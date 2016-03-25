@@ -13,28 +13,10 @@ namespace mozilla {
 namespace dom {
 
 void
-TextEncoder::Init(const nsAString& aEncoding, ErrorResult& aRv)
+TextEncoder::Init()
 {
-  nsAutoString label(aEncoding);
-  EncodingUtils::TrimSpaceCharacters(label);
-
-  // Let encoding be the result of getting an encoding from label.
-  // If encoding is failure, or is none of utf-8, utf-16, and utf-16be,
-  // throw a RangeError (https://encoding.spec.whatwg.org/#dom-textencoder).
-  if (!EncodingUtils::FindEncodingForLabel(label, mEncoding)) {
-    aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(label);
-    return;
-  }
-
-  if (!mEncoding.EqualsLiteral("UTF-8") &&
-      !mEncoding.EqualsLiteral("UTF-16LE") &&
-      !mEncoding.EqualsLiteral("UTF-16BE")) {
-    aRv.ThrowRangeError<MSG_DOM_ENCODING_NOT_UTF>();
-    return;
-  }
-
-  // Create an encoder object for mEncoding.
-  mEncoder = EncodingUtils::EncoderForEncoding(mEncoding);
+  // Create an encoder object for utf-8.
+  mEncoder = EncodingUtils::EncoderForEncoding(NS_LITERAL_CSTRING("UTF-8"));
 }
 
 void
@@ -92,8 +74,7 @@ TextEncoder::Encode(JSContext* aCx,
 void
 TextEncoder::GetEncoding(nsAString& aEncoding)
 {
-  CopyASCIItoUTF16(mEncoding, aEncoding);
-  nsContentUtils::ASCIIToLower(aEncoding);
+  aEncoding.AssignLiteral("utf-8");
 }
 
 } // namespace dom

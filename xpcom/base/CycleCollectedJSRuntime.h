@@ -158,6 +158,9 @@ protected:
     return true; // Don't block context creation.
   }
 
+  std::queue<nsCOMPtr<nsIRunnable>> mPromiseMicroTaskQueue;
+  std::queue<nsCOMPtr<nsIRunnable>> mDebuggerPromiseMicroTaskQueue;
+
 private:
   void
   DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
@@ -285,6 +288,7 @@ public:
   void SetPendingException(nsIException* aException);
 
   std::queue<nsCOMPtr<nsIRunnable>>& GetPromiseMicroTaskQueue();
+  std::queue<nsCOMPtr<nsIRunnable>>& GetDebuggerPromiseMicroTaskQueue();
 
   nsCycleCollectionParticipant* GCThingParticipant();
   nsCycleCollectionParticipant* ZoneParticipant();
@@ -348,6 +352,9 @@ public:
   // full GC.
   void PrepareWaitingZonesForGC();
 
+  // Queue an async microtask to the current main or worker thread.
+  virtual void DispatchToMicroTask(nsIRunnable* aRunnable);
+
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.
   // We store values as `nsISupports` to avoid adding compile-time dependencies
@@ -377,8 +384,6 @@ private:
 
   nsCOMPtr<nsIException> mPendingException;
   nsThread* mOwningThread; // Manual refcounting to avoid include hell.
-
-  std::queue<nsCOMPtr<nsIRunnable>> mPromiseMicroTaskQueue;
 
   struct RunInMetastableStateData
   {

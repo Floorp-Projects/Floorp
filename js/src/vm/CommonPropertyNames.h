@@ -56,6 +56,7 @@
     macro(construct, construct, "construct") \
     macro(constructor, constructor, "constructor") \
     macro(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo") \
+    macro(copyWithin, copyWithin, "copyWithin") \
     macro(count, count, "count") \
     macro(CreateResolvingFunctions, CreateResolvingFunctions, "CreateResolvingFunctions") \
     macro(currency, currency, "currency") \
@@ -86,6 +87,7 @@
     macro(encodeURI, encodeURI, "encodeURI") \
     macro(encodeURIComponent, encodeURIComponent, "encodeURIComponent") \
     macro(endTimestamp, endTimestamp, "endTimestamp") \
+    macro(entries, entries, "entries") \
     macro(enumerable, enumerable, "enumerable") \
     macro(enumerate, enumerate, "enumerate") \
     macro(era, era, "era") \
@@ -95,6 +97,9 @@
     macro(fieldOffsets, fieldOffsets, "fieldOffsets") \
     macro(fieldTypes, fieldTypes, "fieldTypes") \
     macro(fileName, fileName, "fileName") \
+    macro(fill, fill, "fill") \
+    macro(find, find, "find") \
+    macro(findIndex, findIndex, "findIndex") \
     macro(fix, fix, "fix") \
     macro(flags, flags, "flags") \
     macro(float32, float32, "float32") \
@@ -122,6 +127,7 @@
     macro(hour, hour, "hour") \
     macro(ignoreCase, ignoreCase, "ignoreCase") \
     macro(ignorePunctuation, ignorePunctuation, "ignorePunctuation") \
+    macro(includes, includes, "includes") \
     macro(index, index, "index") \
     macro(InitializeCollator, InitializeCollator, "InitializeCollator") \
     macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "InitializeDateTimeFormat") \
@@ -299,6 +305,7 @@
     macro(match, match, "match") \
     macro(species, species, "species") \
     macro(toPrimitive, toPrimitive, "toPrimitive") \
+    macro(unscopables, unscopables, "unscopables") \
     /* Same goes for the descriptions of the well-known symbols. */ \
     macro(Symbol_hasInstance, Symbol_hasInstance, "Symbol.hasInstance") \
     macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
@@ -306,7 +313,6 @@
     macro(Symbol_match,    Symbol_match,    "Symbol.match") \
     macro(Symbol_species,  Symbol_species,  "Symbol.species") \
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
-    macro(Symbol_toStringTag, Symbol_toStringTag, "Symbol.toStringTag") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
     /* Function names for properties named by symbols. */ \
     macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \

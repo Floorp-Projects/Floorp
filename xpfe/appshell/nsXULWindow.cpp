@@ -1080,14 +1080,18 @@ void nsXULWindow::OnChromeLoaded()
           int32_t width = 0, height = 0;
           if (NS_SUCCEEDED(cv->GetContentSize(&width, &height))) {
             treeOwner->SizeShellTo(docShellAsItem, width, height);
-            // Now that we know the window's final size, we can re-do its
-            // positioning so that it is properly constrained to the screen.
-            if (positionSet) {
-              LoadPositionFromXUL(width, height);
-            }
+            // Update specified size for the final LoadPositionFromXUL call.
+            specWidth = width;
+            specHeight = height;
           }
         }
       }
+    }
+
+    // Now that we have set the window's final size, we can re-do its
+    // positioning so that it is properly constrained to the screen.
+    if (positionSet) {
+      LoadPositionFromXUL(specWidth, specHeight);
     }
 
     LoadMiscPersistentAttributesFromXUL();

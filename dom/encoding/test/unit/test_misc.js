@@ -133,7 +133,17 @@ test(
   function () {
     ["utf-8", "utf-16le", "utf-16be"].forEach(function (encoding) {
       var string = "\x00123ABCabc\x80\xFF\u0100\u1000\uFFFD\uD800\uDC00\uDBFF\uDFFF";
-      var encoded = new TextEncoder(encoding).encode(string);
+      var octets = {
+        "utf-16le": [0x00,0x00,0x31,0x00,0x32,0x00,0x33,0x00,0x41,0x00,0x42,0x00,
+                     0x43,0x00,0x61,0x00,0x62,0x00,0x63,0x00,0x80,0x00,0xFF,0x00,
+                     0x00,0x01,0x00,0x10,0xFD,0xFF,0x00,0xD8,0x00,0xDC,0xFF,0xDB,
+                     0xFF,0xDF],
+        "utf-16be": [0x00,0x00,0x00,0x31,0x00,0x32,0x00,0x33,0x00,0x41,0x00,0x42,
+                     0x00,0x43,0x00,0x61,0x00,0x62,0x00,0x63,0x00,0x80,0x00,0xFF,
+                     0x01,0x00,0x10,0x00,0xFF,0xFD,0xD8,0x00,0xDC,0x00,0xDB,0xFF,
+                     0xDF,0xFF]
+      };
+      var encoded = octets[encoding] || new TextEncoder(encoding).encode(string);
 
       for (var len = 1; len <= 5; ++len) {
         var out = "", decoder = new TextDecoder(encoding);
@@ -204,19 +214,12 @@ test(
 test(
   function () {
 
-    var utf_encodings = ["utf-8", "utf-16le", "utf-16be"];
+    var encodings = ["utf-8", "ibm866", "iso-8859-2", "iso-8859-3", "iso-8859-4", "iso-8859-5", "iso-8859-6", "iso-8859-7", "iso-8859-8", "iso-8859-8-i", "iso-8859-10", "iso-8859-13", "iso-8859-14", "iso-8859-15", "iso-8859-16", "koi8-r", "koi8-u", "macintosh", "windows-874", "windows-1250", "windows-1251", "windows-1252", "windows-1253", "windows-1254", "windows-1255", "windows-1256", "windows-1257", "windows-1258", "x-mac-cyrillic", "gbk", "gb18030", "big5", "euc-jp", "iso-2022-jp", "shift_jis", "euc-kr", "x-user-defined", "utf-16le", "utf-16be"];
 
-    var legacy_encodings = ["ibm866", "iso-8859-2", "iso-8859-3", "iso-8859-4", "iso-8859-5", "iso-8859-6", "iso-8859-7", "iso-8859-8", "iso-8859-8-i", "iso-8859-10", "iso-8859-13", "iso-8859-14", "iso-8859-15", "iso-8859-16", "koi8-r", "koi8-u", "macintosh", "windows-874", "windows-1250", "windows-1251", "windows-1252", "windows-1253", "windows-1254", "windows-1255", "windows-1256", "windows-1257", "windows-1258", "x-mac-cyrillic", "gbk", "gb18030", "big5", "euc-jp", "iso-2022-jp", "shift_jis", "euc-kr", "x-user-defined"];
-
-    utf_encodings.forEach(function(encoding) {
+    encodings.forEach(function(encoding) {
       assert_equals(new TextDecoder(encoding).encoding, encoding);
-      assert_equals(new TextEncoder(encoding).encoding, encoding);
-    });
-
-    legacy_encodings.forEach(function(encoding) {
-      assert_equals(new TextDecoder(encoding).encoding, encoding);
-      assert_throws({name: 'RangeError'}, function() { new TextEncoder(encoding); });
+      assert_equals(new TextEncoder(encoding).encoding, "utf-8");
     });
   },
-  "Non-UTF encodings supported only for decode, not encode"
+  "Non-UTF-8 encodings supported only for decode, not encode"
 );

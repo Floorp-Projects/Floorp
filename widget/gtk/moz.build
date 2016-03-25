@@ -82,7 +82,7 @@ else:
     # with GTK2.
     DEFINES['GDK_DISABLE_DEPRECATION_WARNINGS'] = True;
     UNIFIED_SOURCES += [
-        'gtk3drawing.c',
+        'gtk3drawing.cpp',
         'nsApplicationChooser.cpp',
     ]
 

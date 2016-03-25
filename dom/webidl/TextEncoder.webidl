@@ -10,7 +10,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-[Constructor(optional DOMString utfLabel = "utf-8"),
+[Constructor,
  Exposed=(Window,Worker,System)]
 interface TextEncoder {
   [Constant]

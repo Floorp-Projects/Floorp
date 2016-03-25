@@ -774,8 +774,6 @@ video > .caption-box {
 
 details > summary::-moz-list-bullet {
   list-style-type: disclosure-closed;
-  /* Prevent elements in summary being selected when clicking on the triangle. */
-  -moz-user-select: none;
 }
 
 details[open] > summary::-moz-list-bullet {

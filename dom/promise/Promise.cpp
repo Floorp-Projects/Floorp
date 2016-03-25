@@ -922,7 +922,11 @@ Promise::MaybeRejectWithNull()
 bool
 Promise::PerformMicroTaskCheckpoint()
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+
   CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
+  // On the main thread, we always use the main promise micro task queue.
   std::queue<nsCOMPtr<nsIRunnable>>& microtaskQueue =
     runtime->GetPromiseMicroTaskQueue();
 
@@ -930,10 +934,7 @@ Promise::PerformMicroTaskCheckpoint()
     return false;
   }
 
-  Maybe<AutoSafeJSContext> cx;
-  if (NS_IsMainThread()) {
-    cx.emplace();
-  }
+  AutoSafeJSContext cx;
 
   do {
     nsCOMPtr<nsIRunnable> runnable = microtaskQueue.front();
@@ -945,13 +946,75 @@ Promise::PerformMicroTaskCheckpoint()
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
-    if (cx.isSome()) {
-      JS_CheckForInterrupt(cx.ref());
-    }
+    JS_CheckForInterrupt(cx);
     runtime->AfterProcessMicrotask();
   } while (!microtaskQueue.empty());
 
   return true;
+}
+
+void
+Promise::PerformWorkerMicroTaskCheckpoint()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Wrong thread!");
+
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
+  for (;;) {
+    // For a normal microtask checkpoint, we try to use the debugger microtask
+    // queue first. If the debugger queue is empty, we use the normal microtask
+    // queue instead.
+    std::queue<nsCOMPtr<nsIRunnable>>* microtaskQueue =
+      &runtime->GetDebuggerPromiseMicroTaskQueue();
+
+    if (microtaskQueue->empty()) {
+      microtaskQueue = &runtime->GetPromiseMicroTaskQueue();
+      if (microtaskQueue->empty()) {
+        break;
+      }
+    }
+
+    nsCOMPtr<nsIRunnable> runnable = microtaskQueue->front();
+    MOZ_ASSERT(runnable);
+
+    // This function can re-enter, so we remove the element before calling.
+    microtaskQueue->pop();
+    nsresult rv = runnable->Run();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    runtime->AfterProcessMicrotask();
+  }
+}
+
+void
+Promise::PerformWorkerDebuggerMicroTaskCheckpoint()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Wrong thread!");
+
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
+  for (;;) {
+    // For a debugger microtask checkpoint, we always use the debugger microtask
+    // queue.
+    std::queue<nsCOMPtr<nsIRunnable>>* microtaskQueue =
+      &runtime->GetDebuggerPromiseMicroTaskQueue();
+
+    if (microtaskQueue->empty()) {
+      break;
+    }
+
+    nsCOMPtr<nsIRunnable> runnable = microtaskQueue->front();
+    MOZ_ASSERT(runnable);
+
+    // This function can re-enter, so we remove the element before calling.
+    microtaskQueue->pop();
+    nsresult rv = runnable->Run();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    runtime->AfterProcessMicrotask();
+  }
 }
 
 #ifndef SPIDERMONKEY_PROMISE
@@ -2415,18 +2478,6 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
 }
 #endif // SPIDERMONKEY_PROMISE
 
-/* static */ void
-Promise::DispatchToMicroTask(nsIRunnable* aRunnable)
-{
-  MOZ_ASSERT(aRunnable);
-
-  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
-  std::queue<nsCOMPtr<nsIRunnable>>& microtaskQueue =
-    runtime->GetPromiseMicroTaskQueue();
-
-  microtaskQueue.push(aRunnable);
-}
-
 #ifndef SPIDERMONKEY_PROMISE
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
 void
@@ -2517,6 +2568,8 @@ void
 Promise::ResolveInternal(JSContext* aCx,
                          JS::Handle<JS::Value> aValue)
 {
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
   mResolvePending = true;
 
   if (aValue.isObject()) {
@@ -2558,7 +2611,7 @@ Promise::ResolveInternal(JSContext* aCx,
         new PromiseInit(nullptr, thenObj, mozilla::dom::GetIncumbentGlobal());
       RefPtr<PromiseResolveThenableJob> task =
         new PromiseResolveThenableJob(this, valueObj, thenCallback);
-      DispatchToMicroTask(task);
+      runtime->DispatchToMicroTask(task);
       return;
     }
   }
@@ -2648,6 +2701,8 @@ Promise::MaybeSettle(JS::Handle<JS::Value> aValue,
 void
 Promise::TriggerPromiseReactions()
 {
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
   nsTArray<RefPtr<PromiseCallback>> callbacks;
   callbacks.SwapElements(mState == Resolved ? mResolveCallbacks
                                             : mRejectCallbacks);
@@ -2657,7 +2712,7 @@ Promise::TriggerPromiseReactions()
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     RefPtr<PromiseReactionJob> task =
       new PromiseReactionJob(this, callbacks[i], mResult);
-    DispatchToMicroTask(task);
+    runtime->DispatchToMicroTask(task);
   }
 }
 

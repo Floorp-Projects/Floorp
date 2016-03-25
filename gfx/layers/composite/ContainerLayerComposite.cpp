@@ -520,41 +520,32 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   float scaleFactor;
   float scaleFactorX;
   float scaleFactorY;
-  scaleFactorX = 100.f / scrollRect.width;
-  scaleFactorY = ((viewRect.height) - 2 * verticalPadding) / scrollRect.height;
+  Rect dest = Rect(aClipRect.ToUnknownRect());
+  if (aLayer->GetEffectiveClipRect()) {
+    dest = Rect(aLayer->GetEffectiveClipRect().value().ToUnknownRect());
+  } else {
+    dest = aContainer->GetEffectiveTransform().Inverse().TransformBounds(dest);
+  }
+  dest = dest.Intersect(compositionBounds.ToUnknownRect());
+  scaleFactorX = std::min(100.f, dest.width - (2 * horizontalPadding)) / scrollRect.width;
+  scaleFactorY = (dest.height - (2 * verticalPadding)) / scrollRect.height;
   scaleFactor = std::min(scaleFactorX, scaleFactorY);
+  if (scaleFactor <= 0) {
+    return;
+  }
 
   Matrix4x4 transform = Matrix4x4::Scaling(scaleFactor, scaleFactor, 1);
-  transform.PostTranslate(horizontalPadding + compositionBounds.x, verticalPadding + compositionBounds.y, 0);
+  transform.PostTranslate(horizontalPadding + dest.x, verticalPadding + dest.y, 0);
 
-  Rect clipRect = aContainer->GetEffectiveTransform().TransformBounds(
-                    transform.TransformBounds(scrollRect.ToUnknownRect()));
+  Rect transformedScrollRect = transform.TransformBounds(scrollRect.ToUnknownRect());
+
+  Rect clipRect = aContainer->GetEffectiveTransform().TransformBounds(transformedScrollRect);
   clipRect.width++;
   clipRect.height++;
 
-  Rect r;
-  r = transform.TransformBounds(scrollRect.ToUnknownRect());
-  compositor->FillRect(r, backgroundColor, clipRect, aContainer->GetEffectiveTransform());
-
-  /* Disabled because on long pages SlowDrawRect becomes a bottleneck.
-  int tileW = gfxPrefs::LayersTileWidth();
-  int tileH = gfxPrefs::LayersTileHeight();
-
-  for (int x = scrollRect.x; x < scrollRect.XMost(); x += tileW) {
-    for (int y = scrollRect.y; y < scrollRect.YMost(); y += tileH) {
-      LayerRect tileRect = LayerRect(x - x % tileW, y - y % tileH, tileW, tileH);
-      r = transform.TransformBounds(tileRect.ToUnknownRect());
-      if (tileRect.Intersects(dp)) {
-        compositor->FillRect(r, tileActiveColor, clipRect, aContainer->GetEffectiveTransform());
-      }
-      compositor->SlowDrawRect(r, tileBorderColor, clipRect, aContainer->GetEffectiveTransform());
-    }
-  }
-  */
-
   // Render the scrollable area.
-  r = transform.TransformBounds(scrollRect.ToUnknownRect());
-  compositor->SlowDrawRect(r, pageBorderColor, clipRect, aContainer->GetEffectiveTransform());
+  compositor->FillRect(transformedScrollRect, backgroundColor, clipRect, aContainer->GetEffectiveTransform());
+  compositor->SlowDrawRect(transformedScrollRect, pageBorderColor, clipRect, aContainer->GetEffectiveTransform());
 
   // If enabled, render information about visibility.
   if (gfxPrefs::APZMinimapVisibilityEnabled()) {
@@ -585,9 +576,8 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   }
 
   // Render the displayport.
-  r = transform.TransformBounds(dp.ToUnknownRect());
+  Rect r = transform.TransformBounds(dp.ToUnknownRect());
   compositor->FillRect(r, tileActiveColor, clipRect, aContainer->GetEffectiveTransform());
-  r = transform.TransformBounds(dp.ToUnknownRect());
   compositor->SlowDrawRect(r, displayPortColor, clipRect, aContainer->GetEffectiveTransform());
 
   // Render the viewport.

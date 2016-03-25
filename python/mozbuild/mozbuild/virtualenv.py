@@ -173,6 +173,11 @@ class VirtualenvManager(object):
         env.pop('PYTHONDONTWRITEBYTECODE', None)
 
         args = [python, self.virtualenv_script_path,
+            # Without this, virtualenv.py may attempt to contact the outside
+            # world and search for or download a newer version of pip,
+            # setuptools, or wheel. This is bad for security, reproducibility,
+            # and speed.
+            '--no-download',
             self.virtualenv_root]
 
         result = subprocess.call(args, stdout=self.log_handle,

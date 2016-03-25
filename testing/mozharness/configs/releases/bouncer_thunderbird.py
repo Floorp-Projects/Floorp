@@ -4,6 +4,7 @@ config = {
     "products": {
         "installer": {
             "product-name": "Thunderbird-%(version)s",
+            "alias": "thunderbird-latest",
             "ssl-only": False,
             "add-locales": True,
             "paths": {

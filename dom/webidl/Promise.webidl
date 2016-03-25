@@ -22,7 +22,7 @@ callback AnyCallback = any (any value);
 // values work.
 #ifndef SPIDERMONKEY_PROMISE
 [Constructor(PromiseInit init),
- Exposed=(Window,Worker,System)]
+ Exposed=(Window,Worker,WorkerDebugger,System)]
 // Need to escape "Promise" so it's treated as an identifier.
 interface _Promise {
   // Have to use "any" (or "object", but "any" is simpler) as the type to

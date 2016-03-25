@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
++  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebugger with DOM Promises"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebugger_promise_worker.js";
+    const DEBUGGER_URL = BASE_URL + "WorkerDebugger_promise_debugger.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
+        let worker = new Worker(WORKER_URL);
+        let dbg = yield promise;
+
+        info("Send a request to the worker. This should cause the worker " +
+             "to send a response.");
+        promise = waitForWorkerMessage(worker, "resolved");
+        worker.postMessage("resolve");
+        yield promise;
+
+        info("Send a request to the debugger. This should cause the debugger " +
+             "to send a response.");
+        promise = waitForDebuggerMessage(dbg, "resolved");
+        dbg.postMessage("resolve");
+        yield promise;
+
+        info("Send a request to the worker. This should cause the debugger " +
+             "to enter a nested event loop.");
+        promise = waitForDebuggerMessage(dbg, "paused");
+        worker.postMessage("pause");
+        yield promise;
+
+        info("Send a request to the debugger. This should cause the debugger " +
+             "to leave the nested event loop.");
+        promise = waitForMultiple([
+          waitForDebuggerMessage(dbg, "resumed"),
+          waitForWorkerMessage(worker, "resumed")
+        ]);
+        dbg.postMessage("resume");
+        yield promise;
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

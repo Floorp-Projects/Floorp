@@ -147,8 +147,8 @@ class MOZ_RAII CacheIRWriter
     }
 
     void writeOperandId(OperandId opId) {
-        MOZ_ASSERT(size_t(opId.id()) <= UINT8_MAX);
         if (opId.id() < MaxOperandIds) {
+            static_assert(MaxOperandIds <= UINT8_MAX, "operand id must fit in a single byte");
             buffer_.writeByte(opId.id());
         } else {
             tooLarge_ = true;

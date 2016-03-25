@@ -3,6 +3,7 @@ config = {
     "products": {
         "apk": {
             "product-name": "Fennec-%(version)s",
+            "alias": "fennec-latest",
             "ssl-only": False,
             "add-locales": False,  # Do not add locales to let "multi" work
             "paths": {
