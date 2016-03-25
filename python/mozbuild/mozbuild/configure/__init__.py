@@ -450,6 +450,9 @@ class ConfigureSandbox(dict):
         The `reason` argument indicates what caused the option to be implied.
         It is necessary when it cannot be inferred from the `value`.
         '''
+        # Don't do anything when --help was on the command line
+        if self._help:
+            return
         if not reason and isinstance(value, DummyFunction):
             deps = self._depends[value][1]
             possible_reasons = [d for d in deps if d != self._help_option]
