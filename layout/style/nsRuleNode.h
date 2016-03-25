@@ -420,7 +420,8 @@ private:
                              // most specific rule matched to the least
                              // specific rule (which is the optimal order to
                              // use for lookups of style properties.
-  nsIStyleRule* const mRule; // [STRONG] A pointer to our specific rule.
+
+  const nsCOMPtr<nsIStyleRule> mRule; // A pointer to our specific rule.
 
   nsRuleNode* mNextSibling; // This value should be used only by the
                             // parent, since the parent may store
