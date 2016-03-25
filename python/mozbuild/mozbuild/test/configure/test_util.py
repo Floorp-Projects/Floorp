@@ -4,11 +4,176 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
+import os
+import tempfile
 import unittest
+import sys
+
+from StringIO import StringIO
 
 from mozunit import main
 
-from mozbuild.configure.util import Version
+from mozbuild.configure.util import (
+    ConfigureOutputHandler,
+    Version,
+)
+
+
+class TestConfigureOutputHandler(unittest.TestCase):
+    def test_separation(self):
+        out = StringIO()
+        err = StringIO()
+        name = '%s.test_separation' % self.__class__.__name__
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(ConfigureOutputHandler(out, err))
+
+        logger.error('foo')
+        logger.warning('bar')
+        logger.info('baz')
+        logger.debug('qux')
+
+        self.assertEqual(out.getvalue(), 'baz\n')
+        self.assertEqual(err.getvalue(), 'foo\nbar\nqux\n')
+
+    def test_format(self):
+        out = StringIO()
+        err = StringIO()
+        name = '%s.test_format' % self.__class__.__name__
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        handler =  ConfigureOutputHandler(out, err)
+        handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+        logger.addHandler(handler)
+
+        logger.error('foo')
+        logger.warning('bar')
+        logger.info('baz')
+        logger.debug('qux')
+
+        self.assertEqual(out.getvalue(), 'baz\n')
+        self.assertEqual(
+            err.getvalue(),
+            'ERROR:foo\n'
+            'WARNING:bar\n'
+            'DEBUG:qux\n'
+        )
+
+    def test_continuation(self):
+        out = StringIO()
+        name = '%s.test_continuation' % self.__class__.__name__
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        handler =  ConfigureOutputHandler(out, out)
+        handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+        logger.addHandler(handler)
+
+        logger.info('foo')
+        logger.info('checking bar... ')
+        logger.info('yes')
+        logger.info('qux')
+
+        self.assertEqual(
+            out.getvalue(),
+            'foo\n'
+            'checking bar... yes\n'
+            'qux\n'
+        )
+
+        out.seek(0)
+        out.truncate()
+
+        logger.info('foo')
+        logger.info('checking bar... ')
+        logger.warning('hoge')
+        logger.info('no')
+        logger.info('qux')
+
+        self.assertEqual(
+            out.getvalue(),
+            'foo\n'
+            'checking bar... \n'
+            'WARNING:hoge\n'
+            ' ... no\n'
+            'qux\n'
+        )
+
+        out.seek(0)
+        out.truncate()
+
+        logger.info('foo')
+        logger.info('checking bar... ')
+        logger.warning('hoge')
+        logger.warning('fuga')
+        logger.info('no')
+        logger.info('qux')
+
+        self.assertEqual(
+            out.getvalue(),
+            'foo\n'
+            'checking bar... \n'
+            'WARNING:hoge\n'
+            'WARNING:fuga\n'
+            ' ... no\n'
+            'qux\n'
+        )
+
+        out.seek(0)
+        out.truncate()
+        err = StringIO()
+
+        logger.removeHandler(handler)
+        handler =  ConfigureOutputHandler(out, err)
+        handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+        logger.addHandler(handler)
+
+        logger.info('foo')
+        logger.info('checking bar... ')
+        logger.warning('hoge')
+        logger.warning('fuga')
+        logger.info('no')
+        logger.info('qux')
+
+        self.assertEqual(
+            out.getvalue(),
+            'foo\n'
+            'checking bar... no\n'
+            'qux\n'
+        )
+
+        self.assertEqual(
+            err.getvalue(),
+            'WARNING:hoge\n'
+            'WARNING:fuga\n'
+        )
+
+    def test_is_same_output(self):
+        fd1 = sys.stderr.fileno()
+        fd2 = os.dup(fd1)
+        try:
+            self.assertTrue(ConfigureOutputHandler._is_same_output(fd1, fd2))
+        finally:
+            os.close(fd2)
+
+        fd2, path = tempfile.mkstemp()
+        try:
+            self.assertFalse(ConfigureOutputHandler._is_same_output(fd1, fd2))
+
+            fd3 = os.dup(fd2)
+            try:
+                self.assertTrue(ConfigureOutputHandler._is_same_output(fd2, fd3))
+            finally:
+                os.close(fd3)
+
+            with open(path, 'a') as fh:
+                fd3 = fh.fileno()
+                self.assertTrue(
+                    ConfigureOutputHandler._is_same_output(fd2, fd3))
+
+        finally:
+            os.close(fd2)
+            os.remove(path)
 
 
 class TestVersion(unittest.TestCase):

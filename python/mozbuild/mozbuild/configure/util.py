@@ -5,6 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
+import logging
+import os
+import sys
 from distutils.version import LooseVersion
 
 
@@ -34,3 +37,62 @@ class Version(LooseVersion):
         if isinstance(other, unicode):
             other = other.encode('ascii')
         return LooseVersion.__cmp__(self, other)
+
+
+class ConfigureOutputHandler(logging.Handler):
+    '''A logging handler class that sends info messages to stdout and other
+    messages to stderr.
+
+    Messages sent to stdout are not formatted with the attached Formatter.
+    Additionally, if they end with '... ', no newline character is printed,
+    making the next message printed follow the '... '.
+    '''
+    def __init__(self, stdout=sys.stdout, stderr=sys.stderr):
+        super(ConfigureOutputHandler, self).__init__()
+        self._stdout, self._stderr = stdout, stderr
+        try:
+            fd1 = self._stdout.fileno()
+            fd2 = self._stderr.fileno()
+            self._same_output = self._is_same_output(fd1, fd2)
+        except AttributeError:
+            self._same_output = self._stdout == self._stderr
+        self._stdout_waiting = None
+
+    @staticmethod
+    def _is_same_output(fd1, fd2):
+        if fd1 == fd2:
+            return True
+        stat1 = os.fstat(fd1)
+        stat2 = os.fstat(fd2)
+        return stat1.st_ino == stat2.st_ino and stat1.st_dev == stat2.st_dev
+
+    WAITING = 1
+    INTERRUPTED = 2
+
+    def emit(self, record):
+        try:
+            if record.levelno == logging.INFO:
+                stream = self._stdout
+                msg = record.getMessage()
+                if (self._stdout_waiting == self.INTERRUPTED and
+                        self._same_output):
+                    msg = ' ... %s' % msg
+                self._stdout_waiting = msg.endswith('... ')
+                if msg.endswith('... '):
+                    self._stdout_waiting = self.WAITING
+                else:
+                    self._stdout_waiting = None
+                    msg = '%s\n' % msg
+            else:
+                if self._stdout_waiting == self.WAITING and self._same_output:
+                    self._stdout_waiting = self.INTERRUPTED
+                    self._stdout.write('\n')
+                    self._stdout.flush()
+                stream = self._stderr
+                msg = '%s\n' % self.format(record)
+            stream.write(msg)
+            stream.flush()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
