@@ -338,6 +338,21 @@ android.applicationVariants.all { variant ->
     android.sourceSets."${productFlavor}${buildType.capitalize()}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
 }
 
+apply plugin: 'si.dlabs.soter'
+
+soter {
+    dependencies {
+        checkstyleRules files("checkstyle.xml")
+    }
+
+    checkstyle {
+        enabled true
+        uploadReports false
+        toolVersion "6.7"
+        showViolations true
+    }
+}
+
 apply plugin: 'spoon'
 
 spoon {

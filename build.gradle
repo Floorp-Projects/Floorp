@@ -26,7 +26,7 @@ buildscript {
                 url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
             }
         }
-        // For android-sdk-manager SNAPSHOT releases.
+        // For android-sdk-manager SNAPSHOT releases & soter.
         maven {
             url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
         }
@@ -40,6 +40,7 @@ buildscript {
         }
         // Provided in tree.
         classpath 'com.jakewharton.sdkmanager:gradle-plugin:1.5.0-SNAPSHOT'
+        classpath "gradle.plugin.si.dlabs.gradle:soter:1.0.6"
     }
 }
 
