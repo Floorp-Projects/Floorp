@@ -12,9 +12,9 @@
 #       return 'foo'
 # is equivalent to:
 #   def foo():
-#       sys.stdout.write('checking for foo... ')
+#       log.info('checking for foo... ')
 #       ret = foo
-#       sys.stdout.write(ret + '\n')
+#       log.info(ret)
 #       return ret
 # This can be combined with e.g. @depends:
 #   @depends(some_option)
@@ -26,21 +26,17 @@
 @template
 def checking(what, callback=None):
     def decorator(func):
-        @advanced
         def wrapped(*args, **kwargs):
-            import sys
-            print('checking', what, end='... ')
-            sys.stdout.flush()
+            log.info('checking %s... ', what)
             ret = func(*args, **kwargs)
             if callback:
-                print(callback(ret))
+                log.info(callback(ret))
             elif ret is True:
-                print('yes')
+                log.info('yes')
             elif ret is False:
-                print('no')
+                log.info('no')
             else:
-                print(ret)
-            sys.stdout.flush()
+                log.info(ret)
             return ret
         return wrapped
     return decorator
