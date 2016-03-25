@@ -8,6 +8,8 @@ import itertools
 import logging
 import os
 import sys
+from collections import deque
+from contextlib import contextmanager
 from distutils.version import LooseVersion
 
 
@@ -46,8 +48,15 @@ class ConfigureOutputHandler(logging.Handler):
     Messages sent to stdout are not formatted with the attached Formatter.
     Additionally, if they end with '... ', no newline character is printed,
     making the next message printed follow the '... '.
+
+    Only messages above log level INFO (included) are logged.
+
+    Messages below that level can be kept until an ERROR message is received,
+    at which point the last `maxlen` accumulated messages below INFO are
+    printed out. This feature is only enabled under the `queue_debug` context
+    manager.
     '''
-    def __init__(self, stdout=sys.stdout, stderr=sys.stderr):
+    def __init__(self, stdout=sys.stdout, stderr=sys.stderr, maxlen=20):
         super(ConfigureOutputHandler, self).__init__()
         self._stdout, self._stderr = stdout, stderr
         try:
@@ -57,6 +66,8 @@ class ConfigureOutputHandler(logging.Handler):
         except AttributeError:
             self._same_output = self._stdout == self._stderr
         self._stdout_waiting = None
+        self._debug = deque(maxlen=maxlen + 1)
+        self._keep_if_debug = self.THROW
 
     @staticmethod
     def _is_same_output(fd1, fd2):
@@ -66,8 +77,14 @@ class ConfigureOutputHandler(logging.Handler):
         stat2 = os.fstat(fd2)
         return stat1.st_ino == stat2.st_ino and stat1.st_dev == stat2.st_dev
 
+    # possible values for _stdout_waiting
     WAITING = 1
     INTERRUPTED = 2
+
+    # possible values for _keep_if_debug
+    THROW = 0
+    KEEP = 1
+    PRINT = 2
 
     def emit(self, record):
         try:
@@ -83,7 +100,27 @@ class ConfigureOutputHandler(logging.Handler):
                 else:
                     self._stdout_waiting = None
                     msg = '%s\n' % msg
+            elif (record.levelno < logging.INFO and
+                    self._keep_if_debug != self.PRINT):
+                if self._keep_if_debug == self.KEEP:
+                    self._debug.append(record)
+                return
             else:
+                if record.levelno >= logging.ERROR and len(self._debug):
+                    self._keep_if_debug = self.PRINT
+                    if len(self._debug) == self._debug.maxlen:
+                        r = self._debug.popleft()
+                        self.emit(logging.LogRecord(
+                            r.name, r.levelno, r.pathname, r.lineno,
+                            '<truncated - see config.log for full output>',
+                            (), None))
+                    while True:
+                        try:
+                            self.emit(self._debug.popleft())
+                        except IndexError:
+                            break
+                    self._keep_if_debug = self.KEEP
+
                 if self._stdout_waiting == self.WAITING and self._same_output:
                     self._stdout_waiting = self.INTERRUPTED
                     self._stdout.write('\n')
@@ -96,6 +133,13 @@ class ConfigureOutputHandler(logging.Handler):
             raise
         except:
             self.handleError(record)
+
+    @contextmanager
+    def queue_debug(self):
+        self._keep_if_debug = self.KEEP
+        yield
+        self._keep_if_debug = self.THROW
+        self._debug.clear()
 
 
 class LineIO(object):
