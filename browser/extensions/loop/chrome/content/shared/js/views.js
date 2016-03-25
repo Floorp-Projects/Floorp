@@ -885,7 +885,6 @@ loop.shared.views = function (_, mozL10n) {
       screenSharePosterUrl: React.PropTypes.string,
       screenSharingPaused: React.PropTypes.bool,
       showInitialContext: React.PropTypes.bool.isRequired,
-      showMediaWait: React.PropTypes.bool.isRequired,
       showTile: React.PropTypes.bool.isRequired
     },
 
@@ -943,30 +942,6 @@ loop.shared.views = function (_, mozL10n) {
       );
     },
 
-    renderMediaWait: function () {
-      var msg = mozL10n.get("call_progress_getting_media_description", { clientShortname: mozL10n.get("clientShortname2") });
-      var utils = loop.shared.utils;
-      var isChrome = utils.isChrome(navigator.userAgent);
-      var isFirefox = utils.isFirefox(navigator.userAgent);
-      var isOpera = utils.isOpera(navigator.userAgent);
-      var promptMediaMessageClasses = classNames({
-        "prompt-media-message": true,
-        "chrome": isChrome,
-        "firefox": isFirefox,
-        "opera": isOpera,
-        "other": !isChrome && !isFirefox && !isOpera
-      });
-      return React.createElement(
-        "div",
-        { className: "prompt-media-message-wrapper" },
-        React.createElement(
-          "p",
-          { className: promptMediaMessageClasses },
-          msg
-        )
-      );
-    },
-
     render: function () {
       var remoteStreamClasses = classNames({
         "remote": true,
@@ -983,7 +958,6 @@ loop.shared.views = function (_, mozL10n) {
         "media-wrapper": true,
         "receiving-screen-share": this.props.displayScreenShare,
         "showing-local-streams": this.props.localSrcMediaElement || this.props.localPosterUrl,
-        "showing-media-wait": this.props.showMediaWait,
         "showing-remote-streams": this.props.remoteSrcMediaElement || this.props.remotePosterUrl || this.props.isRemoteLoading
       });
 
@@ -1029,8 +1003,7 @@ loop.shared.views = function (_, mozL10n) {
             dispatcher: this.props.dispatcher,
             showInitialContext: this.props.showInitialContext,
             showTile: this.props.showTile }),
-          this.state.localMediaAboslutelyPositioned ? null : this.renderLocalVideo(),
-          this.props.showMediaWait ? this.renderMediaWait() : null
+          this.state.localMediaAboslutelyPositioned ? null : this.renderLocalVideo()
         )
       );
     }
