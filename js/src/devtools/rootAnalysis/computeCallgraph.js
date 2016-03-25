@@ -104,17 +104,17 @@ function findVirtualFunctions(initialCSU, field, suppressed)
     return functions;
 }
 
-var memoized = {};
+var memoized = new Map();
 var memoizedCount = 0;
 
 function memo(name)
 {
-    if (!(name in memoized)) {
-        memoizedCount++;
-        memoized[name] = "" + memoizedCount;
-        print("#" + memoizedCount + " " + name);
+    if (!memoized.has(name)) {
+        let id = memoized.size + 1;
+        memoized.set(name, "" + id);
+        print(`#${id} ${name}`);
     }
-    return memoized[name];
+    return memoized.get(name);
 }
 
 var seenCallees = null;
