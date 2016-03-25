@@ -94,14 +94,14 @@ WriteResponse(const char* filename, const SECItem* item)
     return false;
   }
 
-  ScopedPRFileDesc outFile(PR_Open(filename,
+  UniquePRFileDesc outFile(PR_Open(filename,
                                    PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                    0644));
   if (!outFile) {
     PrintPRError("cannot open file for writing");
     return false;
   }
-  int32_t rv = PR_Write(outFile, item->data, item->len);
+  int32_t rv = PR_Write(outFile.get(), item->data, item->len);
   if (rv < 0 || (uint32_t) rv != item->len) {
     PrintPRError("File write failure");
     return false;
