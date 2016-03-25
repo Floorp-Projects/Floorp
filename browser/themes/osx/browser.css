@@ -2336,30 +2336,25 @@ richlistitem[type~="action"][actiontype$="tab"][selected="true"] > .ac-url-box >
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
-#sidebar,
-sidebarheader {
-  -moz-appearance: -moz-mac-vibrancy-light;
-  background-color: #e2e7ed;
-}
-
-#sidebar:-moz-window-inactive,
-sidebarheader:-moz-window-inactive {
-  background-color: #e8e8e8;
-}
-
-sidebarheader {
-  padding: 2px;
-  text-shadow: none;
-}
-
 #sidebar-box {
-  -moz-appearance: dialog;
-  -moz-appearance: none;
+  background-color: hsl(212,19%,85%);
+  background-image: linear-gradient(hsl(213,26%,93%), hsl(212,19%,85%));
+  box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
+}
+
+#sidebar-box:-moz-window-inactive {
+  background-color: hsl(0,0%,92%);
+  background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,92%));
+}
+
+sidebarheader {
+  padding: 2px 2px 0;
+  text-shadow: 0 1px 0 hsla(0,0%,100%,.5);
 }
 
 .sidebar-splitter {
   -moz-border-start: none;
-  -moz-border-end: 1px solid #bdbdbd;
+  -moz-border-end: 1px solid #b4b4b4;
   min-width: 1px;
   width: 3px;
   background-image: none !important;
@@ -2377,8 +2372,13 @@ sidebarheader {
 
 .sidebar-title,
 #sidebar-title {
-  color: #535f6d;
+  color: #596c80;
   font-weight: bold;
+}
+
+.sidebar-title:-moz-window-inactive,
+#sidebar-title:-moz-window-inactive {
+  color: #868b92;
 }
 
 .sidebar-throbber[loading="true"],
@@ -2393,6 +2393,30 @@ sidebarheader {
     width: 16px;
   }
 }
+
+@media (-moz-mac-yosemite-theme) {
+  #sidebar-box {
+    -moz-appearance: -moz-mac-vibrancy-light;
+    background-image: none;
+    box-shadow: none;
+  }
+
+  #sidebar-box:-moz-window-inactive {
+    background-image: none;
+  }
+
+  sidebarheader {
+    text-shadow: none;
+    font-weight: 500;
+  }
+
+  .sidebar-title,
+  #sidebar-title {
+    color: #636363;
+    font-weight: 500;
+  }
+}
+
 
 /* ----- CONTENT ----- */
 
