@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import inspect
+import logging
 import os
 import sys
 import types
@@ -20,6 +21,10 @@ from mozbuild.configure.options import (
     PositiveOptionValue,
 )
 from mozbuild.configure.help import HelpFormatter
+from mozbuild.configure.util import (
+    ConfigureOutputHandler,
+    LineIO,
+)
 from mozbuild.util import (
     ReadOnlyDict,
     ReadOnlyNamespace,
@@ -92,7 +97,7 @@ class ConfigureSandbox(dict):
     }))
 
     def __init__(self, config, environ=os.environ, argv=sys.argv,
-                 stdout=sys.stdout, stderr=sys.stderr):
+                 stdout=sys.stdout, stderr=sys.stderr, logger=None):
         dict.__setitem__(self, '__builtins__', self.BUILTINS)
 
         self._paths = []
@@ -121,7 +126,19 @@ class ConfigureSandbox(dict):
         self._helper = CommandLineHelper(environ, argv)
 
         assert isinstance(config, dict)
-        self._config, self._stdout, self._stderr = config, stdout, stderr
+        self._config = config
+
+        if logger is None:
+            logger = logging.getLogger('moz.configure')
+            logger.setLevel(logging.INFO)
+            formatter = logging.Formatter('%(levelname)s: %(message)s')
+            handler = ConfigureOutputHandler(stdout, stderr)
+            handler.setLevel(logging.INFO)
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+
+        else:
+            assert isinstance(logger, logging.Logger)
 
         self._help = None
         self._help_option = self.option_impl('--help',
@@ -182,7 +199,8 @@ class ConfigureSandbox(dict):
                 )
 
         if self._help:
-            self._help.usage(self._stdout)
+            with LineIO(logging.getLogger('moz.configure').info) as out:
+                self._help.usage(out)
 
     def __getitem__(self, key):
         impl = '%s_impl' % key
