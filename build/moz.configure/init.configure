@@ -165,6 +165,7 @@ def virtualenv_python(env_python, build_env, mozconfig):
     import os
     import sys
     import subprocess
+    from mozbuild.configure.util import LineIO
     from mozbuild.virtualenv import (
         VirtualenvManager,
         verify_python_version,
@@ -185,15 +186,17 @@ def virtualenv_python(env_python, build_env, mozconfig):
         elif 'PYTHON' in mozconfig['vars']['modified']:
             python = mozconfig['vars']['modified']['PYTHON'][1]
 
-    verify_python_version(sys.stderr)
+    with LineIO(lambda l: log.error(l)) as out:
+        verify_python_version(out)
     topsrcdir, topobjdir = build_env.topsrcdir, build_env.topobjdir
     if topobjdir.endswith('/js/src'):
         topobjdir = topobjdir[:-7]
 
-    manager = VirtualenvManager(
-        topsrcdir, topobjdir,
-        os.path.join(topobjdir, '_virtualenv'), sys.stdout,
-        os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+    with LineIO(lambda l: log.info(l)) as out:
+        manager = VirtualenvManager(
+            topsrcdir, topobjdir,
+            os.path.join(topobjdir, '_virtualenv'), out,
+            os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
     if python:
         # If we're not in the virtualenv, we need the which module for
