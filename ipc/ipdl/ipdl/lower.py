@@ -5194,7 +5194,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [ StmtExpr(self.write(r.ipdltype, r.var(), replyvar))
                 for r in md.returns ]
             + self.setMessageFlags(md, replyvar, reply=1)
-            + [ self.logMessage(md, md.replyCast(replyvar), 'Sending reply ') ])
+            + [ self.logMessage(md, replyvar, 'Sending reply ') ])
 
 
     def setMessageFlags(self, md, var, reply):
@@ -5229,7 +5229,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '.', 'set_name'),
                 args=[ ExprLiteral.String(md.prettyMsgName(self.protocol.name
                                                            +'::')) ])),
-            self.logMessage(md, md.msgCast(msgexpr), 'Received ',
+            self.logMessage(md, msgexpr, 'Received ',
                             receiving=True),
             self.profilerLabel('Recv', md.decl.progname),
             Whitespace.NL
@@ -5267,7 +5267,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def deserializeReply(self, md, replyexpr, side, errfn, actor=None):
         stmts = [ Whitespace.NL,
-                   self.logMessage(md, md.replyCast(replyexpr),
+                   self.logMessage(md, replyexpr,
                                    'Received reply ', actor, receiving=True) ]
         if 0 == len(md.returns):
             return stmts
