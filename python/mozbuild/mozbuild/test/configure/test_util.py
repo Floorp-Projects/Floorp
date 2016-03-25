@@ -16,6 +16,7 @@ from mozunit import main
 
 from mozbuild.configure.util import (
     ConfigureOutputHandler,
+    LineIO,
     Version,
 )
 
@@ -174,6 +175,50 @@ class TestConfigureOutputHandler(unittest.TestCase):
         finally:
             os.close(fd2)
             os.remove(path)
+
+
+class TestLineIO(unittest.TestCase):
+    def test_lineio(self):
+        lines = []
+        l = LineIO(lambda l: lines.append(l))
+
+        l.write('a')
+        self.assertEqual(lines, [])
+
+        l.write('b')
+        self.assertEqual(lines, [])
+
+        l.write('\n')
+        self.assertEqual(lines, ['ab'])
+
+        l.write('cdef')
+        self.assertEqual(lines, ['ab'])
+
+        l.write('\n')
+        self.assertEqual(lines, ['ab', 'cdef'])
+
+        l.write('ghi\njklm')
+        self.assertEqual(lines, ['ab', 'cdef', 'ghi'])
+
+        l.write('nop\nqrst\nuv\n')
+        self.assertEqual(lines, ['ab', 'cdef', 'ghi', 'jklmnop', 'qrst', 'uv'])
+
+        l.write('wx\nyz')
+        self.assertEqual(lines, ['ab', 'cdef', 'ghi', 'jklmnop', 'qrst', 'uv',
+                                 'wx'])
+
+        l.close()
+        self.assertEqual(lines, ['ab', 'cdef', 'ghi', 'jklmnop', 'qrst', 'uv',
+                                 'wx', 'yz'])
+
+    def test_lineio_contextmanager(self):
+        lines = []
+        with LineIO(lambda l: lines.append(l)) as l:
+            l.write('a\nb\nc')
+
+            self.assertEqual(lines, ['a', 'b'])
+
+        self.assertEqual(lines, ['a', 'b', 'c'])
 
 
 class TestVersion(unittest.TestCase):
