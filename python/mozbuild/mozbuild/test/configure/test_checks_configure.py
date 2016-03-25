@@ -152,6 +152,24 @@ class TestChecksConfigure(unittest.TestCase):
                               'DEBUG: foo: Trying unknown\n'
                               'ERROR: Cannot find foo\n')
 
+    def test_check_prog_what(self):
+        config, out, status = self.get_result(
+            'check_prog("CC", ("known-a",), what="the target C compiler")')
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CC': '/usr/bin/known-a'})
+        self.assertEqual(out, 'checking for the target C compiler... /usr/bin/known-a\n')
+
+        config, out, status = self.get_result(
+            'check_prog("CC", ("unknown", "unknown-2", "unknown 3"),'
+            '           what="the target C compiler")')
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {})
+        self.assertEqual(out, 'checking for the target C compiler... not found\n'
+                              'DEBUG: cc: Trying unknown\n'
+                              'DEBUG: cc: Trying unknown-2\n'
+                              "DEBUG: cc: Trying 'unknown 3'\n"
+                              'ERROR: Cannot find the target C compiler\n')
+
     def test_check_prog_configure_error(self):
         with self.assertRaises(ConfigureError) as e:
             self.get_result('check_prog("FOO", "foo")')
