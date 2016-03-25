@@ -7077,18 +7077,20 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
 
 static void
 SetOutputFile(const char* const envVar,
-              FILE* defaultOut,
-              RCFile** outFile)
+              RCFile* defaultOut,
+              RCFile** outFileP)
 {
+    RCFile* outFile;
+
     const char* outPath = getenv(envVar);
     FILE* newfp;
-    if (outPath && *outPath && (newfp = fopen(outPath, "w"))) {
-        *outFile = js_new<RCFile>(newfp);
-        (*outFile)->acquire();
-    } else {
-        *outFile = js_new<RCFile>(defaultOut);
-        (*outFile)->acquire();
-    }
+    if (outPath && *outPath && (newfp = fopen(outPath, "w")))
+        outFile = js_new<RCFile>(newfp);
+    else
+        outFile = defaultOut;
+
+    outFile->acquire();
+    *outFileP = outFile;
 }
 
 /* Pretend we can always preserve wrappers for dummy DOM objects. */
@@ -7129,8 +7131,15 @@ main(int argc, char** argv, char** envp)
     setlocale(LC_ALL, "");
 #endif
 
-    SetOutputFile("JS_STDERR", stderr, &gErrFile);
-    SetOutputFile("JS_STDOUT", stdout, &gOutFile);
+    // Special-case stdout and stderr. We bump their refcounts to prevent them
+    // from getting closed and then having some printf fail somewhere.
+    RCFile rcStdout(stdout);
+    rcStdout.acquire();
+    RCFile rcStderr(stderr);
+    rcStderr.acquire();
+
+    SetOutputFile("JS_STDOUT", &rcStdout, &gOutFile);
+    SetOutputFile("JS_STDERR", &rcStderr, &gErrFile);
 
     OptionParser op("Usage: {progname} [options] [[script] scriptArgs*]");
 

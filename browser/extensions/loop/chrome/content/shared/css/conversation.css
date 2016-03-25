@@ -510,27 +510,10 @@ html, .fx-embedded, #main,
   width: 272px;
 }
 
-.media-wrapper > .text-chat-view > .text-chat-entries > .text-chat-scroller > .welcome-message {
-  font-size: 1.2rem;
-  margin: 0 0 15px;
-  color: #5e5f64;
-  line-height: 20px;
-}
-
-.media-wrapper.showing-local-streams > .text-chat-view,
-.media-wrapper.showing-media-wait > .text-chat-view {
+.media-wrapper.showing-local-streams > .text-chat-view {
   /* When we're displaying the local streams, then we need to make the text
      chat view a bit shorter to give room. */
   height: calc(100% - 204px);
-}
-
-.media-wrapper.showing-media-wait > .text-chat-view {
-  order: 2;
-}
-
-.media-wrapper.showing-media-wait > .local {
-  /* Hides the local stream video box while we're asking the user for permissions */
-  display: none;
 }
 
 .media-wrapper.showing-local-streams.receiving-screen-share {
@@ -539,45 +522,28 @@ html, .fx-embedded, #main,
 
 .media-wrapper.showing-local-streams.receiving-screen-share > .text-chat-view {
   /* When we're displaying the local streams, then we need to make the text
-     chat view a bit shorter to give room. 1 streams x 204px */
-  height: calc(100% - 204px);
+     chat view a bit shorter to give room. 2 streams x 204px each*/
+  height: calc(100% - 408px);
 }
 
 .media-wrapper.receiving-screen-share > .screen {
   order: 1;
 }
 
-.media-wrapper.receiving-screen-share > .text-chat-view,
-.media-wrapper.showing-local-streams > .text-chat-view  {
-  order: 4;
+.media-wrapper.receiving-screen-share > .text-chat-view {
+  order: 2;
 }
 
 .media-wrapper.receiving-screen-share > .remote {
   flex: 0 1 auto;
-  order: 2;
+  order: 3;
   /* to keep the 4:3 ratio set both height and width */
   height: 204px;
   width: 272px;
 }
 
 .media-wrapper.receiving-screen-share > .local {
-  order: 3;
-}
-
-.media-wrapper.receiving-screen-share.showing-remote-streams > .local {
-  position: absolute;
-  z-index: 2;
-  padding: 8px;
-  right: 0;
-  left: auto;
-  top: 124px;
-  /* to keep the 4:3 ratio 80x60px + 16px padding + 4px border */
-  width: calc(80px + 16px + 4px);
-  height: calc(60px + 16px + 4px);
-}
-
-.media-wrapper.receiving-screen-share.showing-remote-streams > .local > .remote-video-box {
-  border: solid 2px #fff;
+  order: 4;
 }
 
 @media screen and (max-width:640px) {
@@ -664,7 +630,7 @@ html, .fx-embedded, #main,
     object-fit: contain;
   }
 
-  .media-wrapper.receiving-screen-share.showing-remote-streams > .local {
+  .media-wrapper.receiving-screen-share > .local {
     /* Screen shares have remote & local video side-by-side on narrow screens */
     order: 3;
     flex: 1 1 auto;
@@ -675,15 +641,13 @@ html, .fx-embedded, #main,
     max-width: 50%;
     /* This cancels out the absolute positioning when it's just remote video. */
     position: relative;
-    top: auto;
     bottom: auto;
     right: auto;
     margin: 0;
-    padding: 0;
   }
 
-  .media-wrapper.receiving-screen-share.showing-remote-streams > .local > .remote-video-box {
-    border: 0;
+  .media-wrapper.receiving-screen-share > .text-chat-view {
+    order: 4;
   }
 }
 
