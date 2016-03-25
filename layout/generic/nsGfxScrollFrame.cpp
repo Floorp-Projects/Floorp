@@ -1862,9 +1862,9 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mRestorePos(-1, -1)
   , mLastPos(-1, -1)
   , mScrollPosForLayerPixelAlignment(-1, -1)
-  , mLastUpdateImagesPos(-1, -1)
-  , mHadDisplayPortAtLastImageUpdate(false)
-  , mDisplayPortAtLastImageUpdate()
+  , mLastUpdateFramesPos(-1, -1)
+  , mHadDisplayPortAtLastFrameUpdate(false)
+  , mDisplayPortAtLastFrameUpdate()
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -1898,7 +1898,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
   }
 
-  EnsureImageVisPrefsCached();
+  EnsureFrameVisPrefsCached();
 
   if (IsAlwaysActive() &&
       gfxPrefs::LayersTilesEnabled() &&
@@ -2633,20 +2633,21 @@ ScrollFrameHelper::ScheduleSyntheticMouseMove()
 }
 
 void
-ScrollFrameHelper::NotifyImageVisibilityUpdate()
+ScrollFrameHelper::NotifyApproximateFrameVisibilityUpdate()
 {
-  mLastUpdateImagesPos = GetScrollPosition();
-  mHadDisplayPortAtLastImageUpdate =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &mDisplayPortAtLastImageUpdate);
+  mLastUpdateFramesPos = GetScrollPosition();
+  mHadDisplayPortAtLastFrameUpdate =
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(),
+                                  &mDisplayPortAtLastFrameUpdate);
 }
 
 bool
-ScrollFrameHelper::GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort)
+ScrollFrameHelper::GetDisplayPortAtLastApproximateFrameVisibilityUpdate(nsRect* aDisplayPort)
 {
-  if (mHadDisplayPortAtLastImageUpdate) {
-    *aDisplayPort = mDisplayPortAtLastImageUpdate;
+  if (mHadDisplayPortAtLastFrameUpdate) {
+    *aDisplayPort = mDisplayPortAtLastFrameUpdate;
   }
-  return mHadDisplayPortAtLastImageUpdate;
+  return mHadDisplayPortAtLastFrameUpdate;
 }
 
 void
@@ -2688,17 +2689,17 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
     return;
   }
 
-  bool needImageVisibilityUpdate = (mLastUpdateImagesPos == nsPoint(-1,-1));
+  bool needFrameVisibilityUpdate = mLastUpdateFramesPos == nsPoint(-1,-1);
 
-  nsPoint dist(std::abs(pt.x - mLastUpdateImagesPos.x),
-               std::abs(pt.y - mLastUpdateImagesPos.y));
+  nsPoint dist(std::abs(pt.x - mLastUpdateFramesPos.x),
+               std::abs(pt.y - mLastUpdateFramesPos.y));
   nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
   nscoord horzAllowance = std::max(scrollPortSize.width / std::max(sHorzScrollFraction, 1),
                                    nsPresContext::AppUnitsPerCSSPixel());
   nscoord vertAllowance = std::max(scrollPortSize.height / std::max(sVertScrollFraction, 1),
                                    nsPresContext::AppUnitsPerCSSPixel());
   if (dist.x >= horzAllowance || dist.y >= vertAllowance) {
-    needImageVisibilityUpdate = true;
+    needFrameVisibilityUpdate = true;
   }
 
   // notify the listeners.
@@ -2767,8 +2768,8 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   if (schedulePaint) {
     mOuter->SchedulePaint();
 
-    if (needImageVisibilityUpdate) {
-      presContext->PresShell()->ScheduleImageVisibilityUpdate();
+    if (needFrameVisibilityUpdate) {
+      presContext->PresShell()->ScheduleApproximateFrameVisibilityUpdateNow();
     }
   }
 
@@ -2979,27 +2980,27 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-/* static */ bool ScrollFrameHelper::sImageVisPrefsCached = false;
+/* static */ bool ScrollFrameHelper::sFrameVisPrefsCached = false;
 /* static */ uint32_t ScrollFrameHelper::sHorzExpandScrollPort = 0;
 /* static */ uint32_t ScrollFrameHelper::sVertExpandScrollPort = 1;
 /* static */ int32_t ScrollFrameHelper::sHorzScrollFraction = 2;
 /* static */ int32_t ScrollFrameHelper::sVertScrollFraction = 2;
 
 /* static */ void
-ScrollFrameHelper::EnsureImageVisPrefsCached()
+ScrollFrameHelper::EnsureFrameVisPrefsCached()
 {
-  if (!sImageVisPrefsCached) {
+  if (!sFrameVisPrefsCached) {
     Preferences::AddUintVarCache(&sHorzExpandScrollPort,
-      "layout.imagevisibility.numscrollportwidths", (uint32_t)0);
+      "layout.framevisibility.numscrollportwidths", (uint32_t)0);
     Preferences::AddUintVarCache(&sVertExpandScrollPort,
-      "layout.imagevisibility.numscrollportheights", 1);
+      "layout.framevisibility.numscrollportheights", 1);
 
     Preferences::AddIntVarCache(&sHorzScrollFraction,
-      "layout.imagevisibility.amountscrollbeforeupdatehorizontal", 2);
+      "layout.framevisibility.amountscrollbeforeupdatehorizontal", 2);
     Preferences::AddIntVarCache(&sVertScrollFraction,
-      "layout.imagevisibility.amountscrollbeforeupdatevertical", 2);
+      "layout.framevisibility.amountscrollbeforeupdatevertical", 2);
 
-    sImageVisPrefsCached = true;
+    sFrameVisPrefsCached = true;
   }
 }
 
@@ -3103,8 +3104,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists)
 {
-  if (aBuilder->IsForImageVisibility()) {
-    NotifyImageVisibilityUpdate();
+  if (aBuilder->IsForFrameVisibility()) {
+    NotifyApproximateFrameVisibilityUpdate();
   }
 
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -3148,8 +3149,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
     nsLayoutUtils::HasDisplayPort(mOuter->GetContent());
 
-  if (aBuilder->IsForImageVisibility()) {
-    // We expand the dirty rect to catch images just outside of the scroll port.
+  if (aBuilder->IsForFrameVisibility()) {
+    // We expand the dirty rect to catch frames just outside of the scroll port.
     // We use the dirty rect instead of the whole scroll port to prevent
     // too much expansion in the presence of very large (bigger than the
     // viewport) scroll ports.

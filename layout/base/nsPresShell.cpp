@@ -1170,9 +1170,9 @@ PresShell::Destroy()
 
   mSynthMouseMoveEvent.Revoke();
 
-  mUpdateImageVisibilityEvent.Revoke();
+  mUpdateApproximateFrameVisibilityEvent.Revoke();
 
-  ClearVisibleImagesList(nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
+  ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
 
   if (mCaret) {
     mCaret->Terminate();
@@ -3776,7 +3776,7 @@ PresShell::UnsuppressAndInvalidate()
 
   if (!mHaveShutDown) {
     SynthesizeMouseMove(false);
-    ScheduleImageVisibilityUpdate();
+    ScheduleApproximateFrameVisibilityUpdateNow();
   }
 }
 
@@ -5583,87 +5583,73 @@ AddFrameToVisibleRegions(nsIFrame* aFrame,
 }
 
 /* static */ void
-PresShell::MarkImagesInListVisible(const nsDisplayList& aList,
-                                   Maybe<VisibleRegions>& aVisibleRegions)
+PresShell::MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
+                                                Maybe<VisibleRegions>& aVisibleRegions)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayList* sublist = item->GetChildren();
     if (sublist) {
-      MarkImagesInListVisible(*sublist, aVisibleRegions);
+      MarkFramesInListApproximatelyVisible(*sublist, aVisibleRegions);
       continue;
     }
-    nsIFrame* f = item->Frame();
-    // We could check the type of the display item, only a handful can hold an
-    // image loading content.
-    // dont bother nscomptr here, it is wasteful
-    nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(f->GetContent()));
-    if (content) {
-      // use the presshell containing the image
-      PresShell* presShell = static_cast<PresShell*>(f->PresContext()->PresShell());
-      uint32_t count = presShell->mVisibleImages.Count();
-      presShell->mVisibleImages.PutEntry(content);
-      if (presShell->mVisibleImages.Count() > count) {
-        // content was added to mVisibleImages, so we need to increment its visible count
-        content->IncrementVisibleCount();
-      }
 
-      AddFrameToVisibleRegions(f, presShell->mViewManager, aVisibleRegions);
+    nsIFrame* frame = item->Frame();
+    MOZ_ASSERT(frame);
+
+    if (!frame->TrackingVisibility()) {
+      continue;
     }
+
+    // Use the presshell containing the frame.
+    auto* presShell = static_cast<PresShell*>(frame->PresContext()->PresShell());
+    uint32_t count = presShell->mApproximatelyVisibleFrames.Count();
+    MOZ_ASSERT(!presShell->AssumeAllFramesVisible());
+    presShell->mApproximatelyVisibleFrames.PutEntry(frame);
+    if (presShell->mApproximatelyVisibleFrames.Count() > count) {
+      // The frame was added to mApproximatelyVisibleFrames, so increment its visible count.
+      frame->IncApproximateVisibleCount();
+    }
+
+    AddFrameToVisibleRegions(frame, presShell->mViewManager, aVisibleRegions);
   }
 }
 
 void
-PresShell::ReportAnyBadState()
+PresShell::ReportBadStateDuringVisibilityUpdate()
 {
   if (!NS_IsMainThread()) {
-    gfxCriticalNote << "Got null image in image visibility: off-main-thread";
+    gfxCriticalNote << "Got null frame in frame visibility: off-main-thread";
   }
   if (mIsZombie) {
-    gfxCriticalNote << "Got null image in image visibility: mIsZombie";
+    gfxCriticalNote << "Got null frame in frame visibility: mIsZombie";
   }
   if (mIsDestroying) {
-    gfxCriticalNote << "Got null image in image visibility: mIsDestroying";
+    gfxCriticalNote << "Got null frame in frame visibility: mIsDestroying";
   }
   if (mIsReflowing) {
-    gfxCriticalNote << "Got null image in image visibility: mIsReflowing";
+    gfxCriticalNote << "Got null frame in frame visibility: mIsReflowing";
   }
   if (mPaintingIsFrozen) {
-    gfxCriticalNote << "Got null image in image visibility: mPaintingIsFrozen";
+    gfxCriticalNote << "Got null frame in frame visibility: mPaintingIsFrozen";
   }
   if (mForwardingContainer) {
-    gfxCriticalNote << "Got null image in image visibility: mForwardingContainer";
+    gfxCriticalNote << "Got null frame in frame visibility: mForwardingContainer";
   }
   if (mIsNeverPainting) {
-    gfxCriticalNote << "Got null image in image visibility: mIsNeverPainting";
+    gfxCriticalNote << "Got null frame in frame visibility: mIsNeverPainting";
   }
   if (mIsDocumentGone) {
-    gfxCriticalNote << "Got null image in image visibility: mIsDocumentGone";
+    gfxCriticalNote << "Got null frame in frame visibility: mIsDocumentGone";
   }
   if (!nsContentUtils::IsSafeToRunScript()) {
-    gfxCriticalNote << "Got null image in image visibility: not safe to run script";
+    gfxCriticalNote << "Got null frame in frame visibility: not safe to run script";
   }
 }
 
 void
-PresShell::SetInImageVisibility(bool aState)
+PresShell::SetInFrameVisibilityUpdate(bool aState)
 {
-  mInImageVisibility = aState;
-}
-
-static void
-DecrementVisibleCount(nsTHashtable<nsRefPtrHashKey<nsIImageLoadingContent>>& aImages,
-                      uint32_t aNonvisibleAction, PresShell* aPresShell)
-{
-  for (auto iter = aImages.Iter(); !iter.Done(); iter.Next()) {
-    if (MOZ_UNLIKELY(!iter.Get()->GetKey())) {
-      // We are about to crash, annotate crash report with some info that might
-      // help debug the crash (bug 1251150)
-      aPresShell->ReportAnyBadState();
-    }
-    aPresShell->SetInImageVisibility(true);
-    iter.Get()->GetKey()->DecrementVisibleCount(aNonvisibleAction);
-    aPresShell->SetInImageVisibility(false);
-  }
+  mInFrameVisibilityUpdate = aState;
 }
 
 static void
@@ -5716,15 +5702,43 @@ NotifyCompositorOfVisibleRegionsChange(PresShell* aPresShell,
   }
 }
 
-void
-PresShell::RebuildImageVisibilityDisplayList(const nsDisplayList& aList)
+/* static */ void
+PresShell::DecApproximateVisibleCount(VisibleFrames& aFrames,
+                                      Maybe<OnNonvisible> aNonvisibleAction
+                                        /* = Nothing() */)
 {
-  MOZ_ASSERT(!mImageVisibilityVisited, "already visited?");
-  mImageVisibilityVisited = true;
-  // Remove the entries of the mVisibleImages hashtable and put them in
-  // oldVisibleImages.
-  nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > oldVisibleImages;
-  mVisibleImages.SwapElements(oldVisibleImages);
+  for (auto iter = aFrames.Iter(); !iter.Done(); iter.Next()) {
+    nsIFrame* frame = iter.Get()->GetKey();
+
+    if (MOZ_UNLIKELY(!frame)) {
+      // We are about to crash, annotate crash report with some info that might
+      // help debug the crash (bug 1251150)
+      ReportBadStateDuringVisibilityUpdate();
+    }
+
+    SetInFrameVisibilityUpdate(true);
+
+    // Decrement the frame's visible count if we're still tracking its
+    // visibility. (We may not be, if the frame disabled visibility tracking
+    // after we added it to the visible frames list.)
+    if (frame->TrackingVisibility()) {
+      frame->DecApproximateVisibleCount(aNonvisibleAction);
+    }
+
+    SetInFrameVisibilityUpdate(false);
+  }
+}
+
+void
+PresShell::RebuildApproximateFrameVisibilityDisplayList(const nsDisplayList& aList)
+{
+  MOZ_ASSERT(!mApproximateFrameVisibilityVisited, "already visited?");
+  mApproximateFrameVisibilityVisited = true;
+
+  // Remove the entries of the mApproximatelyVisibleFrames hashtable and put
+  // them in oldApproxVisibleFrames.
+  VisibleFrames oldApproximatelyVisibleFrames;
+  mApproximatelyVisibleFrames.SwapElements(oldApproximatelyVisibleFrames);
 
   // If we're visualizing visible regions, create a VisibleRegions object to
   // store information about them. The functions we call will populate this
@@ -5735,58 +5749,58 @@ PresShell::RebuildImageVisibilityDisplayList(const nsDisplayList& aList)
     visibleRegions.emplace();
   }
 
-  MarkImagesInListVisible(aList, visibleRegions);
+  MarkFramesInListApproximatelyVisible(aList, visibleRegions);
 
-  DecrementVisibleCount(oldVisibleImages,
-                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION, this);
+  DecApproximateVisibleCount(oldApproximatelyVisibleFrames);
 
   NotifyCompositorOfVisibleRegionsChange(this, visibleRegions);
 }
 
 /* static */ void
-PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
+PresShell::ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear)
 {
   nsViewManager* vm = aView->GetViewManager();
   if (aClear) {
     PresShell* presShell = static_cast<PresShell*>(vm->GetPresShell());
-    if (!presShell->mImageVisibilityVisited) {
-      presShell->ClearVisibleImagesList(
-        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
+    if (!presShell->mApproximateFrameVisibilityVisited) {
+      presShell->ClearApproximatelyVisibleFramesList();
     }
-    presShell->mImageVisibilityVisited = false;
+    presShell->mApproximateFrameVisibilityVisited = false;
   }
   for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    ClearImageVisibilityVisited(v, v->GetViewManager() != vm);
+    ClearApproximateFrameVisibilityVisited(v, v->GetViewManager() != vm);
   }
 }
 
 void
-PresShell::ClearVisibleImagesList(uint32_t aNonvisibleAction)
+PresShell::ClearApproximatelyVisibleFramesList(Maybe<OnNonvisible> aNonvisibleAction
+                                                 /* = Nothing() */)
 {
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "ClearVisibleImagesList is re-entering on "
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "ClearApproximatelyVisibleFramesList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
-  DecrementVisibleCount(mVisibleImages, aNonvisibleAction, this);
-  mVisibleImages.Clear();
+  DecApproximateVisibleCount(mApproximatelyVisibleFrames, aNonvisibleAction);
+  mApproximatelyVisibleFrames.Clear();
 }
 
 void
-PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
-                                      const nsRect& aRect,
-                                      Maybe<VisibleRegions>& aVisibleRegions,
-                                      bool aRemoveOnly /* = false */)
+PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
+                                                   const nsRect& aRect,
+                                                   Maybe<VisibleRegions>& aVisibleRegions,
+                                                   bool aRemoveOnly /* = false */)
 {
   MOZ_ASSERT(aFrame->PresContext()->PresShell() == this, "wrong presshell");
 
-  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(aFrame->GetContent()));
-  if (content && aFrame->StyleVisibility()->IsVisible() &&
-      (!aRemoveOnly || content->GetVisibleCount() > 0)) {
-    uint32_t count = mVisibleImages.Count();
-    mVisibleImages.PutEntry(content);
-    if (mVisibleImages.Count() > count) {
-      // content was added to mVisibleImages, so we need to increment its visible count
-      content->IncrementVisibleCount();
+  if (aFrame->TrackingVisibility() &&
+      aFrame->StyleVisibility()->IsVisible() &&
+      (!aRemoveOnly || aFrame->GetVisibility() == Visibility::APPROXIMATELY_VISIBLE)) {
+    MOZ_ASSERT(!AssumeAllFramesVisible());
+    uint32_t count = mApproximatelyVisibleFrames.Count();
+    mApproximatelyVisibleFrames.PutEntry(aFrame);
+    if (mApproximatelyVisibleFrames.Count() > count) {
+      // The frame was added to mApproximatelyVisibleFrames, so increment its visible count.
+      aFrame->IncApproximateVisibleCount();
     }
 
     AddFrameToVisibleRegions(aFrame, mViewManager, aVisibleRegions);
@@ -5796,7 +5810,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
   if (subdocFrame) {
     nsIPresShell* presShell = subdocFrame->GetSubdocumentPresShellForPainting(
       nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION);
-    if (presShell) {
+    if (presShell && !presShell->AssumeAllFramesVisible()) {
       nsRect rect = aRect;
       nsIFrame* root = presShell->GetRootFrame();
       if (root) {
@@ -5808,7 +5822,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
         aFrame->PresContext()->AppUnitsPerDevPixel(),
         presShell->GetPresContext()->AppUnitsPerDevPixel());
 
-      presShell->RebuildImageVisibility(&rect);
+      presShell->RebuildApproximateFrameVisibility(&rect);
     }
     return;
   }
@@ -5817,7 +5831,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
 
   nsIScrollableFrame* scrollFrame = do_QueryFrame(aFrame);
   if (scrollFrame) {
-    scrollFrame->NotifyImageVisibilityUpdate();
+    scrollFrame->NotifyApproximateFrameVisibilityUpdate();
     nsRect displayPort;
     bool usingDisplayport =
       nsLayoutUtils::GetDisplayPortForVisibilityTesting(
@@ -5832,7 +5846,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
 
   bool preserves3DChildren = aFrame->Extend3DContext();
 
-  // we assume all images in popups are visible elsewhere, so we skip them here
+  // We assume all frames in popups are visible, so we skip them here.
   const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
                                     nsIFrame::kSelectPopupList);
   for (nsIFrame::ChildListIterator childLists(aFrame);
@@ -5858,32 +5872,32 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame,
           }
         }
       }
-      MarkImagesInSubtreeVisible(child, r, aVisibleRegions);
+      MarkFramesInSubtreeApproximatelyVisible(child, r, aVisibleRegions);
     }
   }
 }
 
 void
-PresShell::RebuildImageVisibility(nsRect* aRect,
-                                  bool aRemoveOnly /* = false */)
+PresShell::RebuildApproximateFrameVisibility(nsRect* aRect,
+                                             bool aRemoveOnly /* = false */)
 {
-  MOZ_ASSERT(!mImageVisibilityVisited, "already visited?");
-  mImageVisibilityVisited = true;
+  MOZ_ASSERT(!mApproximateFrameVisibilityVisited, "already visited?");
+  mApproximateFrameVisibilityVisited = true;
 
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
     return;
   }
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "RebuildImageVisibility is re-entering on "
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "RebuildApproximateFrameVisibility is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
 
-  // Remove the entries of the mVisibleImages hashtable and put them in
-  // oldVisibleImages.
-  nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > oldVisibleImages;
-  mVisibleImages.SwapElements(oldVisibleImages);
+  // Remove the entries of the mApproximatelyVisibleFrames hashtable and put
+  // them in oldApproximatelyVisibleFrames.
+  VisibleFrames oldApproximatelyVisibleFrames;
+  mApproximatelyVisibleFrames.SwapElements(oldApproximatelyVisibleFrames);
 
   // If we're visualizing visible regions, create a VisibleRegions object to
   // store information about them. The functions we call will populate this
@@ -5899,27 +5913,26 @@ PresShell::RebuildImageVisibility(nsRect* aRect,
     vis = *aRect;
   }
 
-  MarkImagesInSubtreeVisible(rootFrame, vis, visibleRegions, aRemoveOnly);
+  MarkFramesInSubtreeApproximatelyVisible(rootFrame, vis, visibleRegions, aRemoveOnly);
 
-  DecrementVisibleCount(oldVisibleImages,
-                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION, this);
+  DecApproximateVisibleCount(oldApproximatelyVisibleFrames);
 
   NotifyCompositorOfVisibleRegionsChange(this, visibleRegions);
 }
 
 void
-PresShell::UpdateImageVisibility()
+PresShell::UpdateApproximateFrameVisibility()
 {
-  DoUpdateImageVisibility(/* aRemoveOnly = */ false);
+  DoUpdateApproximateFrameVisibility(/* aRemoveOnly = */ false);
 }
 
 void
-PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
+PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
 {
   MOZ_ASSERT(!mPresContext || mPresContext->IsRootContentDocument(),
-    "updating image visibility on a non-root content document?");
+             "Updating approximate frame visibility on a non-root content document?");
 
-  mUpdateImageVisibilityEvent.Revoke();
+  mUpdateApproximateFrameVisibilityEvent.Revoke();
 
   if (mHaveShutDown || mIsDestroying) {
     return;
@@ -5928,21 +5941,20 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
   // call update on that frame
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
-    ClearVisibleImagesList(
-      nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
+    ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
     return;
   }
 
-  RebuildImageVisibility(/* aRect = */ nullptr, aRemoveOnly);
-  ClearImageVisibilityVisited(rootFrame->GetView(), true);
+  RebuildApproximateFrameVisibility(/* aRect = */ nullptr, aRemoveOnly);
+  ClearApproximateFrameVisibilityVisited(rootFrame->GetView(), true);
 
-#ifdef DEBUG_IMAGE_VISIBILITY_DISPLAY_LIST
-  // This can be used to debug the frame walker by comparing beforeImageList and
-  // mVisibleImages in RebuildImageVisibilityDisplayList to see if they produce
-  // the same results (mVisibleImages holds the images the display list thinks
-  // are visible, beforeImageList holds the images the frame walker thinks are
-  // visible).
-  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilder::IMAGE_VISIBILITY, false);
+#ifdef DEBUG_FRAME_VISIBILITY_DISPLAY_LIST
+  // This can be used to debug the frame walker by comparing beforeFrameList
+  // and mApproximatelyVisibleFrames in RebuildFrameVisibilityDisplayList to see if
+  // they produce the same results (mApproximatelyVisibleFrames holds the frames the
+  // display list thinks are visible, beforeFrameList holds the frames the
+  // frame walker thinks are visible).
+  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilder::FRAME_VISIBILITY, false);
   nsRect updateRect(nsPoint(0, 0), rootFrame->GetSize());
   nsIFrame* rootScroll = GetRootScrollFrame();
   if (rootScroll) {
@@ -5962,31 +5974,31 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
   rootFrame->BuildDisplayListForStackingContext(&builder, updateRect, &list);
   builder.LeavePresShell(rootFrame, updateRect);
 
-  RebuildImageVisibilityDisplayList(list);
+  RebuildApproximateFrameVisibilityDisplayList(list);
 
-  ClearImageVisibilityVisited(rootFrame->GetView(), true);
+  ClearApproximateFrameVisibilityVisited(rootFrame->GetView(), true);
 
   list.DeleteAll();
 #endif
 }
 
 bool
-PresShell::AssumeAllImagesVisible()
+PresShell::AssumeAllFramesVisible()
 {
-  static bool sImageVisibilityEnabled = true;
-  static bool sImageVisibilityPrefCached = false;
+  static bool sFrameVisibilityEnabled = true;
+  static bool sFrameVisibilityPrefCached = false;
 
-  if (!sImageVisibilityPrefCached) {
-    Preferences::AddBoolVarCache(&sImageVisibilityEnabled,
-      "layout.imagevisibility.enabled", true);
-    sImageVisibilityPrefCached = true;
+  if (!sFrameVisibilityPrefCached) {
+    Preferences::AddBoolVarCache(&sFrameVisibilityEnabled,
+      "layout.framevisibility.enabled", true);
+    sFrameVisibilityPrefCached = true;
   }
 
-  if (!sImageVisibilityEnabled || !mPresContext || !mDocument) {
+  if (!sFrameVisibilityEnabled || !mPresContext || !mDocument) {
     return true;
   }
 
-  // We assume all images are visible in print, print preview, chrome, xul, and
+  // We assume all frames are visible in print, print preview, chrome, xul, and
   // resource docs and don't keep track of them.
   if (mPresContext->Type() == nsPresContext::eContext_PrintPreview ||
       mPresContext->Type() == nsPresContext::eContext_Print ||
@@ -6000,10 +6012,31 @@ PresShell::AssumeAllImagesVisible()
 }
 
 void
-PresShell::ScheduleImageVisibilityUpdate()
+PresShell::ScheduleApproximateFrameVisibilityUpdateSoon()
 {
-  if (AssumeAllImagesVisible())
+  if (AssumeAllFramesVisible()) {
     return;
+  }
+
+  if (!mPresContext) {
+    return;
+  }
+
+  nsRefreshDriver* refreshDriver = mPresContext->RefreshDriver();
+  if (!refreshDriver) {
+    return;
+  }
+
+  // Ask the refresh driver to update frame visibility soon.
+  refreshDriver->ScheduleFrameVisibilityUpdate();
+}
+
+void
+PresShell::ScheduleApproximateFrameVisibilityUpdateNow()
+{
+  if (AssumeAllFramesVisible()) {
+    return;
+  }
 
   if (!mPresContext->IsRootContentDocument()) {
     nsPresContext* presContext = mPresContext->GetToplevelContentDocumentPresContext();
@@ -6011,79 +6044,89 @@ PresShell::ScheduleImageVisibilityUpdate()
       return;
     MOZ_ASSERT(presContext->IsRootContentDocument(),
       "Didn't get a root prescontext from GetToplevelContentDocumentPresContext?");
-    presContext->PresShell()->ScheduleImageVisibilityUpdate();
+    presContext->PresShell()->ScheduleApproximateFrameVisibilityUpdateNow();
     return;
   }
 
-  if (mHaveShutDown || mIsDestroying)
+  if (mHaveShutDown || mIsDestroying) {
     return;
+  }
 
-  if (mUpdateImageVisibilityEvent.IsPending())
+  if (mUpdateApproximateFrameVisibilityEvent.IsPending()) {
     return;
+  }
 
   RefPtr<nsRunnableMethod<PresShell> > ev =
-    NS_NewRunnableMethod(this, &PresShell::UpdateImageVisibility);
+    NS_NewRunnableMethod(this, &PresShell::UpdateApproximateFrameVisibility);
   if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
-    mUpdateImageVisibilityEvent = ev;
+    mUpdateApproximateFrameVisibilityEvent = ev;
   }
 }
 
 void
-PresShell::EnsureImageInVisibleList(nsIImageLoadingContent* aImage)
+PresShell::EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame)
 {
-  if (AssumeAllImagesVisible()) {
-    aImage->IncrementVisibleCount();
+  if (!aFrame->TrackingVisibility()) {
+    return;
+  }
+
+  if (AssumeAllFramesVisible()) {
+    aFrame->IncApproximateVisibleCount();
     return;
   }
 
 #ifdef DEBUG
-  // if it has a frame make sure its in this presshell
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aImage);
+  // Make sure it's in this pres shell.
+  nsCOMPtr<nsIContent> content = aFrame->GetContent();
   if (content) {
     PresShell* shell = static_cast<PresShell*>(content->OwnerDoc()->GetShell());
     MOZ_ASSERT(!shell || shell == this, "wrong shell");
   }
 #endif
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "EnsureImageInVisibleList is re-entering on "
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "EnsureFrameInApproximatelyVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
 
-  if (!mVisibleImages.Contains(aImage)) {
-    mVisibleImages.PutEntry(aImage);
-    aImage->IncrementVisibleCount();
+  if (!mApproximatelyVisibleFrames.Contains(aFrame)) {
+    MOZ_ASSERT(!AssumeAllFramesVisible());
+    mApproximatelyVisibleFrames.PutEntry(aFrame);
+    aFrame->IncApproximateVisibleCount();
   }
 }
 
 void
-PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
+PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame)
 {
 #ifdef DEBUG
-  // if it has a frame make sure its in this presshell
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aImage);
+  // Make sure it's in this pres shell.
+  nsCOMPtr<nsIContent> content = aFrame->GetContent();
   if (content) {
     PresShell* shell = static_cast<PresShell*>(content->OwnerDoc()->GetShell());
     MOZ_ASSERT(!shell || shell == this, "wrong shell");
   }
 #endif
 
-  if (AssumeAllImagesVisible()) {
-    MOZ_ASSERT(mVisibleImages.Count() == 0, "shouldn't have any images in the table");
+  if (AssumeAllFramesVisible()) {
+    MOZ_ASSERT(mApproximatelyVisibleFrames.Count() == 0,
+               "Shouldn't have any frames in the table");
     return;
   }
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "RemoveImageFromVisibleList is re-entering on "
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "RemoveFrameFromApproximatelyVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
 
-  uint32_t count = mVisibleImages.Count();
-  mVisibleImages.RemoveEntry(aImage);
-  if (mVisibleImages.Count() < count) {
-    // aImage was in the hashtable, so we need to decrement its visible count
-    aImage->DecrementVisibleCount(
-      nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
+  uint32_t count = mApproximatelyVisibleFrames.Count();
+  mApproximatelyVisibleFrames.RemoveEntry(aFrame);
+
+  if (aFrame->TrackingVisibility() &&
+      mApproximatelyVisibleFrames.Count() < count) {
+    // aFrame was in the hashtable, and we're still tracking its visibility,
+    // so we need to decrement its visible count.
+    aFrame->DecApproximateVisibleCount();
   }
 }
 
@@ -6162,7 +6205,7 @@ PresShell::Paint(nsView*        aViewToPaint,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
 
-  MOZ_ASSERT(!mImageVisibilityVisited, "should have been cleared");
+  MOZ_ASSERT(!mApproximateFrameVisibilityVisited, "Should have been cleared");
 
   if (!mIsActive || mIsZombie) {
     return;
@@ -8829,7 +8872,7 @@ FreezeSubDocument(nsIDocument *aDocument, void *aData)
 void
 PresShell::Freeze()
 {
-  mUpdateImageVisibilityEvent.Revoke();
+  mUpdateApproximateFrameVisibilityEvent.Revoke();
 
   MaybeReleaseCapturingContent();
 
@@ -9576,8 +9619,8 @@ PresShell::Observe(nsISupports* aSubject,
   }
 
   if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
-    if (!AssumeAllImagesVisible() && mPresContext->IsRootContentDocument()) {
-      DoUpdateImageVisibility(/* aRemoveOnly = */ true);
+    if (!AssumeAllFramesVisible() && mPresContext->IsRootContentDocument()) {
+      DoUpdateApproximateFrameVisibility(/* aRemoveOnly = */ true);
     }
     return NS_OK;
   }
@@ -10852,16 +10895,15 @@ PresShell::UpdateImageLockingState()
   nsresult rv = mDocument->SetImageLockingState(locked);
 
   if (locked) {
-    if (mInImageVisibility) {
+    if (mInFrameVisibilityUpdate) {
       gfxCriticalNoteOnce << "UpdateImageLockingState is re-entering on "
                           << (NS_IsMainThread() ? "" : "non-") << "main thread";
     }
 
-    // Request decodes for visible images; we want to start decoding as
+    // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
-    for (auto iter = mVisibleImages.Iter(); !iter.Done(); iter.Next()) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(iter.Get()->GetKey());
-      nsImageFrame* imageFrame = do_QueryFrame(content->GetPrimaryFrame());
+    for (auto iter = mApproximatelyVisibleFrames.Iter(); !iter.Done(); iter.Next()) {
+      nsImageFrame* imageFrame = do_QueryFrame(iter.Get()->GetKey());
       if (imageFrame) {
         imageFrame->MaybeDecodeForPredictedSize();
       }
@@ -10896,7 +10938,7 @@ PresShell::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
   if (mCaret) {
     *aPresShellSize += mCaret->SizeOfIncludingThis(aMallocSizeOf);
   }
-  *aPresShellSize += mVisibleImages.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  *aPresShellSize += mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(aMallocSizeOf);
   *aPresShellSize += mFramesToDirty.ShallowSizeOfExcludingThis(aMallocSizeOf);
   *aPresShellSize += aArenaObjectsSize->mOther;
 

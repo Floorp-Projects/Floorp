@@ -144,6 +144,8 @@ nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
   mReflowCallbackPosted(false),
   mForceSyncDecoding(false)
 {
+  EnableVisibilityTracking();
+
   // We assume our size is not constrained and we haven't gotten an
   // initial reflow yet, so don't touch those flags.
   mIntrinsicSize.width.SetCoordValue(0);
@@ -712,9 +714,7 @@ nsImageFrame::MaybeDecodeForPredictedSize()
     return;  // We won't draw anything, so no point in decoding.
   }
 
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
-  MOZ_ASSERT(imageLoader);
-  if (imageLoader->GetVisibleCount() == 0) {
+  if (GetVisibility() != Visibility::APPROXIMATELY_VISIBLE) {
     return;  // We're not visible, so don't decode.
   }
 
@@ -1041,7 +1041,16 @@ nsImageFrame::ReflowFinished()
 {
   mReflowCallbackPosted = false;
 
-  nsLayoutUtils::UpdateImageVisibilityForFrame(this);
+  // XXX(seth): We don't need this. The purpose of updating visibility
+  // synchronously is to ensure that animated images start animating
+  // immediately. In the short term, however,
+  // nsImageLoadingContent::OnUnlockedDraw() is enough to ensure that
+  // animations start as soon as the image is painted for the first time, and in
+  // the long term we want to update visibility information from the display
+  // list whenever we paint, so we don't actually need to do this. However, to
+  // avoid behavior changes during the transition from the old image visibility
+  // code, we'll leave it in for now.
+  UpdateVisibilitySynchronously();
 
   return false;
 }
@@ -2133,6 +2142,25 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
   }
 
   return NS_OK;
+}
+
+void
+nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
+                                 Maybe<OnNonvisible> aNonvisibleAction)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  if (!imageLoader) {
+    MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
+    return;
+  }
+
+  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+
+  if (aNewVisibility == Visibility::APPROXIMATELY_VISIBLE) {
+    MaybeDecodeForPredictedSize();
+  }
+
+  ImageFrameSuper::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 nsIAtom*
