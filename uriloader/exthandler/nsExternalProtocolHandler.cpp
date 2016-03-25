@@ -41,9 +41,7 @@ public:
     NS_DECL_NSICHANNEL
     NS_DECL_NSIREQUEST
 
-    nsExtProtocolChannel();
-
-    nsresult SetURI(nsIURI*);
+    nsExtProtocolChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo);
 
 private:
     virtual ~nsExtProtocolChannel();
@@ -71,8 +69,13 @@ NS_INTERFACE_MAP_BEGIN(nsExtProtocolChannel)
    NS_INTERFACE_MAP_ENTRY(nsIRequest)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-nsExtProtocolChannel::nsExtProtocolChannel() : mStatus(NS_OK), 
-                                               mWasOpened(false)
+nsExtProtocolChannel::nsExtProtocolChannel(nsIURI* aURI,
+                                           nsILoadInfo* aLoadInfo)
+  : mUrl(aURI)
+  , mOriginalURI(aURI)
+  , mStatus(NS_OK)
+  , mWasOpened(false)
+  , mLoadInfo(aLoadInfo)
 {
 }
 
@@ -130,12 +133,6 @@ NS_IMETHODIMP nsExtProtocolChannel::GetURI(nsIURI* *aURI)
   return NS_OK; 
 }
  
-nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
-{
-  mUrl = aURI;
-  return NS_OK; 
-}
-
 nsresult nsExtProtocolChannel::OpenURL()
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -440,17 +437,8 @@ nsExternalProtocolHandler::NewChannel2(nsIURI* aURI,
     return NS_ERROR_UNKNOWN_PROTOCOL;
   }
 
-  nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel();
-  if (!channel) return NS_ERROR_OUT_OF_MEMORY;
-
-  ((nsExtProtocolChannel*) channel.get())->SetURI(aURI);
-  channel->SetOriginalURI(aURI);
-
-  // set the loadInfo on the new channel
-  ((nsExtProtocolChannel*) channel.get())->SetLoadInfo(aLoadInfo);
-
-  *aRetval = channel;
-  NS_IF_ADDREF(*aRetval);
+  nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel(aURI, aLoadInfo);
+  channel.forget(aRetval);
   return NS_OK;
 }
 
