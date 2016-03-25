@@ -107,7 +107,7 @@ InspectorSearch.prototype = {
       this.searchBox.setAttribute("filled", true);
     }
     if (event.keyCode === event.DOM_VK_RETURN) {
-      this._onSearch();
+      this._onSearch(event.shiftKey);
     } if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_G && event.metaKey) {
       this._onSearch(event.shiftKey);
       event.preventDefault();
