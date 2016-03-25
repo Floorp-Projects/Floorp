@@ -42,7 +42,7 @@ struct DeviceAttachmentsD3D11;
 class CompositorD3D11 : public Compositor
 {
 public:
-  CompositorD3D11(nsIWidget* aWidget);
+  CompositorD3D11(CompositorBridgeParent* aParent, nsIWidget* aWidget);
   ~CompositorD3D11();
 
   virtual bool Initialize() override;
