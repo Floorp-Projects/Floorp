@@ -174,32 +174,43 @@ function SwapArrayElements(array, i, j) {
 }
 
 // A helper function for MergeSort.
-function Merge(source, start, mid, end, destination, comparefn) {
+function Merge(list, start, mid, end, lBuffer, rBuffer, comparefn) {
     var i, j, k;
 
-    i = start;
-    j = mid;
+    var sizeLeft = mid - start + 1;
+    var sizeRight =  end - mid;
+
+    // Copy our virtual lists into separate buffers.
+    for (i = 0; i < sizeLeft; i++)
+        lBuffer[i] = list[start + i];
+
+    for (j = 0; j < sizeRight; j++)
+        rBuffer[j] = list[mid + 1 + j];
+
+
+    i = 0;
+    j = 0;
     k = start;
-    while (i < mid && j < end) {
-        if (comparefn(source[j], source[i]) < 0) {
-            destination[k] = source[j];
-            j++;
-        } else {
-            destination[k] = source[i];
+    while (i < sizeLeft && j < sizeRight) {
+        if (comparefn(lBuffer[i], rBuffer[j]) <= 0) {
+            list[k] = lBuffer[i];
             i++;
+        } else {
+            list[k] = rBuffer[j];
+            j++;
         }
         k++;
     }
 
     // Empty out any remaining elements in the buffer.
-    while (i < mid) {
-        destination[k] = source[i];
+    while (i < sizeLeft) {
+        list[k] =lBuffer[i];
         i++;
         k++;
     }
 
-    while (j < end) {
-        destination[k] = source[j];
+    while (j < sizeRight) {
+        list[k] =rBuffer[j];
         j++;
         k++;
     }
@@ -237,27 +248,26 @@ function MergeSort(array, len, comparefn) {
         return array;
     }
 
-    var source = denseList;
     // We do all of our allocating up front
-    var destination = new List();
+    var lBuffer = new List();
+    var rBuffer = new List();
 
     var mid, end, endOne, endTwo;
     for (var windowSize = 1; windowSize < denseLen; windowSize = 2 * windowSize) {
-        for (var start = 0; start < denseLen; start += 2 * windowSize) {
+        for (var start = 0; start < denseLen - 1; start += 2 * windowSize) {
             assert(windowSize < denseLen, "The window size is larger than the array denseLength!");
             // The midpoint between the two subarrays.
-            mid = start + windowSize;
-            mid = mid < denseLen ? mid : denseLen;
+            mid = start + windowSize - 1;
             // To keep from going over the edge.
-            end = start + 2 * windowSize;
-            end = end < denseLen ? end : denseLen;
-            Merge(source, start, mid, end, destination, comparefn);
+            end = start + 2 * windowSize - 1;
+            end = end < denseLen - 1 ? end : denseLen - 1;
+            // Skip lopsided runs to avoid doing useless work
+            if (mid > end)
+                continue;
+            Merge(denseList, start, mid, end, lBuffer, rBuffer, comparefn);
         }
-        var tmp = source;
-        source = destination;
-        destination = tmp;
     }
-    MoveHoles(array, len, source, denseLen);
+    MoveHoles(array, len, denseList, denseLen);
     return array;
 }
 
