@@ -32,8 +32,7 @@ def check_build_environment(help, dist):
         return result
 
     if topsrcdir == topobjdir:
-        error(
-            '  ***\n'
+        die('  ***\n'
             '  * Building directly in the main source directory is not allowed.\n'
             '  *\n'
             '  * To build, you must run configure from a separate directory\n'
@@ -50,8 +49,7 @@ def check_build_environment(help, dist):
         if os.path.exists(os.path.join(topsrcdir, f))
     ]
     if conflict_files:
-        error(
-            '  ***\n'
+        die('  ***\n'
             '  *   Your source tree contains these files:\n'
             '  %s\n'
             '  *   This indicates that you previously built in the source tree.\n'
@@ -90,7 +88,7 @@ def mozconfig(current_project, mozconfig, old_configure, build_env, help):
     from mozbuild.mozconfig import MozconfigLoader
 
     if not old_configure:
-        error('The OLD_CONFIGURE environment variable must be set')
+        die('The OLD_CONFIGURE environment variable must be set')
 
     # Don't read the mozconfig for the js configure (yay backwards
     # compatibility)
@@ -204,8 +202,8 @@ def virtualenv_python(env_python, build_env, mozconfig):
             sys.path.append(os.path.join(topsrcdir, 'python', 'which'))
         found_python = find_program(python)
         if not found_python:
-            error('The PYTHON environment variable does not contain '
-                  'a valid path. Cannot find %s' % python)
+            die('The PYTHON environment variable does not contain '
+                'a valid path. Cannot find %s', python)
         python = found_python
     else:
         python = sys.executable
@@ -227,7 +225,7 @@ def virtualenv_python(env_python, build_env, mozconfig):
     # We are now in the virtualenv
     import distutils.sysconfig
     if not distutils.sysconfig.get_python_lib():
-        error('Could not determine python site packages directory')
+        die('Could not determine python site packages directory')
 
     return python
 
@@ -416,7 +414,7 @@ def split_triplet(triplet):
     elif os.startswith('openbsd'):
         canonical_os = canonical_kernel = 'OpenBSD'
     else:
-        error('Unknown OS: %s' % os)
+        die('Unknown OS: %s' % os)
 
     # The CPU granularity is probably not enough. Moving more things from
     # old-configure will tell us if we need more
@@ -632,7 +630,7 @@ option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
          check_build_environment, '--help')
 def include_project_configure(project, external_source_dir, build_env, help):
     if not project:
-        error('--enable-project is required.')
+        die('--enable-project is required.')
 
     base_dir = build_env.topsrcdir
     if external_source_dir:
@@ -640,7 +638,7 @@ def include_project_configure(project, external_source_dir, build_env, help):
 
     path = os.path.join(base_dir, project[0], 'moz.configure')
     if not os.path.exists(path):
-        error('Cannot find project %s' % project[0])
+        die('Cannot find project %s', project[0])
     return path
 
 @depends('--with-external-source-dir')
