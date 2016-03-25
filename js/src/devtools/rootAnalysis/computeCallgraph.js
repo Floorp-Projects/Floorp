@@ -65,21 +65,29 @@ function nearestAncestorMethods(csu, method)
     return functions;
 }
 
-function findVirtualFunctions(initialCSU, field, suppressed)
+// Return [ instantations, suppressed ], where instantiations is a Set of all
+// possible implementations of 'field' given static type 'initialCSU', plus
+// null if arbitrary other implementations are possible, and suppressed is true
+// if we the method is assumed to be non-GC'ing by annotation.
+function findVirtualFunctions(initialCSU, field)
 {
     var worklist = [initialCSU];
     var functions = new Set();
 
-    // Virtual call targets on subclasses of nsISupports may be incomplete,
-    // if the interface is scriptable. Just treat all indirect calls on
-    // nsISupports objects as potentially GC'ing, except AddRef/Release
-    // which should never enter the JS engine (even when calling dtors).
+    // Loop through all methods of initialCSU (by looking at all methods of ancestor csus).
+    //
+    // If field is nsISupports::AddRef or ::Release, return an empty list and a
+    // boolean that says we assert that it cannot GC.
+    //
+    // If this is a method that is annotated to be dangerous (eg, it could be
+    // overridden with an implementation that could GC), then use null as a
+    // signal value that it should be considered to GC, even though we'll also
+    // collect all of the instantiations for other purposes.
+
     while (worklist.length) {
         var csu = worklist.pop();
-        if (isSuppressedVirtualMethod(csu, field)) {
-            suppressed[0] = true;
-            return new Set();
-        }
+        if (isSuppressedVirtualMethod(csu, field))
+            return [ new Set(), true ];
         if (isOverridableField(initialCSU, csu, field)) {
             // We will still resolve the virtual function call, because it's
             // nice to have as complete a callgraph as possible for other uses.
@@ -111,7 +119,7 @@ function findVirtualFunctions(initialCSU, field, suppressed)
             worklist.push(...subclasses.get(csu));
     }
 
-    return functions;
+    return [ functions, false ];
 }
 
 var memoized = new Map();
@@ -148,42 +156,42 @@ function getCallees(edge)
             var field = callee.Exp[0].Field;
             var fieldName = field.Name[0];
             var csuName = field.FieldCSU.Type.Name;
-            var functions = null;
+            var functions;
             if ("FieldInstanceFunction" in field) {
-                var suppressed = [ false ];
-                functions = findVirtualFunctions(csuName, fieldName, suppressed);
-                if (suppressed[0]) {
+                let suppressed;
+                [ functions, suppressed ] = findVirtualFunctions(csuName, fieldName, suppressed);
+                if (suppressed) {
                     // Field call known to not GC; mark it as suppressed so
                     // direct invocations will be ignored
                     callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
                                   'suppressed': true});
                 }
-            }
-            if (functions) {
-                // Known set of virtual call targets. Treat them as direct
-                // calls to all possible resolved types, but also record edges
-                // from this field call to each final callee. When the analysis
-                // is checking whether an edge can GC and it sees an unrooted
-                // pointer held live across this field call, it will know
-                // whether any of the direct callees can GC or not.
-                var targets = [];
-                var fullyResolved = true;
-                for (var name of functions) {
-                    if (name === null) {
-                        // virtual call on an nsISupports object
-                        callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
-                        fullyResolved = false;
-                    } else {
-                        callees.push({'kind': "direct", 'name': name});
-                        targets.push({'kind': "direct", 'name': name});
-                    }
-                }
-                if (fullyResolved)
-                    callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
             } else {
-                // Unknown set of call targets. Non-virtual field call.
-                callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+                functions = new Set([null]); // field call
             }
+
+            // Known set of virtual call targets. Treat them as direct calls to
+            // all possible resolved types, but also record edges from this
+            // field call to each final callee. When the analysis is checking
+            // whether an edge can GC and it sees an unrooted pointer held live
+            // across this field call, it will know whether any of the direct
+            // callees can GC or not.
+            var targets = [];
+            var fullyResolved = true;
+            for (var name of functions) {
+                if (name === null) {
+                    // Unknown set of call targets, meaning either a function
+                    // pointer call ("field call") or a virtual method that can
+                    // be overridden in extensions.
+                    callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+                    fullyResolved = false;
+                } else {
+                    callees.push({'kind': "direct", 'name': name});
+                    targets.push({'kind': "direct", 'name': name});
+                }
+            }
+            if (fullyResolved)
+                callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
         } else if (callee.Exp[0].Kind == "Var") {
             // indirect call through a variable.
             callees.push({'kind': "indirect", 'variable': callee.Exp[0].Variable.Name[0]});
@@ -228,7 +236,6 @@ function getTags(functionName, body) {
     var tags = new Set();
     var annotations = getAnnotations(body);
     if (functionName in annotations) {
-        print("crawling through");
         for (var [ annName, annValue ] of annotations[functionName]) {
             if (annName == 'Tag')
                 tags.add(annValue);
