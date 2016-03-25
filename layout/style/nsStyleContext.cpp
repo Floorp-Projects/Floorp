@@ -115,21 +115,11 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
       r2 = r2->GetParent();
     NS_ASSERTION(r1 == r2, "must be in the same rule tree as parent");
 #endif
+  } else {
+    mRuleNode->PresContext()->PresShell()->StyleSet()->RootStyleContextAdded();
   }
 
-  mRuleNode->AddRef();
   mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
-
-  if (!mParent) {
-    // Add as a root before ApplyStyleFixups, since ApplyStyleFixups
-    // can trigger rule tree GC.
-    nsStyleSet* styleSet =
-      mRuleNode->PresContext()->PresShell()->StyleSet()->GetAsGecko();
-    if (styleSet) {
-      styleSet->AddStyleContextRoot(this);
-    }
-  }
-
   ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
@@ -143,11 +133,10 @@ nsStyleContext::~nsStyleContext()
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
 
   nsPresContext *presContext = mRuleNode->PresContext();
-  nsStyleSet* styleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
-
-  NS_ASSERTION(!styleSet ||
-               styleSet->GetRuleTree() == mRuleNode->RuleTree() ||
-               styleSet->IsInRuleTreeReconstruct(),
+  StyleSetHandle styleSet = presContext->PresShell()->StyleSet();
+  NS_ASSERTION(!styleSet->IsGecko() ||
+               styleSet->AsGecko()->GetRuleTree() == mRuleNode->RuleTree() ||
+               styleSet->AsGecko()->IsInRuleTreeReconstruct(),
                "destroying style context from old rule tree too late");
 
 #ifdef DEBUG
@@ -168,14 +157,10 @@ nsStyleContext::~nsStyleContext()
   }
 #endif
 
-  mRuleNode->Release();
-
-  if (styleSet) {
-    styleSet->NotifyStyleContextDestroyed(this);
-  }
-
   if (mParent) {
     mParent->RemoveChild(this);
+  } else {
+    styleSet->RootStyleContextRemoved();
   }
 
   // Free up our data structs.
@@ -1125,30 +1110,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   }
 
   return NS_SubtractHint(hint, nsChangeHint_NeutralChange);
-}
-
-void
-nsStyleContext::Mark()
-{
-  // Mark our rule node.
-  mRuleNode->Mark();
-
-  // Mark our children (i.e., tell them to mark their rule nodes, etc.).
-  if (mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->Mark();
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  
-  if (mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->Mark();
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
-  }
 }
 
 #ifdef DEBUG
