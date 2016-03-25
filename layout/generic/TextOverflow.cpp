@@ -721,10 +721,11 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
                                   nsIFrame*             aBlockFrame)
 {
   // Nothing to do for text-overflow:clip or if 'overflow-x/y:visible' or if
-  // we're just building items for event processing or image visibility.
+  // we're just building items for event processing or frame visibility.
   if (HasClippedOverflow(aBlockFrame) ||
       IsInlineAxisOverflowVisible(aBlockFrame) ||
-      aBuilder->IsForEventDelivery() || aBuilder->IsForImageVisibility()) {
+      aBuilder->IsForEventDelivery() ||
+      aBuilder->IsForFrameVisibility()) {
     return false;
   }
 
