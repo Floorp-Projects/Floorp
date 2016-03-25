@@ -232,7 +232,8 @@ class ConfigureSandbox(dict):
             raise KeyError('Cannot reassign builtins')
 
         if (not isinstance(value, DummyFunction) and
-                value not in self._templates):
+                value not in self._templates and
+                not issubclass(value, Exception)):
             raise KeyError('Cannot assign `%s` because it is neither a '
                            '@depends nor a @template' % key)
 
