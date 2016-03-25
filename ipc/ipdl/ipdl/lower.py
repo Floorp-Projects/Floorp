@@ -1929,63 +1929,7 @@ def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
                                        ExprVar(priorityEnum),
                                        compression,
                                        ExprLiteral.String(prettyName) ]) ])
-    cls.addstmts([ ctor, Whitespace.NL ])
-
-    # generate a logging function
-    # 'pfx' will be something like "[FooParent] sent"
-    pfxvar = ExprVar('pfx__')
-    otherpid = ExprVar('otherPid__')
-    receiving = ExprVar('receiving__')
-    logger = MethodDefn(MethodDecl(
-        'Log',
-        params=([ Decl(Type('std::string', const=1, ref=1), pfxvar.name),
-                  Decl(Type('base::ProcessId'), otherpid.name),
-                  Decl(Type('bool'), receiving.name) ]),
-        const=1))
-    # TODO/cjones: allow selecting what information is printed to
-    # the log
-    msgvar = ExprVar('logmsg__')
-    logger.addstmt(StmtDecl(Decl(Type('std::string'), msgvar.name)))
-
-    def appendToMsg(thing):
-        return StmtExpr(ExprCall(ExprSelect(msgvar, '.', 'append'),
-                                 args=[ thing ]))
-    logger.addstmts([
-        StmtExpr(ExprCall(
-            ExprVar('StringAppendF'),
-            args=[ ExprAddrOf(msgvar),
-                   ExprLiteral.String('[time:%" PRId64 "][%d%s%d]'),
-                   ExprCall(ExprVar('PR_Now')),
-                   ExprCall(ExprVar('base::GetCurrentProcId')),
-                   ExprConditional(receiving, ExprLiteral.String('<-'),
-                                   ExprLiteral.String('->')),
-                   otherpid ])),
-        appendToMsg(pfxvar),
-        appendToMsg(ExprLiteral.String(clsname +'(')),
-        Whitespace.NL
-    ])
-
-    # TODO turn this back on when string stuff is sorted
-
-    logger.addstmt(appendToMsg(ExprLiteral.String('[TODO])\\n')))
-
-    logger.addstmts([
-        CppDirective('ifdef', 'ANDROID'),
-        StmtExpr(ExprCall(
-            ExprVar('__android_log_write'),
-            args=[ ExprVar('ANDROID_LOG_INFO'),
-                   ExprLiteral.String('GeckoIPC'),
-                   ExprCall(ExprSelect(msgvar, '.', 'c_str')) ])),
-        CppDirective('endif')
-    ])
-
-    # and actually print the log message
-    logger.addstmt(StmtExpr(ExprCall(
-        ExprVar('fputs'),
-        args=[ ExprCall(ExprSelect(msgvar, '.', 'c_str')),
-               ExprVar('stderr') ])))
-
-    cls.addstmt(logger)
+    cls.addstmts([ ctor ])
 
     return cls
 
