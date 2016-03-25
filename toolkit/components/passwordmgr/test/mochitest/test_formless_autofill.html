@@ -3,21 +3,14 @@
 <head>
   <meta charset="utf-8">
   <title>Test autofilling of fields outside of a form</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="pwmgr_common.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <script type="application/javascript;version=1.8">
-SimpleTest.waitForExplicitFinish();
-
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-Cu.import("resource://gre/modules/Task.jsm");
-const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm");
-const { LoginManagerContent, FormLikeFactory } = LMCBackstagePass;
-
-let parentScriptURL = SimpleTest.getTestFileURL("pwmgr_common.js");
-let mm = SpecialPowers.loadChromeScript(parentScriptURL);
+let mm = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginFrame").addEventListener("load", (evt) => {
@@ -37,7 +30,14 @@ mm.addMessageListener("doneSetup", function doneSetup() {
   });
 });
 
-mm.addMessageListener("loadedRecipes", () => runTest());
+let loadedRecipesPromise = new Promise(resolve => {
+  mm.addMessageListener("loadedRecipes", resolve);
+});
+
+add_task(function* setup() {
+  yield loadedRecipesPromise;
+});
+
 
 const DEFAULT_ORIGIN = "http://mochi.test:8888";
 const TESTCASES = [
@@ -109,7 +109,7 @@ const TESTCASES = [
   },
 ];
 
-let runTest = Task.async(function*() {
+add_task(function* test() {
   let loginFrame = document.getElementById("loginFrame");
   let frameDoc = loginFrame.contentWindow.document;
 
@@ -132,8 +132,6 @@ let runTest = Task.async(function*() {
          "Check expected input value " + i + ": " + expectedValue);
     }
   }
-
-  SimpleTest.finish();
 });
 
 </script>
