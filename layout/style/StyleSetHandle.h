@@ -158,6 +158,9 @@ public:
         dom::Element* aPseudoElement,
         EventStates aStateMask);
 
+    inline void RootStyleContextAdded();
+    inline void RootStyleContextRemoved();
+
   private:
     // Stores a pointer to an nsStyleSet or a ServoStyleSet.  The least
     // significant bit is 0 for the former, 1 for the latter.  This is
