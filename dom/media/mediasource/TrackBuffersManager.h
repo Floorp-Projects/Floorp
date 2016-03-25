@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
+#include "AutoTaskQueue.h"
 #include "mozilla/dom/SourceBufferBinding.h"
 
 #include "MediaData.h"
@@ -369,7 +370,7 @@ private:
   {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
-  RefPtr<TaskQueue> mTaskQueue;
+  RefPtr<AutoTaskQueue> mTaskQueue;
 
   // SourceBuffer Queues and running context.
   SourceBufferTaskQueue mQueue;
