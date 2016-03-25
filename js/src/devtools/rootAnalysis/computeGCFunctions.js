@@ -21,16 +21,20 @@ loadCallgraph(callgraph_filename);
 
 printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
+
 for (var name in gcFunctions) {
-    print("");
-    print("GC Function: " + name + "$" + readableNames[name][0]);
-    do {
-        name = gcFunctions[name];
-        if (name in readableNames)
-            print("    " + readableNames[name][0]);
-        else
-            print("    " + name);
-    } while (name in gcFunctions);
+    for (let readable of readableNames[name]) {
+        print("");
+        print("GC Function: " + name + "$" + readable);
+        let current = name;
+        do {
+            current = gcFunctions[current];
+            if (current in readableNames)
+                print("    " + readableNames[current][0]);
+            else
+                print("    " + current);
+        } while (current in gcFunctions);
+    }
 }
 
 printErr("Writing " + gcFunctionsList_filename);
