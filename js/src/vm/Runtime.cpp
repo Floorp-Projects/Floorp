@@ -138,7 +138,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     profilerSampleBufferLapCount_(1),
     wasmActivationStack_(nullptr),
     asyncStackForNewActivations(this),
-    asyncCauseForNewActivations(nullptr),
+    asyncCauseForNewActivations(this),
     asyncCallIsExplicit(false),
     entryMonitor(nullptr),
     noExecuteDebuggerTop(nullptr),

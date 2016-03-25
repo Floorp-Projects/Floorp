@@ -4959,7 +4959,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
     }
 
     void Entry(JSContext* cx, JSFunction* function, JS::HandleValue asyncStack,
-               const char* asyncCause) override {
+               JS::HandleString asyncCause) override {
         MOZ_ASSERT(!enteredWithoutExit);
         enteredWithoutExit = true;
 
@@ -4974,7 +4974,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
     }
 
     void Entry(JSContext* cx, JSScript* script, JS::HandleValue asyncStack,
-               const char* asyncCause) override {
+               JS::HandleString asyncCause) override {
         MOZ_ASSERT(!enteredWithoutExit);
         enteredWithoutExit = true;
 
