@@ -128,9 +128,7 @@
      used in the share overlay menu to select an action. It is the verb
      "to bookmark", not the noun "a bookmark". -->
 <!ENTITY overlay_share_bookmark_btn_label "Bookmark">
-<!ENTITY overlay_share_reading_list_btn_label "Add to Reading List">
 <!ENTITY overlay_share_bookmark_btn_label_already "Already bookmarked">
-<!ENTITY overlay_share_reading_list_btn_label_already "Already in Reading List">
 <!ENTITY overlay_share_send_other "Send to other devices">
 
 <!-- Localization note (overlay_share_send_tab_btn_label) : Used on the
@@ -498,15 +496,6 @@ size. -->
 <!ENTITY site_settings_title3       "Site Settings">
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
-
-<!-- Localization note (reading_list_added3) : Used in a toast, please keep as short
-     as possible. -->
-<!ENTITY reading_list_added3 "Added to Reading List">
-<!ENTITY reading_list_removed "Page removed from your Reading List">
-<!-- Localization note (reading_list_remove) : Used to remove the currently open page from
-     the user's reading list. The opposite of overlay_share_reading_list_btn_label. -->
-<!ENTITY reading_list_remove "Remove from Reading List">
-<!ENTITY reading_list_duplicate "Page already in your Reading List">
 
 <!-- Localization note : These strings are used as alternate text for accessibility.
      They are not visible in the UI. -->

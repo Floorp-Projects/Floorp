@@ -126,9 +126,7 @@
   <string name="overlay_share_send_other">&overlay_share_send_other;</string>
   <string name="overlay_share_label">&overlay_share_label;</string>
   <string name="overlay_share_bookmark_btn_label">&overlay_share_bookmark_btn_label;</string>
-  <string name="overlay_share_reading_list_btn_label">&overlay_share_reading_list_btn_label;</string>
   <string name="overlay_share_bookmark_btn_label_already">&overlay_share_bookmark_btn_label_already;</string>
-  <string name="overlay_share_reading_list_btn_label_already">&overlay_share_reading_list_btn_label_already;</string>
   <string name="overlay_share_send_tab_btn_label">&overlay_share_send_tab_btn_label;</string>
   <string name="overlay_share_no_url">&overlay_share_no_url;</string>
   <string name="overlay_share_select_device">&overlay_share_select_device;</string>
@@ -363,11 +361,6 @@
   <string name="site_settings_title">&site_settings_title3;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
-
-  <string name="reading_list_added">&reading_list_added3;</string>
-  <string name="reading_list_removed">&reading_list_removed;</string>
-  <string name="reading_list_remove">&reading_list_remove;</string>
-  <string name="reading_list_duplicate">&reading_list_duplicate;</string>
 
   <string name="reading_list_migration_title">&reading_list_migration_title;</string>
   <string name="reading_list_migration_subtext">&reading_list_migration_subtext;</string>
