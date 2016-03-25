@@ -528,7 +528,7 @@ class ConfigureSandbox(dict):
         glob = SandboxedGlobal(func.func_globals)
         glob.update(
             __builtins__=self.BUILTINS,
-            __file__=self._paths[-1],
+            __file__=self._paths[-1] if self._paths else '',
             os=self.OS,
             log=self.log_impl,
         )

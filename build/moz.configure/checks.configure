@@ -48,7 +48,10 @@ def checking(what, callback=None):
 # it can find. If PROG is already set from the environment or command line,
 # use that value instead.
 @template
+@advanced
 def check_prog(var, progs, allow_missing=False):
+    from mozbuild.shellutil import quote
+
     option(env=var, nargs=1, help='Path to the %s program' % var.lower())
 
     if not (isinstance(progs, tuple) or isinstance(progs, list)):
@@ -56,7 +59,7 @@ def check_prog(var, progs, allow_missing=False):
     progs = list(progs)
 
     @depends(var)
-    @checking('for %s' % var.lower(), lambda x: x or 'not found')
+    @checking('for %s' % var.lower(), lambda x: quote(x) if x else 'not found')
     def check(value):
         if value:
             progs[:] = value
@@ -66,10 +69,8 @@ def check_prog(var, progs, allow_missing=False):
                 return result
 
     @depends(check, var)
-    @advanced
     def postcheck(value, raw_value):
         if value is None and (not allow_missing or raw_value):
-            from mozbuild.shellutil import quote
             die('Cannot find %s (tried: %s)', var.lower(),
                 ', '.join(quote(p) for p in progs))
 
