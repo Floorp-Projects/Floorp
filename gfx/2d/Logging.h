@@ -132,6 +132,7 @@ enum class LogReason : int {
   CannotDraw3D, // 20
   IncompatibleBasicTexturedEffect,
   InvalidFont,
+  PAllocTextureBackendMismatch,
   // End
   MustBeLessThanThis = 101,
 };
