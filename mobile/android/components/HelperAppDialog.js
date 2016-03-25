@@ -8,7 +8,12 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const APK_MIME_TYPE = "application/vnd.android.package-archive";
+
 const OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE = "application/vnd.oma.dd+xml";
+const OMA_DRM_MESSAGE_MIME = "application/vnd.oma.drm.message";
+const OMA_DRM_CONTENT_MIME = "application/vnd.oma.drm.content";
+const OMA_DRM_RIGHTS_MIME = "application/vnd.oma.drm.rights+wbxml";
+
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
@@ -21,6 +26,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -101,9 +107,38 @@ HelperAppLauncherDialog.prototype = {
       return mimeType != OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE;
   },
 
+  /**
+   * Returns true if `launcher`represents a download that should not be handled by Firefox
+   * or a third-party app and instead be forwarded to Android's download manager.
+   */
+  _shouldForwardToAndroidDownloadManager: function(aLauncher) {
+    let forwardDownload = Services.prefs.getBoolPref('browser.download.forward_oma_android_download_manager');
+    if (!forwardDownload) {
+      return false;
+    }
+
+    let mimeType = aLauncher.MIMEInfo.MIMEType;
+    if (!mimeType) {
+      mimeType = ContentAreaUtils.getMIMETypeForURI(aLauncher.source) || "";
+    }
+
+    return [
+      OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE,
+      OMA_DRM_MESSAGE_MIME,
+      OMA_DRM_CONTENT_MIME,
+      OMA_DRM_RIGHTS_MIME
+    ].indexOf(mimeType) != -1;
+  },
+
   show: function hald_show(aLauncher, aContext, aReason) {
     if (!this._canDownload(aLauncher.source)) {
       this._refuseDownload(aLauncher);
+      return;
+    }
+
+    if (this._shouldForwardToAndroidDownloadManager(aLauncher)) {
+      this._downloadWithAndroidDownloadManager(aLauncher);
+      aLauncher.cancel(Cr.NS_BINDING_ABORTED);
       return;
     }
 
@@ -200,6 +235,20 @@ HelperAppLauncherDialog.prototype = {
     let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
     let failedText = bundle.GetStringFromName("download.blocked");
     win.toast.show(failedText, "long");
+  },
+
+  _downloadWithAndroidDownloadManager(aLauncher) {
+    let mimeType = aLauncher.MIMEInfo.MIMEType;
+    if (!mimeType) {
+      mimeType = ContentAreaUtils.getMIMETypeForURI(aLauncher.source) || "";
+    }
+
+    Messaging.sendRequest({
+      'type': 'Download:AndroidDownloadManager',
+      'uri': aLauncher.source.spec,
+      'mimeType': mimeType,
+      'filename': aLauncher.suggestedFileName
+    });
   },
 
   _getPrefName: function getPrefName(mimetype) {

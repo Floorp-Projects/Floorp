@@ -358,6 +358,18 @@
             android:name="org.mozilla.gecko.feeds.FeedService">
         </service>
 
+        <receiver
+            android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name="org.mozilla.gecko.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
+
         <service
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
           android:exported="false"/>

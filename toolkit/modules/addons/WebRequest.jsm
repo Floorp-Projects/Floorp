@@ -13,6 +13,8 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -23,36 +25,37 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
 
 function attachToChannel(channel, key, data) {
   if (channel instanceof Ci.nsIWritablePropertyBag2) {
-    let wrapper = {value: data};
-    wrapper.wrappedJSObject = wrapper;
+    let wrapper = {wrappedJSObject: data};
     channel.setPropertyAsInterface(key, wrapper);
   }
+  return data;
 }
 
 function extractFromChannel(channel, key) {
   if (channel instanceof Ci.nsIPropertyBag2 && channel.hasKey(key)) {
     let data = channel.get(key);
-    if (data && data.wrappedJSObject) {
-      data = data.wrappedJSObject;
-    }
-    return "value" in data ? data.value : data;
+    return data && data.wrappedJSObject;
   }
   return null;
 }
 
+function getData(channel) {
+  const key = "mozilla.webRequest.data";
+  return extractFromChannel(channel, key) || attachToChannel(channel, key, {});
+}
+
 var RequestId = {
   count: 1,
-  KEY: "mozilla.webRequest.requestId",
   create(channel = null) {
     let id = (this.count++).toString();
     if (channel) {
-      attachToChannel(channel, this.KEY, id);
+      getData(channel).requestId = id;
     }
     return id;
   },
 
   get(channel) {
-    return channel && extractFromChannel(channel, this.KEY) || this.create(channel);
+    return channel && getData(channel).requestId || this.create(channel);
   },
 };
 
@@ -69,7 +72,7 @@ function parseFilter(filter) {
   return {urls: filter.urls || null, types: filter.types || null};
 }
 
-function parseExtra(extra, allowed) {
+function parseExtra(extra, allowed = []) {
   if (extra) {
     for (let ex of extra) {
       if (allowed.indexOf(ex) == -1) {
@@ -87,7 +90,7 @@ function parseExtra(extra, allowed) {
   return result;
 }
 
-function mergeStatus(data, channel) {
+function mergeStatus(data, channel, event) {
   try {
     data.statusCode = channel.responseStatus;
     let statusText = channel.responseStatusText;
@@ -96,8 +99,11 @@ function mergeStatus(data, channel) {
     channel.QueryInterface(Ci.nsIHttpChannelInternal).getResponseVersion(maj, min);
     data.statusLine = `HTTP/${maj.value}.${min.value} ${data.statusCode} ${statusText}`;
   } catch (e) {
-    // NS_ERROR_NOT_AVAILABLE might be thrown.
-    Cu.reportError(e);
+    // NS_ERROR_NOT_AVAILABLE might be thrown if it's an internal redirect, happening before
+    // any actual HTTP traffic. Otherwise, let's report.
+    if (event !== "onRedirect" || e.result !== Cr.NS_ERROR_NOT_AVAILABLE) {
+      Cu.reportError(`webRequest Error: ${e} trying to merge status in ${event}@${channel.name}`);
+    }
   }
 }
 
@@ -127,6 +133,7 @@ var ContentPolicyManager = {
         continue;
       }
       let response = null;
+      let listenerKind = "onStop";
       let data = {
         url: msg.data.url,
         windowId: msg.data.windowId,
@@ -137,15 +144,18 @@ var ContentPolicyManager = {
       };
       try {
         response = callback(data);
-        if (response && response.cancel) {
-          return {cancel: true};
+        if (response) {
+          if (response.cancel) {
+            listenerKind = "onError";
+            data.error = "NS_ERROR_ABORT";
+            return {cancel: true};
+          }
+          // FIXME: Need to handle redirection here (for non-HTTP URIs only)
         }
-
-        // FIXME: Need to handle redirection here. (Bug 1163862)
       } catch (e) {
         Cu.reportError(e);
       } finally {
-        runLater(() => this.runChannelListener("onStop", data));
+        runLater(() => this.runChannelListener(listenerKind, data));
       }
     }
 
@@ -267,6 +277,8 @@ HttpObserverManager = {
   modifyInitialized: false,
   examineInitialized: false,
   redirectInitialized: false,
+  activityInitialized: false,
+  needTracing: false,
 
   listeners: {
     opening: new Map(),
@@ -275,7 +287,12 @@ HttpObserverManager = {
     headersReceived: new Map(),
     onRedirect: new Map(),
     onStart: new Map(),
+    onError: new Map(),
     onStop: new Map(),
+  },
+
+  get activityDistributor() {
+    return Cc["@mozilla.org/network/http-activity-distributor;1"].getService(Ci.nsIHttpActivityDistributor);
   },
 
   addOrRemove() {
@@ -287,10 +304,13 @@ HttpObserverManager = {
       this.modifyInitialized = false;
       Services.obs.removeObserver(this, "http-on-modify-request");
     }
+    this.needTracing = this.listeners.onStart.size ||
+                       this.listeners.onError.size ||
+                       this.listeners.onStop.size;
 
-    let needExamine = this.listeners.headersReceived.size ||
-                      this.listeners.onStart.size ||
-                      this.listeners.onStop.size;
+    let needExamine = this.needTracing ||
+                      this.listeners.headersReceived.size;
+
     if (needExamine && !this.examineInitialized) {
       this.examineInitialized = true;
       Services.obs.addObserver(this, "http-on-examine-response", false);
@@ -310,6 +330,15 @@ HttpObserverManager = {
     } else if (!needRedirect && this.redirectInitialized) {
       this.redirectInitialized = false;
       ChannelEventSink.unregister();
+    }
+
+    let needActivity = this.listeners.onError.size;
+    if (needActivity && !this.activityInitialized) {
+      this.activityInitialized = true;
+      this.activityDistributor.addObserver(this);
+    } else if (!needActivity && this.activityInitialized) {
+      this.activityInitialized = false;
+      this.activityDistributor.removeObserver(this);
     }
   },
 
@@ -339,7 +368,7 @@ HttpObserverManager = {
     }
   },
 
-  getHeaders(channel, method) {
+  getHeaders(channel, method, event) {
     let headers = [];
     let visitor = {
       visitHeader(name, value) {
@@ -350,7 +379,11 @@ HttpObserverManager = {
                                              Ci.nsISupports]),
     };
 
-    channel[method](visitor);
+    try {
+      channel[method](visitor);
+    } catch (e) {
+      Cu.reportError(`webRequest Error: ${e} trying to perform ${method} in ${event}@${channel.name}`);
+    }
     return headers;
   },
 
@@ -398,14 +431,74 @@ HttpObserverManager = {
     }
   },
 
+  // We map activity values with tentative error names, e.g. "STATUS_RESOLVING" => "NS_ERROR_NET_ON_RESOLVING".
+  get activityErrorsMap() {
+    let prefix = /^(?:ACTIVITY_SUBTYPE_|STATUS_)/;
+    let map = new Map();
+    for (let iface of [nsIHttpActivityObserver, nsISocketTransport]) {
+      for (let c of Object.keys(iface).filter(name => prefix.test(name))) {
+        map.set(iface[c], c.replace(prefix, "NS_ERROR_NET_ON_"));
+      }
+    }
+    delete this.activityErrorsMap;
+    this.activityErrorsMap = map;
+    return this.activityErrorsMap;
+  },
+  GOOD_LAST_ACTIVITY: nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_HEADER,
+  observeActivity(channel, activityType, activitySubtype /* , aTimestamp, aExtraSizeData, aExtraStringData */) {
+    let channelData = getData(channel);
+    let lastActivity = channelData.lastActivity || 0;
+    if (activitySubtype === nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE &&
+        lastActivity && lastActivity !== this.GOOD_LAST_ACTIVITY) {
+      let loadContext = this.getLoadContext(channel);
+      if (!this.errorCheck(channel, loadContext, channelData)) {
+        this.runChannelListener(channel, loadContext, "onError",
+                                {error: this.activityErrorsMap.get(lastActivity) ||
+                                        `NS_ERROR_NET_UNKNOWN_${lastActivity}`});
+      }
+    } else if (lastActivity !== this.GOOD_LAST_ACTIVITY &&
+               lastActivity !== nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE) {
+      channelData.lastActivity = activitySubtype;
+    }
+  },
+
   shouldRunListener(policyType, uri, filter) {
     return WebRequestCommon.typeMatches(policyType, filter.types) &&
            WebRequestCommon.urlMatches(uri, filter.urls);
   },
 
+  get resultsMap() {
+    delete this.resultsMap;
+    this.resultsMap = new Map(Object.keys(Cr).map(name => [Cr[name], name]));
+    return this.resultsMap;
+  },
+  maybeError(channel, extraData = null, channelData = null) {
+    if (!(extraData && extraData.error)) {
+      if (!Components.isSuccessCode(channel.status)) {
+        extraData = {error: this.resultsMap.get(channel.status)};
+      }
+    }
+    return extraData;
+  },
+  errorCheck(channel, loadContext, channelData = null) {
+    let errorData = this.maybeError(channel, null, channelData);
+    if (errorData) {
+      this.runChannelListener(channel, loadContext, "onError", errorData);
+    }
+    return errorData;
+  },
+
   runChannelListener(channel, loadContext, kind, extraData = null) {
-    if (channel.status === Cr.NS_ERROR_ABORT) {
-      return false;
+    if (this.activityInitialized) {
+      let channelData = getData(channel);
+      if (kind === "onError") {
+        if (channelData.errorNotified) {
+          return false;
+        }
+        channelData.errorNotified = true;
+      } else if (this.errorCheck(channel, loadContext, channelData)) {
+        return false;
+      }
     }
     let listeners = this.listeners[kind];
     let browser = loadContext ? loadContext.topFrameElement : null;
@@ -449,15 +542,15 @@ HttpObserverManager = {
         Object.assign(data, extraData);
       }
       if (opts.requestHeaders) {
-        data.requestHeaders = this.getHeaders(channel, "visitRequestHeaders");
+        data.requestHeaders = this.getHeaders(channel, "visitRequestHeaders", kind);
         requestHeaderNames = data.requestHeaders.map(h => h.name);
       }
       if (opts.responseHeaders) {
-        data.responseHeaders = this.getHeaders(channel, "visitResponseHeaders");
+        data.responseHeaders = this.getHeaders(channel, "visitResponseHeaders", kind);
         responseHeaderNames = data.responseHeaders.map(h => h.name);
       }
       if (includeStatus) {
-        mergeStatus(data, channel);
+        mergeStatus(data, channel, kind);
       }
 
       let result = null;
@@ -472,6 +565,7 @@ HttpObserverManager = {
       }
       if (result.cancel) {
         channel.cancel(Cr.NS_ERROR_ABORT);
+        this.errorCheck(channel, loadContext);
         return false;
       }
       if (result.redirectUrl) {
@@ -507,7 +601,7 @@ HttpObserverManager = {
   examine(channel, topic, data) {
     let loadContext = this.getLoadContext(channel);
 
-    if (this.listeners.onStart.size || this.listeners.onStop.size) {
+    if (this.needTracing) {
       if (channel instanceof Ci.nsITraceableChannel) {
         let responseStatus = channel.responseStatus;
         // skip redirections, https://bugzilla.mozilla.org/show_bug.cgi?id=728901#c8
@@ -574,6 +668,7 @@ var onHeadersReceived = new HttpEvent("headersReceived", ["blocking", "responseH
 var onBeforeRedirect = new HttpEvent("onRedirect", ["responseHeaders"]);
 var onResponseStarted = new HttpEvent("onStart", ["responseHeaders"]);
 var onCompleted = new HttpEvent("onStop", ["responseHeaders"]);
+var onErrorOccurred = new HttpEvent("onError");
 
 var WebRequest = {
   // http-on-modify observer for HTTP(S), content policy for the other protocols (notably, data:)
@@ -588,7 +683,7 @@ var WebRequest = {
   // http-on-examine-*observer.
   onHeadersReceived: onHeadersReceived,
 
-  // nsIChannelEventSink
+  // nsIChannelEventSink.
   onBeforeRedirect: onBeforeRedirect,
 
   // OnStartRequest channel listener.
@@ -596,6 +691,9 @@ var WebRequest = {
 
   // OnStopRequest channel listener.
   onCompleted: onCompleted,
+
+  // nsIHttpActivityObserver.
+  onErrorOccurred: onErrorOccurred,
 };
 
 Services.ppmm.loadProcessScript("resource://gre/modules/WebRequestContent.js", true);
