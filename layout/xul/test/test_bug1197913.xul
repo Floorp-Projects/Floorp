@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1197913
+-->
+<window title="Mozilla Bug 1197913"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="SimpleTest.waitForFocus(nextTest, window)">
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1197913"
+     target="_blank">Mozilla Bug 1197913</a>
+  </body>
+
+  <menulist>
+    <menupopup>
+      <menuitem label="Car" />
+      <menuitem label="Taxi" id="target" />
+      <menuitem label="Bus" />
+    </menupopup>
+  </menulist>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  SimpleTest.waitForExplicitFinish();
+
+  let menulist = document.getElementsByTagName("menulist")[0];
+  let menuitem = document.getElementById("target");
+
+  function onDOMMenuItemActive(e) {
+    menuitem.removeEventListener("DOMMenuItemActive", onDOMMenuItemActive);
+
+    synthesizeMouse(menuitem, 0, 0, { type: "mousemove" });
+    synthesizeMouse(menuitem, -1, 0, { type: "mousemove" });
+
+    setTimeout(() => {
+      if (navigator.platform.toLowerCase().startsWith("win")) {
+        ok(menuitem.getAttribute("_moz-menuactive"));
+      } else {
+        ok(!menuitem.getAttribute("_moz-menuactive"));
+      }
+
+      SimpleTest.finish();
+    });
+  }
+
+  function onPopupShown(e) {
+    menulist.removeEventListener("popupshown", onPopupShown);
+    menuitem.addEventListener("DOMMenuItemActive", onDOMMenuItemActive);
+    synthesizeMouse(menuitem, 0, 0, { type: "mousemove" });
+    synthesizeMouse(menuitem, 1, 0, { type: "mousemove" });
+  }
+
+  function nextTest(e) {
+    menulist.addEventListener("popupshown", onPopupShown);
+    synthesizeMouseAtCenter(menulist, {});
+  }
+
+  ]]>
+  </script>
+</window>
