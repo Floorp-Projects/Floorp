@@ -426,33 +426,30 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsExternalProtocolHandler::NewChannel2(nsIURI* aURI,
                                        nsILoadInfo* aLoadInfo,
-                                       nsIChannel** _retval)
+                                       nsIChannel** aRetval)
 {
+  NS_ENSURE_TRUE(aRetval, NS_ERROR_UNKNOWN_PROTOCOL);
+
   // Only try to return a channel if we have a protocol handler for the url.
   // nsOSHelperAppService::LoadUriInternal relies on this to check trustedness
   // for some platforms at least.  (win uses ::ShellExecute and unix uses
   // gnome_url_show.)
-  bool haveExternalHandler = HaveExternalProtocolHandler(aURI);
-  if (haveExternalHandler)
-  {
-    nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel();
-    if (!channel) return NS_ERROR_OUT_OF_MEMORY;
-
-    ((nsExtProtocolChannel*) channel.get())->SetURI(aURI);
-    channel->SetOriginalURI(aURI);
-
-    // set the loadInfo on the new channel
-    ((nsExtProtocolChannel*) channel.get())->SetLoadInfo(aLoadInfo);
-
-    if (_retval)
-    {
-      *_retval = channel;
-      NS_IF_ADDREF(*_retval);
-      return NS_OK;
-    }
+  if (!HaveExternalProtocolHandler(aURI)) {
+    return NS_ERROR_UNKNOWN_PROTOCOL;
   }
 
-  return NS_ERROR_UNKNOWN_PROTOCOL;
+  nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel();
+  if (!channel) return NS_ERROR_OUT_OF_MEMORY;
+
+  ((nsExtProtocolChannel*) channel.get())->SetURI(aURI);
+  channel->SetOriginalURI(aURI);
+
+  // set the loadInfo on the new channel
+  ((nsExtProtocolChannel*) channel.get())->SetLoadInfo(aLoadInfo);
+
+  *aRetval = channel;
+  NS_IF_ADDREF(*aRetval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
