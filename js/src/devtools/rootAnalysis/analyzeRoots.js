@@ -753,9 +753,9 @@ var minStream = xdb.min_data_stream()|0;
 var maxStream = xdb.max_data_stream()|0;
 
 var N = (maxStream - minStream) + 1;
-var each = Math.floor(N/numBatches);
-var start = minStream + each * (batch - 1);
-var end = Math.min(minStream + each * batch - 1, maxStream);
+var start = Math.floor((batch - 1) / numBatches * N) + minStream;
+var start_next = Math.floor(batch / numBatches * N) + minStream;
+var end = start_next - 1;
 
 function process(name, json) {
     functionName = name;
