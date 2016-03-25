@@ -106,7 +106,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mNextSibling = this;
   mPrevSibling = this;
   if (mParent) {
-    mParent->AddRef();
     mParent->AddChild(this);
 #ifdef DEBUG
     nsRuleNode *r1 = mParent->RuleNode(), *r2 = aRuleNode;
@@ -177,7 +176,6 @@ nsStyleContext::~nsStyleContext()
 
   if (mParent) {
     mParent->RemoveChild(this);
-    mParent->Release();
   }
 
   // Free up our data structs.
@@ -342,25 +340,18 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   MOZ_ASSERT(!aNewParent->IsStyleIfVisited());
   MOZ_ASSERT(!mStyleIfVisited || mStyleIfVisited->mParent == mParent);
 
-  nsStyleContext* oldParent = mParent;
-
-  if (oldParent->HasChildThatUsesResetStyle()) {
+  if (mParent->HasChildThatUsesResetStyle()) {
     aNewParent->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
   }
 
-  aNewParent->AddRef();
   mParent->RemoveChild(this);
   mParent = aNewParent;
   mParent->AddChild(this);
-  oldParent->Release();
 
   if (mStyleIfVisited) {
-    oldParent = mStyleIfVisited->mParent;
-    aNewParent->AddRef();
     mStyleIfVisited->mParent->RemoveChild(mStyleIfVisited);
     mStyleIfVisited->mParent = aNewParent;
     mStyleIfVisited->mParent->AddChild(mStyleIfVisited);
-    oldParent->Release();
   }
 }
 
@@ -1600,7 +1591,7 @@ nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
 
   nsCString parent;
   if (aFirst) {
-    parent.AppendPrintf("parent=%p ", mParent);
+    parent.AppendPrintf("parent=%p ", mParent.get());
   }
 
   LOG_RESTYLE("%p(%d) %s%s%s%s",
