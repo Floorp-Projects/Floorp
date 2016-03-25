@@ -9,6 +9,9 @@
 </head>
 <body>
 Login Manager test: forms with 3 password fields (form filling)
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
 <p id="display"></p>
 
 <div id="content" style="display: none">
@@ -112,8 +115,6 @@ Login Manager test: forms with 3 password fields (form filling)
 
 /** Test for Login Manager: form fill, 3 password fields **/
 
-commonInit();
-
 // Test to make sure 3-password forms are filled properly.
 
 function startTest() {
@@ -169,10 +170,6 @@ function startTest() {
   // logins and changing passwords.
   SimpleTest.finish();
 }
-
-window.addEventListener("runTests", startTest);
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

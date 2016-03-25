@@ -11,8 +11,7 @@
 Login Manager test: simple form fill
 
 <script>
-commonInit();
-SimpleTest.waitForExplicitFinish();
+runChecksAfterCommonInit(startTest);
 
 /** Test for Login Manager: form fill, multiple forms. **/
 
@@ -22,8 +21,6 @@ function startTest() {
 
   SimpleTest.finish();
 }
-
-window.addEventListener("runTests", startTest);
 </script>
 
 <p id="display"></p>

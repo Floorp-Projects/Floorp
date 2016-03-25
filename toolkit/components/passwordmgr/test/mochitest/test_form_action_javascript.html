@@ -10,30 +10,25 @@
 <body>
 Login Manager test: form with JS submit action
 <script>
-SimpleTest.waitForExplicitFinish();
+runChecksAfterCommonInit(() => startTest());
 
-// Note: Call this first so it doesn't override our login.
-commonInit();
+runInParent(function setup() {
+  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+  Cu.import("resource://gre/modules/Services.jsm");
 
-var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
-                         .getService(SpecialPowers.Ci.nsILoginManager);
-var jslogin = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"]
-                           .createInstance(SpecialPowers.Ci.nsILoginInfo);
-jslogin.init("http://mochi.test:8888", "javascript:", null,
+  let jslogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+  jslogin.init("http://mochi.test:8888", "javascript:", null,
               "jsuser", "jspass123", "uname", "pword");
-pwmgr.addLogin(jslogin);
+  Services.logins.addLogin(jslogin);
+});
 
 /** Test for Login Manager: JS action URL **/
 
 function startTest() {
     checkForm(1, "jsuser", "jspass123");
 
-    pwmgr.removeLogin(jslogin);
     SimpleTest.finish();
 }
-
-// XXX
-window.addEventListener("runTests", startTest);
 </script>
 
 <p id="display"></p>

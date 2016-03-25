@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
   <script type="application/javascript">
   /** Test for Bug 355063 **/
 
-  function startTest() {
+  runChecksAfterCommonInit(function startTest() {
     info("startTest");
     // Password Manager's own listener should always have been added first, so
     // the test's listener should be called after the pwmgr's listener fills in
@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
       passField.addEventListener("input", checkForm);
     });
     addForm();
-  }
+  });
 
   function addForm() {
     info("addForm");
@@ -41,11 +41,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
 
     SimpleTest.finish();
   }
-
-  commonInit();
-
-  window.addEventListener("runTests", startTest);
-  SimpleTest.waitForExplicitFinish();
 </script>
 </head>
 <body>
