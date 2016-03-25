@@ -167,6 +167,7 @@
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom/copper" path="device/qcom/msm8974" revision="ec7bc1a26610922156d7d412b4d3de6b4adb93da"/>
   <project name="vendor_broadcom_wlan" path="vendor/broadcom/wlan" remote="b2g" revision="114b9491a8a919687da4e22fbd89fab511d6d8d7"/>
+  <project name="nginx" path="external/nginx" remote="b2g" revision="584bf310e21510e56af7e9dccd779eb7671118ef"/>
   <!-- Shinano specific things -->
   <project name="device-shinano" path="device/sony/leo" remote="b2g" revision="653f7e1f093b948e40262fcb3c665c2b4976df74"/>
   <!-- Aries specific things -->
