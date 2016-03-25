@@ -1,8 +1,6 @@
 "use strict";
 
 var tab;
-var notification;
-var notification2;
 var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 
 const ALERT_SERVICE = Cc["@mozilla.org/alerts-service;1"]
@@ -44,20 +42,16 @@ function test () {
 
 function onLoad() {
   tab.linkedBrowser.removeEventListener("load", onLoad, true);
-  let win = tab.linkedBrowser.contentWindow.wrappedJSObject;
-  notification = win.showNotification2();
-  notification.addEventListener("show", onAlertShowing);
+  openNotification(tab.linkedBrowser, "showNotification2").then(onAlertShowing);
 }
 
 function onAlertShowing() {
   info("Notification alert showing");
-  notification.removeEventListener("show", onAlertShowing);
 
   let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
   if (!alertWindow) {
     ok(true, "Notifications don't use XUL windows on all platforms.");
-    notification.close();
-    finish();
+    closeNotification(tab.linkedBrowser).then(finish);
     return;
   }
   let doNotDisturbMenuItem = alertWindow.document.getElementById("doNotDisturbMenuItem");
@@ -71,21 +65,16 @@ function onAlertClosing(event) {
   event.target.removeEventListener("beforeunload", onAlertClosing);
 
   ok(ALERT_SERVICE.manualDoNotDisturb, "Alert service should be disabled after clicking menuitem");
-  let win = tab.linkedBrowser.contentWindow.wrappedJSObject;
-  notification2 = win.showNotification2();
-  notification2.addEventListener("show", onAlert2Showing);
 
   // The notification should not appear, but there is
   // no way from the client-side to know that it was
   // blocked, except for waiting some time and realizing
   // that the "onshow" event never fired.
-  setTimeout(function() {
-    notification2.removeEventListener("show", onAlert2Showing);
-    finish();
-  }, 2000);
+  openNotification(tab.linkedBrowser, "showNotification2", 2000)
+    .then(onAlert2Showing, finish);
 }
 
 function onAlert2Showing() {
   ok(false, "the second alert should not have been shown");
-  notification2.close();
+  closeNotification(tab.linkedBrowser).then(finish);
 }
