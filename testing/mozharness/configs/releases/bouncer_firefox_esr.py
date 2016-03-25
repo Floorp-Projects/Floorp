@@ -4,6 +4,7 @@ config = {
     "products": {
         "installer": {
             "product-name": "Firefox-%(version)s",
+            "alias": "firefox-esr-latest",
             "ssl-only": True,
             "add-locales": True,
             "paths": {

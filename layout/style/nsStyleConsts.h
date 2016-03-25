@@ -464,6 +464,8 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_DISPLAY_RUBY_TEXT              36
 #define NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER    37
 #define NS_STYLE_DISPLAY_CONTENTS               38
+#define NS_STYLE_DISPLAY_WEBKIT_BOX             39
+#define NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX      40
 
 // See nsStyleDisplay
 // If these are re-ordered, nsComputedDOMStyle::DoGetContain() and

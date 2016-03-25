@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Test for how block-in-inline splits behave inside of -webkit-box.
+  </title>
+  <style>
+  .container {
+    display: -webkit-box;
+    -webkit-box-pack: justify;
+    justify-content: space-between; /* XXX remove when bug 1231682 is fixed */
+    width: 300px;
+    border: 1px solid black;
+    font: 10px sans-serif;
+  }
+  .container > * {
+    background: lightgray;
+  }
+  </style>
+</head>
+<body>
+<div class="container">
+  raw text
+  <span>start<div>BLOCK</div>end</span>
+  raw text
+</div>
+</body>
+</html>

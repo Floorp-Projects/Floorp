@@ -7,16 +7,14 @@
 # Temporarily disabled. See bug 1256495.
 #test_certificates = (
 #    'badca.pem',
-#    'cn-a.pinning2.example.com-badca.pem',
-#    'cn-a.pinning2.example.com-pinningroot.pem',
-#    'cn-b.pinning2.example.com-badca.pem',
-#    'cn-b.pinning2.example.com-pinningroot.pem',
-#    'cn-www.example.com-alt-a.pinning2.example-badca.pem',
-#    'cn-www.example.com-alt-a.pinning2.example-pinningroot.pem',
-#    'cn-x.a.pinning2.example.com-badca.pem',
-#    'cn-x.a.pinning2.example.com-pinningroot.pem',
-#    'cn-x.b.pinning2.example.com-badca.pem',
-#    'cn-x.b.pinning2.example.com-pinningroot.pem',
+#    'a.pinning2.example.com-badca.pem',
+#    'a.pinning2.example.com-pinningroot.pem',
+#    'b.pinning2.example.com-badca.pem',
+#    'b.pinning2.example.com-pinningroot.pem',
+#    'x.a.pinning2.example.com-badca.pem',
+#    'x.a.pinning2.example.com-pinningroot.pem',
+#    'x.b.pinning2.example.com-badca.pem',
+#    'x.b.pinning2.example.com-pinningroot.pem',
 #    'pinningroot.pem',
 #)
 #

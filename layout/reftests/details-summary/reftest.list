@@ -65,7 +65,10 @@ pref(dom.details_element.enabled,true) == mouse-click-overflow-hidden-details.ht
 pref(dom.details_element.enabled,true) == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
 pref(dom.details_element.enabled,true) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html
 pref(dom.details_element.enabled,true) == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
-pref(dom.details_element.enabled,true) == mouse-click-display-none-details.html single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-display-none-details.html open-single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-change-details-to-display-none.html open-single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-change-summary-to-display-none.html mouse-click-change-summary-to-display-none-ref.html
+pref(dom.details_element.enabled,true) == mouse-click-move-summary-to-different-details.html mouse-click-move-summary-to-different-details-ref.html
 
 # Dispatch mouse click to out-of-flow details or summary
 pref(dom.details_element.enabled,true) == mouse-click-fixed-summary.html open-fixed-summary.html

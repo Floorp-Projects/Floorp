@@ -672,7 +672,7 @@ void evutil_secure_rng_get_bytes(void *buf, size_t n);
  */
 int evutil_secure_rng_init(void);
 
-#ifndef __OpenBSD__
+#if !defined(__OpenBSD__) && !defined(ANDROID)
 /** Seed the random number generator with extra random bytes.
 
     You should almost never need to call this function; it should be

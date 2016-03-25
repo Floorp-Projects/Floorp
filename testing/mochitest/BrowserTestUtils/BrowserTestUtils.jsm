@@ -476,6 +476,8 @@ this.BrowserTestUtils = {
    *        event is the expected one, or false if it should be ignored and
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise.
+   * @param {bool} wantsUntrusted [optional]
+   *        True to receive synthetic events dispatched by web content.
    *
    * @note Because this function is intended for testing, any error in checkFn
    *       will cause the returned promise to be rejected instead of waiting for
@@ -484,7 +486,7 @@ this.BrowserTestUtils = {
    * @returns {Promise}
    * @resolves The Event object.
    */
-  waitForEvent(subject, eventName, capture, checkFn) {
+  waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted) {
     return new Promise((resolve, reject) => {
       subject.addEventListener(eventName, function listener(event) {
         try {
@@ -501,7 +503,7 @@ this.BrowserTestUtils = {
           }
           reject(ex);
         }
-      }, capture);
+      }, capture, wantsUntrusted);
     });
   },
 

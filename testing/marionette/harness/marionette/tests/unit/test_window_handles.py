@@ -91,6 +91,36 @@ class TestWindowHandles(MarionetteTestCase):
         self.assertEqual(len(self.marionette.window_handles), 1)
         self.marionette.switch_to_window(start_tab)
 
+    def test_chrome_window_handles_with_scopes(self):
+        start_tab = self.marionette.current_window_handle
+        start_chrome_window = self.marionette.current_chrome_window_handle
+        start_chrome_windows = self.marionette.chrome_window_handles
+
+        # Ensure that we work in chrome scope so we don't have any limitations
+        with self.marionette.using_context("chrome"):
+            # Open a browser and a non-browser (about window) chrome window
+            self.marionette.execute_script("window.open()")
+            self.marionette.find_element(By.ID, "aboutName").click()
+
+            self.wait_for_condition(lambda mn: len(mn.chrome_window_handles) ==
+                                    len(start_chrome_windows) + 2)
+
+            handles_in_chrome_scope = self.marionette.chrome_window_handles
+            with self.marionette.using_context("content"):
+                self.assertEqual(self.marionette.chrome_window_handles,
+                                 handles_in_chrome_scope)
+
+        for handle in handles_in_chrome_scope:
+            if handle != start_chrome_window:
+                self.marionette.switch_to_window(handle)
+                self.marionette.close_chrome_window()
+
+        self.marionette.switch_to_window(start_tab)
+
+        self.assertEqual(len(self.marionette.chrome_window_handles), 1)
+        self.assertEqual(len(self.marionette.window_handles), 1)
+        self.assertEqual(self.marionette.current_window_handle, start_tab)
+
     def test_tab_and_window_handles(self):
         start_tab = self.marionette.current_window_handle
         start_chrome_window = self.marionette.current_chrome_window_handle

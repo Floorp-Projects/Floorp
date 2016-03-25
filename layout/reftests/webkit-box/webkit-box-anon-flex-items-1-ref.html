@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Reference Case
+  </title>
+  <style>
+  .container {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    border: 1px solid black;
+    font: 10px sans-serif;
+    margin-bottom: 10px;
+  }
+  .container > * {
+    background: lightgray;
+  }
+
+  .fakeAnonWrapper {
+    background: none;
+  }
+  .fakeAnonWrapper > * {
+    background: lightgray;
+  }
+  .table {
+    display: table;
+  }
+  </style>
+</head>
+<body>
+<!-- We use an explicit div (with class "fakeAnonWrapper") here, to match the
+     anonymous div that the testcase is expected to generate around contiguous
+     runs of inline content. -->
+<div class="container">
+  <div class="fakeAnonWrapper">
+    a
+    <i>i</i><img src="bogus"><img src="bogus" alt="alt">
+    <canvas height="5" width="5"></canvas>
+    <video height="5" width="5"></video>
+    <div style="display:inline-block">ib</div>
+    <div style="display:inline-table">it</div>
+    z
+  </div>
+  <div>block</div>
+  <div>block</div>
+</div>
+
+<div class="container">
+  <div>block</div>
+  <div class="fakeAnonWrapper">
+    a
+    <i>i</i><img src="bogus"><img src="bogus" alt="alt">
+    <canvas height="5" width="5"></canvas>
+    <video height="5" width="5"></video>
+    <div style="display:inline-block">ib</div>
+    <div style="display:inline-table">it</div>
+    z
+  </div>
+  <div>block</div>
+</div>
+
+<div class="container">
+  <div>block</div>
+  <div>block</div>
+  <div class="fakeAnonWrapper">
+    a
+    <i>i</i><img src="bogus"><img src="bogus" alt="alt">
+    <canvas height="5" width="5"></canvas>
+    <video height="5" width="5"></video>
+    <div style="display:inline-block">ib</div>
+    <div style="display:inline-table">it</div>
+    z
+  </div>
+</div>
+
+<!-- We use explicit divs here for each anonymous wrapper-box that the testcase
+     is expected to produce (with class "fakeAnonWrapper", and also "table" if
+     it's expected to be a table wrapper)  -->
+<div class="container">
+  <div class="fakeAnonWrapper">a</div>
+  <div class="fakeAnonWrapper table">
+    <div style="display: table-cell">tc</div>
+    <div style="display: table-cell">tc</div>
+  </div>
+  <div class="fakeAnonWrapper">b</div>
+  <div class="fakeAnonWrapper table">
+    <div style="display: table-row">tr</div>
+    <div style="display: table-cell">tc</div>
+  </div>
+  <div class="fakeAnonWrapper">c</div>
+  <div class="fakeAnonWrapper table">
+    <div style="display: table-row">tr</div>
+    <div style="display: table-row-group">trg</div>
+  </div>
+  <div class="fakeAnonWrapper">d</div>
+  <table><tbody><tr><td>t</td></tr></tbody></table>
+  <div class="fakeAnonWrapper">e</div>
+</div>
+</body>
+</html>

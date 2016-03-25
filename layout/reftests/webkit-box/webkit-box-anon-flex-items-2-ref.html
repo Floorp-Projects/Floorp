@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Reference Case
+  </title>
+  <style>
+  .container {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    border: 1px solid black;
+    font: 10px sans-serif;
+  }
+  span {
+    background: lightgray;
+  }
+  </style>
+</head>
+<body>
+<!-- We use an explicit div here, to match the anonymous div that the testcase
+     is expected to generate around contiguous runs of inline content. -->
+<div class="container">
+  <div>
+    raw text
+    <span>start</span>
+  </div>
+  <div>BLOCK</div>
+  <div>
+    <span>end</span>
+    raw text
+  </div>
+</div>
+</body>
+</html>

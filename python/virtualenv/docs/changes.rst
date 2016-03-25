@@ -1,6 +1,73 @@
 Release History
 ===============
 
+15.0.1 (2016-03-17)
+-------------------
+
+* Print error message when DEST_DIR exists and is a file
+
+* Upgrade setuptools to 20.3
+
+* Upgrade pip to 8.1.1.
+
+
+15.0.0 (2016-03-05)
+-------------------
+
+* Remove the `virtualenv-N.N` script from the package; this can no longer be
+  correctly created from a wheel installation.
+  Resolves :issue:`851`, :issue:`692`
+
+* Remove accidental runtime dependency on pip by extracting certificate in the
+  subprocess.
+
+* Upgrade setuptools 20.2.2.
+
+* Upgrade pip to 8.1.0.
+
+
+14.0.6 (2016-02-07)
+-------------------
+
+* Upgrade setuptools to 20.0
+
+* Upgrade wheel to 0.29.0
+
+* Fix an error where virtualenv didn't pass in a working ssl certificate for
+  pip, causing "weird" errors related to ssl.
+
+
+14.0.5 (2016-02-01)
+-------------------
+
+* Homogenize drive letter casing for both prefixes and filenames. :issue:`858`
+
+
+14.0.4 (2016-01-31)
+-------------------
+
+* Upgrade setuptools to 19.6.2
+
+* Revert ac4ea65; only correct drive letter case.
+  Fixes :issue:`856`, :issue:`815`
+
+
+14.0.3 (2016-01-28)
+-------------------
+
+* Upgrade setuptools to 19.6.1
+
+
+14.0.2 (2016-01-28)
+-------------------
+
+* Upgrade setuptools to 19.6
+
+* Supress any errors from `unset` on different shells (:pull:`843`)
+
+* Normalize letter case for prefix path checking. Fixes :issue:`837`
+
+
 14.0.1 (2016-01-21)
 -------------------
 
@@ -38,7 +105,7 @@ Release History
 
 * Make sure not to run a --user install when creating the virtualenv (:pull:`803`)
 
-* Remove virtualenv file's path from directory when executing with a new
+* Remove virtualenv.py's path from sys.path when executing with a new
   python. Fixes issue :issue:`779`, :issue:`763` (:pull:`805`)
 
 * Remove use of () in .bat files so ``Program Files (x86)`` works :issue:`35`
@@ -56,6 +123,7 @@ Release History
 
 * Upgrade pip to 7.1.2.
 
+
 13.1.1 (2015-08-20)
 -------------------
 
@@ -64,6 +132,7 @@ Release History
 * Upgrade setuptools to 18.2.
 
 * Make the activate script safe to use when bash is running with ``-u``.
+
 
 13.1.0 (2015-06-30)
 -------------------

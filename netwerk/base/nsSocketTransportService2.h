@@ -19,6 +19,7 @@
 #include "mozilla/net/DashboardTypes.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
+#include "nsITimer.h"
 
 class nsASocketHandler;
 struct PRPollDesc;
@@ -111,7 +112,8 @@ public:
     // Returns true if keepalives are enabled in prefs.
     bool IsKeepaliveEnabled() { return mKeepaliveEnabledPref; }
 
-    bool IsTelemetryEnabled() { return mTelemetryEnabledPref; }
+    bool IsTelemetryEnabledAndNotSleepPhase() { return mTelemetryEnabledPref &&
+                                                       !mSleepPhase; }
     PRIntervalTime MaxTimeForPrClosePref() {return mMaxTimeForPrClosePref; }
 protected:
 
@@ -239,6 +241,11 @@ private:
     mozilla::Atomic<int32_t, mozilla::Relaxed> mMaxTimePerPollIter;
     mozilla::Atomic<bool, mozilla::Relaxed>  mTelemetryEnabledPref;
     mozilla::Atomic<PRIntervalTime, mozilla::Relaxed> mMaxTimeForPrClosePref;
+
+    // Between a computer going to sleep and waking up the PR_*** telemetry
+    // will be corrupted - so do not record it.
+    mozilla::Atomic<bool, mozilla::Relaxed> mSleepPhase;
+    nsCOMPtr<nsITimer> mAfterWakeUpTimer;
 
     void OnKeepaliveEnabledPrefChange();
     void NotifyKeepaliveEnabledPrefChange(SocketContext *sock);
