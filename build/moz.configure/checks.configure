@@ -74,8 +74,8 @@ def check_prog(var, progs, allow_missing=False):
     def postcheck(value, raw_value):
         if value is None and (not allow_missing or raw_value):
             from mozbuild.shellutil import quote
-            error('Cannot find %s (tried: %s)'
-                  % (var.lower(), ', '.join(quote(p) for p in progs)))
+            die('Cannot find %s (tried: %s)', var.lower(),
+                ', '.join(quote(p) for p in progs))
 
     @depends(check)
     def normalized_for_config(value):

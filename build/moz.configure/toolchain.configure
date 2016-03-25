@@ -19,7 +19,7 @@ def yasm_version(yasm):
         ).splitlines()[0].split()[1])
         return version
     except subprocess.CalledProcessError as e:
-        error('Failed to get yasm version: %s' % e.message)
+        die('Failed to get yasm version: %s', e.message)
 
 # Until we move all the yasm consumers out of old-configure.
 # bug 1257904
