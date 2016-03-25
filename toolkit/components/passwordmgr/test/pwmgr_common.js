@@ -130,16 +130,12 @@ function commonInit(selfFilling) {
               getService(SpecialPowers.Ci.nsILoginManager);
   ok(pwmgr != null, "Access LoginManager");
 
-
   // Check that initial state has no logins
   var logins = pwmgr.getAllLogins();
-  if (logins.length) {
-    //todo(false, "Warning: wasn't expecting logins to be present.");
-    pwmgr.removeAllLogins();
-  }
+  is(logins.length, 0, "Not expecting logins to be present");
   var disabledHosts = pwmgr.getAllDisabledHosts();
   if (disabledHosts.length) {
-    //todo(false, "Warning: wasn't expecting disabled hosts to be present.");
+    ok(false, "Warning: wasn't expecting disabled hosts to be present.");
     for (var host of disabledHosts)
       pwmgr.setLoginSavingEnabled(host, true);
   }
@@ -160,7 +156,11 @@ function commonInit(selfFilling) {
   if (selfFilling)
     return;
 
-  registerRunTests();
+  if (this.sendAsyncMessage) {
+    sendAsyncMessage("registerRunTests");
+  } else {
+    registerRunTests();
+  }
 }
 
 function registerRunTests() {
@@ -282,27 +282,34 @@ function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
-function loadParentTestFile(aRelativeFilePath) {
-  let fileURL = SimpleTest.getTestFileURL(aRelativeFilePath);
-  let testScript = SpecialPowers.loadChromeScript(fileURL);
-  SimpleTest.registerCleanupFunction(function destroyChromeScript() {
-    testScript.destroy();
-  });
-  return testScript;
-}
-
 /**
  * Run a function synchronously in the parent process and destroy it in the test cleanup function.
- * @param {Function} aFunction - function that will be stringified and run.
+ * @param {Function|String} aFunctionOrURL - either a function that will be stringified and run
+ *                                           or the URL to a JS file.
  * @return {Object} - the return value of loadChromeScript providing message-related methods.
  *                    @see loadChromeScript in specialpowersAPI.js
  */
-function runFunctionInParent(aFunction) {
-  let chromeScript = SpecialPowers.loadChromeScript(aFunction);
+function runInParent(aFunctionOrURL) {
+  let chromeScript = SpecialPowers.loadChromeScript(aFunctionOrURL);
   SimpleTest.registerCleanupFunction(() => {
     chromeScript.destroy();
   });
   return chromeScript;
+}
+
+/**
+ * Run commonInit synchronously in the parent then run the test function after the runTests event.
+ *
+ * @param {Function} aFunction The test function to run
+ */
+function runChecksAfterCommonInit(aFunction = null) {
+  SimpleTest.waitForExplicitFinish();
+  let pwmgrCommonScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+  if (aFunction) {
+    window.addEventListener("runTests", aFunction);
+    pwmgrCommonScript.addMessageListener("registerRunTests", () => registerRunTests());
+  }
+  pwmgrCommonScript.sendSyncMessage("setupParent");
 }
 
 // Code to run when loaded as a chrome script in tests via loadChromeScript
@@ -315,8 +322,8 @@ if (this.addMessageListener) {
 
   Cu.import("resource://gre/modules/Task.jsm");
 
-  addMessageListener("setupParent", () => {
-    commonInit(true);
+  addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
+    commonInit(selfFilling);
     sendAsyncMessage("doneSetup");
   });
 
@@ -334,11 +341,24 @@ if (this.addMessageListener) {
 } else {
   // Code to only run in the mochitest pages (not in the chrome script).
   SimpleTest.registerCleanupFunction(() => {
-    let recipeParent = getRecipeParent();
-    if (!recipeParent) {
-      // No need to reset the recipes if the module wasn't even loaded.
-      return;
-    }
-    recipeParent.then(recipeParent => recipeParent.reset());
+    runInParent(function cleanupParent() {
+      const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+      Cu.import("resource://gre/modules/Services.jsm");
+      Cu.import("resource://gre/modules/LoginManagerParent.jsm");
+
+      // Remove all logins and disabled hosts
+      Services.logins.removeAllLogins();
+
+      let disabledHosts = Services.logins.getAllDisabledHosts();
+      disabledHosts.forEach(host => Services.logins.setLoginSavingEnabled(host, true));
+
+      let authMgr = Cc["@mozilla.org/network/http-auth-manager;1"].
+                    getService(Ci.nsIHttpAuthManager);
+      authMgr.clearAll();
+
+      if (LoginManagerParent._recipeManager) {
+        LoginManagerParent._recipeManager.reset();
+      }
+    });
   });
 }

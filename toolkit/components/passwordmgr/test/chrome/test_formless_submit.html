@@ -22,7 +22,7 @@ let mm = SpecialPowers.loadChromeScript(parentScriptURL);
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginFrame").addEventListener("load", (evt) => {
     // Tell the parent to setup test logins.
-    mm.sendAsyncMessage("setupParent");
+    mm.sendAsyncMessage("setupParent", { selfFilling: true });
   });
 });
 
