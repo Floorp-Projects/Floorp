@@ -47,6 +47,12 @@
                android:value="preferences_accessibility" />
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_notifications"
+        android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment">
+        <extra android:name="resource"
+            android:value="preferences_notifications"/>
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_advanced"
                       android:summary="@string/pref_category_advanced_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"

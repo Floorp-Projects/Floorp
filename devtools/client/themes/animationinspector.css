@@ -330,13 +330,11 @@ body {
      borders between each iteration. These borders must have the same color as
      the border of this element */
   background-image:
-    linear-gradient(to right,
+    linear-gradient(to left,
                     var(--timeline-border-color) 0,
                     var(--timeline-border-color) 1px,
                     transparent 1px,
                     transparent 2px);
-  background-repeat: repeat-x;
-  background-position: -1px 0;
   border: 1px solid var(--timeline-border-color);
   /* Border-right is already handled by the gradient */
   border-width: 1px 0 1px 1px;

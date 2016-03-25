@@ -1101,6 +1101,23 @@ public class LocalBrowserDB implements BrowserDB {
                   new String[] { String.valueOf(id) });
     }
 
+    @Override
+    public boolean hasBookmarkWithGuid(ContentResolver cr, String guid) {
+        Cursor c = cr.query(bookmarksUriWithLimit(1),
+                new String[] { Bookmarks.GUID },
+                Bookmarks.GUID + " = ?",
+                new String[] { guid },
+                null);
+
+        try {
+            return c != null && c.getCount() > 0;
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+    }
+
     /**
      * Get the favicon from the database, if any, associated with the given favicon URL. (That is,
      * the URL of the actual favicon image, not the URL of the page with which the favicon is associated.)
@@ -1572,6 +1589,22 @@ public class LocalBrowserDB implements BrowserDB {
                             Bookmarks.URL + " = ?",
                             new String[] { url },
                             null);
+
+        if (c != null && c.getCount() == 0) {
+            c.close();
+            c = null;
+        }
+
+        return c;
+    }
+
+    @Override
+    public Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl) {
+        Cursor c = cr.query(mBookmarksUriWithProfile,
+                new String[] { Bookmarks.GUID, Bookmarks._ID, Bookmarks.URL },
+                Bookmarks.URL + " LIKE '%" + partialUrl + "%'", // TODO: Escaping!
+                null,
+                null);
 
         if (c != null && c.getCount() == 0) {
             c.close();

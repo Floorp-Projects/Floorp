@@ -54,6 +54,10 @@
                 label="&debuggerUI.seMenuCondBreak;"
                 key="addConditionalBreakpointKey"
                 command="addConditionalBreakpointCommand"/>
+      <menuitem id="se-dbg-cMenu-editConditionalBreakpoint"
+                label="&debuggerUI.seEditMenuCondBreak;"
+                key="addConditionalBreakpointKey"
+                command="addConditionalBreakpointCommand"/>
       <menuitem id="se-dbg-cMenu-addAsWatch"
                 label="&debuggerUI.seMenuAddWatch;"
                 key="addWatchExpressionKey"

@@ -517,7 +517,23 @@ public class BrowserContract {
         public enum Key {
             // We use a parameter, rather than name(), as defensive coding: we can't let the
             // enum name change because we've already stored values into the DB.
-            SCREENSHOT ("screenshot");
+            SCREENSHOT ("screenshot"),
+
+            /**
+             * This key maps URLs to its feeds.
+             *
+             * Key:   feed
+             * Value: URL of feed
+             */
+            FEED("feed"),
+
+            /**
+             * This key maps URLs of feeds to an object describing the feed.
+             *
+             * Key:   feed_subscription
+             * Value: JSON object describing feed
+             */
+            FEED_SUBSCRIPTION("feed_subscription");
 
             private final String dbValue;
 

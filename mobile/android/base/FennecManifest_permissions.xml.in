@@ -29,6 +29,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- READ_EXTERNAL_STORAGE was added in API 16, and is only enforced in API
          19+.  We declare it so that the bouncer APK and the main APK have the
          same set of permissions. -->
