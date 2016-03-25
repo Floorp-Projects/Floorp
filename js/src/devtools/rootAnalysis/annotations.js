@@ -146,6 +146,12 @@ function ignoreEdgeAddressTaken(edge)
     return false;
 }
 
+// Return whether csu.method is one that we claim can never GC.
+function isSuppressedVirtualMethod(csu, method)
+{
+    return csu == "nsISupports" && (method == "AddRef" || method == "Release");
+}
+
 // Ignore calls of these functions (so ignore any stack containing these)
 var ignoreFunctions = {
     "ptio.c:pt_MapError" : true,
