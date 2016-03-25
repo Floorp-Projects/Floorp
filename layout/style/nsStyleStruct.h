@@ -31,6 +31,7 @@
 #include "imgRequestProxy.h"
 #include "Orientation.h"
 #include "CounterStyleManager.h"
+#include <cstddef> // offsetof()
 
 class nsIFrame;
 class nsIURI;
@@ -98,8 +99,51 @@ static_assert(int(mozilla::SheetType::Count) - 1 <=
 
 static_assert(NS_RULE_NODE_IS_ANIMATION_RULE == (1 << nsStyleStructID_Length),
   "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
-// The lifetime of these objects is managed by the presshell's arena.
 
+/**
+ * These *_Simple types are used to map Gecko types to layout-equivalent but
+ * simpler Rust types, to aid Rust binding generation.
+ *
+ * If something in this types or the assertions below needs to change, ask
+ * bholley, heycam or emilio before!
+ *
+ * <div rustbindgen="true" replaces="nsPoint">
+ */
+struct nsPoint_Simple {
+  nscoord x, y;
+};
+
+static_assert(sizeof(nsPoint_Simple) == sizeof(nsPoint), "Wrong nsPoint_Simple size");
+static_assert(offsetof(nsPoint_Simple, x) == offsetof(nsPoint, x), "Wrong nsPoint_Simple member alignment");
+static_assert(offsetof(nsPoint_Simple, y) == offsetof(nsPoint, y), "Wrong nsPoint_Simple member alignment");
+
+/**
+ * <div rustbindgen="true" replaces="nsMargin">
+ */
+struct nsMargin_Simple {
+  nscoord top, right, bottom, left;
+};
+
+static_assert(sizeof(nsMargin_Simple) == sizeof(nsMargin), "Wrong nsMargin_Simple size");
+static_assert(offsetof(nsMargin_Simple, top) == offsetof(nsMargin, top), "Wrong nsMargin_Simple member alignment");
+static_assert(offsetof(nsMargin_Simple, right) == offsetof(nsMargin, right), "Wrong nsMargin_Simple member alignment");
+static_assert(offsetof(nsMargin_Simple, bottom) == offsetof(nsMargin, bottom), "Wrong nsMargin_Simple member alignment");
+static_assert(offsetof(nsMargin_Simple, left) == offsetof(nsMargin, left), "Wrong nsMargin_Simple member alignment");
+
+/**
+ * <div rustbindgen="true" replaces="nsRect">
+ */
+struct nsRect_Simple {
+  nscoord x, y, width, height;
+};
+
+static_assert(sizeof(nsRect_Simple) == sizeof(nsRect), "Wrong nsRect_Simple size");
+static_assert(offsetof(nsRect_Simple, x) == offsetof(nsRect, x), "Wrong nsRect_Simple member alignment");
+static_assert(offsetof(nsRect_Simple, y) == offsetof(nsRect, y), "Wrong nsRect_Simple member alignment");
+static_assert(offsetof(nsRect_Simple, width) == offsetof(nsRect, width), "Wrong nsRect_Simple member alignment");
+static_assert(offsetof(nsRect_Simple, height) == offsetof(nsRect, height), "Wrong nsRect_Simple member alignment");
+
+// The lifetime of these objects is managed by the presshell's arena.
 struct nsStyleFont
 {
   nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
