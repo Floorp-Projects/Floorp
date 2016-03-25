@@ -5,3 +5,6 @@
 # This file is included by all browser mozconfigs
 
 . "$topsrcdir/build/mozconfig.common"
+
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
