@@ -209,13 +209,13 @@ def virtualenv_python(env_python, build_env, mozconfig):
         python = sys.executable
 
     if not manager.up_to_date(python):
-        warn('Creating Python environment')
+        log.info('Creating Python environment')
         manager.build(python)
 
     python = normsep(manager.python_path)
 
     if python != normsep(sys.executable):
-        warn('Reexecuting in the virtualenv')
+        log.info('Reexecuting in the virtualenv')
         if env_python:
             del os.environ['PYTHON']
         # One would prefer to use os.execl, but that's completely borked on
@@ -311,9 +311,9 @@ def wanted_mozconfig_variables(help):
 def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
     if mozconfig['path']:
         helper = command_line_helper()
-        warn('Adding configure options from %s' % mozconfig['path'])
+        log.info('Adding configure options from %s' % mozconfig['path'])
         for arg in mozconfig['configure_args']:
-            warn('  %s' % arg)
+            log.info('  %s' % arg)
             # We could be using imply_option() here, but it has other
             # contraints that don't really apply to the command-line
             # emulation that mozconfig provides.
@@ -323,7 +323,7 @@ def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
             # See comment above wanted_mozconfig_variables
             if key in wanted_mozconfig_variables:
                 arg = '%s=%s' % (key, value)
-                warn('  %s' % arg)
+                log.info('  %s' % arg)
                 helper.add(arg, origin='mozconfig', args=helper._args)
 
         for key, value in mozconfig['env']['added'].iteritems():

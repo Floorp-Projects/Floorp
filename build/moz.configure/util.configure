@@ -6,20 +6,10 @@
 
 @template
 @advanced
-def warn(*args):
-    'Print a warning.'
-    import sys
-    print(*args, file=sys.stderr)
-    sys.stderr.flush()
-
-
-@template
-@advanced
-def die(format, *args):
+def die(*args):
     'Print an error and terminate configure.'
     import sys
-    print(format % args, file=sys.stderr)
-    sys.stderr.flush()
+    log.error(*args)
     sys.exit(1)
 
 

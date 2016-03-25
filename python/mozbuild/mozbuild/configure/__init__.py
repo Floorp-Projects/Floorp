@@ -140,6 +140,11 @@ class ConfigureSandbox(dict):
         else:
             assert isinstance(logger, logging.Logger)
 
+        self.log_impl = ReadOnlyNamespace(**{
+                k: getattr(logger, k)
+                for k in ('debug', 'info', 'warning', 'error')
+        })
+
         self._help = None
         self._help_option = self.option_impl('--help',
                                              help='print this message')
@@ -199,7 +204,7 @@ class ConfigureSandbox(dict):
                 )
 
         if self._help:
-            with LineIO(logging.getLogger('moz.configure').info) as out:
+            with LineIO(self.log_impl.info) as out:
                 self._help.usage(out)
 
     def __getitem__(self, key):
@@ -518,6 +523,7 @@ class ConfigureSandbox(dict):
             __builtins__=self.BUILTINS,
             __file__=self._paths[-1],
             os=self.OS,
+            log=self.log_impl,
         )
         func = wraps(func)(types.FunctionType(
             func.func_code,
