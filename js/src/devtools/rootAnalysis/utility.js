@@ -6,6 +6,15 @@
 // constructors/destructors.
 var internalMarker = " *INTERNAL* ";
 
+if (! Set.prototype.hasOwnProperty("update")) {
+    Object.defineProperty(Set.prototype, "update", {
+        value: function (collection) {
+            for (let elt of collection)
+                this.add(elt);
+        }
+    });
+}
+
 function assert(x, msg)
 {
     if (x)
