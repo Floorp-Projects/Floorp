@@ -58,3 +58,48 @@ def have_yasm(value):
 set_config('HAVE_YASM', have_yasm)
 # Until the YASM variable is not necessary in old-configure.
 add_old_configure_assignment('YASM', have_yasm)
+
+
+# Compiler wrappers
+# ==============================================================
+js_option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
+          help='Enable compiling with wrappers such as distcc and ccache')
+
+js_option('--with-ccache', env='CCACHE', nargs='?',
+          help='Enable compiling with ccache')
+
+@depends_if('--with-ccache')
+def ccache(value):
+    if len(value):
+        return value
+    # If --with-ccache was given without an explicit value, we default to
+    # 'ccache'.
+    return 'ccache'
+
+ccache = check_prog('CCACHE', progs=(), input=ccache)
+
+@depends_if(ccache)
+def using_ccache(ccache):
+    return True
+
+set_config('MOZ_USING_CCACHE', using_ccache)
+
+@depends('--with-compiler-wrapper', ccache)
+@advanced
+def compiler_wrapper(wrapper, ccache):
+    from mozbuild.shellutil import split as shell_split
+    if ccache:
+        if wrapper:
+            return tuple([ccache] + shell_split(wrapper[0]))
+        else:
+            return (ccache,)
+    elif wrapper:
+        return tuple(shell_split(wrapper[0]))
+
+add_old_configure_assignment('COMPILER_WRAPPER', compiler_wrapper)
+
+@depends_if(compiler_wrapper)
+def using_compiler_wrapper(compiler_wrapper):
+    return True
+
+set_config('MOZ_USING_COMPILER_WRAPPER', using_compiler_wrapper)
