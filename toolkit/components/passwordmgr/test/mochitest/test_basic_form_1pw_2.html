@@ -9,6 +9,9 @@
 </head>
 <body>
 Login Manager test: forms with 1 password field, part 2
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
 <p id="display"></p>
 
 <div id="content" style="display: none">
@@ -83,8 +86,6 @@ Login Manager test: forms with 1 password field, part 2
 
 /** Test for Login Manager: simple form fill, part 2 **/
 
-commonInit();
-
 function startTest() {
     var f;
 
@@ -101,11 +102,6 @@ function startTest() {
 
     SimpleTest.finish();
 }
-
-
-window.addEventListener("runTests", startTest);
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

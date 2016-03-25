@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654348
   <meta charset="utf-8">
   <title>Test XHR auth with user and pass arguments</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="startTest()">
@@ -22,50 +23,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654348
  *    we must use the creds that are provided to the xhr witch are different and expected
  */
 
-SimpleTest.waitForExplicitFinish();
-
-function clearAuthCache()
-{
-  var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
-                             .getService(SpecialPowers.Ci.nsIHttpAuthManager);
-  authMgr.clearAll();
-}
-
-function doxhr(URL, user, pass, code, next)
-{
+function doxhr(URL, user, pass, code, next) {
   var xhr = new XMLHttpRequest();
   if (user && pass)
     xhr.open("POST", URL, true, user, pass);
   else
     xhr.open("POST", URL, true);
-  xhr.onload = function()
-  {
+  xhr.onload = function() {
     is(xhr.status, code, "expected response code " + code);
     next();
   }
-  xhr.onerror = function()
-  {
+  xhr.onerror = function() {
     ok(false, "request passed");
     finishTest();
   }
   xhr.send();
 }
 
-function startTest()
-{
-  clearAuthCache();
+function startTest() {
   doxhr("authenticate.sjs?user=dummy&pass=pass1&realm=realm1&formauth=1", "dummy", "dummy", 403, function() {
     doxhr("authenticate.sjs?user=dummy&pass=pass1&realm=realm1&formauth=1", "dummy", "pass1", 200, finishTest);
   });
 }
 
-function finishTest()
-{
-  clearAuthCache();
+function finishTest() {
   SimpleTest.finish();
 }
 
 </script>
 </body>
 </html>
-

@@ -9,6 +9,9 @@
 </head>
 <body>
 Login Manager test: Bug 360493
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -114,8 +117,6 @@ Login Manager test: Bug 360493
 // This test is designed to make sure variations on the form's |action|
 // and |method| continue to work with the fix for 360493.
 
-commonInit();
-
 function startTest() {
   for (var i = 1; i <= 9; i++) {
     // Check form i
@@ -129,11 +130,6 @@ function startTest() {
 
   SimpleTest.finish();
 }
-
-window.addEventListener("runTests", startTest);
-
-SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>
