@@ -146,6 +146,8 @@ def add_old_configure_assignment(var, value_func):
             assignments.append('%s=' % var)
         else:
             from mozbuild.shellutil import quote
+            if isinstance(value, (list, tuple)):
+                value = ' '.join(quote(v) for v in value)
             assignments.append('%s=%s' % (var, quote(value)))
 
 @template
@@ -273,6 +275,8 @@ def wanted_mozconfig_variables(help):
      return set([
          'AUTOCONF',
          'AWK',
+         'CCACHE',
+         'COMPILER_WRAPPER',
          'DISABLE_EXPORT_JS',
          'DISABLE_SHARED_JS',
          'DOXYGEN',
