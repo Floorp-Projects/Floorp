@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_multiple_pages() {
+  function background() {
+    let tabReady = new Promise(resolve => {
+      browser.runtime.onMessage.addListener(function listener(msg) {
+        browser.test.log("onMessage " + msg);
+        if (msg == "tab-ready") {
+          browser.runtime.onMessage.removeListener(listener);
+          resolve();
+        }
+      });
+    });
+
+    let tabId;
+    let tabRemoved = new Promise(resolve => {
+      browser.tabs.onRemoved.addListener(function listener(removedId) {
+        if (removedId == tabId) {
+          browser.tabs.onRemoved.removeListener(listener);
+
+          // Delay long enough to be sure the inner window has been nuked.
+          setTimeout(resolve, 0);
+        }
+      });
+    });
+
+    let storage = browser.storage.local;
+
+    browser.test.log("create");
+    browser.tabs.create({url: "tab.html"}).then(tab => {
+      tabId = tab.id;
+
+      return tabReady;
+    }).then(() => {
+      return storage.get("key");
+    }).then(result => {
+      browser.test.assertEq(undefined, result.key, "Key should be undefined");
+
+      return browser.runtime.sendMessage("tab-set-key");
+    }).then(() => {
+      return storage.get("key");
+    }).then(result => {
+      browser.test.assertEq(JSON.stringify({foo: {bar: "baz"}}),
+                            JSON.stringify(result.key),
+                            "Key should be set to the value from the tab");
+    }).then(() => {
+      browser.test.log("Remove tab");
+      return Promise.all([browser.tabs.remove(tabId),
+                          tabRemoved]);
+    }).then(() => {
+      return storage.get("key");
+    }).then(result => {
+      browser.test.assertEq(JSON.stringify({foo: {bar: "baz"}}),
+                            JSON.stringify(result.key),
+                            "Key should still be set to the value from the tab");
+    }).then(() => {
+      browser.test.notifyPass("storage-multiple");
+    }).catch(e => {
+      browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      browser.test.notifyFail("storage-multiple");
+    });
+  }
+
+  function tab() {
+    browser.test.log("tab");
+    browser.runtime.onMessage.addListener(msg => {
+      if (msg == "tab-set-key") {
+        return browser.storage.local.set({key: {foo: {bar: "baz"}}});
+      }
+    });
+
+    browser.runtime.sendMessage("tab-ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+
+    files: {
+      "tab.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="tab.js"></${"script"}>
+          </head>
+        </html>`,
+
+      "tab.js": `(${tab})()`,
+    },
+
+    manifest: {
+      permissions: ["storage"],
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("storage-multiple");
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>
