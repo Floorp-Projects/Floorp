@@ -92,13 +92,7 @@ this.ExtensionStorage = {
   remove(extensionId, items) {
     return this.read(extensionId).then(extData => {
       let changes = {};
-      if (Array.isArray(items)) {
-        for (let prop of items) {
-          changes[prop] = {oldValue: extData[prop]};
-          delete extData[prop];
-        }
-      } else {
-        let prop = items;
+      for (let prop of [].concat(items)) {
         changes[prop] = {oldValue: extData[prop]};
         delete extData[prop];
       }
@@ -112,11 +106,9 @@ this.ExtensionStorage = {
   clear(extensionId) {
     return this.read(extensionId).then(extData => {
       let changes = {};
-      if (extData) {
-        for (let prop of Object.keys(extData)) {
-          changes[prop] = {oldValue: extData[prop]};
-          delete extData[prop];
-        }
+      for (let prop of Object.keys(extData)) {
+        changes[prop] = {oldValue: extData[prop]};
+        delete extData[prop];
       }
 
       this.notifyListeners(extensionId, changes);
@@ -138,13 +130,8 @@ this.ExtensionStorage = {
             result[prop] = keys[prop];
           }
         }
-      } else if (typeof(keys) == "string") {
-        let prop = keys;
-        if (prop in extData) {
-          result[prop] = extData[prop];
-        }
       } else {
-        for (let prop of keys) {
+        for (let prop of [].concat(keys)) {
           if (prop in extData) {
             result[prop] = extData[prop];
           }
