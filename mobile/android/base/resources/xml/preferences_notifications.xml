@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference android:key="android.not_a_preference.notifications.content"
+        android:title="@string/pref_content_notifications"
+        android:summary="@string/pref_content_notifications_summary"
+        android:defaultValue="true" />
+</PreferenceScreen>

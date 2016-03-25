@@ -17,6 +17,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
@@ -159,6 +160,36 @@ class StubUrlAnnotations implements UrlAnnotations {
 
     @Override
     public void insertScreenshot(ContentResolver cr, String pageUrl, final String screenshotLocation) {}
+
+    @Override
+    public Cursor getFeedSubscriptions(ContentResolver cr) { return null; }
+
+    @Override
+    public Cursor getWebsitesWithFeedUrl(ContentResolver cr) { return null; }
+
+    @Override
+    public void deleteFeedUrl(ContentResolver cr, String websiteUrl) {}
+
+    @Override
+    public boolean hasWebsiteForFeedUrl(ContentResolver cr, String feedUrl) { return false; }
+
+    @Override
+    public void deleteFeedSubscription(ContentResolver cr, FeedSubscription subscription) {}
+
+    @Override
+    public void updateFeedSubscription(ContentResolver cr, FeedSubscription subscription) {}
+
+    @Override
+    public boolean hasFeedSubscription(ContentResolver cr, String feedUrl) { return false; }
+
+    @Override
+    public void insertFeedSubscription(ContentResolver cr, FeedSubscription subscription) {}
+
+    @Override
+    public boolean hasFeedUrlForWebsite(ContentResolver cr, String websiteUrl) { return false; }
+
+    @Override
+    public void insertFeedUrl(ContentResolver cr, String originUrl, String feedUrl) {}
 }
 
 /*
@@ -372,6 +403,16 @@ public class StubBrowserDB implements BrowserDB {
     @RobocopTarget
     public Cursor getBookmarkForUrl(ContentResolver cr, String url) {
         return null;
+    }
+
+    @Override
+    public Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl) {
+        return null;
+    }
+
+    @Override
+    public boolean hasBookmarkWithGuid(ContentResolver cr, String guid) {
+        return false;
     }
 
     public void setSuggestedSites(SuggestedSites suggestedSites) {
