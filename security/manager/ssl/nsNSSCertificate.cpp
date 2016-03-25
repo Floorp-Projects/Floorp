@@ -841,7 +841,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(_rvChain);
-  nsresult rv;
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting chain for \"%s\"\n", mCert->nickname));
 
   mozilla::pkix::Time now(mozilla::pkix::Now());
@@ -906,7 +905,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   // enumerate the chain for scripting purposes
   nsCOMPtr<nsIMutableArray> array = nsArrayBase::Create();
   if (!array) {
-    goto done;
+    return NS_ERROR_FAILURE;
   }
   CERTCertListNode* node;
   for (node = CERT_LIST_HEAD(nssChain.get());
@@ -919,9 +918,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   }
   *_rvChain = array;
   NS_IF_ADDREF(*_rvChain);
-  rv = NS_OK;
-done:
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
