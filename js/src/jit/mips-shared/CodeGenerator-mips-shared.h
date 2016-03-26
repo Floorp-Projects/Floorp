@@ -35,15 +35,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
         bailoutFrom(&bail, snapshot);
     }
     template<typename T>
-    void bailoutCmp32(Assembler::Condition c, Operand lhs, T rhs, LSnapshot* snapshot) {
-        if (lhs.getTag() == Operand::REG)
-            bailoutCmp32(c, lhs.toReg(), rhs, snapshot);
-        else if (lhs.getTag() == Operand::MEM)
-            bailoutCmp32(c, lhs.toAddress(), rhs, snapshot);
-        else
-            MOZ_CRASH("Invalid operand tag.");
-    }
-    template<typename T>
     void bailoutTest32(Assembler::Condition c, Register lhs, T rhs, LSnapshot* snapshot) {
         Label bail;
         masm.branchTest32(c, lhs, rhs, &bail);
