@@ -10,6 +10,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "js/Date.h"
 #include "vm/NativeObject.h"
+#include "vm/Time.h"
 
 namespace js {
 

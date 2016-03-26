@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TestCommon.h"
+#include "TestHarness.h"
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
@@ -186,18 +187,6 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
     aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
 }
 
-class ScopedXPCOM
-{
-public:
-  ScopedXPCOM() : rv(NS_InitXPCOM2(nullptr, nullptr, nullptr)) { }
-  ~ScopedXPCOM()
-  {
-    if (NS_SUCCEEDED(rv))
-      NS_ShutdownXPCOM(nullptr);
-  }
-
-  nsresult rv;
-};
 
 int
 main(int32_t argc, char *argv[])
@@ -207,9 +196,7 @@ main(int32_t argc, char *argv[])
 
     bool allTestsPassed = true;
 
-    ScopedXPCOM xpcom;
-    if (NS_FAILED(xpcom.rv))
-      return -1;
+    ScopedXPCOM xpcom("TestCookie");
 
     {
       nsresult rv0;

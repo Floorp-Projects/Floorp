@@ -73,10 +73,8 @@ add_task(function* test_notification_duplicate() {
     }
   });
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
-  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for stale acknowledgement');
+  yield notifyPromise;
+  yield ackPromise;
 
   let staleRecord = yield db.getByKeyID(
     '8d2d9400-3597-4c5a-8a38-c546b0043bcc');

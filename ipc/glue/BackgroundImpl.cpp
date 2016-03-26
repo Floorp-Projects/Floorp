@@ -341,11 +341,7 @@ class ChildImpl final : public BackgroundChildImpl
   // create the background thread after application shutdown has started.
   static bool sShutdownHasStarted;
 
-#ifdef RELEASE_BUILD
-#ifdef DEBUG
-  nsIThread* mBoundThread;
-#endif
-#else
+#if defined(DEBUG) || !defined(RELEASE_BUILD)
   nsIThread* mBoundThread;
 #endif
 
@@ -382,7 +378,9 @@ public:
   }
 
   ChildImpl()
+#if defined(DEBUG) || !defined(RELEASE_BUILD)
   : mBoundThread(nullptr)
+#endif
 #ifdef DEBUG
   , mActorDestroyed(false)
 #endif

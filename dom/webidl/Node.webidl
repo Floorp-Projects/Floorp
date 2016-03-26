@@ -72,6 +72,8 @@ interface Node : EventTarget {
   [Throws]
   Node cloneNode(optional boolean deep = false);
   [Pure]
+  boolean isSameNode(Node? node);
+  [Pure]
   boolean isEqualNode(Node? node);
 
   const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;

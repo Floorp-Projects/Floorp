@@ -1091,7 +1091,10 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
       const nsStyleText* otherVisText = otherVis->StyleText();
       if (thisVisText->mTextEmphasisColorForeground !=
           otherVisText->mTextEmphasisColorForeground ||
-          thisVisText->mTextEmphasisColor != otherVisText->mTextEmphasisColor) {
+          thisVisText->mTextEmphasisColor != otherVisText->mTextEmphasisColor ||
+          thisVisText->mWebkitTextFillColorForeground !=
+          otherVisText->mWebkitTextFillColorForeground ||
+          thisVisText->mWebkitTextFillColor != otherVisText->mWebkitTextFillColor) {
         change = true;
       }
     }
@@ -1313,6 +1316,7 @@ nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
                aProperty == eCSSProperty__moz_column_rule_color ||
                aProperty == eCSSProperty_text_decoration_color ||
                aProperty == eCSSProperty_text_emphasis_color ||
+               aProperty == eCSSProperty__webkit_text_fill_color ||
                aProperty == eCSSProperty_fill ||
                aProperty == eCSSProperty_stroke,
                "we need to add to nsStyleContext::CalcStyleDifference");

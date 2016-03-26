@@ -425,6 +425,7 @@ private:
   already_AddRefed<CSSValue> DoGetHyphens();
   already_AddRefed<CSSValue> DoGetTabSize();
   already_AddRefed<CSSValue> DoGetTextSizeAdjust();
+  already_AddRefed<CSSValue> DoGetWebkitTextFillColor();
 
   /* Visibility properties */
   already_AddRefed<CSSValue> DoGetOpacity();

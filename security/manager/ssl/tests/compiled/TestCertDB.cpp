@@ -7,12 +7,13 @@
 #include "nsIPrefService.h"
 #include "nsIX509CertDB.h"
 #include "nsServiceManagerUtils.h"
+#include "TestHarness.h"
 
 int
 main(int argc, char* argv[])
 {
+  ScopedXPCOM xpcom("TestCertDB");
   {
-    NS_InitXPCOM2(nullptr, nullptr, nullptr);
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (!prefs) {
       return -1;
@@ -29,6 +30,5 @@ main(int argc, char* argv[])
     }
   } // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-  NS_ShutdownXPCOM(nullptr);
   return 0;
 }

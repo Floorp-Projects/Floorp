@@ -18,6 +18,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
 #include "nsIFile.h"
+#include "TestHarness.h"
 
 using namespace mozilla;
 
@@ -1194,8 +1195,7 @@ int main(int argc, char **argv) {
   if (argc > 1)
     count = atoi(argv[1]);
 
-  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr)))
-    return -1;
+  ScopedXPCOM xpcom("TestTArray");
 
   bool success = true;
   while (count--) {
@@ -1206,7 +1206,6 @@ int main(int argc, char **argv) {
         success = false;
     }
   }
-  
-  NS_ShutdownXPCOM(nullptr);
+
   return success ? 0 : -1;
 }

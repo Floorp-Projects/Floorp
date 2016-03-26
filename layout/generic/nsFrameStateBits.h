@@ -229,6 +229,10 @@ FRAME_STATE_BIT(Generic, 44, NS_FRAME_MAY_HAVE_GENERATED_CONTENT)
 // the frames for future reference.
 FRAME_STATE_BIT(Generic, 45, NS_FRAME_NO_COMPONENT_ALPHA)
 
+// This bit indicates that we're tracking visibility for this frame, and that
+// the frame has a VisibilityStateProperty property.
+FRAME_STATE_BIT(Generic, 46, NS_FRAME_VISIBILITY_IS_TRACKED)
+
 // The frame is a descendant of SVGTextFrame and is thus used for SVG
 // text layout.
 FRAME_STATE_BIT(Generic, 47, NS_FRAME_IS_SVG_TEXT)

@@ -411,6 +411,9 @@ nsFrame::~nsFrame()
 {
   MOZ_COUNT_DTOR(nsFrame);
 
+  MOZ_ASSERT(GetVisibility() != Visibility::APPROXIMATELY_VISIBLE,
+             "Visible nsFrame is being destroyed");
+
   NS_IF_RELEASE(mContent);
 #ifdef DEBUG
   mStyleContext->FrameRelease();
@@ -544,6 +547,11 @@ nsFrame::Init(nsIContent*       aContent,
                        NS_FRAME_IS_SVG_TEXT |
                        NS_FRAME_IN_POPUP |
                        NS_FRAME_IS_NONDISPLAY);
+
+    if (HasAnyStateBits(NS_FRAME_IN_POPUP) && TrackingVisibility()) {
+      // Assume all frames in popups are visible.
+      IncApproximateVisibleCount();
+    }
   }
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->HasTransform(this)) {
@@ -591,6 +599,11 @@ nsFrame::Init(nsIContent*       aContent,
 
   if (aContent && aContent->GetProperty(nsGkAtoms::vr_state) != nullptr) {
     AddStateBits(NS_FRAME_HAS_VR_CONTENT);
+  }
+
+  if (PresContext()->PresShell()->AssumeAllFramesVisible() &&
+      TrackingVisibility()) {
+    IncApproximateVisibleCount();
   }
 
   DidSetStyleContext(nullptr);
@@ -701,6 +714,17 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
       NS_ERROR("stylo: ServoRestyleManager does not support animations yet");
     }
   }
+
+  // Disable visibility tracking. Note that we have to do this before calling
+  // NotifyDestroyingFrame(), which will clear frame properties and make us lose
+  // track of whether we were previously visible or not.
+  // XXX(seth): It'd be ideal to assert that we're already marked nonvisible
+  // here, but it's unfortunately tricky to guarantee in the face of things like
+  // frame reconstruction induced by style changes.
+  DisableVisibilityTracking();
+
+  // Ensure that we're not in the approximately visible list anymore.
+  PresContext()->GetPresShell()->RemoveFrameFromApproximatelyVisibleList(this);
 
   shell->NotifyDestroyingFrame(this);
 
@@ -1440,6 +1464,190 @@ nsIFrame::GetCrossDocChildLists(nsTArray<ChildList>* aLists)
   }
 
   GetChildLists(aLists);
+}
+
+Visibility
+nsIFrame::GetVisibility() const
+{
+  if (!(GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED)) {
+    return Visibility::UNTRACKED;
+  }
+
+  bool isSet = false;
+  FrameProperties props = Properties();
+  uint32_t visibleCount = props.Get(VisibilityStateProperty(), &isSet);
+
+  MOZ_ASSERT(isSet, "Should have a VisibilityStateProperty value "
+                    "if NS_FRAME_VISIBILITY_IS_TRACKED is set");
+
+  return visibleCount > 0
+       ? Visibility::APPROXIMATELY_VISIBLE
+       : Visibility::APPROXIMATELY_NONVISIBLE;
+}
+
+void
+nsIFrame::UpdateVisibilitySynchronously()
+{
+  nsIPresShell* presShell = PresContext()->PresShell();
+  if (!presShell) {
+    return;
+  }
+
+  if (presShell->AssumeAllFramesVisible()) {
+    presShell->EnsureFrameInApproximatelyVisibleList(this);
+    return;
+  }
+
+  bool visible = true;
+  nsIFrame* f = GetParent();
+  nsRect rect = GetRectRelativeToSelf();
+  nsIFrame* rectFrame = this;
+  while (f) {
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf) {
+      nsRect transformedRect =
+        nsLayoutUtils::TransformFrameRectToAncestor(rectFrame, rect, f);
+      if (!sf->IsRectNearlyVisible(transformedRect)) {
+        visible = false;
+        break;
+      }
+
+      // In this code we're trying to synchronously update *approximate*
+      // visibility. (In the future we may update precise visibility here as
+      // well, which is why the method name does not contain 'approximate'.) The
+      // IsRectNearlyVisible() check above tells us that the rect we're checking
+      // is approximately visible within the scrollframe, but we still need to
+      // ensure that, even if it was scrolled into view, it'd be visible when we
+      // consider the rest of the document. To do that, we move transformedRect
+      // to be contained in the scrollport as best we can (it might not fit) to
+      // pretend that it was scrolled into view.
+      rect = transformedRect.MoveInsideAndClamp(sf->GetScrollPortRect());
+      rectFrame = f;
+    }
+    nsIFrame* parent = f->GetParent();
+    if (!parent) {
+      parent = nsLayoutUtils::GetCrossDocParentFrame(f);
+      if (parent && parent->PresContext()->IsChrome()) {
+        break;
+      }
+    }
+    f = parent;
+  }
+
+  if (visible) {
+    presShell->EnsureFrameInApproximatelyVisibleList(this);
+  } else {
+    presShell->RemoveFrameFromApproximatelyVisibleList(this);
+  }
+}
+
+void
+nsIFrame::EnableVisibilityTracking()
+{
+  if (GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED) {
+    return;  // Nothing to do.
+  }
+
+  FrameProperties props = Properties();
+  MOZ_ASSERT(!props.Has(VisibilityStateProperty()),
+             "Shouldn't have a VisibilityStateProperty value "
+             "if NS_FRAME_VISIBILITY_IS_TRACKED is not set");
+
+  // Add the state bit so we know to track visibility for this frame, and
+  // initialize the frame property.
+  AddStateBits(NS_FRAME_VISIBILITY_IS_TRACKED);
+  props.Set(VisibilityStateProperty(), 0);
+
+  nsIPresShell* presShell = PresContext()->PresShell();
+  if (!presShell) {
+    return;
+  }
+
+  // Schedule a visibility update. This method will virtually always be called
+  // when layout has changed anyway, so it's very unlikely that any additional
+  // visibility updates will be triggered by this, but this way we guarantee
+  // that if this frame is currently visible we'll eventually find out.
+  presShell->ScheduleApproximateFrameVisibilityUpdateSoon();
+}
+
+void
+nsIFrame::DisableVisibilityTracking()
+{
+  if (!(GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED)) {
+    return;  // Nothing to do.
+  }
+
+  bool isSet = false;
+  FrameProperties props = Properties();
+  uint32_t visibleCount = props.Remove(VisibilityStateProperty(), &isSet);
+
+  MOZ_ASSERT(isSet, "Should have a VisibilityStateProperty value "
+                    "if NS_FRAME_VISIBILITY_IS_TRACKED is set");
+
+  RemoveStateBits(NS_FRAME_VISIBILITY_IS_TRACKED);
+
+  if (visibleCount == 0) {
+    return;  // We were nonvisible.
+  }
+
+  // We were visible, so send an OnVisibilityChange() notification.
+  OnVisibilityChange(Visibility::APPROXIMATELY_NONVISIBLE);
+}
+
+void
+nsIFrame::DecApproximateVisibleCount(Maybe<OnNonvisible> aNonvisibleAction
+                                       /* = Nothing() */)
+{
+  MOZ_ASSERT(GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED);
+
+  bool isSet = false;
+  FrameProperties props = Properties();
+  uint32_t visibleCount = props.Get(VisibilityStateProperty(), &isSet);
+
+  MOZ_ASSERT(isSet, "Should have a VisibilityStateProperty value "
+                    "if NS_FRAME_VISIBILITY_IS_TRACKED is set");
+  MOZ_ASSERT(visibleCount > 0, "Frame is already nonvisible and we're "
+                               "decrementing its visible count?");
+
+  visibleCount--;
+  props.Set(VisibilityStateProperty(), visibleCount);
+  if (visibleCount > 0) {
+    return;
+  }
+
+  // We just became nonvisible, so send an OnVisibilityChange() notification.
+  OnVisibilityChange(Visibility::APPROXIMATELY_NONVISIBLE, aNonvisibleAction);
+}
+
+void
+nsIFrame::IncApproximateVisibleCount()
+{
+  MOZ_ASSERT(GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED);
+
+  bool isSet = false;
+  FrameProperties props = Properties();
+  uint32_t visibleCount = props.Get(VisibilityStateProperty(), &isSet);
+
+  MOZ_ASSERT(isSet, "Should have a VisibilityStateProperty value "
+                    "if NS_FRAME_VISIBILITY_IS_TRACKED is set");
+
+  visibleCount++;
+  props.Set(VisibilityStateProperty(), visibleCount);
+  if (visibleCount > 1) {
+    return;
+  }
+
+  // We just became visible, so send an OnVisibilityChange() notification.
+  OnVisibilityChange(Visibility::APPROXIMATELY_VISIBLE);
+}
+
+void
+nsIFrame::OnVisibilityChange(Visibility aNewVisibility,
+                             Maybe<OnNonvisible> aNonvisibleAction
+                               /* = Nothing() */)
+{
+  // XXX(seth): In bug 1218990 we'll implement visibility tracking for CSS
+  // images here.
 }
 
 static nsIFrame*
@@ -8939,6 +9147,12 @@ nsFrame::BoxMetrics() const
 /* static */ void
 nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame)
 {
+  if (!aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP) &&
+      aFrame->TrackingVisibility()) {
+    // Assume all frames in popups are visible.
+    aFrame->IncApproximateVisibleCount();
+  }
+
   aFrame->AddStateBits(NS_FRAME_IN_POPUP);
 
   AutoTArray<nsIFrame::ChildList,4> childListArray;
@@ -8962,6 +9176,12 @@ nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
   }
 
   aFrame->RemoveStateBits(NS_FRAME_IN_POPUP);
+
+  if (aFrame->TrackingVisibility()) {
+    // We assume all frames in popups are visible, so this decrement balances
+    // out the increment in AddInPopupStateBitToDescendants above.
+    aFrame->DecApproximateVisibleCount();
+  }
 
   AutoTArray<nsIFrame::ChildList,4> childListArray;
   aFrame->GetCrossDocChildLists(&childListArray);

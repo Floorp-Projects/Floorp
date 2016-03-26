@@ -55,6 +55,10 @@ namespace mozilla {
 
 class EventDispatchingCallback;
 
+// A set type for tracking visible frames, for use by the visibility code in
+// PresShell. The set contains nsIFrame* pointers.
+typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
+
 // A hash table type for tracking visible regions, for use by the visibility
 // code in PresShell. The mapping is from view IDs to regions in the
 // coordinate system of that view's scrolled frame.
@@ -73,6 +77,9 @@ class PresShell final : public nsIPresShell,
                         public nsSupportsWeakReference
 {
   template <typename T> using Maybe = mozilla::Maybe<T>;
+  using Nothing = mozilla::Nothing;
+  using OnNonvisible = mozilla::OnNonvisible;
+  using VisibleFrames = mozilla::VisibleFrames;
   using VisibleRegions = mozilla::VisibleRegions;
 
 public:
@@ -382,17 +389,23 @@ public:
     uint32_t   mContentToScrollToFlags;
   };
 
-  virtual void ScheduleImageVisibilityUpdate() override;
 
-  virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) override;
-  virtual void RebuildImageVisibility(nsRect* aRect = nullptr,
-                                      bool aRemoveOnly = false) override;
+  //////////////////////////////////////////////////////////////////////////////
+  // Approximate frame visibility tracking public API.
+  //////////////////////////////////////////////////////////////////////////////
 
-  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) override;
+  void ScheduleApproximateFrameVisibilityUpdateSoon() override;
+  void ScheduleApproximateFrameVisibilityUpdateNow() override;
 
-  virtual void RemoveImageFromVisibleList(nsIImageLoadingContent* aImage) override;
+  void RebuildApproximateFrameVisibilityDisplayList(const nsDisplayList& aList) override;
+  void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
+                                         bool aRemoveOnly = false) override;
 
-  virtual bool AssumeAllImagesVisible() override;
+  void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame) override;
+  void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) override;
+
+  bool AssumeAllFramesVisible() override;
+
 
   virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) override;
 
@@ -401,10 +414,6 @@ public:
                                           bool aEmbeddedCancelled) override;
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
-
-  void ReportAnyBadState();
-
-  void SetInImageVisibility(bool aState);
 
 protected:
   virtual ~PresShell();
@@ -742,22 +751,42 @@ protected:
   virtual void PausePainting() override;
   virtual void ResumePainting() override;
 
-  void UpdateImageVisibility();
-  void DoUpdateImageVisibility(bool aRemoveOnly);
   void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
 
-  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
 
-  void ClearVisibleImagesList(uint32_t aNonvisibleAction);
-  static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
-  static void MarkImagesInListVisible(const nsDisplayList& aList,
-                                      Maybe<VisibleRegions>& aVisibleRegions);
-  void MarkImagesInSubtreeVisible(nsIFrame* aFrame,
-                                  const nsRect& aRect,
-                                  Maybe<VisibleRegions>& aVisibleRegions,
-                                  bool aRemoveOnly = false);
+  //////////////////////////////////////////////////////////////////////////////
+  // Approximate frame visibility tracking implementation.
+  //////////////////////////////////////////////////////////////////////////////
 
+  void UpdateApproximateFrameVisibility();
+  void DoUpdateApproximateFrameVisibility(bool aRemoveOnly);
+
+  void ClearApproximatelyVisibleFramesList(Maybe<mozilla::OnNonvisible> aNonvisibleAction
+                                             = Nothing());
+  static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
+  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
+                                                   Maybe<VisibleRegions>& aVisibleRegions);
+  void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
+                                               const nsRect& aRect,
+                                               Maybe<VisibleRegions>& aVisibleRegions,
+                                               bool aRemoveOnly = false);
+
+  void DecApproximateVisibleCount(VisibleFrames& aFrames,
+                                  Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  void ReportBadStateDuringVisibilityUpdate();
+  void SetInFrameVisibilityUpdate(bool aState);
+
+  nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
+
+  // A set of frames that were visible or could be visible soon at the time
+  // that we last did an approximate frame visibility update.
+  VisibleFrames mApproximatelyVisibleFrames;
+
+
+  //////////////////////////////////////////////////////////////////////////////
   // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
+  //////////////////////////////////////////////////////////////////////////////
+
   void HandleKeyboardEvent(nsINode* aTarget,
                            mozilla::WidgetKeyboardEvent& aEvent,
                            bool aEmbeddedCancelled,
@@ -774,9 +803,6 @@ protected:
          bool aEmbeddedCancelled,
          size_t aChainIndex = 0);
   bool CanDispatchEvent(const mozilla::WidgetGUIEvent* aEvent = nullptr) const;
-
-  // A list of images that are visible or almost visible.
-  nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > mVisibleImages;
 
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution);
 
@@ -887,7 +913,7 @@ protected:
   bool                      mAsyncResizeTimerIsActive : 1;
   bool                      mInResize : 1;
 
-  bool                      mImageVisibilityVisited : 1;
+  bool                      mApproximateFrameVisibilityVisited : 1;
 
   bool                      mNextPaintCompressed : 1;
 
@@ -904,7 +930,7 @@ protected:
   // Whether the widget has received a paint message yet.
   bool                      mHasReceivedPaintMessage : 1;
 
-  bool                      mInImageVisibility : 1;
+  bool                      mInFrameVisibilityUpdate : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };
