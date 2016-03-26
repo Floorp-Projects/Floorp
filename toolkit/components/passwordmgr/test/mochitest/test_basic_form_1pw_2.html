@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test forms with 1 password field, part 2</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: forms with 1 password field, part 2
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+<form id='form1' action='formtest.js'> 1
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form2' action='formtest.js'> 2
+    <input type='password' name='pname' value='' disabled>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form3' action='formtest.js'> 3
+    <input type='password' name='pname' value='' readonly>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form4' action='formtest.js'> 4
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form5' action='formtest.js'> 5
+    <input type='text'     name='uname' value='' disabled>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form6' action='formtest.js'> 6
+    <input type='text'     name='uname' value='' readonly>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form7' action='formtest.js'> 7
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value='' disabled>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form8' action='formtest.js'> 8
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value='' readonly>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form9' action='formtest.js'> 9
+    <input type='text'     name='uname' value='TESTUSER'>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form10' action='formtest.js'> 10
+    <input type='text'     name='uname' value='TESTUSER' readonly>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form11' action='formtest.js'> 11
+    <input type='text'     name='uname' value='TESTUSER' disabled>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: simple form fill, part 2 **/
+
+function startTest() {
+    var f;
+
+    // Test various combinations of disabled/readonly inputs
+    checkForm(1, "testpass"); // control
+    checkUnmodifiedForm(2);
+    checkUnmodifiedForm(3);
+    checkForm(4, "testuser", "testpass"); // control
+    for (f = 5;  f <= 8;  f++) { checkUnmodifiedForm(f); }
+    // Test case-insensitive comparison of username field
+    checkForm(9, "testuser", "testpass");
+    checkForm(10, "TESTUSER", "testpass");
+    checkForm(11, "TESTUSER", "testpass");
+
+    SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+

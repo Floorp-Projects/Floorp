@@ -14,7 +14,7 @@ const PWMGR_COMMON_URL = SimpleTest.getTestFileURL("pwmgr_common.js");
 let pwmgrCommonScript = SpecialPowers.loadChromeScript(PWMGR_COMMON_URL);
 
 // Tell the parent to setup test logins.
-pwmgrCommonScript.sendAsyncMessage("setupParent");
+pwmgrCommonScript.sendAsyncMessage("setupParent", { selfFilling: true });
 
 // When the setup is done, load a recipe for this test.
 pwmgrCommonScript.addMessageListener("doneSetup", function doneSetup() {

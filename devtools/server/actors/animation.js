@@ -390,6 +390,20 @@ var AnimationPlayerActor = ActorClass({
     response: {
       frames: RetVal("json")
     }
+  }),
+
+  /**
+   * Get data about the animated properties of this animation player.
+   * @return {Object} Returns a list of animated properties.
+   * Each property contains a list of values and their offsets
+   */
+  getProperties: method(function() {
+    return this.player.effect.getProperties();
+  }, {
+    request: {},
+    response: {
+      frames: RetVal("json")
+    }
   })
 });
 
