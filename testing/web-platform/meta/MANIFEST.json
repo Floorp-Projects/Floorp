@@ -28414,6 +28414,10 @@
         "url": "/web-animations/animation-effect-timing/iterationStart.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/direction.html",
+        "url": "/web-animations/animation-effect-timing/direction.html"
+      },
+      {
         "path": "web-animations/animation-node/animation-node-after.html",
         "url": "/web-animations/animation-node/animation-node-after.html"
       },
