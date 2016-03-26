@@ -44,7 +44,7 @@ public:
   static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
                            double aPortion)
   {
-    return aFunction.isSome() ? aFunction->GetValue(aPortion) : aPortion;
+    return aFunction ? aFunction->GetValue(aPortion) : aPortion;
   }
   static int32_t Compare(const Maybe<ComputedTimingFunction>& aLhs,
                          const Maybe<ComputedTimingFunction>& aRhs);
