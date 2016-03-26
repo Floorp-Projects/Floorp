@@ -171,7 +171,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
         break;
       }
       case eClipboardEventClass:
-        tmp->mEvent->AsClipboardEvent()->clipboardData = nullptr;
+        tmp->mEvent->AsClipboardEvent()->mClipboardData = nullptr;
         break;
       case eMutationEventClass:
         tmp->mEvent->AsMutationEvent()->mRelatedNode = nullptr;
@@ -212,8 +212,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
         break;
       }
       case eClipboardEventClass:
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");
-        cb.NoteXPCOMChild(tmp->mEvent->AsClipboardEvent()->clipboardData);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mClipboardData");
+        cb.NoteXPCOMChild(tmp->mEvent->AsClipboardEvent()->mClipboardData);
         break;
       case eMutationEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");

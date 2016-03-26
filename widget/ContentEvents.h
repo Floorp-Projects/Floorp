@@ -175,14 +175,14 @@ public:
     return result;
   }
 
-  nsCOMPtr<dom::DataTransfer> clipboardData;
+  nsCOMPtr<dom::DataTransfer> mClipboardData;
 
   void AssignClipboardEventData(const InternalClipboardEvent& aEvent,
                                 bool aCopyTargets)
   {
     AssignEventData(aEvent, aCopyTargets);
 
-    clipboardData = aEvent.clipboardData;
+    mClipboardData = aEvent.mClipboardData;
   }
 };
 
