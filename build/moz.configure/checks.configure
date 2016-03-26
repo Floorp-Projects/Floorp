@@ -74,6 +74,11 @@ def checking(what, callback=None):
 # - `progs` is a list (or tuple) of program names that will be searched for.
 # - `what` is a human readable description of what is being looked for. It
 #   defaults to the lowercase version of `var`.
+# - `input` is a string reference to an existing option or a reference to a
+#   @depends function resolving to explicit input for the program check.
+#   The default is to create an option for the environment variable `var`.
+#   This argument allows to use a different kind of option (possibly using a
+#   configure flag), or doing some pre-processing with a @depends function.
 # - `allow_missing` indicates whether not finding the program is an error.
 #
 # The simplest form is:
@@ -83,18 +88,32 @@ def checking(what, callback=None):
 # use that value instead.
 @template
 @advanced
-def check_prog(var, progs, what=None, allow_missing=False):
+def check_prog(var, progs, what=None, input=None, allow_missing=False):
     from mozbuild.shellutil import quote
 
-    option(env=var, nargs=1,
-           help='Path to %s' % (what or 'the %s program' % var.lower()))
+    if input:
+        # Wrap input with type checking and normalization.
+        @depends(input)
+        def input(value):
+            if not value:
+                return
+            if isinstance(value, str):
+                return (value,)
+            if isinstance(value, (tuple, list)) and len(value) == 1:
+                return value
+            configure_error('input must resolve to a tuple or a list with a '
+                            'single element, or a string')
+    else:
+        option(env=var, nargs=1,
+               help='Path to %s' % (what or 'the %s program' % var.lower()))
+        input = var
     what = what or var.lower()
 
     if not isinstance(progs, (tuple, list)):
         configure_error('progs should be a list or tuple!')
     progs = list(progs)
 
-    @depends(var)
+    @depends(input)
     @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
     def check(value):
         if value:
