@@ -97,7 +97,7 @@ namespace
     NS_IMETHOD Run()
     {
       InternalSMILTimeEvent event(true, mMsg);
-      event.detail = mDetail;
+      event.mDetail = mDetail;
 
       nsPresContext* context = nullptr;
       nsIDocument* doc = mTarget->GetCurrentDoc();
