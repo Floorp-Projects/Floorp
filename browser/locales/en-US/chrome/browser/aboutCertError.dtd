@@ -26,12 +26,12 @@ Strict Transport Security (HSTS) to specify that &brandShortName; only connect
 to it securely. As a result, it is not possible to add an exception for this
 certificate.">
 
-<!ENTITY certerror.expert.content "If you understand what’s going on, you
-can tell &brandShortName; to start trusting this site’s identification.
+<!ENTITY certerror.expert.content "If you understand what's going on, you
+can tell &brandShortName; to start trusting this site's identification.
 <b>Even if you trust the site, this error could mean that someone is
 tampering with your connection.</b>">
-<!ENTITY certerror.expert.contentPara2 "Don’t add an exception unless
-you know there’s a good reason why this site doesn’t use trusted identification.">
+<!ENTITY certerror.expert.contentPara2 "Don't add an exception unless
+you know there's a good reason why this site doesn't use trusted identification.">
 <!ENTITY certerror.addException.label "Add Exception…">
 <!ENTITY certerror.copyToClipboard.label "Copy text to clipboard">
 
