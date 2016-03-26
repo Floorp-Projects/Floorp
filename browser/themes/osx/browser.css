@@ -3282,13 +3282,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   color: hsl(210,11%,16%);
 }
 
-/* Developer Toolbar */
-
-#developer-toolbar-closebutton {
-  margin-left: 8px;
-  margin-right: 8px;
-}
-
 /* Error counter */
 
 #developer-toolbar-toolbox-button[error-count]:before {
