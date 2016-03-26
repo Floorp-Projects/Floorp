@@ -83,12 +83,13 @@ class ConfigureSandbox(dict):
         do_stuff(config)
     """
 
-    # The default set of builtins.
+    # The default set of builtins. We expose unicode as str to make sandboxed
+    # files more python3-ready.
     BUILTINS = ReadOnlyDict({
         b: __builtins__[b]
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance')
-    }, __import__=forbidden_import)
+    }, __import__=forbidden_import, str=unicode)
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{

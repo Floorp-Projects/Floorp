@@ -170,12 +170,63 @@ class TestChecksConfigure(unittest.TestCase):
                               "DEBUG: cc: Trying 'unknown 3'\n"
                               'ERROR: Cannot find the target C compiler\n')
 
+    def test_check_prog_input(self):
+        config, out, status = self.get_result(
+            'option("--with-ccache", nargs=1, help="ccache")\n'
+            'check_prog("CCACHE", ("known-a",), input="--with-ccache")',
+            ['--with-ccache=known-b'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CCACHE': '/usr/local/bin/known-b'})
+        self.assertEqual(out, 'checking for ccache... /usr/local/bin/known-b\n')
+
+        script = (
+            'option(env="CC", nargs=1, help="compiler")\n'
+            '@depends("CC")\n'
+            'def compiler(value):\n'
+            '    return value[0].split()[0] if value else None\n'
+            'check_prog("CC", ("known-a",), input=compiler)'
+        )
+        config, out, status = self.get_result(script)
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CC': '/usr/bin/known-a'})
+        self.assertEqual(out, 'checking for cc... /usr/bin/known-a\n')
+
+        config, out, status = self.get_result(script, ['CC=known-b'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CC': '/usr/local/bin/known-b'})
+        self.assertEqual(out, 'checking for cc... /usr/local/bin/known-b\n')
+
+        config, out, status = self.get_result(script, ['CC=known-b -m32'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CC': '/usr/local/bin/known-b'})
+        self.assertEqual(out, 'checking for cc... /usr/local/bin/known-b\n')
+
     def test_check_prog_configure_error(self):
         with self.assertRaises(ConfigureError) as e:
             self.get_result('check_prog("FOO", "foo")')
 
         self.assertEqual(e.exception.message,
                          'progs should be a list or tuple!')
+
+        with self.assertRaises(ConfigureError) as e:
+            self.get_result(
+                'foo = depends("--help")(lambda h: ("a", "b"))\n'
+                'check_prog("FOO", ("known-a",), input=foo)'
+            )
+
+        self.assertEqual(e.exception.message,
+                         'input must resolve to a tuple or a list with a '
+                         'single element, or a string')
+
+        with self.assertRaises(ConfigureError) as e:
+            self.get_result(
+                'foo = depends("--help")(lambda h: {"a": "b"})\n'
+                'check_prog("FOO", ("known-a",), input=foo)'
+            )
+
+        self.assertEqual(e.exception.message,
+                         'input must resolve to a tuple or a list with a '
+                         'single element, or a string')
 
 
 if __name__ == '__main__':
