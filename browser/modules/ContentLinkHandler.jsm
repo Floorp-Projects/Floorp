@@ -71,47 +71,46 @@ this.ContentLinkHandler = {
           }
           break;
         case "icon":
-          if (!iconAdded) {
-            if (!Services.prefs.getBoolPref("browser.chrome.site_icons"))
-              break;
+          if (iconAdded || !Services.prefs.getBoolPref("browser.chrome.site_icons"))
+            break;
 
-            var uri = this.getLinkIconURI(link);
-            if (!uri)
-              break;
+          var uri = this.getLinkIconURI(link);
+          if (!uri)
+            break;
 
-            // Telemetry probes for measuring the sizes attribute
-            // usage and available dimensions.
-            let sizeHistogramTypes = Services.telemetry.
-                                     getHistogramById("LINK_ICON_SIZES_ATTR_USAGE");
-            let sizeHistogramDimension = Services.telemetry.
-                                         getHistogramById("LINK_ICON_SIZES_ATTR_DIMENSION");
-            let sizesType;
-            if (link.sizes.length) {
-              for (let size of link.sizes) {
-                if (size.toLowerCase() == "any") {
-                  sizesType = SIZES_TELEMETRY_ENUM.ANY;
-                  break;
+          // Telemetry probes for measuring the sizes attribute
+          // usage and available dimensions.
+          let sizeHistogramTypes = Services.telemetry.
+                                   getHistogramById("LINK_ICON_SIZES_ATTR_USAGE");
+          let sizeHistogramDimension = Services.telemetry.
+                                       getHistogramById("LINK_ICON_SIZES_ATTR_DIMENSION");
+          let sizesType;
+          if (link.sizes.length) {
+            for (let size of link.sizes) {
+              if (size.toLowerCase() == "any") {
+                sizesType = SIZES_TELEMETRY_ENUM.ANY;
+                break;
+              } else {
+                let re = /^([1-9][0-9]*)x[1-9][0-9]*$/i;
+                let values = re.exec(size);
+                if (values && values.length > 1) {
+                  sizesType = SIZES_TELEMETRY_ENUM.DIMENSION;
+                  sizeHistogramDimension.add(parseInt(values[1]));
                 } else {
-                  let re = /^([1-9][0-9]*)x[1-9][0-9]*$/i;
-                  let values = re.exec(size);
-                  if (values && values.length > 1) {
-                    sizesType = SIZES_TELEMETRY_ENUM.DIMENSION;
-                    sizeHistogramDimension.add(parseInt(values[1]));
-                  } else {
-                    sizesType = SIZES_TELEMETRY_ENUM.INVALID;
-                    break;
-                  }
+                  sizesType = SIZES_TELEMETRY_ENUM.INVALID;
+                  break;
                 }
               }
-            } else {
-              sizesType = SIZES_TELEMETRY_ENUM.NO_SIZES;
             }
-            sizeHistogramTypes.add(sizesType);
-
-            [iconAdded] = chromeGlobal.sendSyncMessage(
-                            "Link:SetIcon",
-                            {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
+          } else {
+            sizesType = SIZES_TELEMETRY_ENUM.NO_SIZES;
           }
+          sizeHistogramTypes.add(sizesType);
+
+          chromeGlobal.sendAsyncMessage(
+            "Link:SetIcon",
+            {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
+          iconAdded = true;
           break;
         case "search":
           if (!searchAdded && event.type == "DOMLinkAdded") {

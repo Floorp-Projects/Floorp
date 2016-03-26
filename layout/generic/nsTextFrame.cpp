@@ -3599,7 +3599,11 @@ nsTextPaintStyle::GetTextColor()
         return NS_RGBA(0, 0, 0, 255);
     }
   }
-  return nsLayoutUtils::GetColor(mFrame, eCSSProperty_color);
+
+  nsCSSProperty property =
+    mFrame->StyleText()->mWebkitTextFillColorForeground
+    ? eCSSProperty_color : eCSSProperty__webkit_text_fill_color;
+  return nsLayoutUtils::GetColor(mFrame, property);
 }
 
 bool

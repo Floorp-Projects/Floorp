@@ -3915,6 +3915,17 @@ nsComputedDOMStyle::DoGetTextSizeAdjust()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWebkitTextFillColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  const nsStyleText* text = StyleText();
+  nscolor color = text->mWebkitTextFillColorForeground ?
+    StyleColor()->mColor : text->mWebkitTextFillColor;
+  SetToRGBAColor(val, color);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetPointerEvents()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;

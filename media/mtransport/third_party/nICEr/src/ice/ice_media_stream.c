@@ -319,19 +319,10 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
     int r,_status;
     nr_ice_media_stream *stream=cb_arg;
     nr_ice_cand_pair *pair = 0;
-    int timer_val;
-    int timer_multiplier;
+    int timer_multiplier=stream->pctx->active_streams ? stream->pctx->active_streams : 1;
+    int timer_val=stream->pctx->ctx->Ta*timer_multiplier;
 
-    timer_multiplier=stream->pctx->active_streams;
-    /* Once the checks are completed we don't have an active streams any more,
-     * but we still need to process triggered checks. */
-    if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED) {
-      assert(timer_multiplier==0);
-      timer_multiplier=1;
-    }
-
-    assert(timer_multiplier!=0);
-    timer_val=stream->pctx->ctx->Ta*timer_multiplier;
+    assert(timer_val>0);
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): check timer expired for media stream %s",stream->pctx->label,stream->label);
     stream->timer=0;

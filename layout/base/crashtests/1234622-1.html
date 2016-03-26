@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+<script>
+
+window.addEventListener("load", function() {
+    setTimeout(function() {
+        window.location = "data:text/html,2";
+    }, 0);
+}, false);
+
+window.addEventListener("pagehide", function() {
+    var x = document.createElement("object");
+    x.setAttribute("data", "data:text/plain,3");
+    document.documentElement.appendChild(x);
+}, false);
+
+</script>

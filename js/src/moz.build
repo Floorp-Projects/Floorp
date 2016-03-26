@@ -77,10 +77,16 @@ CONFIGURE_DEFINE_FILES += [
     'js-config.h',
 ]
 
+if CONFIG['HAVE_DTRACE']:
+    GENERATED_FILES += ['javascript-trace.h']
+
+    EXPORTS += ['!javascript-trace.h']
+
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
 # doing!
 EXPORTS += [
+    '!js-config.h',
     'js.msg',
     'jsalloc.h',
     'jsapi.h',

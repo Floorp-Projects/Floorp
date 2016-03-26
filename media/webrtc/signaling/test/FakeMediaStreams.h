@@ -414,6 +414,12 @@ public:
            ((mHintContents & HINT_CONTENTS_VIDEO) && aTrack.AsVideoStreamTrack());
   }
 
+  bool
+  OwnsTrack(const Fake_MediaStreamTrack& aTrack) const
+  {
+    return HasTrack(aTrack);
+  }
+
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
 
   Fake_MediaStreamTrack*

@@ -282,10 +282,6 @@
               accesskey="&warnOpenManyTabs.accesskey;"
               preference="browser.tabs.warnOnOpen"/>
 
-    <checkbox id="restoreOnDemand" label="&restoreTabsOnDemand.label;"
-              accesskey="&restoreTabsOnDemand.accesskey;"
-              preference="browser.sessionstore.restore_on_demand"/>
-
     <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
               accesskey="&switchToNewTabs.accesskey;"
               preference="browser.tabs.loadInBackground"/>

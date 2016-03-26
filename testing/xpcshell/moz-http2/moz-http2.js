@@ -204,7 +204,7 @@ function handleRequest(req, res) {
   var push, push1, push1a, push2, push3;
 
   // PushService tests.
-  var pushPushServer1, pushPushServer2, pushPushServer3;
+  var pushPushServer1, pushPushServer2, pushPushServer3, pushPushServer4;
 
   if (req.httpVersionMajor === 2) {
     res.setHeader('X-Connection-Http2', 'yes');
@@ -608,7 +608,8 @@ function handleRequest(req, res) {
       { hostname: 'localhost:' + serverPort, port: serverPort,
         path : '/pushNotificationsDeliver1', method : 'GET',
         headers: { 'Encryption-Key': 'keyid="notification1"; dh="BO_tgGm-yvYAGLeRe16AvhzaUcpYRiqgsGOlXpt0DRWDRGGdzVLGlEVJMygqAUECarLnxCiAOHTP_znkedrlWoU"',
-                   'Encryption': 'keyid="notification1";salt="uAZaiXpOSfOLJxtOCZ09dA"'
+                   'Encryption': 'keyid="notification1";salt="uAZaiXpOSfOLJxtOCZ09dA"',
+                   'Content-Encoding': 'aesgcm128',
                  }
       });
     pushPushServer1.writeHead(200, {
@@ -624,7 +625,8 @@ function handleRequest(req, res) {
       { hostname: 'localhost:' + serverPort, port: serverPort,
         path : '/pushNotificationsDeliver3', method : 'GET',
         headers: { 'Encryption-Key': 'keyid="notification2"; dh="BKVdQcgfncpNyNWsGrbecX0zq3eHIlHu5XbCGmVcxPnRSbhjrA6GyBIeGdqsUL69j5Z2CvbZd-9z1UBH0akUnGQ"',
-                   'Encryption': 'keyid="notification2";salt="vFn3t3M_k42zHBdpch3VRw"'
+                   'Encryption': 'keyid="notification2";salt="vFn3t3M_k42zHBdpch3VRw"',
+                   'Content-Encoding': 'aesgcm128',
                  }
       });
     pushPushServer2.writeHead(200, {
@@ -640,7 +642,8 @@ function handleRequest(req, res) {
       { hostname: 'localhost:' + serverPort, port: serverPort,
         path : '/pushNotificationsDeliver3', method : 'GET',
         headers: { 'Encryption-Key': 'keyid="notification3";dh="BD3xV_ACT8r6hdIYES3BJj1qhz9wyv7MBrG9vM2UCnjPzwE_YFVpkD-SGqE-BR2--0M-Yf31wctwNsO1qjBUeMg"',
-                   'Encryption': 'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24'
+                   'Encryption': 'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
+                   'Content-Encoding': 'aesgcm128',
                  }
       });
     pushPushServer3.writeHead(200, {
@@ -648,6 +651,23 @@ function handleRequest(req, res) {
       });
 
     pushPushServer3.end('2caaeedd9cf1059b80c58b6c6827da8ff7de864ac8bea6d5775892c27c005209cbf9c4de0c3fbcddb9711d74eaeebd33f7275374cb42dd48c07168bc2cc9df63e045ce2d2a2408c66088a40c', 'hex');
+    return;
+  }
+
+  else if (u.pathname == "/pushNotifications/subscription4") {
+    pushPushServer4 = res.push(
+      { hostname: 'localhost:' + serverPort, port: serverPort,
+        path : '/pushNotificationsDeliver4', method : 'GET',
+        headers: { 'Crypto-Key': 'keyid="notification4";dh="BJScXUUTcs7D8jJWI1AOxSgAKkF7e56ay4Lek52TqDlWo1yGd5czaxFWfsuP4j7XNWgGYm60-LKpSUMlptxPFVQ"',
+                   'Encryption': 'keyid="notification4"; salt="sn9p2QqF3V6KBclda8vx7w"',
+                   'Content-Encoding': 'aesgcm',
+                 }
+      });
+    pushPushServer4.writeHead(200, {
+      'subresource' : '1'
+      });
+
+    pushPushServer4.end('9eba7ba6192544a39bd9e9b58e702d0748f1776b27f6616cdc55d29ed5a015a6db8f2dd82cd5751a14315546194ff1c18458ab91eb36c9760ccb042670001fd9964557a079553c3591ee131ceb259389cfffab3ab873f873caa6a72e87d262b8684c3260e5940b992234deebf57a9ff3a8775742f3cbcb152d249725a28326717e19cce8506813a155eff5df9bdba9e3ae8801d3cc2b7e7f2f1b6896e63d1fdda6f85df704b1a34db7b2dd63eba11ede154300a318c6f83c41a3d32356a196e36bc905b99195fd91ae4ff3f545c42d17f1fdc1d5bd2bf7516d0765e3a859fffac84f46160b79cedda589f74c25357cf6988cd8ba83867ebd86e4579c9d3b00a712c77fcea3b663007076e21f9819423faa830c2176ff1001c1690f34be26229a191a938517', 'hex');
     return;
   }
 
