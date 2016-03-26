@@ -1910,24 +1910,23 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
     MIRType mirType = ins->mir()->type();
 
     Register cond = ToRegister(ins->condExpr());
+    const LAllocation* falseExpr = ins->falseExpr();
 
     if (mirType == MIRType_Int32) {
-        Register falseExpr = ToRegister(ins->falseExpr());
         Register out = ToRegister(ins->output());
         MOZ_ASSERT(ToRegister(ins->trueExpr()) == out, "true expr input is reused for output");
-        masm.as_movz(out, falseExpr, cond);
+        masm.as_movz(out, ToRegister(falseExpr), cond);
         return;
     }
 
-    Operand falseExpr = ToOperand(ins->falseExpr());
     FloatRegister out = ToFloatRegister(ins->output());
     MOZ_ASSERT(ToFloatRegister(ins->trueExpr()) == out, "true expr input is reused for output");
 
-    if (falseExpr.getTag() == Operand::FREG) {
+    if (falseExpr->isFloatReg()) {
         if (mirType == MIRType_Float32)
-            masm.as_movz(Assembler::SingleFloat, out, falseExpr.toFReg(), cond);
+            masm.as_movz(Assembler::SingleFloat, out, ToFloatRegister(falseExpr), cond);
         else if (mirType == MIRType_Double)
-            masm.as_movz(Assembler::DoubleFloat, out, falseExpr.toFReg(), cond);
+            masm.as_movz(Assembler::DoubleFloat, out, ToFloatRegister(falseExpr), cond);
         else
             MOZ_CRASH("unhandled type in visitAsmSelect!");
     } else {
@@ -1935,9 +1934,9 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
         masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
 
         if (mirType == MIRType_Float32)
-            masm.loadFloat32(falseExpr.toAddress(), out);
+            masm.loadFloat32(ToAddress(falseExpr), out);
         else if (mirType == MIRType_Double)
-            masm.loadDouble(falseExpr.toAddress(), out);
+            masm.loadDouble(ToAddress(falseExpr), out);
         else
             MOZ_CRASH("unhandled type in visitAsmSelect!");
 
