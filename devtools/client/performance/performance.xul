@@ -84,15 +84,15 @@
                class="devtools-toolbar">
         <hbox id="recordings-controls"
               class="devtools-toolbarbutton-group">
+          <toolbarbutton id="clear-button"
+                         class="devtools-toolbarbutton devtools-clear-icon"
+                         tooltiptext="&performanceUI.clearButton;"/>
           <toolbarbutton id="main-record-button"
                          class="devtools-toolbarbutton record-button"
                          tooltiptext="&performanceUI.recordButton.tooltip;"/>
           <toolbarbutton id="import-button"
                          class="devtools-toolbarbutton"
                          label="&performanceUI.importButton;"/>
-          <toolbarbutton id="clear-button"
-                         class="devtools-toolbarbutton"
-                         label="&performanceUI.clearButton;"/>
         </hbox>
       </toolbar>
       <vbox id="recordings-list" class="theme-sidebar" flex="1"/>

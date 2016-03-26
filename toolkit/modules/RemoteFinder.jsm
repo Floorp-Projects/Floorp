@@ -29,6 +29,7 @@ RemoteFinder.prototype = {
       this._messageManager.removeMessageListener("Finder:Result", this);
       this._messageManager.removeMessageListener("Finder:MatchesResult", this);
       this._messageManager.removeMessageListener("Finder:CurrentSelectionResult",this);
+      this._messageManager.removeMessageListener("Finder:HighlightFinished",this);
     }
     else {
       aBrowser.messageManager.sendAsyncMessage("Finder:Initialize");
@@ -39,6 +40,7 @@ RemoteFinder.prototype = {
     this._messageManager.addMessageListener("Finder:Result", this);
     this._messageManager.addMessageListener("Finder:MatchesResult", this);
     this._messageManager.addMessageListener("Finder:CurrentSelectionResult", this);
+    this._messageManager.addMessageListener("Finder:HighlightFinished", this);
 
     // Ideally listeners would have removed themselves but that doesn't happen
     // right now
@@ -70,6 +72,10 @@ RemoteFinder.prototype = {
       case "Finder:CurrentSelectionResult":
         callback = "onCurrentSelection";
         params = [ aMessage.data.selection, aMessage.data.initial ];
+        break;
+      case "Finder:HighlightFinished":
+        callback = "onHighlightFinished";
+        params = [ aMessage.data ];
         break;
     }
 
@@ -200,6 +206,10 @@ RemoteFinderListener.prototype = {
   // it passes them forward to the parent.
   onMatchesCountResult: function (aData) {
     this._global.sendAsyncMessage("Finder:MatchesResult", aData);
+  },
+
+  onHighlightFinished: function(aData) {
+    this._global.sendAsyncMessage("Finder:HighlightFinished", aData);
   },
 
   receiveMessage: function (aMessage) {

@@ -9,31 +9,37 @@
 #placesList > treechildren::-moz-tree-row {
   background-color: transparent;
   border-color: transparent;
+  padding-bottom: 1px;
+  height: 24px;
+}
+
+#placesList > treechildren::-moz-tree-cell-text {
+  font-size: 12px;
+  -moz-margin-end: 6px;
 }
 
 #placesList > treechildren::-moz-tree-row(selected) {  
   background: @sidebarItemBackground@;
   border-top: @sidebarItemBorderTop@;
+  border-bottom: @sidebarItemBorderBottom@;
 }
 
 #placesList > treechildren::-moz-tree-row(selected,focus) {  
   background: @sidebarItemFocusedBackground@;
   border-top: @sidebarItemFocusedBorderTop@;
+  border-bottom: @sidebarItemFocusedBorderBottom@;
 }
 
 #placesList:-moz-system-metric(mac-graphite-theme) > treechildren::-moz-tree-row(selected) {
   background: @sidebarItemGraphiteBackground@;
   border-top: @sidebarItemGraphiteBorderTop@;
+  border-bottom: @sidebarItemGraphiteBorderBottom@;
 }
 
 #placesList:-moz-system-metric(mac-graphite-theme) > treechildren::-moz-tree-row(selected,focus) {
   background: @sidebarItemGraphiteFocusedBackground@;
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
-}
-
-#placesList > treechildren:-moz-window-inactive::-moz-tree-row(selected) {
-  background: @sidebarItemInactiveBackground@;
-  border-top: @sidebarItemInactiveBorderTop@;
+  border-bottom: @sidebarItemGraphiteFocusedBorderBottom@;
 }
 
 #placesList > treechildren::-moz-tree-row(History),
@@ -51,8 +57,77 @@
 }
 
 #placesList > treechildren::-moz-tree-cell-text(selected) {  
-  font-weight: bold !important;
-  color: #ffffff !important;
+  color: #fff;
+  font-weight: bold;
+}
+
+#placesList > treechildren::-moz-tree-twisty {
+  -moz-appearance: none;
+  padding: 0 2px;
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed");
+}
+
+#placesList > treechildren::-moz-tree-twisty(selected) {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
+}
+
+#placesList > treechildren::-moz-tree-twisty(open) {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
+}
+
+#placesList > treechildren::-moz-tree-twisty(open, selected) {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+}
+
+@media (-moz-mac-yosemite-theme) {
+  #placesList > treechildren::-moz-tree-row(selected) {
+    background: @sidebarItemBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  #placesList > treechildren::-moz-tree-row(selected,focus) {
+    background: @sidebarItemFocusedBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  #placesList > treechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected) {
+    background: @sidebarItemGraphiteBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  #placesList > treechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected,focus) {
+    background: @sidebarItemGraphiteFocusedBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  #placesList > treechildren::-moz-tree-cell-text(selected) {
+    color: -moz-dialogtext;
+    font-weight: 500;
+  }
+
+  #placesList > treechildren::-moz-tree-cell-text(selected, focus) {
+    color: #fff;
+  }
+
+  #placesList > treechildren::-moz-tree-twisty(selected) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed");
+  }
+
+  #placesList > treechildren::-moz-tree-twisty(selected, focus) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
+  }
+
+  #placesList > treechildren::-moz-tree-twisty(open, selected) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
+  }
+
+  #placesList > treechildren::-moz-tree-twisty(open, selected, focus) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+  }
 }
 
 #placesToolbar {
@@ -65,7 +140,7 @@
 
 #placesView > splitter {
   -moz-border-start: none !important;
-  -moz-border-end: 1px solid #bdbdbd;
+  -moz-border-end: 1px solid #b4b4b4;
   min-width: 1px;
   width: 3px;
   -moz-margin-start: -3px;
@@ -174,14 +249,29 @@
 
 /* Place List, Place Content */
 #placesList {
-  -moz-appearance: -moz-mac-vibrancy-light;
-  background-color: #e2e7ed;
+  background-color: hsl(212,19%,85%);
+  background-image: linear-gradient(hsl(213,26%,93%), hsl(212,19%,85%));
+  box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
   width: 160px;
 }
 
 #placesList:-moz-window-inactive {
-  background-color: #e8e8e8;
+  background-color: hsl(0,0%,92%);
+  background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,92%));
 }
+
+@media (-moz-mac-yosemite-theme) {
+  #placesList {
+    -moz-appearance: -moz-mac-vibrancy-light;
+    background-image: none;
+    box-shadow: none;
+  }
+
+  #placesList:-moz-window-inactive {
+    background-image: none;
+  }
+}
+
 
 /* Info box */
 #detailsDeck {

@@ -31,24 +31,36 @@ const INT_PARTIAL_LEN = 15;
 const INT_TOTAL_LEN = 31;
 
 function backgroundScript() {
-  let events = [];
+  let events = new Set();
   let eventWaiter = null;
 
   browser.downloads.onCreated.addListener(data => {
-    events.push({type: "onCreated", data});
+    events.add({type: "onCreated", data});
     if (eventWaiter) {
       eventWaiter();
     }
   });
 
   browser.downloads.onChanged.addListener(data => {
-    events.push({type: "onChanged", data});
+    events.add({type: "onChanged", data});
     if (eventWaiter) {
       eventWaiter();
     }
   });
 
-  function waitForEvents(expected) {
+  browser.downloads.onErased.addListener(data => {
+    events.add({type: "onErased", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
+  // Returns a promise that will resolve when the given list of expected
+  // events have all been seen.  By default, succeeds only if the exact list
+  // of expected events is seen in the given order.  options.exact can be
+  // set to false to allow other events and options.inorder can be set to
+  // false to allow the events to arrive in any order.
+  function waitForEvents(expected, options = {}) {
     function compare(received, expected) {
       if (typeof expected == "object" && expected != null) {
         if (typeof received != "object") {
@@ -58,24 +70,55 @@ function backgroundScript() {
       }
       return (received == expected);
     }
+
+    const exact = ("exact" in options) ? options.exact : true;
+    const inorder = ("inorder" in options) ? options.inorder : true;
     return new Promise((resolve, reject) => {
       function check() {
-        if (events.length < expected.length) {
+        function fail(msg) {
+          browser.test.fail(msg);
+          reject(new Error(msg));
+        }
+        if (events.size < expected.length) {
           return;
         }
-        if (expected.length > events.length) {
-          reject(new Error(`Got ${events.length} events but only expected ${expected.length}`));
+        if (exact && expected.length < events.size) {
+          fail(`Got ${events.size} events but only expected ${expected.length}`);
+          return;
         }
 
-        for (let i = 0; i < expected.length; i++) {
-          if (!compare(events[i], expected[i])) {
-            reject(new Error(`Mismatch in event ${i}, expecting ${JSON.stringify(expected[i])} but got ${JSON.stringify(events[i])}`));
+        let remaining = new Set(events);
+        if (inorder) {
+          for (let event of events) {
+            if (compare(event, expected[0])) {
+              expected.shift();
+              remaining.delete(event);
+            }
           }
+        } else {
+          expected = expected.filter(val => {
+            for (let remainingEvent of remaining) {
+              if (compare(remainingEvent, val)) {
+                remaining.delete(remainingEvent);
+                return false;
+              }
+            }
+            return true;
+          });
         }
 
-        events = [];
-        eventWaiter = null;
-        resolve();
+        // Events that did occur have been removed from expected so if
+        // expected is empty, we're done.  If we didn't see all the
+        // expected events and we're not looking for an exact match,
+        // then we just may not have seen the event yet, so return without
+        // failing and check() will be called again when a new event arrives.
+        if (expected.length == 0) {
+          events = remaining;
+          eventWaiter = null;
+          resolve();
+        } else if (exact) {
+          fail(`Mismatched event: expecting ${JSON.stringify(expected[0])} but got ${JSON.stringify(Array.from(remaining)[0])}`);
+        }
       }
       eventWaiter = check;
       check();
@@ -89,11 +132,14 @@ function backgroundScript() {
     }
     let what = match[1];
     if (what == "waitForEvents") {
-      waitForEvents(arguments[1]).then(() => {
+      waitForEvents(...args).then(() => {
         browser.test.sendMessage("waitForEvents.done", {status: "success"});
       }).catch(error => {
         browser.test.sendMessage("waitForEvents.done", {status: "error", errmsg: error.message});
       });
+    } else if (what == "clearEvents") {
+      events = new Set();
+      browser.test.sendMessage("clearEvents.done", {status: "success"});
     } else {
       // extension functions throw on bad arguments, we can remove the extra
       // promise when bug 1250223 is fixed.
@@ -122,8 +168,8 @@ function clearDownloads(callback) {
   });
 }
 
-function runInExtension(what, args) {
-  extension.sendMessage(`${what}.request`, args);
+function runInExtension(what, ...args) {
+  extension.sendMessage(`${what}.request`, ...args);
   return extension.awaitMessage(`${what}.done`);
 }
 
@@ -240,8 +286,18 @@ add_task(function* test_cancel() {
           current: "USER_CANCELED",
         },
       },
-    }]);
-  is(msg.status, "success", "got onChanged event corresponding to pause");
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        paused: {
+          previous: true,
+          current: false,
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onChanged events corresponding to cancel()");
 
   msg = yield runInExtension("search", {error: "USER_CANCELED"});
   is(msg.status, "success", "search() succeeded");
@@ -295,6 +351,15 @@ add_task(function* test_pauseresume() {
         canResume: {
           previous: false,
           current: true,
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
         },
       },
     }]);
@@ -411,6 +476,15 @@ add_task(function* test_pausecancel() {
         canResume: {
           previous: false,
           current: true,
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
         },
       },
     }]);
@@ -590,26 +664,39 @@ add_task(function* test_removal_of_incomplete_download() {
 add_task(function* test_erase() {
   yield clearDownloads();
 
+  yield runInExtension("clearEvents");
+
+  function* download() {
+    let msg = yield runInExtension("download", {url: TXT_URL});
+    is(msg.status, "success", "download succeeded");
+    let id = msg.result;
+
+    msg = yield runInExtension("waitForEvents", [{
+      type: "onChanged", data: {id, state: {current: "complete"}},
+    }], {exact: false});
+    is(msg.status, "success", "download finished");
+
+    return id;
+  }
+
   let ids = {};
-  let msg = yield runInExtension("download", {url: TXT_URL});
-  is(msg.status, "success", "download succeeded");
-  ids.dl1 = msg.result;
+  ids.dl1 = yield download();
+  ids.dl2 = yield download();
+  ids.dl3 = yield download();
 
-  msg = yield runInExtension("download", {url: TXT_URL});
-  is(msg.status, "success", "download succeeded");
-  ids.dl2 = msg.result;
-
-  msg = yield runInExtension("download", {url: TXT_URL});
-  is(msg.status, "success", "download succeeded");
-  ids.dl3 = msg.result;
-
-  msg = yield runInExtension("search", {});
+  let msg = yield runInExtension("search", {});
   is(msg.status, "success", "search succeded");
   is(msg.result.length, 3, "search found 3 downloads");
 
+  msg = yield runInExtension("clearEvents");
+
   msg = yield runInExtension("erase", {id: ids.dl1});
-  if (msg.errmsg) { info(msg.errmsg); }
   is(msg.status, "success", "erase by id succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onErased", data: ids.dl1},
+  ]);
+  is(msg.status, "success", "received onErased event");
 
   msg = yield runInExtension("search", {});
   is(msg.status, "success", "search succeded");
@@ -617,6 +704,12 @@ add_task(function* test_erase() {
 
   msg = yield runInExtension("erase", {});
   is(msg.status, "success", "erase everything succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onErased", data: ids.dl2},
+    {type: "onErased", data: ids.dl3},
+  ], {inorder: false});
+  is(msg.status, "success", "received 2 onErased events");
 
   msg = yield runInExtension("search", {});
   is(msg.status, "success", "search succeded");

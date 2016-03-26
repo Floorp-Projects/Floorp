@@ -39,7 +39,7 @@ add_task(function*() {
   ok(propertiesList.querySelectorAll(".property").length,
      "The list of properties panel actually contains properties");
   ok(hasExpectedProperties(propertiesList),
-     "The list of proeprties panel contains the right properties");
+     "The list of properties panel contains the right properties");
 
   info("Click to unselect the animation");
   yield clickOnAnimation(panel, 0, true);

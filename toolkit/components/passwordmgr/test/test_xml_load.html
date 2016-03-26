@@ -40,14 +40,6 @@ function initLogins() {
   pwmgr.addLogin(login2);
 }
 
-function finishTest() {
-  ok(true, "finishTest removing testing logins...");
-  pwmgr.removeLogin(login1);
-  pwmgr.removeLogin(login2);
-
-  SimpleTest.finish();
-}
-
 function handleDialog(doc, testNum) {
   ok(true, "handleDialog running for test " + testNum);
 
@@ -165,7 +157,7 @@ function doTest() {
         break;
 
     default:
-        finishTest();
+        SimpleTest.finish();
   }
 }
 

@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test forms with no password fields</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: forms with no password fields
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+  <!-- Form with no user field or password field -->
+  <form id="form1" action="formtest.js">
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Form with no user field or password field, but one other field -->
+  <form id="form2" action="formtest.js">
+    <input  type="checkbox">
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Form with no user field or password field, but one other field -->
+  <form id="form3" action="formtest.js">
+    <input  type="checkbox" name="uname" value="">
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Form with a text field, but no password field -->
+  <form id="form4" action="formtest.js">
+    <input  type="text"       name="yyyyy">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Form with a user field, but no password field -->
+  <form id="form5" action="formtest.js">
+    <input  type="text"       name="uname">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: form fill, no password fields. **/
+
+function startTest() {
+  is($_(3, "uname").value, "", "Checking for unfilled checkbox (form 3)");
+  is($_(4, "yyyyy").value, "", "Checking for unfilled text field (form 4)");
+  is($_(5, "uname").value, "", "Checking for unfilled text field (form 5)");
+
+  SimpleTest.finish();
+}
+
+runChecksAfterCommonInit(startTest);
+</script>
+</pre>
+</body>
+</html>
+
