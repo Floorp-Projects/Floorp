@@ -1601,6 +1601,39 @@ addAsyncAnimTest("change_enddelay_and_currenttime",
   assert_records([], "records after animation is added");
 });
 
+addAsyncAnimTest("change_iterations",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] }, 100000);
+
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect.timing.iterations = 2;
+  yield await_frame();
+  assert_records([{ added: [], changed: [anim], removed: [] }],
+                 "records after iterations is changed");
+
+  anim.effect.timing.iterations = 2;
+  yield await_frame();
+  assert_records([], "records after assigning same value");
+
+  anim.effect.timing.iterations = 0;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+
+  anim.effect.timing.iterations = Infinity;
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation restarted");
+
+  anim.cancel();
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+});
+
 addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
                  { observe: div, subtree: false }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] }, { duration: 100000 });
