@@ -37,7 +37,7 @@ class ConfigureError(Exception):
     pass
 
 
-class DummyFunction(object):
+class DependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
     def __call__(self, *arg, **kwargs):
         raise RuntimeError('The `%s` function may not be called'
@@ -104,7 +104,7 @@ class ConfigureSandbox(dict):
         self._paths = []
         self._templates = set()
         # Store the real function and its dependencies, behind each
-        # DummyFunction generated from @depends.
+        # DependsFunction generated from @depends.
         self._depends = {}
         self._seen = set()
 
@@ -231,7 +231,7 @@ class ConfigureSandbox(dict):
                 hasattr(self, '%s_impl' % key)):
             raise KeyError('Cannot reassign builtins')
 
-        if (not isinstance(value, DummyFunction) and
+        if (not isinstance(value, DependsFunction) and
                 value not in self._templates and
                 not issubclass(value, Exception)):
             raise KeyError('Cannot assign `%s` because it is neither a '
@@ -240,7 +240,7 @@ class ConfigureSandbox(dict):
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
     def _resolve(self, arg, need_help_dependency=True):
-        if isinstance(arg, DummyFunction):
+        if isinstance(arg, DependsFunction):
             assert arg in self._depends
             func, deps = self._depends[arg]
             assert not inspect.isgeneratorfunction(func)
@@ -328,7 +328,7 @@ class ConfigureSandbox(dict):
                 dependencies.append(arg)
                 assert arg in self._option_values or self._help
                 resolved_arg = self._option_values.get(arg)
-            elif isinstance(arg, DummyFunction):
+            elif isinstance(arg, DependsFunction):
                 assert arg in self._depends
                 dependencies.append(arg)
                 arg, _ = self._depends[arg]
@@ -345,12 +345,12 @@ class ConfigureSandbox(dict):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
-            dummy = wraps(func)(DummyFunction())
+            dummy = wraps(func)(DependsFunction())
             self._depends[dummy] = func, dependencies
             with_help = self._help_option in dependencies
             if with_help:
                 for arg in args:
-                    if isinstance(arg, DummyFunction):
+                    if isinstance(arg, DependsFunction):
                         _, deps = self._depends[arg]
                         if self._help_option not in deps:
                             raise ConfigureError(
@@ -488,7 +488,7 @@ class ConfigureSandbox(dict):
         # Don't do anything when --help was on the command line
         if self._help:
             return
-        if not reason and isinstance(value, DummyFunction):
+        if not reason and isinstance(value, DependsFunction):
             deps = self._depends[value][1]
             possible_reasons = [d for d in deps if d != self._help_option]
             if len(possible_reasons) == 1:
@@ -496,7 +496,7 @@ class ConfigureSandbox(dict):
                     reason = (self._raw_options.get(possible_reasons[0]) or
                               possible_reasons[0].option)
 
-        if not reason or not isinstance(value, DummyFunction):
+        if not reason or not isinstance(value, DependsFunction):
             raise ConfigureError(
                 "Cannot infer what implies '%s'. Please add a `reason` to "
                 "the `imply_option` call."
