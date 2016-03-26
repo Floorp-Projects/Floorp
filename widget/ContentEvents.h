@@ -242,7 +242,7 @@ public:
 
   InternalTransitionEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eTransitionEventClass)
-    , elapsedTime(0.0)
+    , mElapsedTime(0.0)
   {
     mFlags.mCancelable = false;
   }
@@ -258,18 +258,18 @@ public:
     return result;
   }
 
-  nsString propertyName;
-  float elapsedTime;
-  nsString pseudoElement;
+  nsString mPropertyName;
+  nsString mPseudoElement;
+  float mElapsedTime;
 
   void AssignTransitionEventData(const InternalTransitionEvent& aEvent,
                                  bool aCopyTargets)
   {
     AssignEventData(aEvent, aCopyTargets);
 
-    propertyName = aEvent.propertyName;
-    elapsedTime = aEvent.elapsedTime;
-    pseudoElement = aEvent.pseudoElement;
+    mPropertyName = aEvent.mPropertyName;
+    mElapsedTime = aEvent.mElapsedTime;
+    mPseudoElement = aEvent.mPseudoElement;
   }
 };
 
