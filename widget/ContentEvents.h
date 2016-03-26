@@ -305,7 +305,7 @@ public:
 
   nsString mAnimationName;
   float mElapsedTime;
-  nsString pseudoElement;
+  nsString mPseudoElement;
 
   void AssignAnimationEventData(const InternalAnimationEvent& aEvent,
                                 bool aCopyTargets)
@@ -314,7 +314,7 @@ public:
 
     mAnimationName = aEvent.mAnimationName;
     mElapsedTime = aEvent.mElapsedTime;
-    pseudoElement = aEvent.pseudoElement;
+    mPseudoElement = aEvent.mPseudoElement;
   }
 };
 
