@@ -73,7 +73,18 @@ AnimationEffectTiming::SetIterationStart(double aIterationStart,
 void
 AnimationEffectTiming::SetIterations(double aIterations, ErrorResult& aRv)
 {
-  // TODO: Bug 1244640 - implement AnimationEffectTiming iterations
+  if (mTiming.mIterations == aIterations) {
+    return;
+  }
+
+  TimingParams::ValidateIterations(aIterations, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  mTiming.mIterations = aIterations;
+
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 void
