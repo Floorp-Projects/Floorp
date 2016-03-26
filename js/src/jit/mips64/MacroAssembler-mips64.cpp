@@ -1276,21 +1276,10 @@ MacroAssemblerMIPS64Compat::unboxInt32(const ValueOperand& operand, Register des
 }
 
 void
-MacroAssemblerMIPS64Compat::unboxInt32(const Operand& operand, Register dest)
+MacroAssemblerMIPS64Compat::unboxInt32(Register src, Register dest)
 {
-    switch(operand.getTag()) {
-    case Operand::REG:
-        ma_dsll(dest, operand.toReg(), Imm32(32));
-        ma_dsra(dest, dest, Imm32(32));
-        break;
-    case Operand::MEM:
-        unboxInt32(operand.toAddress(), dest);
-        break;
-    case Operand::FREG:
-    default:
-        MOZ_CRASH("unexpected operand kind");
-        break;
-    }
+    ma_dsll(dest, src, Imm32(32));
+    ma_dsra(dest, dest, Imm32(32));
 }
 
 void
@@ -1313,20 +1302,9 @@ MacroAssemblerMIPS64Compat::unboxBoolean(const ValueOperand& operand, Register d
 }
 
 void
-MacroAssemblerMIPS64Compat::unboxBoolean(const Operand& operand, Register dest)
+MacroAssemblerMIPS64Compat::unboxBoolean(Register src, Register dest)
 {
-    switch(operand.getTag()) {
-    case Operand::REG:
-        ma_dext(dest, operand.toReg(), Imm32(0), Imm32(32));
-        break;
-    case Operand::MEM:
-        unboxBoolean(operand.toAddress(), dest);
-        break;
-    case Operand::FREG:
-    default:
-        MOZ_CRASH("unexpected operand kind");
-        break;
-    }
+    ma_dext(dest, src, Imm32(0), Imm32(32));
 }
 
 void
@@ -1361,20 +1339,9 @@ MacroAssemblerMIPS64Compat::unboxString(const ValueOperand& operand, Register de
 }
 
 void
-MacroAssemblerMIPS64Compat::unboxString(const Operand& operand, Register dest)
+MacroAssemblerMIPS64Compat::unboxString(Register src, Register dest)
 {
-    switch(operand.getTag()) {
-    case Operand::REG:
-        ma_dext(dest, operand.toReg(), Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-        break;
-    case Operand::MEM:
-        unboxNonDouble(operand.toAddress(), dest);
-        break;
-    case Operand::FREG:
-    default:
-        MOZ_CRASH("unexpected operand kind");
-        break;
-    }
+    ma_dext(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
 }
 
 void
@@ -1384,20 +1351,9 @@ MacroAssemblerMIPS64Compat::unboxString(const Address& src, Register dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::unboxSymbol(const Operand& operand, Register dest)
+MacroAssemblerMIPS64Compat::unboxSymbol(Register src, Register dest)
 {
-    switch(operand.getTag()) {
-    case Operand::REG:
-        ma_dext(dest, operand.toReg(), Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-        break;
-    case Operand::MEM:
-        unboxNonDouble(operand.toAddress(), dest);
-        break;
-    case Operand::FREG:
-    default:
-        MOZ_CRASH("unexpected operand kind");
-        break;
-    }
+    ma_dext(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
 }
 
 void
@@ -1413,20 +1369,9 @@ MacroAssemblerMIPS64Compat::unboxObject(const ValueOperand& src, Register dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::unboxObject(const Operand& src, Register dest)
+MacroAssemblerMIPS64Compat::unboxObject(Register src, Register dest)
 {
-    switch(src.getTag()) {
-    case Operand::REG:
-        ma_dext(dest, src.toReg(), Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-        break;
-    case Operand::MEM:
-        unboxNonDouble(src.toAddress(), dest);
-        break;
-    case Operand::FREG:
-    default:
-        MOZ_CRASH("unexpected operand kind");
-        break;
-    }
+    ma_dext(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
 }
 
 void
