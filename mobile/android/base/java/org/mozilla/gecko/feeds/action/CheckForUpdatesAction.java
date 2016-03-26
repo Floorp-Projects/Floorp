@@ -166,7 +166,7 @@ public class CheckForUpdatesAction extends FeedAction {
         Intent intent = new Intent(context, BrowserApp.class);
         intent.setAction(BrowserApp.ACTION_VIEW_MULTIPLE);
         intent.putStringArrayListExtra("urls", urls);
-	    intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
+        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 

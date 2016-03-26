@@ -26,7 +26,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += [
-    'chrome.ini',
     'chrome/chrome.ini',
 ]
 
@@ -41,11 +40,18 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.brows
     'browser/399606-location.replace.html',
     'browser/399606-window.location.href.html',
     'browser/399606-window.location.html',
+    'browser/461710_iframe.html',
+    'browser/461710_link_page-2.html',
+    'browser/461710_link_page-3.html',
+    'browser/461710_link_page.html',
+    'browser/461710_visited_page.html',
     'browser/begin.html',
     'browser/favicon-normal16.png',
     'browser/favicon-normal32.png',
     'browser/favicon.html',
     'browser/final.html',
+    'browser/history_post.html',
+    'browser/history_post.sjs',
     'browser/redirect-target.html',
     'browser/redirect.sjs',
     'browser/redirect_once.sjs',
@@ -61,17 +67,5 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.chrom
     'chrome/rss_as_html.rss',
     'chrome/rss_as_html.rss^headers^',
     'chrome/sample_feed.atom',
-]
-
-TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests += [
-    'bug94514-postpage.html',
-]
-
-TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.mochitest.bug_461710 += [
-    'mochitest/bug_461710/iframe.html',
-    'mochitest/bug_461710/link_page-2.html',
-    'mochitest/bug_461710/link_page-3.html',
-    'mochitest/bug_461710/link_page.html',
-    'mochitest/bug_461710/visited_page.html',
 ]
 

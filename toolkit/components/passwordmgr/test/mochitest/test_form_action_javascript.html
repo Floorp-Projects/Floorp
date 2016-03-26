@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test forms with a JS submit action</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: form with JS submit action
+<script>
+runChecksAfterCommonInit(() => startTest());
+
+runInParent(function setup() {
+  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  let jslogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+  jslogin.init("http://mochi.test:8888", "javascript:", null,
+              "jsuser", "jspass123", "uname", "pword");
+  Services.logins.addLogin(jslogin);
+});
+
+/** Test for Login Manager: JS action URL **/
+
+function startTest() {
+    checkForm(1, "jsuser", "jspass123");
+
+    SimpleTest.finish();
+}
+</script>
+
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+
+<form id='form1' action='javascript:alert("never shows")'> 1
+    <input name="uname">
+    <input name="pword" type="password">
+
+    <button type='submit'>Submit</button>
+    <button type='reset'> Reset </button>
+</form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>
+

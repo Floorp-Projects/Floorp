@@ -48,10 +48,12 @@ var ra=[Sc,qc];return{_malloc:vc,_i64Subtract:Cc,_free:wc,_i64Add:Gc,_memmove:Hc
     if (func.length >= 2048) return null;
     m.writeStringToMemory(func.substr(1), buf);
     var ret = m['___cxa_demangle'](buf, 0, 0, status);
+    var result = null;
     if (m.HEAP32[status >> 2] === 0 && ret) {
-      return m.Pointer_stringify(ret);
+      result = m.Pointer_stringify(ret);
+      m._free(ret);
     }
-    return null;
+    return result;
   };
 })();
 
