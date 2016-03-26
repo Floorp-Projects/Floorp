@@ -46,12 +46,6 @@
 #include <gdk/gdkkeysyms-compat.h>
 #endif
 
-#ifdef AIX
-#include <X11/keysym.h>
-#else
-#include <X11/XF86keysym.h>
-#endif
-
 #if (MOZ_WIDGET_GTK == 2)
 #include "gtk2xtbin.h"
 #endif
@@ -3075,31 +3069,29 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         }
     }
 
-#ifdef MOZ_X11
-#if ! defined AIX // no XFree86 on AIX 5L
     // Look for specialized app-command keys
     switch (aEvent->keyval) {
-        case XF86XK_Back:
+        case GDK_Back:
             return DispatchCommandEvent(nsGkAtoms::Back);
-        case XF86XK_Forward:
+        case GDK_Forward:
             return DispatchCommandEvent(nsGkAtoms::Forward);
-        case XF86XK_Refresh:
+        case GDK_Refresh:
             return DispatchCommandEvent(nsGkAtoms::Reload);
-        case XF86XK_Stop:
+        case GDK_Stop:
             return DispatchCommandEvent(nsGkAtoms::Stop);
-        case XF86XK_Search:
+        case GDK_Search:
             return DispatchCommandEvent(nsGkAtoms::Search);
-        case XF86XK_Favorites:
+        case GDK_Favorites:
             return DispatchCommandEvent(nsGkAtoms::Bookmarks);
-        case XF86XK_HomePage:
+        case GDK_HomePage:
             return DispatchCommandEvent(nsGkAtoms::Home);
-        case XF86XK_Copy:
+        case GDK_Copy:
         case GDK_F16:  // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
             return DispatchContentCommandEvent(eContentCommandCopy);
-        case XF86XK_Cut:
+        case GDK_Cut:
         case GDK_F20:
             return DispatchContentCommandEvent(eContentCommandCut);
-        case XF86XK_Paste:
+        case GDK_Paste:
         case GDK_F18:
             return DispatchContentCommandEvent(eContentCommandPaste);
         case GDK_Redo:
@@ -3108,8 +3100,6 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         case GDK_F14:
             return DispatchContentCommandEvent(eContentCommandUndo);
     }
-#endif /* ! AIX */
-#endif /* MOZ_X11 */
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, this);
     KeymapWrapper::InitKeyEvent(keypressEvent, aEvent);
