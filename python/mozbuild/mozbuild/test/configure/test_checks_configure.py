@@ -201,12 +201,77 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(config, {'CC': '/usr/local/bin/known-b'})
         self.assertEqual(out, 'checking for cc... /usr/local/bin/known-b\n')
 
+    def test_check_prog_progs(self):
+        config, out, status = self.get_result(
+            'check_prog("FOO", ())')
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {})
+        self.assertEqual(out, '')
+
+        config, out, status = self.get_result(
+            'check_prog("FOO", ())', ['FOO=known-a'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'FOO': '/usr/bin/known-a'})
+        self.assertEqual(out, 'checking for foo... /usr/bin/known-a\n')
+
+        script = (
+            'option(env="TARGET", nargs=1, default="linux", help="target")\n'
+            '@depends("TARGET")\n'
+            'def compiler(value):\n'
+            '    if value:\n'
+            '        if value[0] == "linux":\n'
+            '            return ("gcc", "clang")\n'
+            '        if value[0] == "winnt":\n'
+            '            return ("cl", "clang-cl")\n'
+            'check_prog("CC", compiler)'
+        )
+        config, out, status = self.get_result(script)
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {})
+        self.assertEqual(out, 'checking for cc... not found\n'
+                              'DEBUG: cc: Trying gcc\n'
+                              'DEBUG: cc: Trying clang\n'
+                              'ERROR: Cannot find cc\n')
+
+        config, out, status = self.get_result(script, ['TARGET=linux'])
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {})
+        self.assertEqual(out, 'checking for cc... not found\n'
+                              'DEBUG: cc: Trying gcc\n'
+                              'DEBUG: cc: Trying clang\n'
+                              'ERROR: Cannot find cc\n')
+
+        config, out, status = self.get_result(script, ['TARGET=winnt'])
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {})
+        self.assertEqual(out, 'checking for cc... not found\n'
+                              'DEBUG: cc: Trying cl\n'
+                              'DEBUG: cc: Trying clang-cl\n'
+                              'ERROR: Cannot find cc\n')
+
+        config, out, status = self.get_result(script, ['TARGET=none'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {})
+        self.assertEqual(out, '')
+
+        config, out, status = self.get_result(script, ['TARGET=winnt',
+                                                       'CC=known-a'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CC': '/usr/bin/known-a'})
+        self.assertEqual(out, 'checking for cc... /usr/bin/known-a\n')
+
+        config, out, status = self.get_result(script, ['TARGET=none',
+                                                       'CC=known-a'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'CC': '/usr/bin/known-a'})
+        self.assertEqual(out, 'checking for cc... /usr/bin/known-a\n')
+
     def test_check_prog_configure_error(self):
         with self.assertRaises(ConfigureError) as e:
             self.get_result('check_prog("FOO", "foo")')
 
         self.assertEqual(e.exception.message,
-                         'progs should be a list or tuple!')
+                         'progs must resolve to a list or tuple!')
 
         with self.assertRaises(ConfigureError) as e:
             self.get_result(

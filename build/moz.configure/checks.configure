@@ -72,6 +72,8 @@ def checking(what, callback=None):
 # - `var` is the name of the variable that will be set with `set_config` when
 #   the program is found.
 # - `progs` is a list (or tuple) of program names that will be searched for.
+#   It can also be a reference to a @depends function that returns such a
+#   list. If the list is empty and there is no input, the check is skipped.
 # - `what` is a human readable description of what is being looked for. It
 #   defaults to the lowercase version of `var`.
 # - `input` is a string reference to an existing option or a reference to a
@@ -90,6 +92,7 @@ def checking(what, callback=None):
 @advanced
 def check_prog(var, progs, what=None, input=None, allow_missing=False):
     from mozbuild.shellutil import quote
+    from mozbuild.configure import DependsFunction
 
     if input:
         # Wrap input with type checking and normalization.
@@ -109,16 +112,20 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False):
         input = var
     what = what or var.lower()
 
-    if not isinstance(progs, (tuple, list)):
-        configure_error('progs should be a list or tuple!')
-    progs = list(progs)
+    if not isinstance(progs, DependsFunction):
+        # Trick to make a @depends function out of an immediate value.
+        progs = depends('--help')(lambda h: progs)
 
-    @depends(input)
+    @depends_if(input, progs)
     @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
-    def check(value):
-        if value:
-            progs[:] = value
-        for prog in progs:
+    def check(value, progs):
+        if progs is None:
+            progs = ()
+
+        if not isinstance(progs, (tuple, list)):
+            configure_error('progs must resolve to a list or tuple!')
+
+        for prog in value or progs:
             log.debug('%s: Trying %s', var.lower(), quote(prog))
             result = find_program(prog)
             if result:
@@ -127,8 +134,8 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False):
         if not allow_missing or value:
             raise FatalCheckError('Cannot find %s' % what)
 
-    @depends(check)
-    def normalized_for_config(value):
+    @depends_if(check, progs)
+    def normalized_for_config(value, progs):
         return ':' if value is None else value
 
     set_config(var, normalized_for_config)
