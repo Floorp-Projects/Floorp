@@ -287,7 +287,7 @@ public:
 
   InternalAnimationEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eAnimationEventClass)
-    , elapsedTime(0.0)
+    , mElapsedTime(0.0)
   {
     mFlags.mCancelable = false;
   }
@@ -304,7 +304,7 @@ public:
   }
 
   nsString mAnimationName;
-  float elapsedTime;
+  float mElapsedTime;
   nsString pseudoElement;
 
   void AssignAnimationEventData(const InternalAnimationEvent& aEvent,
@@ -313,7 +313,7 @@ public:
     AssignEventData(aEvent, aCopyTargets);
 
     mAnimationName = aEvent.mAnimationName;
-    elapsedTime = aEvent.elapsedTime;
+    mElapsedTime = aEvent.mElapsedTime;
     pseudoElement = aEvent.pseudoElement;
   }
 };

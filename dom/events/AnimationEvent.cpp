@@ -48,7 +48,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
 
   InternalAnimationEvent* internalEvent = e->mEvent->AsAnimationEvent();
   internalEvent->mAnimationName = aParam.mAnimationName;
-  internalEvent->elapsedTime = aParam.mElapsedTime;
+  internalEvent->mElapsedTime = aParam.mElapsedTime;
   internalEvent->pseudoElement = aParam.mPseudoElement;
 
   e->SetTrusted(trusted);
@@ -72,7 +72,7 @@ AnimationEvent::GetElapsedTime(float* aElapsedTime)
 float
 AnimationEvent::ElapsedTime()
 {
-  return mEvent->AsAnimationEvent()->elapsedTime;
+  return mEvent->AsAnimationEvent()->mElapsedTime;
 }
 
 NS_IMETHODIMP
