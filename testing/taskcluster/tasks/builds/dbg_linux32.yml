@@ -1,10 +1,24 @@
 $inherits:
-  from: 'tasks/builds/dbg_linux32_clobber.yml'
+  from: 'tasks/builds/base_linux32.yml'
+  variables:
+    build_name: 'linux32'
+    build_type: 'dbg'
 task:
-  # same as clobber, but with a cached workspace
-  scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux32-workspace'
+  metadata:
+      name: '[TC] Linux32 Dbg'
+      description: 'Linux32 Dbg'
+
+  workerType: dbg-linux32
 
   payload:
-    cache:
-      level-{{level}}-{{project}}-build-linux32-workspace: '/home/worker/workspace'
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+      collection:
+        debug: true
+

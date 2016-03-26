@@ -57,8 +57,8 @@ http://creativecommons.org/licenses/publicdomain/
 
   function setupMultipleSubscriptions(swr) {
     // We need to do this to restart service so that a queue will be formed.
-    teardownMockPushService();
-    setupMockPushService(new MockWebSocket());
+    teardownMockPushSocket();
+    setupMockPushSocket(new MockWebSocket());
 
     return Promise.all([
       subscribe(swr),
@@ -99,7 +99,7 @@ http://creativecommons.org/licenses/publicdomain/
     }).then(SimpleTest.finish);
   }
 
-  setupPrefsAndMock(new MockWebSocket()).then(_ => runTest());
+  setupPrefsAndMockSocket(new MockWebSocket()).then(_ => runTest());
   SpecialPowers.addPermission("desktop-notification", true, document);
   SimpleTest.waitForExplicitFinish();
 </script>

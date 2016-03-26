@@ -53,6 +53,8 @@ from .data import (
     Library,
     Linkable,
     LocalInclude,
+    ObjdirFiles,
+    ObjdirPreprocessedFiles,
     PerSourceFlag,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
@@ -830,6 +832,8 @@ class TreeMetadataEmitter(LoggingMixin):
             ('EXPORTS', Exports),
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
+            ('OBJDIR_FILES', ObjdirFiles),
+            ('OBJDIR_PP_FILES', ObjdirPreprocessedFiles),
             ('SDK_FILES', SdkFiles),
             ('TEST_HARNESS_FILES', TestHarnessFiles),
         ):
@@ -853,12 +857,13 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == 'res':
                     has_resources = True
                 for f in files:
-                    if (var == 'FINAL_TARGET_PP_FILES' and
+                    if ((var == 'FINAL_TARGET_PP_FILES' or
+                         var == 'OBJDIR_PP_FILES') and
                         not isinstance(f, SourcePath)):
                         raise SandboxValidationError(
                                 ('Only source directory paths allowed in ' +
-                                'FINAL_TARGET_PP_FILES: %s')
-                                % (f,), context)
+                                 '%s: %s')
+                                % (var, f,), context)
                     if not isinstance(f, ObjDirPath):
                         path = f.full_path
                         if '*' not in path and not os.path.exists(path):

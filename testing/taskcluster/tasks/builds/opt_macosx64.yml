@@ -1,14 +1,11 @@
 $inherits:
-  from: 'tasks/builds/opt_macosx64_clobber.yml'
+  from: 'tasks/builds/base_macosx64.yml'
+  variables:
+    build_name: 'macosx64'
+    build_type: 'opt'
 task:
-  # same as clobber, but with a cached workspace
-  scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-macosx64-workspace'
+  metadata:
+      name: '[TC] MacOSX64 Opt'
+      description: 'MacOSX64 Opt'
 
-  routes:
-    - 'index.buildbot.branches.{{project}}.macosx64'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.macosx64'
-
-  payload:
-    cache:
-      level-{{level}}-{{project}}-build-macosx64-workspace: '/home/worker/workspace'
+  workerType: opt-macosx64

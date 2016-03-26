@@ -132,11 +132,9 @@ add_task(function* test_expiration_origin_threshold() {
     },
   });
 
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for unregister request');
+  yield unregisterPromise;
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
+  yield notifyPromise;
 
   let expiredRecord = yield db.getByKeyID('eb33fc90-c883-4267-b5cb-613969e8e349');
   strictEqual(expiredRecord.quota, 0, 'Expired record not updated');

@@ -67,6 +67,7 @@ UNIFIED_SOURCES += [
     'KeyPath.cpp',
     'PermissionRequestBase.cpp',
     'ReportInternalError.cpp',
+    'ScriptErrorHelper.cpp',
 ]
 
 SOURCES += [

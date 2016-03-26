@@ -187,11 +187,11 @@ public:
    *     to know (i.e., we don't intend to read the actual value or remove the
    *     property).
    *
-   *   - Calling IsSet() before Set() in cases where we don't want to overwrite
+   *   - Calling Has() before Set() in cases where we don't want to overwrite
    *     an existing value for the frame property.
    */
   template<typename T>
-  bool IsSet(const nsIFrame* aFrame, Descriptor<T> aProperty)
+  bool Has(const nsIFrame* aFrame, Descriptor<T> aProperty)
   {
     bool foundResult = false;
     mozilla::Unused << GetInternal(aFrame, aProperty, &foundResult);
@@ -389,9 +389,9 @@ public:
   }
 
   template<typename T>
-  bool IsSet(Descriptor<T> aProperty) const
+  bool Has(Descriptor<T> aProperty) const
   {
-    return mTable->IsSet(mFrame, aProperty);
+    return mTable->Has(mFrame, aProperty);
   }
 
   template<typename T>

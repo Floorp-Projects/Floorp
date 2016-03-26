@@ -23,6 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
   text-decoration-color: black; /* don't derive from color */
   outline-color: black; /* don't derive from color */
   text-emphasis-color: black; /* don't derive from color */
+  -webkit-text-fill-color: black; /* don't derive from color */
 }
 
 #four {
@@ -75,6 +76,7 @@ var got_one_target_borderleft = false;
 var got_one_target_columnrule = false;
 var got_one_target_textdecorationcolor = false;
 var got_one_target_textemphasiscolor = false;
+var got_one_target_webkittextfillcolor = false;
 var got_one_target_outlinecolor = false;
 var got_two_target = false;
 var got_three_top = false;
@@ -198,6 +200,12 @@ $("one").addEventListener("transitionend",
         got_one_target_textemphasiscolor = true;
         event.stopPropagation();
         break;
+      case "-webkit-text-fill-color":
+        ok(!got_one_target_webkittextfillcolor,
+           "transitionend on one on target (-webkit-text-fill-color)");
+        got_one_target_webkittextfillcolor = true;
+        event.stopPropagation();
+        break;
       case "outline-color":
         ok(!got_one_target_outlinecolor,
            "transitionend on one on target (outline-color)");
@@ -225,6 +233,9 @@ started_test(); // -moz-column-rule-color on #one
 started_test(); // text-decoration-color on #one
 if (SpecialPowers.getBoolPref("layout.css.text-emphasis.enabled")) {
   started_test(); // text-emphasis-color on #one
+}
+if (SpecialPowers.getBoolPref("layout.css.prefixes.webkit")) {
+  started_test(); // -webkit-text-fill-color on #one
 }
 started_test(); // outline-color on #one
 $("one").style.color = "lime";

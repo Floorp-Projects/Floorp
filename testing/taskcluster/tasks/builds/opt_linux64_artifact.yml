@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/builds/linux64_clobber.yml'
+  from: 'tasks/builds/base_linux64.yml'
   variables:
     build_name: 'linux64-artifact'
     build_type: 'opt'

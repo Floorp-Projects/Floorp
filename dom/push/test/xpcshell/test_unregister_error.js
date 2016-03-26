@@ -65,6 +65,5 @@ add_task(function* test_unregister_error() {
   ok(!result, 'Deleted push record exists');
 
   // Make sure we send a request to the server.
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for unregister');
+  yield unregisterPromise;
 });

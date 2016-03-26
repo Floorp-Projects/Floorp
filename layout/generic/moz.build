@@ -96,6 +96,7 @@ EXPORTS += [
     'nsTextRunTransformations.h',
     'RubyUtils.h',
     'ScrollbarActivity.h',
+    'Visibility.h',
 ]
 
 EXPORTS.mozilla += [
