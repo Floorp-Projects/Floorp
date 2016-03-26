@@ -3284,6 +3284,14 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty__webkit_text_fill_color: {
+          auto styleText = static_cast<const nsStyleText*>(styleStruct);
+          nscolor color = styleText->mWebkitTextFillColorForeground ?
+            aStyleContext->StyleColor()->mColor : styleText->mWebkitTextFillColor;
+          aComputedValue.SetColorValue(color);
+          break;
+        }
+
         case eCSSProperty_border_spacing: {
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);

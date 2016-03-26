@@ -952,11 +952,11 @@ pref("nglayout.debug.widget_update_flashing", false);
 // Enable/disable display list invalidation logging --- useful for debugging.
 pref("nglayout.debug.invalidation", false);
 
-// Whether image visibility is enabled globally (ie we will try to unlock images
-// that are not visible).
-pref("layout.imagevisibility.enabled", true);
-pref("layout.imagevisibility.numscrollportwidths", 0);
-pref("layout.imagevisibility.numscrollportheights", 1);
+// Whether frame visibility tracking is enabled globally.
+pref("layout.framevisibility.enabled", true);
+
+pref("layout.framevisibility.numscrollportwidths", 0);
+pref("layout.framevisibility.numscrollportheights", 1);
 
 // scrollbar snapping region
 // 0 - off

@@ -2209,8 +2209,7 @@ nsPresContext::SizeModeChanged(nsSizeMode aSizeMode)
     nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
                                             NotifyTabSizeModeChanged,
                                             &aSizeMode);
-    MediaFeatureValuesChangedAllDocuments(eRestyle_Subtree,
-                                          NS_STYLE_HINT_REFLOW);
+    MediaFeatureValuesChangedAllDocuments(nsRestyleHint(0));
   }
 }
 

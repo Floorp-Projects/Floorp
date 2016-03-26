@@ -265,31 +265,13 @@ CallbackObject::CallSetup::~CallSetup()
     if (needToDealWithException) {
       // Either we're supposed to report our exceptions, or we're supposed to
       // re-throw them but we failed to get the exception value.  Either way,
-      // just report the pending exception, if any.
-      //
-      // XXXbz FIXME: bug 979525 means we don't always JS_SaveFrameChain here,
-      // so we need to go ahead and do that.  This is also the reason we don't
-      // just rely on ~AutoJSAPI reporting the exception for us.  I think if we
-      // didn't need to JS_SaveFrameChain here, we could just rely on that.
-      JS::Rooted<JSObject*> oldGlobal(mCx, JS::CurrentGlobalOrNull(mCx));
-      MOZ_ASSERT(oldGlobal, "How can we not have a global here??");
-      bool saved = JS_SaveFrameChain(mCx);
-      // Make sure the JSAutoCompartment goes out of scope before the
-      // JS_RestoreFrameChain call!
-      {
-        JSAutoCompartment ac(mCx, oldGlobal);
-        MOZ_ASSERT(!JS::DescribeScriptedCaller(mCx),
-                   "Our comment above about JS_SaveFrameChain having been "
-                   "called is a lie?");
-        mAutoEntryScript->ReportException();
-      }
-      if (saved) {
-        JS_RestoreFrameChain(mCx);
-      }
-
+      // we'll just report the pending exception, if any, once ~mAutoEntryScript
+      // runs.  Note that we've already run ~mAc, effectively, so we don't have
+      // to worry about ordering here.
       if (mErrorResult.IsJSContextException()) {
         // XXXkhuey bug 1117269.
-        // This isn't true anymore ... so throw something else.
+        // This won't be true anymore because we will report the exception on
+        // the JSContext ... so throw something else.
         mErrorResult.Throw(NS_ERROR_UNEXPECTED);
       }
     }

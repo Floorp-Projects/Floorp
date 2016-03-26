@@ -297,6 +297,12 @@ COMPUTED_STYLE_PROP(user_select,                   UserSelect)
 COMPUTED_STYLE_PROP(_moz_window_dragging,          WindowDragging)
 COMPUTED_STYLE_PROP(_moz_window_shadow,            WindowShadow)
 
+/* ********************************** *\
+ * Implementations of -webkit- styles *
+\* ********************************** */
+
+COMPUTED_STYLE_PROP(_webkit_text_fill_color,       WebkitTextFillColor)
+
 /* ***************************** *\
  * Implementations of SVG styles *
 \* ***************************** */

@@ -2462,17 +2462,19 @@ nsDocumentViewer::FindContainerView()
       if (!containerElement) {
         return nullptr;
       }
+
       nsCOMPtr<nsIPresShell> parentPresShell;
-      nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
-      docShell->GetParent(getter_AddRefs(parentDocShellItem));
-      if (parentDocShellItem) {
-        nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
-        parentPresShell = parentDocShell->GetPresShell();
+      nsCOMPtr<nsIDocument> parentDoc = containerElement->GetCurrentDoc();
+      if (parentDoc) {
+        parentPresShell = parentDoc->GetShell();
       }
+
       if (!parentPresShell) {
-        nsCOMPtr<nsIDocument> parentDoc = containerElement->GetCurrentDoc();
-        if (parentDoc) {
-          parentPresShell = parentDoc->GetShell();
+        nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
+        docShell->GetParent(getter_AddRefs(parentDocShellItem));
+        if (parentDocShellItem) {
+          nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
+          parentPresShell = parentDocShell->GetPresShell();
         }
       }
       if (!parentPresShell) {

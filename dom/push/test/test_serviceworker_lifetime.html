@@ -335,7 +335,7 @@
       }).then(SimpleTest.finish);
   }
 
-  setupPrefsAndMock(mockSocket).then(_ => runTest());
+  setupPrefsAndMockSocket(mockSocket).then(_ => runTest());
   SpecialPowers.addPermission('desktop-notification', true, document);
   SimpleTest.waitForExplicitFinish();
 </script>

@@ -2544,14 +2544,6 @@ public:
     nsRegion* aImpreciseTargetDest);
 
   /**
-   * Determine if aImageFrame (which is an nsImageFrame, nsImageControlFrame, or
-   * nsSVGImageFrame) is visible or close to being visible via scrolling and
-   * update the presshell with this knowledge.
-   */
-  static void
-  UpdateImageVisibilityForFrame(nsIFrame* aImageFrame);
-
-  /**
    * Populate aOutSize with the size of the content viewer corresponding
    * to the given prescontext. Return true if the size was set, false
    * otherwise.

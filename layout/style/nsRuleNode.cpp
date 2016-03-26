@@ -1656,9 +1656,10 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
                                         sizeof(ChildrenHashEntry),
                                         aNumKids);
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
+    Key key = curr->GetKey();
     // This will never fail because of the initial size we gave the table.
     auto entry =
-      static_cast<ChildrenHashEntry*>(hash->Add(curr->mRule));
+      static_cast<ChildrenHashEntry*>(hash->Add(&key));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
     entry->mRuleNode = curr;
   }
@@ -4709,6 +4710,27 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     }
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown value unit type");
+  }
+
+  // -webkit-text-fill-color: color, string, inherit, initial
+  const nsCSSValue*
+    webkitTextFillColorValue = aRuleData->ValueForWebkitTextFillColor();
+  if (webkitTextFillColorValue->GetUnit() == eCSSUnit_Null) {
+    // We don't want to change anything in this case.
+  } else if (webkitTextFillColorValue->GetUnit() == eCSSUnit_Inherit ||
+             webkitTextFillColorValue->GetUnit() == eCSSUnit_Unset) {
+    conditions.SetUncacheable();
+    text->mWebkitTextFillColorForeground = parentText->mWebkitTextFillColorForeground;
+    text->mWebkitTextFillColor = parentText->mWebkitTextFillColor;
+  } else if ((webkitTextFillColorValue->GetUnit() == eCSSUnit_EnumColor &&
+              webkitTextFillColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
+             webkitTextFillColorValue->GetUnit() == eCSSUnit_Initial) {
+    text->mWebkitTextFillColorForeground = true;
+    text->mWebkitTextFillColor = mPresContext->DefaultColor();
+  } else {
+    text->mWebkitTextFillColorForeground = false;
+    SetColor(*webkitTextFillColorValue, 0, mPresContext, aContext,
+             text->mWebkitTextFillColor, conditions);
   }
 
   // -moz-control-character-visibility: enum, inherit, initial

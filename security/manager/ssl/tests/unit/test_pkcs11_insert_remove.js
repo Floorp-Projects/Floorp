@@ -45,8 +45,21 @@ SmartcardObserver.prototype = {
         break;
       }
     }
-    equal(testTokenLabelFound, this.type == "smartcard-insert",
+    let testTokenShouldBePresent = this.type == "smartcard-insert";
+    equal(testTokenLabelFound, testTokenShouldBePresent,
           "Should find test token only when the test module is loaded");
+
+    // Test that the token is findable by name only when the test module is
+    // loaded.
+    // Note: Again, this test is located here out of convenience.
+    if (testTokenShouldBePresent) {
+      notEqual(gTokenDB.findTokenByName(gExpectedTokenLabel), null,
+               "Test token should be findable by name");
+    } else {
+      throws(() => gTokenDB.findTokenByName(gExpectedTokenLabel),
+             /NS_ERROR_FAILURE/,
+             "Non-present test token should not be findable by name");
+    }
 
     Services.obs.removeObserver(this, this.type);
     do_test_finished();

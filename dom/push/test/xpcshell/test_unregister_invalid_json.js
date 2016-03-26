@@ -82,6 +82,5 @@ add_task(function* test_unregister_invalid_json() {
   ok(!record,
     'Failed to delete unregistered record after receiving invalid JSON');
 
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for unregister');
+  yield unregisterPromise;
 });
