@@ -26,9 +26,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
   protected:
     NonAssertingLabel deoptLabel_;
 
-    inline Address ToAddress(const LAllocation& a);
-    inline Address ToAddress(const LAllocation* a);
-
     MoveOperand toMoveOperand(LAllocation a) const;
 
     template <typename T1, typename T2>
