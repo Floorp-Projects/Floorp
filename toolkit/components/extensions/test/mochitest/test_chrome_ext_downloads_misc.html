@@ -539,6 +539,23 @@ add_task(function* test_pausecancel() {
   is(msg.result[0].exists, false, "download.exists is correct");
 });
 
+add_task(function* test_pause_resume_cancel_badargs() {
+  let BAD_ID = 1000;
+
+  let msg = yield runInExtension("pause", BAD_ID);
+  info(JSON.stringify(msg));
+  is(msg.status, "error", "pause() failed with a bad download id");
+  ok(/Invalid download id/.test(msg.errmsg), "error message is descriptive");
+
+  msg = yield runInExtension("resume", BAD_ID);
+  is(msg.status, "error", "resume() failed with a bad download id");
+  ok(/Invalid download id/.test(msg.errmsg), "error message is descriptive");
+
+  msg = yield runInExtension("cancel", BAD_ID);
+  is(msg.status, "error", "cancel() failed with a bad download id");
+  ok(/Invalid download id/.test(msg.errmsg), "error message is descriptive");
+});
+
 add_task(function* test_file_removal() {
   let msg = yield runInExtension("download", {url: TXT_URL});
   is(msg.status, "success", "download() succeeded");

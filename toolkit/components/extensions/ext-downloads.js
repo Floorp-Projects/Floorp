@@ -497,8 +497,10 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
 
       pause(id) {
         return DownloadMap.lazyInit().then(() => {
-          let item = DownloadMap.fromId(id);
-          if (!item) {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
             return Promise.reject({message: `Invalid download id ${id}`});
           }
           if (item.state != "in_progress") {
@@ -511,8 +513,10 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
 
       resume(id) {
         return DownloadMap.lazyInit().then(() => {
-          let item = DownloadMap.fromId(id);
-          if (!item) {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
             return Promise.reject({message: `Invalid download id ${id}`});
           }
           if (!item.canResume) {
@@ -525,8 +529,10 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
 
       cancel(id) {
         return DownloadMap.lazyInit().then(() => {
-          let item = DownloadMap.fromId(id);
-          if (!item) {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
             return Promise.reject({message: `Invalid download id ${id}`});
           }
           if (item.download.succeeded) {
