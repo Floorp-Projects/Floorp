@@ -420,6 +420,17 @@ var listenUntil = (target, eventName, onFire) => {
   }, false));
 };
 
+/* Test that a function throws the right error */
+function mustThrowWith(msg, reason, f) {
+  try {
+    f();
+    ok(false, msg + " must throw");
+  } catch (e) {
+    is(e.name, reason, msg + " must throw: " + e.message);
+  }
+};
+
+
 /*** Test control flow methods */
 
 /**

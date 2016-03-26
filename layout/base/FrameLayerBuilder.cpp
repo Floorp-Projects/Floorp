@@ -5105,9 +5105,11 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
                 aContainerFrame, aVisibleRect.Size(),
                 displaySize);
-      // multiply by the scale inherited from ancestors
-      scale.width *= aIncomingScale.mXScale;
-      scale.height *= aIncomingScale.mYScale;
+      // multiply by the scale inherited from ancestors--we use a uniform
+      // scale factor to prevent blurring when the layer is rotated.
+      float incomingScale = std::max(aIncomingScale.mXScale, aIncomingScale.mYScale);
+      scale.width *= incomingScale;
+      scale.height *= incomingScale;
     } else {
       // Scale factors are normalized to a power of 2 to reduce the number of resolution changes
       scale = RoundToFloatPrecision(ThebesMatrix(transform2d).ScaleFactors(true));

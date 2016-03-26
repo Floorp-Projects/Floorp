@@ -61,7 +61,7 @@ typedef struct nr_ice_stun_server_ {
       UINT2 port;
     } dnsname;
   } u;
-  int index;
+  int id;
   int transport;
 } nr_ice_stun_server;
 

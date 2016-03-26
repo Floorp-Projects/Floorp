@@ -54,7 +54,6 @@ add_task(function* test_register_invalid_json() {
     'Expected error for invalid JSON response'
   );
 
-  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
-    'Reconnect after invalid JSON response timed out');
+  yield helloPromise;
   equal(registers, 1, 'Wrong register count');
 });
