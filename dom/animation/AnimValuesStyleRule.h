@@ -61,8 +61,7 @@ public:
 
   void AddPropertiesToSet(nsCSSPropertySet& aSet) const
   {
-    for (size_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-      const PropertyValuePair &cv = mPropertyValuePairs[i];
+    for (const PropertyValuePair& cv : mPropertyValuePairs) {
       aSet.AddProperty(cv.mProperty);
     }
   }
