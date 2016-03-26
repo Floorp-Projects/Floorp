@@ -34,24 +34,6 @@ using mozilla::NegativeInfinity;
 using JS::GenericNaN;
 using JS::ToInt32;
 
-// inline
-Address
-CodeGeneratorMIPSShared::ToAddress(const LAllocation& a)
-{
-    MOZ_ASSERT(a.isMemory());
-    int32_t offset = ToStackOffset(&a);
-
-    return Address(StackPointer, offset);
-}
-
-// inline
-Address
-CodeGeneratorMIPSShared::ToAddress(const LAllocation* a)
-{
-    return ToAddress(*a);
-}
-
-
 // shared
 CodeGeneratorMIPSShared::CodeGeneratorMIPSShared(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
   : CodeGeneratorShared(gen, graph, masm)
