@@ -109,7 +109,13 @@ AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration,
 void
 AnimationEffectTiming::SetDirection(const PlaybackDirection& aDirection)
 {
-  // TODO: Bug 1244642 - implement AnimationEffectTiming direction
+  if (mTiming.mDirection == aDirection) {
+    return;
+  }
+
+  mTiming.mDirection = aDirection;
+
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 void
