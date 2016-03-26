@@ -534,23 +534,6 @@ MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label*
     branch32(cond, scratch32.asUnsized(), rhs, label);
 }
 
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
-{
-    // since rhs is an operand, do the compare backwards
-    Cmp(ARMRegister(rhs, 32), lhs);
-    B(label, Assembler::InvertCmpCondition(cond));
-}
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
-{
-    ARMRegister l = lhs.reg();
-    Cmp(l, Operand(rhs.value));
-    B(label, cond);
-}
-
 void
 MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
 {
