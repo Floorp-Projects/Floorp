@@ -582,8 +582,8 @@ StackCheckIsConstructorCalleeNewTarget(JSContext* cx, HandleValue callee, Handle
     return true;
 }
 
-static bool
-ConstructFromStack(JSContext* cx, const CallArgs& args)
+bool
+js::ConstructFromStack(JSContext* cx, const CallArgs& args)
 {
     if (!StackCheckIsConstructorCalleeNewTarget(cx, args.calleev(), args.newTarget()))
         return false;
