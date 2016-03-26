@@ -1019,6 +1019,7 @@ var PageInfoListener = {
     docInfo.contentType = document.contentType;
     docInfo.characterSet = document.characterSet;
     docInfo.lastModified = document.lastModified;
+    docInfo.principal = document.nodePrincipal;
 
     let documentURIObject = {};
     documentURIObject.spec = document.documentURIObject.spec;
