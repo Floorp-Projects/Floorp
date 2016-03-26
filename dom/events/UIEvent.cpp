@@ -50,7 +50,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
   switch(mEvent->mClass) {
     case eUIEventClass:
     {
-      mDetail = mEvent->AsUIEvent()->detail;
+      mDetail = mEvent->AsUIEvent()->mDetail;
       break;
     }
 
