@@ -50,15 +50,19 @@
   margin: auto 10px;
 }
 
-:root[devtoolstheme="light"] #developer-toolbar > toolbarbutton:not([checked=true]) > image,
+:root[devtoolstheme="light"] #developer-toolbar > .developer-toolbar-button:not([checked=true]) > image,
 :root[devtoolstheme="light"] .gclitoolbar-input-node:not([focused=true])::before  {
   filter: invert(1);
 }
 
-.developer-toolbar-button > .toolbarbutton-icon,
-#developer-toolbar-closebutton > .toolbarbutton-icon {
+.developer-toolbar-button > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
+}
+
+/* The toolkit close button is low contrast in the dark theme so invert it. */
+:root[devtoolstheme="dark"] #developer-toolbar > .close-icon:not(:hover) > image {
+  filter: invert(1);
 }
 
 #developer-toolbar-toolbox-button {
@@ -99,40 +103,6 @@
   #developer-toolbar-toolbox-button[checked=true] {
     -moz-image-region: rect(0px, 128px, 32px, 96px);
   }
-}
-
-#developer-toolbar-closebutton {
-  list-style-image: url("chrome://devtools/skin/images/close.png");
-  -moz-appearance: none;
-  border: none;
-  margin: 0 4px;
-  min-width: 16px;
-  width: 16px;
-  opacity: 0.6;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #developer-toolbar-closebutton {
-    list-style-image: url("chrome://devtools/skin/images/close@2x.png");
-  }
-}
-
-#developer-toolbar-closebutton > .toolbarbutton-icon {
-  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
-     use evil CSS to give the impression of smaller content */
-  margin: -4px;
-}
-
-#developer-toolbar-closebutton > .toolbarbutton-text {
-  display: none;
-}
-
-#developer-toolbar-closebutton:hover {
-  opacity: 0.8;
-}
-
-#developer-toolbar-closebutton:hover:active {
-  opacity: 1;
 }
 
 /* GCLI */
