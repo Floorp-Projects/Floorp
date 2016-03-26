@@ -132,8 +132,8 @@ def extra_old_configure_args(help):
 @template
 @advanced
 def add_old_configure_assignment(var, value_func):
-    from mozbuild.configure import DummyFunction
-    assert isinstance(value_func, DummyFunction)
+    from mozbuild.configure import DependsFunction
+    assert isinstance(value_func, DependsFunction)
 
     @depends(old_configure_assignments, value_func)
     @advanced
