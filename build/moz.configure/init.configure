@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include('util.configure')
+include('checks.configure')
 
 option(env='DIST', nargs=1, help='DIST directory')
 
@@ -464,6 +465,7 @@ def config_sub(shell, triplet):
 
 
 @depends('--host', shell)
+@checking('for host system type', lambda h: h.alias)
 @advanced
 def host(value, shell):
     if not value:
@@ -478,6 +480,7 @@ def host(value, shell):
 
 
 @depends('--target', host, shell)
+@checking('for target system type', lambda t: t.alias)
 def target(value, host, shell):
     if not value:
         return host

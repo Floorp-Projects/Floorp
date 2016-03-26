@@ -347,13 +347,13 @@ public:
    */
   virtual void ClearDidHistoryRestore() = 0;
   /**
-   * Determine if the passed in rect is nearly visible according to the image
+   * Determine if the passed in rect is nearly visible according to the frame
    * visibility heuristics for how close it is to the visible scrollport.
    */
   virtual bool IsRectNearlyVisible(const nsRect& aRect) = 0;
  /**
   * Expand the given rect taking into account which directions we can scroll
-  * and how far we want to expand for image visibility purposes.
+  * and how far we want to expand for frame visibility purposes.
   */
   virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const = 0;
   /**
@@ -453,16 +453,16 @@ public:
                                      bool aAllowCreateDisplayPort) = 0;
 
   /**
-   * Notification that this scroll frame is getting its image visibility updated.
+   * Notification that this scroll frame is getting its frame visibility updated.
    */
-  virtual void NotifyImageVisibilityUpdate() = 0;
+  virtual void NotifyApproximateFrameVisibilityUpdate() = 0;
 
   /**
-   * Returns true if this scroll frame had a display port at the last image
+   * Returns true if this scroll frame had a display port at the last frame
    * visibility update and fills in aDisplayPort with that displayport. Returns
    * false otherwise, and doesn't touch aDisplayPort.
    */
-  virtual bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort) = 0;
+  virtual bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(nsRect* aDisplayPort) = 0;
 
   /**
    * This is called when a descendant scrollframe's has its displayport expired.

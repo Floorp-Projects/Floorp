@@ -12,11 +12,12 @@ task:
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux32-workspace'
 
   payload:
     cache:
-      # "clobber" means no workspace cache; non-clobber subclasses should add that
       tooltool-cache: '/home/worker/tooltool-cache'
+      level-{{level}}-{{project}}-build-linux32-workspace: '/home/worker/workspace'
 
     features:
       relengAPIProxy: true
@@ -49,3 +50,4 @@ task:
     locations:
       build: 'public/build/target.tar.bz2'
       tests: 'public/build/target.tests.zip'
+

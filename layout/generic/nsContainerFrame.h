@@ -34,7 +34,10 @@ class FramePropertyTable;
 // dependency on nsDeviceContext.h.  It doesn't matter if it's a
 // little off.
 #ifdef DEBUG
-#define CRAZY_COORD (1000000*60)
+// 10 million pixels, converted to app units. Note that this a bit larger
+// than 1/4 of nscoord_MAX. So, if any content gets to be this large, we're
+// definitely in danger of grazing up against nscoord_MAX; hence, it's CRAZY.
+#define CRAZY_COORD (10000000*60)
 #define CRAZY_SIZE(_x) (((_x) < -CRAZY_COORD) || ((_x) > CRAZY_COORD))
 #endif
 

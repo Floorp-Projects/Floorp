@@ -48,7 +48,7 @@ MockWebSocketParent.prototype = {
   },
 
   sendMsg(msg) {
-    sendAsyncMessage("client-msg", msg);
+    sendAsyncMessage("socket-client-msg", msg);
   },
 
   close() {
@@ -83,7 +83,7 @@ var pushService = Cc["@mozilla.org/push/Service;1"].
 
 var mockWebSocket;
 
-addMessageListener("setup", function () {
+addMessageListener("socket-setup", function () {
   mockWebSocket = new Promise((resolve, reject) => {
     var mockSocket = null;
     pushService.replaceServiceBackend({
@@ -101,15 +101,72 @@ addMessageListener("setup", function () {
   });
 });
 
-addMessageListener("teardown", function () {
+addMessageListener("socket-teardown", function () {
   mockWebSocket.then(socket => {
     socket.close();
     pushService.restoreServiceBackend();
   });
 });
 
-addMessageListener("server-msg", function (msg) {
+addMessageListener("socket-server-msg", function (msg) {
   mockWebSocket.then(socket => {
     socket.serverSendMsg(msg);
   });
+});
+
+var MockService = {
+  requestID: 1,
+  resolvers: new Map(),
+
+  sendRequest(name, params) {
+    return new Promise((resolve, reject) => {
+      let id = this.requestID++;
+      this.resolvers.set(id, { resolve, reject });
+      sendAsyncMessage("service-request", {
+        name: name,
+        id: id,
+        params: params,
+      });
+    });
+  },
+
+  handleResponse(response) {
+    if (!this.resolvers.has(response.id)) {
+      Cu.reportError(`Unexpected response for request ${response.id}`);
+      return;
+    }
+    let resolver = this.resolvers.get(response.id);
+    this.resolvers.delete(response.id);
+    if (response.error) {
+      resolver.reject(response.error);
+    } else {
+      resolver.resolve(response.result);
+    }
+  },
+
+  init() {},
+
+  register(pageRecord) {
+    return this.sendRequest("register", pageRecord);
+  },
+
+  registration(pageRecord) {
+    return this.sendRequest("registration", pageRecord);
+  },
+
+  unregister(pageRecord) {
+    return this.sendRequest("unregister", pageRecord);
+  },
+};
+
+addMessageListener("service-replace", function () {
+  pushService.service = MockService;
+});
+
+addMessageListener("service-restore", function () {
+  pushService.service = null;
+});
+
+addMessageListener("service-response", function (response) {
+  MockService.handleResponse(response);
 });

@@ -56,6 +56,8 @@ from ..frontend.data import (
     JavaJarData,
     Library,
     LocalInclude,
+    ObjdirFiles,
+    ObjdirPreprocessedFiles,
     PerSourceFlag,
     Program,
     SharedLibrary,
@@ -582,7 +584,13 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_final_target_files(obj, obj.files, backend_file)
 
         elif isinstance(obj, FinalTargetPreprocessedFiles):
-            self._process_final_target_pp_files(obj, obj.files, backend_file)
+            self._process_final_target_pp_files(obj, obj.files, backend_file, 'DIST_FILES')
+
+        elif isinstance(obj, ObjdirFiles):
+            self._process_objdir_files(obj, obj.files, backend_file)
+
+        elif isinstance(obj, ObjdirPreprocessedFiles):
+            self._process_final_target_pp_files(obj, obj.files, backend_file, 'OBJDIR_PP_FILES')
 
         elif isinstance(obj, AndroidResDirs):
             # Order matters.
@@ -1267,20 +1275,38 @@ class RecursiveMakeBackend(CommonBackend):
                 backend_file.write('%s_TARGET := %s\n' % (target_var, tier))
                 backend_file.write('INSTALL_TARGETS += %s\n' % target_var)
 
-    def _process_final_target_pp_files(self, obj, files, backend_file):
+    def _process_final_target_pp_files(self, obj, files, backend_file, name):
         # Bug 1177710 - We'd like to install these via manifests as
         # preprocessed files. But they currently depend on non-standard flags
         # being added via some Makefiles, so for now we just pass them through
         # to the underlying Makefile.in.
+        #
+        # Note that if this becomes a manifest, OBJDIR_PP_FILES will likely
+        # still need to use PP_TARGETS internally because we can't have an
+        # install manifest for the root of the objdir.
+        for i, (path, files) in enumerate(files.walk()):
+            self._no_skip['misc'].add(backend_file.relobjdir)
+            var = '%s_%d' % (name, i)
+            for f in files:
+                backend_file.write('%s += %s\n' % (
+                    var, self._pretty_path(f, backend_file)))
+            backend_file.write('%s_PATH := $(DEPTH)/%s\n'
+                               % (var, mozpath.join(obj.install_target, path)))
+            backend_file.write('%s_TARGET := misc\n' % var)
+            backend_file.write('PP_TARGETS += %s\n' % var)
+
+    def _process_objdir_files(self, obj, files, backend_file):
+        # We can't use an install manifest for the root of the objdir, since it
+        # would delete all the other files that get put there by the build
+        # system.
         for i, (path, files) in enumerate(files.walk()):
             self._no_skip['misc'].add(backend_file.relobjdir)
             for f in files:
-                backend_file.write('DIST_FILES_%d += %s\n' % (
+                backend_file.write('OBJDIR_%d_FILES += %s\n' % (
                     i, self._pretty_path(f, backend_file)))
-            backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
-                               % (i, mozpath.join(obj.install_target, path)))
-            backend_file.write('DIST_FILES_%d_TARGET := misc\n' % i)
-            backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)
+            backend_file.write('OBJDIR_%d_DEST := $(topobjdir)/%s\n' % (i, path))
+            backend_file.write('OBJDIR_%d_TARGET := misc\n' % i)
+            backend_file.write('INSTALL_TARGETS += OBJDIR_%d\n' % i)
 
     def _process_chrome_manifest_entry(self, obj, backend_file):
         fragment = Makefile()

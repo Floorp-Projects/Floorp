@@ -1,21 +1,45 @@
-function test() {
-  waitForExplicitFinish();
-
+add_task(function* test() {
   let testPath = getRootDirectory(gTestPath);
 
-  let tab = gBrowser.addTab(testPath + "file_with_favicon.html");
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+    function* (tabBrowser) {
+      const URI = testPath + "file_with_favicon.html";
+      const expectedIcon = testPath + "file_generic_favicon.ico";
 
-  tab.linkedBrowser.addEventListener("DOMContentLoaded", function() {
-    tab.linkedBrowser.removeEventListener("DOMContentLoaded", arguments.callee, true);
+      let got_favicon = Promise.defer();
+      let listener = {
+        onLinkIconAvailable(browser, iconURI) {
+          if (got_favicon && iconURI && browser === tabBrowser) {
+            got_favicon.resolve(iconURI);
+            got_favicon = null;
+          }
+        }
+      };
+      gBrowser.addTabsProgressListener(listener);
 
-    let expectedIcon = testPath + "file_generic_favicon.ico";
+      BrowserTestUtils.loadURI(tabBrowser, URI);
 
-    is(gBrowser.getIcon(tab), expectedIcon, "Correct icon before hash change.");
-    tab.linkedBrowser.contentWindow.location.href += "#foo";
-    is(gBrowser.getIcon(tab), expectedIcon, "Correct icon after hash change.");
+      let iconURI = yield got_favicon.promise;
+      is(iconURI, expectedIcon, "Correct icon before pushState.");
 
-    gBrowser.removeTab(tab);
+      got_favicon = Promise.defer();
+      got_favicon.promise.then(() => { ok(false, "shouldn't be called"); }, (e) => e);
+      yield ContentTask.spawn(tabBrowser, null, function() {
+        content.location.href += "#foo";
+      });
 
-    finish();
-  }, true);
-}
+      // We've navigated and shouldn't get a call to onLinkIconAvailable.
+      TestUtils.executeSoon(() => {
+        got_favicon.reject(gBrowser.getIcon(gBrowser.getTabForBrowser(tabBrowser)));
+      });
+      try {
+        yield got_favicon.promise;
+      } catch (e) {
+        iconURI = e;
+      }
+      is(iconURI, expectedIcon, "Correct icon after pushState.");
+
+      gBrowser.removeTabsProgressListener(listener);
+    });
+});
+

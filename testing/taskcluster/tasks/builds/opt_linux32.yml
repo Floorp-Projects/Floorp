@@ -1,10 +1,18 @@
 $inherits:
-  from: 'tasks/builds/opt_linux32_clobber.yml'
+  from: 'tasks/builds/base_linux32.yml'
+  variables:
+    build_name: 'linux32'
+    build_type: 'opt'
 task:
-  # same as clobber, but with a cached workspace
-  scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux32-workspace'
+  metadata:
+      name: '[TC] Linux32 Opt'
+      description: 'Linux32 Opt'
 
-  payload:
-    cache:
-      level-{{level}}-{{project}}-build-linux32-workspace: '/home/worker/workspace'
+  workerType: opt-linux32
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+

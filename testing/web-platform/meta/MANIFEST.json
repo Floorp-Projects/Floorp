@@ -34820,6 +34820,44 @@
           }
         ]
       },
+      "reftest": {
+        "compat/webkit-text-fill-color-property-001a.html": [
+          {
+            "path": "compat/webkit-text-fill-color-property-001a.html",
+            "references": [
+              [
+                "/compat/webkit-text-fill-color-property-001-ref.html",
+                "=="
+              ]
+            ],
+            "url": "/compat/webkit-text-fill-color-property-001a.html"
+          }
+        ],
+        "compat/webkit-text-fill-color-property-001b.html": [
+          {
+            "path": "compat/webkit-text-fill-color-property-001b.html",
+            "references": [
+              [
+                "/compat/webkit-text-fill-color-property-001-ref.html",
+                "=="
+              ]
+            ],
+            "url": "/compat/webkit-text-fill-color-property-001b.html"
+          }
+        ],
+        "compat/webkit-text-fill-color-property-001c.html": [
+          {
+            "path": "compat/webkit-text-fill-color-property-001c.html",
+            "references": [
+              [
+                "/compat/webkit-text-fill-color-property-001-ref.html",
+                "=="
+              ]
+            ],
+            "url": "/compat/webkit-text-fill-color-property-001c.html"
+          }
+        ]
+      },
       "testharness": {
         "js/builtins/Promise-incumbent-global.sub.html": [
           {
@@ -34836,7 +34874,44 @@
         ]
       }
     },
-    "reftest_nodes": {}
+    "reftest_nodes": {
+      "compat/webkit-text-fill-color-property-001a.html": [
+        {
+          "path": "compat/webkit-text-fill-color-property-001a.html",
+          "references": [
+            [
+              "/compat/webkit-text-fill-color-property-001-ref.html",
+              "=="
+            ]
+          ],
+          "url": "/compat/webkit-text-fill-color-property-001a.html"
+        }
+      ],
+      "compat/webkit-text-fill-color-property-001b.html": [
+        {
+          "path": "compat/webkit-text-fill-color-property-001b.html",
+          "references": [
+            [
+              "/compat/webkit-text-fill-color-property-001-ref.html",
+              "=="
+            ]
+          ],
+          "url": "/compat/webkit-text-fill-color-property-001b.html"
+        }
+      ],
+      "compat/webkit-text-fill-color-property-001c.html": [
+        {
+          "path": "compat/webkit-text-fill-color-property-001c.html",
+          "references": [
+            [
+              "/compat/webkit-text-fill-color-property-001-ref.html",
+              "=="
+            ]
+          ],
+          "url": "/compat/webkit-text-fill-color-property-001c.html"
+        }
+      ]
+    }
   },
   "reftest_nodes": {
     "2dcontext/building-paths/canvas_complexshapes_arcto_001.htm": [

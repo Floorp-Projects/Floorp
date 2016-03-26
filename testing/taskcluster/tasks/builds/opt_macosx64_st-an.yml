@@ -1,22 +1,16 @@
 $inherits:
-  from: 'tasks/builds/opt_macosx64_clobber.yml'
+  from: 'tasks/builds/base_macosx64.yml'
   variables:
     build_name: 'macosx64-st-an'
+    build_type: 'opt'
 task:
   metadata:
       name: '[TC] MacOSX64 Static Analysis Opt'
       description: 'MacOSX64 Static Analysis Opt'
 
-  scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-macosx64-st-an-workspace'
-
-  routes:
-    - 'index.buildbot.branches.{{project}}.macosx64-st-an'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.macosx64-st-an'
+  workerType: opt-macosx64
 
   payload:
-    cache:
-      level-{{level}}-{{project}}-build-macosx64-st-an-workspace: '/home/worker/workspace'
     env:
       MH_CUSTOM_BUILD_VARIANT_CFG: 'cross-opt'
       DIST_UPLOADS: ''

@@ -7,32 +7,31 @@
 /*
  * Dialog services for PIP.
  */
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "mozIDOMWindow.h"
-#include "nsIDialogParamBlock.h"
+#include "nsArray.h"
+#include "nsCOMPtr.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsEmbedCID.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsIStringBundle.h"
+#include "nsIDateTimeFormat.h"
+#include "nsIDialogParamBlock.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
-#include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
-#include "nsPromiseFlatString.h"
-
-#include "nsNSSDialogs.h"
 #include "nsIKeygenThread.h"
-#include "nsIProtectedAuthThread.h"
-#include "nsNSSDialogHelper.h"
-#include "nsIWindowWatcher.h"
-#include "nsIX509CertValidity.h"
-
-#include "nsEmbedCID.h"
 #include "nsIPromptService.h"
+#include "nsIProtectedAuthThread.h"
+#include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
+#include "nsIWindowWatcher.h"
+#include "nsIX509CertDB.h"
+#include "nsIX509Cert.h"
+#include "nsIX509CertValidity.h"
+#include "nsNSSDialogHelper.h"
+#include "nsNSSDialogs.h"
+#include "nsPromiseFlatString.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
@@ -109,7 +108,7 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIMutableArray> dlgArray(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  nsCOMPtr<nsIMutableArray> dlgArray = nsArrayBase::Create();
   if (!dlgArray) {
     return NS_ERROR_FAILURE;
   }
@@ -360,7 +359,7 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
 NS_IMETHODIMP 
 nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
 {
-  nsCOMPtr<nsIMutableArray> dlgArray(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  nsCOMPtr<nsIMutableArray> dlgArray = nsArrayBase::Create();
   if (!dlgArray) {
     return NS_ERROR_FAILURE;
   }
