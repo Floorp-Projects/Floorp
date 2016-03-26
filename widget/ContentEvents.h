@@ -303,7 +303,7 @@ public:
     return result;
   }
 
-  nsString animationName;
+  nsString mAnimationName;
   float elapsedTime;
   nsString pseudoElement;
 
@@ -312,7 +312,7 @@ public:
   {
     AssignEventData(aEvent, aCopyTargets);
 
-    animationName = aEvent.animationName;
+    mAnimationName = aEvent.mAnimationName;
     elapsedTime = aEvent.elapsedTime;
     pseudoElement = aEvent.pseudoElement;
   }
