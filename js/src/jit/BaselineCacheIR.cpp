@@ -743,6 +743,37 @@ BaselineCacheIRCompiler::emitGuardProto()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardClass()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    const Class* clasp = nullptr;
+    switch (reader.guardClassKind()) {
+      case GuardClassKind::Array:
+        clasp = &ArrayObject::class_;
+        break;
+      case GuardClassKind::UnboxedArray:
+        clasp = &UnboxedArrayObject::class_;
+        break;
+      case GuardClassKind::MappedArguments:
+        clasp = &MappedArgumentsObject::class_;
+        break;
+      case GuardClassKind::UnmappedArguments:
+        clasp = &UnmappedArgumentsObject::class_;
+        break;
+    }
+
+    MOZ_ASSERT(clasp);
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardNoUnboxedExpando()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -806,6 +837,69 @@ BaselineCacheIRCompiler::emitLoadUndefinedResult()
     // Normally for this op, the result would have to be monitored by TI.
     // However, since this stub ALWAYS returns UndefinedValue(), and we can be sure
     // that undefined is already registered with the type-set, this can be avoided.
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadInt32ArrayLengthResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+    masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
+
+    // Guard length fits in an int32.
+    masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
+
+    // The int32 type was monitored when attaching the stub, so we can
+    // just return.
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadUnboxedArrayLengthResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    masm.load32(Address(obj, UnboxedArrayObject::offsetOfLength()), R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
+
+    // The int32 type was monitored when attaching the stub, so we can
+    // just return.
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadArgumentsObjectLengthResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Get initial length value.
+    masm.unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), scratch);
+
+    // Test if length has been overridden.
+    masm.branchTest32(Assembler::NonZero,
+                      scratch,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      failure->label());
+
+    // Shift out arguments length and return it. No need to type monitor
+    // because this stub always returns int32.
+    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
     emitReturnFromIC();
     return true;
 }
@@ -1008,7 +1102,8 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer, Cache
             return nullptr;
 
         CacheIRStubKey key(stubInfo);
-        jitCompartment->putCacheIRStubCode(lookup, key, code);
+        if (!jitCompartment->putCacheIRStubCode(lookup, key, code))
+            return nullptr;
     }
 
     // We got our shared stub code and stub info. Time to allocate and attach a
