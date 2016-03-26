@@ -217,10 +217,6 @@ class CodeGeneratorShared : public LElementVisitor
         return frameClass_ == FrameSizeClass::None() ? frameDepth_ : frameClass_.frameSize();
     }
 
-    inline Operand ToOperand(const LAllocation& a);
-    inline Operand ToOperand(const LAllocation* a);
-    inline Operand ToOperand(const LDefinition* def);
-
   protected:
 #ifdef CHECK_OSIPOINT_REGISTERS
     void resetOsiPointRegs(LSafepoint* safepoint);

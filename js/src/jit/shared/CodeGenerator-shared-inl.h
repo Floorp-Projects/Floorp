@@ -257,28 +257,6 @@ CodeGeneratorShared::ToAddress(const LAllocation* a)
     return ToAddress(*a);
 }
 
-Operand
-CodeGeneratorShared::ToOperand(const LAllocation& a)
-{
-    if (a.isGeneralReg())
-        return Operand(a.toGeneralReg()->reg());
-    if (a.isFloatReg())
-        return Operand(a.toFloatReg()->reg());
-    return Operand(masm.getStackPointer(), ToStackOffset(&a));
-}
-
-Operand
-CodeGeneratorShared::ToOperand(const LAllocation* a)
-{
-    return ToOperand(*a);
-}
-
-Operand
-CodeGeneratorShared::ToOperand(const LDefinition* def)
-{
-    return ToOperand(def->output());
-}
-
 void
 CodeGeneratorShared::saveLive(LInstruction* ins)
 {
