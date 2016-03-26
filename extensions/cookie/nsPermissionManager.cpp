@@ -112,6 +112,9 @@ GetPrincipalFromOrigin(const nsACString& aOrigin, nsIPrincipal** aPrincipal)
     return NS_ERROR_FAILURE;
   }
 
+  // set to default to disable user context isolation for permissions
+  attrs.mUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
+
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2165,8 +2168,14 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
     }
 
     // Copy the attributes over
-    mozilla::PrincipalOriginAttributes attrs = mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-    nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
+    mozilla::PrincipalOriginAttributes attrs =
+      mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+
+    // ensure that the user context isolation is disabled
+    attrs.mUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
+
+    nsCOMPtr<nsIPrincipal> principal =
+      mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
 
     return GetPermissionHashKey(principal, aType, aExactHostMatch);
   }

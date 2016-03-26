@@ -8,6 +8,7 @@ Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 const nsIQuotaManagerService = Components.interfaces.nsIQuotaManagerService;
 
 var gPermURI;
+var gPermPrincipal;
 var gUsageRequest;
 
 var gPermissions = SitePermissions.listPermissions();
@@ -28,11 +29,12 @@ var permissionObserver = {
   }
 };
 
-function onLoadPermission(uri)
+function onLoadPermission(uri, principal)
 {
   var permTab = document.getElementById("permTab");
   if (SitePermissions.isSupportedURI(uri)) {
     gPermURI = uri;
+    gPermPrincipal = principal;
     var hostText = document.getElementById("hostText");
     hostText.value = gPermURI.prePath;
 
@@ -189,11 +191,8 @@ function initIndexedDBRow()
   var quotaManagerService =
     Components.classes["@mozilla.org/dom/quota-manager-service;1"]
               .getService(nsIQuotaManagerService);
-  let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                            .getService(Components.interfaces.nsIScriptSecurityManager)
-                            .createCodebasePrincipal(gPermURI, {});
   gUsageRequest =
-    quotaManagerService.getUsageForPrincipal(principal,
+    quotaManagerService.getUsageForPrincipal(gPermPrincipal,
                                              onIndexedDBUsageCallback);
 
   var status = document.getElementById("indexedDBStatus");
@@ -206,13 +205,9 @@ function initIndexedDBRow()
 
 function onIndexedDBClear()
 {
-  let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                            .getService(Components.interfaces.nsIScriptSecurityManager)
-                            .createCodebasePrincipal(gPermURI, {});
-
   Components.classes["@mozilla.org/dom/quota-manager-service;1"]
             .getService(nsIQuotaManagerService)
-            .clearStoragesForPrincipal(principal);
+            .clearStoragesForPrincipal(gPermPrincipal);
 
   Components.classes["@mozilla.org/serviceworkers/manager;1"]
             .getService(Components.interfaces.nsIServiceWorkerManager)
