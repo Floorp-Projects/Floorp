@@ -47,7 +47,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
   e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
 
   InternalAnimationEvent* internalEvent = e->mEvent->AsAnimationEvent();
-  internalEvent->animationName = aParam.mAnimationName;
+  internalEvent->mAnimationName = aParam.mAnimationName;
   internalEvent->elapsedTime = aParam.mElapsedTime;
   internalEvent->pseudoElement = aParam.mPseudoElement;
 
@@ -58,7 +58,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
 NS_IMETHODIMP
 AnimationEvent::GetAnimationName(nsAString& aAnimationName)
 {
-  aAnimationName = mEvent->AsAnimationEvent()->animationName;
+  aAnimationName = mEvent->AsAnimationEvent()->mAnimationName;
   return NS_OK;
 }
 
