@@ -49,7 +49,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
   InternalAnimationEvent* internalEvent = e->mEvent->AsAnimationEvent();
   internalEvent->mAnimationName = aParam.mAnimationName;
   internalEvent->mElapsedTime = aParam.mElapsedTime;
-  internalEvent->pseudoElement = aParam.mPseudoElement;
+  internalEvent->mPseudoElement = aParam.mPseudoElement;
 
   e->SetTrusted(trusted);
   return e.forget();
@@ -78,7 +78,7 @@ AnimationEvent::ElapsedTime()
 NS_IMETHODIMP
 AnimationEvent::GetPseudoElement(nsAString& aPseudoElement)
 {
-  aPseudoElement = mEvent->AsAnimationEvent()->pseudoElement;
+  aPseudoElement = mEvent->AsAnimationEvent()->mPseudoElement;
   return NS_OK;
 }
 

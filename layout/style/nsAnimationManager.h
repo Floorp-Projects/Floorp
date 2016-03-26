@@ -48,7 +48,7 @@ struct AnimationEventInfo {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.mAnimationName = aAnimationName;
     mEvent.mElapsedTime = aElapsedTime.ToSeconds();
-    mEvent.pseudoElement =
+    mEvent.mPseudoElement =
       AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(aPseudoType);
   }
 
