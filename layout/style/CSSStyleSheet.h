@@ -225,6 +225,9 @@ public:
      return null */
   nsIURI* GetOriginalURI() const { return mInner->mOriginalSheetURI; }
 
+  // Whether the sheet is for an inline <style> element.
+  bool IsInline() const { return mInner->IsInline(); }
+
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
