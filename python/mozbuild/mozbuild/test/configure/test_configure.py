@@ -259,6 +259,17 @@ class TestConfigure(unittest.TestCase):
         self.assertIn('PLATFORM', config)
         self.assertEquals(config['PLATFORM'], sys.platform)
 
+    def test_decorators(self):
+        config = {}
+        out = StringIO()
+        sandbox = ConfigureSandbox(config, {}, [], out, out)
+
+        sandbox.exec_file(mozpath.join(test_data_path, 'decorators.configure'))
+
+        self.assertNotIn('FOO', sandbox)
+        self.assertNotIn('BAR', sandbox)
+        self.assertNotIn('QUX', sandbox)
+
     def test_set_config(self):
         def get_config(*args):
             return self.get_config(*args, configure='set_config.configure')
