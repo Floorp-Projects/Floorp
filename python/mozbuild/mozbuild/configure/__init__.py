@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import inspect
 import logging
 import os
+import re
 import sys
 import types
 from collections import OrderedDict
@@ -57,10 +58,11 @@ class ConfigureSandbox(dict):
     This is a different kind of sandboxing than the one used for moz.build
     processing.
 
-    The sandbox has 8 primitives:
+    The sandbox has 9 primitives:
     - option
     - depends
     - template
+    - imports
     - advanced
     - include
     - set_config
@@ -68,7 +70,7 @@ class ConfigureSandbox(dict):
     - imply_option
 
     `option`, `include`, `set_config`, `set_define` and `imply_option` are
-    functions. `depends`, `template` and `advanced` are decorators.
+    functions. `depends`, `template`, `imports` and `advanced` are decorators.
 
     These primitives are declared as name_impl methods to this class and
     the mapping name -> name_impl is done automatically in __getitem__.
@@ -111,6 +113,8 @@ class ConfigureSandbox(dict):
         # DependsFunction generated from @depends.
         self._depends = {}
         self._seen = set()
+        # Store the @imports added to a given function.
+        self._imports = {}
 
         self._options = OrderedDict()
         # Store the raw values returned by @depends functions
@@ -428,9 +432,62 @@ class ConfigureSandbox(dict):
         This function gives the decorated function access to the complete set
         of builtins, allowing the import keyword as an expected side effect.
         '''
-        func, glob = self._prepare_function(func)
-        glob.update(__builtins__=__builtins__)
-        return func
+        return self.imports_impl(_import='__builtin__', _as='__builtins__')(func)
+
+    RE_MODULE = re.compile('^[a-zA-Z0-9_\.]+$')
+
+    def imports_impl(self, _import, _from=None, _as=None):
+        '''Implementation of @imports.
+        This decorator imports the given _import from the given _from module
+        optionally under a different _as name.
+        The options correspond to the various forms for the import builtin.
+            @imports('sys')
+            @imports(_from='mozpack', _import='path', _as='mozpath')
+        '''
+        for value, required in (
+                (_import, True), (_from, False), (_as, False)):
+            if not isinstance(value, types.StringTypes) and not (
+                    required or value is None):
+                raise TypeError("Unexpected type: '%s'" % type(value))
+            if value is not None and not self.RE_MODULE.match(value):
+                raise ValueError("Invalid argument to @imports: '%s'" % value)
+
+        def decorator(func):
+            if func in self._prepared_functions:
+                raise ConfigureError(
+                    '@imports must appear after other decorators')
+            # For the imports to apply in the order they appear in the
+            # .configure file, we accumulate them in reverse order and apply
+            # them later.
+            imports = self._imports.setdefault(func, [])
+            imports.insert(0, (_from, _import, _as))
+            return func
+
+        return decorator
+
+    def _apply_imports(self, func, glob):
+        for _from, _import, _as in self._imports.get(func, ()):
+            # The special `__sandbox__` module gives access to the sandbox
+            # instance.
+            if _from is None and _import == '__sandbox__':
+                glob[_as or _import] = self
+                continue
+            # Special case for the open() builtin, because otherwise, using it
+            # fails with "IOError: file() constructor not accessible in
+            # restricted mode"
+            if _from == '__builtin__' and _import == 'open':
+                glob[_as or _import] = \
+                    lambda *args, **kwargs: open(*args, **kwargs)
+                continue
+            # Until this proves to be a performance problem, just construct an
+            # import statement and execute it.
+            import_line = ''
+            if _from:
+                import_line += 'from %s ' % _from
+            import_line += 'import %s' % _import
+            if _as:
+                import_line += ' as %s' % _as
+            exec(import_line, {}, glob)
 
     def _resolve_and_set(self, data, name, value):
         # Don't set anything when --help was on the command line
@@ -565,6 +622,7 @@ class ConfigureSandbox(dict):
             os=self.OS,
             log=self.log_impl,
         )
+        self._apply_imports(func, glob)
         func = wraps(func)(types.FunctionType(
             func.func_code,
             glob,
