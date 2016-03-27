@@ -148,9 +148,10 @@ def add_old_configure_assignment(var, value_func):
 
 @template
 def add_old_configure_arg(arg):
-    @depends(extra_old_configure_args)
-    def add_arg(args):
-        args.append(arg)
+    @depends(extra_old_configure_args, arg)
+    def add_arg(args, arg):
+        if arg:
+            args.append(arg)
 
 
 option(env='PYTHON', nargs=1, help='Python interpreter')
@@ -470,17 +471,23 @@ def target(value, host, shell):
     return split_triplet(config_sub(shell, value[0]))
 
 
-@depends(host, target)
-def host_and_target_for_old_configure(host, target):
-    # Autoconf needs these set
-    add_old_configure_arg('--host=%s' % host.alias)
+# Autoconf needs these set
+@depends(host)
+def host_for_old_configure(host):
+    return '--host=%s' % host.alias
 
+add_old_configure_arg(host_for_old_configure)
+
+@depends(host, target)
+def target_for_old_configure(host, target):
     target_alias = target.alias
     # old-configure does plenty of tests against $target and $target_os
     # and expects darwin for iOS, so make it happy.
     if target.os == 'iOS':
         target_alias = target_alias.replace('-ios', '-darwin')
-    add_old_configure_arg('--target=%s' % target_alias)
+    return '--target=%s' % target_alias
+
+add_old_configure_arg(target_for_old_configure)
 
 
 # These variables are for compatibility with the current moz.builds and
@@ -691,7 +698,9 @@ def js_option(*args, **kwargs):
     @depends(opt.option, build_project)
     def js_option(value, build_project):
         if build_project != 'js':
-            add_old_configure_arg(value.format(opt.option))
+            return value.format(opt.option)
+
+    add_old_configure_arg(js_option)
 
 
 # This is overridden in b2g/moz.configure with an option. No other project
