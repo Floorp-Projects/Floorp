@@ -80,8 +80,6 @@ class ArrayBufferObjectMaybeShared : public NativeObject
         return AnyArrayBufferByteLength(this);
     }
 
-    inline bool isDetached() const;
-
     inline SharedMem<uint8_t*> dataPointerEither();
 };
 
