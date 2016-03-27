@@ -351,7 +351,6 @@
     _(SetDOMProperty)               \
     _(CallDOMNative)                \
     _(IsCallable)                   \
-    _(IsConstructor)                \
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
