@@ -198,9 +198,6 @@ public:
 
   void Ended();
 
-  // Evict data in the source buffer in the given time range.
-  void Evict(double aStart, double aEnd);
-
   double GetBufferedStart();
   double GetBufferedEnd();
 
