@@ -17,8 +17,7 @@ const MAX_ENTRIES = 10;
 //    total items in the popup
 //  ]
 var testData = [
-  ["d", "direction", 0, 3],
-  ["VK_DOWN", "display", 1, 3],
+  ["d", "display", 1, 3],
   ["VK_DOWN", "dominant-baseline", 2, 3],
   ["VK_DOWN", "direction", 0, 3],
   ["VK_DOWN", "display", 1, 3],
@@ -26,14 +25,14 @@ var testData = [
   ["VK_UP", "dominant-baseline", 2, 3],
   ["VK_UP", "display", 1, 3],
   ["VK_BACK_SPACE", "d", -1, 0],
-  ["i", "direction", 0, 2],
+  ["i", "display", 1, 2],
   ["s", "display", -1, 0],
   ["VK_BACK_SPACE", "dis", -1, 0],
   ["VK_BACK_SPACE", "di", -1, 0],
   ["VK_BACK_SPACE", "d", -1, 0],
   ["VK_BACK_SPACE", "", -1, 0],
-  ["f", "fill", 0, MAX_ENTRIES],
-  ["i", "fill", 0, 4],
+  ["f", "filter", 3, MAX_ENTRIES],
+  ["i", "filter", 3, 4],
   ["VK_ESCAPE", null, -1, 0],
 ];
 
