@@ -336,13 +336,6 @@ class RegExpCompartment
      */
     ReadBarriered<Shape*> optimizableRegExpPrototypeShape_;
 
-    /*
-     * The shape of RegExp instance that satisfies following:
-     *   * lastProperty is lastIndex
-     *   * prototype is RegExp.prototype
-     */
-    ReadBarriered<Shape*> optimizableRegExpInstanceShape_;
-
     ArrayObject* createMatchResultTemplateObject(JSContext* cx);
 
   public:
@@ -372,18 +365,9 @@ class RegExpCompartment
     void setOptimizableRegExpPrototypeShape(Shape* shape) {
         optimizableRegExpPrototypeShape_ = shape;
     }
-    Shape* getOptimizableRegExpInstanceShape() {
-        return optimizableRegExpInstanceShape_;
-    }
-    void setOptimizableRegExpInstanceShape(Shape* shape) {
-        optimizableRegExpInstanceShape_ = shape;
-    }
 
     static size_t offsetOfOptimizableRegExpPrototypeShape() {
         return offsetof(RegExpCompartment, optimizableRegExpPrototypeShape_);
-    }
-    static size_t offsetOfOptimizableRegExpInstanceShape() {
-        return offsetof(RegExpCompartment, optimizableRegExpInstanceShape_);
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -424,15 +408,6 @@ class RegExpObject : public NativeObject
     /* Accessors. */
 
     static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
-
-    static bool isInitialShape(NativeObject* nobj) {
-        Shape* shape = nobj->lastProperty();
-        if (!shape->hasSlot())
-            return false;
-        if (shape->maybeSlot() != LAST_INDEX_SLOT)
-            return false;
-        return true;
-    }
 
     const Value& getLastIndex() const { return getSlot(LAST_INDEX_SLOT); }
 
