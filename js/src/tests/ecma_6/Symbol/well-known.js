@@ -7,7 +7,6 @@ var names = [
     "replace",
     "search",
     "species",
-    "split",
     "toPrimitive",
     "unscopables"
 ];

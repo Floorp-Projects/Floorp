@@ -20,7 +20,6 @@
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"
-#include "vm/SelfHosting.h"
 
 #include "jsscriptinlines.h"
 
@@ -192,6 +191,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // String natives.
       case InlinableNative::String:
         return inlineStringObject(callInfo);
+      case InlinableNative::StringSplit:
+        return inlineStringSplit(callInfo);
       case InlinableNative::StringCharCodeAt:
         return inlineStrCharCodeAt(callInfo);
       case InlinableNative::StringFromCharCode:
@@ -202,8 +203,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // String intrinsics.
       case InlinableNative::IntrinsicStringReplaceString:
         return inlineStringReplaceString(callInfo);
-      case InlinableNative::IntrinsicStringSplitString:
-        return inlineStringSplitString(callInfo);
 
       // Object natives.
       case InlinableNative::ObjectCreate:
@@ -1470,37 +1469,37 @@ IonBuilder::inlineStringObject(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
+IonBuilder::inlineConstantStringSplit(CallInfo& callInfo)
 {
+    if (!callInfo.thisArg()->isConstant())
+        return InliningStatus_NotInlined;
+
     if (!callInfo.getArg(0)->isConstant())
         return InliningStatus_NotInlined;
 
-    if (!callInfo.getArg(1)->isConstant())
+    MConstant* argval = callInfo.getArg(0)->toConstant();
+    if (argval->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    MConstant* strval = callInfo.getArg(0)->toConstant();
-    if (strval->type() != MIRType_String)
-        return InliningStatus_NotInlined;
-
-    MConstant* sepval = callInfo.getArg(1)->toConstant();
+    MConstant* strval = callInfo.thisArg()->toConstant();
     if (strval->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
     // Check if exist a template object in stub.
-    JSString* stringStr = nullptr;
-    JSString* stringSep = nullptr;
+    JSString* stringThis = nullptr;
+    JSString* stringArg = nullptr;
     JSObject* templateObject = nullptr;
-    if (!inspector->isOptimizableCallStringSplit(pc, &stringStr, &stringSep, &templateObject))
+    if (!inspector->isOptimizableCallStringSplit(pc, &stringThis, &stringArg, &templateObject))
         return InliningStatus_NotInlined;
 
-    MOZ_ASSERT(stringStr);
-    MOZ_ASSERT(stringSep);
+    MOZ_ASSERT(stringThis);
+    MOZ_ASSERT(stringArg);
     MOZ_ASSERT(templateObject);
 
-    if (strval->toString() != stringStr)
+    if (strval->toString() != stringThis)
         return InliningStatus_NotInlined;
 
-    if (sepval->toString() != stringSep)
+    if (argval->toString() != stringArg)
         return InliningStatus_NotInlined;
 
     // Check if |templateObject| is valid.
@@ -1573,27 +1572,23 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStringSplitString(CallInfo& callInfo)
+IonBuilder::inlineStringSplit(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    MDefinition* strArg = callInfo.getArg(0);
-    MDefinition* sepArg = callInfo.getArg(1);
-
-    if (strArg->type() != MIRType_String)
+    if (callInfo.thisArg()->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    if (sepArg->type() != MIRType_String)
-        return InliningStatus_NotInlined;
-
-    IonBuilder::InliningStatus resultConstStringSplit = inlineConstantStringSplitString(callInfo);
+    IonBuilder::InliningStatus resultConstStringSplit = inlineConstantStringSplit(callInfo);
     if (resultConstStringSplit != InliningStatus_NotInlined)
         return resultConstStringSplit;
 
-    JSObject* templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_StringSplitString);
+    JSObject* templateObject = inspector->getTemplateObjectForNative(pc, js::str_split);
     if (!templateObject)
         return InliningStatus_NotInlined;
 
@@ -1615,8 +1610,8 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
                                                   constraints());
     current->add(templateObjectDef);
 
-    MStringSplit* ins = MStringSplit::New(alloc(), constraints(), strArg, sepArg,
-                                          templateObjectDef);
+    MStringSplit* ins = MStringSplit::New(alloc(), constraints(), callInfo.thisArg(),
+                                          callInfo.getArg(0), templateObjectDef);
     current->add(ins);
     current->push(ins);
 

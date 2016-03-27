@@ -7232,13 +7232,12 @@ CodeGenerator::visitSinCos(LSinCos *lir)
     masm.freeStack(sizeof(double) * 2);
 }
 
-typedef JSObject* (*StringSplitFn)(JSContext*, HandleObjectGroup, HandleString, HandleString, uint32_t);
+typedef JSObject* (*StringSplitFn)(JSContext*, HandleObjectGroup, HandleString, HandleString);
 static const VMFunction StringSplitInfo = FunctionInfo<StringSplitFn>(js::str_split_string);
 
 void
 CodeGenerator::visitStringSplit(LStringSplit* lir)
 {
-    pushArg(Imm32(INT32_MAX));
     pushArg(ToRegister(lir->separator()));
     pushArg(ToRegister(lir->string()));
     pushArg(ImmGCPtr(lir->mir()->group()));

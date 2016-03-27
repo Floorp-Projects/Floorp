@@ -310,9 +310,6 @@ str_fromCharCode_one_arg(JSContext* cx, HandleValue code, MutableHandleValue rva
 /* String methods exposed so they can be installed in the self-hosting global. */
 
 extern bool
-str_includes(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
 str_indexOf(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
@@ -419,9 +416,11 @@ FileEscapedString(FILE* fp, const char* chars, size_t length, uint32_t quote)
     return res;
 }
 
+bool
+str_split(JSContext* cx, unsigned argc, Value* vp);
+
 JSObject*
-str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep,
-                 uint32_t limit);
+str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep);
 
 JSString *
 str_flat_replace_string(JSContext *cx, HandleString string, HandleString pattern,
