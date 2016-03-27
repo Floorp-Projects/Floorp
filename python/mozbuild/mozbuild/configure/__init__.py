@@ -57,15 +57,18 @@ class ConfigureSandbox(dict):
     This is a different kind of sandboxing than the one used for moz.build
     processing.
 
-    The sandbox has 5 primitives:
+    The sandbox has 8 primitives:
     - option
     - depends
     - template
     - advanced
     - include
+    - set_config
+    - set_define
+    - imply_option
 
-    `option` and `include` are functions. `depends`, `template` and `advanced`
-    are decorators.
+    `option`, `include`, `set_config`, `set_define` and `imply_option` are
+    functions. `depends`, `template` and `advanced` are decorators.
 
     These primitives are declared as name_impl methods to this class and
     the mapping name -> name_impl is done automatically in __getitem__.
