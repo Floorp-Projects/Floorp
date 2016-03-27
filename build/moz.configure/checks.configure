@@ -12,7 +12,8 @@
 # _declare_exceptions template, and add it to the return statement. Then
 # destructure in the assignment below the function declaration.
 @template
-@advanced
+@imports(_from='__builtin__', _import='Exception')
+@imports(_from='__builtin__', _import='__name__')
 def _declare_exceptions():
     class FatalCheckError(Exception):
         '''An exception to throw from a function decorated with @checking.
@@ -89,11 +90,9 @@ def checking(what, callback=None):
 # it can find. If PROG is already set from the environment or command line,
 # use that value instead.
 @template
-@advanced
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.configure', _import='DependsFunction')
 def check_prog(var, progs, what=None, input=None, allow_missing=False):
-    from mozbuild.shellutil import quote
-    from mozbuild.configure import DependsFunction
-
     if input:
         # Wrap input with type checking and normalization.
         @depends(input)

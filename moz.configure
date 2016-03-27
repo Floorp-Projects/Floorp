@@ -62,9 +62,8 @@ include(toolchain_include)
 
 
 @depends('--help')
-@advanced
+@imports(_from='mozbuild.backend', _import='backends')
 def build_backends_choices(help):
-    from mozbuild.backend import backends
     return tuple(backends)
 
 
@@ -110,9 +109,8 @@ add_old_configure_assignment('PERL', perl_for_old_configure)
 def perl_version_check(min_version):
     @depends(perl)
     @checking('for minimum required perl version >= %s' % min_version)
-    @advanced
+    @imports('subprocess')
     def get_perl_version(perl):
-        import subprocess
         try:
             return Version(subprocess.check_output([perl, '-e', 'print $]']))
         except subprocess.CalledProcessError as e:
@@ -125,9 +123,8 @@ def perl_version_check(min_version):
 
     @depends(perl)
     @checking('for full perl installation')
-    @advanced
+    @imports('subprocess')
     def has_full_perl_installation(perl):
-        import subprocess
         ret = subprocess.call(
             [perl, '-e', 'use Config; exit(!-d $Config{archlib})'])
         return ret == 0

@@ -10,9 +10,8 @@ yasm = check_prog('YASM', ['yasm'], allow_missing=True)
 
 @depends_if(yasm)
 @checking('yasm version')
-@advanced
+@imports('subprocess')
 def yasm_version(yasm):
-    import subprocess
     try:
         version = Version(subprocess.check_output(
             [yasm, '--version']
@@ -85,9 +84,8 @@ def using_ccache(ccache):
 set_config('MOZ_USING_CCACHE', using_ccache)
 
 @depends('--with-compiler-wrapper', ccache)
-@advanced
+@imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
 def compiler_wrapper(wrapper, ccache):
-    from mozbuild.shellutil import split as shell_split
     if ccache:
         if wrapper:
             return tuple([ccache] + shell_split(wrapper[0]))

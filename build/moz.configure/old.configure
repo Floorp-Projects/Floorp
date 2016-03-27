@@ -5,10 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
-@advanced
+@imports('codecs')
+@imports('sys')
 def encoded_open(path, mode):
-    import codecs
-    import sys
     encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
     return codecs.open(path, mode, encoding)
 
@@ -16,10 +15,8 @@ def encoded_open(path, mode):
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 @depends(mozconfig, 'AUTOCONF')
-@advanced
+@imports('re')
 def autoconf(mozconfig, autoconf):
-    import re
-
     mozconfig_autoconf = None
     if mozconfig['path']:
         make_extra = mozconfig['make_extra']
@@ -63,11 +60,12 @@ set_config('AUTOCONF', autoconf)
 
 # See comment in mozconfig_options() from build/moz.configure/init.configure
 @template
-@advanced
+# This gives access to the sandbox. Don't copy this blindly.
+@imports('__sandbox__')
 def check_mozconfig_variables():
     # This escapes the sandbox. Don't copy this. This is only here because it
     # is a one off until old-configure is gone.
-    all_options = depends.__self__._options.itervalues()
+    all_options = __sandbox__._options.itervalues()
 
     @depends(early_options, wanted_mozconfig_variables)
     def check_mozconfig_variables(early_options, wanted_mozconfig_variables):
@@ -82,17 +80,16 @@ check_mozconfig_variables()
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
          old_configure_assignments, build_project)
-@advanced
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='print')
+@imports('glob')
+@imports('itertools')
+@imports('subprocess')
+# Import getmtime without overwriting the sandbox os.path.
+@imports(_from='os.path', _import='getmtime')
+@imports(_from='mozbuild.shellutil', _import='quote')
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                       old_configure_assignments, build_project):
-    import glob
-    import itertools
-    import subprocess
-    # Import getmtime without overwriting the sandbox os.path.
-    from os.path import getmtime
-
-    from mozbuild.shellutil import quote
-
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
@@ -369,15 +366,16 @@ def old_configure_options(*options):
     '--enable-calendar',
     '--enable-incomplete-external-linkage',
 )
-@advanced
+@imports(_from='__builtin__', _import='compile')
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='zip')
+@imports('logging')
+@imports('os')
+@imports('subprocess')
+@imports('sys')
+@imports(_from='mozbuild.shellutil', _import='quote')
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
-    import logging
-    import os
-    import subprocess
-    import sys
-    from mozbuild.shellutil import quote
-
     cmd = prepare_configure
 
     # old-configure only supports the options listed in @old_configure_options
@@ -456,10 +454,8 @@ def set_old_configure_define(name, value):
 
 
 @depends(old_configure)
-@advanced
+@imports('types')
 def post_old_configure(raw_config):
-    import types
-
     for k, v in raw_config['substs']:
         set_old_configure_config(
             k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
