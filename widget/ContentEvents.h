@@ -197,7 +197,7 @@ public:
 
   InternalFocusEvent(bool aIsTrusted, EventMessage aMessage)
     : InternalUIEvent(aIsTrusted, aMessage, eFocusEventClass)
-    , fromRaise(false)
+    , mFromRaise(false)
     , isRefocus(false)
   {
   }
@@ -215,7 +215,7 @@ public:
   /// The possible related target
   nsCOMPtr<dom::EventTarget> relatedTarget;
 
-  bool fromRaise;
+  bool mFromRaise;
   bool isRefocus;
 
   void AssignFocusEventData(const InternalFocusEvent& aEvent, bool aCopyTargets)
@@ -223,7 +223,7 @@ public:
     AssignUIEventData(aEvent, aCopyTargets);
 
     relatedTarget = aCopyTargets ? aEvent.relatedTarget : nullptr;
-    fromRaise = aEvent.fromRaise;
+    mFromRaise = aEvent.mFromRaise;
     isRefocus = aEvent.isRefocus;
   }
 };
