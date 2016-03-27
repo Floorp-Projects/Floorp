@@ -147,13 +147,7 @@ function RegExpMatch(string) {
     }
 }
 
-// Checks if following properties and getters are not modified, and accessing
-// them not observed by content script:
-//   * global
-//   * sticky
-//   * exec
-//   * lastIndex
-function IsRegExpMethodOptimizable(rx) {
+function IsRegExpReplaceOptimizable(rx) {
     var RegExpProto = GetBuiltinPrototype("RegExp");
     // If RegExpPrototypeOptimizable and RegExpInstanceOptimizable succeed,
     // `RegExpProto.exec` is guaranteed to be data properties.
@@ -192,7 +186,7 @@ function RegExpReplace(string, replaceValue) {
     var global = !!rx.global;
 
     // Optimized paths for simple cases.
-    if (!functionalReplace && firstDollarIndex === -1 && IsRegExpMethodOptimizable(rx)) {
+    if (!functionalReplace && firstDollarIndex === -1 && IsRegExpReplaceOptimizable(rx)) {
         if (global) {
             if (lengthS < 0x7fff)
                 return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue);
@@ -531,21 +525,6 @@ function RegExpSearch(string) {
     // Step 3.
     var S = ToString(string);
 
-    var result;
-    if (IsRegExpMethodOptimizable(rx) && S.length < 0x7fff) {
-        var sticky = !!rx.sticky;
-
-        // Step 6.
-        result = RegExpSearcher(rx, S, 0, sticky);
-
-        // Step 8.
-        if (result === -1)
-            return -1;
-
-        // Step 9.
-        return result & 0x7fff;
-    }
-
     // Step 4.
     var previousLastIndex = rx.lastIndex;
 
@@ -553,7 +532,7 @@ function RegExpSearch(string) {
     rx.lastIndex = 0;
 
     // Step 6.
-    result = RegExpExec(rx, S, false);
+    var result = RegExpExec(rx, S, false);
 
     // Step 7.
     rx.lastIndex = previousLastIndex;
