@@ -1219,9 +1219,6 @@ bool
 GetPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Value* vp);
 
 bool
-GetGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp);
-
-bool
 GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
