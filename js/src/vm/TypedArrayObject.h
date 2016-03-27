@@ -256,7 +256,6 @@ class TypedArrayObject : public NativeObject
     static const JSFunctionSpec protoFunctions[];
     static const JSPropertySpec protoAccessors[];
     static const JSFunctionSpec staticFunctions[];
-    static const JSPropertySpec staticProperties[];
 
     /* Accessors and functions */
 
