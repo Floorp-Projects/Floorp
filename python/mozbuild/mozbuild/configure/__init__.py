@@ -58,19 +58,18 @@ class ConfigureSandbox(dict):
     This is a different kind of sandboxing than the one used for moz.build
     processing.
 
-    The sandbox has 9 primitives:
+    The sandbox has 8 primitives:
     - option
     - depends
     - template
     - imports
-    - advanced
     - include
     - set_config
     - set_define
     - imply_option
 
     `option`, `include`, `set_config`, `set_define` and `imply_option` are
-    functions. `depends`, `template`, `imports` and `advanced` are decorators.
+    functions. `depends`, `template`, and `imports` are decorators.
 
     These primitives are declared as name_impl methods to this class and
     the mapping name -> name_impl is done automatically in __getitem__.
@@ -390,8 +389,8 @@ class ConfigureSandbox(dict):
         '''Implementation of @template.
         This function is a decorator. Template functions are called
         immediately. They are altered so that their global namespace exposes
-        a limited set of functions from os.path, as well as `advanced`,
-        `depends` and `option`.
+        a limited set of functions from os.path, as well as `depends` and
+        `option`.
         Templates allow to simplify repetitive constructs, or to implement
         helper decorators and somesuch.
         '''
@@ -426,13 +425,6 @@ class ConfigureSandbox(dict):
         wrapper = wrap_template(template)
         self._templates.add(wrapper)
         return wrapper
-
-    def advanced_impl(self, func):
-        '''Implementation of @advanced.
-        This function gives the decorated function access to the complete set
-        of builtins, allowing the import keyword as an expected side effect.
-        '''
-        return self.imports_impl(_import='__builtin__', _as='__builtins__')(func)
 
     RE_MODULE = re.compile('^[a-zA-Z0-9_\.]+$')
 
@@ -608,7 +600,7 @@ class ConfigureSandbox(dict):
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground
-        for @depends, @template and @advanced.
+        for @depends, and @template.
         '''
         if not inspect.isfunction(func):
             raise TypeError("Unexpected type: '%s'" % type(func))
