@@ -234,7 +234,7 @@ class ConfigureSandbox(dict):
 
         if (not isinstance(value, DependsFunction) and
                 value not in self._templates and
-                not issubclass(value, Exception)):
+                not (inspect.isclass(value) and issubclass(value, Exception))):
             raise KeyError('Cannot assign `%s` because it is neither a '
                            '@depends nor a @template' % key)
 
@@ -393,8 +393,32 @@ class ConfigureSandbox(dict):
             (k[:-len('_impl')], getattr(self, k))
             for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
         )
-        self._templates.add(template)
-        return template
+
+        # Any function argument to the template must be prepared to be sandboxed.
+        # If the template itself returns a function (in which case, it's very
+        # likely a decorator), that function must be prepared to be sandboxed as
+        # well.
+        def wrap_template(template):
+            @wraps(template)
+            def wrapper(*args, **kwargs):
+                def maybe_prepare_function(obj):
+                    if inspect.isfunction(obj):
+                        func, _ = self._prepare_function(obj)
+                        return func
+                    return obj
+
+                args = [maybe_prepare_function(arg) for arg in args]
+                kwargs = {k: maybe_prepare_function(v)
+                          for k, v in kwargs.iteritems()}
+                ret = template(*args, **kwargs)
+                if inspect.isfunction(ret):
+                    return wrap_template(ret)
+                return ret
+            return wrapper
+
+        wrapper = wrap_template(template)
+        self._templates.add(wrapper)
+        return wrapper
 
     def advanced_impl(self, func):
         '''Implementation of @advanced.
