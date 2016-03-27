@@ -9,6 +9,8 @@ EXPORTS += [
     'AsyncEventRunner.h',
     'MediaSourceDecoder.h',
     'MediaSourceDemuxer.h',
+    'SourceBufferAttributes.h',
+    'SourceBufferTask.h',
     'TrackBuffersManager.h',
 ]
 
