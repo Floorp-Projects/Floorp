@@ -147,15 +147,21 @@ check_prog('XARGS', ('xargs',))
 check_prog('ZIP', ('zip',))
 
 @depends(target)
-def mac_programs(target):
+def extra_programs(target):
     if target.kernel == 'Darwin':
-        check_prog('DSYMUTIL', ('dsymutil', 'llvm-dsymutil'), allow_missing=True)
-        check_prog('GENISOIMAGE', ('genisoimage',), allow_missing=True)
-
-@depends(target)
-def linux_programs(target):
+        return namespace(
+            DSYMUTIL=('dsymutil', 'llvm-dsymutil'),
+            GENISOIMAGE=('genisoimage',),
+        )
     if target.os == 'GNU' and target.kernel == 'Linux':
-        check_prog('RPMBUILD', ('rpmbuild',), allow_missing=True)
+        return namespace(RPMBUILD=('rpmbuild',))
+
+check_prog('DSYMUTIL', delayed_getattr(extra_programs, 'DSYMUTIL'),
+           allow_missing=True)
+check_prog('GENISOIMAGE', delayed_getattr(extra_programs, 'GENISOIMAGE'),
+           allow_missing=True)
+check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
+           allow_missing=True)
 
 
 # Fallthrough to autoconf-based configure
