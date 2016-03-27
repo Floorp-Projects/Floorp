@@ -989,7 +989,7 @@ LayerTransactionParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData
     // TextureHost should not attempt to access the compositor.
     flags |= TextureFlags::INVALID_COMPOSITOR;
   } else if (aLayersBackend != mLayerManager->GetCompositor()->GetBackendType()) {
-    gfxDevCrash(LogReason::PAllocTextureBackendMismatch) << "Texture backend is wrong";
+    gfxDevCrash(gfx::LogReason::PAllocTextureBackendMismatch) << "Texture backend is wrong";
   }
 
   return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, flags);
