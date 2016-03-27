@@ -207,7 +207,6 @@
     _(OsrArgumentsObject)           \
     _(RegExp)                       \
     _(RegExpMatcher)                \
-    _(RegExpSearcher)               \
     _(RegExpTester)                 \
     _(RegExpPrototypeOptimizable)   \
     _(RegExpInstanceOptimizable)    \
