@@ -105,14 +105,11 @@ public:
   RefPtr<RangeRemovalPromise> RangeRemoval(media::TimeUnit aStart,
                                              media::TimeUnit aEnd);
 
-  // Evicts data up to aPlaybackTime. aThreshold is used to
-  // bound the data being evicted. It will not evict more than aThreshold
-  // bytes. aBufferStartTime contains the new start time of the data after the
-  // eviction.
-  EvictDataResult
-  EvictData(media::TimeUnit aPlaybackTime,
-            int64_t aThresholdReduct,
-            media::TimeUnit* aBufferStartTime);
+  // Schedule data eviction if necessary as the next call to AppendData will
+  // add aSize bytes.
+  // Eviction is done in two steps, first remove data up to aPlaybackTime
+  // and if still more space is needed remove from the end.
+  EvictDataResult EvictData(const media::TimeUnit& aPlaybackTime, int64_t aSize);
 
   // Returns the buffered range currently managed.
   // This may be called on any thread.
@@ -120,7 +117,7 @@ public:
   media::TimeIntervals Buffered();
 
   // Return the size of the data managed by this SourceBufferContentManager.
-  int64_t GetSize();
+  int64_t GetSize() const;
 
   // Indicate that the MediaSource parent object got into "ended" state.
   void Ended();
