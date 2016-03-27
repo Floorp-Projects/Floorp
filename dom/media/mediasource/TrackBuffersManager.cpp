@@ -234,19 +234,6 @@ TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
   return EvictDataResult::NO_DATA_EVICTED;
 }
 
-void
-TrackBuffersManager::EvictBefore(TimeUnit aTime)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("");
-
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArg<TimeInterval>(
-      this, &TrackBuffersManager::CodedFrameRemoval,
-      TimeInterval(TimeUnit::FromSeconds(0), aTime));
-  GetTaskQueue()->Dispatch(task.forget());
-}
-
 TimeIntervals
 TrackBuffersManager::Buffered()
 {
