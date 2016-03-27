@@ -475,6 +475,8 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     partialEvict += frame->ComputedSizeOfIncludingThis();
   }
 
+  const int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
+
   if (lastKeyFrameIndex > 0) {
     MSE_DEBUG("Step1. Evicting %lld bytes prior currentTime",
               aSizeToEvict - toEvict);
@@ -483,8 +485,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
                    TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex]->mTime - 1)));
   }
 
-  const int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
-  if (mSizeSourceBuffer <= finalSize || !buffer.Length()) {
+  if (mSizeSourceBuffer <= finalSize) {
     return;
   }
 
