@@ -14,6 +14,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SourceBufferBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/mozalloc.h"
@@ -25,7 +26,7 @@
 #include "nsString.h"
 #include "nscore.h"
 #include "TrackBuffersManager.h"
-#include "mozilla/Monitor.h"
+#include "SourceBufferTask.h"
 
 class JSObject;
 struct JSContext;
@@ -40,103 +41,13 @@ namespace dom {
 
 class TimeRanges;
 
-class SourceBufferAttributes {
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SourceBufferAttributes);
-  explicit SourceBufferAttributes(bool aGenerateTimestamp)
-    : mGenerateTimestamps(aGenerateTimestamp)
-    , mMonitor("SourceBufferAttributes")
-    , mAppendWindowStart(0)
-    , mAppendWindowEnd(PositiveInfinity<double>())
-    , mAppendMode(SourceBufferAppendMode::Segments)
-    , mApparentTimestampOffset(0)
-  {}
-
-  double GetAppendWindowStart()
-  {
-    MonitorAutoLock mon(mMonitor);
-    return mAppendWindowStart;
-  }
-
-  double GetAppendWindowEnd()
-  {
-    MonitorAutoLock mon(mMonitor);
-    return mAppendWindowEnd;
-  }
-
-  void SetAppendWindowStart(double aWindowStart)
-  {
-    MonitorAutoLock mon(mMonitor);
-    mAppendWindowStart = aWindowStart;
-  }
-
-  void SetAppendWindowEnd(double aWindowEnd)
-  {
-    MonitorAutoLock mon(mMonitor);
-    mAppendWindowEnd = aWindowEnd;
-  }
-
-  double GetApparentTimestampOffset()
-  {
-    MonitorAutoLock mon(mMonitor);
-    return mApparentTimestampOffset;
-  }
-
-  void SetApparentTimestampOffset(double aTimestampOffset)
-  {
-    MonitorAutoLock mon(mMonitor);
-    mApparentTimestampOffset = aTimestampOffset;
-    mTimestampOffset = media::TimeUnit::FromSeconds(aTimestampOffset);
-  }
-
-  media::TimeUnit GetTimestampOffset()
-  {
-    MonitorAutoLock mon(mMonitor);
-    return mTimestampOffset;
-  }
-
-  void SetTimestampOffset(media::TimeUnit& aTimestampOffset)
-  {
-    MonitorAutoLock mon(mMonitor);
-    mTimestampOffset = aTimestampOffset;
-    mApparentTimestampOffset = aTimestampOffset.ToSeconds();
-  }
-
-  SourceBufferAppendMode GetAppendMode()
-  {
-    MonitorAutoLock mon(mMonitor);
-    return mAppendMode;
-  }
-
-  void SetAppendMode(SourceBufferAppendMode aAppendMode)
-  {
-    MonitorAutoLock mon(mMonitor);
-    mAppendMode = aAppendMode;
-  }
-
-  // mGenerateTimestamp isn't mutable once the source buffer has been constructed
-  // We don't need a monitor to protect it across threads.
-  const bool mGenerateTimestamps;
-
-private:
-  ~SourceBufferAttributes() {};
-
-  // Monitor protecting all members below.
-  Monitor mMonitor;
-  double mAppendWindowStart;
-  double mAppendWindowEnd;
-  SourceBufferAppendMode mAppendMode;
-  double mApparentTimestampOffset;
-  media::TimeUnit mTimestampOffset;
-};
-
 class SourceBuffer final : public DOMEventTargetHelper
 {
 public:
   /** WebIDL Methods. */
   SourceBufferAppendMode Mode() const
   {
-    return mAttributes->GetAppendMode();
+    return mCurrentAttributes.GetAppendMode();
   }
 
   void SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv);
@@ -151,21 +62,21 @@ public:
 
   double TimestampOffset() const
   {
-    return mAttributes->GetApparentTimestampOffset();
+    return mCurrentAttributes.GetApparentTimestampOffset();
   }
 
   void SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv);
 
   double AppendWindowStart() const
   {
-    return mAttributes->GetAppendWindowStart();
+    return mCurrentAttributes.GetAppendWindowStart();
   }
 
   void SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv);
 
   double AppendWindowEnd() const
   {
-    return mAttributes->GetAppendWindowEnd();
+    return mCurrentAttributes.GetAppendWindowEnd();
   }
 
   void SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv);
@@ -222,6 +133,7 @@ private:
   void StartUpdating();
   void StopUpdating();
   void AbortUpdating();
+  void ResetParserState();
 
   // If the media segment contains data beyond the current duration,
   // then run the duration change algorithm with new duration set to the
@@ -230,7 +142,6 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
-  void BufferAppend();
 
   // Implement the "Append Error Algorithm".
   // Will call endOfStream() with "decode" error if aDecodeError is true.
@@ -244,19 +155,19 @@ private:
                                                   uint32_t aLength,
                                                   ErrorResult& aRv);
 
-  void AppendDataCompletedWithSuccess(bool aHasActiveTracks);
+  void AppendDataCompletedWithSuccess(SourceBufferTask::AppendBufferResult aResult);
   void AppendDataErrored(nsresult aError);
 
   RefPtr<MediaSource> mMediaSource;
 
   RefPtr<TrackBuffersManager> mTrackBuffersManager;
-  RefPtr<SourceBufferAttributes> mAttributes;
+  SourceBufferAttributes mCurrentAttributes;
 
   bool mUpdating;
 
   mozilla::Atomic<bool> mActive;
 
-  MozPromiseRequestHolder<TrackBuffersManager::AppendPromise> mPendingAppend;
+  MozPromiseRequestHolder<SourceBufferTask::AppendPromise> mPendingAppend;
   const nsCString mType;
 
   RefPtr<TimeRanges> mBuffered;
