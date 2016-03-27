@@ -77,10 +77,10 @@ class TestConfigure(unittest.TestCase):
             '  --option                  Option\n'
             '  --with-returned-default   Returned default [not-simple]\n'
             '  --returned-choices        Choices\n'
-            '  --enable-advanced-template\n'
-            '                            Advanced template\n'
+            '  --enable-imports-in-template\n'
+            '                            Imports in template\n'
             '  --enable-include          Include\n'
-            '  --with-advanced           Advanced\n'
+            '  --with-imports            Imports\n'
             '\n'
             'Environment variables:\n'
             '  CC                        C Compiler\n',
@@ -227,13 +227,13 @@ class TestConfigure(unittest.TestCase):
         config = self.get_config(env={'CC': 'clang'})
         self.assertNotIn('CFLAGS', config)
 
-    def test_advanced(self):
-        config = self.get_config(['--with-advanced'])
-        self.assertIn('ADVANCED', config)
-        self.assertEquals(config['ADVANCED'], True)
+    def test_imports(self):
+        config = self.get_config(['--with-imports'])
+        self.assertIn('IMPORTS', config)
+        self.assertEquals(config['IMPORTS'], True)
 
         with self.assertRaises(ImportError):
-            self.get_config(['--with-advanced=break'])
+            self.get_config(['--with-imports=break'])
 
     def test_imports(self):
         config = {}
@@ -339,11 +339,11 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(sandbox['__builtins__'], ConfigureSandbox.BUILTINS)
 
     def test_os_path(self):
-        config = self.get_config(['--with-advanced=%s' % __file__])
+        config = self.get_config(['--with-imports=%s' % __file__])
         self.assertIn('IS_FILE', config)
         self.assertEquals(config['IS_FILE'], True)
 
-        config = self.get_config(['--with-advanced=%s.no-exist' % __file__])
+        config = self.get_config(['--with-imports=%s.no-exist' % __file__])
         self.assertIn('IS_FILE', config)
         self.assertEquals(config['IS_FILE'], False)
 
@@ -359,8 +359,8 @@ class TestConfigure(unittest.TestCase):
         self.assertIn('TEMPLATE_VALUE_2', config)
         self.assertEquals(config['TEMPLATE_VALUE_2'], 21)
 
-    def test_template_advanced(self):
-        config = self.get_config(['--enable-advanced-template'])
+    def test_template_imports(self):
+        config = self.get_config(['--enable-imports-in-template'])
         self.assertIn('PLATFORM', config)
         self.assertEquals(config['PLATFORM'], sys.platform)
 

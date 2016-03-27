@@ -41,16 +41,14 @@ def check(value):
 
 set_config('TEMPLATE_VALUE_2', check)
 
-# Templates can use @advanced too to import modules and get the full set of
-# builtins.
+# Templates can use @imports too to import modules.
 @template
-@advanced
+@imports('sys')
 def platform():
-    import sys
     return sys.platform
 
-option('--enable-advanced-template', help='Advanced template')
-@depends('--enable-advanced-template')
+option('--enable-imports-in-template', help='Imports in template')
+@depends('--enable-imports-in-template')
 def check(value):
     if value:
         return platform()
