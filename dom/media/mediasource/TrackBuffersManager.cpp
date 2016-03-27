@@ -299,14 +299,15 @@ TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 }
 
 TrackBuffersManager::EvictDataResult
-TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
-                               int64_t aThresholdReduct,
-                               TimeUnit* aBufferStartTime)
+TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  const int64_t toEvict = GetSize() -
-    std::max(EvictionThreshold() - aThresholdReduct, aThresholdReduct);
+  if (aSize > EvictionThreshold()) {
+    // We're adding more data than we can hold.
+    return EvictDataResult::BUFFER_FULL;
+  }
+  const int64_t toEvict = GetSize() + aSize - EvictionThreshold();
 
   MSE_DEBUG("buffered=%lldkb, eviction threshold=%ukb, evict=%lldkb",
             GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024);
@@ -369,7 +370,7 @@ TrackBuffersManager::Buffered()
 }
 
 int64_t
-TrackBuffersManager::GetSize()
+TrackBuffersManager::GetSize() const
 {
   return mSizeSourceBuffer;
 }
