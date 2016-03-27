@@ -103,7 +103,7 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
   , mVideoEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.video",
                                                  100 * 1024 * 1024))
   , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
-                                                 15 * 1024 * 1024))
+                                                 30 * 1024 * 1024))
   , mEvictionOccurred(false)
   , mMonitor("TrackBuffersManager")
 {
