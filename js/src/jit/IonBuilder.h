@@ -817,9 +817,7 @@ class IonBuilder
     InliningStatus inlineConstantCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo& callInfo);
     InliningStatus inlineStrCharAt(CallInfo& callInfo);
-
-    // String intrinsics.
-    InliningStatus inlineStringReplaceString(CallInfo& callInfo);
+    InliningStatus inlineStrReplace(CallInfo& callInfo);
 
     // RegExp intrinsics.
     InliningStatus inlineRegExpMatcher(CallInfo& callInfo);

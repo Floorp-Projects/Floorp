@@ -4,7 +4,6 @@
 var names = [
     "iterator",
     "match",
-    "replace",
     "search",
     "species",
     "toPrimitive",
