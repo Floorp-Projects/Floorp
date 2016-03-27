@@ -2923,7 +2923,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
     MOZ_FALLTHROUGH;
   case eFocus: {
     InternalFocusEvent* focusEvent = aVisitor.mEvent->AsFocusEvent();
-    if (!focusEvent || !focusEvent->isRefocus) {
+    if (!focusEvent || !focusEvent->mIsRefocus) {
       nsAutoString target;
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
