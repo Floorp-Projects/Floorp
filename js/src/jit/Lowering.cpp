@@ -3965,14 +3965,6 @@ LIRGenerator::visitIsCallable(MIsCallable* ins)
     define(new(alloc()) LIsCallable(useRegister(ins->object())), ins);
 }
 
-void
-LIRGenerator::visitIsConstructor(MIsConstructor* ins)
-{
-    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->type() == MIRType_Boolean);
-    define(new(alloc()) LIsConstructor(useRegister(ins->object())), ins);
-}
-
 static bool
 CanEmitIsObjectAtUses(MInstruction* ins)
 {
