@@ -431,6 +431,9 @@ FileEscapedString(FILE* fp, const char* chars, size_t length, uint32_t quote)
 }
 
 bool
+str_match(JSContext* cx, unsigned argc, Value* vp);
+
+bool
 str_search(JSContext* cx, unsigned argc, Value* vp);
 
 bool
@@ -449,9 +452,6 @@ str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
 
 extern bool
 StringConstructor(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
-FlatStringMatch(JSContext* cx, unsigned argc, Value* vp);
 
 } /* namespace js */
 
