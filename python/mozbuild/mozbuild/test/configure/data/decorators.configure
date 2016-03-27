@@ -1,0 +1,44 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def simple_decorator(func):
+    return func
+
+@template
+def wrapper_decorator(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@template
+def function_decorator(*args, **kwargs):
+    # We could return wrapper_decorator from above here, but then we wouldn't
+    # know if this works as expected because wrapper_decorator itself was
+    # modified or because the right thing happened here.
+    def wrapper_decorator(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    return wrapper_decorator
+
+@depends('--help')
+@simple_decorator
+def foo(help):
+    global FOO
+    FOO = 1
+
+@depends('--help')
+@wrapper_decorator
+def bar(help):
+    global BAR
+    BAR = 1
+
+@depends('--help')
+@function_decorator('a', 'b', 'c')
+def qux(help):
+    global QUX
+    QUX = 1
