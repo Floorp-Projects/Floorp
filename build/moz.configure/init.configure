@@ -355,7 +355,6 @@ option('--target', nargs=1,
        help='Define the system type where the resulting executables will be '
             'used')
 
-@template
 def split_triplet(triplet):
     # The standard triplet is defined as
     #   CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
@@ -441,7 +440,6 @@ def split_triplet(triplet):
     )
 
 
-@template
 @imports('subprocess')
 def config_sub(shell, triplet):
     config_sub = os.path.join(os.path.dirname(__file__), '..',
