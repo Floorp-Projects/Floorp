@@ -29,9 +29,7 @@ var testData = [
   ["VK_BACK_SPACE", {}, "blue", -1, 0, true],
   ["VK_TAB", {shiftKey: true}, "color", -1, 0, true],
   ["VK_BACK_SPACE", {}, "", -1, 0, false],
-  ["d", {}, "direction", 0, 3, false],
-  ["i", {}, "direction", 0, 2, false],
-  ["s", {}, "display", -1, 0, false],
+  ["d", {}, "display", 1, 3, false],
   ["VK_TAB", {}, "blue", -1, 0, true],
   ["n", {}, "none", -1, 0, true],
   ["VK_RETURN", {}, null, -1, 0, true]
