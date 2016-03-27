@@ -19,6 +19,8 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.TabsProvider;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
+import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
+import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
 import org.robolectric.shadows.ShadowContentResolver;
 
 @RunWith(TestRunner.class)
@@ -242,6 +244,93 @@ public class TestTabsProvider {
             cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, null);
             // ... and all that client's tabs should be removed.
             Assert.assertEquals(0, cursor.getCount());
+        } finally {
+            cursor.close();
+        }
+    }
+
+    @Test
+    public void testTabsRecordFromCursor() throws Exception {
+        final ContentProviderClient tabsClient = getTabsClient();
+
+        deleteAllTestTabs(tabsClient);
+        insertTestClient(getClientsClient());
+        insertSomeTestTabs(tabsClient);
+
+        final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
+        Cursor cursor = null;
+        try {
+            cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
+            Assert.assertEquals(3, cursor.getCount());
+
+            cursor.moveToPosition(1);
+
+            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+
+            // Make sure we clean up after ourselves.
+            Assert.assertEquals(1, cursor.getPosition());
+
+            Assert.assertEquals(TEST_CLIENT_GUID, tabsRecord.guid);
+            Assert.assertEquals(TEST_CLIENT_NAME, tabsRecord.clientName);
+
+            Assert.assertEquals(3, tabsRecord.tabs.size());
+            Assert.assertEquals(testTab1, tabsRecord.tabs.get(0));
+            Assert.assertEquals(testTab2, tabsRecord.tabs.get(1));
+            Assert.assertEquals(testTab3, tabsRecord.tabs.get(2));
+
+            Assert.assertEquals(Math.max(Math.max(testTab1.lastUsed, testTab2.lastUsed), testTab3.lastUsed), tabsRecord.lastModified);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    // Verify that we can fetch a record when there are no local tabs at all.
+    @Test
+    public void testEmptyTabsRecordFromCursor() throws Exception {
+        final ContentProviderClient tabsClient = getTabsClient();
+
+        deleteAllTestTabs(tabsClient);
+
+        final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
+        Cursor cursor = null;
+        try {
+            cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
+            Assert.assertEquals(0, cursor.getCount());
+
+            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+
+            Assert.assertEquals(TEST_CLIENT_GUID, tabsRecord.guid);
+            Assert.assertEquals(TEST_CLIENT_NAME, tabsRecord.clientName);
+
+            Assert.assertNotNull(tabsRecord.tabs);
+            Assert.assertEquals(0, tabsRecord.tabs.size());
+
+            Assert.assertEquals(0, tabsRecord.lastModified);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    // Not much of a test, but verifies the tabs record at least agrees with the
+    // disk data and doubles as a database inspector.
+    @Test
+    public void testLocalTabs() throws Exception {
+        final ContentProviderClient tabsClient = getTabsClient();
+
+        final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
+        Cursor cursor = null;
+        try {
+            // Keep this in sync with the Fennec schema.
+            cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, BrowserContract.Tabs.CLIENT_GUID + " IS NULL", null, positionAscending);
+            CursorDumper.dumpCursor(cursor);
+
+            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+
+            Assert.assertEquals(TEST_CLIENT_GUID, tabsRecord.guid);
+            Assert.assertEquals(TEST_CLIENT_NAME, tabsRecord.clientName);
+
+            Assert.assertNotNull(tabsRecord.tabs);
+            Assert.assertEquals(cursor.getCount(), tabsRecord.tabs.size());
         } finally {
             cursor.close();
         }
