@@ -23,7 +23,7 @@ var MemoryObserver = {
     let tabs = BrowserApp.tabs;
     let selected = BrowserApp.selectedTab;
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i] != selected) {
+      if (tabs[i] != selected && !tabs[i].playingAudio) {
         this.zombify(tabs[i]);
       }
     }
