@@ -537,14 +537,6 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   Result evicted =
     mTrackBuffersManager->EvictData(TimeUnit::FromSeconds(mMediaSource->GetDecoder()->GetCurrentTime()),
                                     aLength, &newBufferStartTime);
-  if (evicted == Result::DATA_EVICTED) {
-    MSE_DEBUG("AppendData Evict; current buffered start=%f",
-              GetBufferedStart());
-
-    // We notify that we've evicted from the time range 0 through to
-    // the current start point.
-    mMediaSource->NotifyEvicted(0.0, newBufferStartTime.ToSeconds());
-  }
 
   // See if we have enough free space to append our new data.
   // As we can only evict once we have playable data, we must give a chance
@@ -579,20 +571,6 @@ SourceBuffer::GetBufferedEnd()
   ErrorResult dummy;
   RefPtr<TimeRanges> ranges = GetBuffered(dummy);
   return ranges->Length() > 0 ? ranges->GetEndTime() : 0;
-}
-
-void
-SourceBuffer::Evict(double aStart, double aEnd)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("Evict(aStart=%f, aEnd=%f)", aStart, aEnd);
-  double currentTime = mMediaSource->GetDecoder()->GetCurrentTime();
-  double evictTime = aEnd;
-  const double safety_threshold = 5;
-  if (currentTime + safety_threshold >= evictTime) {
-    evictTime -= safety_threshold;
-  }
-  mTrackBuffersManager->EvictBefore(TimeUnit::FromSeconds(evictTime));
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SourceBuffer)
