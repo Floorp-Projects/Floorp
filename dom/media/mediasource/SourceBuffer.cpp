@@ -508,25 +508,16 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   }
 
   // Eviction uses a byte threshold. If the buffer is greater than the
-  // number of bytes then data is evicted. The time range for this
-  // eviction is reported back to the media source. It will then
-  // evict data before that range across all SourceBuffers it knows
-  // about.
-  // TODO: Make the eviction threshold smaller for audio-only streams.
+  // number of bytes then data is evicted.
   // TODO: Drive evictions off memory pressure notifications.
   // TODO: Consider a global eviction threshold  rather than per TrackBuffer.
-  TimeUnit newBufferStartTime;
-  // Attempt to evict the amount of data we are about to add by lowering the
-  // threshold.
+  // Give a chance to the TrackBuffersManager to evict some data if needed.
   Result evicted =
     mTrackBuffersManager->EvictData(TimeUnit::FromSeconds(mMediaSource->GetDecoder()->GetCurrentTime()),
-                                    aLength, &newBufferStartTime);
+                                    aLength);
 
   // See if we have enough free space to append our new data.
-  // As we can only evict once we have playable data, we must give a chance
-  // to the DASH player to provide a complete media segment.
-  if (aLength > mTrackBuffersManager->EvictionThreshold() ||
-      evicted == Result::BUFFER_FULL) {
+  if (evicted == Result::BUFFER_FULL) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }
