@@ -210,6 +210,7 @@
     _(RegExpTester)                 \
     _(RegExpPrototypeOptimizable)   \
     _(RegExpInstanceOptimizable)    \
+    _(RegExpReplace)                \
     _(StringReplace)                \
     _(Substr)                       \
     _(BinarySharedStub)             \
