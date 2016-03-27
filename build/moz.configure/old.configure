@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@template
 @imports('codecs')
 @imports('sys')
 def encoded_open(path, mode):
@@ -443,14 +442,14 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
 # set_config is only available in the global namespace, not directly in
 # @depends functions, but we do need to enumerate the result of
 # old_configure, so we cheat.
-@template
+@imports('__sandbox__')
 def set_old_configure_config(name, value):
-    set_config(name, value)
+    __sandbox__.set_config_impl(name, value)
 
 # Same as set_old_configure_config, but for set_define.
-@template
+@imports('__sandbox__')
 def set_old_configure_define(name, value):
-    set_define(name, value)
+    __sandbox__.set_define_impl(name, value)
 
 
 @depends(old_configure)
