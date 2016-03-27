@@ -891,6 +891,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // request was being processed. See bug 1239983.
     NS_ASSERTION(false, "mInputDemuxer has been destroyed");
     RejectAppend(NS_ERROR_ABORT, __func__);
+    return;
   }
 
   MediaInfo info;
