@@ -309,42 +309,42 @@ function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
     return callFunction(ArrayMap, list, callbackfn, T);
 }
 
-/* ES 2016 draft Mar 25, 2016 22.1.3.7 Array.prototype.filter. */
+/* ES2015 22.1.3.7 Array.prototype.filter. */
 function ArrayFilter(callbackfn/*, thisArg*/) {
-    /* Step 1. */
+    /* Steps 1-2. */
     var O = ToObject(this);
 
-    /* Step 2. */
+    /* Steps 3-4. */
     var len = ToInteger(O.length);
 
-    /* Step 3. */
+    /* Step 5. */
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.filter');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    /* Step 4. */
+    /* Step 6. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
-    /* Step 5. */
-    var A = ArraySpeciesCreate(O, 0);
+    /* Step 7. */
+    var A = [];
 
-    /* Steps 6-8. */
-    /* Steps 8.a (implicit), and 8.d. */
+    /* Steps 8-11. */
+    /* Steps 11.a (implicit), and 11.e. */
     for (var k = 0, to = 0; k < len; k++) {
-        /* Steps 8.b-c. */
+        /* Steps 11.b-c. */
         if (k in O) {
-            /* Step 8.c.i. */
+            /* Steps 11.c.i-ii. */
             var kValue = O[k];
-            /* Step 8.c.ii. */
+            /* Steps 11.c.iii-iv. */
             var selected = callContentFunction(callbackfn, T, kValue, k, O);
-            /* Step 8.c.iii. */
+            /* Step 11.c.v. */
             if (selected)
                 _DefineDataProperty(A, to++, kValue);
         }
     }
 
-    /* Step 9. */
+    /* Step 12. */
     return A;
 }
 
