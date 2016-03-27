@@ -152,88 +152,49 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, RegExpObject& reobj,
     return CreateRegExpMatchResult(cx, input, matches, rval);
 }
 
-enum RegExpSharedUse {
-    UseRegExpShared,
-    DontUseRegExpShared
-};
-
 /*
- * ES 2016 draft Mar 25, 2016 21.2.3.2.2.
- * Because this function only ever returns |obj| in the spec, provided by the
- * user, we omit it and just return the usual success/failure.
+ * ES6 21.2.3.2.2.  Because this function only ever returns |obj| in the spec,
+ * provided by the user, we omit it and just return the usual success/failure.
  */
 static bool
 RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
-                                  HandleValue patternValue, HandleValue flagsValue,
-                                  RegExpSharedUse sharedUse = DontUseRegExpShared)
+                                  HandleValue patternValue, HandleValue flagsValue)
 {
     RootedAtom pattern(cx);
     if (patternValue.isUndefined()) {
         /* Step 1. */
         pattern = cx->names().empty;
     } else {
-        /* Step 2. */
+        /* Steps 2-3. */
         pattern = ToAtom<CanGC>(cx, patternValue);
         if (!pattern)
             return false;
     }
 
-    /* Step 3. */
+    /* Step 4. */
     RegExpFlag flags = RegExpFlag(0);
     if (!flagsValue.isUndefined()) {
-        /* Step 4. */
+        /* Steps 5-6. */
         RootedString flagStr(cx, ToString<CanGC>(cx, flagsValue));
         if (!flagStr)
             return false;
 
-        /* Step 5. */
+        /* Step 7. */
         if (!ParseRegExpFlags(cx, flagStr, &flags))
             return false;
     }
 
-    if (sharedUse == UseRegExpShared) {
-        /* Steps 7-8. */
-        RegExpGuard re(cx);
-        if (!cx->compartment()->regExps.get(cx, pattern, flags, &re))
-            return false;
-
-        /* Steps 9-12. */
-        obj->initIgnoringLastIndex(pattern, flags);
-
-        obj->setShared(*re);
-    } else {
-        /* Steps 7-8. */
-        CompileOptions options(cx);
-        frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-        if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
-                                          flags & UnicodeFlag))
-        {
-            return false;
-        }
-
-        /* Steps 9-12. */
-        obj->initIgnoringLastIndex(pattern, flags);
+    /* Steps 8-10. */
+    CompileOptions options(cx);
+    frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+                                      flags & UnicodeFlag))
+    {
+        return false;
     }
 
-    return true;
-}
-
-/* ES 2016 draft Mar 25, 2016 21.2.3.2.3. */
-bool
-js::RegExpCreate(JSContext* cx, HandleValue patternValue, HandleValue flagsValue,
-                 MutableHandleValue rval)
-{
-    /* Step 1. */
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, nullptr));
-    if (!regexp)
-         return false;
-
-    /* Step 2. */
-    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, patternValue, flagsValue, UseRegExpShared))
-        return false;
-    regexp->zeroLastIndex(cx);
-
-    rval.setObject(*regexp);
+    /* Steps 11-13. */
+    obj->initIgnoringLastIndex(pattern, flags);
     return true;
 }
 
