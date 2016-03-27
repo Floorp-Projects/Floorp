@@ -42,21 +42,20 @@ extern mozilla::LogModule* GetMediaSourceAPILog();
 namespace mozilla {
 
 using media::TimeUnit;
+typedef SourceBufferAttributes::AppendState AppendState;
 
 namespace dom {
 
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
-  typedef mozilla::TrackBuffersManager::AppendState AppendState;
-
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetMode(aMode=%d)", aMode);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (mAttributes->mGenerateTimestamps &&
+  if (mCurrentAttributes.mGenerateTimestamps &&
       aMode == SourceBufferAppendMode::Segments) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
@@ -65,24 +64,22 @@ SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  if (mTrackBuffersManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+  if (mCurrentAttributes.GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   if (aMode == SourceBufferAppendMode::Sequence) {
     // Will set GroupStartTimestamp to GroupEndTimestamp.
-    mTrackBuffersManager->RestartGroupStartTimestamp();
+    mCurrentAttributes.RestartGroupStartTimestamp();
   }
 
-  mAttributes->SetAppendMode(aMode);
+  mCurrentAttributes.SetAppendMode(aMode);
 }
 
 void
 SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
 {
-  typedef mozilla::TrackBuffersManager::AppendState AppendState;
-
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetTimestampOffset(aTimestampOffset=%f)", aTimestampOffset);
   if (!IsAttached() || mUpdating) {
@@ -93,13 +90,13 @@ SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  if (mTrackBuffersManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+  if (mCurrentAttributes.GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  mAttributes->SetApparentTimestampOffset(aTimestampOffset);
-  if (mAttributes->GetAppendMode() == SourceBufferAppendMode::Sequence) {
-    mTrackBuffersManager->SetGroupStartTimestamp(mAttributes->GetTimestampOffset());
+  mCurrentAttributes.SetApparentTimestampOffset(aTimestampOffset);
+  if (mCurrentAttributes.GetAppendMode() == SourceBufferAppendMode::Sequence) {
+    mCurrentAttributes.SetGroupStartTimestamp(mCurrentAttributes.GetTimestampOffset());
   }
 }
 
@@ -146,11 +143,11 @@ SourceBuffer::SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv)
     return;
   }
   if (aAppendWindowStart < 0 ||
-      aAppendWindowStart >= mAttributes->GetAppendWindowEnd()) {
+      aAppendWindowStart >= mCurrentAttributes.GetAppendWindowEnd()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
-  mAttributes->SetAppendWindowStart(aAppendWindowStart);
+  mCurrentAttributes.SetAppendWindowStart(aAppendWindowStart);
 }
 
 void
@@ -163,11 +160,11 @@ SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
     return;
   }
   if (IsNaN(aAppendWindowEnd) ||
-      aAppendWindowEnd <= mAttributes->GetAppendWindowStart()) {
+      aAppendWindowEnd <= mCurrentAttributes.GetAppendWindowStart()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
-  mAttributes->SetAppendWindowEnd(aAppendWindowEnd);
+  mCurrentAttributes.SetAppendWindowEnd(aAppendWindowEnd);
 }
 
 void
@@ -202,9 +199,9 @@ SourceBuffer::Abort(ErrorResult& aRv)
     return;
   }
   AbortBufferAppend();
-  mTrackBuffersManager->ResetParserState();
-  mAttributes->SetAppendWindowStart(0);
-  mAttributes->SetAppendWindowEnd(PositiveInfinity<double>());
+  ResetParserState();
+  mCurrentAttributes.SetAppendWindowStart(0);
+  mCurrentAttributes.SetAppendWindowEnd(PositiveInfinity<double>());
 }
 
 void
@@ -214,12 +211,15 @@ SourceBuffer::AbortBufferAppend()
     if (mPendingAppend.Exists()) {
       mPendingAppend.Disconnect();
       mTrackBuffersManager->AbortAppendData();
-      // Some data may have been added by the Segment Parser Loop.
-      // Check if we need to update the duration.
-      CheckEndTime();
     }
     AbortUpdating();
   }
+}
+
+void
+SourceBuffer::ResetParserState()
+{
+  mTrackBuffersManager->ResetParserState(mCurrentAttributes);
 }
 
 void
@@ -295,23 +295,17 @@ SourceBuffer::Ended()
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
+  , mCurrentAttributes(aType.LowerCaseEqualsLiteral("audio/mpeg") ||
+                       aType.LowerCaseEqualsLiteral("audio/aac"))
   , mUpdating(false)
   , mActive(false)
   , mType(aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
-  bool generateTimestamps = false;
-  if (aType.LowerCaseEqualsLiteral("audio/mpeg") ||
-      aType.LowerCaseEqualsLiteral("audio/aac")) {
-    generateTimestamps = true;
-  }
-  mAttributes = new SourceBufferAttributes(generateTimestamps);
 
   mTrackBuffersManager =
-    new TrackBuffersManager(mAttributes,
-                            aMediaSource->GetDecoder(),
-                            aType);
+    new TrackBuffersManager(aMediaSource->GetDecoder(), aType);
 
   // Now that we know what type we're dealing with, enable dormant as needed.
 #if defined(MP4_READER_DORMANT_HEURISTIC)
@@ -322,7 +316,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
             mTrackBuffersManager.get());
 
   ErrorResult dummy;
-  if (mAttributes->mGenerateTimestamps) {
+  if (mCurrentAttributes.mGenerateTimestamps) {
     SetMode(SourceBufferAppendMode::Sequence, dummy);
   } else {
     SetMode(SourceBufferAppendMode::Segments, dummy);
@@ -403,7 +397,7 @@ SourceBuffer::CheckEndTime()
 {
   MOZ_ASSERT(NS_IsMainThread());
   // Check if we need to update mMediaSource duration
-  double endTime = mTrackBuffersManager->GroupEndTimestamp().ToSeconds();
+  double endTime = mCurrentAttributes.GetGroupEndTimestamp().ToSeconds();
   double duration = mMediaSource->Duration();
   if (endTime > duration) {
     mMediaSource->SetDuration(endTime, MSRangeRemovalAction::SKIP);
@@ -419,33 +413,21 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   if (!data) {
     return;
   }
-  mTrackBuffersManager->AppendData(data, mAttributes->GetTimestampOffset());
-
   StartUpdating();
 
-  BufferAppend();
-}
-
-void
-SourceBuffer::BufferAppend()
-{
-  MOZ_ASSERT(mUpdating);
-  MOZ_ASSERT(mMediaSource);
-  MOZ_ASSERT(!mPendingAppend.Exists());
-
-  mPendingAppend.Begin(mTrackBuffersManager->BufferAppend()
+  mPendingAppend.Begin(mTrackBuffersManager->AppendData(data, mCurrentAttributes)
                        ->Then(AbstractThread::MainThread(), __func__, this,
                               &SourceBuffer::AppendDataCompletedWithSuccess,
                               &SourceBuffer::AppendDataErrored));
 }
 
 void
-SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
+SourceBuffer::AppendDataCompletedWithSuccess(SourceBufferTask::AppendBufferResult aResult)
 {
   MOZ_ASSERT(mUpdating);
   mPendingAppend.Complete();
 
-  if (aHasActiveTracks) {
+  if (aResult.first()) {
     if (!mActive) {
       mActive = true;
       mMediaSource->SourceBufferIsActive(this);
@@ -457,6 +439,8 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
     // Send progress event.
     mMediaSource->GetDecoder()->NotifyBytesDownloaded();
   }
+
+  mCurrentAttributes = aResult.second();
 
   CheckEndTime();
 
@@ -485,7 +469,7 @@ SourceBuffer::AppendError(bool aDecoderError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mTrackBuffersManager->ResetParserState();
+  ResetParserState();
 
   mUpdating = false;
 
