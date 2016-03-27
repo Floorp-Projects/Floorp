@@ -208,7 +208,6 @@
     _(RegExp)                       \
     _(RegExpMatcher)                \
     _(RegExpTester)                 \
-    _(RegExpPrototypeOptimizable)   \
     _(RegExpReplace)                \
     _(StringReplace)                \
     _(Substr)                       \
