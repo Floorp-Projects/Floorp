@@ -1,6 +1,5 @@
-function test() {
-  var tab = gBrowser.addTab(null, {skipAnimation: true});
-  gBrowser.selectedTab = tab;
+add_task(function* test() {
+  var tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   var gotTabAttrModified = false;
   var gotTabClose = false;
@@ -16,11 +15,11 @@ function test() {
 
   tab.addEventListener("TabClose", onTabClose, false);
 
-  gBrowser.removeTab(tab);
+  yield BrowserTestUtils.removeTab(tab);
 
   ok(gotTabClose, "should have got the TabClose event");
   ok(!gotTabAttrModified, "shouldn't have got the TabAttrModified event after TabClose");
 
   tab.removeEventListener("TabClose", onTabClose, false);
   tab.removeEventListener("TabAttrModified", onTabAttrModified, false);
-}
+});
