@@ -5,45 +5,45 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
-@advanced
+@imports('sys')
 def die(*args):
     'Print an error and terminate configure.'
-    import sys
     log.error(*args)
     sys.exit(1)
 
 
 @template
-@advanced
+@imports(_from='mozbuild.configure', _import='ConfigureError')
 def configure_error(message):
     '''Raise a programming error and terminate configure.
     Primarily for use in moz.configure templates to sanity check
     their inputs from moz.configure usage.'''
-    from mozbuild.configure import ConfigureError
     raise ConfigureError(message)
 
 
 @template
-@advanced
+@imports('os')
 def is_absolute_or_relative(path):
-    import os
     if os.altsep and os.altsep in path:
         return True
     return os.sep in path
 
 
 @template
-@advanced
+@imports(_import='mozpack.path', _as='mozpath')
 def normsep(path):
-    import mozpack.path as mozpath
     return mozpath.normsep(path)
 
 
 @template
-@advanced
+# This unlocks the sandbox. Do not copy blindly.
+@imports(_import='__builtin__', _as='__builtins__')
 def find_program(file):
     if is_absolute_or_relative(file):
         return os.path.abspath(file) if os.path.isfile(file) else None
+    # We can't use @imports here because it imports at declaration time,
+    # and the declaration of find_program happens before we ensure the
+    # which module is available in sys.path somehow.
     from which import which, WhichError
     try:
         return normsep(which(file))
@@ -60,10 +60,9 @@ def unique_list(l):
     return result
 
 @template
-@advanced
+@imports(_from='mozbuild.configure.util', _import='Version', _as='_Version')
 def Version(v):
     'A version number that can be compared usefully.'
-    from mozbuild.configure.util import Version as _Version
     return _Version(v)
 
 # Denotes a deprecated option. Combines option() and @depends:
@@ -92,9 +91,8 @@ def deprecated_option(*args, **kwargs):
 
 # from mozbuild.util import ReadOnlyNamespace as namespace
 @template
-@advanced
+@imports(_from='mozbuild.util', _import='ReadOnlyNamespace')
 def namespace(**kwargs):
-    from mozbuild.util import ReadOnlyNamespace
     return ReadOnlyNamespace(**kwargs)
 
 
@@ -110,7 +108,7 @@ def namespace(**kwargs):
 @template
 def delayed_getattr(func, key):
     @depends(func)
-    @advanced
+    @imports(_from='__builtin__', _import='getattr')
     def result(value):
         try:
             return getattr(value, key)
