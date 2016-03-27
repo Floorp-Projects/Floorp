@@ -2286,16 +2286,6 @@ LIRGenerator::visitRegExpTester(MRegExpTester* ins)
 }
 
 void
-LIRGenerator::visitRegExpPrototypeOptimizable(MRegExpPrototypeOptimizable* ins)
-{
-    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->type() == MIRType_Boolean);
-    LRegExpPrototypeOptimizable* lir = new(alloc()) LRegExpPrototypeOptimizable(useRegister(ins->object()),
-                                                                                temp());
-    define(lir, ins);
-}
-
-void
 LIRGenerator::visitRegExpReplace(MRegExpReplace* ins)
 {
     MOZ_ASSERT(ins->pattern()->type() == MIRType_Object);

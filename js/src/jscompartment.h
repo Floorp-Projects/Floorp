@@ -625,10 +625,6 @@ struct JSCompartment
     // Initialize randomNumberGenerator if needed.
     void ensureRandomNumberGenerator();
 
-    static size_t offsetOfRegExps() {
-        return offsetof(JSCompartment, regExps);
-    }
-
   private:
     JSCompartment* thisForCtor() { return this; }
 

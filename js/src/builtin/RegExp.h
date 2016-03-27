@@ -91,12 +91,6 @@ IsRegExp(JSContext* cx, HandleValue value, bool* result);
 extern bool
 RegExpCreate(JSContext* cx, HandleValue pattern, HandleValue flags, MutableHandleValue rval);
 
-extern bool
-RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
-RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* result);
-
 // RegExp ClassSpec members used in RegExpObject.cpp.
 extern bool
 regexp_construct(JSContext* cx, unsigned argc, Value* vp);
