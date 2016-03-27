@@ -238,7 +238,10 @@ class ConfigureSandbox(dict):
                 hasattr(self, '%s_impl' % key)):
             raise KeyError('Cannot reassign builtins')
 
-        if (not isinstance(value, DependsFunction) and
+        if inspect.isfunction(value) and value not in self._templates:
+            value, _ = self._prepare_function(value)
+
+        elif (not isinstance(value, DependsFunction) and
                 value not in self._templates and
                 not (inspect.isclass(value) and issubclass(value, Exception))):
             raise KeyError('Cannot assign `%s` because it is neither a '
@@ -399,25 +402,33 @@ class ConfigureSandbox(dict):
             (k[:-len('_impl')], getattr(self, k))
             for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
         )
+        glob.update((k, v) for k, v in self.iteritems() if k not in glob)
 
         # Any function argument to the template must be prepared to be sandboxed.
         # If the template itself returns a function (in which case, it's very
         # likely a decorator), that function must be prepared to be sandboxed as
         # well.
         def wrap_template(template):
+            isfunction = inspect.isfunction
+
+            def maybe_prepare_function(obj):
+                if isfunction(obj):
+                    func, _ = self._prepare_function(obj)
+                    return func
+                return obj
+
+            # The following function may end up being prepared to be sandboxed,
+            # so it mustn't depend on anything from the global scope in this
+            # file. It can however depend on variables from the closure, thus
+            # maybe_prepare_function and isfunction are declared above to be
+            # available there.
             @wraps(template)
             def wrapper(*args, **kwargs):
-                def maybe_prepare_function(obj):
-                    if inspect.isfunction(obj):
-                        func, _ = self._prepare_function(obj)
-                        return func
-                    return obj
-
                 args = [maybe_prepare_function(arg) for arg in args]
                 kwargs = {k: maybe_prepare_function(v)
                           for k, v in kwargs.iteritems()}
                 ret = template(*args, **kwargs)
-                if inspect.isfunction(ret):
+                if isfunction(ret):
                     return wrap_template(ret)
                 return ret
             return wrapper
@@ -607,7 +618,11 @@ class ConfigureSandbox(dict):
         if func in self._prepared_functions:
             return func, func.func_globals
 
-        glob = SandboxedGlobal(func.func_globals)
+        glob = SandboxedGlobal(
+            (k, v) for k, v in func.func_globals.iteritems()
+            if (inspect.isfunction(v) and v not in self._templates) or (
+                inspect.isclass(v) and issubclass(v, Exception))
+        )
         glob.update(
             __builtins__=self.BUILTINS,
             __file__=self._paths[-1] if self._paths else '',

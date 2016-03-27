@@ -17,12 +17,10 @@ def check_compiler_flag(flag):
 
 check_compiler_flag('-Werror=foobar')
 
-# A template that doesn't return functions can be used in @depends functions.
-@template
+# Normal functions can be used in @depends functions.
 def fortytwo():
     return 42
 
-@template
 def twentyone():
     yield 21
 
@@ -41,8 +39,7 @@ def check(value):
 
 set_config('TEMPLATE_VALUE_2', check)
 
-# Templates can use @imports too to import modules.
-@template
+# Normal functions can use @imports too to import modules.
 @imports('sys')
 def platform():
     return sys.platform

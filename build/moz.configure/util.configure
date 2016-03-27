@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@template
 @imports('sys')
 def die(*args):
     'Print an error and terminate configure.'
@@ -12,7 +11,6 @@ def die(*args):
     sys.exit(1)
 
 
-@template
 @imports(_from='mozbuild.configure', _import='ConfigureError')
 def configure_error(message):
     '''Raise a programming error and terminate configure.
@@ -21,7 +19,6 @@ def configure_error(message):
     raise ConfigureError(message)
 
 
-@template
 @imports('os')
 def is_absolute_or_relative(path):
     if os.altsep and os.altsep in path:
@@ -29,13 +26,11 @@ def is_absolute_or_relative(path):
     return os.sep in path
 
 
-@template
 @imports(_import='mozpack.path', _as='mozpath')
 def normsep(path):
     return mozpath.normsep(path)
 
 
-@template
 # This unlocks the sandbox. Do not copy blindly.
 @imports(_import='__builtin__', _as='__builtins__')
 def find_program(file):
@@ -51,7 +46,6 @@ def find_program(file):
         return None
 
 
-@template
 def unique_list(l):
     result = []
     for i in l:
@@ -59,7 +53,6 @@ def unique_list(l):
             result.append(i)
     return result
 
-@template
 @imports(_from='mozbuild.configure.util', _import='Version', _as='_Version')
 def Version(v):
     'A version number that can be compared usefully.'
@@ -90,7 +83,6 @@ def deprecated_option(*args, **kwargs):
 
 
 # from mozbuild.util import ReadOnlyNamespace as namespace
-@template
 @imports(_from='mozbuild.util', _import='ReadOnlyNamespace')
 def namespace(**kwargs):
     return ReadOnlyNamespace(**kwargs)
@@ -110,13 +102,10 @@ def delayed_getattr(func, key):
     @depends(func)
     @imports(_from='__builtin__', _import='getattr')
     def result(value):
-        try:
-            return getattr(value, key)
-        except AttributeError:
-            # The @depends function we're being passed may have returned
-            # None, or an object that simply doesn't have the wanted key.
-            # In that case, just return None.
-            return None
+        # The @depends function we're being passed may have returned
+        # None, or an object that simply doesn't have the wanted key.
+        # In that case, just return None.
+        return getattr(value, key, None)
     return result
 
 
