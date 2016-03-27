@@ -1238,12 +1238,6 @@ ObjectIsCallable(JSObject* obj)
     return obj->isCallable();
 }
 
-bool
-ObjectIsConstructor(JSObject* obj)
-{
-    return obj->isConstructor();
-}
-
 void
 MarkValueFromIon(JSRuntime* rt, Value* vp)
 {
