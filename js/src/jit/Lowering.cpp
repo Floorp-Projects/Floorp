@@ -2190,6 +2190,7 @@ MustCloneRegExpForCall(MCall* call, uint32_t useIndex)
     if (useIndex == MCall::IndexOfArgument(0) &&
         (target->native() == str_split ||
          target->native() == str_replace ||
+         target->native() == str_match ||
          target->native() == str_search))
     {
         return false;
