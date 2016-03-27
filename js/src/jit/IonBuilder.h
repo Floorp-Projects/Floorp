@@ -910,7 +910,6 @@ class IonBuilder
     InliningStatus inlineIsConstructor(CallInfo& callInfo);
     InliningStatus inlineIsObject(CallInfo& callInfo);
     InliningStatus inlineToObject(CallInfo& callInfo);
-    InliningStatus inlineIsWrappedArrayConstructor(CallInfo& callInfo);
     InliningStatus inlineToInteger(CallInfo& callInfo);
     InliningStatus inlineToString(CallInfo& callInfo);
     InliningStatus inlineDump(CallInfo& callInfo);
