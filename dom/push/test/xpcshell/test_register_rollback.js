@@ -59,6 +59,7 @@ add_task(function* test_register_rollback() {
         },
         onUnregister(request) {
           equal(request.channelID, channelID, 'Unregister: wrong channel ID');
+          equal(request.code, 200, 'Expected manual unregister reason');
           this.serverSendMsg(JSON.stringify({
             messageType: 'unregister',
             status: 200,
