@@ -9,7 +9,7 @@ function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, PerformanceController, WaterfallView } = panel.panelWin;
   let { L10N } = require("devtools/client/performance/modules/global");
-  let { getMarkerLabel } = require("devtools/client/performance/modules/logic/marker-utils");
+  let { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 
   // Hijack the markers massaging part of creating the waterfall view,
   // to prevent collapsing markers and allowing this test to verify
@@ -60,7 +60,7 @@ function* spawnTest() {
     info("Current marker data: " + mkr.toSource());
     info("Current marker output: " + $("#waterfall-details").innerHTML);
 
-    is(type, getMarkerLabel(mkr), "Sidebar title matches markers name.");
+    is(type, MarkerBlueprintUtils.getMarkerLabel(mkr), "Sidebar title matches markers name.");
 
     // Values are rounded. We don't use a strict equality.
     is(toMs(mkr.end - mkr.start), duration, "Sidebar duration is valid.");

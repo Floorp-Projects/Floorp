@@ -11,8 +11,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
-
-const MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
+const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -148,7 +147,7 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       let marker = submarkers[i];
 
       // Skip filtered markers
-      if (!MarkerUtils.isMarkerValid(marker, this.filter)) {
+      if (!MarkerBlueprintUtils.shouldDisplayMarker(marker, this.filter)) {
         continue;
       }
 
@@ -173,7 +172,7 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    */
   _buildMarkerCells: function(doc, targetNode, arrowNode) {
     let marker = this.marker;
-    let blueprint = MarkerUtils.getBlueprintFor(marker);
+    let blueprint = MarkerBlueprintUtils.getBlueprintFor(marker);
     let startTime = this.root._interval.startTime;
     let endTime = this.root._interval.endTime;
 
@@ -212,7 +211,7 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.appendChild(bullet);
 
     let name = doc.createElement("description");
-    let label = MarkerUtils.getMarkerLabel(marker);
+    let label = MarkerBlueprintUtils.getMarkerLabel(marker);
     name.className = "plain waterfall-marker-name";
     name.style.transform = `translateX(${this.level * LEVEL_INDENT}px)`;
     name.setAttribute("crop", "end");

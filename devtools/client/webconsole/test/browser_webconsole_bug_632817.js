@@ -20,6 +20,15 @@ const TEST_DATA_JSON_CONTENT =
 const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging " +
                  "tests";
 
+const PAGE_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("test-network-request.html");
+
+const TEST_DATA_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("test-data.json");
+
+const XHR_WARN_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("sjs_cors-test-server.sjs");
+
 let hud;
 
 add_task(function*() {
@@ -56,11 +65,7 @@ add_task(function*() {
 function testPageLoad() {
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_NETWORK_REQUEST_URI);
-  let lastRequest = yield new Promise(resolve => {
-    HUDService.lastFinishedRequest.callback = function(request) {
-      resolve(request);
-    };
-  });
+  let lastRequest = yield waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
 
   // Check if page load was logged correctly.
   ok(lastRequest, "Page load was logged");
@@ -75,7 +80,7 @@ function testXhrGet() {
     content.wrappedJSObject.testXhrGet();
   });
 
-  let lastRequest = yield waitForFinishedRequest();
+  let lastRequest = yield waitForFinishedRequest(TEST_DATA_REQUEST_PREDICATE);
 
   ok(lastRequest, "testXhrGet() was logged");
   is(lastRequest.request.method, "GET", "Method is correct");
@@ -88,7 +93,7 @@ function testXhrWarn() {
     content.wrappedJSObject.testXhrWarn();
   });
 
-  let lastRequest = yield waitForFinishedRequest();
+  let lastRequest = yield waitForFinishedRequest(XHR_WARN_REQUEST_PREDICATE);
 
   ok(lastRequest, "testXhrWarn() was logged");
   is(lastRequest.request.method, "GET", "Method is correct");
@@ -102,7 +107,7 @@ function testXhrPost() {
     content.wrappedJSObject.testXhrPost();
   });
 
-  let lastRequest = yield waitForFinishedRequest();
+  let lastRequest = yield waitForFinishedRequest(TEST_DATA_REQUEST_PREDICATE);
 
   ok(lastRequest, "testXhrPost() was logged");
   is(lastRequest.request.method, "POST", "Method is correct");
@@ -118,7 +123,8 @@ function testFormSubmission() {
     form.submit();
   });
 
-  let lastRequest = yield waitForFinishedRequest();
+  // The form POSTs to the page URL but over https (page over http).
+  let lastRequest = yield waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
 
   ok(lastRequest, "testFormSubmission() was logged");
   is(lastRequest.request.method, "POST", "Method is correct");

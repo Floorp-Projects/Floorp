@@ -10,7 +10,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
+const { MarkerDOMUtils } = require("devtools/client/performance/modules/marker-dom-utils");
 
 /**
  * A detailed view for one single marker.
@@ -93,22 +93,22 @@ MarkerDetails.prototype = {
     this.empty();
 
     let elements = [];
-    elements.push(MarkerUtils.DOM.buildTitle(this._document, marker));
-    elements.push(MarkerUtils.DOM.buildDuration(this._document, marker));
-    MarkerUtils.DOM.buildFields(this._document, marker).forEach(f => elements.push(f));
-    MarkerUtils.DOM.buildCustom(this._document, marker, options).forEach(f => elements.push(f));
+    elements.push(MarkerDOMUtils.buildTitle(this._document, marker));
+    elements.push(MarkerDOMUtils.buildDuration(this._document, marker));
+    MarkerDOMUtils.buildFields(this._document, marker).forEach(f => elements.push(f));
+    MarkerDOMUtils.buildCustom(this._document, marker, options).forEach(f => elements.push(f));
 
     // Build a stack element -- and use the "startStack" label if
     // we have both a startStack and endStack.
     if (marker.stack) {
       let type = marker.endStack ? "startStack" : "stack";
-      elements.push(MarkerUtils.DOM.buildStackTrace(this._document, {
+      elements.push(MarkerDOMUtils.buildStackTrace(this._document, {
         frameIndex: marker.stack, frames, type
       }));
     }
     if (marker.endStack) {
       let type = "endStack";
-      elements.push(MarkerUtils.DOM.buildStackTrace(this._document, {
+      elements.push(MarkerDOMUtils.buildStackTrace(this._document, {
         frameIndex: marker.endStack, frames, type
       }));
     }
