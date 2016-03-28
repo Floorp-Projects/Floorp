@@ -358,6 +358,7 @@ public:
       mLineOrPageDeltaX(0),
       mLineOrPageDeltaY(0),
       mHandledByAPZ(false),
+      mFollowedByMomentum(false),
       mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
   {
   }
@@ -384,6 +385,10 @@ public:
   int32_t mLineOrPageDeltaY;
 
   bool mHandledByAPZ;
+
+  // true if this is a PANGESTURE_END event that will be followed by a
+  // PANGESTURE_MOMENTUMSTART event.
+  bool mFollowedByMomentum;
 
   // If this is true, and this event started a new input block that couldn't
   // find a scrollable target which is scrollable in the horizontal component
