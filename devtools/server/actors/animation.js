@@ -182,6 +182,14 @@ var AnimationPlayerActor = ActorClass({
   },
 
   /**
+   * Get the animation endDelay from this player, in milliseconds.
+   * @return {Number}
+   */
+  getEndDelay: function() {
+    return this.player.effect.getComputedTiming().endDelay;
+  },
+
+  /**
    * Get the animation iteration count for this player. That is, how many times
    * is the animation scheduled to run.
    * @return {Number} The number of iterations, or null if the animation repeats
@@ -229,6 +237,7 @@ var AnimationPlayerActor = ActorClass({
       name: this.getName(),
       duration: this.getDuration(),
       delay: this.getDelay(),
+      endDelay: this.getEndDelay(),
       iterationCount: this.getIterationCount(),
       iterationStart: this.getIterationStart(),
       // animation is hitting the fast path or not. Returns false whenever the
@@ -303,7 +312,8 @@ var AnimationPlayerActor = ActorClass({
         hasChanged = newState.delay !== oldState.delay ||
                      newState.iterationCount !== oldState.iterationCount ||
                      newState.iterationStart !== oldState.iterationStart ||
-                     newState.duration !== oldState.duration;
+                     newState.duration !== oldState.duration ||
+                     newState.endDelay !== oldState.endDelay;
         break;
       }
     }
@@ -456,6 +466,7 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       name: this._form.name,
       duration: this._form.duration,
       delay: this._form.delay,
+      endDelay: this._form.endDelay,
       iterationCount: this._form.iterationCount,
       iterationStart: this._form.iterationStart,
       isRunningOnCompositor: this._form.isRunningOnCompositor,

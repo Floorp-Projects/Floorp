@@ -333,8 +333,10 @@ nsPresContext::Destroy()
 
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
-  if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
-    mRefreshDriver->Disconnect();
+  if (mRefreshDriver) {
+    if (mRefreshDriver->PresContext() == this) {
+      mRefreshDriver->Disconnect();
+    }
     mRefreshDriver = nullptr;
   }
 }

@@ -5510,7 +5510,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   WidgetMouseEvent event(true, eMouseMove, view->GetWidget(),
                          WidgetMouseEvent::eSynthesized);
   event.refPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
-  event.time = PR_IntervalNow();
+  event.mTime = PR_IntervalNow();
   // XXX set event.modifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 
@@ -6884,8 +6884,8 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.height = touch->RadiusY();
       event.tiltX = touch->tiltX;
       event.tiltY = touch->tiltY;
-      event.time = touchEvent->time;
-      event.timeStamp = touchEvent->timeStamp;
+      event.mTime = touchEvent->mTime;
+      event.mTimeStamp = touchEvent->mTimeStamp;
       event.mFlags = touchEvent->mFlags;
       event.button = WidgetMouseEvent::eLeftButton;
       event.buttons = WidgetMouseEvent::eLeftButtonFlag;
@@ -8144,9 +8144,9 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
   }
 
   if (Telemetry::CanRecordBase() &&
-      !aEvent->timeStamp.IsNull() &&
+      !aEvent->mTimeStamp.IsNull() &&
       aEvent->AsInputEvent()) {
-    double millis = (TimeStamp::Now() - aEvent->timeStamp).ToMilliseconds();
+    double millis = (TimeStamp::Now() - aEvent->mTimeStamp).ToMilliseconds();
     Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_MS, millis);
   }
 

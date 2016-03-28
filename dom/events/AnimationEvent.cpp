@@ -22,7 +22,7 @@ AnimationEvent::AnimationEvent(EventTarget* aOwner,
   }
   else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 }
 
@@ -47,9 +47,9 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
   e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
 
   InternalAnimationEvent* internalEvent = e->mEvent->AsAnimationEvent();
-  internalEvent->animationName = aParam.mAnimationName;
-  internalEvent->elapsedTime = aParam.mElapsedTime;
-  internalEvent->pseudoElement = aParam.mPseudoElement;
+  internalEvent->mAnimationName = aParam.mAnimationName;
+  internalEvent->mElapsedTime = aParam.mElapsedTime;
+  internalEvent->mPseudoElement = aParam.mPseudoElement;
 
   e->SetTrusted(trusted);
   return e.forget();
@@ -58,7 +58,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
 NS_IMETHODIMP
 AnimationEvent::GetAnimationName(nsAString& aAnimationName)
 {
-  aAnimationName = mEvent->AsAnimationEvent()->animationName;
+  aAnimationName = mEvent->AsAnimationEvent()->mAnimationName;
   return NS_OK;
 }
 
@@ -72,13 +72,13 @@ AnimationEvent::GetElapsedTime(float* aElapsedTime)
 float
 AnimationEvent::ElapsedTime()
 {
-  return mEvent->AsAnimationEvent()->elapsedTime;
+  return mEvent->AsAnimationEvent()->mElapsedTime;
 }
 
 NS_IMETHODIMP
 AnimationEvent::GetPseudoElement(nsAString& aPseudoElement)
 {
-  aPseudoElement = mEvent->AsAnimationEvent()->pseudoElement;
+  aPseudoElement = mEvent->AsAnimationEvent()->mPseudoElement;
   return NS_OK;
 }
 

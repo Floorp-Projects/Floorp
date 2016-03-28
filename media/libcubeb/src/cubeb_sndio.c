@@ -67,7 +67,7 @@ sndio_onmove(void *arg, int delta)
 {
   cubeb_stream *s = (cubeb_stream *)arg;
 
-  s->rdpos += delta;
+  s->rdpos += delta * s->bpf;
 }
 
 static void *
@@ -135,7 +135,7 @@ sndio_mainloop(void *arg)
         state = CUBEB_STATE_ERROR;
         break;
       }
-      s->wrpos = 0;
+      s->wrpos += n;
       start += n;
     }
   }
@@ -197,7 +197,7 @@ sndio_stream_init(cubeb * context,
   if (s == NULL)
     return CUBEB_ERROR;
   s->context = context;
-  s->hdl = sio_open(NULL, SIO_PLAY, 0);
+  s->hdl = sio_open(NULL, SIO_PLAY, 1);
   if (s->hdl == NULL) {
     free(s);
     DPR("sndio_stream_init(), sio_open() failed\n");
@@ -336,7 +336,7 @@ sndio_stream_get_position(cubeb_stream *s, uint64_t *p)
 {
   pthread_mutex_lock(&s->mtx);
   DPR("sndio_stream_get_position() %lld\n", s->rdpos);
-  *p = s->rdpos;
+  *p = s->rdpos / s->bpf;
   pthread_mutex_unlock(&s->mtx);
   return CUBEB_OK;
 }
@@ -356,7 +356,7 @@ sndio_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
   // http://www.openbsd.org/cgi-bin/man.cgi?query=sio_open
   // in the "Measuring the latency and buffers usage" paragraph.
-  *latency = stm->wrpos - stm->rdpos;
+  *latency = (stm->wrpos - stm->rdpos) / stm->bpf;
   return CUBEB_OK;
 }
 

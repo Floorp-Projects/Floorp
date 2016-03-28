@@ -563,8 +563,10 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
   // Special case for "Space" key.  With some keyboard layouts, "Space" with
   // or without Shift key causes non-ASCII space.  For such keyboard layouts,
   // we should guarantee that the key press works as an ASCII white space key
-  // press.
-  if (mCodeNameIndex == CODE_NAME_INDEX_Space &&
+  // press.  However, if the space key is assigned to a function key, it
+  // shouldn't work as a space key.
+  if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
+      mCodeNameIndex == CODE_NAME_INDEX_Space &&
       pseudoCharCode != static_cast<uint32_t>(' ')) {
     ShortcutKeyCandidate spaceKey(static_cast<uint32_t>(' '), false);
     aCandidates.AppendElement(spaceKey);
@@ -607,8 +609,10 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
   // Special case for "Space" key.  With some keyboard layouts, "Space" with
   // or without Shift key causes non-ASCII space.  For such keyboard layouts,
   // we should guarantee that the key press works as an ASCII white space key
-  // press.
-  if (mCodeNameIndex == CODE_NAME_INDEX_Space &&
+  // press.  However, if the space key is assigned to a function key, it
+  // shouldn't work as a space key.
+  if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
+      mCodeNameIndex == CODE_NAME_INDEX_Space &&
       charCode != static_cast<uint32_t>(' ')) {
     aCandidates.AppendElement(static_cast<uint32_t>(' '));
   }

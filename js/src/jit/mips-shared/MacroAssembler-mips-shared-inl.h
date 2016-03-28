@@ -243,24 +243,6 @@ MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label*
 }
 
 void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
-{
-    if (lhs.getTag() == Operand::REG)
-        ma_b(lhs.toReg(), rhs, label, cond);
-    else
-        branch32(cond, lhs.toAddress(), rhs, label);
-}
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
-{
-    if (lhs.getTag() == Operand::REG)
-        ma_b(lhs.toReg(), rhs, label, cond);
-    else
-        branch32(cond, lhs.toAddress(), rhs, label);
-}
-
-void
 MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress addr, Imm32 imm, Label* label)
 {
     load32(addr, SecondScratchReg);

@@ -3781,7 +3781,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       // DOMActive event should be trusted since the activation is actually
       // occurred even if the cause is an untrusted click event.
       InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
-      actEvent.detail = 1;
+      actEvent.mDetail = 1;
 
       nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
       if (shell) {
@@ -3902,7 +3902,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           // just because we raised a window.
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && IsSingleLineTextControl(false) &&
-              !aVisitor.mEvent->AsFocusEvent()->fromRaise &&
+              !aVisitor.mEvent->AsFocusEvent()->mFromRaise &&
               SelectTextFieldOnFocus()) {
             nsIDocument* document = GetComposedDoc();
             if (document) {

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+  .target {
+    width: 50px;
+    height: 50px;
+    background: blue;
+  }
+  </style>
+</head>
+<body>
+  <div id="target1" class="target"></div>
+  <div id="target2" class="target"></div>
+  <div id="target3" class="target"></div>
+  <div id="target4" class="target"></div>
+  <script>
+    "use strict";
+
+    var el = document.getElementById("target1");
+    el.animate(
+      { opacity: [ 0, 1 ] },
+      { id: "endDelay_animation1",
+        duration: 1000000,
+        endDelay: 500000,
+        fill: "none" }
+    );
+
+    el = document.getElementById("target2");
+    el.animate(
+      { opacity: [ 0, 1 ] },
+      { id: "endDelay_animation2",
+        duration: 1000000,
+        endDelay: -500000,
+        fill: "none" }
+    );
+
+    el = document.getElementById("target3");
+    el.animate(
+      { opacity: [ 0, 1 ] },
+      { id: "endDelay_animation3",
+        duration: 1000000,
+        endDelay: -1500000,
+        fill: "forwards" }
+    );
+
+    el = document.getElementById("target4");
+    el.animate(
+      { opacity: [ 0, 1 ] },
+      { id: "endDelay_animation4",
+        duration: 100000,
+        delay: 100000,
+        endDelay: -1500000,
+        fill: "forwards" }
+    );
+
+  </script>
+</body>
+</html>

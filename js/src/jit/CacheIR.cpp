@@ -56,6 +56,8 @@ GetPropIRGenerator::tryAttachStub(Maybe<CacheIRWriter>& writer)
         RootedObject obj(cx_, &val_.toObject());
         ObjOperandId objId = writer->guardIsObject(valId);
 
+        if (!emitted_ && !tryAttachObjectLength(*writer, obj, objId))
+            return false;
         if (!emitted_ && !tryAttachNative(*writer, obj, objId))
             return false;
         if (!emitted_ && !tryAttachUnboxedExpando(*writer, obj, objId))
@@ -272,5 +274,47 @@ GetPropIRGenerator::tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject 
     emitted_ = true;
 
     EmitReadSlotResult(writer, obj, obj, shape, objId);
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    if (name_ != cx_->names().length)
+        return true;
+
+    if (obj->is<ArrayObject>()) {
+        // Make sure int32 is added to the TypeSet before we attach a stub, so
+        // the stub can return int32 values without monitoring the result.
+        if (obj->as<ArrayObject>().length() > INT32_MAX)
+            return true;
+
+        writer.guardClass(objId, GuardClassKind::Array);
+        writer.loadInt32ArrayLengthResult(objId);
+        emitted_ = true;
+        return true;
+    }
+
+    if (obj->is<UnboxedArrayObject>()) {
+        writer.guardClass(objId, GuardClassKind::UnboxedArray);
+        writer.loadUnboxedArrayLengthResult(objId);
+        emitted_ = true;
+        return true;
+    }
+
+    if (obj->is<ArgumentsObject>() && !obj->as<ArgumentsObject>().hasOverriddenLength()) {
+        if (obj->is<MappedArgumentsObject>()) {
+            writer.guardClass(objId, GuardClassKind::MappedArguments);
+        } else {
+            MOZ_ASSERT(obj->is<UnmappedArgumentsObject>());
+            writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+        }
+        writer.loadArgumentsObjectLengthResult(objId);
+        emitted_ = true;
+        return true;
+    }
+
     return true;
 }

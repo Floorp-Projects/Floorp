@@ -227,7 +227,7 @@ body {
 }
 
 .animation-timeline .scrubber-wrapper {
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   height: 100%;
 }
@@ -374,6 +374,7 @@ body {
   padding: 0 2px;
   box-sizing: border-box;
   --fast-track-icon-width: 12px;
+  z-index: 1;
 }
 
 .animation-timeline .animation .name div {
@@ -396,20 +397,23 @@ body {
   right: 0;
   height: 100%;
   width: var(--fast-track-icon-width);
+  z-index: 1;
 
   background-image: url("images/animation-fast-track.svg");
   background-repeat: no-repeat;
   background-position: center;
 }
 
-.animation-timeline .animation .delay {
+.animation-timeline .animation .delay,
+.animation-timeline .animation .end-delay {
   position: absolute;
   height: 100%;
-
   border: 1px solid var(--timeline-border-color);
   box-sizing: border-box;
-  border-width: 1px 0 1px 1px;
+}
 
+.animation-timeline .animation .delay {
+  border-width: 1px 0 1px 1px;
   background-image: repeating-linear-gradient(45deg,
                                               transparent,
                                               transparent 1px,
@@ -418,7 +422,18 @@ body {
   background-color: var(--timeline-border-color);
 }
 
-.animation-timeline .animation .delay.negative {
+.animation-timeline .animation .end-delay {
+  border-width: 1px 1px 1px 0;
+  background-image: repeating-linear-gradient(
+                      -45deg,
+                      transparent,
+                      transparent 3px,
+                      var(--timeline-border-color) 3px,
+                      var(--timeline-border-color) 4px);
+}
+
+.animation-timeline .animation .delay.negative,
+.animation-timeline .animation .end-delay.negative {
   /* Negative delays are displayed on top of the animation, so they need a
      right border. Whereas normal delays are displayed just before the
      animation, so there's already the animation's left border that serves as

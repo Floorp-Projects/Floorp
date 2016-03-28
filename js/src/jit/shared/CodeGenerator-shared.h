@@ -210,13 +210,12 @@ class CodeGeneratorShared : public LElementVisitor
     inline int32_t ToStackOffset(LAllocation a) const;
     inline int32_t ToStackOffset(const LAllocation* a) const;
 
+    inline Address ToAddress(const LAllocation& a);
+    inline Address ToAddress(const LAllocation* a);
+
     uint32_t frameSize() const {
         return frameClass_ == FrameSizeClass::None() ? frameDepth_ : frameClass_.frameSize();
     }
-
-    inline Operand ToOperand(const LAllocation& a);
-    inline Operand ToOperand(const LAllocation* a);
-    inline Operand ToOperand(const LDefinition* def);
 
   protected:
 #ifdef CHECK_OSIPOINT_REGISTERS
