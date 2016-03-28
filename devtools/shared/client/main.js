@@ -1824,24 +1824,20 @@ ThreadClient.prototype = {
     this._pauseOnExceptions = aPauseOnExceptions;
     this._ignoreCaughtExceptions = aIgnoreCaughtExceptions;
 
-    // If the debuggee is paused, we have to send the flag via a reconfigure
-    // request.
-    if (this.paused) {
-      this.reconfigure({
-        pauseOnExceptions: aPauseOnExceptions,
-        ignoreCaughtExceptions: aIgnoreCaughtExceptions
-      }, aOnResponse);
-      return;
-    }
     // Otherwise send the flag using a standard resume request.
-    return this.interrupt(aResponse => {
-      if (aResponse.error) {
-        // Can't continue if pausing failed.
-        aOnResponse(aResponse);
-        return aResponse;
-      }
-      return this.resume(aOnResponse);
-    });
+    if(!this.paused) {
+      return this.interrupt(aResponse => {
+        if (aResponse.error) {
+          // Can't continue if pausing failed.
+          aOnResponse(aResponse);
+          return aResponse;
+        }
+        return this.resume(aOnResponse);
+      });
+    }
+
+    aOnResponse();
+    return promise.resolve();
   },
 
   /**
