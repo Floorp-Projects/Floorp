@@ -133,11 +133,11 @@ function test() {
          "The second source is not displayed.");
 
       // The editor's debug location takes a tick to update.
-      ok(isCaretPos(gPanel, 5),
+      ok(isCaretPos(gPanel, 6),
          "Editor caret location is correct.");
-      is(gEditor.getDebugLocation(), 4,
+      is(gEditor.getDebugLocation(), 5,
          "Editor debugger location is correct.");
-      ok(gEditor.hasLineClass(4, "debug-line"),
+      ok(gEditor.hasLineClass(5, "debug-line"),
          "The debugged line is highlighted appropriately.");
 
       deferred.resolve();

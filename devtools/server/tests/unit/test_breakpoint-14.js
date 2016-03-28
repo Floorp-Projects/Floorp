@@ -39,67 +39,66 @@ function test_simple_breakpoint()
     let source = gThreadClient.source(aPacket.frame.where.source);
     let location = { line: gDebuggee.line0 + 2 };
 
-    source.setBreakpoint(location, function (aResponse, bpClient) {
-      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-        // Check that the stepping worked.
-        do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);
-        do_check_eq(aPacket.why.type, "resumeLimit");
-
-        gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+    source.setBreakpoint(location, Task.async(function*(aResponse, bpClient) {
+      const testCallbacks = [
+        function(aPacket) {
+          // Check that the stepping worked.
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);
+          do_check_eq(aPacket.why.type, "resumeLimit");
+        },
+        function(aPacket) {
           // Reached the breakpoint.
           do_check_eq(aPacket.frame.where.line, location.line);
           do_check_eq(aPacket.why.type, "breakpoint");
           do_check_neq(aPacket.why.type, "resumeLimit");
+        },
+        function(aPacket) {
+          // Stepped to the closing brace of the function.
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 3);
+          do_check_eq(aPacket.why.type, "resumeLimit");
+        },
+        function(aPacket) {
+          // The frame is about to be popped while stepping.
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 3);
+          do_check_neq(aPacket.why.type, "breakpoint");
+          do_check_eq(aPacket.why.type, "resumeLimit");
+          do_check_eq(aPacket.why.frameFinished.return.type, "undefined");
+        },
+        function(aPacket) {
+          // The foo function call frame was just popped from the stack.
+          do_check_eq(gDebuggee.a, 1);
+          do_check_eq(gDebuggee.b, undefined);
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);
+          do_check_eq(aPacket.why.type, "resumeLimit");
+          do_check_eq(aPacket.poppedFrames.length, 1);
+        },
+        function(aPacket) {
+          // Check that the debugger statement wasn't the reason for this pause.
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 6);
+          do_check_neq(aPacket.why.type, "debuggerStatement");
+          do_check_eq(aPacket.why.type, "resumeLimit");
+        },
+        function(aPacket) {
+          // Check that the debugger statement wasn't the reason for this pause.
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 7);
+          do_check_neq(aPacket.why.type, "debuggerStatement");
+          do_check_eq(aPacket.why.type, "resumeLimit");
+        },
+      ];
 
-          gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-            // The frame is about to be popped while stepping.
-            do_check_eq(aPacket.frame.where.line, location.line);
-            do_check_neq(aPacket.why.type, "breakpoint");
-            do_check_eq(aPacket.why.type, "resumeLimit");
-            do_check_eq(aPacket.why.frameFinished.return.type, "undefined");
-
-            gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-              // The foo function call frame was just popped from the stack.
-              do_check_eq(gDebuggee.a, 1);
-              do_check_eq(gDebuggee.b, undefined);
-              do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);
-              do_check_eq(aPacket.why.type, "resumeLimit");
-              do_check_eq(aPacket.poppedFrames.length, 1);
-
-              gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-                // Check that the debugger statement wasn't the reason for this pause.
-                do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 6);
-                do_check_neq(aPacket.why.type, "debuggerStatement");
-                do_check_eq(aPacket.why.type, "resumeLimit");
-
-                gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-                  // Check that the debugger statement wasn't the reason for this pause.
-                  do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 7);
-                  do_check_neq(aPacket.why.type, "debuggerStatement");
-                  do_check_eq(aPacket.why.type, "resumeLimit");
-
-                  // Remove the breakpoint and finish.
-                  bpClient.remove(() => gThreadClient.resume(() => gClient.close(gCallback)));
-
-                });
-                // Step past the debugger statement.
-                gThreadClient.stepOver();
-              });
-              // Step over the debugger statement.
-              gThreadClient.stepOver();
-            });
-            // Get back to the frame above.
-            gThreadClient.stepOver();
-          });
-          // Step to the end of the function call frame.
-          gThreadClient.stepOver();
-        });
-        // Step over the function call.
+      for (let callback of testCallbacks) {
+        let waiter = waitForPause(gThreadClient);
         gThreadClient.stepOver();
-      });
-      // Step over to the next line with the function call.
+        let packet = yield waiter;
+        callback(packet);
+      }
+
+      // Remove the breakpoint and finish.
+      let waiter = waitForPause(gThreadClient);
       gThreadClient.stepOver();
-    });
+      yield waiter;
+      bpClient.remove(() => gThreadClient.resume(() => gClient.close(gCallback)));
+    }));
   });
 
   Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +

@@ -38,7 +38,7 @@ function test_executable_lines() {
       do_check_true(!error);
       let source = gThreadClient.source(sources[0]);
       source.getExecutableLines(function(lines){
-        do_check_true(arrays_equal([2, 5, 7, 8, 12, 14, 16], lines));
+        do_check_true(arrays_equal([2, 5, 7, 8, 10, 12, 14, 16], lines));
         finishClient(gClient);
       });
     });
