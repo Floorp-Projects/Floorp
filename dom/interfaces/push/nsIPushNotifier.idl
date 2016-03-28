@@ -1,3 +1,8 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "nsISupports.idl"
 
 interface nsIPrincipal;
@@ -7,12 +12,14 @@ interface nsIPrincipal;
  * and XPCOM observer notifications for system subscriptions. This service
  * can only be used from the parent process.
  */
-[scriptable, uuid(b00dfdeb-14e5-425b-adc7-b531442e3216)]
+[scriptable, builtinclass, uuid(b00dfdeb-14e5-425b-adc7-b531442e3216)]
 interface nsIPushNotifier : nsISupports
 {
-  void notifyPush(in ACString scope, in nsIPrincipal principal);
+  void notifyPush(in ACString scope, in nsIPrincipal principal,
+                  in DOMString messageId);
 
   void notifyPushWithData(in ACString scope, in nsIPrincipal principal,
+                          in DOMString messageId,
                           [optional] in uint32_t dataLen,
                           [array, size_is(dataLen)] in uint8_t data);
 
@@ -26,7 +33,7 @@ interface nsIPushNotifier : nsISupports
  *
  * This interface resembles the `PushMessageData` WebIDL interface.
  */
-[scriptable, uuid(136dc8fd-8c56-4176-9170-eaa86b6ba99e)]
+[scriptable, builtinclass, uuid(136dc8fd-8c56-4176-9170-eaa86b6ba99e)]
 interface nsIPushMessage : nsISupports
 {
   /** Extracts the data as a UTF-8 text string. */
