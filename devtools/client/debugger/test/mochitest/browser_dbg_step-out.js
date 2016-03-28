@@ -25,7 +25,7 @@ function test() {
 
 function testNormalReturn() {
   waitForSourceAndCaretAndScopes(gPanel, ".html", 17).then(() => {
-    waitForCaretAndScopes(gPanel, 19).then(() => {
+    waitForCaretAndScopes(gPanel, 20).then(() => {
       let innerScope = gVars.getScopeAtIndex(0);
       let returnVar = innerScope.get("<return>");
 
