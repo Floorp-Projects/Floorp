@@ -89,11 +89,6 @@ function makeStateBroadcaster(stillAliveFunc) {
         if (stillAliveFunc()) {
           enqueuedChanges.forEach(([name, payload]) => {
             if (listeners[name]) {
-              let payloadStr = payload;
-              try {
-                payloadStr = JSON.stringify(payload);
-              }
-              catch(e) {}
               listeners[name].forEach(listener => {
                 listener(payload)
               });
