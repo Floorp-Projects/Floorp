@@ -43,6 +43,17 @@ var MemoryObserver = {
     let data = browser.__SS_data;
     let extra = browser.__SS_extdata;
 
+    // Destroying the tab will stop audio playback without invoking the
+    // normal events, therefore we need to explicitly tell the Java UI
+    // to stop displaying the audio playing indicator.
+    if (tab.playingAudio) {
+      Messaging.sendRequest({
+        type: "Tab:AudioPlayingChange",
+        tabID: tab.id,
+        isAudioPlaying: false
+      });
+    }
+
     // We need this data to correctly create and position the new browser
     // If this browser is already a zombie, fallback to the session data
     let currentURL = browser.__SS_restore ? data.entries[0].url : browser.currentURI.spec;
