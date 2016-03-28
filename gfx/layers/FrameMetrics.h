@@ -194,6 +194,15 @@ public:
     return size;
   }
 
+  CSSRect CalculateScrollRange() const
+  {
+    CSSSize scrollPortSize = CalculateCompositedSizeInCssPixels();
+    CSSRect scrollRange = mScrollableRect;
+    scrollRange.width = std::max(scrollRange.width - scrollPortSize.width, 0.0f);
+    scrollRange.height = std::max(scrollRange.height - scrollPortSize.height, 0.0f);
+    return scrollRange;
+  }
+
   void ScrollBy(const CSSPoint& aPoint)
   {
     mScrollOffset += aPoint;
