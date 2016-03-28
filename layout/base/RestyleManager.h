@@ -919,7 +919,7 @@ private:
  * (and further ancestors) may be display:contents nodes which have
  * not yet been pushed onto TreeMatchContext.
  */
-class MOZ_STACK_CLASS AutoDisplayContentsAncestorPusher final
+class MOZ_RAII AutoDisplayContentsAncestorPusher final
 {
  public:
   typedef mozilla::dom::Element Element;
