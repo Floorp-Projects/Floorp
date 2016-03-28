@@ -924,12 +924,6 @@ class MessageDecl(ipdl.ast.MessageDecl):
     def pqMsgClass(self):
         return '%s::%s'% (self.namespace, self.msgClass())
 
-    def msgCast(self, msgexpr):
-        return ExprCast(msgexpr, self.msgCxxType(const=1, ptr=1), static=1)
-
-    def msgCxxType(self, const=0, ref=0, ptr=0):
-        return Type(self.pqMsgClass(), const=const, ref=ref, ptr=ptr)
-
     def msgId(self):  return self.msgClass()+ '__ID'
     def pqMsgId(self):
         return '%s::%s'% (self.namespace, self.msgId())
@@ -939,10 +933,6 @@ class MessageDecl(ipdl.ast.MessageDecl):
 
     def pqReplyClass(self):
         return '%s::%s'% (self.namespace, self.replyClass())
-
-    def replyCast(self, replyexpr):
-        return ExprCast(replyexpr, Type(self.pqReplyClass(), const=1, ptr=1),
-                        static=1)
 
     def replyId(self):  return self.replyClass()+ '__ID'
     def pqReplyId(self):
