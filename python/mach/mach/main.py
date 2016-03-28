@@ -185,6 +185,9 @@ class Mach(object):
         require_conditions -- If True, commands that do not have any condition
             functions applied will be skipped. Defaults to False.
 
+        settings_paths -- A list of files or directories in which to search
+            for settings files to load.
+
     """
 
     USAGE = """%(prog)s [global arguments] command [command arguments]
@@ -211,6 +214,10 @@ To see more help for a specific command, run:
         self.log_manager = LoggingManager()
         self.logger = logging.getLogger(__name__)
         self.settings = ConfigSettings()
+        self.settings_paths = []
+
+        if 'MACHRC' in os.environ:
+            self.settings_paths.append(os.environ['MACHRC'])
 
         self.log_manager.register_structured_logger(self.logger)
         self.global_arguments = []
@@ -360,6 +367,12 @@ To see more help for a specific command, run:
             sys.stderr = orig_stderr
 
     def _run(self, argv):
+        # Load settings as early as possible so things in dispatcher.py
+        # can use them.
+        for provider in Registrar.settings_providers:
+            self.settings.register_provider(provider)
+        self.load_settings(self.settings_paths)
+
         context = CommandContext(cwd=self.cwd,
             settings=self.settings, log_manager=self.log_manager,
             commands=Registrar)
@@ -412,7 +425,10 @@ To see more help for a specific command, run:
         self.log_manager.add_terminal_logging(level=log_level,
             write_interval=args.log_interval, write_times=write_times)
 
-        self.load_settings(args)
+        if args.settings_file:
+            # Argument parsing has already happened, so settings that apply
+            # to command line handling (e.g alias, defaults) will be ignored.
+            self.load_settings(args.settings_file)
 
         if not hasattr(args, 'mach_handler'):
             raise MachError('ArgumentParser result missing mach handler info.')
@@ -492,43 +508,31 @@ To see more help for a specific command, run:
         for l in traceback.format_list(stack):
             fh.write(l)
 
-    def load_settings(self, args):
-        """Determine which settings files apply and load them.
+    def load_settings(self, paths):
+        """Load the specified settings files.
 
-        Currently, we only support loading settings from a single file.
-        Ideally, we support loading from multiple files. This is supported by
-        the ConfigSettings API. However, that API currently doesn't track where
-        individual values come from, so if we load from multiple sources then
-        save, we effectively do a full copy. We don't want this. Until
-        ConfigSettings does the right thing, we shouldn't expose multi-file
-        loading.
+        If a directory is specified, the following basenames will be
+        searched for in this order:
 
-        We look for a settings file in the following locations. The first one
-        found wins:
-
-          1) Command line argument
-          2) Environment variable
-          3) Default path
+            machrc, .machrc
         """
-        # Settings are disabled until integration with command providers is
-        # worked out.
-        self.settings = None
-        return False
+        if isinstance(paths, basestring):
+            paths = [paths]
 
-        for provider in Registrar.settings_providers:
-            provider.register_settings()
-            self.settings.register_provider(provider)
+        valid_names = ('machrc', '.machrc')
+        def find_in_dir(base):
+            if os.path.isfile(base):
+                return base
 
-        p = os.path.join(self.cwd, 'mach.ini')
+            for name in valid_names:
+                path = os.path.join(base, name)
+                if os.path.isfile(path):
+                    return path
 
-        if args.settings_file:
-            p = args.settings_file
-        elif 'MACH_SETTINGS_FILE' in os.environ:
-            p = os.environ['MACH_SETTINGS_FILE']
+        files = map(find_in_dir, self.settings_paths)
+        files = filter(bool, files)
 
-        self.settings.load_file(p)
-
-        return os.path.exists(p)
+        self.settings.load_files(files)
 
     def get_argument_parser(self, context):
         """Returns an argument parser for the command-line interface."""
@@ -539,9 +543,6 @@ To see more help for a specific command, run:
         # Order is important here as it dictates the order the auto-generated
         # help messages are printed.
         global_group = parser.add_argument_group('Global Arguments')
-
-        #global_group.add_argument('--settings', dest='settings_file',
-        #    metavar='FILENAME', help='Path to settings file.')
 
         global_group.add_argument('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
@@ -566,6 +567,9 @@ To see more help for a specific command, run:
             help='Show this help message.')
         global_group.add_argument('--debug-command', action='store_true',
             help='Start a Python debugger when command is dispatched.')
+        global_group.add_argument('--settings', dest='settings_file',
+            metavar='FILENAME', default=None,
+            help='Path to settings file.')
 
         for args, kwargs in self.global_arguments:
             global_group.add_argument(*args, **kwargs)

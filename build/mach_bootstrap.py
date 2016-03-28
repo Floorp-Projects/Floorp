@@ -120,6 +120,7 @@ MACH_MODULES = [
     'layout/tools/reftest/mach_commands.py',
     'python/mach_commands.py',
     'python/mach/mach/commands/commandinfo.py',
+    'python/mach/mach/commands/settings.py',
     'python/compare-locales/mach_commands.py',
     'python/mozboot/mozboot/mach_commands.py',
     'python/mozbuild/mozbuild/mach_commands.py',
@@ -399,6 +400,12 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context
+
+    if not mach.settings_paths:
+        # default global machrc location
+        mach.settings_paths.append(get_state_dir()[0])
+    # always load local repository configuration
+    mach.settings_paths.append(mozilla_dir)
 
     for category, meta in CATEGORIES.items():
         mach.define_category(category, meta['short'], meta['long'],
