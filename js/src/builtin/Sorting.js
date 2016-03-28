@@ -86,6 +86,15 @@ function MergeSort(array, len, comparefn) {
     var denseList = new List();
     var denseLen = 0;
 
+    // Until recently typed arrays had no sort method. To work around that
+    // many users passed them to Array.prototype.sort. Now that we have a
+    // typed array specific sorting method it makes sense to divert to it
+    // when possible. Further, the MoveHoles utility function (used within
+    // MergeSort) is not currently compatible with typed arrays.
+    if (IsPossiblyWrappedTypedArray(array)) {
+        return TypedArraySort.call(array, comparefn);
+    }
+
     for (var i = 0; i < len; i++) {
         if (i in array)
             denseList[denseLen++] = array[i];
