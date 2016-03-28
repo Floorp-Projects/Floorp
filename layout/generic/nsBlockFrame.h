@@ -68,14 +68,12 @@ class nsBulletFrame;
  * prepended to the overflow lines.
  */
 
-typedef nsContainerFrame nsBlockFrameSuper;
-
 /*
  * Base class for block and inline frames.
  * The block frame has an additional child list, kAbsoluteList, which
  * contains the absolutely positioned frames.
- */ 
-class nsBlockFrame : public nsBlockFrameSuper
+ */
+class nsBlockFrame : public nsContainerFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsBlockFrame)
