@@ -7,6 +7,8 @@
 #include "nsSVGMaskFrame.h"
 #include <arm_neon.h>
 
+using namespace mozilla::gfx;
+
 void
 ComputesRGBLuminanceMask_NEON(const uint8_t *aSourceData,
                               int32_t aSourceStride,
