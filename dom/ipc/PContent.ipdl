@@ -730,12 +730,13 @@ child:
     /**
      * Send a `push` event without data to a service worker in the child.
      */
-    async Push(nsCString scope, Principal principal);
+    async Push(nsCString scope, Principal principal, nsString messageId);
 
     /**
      * Send a `push` event with data to a service worker in the child.
      */
-    async PushWithData(nsCString scope, Principal principal, uint8_t[] data);
+    async PushWithData(nsCString scope, Principal principal,
+                       nsString messageId, uint8_t[] data);
 
     /**
      * Send a `pushsubscriptionchange` event to a service worker in the child.

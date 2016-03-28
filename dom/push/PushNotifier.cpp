@@ -41,6 +41,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PushNotifier)
 NS_IMETHODIMP
 PushNotifier::NotifyPushWithData(const nsACString& aScope,
                                  nsIPrincipal* aPrincipal,
+                                 const nsAString& aMessageId,
                                  uint32_t aDataLen, uint8_t* aData)
 {
   nsTArray<uint8_t> data;
@@ -50,13 +51,14 @@ PushNotifier::NotifyPushWithData(const nsACString& aScope,
   if (!data.InsertElementsAt(0, aData, aDataLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return NotifyPush(aScope, aPrincipal, Some(data));
+  return NotifyPush(aScope, aPrincipal, aMessageId, Some(data));
 }
 
 NS_IMETHODIMP
-PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal)
+PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
+                         const nsAString& aMessageId)
 {
-  return NotifyPush(aScope, aPrincipal, Nothing());
+  return NotifyPush(aScope, aPrincipal, aMessageId, Nothing());
 }
 
 NS_IMETHODIMP
@@ -84,7 +86,8 @@ PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
 
 nsresult
 PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
-                         Maybe<nsTArray<uint8_t>> aData)
+                         const nsAString& aMessageId,
+                         const Maybe<nsTArray<uint8_t>>& aData)
 {
   if (XRE_IsContentProcess()) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -97,7 +100,7 @@ PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
     }
   }
   if (ShouldNotifyWorkers(aPrincipal)) {
-    rv = NotifyPushWorkers(aScope, aPrincipal, aData);
+    rv = NotifyPushWorkers(aScope, aPrincipal, aMessageId, aData);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -108,7 +111,8 @@ PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
 nsresult
 PushNotifier::NotifyPushWorkers(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
-                                Maybe<nsTArray<uint8_t>> aData)
+                                const nsAString& aMessageId,
+                                const Maybe<nsTArray<uint8_t>>& aData)
 {
   if (!aPrincipal) {
     return NS_ERROR_INVALID_ARG;
@@ -127,7 +131,7 @@ PushNotifier::NotifyPushWorkers(const nsACString& aScope,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    return swm->SendPushEvent(originSuffix, aScope, aData);
+    return swm->SendPushEvent(originSuffix, aScope, aMessageId, aData);
   }
 
   // Otherwise, we're in the parent and e10s is enabled. Broadcast the event
@@ -138,10 +142,10 @@ PushNotifier::NotifyPushWorkers(const nsACString& aScope,
   for (uint32_t i = 0; i < contentActors.Length(); ++i) {
     if (aData) {
       ok &= contentActors[i]->SendPushWithData(PromiseFlatCString(aScope),
-        IPC::Principal(aPrincipal), aData.ref());
+        IPC::Principal(aPrincipal), PromiseFlatString(aMessageId), aData.ref());
     } else {
       ok &= contentActors[i]->SendPush(PromiseFlatCString(aScope),
-        IPC::Principal(aPrincipal));
+        IPC::Principal(aPrincipal), PromiseFlatString(aMessageId));
     }
   }
   return ok ? NS_OK : NS_ERROR_FAILURE;
@@ -182,7 +186,7 @@ PushNotifier::NotifySubscriptionChangeWorkers(const nsACString& aScope,
 
 nsresult
 PushNotifier::NotifyPushObservers(const nsACString& aScope,
-                                  Maybe<nsTArray<uint8_t>> aData)
+                                  const Maybe<nsTArray<uint8_t>>& aData)
 {
   nsCOMPtr<nsIPushMessage> message = nullptr;
   if (aData) {
