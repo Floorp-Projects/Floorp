@@ -217,23 +217,27 @@ async_test(function(t)
   }));
 }, 'startTime while pause-pending and play-pending');
 
-async_test(function(t)
-{
+async_test(function(t) {
   var div = addDiv(t, { 'style': 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
   // Seek to end to put us in the finished state
-  // FIXME: Once we implement finish(), use that here.
   animation.currentTime = 100 * 1000;
   animation.ready.then(t.step_func(function() {
     // Call play() which puts us back in the running state
     animation.play();
-    // FIXME: Enable this once we implement finishing behavior (bug 1074630)
-    /*
     assert_equals(animation.startTime, null, 'startTime is unresolved');
-    */
     t.done();
   }));
 }, 'startTime while play-pending from finished state');
+
+test(function(t) {
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+  animation.finish();
+  // Call play() which puts us back in the running state
+  animation.play();
+  assert_equals(animation.startTime, null, 'startTime is unresolved');
+}, 'startTime while play-pending from finished state using finish()');
 
 async_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 1000s' });

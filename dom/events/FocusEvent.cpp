@@ -23,7 +23,7 @@ FocusEvent::FocusEvent(EventTarget* aOwner,
     mEventIsInternal = false;
   } else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 }
 
@@ -38,7 +38,7 @@ FocusEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 EventTarget*
 FocusEvent::GetRelatedTarget()
 {
-  return mEvent->AsFocusEvent()->relatedTarget;
+  return mEvent->AsFocusEvent()->mRelatedTarget;
 }
 
 void
@@ -50,7 +50,7 @@ FocusEvent::InitFocusEvent(const nsAString& aType,
                            EventTarget* aRelatedTarget)
 {
   UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
-  mEvent->AsFocusEvent()->relatedTarget = aRelatedTarget;
+  mEvent->AsFocusEvent()->mRelatedTarget = aRelatedTarget;
 }
 
 already_AddRefed<FocusEvent>

@@ -1,6 +1,0 @@
-$inherits:
-  from: 'tasks/builds/b2g_aries_spark_ota_debug.yml'
-task:
-  payload:
-    env:
-      MOZHARNESS_CONFIG: b2g/taskcluster-spark-ota-balrog.py

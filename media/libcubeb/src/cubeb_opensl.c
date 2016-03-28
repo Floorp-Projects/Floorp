@@ -17,6 +17,7 @@
 #include "android/sles_definitions.h"
 #include <SLES/OpenSLES_Android.h>
 #include <android/log.h>
+#include <android/api-level.h>
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Cubeb_OpenSL" , ## args)
 #define ANDROID_VERSION_GINGERBREAD_MR1 10
 #endif
@@ -120,8 +121,9 @@ bufferqueue_callback(SLBufferQueueItf caller, void * user_ptr)
     pthread_mutex_unlock(&stm->mutex);
 
     if (!draining) {
-      written = cubeb_resampler_fill(stm->resampler, NULL, buf,
-                                     stm->queuebuf_len / stm->framesize);
+      written = cubeb_resampler_fill(stm->resampler,
+                                     NULL, NULL,
+                                     buf, stm->queuebuf_len / stm->framesize);
       if (written < 0 || written * stm->framesize > stm->queuebuf_len) {
         (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_PAUSED);
         return;
@@ -180,7 +182,7 @@ convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
 
 static void opensl_destroy(cubeb * ctx);
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && (__ANDROID_API__ <= ANDROID_VERSION_GINGERBREAD_MR1)
 
 static int
 get_android_version(void)
@@ -204,7 +206,7 @@ opensl_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && (__ANDROID_API__ <= ANDROID_VERSION_GINGERBREAD_MR1)
   int android_version = get_android_version();
   if (android_version > 0 && android_version <= ANDROID_VERSION_GINGERBREAD_MR1) {
     // Don't even attempt to run on Gingerbread and lower
@@ -340,7 +342,6 @@ opensl_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   void * libmedia;
   uint32_t (*get_primary_output_samplingrate)();
   uint32_t (*get_output_samplingrate)(int * samplingRate, int streamType);
-  uint32_t primary_sampling_rate;
 
   libmedia = dlopen("libmedia.so", RTLD_LAZY);
   if (!libmedia) {
@@ -584,10 +585,9 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
     stm->queuebuf_len += stm->framesize - (stm->queuebuf_len % stm->framesize);
   }
 
-  stm->resampler = cubeb_resampler_create(stm, *output_stream_params,
+  stm->resampler = cubeb_resampler_create(stm, NULL, output_stream_params,
                                           preferred_sampling_rate,
                                           data_callback,
-                                          stm->queuebuf_len / stm->framesize,
                                           user_ptr,
                                           CUBEB_RESAMPLER_QUALITY_DEFAULT);
 

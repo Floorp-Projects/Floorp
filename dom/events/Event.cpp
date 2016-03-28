@@ -107,7 +107,7 @@ Event::ConstructorInit(EventTarget* aOwner,
         }
      */
     mEvent = new WidgetEvent(false, eVoidEvent);
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 
   InitPresContextData(aPresContext);
@@ -171,13 +171,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
         break;
       }
       case eClipboardEventClass:
-        tmp->mEvent->AsClipboardEvent()->clipboardData = nullptr;
+        tmp->mEvent->AsClipboardEvent()->mClipboardData = nullptr;
         break;
       case eMutationEventClass:
         tmp->mEvent->AsMutationEvent()->mRelatedNode = nullptr;
         break;
       case eFocusEventClass:
-        tmp->mEvent->AsFocusEvent()->relatedTarget = nullptr;
+        tmp->mEvent->AsFocusEvent()->mRelatedTarget = nullptr;
         break;
       default:
         break;
@@ -212,16 +212,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
         break;
       }
       case eClipboardEventClass:
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");
-        cb.NoteXPCOMChild(tmp->mEvent->AsClipboardEvent()->clipboardData);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mClipboardData");
+        cb.NoteXPCOMChild(tmp->mEvent->AsClipboardEvent()->mClipboardData);
         break;
       case eMutationEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
         cb.NoteXPCOMChild(tmp->mEvent->AsMutationEvent()->mRelatedNode);
         break;
       case eFocusEventClass:
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
-        cb.NoteXPCOMChild(tmp->mEvent->AsFocusEvent()->relatedTarget);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedTarget");
+        cb.NoteXPCOMChild(tmp->mEvent->AsFocusEvent()->mRelatedTarget);
         break;
       default:
         break;
@@ -459,7 +459,7 @@ Event::GetCancelable(bool* aCancelable)
 NS_IMETHODIMP
 Event::GetTimeStamp(uint64_t* aTimeStamp)
 {
-  *aTimeStamp = mEvent->time;
+  *aTimeStamp = mEvent->mTime;
   return NS_OK;
 }
 
@@ -1064,10 +1064,10 @@ double
 Event::TimeStamp() const
 {
   if (!sReturnHighResTimeStamp) {
-    return static_cast<double>(mEvent->time);
+    return static_cast<double>(mEvent->mTime);
   }
 
-  if (mEvent->timeStamp.IsNull()) {
+  if (mEvent->mTimeStamp.IsNull()) {
     return 0.0;
   }
 
@@ -1085,7 +1085,7 @@ Event::TimeStamp() const
       return 0.0;
     }
 
-    return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->timeStamp);
+    return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
   }
 
   // For dedicated workers, we should make times relative to the navigation
@@ -1096,7 +1096,7 @@ Event::TimeStamp() const
   MOZ_ASSERT(workerPrivate);
 
   TimeDuration duration =
-    mEvent->timeStamp - workerPrivate->NowBaseTimeStamp();
+    mEvent->mTimeStamp - workerPrivate->NowBaseTimeStamp();
   return duration.ToMilliseconds();
 }
 

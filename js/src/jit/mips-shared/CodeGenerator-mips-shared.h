@@ -26,9 +26,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
   protected:
     NonAssertingLabel deoptLabel_;
 
-    inline Address ToAddress(const LAllocation& a);
-    inline Address ToAddress(const LAllocation* a);
-
     MoveOperand toMoveOperand(LAllocation a) const;
 
     template <typename T1, typename T2>
@@ -36,15 +33,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
         Label bail;
         masm.branch32(c, lhs, rhs, &bail);
         bailoutFrom(&bail, snapshot);
-    }
-    template<typename T>
-    void bailoutCmp32(Assembler::Condition c, Operand lhs, T rhs, LSnapshot* snapshot) {
-        if (lhs.getTag() == Operand::REG)
-            bailoutCmp32(c, lhs.toReg(), rhs, snapshot);
-        else if (lhs.getTag() == Operand::MEM)
-            bailoutCmp32(c, lhs.toAddress(), rhs, snapshot);
-        else
-            MOZ_CRASH("Invalid operand tag.");
     }
     template<typename T>
     void bailoutTest32(Assembler::Condition c, Register lhs, T rhs, LSnapshot* snapshot) {

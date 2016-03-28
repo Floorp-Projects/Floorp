@@ -152,6 +152,12 @@ class MacroAssemblerX86Shared : public Assembler
     void cmp32(Register lhs, Register rhs) {
         cmpl(rhs, lhs);
     }
+    void cmp32(const Address& lhs, Register rhs) {
+        cmp32(Operand(lhs), rhs);
+    }
+    void cmp32(const Address& lhs, Imm32 rhs) {
+        cmp32(Operand(lhs), rhs);
+    }
     void cmp32(const Operand& lhs, Imm32 rhs) {
         cmpl(rhs, lhs);
     }

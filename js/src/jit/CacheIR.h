@@ -82,6 +82,7 @@ class ObjOperandId : public OperandId
     _(GuardShape)                         \
     _(GuardGroup)                         \
     _(GuardProto)                         \
+    _(GuardClass)                         \
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
@@ -89,6 +90,9 @@ class ObjOperandId : public OperandId
     _(LoadUnboxedExpando)                 \
     _(LoadFixedSlotResult)                \
     _(LoadDynamicSlotResult)              \
+    _(LoadInt32ArrayLengthResult)         \
+    _(LoadUnboxedArrayLengthResult)       \
+    _(LoadArgumentsObjectLengthResult)    \
     _(LoadUndefinedResult)
 
 enum class CacheOp {
@@ -112,6 +116,16 @@ struct StubField {
     StubField(uintptr_t word, GCType gcType)
       : word(word), gcType(gcType)
     {}
+};
+
+// We use this enum as GuardClass operand, instead of storing Class* pointers
+// in the IR, to keep the IR compact and the same size on all platforms.
+enum class GuardClassKind
+{
+    Array,
+    UnboxedArray,
+    MappedArguments,
+    UnmappedArguments,
 };
 
 // Class to record CacheIR + some additional metadata for code generation.
@@ -240,6 +254,11 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::GuardProto, obj);
         addStubWord(uintptr_t(proto), StubField::GCType::JSObject);
     }
+    void guardClass(ObjOperandId obj, GuardClassKind kind) {
+        MOZ_ASSERT(uint32_t(kind) <= UINT8_MAX);
+        writeOpWithOperandId(CacheOp::GuardClass, obj);
+        buffer_.writeByte(uint32_t(kind));
+    }
     void guardNoUnboxedExpando(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNoUnboxedExpando, obj);
     }
@@ -280,6 +299,15 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::LoadDynamicSlotResult, obj);
         addStubWord(offset, StubField::GCType::NoGCThing);
     }
+    void loadInt32ArrayLengthResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
+    }
+    void loadUnboxedArrayLengthResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadUnboxedArrayLengthResult, obj);
+    }
+    void loadArgumentsObjectLengthResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
+    }
 };
 
 class CacheIRStubInfo;
@@ -313,9 +341,9 @@ class MOZ_RAII CacheIRReader
     ObjOperandId objOperandId() {
         return ObjOperandId(buffer_.readByte());
     }
-    uint32_t stubOffset() {
-        return buffer_.readByte();
-    }
+
+    uint32_t stubOffset() { return buffer_.readByte(); }
+    GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
 
     bool matchOp(CacheOp op) {
         const uint8_t* pos = buffer_.currentPosition();
@@ -356,6 +384,7 @@ class MOZ_RAII GetPropIRGenerator
 
     bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;

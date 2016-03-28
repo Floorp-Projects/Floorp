@@ -143,7 +143,7 @@ DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
 {
   Accessible* parent = aShowEvent->Parent();
   uint64_t parentID = parent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(parent->UniqueID());
-  uint32_t idxInParent = aShowEvent->GetAccessible()->IndexInParent();
+  uint32_t idxInParent = aShowEvent->InsertionIndex();
   nsTArray<AccessibleData> shownTree;
   ShowEventData data(parentID, idxInParent, shownTree);
   SerializeTree(aShowEvent->GetAccessible(), data.NewTree());

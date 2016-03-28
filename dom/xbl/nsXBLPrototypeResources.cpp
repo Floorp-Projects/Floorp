@@ -80,7 +80,9 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
   // We have scoped stylesheets.  Reload any chrome stylesheets we
   // encounter.  (If they aren't skin sheets, it doesn't matter, since
-  // they'll still be in the chrome cache.
+  // they'll still be in the chrome cache.  Skip inline sheets, which
+  // skin sheets can't be, and which in any case don't have a usable
+  // URL to reload.)
 
   nsTArray<StyleSheetHandle::RefPtr> oldSheets;
 
@@ -94,7 +96,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
     nsIURI* uri = oldSheet->GetSheetURI();
 
     StyleSheetHandle::RefPtr newSheet;
-    if (IsChromeURI(uri)) {
+    if (!oldSheet->IsInline() && IsChromeURI(uri)) {
       if (NS_FAILED(cssLoader->LoadSheetSync(uri, &newSheet)))
         continue;
     }

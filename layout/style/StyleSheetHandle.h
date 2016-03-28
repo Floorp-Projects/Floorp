@@ -104,6 +104,7 @@ public:
     // CSSStyleSheet or ServoStyleSheet.  See corresponding comments in
     // CSSStyleSheet.h for descriptions of these methods.
 
+    inline bool IsInline() const;
     inline nsIURI* GetSheetURI() const;
     inline nsIURI* GetOriginalURI() const;
     inline nsIURI* GetBaseURI() const;

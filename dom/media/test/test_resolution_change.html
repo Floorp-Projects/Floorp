@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback of files with resolution changes</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function loadedData(e) {
+  var v = e.target;
+  v.addEventListener("resize", resize, false);
+  v.play();
+}
+
+function resize(e) {
+  var v = e.target;
+  v.seenResolutionChange = true;
+}
+
+function ended(e)  {
+  var v = e.target;
+  ok(v.seenResolutionChange, v.token + ": A resolution change should have ocurred by the end of playback");
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  v.src = test.name;
+  v.seenResolutionChange = false;
+
+  v.addEventListener("loadeddata", loadedData, false)
+  v.addEventListener("ended", ended, false);
+
+  manager.started(token);
+  document.body.appendChild(v);
+}
+
+manager.runTests(gResolutionChangeTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
