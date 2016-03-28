@@ -15,13 +15,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
 import org.mozilla.gecko.home.HomeConfig.OnReloadListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomeConfig.State;
-import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.BroadcastReceiver;
@@ -74,13 +72,8 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                                                   EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)));
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.BOOKMARKS));
-        panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.HISTORY));
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.COMBINED_HISTORY));
 
-        // We disable Synced Tabs for guest mode / restricted profiles.
-        if (Restrictions.isAllowed(mContext, Restrictable.MODIFY_ACCOUNTS)) {
-            panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.REMOTE_TABS));
-        }
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS));
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.READING_LIST));
