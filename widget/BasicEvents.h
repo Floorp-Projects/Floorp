@@ -236,25 +236,25 @@ public:
   uint64_t mTime;
   // Timestamp when the message was created. Set in parallel to 'time' until we
   // determine if it is safe to drop 'time' (see bug 77992).
-  TimeStamp timeStamp;
+  TimeStamp mTimeStamp;
 
   WidgetEventTime()
     : mTime(0)
-    , timeStamp(TimeStamp::Now())
+    , mTimeStamp(TimeStamp::Now())
   {
   }
 
   WidgetEventTime(uint64_t aTime,
                   TimeStamp aTimeStamp)
     : mTime(aTime)
-    , timeStamp(aTimeStamp)
+    , mTimeStamp(aTimeStamp)
   {
   }
 
   void AssignEventTime(const WidgetEventTime& aOther)
   {
     mTime = aOther.mTime;
-    timeStamp = aOther.timeStamp;
+    mTimeStamp = aOther.mTimeStamp;
   }
 };
 
