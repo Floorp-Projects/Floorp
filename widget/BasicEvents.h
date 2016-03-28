@@ -233,27 +233,27 @@ class WidgetEventTime
 public:
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
-  uint64_t time;
+  uint64_t mTime;
   // Timestamp when the message was created. Set in parallel to 'time' until we
   // determine if it is safe to drop 'time' (see bug 77992).
   TimeStamp timeStamp;
 
   WidgetEventTime()
-    : time(0)
+    : mTime(0)
     , timeStamp(TimeStamp::Now())
   {
   }
 
   WidgetEventTime(uint64_t aTime,
                   TimeStamp aTimeStamp)
-    : time(aTime)
+    : mTime(aTime)
     , timeStamp(aTimeStamp)
   {
   }
 
   void AssignEventTime(const WidgetEventTime& aOther)
   {
-    time = aOther.time;
+    mTime = aOther.mTime;
     timeStamp = aOther.timeStamp;
   }
 };

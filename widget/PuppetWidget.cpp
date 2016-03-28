@@ -302,7 +302,7 @@ PuppetWidget::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
     // use the point override if provided
     event.refPoint = *aPoint;
   }
-  event.time = PR_Now() / 1000;
+  event.mTime = PR_Now() / 1000;
 }
 
 NS_IMETHODIMP

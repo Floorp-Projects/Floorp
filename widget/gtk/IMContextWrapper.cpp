@@ -2249,7 +2249,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
 void
 IMContextWrapper::InitEvent(WidgetGUIEvent& aEvent)
 {
-    aEvent.time = PR_Now() / 1000;
+    aEvent.mTime = PR_Now() / 1000;
 }
 
 bool

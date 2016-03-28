@@ -107,7 +107,7 @@ Event::ConstructorInit(EventTarget* aOwner,
         }
      */
     mEvent = new WidgetEvent(false, eVoidEvent);
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 
   InitPresContextData(aPresContext);
@@ -459,7 +459,7 @@ Event::GetCancelable(bool* aCancelable)
 NS_IMETHODIMP
 Event::GetTimeStamp(uint64_t* aTimeStamp)
 {
-  *aTimeStamp = mEvent->time;
+  *aTimeStamp = mEvent->mTime;
   return NS_OK;
 }
 
@@ -1064,7 +1064,7 @@ double
 Event::TimeStamp() const
 {
   if (!sReturnHighResTimeStamp) {
-    return static_cast<double>(mEvent->time);
+    return static_cast<double>(mEvent->mTime);
   }
 
   if (mEvent->timeStamp.IsNull()) {
