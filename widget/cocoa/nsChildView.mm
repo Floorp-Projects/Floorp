@@ -4941,6 +4941,20 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
 
+    if (panEvent.mType == PanGestureInput::PANGESTURE_END) {
+      // Check if there's a momentum start event in the event queue, so that we
+      // can annotate this event.
+      NSEvent* nextWheelEvent =
+        [NSApp nextEventMatchingMask:NSScrollWheelMask
+                           untilDate:[NSDate distantPast]
+                              inMode:NSDefaultRunLoopMode
+                             dequeue:NO];
+      if (nextWheelEvent &&
+          PanGestureTypeForEvent(nextWheelEvent) == PanGestureInput::PANGESTURE_MOMENTUMSTART) {
+        panEvent.mFollowedByMomentum = true;
+      }
+    }
+
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
     panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
     mGeckoChild->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
