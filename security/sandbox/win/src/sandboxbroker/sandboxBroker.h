@@ -27,9 +27,6 @@ class SANDBOX_EXPORT SandboxBroker
 {
 public:
   SandboxBroker();
-
-  static bool Initialize();
-
   bool LaunchApp(const wchar_t *aPath,
                  const wchar_t *aArguments,
                  const bool aEnableLogging,
