@@ -42,7 +42,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
   }
   else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
   
   // Fill mDetail and mView according to the mEvent (widget-generated

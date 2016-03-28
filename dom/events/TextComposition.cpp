@@ -120,7 +120,7 @@ TextComposition::CloneAndDispatchAs(
 
   WidgetCompositionEvent compositionEvent(aCompositionEvent->IsTrusted(),
                                           aMessage, aCompositionEvent->widget);
-  compositionEvent.time = aCompositionEvent->time;
+  compositionEvent.mTime = aCompositionEvent->mTime;
   compositionEvent.timeStamp = aCompositionEvent->timeStamp;
   compositionEvent.mData = aCompositionEvent->mData;
   compositionEvent.mNativeIMEContext = aCompositionEvent->mNativeIMEContext;

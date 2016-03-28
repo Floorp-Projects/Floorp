@@ -1106,7 +1106,7 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
     aEvent.mIsRepeat =
         (aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyPress) &&
         aQEvent->isAutoRepeat();
-    aEvent.time = 0;
+    aEvent.mTime = 0;
 
     if (sAltGrModifier) {
         aEvent.modifiers |= (MODIFIER_CONTROL | MODIFIER_ALT);
@@ -1294,7 +1294,7 @@ nsWindow::wheelEvent(QWheelEvent* aEvent)
                                   aEvent->modifiers() & Qt::AltModifier,
                                   aEvent->modifiers() & Qt::ShiftModifier,
                                   aEvent->modifiers() & Qt::MetaModifier);
-    wheelEvent.time = 0;
+    wheelEvent.mTime = 0;
 
     return DispatchEvent(&wheelEvent);
 }
