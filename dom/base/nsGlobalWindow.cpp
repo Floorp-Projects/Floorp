@@ -3116,7 +3116,7 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
       myCoord[0] = aVisitor.mEvent->refPoint.x;
       myCoord[1] = aVisitor.mEvent->refPoint.y;
       gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
-      gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->time),
+      gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->mTime),
                                       sizeof(uint32_t));
     }
   } else if (msg == eResize && aVisitor.mEvent->IsTrusted()) {

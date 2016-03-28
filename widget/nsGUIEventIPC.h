@@ -69,7 +69,7 @@ struct ParamTraits<mozilla::WidgetEvent>
       static_cast<mozilla::EventClassIDType>(aParam.mClass));
     WriteParam(aMsg, aParam.mMessage);
     WriteParam(aMsg, aParam.refPoint);
-    WriteParam(aMsg, aParam.time);
+    WriteParam(aMsg, aParam.mTime);
     WriteParam(aMsg, aParam.timeStamp);
     WriteParam(aMsg, aParam.mFlags);
   }
@@ -80,7 +80,7 @@ struct ParamTraits<mozilla::WidgetEvent>
     bool ret = ReadParam(aMsg, aIter, &eventClassID) &&
                ReadParam(aMsg, aIter, &aResult->mMessage) &&
                ReadParam(aMsg, aIter, &aResult->refPoint) &&
-               ReadParam(aMsg, aIter, &aResult->time) &&
+               ReadParam(aMsg, aIter, &aResult->mTime) &&
                ReadParam(aMsg, aIter, &aResult->timeStamp) &&
                ReadParam(aMsg, aIter, &aResult->mFlags);
     aResult->mClass = static_cast<mozilla::EventClassID>(eventClassID);

@@ -29,7 +29,7 @@ already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const
 }
 
 MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
-  : InputData(MOUSE_INPUT, aMouseEvent.time, aMouseEvent.timeStamp,
+  : InputData(MOUSE_INPUT, aMouseEvent.mTime, aMouseEvent.timeStamp,
               aMouseEvent.modifiers)
   , mType(MOUSE_NONE)
   , mButtonType(NONE)
@@ -156,7 +156,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
   event.buttons = mButtons;
   event.modifiers = modifiers;
-  event.time = mTime;
+  event.mTime = mTime;
   event.timeStamp = mTimeStamp;
   event.refPoint =
     RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
@@ -169,7 +169,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 }
 
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
-  : InputData(MULTITOUCH_INPUT, aTouchEvent.time, aTouchEvent.timeStamp,
+  : InputData(MULTITOUCH_INPUT, aTouchEvent.mTime, aTouchEvent.timeStamp,
               aTouchEvent.modifiers)
   , mHandledByAPZ(aTouchEvent.mFlags.mHandledByAPZ)
 {
@@ -246,7 +246,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   }
 
   event.modifiers = this->modifiers;
-  event.time = this->mTime;
+  event.mTime = this->mTime;
   event.timeStamp = this->mTimeStamp;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
 
@@ -287,7 +287,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.refPoint.x = firstTouch.mScreenPoint.x;
   event.refPoint.y = firstTouch.mScreenPoint.y;
 
-  event.time = mTime;
+  event.mTime = mTime;
   event.button = WidgetMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.modifiers = modifiers;
@@ -318,7 +318,7 @@ MultiTouchInput::IndexOfTouch(int32_t aTouchIdentifier)
 // SingleTouchData. It also sends garbage for the identifier, radius, force
 // and rotation angle.
 MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
-  : InputData(MULTITOUCH_INPUT, aMouseEvent.time, aMouseEvent.timeStamp,
+  : InputData(MULTITOUCH_INPUT, aMouseEvent.mTime, aMouseEvent.timeStamp,
               aMouseEvent.modifiers)
   , mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ)
 {
@@ -385,7 +385,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.modifiers = this->modifiers;
-  wheelEvent.time = mTime;
+  wheelEvent.mTime = mTime;
   wheelEvent.timeStamp = mTimeStamp;
   wheelEvent.refPoint =
     RoundedToInt(ViewAs<LayoutDevicePixel>(mPanStartPoint,
@@ -457,7 +457,7 @@ DeltaModeForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
 
 ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
   : InputData(SCROLLWHEEL_INPUT,
-              aWheelEvent.time,
+              aWheelEvent.mTime,
               aWheelEvent.timeStamp,
               aWheelEvent.modifiers)
   , mDeltaType(DeltaTypeForDeltaMode(aWheelEvent.deltaMode))
@@ -485,7 +485,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.modifiers = this->modifiers;
-  wheelEvent.time = mTime;
+  wheelEvent.mTime = mTime;
   wheelEvent.timeStamp = mTimeStamp;
   wheelEvent.refPoint =
     RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,

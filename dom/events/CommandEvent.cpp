@@ -18,7 +18,7 @@ CommandEvent::CommandEvent(EventTarget* aOwner,
           aEvent ? aEvent :
                    new WidgetCommandEvent(false, nullptr, nullptr, nullptr))
 {
-  mEvent->time = PR_Now();
+  mEvent->mTime = PR_Now();
   if (aEvent) {
     mEventIsInternal = false;
   } else {

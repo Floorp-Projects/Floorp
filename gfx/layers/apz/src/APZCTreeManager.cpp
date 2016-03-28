@@ -1093,7 +1093,7 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
   }
 
   ScreenPoint origin(aEvent.refPoint.x, aEvent.refPoint.y);
-  ScrollWheelInput input(aEvent.time, aEvent.timeStamp, 0,
+  ScrollWheelInput input(aEvent.mTime, aEvent.timeStamp, 0,
                          scrollMode,
                          ScrollWheelInput::DeltaTypeForDeltaMode(aEvent.deltaMode),
                          origin,
