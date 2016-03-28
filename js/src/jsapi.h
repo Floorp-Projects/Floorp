@@ -998,7 +998,7 @@ extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API(JSRuntime*)
-JS_GetParentRuntime(JSContext* cx);
+JS_GetParentRuntime(JSRuntime* rt);
 
 JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime* rt, void* data);
