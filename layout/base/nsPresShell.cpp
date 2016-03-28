@@ -6885,7 +6885,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.tiltX = touch->tiltX;
       event.tiltY = touch->tiltY;
       event.mTime = touchEvent->mTime;
-      event.timeStamp = touchEvent->timeStamp;
+      event.mTimeStamp = touchEvent->mTimeStamp;
       event.mFlags = touchEvent->mFlags;
       event.button = WidgetMouseEvent::eLeftButton;
       event.buttons = WidgetMouseEvent::eLeftButtonFlag;
@@ -8144,9 +8144,9 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
   }
 
   if (Telemetry::CanRecordBase() &&
-      !aEvent->timeStamp.IsNull() &&
+      !aEvent->mTimeStamp.IsNull() &&
       aEvent->AsInputEvent()) {
-    double millis = (TimeStamp::Now() - aEvent->timeStamp).ToMilliseconds();
+    double millis = (TimeStamp::Now() - aEvent->mTimeStamp).ToMilliseconds();
     Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_MS, millis);
   }
 
