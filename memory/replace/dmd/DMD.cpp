@@ -1002,8 +1002,47 @@ public:
   }
 };
 
+// A table of live blocks where the lookup key is the block address.
 typedef js::HashSet<LiveBlock, LiveBlock, InfallibleAllocPolicy> LiveBlockTable;
 static LiveBlockTable* gLiveBlockTable = nullptr;
+
+class AggregatedLiveBlockHashPolicy
+{
+public:
+  typedef const LiveBlock* const Lookup;
+
+  static uint32_t hash(const LiveBlock* const& aB)
+  {
+    return gOptions->IsDarkMatterMode()
+         ? mozilla::HashGeneric(aB->ReqSize(),
+                                aB->SlopSize(),
+                                aB->AllocStackTrace(),
+                                aB->ReportedOnAlloc1(),
+                                aB->ReportedOnAlloc2())
+         : mozilla::HashGeneric(aB->ReqSize(),
+                                aB->SlopSize(),
+                                aB->AllocStackTrace());
+  }
+
+  static bool match(const LiveBlock* const& aA, const LiveBlock* const& aB)
+  {
+    return gOptions->IsDarkMatterMode()
+         ? aA->ReqSize() == aB->ReqSize() &&
+           aA->SlopSize() == aB->SlopSize() &&
+           aA->AllocStackTrace() == aB->AllocStackTrace() &&
+           aA->ReportStackTrace1() == aB->ReportStackTrace1() &&
+           aA->ReportStackTrace2() == aB->ReportStackTrace2()
+         : aA->ReqSize() == aB->ReqSize() &&
+           aA->SlopSize() == aB->SlopSize() &&
+           aA->AllocStackTrace() == aB->AllocStackTrace();
+  }
+};
+
+// A table of live blocks where the lookup key is everything but the block
+// address. For aggregating similar live blocks at output time.
+typedef js::HashMap<const LiveBlock*, size_t, AggregatedLiveBlockHashPolicy,
+                    InfallibleAllocPolicy>
+        AggregatedLiveBlockTable;
 
 // A freed heap block.
 class DeadBlock
@@ -1068,7 +1107,7 @@ public:
 // For each unique DeadBlock value we store a count of how many actual dead
 // blocks have that value.
 typedef js::HashMap<DeadBlock, size_t, DeadBlock, InfallibleAllocPolicy>
-  DeadBlockTable;
+        DeadBlockTable;
 static DeadBlockTable* gDeadBlockTable = nullptr;
 
 // Add the dead block to the dead block table, if that's appropriate.
@@ -1834,40 +1873,81 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
 
     writer.StartArrayProperty("blockList");
     {
-      // Live blocks.
-      for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
-        const LiveBlock& b = r.front();
-        b.AddStackTracesToTable(usedStackTraces);
+      // Lambda that writes out a live block.
+      auto writeLiveBlock = [&](const LiveBlock& aB, size_t aNum) {
+        aB.AddStackTracesToTable(usedStackTraces);
+
+        MOZ_ASSERT_IF(gOptions->IsScanMode(), aNum == 1);
 
         writer.StartObjectElement(writer.SingleLineStyle);
         {
           if (gOptions->IsScanMode()) {
-            writer.StringProperty("addr", sc.ToPtrString(b.Address()));
-            WriteBlockContents(writer, b);
+            writer.StringProperty("addr", sc.ToPtrString(aB.Address()));
+            WriteBlockContents(writer, aB);
           }
-          writer.IntProperty("req", b.ReqSize());
-          if (b.SlopSize() > 0) {
-            writer.IntProperty("slop", b.SlopSize());
-          }
-
-          if (b.AllocStackTrace()) {
-            writer.StringProperty("alloc", isc.ToIdString(b.AllocStackTrace()));
+          writer.IntProperty("req", aB.ReqSize());
+          if (aB.SlopSize() > 0) {
+            writer.IntProperty("slop", aB.SlopSize());
           }
 
-          if (gOptions->IsDarkMatterMode() && b.NumReports() > 0) {
+          if (aB.AllocStackTrace()) {
+            writer.StringProperty("alloc",
+                                  isc.ToIdString(aB.AllocStackTrace()));
+          }
+
+          if (gOptions->IsDarkMatterMode() && aB.NumReports() > 0) {
             writer.StartArrayProperty("reps");
             {
-              if (b.ReportStackTrace1()) {
-                writer.StringElement(isc.ToIdString(b.ReportStackTrace1()));
+              if (aB.ReportStackTrace1()) {
+                writer.StringElement(isc.ToIdString(aB.ReportStackTrace1()));
               }
-              if (b.ReportStackTrace2()) {
-                writer.StringElement(isc.ToIdString(b.ReportStackTrace2()));
+              if (aB.ReportStackTrace2()) {
+                writer.StringElement(isc.ToIdString(aB.ReportStackTrace2()));
               }
             }
             writer.EndArray();
           }
+
+          if (aNum > 1) {
+            writer.IntProperty("num", aNum);
+          }
         }
         writer.EndObject();
+      };
+
+      // Live blocks.
+      if (!gOptions->IsScanMode()) {
+        // At this point we typically have many LiveBlocks that differ only in
+        // their address. Aggregate them to reduce the size of the output file.
+        AggregatedLiveBlockTable agg;
+        MOZ_ALWAYS_TRUE(agg.init(8192));
+        for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
+          const LiveBlock& b = r.front();
+          b.AddStackTracesToTable(usedStackTraces);
+
+          if (AggregatedLiveBlockTable::AddPtr p = agg.lookupForAdd(&b)) {
+            p->value() += 1;
+          } else {
+            MOZ_ALWAYS_TRUE(agg.add(p, &b, 1));
+          }
+        }
+
+        // Now iterate over the aggregated table.
+        for (auto r = agg.all(); !r.empty(); r.popFront()) {
+          const LiveBlock& b = *r.front().key();
+          size_t num = r.front().value();
+          writeLiveBlock(b, num);
+        }
+
+      } else {
+        // In scan mode we cannot aggregate because we print each live block's
+        // address and contents.
+        for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
+          const LiveBlock& b = r.front();
+          b.AddStackTracesToTable(usedStackTraces);
+
+          writeLiveBlock(b, 1);
+        }
       }
 
       // Dead blocks.
