@@ -61,7 +61,7 @@ var ToolbarView = {
       menuitem.setAttribute("type", "checkbox");
       menuitem.setAttribute("align", "center");
       menuitem.setAttribute("flex", "1");
-      menuitem.setAttribute("label", MarkerUtils.getMarkerClassName(markerName));
+      menuitem.setAttribute("label", MarkerBlueprintUtils.getMarkerGenericName(markerName));
       menuitem.setAttribute("marker-type", markerName);
       menuitem.className = `marker-color-${markerDetails.colorName}`;
 

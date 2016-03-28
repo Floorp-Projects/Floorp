@@ -14,8 +14,14 @@ const TEST_NETWORK_REQUEST_URI =
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
+const PAGE_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("test-network-request.html");
+
+const TEST_DATA_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("test-data.json");
+
 add_task(function* testPageLoad() {
-  let finishedRequest = waitForFinishedRequest();
+  let finishedRequest = waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
   let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
   let request = yield finishedRequest;
 
@@ -39,7 +45,7 @@ add_task(function* testPageLoad() {
 add_task(function* testXhrGet() {
   let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
 
-  let finishedRequest = waitForFinishedRequest();
+  let finishedRequest = waitForFinishedRequest(TEST_DATA_REQUEST_PREDICATE);
   content.wrappedJSObject.testXhrGet();
   let request = yield finishedRequest;
 
@@ -61,7 +67,7 @@ add_task(function* testXhrGet() {
 add_task(function* testXhrPost() {
   let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
 
-  let finishedRequest = waitForFinishedRequest();
+  let finishedRequest = waitForFinishedRequest(TEST_DATA_REQUEST_PREDICATE);
   content.wrappedJSObject.testXhrPost();
   let request = yield finishedRequest;
 
@@ -81,7 +87,8 @@ add_task(function* testXhrPost() {
 add_task(function* testFormSubmission() {
   let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
 
-  let finishedRequest = waitForFinishedRequest();
+  // The form POSTs to the page URL but over https (page over http).
+  let finishedRequest = waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
   ContentTask.spawn(gBrowser.selectedBrowser, { }, `function()
   {
     let form = content.document.querySelector("form");
