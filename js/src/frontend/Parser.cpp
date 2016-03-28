@@ -3210,6 +3210,8 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
             return false;
     }
 
+    handler.setEndPosition(body, pos().begin);
+
     return finishFunctionDefinition(pn, funbox, body);
 }
 
