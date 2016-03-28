@@ -50,6 +50,8 @@ public:
                              const Maybe<nsTArray<uint8_t>>& aData);
   nsresult NotifySubscriptionChangeWorkers(const nsACString& aScope,
                                            nsIPrincipal* aPrincipal);
+  void NotifyErrorWorkers(const nsACString& aScope, const nsAString& aMessage,
+                          uint32_t aFlags);
 
 protected:
   virtual ~PushNotifier();

@@ -24,6 +24,9 @@ interface nsIPushNotifier : nsISupports
                           [array, size_is(dataLen)] in uint8_t data);
 
   void notifySubscriptionChange(in ACString scope, in nsIPrincipal principal);
+
+  void notifyError(in ACString scope, in nsIPrincipal principal,
+                   in DOMString message, in uint32_t flags);
 };
 
 /**
