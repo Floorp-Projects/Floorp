@@ -12338,7 +12338,7 @@ ConnectionPool::CloseDatabase(DatabaseInfo* aDatabaseInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
-  MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
+  MOZ_RELEASE_ASSERT(!aDatabaseInfo->TotalTransactionCount());
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
   MOZ_ASSERT(!aDatabaseInfo->mClosing);
@@ -13965,7 +13965,7 @@ Database::RecvPBackgroundIDBTransactionConstructor(
              aMode == IDBTransaction::READ_WRITE ||
              aMode == IDBTransaction::READ_WRITE_FLUSH ||
              aMode == IDBTransaction::CLEANUP);
-  MOZ_ASSERT(!mClosed);
+  MOZ_RELEASE_ASSERT(!mClosed);
 
   if (IsInvalidated()) {
     // This is an expected race. We don't want the child to die here, just don't
