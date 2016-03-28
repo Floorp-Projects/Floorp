@@ -116,8 +116,7 @@ function _removeOrDisableBreakpoint(location, isDisabled) {
       return dispatch(Object.assign({}, action, {
         [PROMISE]: bpClient.remove()
       }));
-    }
-    else {
+    } else {
       return dispatch(Object.assign({}, action, { status: "done" }));
     }
   }
@@ -154,21 +153,30 @@ function setBreakpointCondition(location, condition) {
     }
 
     const bpClient = getBreakpointClient(bp.actor);
-
-    return dispatch({
+    const action = {
       type: constants.SET_BREAKPOINT_CONDITION,
       breakpoint: bp,
-      condition: condition,
-      [PROMISE]: Task.spawn(function*() {
-        const newClient = yield bpClient.setCondition(gThreadClient, condition);
+      condition: condition
+    };
 
-        // Remove the old instance and save the new one
-        setBreakpointClient(bpClient.actor, null);
-        setBreakpointClient(newClient.actor, newClient);
+    // If it's not disabled, we need to update the condition on the
+    // server. Otherwise, just dispatch a non-remote action that
+    // updates the condition locally.
+    if(!bp.disabled) {
+      return dispatch(Object.assign({}, action, {
+        [PROMISE]: Task.spawn(function*() {
+          const newClient = yield bpClient.setCondition(gThreadClient, condition);
 
-        return { actor: newClient.actor };
-      })
-    });
+          // Remove the old instance and save the new one
+          setBreakpointClient(bpClient.actor, null);
+          setBreakpointClient(newClient.actor, newClient);
+
+          return { actor: newClient.actor };
+        })
+      }));
+    } else {
+      return dispatch(action);
+    }
   };
 }
 

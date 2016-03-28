@@ -374,14 +374,15 @@ var DebuggerView = {
 
     if (source && source.actor === location.actor) {
       this.editor.removeBreakpoint(location.line - 1);
+      this.editor.removeBreakpointCondition(location.line - 1);
     }
   },
 
   renderEditorBreakpointCondition: function (breakpoint) {
-    const { location, condition } = breakpoint;
+    const { location, condition, disabled } = breakpoint;
     const source = queries.getSelectedSource(this.controller.getState());
 
-    if (source && source.actor === location.actor) {
+    if (source && source.actor === location.actor && !disabled) {
       if (condition) {
         this.editor.setBreakpointCondition(location.line - 1);
       } else {
