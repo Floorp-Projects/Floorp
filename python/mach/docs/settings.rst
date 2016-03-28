@@ -54,6 +54,26 @@ pairs to add to the setting's metadata. The following keys may be specified
 in the ``extra`` dict:
     * ``choices`` - A set of allowed values for the setting.
 
+Wildcards
+---------
+
+Sometimes a section should allow arbitrarily defined options from the user, such
+as the ``alias`` section mentioned above. To define a section like this, use ``*``
+as the option name. For example:
+
+.. parsed-literal::
+
+    ('foo.*', 'string')
+
+This allows configuration files like this:
+
+.. parsed-literal::
+
+    [foo]
+    arbitrary1 = some string
+    arbitrary2 = some other string
+
+
 
 Accessing Settings
 ==================
