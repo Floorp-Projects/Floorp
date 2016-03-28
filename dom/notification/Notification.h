@@ -46,7 +46,7 @@ public:
   explicit NotificationFeature(Notification* aNotification);
 
   bool
-  Notify(JSContext* aCx, workers::Status aStatus) override;
+  Notify(workers::Status aStatus) override;
 };
 
 // Records telemetry probes at application startup, when a notification is

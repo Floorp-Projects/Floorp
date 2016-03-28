@@ -5203,7 +5203,7 @@ WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
   nsTObserverArray<WorkerFeature*>::ForwardIterator iter(mFeatures);
   while (iter.HasMore()) {
     WorkerFeature* feature = iter.GetNext();
-    if (!feature->Notify(aCx, aStatus)) {
+    if (!feature->Notify(aStatus)) {
       NS_WARNING("Failed to notify feature!");
     }
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
