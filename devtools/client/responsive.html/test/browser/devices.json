@@ -20,6 +20,6 @@
       "touch": true,
       "firefoxOS": true,
       "os": "fxos"
-    },
-  ],
+    }
+  ]
 }
