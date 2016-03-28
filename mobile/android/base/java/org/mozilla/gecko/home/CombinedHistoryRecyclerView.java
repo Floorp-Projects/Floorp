@@ -9,6 +9,7 @@ import android.content.Context;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.View;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener;
@@ -18,6 +19,8 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.EnumSet;
+
+import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.PARENT;
 
 public class CombinedHistoryRecyclerView extends RecyclerView
         implements RecyclerViewClickSupport.OnItemClickListener, RecyclerViewClickSupport.OnItemLongClickListener {
@@ -50,6 +53,20 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         RecyclerViewClickSupport.addTo(this)
             .setOnItemClickListener(this)
             .setOnItemLongClickListener(this);
+
+        setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                final int action = event.getAction();
+
+                // If the user hit the BACK key, try to move to the parent folder.
+                if (action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+                    mOnPanelLevelChangeListener.onPanelLevelChange(PARENT);
+                    return ((CombinedHistoryAdapter) getAdapter()).exitChildView();
+                }
+                return false;
+            }
+        });
     }
 
     public void setOnHistoryClickedListener(HomePager.OnUrlOpenListener listener) {
@@ -81,7 +98,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
                 break;
 
             case NAVIGATION_BACK:
-                mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.PARENT);
+                mOnPanelLevelChangeListener.onPanelLevelChange(PARENT);
                 ((CombinedHistoryAdapter) getAdapter()).exitChildView();
                 break;
             case CHILD:
