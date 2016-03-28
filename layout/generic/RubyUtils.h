@@ -96,7 +96,7 @@ public:
  * This array stores all ruby text containers of the ruby segment
  * of the given ruby base container.
  */
-class MOZ_STACK_CLASS AutoRubyTextContainerArray final
+class MOZ_RAII AutoRubyTextContainerArray final
   : public AutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
 {
 public:
