@@ -195,10 +195,14 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         notifyDataSetChanged();
     }
 
-    public void exitChildView() {
+    public boolean exitChildView() {
+        if (!inChildView) {
+            return false;
+        }
         inChildView = false;
         clientChildren.clear();
         notifyDataSetChanged();
+        return true;
     }
 
     private ItemType getItemTypeForPosition(int position) {
