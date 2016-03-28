@@ -2544,8 +2544,11 @@ gfxWindowsPlatform::InitializeD2D()
     return;
   }
 
-  mD2D1Status = FeatureStatus::Available;
-  Factory::SetDirect3D11Device(mD3D11ContentDevice);
+  // Verify that Direct2D device creation succeeded.
+  if (!Factory::SetDirect3D11Device(mD3D11ContentDevice)) {
+    mD2D1Status = FeatureStatus::Failed;
+    return;
+  }
 
   d2d1_1.SetSuccessful();
 
