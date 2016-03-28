@@ -152,24 +152,17 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             return;
         }
 
-        final PreferenceActivity activity = (PreferenceActivity) getActivity();
+        final GeckoPreferences activity = (GeckoPreferences) getActivity();
         if (Versions.feature11Plus && activity.isMultiPane()) {
             // In a multi-pane activity, the title is "Settings", and the action
             // bar is along the top of the screen. We don't want to change those.
             activity.showBreadCrumbs(newTitle, newTitle);
-            ((GeckoPreferences) activity).switchToHeader(getHeader());
+            activity.switchToHeader(getHeader());
             return;
         }
 
         Log.v(LOGTAG, "Setting activity title to " + newTitle);
         activity.setTitle(newTitle);
-
-        if (Versions.feature14Plus) {
-            final ActionBar actionBar = activity.getActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle(newTitle);
-            }
-        }
     }
 
     @Override
@@ -232,7 +225,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             Log.e(LOGTAG, "Failed to find resource: " + resourceName + ". Displaying default settings.");
 
             boolean isMultiPane = Versions.feature11Plus &&
-                                  ((PreferenceActivity) activity).isMultiPane();
+                                  ((GeckoPreferences) activity).isMultiPane();
             resid = isMultiPane ? R.xml.preferences_general_tablet : R.xml.preferences;
         }
 

@@ -464,6 +464,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'preferences/AlignRightLinkPreference.java',
     'preferences/AndroidImport.java',
     'preferences/AndroidImportPreference.java',
+    'preferences/AppCompatPreferenceActivity.java',
     'preferences/ClearOnShutdownPref.java',
     'preferences/CustomCheckBoxPreference.java',
     'preferences/CustomListCategory.java',
