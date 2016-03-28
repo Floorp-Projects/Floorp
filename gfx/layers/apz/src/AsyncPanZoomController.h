@@ -643,13 +643,14 @@ protected:
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
 
-  // This is called to request that the main thread snap the scroll position
-  // to a nearby snap position if appropriate. The current scroll position is
-  // used as the final destination.
-  void RequestSnap();
-  // Same as above, but takes into account the current velocity to find a
-  // predicted destination.
-  void RequestSnapToDestination();
+  // Snap to a snap position nearby the current scroll position, if appropriate.
+  void ScrollSnap();
+  // Snap to a snap position nearby the destination predicted based on the
+  // current velocity, if appropriate.
+  void ScrollSnapToDestination();
+
+  // Helper function for ScrollSnap() and ScrollSnapToDestination().
+  void ScrollSnapNear(const CSSPoint& aDestination);
 
   uint64_t mLayersId;
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
