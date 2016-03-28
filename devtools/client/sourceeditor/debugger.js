@@ -119,7 +119,7 @@ function hasBreakpoint(ctx, line) {
   let markers = cm.lineInfo(line).wrapClass;
 
   return markers != null &&
-         markers.contains("breakpoint");
+         markers.includes("breakpoint");
 }
 
 /**
