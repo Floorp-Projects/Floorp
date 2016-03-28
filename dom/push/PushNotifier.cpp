@@ -65,9 +65,6 @@ NS_IMETHODIMP
 PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
                                        nsIPrincipal* aPrincipal)
 {
-  if (XRE_IsContentProcess()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   nsresult rv;
   if (ShouldNotifyObservers(aPrincipal)) {
     rv = NotifySubscriptionChangeObservers(aScope);
@@ -89,9 +86,6 @@ PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
                          const nsAString& aMessageId,
                          const Maybe<nsTArray<uint8_t>>& aData)
 {
-  if (XRE_IsContentProcess()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   nsresult rv;
   if (ShouldNotifyObservers(aPrincipal)) {
     rv = NotifyPushObservers(aScope, aData);
