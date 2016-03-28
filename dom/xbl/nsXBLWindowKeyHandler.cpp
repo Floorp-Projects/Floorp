@@ -393,7 +393,7 @@ nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(eventType);
+  nsCOMPtr<nsIAtom> eventTypeAtom = NS_Atomize(eventType);
   NS_ENSURE_TRUE(eventTypeAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return WalkHandlers(keyEvent, eventTypeAtom);
@@ -695,7 +695,7 @@ nsXBLWindowKeyHandler::HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
 
   nsAutoString eventType;
   aEvent->AsEvent()->GetType(eventType);
-  nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(eventType);
+  nsCOMPtr<nsIAtom> eventTypeAtom = NS_Atomize(eventType);
   NS_ENSURE_TRUE(eventTypeAtom, false);
 
   return WalkHandlersInternal(aEvent, eventTypeAtom, mHandler, false,

@@ -248,7 +248,7 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
       --start;
       haveTwoColons = false;
     }
-    mPseudo = do_GetAtom(Substring(start, end));
+    mPseudo = NS_Atomize(Substring(start, end));
     MOZ_ASSERT(mPseudo);
 
     // There aren't any non-CSS2 pseudo-elements with a single ':'

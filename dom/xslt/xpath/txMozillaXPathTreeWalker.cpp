@@ -358,7 +358,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
             nsAutoString target;
             node->GetNodeName(target);
 
-            return NS_NewAtom(target);
+            return NS_Atomize(target);
         }
 
         return nullptr;

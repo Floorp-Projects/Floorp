@@ -67,7 +67,7 @@ nsAtomList::nsAtomList(const nsString& aAtomValue)
     mNext(nullptr)
 {
   MOZ_COUNT_CTOR(nsAtomList);
-  mAtom = do_GetAtom(aAtomValue);
+  mAtom = NS_Atomize(aAtomValue);
 }
 
 nsAtomList*
@@ -229,8 +229,8 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr)
   nsAutoString lowercase;
   nsContentUtils::ASCIIToLower(aAttr, lowercase);
   
-  mCasedAttr = do_GetAtom(aAttr);
-  mLowercaseAttr = do_GetAtom(lowercase);
+  mCasedAttr = NS_Atomize(aAttr);
+  mLowercaseAttr = NS_Atomize(lowercase);
 }
 
 nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction, 
@@ -249,8 +249,8 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_
   nsAutoString lowercase;
   nsContentUtils::ASCIIToLower(aAttr, lowercase);
   
-  mCasedAttr = do_GetAtom(aAttr);
-  mLowercaseAttr = do_GetAtom(lowercase);
+  mCasedAttr = NS_Atomize(aAttr);
+  mLowercaseAttr = NS_Atomize(lowercase);
 }
 
 nsAttrSelector::nsAttrSelector(int32_t aNameSpace,  nsIAtom* aLowercaseAttr,
@@ -392,11 +392,11 @@ void nsCSSSelector::SetTag(const nsString& aTag)
     return;
   }
 
-  mCasedTag = do_GetAtom(aTag);
+  mCasedTag = NS_Atomize(aTag);
  
   nsAutoString lowercase;
   nsContentUtils::ASCIIToLower(aTag, lowercase);
-  mLowercaseTag = do_GetAtom(lowercase);
+  mLowercaseTag = NS_Atomize(lowercase);
 }
 
 void nsCSSSelector::AddID(const nsString& aID)

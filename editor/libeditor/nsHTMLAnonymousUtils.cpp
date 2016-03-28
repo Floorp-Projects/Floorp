@@ -149,7 +149,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 
   // Create a new node through the element factory
   nsCOMPtr<Element> newContent =
-    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(aTag)));
+    CreateHTMLContent(nsCOMPtr<nsIAtom>(NS_Atomize(aTag)));
   NS_ENSURE_STATE(newContent);
 
   nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
@@ -299,7 +299,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   res = focusElement->GetTagName(focusTagName);
   NS_ENSURE_SUCCESS(res, res);
   ToLowerCase(focusTagName);
-  nsCOMPtr<nsIAtom> focusTagAtom = do_GetAtom(focusTagName);
+  nsCOMPtr<nsIAtom> focusTagAtom = NS_Atomize(focusTagName);
 
   nsCOMPtr<nsIDOMElement> absPosElement;
   if (mIsAbsolutelyPositioningEnabled) {

@@ -28,7 +28,7 @@ interface nsIAtom;
 interface nsIAtomService : nsISupports {
 
   /**
-   * Version of NS_NewAtom that doesn't require linking against the
+   * Version of NS_Atomize that doesn't require linking against the
    * XPCOM library.  See nsIAtom.idl.
    */
   nsIAtom getAtom(in AString value);

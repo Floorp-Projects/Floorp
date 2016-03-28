@@ -22,7 +22,7 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
     }
 
     if (colon) {
-        nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(qName.get(), colon));
+        nsCOMPtr<nsIAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
         int32_t namespaceID = aResolver->lookupNamespace(prefix);
         if (namespaceID == kNameSpaceID_Unknown)
             return NS_ERROR_FAILURE;
@@ -30,12 +30,12 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
 
         const char16_t *end;
         qName.EndReading(end);
-        mLocalName = do_GetAtom(Substring(colon + 1, end));
+        mLocalName = NS_Atomize(Substring(colon + 1, end));
     }
     else {
         mNamespaceID = aUseDefault ? aResolver->lookupNamespace(nullptr) :
                                      kNameSpaceID_None;
-        mLocalName = do_GetAtom(aQName);
+        mLocalName = NS_Atomize(aQName);
     }
     return NS_OK;
 }
