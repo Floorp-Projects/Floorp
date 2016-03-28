@@ -200,6 +200,10 @@ function injectControlledFrame(target = document.body) {
         return iframe ? iframe.contentWindow.waitOnWorkerMessage(type) :
                Promise.reject(new Error("Frame removed from document"));
       },
+      innerWindowId() {
+        var utils = SpecialPowers.getDOMWindowUtils(iframe.contentWindow);
+        return utils.currentInnerWindowID;
+      },
     };
 
     iframe.onload = () => res(controlledFrame);

@@ -6,10 +6,11 @@
 
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
-#include "nsXPCOM.h"
-#include "nsIXULRuntime.h"
-#include "ServiceWorkerManager.h"
 #include "nsICategoryManager.h"
+#include "nsIXULRuntime.h"
+#include "nsNetUtil.h"
+#include "nsXPCOM.h"
+#include "ServiceWorkerManager.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -20,6 +21,7 @@
 namespace mozilla {
 namespace dom {
 
+using workers::AssertIsOnMainThread;
 using workers::ServiceWorkerManager;
 
 PushNotifier::PushNotifier()
@@ -81,6 +83,27 @@ PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PushNotifier::NotifyError(const nsACString& aScope, nsIPrincipal* aPrincipal,
+                          const nsAString& aMessage, uint32_t aFlags)
+{
+  if (ShouldNotifyWorkers(aPrincipal)) {
+    // For service worker subscriptions, report the error to all clients.
+    NotifyErrorWorkers(aScope, aMessage, aFlags);
+    return NS_OK;
+  }
+  // For system subscriptions, log the error directly to the browser console.
+  return nsContentUtils::ReportToConsoleNonLocalized(aMessage,
+                                                     aFlags,
+                                                     NS_LITERAL_CSTRING("Push"),
+                                                     nullptr, /* aDocument */
+                                                     nullptr, /* aURI */
+                                                     EmptyString(), /* aLine */
+                                                     0, /* aLineNumber */
+                                                     0, /* aColumnNumber */
+                                                     nsContentUtils::eOMIT_LOCATION);
+}
+
 nsresult
 PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
                          const nsAString& aMessageId,
@@ -108,6 +131,7 @@ PushNotifier::NotifyPushWorkers(const nsACString& aScope,
                                 const nsAString& aMessageId,
                                 const Maybe<nsTArray<uint8_t>>& aData)
 {
+  AssertIsOnMainThread();
   if (!aPrincipal) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -149,6 +173,7 @@ nsresult
 PushNotifier::NotifySubscriptionChangeWorkers(const nsACString& aScope,
                                               nsIPrincipal* aPrincipal)
 {
+  AssertIsOnMainThread();
   if (!aPrincipal) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -176,6 +201,58 @@ PushNotifier::NotifySubscriptionChangeWorkers(const nsACString& aScope,
       PromiseFlatCString(aScope), IPC::Principal(aPrincipal));
   }
   return ok ? NS_OK : NS_ERROR_FAILURE;
+}
+
+void
+PushNotifier::NotifyErrorWorkers(const nsACString& aScope,
+                                 const nsAString& aMessage,
+                                 uint32_t aFlags)
+{
+  AssertIsOnMainThread();
+
+  if (XRE_IsContentProcess() || !BrowserTabsRemoteAutostart()) {
+    // Content process or e10s disabled.
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->ReportToAllClients(PromiseFlatCString(aScope),
+                              PromiseFlatString(aMessage),
+                              NS_ConvertUTF8toUTF16(aScope), /* aFilename */
+                              EmptyString(), /* aLine */
+                              0, /* aLineNumber */
+                              0, /* aColumnNumber */
+                              aFlags);
+    }
+    return;
+  }
+
+  // Parent process, e10s enabled.
+  nsTArray<ContentParent*> contentActors;
+  ContentParent::GetAll(contentActors);
+  if (!contentActors.IsEmpty()) {
+    // At least one content process active.
+    for (uint32_t i = 0; i < contentActors.Length(); ++i) {
+      Unused << NS_WARN_IF(
+        !contentActors[i]->SendPushError(PromiseFlatCString(aScope),
+          PromiseFlatString(aMessage), aFlags));
+    }
+    return;
+  }
+  // Report to the console if no content processes are active.
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+  Unused << NS_WARN_IF(NS_FAILED(
+    nsContentUtils::ReportToConsoleNonLocalized(aMessage,
+                                                aFlags,
+                                                NS_LITERAL_CSTRING("Push"),
+                                                nullptr, /* aDocument */
+                                                scopeURI, /* aURI */
+                                                EmptyString(), /* aLine */
+                                                0, /* aLineNumber */
+                                                0, /* aColumnNumber */
+                                                nsContentUtils::eOMIT_LOCATION)));
 }
 
 nsresult
