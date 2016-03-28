@@ -5116,7 +5116,7 @@ WorkerPrivate::ModifyBusyCountFromWorker(bool aIncrease)
 }
 
 bool
-WorkerPrivate::AddChildWorker(JSContext* aCx, ParentType* aChildWorker)
+WorkerPrivate::AddChildWorker(ParentType* aChildWorker)
 {
   AssertIsOnWorkerThread();
 
@@ -5142,7 +5142,7 @@ WorkerPrivate::AddChildWorker(JSContext* aCx, ParentType* aChildWorker)
 }
 
 void
-WorkerPrivate::RemoveChildWorker(JSContext* aCx, ParentType* aChildWorker)
+WorkerPrivate::RemoveChildWorker(ParentType* aChildWorker)
 {
   AssertIsOnWorkerThread();
 
