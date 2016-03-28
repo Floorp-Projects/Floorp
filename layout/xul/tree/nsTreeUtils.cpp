@@ -44,7 +44,7 @@ nsTreeUtils::TokenizeProperties(const nsAString& aProperties, AtomArray & aPrope
     if (iter == first)
       break;
 
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(Substring(first, iter));
+    nsCOMPtr<nsIAtom> atom = NS_Atomize(Substring(first, iter));
     aPropertiesArray.AppendElement(atom);
   } while (iter != end);
 

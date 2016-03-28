@@ -5512,7 +5512,7 @@ nsDocument::SetupCustomElement(Element* aElement,
 
   nsCOMPtr<nsIAtom> tagAtom = aElement->NodeInfo()->NameAtom();
   nsCOMPtr<nsIAtom> typeAtom = aTypeExtension ?
-    do_GetAtom(*aTypeExtension) : tagAtom;
+    NS_Atomize(*aTypeExtension) : tagAtom;
 
   if (aTypeExtension && !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::is)) {
     // Custom element setup in the parser happens after the "is"
@@ -5839,7 +5839,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
     return true;
   }
 
-  nsCOMPtr<nsIAtom> typeAtom(do_GetAtom(elemName));
+  nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(elemName));
   CustomElementHashKey key(kNameSpaceID_Unknown, typeAtom);
   CustomElementDefinition* definition;
   if (!document->mRegistry ||
@@ -6133,7 +6133,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     lcName.Assign(aOptions.mExtends);
   }
 
-  nsCOMPtr<nsIAtom> typeAtom(do_GetAtom(lcType));
+  nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(lcType));
   if (!nsContentUtils::IsCustomElementName(typeAtom)) {
     rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
@@ -6254,7 +6254,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     if (!lcName.IsEmpty()) {
       // Let BASE be the element interface for NAME and NAMESPACE.
       bool known = false;
-      nameAtom = do_GetAtom(lcName);
+      nameAtom = NS_Atomize(lcName);
       if (namespaceID == kNameSpaceID_XHTML) {
         nsIParserService* ps = nsContentUtils::GetParserService();
         if (!ps) {
@@ -6871,7 +6871,7 @@ nsIDocument::GetAnonymousElementByAttribute(Element& aElement,
                                             const nsAString& aAttrName,
                                             const nsAString& aAttrValue)
 {
-  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttrName);
+  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttrName);
 
   return GetAnonymousElementByAttribute(&aElement, attribute, aAttrValue);
 }
@@ -8620,7 +8620,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       rv =
         httpChannel->GetResponseHeader(nsDependentCString(*name), headerVal);
       if (NS_SUCCEEDED(rv) && !headerVal.IsEmpty()) {
-        nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
+        nsCOMPtr<nsIAtom> key = NS_Atomize(*name);
         SetHeaderData(key, NS_ConvertASCIItoUTF16(headerVal));
       }
       ++name;

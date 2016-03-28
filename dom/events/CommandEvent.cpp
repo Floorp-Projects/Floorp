@@ -53,7 +53,7 @@ CommandEvent::InitCommandEvent(const nsAString& aTypeArg,
 {
   Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 
-  mEvent->AsCommandEvent()->command = do_GetAtom(aCommand);
+  mEvent->AsCommandEvent()->command = NS_Atomize(aCommand);
   return NS_OK;
 }
 

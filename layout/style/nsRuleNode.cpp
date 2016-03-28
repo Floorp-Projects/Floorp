@@ -3342,7 +3342,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     langValue->GetStringValue(lang);
 
     nsContentUtils::ASCIIToLower(lang);
-    aFont->mLanguage = do_GetAtom(lang);
+    aFont->mLanguage = NS_Atomize(lang);
     aFont->mExplicitLanguage = true;
   }
 

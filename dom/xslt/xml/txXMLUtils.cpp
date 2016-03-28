@@ -58,7 +58,7 @@ XMLUtils::splitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
         nameStart = (uriEnd + 1);
         if (nameEnd)  {
             const char16_t *prefixStart = nameEnd + 1;
-            *aPrefix = NS_NewAtom(Substring(prefixStart, pos)).take();
+            *aPrefix = NS_Atomize(Substring(prefixStart, pos)).take();
             if (!*aPrefix) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
@@ -75,7 +75,7 @@ XMLUtils::splitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
         *aPrefix = nullptr;
     }
 
-    *aLocalName = NS_NewAtom(Substring(nameStart, nameEnd)).take();
+    *aLocalName = NS_Atomize(Substring(nameStart, nameEnd)).take();
 
     return *aLocalName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -95,12 +95,12 @@ XMLUtils::splitQName(const nsAString& aName, nsIAtom** aPrefix,
         const char16_t *end;
         qName.EndReading(end);
 
-        *aPrefix = NS_NewAtom(Substring(qName.get(), colon)).take();
-        *aLocalName = NS_NewAtom(Substring(colon + 1, end)).take();
+        *aPrefix = NS_Atomize(Substring(qName.get(), colon)).take();
+        *aLocalName = NS_Atomize(Substring(colon + 1, end)).take();
     }
     else {
         *aPrefix = nullptr;
-        *aLocalName = NS_NewAtom(aName).take();
+        *aLocalName = NS_Atomize(aName).take();
     }
 
     return NS_OK;

@@ -239,7 +239,7 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 {
   nsIDocument* doc = GetDocument();
   if (doc) {
-    nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+    nsCOMPtr<nsIAtom> name = NS_Atomize(aName);
     doc->GetHeaderData(name, aValue);
     return NS_OK;
   }

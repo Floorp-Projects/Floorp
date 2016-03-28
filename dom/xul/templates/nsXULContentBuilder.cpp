@@ -823,7 +823,7 @@ nsXULContentBuilder::AddPersistentAttributes(Element* aTemplateNode,
             nameSpaceID = ni->NamespaceID();
         }
         else {
-            tag = do_GetAtom(attribute);
+            tag = NS_Atomize(attribute);
             NS_ENSURE_TRUE(tag, NS_ERROR_OUT_OF_MEMORY);
 
             nameSpaceID = kNameSpaceID_None;

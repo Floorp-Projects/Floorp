@@ -40,7 +40,7 @@ EventTarget::SetEventHandler(const nsAString& aType,
     return;
   }
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsIAtom> type = do_GetAtom(aType);
+    nsCOMPtr<nsIAtom> type = NS_Atomize(aType);
     SetEventHandler(type, EmptyString(), aHandler);
     return;
   }

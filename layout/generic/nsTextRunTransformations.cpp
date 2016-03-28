@@ -264,7 +264,7 @@ GetCasingFor(const nsIAtom* aLang)
   int index = langStr.FindChar('-');
   if (index > 0) {
     langStr.Truncate(index);
-    nsCOMPtr<nsIAtom> truncatedLang = do_GetAtom(langStr);
+    nsCOMPtr<nsIAtom> truncatedLang = NS_Atomize(langStr);
     return GetCasingFor(truncatedLang);
   }
 
