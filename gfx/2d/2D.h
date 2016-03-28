@@ -1373,7 +1373,11 @@ public:
 #ifdef WIN32
   static already_AddRefed<DrawTarget> CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat);
 
-  static void SetDirect3D11Device(ID3D11Device *aDevice);
+  /*
+   * Attempts to create and install a D2D1 device from the supplied Direct3D11 device.
+   * Returns true on success, or false on failure and leaves the D2D1/Direct3D11 devices unset.
+   */
+  static bool SetDirect3D11Device(ID3D11Device *aDevice);
   static ID3D11Device *GetDirect3D11Device();
   static ID2D1Device *GetD2D1Device();
   static bool SupportsD2D1();
