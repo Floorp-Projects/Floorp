@@ -10,20 +10,32 @@ function genRandomArray(size, seed) {
 }
 
 function SortTest(size, seed) {
-    let arrOne    = genRandomArray(size, seed);
-    let arrTwo    = Array.from(arrOne);
-    let arrThree  = Array.from(arrOne);
+    let arrOne       = genRandomArray(size, seed);
+    let arrTwo       = Array.from(arrOne);
+    let arrThree     = Array.from(arrOne);
+    let typedArrays  = [
+        new Uint8Array(arrOne),
+        new Int32Array(arrOne),
+        new Float32Array(arrOne)
+    ];
+
+    let sorted = Array.from((Int32Array.from(arrOne)).sort());
 
     // Test numeric comparators against typed array sort.
-    assertDeepEq(Array.from((Int32Array.from(arrOne)).sort()),
-                 arrTwo.sort((x, y) => (x - y)),
-                 `The arr is not properly sorted! seed: ${SEED}`);
+    assertDeepEq(sorted, arrTwo.sort((x, y) => (x - y)),
+                 `The array is not properly sorted! seed: ${SEED}`);
 
     // Use multiplication to kill comparator optimization and trigger
     // self-hosted sorting.
-    assertDeepEq(Array.from((Int32Array.from(arrOne)).sort()),
-                 arrThree.sort((x, y) => (1*x - 1*y)),
-                 `The arr is not properly sorted! seed: ${SEED}`);
+    assertDeepEq(sorted, arrThree.sort((x, y) => (1*x - 1*y)),
+                 `The array is not properly sorted! seed: ${SEED}`);
+
+    // Ensure that typed arrays are also sorted property.
+    for (typedArr of typedArrays) {
+        let sortedTypedArray = Array.prototype.sort.call(typedArr, (x, y) => (1*x - 1*y))
+        assertDeepEq(sorted, Array.from(sortedTypedArray),
+                     `The array is not properly sorted! seed: ${SEED}`);
+    }
 }
 
 SortTest(2048, SEED);
