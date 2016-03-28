@@ -213,6 +213,9 @@ class ConfigSettings(collections.Mapping):
             object.__setattr__(self, '_name', name)
             object.__setattr__(self, '_settings', settings)
 
+            wildcard = any(s == '*' for s in self._settings)
+            object.__setattr__(self, '_wildcard', wildcard)
+
         @property
         def options(self):
             try:
@@ -220,11 +223,15 @@ class ConfigSettings(collections.Mapping):
             except NoSectionError:
                 return []
 
-        def _validate(self, option, value):
-            if option not in self._settings:
-                raise KeyError('Option not registered with provider: %s' % option)
+        def get_meta(self, option):
+            if option in self._settings:
+                return self._settings[option]
+            if self._wildcard:
+                return self._settings['*']
+            raise KeyError('Option not registered with provider: %s' % option)
 
-            meta = self._settings[option]
+        def _validate(self, option, value):
+            meta = self.get_meta(option)
             meta['type_cls'].validate(value)
 
             if 'choices' in meta and value not in meta['choices']:
@@ -242,7 +249,7 @@ class ConfigSettings(collections.Mapping):
             return self._config.has_option(self._name, k)
 
         def __getitem__(self, k):
-            meta = self._settings[k]
+            meta = self.get_meta(k)
 
             if self._config.has_option(self._name, k):
                 v = meta['type_cls'].from_config(self._config, self._name, k)
@@ -255,11 +262,10 @@ class ConfigSettings(collections.Mapping):
             self._validate(k, v)
             return v
 
-
         def __setitem__(self, k, v):
             self._validate(k, v)
+            meta = self.get_meta(k)
 
-            meta = self._settings[k]
             if not self._config.has_section(self._name):
                 self._config.add_section(self._name)
 
@@ -416,7 +422,7 @@ class ConfigSettings(collections.Mapping):
     def option_help(self, section, option):
         """Obtain the translated help messages for an option."""
 
-        meta = self[section]._settings[option]
+        meta = self[section].get_meta(option)
 
         # Providers should always have an en-US translation. If they don't,
         # they are coded wrong and this will raise.
