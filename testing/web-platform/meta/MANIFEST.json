@@ -34911,6 +34911,18 @@
             "url": "/dom/collections/HTMLCollection-as-proto-length-get-throws.html"
           }
         ],
+        "dom/nodes/Element-insertAdjacentElement.html": [
+          {
+            "path": "dom/nodes/Element-insertAdjacentElement.html",
+            "url": "/dom/nodes/Element-insertAdjacentElement.html"
+          }
+        ],
+        "dom/nodes/Element-insertAdjacentText.html": [
+          {
+            "path": "dom/nodes/Element-insertAdjacentText.html",
+            "url": "/dom/nodes/Element-insertAdjacentText.html"
+          }
+        ],
         "dom/nodes/remove-unscopable.html": [
           {
             "path": "dom/nodes/remove-unscopable.html",
