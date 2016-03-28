@@ -48,7 +48,7 @@ assertEq(Object.keys(offsets).length, 2);
 // have no effect on this one.
 doSingleStep = false;
 g.eval('t(0, 0, 0)');
-assertEq(Object.keys(offsets).length, 6);
+assertEq(Object.keys(offsets).length, 7);
 doSingleStep = true;
 
 // Single-step in an eval frame. This should reach every line but the
