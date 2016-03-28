@@ -48,13 +48,12 @@ add_task(function* test_execute_page_action_without_popup() {
     },
   });
 
-  yield extension.startup();
-
   extension.onMessage("send-keys", () => {
     EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
     EventUtils.synthesizeKey("3", {altKey: true, shiftKey: true});
   });
 
+  yield extension.startup();
   yield extension.awaitFinish("page-action-without-popup");
   yield extension.unload();
 });
@@ -123,13 +122,12 @@ add_task(function* test_execute_page_action_with_popup() {
     },
   });
 
-  yield extension.startup();
-
   extension.onMessage("send-keys", () => {
     EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
     EventUtils.synthesizeKey("3", {altKey: true, shiftKey: true});
   });
 
+  yield extension.startup();
   yield extension.awaitFinish("page-action-with-popup");
   yield extension.unload();
 });
