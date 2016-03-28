@@ -89,6 +89,18 @@ extern bool
 Construct(JSContext* cx, HandleValue fval, const AnyConstructArgs& args, HandleValue newTarget,
           MutableHandleObject objp);
 
+// Check that in the given |args|, which must be |args.isConstructing()|, that
+// |IsConstructor(args.callee())|. If this is not the case, throw a TypeError.
+// Otherwise, the user must ensure that, additionally, |IsConstructor(args.newTarget())|.
+// (If |args| comes directly from the interpreter stack, as set up by JSOP_NEW,
+// this comes for free.) Then perform a Construct() operation using |args|.
+//
+// This internal operation is intended only for use with arguments known to be
+// on the JS stack, or at least in carefully-rooted memory. The vast majority of
+// potential users should instead use ConstructArgs in concert with Construct().
+extern bool
+ConstructFromStack(JSContext* cx, const CallArgs& args);
+
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
 // during construction of |fval|.
 //

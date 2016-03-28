@@ -1857,7 +1857,7 @@ nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
         event.refPoint.y = 0;
     }
 
-    event.time = PR_Now() / 1000;
+    event.mTime = PR_Now() / 1000;
 }
 
 void
@@ -1981,7 +1981,7 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
     event.refPoint =
         RoundedToInt(pt * GetDefaultScale()) - WidgetToScreenOffset();
     event.clickCount = 1;
-    event.time = ae->Time();
+    event.mTime = ae->Time();
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
     event.ignoreRootScrollFrame = true;
 
@@ -2117,7 +2117,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
     event.direction = 0;
     event.delta = delta;
     event.modifiers = 0;
-    event.time = ae->Time();
+    event.mTime = ae->Time();
     event.refPoint = pt;
 
     DispatchEvent(&event);
@@ -2488,7 +2488,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
 
     event.location =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
-    event.time = time;
+    event.mTime = time;
 }
 
 void

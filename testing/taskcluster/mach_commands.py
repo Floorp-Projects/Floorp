@@ -227,6 +227,40 @@ class DecisionTask(object):
         print(json.dumps(task, indent=4))
 
 @CommandProvider
+class LoadImage(object):
+    @Command('taskcluster-load-image', category="ci",
+        description="Load a pre-built Docker image")
+    @CommandArgument('--task-id',
+        help="Load the image at public/image.tar in this task, rather than "
+             "searching the index")
+    @CommandArgument('image_name', nargs='?',
+        help="Load the image of this name based on the current contents of the tree "
+             "(as built for mozilla-central or mozilla-inbound)")
+    def load_image(self, image_name, task_id):
+        from taskcluster_graph.image_builder import (
+            task_id_for_image,
+            docker_load_from_url
+        )
+
+        if not image_name and not task_id:
+            print("Specify either IMAGE-NAME or TASK-ID")
+            sys.exit(1)
+
+        if not task_id:
+            task_id = task_id_for_image({}, 'mozilla-inbound', image_name, create=False)
+            if not task_id:
+                print("No task found in the TaskCluster index for {}".format(image_name))
+                sys.exit(1)
+
+        print("Task ID: {}".format(task_id))
+
+        ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
+        image_name = docker_load_from_url(ARTIFACT_URL.format(task_id, 'public/image.tar'))
+
+        print("Loaded image is named {}".format(image_name))
+
+
+@CommandProvider
 class Graph(object):
     @Command('taskcluster-graph', category="ci",
         description="Create taskcluster task graph")

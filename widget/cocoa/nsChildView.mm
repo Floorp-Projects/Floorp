@@ -3508,7 +3508,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetGUIEvent focusGuiEvent(true, eventMessage, mGeckoChild);
-  focusGuiEvent.time = PR_IntervalNow();
+  focusGuiEvent.mTime = PR_IntervalNow();
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }
 

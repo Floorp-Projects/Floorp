@@ -517,6 +517,11 @@ public:
     return mCompositeUntilTime;
   }
 
+  // A stale Compositor has no CompositorBridgeParent; it will not process
+  // frames and should not be used.
+  void SetInvalid();
+  bool IsValid() const;
+
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,

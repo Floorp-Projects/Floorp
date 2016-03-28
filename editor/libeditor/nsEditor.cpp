@@ -1784,7 +1784,7 @@ public:
     // Even if the change is caused by untrusted event, we need to dispatch
     // trusted input event since it's a fact.
     InternalEditorInputEvent inputEvent(true, eEditorInput, widget);
-    inputEvent.time = static_cast<uint64_t>(PR_Now() / 1000);
+    inputEvent.mTime = static_cast<uint64_t>(PR_Now() / 1000);
     inputEvent.mIsComposing = mIsComposing;
     nsEventStatus status = nsEventStatus_eIgnore;
     nsresult rv =

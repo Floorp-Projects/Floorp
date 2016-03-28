@@ -220,6 +220,9 @@ var gPlayTests = [
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
 
+  // Test playback of a WebM file with resolution changes.
+  { name:"resolution-change.webm", type:"video/webm", duration:6.533 },
+
   // Test playback of a raw file
   { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
 
@@ -282,6 +285,11 @@ var gSnifferTests = [
   // A mp3 file with id3 tags.
   { name:"id3tags.mp3", type:"audio/mpeg", duration:0.28, size:3530},
   { name:"bogus.duh", type:"bogus/duh" }
+];
+
+// Files that contain resolution changes
+var gResolutionChangeTests = [
+  { name:"resolution-change.webm", type:"video/webm", duration:6.533 },
 ];
 
 // Files we must reject as invalid.

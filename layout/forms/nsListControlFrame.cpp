@@ -2303,7 +2303,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // string we will use to find options and start searching at the current
   // keystroke.  Otherwise, Truncate the string if it's been a long time
   // since our last keypress.
-  if (keyEvent->time - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
+  if (keyEvent->mTime - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
     // If this is ' ' and we are at the beginning of the string, treat it as
     // "select this option" (bug 191543)
     if (keyEvent->charCode == ' ') {
@@ -2318,7 +2318,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     GetIncrementalString().Truncate();
   }
 
-  gLastKeyTime = keyEvent->time;
+  gLastKeyTime = keyEvent->mTime;
 
   // Append this keystroke to the search string. 
   char16_t uniChar = ToLowerCase(static_cast<char16_t>(keyEvent->charCode));

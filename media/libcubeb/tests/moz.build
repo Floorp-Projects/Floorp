@@ -7,7 +7,11 @@
 DEFINES['CUBEB_GECKO_BUILD'] = True
 
 GeckoCppUnitTests([
-  'test_tone'
+  'test_duplex',
+  'test_record',
+  'test_resampler',
+  'test_tone',
+  'test_utils'
 ])
 
 if CONFIG['OS_TARGET'] != 'Android':
@@ -18,7 +22,13 @@ if CONFIG['OS_TARGET'] != 'Android':
   ])
 
 LOCAL_INCLUDES += [
-    '../include'
+    '../include',
+    '../src'
+]
+
+USE_LIBS += [
+    'cubeb',
+    'speex'
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

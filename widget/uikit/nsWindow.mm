@@ -146,7 +146,7 @@ private:
     event.refPoint = aPoint;
     event.clickCount = 1;
     event.button = WidgetMouseEvent::eLeftButton;
-    event.time = PR_IntervalNow();
+    event.mTime = PR_IntervalNow();
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
     nsEventStatus status;
@@ -169,7 +169,7 @@ private:
     WidgetTouchEvent event(true, aType, aWindow);
     //XXX: I think nativeEvent.timestamp * 1000 is probably usable here but
     // I don't care that much right now.
-    event.time = PR_IntervalNow();
+    event.mTime = PR_IntervalNow();
     event.touches.SetCapacity(aTouches.count);
     for (UITouch* touch in aTouches) {
         LayoutDeviceIntPoint loc = UIKitPointsToDevPixels([touch locationInView:self], [self contentScaleFactor]);

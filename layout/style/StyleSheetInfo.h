@@ -40,6 +40,9 @@ public:
   nsIURI* GetBaseURI() const { return mBaseURI; }
   void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
 
+  // Whether the sheet is for an inline <style> element.
+  bool IsInline() const { return !mOriginalSheetURI; }
+
   nsIPrincipal* Principal() const { return mPrincipal; }
   void SetPrincipal(nsIPrincipal* aPrincipal);
 

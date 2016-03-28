@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
 const gPrefsMap = new Map([
   ["browser.newtabpage.remote", "bool"],
   ["browser.newtabpage.remote.mode", "str"],
+  ["browser.newtabpage.remote.version", "str"],
   ["browser.newtabpage.enabled", "bool"],
   ["browser.newtabpage.enhanced", "bool"],
   ["browser.newtabpage.introShown", "bool"],

@@ -48,6 +48,12 @@ StyleSheetHandle::Ptr::Release()
   FORWARD(Release, ());
 }
 
+bool
+StyleSheetHandle::Ptr::IsInline() const
+{
+  FORWARD(IsInline, ());
+}
+
 nsIURI*
 StyleSheetHandle::Ptr::GetSheetURI() const
 {

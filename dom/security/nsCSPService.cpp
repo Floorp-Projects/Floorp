@@ -41,9 +41,19 @@ CSPService::~CSPService()
 
 NS_IMPL_ISUPPORTS(CSPService, nsIContentPolicy, nsIChannelEventSink)
 
-// Helper function to identify protocols not subject to CSP.
+// Helper function to identify protocols and content types not subject to CSP.
 bool
-subjectToCSP(nsIURI* aURI) {
+subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
+  // These content types are not subject to CSP content policy checks:
+  // TYPE_CSP_REPORT -- csp can't block csp reports
+  // TYPE_REFRESH    -- never passed to ShouldLoad (see nsIContentPolicy.idl)
+  // TYPE_DOCUMENT   -- used for frame-ancestors
+  if (aContentType == nsIContentPolicy::TYPE_CSP_REPORT ||
+      aContentType == nsIContentPolicy::TYPE_REFRESH ||
+      aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
   // The three protocols: data:, blob: and filesystem: share the same
   // protocol flag (URI_IS_LOCAL_RESOURCE) with other protocols, like
   // chrome:, resource:, moz-icon:, but those three protocols get
@@ -117,21 +127,11 @@ CSPService::ShouldLoad(uint32_t aContentType,
   *aDecision = nsIContentPolicy::ACCEPT;
 
   // No need to continue processing if CSP is disabled or if the protocol
-  // is *not* subject to CSP.
+  // or type is *not* subject to CSP.
   // Please note, the correct way to opt-out of CSP using a custom
   // protocolHandler is to set one of the nsIProtocolHandler flags
   // that are whitelistet in subjectToCSP()
-  if (!sCSPEnabled || !subjectToCSP(aContentLocation)) {
-    return NS_OK;
-  }
-
-  // These content types are not subject to CSP content policy checks:
-  // TYPE_CSP_REPORT -- csp can't block csp reports
-  // TYPE_REFRESH    -- never passed to ShouldLoad (see nsIContentPolicy.idl)
-  // TYPE_DOCUMENT   -- used for frame-ancestors
-  if (aContentType == nsIContentPolicy::TYPE_CSP_REPORT ||
-    aContentType == nsIContentPolicy::TYPE_REFRESH ||
-    aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
+  if (!sCSPEnabled || !subjectToCSP(aContentLocation, aContentType)) {
     return NS_OK;
   }
 
@@ -252,20 +252,20 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   nsresult rv = newChannel->GetURI(getter_AddRefs(newUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsILoadInfo> loadInfo = oldChannel->GetLoadInfo();
+
+  // if no loadInfo on the channel, nothing for us to do
+  if (!loadInfo) {
+    return NS_OK;
+  }
+
   // No need to continue processing if CSP is disabled or if the protocol
   // is *not* subject to CSP.
   // Please note, the correct way to opt-out of CSP using a custom
   // protocolHandler is to set one of the nsIProtocolHandler flags
   // that are whitelistet in subjectToCSP()
-  if (!sCSPEnabled || !subjectToCSP(newUri)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = oldChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-
-  // if no loadInfo on the channel, nothing for us to do
-  if (!loadInfo) {
+  nsContentPolicyType policyType = loadInfo->InternalContentPolicyType();
+  if (!sCSPEnabled || !subjectToCSP(newUri, policyType)) {
     return NS_OK;
   }
 
@@ -279,7 +279,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   nsCOMPtr<nsIURI> originalUri;
   rv = oldChannel->GetOriginalURI(getter_AddRefs(originalUri));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsContentPolicyType policyType = loadInfo->InternalContentPolicyType();
 
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
 

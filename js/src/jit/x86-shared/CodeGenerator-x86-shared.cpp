@@ -1737,6 +1737,28 @@ CodeGeneratorX86Shared::visitUrshD(LUrshD* ins)
     masm.convertUInt32ToDouble(lhs, out);
 }
 
+Operand
+CodeGeneratorX86Shared::ToOperand(const LAllocation& a)
+{
+    if (a.isGeneralReg())
+        return Operand(a.toGeneralReg()->reg());
+    if (a.isFloatReg())
+        return Operand(a.toFloatReg()->reg());
+    return Operand(masm.getStackPointer(), ToStackOffset(&a));
+}
+
+Operand
+CodeGeneratorX86Shared::ToOperand(const LAllocation* a)
+{
+    return ToOperand(*a);
+}
+
+Operand
+CodeGeneratorX86Shared::ToOperand(const LDefinition* def)
+{
+    return ToOperand(def->output());
+}
+
 MoveOperand
 CodeGeneratorX86Shared::toMoveOperand(LAllocation a) const
 {

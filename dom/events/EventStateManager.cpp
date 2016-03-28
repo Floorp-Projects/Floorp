@@ -51,6 +51,7 @@
 #include "nsFrameManager.h"
 #include "nsITabChild.h"
 #include "nsPluginFrame.h"
+#include "nsMenuPopupFrame.h"
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMKeyEvent.h"
@@ -2298,8 +2299,8 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mFlags.mDefaultPreventedByContent = aState.mDefaultPreventedByContent;
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
-  event.time = aEvent->time;
-  event.timeStamp = aEvent->timeStamp;
+  event.mTime = aEvent->mTime;
+  event.mTimeStamp = aEvent->mTimeStamp;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
@@ -2338,8 +2339,8 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mFlags.mDefaultPreventedByContent = aState.mDefaultPreventedByContent;
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
-  event.time = aEvent->time;
-  event.timeStamp = aEvent->timeStamp;
+  event.mTime = aEvent->mTime;
+  event.mTimeStamp = aEvent->mTimeStamp;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
@@ -2437,6 +2438,10 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
             pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
           return scrollFrame;
         }
+      }
+      nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(scrollFrame);
+      if (menuPopupFrame) {
+        return nullptr;
       }
       continue;
     }
@@ -4638,8 +4643,8 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
     event.clickCount = aEvent->clickCount;
     event.modifiers = aEvent->modifiers;
     event.buttons = aEvent->buttons;
-    event.time = aEvent->time;
-    event.timeStamp = aEvent->timeStamp;
+    event.mTime = aEvent->mTime;
+    event.mTimeStamp = aEvent->mTimeStamp;
     event.mFlags.mNoContentDispatch = notDispatchToContents;
     event.button = aEvent->button;
     event.inputSource = aEvent->inputSource;
