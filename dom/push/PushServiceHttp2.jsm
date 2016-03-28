@@ -466,7 +466,7 @@ this.PushServiceHttp2 = {
   /**
    * Subscribe new resource.
    */
-  _subscribeResource: function(aRecord) {
+  register: function(aRecord) {
     console.debug("subscribeResource()");
 
     return this._subscribeResourceInternal({
@@ -707,16 +707,9 @@ this.PushServiceHttp2 = {
     this._listenersPendingRetry.clear();
   },
 
-  request: function(action, aRecord) {
-    switch (action) {
-      case "register":
-        return this._subscribeResource(aRecord);
-     case "unregister":
-        this._shutdownSubscription(aRecord.subscriptionUri);
-        return this._unsubscribeResource(aRecord.subscriptionUri);
-      default:
-        return Promise.reject(new Error("Unknown request type: " + action));
-    }
+  unregister: function(aRecord) {
+    this._shutdownSubscription(aRecord.subscriptionUri);
+    return this._unsubscribeResource(aRecord.subscriptionUri);
   },
 
   /** Push server has deleted subscription.
@@ -727,7 +720,7 @@ this.PushServiceHttp2 = {
    */
   _resubscribe: function(aSubscriptionUri) {
     this._mainPushService.getByKeyID(aSubscriptionUri)
-      .then(record => this._subscribeResource(record)
+      .then(record => this.register(record)
         .then(recordNew => {
           if (this._mainPushService) {
             this._mainPushService
@@ -790,7 +783,7 @@ this.PushServiceHttp2 = {
     console.debug("pushChannelOnStop()");
 
     this._mainPushService.receivedPushMessage(
-      aUri, aMessage, cryptoParams, record => {
+      aUri, "", aMessage, cryptoParams, record => {
         // Always update the stored record.
         return record;
       }

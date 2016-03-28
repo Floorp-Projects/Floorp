@@ -108,6 +108,7 @@ add_task(function* test_webapps_cleardata() {
           }));
         },
         onUnregister(data) {
+          equal(data.code, 200, 'Expected manual unregister reason');
           unregisterDone();
         },
       });

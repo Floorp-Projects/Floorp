@@ -42,6 +42,7 @@ add_task(function* test_unregister_success() {
         },
         onUnregister(request) {
           equal(request.channelID, channelID, 'Should include the channel ID');
+          equal(request.code, 200, 'Expected manual unregister reason');
           this.serverSendMsg(JSON.stringify({
             messageType: 'unregister',
             status: 200,
