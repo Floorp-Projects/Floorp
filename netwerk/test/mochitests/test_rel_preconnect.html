@@ -11,44 +11,18 @@
 SimpleTest.waitForExplicitFinish();
 
 const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
-var srv;
-
-function TestServer1(nextTest) {
-    this.listener= Cc["@mozilla.org/network/server-socket;1"]
-                   .createInstance(Ci.nsIServerSocket);
-    this.listener.init(-1, true, -1);
-    this.listener.asyncListen(SpecialPowers.wrapCallbackObject(this));
-    this.nextTest = nextTest;
-}
-
-TestServer1.prototype = {
-    QueryInterface: function(iid) {
-      iid = SpecialPowers.wrap(iid);
-        if (iid.equals(Ci.nsIServerSocketListener) ||
-            iid.equals(Ci.nsISupports))
-            return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    onSocketAccepted: function(socket, trans) {
-        try { socket.close(); } catch(e) {}
-        try { trans.close(); } catch(e) {}
-    },
-    onStopListening: function(socket) {}
-};
 
 var remainder = 4;
 var observer;
 
 function doTest()
 {
-  srv = new TestServer1();
   SpecialPowers.setBoolPref("network.http.debug-observations", true);
   
   observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
     remainder--;
     ok(true, "observed remainder = " + remainder);
     if (!remainder) {
-      srv.listener.close();
       SpecialPowers.removeObserver(observer, "speculative-connect-request");
       SpecialPowers.setBoolPref("network.http.debug-observations", false);
       SimpleTest.finish();
@@ -60,18 +34,18 @@ function doTest()
   // and crossOrigin=anonymous
   var link = document.createElement("link");
   link.rel = "preconnect";
-  link.href = "//localhost:" +  srv.listener.port;
+  link.href = "//localhost:8888";
   document.head.appendChild(link);
   link = document.createElement("link");
   link.rel = "preconnect";
-  link.href = "//localhost:" +  srv.listener.port;
+  link.href = "//localhost:8888";
   link.crossOrigin = "anonymous";
   document.head.appendChild(link);
 
   // test the http link response header - the test contains both a
   // normal and anonymous preconnect link header
   var iframe = document.createElement('iframe');
-  iframe.src = 'rel_preconnect.sjs?//localhost:' + srv.listener.port;
+  iframe.src = 'rel_preconnect.sjs?//localhost:8888';
 
   document.body.appendChild(iframe);
 }
