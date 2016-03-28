@@ -1495,7 +1495,7 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   // From here on out we must call UnregisterWorker if something fails!
   if (parent) {
-    if (!parent->AddChildWorker(aCx, aWorkerPrivate)) {
+    if (!parent->AddChildWorker(aWorkerPrivate)) {
       UnregisterWorker(aCx, aWorkerPrivate);
       return false;
     }
@@ -1652,7 +1652,7 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
 
   if (parent) {
-    parent->RemoveChildWorker(aCx, aWorkerPrivate);
+    parent->RemoveChildWorker(aWorkerPrivate);
   }
   else if (aWorkerPrivate->IsSharedWorker()) {
     AssertIsOnMainThread();
