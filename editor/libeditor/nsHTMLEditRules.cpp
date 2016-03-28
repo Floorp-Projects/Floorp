@@ -3024,7 +3024,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   if (!aSelection || !aListType || !aCancel || !aHandled) {
     return NS_ERROR_NULL_POINTER;
   }
-  OwningNonNull<nsIAtom> listType = do_GetAtom(*aListType);
+  OwningNonNull<nsIAtom> listType = NS_Atomize(*aListType);
 
   nsresult res = WillInsert(aSelection, aCancel);
   NS_ENSURE_SUCCESS(res, res);
@@ -3037,7 +3037,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   // deduce what tag to use for list items
   nsCOMPtr<nsIAtom> itemType;
   if (aItemType) {
-    itemType = do_GetAtom(*aItemType);
+    itemType = NS_Atomize(*aItemType);
     NS_ENSURE_TRUE(itemType, NS_ERROR_OUT_OF_MEMORY);
   } else if (listType == nsGkAtoms::dl) {
     itemType = nsGkAtoms::dd;
@@ -3400,7 +3400,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
                                     bool *aCancel,
                                     bool *aHandled)
 {
-  OwningNonNull<nsIAtom> blockType = do_GetAtom(*aBlockType);
+  OwningNonNull<nsIAtom> blockType = NS_Atomize(*aBlockType);
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = false;
@@ -8718,7 +8718,7 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
     nsAutoString defaultLengthUnit;
     NS_ENSURE_STATE(mHTMLEditor);
     mHTMLEditor->mHTMLCSSUtils->GetDefaultLengthUnit(defaultLengthUnit);
-    unit = do_GetAtom(defaultLengthUnit);
+    unit = NS_Atomize(defaultLengthUnit);
   }
   if        (nsGkAtoms::in == unit) {
             f += NS_EDITOR_INDENT_INCREMENT_IN * aRelativeChange;

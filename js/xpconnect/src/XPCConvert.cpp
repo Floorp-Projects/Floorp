@@ -693,7 +693,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
                     *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                 return false;
             }
-            nsCOMPtr<nsIAtom> atom = NS_NewAtom(autoStr);
+            nsCOMPtr<nsIAtom> atom = NS_Atomize(autoStr);
             atom.forget((nsISupports**)d);
             return true;
         }

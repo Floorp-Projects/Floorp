@@ -806,7 +806,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
     nsAutoString result;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
-      nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
+      nsCOMPtr<nsIAtom> fieldAtom(NS_Atomize(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent); 
     }
   }

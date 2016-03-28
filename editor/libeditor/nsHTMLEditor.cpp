@@ -1967,7 +1967,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList, cons
       nsCOMPtr<nsIContent> parent = node;
       nsCOMPtr<nsIContent> topChild = node;
 
-      nsCOMPtr<nsIAtom> listAtom = do_GetAtom(aListType);
+      nsCOMPtr<nsIAtom> listAtom = NS_Atomize(aListType);
       while (!CanContainTag(*parent, *listAtom)) {
         topChild = parent;
         parent = parent->GetParent();
@@ -2099,7 +2099,7 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       nsCOMPtr<nsIContent> parent = node;
       nsCOMPtr<nsIContent> topChild = node;
 
-      nsCOMPtr<nsIAtom> blockAtom = do_GetAtom(aBlockType);
+      nsCOMPtr<nsIAtom> blockAtom = NS_Atomize(aBlockType);
       while (!CanContainTag(*parent, *blockAtom)) {
         NS_ENSURE_TRUE(parent->GetParent(), NS_ERROR_FAILURE);
         topChild = parent;
@@ -2554,7 +2554,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
 
   // New call to use instead to get proper HTML element, bug 39919
   nsCOMPtr<Element> newElement =
-    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(realTagName)));
+    CreateHTMLContent(nsCOMPtr<nsIAtom>(NS_Atomize(realTagName)));
   if (!newElement) {
     return nullptr;
   }
@@ -4488,7 +4488,7 @@ nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
   nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(element, NS_OK);
 
-  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttribute);
+  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
   MOZ_ASSERT(attribute);
 
   nsresult res = NS_OK;
