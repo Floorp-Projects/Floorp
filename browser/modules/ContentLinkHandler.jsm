@@ -107,9 +107,34 @@ this.ContentLinkHandler = {
           }
           sizeHistogramTypes.add(sizesType);
 
-          chromeGlobal.sendAsyncMessage(
-            "Link:SetIcon",
-            {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
+	  if (uri.scheme == 'blob') {
+            // Blob URLs don't work cross process, work around this by sending as a data uri
+            let channel = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService).newChannelFromURI2(uri, null, Services.scriptSecurityManager.getSystemPrincipal(), null, Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, Ci.nsIContentPolicy.TYPE_OTHER);
+            let listener = {
+              encoded: "",
+              bis: null,
+              onStartRequest: function(aRequest, aContext) {
+                this.bis = Components.classes["@mozilla.org/binaryinputstream;1"]
+                    .createInstance(Components.interfaces.nsIBinaryInputStream);
+              },
+              onStopRequest: function(aRequest, aContext, aStatusCode) {
+                let spec = "data:" + channel.contentType + ";base64," + this.encoded;
+                chromeGlobal.sendAsyncMessage(
+                  "Link:SetIcon",
+                  {url: spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
+              },
+              onDataAvailable: function(request, context, inputStream, offset, count) {
+                this.bis.setInputStream(inputStream);
+                this.encoded += btoa(this.bis.readBytes(this.bis.available()));
+              }
+            }
+            channel.asyncOpen(listener, null);
+          } else {
+            chromeGlobal.sendAsyncMessage(
+              "Link:SetIcon",
+              {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
+          }
           iconAdded = true;
           break;
         case "search":

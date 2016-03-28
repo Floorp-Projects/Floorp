@@ -128,5 +128,17 @@
   <div class="ball negative-delay"></div>
   <div class="ball no-compositor"></div>
   <div class="ball pseudo"></div>
+  <div class="ball" id="endDelayed"></div>
+  <script>
+    "use strict";
+
+    var el = document.getElementById("endDelayed");
+    el.animate(
+      { opacity: [ 0, 1 ] },
+      { duration: 1000000,
+        endDelay: 500000,
+        fill: "none" }
+    );
+  </script>
 </body>
 </html>

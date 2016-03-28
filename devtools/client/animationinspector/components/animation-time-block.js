@@ -54,7 +54,7 @@ AnimationTimeBlock.prototype = {
     // Create a container element to hold the delay and iterations.
     // It is positioned according to its delay (divided by the playbackrate),
     // and its width is according to its duration (divided by the playbackrate).
-    let {x, iterationW, delayX, delayW, negativeDelayW} =
+    let {x, iterationW, delayX, delayW, negativeDelayW, endDelayX, endDelayW} =
       TimeScale.getAnimationDimensions(animation);
 
     // background properties for .iterations element
@@ -106,6 +106,18 @@ AnimationTimeBlock.prototype = {
         }
       });
     }
+
+    // endDelay
+    if (state.endDelay) {
+      createNode({
+        parent: this.containerEl,
+        attributes: {
+          "class": "end-delay" + (state.endDelay < 0 ? " negative" : ""),
+          "style": `left:${endDelayX}%;
+                    width:${endDelayW}%;`
+        }
+      });
+    }
   },
 
   getTooltipText: function(state) {
@@ -119,14 +131,23 @@ AnimationTimeBlock.prototype = {
     text += "\n";
 
     // Adding the delay.
-    text += L10N.getStr("player.animationDelayLabel") + " ";
-    text += getTime(state.delay);
-    text += "\n";
+    if (state.delay) {
+      text += L10N.getStr("player.animationDelayLabel") + " ";
+      text += getTime(state.delay);
+      text += "\n";
+    }
 
     // Adding the duration.
     text += L10N.getStr("player.animationDurationLabel") + " ";
     text += getTime(state.duration);
     text += "\n";
+
+    // Adding the endDelay.
+    if (state.endDelay) {
+      text += L10N.getStr("player.animationEndDelayLabel") + " ";
+      text += getTime(state.endDelay);
+      text += "\n";
+    }
 
     // Adding the iteration count (the infinite symbol, or an integer).
     if (state.iterationCount !== 1) {

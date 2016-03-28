@@ -693,7 +693,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
     nsEventStatus status = nsEventStatus_eIgnore;
     InternalClipboardEvent evt(true, aEventMessage);
-    evt.clipboardData = clipboardData;
+    evt.mClipboardData = clipboardData;
     EventDispatcher::Dispatch(content, presShell->GetPresContext(), &evt,
                               nullptr, &status);
     // If the event was cancelled, don't do the clipboard operation

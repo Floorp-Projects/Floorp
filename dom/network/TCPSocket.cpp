@@ -162,6 +162,7 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
   , mSuspendCount(0)
   , mTrackingNumber(0)
   , mWaitingForStartTLS(false)
+  , mObserversActive(false)
 #ifdef MOZ_WIDGET_GONK
   , mTxBytes(0)
   , mRxBytes(0)
@@ -179,6 +180,13 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
 
 TCPSocket::~TCPSocket()
 {
+  if (mObserversActive) {
+    nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
+    if (obs) {
+      obs->RemoveObserver(this, "inner-window-destroyed");
+      obs->RemoveObserver(this, "profile-change-net-teardown");
+    }
+  }
 }
 
 nsresult
@@ -258,7 +266,9 @@ TCPSocket::Init()
 {
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
   if (obs) {
-    obs->AddObserver(this, "inner-window-destroyed", true);
+    mObserversActive = true;
+    obs->AddObserver(this, "inner-window-destroyed", true); // weak reference
+    obs->AddObserver(this, "profile-change-net-teardown", true); // weak ref
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
@@ -376,6 +386,7 @@ NS_IMETHODIMP
 CopierCallbacks::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus)
 {
   mOwner->NotifyCopyComplete(aStatus);
+  mOwner = nullptr;
   return NS_OK;
 }
 } // unnamed namespace
@@ -442,7 +453,10 @@ TCPSocket::NotifyCopyComplete(nsresult aStatus)
   }
 
   if (mReadyState == TCPReadyState::Closing) {
-    mSocketOutputStream->Close();
+    if (mSocketOutputStream) {
+      mSocketOutputStream->Close();
+      mSocketOutputStream = nullptr;
+    }
     mReadyState = TCPReadyState::Closed;
     FireEvent(NS_LITERAL_STRING("close"));
   }
@@ -634,6 +648,9 @@ TCPSocket::MaybeReportErrorAndCloseIfOpen(nsresult status) {
   if (mReadyState == TCPReadyState::Closed) {
     return NS_OK;
   }
+
+  // go through ::Closing state and then mark ::Closed
+  Close();
   mReadyState = TCPReadyState::Closed;
 
   if (NS_FAILED(status)) {
@@ -758,11 +775,19 @@ TCPSocket::Close()
   }
 
   uint32_t count = 0;
-  mMultiplexStream->GetCount(&count);
-  if (!count) {
-    mSocketOutputStream->Close();
+  if (mMultiplexStream) {
+    mMultiplexStream->GetCount(&count);
   }
-  mSocketInputStream->Close();
+  if (!count) {
+    if (mSocketOutputStream) {
+      mSocketOutputStream->Close();
+      mSocketOutputStream = nullptr;
+    }
+  }
+  if (mSocketInputStream) {
+    mSocketInputStream->Close();
+    mSocketInputStream = nullptr;
+  }
 }
 
 void
@@ -955,6 +980,9 @@ TCPSocket::Constructor(const GlobalObject& aGlobal,
 nsresult
 TCPSocket::CreateInputStreamPump()
 {
+  if (!mSocketInputStream) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   nsresult rv;
   mInputStreamPump = do_CreateInstance("@mozilla.org/network/input-stream-pump;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1176,13 +1204,10 @@ TCPSocket::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aD
     }
 
     if (innerID == mInnerWindowID) {
-      nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
-      if (obs) {
-        obs->RemoveObserver(this, "inner-window-destroyed");
-      }
-
       Close();
     }
+  } else if (!strcmp(aTopic, "profile-change-net-teardown")) {
+    Close();
   }
 
   return NS_OK;

@@ -682,7 +682,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   event.tiltY = aTiltY;
   event.isPrimary = (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == aInputSourceArg) ? true : aIsPrimary;
   event.clickCount = aClickCount;
-  event.time = PR_IntervalNow();
+  event.mTime = PR_IntervalNow();
   event.mFlags.mIsSynthesizedForTests = aOptionalArgCount >= 10 ? aIsSynthesized : true;
 
   nsPresContext* presContext = GetPresContext();
@@ -807,7 +807,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   wheelEvent.lineOrPageDeltaY = aLineOrPageDeltaY;
   wheelEvent.widget = widget;
 
-  wheelEvent.time = PR_Now() / 1000;
+  wheelEvent.mTime = PR_Now() / 1000;
 
   nsPresContext* presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
@@ -939,7 +939,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   WidgetTouchEvent event(true, msg, widget);
   event.modifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   event.widget = widget;
-  event.time = PR_Now();
+  event.mTime = PR_Now();
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
@@ -1296,7 +1296,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   event.direction = aDirection;
   event.delta = aDelta;
   event.clickCount = aClickCount;
-  event.time = PR_IntervalNow();
+  event.mTime = PR_IntervalNow();
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext)
@@ -1802,7 +1802,7 @@ InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
   if (aPt) {
     aEvent.refPoint = *aPt;
   }
-  aEvent.time = PR_IntervalNow();
+  aEvent.mTime = PR_IntervalNow();
 }
 
 NS_IMETHODIMP

@@ -28406,8 +28406,16 @@
         "url": "/web-animations/animation-effect-timing/getComputedStyle.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/iterations.html",
+        "url": "/web-animations/animation-effect-timing/iterations.html"
+      },
+      {
         "path": "web-animations/animation-effect-timing/iterationStart.html",
         "url": "/web-animations/animation-effect-timing/iterationStart.html"
+      },
+      {
+        "path": "web-animations/animation-effect-timing/direction.html",
+        "url": "/web-animations/animation-effect-timing/direction.html"
       },
       {
         "path": "web-animations/animation-node/animation-node-after.html",

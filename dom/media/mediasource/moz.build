@@ -7,9 +7,12 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
     'AsyncEventRunner.h',
+    'AutoTaskQueue.h',
     'MediaSourceDecoder.h',
     'MediaSourceDemuxer.h',
-    'SourceBufferContentManager.h',
+    'SourceBufferAttributes.h',
+    'SourceBufferTask.h',
+    'TrackBuffersManager.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -26,7 +29,6 @@ UNIFIED_SOURCES += [
     'MediaSourceUtils.cpp',
     'ResourceQueue.cpp',
     'SourceBuffer.cpp',
-    'SourceBufferContentManager.cpp',
     'SourceBufferList.cpp',
     'SourceBufferResource.cpp',
     'TrackBuffersManager.cpp',

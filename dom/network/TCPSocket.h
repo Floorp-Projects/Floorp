@@ -239,6 +239,8 @@ private:
   // The buffered data awaiting the TLS upgrade to finish.
   nsTArray<nsCOMPtr<nsIInputStream>> mPendingDataAfterStartTLS;
 
+  bool mObserversActive;
+
 #ifdef MOZ_WIDGET_GONK
   // Number of bytes sent.
   uint32_t mTxBytes;
