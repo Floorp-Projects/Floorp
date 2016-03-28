@@ -6514,7 +6514,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
 
     wheelEvent.button      = 0;
     wheelEvent.mTime       = ::GetMessageTime();
-    wheelEvent.timeStamp   = GetMessageTimeStamp(wheelEvent.mTime);
+    wheelEvent.mTimeStamp  = GetMessageTimeStamp(wheelEvent.mTime);
     wheelEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
 
     bool endFeedback = true;
@@ -6551,7 +6551,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   modifierKeyState.InitInputEvent(event);
   event.button    = 0;
   event.mTime     = ::GetMessageTime();
-  event.timeStamp = GetMessageTimeStamp(event.mTime);
+  event.mTimeStamp = GetMessageTimeStamp(event.mTime);
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
 
   nsEventStatus status;

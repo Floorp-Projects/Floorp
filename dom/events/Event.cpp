@@ -1067,7 +1067,7 @@ Event::TimeStamp() const
     return static_cast<double>(mEvent->mTime);
   }
 
-  if (mEvent->timeStamp.IsNull()) {
+  if (mEvent->mTimeStamp.IsNull()) {
     return 0.0;
   }
 
@@ -1085,7 +1085,7 @@ Event::TimeStamp() const
       return 0.0;
     }
 
-    return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->timeStamp);
+    return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
   }
 
   // For dedicated workers, we should make times relative to the navigation
@@ -1096,7 +1096,7 @@ Event::TimeStamp() const
   MOZ_ASSERT(workerPrivate);
 
   TimeDuration duration =
-    mEvent->timeStamp - workerPrivate->NowBaseTimeStamp();
+    mEvent->mTimeStamp - workerPrivate->NowBaseTimeStamp();
   return duration.ToMilliseconds();
 }
 
