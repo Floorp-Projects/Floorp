@@ -1662,20 +1662,28 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         self.funcDefns.append(tfDefn)
 
         for md in p.messageDecls:
-            ns.addstmts([
-                _generateMessageClass(md.msgClass(), md.msgId(),
-                                      md.decl.type.priority,
-                                      md.prettyMsgName(p.name+'::'),
-                                      md.decl.type.compress),
-                Whitespace.NL ])
+            decls = []
+
+            mfDecl, mfDefn = _splitFuncDeclDefn(
+                _generateMessageConstructor(md.msgClass(), md.msgId(),
+                                            md.decl.type.priority,
+                                            md.prettyMsgName(p.name+'::'),
+                                            md.decl.type.compress))
+            decls.append(mfDecl)
+            self.funcDefns.append(mfDefn)
+
             if md.hasReply():
-                ns.addstmts([
-                    _generateMessageClass(
+                rfDecl, rfDefn = _splitFuncDeclDefn(
+                    _generateMessageConstructor(
                         md.replyClass(), md.replyId(),
                         md.decl.type.priority,
                         md.prettyReplyName(p.name+'::'),
-                        md.decl.type.compress),
-                    Whitespace.NL ])
+                        md.decl.type.compress))
+                decls.append(rfDecl)
+                self.funcDefns.append(rfDefn)
+
+            decls.append(Whitespace.NL)
+            ns.addstmts(decls)
 
         ns.addstmts([ Whitespace.NL, Whitespace.NL ])
 
@@ -1897,22 +1905,21 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
-    cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
-    cls.addstmt(Label.PUBLIC)
+def _generateMessageConstructor(clsname, msgid, priority, prettyName, compress):
+    routingId = ExprVar('routingId')
 
-    idenum = TypeEnum()
-    idenum.addId('ID', msgid)
-    cls.addstmt(StmtDecl(Decl(idenum, '')))
+    func = FunctionDefn(FunctionDecl(
+        clsname,
+        params=[ Decl(Type('int32_t'), routingId.name) ],
+        ret=Type('IPC::Message', ptr=1)))
 
-    # make the message constructor
     if compress == 'compress':
-        compression = ExprVar('COMPRESSION_ENABLED')
+        compression = ExprVar('IPC::Message::COMPRESSION_ENABLED')
     elif compress:
         assert compress == 'compressall'
-        compression = ExprVar('COMPRESSION_ALL')
+        compression = ExprVar('IPC::Message::COMPRESSION_ALL')
     else:
-        compression = ExprVar('COMPRESSION_NONE')
+        compression = ExprVar('IPC::Message::COMPRESSION_NONE')
     if priority == ipdl.ast.NORMAL_PRIORITY:
         priorityEnum = 'IPC::Message::PRIORITY_NORMAL'
     elif priority == ipdl.ast.HIGH_PRIORITY:
@@ -1920,18 +1927,16 @@ def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
     else:
         assert priority == ipdl.ast.URGENT_PRIORITY
         priorityEnum = 'IPC::Message::PRIORITY_URGENT'
-    routingId = ExprVar('routingId')
-    ctor = ConstructorDefn(
-        ConstructorDecl(clsname, params=[ Decl(Type('int32_t'), routingId.name) ]),
-        memberinits=[ ExprMemberInit(ExprVar('IPC::Message'),
-                                     [ routingId,
-                                       ExprVar('ID'),
-                                       ExprVar(priorityEnum),
-                                       compression,
-                                       ExprLiteral.String(prettyName) ]) ])
-    cls.addstmts([ ctor ])
 
-    return cls
+    func.addstmt(
+        StmtReturn(ExprNew(Type('IPC::Message'),
+                           args=[ routingId,
+                                  ExprVar(msgid),
+                                  ExprVar(priorityEnum),
+                                  compression,
+                                  ExprLiteral.String(prettyName) ])))
+
+    return func
 
 ##--------------------------------------------------
 
@@ -5112,9 +5117,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         this = None
         if md.decl.type.isDtor():  this = md.actorDecl().var()
 
-        stmts = ([ StmtDecl(Decl(Type(md.pqMsgClass(), ptr=1), msgvar.name),
-                            init=ExprNew(Type(md.pqMsgClass()),
-                                         args=[ routingId ])) ]
+        stmts = ([ StmtDecl(Decl(Type('IPC::Message', ptr=1), msgvar.name),
+                            init=ExprCall(ExprVar(md.pqMsgClass()),
+                                          args=[ routingId ])) ]
                  + [ Whitespace.NL ]
                  + [ StmtExpr(self.write(p.ipdltype, p.var(), msgvar, this))
                      for p in md.params ]
@@ -5133,7 +5138,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         replyvar = self.replyvar
         return (
             [ StmtExpr(ExprAssn(
-                replyvar, ExprNew(Type(md.pqReplyClass()), args=[ routingId ]))),
+                replyvar, ExprCall(ExprVar(md.pqReplyClass()), args=[ routingId ]))),
               Whitespace.NL ]
             + [ StmtExpr(self.write(r.ipdltype, r.var(), replyvar))
                 for r in md.returns ]
