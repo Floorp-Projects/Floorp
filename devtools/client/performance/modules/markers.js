@@ -18,6 +18,12 @@ const { Formatters, labelForProperty } = require("devtools/client/performance/mo
  *          If you use a function for a label, it *must* handle the case where
  *          no marker is provided, to get a generic label used to describe
  *          all markers of this type.
+ * - fields: The fields used in the marker details view to display more
+ *           information about a currently selected marker. Can either be an
+ *           object of fields, or simply a function that accepts the marker and
+ *           returns such an object (if you want to use properties dynamically).
+ *           For example, a field in the object such as { "Cause": "causeName" }
+ *           would render something like `Cause: ${marker.causeName}` in the UI.
  * - colorName: The label of the DevTools color used for this marker. If
  *              adding a new color, be sure to check that there's an entry
  *              for `.marker-color-graphs-{COLORNAME}` for the equivilent
@@ -28,20 +34,6 @@ const { Formatters, labelForProperty } = require("devtools/client/performance/mo
  *                children. Defaults to true.
  * - nestable: Whether or not this marker can be nested inside an eclipsing
  *             collapsible marker. Defaults to true.
- * - fields: An optional array of fields you wish to display in the marker
- *           details view. For example, a field in the array such as
- *           { label: "Cause", property: "causeName" } would render a string
- *           like `Cause: ${marker.causeName}` in the marker details view.
- *           Each field may take the following properties:
- *           - label: The name of the property that should be displayed.
- *           - property: The property that must exist on the marker to render,
- *                       and the value of the property will be displayed.
- *           Alternatively, this also be a function that returns an object.
- *           Each key in that object will be rendered as one field's label,
- *           with its value rendering as one field's value.
- *
- * Whenever this is changed, browser_timeline_waterfall-styles.js *must* be
- * updated as well.
  */
 const TIMELINE_BLUEPRINT = {
   /* Default definition used for markers that occur but are not defined here.
