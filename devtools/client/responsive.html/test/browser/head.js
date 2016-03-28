@@ -18,7 +18,7 @@ const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.htm
 
 DevToolsUtils.testing = true;
 Services.prefs.setCharPref("devtools.devices.url",
-  TEST_URI_ROOT + "browser_devices.json");
+  TEST_URI_ROOT + "devices.json");
 Services.prefs.setBoolPref("devtools.responsive.html.enabled", true);
 
 registerCleanupFunction(() => {
