@@ -37,7 +37,7 @@ public:
 
     void RunTimer();
     void DisableTimer();
-    bool Notify(JSContext* aCx, dom::workers::Status aStatus) override;
+    bool Notify(dom::workers::Status aStatus) override;
 
 protected:
     ~WebGLContextLossHandler();

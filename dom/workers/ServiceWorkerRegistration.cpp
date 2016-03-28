@@ -1144,7 +1144,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
 }
 
 bool
-ServiceWorkerRegistrationWorkerThread::Notify(JSContext* aCx, workers::Status aStatus)
+ServiceWorkerRegistrationWorkerThread::Notify(workers::Status aStatus)
 {
   ReleaseListener(WorkerIsGoingAway);
   return true;
