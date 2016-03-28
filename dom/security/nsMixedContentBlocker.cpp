@@ -921,9 +921,6 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     *aDecision = ACCEPT;
     return NS_OK;
   }
-
-  *aDecision = REJECT_REQUEST;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
