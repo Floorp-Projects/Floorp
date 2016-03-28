@@ -11,6 +11,9 @@
    */
   function replacePushService(mockService) {
     chromeScript.sendSyncMessage("service-replace");
+    chromeScript.addMessageListener("service-delivery-error", function(msg) {
+      mockService.reportDeliveryError(msg.messageId, msg.reason);
+    });
     chromeScript.addMessageListener("service-request", function(msg) {
       let promise;
       try {

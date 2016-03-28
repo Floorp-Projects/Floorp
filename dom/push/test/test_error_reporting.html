@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1246341: Report message delivery failures to the Push server.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1246341</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1246341">Mozilla Bug 1246341</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  var pushNotifier = SpecialPowers.Cc["@mozilla.org/push/Notifier;1"]
+                                  .getService(SpecialPowers.Ci.nsIPushNotifier);
+
+  var reporters = new Map();
+
+  var registration;
+  add_task(function* start() {
+    yield setupPrefsAndReplaceService({
+      reportDeliveryError(messageId, reason) {
+        ok(reporters.has(messageId),
+          'Unexpected error reported for message ' + messageId);
+        var resolve = reporters.get(messageId);
+        reporters.delete(messageId);
+        resolve(reason);
+      },
+    });
+    yield setPushPermission(true);
+
+    var url = "error_worker.js" + "?" + (Math.random());
+    registration = yield navigator.serviceWorker.register(url, {scope: "."});
+  });
+
+  var controlledFrame;
+  add_task(function* createControlledIFrame() {
+    controlledFrame = yield injectControlledFrame();
+  });
+
+  var idCounter = 1;
+  function waitForDeliveryError(request) {
+    return new Promise(resolve => {
+      var data = new TextEncoder("utf-8").encode(JSON.stringify(request));
+      var principal = SpecialPowers.wrap(document).nodePrincipal;
+
+      let messageId = "message-" + (idCounter++);
+      reporters.set(messageId, resolve);
+      pushNotifier.notifyPushWithData(registration.scope, principal, messageId,
+                                      data.length, data);
+    });
+  }
+
+  add_task(function* reportErrors() {
+    var reason = yield waitForDeliveryError({ type: "exception" });
+    is(reason, SpecialPowers.Ci.nsIPushErrorReporter.DELIVERY_UNCAUGHT_EXCEPTION,
+      "Should report uncaught exceptions");
+
+    reason = yield waitForDeliveryError({ type: "rejection" });
+    is(reason, SpecialPowers.Ci.nsIPushErrorReporter.DELIVERY_UNHANDLED_REJECTION,
+      "Should report unhandled rejections");
+  });
+
+  add_task(function* unsubscribe() {
+    controlledFrame.remove();
+  });
+
+  add_task(function* unregister() {
+    yield registration.unregister();
+  });
+
+</script>
+</body>
+</html>
+
