@@ -241,6 +241,7 @@ Editor.prototype = {
   container: null,
   version: null,
   config: null,
+  Doc: null,
 
   /**
    * Appends the current Editor instance to the element specified by
@@ -302,6 +303,7 @@ Editor.prototype = {
       // context menus won't work).
 
       cm = win.CodeMirror(win.document.body, this.config);
+      this.Doc = win.CodeMirror.Doc;
 
       // Disable APZ for source editors. It currently causes the line numbers to
       // "tear off" and swim around on top of the content. Bug 1160601 tracks
@@ -486,6 +488,22 @@ Editor.prototype = {
     }
     let win = this.container.contentWindow.wrappedJSObject;
     Services.scriptloader.loadSubScript(url, win, "utf8");
+  },
+
+  /**
+   * Creates a CodeMirror Document
+   * @returns CodeMirror.Doc
+   */
+  createDocument: function() {
+     return new this.Doc("");
+  },
+
+  /**
+   * Replaces the current document with a new source document
+   */
+  replaceDocument: function(doc) {
+    let cm = editors.get(this);
+    cm.swapDoc(doc);
   },
 
   /**
