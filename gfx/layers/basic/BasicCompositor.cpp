@@ -78,8 +78,9 @@ public:
   bool mWrappingExistingData;
 };
 
-BasicCompositor::BasicCompositor(nsIWidget *aWidget)
-  : mWidget(aWidget)
+BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget)
+  : Compositor(aParent)
+  , mWidget(aWidget)
   , mDidExternalComposition(false)
 {
   MOZ_COUNT_CTOR(BasicCompositor);

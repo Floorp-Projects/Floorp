@@ -444,11 +444,13 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   }
 
   // Iterate over our old sheets and kick off a sync load of the new
-  // sheet if and only if it's a chrome URL.
+  // sheet if and only if it's a non-inline sheet with a chrome URL.
   for (StyleSheetHandle sheet : oldSheets) {
-    nsIURI* uri = sheet ? sheet->GetOriginalURI() : nullptr;
+    MOZ_ASSERT(sheet, "GetStyleSheetAt shouldn't return nullptr for "
+                      "in-range sheet indexes");
+    nsIURI* uri = sheet->GetSheetURI();
 
-    if (uri && IsChromeURI(uri)) {
+    if (!sheet->IsInline() && IsChromeURI(uri)) {
       // Reload the sheet.
       StyleSheetHandle::RefPtr newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This

@@ -172,8 +172,8 @@ public:
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
     modifiers = aOther.modifiers;
-    time = aOther.time;
-    timeStamp = aOther.timeStamp;
+    mTime = aOther.mTime;
+    mTimeStamp = aOther.mTimeStamp;
     touches.AppendElements(aOther.touches);
     mFlags.mCancelable = mMessage != eTouchCancel;
     mFlags.mHandledByAPZ = aOther.mFlags.mHandledByAPZ;

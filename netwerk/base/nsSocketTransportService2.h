@@ -20,6 +20,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "nsITimer.h"
+#include "mozilla/UniquePtr.h"
+#include "PollableEvent.h"
 
 class nsASocketHandler;
 struct PRPollDesc;
@@ -126,14 +128,7 @@ private:
     //-------------------------------------------------------------------------
 
     nsCOMPtr<nsIThread> mThread;    // protected by mLock
-    PRFileDesc *mThreadEvent;
-                            // protected by mLock.  mThreadEvent may change
-                            // if the old pollable event is broken.  only
-                            // the socket thread may change mThreadEvent;
-                            // it needs to lock mLock only when it changes
-                            // mThreadEvent.  other threads don't change
-                            // mThreadEvent; they need to lock mLock
-                            // whenever they access mThreadEvent.
+    mozilla::UniquePtr<mozilla::net::PollableEvent> mPollableEvent;
     bool        mAutodialEnabled;
                             // pref to control autodial code
 
@@ -175,6 +170,7 @@ private:
 
     SocketContext *mActiveList;                   /* mListSize entries */
     SocketContext *mIdleList;                     /* mListSize entries */
+    nsIThread     *mRawThread;
 
     uint32_t mActiveListSize;
     uint32_t mIdleListSize;
@@ -199,18 +195,16 @@ private:
     //-------------------------------------------------------------------------
     // poll list (socket thread only)
     //
-    // first element of the poll list is mThreadEvent (or null if the pollable
+    // first element of the poll list is mPollableEvent (or null if the pollable
     // event cannot be created).
     //-------------------------------------------------------------------------
 
     PRPollDesc *mPollList;                        /* mListSize + 1 entries */
 
     PRIntervalTime PollTimeout();            // computes ideal poll timeout
-    nsresult       DoPollIteration(bool wait,
-                                   mozilla::TimeDuration *pollDuration);
+    nsresult       DoPollIteration(mozilla::TimeDuration *pollDuration);
                                              // perfoms a single poll iteration
-    int32_t        Poll(bool wait,
-                        uint32_t *interval,
+    int32_t        Poll(uint32_t *interval,
                         mozilla::TimeDuration *pollDuration);
                                              // calls PR_Poll.  the out param
                                              // interval indicates the poll

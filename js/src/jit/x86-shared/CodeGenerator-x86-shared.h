@@ -116,6 +116,10 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     NonAssertingLabel deoptLabel_;
 
+    Operand ToOperand(const LAllocation& a);
+    Operand ToOperand(const LAllocation* a);
+    Operand ToOperand(const LDefinition* def);
+
     MoveOperand toMoveOperand(LAllocation a) const;
 
     void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);

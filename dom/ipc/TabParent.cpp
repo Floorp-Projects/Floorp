@@ -2759,7 +2759,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
 
   WidgetTouchEvent event(true, msg, widget);
   event.modifiers = aModifiers;
-  event.time = PR_IntervalNow();
+  event.mTime = PR_IntervalNow();
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
   if (!content || !content->OwnerDoc()) {

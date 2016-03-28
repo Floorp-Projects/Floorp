@@ -66,7 +66,7 @@ EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
           if (widget) {
             WidgetTouchEvent event(true, eTouchEnd, widget);
             event.widget = widget;
-            event.time = PR_IntervalNow();
+            event.mTime = PR_IntervalNow();
             event.touches.AppendElement(aTouch);
             nsEventStatus status;
             widget->DispatchEvent(&event, status);
