@@ -123,7 +123,7 @@ public:
     MOZ_ASSERT(scriptError);
 
     if (aInnerWindowID) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      MOZ_ALWAYS_SUCCEEDS(
         scriptError->InitWithWindowID(aMessage,
                                       aFilename,
                                       /* aSourceLine */ EmptyString(),
@@ -131,19 +131,19 @@ public:
                                       aColumnNumber,
                                       aSeverityFlag,
                                       category,
-                                      aInnerWindowID)));
+                                      aInnerWindowID));
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      MOZ_ALWAYS_SUCCEEDS(
         scriptError->Init(aMessage,
                           aFilename,
                           /* aSourceLine */ EmptyString(),
                           aLineNumber,
                           aColumnNumber,
                           aSeverityFlag,
-                          category.get())));
+                          category.get()));
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(consoleService->LogMessage(scriptError)));
+    MOZ_ALWAYS_SUCCEEDS(consoleService->LogMessage(scriptError));
   }
 
   NS_IMETHOD
@@ -210,7 +210,7 @@ ScriptErrorHelper::Dump(const nsAString& aMessage,
                               aSeverityFlag,
                               aIsChrome,
                               aInnerWindowID);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   }
 }
 
@@ -240,7 +240,7 @@ ScriptErrorHelper::DumpLocalizedMessage(const nsACString& aMessageName,
                               aSeverityFlag,
                               aIsChrome,
                               aInnerWindowID);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   }
 }
 
