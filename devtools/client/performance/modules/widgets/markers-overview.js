@@ -16,7 +16,7 @@ const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs")
 const { colorUtils } = require("devtools/shared/css-color");
 const { getColor } = require("devtools/client/shared/theme");
 const ProfilerGlobal = require("devtools/client/performance/modules/global");
-const MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
+const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 const { TickUtils } = require("devtools/client/performance/modules/widgets/waterfall-ticks");
 const { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
 
@@ -117,7 +117,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     for (let marker of markers) {
       // Again skip over markers that we're filtering -- we don't want them
       // to be labeled as "Unknown"
-      if (!MarkerUtils.isMarkerValid(marker, this._filter)) {
+      if (!MarkerBlueprintUtils.shouldDisplayMarker(marker, this._filter)) {
         continue;
       }
 

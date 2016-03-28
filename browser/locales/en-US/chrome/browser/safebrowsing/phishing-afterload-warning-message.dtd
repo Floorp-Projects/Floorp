@@ -5,7 +5,7 @@
 <!ENTITY safeb.palm.accept.label "Get me out of here!">
 <!ENTITY safeb.palm.decline.label "Ignore this warning">
 <!-- Localization note (safeb.palm.notdeceptive.label) - Label of the Help menu item. -->
-<!ENTITY safeb.palm.notdeceptive.label "This isn't a deceptive site…">
+<!ENTITY safeb.palm.notdeceptive.label "This isn’t a deceptive site…">
 <!ENTITY safeb.palm.reportPage.label "Why was this page blocked?">
 <!ENTITY safeb.palm.whyForbidden.label "Why was this page blocked?">
 
