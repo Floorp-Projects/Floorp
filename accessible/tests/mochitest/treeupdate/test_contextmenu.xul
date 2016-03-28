@@ -117,8 +117,8 @@
       }
     }
 
-    //gA11yEventDumpID = "eventdump";
     //gA11yEventDumpToConsole = true;
+    //enableLogging("tree,verbose");
 
     var gQueue = null;
     var gContextTree = {};
@@ -312,8 +312,6 @@
       </menupopup>
 
       <button context="context" id="button">btn</button>
-
-      <vbox id="eventdump" role="log"/>
     </vbox>
   </hbox>
 </window>

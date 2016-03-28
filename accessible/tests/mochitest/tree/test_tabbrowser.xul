@@ -201,6 +201,9 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Test
+    //gA11yEventDumpToConsole = true;
+    //enableLogging("tree,verbose,stack");
+
     var gQueue = null;
     function doTest()
     {
