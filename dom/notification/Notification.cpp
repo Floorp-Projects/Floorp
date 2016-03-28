@@ -2245,7 +2245,7 @@ Notification::WorkerGet(WorkerPrivate* aWorkerPrivate,
     new WorkerGetRunnable(proxy, aFilter.mTag, aScope);
   // Since this is called from script via
   // ServiceWorkerRegistration::GetNotifications, we can assert dispatch.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   return p.forget();
 }
 

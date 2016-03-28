@@ -2737,21 +2737,21 @@ InsertIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 #ifdef DEBUG
   {
     uint32_t argCount;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetNumEntries(&argCount)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetNumEntries(&argCount));
     MOZ_ASSERT(argCount == 4);
 
     int32_t valueType;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(0, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
                valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(1, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(1, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_INTEGER);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(2, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(2, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_INTEGER);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(3, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(3, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
   }
 #endif
@@ -3002,11 +3002,11 @@ UpgradeKeyFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 #ifdef DEBUG
   {
     uint32_t argCount;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetNumEntries(&argCount)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetNumEntries(&argCount));
     MOZ_ASSERT(argCount == 1);
 
     int32_t valueType;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(0, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
   }
 #endif
@@ -3071,17 +3071,14 @@ UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(mozIStorageConnection* aConnection,
 
   rv = aConnection->CreateFunction(insertIDVFunctionName, 4, insertIDVFunction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->RemoveFunction(upgradeKeyFunctionName)));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(upgradeKeyFunctionName));
     return rv;
   }
 
   rv = DoUpgradeInternal(aConnection, aOrigin);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aConnection->RemoveFunction(upgradeKeyFunctionName)));
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aConnection->RemoveFunction(insertIDVFunctionName)));
+  MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(upgradeKeyFunctionName));
+  MOZ_ALWAYS_SUCCEEDS(aConnection->RemoveFunction(insertIDVFunctionName));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4243,7 +4240,7 @@ struct StorageOpenTraits<nsIFileURL*>
   static void
   GetPath(nsIFileURL* aFileURL, nsCString& aPath)
   {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFileURL->GetFileName(aPath)));
+    MOZ_ALWAYS_SUCCEEDS(aFileURL->GetFileName(aPath));
   }
 #endif
 };
@@ -4264,7 +4261,7 @@ struct StorageOpenTraits<nsIFile*>
   GetPath(nsIFile* aFile, nsCString& aPath)
   {
     nsString path;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFile->GetPath(path)));
+    MOZ_ALWAYS_SUCCEEDS(aFile->GetPath(path));
 
     aPath.AssignWithConversion(path);
   }
@@ -4503,9 +4500,9 @@ CreateStorageConnection(nsIFile* aDBFile,
 #ifdef DEBUG
     // Disable foreign key support while upgrading. This has to be done before
     // starting a transaction.
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       connection->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("PRAGMA foreign_keys = OFF;"))));
+        NS_LITERAL_CSTRING("PRAGMA foreign_keys = OFF;")));
 #endif
     }
 
@@ -4623,18 +4620,18 @@ CreateStorageConnection(nsIFile* aDBFile,
     if (!newDatabase) {
       // Re-enable foreign key support after doing a foreign key check.
       nsCOMPtr<mozIStorageStatement> checkStmt;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      MOZ_ALWAYS_SUCCEEDS(
         connection->CreateStatement(
           NS_LITERAL_CSTRING("PRAGMA foreign_key_check;"),
-          getter_AddRefs(checkStmt))));
+          getter_AddRefs(checkStmt)));
 
       bool hasResult;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(checkStmt->ExecuteStep(&hasResult)));
+      MOZ_ALWAYS_SUCCEEDS(checkStmt->ExecuteStep(&hasResult));
       MOZ_ASSERT(!hasResult, "Database has inconsisistent foreign keys!");
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      MOZ_ALWAYS_SUCCEEDS(
         connection->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("PRAGMA foreign_keys = OFF;"))));
+          NS_LITERAL_CSTRING("PRAGMA foreign_keys = OFF;")));
     }
 #endif
 
@@ -9587,7 +9584,7 @@ TelemetryIdForFile(nsIFile* aFile)
   // <persistence>, <origin>, and <filename> pieces.
 
   nsString filename;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFile->GetLeafName(filename)));
+  MOZ_ALWAYS_SUCCEEDS(aFile->GetLeafName(filename));
 
   // Make sure we were given a database file.
   NS_NAMED_LITERAL_STRING(sqliteExtension, ".sqlite");
@@ -9598,7 +9595,7 @@ TelemetryIdForFile(nsIFile* aFile)
 
   // Get the "idb" directory.
   nsCOMPtr<nsIFile> idbDirectory;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFile->GetParent(getter_AddRefs(idbDirectory))));
+  MOZ_ALWAYS_SUCCEEDS(aFile->GetParent(getter_AddRefs(idbDirectory)));
 
   DebugOnly<nsString> idbLeafName;
   MOZ_ASSERT(NS_SUCCEEDED(idbDirectory->GetLeafName(idbLeafName)));
@@ -9606,11 +9603,11 @@ TelemetryIdForFile(nsIFile* aFile)
 
   // Get the <origin> directory.
   nsCOMPtr<nsIFile> originDirectory;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    idbDirectory->GetParent(getter_AddRefs(originDirectory))));
+  MOZ_ALWAYS_SUCCEEDS(
+    idbDirectory->GetParent(getter_AddRefs(originDirectory)));
 
   nsString origin;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(originDirectory->GetLeafName(origin)));
+  MOZ_ALWAYS_SUCCEEDS(originDirectory->GetLeafName(origin));
 
   // Any databases in these directories are owned by the application and should
   // not have their filenames masked. Hopefully they also appear in the
@@ -9622,11 +9619,11 @@ TelemetryIdForFile(nsIFile* aFile)
 
   // Get the <persistence> directory.
   nsCOMPtr<nsIFile> persistenceDirectory;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    originDirectory->GetParent(getter_AddRefs(persistenceDirectory))));
+  MOZ_ALWAYS_SUCCEEDS(
+    originDirectory->GetParent(getter_AddRefs(persistenceDirectory)));
 
   nsString persistence;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(persistenceDirectory->GetLeafName(persistence)));
+  MOZ_ALWAYS_SUCCEEDS(persistenceDirectory->GetLeafName(persistence));
 
   NS_NAMED_LITERAL_STRING(separator, "*");
 
@@ -9730,7 +9727,7 @@ RecvFlushPendingFileDeletions()
   RefPtr<FlushPendingFileDeletionsRunnable> runnable =
     new FlushPendingFileDeletionsRunnable();
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
   return true;
 }
@@ -9883,8 +9880,7 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery,
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       nsCString msg;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        mStorageConnection->GetLastErrorString(msg)));
+      MOZ_ALWAYS_SUCCEEDS(mStorageConnection->GetLastErrorString(msg));
 
       nsAutoCString error =
         NS_LITERAL_CSTRING("The statement '") + aQuery +
@@ -10474,15 +10470,15 @@ DatabaseConnection::Close(uintptr_t aCallsite)
                  js::ProfileEntry::Category::STORAGE);
 
   if (mUpdateRefcountFunction) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       mStorageConnection->RemoveFunction(
-        NS_LITERAL_CSTRING("update_refcount"))));
+        NS_LITERAL_CSTRING("update_refcount")));
     mUpdateRefcountFunction = nullptr;
   }
 
   mCachedStatements.Clear();
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mStorageConnection->Close()));
+  MOZ_ALWAYS_SUCCEEDS(mStorageConnection->Close());
   mStorageConnection = nullptr;
 
   mFileManager = nullptr;
@@ -11594,8 +11590,8 @@ ConnectionPool::Dispatch(uint64_t aTransactionId, nsIRunnable* aRunnable)
     MOZ_ASSERT_IF(transactionInfo->mIsWriteTransaction,
                   dbInfo->mRunningWriteTransaction == transactionInfo);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      dbInfo->mThreadInfo.mThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(
+      dbInfo->mThreadInfo.mThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL));
   } else {
     transactionInfo->mQueuedRunnables.AppendElement(aRunnable);
   }
@@ -11734,7 +11730,7 @@ ConnectionPool::Cleanup()
     nsIThread* currentThread = NS_GetCurrentThread();
     MOZ_ASSERT(currentThread);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProcessPendingEvents(currentThread)));
+    MOZ_ALWAYS_SUCCEEDS(NS_ProcessPendingEvents(currentThread));
   }
 
   mShutdownComplete = true;
@@ -11790,11 +11786,11 @@ ConnectionPool::AdjustIdleTimer()
       delay = 0;
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       mIdleTimer->InitWithFuncCallback(IdleTimerCallback,
                                        this,
                                        delay,
-                                       nsITimer::TYPE_ONE_SHOT)));
+                                       nsITimer::TYPE_ONE_SHOT));
 
     mTargetIdleTime = newTargetIdleTime;
   }
@@ -11807,7 +11803,7 @@ ConnectionPool::CancelIdleTimer()
   MOZ_ASSERT(mIdleTimer);
 
   if (!mTargetIdleTime.IsNull()) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mIdleTimer->Cancel()));
+    MOZ_ALWAYS_SUCCEEDS(mIdleTimer->Cancel());
 
     mTargetIdleTime = TimeStamp();
     MOZ_ASSERT(mTargetIdleTime.IsNull());
@@ -11832,11 +11828,11 @@ ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo)
                  runnable->SerialNumber()));
 
   // This should clean up the thread with the profiler.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->Dispatch(runnable, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(runnable, NS_DISPATCH_NORMAL));
 
   nsCOMPtr<nsIRunnable> shutdownRunnable =
     NS_NewRunnableMethod(thread, &nsIThread::Shutdown);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(shutdownRunnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(shutdownRunnable));
 
   mTotalThreadCount--;
 }
@@ -11950,9 +11946,9 @@ ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
           MOZ_ASSERT(dbInfo);
           MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
 
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+          MOZ_ALWAYS_SUCCEEDS(
             dbInfo->mThreadInfo.mThread->Dispatch(runnable,
-                                                  NS_DISPATCH_NORMAL)));
+                                                  NS_DISPATCH_NORMAL));
         }
       }
 
@@ -12008,8 +12004,8 @@ ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
       nsCOMPtr<nsIRunnable> runnable;
       queuedRunnables[index].swap(runnable);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        dbInfo->mThreadInfo.mThread->Dispatch(runnable, NS_DISPATCH_NORMAL)));
+      MOZ_ALWAYS_SUCCEEDS(
+        dbInfo->mThreadInfo.mThread->Dispatch(runnable, NS_DISPATCH_NORMAL));
     }
 
     queuedRunnables.Clear();
@@ -12342,9 +12338,9 @@ ConnectionPool::PerformIdleDatabaseMaintenance(DatabaseInfo* aDatabaseInfo)
 
   mDatabasesPerformingIdleMaintenance.AppendElement(aDatabaseInfo);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+  MOZ_ALWAYS_SUCCEEDS(
     aDatabaseInfo->mThreadInfo.mThread->Dispatch(runnable,
-                                                 NS_DISPATCH_NORMAL)));
+                                                 NS_DISPATCH_NORMAL));
 }
 
 void
@@ -12365,9 +12361,9 @@ ConnectionPool::CloseDatabase(DatabaseInfo* aDatabaseInfo,
   nsCOMPtr<nsIRunnable> runnable = new CloseConnectionRunnable(aDatabaseInfo,
                                                                aCallsite);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+  MOZ_ALWAYS_SUCCEEDS(
     aDatabaseInfo->mThreadInfo.mThread->Dispatch(runnable,
-                                                 NS_DISPATCH_NORMAL)));
+                                                 NS_DISPATCH_NORMAL));
 }
 
 bool
@@ -12426,8 +12422,8 @@ IdleConnectionRunnable::Run()
     MOZ_ASSERT(mDatabaseInfo->mConnection);
     mDatabaseInfo->mConnection->DoIdleProcessing(mNeedsCheckpoint);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      owningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(
+      owningThread->Dispatch(this, NS_DISPATCH_NORMAL));
     return NS_OK;
   }
 
@@ -12484,8 +12480,8 @@ CloseConnectionRunnable::Run()
 #endif
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      owningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(
+      owningThread->Dispatch(this, NS_DISPATCH_NORMAL));
     return NS_OK;
   }
 
@@ -12600,8 +12596,8 @@ FinishCallbackWrapper::Run()
 
     Unused << mCallback->Run();
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(
+      mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 
     return NS_OK;
   }
@@ -12689,8 +12685,8 @@ ThreadRunnable::Run()
       nsCOMPtr<nsISupportsPriority> thread = do_QueryInterface(currentThread);
       MOZ_ASSERT(thread);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        thread->SetPriority(kDEBUGTransactionThreadPriority)));
+      MOZ_ALWAYS_SUCCEEDS(
+        thread->SetPriority(kDEBUGTransactionThreadPriority));
     }
 
     if (kDEBUGTransactionThreadSleepMS) {
@@ -13052,7 +13048,7 @@ Factory::Create(const LoggingInfo& aLoggingInfo)
         do_QueryInterface(NS_GetCurrentThread());
       MOZ_ASSERT(thread);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->SetPriority(kDEBUGThreadPriority)));
+      MOZ_ALWAYS_SUCCEEDS(thread->SetPriority(kDEBUGThreadPriority));
     }
 
     if (kDEBUGThreadSleepMS) {
@@ -13064,7 +13060,7 @@ Factory::Create(const LoggingInfo& aLoggingInfo)
 
       gDEBUGThreadSlower = new DEBUGThreadSlower();
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->AddObserver(gDEBUGThreadSlower)));
+      MOZ_ALWAYS_SUCCEEDS(thread->AddObserver(gDEBUGThreadSlower));
     }
 #endif // DEBUG
   }
@@ -13127,8 +13123,8 @@ Factory::ActorDestroy(ActorDestroyReason aWhy)
         do_QueryInterface(NS_GetCurrentThread());
       MOZ_ASSERT(thread);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        thread->SetPriority(nsISupportsPriority::PRIORITY_NORMAL)));
+      MOZ_ALWAYS_SUCCEEDS(
+        thread->SetPriority(nsISupportsPriority::PRIORITY_NORMAL));
     }
 
     if (kDEBUGThreadSleepMS) {
@@ -13138,7 +13134,7 @@ Factory::ActorDestroy(ActorDestroyReason aWhy)
         do_QueryInterface(NS_GetCurrentThread());
       MOZ_ASSERT(thread);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->RemoveObserver(gDEBUGThreadSlower)));
+      MOZ_ALWAYS_SUCCEEDS(thread->RemoveObserver(gDEBUGThreadSlower));
 
       gDEBUGThreadSlower = nullptr;
     }
@@ -13247,7 +13243,7 @@ Factory::RecvPBackgroundIDBFactoryRequestConstructor(
 
   auto* op = static_cast<FactoryOp*>(aActor);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(op)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(op));
   return true;
 }
 
@@ -15415,7 +15411,7 @@ VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
     Unused << SendComplete(aResult);
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(openDatabaseOp->Run()));
+  MOZ_ALWAYS_SUCCEEDS(openDatabaseOp->Run());
 }
 
 void
@@ -16709,19 +16705,15 @@ QuotaClient::GetOrCreateThreadPool()
       std::max(int32_t(PR_GetNumberOfProcessors()), int32_t(1)) +
       2;
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetThreadLimit(threadCount)));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(threadCount));
 
     // Don't keep more than one idle thread.
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetIdleThreadLimit(1)));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(1));
 
     // Don't keep idle threads alive very long.
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetIdleThreadTimeout(5 * PR_MSEC_PER_SEC)));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadTimeout(5 * PR_MSEC_PER_SEC));
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Mnt"))));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Mnt")));
 
     mMaintenanceThreadPool = Move(threadPool);
   }
@@ -17007,14 +16999,14 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
 
       nsString leafName;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(unknownFile->GetLeafName(leafName)));
+      MOZ_ALWAYS_SUCCEEDS(unknownFile->GetLeafName(leafName));
 
       MOZ_ASSERT(!StringEndsWith(leafName, journalSuffix));
       MOZ_ASSERT(!StringEndsWith(leafName, shmSuffix));
       MOZ_ASSERT(!StringEndsWith(leafName, walSuffix));
 
       nsString path;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(unknownFile->GetPath(path)));
+      MOZ_ALWAYS_SUCCEEDS(unknownFile->GetPath(path));
       MOZ_ASSERT(!path.IsEmpty());
 
       nsPrintfCString warning("Refusing to open databases for \"%s\" because "
@@ -17383,7 +17375,7 @@ Maintenance::Start()
   }
 
   mState = State::CreateIndexedDatabaseManager;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   return NS_OK;
 }
@@ -17404,8 +17396,8 @@ Maintenance::CreateIndexedDatabaseManager()
   }
 
   mState = State::IndexedDatabaseManagerOpen;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(
+    mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -17484,13 +17476,13 @@ Maintenance::DirectoryWork()
   MOZ_ASSERT(storageDir);
 
   bool exists;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(storageDir->Exists(&exists)));
+  MOZ_ALWAYS_SUCCEEDS(storageDir->Exists(&exists));
   if (!exists) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   bool isDirectory;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(storageDir->IsDirectory(&isDirectory)));
+  MOZ_ALWAYS_SUCCEEDS(storageDir->IsDirectory(&isDirectory));
   if (NS_WARN_IF(!isDirectory)) {
     return NS_ERROR_FAILURE;
   }
@@ -17525,25 +17517,25 @@ Maintenance::DirectoryWork()
     }
 
     nsCOMPtr<nsIFile> persistenceDir;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      storageDir->Clone(getter_AddRefs(persistenceDir))));
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString))));
+    MOZ_ALWAYS_SUCCEEDS(
+      storageDir->Clone(getter_AddRefs(persistenceDir)));
+    MOZ_ALWAYS_SUCCEEDS(
+      persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString)));
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(persistenceDir->Exists(&exists)));
+    MOZ_ALWAYS_SUCCEEDS(persistenceDir->Exists(&exists));
     if (!exists) {
       continue;
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(persistenceDir->IsDirectory(&isDirectory)));
+    MOZ_ALWAYS_SUCCEEDS(persistenceDir->IsDirectory(&isDirectory));
     if (NS_WARN_IF(!isDirectory)) {
       continue;
     }
 
     nsCOMPtr<nsISimpleEnumerator> persistenceDirEntries;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       persistenceDir->GetDirectoryEntries(
-        getter_AddRefs(persistenceDirEntries))));
+        getter_AddRefs(persistenceDirEntries)));
     if (!persistenceDirEntries) {
       continue;
     }
@@ -17555,16 +17547,16 @@ Maintenance::DirectoryWork()
       }
 
       bool persistenceDirHasMoreEntries;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        persistenceDirEntries->HasMoreElements(&persistenceDirHasMoreEntries)));
+      MOZ_ALWAYS_SUCCEEDS(
+        persistenceDirEntries->HasMoreElements(&persistenceDirHasMoreEntries));
 
       if (!persistenceDirHasMoreEntries) {
         break;
       }
 
       nsCOMPtr<nsISupports> persistenceDirEntry;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        persistenceDirEntries->GetNext(getter_AddRefs(persistenceDirEntry))));
+      MOZ_ALWAYS_SUCCEEDS(
+        persistenceDirEntries->GetNext(getter_AddRefs(persistenceDirEntry)));
 
       nsCOMPtr<nsIFile> originDir = do_QueryInterface(persistenceDirEntry);
       MOZ_ASSERT(originDir);
@@ -17572,29 +17564,29 @@ Maintenance::DirectoryWork()
       MOZ_ASSERT(NS_SUCCEEDED(originDir->Exists(&exists)));
       MOZ_ASSERT(exists);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(originDir->IsDirectory(&isDirectory)));
+      MOZ_ALWAYS_SUCCEEDS(originDir->IsDirectory(&isDirectory));
       if (!isDirectory) {
         continue;
       }
 
       nsCOMPtr<nsIFile> idbDir;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(originDir->Clone(getter_AddRefs(idbDir))));
+      MOZ_ALWAYS_SUCCEEDS(originDir->Clone(getter_AddRefs(idbDir)));
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDir->Append(idbDirName)));
+      MOZ_ALWAYS_SUCCEEDS(idbDir->Append(idbDirName));
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDir->Exists(&exists)));
+      MOZ_ALWAYS_SUCCEEDS(idbDir->Exists(&exists));
       if (!exists) {
         continue;
       }
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDir->IsDirectory(&isDirectory)));
+      MOZ_ALWAYS_SUCCEEDS(idbDir->IsDirectory(&isDirectory));
       if (NS_WARN_IF(!isDirectory)) {
         continue;
       }
 
       nsCOMPtr<nsISimpleEnumerator> idbDirEntries;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries))));
+      MOZ_ALWAYS_SUCCEEDS(
+        idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries)));
       if (!idbDirEntries) {
         continue;
       }
@@ -17610,22 +17602,22 @@ Maintenance::DirectoryWork()
         }
 
         bool idbDirHasMoreEntries;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-          idbDirEntries->HasMoreElements(&idbDirHasMoreEntries)));
+        MOZ_ALWAYS_SUCCEEDS(
+          idbDirEntries->HasMoreElements(&idbDirHasMoreEntries));
 
         if (!idbDirHasMoreEntries) {
           break;
         }
 
         nsCOMPtr<nsISupports> idbDirEntry;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-          idbDirEntries->GetNext(getter_AddRefs(idbDirEntry))));
+        MOZ_ALWAYS_SUCCEEDS(
+          idbDirEntries->GetNext(getter_AddRefs(idbDirEntry)));
 
         nsCOMPtr<nsIFile> idbDirFile = do_QueryInterface(idbDirEntry);
         MOZ_ASSERT(idbDirFile);
 
         nsString idbFilePath;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDirFile->GetPath(idbFilePath)));
+        MOZ_ALWAYS_SUCCEEDS(idbDirFile->GetPath(idbFilePath));
 
         if (!StringEndsWith(idbFilePath, sqliteExtension)) {
           continue;
@@ -17634,7 +17626,7 @@ Maintenance::DirectoryWork()
         MOZ_ASSERT(NS_SUCCEEDED(idbDirFile->Exists(&exists)));
         MOZ_ASSERT(exists);
 
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDirFile->IsDirectory(&isDirectory)));
+        MOZ_ALWAYS_SUCCEEDS(idbDirFile->IsDirectory(&isDirectory));
         if (isDirectory) {
           continue;
         }
@@ -17673,8 +17665,8 @@ Maintenance::DirectoryWork()
 
   mState = State::BeginDatabaseMaintenance;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(
+    mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -17735,8 +17727,8 @@ Maintenance::BeginDatabaseMaintenance()
           MOZ_ASSERT(threadPool);
         }
 
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-          threadPool->Dispatch(databaseMaintenance, NS_DISPATCH_NORMAL)));
+        MOZ_ALWAYS_SUCCEEDS(
+          threadPool->Dispatch(databaseMaintenance, NS_DISPATCH_NORMAL));
 
         RegisterDatabaseMaintenance(databaseMaintenance);
       }
@@ -17814,8 +17806,8 @@ Maintenance::Run()
     if (IsOnBackgroundThread()) {
       Finish();
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL)));
+      MOZ_ALWAYS_SUCCEEDS(
+        mQuotaClient->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL));
     }
   }
 
@@ -17877,7 +17869,7 @@ DatabaseMaintenance::PerformMaintenanceOnDatabase()
     {
       MOZ_ASSERT(mConnection);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mConnection->Close()));
+      MOZ_ALWAYS_SUCCEEDS(mConnection->Close());
     }
   };
 
@@ -18352,8 +18344,7 @@ DatabaseMaintenance::RunOnOwningThread()
   AssertIsOnBackgroundThread();
 
   if (mCompleteCallback) {
-    MOZ_ALWAYS_TRUE(
-      NS_SUCCEEDED(NS_DispatchToCurrentThread(mCompleteCallback)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback));
     mCompleteCallback = nullptr;
   }
 
@@ -18368,8 +18359,8 @@ DatabaseMaintenance::RunOnConnectionThread()
 
   PerformMaintenanceOnDatabase();
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mMaintenance->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(
+    mMaintenance->BackgroundThread()->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 NS_IMETHODIMP
@@ -19263,7 +19254,7 @@ DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     }
 
     if (deleteStmt) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteStmt->Reset()));
+      MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
     } else {
       rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "DELETE FROM object_data "
@@ -19447,8 +19438,8 @@ AutoSetProgressHandler::~AutoSetProgressHandler()
 
   if (mConnection) {
     nsCOMPtr<mozIStorageProgressHandler> oldHandler;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler))));
+    MOZ_ALWAYS_SUCCEEDS(
+      mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler)));
     MOZ_ASSERT(oldHandler == mDEBUGDatabaseOp);
   }
 }
@@ -19727,16 +19718,14 @@ FactoryOp::Open()
 
   if (permission == PermissionRequestBase::kPermissionPrompt) {
     mState = State::PermissionChallenge;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                         NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
     return NS_OK;
   }
 
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed);
 
   mState = State::FinishOpen;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -19793,8 +19782,7 @@ FactoryOp::RetryCheckPermission()
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed);
 
   mState = State::FinishOpen;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -19913,7 +19901,7 @@ FactoryOp::FinishSendResults()
 
   if (mBlockedDatabaseOpen) {
     if (mDelayedOp) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(mDelayedOp)));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mDelayedOp));
       mDelayedOp = nullptr;
     }
 
@@ -20407,8 +20395,7 @@ FactoryOp::Run()
     if (IsOnOwningThread()) {
       SendResults();
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+      MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
     }
   }
 
@@ -20471,7 +20458,7 @@ FactoryOp::RecvPermissionRetry()
   mContentParent = BackgroundParent::GetContentParent(Manager()->Manager());
 
   mState = State::PermissionRetry;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   return true;
 }
@@ -21252,7 +21239,7 @@ OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     }
 
     mState = State::SendingResults;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Run()));
+    MOZ_ALWAYS_SUCCEEDS(Run());
   }
 }
 
@@ -21757,7 +21744,7 @@ VersionChangeOp::SendFailureResult(nsresult aResultCode)
   mOpenDatabaseOp->SetFailureCode(aResultCode);
   mOpenDatabaseOp->mState = State::SendingResults;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOpenDatabaseOp->Run()));
+  MOZ_ALWAYS_SUCCEEDS(mOpenDatabaseOp->Run());
 
   return false;
 }
@@ -21812,17 +21799,17 @@ DeleteDatabaseOp::LoadPreviousVersion(nsIFile* aDatabaseFile)
 #ifdef DEBUG
   {
     nsCOMPtr<mozIStorageStatement> stmt;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       connection->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT name "
           "FROM database"
-        ), getter_AddRefs(stmt))));
+        ), getter_AddRefs(stmt)));
 
     bool hasResult;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
 
     nsString databaseName;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->GetString(0, databaseName)));
+    MOZ_ALWAYS_SUCCEEDS(stmt->GetString(0, databaseName));
 
     MOZ_ASSERT(mCommonParams.metadata().name() == databaseName);
   }
@@ -22068,7 +22055,7 @@ DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     }
 
     mState = State::SendingResults;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Run()));
+    MOZ_ALWAYS_SUCCEEDS(Run());
   }
 }
 
@@ -22393,7 +22380,7 @@ VersionChangeOp::RunOnOwningThread()
   }
 
   deleteOp->mState = State::SendingResults;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteOp->Run()));
+  MOZ_ALWAYS_SUCCEEDS(deleteOp->Run());
 
 #ifdef DEBUG
   // A bit hacky but the DeleteDatabaseOp::VersionChangeOp is not really a
@@ -22421,8 +22408,7 @@ VersionChangeOp::Run()
       mResultCode = rv;
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                         NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
@@ -22553,8 +22539,7 @@ TransactionDatabaseOperationBase::RunOnConnectionThread()
     }
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 void
@@ -22675,7 +22660,7 @@ CommitOp::WriteAutoIncrementCounts()
       MOZ_ASSERT(metadata->mNextAutoIncrementId > 1);
 
       if (stmt) {
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->Reset()));
+        MOZ_ALWAYS_SUCCEEDS(stmt->Reset());
       } else {
         rv = connection->GetCachedStatement(
           NS_LITERAL_CSTRING("UPDATE object_store "
@@ -22751,27 +22736,27 @@ CommitOp::AssertForeignKeyConsistency(DatabaseConnection* aConnection)
   MOZ_ASSERT(mTransaction->GetMode() != IDBTransaction::READ_ONLY);
 
   DatabaseConnection::CachedStatement pragmaStmt;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+  MOZ_ALWAYS_SUCCEEDS(
     aConnection->GetCachedStatement(NS_LITERAL_CSTRING("PRAGMA foreign_keys;"),
-                                    &pragmaStmt)));
+                                    &pragmaStmt));
 
   bool hasResult;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(pragmaStmt->ExecuteStep(&hasResult)));
+  MOZ_ALWAYS_SUCCEEDS(pragmaStmt->ExecuteStep(&hasResult));
 
   MOZ_ASSERT(hasResult);
 
   int32_t foreignKeysEnabled;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(pragmaStmt->GetInt32(0, &foreignKeysEnabled)));
+  MOZ_ALWAYS_SUCCEEDS(pragmaStmt->GetInt32(0, &foreignKeysEnabled));
 
   MOZ_ASSERT(foreignKeysEnabled, "Database doesn't have foreign keys enabled!");
 
   DatabaseConnection::CachedStatement checkStmt;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+  MOZ_ALWAYS_SUCCEEDS(
     aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("PRAGMA foreign_key_check;"),
-      &checkStmt)));
+      &checkStmt));
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(checkStmt->ExecuteStep(&hasResult)));
+  MOZ_ALWAYS_SUCCEEDS(checkStmt->ExecuteStep(&hasResult));
 
   MOZ_ASSERT(!hasResult, "Database has inconsisistent foreign keys!");
 }
@@ -22989,8 +22974,7 @@ DatabaseOp::Run()
     // thread.
     mState = State::SendingResults;
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                         NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
@@ -23207,18 +23191,18 @@ CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
     // another that already exists. This should be impossible because we should
     // have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "SELECT name "
           "FROM object_store "
           "WHERE name = :name;"),
-        &stmt)));
+        &stmt));
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name())));
+    MOZ_ALWAYS_SUCCEEDS(
+      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name()));
 
     bool hasResult;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
     MOZ_ASSERT(!hasResult);
   }
 #endif
@@ -23277,8 +23261,8 @@ CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
 #ifdef DEBUG
   {
     int64_t id;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetStorageConnection()->GetLastInsertRowID(&id)));
+    MOZ_ALWAYS_SUCCEEDS(
+      aConnection->GetStorageConnection()->GetLastInsertRowID(&id));
     MOZ_ASSERT(mMetadata.id() == id);
   }
 #endif
@@ -23307,25 +23291,25 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
   {
     // Make sure |mIsLastObjectStore| is telling the truth.
     DatabaseConnection::CachedStatement stmt;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "SELECT id "
           "FROM object_store;"),
-        &stmt)));
+        &stmt));
 
     bool foundThisObjectStore = false;
     bool foundOtherObjectStore = false;
 
     while (true) {
       bool hasResult;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+      MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
 
       if (!hasResult) {
         break;
       }
 
       int64_t id;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->GetInt64(0, &id)));
+      MOZ_ALWAYS_SUCCEEDS(stmt->GetInt64(0, &id));
 
       if (id == mMetadata->mCommonMetadata.id()) {
         foundThisObjectStore = true;
@@ -23494,9 +23478,9 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
 #ifdef DEBUG
     {
       int32_t deletedRowCount;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      MOZ_ALWAYS_SUCCEEDS(
         aConnection->GetStorageConnection()->
-          GetAffectedRows(&deletedRowCount)));
+          GetAffectedRows(&deletedRowCount));
       MOZ_ASSERT(deletedRowCount == 1);
     }
 #endif
@@ -23572,8 +23556,7 @@ CreateIndexOp::InsertDataFromObjectStore(DatabaseConnection* aConnection)
 
   rv = InsertDataFromObjectStoreInternal(aConnection);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    storageConnection->RemoveFunction(updateFunctionName)));
+  MOZ_ALWAYS_SUCCEEDS(storageConnection->RemoveFunction(updateFunctionName));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -23676,20 +23659,20 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
     // store as another that already exists. This should be impossible because
     // we should have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "SELECT name "
           "FROM object_store_index "
           "WHERE object_store_id = :osid "
           "AND name = :name;"),
-        &stmt)));
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId)));
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name())));
+        &stmt));
+    MOZ_ALWAYS_SUCCEEDS(
+      stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId));
+    MOZ_ALWAYS_SUCCEEDS(
+      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name()));
 
     bool hasResult;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
 
     MOZ_ASSERT(!hasResult);
   }
@@ -23772,8 +23755,8 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
 #ifdef DEBUG
   {
     int64_t id;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetStorageConnection()->GetLastInsertRowID(&id)));
+    MOZ_ALWAYS_SUCCEEDS(
+      aConnection->GetStorageConnection()->GetLastInsertRowID(&id));
     MOZ_ASSERT(mMetadata.id() == id);
   }
 #endif
@@ -23903,22 +23886,22 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 #ifdef DEBUG
   {
     uint32_t argCount;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetNumEntries(&argCount)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetNumEntries(&argCount));
     MOZ_ASSERT(argCount == 4); // key, index_data_values, file_ids, data
 
     int32_t valueType;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(0, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(1, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(1, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
                valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(2, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(2, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
                valueType == mozIStorageValueArray::VALUE_TYPE_TEXT);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(3, &valueType)));
+    MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(3, &valueType));
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
   }
 #endif
@@ -24238,30 +24221,30 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   {
     // Make sure |mIsLastIndex| is telling the truth.
     DatabaseConnection::CachedStatement stmt;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "SELECT id "
           "FROM object_store_index "
           "WHERE object_store_id = :object_store_id;"),
-        &stmt)));
+        &stmt));
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    MOZ_ALWAYS_SUCCEEDS(
       stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
-                            mObjectStoreId)));
+                            mObjectStoreId));
 
     bool foundThisIndex = false;
     bool foundOtherIndex = false;
 
     while (true) {
       bool hasResult;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+      MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
 
       if (!hasResult) {
         break;
       }
 
       int64_t id;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->GetInt64(0, &id)));
+      MOZ_ALWAYS_SUCCEEDS(stmt->GetInt64(0, &id));
 
       if (id == mIndexId) {
         foundThisIndex = true;
@@ -24432,7 +24415,7 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
     // Now delete the index row.
     if (deleteIndexRowStmt) {
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteIndexRowStmt->Reset()));
+        MOZ_ALWAYS_SUCCEEDS(deleteIndexRowStmt->Reset());
     } else {
       if (mUnique) {
         rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -24514,8 +24497,8 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
 #ifdef DEBUG
   {
     int32_t deletedRowCount;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetStorageConnection()->GetAffectedRows(&deletedRowCount)));
+    MOZ_ALWAYS_SUCCEEDS(
+      aConnection->GetStorageConnection()->GetAffectedRows(&deletedRowCount));
     MOZ_ASSERT(deletedRowCount == 1);
   }
 #endif

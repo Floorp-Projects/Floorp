@@ -92,7 +92,7 @@ ClientsShutdownBlocker::ClientsShutdownBlocker()
   MOZ_ASSERT(asyncShutdown);
   if (asyncShutdown) {
     nsCOMPtr<nsIAsyncShutdownBarrier> barrier;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(asyncShutdown->MakeBarrier(mName, getter_AddRefs(barrier))));
+    MOZ_ALWAYS_SUCCEEDS(asyncShutdown->MakeBarrier(mName, getter_AddRefs(barrier)));
     mBarrier = new nsMainThreadPtrHolder<nsIAsyncShutdownBarrier>(barrier);
   }
 }
@@ -102,7 +102,7 @@ ClientsShutdownBlocker::GetClient()
 {
   nsCOMPtr<nsIAsyncShutdownClient> client;
   if (mBarrier) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mBarrier->GetClient(getter_AddRefs(client))));
+    MOZ_ALWAYS_SUCCEEDS(mBarrier->GetClient(getter_AddRefs(client)));
   }
   return client.forget();
 }
@@ -120,7 +120,7 @@ ClientsShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
   }
 
   // Wait until all the clients have removed their blockers.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mBarrier->Wait(this)));
+  MOZ_ALWAYS_SUCCEEDS(mBarrier->Wait(this));
 
   mState = CALLED_WAIT_CLIENTS;
   return NS_OK;
@@ -204,9 +204,9 @@ ConnectionShutdownBlocker::Complete(nsresult, nsISupports*)
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   MOZ_ASSERT(os);
   if (os) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr,
-                                                     TOPIC_PLACES_CONNECTION_CLOSED,
-                                                     nullptr)));
+    MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr,
+					    TOPIC_PLACES_CONNECTION_CLOSED,
+					    nullptr));
   }
   mState = NOTIFIED_OBSERVERS_PLACES_CONNECTION_CLOSED;
 

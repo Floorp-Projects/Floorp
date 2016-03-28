@@ -316,7 +316,7 @@ public:
   {
     RefPtr<FireSuccessAsyncTask> asyncTask =
       new FireSuccessAsyncTask(aRequest, aResult);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(asyncTask)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(asyncTask));
     return NS_OK;
   }
 
@@ -368,7 +368,7 @@ DOMRequestService::FireErrorAsync(nsIDOMDOMRequest* aRequest,
   NS_ENSURE_STATE(aRequest);
   nsCOMPtr<nsIRunnable> asyncTask =
     new FireErrorAsyncTask(static_cast<DOMRequest*>(aRequest), aError);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(asyncTask)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(asyncTask));
   return NS_OK;
 }
 
