@@ -39,6 +39,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
                                    "@mozilla.org/push/Notifier;1",
                                    "nsIPushNotifier");
 
+XPCOMUtils.defineLazyGetter(this, "gDOMBundle", () =>
+  Services.strings.createBundle("chrome://global/locale/dom/dom.properties"));
+
 this.EXPORTED_SYMBOLS = ["PushService"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
@@ -862,7 +865,10 @@ this.PushService = {
       cryptoParams.auth ? record.authenticationSecret : null,
       cryptoParams.padSize
     ).then(message => this._notifyApp(record, messageID, message), error => {
-      console.error("receivedPushMessage: Error decrypting message", error);
+      let message = gDOMBundle.formatStringFromName(
+        "PushMessageDecryptionFailure", [record.scope, String(error)], 2);
+      gPushNotifier.notifyError(record.scope, record.principal, message,
+                                Ci.nsIScriptError.errorFlag);
       return Ci.nsIPushErrorReporter.ACK_DECRYPTION_ERROR;
     });
   },

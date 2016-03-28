@@ -3331,5 +3331,22 @@ ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
   return true;
 }
 
+bool
+ContentChild::RecvPushError(const nsCString& aScope, const nsString& aMessage,
+                            const uint32_t& aFlags)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+  pushNotifier->NotifyErrorWorkers(aScope, aMessage, aFlags);
+#endif
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla

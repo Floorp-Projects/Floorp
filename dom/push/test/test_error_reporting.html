@@ -65,7 +65,7 @@ http://creativecommons.org/licenses/publicdomain/
     });
   }
 
-  add_task(function* reportErrors() {
+  add_task(function* reportDeliveryErrors() {
     var reason = yield waitForDeliveryError({ type: "exception" });
     is(reason, SpecialPowers.Ci.nsIPushErrorReporter.DELIVERY_UNCAUGHT_EXCEPTION,
       "Should report uncaught exceptions");
@@ -73,6 +73,46 @@ http://creativecommons.org/licenses/publicdomain/
     reason = yield waitForDeliveryError({ type: "rejection" });
     is(reason, SpecialPowers.Ci.nsIPushErrorReporter.DELIVERY_UNHANDLED_REJECTION,
       "Should report unhandled rejections");
+  });
+
+  add_task(function* reportDecryptionError() {
+    var message = yield new Promise(resolve => {
+      var consoleService = SpecialPowers.Cc["@mozilla.org/consoleservice;1"]
+        .getService(SpecialPowers.Ci.nsIConsoleService);
+
+      var listener = SpecialPowers.wrapCallbackObject({
+        QueryInterface(iid) {
+          if (!SpecialPowers.Ci.nsISupports.equals(iid) &&
+              !SpecialPowers.Ci.nsIConsoleListener.equals(iid)) {
+            throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+          }
+          return this;
+        },
+
+        observe(message) {
+          let error = message;
+          try {
+            error.QueryInterface(SpecialPowers.Ci.nsIScriptError);
+          } catch (error) {
+            return;
+          }
+          if (message.innerWindowID == controlledFrame.innerWindowId()) {
+            consoleService.unregisterListener(listener);
+            resolve(error);
+          }
+        },
+      });
+      consoleService.registerListener(listener);
+
+      var principal = SpecialPowers.wrap(document).nodePrincipal;
+      pushNotifier.notifyError(registration.scope, principal, "Push error",
+        SpecialPowers.Ci.nsIScriptError.errorFlag);
+    });
+
+    is(message.sourceName, registration.scope,
+      "Should use the qualified scope URL as the source");
+    is(message.errorMessage, "Push error",
+      "Should report the given error string");
   });
 
   add_task(function* unsubscribe() {
