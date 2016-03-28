@@ -46,7 +46,6 @@ import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.TargetApi;
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
@@ -74,6 +73,7 @@ import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v7.app.ActionBar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -97,7 +97,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class GeckoPreferences
-extends PreferenceActivity
+extends AppCompatPreferenceActivity
 implements
 GeckoActivityStatus,
 GeckoEventListener,
@@ -205,10 +205,7 @@ OnSharedPreferenceChangeListener
             if (newTitle != null) {
                 Log.v(LOGTAG, "Setting action bar title to " + newTitle);
 
-                final ActionBar actionBar = getActionBar();
-                if (actionBar != null) {
-                    actionBar.setTitle(newTitle);
-                }
+                setTitle(newTitle);
             }
         }
     }
@@ -242,7 +239,7 @@ OnSharedPreferenceChangeListener
         BrowserLocaleManager.getInstance().updateConfiguration(getApplicationContext(), newLocale);
         this.lastLocale = newLocale;
 
-        if (Versions.feature11Plus && isMultiPane()) {
+        if (isMultiPane()) {
             // This takes care of the left pane.
             invalidateHeaders();
 
@@ -315,32 +312,35 @@ OnSharedPreferenceChangeListener
         // check that PreferenceActivity.EXTRA_SHOW_FRAGMENT has been set
         // (or set it) before super.onCreate() is called so Android can display
         // the correct Fragment resource.
-
+        // Note: this seems to only be required for non-multipane devices, multipane
+        // manages to automatically select the correct fragments.
         if (Versions.feature11Plus) {
             if (!getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
                 // Set up the default fragment if there is no explicit fragment to show.
                 setupTopLevelFragmentIntent();
-
-                // This is the default header, because it's the first one.
-                // I know, this is an affront to all human decency. And yet.
-                setTitle(R.string.pref_header_general);
-            }
-
-            if (onIsMultiPane()) {
-                // So that Android doesn't put the fragment title (or nothing at
-                // all) in the action bar.
-                updateActionBarTitle(R.string.settings_title);
-
-                if (Build.VERSION.SDK_INT < 13) {
-                    // Affected by Bug 1015209 -- no detach/attach.
-                    // If we try rejigging fragments, we'll crash, so don't
-                    // enable locale switching at all.
-                    localeSwitchingIsEnabled = false;
-                }
             }
         }
 
+        // We must call this before setTitle to avoid crashes. Most devices don't seem to care
+        // (we used to call onCreate later), however the ASUS TF300T (running 4.2) crashes
+        // with an NPE in android.support.v7.app.AppCompatDelegateImplV7.ensureSubDecor(), and it's
+        // likely other strange devices (other Asus devices, some Samsungs) could do the same.
         super.onCreate(savedInstanceState);
+
+        if (Versions.feature11Plus && onIsMultiPane()) {
+            // So that Android doesn't put the fragment title (or nothing at
+            // all) in the action bar.
+            updateActionBarTitle(R.string.settings_title);
+
+            if (Build.VERSION.SDK_INT < 13) {
+                // Affected by Bug 1015209 -- no detach/attach.
+                // If we try rejigging fragments, we'll crash, so don't
+                // enable locale switching at all.
+                localeSwitchingIsEnabled = false;
+                throw new IllegalStateException("foobar");
+            }
+        }
+
         initActionBar();
 
         // Use setResourceToOpen to specify these extras.
@@ -426,7 +426,7 @@ OnSharedPreferenceChangeListener
      */
     private void initActionBar() {
         if (Versions.feature14Plus) {
-            final ActionBar actionBar = getActionBar();
+            final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.setHomeButtonEnabled(true);
                 actionBar.setDisplayHomeAsUpEnabled(true);
