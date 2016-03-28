@@ -400,9 +400,9 @@ public:
   virtual bool WantAsyncScroll() const = 0;
   /**
    * aLayer's animated geometry root is this frame. If there needs to be a
-   * FrameMetrics contributed by this frame, append it to aOutput.
+   * ScrollMetadata contributed by this frame, append it to aOutput.
    */
-  virtual mozilla::Maybe<mozilla::layers::FrameMetrics> ComputeFrameMetrics(
+  virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
     mozilla::layers::Layer* aLayer,
     nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
