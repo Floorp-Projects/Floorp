@@ -143,6 +143,7 @@ class nsLayoutUtils
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollMetadata ScrollMetadata;
   typedef FrameMetrics::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSSize CSSSize;
@@ -2721,16 +2722,16 @@ public:
    */
   static bool CanScrollOriginClobberApz(nsIAtom* aScrollOrigin);
 
-  static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
-                                          nsIFrame* aScrollFrame,
-                                          nsIContent* aContent,
-                                          const nsIFrame* aReferenceFrame,
-                                          Layer* aLayer,
-                                          ViewID aScrollParentId,
-                                          const nsRect& aViewport,
-                                          const mozilla::Maybe<nsRect>& aClipRect,
-                                          bool aIsRoot,
-                                          const ContainerLayerParameters& aContainerParameters);
+  static ScrollMetadata ComputeScrollMetadata(nsIFrame* aForFrame,
+                                              nsIFrame* aScrollFrame,
+                                              nsIContent* aContent,
+                                              const nsIFrame* aReferenceFrame,
+                                              Layer* aLayer,
+                                              ViewID aScrollParentId,
+                                              const nsRect& aViewport,
+                                              const mozilla::Maybe<nsRect>& aClipRect,
+                                              bool aIsRoot,
+                                              const ContainerLayerParameters& aContainerParameters);
 
   /**
    * If the given scroll frame needs an area excluded from its composition

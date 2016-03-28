@@ -860,6 +860,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      // mTreeManager must be initialized before GetFrameTime() is called
      mTreeManager(aTreeManager),
      mSharingFrameMetricsAcrossProcesses(false),
+     mFrameMetrics(mScrollMetadata.GetMetrics()),
      mMonitor("AsyncPanZoomController"),
      mX(this),
      mY(this),
@@ -3298,14 +3299,16 @@ bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
   return true;
 }
 
-void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics,
+void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMetadata,
                                                  bool aIsFirstPaint,
                                                  bool aThisLayerTreeUpdated)
 {
   APZThreadUtils::AssertOnCompositorThread();
 
   ReentrantMonitorAutoEnter lock(mMonitor);
-  bool isDefault = mFrameMetrics.IsDefault();
+  bool isDefault = mScrollMetadata.IsDefault();
+
+  const FrameMetrics& aLayerMetrics = aScrollMetadata.GetMetrics();
 
   if ((aLayerMetrics == mLastContentPaintMetrics) && !isDefault) {
     // No new information here, skip it. Note that this is not just an
@@ -3390,7 +3393,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // that was just painted is something we knew nothing about previously
     CancelAnimation();
 
-    mFrameMetrics = aLayerMetrics;
+    mScrollMetadata = aScrollMetadata;
     if (scrollOffsetUpdated) {
       AcknowledgeScrollUpdate();
     }
@@ -3446,8 +3449,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.SetHasScrollgrab(aLayerMetrics.GetHasScrollgrab());
     mFrameMetrics.SetLineScrollAmount(aLayerMetrics.GetLineScrollAmount());
     mFrameMetrics.SetPageScrollAmount(aLayerMetrics.GetPageScrollAmount());
-    mFrameMetrics.SetClipRect(aLayerMetrics.GetClipRect());
-    mFrameMetrics.SetMaskLayerIndex(aLayerMetrics.GetMaskLayerIndex());
+    mScrollMetadata.SetClipRect(aScrollMetadata.GetClipRect());
+    mScrollMetadata.SetMaskLayerIndex(aScrollMetadata.GetMaskLayerIndex());
     mFrameMetrics.SetIsLayersIdRoot(aLayerMetrics.IsLayersIdRoot());
     mFrameMetrics.SetUsesContainerScrolling(aLayerMetrics.UsesContainerScrolling());
     mFrameMetrics.SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());

@@ -38,7 +38,6 @@ public:
   static const ViewID NULL_SCROLL_ID;   // This container layer does not scroll.
   static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling subframes
                                         // will begin at.
-  static const FrameMetrics sNullMetrics;   // We often need an empty metrics
 
   FrameMetrics()
     : mScrollId(NULL_SCROLL_ID)
@@ -63,8 +62,6 @@ public:
     , mContentDescription()
     , mLineScrollAmount(0, 0)
     , mPageScrollAmount(0, 0)
-    , mClipRect()
-    , mMaskLayerIndex()
     , mPaintRequestTime()
     , mIsRootContent(false)
     , mHasScrollgrab(false)
@@ -105,8 +102,6 @@ public:
            // don't compare mContentDescription
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
-           mClipRect == aOther.mClipRect &&
-           mMaskLayerIndex == aOther.mMaskLayerIndex &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mIsRootContent == aOther.mIsRootContent &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
@@ -122,14 +117,6 @@ public:
   bool operator!=(const FrameMetrics& aOther) const
   {
     return !operator==(aOther);
-  }
-
-  bool IsDefault() const
-  {
-    FrameMetrics def;
-
-    def.mPresShellId = mPresShellId;
-    return (def == *this);
   }
 
   bool IsScrollable() const
@@ -528,28 +515,6 @@ public:
     mAllowVerticalScrollWithWheel = aValue;
   }
 
-  void SetClipRect(const Maybe<ParentLayerIntRect>& aClipRect)
-  {
-    mClipRect = aClipRect;
-  }
-  const Maybe<ParentLayerIntRect>& GetClipRect() const
-  {
-    return mClipRect;
-  }
-  bool HasClipRect() const {
-    return mClipRect.isSome();
-  }
-  const ParentLayerIntRect& ClipRect() const {
-    return mClipRect.ref();
-  }
-
-  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
-    mMaskLayerIndex = aIndex;
-  }
-  const Maybe<size_t>& GetMaskLayerIndex() const {
-    return mMaskLayerIndex;
-  }
-
   void SetPaintRequestTime(const TimeStamp& aTime) {
     mPaintRequestTime = aTime;
   }
@@ -731,14 +696,6 @@ private:
   // The value of GetPageScrollAmount(), for scroll frames.
   LayoutDeviceIntSize mPageScrollAmount;
 
-  // The clip rect to use when compositing a layer with this FrameMetrics.
-  Maybe<ParentLayerIntRect> mClipRect;
-
-  // An extra clip mask layer to use when compositing a layer with this
-  // FrameMetrics. This is an index into the MetricsMaskLayers array on
-  // the Layer.
-  Maybe<size_t> mMaskLayerIndex;
-
   // The time at which the APZC last requested a repaint for this scrollframe.
   TimeStamp mPaintRequestTime;
 
@@ -792,6 +749,81 @@ private:
   void SetDoSmoothScroll(bool aValue) {
     mDoSmoothScroll = aValue;
   }
+};
+
+
+/**
+ * Metadata about a scroll frame that's stored in the layer tree for use by
+ * the compositor (including APZ). This includes the scroll frame's FrameMetrics,
+ * as well as other metadata. We don't put the other metadata into FrameMetrics
+ * to avoid FrameMetrics becoming too bloated (as a FrameMetrics is e.g. sent
+ * over IPC for every repaint request for every active scroll frame).
+ */
+struct ScrollMetadata {
+  friend struct IPC::ParamTraits<mozilla::layers::ScrollMetadata>;
+public:
+  static const ScrollMetadata sNullMetadata;   // We sometimes need an empty metadata
+
+  ScrollMetadata()
+    : mMetrics()
+    , mMaskLayerIndex()
+    , mClipRect()
+  {}
+
+  bool operator==(const ScrollMetadata& aOther) const
+  {
+    return mMetrics == aOther.mMetrics &&
+           mMaskLayerIndex == aOther.mMaskLayerIndex &&
+           mClipRect == aOther.mClipRect;
+  }
+
+  bool operator!=(const ScrollMetadata& aOther) const
+  {
+    return !operator==(aOther);
+  }
+
+  bool IsDefault() const
+  {
+    ScrollMetadata def;
+
+    def.mMetrics.SetPresShellId(mMetrics.GetPresShellId());
+    return (def == *this);
+  }
+
+  FrameMetrics& GetMetrics() { return mMetrics; }
+  const FrameMetrics& GetMetrics() const { return mMetrics; }
+
+  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
+    mMaskLayerIndex = aIndex;
+  }
+  const Maybe<size_t>& GetMaskLayerIndex() const {
+    return mMaskLayerIndex;
+  }
+
+  void SetClipRect(const Maybe<ParentLayerIntRect>& aClipRect)
+  {
+    mClipRect = aClipRect;
+  }
+  const Maybe<ParentLayerIntRect>& GetClipRect() const
+  {
+    return mClipRect;
+  }
+  bool HasClipRect() const {
+    return mClipRect.isSome();
+  }
+  const ParentLayerIntRect& ClipRect() const {
+    return mClipRect.ref();
+  }
+private:
+  FrameMetrics mMetrics;
+
+  // An extra clip mask layer to use when compositing a layer with this
+  // FrameMetrics. This is an index into the MetricsMaskLayers array on
+  // the Layer.
+  Maybe<size_t> mMaskLayerIndex;
+
+  // The clip rect to use when compositing a layer with this FrameMetrics.
+  Maybe<ParentLayerIntRect> mClipRect;
 };
 
 /**

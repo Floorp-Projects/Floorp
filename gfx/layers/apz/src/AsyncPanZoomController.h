@@ -178,13 +178,13 @@ public:
   AsyncTransformComponentMatrix GetOverscrollTransform() const;
 
   /**
-   * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics
+   * A shadow layer update has arrived. |aScrollMetdata| is the new ScrollMetadata
    * for the container layer corresponding to this APZC.
    * |aIsFirstPaint| is a flag passed from the shadow
-   * layers code indicating that the frame metrics being sent with this call are
-   * the initial metrics and the initial paint of the frame has just happened.
+   * layers code indicating that the scroll metadata being sent with this call are
+   * the initial metadata and the initial paint of the frame has just happened.
    */
-  void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint,
+  void NotifyLayersUpdated(const ScrollMetadata& aScrollMetadata, bool aIsFirstPaint,
                            bool aThisLayerTreeUpdated);
 
   /**
@@ -681,7 +681,8 @@ protected:
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
   // monitor. Do not read from or modify either of them without locking.
-  FrameMetrics mFrameMetrics;
+  ScrollMetadata mScrollMetadata;
+  FrameMetrics& mFrameMetrics;  // for convenience, refers to mScrollMetadata.mMetrics
 
   // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, and |mState|.
   // Before manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the
