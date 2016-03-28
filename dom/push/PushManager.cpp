@@ -531,7 +531,7 @@ WorkerPushSubscription::Unsubscribe(ErrorResult &aRv)
 
   RefPtr<UnsubscribeRunnable> r =
     new UnsubscribeRunnable(proxy, mScope);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return p.forget();
 }
@@ -828,7 +828,7 @@ WorkerPushManager::PerformSubscriptionAction(SubscriptionAction aAction, ErrorRe
 
   RefPtr<GetSubscriptionRunnable> r =
     new GetSubscriptionRunnable(proxy, mScope, aAction);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return p.forget();
 }

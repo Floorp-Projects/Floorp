@@ -568,7 +568,7 @@ MessagePort::Dispatch()
 
   mPostMessageRunnable = new PostMessageRunnable(this, data);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(mPostMessageRunnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mPostMessageRunnable));
 }
 
 void

@@ -632,7 +632,7 @@ ServiceWorkerGlobalScope::SkipWaiting(ErrorResult& aRv)
     new WorkerScopeSkipWaitingRunnable(promiseProxy,
                                        NS_ConvertUTF16toUTF8(mScope));
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   return promise.forget();
 }
 
