@@ -43,10 +43,12 @@ public:
   NS_DECL_NSIPUSHNOTIFIER
 
   nsresult NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
-                      Maybe<nsTArray<uint8_t>> aData);
+                      const nsAString& aMessageId,
+                      const Maybe<nsTArray<uint8_t>>& aData);
   nsresult NotifyPushWorkers(const nsACString& aScope,
                              nsIPrincipal* aPrincipal,
-                             Maybe<nsTArray<uint8_t>> aData);
+                             const nsAString& aMessageId,
+                             const Maybe<nsTArray<uint8_t>>& aData);
   nsresult NotifySubscriptionChangeWorkers(const nsACString& aScope,
                                            nsIPrincipal* aPrincipal);
 
@@ -55,7 +57,7 @@ protected:
 
 private:
   nsresult NotifyPushObservers(const nsACString& aScope,
-                               Maybe<nsTArray<uint8_t>> aData);
+                               const Maybe<nsTArray<uint8_t>>& aData);
   nsresult NotifySubscriptionChangeObservers(const nsACString& aScope);
   nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
                              const nsACString& aScope);
