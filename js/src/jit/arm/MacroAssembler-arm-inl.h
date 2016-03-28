@@ -481,32 +481,6 @@ MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label*
     branch32(cond, scratch2, rhs, label);
 }
 
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
-{
-    if (lhs.getTag() == Operand::OP2) {
-        branch32(cond, lhs.toReg(), rhs, label);
-    } else {
-        ScratchRegisterScope scratch(*this);
-        ma_ldr(lhs.toAddress(), scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-}
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
-{
-    if (lhs.getTag() == Operand::OP2) {
-        branch32(cond, lhs.toReg(), rhs, label);
-    } else {
-        // branch32 will use ScratchRegister.
-        AutoRegisterScope scratch(*this, secondScratchReg_);
-        ma_ldr(lhs.toAddress(), scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-}
-
 void
 MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
 {

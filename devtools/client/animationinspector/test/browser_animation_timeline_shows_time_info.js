@@ -23,8 +23,13 @@ add_task(function*() {
     ok(el.hasAttribute("title"), "The tooltip is defined for animation " + i);
 
     let title = el.getAttribute("title");
-    ok(title.match(/Delay: [\d.-]+s/), "The tooltip shows the delay");
+    if (controller.animationPlayers[i].state.delay) {
+      ok(title.match(/Delay: [\d.-]+s/), "The tooltip shows the delay");
+    }
     ok(title.match(/Duration: [\d.]+s/), "The tooltip shows the duration");
+    if (controller.animationPlayers[i].state.endDelay) {
+      ok(title.match(/End delay: [\d.-]+s/), "The tooltip shows the endDelay");
+    }
     if (controller.animationPlayers[i].state.iterationCount !== 1) {
       ok(title.match(/Repeats: /), "The tooltip shows the iterations");
     } else {

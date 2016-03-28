@@ -233,28 +233,28 @@ class WidgetEventTime
 public:
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
-  uint64_t time;
+  uint64_t mTime;
   // Timestamp when the message was created. Set in parallel to 'time' until we
   // determine if it is safe to drop 'time' (see bug 77992).
-  TimeStamp timeStamp;
+  TimeStamp mTimeStamp;
 
   WidgetEventTime()
-    : time(0)
-    , timeStamp(TimeStamp::Now())
+    : mTime(0)
+    , mTimeStamp(TimeStamp::Now())
   {
   }
 
   WidgetEventTime(uint64_t aTime,
                   TimeStamp aTimeStamp)
-    : time(aTime)
-    , timeStamp(aTimeStamp)
+    : mTime(aTime)
+    , mTimeStamp(aTimeStamp)
   {
   }
 
   void AssignEventTime(const WidgetEventTime& aOther)
   {
-    time = aOther.time;
-    timeStamp = aOther.timeStamp;
+    mTime = aOther.mTime;
+    mTimeStamp = aOther.mTimeStamp;
   }
 };
 
@@ -825,7 +825,7 @@ class InternalUIEvent : public WidgetGUIEvent
 {
 protected:
   InternalUIEvent()
-    : detail(0)
+    : mDetail(0)
     , mCausedByUntrustedEvent(false)
   {
   }
@@ -833,7 +833,7 @@ protected:
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , detail(0)
+    , mDetail(0)
     , mCausedByUntrustedEvent(false)
   {
   }
@@ -841,7 +841,7 @@ protected:
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aEventClassID)
-    , detail(0)
+    , mDetail(0)
     , mCausedByUntrustedEvent(false)
   {
   }
@@ -857,7 +857,7 @@ public:
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   const WidgetEvent* aEventCausesThisEvent)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
-    , detail(0)
+    , mDetail(0)
     , mCausedByUntrustedEvent(
         aEventCausesThisEvent && !aEventCausesThisEvent->IsTrusted())
   {
@@ -873,7 +873,7 @@ public:
     return result;
   }
 
-  int32_t detail;
+  int32_t mDetail;
   // mCausedByUntrustedEvent is true if the event is caused by untrusted event.
   bool mCausedByUntrustedEvent;
 
@@ -888,7 +888,7 @@ public:
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    detail = aEvent.detail;
+    mDetail = aEvent.mDetail;
     mCausedByUntrustedEvent = aEvent.mCausedByUntrustedEvent;
   }
 };

@@ -2583,7 +2583,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               event.type = anEvent.mMessage == eMouseOver ?
                 EnterNotify : LeaveNotify;
               event.root = root;
-              event.time = anEvent.time;
+              event.time = anEvent.mTime;
               event.x = pluginPoint.x;
               event.y = pluginPoint.y;
               event.x_root = rootPoint.x;
@@ -2602,7 +2602,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               XMotionEvent& event = pluginEvent.xmotion;
               event.type = MotionNotify;
               event.root = root;
-              event.time = anEvent.time;
+              event.time = anEvent.mTime;
               event.x = pluginPoint.x;
               event.y = pluginPoint.y;
               event.x_root = rootPoint.x;
@@ -2621,7 +2621,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               event.type = anEvent.mMessage == eMouseDown ?
                 ButtonPress : ButtonRelease;
               event.root = root;
-              event.time = anEvent.time;
+              event.time = anEvent.mTime;
               event.x = pluginPoint.x;
               event.y = pluginPoint.y;
               event.x_root = rootPoint.x;
@@ -2658,7 +2658,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
           XKeyEvent &event = pluginEvent.xkey;
 #ifdef MOZ_WIDGET_GTK
           event.root = GDK_ROOT_WINDOW();
-          event.time = anEvent.time;
+          event.time = anEvent.mTime;
           const GdkEventKey* gdkEvent =
             static_cast<const GdkEventKey*>(anEvent.mPluginEvent);
           event.keycode = gdkEvent->hardware_keycode;

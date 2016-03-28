@@ -87,8 +87,10 @@ CodeGeneratorARM::visitCompare(LCompare* comp)
 
     if (right->isConstant())
         masm.ma_cmp(ToRegister(left), Imm32(ToInt32(right)));
+    else if (right->isRegister())
+        masm.ma_cmp(ToRegister(left), ToRegister(right));
     else
-        masm.ma_cmp(ToRegister(left), ToOperand(right));
+        masm.ma_cmp(ToRegister(left), Operand(ToAddress(right)));
     masm.ma_mov(Imm32(0), ToRegister(def));
     masm.ma_mov(Imm32(1), ToRegister(def), cond);
 }
@@ -97,10 +99,15 @@ void
 CodeGeneratorARM::visitCompareAndBranch(LCompareAndBranch* comp)
 {
     Assembler::Condition cond = JSOpToCondition(comp->cmpMir()->compareType(), comp->jsop());
-    if (comp->right()->isConstant())
-        masm.ma_cmp(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));
+    const LAllocation* left = comp->left();
+    const LAllocation* right = comp->right();
+
+    if (right->isConstant())
+        masm.ma_cmp(ToRegister(left), Imm32(ToInt32(right)));
+    else if (right->isRegister())
+        masm.ma_cmp(ToRegister(left), ToRegister(right));
     else
-        masm.ma_cmp(ToRegister(comp->left()), ToOperand(comp->right()));
+        masm.ma_cmp(ToRegister(left), Operand(ToAddress(right)));
     emitBranch(cond, comp->ifTrue(), comp->ifFalse());
 }
 
@@ -338,8 +345,10 @@ CodeGeneratorARM::visitAddI(LAddI* ins)
 
     if (rhs->isConstant())
         masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCC);
+    else if (rhs->isRegister())
+        masm.ma_add(ToRegister(lhs), ToRegister(rhs), ToRegister(dest), SetCC);
     else
-        masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCC);
+        masm.ma_add(ToRegister(lhs), Operand(ToAddress(rhs)), ToRegister(dest), SetCC);
 
     if (ins->snapshot())
         bailoutIf(Assembler::Overflow, ins->snapshot());
@@ -354,8 +363,10 @@ CodeGeneratorARM::visitSubI(LSubI* ins)
 
     if (rhs->isConstant())
         masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCC);
+    else if (rhs->isRegister())
+        masm.ma_sub(ToRegister(lhs), ToRegister(rhs), ToRegister(dest), SetCC);
     else
-        masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCC);
+        masm.ma_sub(ToRegister(lhs), Operand(ToAddress(rhs)), ToRegister(dest), SetCC);
 
     if (ins->snapshot())
         bailoutIf(Assembler::Overflow, ins->snapshot());
@@ -454,7 +465,6 @@ CodeGeneratorARM::visitMulI(LMulI* ins)
     } else {
         Assembler::Condition c = Assembler::Overflow;
 
-        // masm.imull(ToOperand(rhs), ToRegister(lhs));
         if (mul->canOverflow())
             c = masm.ma_check_mul(ToRegister(lhs), ToRegister(rhs), ToRegister(dest), c);
         else

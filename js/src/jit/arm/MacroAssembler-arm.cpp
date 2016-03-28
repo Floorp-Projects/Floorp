@@ -2365,19 +2365,6 @@ MacroAssemblerARMCompat::cmp32(Register lhs, Imm32 rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmp32(const Operand& lhs, Register rhs)
-{
-    ma_cmp(lhs.toReg(), rhs);
-}
-
-void
-MacroAssemblerARMCompat::cmp32(const Operand& lhs, Imm32 rhs)
-{
-    MOZ_ASSERT(lhs.toReg() != ScratchRegister);
-    ma_cmp(lhs.toReg(), rhs);
-}
-
-void
 MacroAssemblerARMCompat::cmp32(Register lhs, Register rhs)
 {
     ma_cmp(lhs, rhs);
