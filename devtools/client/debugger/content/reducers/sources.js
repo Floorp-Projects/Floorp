@@ -67,8 +67,15 @@ function update(state = initialState, action, emitChange) {
         loading: false
       });
 
-      // If it errored, just display the source as it way before.
-      emitChange('prettyprinted', s.sources[action.source.actor]);
+      // If it errored, just display the source as it was before, but
+      // only if there is existing text already. If auto-prettifying
+      // is on, the original text may still be coming in and we don't
+      // have it yet. If we try to set empty text we confuse the
+      // editor because it thinks it's already displaying the source's
+      // text and won't load the text when it actually comes in.
+      if(s.sourcesText[action.source.actor].text != null) {
+        emitChange('prettyprinted', s.sources[action.source.actor]);
+      }
     }
     else {
       s = _updateText(state, action);
