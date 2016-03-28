@@ -281,7 +281,7 @@ public:
     MOZ_COUNT_CTOR(BroadcastChannelFeature);
   }
 
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
+  virtual bool Notify(workers::Status aStatus) override
   {
     if (aStatus >= Closing) {
       mChannel->Shutdown();
