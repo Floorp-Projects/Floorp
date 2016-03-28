@@ -397,13 +397,33 @@ CensusTreeNodeVisitor.prototype.root = function () {
  * @param {null|String|SavedFrame} name
  */
 function CensusTreeNode(name) {
+  // Display name for this CensusTreeNode. Either null, a string, or a
+  // SavedFrame.
   this.name = name;
+
+  // The number of bytes occupied by matching things in the heap snapshot.
   this.bytes = 0;
+
+  // The sum of `this.bytes` and `child.totalBytes` for each child in
+  // `this.children`.
   this.totalBytes = 0;
+
+  // The number of things in the heap snapshot that match this node in the
+  // census tree.
   this.count = 0;
+
+  // The sum of `this.count` and `child.totalCount` for each child in
+  // `this.children`.
   this.totalCount = 0;
+
+  // An array of this node's children, or undefined if it has no children.
   this.children = undefined;
+
+  // The unique ID of this node.
   this.id = ++censusTreeNodeIdCounter;
+
+  // If present, the unique ID of this node's parent. If this node does not have
+  // a parent, then undefined.
   this.parent = undefined;
 }
 
