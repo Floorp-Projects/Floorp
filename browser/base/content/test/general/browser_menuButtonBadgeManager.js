@@ -17,8 +17,17 @@ add_task(function* testButtonActivities() {
   gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_APPUPDATE, "update-failed");
   is(menuButton.getAttribute("badge-status"), "update-failed", "Should have update-failed badge status");
 
+  gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD, "download-severe");
+  is(menuButton.getAttribute("badge-status"), "download-severe", "Should have download-severe badge status");
+
+  gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD, "download-warning");
+  is(menuButton.getAttribute("badge-status"), "download-warning", "Should have download-warning badge status");
+
   gMenuButtonBadgeManager.addBadge("unknownbadge", "attr");
-  is(menuButton.getAttribute("badge-status"), "update-failed", "Should not have changed badge status");
+  is(menuButton.getAttribute("badge-status"), "download-warning", "Should not have changed badge status");
+
+  gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD);
+  is(menuButton.getAttribute("badge-status"), "update-failed", "Should have update-failed badge status");
 
   gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_APPUPDATE);
   is(menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Should have fxa-needs-authentication badge status");
@@ -31,7 +40,7 @@ add_task(function* testButtonActivities() {
   PanelUI.hide();
 
   gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_FXA, "fxa-needs-authentication");
-  gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_UPDATE, "update-succeeded");
+  gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_APPUPDATE, "update-succeeded");
   gMenuButtonBadgeManager.clearBadges();
   is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status (clearBadges called)");
 });
