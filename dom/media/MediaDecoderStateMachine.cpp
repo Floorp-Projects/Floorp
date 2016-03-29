@@ -42,7 +42,6 @@
 #include "ImageContainer.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderReader.h"
-#include "MediaDecoderReaderWrapper.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
 #include "MediaTimer.h"
@@ -220,7 +219,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
   mFragmentEndTime(-1),
   mReader(aReader),
-  mReaderWrapper(new MediaDecoderReaderWrapper(aRealTime, mTaskQueue, aReader)),
   mDecodedAudioEndTime(0),
   mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
@@ -606,6 +604,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
   RefPtr<MediaData> audio(aAudioSample);
   MOZ_ASSERT(audio);
   mAudioDataRequest.Complete();
+  aAudioSample->AdjustForStartTime(StartTime());
 
   // audio->GetEndTime() is not always mono-increasing in chained ogg.
   mDecodedAudioEndTime = std::max(audio->GetEndTime(), mDecodedAudioEndTime);
@@ -888,6 +887,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
   RefPtr<MediaData> video(aVideoSample);
   MOZ_ASSERT(video);
   mVideoDataRequest.Complete();
+  aVideoSample->AdjustForStartTime(StartTime());
 
   // Handle abnormal or negative timestamps.
   mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, video->GetEndTime());
@@ -1342,7 +1342,11 @@ MediaDecoderStateMachine::Shutdown()
   Reset();
 
   mMediaSink->Shutdown();
-  mReaderWrapper->Shutdown();
+
+  // Shut down our start time rendezvous.
+  if (mStartTimeRendezvous) {
+    mStartTimeRendezvous->Destroy();
+  }
 
   DECODER_LOG("Shutdown started");
 
@@ -1479,7 +1483,8 @@ MediaDecoderStateMachine::ReadMetadata()
   DECODER_LOG("Dispatching AsyncReadMetadata");
   // Set mode to METADATA since we are about to read metadata.
   mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-  mMetadataRequest.Begin(mReaderWrapper->ReadMetadata()
+  mMetadataRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                                     &MediaDecoderReader::AsyncReadMetadata)
     ->Then(OwnerThread(), __func__, this,
            &MediaDecoderStateMachine::OnMetadataRead,
            &MediaDecoderStateMachine::OnMetadataNotRead));
@@ -1632,8 +1637,11 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
 
   // Do the seek.
   RefPtr<MediaDecoderStateMachine> self = this;
-  mSeekRequest.Begin(
-    mReaderWrapper->Seek(mCurrentSeek.mTarget, Duration())
+  SeekTarget seekTarget = mCurrentSeek.mTarget;
+  seekTarget.SetTime(seekTarget.GetTime() + media::TimeUnit::FromMicroseconds(StartTime()));
+  mSeekRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                                 &MediaDecoderReader::Seek, seekTarget,
+                                 Duration().ToMicroseconds())
     ->Then(OwnerThread(), __func__,
            [self] (media::TimeUnit) -> void {
              self->mSeekRequest.Complete();
@@ -1695,11 +1703,25 @@ MediaDecoderStateMachine::RequestAudioData()
   SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
              AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
-  mAudioDataRequest.Begin(
-    mReaderWrapper->RequestAudioData()
-    ->Then(OwnerThread(), __func__, this,
-           &MediaDecoderStateMachine::OnAudioDecoded,
-           &MediaDecoderStateMachine::OnAudioNotDecoded));
+  if (mSentFirstFrameLoadedEvent) {
+    mAudioDataRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(),
+                                        __func__, &MediaDecoderReader::RequestAudioData)
+      ->Then(OwnerThread(), __func__, this,
+             &MediaDecoderStateMachine::OnAudioDecoded,
+             &MediaDecoderStateMachine::OnAudioNotDecoded));
+  } else {
+    mAudioDataRequest.Begin(
+      InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                  &MediaDecoderReader::RequestAudioData)
+      ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
+             &StartTimeRendezvous::ProcessFirstSample<AudioDataPromise, MediaData::AUDIO_DATA>,
+             &StartTimeRendezvous::FirstSampleRejected<MediaData::AUDIO_DATA>)
+      ->CompletionPromise()
+      ->Then(OwnerThread(), __func__, this,
+             &MediaDecoderStateMachine::OnAudioDecoded,
+             &MediaDecoderStateMachine::OnAudioNotDecoded)
+    );
+  }
 }
 
 nsresult
@@ -1754,23 +1776,44 @@ MediaDecoderStateMachine::RequestVideoData()
   bool skipToNextKeyFrame = mSentFirstFrameLoadedEvent &&
     NeedToSkipToNextKeyframe();
 
-  media::TimeUnit currentTime = media::TimeUnit::FromMicroseconds(
-    mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime());
+  int64_t currentTime =
+    mState == DECODER_STATE_SEEKING || !mSentFirstFrameLoadedEvent
+      ? 0 : GetMediaTime() + StartTime();
 
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
              VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
-             currentTime.ToMicroseconds());
+             currentTime);
 
   RefPtr<MediaDecoderStateMachine> self = this;
-  mVideoDataRequest.Begin(
-    mReaderWrapper->RequestVideoData(skipToNextKeyFrame, currentTime)
-    ->Then(OwnerThread(), __func__,
-           [self, videoDecodeStartTime] (MediaData* aVideoSample) {
-             self->OnVideoDecoded(aVideoSample, videoDecodeStartTime);
-           },
-           [self] (MediaDecoderReader::NotDecodedReason aReason) {
-             self->OnVideoNotDecoded(aReason);
-           }));
+  if (mSentFirstFrameLoadedEvent) {
+    mVideoDataRequest.Begin(
+      InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                  &MediaDecoderReader::RequestVideoData,
+                  skipToNextKeyFrame, currentTime)
+      ->Then(OwnerThread(), __func__,
+             [self, videoDecodeStartTime] (MediaData* aVideoSample) {
+               self->OnVideoDecoded(aVideoSample, videoDecodeStartTime);
+             },
+             [self] (MediaDecoderReader::NotDecodedReason aReason) {
+               self->OnVideoNotDecoded(aReason);
+             }));
+  } else {
+    mVideoDataRequest.Begin(
+      InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                  &MediaDecoderReader::RequestVideoData,
+                  skipToNextKeyFrame, currentTime)
+      ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
+             &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise, MediaData::VIDEO_DATA>,
+             &StartTimeRendezvous::FirstSampleRejected<MediaData::VIDEO_DATA>)
+      ->CompletionPromise()
+      ->Then(OwnerThread(), __func__,
+             [self, videoDecodeStartTime] (MediaData* aVideoSample) {
+               self->OnVideoDecoded(aVideoSample, videoDecodeStartTime);
+             },
+             [self] (MediaDecoderReader::NotDecodedReason aReason) {
+               self->OnVideoNotDecoded(aReason);
+             }));
+  }
 }
 
 void
@@ -1903,14 +1946,29 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   mMetadataTags = aMetadata->mTags.forget();
   RefPtr<MediaDecoderStateMachine> self = this;
 
+  // Set up the start time rendezvous if it doesn't already exist (which is
+  // generally the case, unless we're coming out of dormant mode).
+  if (!mStartTimeRendezvous) {
+    mStartTimeRendezvous = new StartTimeRendezvous(OwnerThread(), HasAudio(), HasVideo(),
+                                                   mReader->ForceZeroStartTime() || IsRealTime());
+
+    mStartTimeRendezvous->AwaitStartTime()->Then(OwnerThread(), __func__,
+      [self] () -> void {
+        NS_ENSURE_TRUE_VOID(!self->IsShutdown());
+        self->mReader->DispatchSetStartTime(self->StartTime());
+      },
+      [] () -> void { NS_WARNING("Setting start time on reader failed"); }
+    );
+  }
+
   if (mInfo.mMetadataDuration.isSome()) {
     RecomputeDuration();
   } else if (mInfo.mUnadjustedMetadataEndTime.isSome()) {
-    mReaderWrapper->AwaitStartTime()->Then(OwnerThread(), __func__,
+    mStartTimeRendezvous->AwaitStartTime()->Then(OwnerThread(), __func__,
       [self] () -> void {
         NS_ENSURE_TRUE_VOID(!self->IsShutdown());
         TimeUnit unadjusted = self->mInfo.mUnadjustedMetadataEndTime.ref();
-        TimeUnit adjustment = self->mReaderWrapper->StartTime();
+        TimeUnit adjustment = TimeUnit::FromMicroseconds(self->StartTime());
         self->mInfo.mMetadataDuration.emplace(unadjusted - adjustment);
         self->RecomputeDuration();
       }, [] () -> void { NS_WARNING("Adjusting metadata end time failed"); }
