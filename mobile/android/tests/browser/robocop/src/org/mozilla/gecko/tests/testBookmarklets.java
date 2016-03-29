@@ -6,7 +6,7 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
 
-import com.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Condition;
 
 
 public class testBookmarklets extends BaseTest {

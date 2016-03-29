@@ -11,7 +11,7 @@ import org.mozilla.gecko.tests.UITestContext.ComponentType;
 import org.mozilla.gecko.tests.components.AppMenuComponent;
 import org.mozilla.gecko.tests.components.ToolbarComponent;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * Provides helper functionality for navigating around the Firefox UI. These functions will often
