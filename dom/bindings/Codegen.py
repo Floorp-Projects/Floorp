@@ -2745,13 +2745,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
     properties should be a PropertyArrays instance.
     """
-    def __init__(self, descriptor, properties):
+    def __init__(self, descriptor, properties, haveUnscopables):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('ProtoAndIfaceCache&', 'aProtoAndIfaceCache'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
+        self.haveUnscopables = haveUnscopables
 
     def definition_body(self):
         (protoGetter, protoHandleGetter) = InterfacePrototypeObjectProtoGetter(self.descriptor)
@@ -2891,7 +2892,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
-                                        ${name}, aDefineOnGlobal);
+                                        ${name}, aDefineOnGlobal,
+                                        ${unscopableNames});
             """,
             protoClass=protoClass,
             parentProto=parentProto,
@@ -2903,7 +2905,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceCache=interfaceCache,
             properties=properties,
             chromeProperties=chromeProperties,
-            name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr")
+            name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr",
+            unscopableNames="unscopableNames" if self.haveUnscopables else "nullptr")
 
         # If we fail after here, we must clear interface and prototype caches
         # using this code: intermediate failure must not expose the interface in
@@ -12078,7 +12081,8 @@ class CGDescriptor(CGThing):
 
         # CGCreateInterfaceObjectsMethod needs to come after our
         # CGDOMJSClass and unscopables, if any.
-        cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
+        cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties,
+                                                       haveUnscopables))
 
         # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
         # to come after CGCreateInterfaceObjectsMethod.
