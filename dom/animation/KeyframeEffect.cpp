@@ -598,14 +598,12 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       aStyleRule = new AnimValuesStyleRule();
     }
 
-    StyleAnimationValue* val = aStyleRule->AddEmptyValue(prop.mProperty);
-
     // Special handling for zero-length segments
     if (segment->mToKey == segment->mFromKey) {
       if (computedTiming.mProgress.Value() < 0) {
-        *val = segment->mFromValue;
+        aStyleRule->AddValue(prop.mProperty, segment->mFromValue);
       } else {
-        *val = segment->mToValue;
+        aStyleRule->AddValue(prop.mProperty, segment->mToValue);
       }
       continue;
     }
@@ -618,14 +616,17 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                          positionInSegment,
                                          computedTiming.mBeforeFlag);
 
+    StyleAnimationValue val;
 #ifdef DEBUG
     bool result =
 #endif
       StyleAnimationValue::Interpolate(prop.mProperty,
                                        segment->mFromValue,
                                        segment->mToValue,
-                                       valuePosition, *val);
+                                       valuePosition, val);
     MOZ_ASSERT(result, "interpolate must succeed now");
+
+    aStyleRule->AddValue(prop.mProperty, Move(val));
   }
 }
 
