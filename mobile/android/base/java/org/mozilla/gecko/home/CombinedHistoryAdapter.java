@@ -47,6 +47,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     private List<RemoteClient> remoteClients = Collections.emptyList();
     private List<RemoteTab> clientChildren;
+    private int remoteClientIndexOfParent = -1;
     private Cursor historyCursor;
 
     // Maintain group collapsed and hidden state. Only accessed from the UI thread.
@@ -61,9 +62,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     private final Context context;
 
-    private boolean inChildView = false;
-
-    public CombinedHistoryAdapter(Context context) {
+    public CombinedHistoryAdapter(Context context, int savedParentIndex) {
         super();
         this.context = context;
         sectionHeaders = new SparseArray<>();
@@ -76,6 +75,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         if (sState == null) {
             sState = new RemoteTabsExpandableListState(GeckoSharedPrefs.forProfile(context));
         }
+        remoteClientIndexOfParent = savedParentIndex;
     }
 
     public void setClients(List<RemoteClient> clients) {
@@ -184,22 +184,30 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         return null;
     }
 
+    public int getParentIndex() {
+        return remoteClientIndexOfParent;
+    }
+
+    private boolean isInChildView() {
+        return remoteClientIndexOfParent != -1;
+    }
+
     public void showChildView(int parentPosition) {
         if (clientChildren == null) {
             clientChildren = new ArrayList<>();
         }
         // Handle "back" view.
         clientChildren.add(null);
-        clientChildren.addAll(remoteClients.get(transformAdapterPositionForDataStructure(ItemType.CLIENT, parentPosition)).tabs);
-        inChildView = true;
+        remoteClientIndexOfParent = transformAdapterPositionForDataStructure(ItemType.CLIENT, parentPosition);
+        clientChildren.addAll(remoteClients.get(remoteClientIndexOfParent).tabs);
         notifyDataSetChanged();
     }
 
     public boolean exitChildView() {
-        if (!inChildView) {
+        if (!isInChildView()) {
             return false;
         }
-        inChildView = false;
+        remoteClientIndexOfParent = -1;
         clientChildren.clear();
         notifyDataSetChanged();
         return true;
@@ -285,7 +293,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     @Override
     public int getItemViewType(int position) {
-        if (inChildView) {
+        if (isInChildView()) {
             if (position == 0) {
                 return ItemType.itemTypeToViewType(ItemType.NAVIGATION_BACK);
             }
@@ -310,8 +318,13 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     @Override
     public int getItemCount() {
-        if (inChildView) {
-            return (clientChildren == null) ? 0 : clientChildren.size();
+        if (isInChildView()) {
+            if (clientChildren == null) {
+                clientChildren = new ArrayList<>();
+                clientChildren.add(null);
+                clientChildren.addAll(remoteClients.get(remoteClientIndexOfParent).tabs);
+            }
+            return clientChildren.size();
         } else {
             final int historySize = historyCursor == null ? 0 : historyCursor.getCount();
             return remoteClients.size() + historySize + sectionHeaders.size();
