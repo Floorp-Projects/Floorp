@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<input id="textinput" type="text"></input>
+<input id="textinput1" type="text"></input>
+</body>
+<script>
+  var SimpleTest = parent.SimpleTest;
+
+  var ok = SimpleTest.ok;
+  var info = SimpleTest.info;
+  var is = SimpleTest.is;
+  var finish = SimpleTest.finish.bind(SimpleTest);
+
+  var input = document.getElementById("textinput");
+  input.addEventListener("focus", function onFocus(aEvent) {
+    input.removeEventListener("focus", onFocus);
+    is(aEvent.target.id, "textinput", "Input should be focused.");
+    ok(aEvent.relatedTarget === null, "The relatedTarget should be null.");
+    parent.postMessage("runNextTest", "*");
+  });
+  input.focus();
+</script>
+</html>
