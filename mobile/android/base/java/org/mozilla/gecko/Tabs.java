@@ -63,6 +63,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DELAY_LOAD   = 1 << 4;
     public static final int LOADURL_DESKTOP      = 1 << 5;
     public static final int LOADURL_BACKGROUND   = 1 << 6;
+    /** Indicates the url has been specified by a source external to the app. */
     public static final int LOADURL_EXTERNAL     = 1 << 7;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
