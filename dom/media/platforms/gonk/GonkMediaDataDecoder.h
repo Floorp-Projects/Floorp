@@ -77,6 +77,7 @@ protected:
   void ProcessInput(bool aEndOfStream);
   virtual void ProcessFlush();
   void ProcessToDo(bool aEndOfStream);
+  virtual void ResetEOS();
 
   RefPtr<MediaByteBuffer> mCodecSpecificData;
 
