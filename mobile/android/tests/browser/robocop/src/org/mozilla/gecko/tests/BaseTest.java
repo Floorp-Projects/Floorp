@@ -46,9 +46,9 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import com.robotium.solo.Condition;
-import com.robotium.solo.Solo;
-import com.robotium.solo.Timeout;
+import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Timeout;
 
 /**
  *  A convenient base class suitable for most Robocop tests.

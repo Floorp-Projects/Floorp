@@ -13,7 +13,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.util.DisplayMetrics;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * Provides general hardware (ex: configuration) and software (ex: version) information

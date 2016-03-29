@@ -2,11 +2,11 @@ Robocop is a Mozilla project which uses Robotium to test Firefox on Android devi
 
 Robotium is an open source tool licensed under the Apache 2.0 license and the original
 source can be found here:
-https://github.com/RobotiumTech/robotium
+http://code.google.com/p/robotium/
 
-We are including robotium-solo-5.5.4.jar as a binary and are not modifying it in any way
+We are including robotium-solo-4.3.1.jar as a binary and are not modifying it in any way
 from the original download found at:
-https://github.com/RobotiumTech/robotium/wiki/Downloads
+http://code.google.com/p/robotium/
 
 Firefox for Android developers should read the documentation in
 mobile/android/tests/browser/robocop/README.rst.

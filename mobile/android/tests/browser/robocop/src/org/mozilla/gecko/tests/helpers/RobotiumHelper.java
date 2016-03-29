@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.tests.helpers;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 import org.mozilla.gecko.tests.UITestContext;
 
