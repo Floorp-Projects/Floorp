@@ -40,6 +40,7 @@ DevToolsModules(
     'prefs.js',
     'source-utils.js',
     'SplitView.jsm',
+    'suggestion-picker.js',
     'telemetry.js',
     'theme-switching.js',
     'theme.js',
