@@ -31,7 +31,8 @@ loop.shared.views.chat = function (mozL10n) {
       message: React.PropTypes.string.isRequired,
       showTimestamp: React.PropTypes.bool.isRequired,
       timestamp: React.PropTypes.string.isRequired,
-      type: React.PropTypes.string.isRequired
+      type: React.PropTypes.string.isRequired,
+      useDesktopPaths: React.PropTypes.bool
     },
 
     /**
@@ -52,12 +53,11 @@ loop.shared.views.chat = function (mozL10n) {
 
     render: function () {
       var classes = classNames({
-        "text-chat-entry": this.props.contentType !== CHAT_CONTENT_TYPES.NOTIFICATION,
+        "text-chat-entry": true,
         "received": this.props.type === CHAT_MESSAGE_TYPES.RECEIVED,
         "sent": this.props.type === CHAT_MESSAGE_TYPES.SENT,
         "special": this.props.type === CHAT_MESSAGE_TYPES.SPECIAL,
-        "room-name": this.props.contentType === CHAT_CONTENT_TYPES.ROOM_NAME,
-        "text-chat-notif": this.props.contentType === CHAT_CONTENT_TYPES.NOTIFICATION
+        "room-name": this.props.contentType === CHAT_CONTENT_TYPES.ROOM_NAME
       });
 
       var optionalProps = {};
@@ -76,25 +76,8 @@ loop.shared.views.chat = function (mozL10n) {
             description: this.props.message,
             dispatcher: this.props.dispatcher,
             thumbnail: this.props.extraData.newRoomThumbnail,
-            url: this.props.extraData.newRoomURL }),
-          this.props.showTimestamp ? this._renderTimestamp() : null
-        );
-      }
-
-      if (this.props.contentType === CHAT_CONTENT_TYPES.NOTIFICATION) {
-        return React.createElement(
-          "div",
-          { className: classes },
-          React.createElement(
-            "div",
-            { className: "content-wrapper" },
-            React.createElement("img", { className: "notification-icon", src: "shared/img/leave_notification.svg" }),
-            React.createElement(
-              "p",
-              null,
-              mozL10n.get(this.props.message)
-            )
-          ),
+            url: this.props.extraData.newRoomURL,
+            useDesktopPaths: this.props.useDesktopPaths }),
           this.props.showTimestamp ? this._renderTimestamp() : null
         );
       }
@@ -149,7 +132,8 @@ loop.shared.views.chat = function (mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       messageList: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
-      showInitialContext: React.PropTypes.bool.isRequired
+      showInitialContext: React.PropTypes.bool.isRequired,
+      useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -160,7 +144,7 @@ loop.shared.views.chat = function (mozL10n) {
 
     _hasChatMessages: function () {
       return this.props.messageList.some(function (message) {
-        return message.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME && message.contentType !== CHAT_CONTENT_TYPES.CONTEXT;
+        return message.contentType === CHAT_CONTENT_TYPES.TEXT;
       });
     },
 
@@ -235,7 +219,8 @@ loop.shared.views.chat = function (mozL10n) {
                       description: entry.message,
                       dispatcher: this.props.dispatcher,
                       thumbnail: entry.extraData.thumbnail,
-                      url: entry.extraData.location })
+                      url: entry.extraData.location,
+                      useDesktopPaths: this.props.useDesktopPaths })
                   );
                 default:
                   console.error("Unsupported contentType", entry.contentType);
@@ -260,7 +245,8 @@ loop.shared.views.chat = function (mozL10n) {
               message: entry.message,
               showTimestamp: shouldShowTimestamp,
               timestamp: timestamp,
-              type: entry.type });
+              type: entry.type,
+              useDesktopPaths: this.props.useDesktopPaths });
           }, this)
         )
       );
@@ -407,7 +393,7 @@ loop.shared.views.chat = function (mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       showInitialContext: React.PropTypes.bool.isRequired,
-      showTile: React.PropTypes.bool.isRequired
+      useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -442,14 +428,12 @@ loop.shared.views.chat = function (mozL10n) {
         React.createElement(TextChatEntriesView, {
           dispatcher: this.props.dispatcher,
           messageList: messageList,
-          showInitialContext: this.props.showInitialContext }),
+          showInitialContext: this.props.showInitialContext,
+          useDesktopPaths: this.props.useDesktopPaths }),
         React.createElement(TextChatInputView, {
           dispatcher: this.props.dispatcher,
           showPlaceholder: !hasSentMessages,
-          textChatEnabled: this.state.textChatEnabled }),
-        React.createElement(sharedViews.AdsTileView, {
-          dispatcher: this.props.dispatcher,
-          showTile: this.props.showTile })
+          textChatEnabled: this.state.textChatEnabled })
       );
     }
   });

@@ -26,8 +26,7 @@ loop.store.TextChatStore = (function() {
       "receivedTextChatMessage",
       "sendTextChatMessage",
       "updateRoomInfo",
-      "updateRoomContext",
-      "remotePeerDisconnected"
+      "updateRoomContext"
     ],
 
     /**
@@ -119,8 +118,7 @@ loop.store.TextChatStore = (function() {
       // Notify MozLoopService if appropriate that a message has been appended
       // and it should therefore check if we need a different sized window or not.
       if (message.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME &&
-          message.contentType !== CHAT_CONTENT_TYPES.CONTEXT &&
-          message.contentType !== CHAT_CONTENT_TYPES.NOTIFICATION) {
+          message.contentType !== CHAT_CONTENT_TYPES.CONTEXT) {
         if (this._storeState.textChatEnabled) {
           window.dispatchEvent(new CustomEvent("LoopChatMessageAppended"));
         } else {
@@ -138,8 +136,7 @@ loop.store.TextChatStore = (function() {
       // If we don't know how to deal with this content, then skip it
       // as this version doesn't support it.
       if (actionData.contentType !== CHAT_CONTENT_TYPES.TEXT &&
-        actionData.contentType !== CHAT_CONTENT_TYPES.CONTEXT_TILE &&
-        actionData.contentType !== CHAT_CONTENT_TYPES.NOTIFICATION) {
+        actionData.contentType !== CHAT_CONTENT_TYPES.CONTEXT_TILE) {
         return;
       }
 
@@ -223,32 +220,6 @@ loop.store.TextChatStore = (function() {
       }
 
       this._appendContextTileMessage(actionData);
-    },
-
-
-    /**
-     * Handles a remote peer disconnecting from the session.
-     * With specific to text chat area, we will put a notification
-     * when the peer has left the room or unexpectedly quit.
-     *
-     * @param  {sharedActions.remotePeerDisconnected} actionData
-     */
-    remotePeerDisconnected: function(actionData) {
-      var notificationTextKey;
-
-      if (actionData.peerHungup) {
-        notificationTextKey = "peer_left_session";
-      } else {
-        notificationTextKey = "peer_unexpected_quit";
-      }
-
-      var message = {
-        contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
-        message: notificationTextKey,
-        receivedTimestamp: (new Date()).toISOString()
-      };
-
-      this._appendTextChatMessage(CHAT_MESSAGE_TYPES.RECEIVED, message);
     },
 
     /**

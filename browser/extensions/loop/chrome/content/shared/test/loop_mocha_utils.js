@@ -270,7 +270,7 @@ var LoopMochaUtils = (function(global, _) {
     var consoleWarn = console.warn;
     var consoleError = console.error;
     console.warn = function() {
-      var args = Array.prototype.slice.call(arguments);
+      var args = Array.slice(arguments);
       try {
         throw new Error();
       } catch (e) {
@@ -279,7 +279,7 @@ var LoopMochaUtils = (function(global, _) {
       consoleWarn.apply(console, args);
     };
     console.error = function() {
-      var args = Array.prototype.slice.call(arguments);
+      var args = Array.slice(arguments);
       try {
         throw new Error();
       } catch (e) {
