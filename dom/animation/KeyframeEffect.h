@@ -63,6 +63,11 @@ struct PropertyValuePair
   // property values, we store the specified property value as a token stream
   // (string).
   nsCSSValue    mValue;
+
+  bool operator==(const PropertyValuePair& aOther) const {
+    return mProperty == aOther.mProperty &&
+           mValue == aOther.mValue;
+  }
 };
 
 /**
@@ -274,6 +279,7 @@ public:
   void SetAnimation(Animation* aAnimation);
   Animation* GetAnimation() const { return mAnimation; }
 
+  void SetFrames(nsTArray<Keyframe>&& aFrames, nsStyleContext* aStyleContext);
   const AnimationProperty*
   GetAnimationOfProperty(nsCSSProperty aProperty) const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const {
@@ -293,6 +299,10 @@ public:
   // Returns true if we updated anything in the properties.
   bool UpdateProperties(
     const InfallibleTArray<AnimationProperty>& aProperties);
+
+  // Update |mProperties| by recalculating from |mFrames| using |aStyleContext|
+  // to resolve specified values.
+  void UpdateProperties(nsStyleContext* aStyleContext);
 
   // Updates |aStyleRule| with the animation values produced by this
   // AnimationEffect for the current time except any properties already
@@ -363,7 +373,11 @@ protected:
   OwningNonNull<AnimationEffectTimingReadOnly> mTiming;
   CSSPseudoElementType mPseudoType;
 
-  InfallibleTArray<AnimationProperty> mProperties;
+  // The specified keyframes.
+  nsTArray<Keyframe>          mFrames;
+
+  // A set of per-property value arrays, derived from |mFrames|.
+  nsTArray<AnimationProperty> mProperties;
 
   // The computed progress last time we composed the style rule. This is
   // used to detect when the progress is not changing (e.g. due to a step
