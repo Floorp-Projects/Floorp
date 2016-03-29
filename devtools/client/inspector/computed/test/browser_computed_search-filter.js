@@ -35,9 +35,18 @@ function* testAddTextInFilter(inspector, computedView) {
   info("setting filter text to \"color\"");
   let searchField = computedView.searchField;
   let onRefreshed = inspector.once("computed-view-refreshed");
-  searchField.focus();
-
   let win = computedView.styleWindow;
+
+  // First check to make sure that accel + F doesn't focus search if the container
+  // isn't focused
+  inspector.panelWin.focus();
+  EventUtils.synthesizeKey("f", { accelKey: true });
+  isnot(inspector.panelDoc.activeElement, searchField, "Search field isn't focused");
+
+  computedView.element.focus();
+  EventUtils.synthesizeKey("f", { accelKey: true });
+  is(inspector.panelDoc.activeElement, searchField, "Search field is focused");
+
   synthesizeKeys("color", win);
   yield onRefreshed;
 
