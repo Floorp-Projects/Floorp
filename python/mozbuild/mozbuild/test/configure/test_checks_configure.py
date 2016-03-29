@@ -27,7 +27,7 @@ class FindProgramSandbox(ConfigureSandbox):
         # We also need to use super().__setitem__ because ours would do
         # nothing.
         super(FindProgramSandbox, self).__setitem__(
-            'find_program', self.template_impl(self.find_program))
+            'find_program', lambda x: self.find_program(x))
 
     PROGRAMS = {
         'known-a': '/usr/bin/known-a',
