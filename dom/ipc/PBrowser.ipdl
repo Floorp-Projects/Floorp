@@ -483,10 +483,6 @@ parent:
      */
     async RemotePaintIsReady();
 
-    sync GetRenderFrameInfo(PRenderFrame aRenderFrame)
-        returns (TextureFactoryIdentifier textureFactoryIdentifier,
-                 uint64_t layersId);
-
     /**
      * Sent by the child to the parent to inform it that an update to the
      * dimensions has been requested, likely through win.moveTo or resizeTo
