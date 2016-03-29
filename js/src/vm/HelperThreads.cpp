@@ -16,6 +16,7 @@
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
 #include "vm/Debugger.h"
+#include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
 
@@ -1191,11 +1192,6 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, Pars
     // The Debugger only needs to be told about the topmost script that was compiled.
     Debugger::onNewScript(cx, script);
 
-    // Update the compressed source table with the result. This is normally
-    // called by setCompressedSource when compilation occurs on the main thread.
-    if (script->scriptSource()->hasCompressedSource())
-        script->scriptSource()->updateCompressedSourceSet(rt);
-
     return script;
 }
 
@@ -1621,18 +1617,25 @@ SourceCompressionTask::complete()
     }
 
     if (result == Success) {
-        ss->setCompressedSource(cx->isJSContext() ? cx->asJSContext()->runtime() : nullptr,
-                                compressed, compressedBytes, compressedHash);
+        mozilla::UniquePtr<char[], JS::FreePolicy> compressedSource(
+            reinterpret_cast<char*>(compressed));
+        compressed = nullptr;
 
-        // Update memory accounting.
-        cx->updateMallocCounter(ss->computedSizeOfData());
+        auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+        auto deduped = cache.getOrCreate(mozilla::Move(compressedSource), compressedBytes);
+        if (!deduped) {
+            ReportOutOfMemory(cx);
+            result = OOM;
+            ss = nullptr;
+            return false;
+        }
+
+        ss->setCompressedSource(mozilla::Move(*deduped), ss->length());
     } else {
         js_free(compressed);
 
         if (result == OOM)
             ReportOutOfMemory(cx);
-        else if (result == Aborted && !ss->ensureOwnsSource(cx))
-            result = OOM;
     }
 
     ss = nullptr;
