@@ -102,4 +102,16 @@ this.E10SUtils = {
     });
     return false;
   },
+
+  wrapHandlingUserInput: function(aWindow, aIsHandling, aCallback) {
+    var handlingUserInput;
+    try {
+      handlingUserInput = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils)
+                                 .setHandlingUserInput(aIsHandling);
+      aCallback();
+    } finally {
+      handlingUserInput.destruct();
+    }
+  },
 };
