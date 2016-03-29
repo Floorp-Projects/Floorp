@@ -2820,8 +2820,13 @@ BytecodeEmitter::emitElemOperands(ParseNode* pn, EmitElemOption opts)
     if (!emitTree(pn->pn_right))
         return false;
 
-    if (opts == EmitElemOption::Set && !emit2(JSOP_PICK, 2))
-        return false;
+    if (opts == EmitElemOption::Set) {
+        if (!emit2(JSOP_PICK, 2))
+            return false;
+    } else if (opts == EmitElemOption::IncDec || opts == EmitElemOption::SelfAssign) {
+        if (!emit1(JSOP_TOID))
+            return false;
+    }
     return true;
 }
 
@@ -2840,8 +2845,10 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, EmitElemOption opts)
 
     // We need to convert the key to an object id first, so that we do not do
     // it inside both the GETELEM and the SETELEM.
-    if (opts == EmitElemOption::IncDec && !emit1(JSOP_TOID))
-        return false;
+    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::SelfAssign) {
+        if (!emit1(JSOP_TOID))
+            return false;
+    }
 
     if (!emitGetThisForSuperBase(pn->pn_left))
         return false;
@@ -2913,6 +2920,9 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
 
     bool isSuper = pn->pn_kid->as<PropertyByValue>().isSuper();
 
+    // We need to convert the key to an object id first, so that we do not do
+    // it inside both the GETELEM and the SETELEM. This is done by
+    // emit(Super)ElemOperands.
     if (isSuper) {
         if (!emitSuperElemOperands(pn->pn_kid, EmitElemOption::IncDec))
             return false;
@@ -2936,12 +2946,7 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
             return false;
         getOp = JSOP_GETELEM_SUPER;
     } else {
-        // We need to convert the key to an object id first, so that we do not do
-        // it inside both the GETELEM and the SETELEM. In the super case, this is
-        // done by emitSuperElemOperands.
-                                                        // OBJ KEY*
-        if (!emit1(JSOP_TOID))                          // OBJ KEY
-            return false;
+                                                        // OBJ KEY
         if (!emit1(JSOP_DUP2))                          // OBJ KEY OBJ KEY
             return false;
         getOp = JSOP_GETELEM;
@@ -4601,20 +4606,20 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
             return false;
         break;
-      case PNK_ELEM:
+      case PNK_ELEM: {
         MOZ_ASSERT(lhs->isArity(PN_BINARY));
+        EmitElemOption opt = op == JSOP_NOP ? EmitElemOption::Get : EmitElemOption::SelfAssign;
         if (lhs->as<PropertyByValue>().isSuper()) {
-            if (!emitSuperElemOperands(lhs))
+            if (!emitSuperElemOperands(lhs, opt))
                 return false;
             offset += 3;
         } else {
-            if (!emitTree(lhs->pn_left))
-                return false;
-            if (!emitTree(lhs->pn_right))
+            if (!emitElemOperands(lhs, opt))
                 return false;
             offset += 2;
         }
         break;
+      }
       case PNK_ARRAY:
       case PNK_OBJECT:
         break;
