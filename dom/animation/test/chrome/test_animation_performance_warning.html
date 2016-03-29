@@ -512,11 +512,6 @@ function start() {
   });
 
   gPerformanceWarningTests.forEach(function(subtest) {
-    // FIXME: Bug 1255710: 'preserve-3d' frame breaks other tests,
-    // we should skip all 'preserve-3d' tests here.
-    if (subtest.desc.includes('preserve-3d')) {
-      return;
-    }
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animation = div.animate(subtest.frames, 100000);
@@ -541,11 +536,6 @@ function start() {
   });
 
   gMultipleAsyncAnimationsTests.forEach(function(subtest) {
-    // FIXME: Bug 1255710: 'preserve-3d' frame breaks other tests,
-    // we should skip all 'preserve-3d' tests here.
-    if (subtest.desc.includes('preserve-3d')) {
-      return;
-    }
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animations = subtest.animations.map(function(anim) {
