@@ -104,7 +104,6 @@ class MediaSink;
 
 class AudioSegment;
 class DecodedStream;
-class MediaDecoderReaderWrapper;
 class OutputStreamManager;
 class TaskQueue;
 
@@ -756,8 +755,6 @@ private:
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
   const RefPtr<MediaDecoderReader> mReader;
-
-  const RefPtr<MediaDecoderReaderWrapper> mReaderWrapper;
 
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
