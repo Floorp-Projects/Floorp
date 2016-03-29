@@ -11835,6 +11835,7 @@ class CGDescriptor(CGThing):
             hasPromiseReturningMethod) = False, False, False, False, False, False
         jsonifierMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
+        unscopableNames = list()
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
                                                NamedConstructorName(n)))
@@ -11847,6 +11848,9 @@ class CGDescriptor(CGThing):
             props = memberProperties(m, descriptor)
 
             if m.isMethod():
+                if m.getExtendedAttribute("Unscopable"):
+                    assert not m.isStatic()
+                    unscopableNames.append(m.identifier.name)
                 if props.isJsonifier:
                     jsonifierMethod = m
                 elif not m.isIdentifierLess() or m == descriptor.operations['Stringifier']:
@@ -11872,6 +11876,9 @@ class CGDescriptor(CGThing):
                     raise TypeError("Stringifier attributes not supported yet. "
                                     "See bug 824857.\n"
                                     "%s" % m.location)
+                if m.getExtendedAttribute("Unscopable"):
+                    assert not m.isStatic()
+                    unscopableNames.append(m.identifier.name)
                 if m.isStatic():
                     assert descriptor.interface.hasInterfaceObject()
                     cgThings.append(CGStaticGetter(descriptor, m))
@@ -12059,8 +12066,18 @@ class CGDescriptor(CGThing):
             cgThings.extend(CGClearCachedValueMethod(descriptor, m) for
                             m in clearableCachedAttrs(descriptor))
 
+        haveUnscopables = (len(unscopableNames) != 0 and
+                           descriptor.interface.hasInterfacePrototypeObject())
+        if haveUnscopables:
+            cgThings.append(
+                CGList([CGGeneric("static const char* const unscopableNames[] = {"),
+                        CGIndenter(CGList([CGGeneric('"%s"' % name) for
+                                           name in unscopableNames] +
+                                          [CGGeneric("nullptr")], ",\n")),
+                        CGGeneric("};\n")], "\n"))
+
         # CGCreateInterfaceObjectsMethod needs to come after our
-        # CGDOMJSClass, if any.
+        # CGDOMJSClass and unscopables, if any.
         cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
 
         # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
