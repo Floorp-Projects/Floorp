@@ -4,16 +4,36 @@
 
 /* These styles are intended to mimic XUL trees and the XUL search box. */
 
-:root, body {
-  overflow-x: hidden;
+html {
+  height: 100%;
 }
 
 body {
+  height: 100%;
   margin: 0;
   font: message-box;
   color: #333333;
   -moz-user-select: none;
-  overflow: hidden;
+}
+
+/* The content-container holds the non-scrollable header and the scrollable
+   content area.
+*/
+.content-container {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+/* The content header is not scrollable */
+.content-header {
+  flex: 0 1 auto;
+}
+
+/* The main content area is scrollable and fills the rest of the area */
+.content-scrollable {
+  flex: 1 1 auto;
+  overflow: auto;
 }
 
 .emptyListInfo {
@@ -166,6 +186,10 @@ body {
 .deck .sync-state.selected {
   display: unset;
   opacity: 100;
+}
+
+.sidebar-search-container.tabs-container:not(.selected) {
+  display: none;
 }
 
 .textbox-search-clear:not([disabled]) {

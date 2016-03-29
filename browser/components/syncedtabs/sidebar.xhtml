@@ -63,17 +63,6 @@
 
     <template id="tabs-container-template">
       <div class="tabs-container">
-        <div class="sidebar-search-container">
-          <div class="search-box compact">
-            <div class="textbox-input-box">
-              <input type="text" class="tabsFilter textbox-input"/>
-              <div class="textbox-search-icons">
-                <a class="textbox-search-clear"></a>
-                <a class="textbox-search-icon"></a>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="list" role="listbox" tabindex="1"></div>
       </div>
     </template>
@@ -98,5 +87,24 @@
       </div>
     </template>
 
+    <div class="content-container">
+      <!-- the non-scrollable header -->
+      <div class="content-header">
+        <div class="sidebar-search-container tabs-container sync-state">
+          <div class="search-box compact">
+            <div class="textbox-input-box">
+              <input type="text" class="tabsFilter textbox-input"/>
+              <div class="textbox-search-icons">
+                <a class="textbox-search-clear"></a>
+                <a class="textbox-search-icon"></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- the scrollable content area where our templates are inserted -->
+      <div id="template-container" class="content-scrollable">
+      </div>
+    </div>
   </body>
 </html>
