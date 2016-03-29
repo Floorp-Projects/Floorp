@@ -766,13 +766,36 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                JS::Handle<JSObject*> parentProto,
                                const js::Class* protoClass,
                                const NativeProperties* properties,
-                               const NativeProperties* chromeOnlyProperties)
+                               const NativeProperties* chromeOnlyProperties,
+                               const char* const* unscopableNames)
 {
   JS::Rooted<JSObject*> ourProto(cx,
     JS_NewObjectWithUniqueType(cx, Jsvalify(protoClass), parentProto));
   if (!ourProto ||
       !DefineProperties(cx, ourProto, properties, chromeOnlyProperties)) {
     return nullptr;
+  }
+
+  if (unscopableNames) {
+    JS::Rooted<JSObject*> unscopableObj(cx, JS_NewPlainObject(cx));
+    if (!unscopableObj) {
+      return nullptr;
+    }
+
+    for (; *unscopableNames; ++unscopableNames) {
+      if (!JS_DefineProperty(cx, unscopableObj, *unscopableNames,
+                             JS::TrueHandleValue, JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+    }
+
+    JS::Rooted<jsid> unscopableId(cx,
+      SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::unscopables)));
+    // Readonly and non-enumerable to match Array.prototype.
+    if (!JS_DefinePropertyById(cx, ourProto, unscopableId, unscopableObj,
+                               JSPROP_READONLY)) {
+      return nullptr;
+    }
   }
 
   return ourProto;
@@ -830,7 +853,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* properties,
                        const NativeProperties* chromeOnlyProperties,
-                       const char* name, bool defineOnGlobal)
+                       const char* name, bool defineOnGlobal,
+                       const char* const* unscopableNames)
 {
   MOZ_ASSERT(protoClass || constructorClass || constructor,
              "Need at least one class or a constructor!");
@@ -861,7 +885,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
   if (protoClass) {
     proto =
       CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
-                                     properties, chromeOnlyProperties);
+                                     properties, chromeOnlyProperties,
+                                     unscopableNames);
     if (!proto) {
       return;
     }
