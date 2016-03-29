@@ -52,6 +52,7 @@ function run_test() {
     children: undefined,
     id: 13,
     parent: undefined,
+    reportLeafIndex: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { filter: "zzzzzzzzzzzzzzzzzzzz" });

@@ -253,6 +253,17 @@ function assertStructurallyEquivalent(actual, expected, path="root") {
 
       equal(expectedKeys.size, 0,
             `${path}: every key in expected should also exist in actual, did not see ${[...expectedKeys]}`);
+    } else if (actualProtoString === "[object Set]") {
+      const expectedItems = new Set([...expected]);
+
+      for (let item of actual) {
+        ok(expectedItems.has(item),
+           `${path}: every set item in actual should exist in expected: ${item}`);
+        expectedItems.delete(item);
+      }
+
+      equal(expectedItems.size, 0,
+            `${path}: every set item in expected should also exist in actual, did not see ${[...expectedItems]}`);
     } else {
       const expectedKeys = new Set(Object.keys(expected));
 
