@@ -136,18 +136,37 @@ AutocompletePopup.prototype = {
    * @param Number aYOffset
    *        Vertical offset in pixels from the top of the node to the starting
    *        of the popup.
+   * @param integer index
+   *        The position of item to select.
    */
-  openPopup: function AP_openPopup(aAnchor, aXOffset = 0, aYOffset = 0)
+  openPopup: function AP_openPopup(aAnchor, aXOffset = 0, aYOffset = 0, index)
   {
     this.__maxLabelLength = -1;
     this._updateSize();
     this._panel.openPopup(aAnchor, this.position, aXOffset, aYOffset);
 
     if (this.autoSelect) {
-      this.selectFirstItem();
+      this.selectItemAtIndex(index);
     }
 
     this.emit("popup-opened");
+  },
+
+  /**
+   * Select item at the provided index.
+   *
+   * @param {Number} index
+   *        The position of the item to select.
+   */
+  selectItemAtIndex: function AP_selectItemAtIndex(index)
+  {
+    if (typeof index != "number") {
+      // If no index was provided, select the item closest to the input.
+      let isAboveInput = this.position.includes("before");
+      index = isAboveInput ? this.itemCount - 1 : 0;
+    }
+    this.selectedIndex = index;
+    this._list.ensureIndexIsVisible(this._list.selectedIndex);
   },
 
   /**
@@ -237,8 +256,10 @@ AutocompletePopup.prototype = {
    *
    * @param array aItems
    *        The list of items you want displayed in the popup list.
+   * @param integer index
+   *        The position of the item to select.
    */
-  setItems: function AP_setItems(aItems)
+  setItems: function AP_setItems(aItems, index)
   {
     this.clearItems();
     aItems.forEach(this.appendItem, this);
@@ -246,26 +267,10 @@ AutocompletePopup.prototype = {
     // Make sure that the new content is properly fitted by the XUL richlistbox.
     if (this.isOpen) {
       if (this.autoSelect) {
-        this.selectFirstItem();
+        this.selectItemAtIndex(index);
       }
       this._updateSize();
     }
-  },
-
-  /**
-   * Selects the first item of the richlistbox. Note that first item here is the
-   * item closes to the input element, which means that 0th index if position is
-   * below, and last index if position is above.
-   */
-  selectFirstItem: function AP_selectFirstItem()
-  {
-    if (this.position.includes("before")) {
-      this.selectedIndex = this.itemCount - 1;
-    }
-    else {
-      this.selectedIndex = 0;
-    }
-    this._list.ensureIndexIsVisible(this._list.selectedIndex);
   },
 
   __maxLabelLength: -1,

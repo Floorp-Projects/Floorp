@@ -40,6 +40,7 @@ const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
+const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
 
 /**
  * Mark a span editable.  |editableField| will listen for the span to
@@ -245,7 +246,7 @@ function InplaceEditor(options, event) {
   }
 
   if (this.contentType == CONTENT_TYPES.CSS_VALUE && this.input.value == "") {
-    this._maybeSuggestCompletion(true);
+    this._maybeSuggestCompletion(false);
   }
 
   this.input.addEventListener("blur", this._onBlur, false);
@@ -949,7 +950,7 @@ InplaceEditor.prototype = {
         this.popup.hidePopup();
       }
     } else if (!cycling && !event.metaKey && !event.altKey && !event.ctrlKey) {
-      this._maybeSuggestCompletion();
+      this._maybeSuggestCompletion(true);
     }
 
     if (this.multiline &&
@@ -1126,15 +1127,16 @@ InplaceEditor.prototype = {
   /**
    * Handles displaying suggestions based on the current input.
    *
-   * @param {Boolean} noAutoInsert
-   *        true if you don't want to automatically insert the first suggestion
+   * @param {Boolean} autoInsert
+   *        Pass true to automatically insert the most relevant suggestion.
    */
-  _maybeSuggestCompletion: function(noAutoInsert) {
+  _maybeSuggestCompletion: function(autoInsert) {
     // Input can be null in cases when you intantaneously switch out of it.
     if (!this.input) {
       return;
     }
     let preTimeoutQuery = this.input.value;
+
     // Since we are calling this method from a keypress event handler, the
     // |input.value| does not include currently typed character. Thus we perform
     // this method async.
@@ -1229,24 +1231,13 @@ InplaceEditor.prototype = {
           }
         }
       }
-      if (!noAutoInsert) {
-        list.some(item => {
-          if (startCheckQuery != null && item.startsWith(startCheckQuery)) {
-            input.value = query + item.slice(startCheckQuery.length) +
-                          input.value.slice(query.length);
-            input.setSelectionRange(query.length, query.length + item.length -
-                                                  startCheckQuery.length);
-            this._updateSize();
-            return true;
-          }
-        });
-      }
 
       if (!this.popup) {
         // This emit is mainly to make the test flow simpler.
         this.emit("after-suggest", "no popup");
         return;
       }
+
       let finalList = [];
       let length = list.length;
       for (let i = 0, count = 0; i < length && count < MAX_POPUP_ENTRIES; i++) {
@@ -1266,15 +1257,32 @@ InplaceEditor.prototype = {
         }
       }
 
+      // Pick the best first suggestion from the provided list of suggestions.
+      let cssValues = finalList.map(item => item.label);
+      let mostRelevantIndex = findMostRelevantCssPropertyIndex(cssValues);
+
+      // Insert the most relevant item from the final list as the input value.
+      if (autoInsert && finalList[mostRelevantIndex]) {
+        let item = finalList[mostRelevantIndex].label;
+        input.value = query + item.slice(startCheckQuery.length) +
+                      input.value.slice(query.length);
+        input.setSelectionRange(query.length, query.length + item.length -
+                                              startCheckQuery.length);
+        this._updateSize();
+      }
+
+      // Display the list of suggestions if there are more than one.
       if (finalList.length > 1) {
-        // Calculate the offset for the popup to be opened.
-        let x = (this.input.selectionStart - startCheckQuery.length) *
-                this.inputCharWidth;
+        // Calculate the popup horizontal offset.
+        let indent = this.input.selectionStart - query.length;
+        let offset = indent * this.inputCharWidth;
+
+        // Select the most relevantItem if autoInsert is allowed
+        let selectedIndex = autoInsert ? mostRelevantIndex : -1;
+
+        // Open the suggestions popup.
         this.popup.setItems(finalList);
-        this.popup.openPopup(this.input, x);
-        if (noAutoInsert) {
-          this.popup.selectedIndex = -1;
-        }
+        this.popup.openPopup(this.input, offset, 0, selectedIndex);
       } else {
         this.popup.hidePopup();
       }
@@ -1282,7 +1290,7 @@ InplaceEditor.prototype = {
       this.emit("after-suggest");
       this._doValidation();
     }, 0);
-  }
+  },
 };
 
 /**
