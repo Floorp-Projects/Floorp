@@ -1499,11 +1499,15 @@ CssRuleView.prototype = {
    * Handle the keypress event in the rule view.
    */
   _onKeypress: function(event) {
+    if (!event.target.closest("#sidebar-panel-ruleview")) {
+      return;
+    }
+
     let isOSX = Services.appinfo.OS === "Darwin";
 
     if (((isOSX && event.metaKey && !event.ctrlKey && !event.altKey) ||
         (!isOSX && event.ctrlKey && !event.metaKey && !event.altKey)) &&
-        event.code === "KeyF") {
+        event.key === "f") {
       this.searchField.focus();
       event.preventDefault();
     }
