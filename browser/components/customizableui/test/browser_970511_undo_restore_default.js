@@ -21,9 +21,9 @@ add_task(function*() {
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
 
-  undoResetButton.click();
-  yield waitForCondition(() => !gCustomizeMode.resetting);
-  ok(!CustomizableUI.inDefaultState, "Not in default state after reset-undo");
+  yield gCustomizeMode.undoReset()
+
+  ok(!CustomizableUI.inDefaultState, "Not in default state after undo-reset");
   is(undoResetButton.hidden, true, "The undo button is hidden after clicking on the undo button");
   is(CustomizableUI.getPlacementOfWidget(homeButtonId), null, "Home button is in palette");
 
