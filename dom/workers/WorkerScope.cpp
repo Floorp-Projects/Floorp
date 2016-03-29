@@ -943,7 +943,7 @@ WorkerDebuggerGlobalScope::RetrieveConsoleEvents(JSContext* aCx,
 
 void
 WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,
-                                                  AnyCallback& aHandler,
+                                                  AnyCallback* aHandler,
                                                   ErrorResult& aRv)
 {
   WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
