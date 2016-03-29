@@ -34867,6 +34867,12 @@
         ]
       },
       "testharness": {
+        "dom/collections/HTMLCollection-as-proto-length-get-throws.html": [
+          {
+            "path": "dom/collections/HTMLCollection-as-proto-length-get-throws.html",
+            "url": "/dom/collections/HTMLCollection-as-proto-length-get-throws.html"
+          }
+        ],
         "js/builtins/Promise-incumbent-global.sub.html": [
           {
             "path": "js/builtins/Promise-incumbent-global.sub.html",
