@@ -10,6 +10,7 @@ loop.OTSdkDriver = (function() {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var CURSOR_MESSAGE_TYPES = loop.shared.utils.CURSOR_MESSAGE_TYPES;
 
   /**
    * This is a wrapper for the OT sdk. It is used to translate the SDK events into
@@ -52,17 +53,6 @@ loop.OTSdkDriver = (function() {
     // localStorage.setItem("debug.twoWayMediaTelemetry", true);
     loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry", function(enabled) {
       this._debugTwoWayMediaTelemetry = enabled;
-    }.bind(this));
-
-    // Set loop.debug.sdk to true in the browser, or in standalone:
-    // localStorage.setItem("debug.sdk", true);
-    loop.shared.utils.getBoolPreference("debug.sdk", function(enabled) {
-      // We don't bother with the else case - as we only create one instance of
-      // OTSdkDriver per window, and hence, we leave the sdk set to its default
-      // value.
-      if (enabled) {
-        this.sdk.setLogLevel(this.sdk.DEBUG);
-      }
     }.bind(this));
 
     /**
@@ -557,15 +547,7 @@ loop.OTSdkDriver = (function() {
      * https://tokbox.com/opentok/libraries/client/js/reference/Stream.html
      */
     _handleRemoteScreenShareCreated: function(stream) {
-      // Let the stores know first if the screen sharing is paused or not so
-      // they can update the display properly
-      if (!stream[STREAM_PROPERTIES.HAS_VIDEO]) {
-        this.dispatcher.dispatch(new sharedActions.VideoScreenStreamChanged({
-          hasVideo: false
-        }));
-      }
-
-      // Let the stores know so they can update the display if needed.
+      // Let the stores know first so they can update the display.
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
         receiving: true
       }));
@@ -717,7 +699,11 @@ loop.OTSdkDriver = (function() {
          }.bind(this)],
         ["cursor",
          function(message) {
-            this.dispatcher.dispatch(new sharedActions.ReceivedCursorData(message));
+           switch (message.type) {
+             case CURSOR_MESSAGE_TYPES.POSITION:
+               this.dispatcher.dispatch(new sharedActions.ReceivedCursorData(message));
+               break;
+           }
          }.bind(this),
          function(channel) {
            this._subscriberCursorChannel = channel;
@@ -826,7 +812,7 @@ loop.OTSdkDriver = (function() {
     },
 
     /**
-     * Sends the cursor events through the data channel.
+     * Sends the cursor position on the data channel.
      *
      * @param {String} message The message to send.
      */

@@ -88,14 +88,6 @@ describe("loop.store.ActiveRoomStore", function() {
     });
   });
 
-  describe("#getInitialStoreState", function() {
-    it("should return an object with roomContextUrls set to null", function() {
-      var initialState = store.getInitialStoreState();
-
-      expect(initialState).to.have.a.property("roomContextUrls", null);
-    });
-  });
-
   describe("#roomFailure", function() {
     var fakeError;
 
@@ -1584,33 +1576,10 @@ describe("loop.store.ActiveRoomStore", function() {
           owner: false
         }]
       });
-
-      sandbox.stub(console, "error");
     });
 
     afterEach(function() {
       store.endScreenShare();
-    });
-
-    it("should log an error if the state is not inactive", function() {
-      store.setStoreState({
-        screenSharingState: SCREEN_SHARE_STATES.PENDING
-      });
-
-      store.startBrowserShare(new sharedActions.StartBrowserShare());
-
-      sinon.assert.calledOnce(console.error);
-    });
-
-    it("should not do anything if the state is not inactive", function() {
-      store.setStoreState({
-        screenSharingState: SCREEN_SHARE_STATES.PENDING
-      });
-
-      store.startBrowserShare(new sharedActions.StartBrowserShare());
-
-      sinon.assert.notCalled(requestStubs.AddBrowserSharingListener);
-      sinon.assert.notCalled(fakeSdkDriver.startScreenShare);
     });
 
     it("should set the state to 'pending'", function() {
@@ -1887,26 +1856,6 @@ describe("loop.store.ActiveRoomStore", function() {
       expect(participants).to.have.length.of(1);
       expect(participants[0].owner).eql(true);
     });
-
-    it("should clear the streamPaused state", function() {
-      store.setStoreState({
-        streamPaused: true
-      });
-
-      store.remotePeerDisconnected();
-
-      expect(store.getStoreState().streamPaused).eql(false);
-    });
-
-    it("should set the remotePeerDisconnected to `true", function() {
-      store.setStoreState({
-        remotePeerDisconnected: false
-      });
-
-      store.remotePeerDisconnected();
-
-      expect(store.getStoreState().remotePeerDisconnected).eql(true);
-    });
   });
 
   describe("#connectionStatus", function() {
@@ -2048,16 +1997,6 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken", "1627384950");
     });
 
-    it("should call 'HangupNow' when _isDesktop is true and windowStayingOpen", function() {
-      store._isDesktop = true;
-
-      store.leaveRoom({
-        windowStayingOpen: true
-      });
-
-      sinon.assert.calledOnce(requestStubs["HangupNow"]);
-    });
-
     it("should not call 'HangupNow' Loop API when _isDesktop is true", function() {
       store._isDesktop = true;
 
@@ -2090,7 +2029,6 @@ describe("loop.store.ActiveRoomStore", function() {
         audioMuted: true,
         localVideoDimensions: { x: 10 },
         receivingScreenShare: true,
-        remotePeerDisconnected: true,
         remoteVideoDimensions: { y: 10 },
         screenSharingState: true,
         videoMuted: true,
@@ -2102,7 +2040,6 @@ describe("loop.store.ActiveRoomStore", function() {
       expect(store._storeState.audioMuted).eql(false);
       expect(store._storeState.localVideoDimensions).eql({});
       expect(store._storeState.receivingScreenShare).eql(false);
-      expect(store._storeState.remotePeerDisconnected).eql(false);
       expect(store._storeState.remoteVideoDimensions).eql({});
       expect(store._storeState.screenSharingState).eql(SCREEN_SHARE_STATES.INACTIVE);
       expect(store._storeState.videoMuted).eql(false);

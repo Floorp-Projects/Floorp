@@ -34,11 +34,8 @@
         var Assertion = chai.Assertion;
         var assert = chai.assert;
 
-        function isLegacyJQueryPromise(thenable) {
-            // jQuery promises are Promises/A+-compatible since 3.0.0. jQuery 3.0.0 is also the first version
-            // to define the catch method.
-            return typeof thenable.catch !== "function" &&
-                   typeof thenable.always === "function" &&
+        function isJQueryPromise(thenable) {
+            return typeof thenable.always === "function" &&
                    typeof thenable.done === "function" &&
                    typeof thenable.fail === "function" &&
                    typeof thenable.pipe === "function" &&
@@ -50,10 +47,9 @@
             if (typeof assertion._obj.then !== "function") {
                 throw new TypeError(utils.inspect(assertion._obj) + " is not a thenable.");
             }
-            if (isLegacyJQueryPromise(assertion._obj)) {
-                throw new TypeError("Chai as Promised is incompatible with thenables of jQuery<3.0.0, sorry! Please " +
-                                    "upgrade jQuery or use another Promises/A+ compatible library (see " +
-                                    "http://promisesaplus.com/).");
+            if (isJQueryPromise(assertion._obj)) {
+                throw new TypeError("Chai as Promised is incompatible with jQuery's thenables, sorry! Please use a " +
+                                    "Promises/A+ compatible library (see http://promisesaplus.com/).");
             }
         }
 
@@ -237,8 +233,8 @@
             doNotify(getBasePromise(this), done);
         });
 
-        method("become", function (value, message) {
-            return this.eventually.deep.equal(value, message);
+        method("become", function (value) {
+            return this.eventually.deep.equal(value);
         });
 
         ////////

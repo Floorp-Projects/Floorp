@@ -62,11 +62,7 @@ describe("loop.store.RoomStore", function() {
       },
       NotifyUITour: function() {},
       OpenURL: sinon.stub(),
-      "Rooms:Create": sinon.stub().returns({
-        decryptedContext: [],
-        roomToken: "fakeToken",
-        roomUrl: "fakeUrl"
-      }),
+      "Rooms:Create": sinon.stub().returns({ roomToken: "fakeToken" }),
       "Rooms:Delete": sinon.stub(),
       "Rooms:GetAll": sinon.stub(),
       "Rooms:Open": sinon.stub(),
@@ -294,9 +290,7 @@ describe("loop.store.RoomStore", function() {
           sinon.assert.calledOnce(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
             new sharedActions.CreatedRoom({
-              decryptedContext: [],
-              roomToken: "fakeToken",
-              roomUrl: "fakeUrl"
+              roomToken: "fakeToken"
             }));
         });
 
@@ -368,38 +362,24 @@ describe("loop.store.RoomStore", function() {
         store.setStoreState({ pendingCreation: true });
 
         store.createdRoom(new sharedActions.CreatedRoom({
-          decryptedContext: [],
-          roomToken: "fakeToken",
-          roomUrl: "fakeUrl"
+          roomToken: "fakeToken"
         }));
 
         expect(store.getStoreState().pendingCreation).eql(false);
       });
 
-      it("should not dispatch an OpenRoom action once the operation is done",
+      it("should dispatch an OpenRoom action once the operation is done",
         function() {
           store.createdRoom(new sharedActions.CreatedRoom({
-            decryptedContext: [],
-            roomToken: "fakeToken",
-            roomUrl: "fakeUrl"
+            roomToken: "fakeToken"
           }));
 
-          sinon.assert.notCalled(dispatcher.dispatch);
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.OpenRoom({
+              roomToken: "fakeToken"
+            }));
         });
-
-      it("should save the state of the active room", function() {
-        store.createdRoom(new sharedActions.CreatedRoom({
-          decryptedContext: [],
-          roomToken: "fakeToken",
-          roomUrl: "fakeUrl"
-        }));
-
-        expect(store.getStoreState().activeRoom).eql({
-          decryptedContext: [],
-          roomToken: "fakeToken",
-          roomUrl: "fakeUrl"
-        });
-      });
     });
 
     describe("#createRoomError", function() {
@@ -965,7 +945,7 @@ describe("loop.store.RoomStore", function() {
 
       sinon.assert.calledOnce(requestStubs["TelemetryAddValue"]);
       sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"],
-        "LOOP_ACTIVITY_COUNTER", store._constants.LOOP_MAU_TYPE.ROOM_OPEN);
+        "LOOP_MAU", store._constants.LOOP_MAU_TYPE.ROOM_OPEN);
     });
 
     it("should log telemetry event when sharing a room (copy link)", function() {
@@ -976,7 +956,7 @@ describe("loop.store.RoomStore", function() {
 
       sinon.assert.calledTwice(requestStubs["TelemetryAddValue"]);
       sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"].getCall(1),
-        "LOOP_ACTIVITY_COUNTER", store._constants.LOOP_MAU_TYPE.ROOM_SHARE);
+        "LOOP_MAU", store._constants.LOOP_MAU_TYPE.ROOM_SHARE);
     });
 
     it("should log telemetry event when sharing a room (email)", function() {
@@ -987,7 +967,7 @@ describe("loop.store.RoomStore", function() {
 
       sinon.assert.calledTwice(requestStubs["TelemetryAddValue"]);
       sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"].getCall(1),
-        "LOOP_ACTIVITY_COUNTER", store._constants.LOOP_MAU_TYPE.ROOM_SHARE);
+        "LOOP_MAU", store._constants.LOOP_MAU_TYPE.ROOM_SHARE);
     });
 
     it("should log telemetry event when sharing a room (facebook)", function() {
@@ -998,7 +978,7 @@ describe("loop.store.RoomStore", function() {
 
       sinon.assert.calledTwice(requestStubs["TelemetryAddValue"]);
       sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"].getCall(1),
-        "LOOP_ACTIVITY_COUNTER", store._constants.LOOP_MAU_TYPE.ROOM_SHARE);
+        "LOOP_MAU", store._constants.LOOP_MAU_TYPE.ROOM_SHARE);
     });
 
     it("should log telemetry event when deleting a room", function() {
@@ -1008,7 +988,7 @@ describe("loop.store.RoomStore", function() {
 
       sinon.assert.calledTwice(requestStubs["TelemetryAddValue"]);
       sinon.assert.calledWithExactly(requestStubs["TelemetryAddValue"].getCall(1),
-        "LOOP_ACTIVITY_COUNTER", store._constants.LOOP_MAU_TYPE.ROOM_DELETE);
+        "LOOP_MAU", store._constants.LOOP_MAU_TYPE.ROOM_DELETE);
     });
   });
 });

@@ -43,7 +43,6 @@ loop.store.RemoteCursorStore = (function() {
 
       loop.subscribe("CursorPositionChange",
                      this._cursorPositionChangeListener.bind(this));
-      loop.subscribe("CursorClick", this._cursorClickListener.bind(this));
     },
 
     /**
@@ -52,22 +51,12 @@ loop.store.RemoteCursorStore = (function() {
     getInitialStoreState: function() {
       return {
         realVideoSize: null,
-        remoteCursorClick: null,
         remoteCursorPosition: null
       };
     },
 
     /**
-     * Sends cursor click position through the sdk.
-     */
-    _cursorClickListener: function() {
-      this.sendCursorData({
-        type: CURSOR_MESSAGE_TYPES.CLICK
-      });
-    },
-
-    /**
-     * Prepares the cursor position object to be sent.
+     * Sends cursor position through the sdk.
      *
      * @param {Object} event An object containing the cursor position and
      *                       stream dimensions. It should contain:
@@ -90,15 +79,12 @@ loop.store.RemoteCursorStore = (function() {
      *      {
      *       ratioX {[0-1]} Cursor's position on the X axis
      *       ratioY {[0-1]} Cursor's position on the Y axis
-     *       type   {String} Type of the data being sent. Could be of the type
-     *                | CURSOR_MESSAGE_TYPES.POSITION
-     *                | CURSOR_MESSAGE_TYPES.CLICK
+     *       type   {String} Type of the data being sent
      *      }
      */
     sendCursorData: function(actionData) {
       switch (actionData.type) {
         case CURSOR_MESSAGE_TYPES.POSITION:
-        case CURSOR_MESSAGE_TYPES.CLICK:
           this._sdkDriver.sendCursorMessage(actionData);
           break;
       }
@@ -117,11 +103,6 @@ loop.store.RemoteCursorStore = (function() {
               ratioX: actionData.ratioX,
               ratioY: actionData.ratioY
             }
-          });
-          break;
-        case CURSOR_MESSAGE_TYPES.CLICK:
-          this.setStoreState({
-            remoteCursorClick: true
           });
           break;
       }

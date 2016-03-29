@@ -40,16 +40,15 @@ describe("loop.store.RemoteCursorStore", function() {
       }).to.Throw(/sdkDriver/);
     });
 
-    it("should add a event listeners", function() {
+    it("should add a CursorPositionChange event listener", function() {
       sandbox.stub(loop, "subscribe");
       new loop.store.RemoteCursorStore(dispatcher, { sdkDriver: fakeSdkDriver });
-      sinon.assert.calledTwice(loop.subscribe);
+      sinon.assert.calledOnce(loop.subscribe);
       sinon.assert.calledWith(loop.subscribe, "CursorPositionChange");
-      sinon.assert.calledWith(loop.subscribe, "CursorClick");
     });
   });
 
-  describe("#cursor position change", function() {
+  describe("#_cursorPositionChangeListener", function() {
     it("should send cursor data through the sdk", function() {
       var fakeEvent = {
         ratioX: 10,
@@ -63,19 +62,6 @@ describe("loop.store.RemoteCursorStore", function() {
         type: CURSOR_MESSAGE_TYPES.POSITION,
         ratioX: fakeEvent.ratioX,
         ratioY: fakeEvent.ratioY
-      });
-    });
-  });
-
-  describe("#cursor click", function() {
-    it("should send cursor data through the sdk", function() {
-      var fakeClick = true;
-
-      LoopMochaUtils.publish("CursorClick", fakeClick);
-
-      sinon.assert.calledOnce(fakeSdkDriver.sendCursorMessage);
-      sinon.assert.calledWith(fakeSdkDriver.sendCursorMessage, {
-        type: CURSOR_MESSAGE_TYPES.CLICK
       });
     });
   });
@@ -126,7 +112,7 @@ describe("loop.store.RemoteCursorStore", function() {
       sinon.assert.notCalled(store.setStoreState);
     });
 
-    it("should save the state of the cursor position", function() {
+    it("should save the state", function() {
       store.receivedCursorData(new sharedActions.ReceivedCursorData({
         type: CURSOR_MESSAGE_TYPES.POSITION,
         ratioX: 10,
@@ -137,14 +123,6 @@ describe("loop.store.RemoteCursorStore", function() {
         ratioX: 10,
         ratioY: 10
       });
-    });
-
-    it("should save the state of the cursor click", function() {
-      store.receivedCursorData(new sharedActions.ReceivedCursorData({
-        type: CURSOR_MESSAGE_TYPES.CLICK
-      }));
-
-      expect(store.getStoreState().remoteCursorClick).eql(true);
     });
   });
 
