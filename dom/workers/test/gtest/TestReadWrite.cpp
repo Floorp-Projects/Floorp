@@ -14,6 +14,7 @@
 #include "nsIFile.h"
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -33,6 +34,11 @@ public:
   nsresult TestReadData() { return ReadData(); }
   nsresult TestWriteData() { return WriteData(); }
   void TestDeleteData() { DeleteData(); }
+
+  void TestRegisterServiceWorker(const ServiceWorkerRegistrationData& aData)
+  {
+    RegisterServiceWorkerInternal(aData);
+  }
 
   nsTArray<ServiceWorkerRegistrationData>& TestGetData() { return mData; }
 };
@@ -208,17 +214,20 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
   {
     RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
-    nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
-
     for (int i = 0; i < 10; ++i) {
-      ServiceWorkerRegistrationData* d = data.AppendElement();
+      ServiceWorkerRegistrationData reg;
+
+      reg.scope() = nsPrintfCString("scope write %d", i);
+      reg.currentWorkerURL() = nsPrintfCString("currentWorkerURL write %d", i);
+      reg.cacheName() =
+        NS_ConvertUTF8toUTF16(nsPrintfCString("cacheName write %d", i));
 
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
-      d->principal() = mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(i, i % 2), spec);
-      d->scope().AppendPrintf("scope write %d", i);
-      d->currentWorkerURL().AppendPrintf("currentWorkerURL write %d", i);
-      d->cacheName().AppendPrintf("cacheName write %d", i);
+      reg.principal() =
+        mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(i, i % 2), spec);
+
+      swr->TestRegisterServiceWorker(reg);
     }
 
     nsresult rv = swr->TestWriteData();
