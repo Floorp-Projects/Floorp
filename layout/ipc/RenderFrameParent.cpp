@@ -91,11 +91,23 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mAsyncPanZoomEnabled(false)
+  , mInitted(false)
 {
-  *aSuccess = false;
-  if (!mFrameLoader) {
-    return;
+  mInitted = Init(aFrameLoader);
+  *aSuccess = mInitted;
+}
+
+RenderFrameParent::~RenderFrameParent()
+{}
+
+bool
+RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
+{
+  if (mInitted || !aFrameLoader) {
+    return false;
   }
+
+  mFrameLoader = aFrameLoader;
 
   RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
 
@@ -113,11 +125,16 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
     CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
   }
-  *aSuccess = true;
+
+  mInitted = true;
+  return true;
 }
 
-RenderFrameParent::~RenderFrameParent()
-{}
+bool
+RenderFrameParent::IsInitted()
+{
+  return mInitted;
+}
 
 void
 RenderFrameParent::Destroy()
