@@ -84,16 +84,11 @@ SyncedTabsDeckView.prototype = {
   },
 
   update(state) {
-    // Note that we may also want to update elements that are outside of the
-    // deck, so use the document to find the class names rather than our
-    // container.
     for (let panel of state.panels) {
       if (panel.selected) {
-        Array.prototype.map.call(this._doc.getElementsByClassName(panel.id),
-                                 item => item.classList.add("selected"));
+        this.container.getElementsByClassName(panel.id).item(0).classList.add("selected");
       } else {
-        Array.prototype.map.call(this._doc.getElementsByClassName(panel.id),
-                                 item => item.classList.remove("selected"));
+        this.container.getElementsByClassName(panel.id).item(0).classList.remove("selected");
       }
     }
   },
