@@ -110,6 +110,7 @@ DEFAULTS = dict(
         'browser.safebrowsing.enabled': False,
         'browser.safebrowsing.malware.enabled': False,
         'browser.safebrowsing.forbiddenURIs.enabled': False,
+        'browser.safebrowsing.blockedURIs.enabled': False,
         'privacy.trackingprotection.enabled': False,
         'privacy.trackingprotection.pbmode.enabled': False,
         'browser.search.isUS': True,

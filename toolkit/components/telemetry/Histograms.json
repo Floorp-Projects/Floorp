@@ -10447,5 +10447,19 @@
     "bug_numbers": [1255934],
     "kind": "count",
     "description": "Remote JAR protocol usage"
+  },
+  "PLUGIN_BLOCKED_FOR_STABILITY": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "52",
+    "kind": "count",
+    "bug_numbers": [1237198],
+    "description": "Count plugins blocked for stability"
+  },
+  "PLUGIN_TINY_CONTENT": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "52",
+    "kind": "count",
+    "bug_numbers": [1237198],
+    "description": "Count tiny plugin content"
   }
 }
