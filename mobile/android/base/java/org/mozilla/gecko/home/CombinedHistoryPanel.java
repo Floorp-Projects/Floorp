@@ -9,6 +9,7 @@ import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -82,6 +83,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private CombinedHistoryRecyclerView mRecyclerView;
     private CombinedHistoryAdapter mAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
+    private int mSavedParentIndex = -1;
 
     private OnPanelLevelChangeListener.PanelLevel mPanelLevel = OnPanelLevelChangeListener.PanelLevel.PARENT;
     private Button mPanelFooterButton;
@@ -106,7 +108,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         super.onViewCreated(view, savedInstanceState);
 
         mRecyclerView = (CombinedHistoryRecyclerView) view.findViewById(R.id.combined_recycler_view);
-        mAdapter = new CombinedHistoryAdapter(getContext());
+        mAdapter = new CombinedHistoryAdapter(getContext(), mSavedParentIndex);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));
@@ -123,6 +125,17 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (isVisible()) {
+            // The parent stack is saved just so that the folder state can be
+            // restored on rotation.
+            mSavedParentIndex = mAdapter.getParentIndex();
+        }
     }
 
     @Override
@@ -286,7 +299,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     break;
 
                 case CHILD:
-                    final JSONArray tabUrls = ((CombinedHistoryAdapter) mRecyclerView.getAdapter()).getCurrentChildTabs();
+                    final JSONArray tabUrls = mAdapter.getCurrentChildTabs();
                     if (tabUrls != null) {
                         final JSONObject message = new JSONObject();
                         try {
@@ -426,7 +439,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         final int itemId = item.getItemId();
         if (itemId == R.id.home_remote_tabs_hide_client) {
-            ((CombinedHistoryAdapter) mRecyclerView.getAdapter()).removeItem(info.position);
+            mAdapter.removeItem(info.position);
             return true;
         }
 
@@ -453,7 +466,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
     @Override
     public void onClients(List<RemoteClient> clients) {
-        ((CombinedHistoryAdapter) mRecyclerView.getAdapter()).unhideClients(clients);
+        mAdapter.unhideClients(clients);
     }
 
     /**
