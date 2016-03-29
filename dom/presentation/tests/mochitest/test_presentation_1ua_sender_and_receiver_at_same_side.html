@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for B2G Presentation API when sender and receiver at the same side</title>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1234492">
+    Test for B2G Presentation API when sender and receiver at the same side</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScriptFor1UA.js'));
+var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_receiver.html');
+var request;
+var connection;
+var receiverIframe;
+
+function setup() {
+  // Create receiver iframe
+  receiverIframe = document.createElement('iframe');
+  receiverIframe.onload = function() {
+    info('Receiver loaded.');
+    gScript.sendAsyncMessage('trigger-control-channel-open');
+    // mockedControlChannelOfSender.notifyOpened();
+    //   -> mockedControlChannelOfSender.sendOffer();
+    //   -> 'offer-sent' event emitted.
+  }
+  receiverIframe.setAttribute('src', receiverUrl);
+  var promise = new Promise(function(aResolve, aReject) {
+    document.body.appendChild(receiverIframe);
+    aResolve(receiverIframe);
+  });
+
+  // Pass receiver iframe to ChromeScript
+  // This iframe would be used when device is chosen
+  var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                         .getService(SpecialPowers.Ci.nsIObserverService);
+  obs.notifyObservers(promise, 'setup-request-promise', null);
+
+  // This event is triggered when the iframe calls "postMessage".
+  window.addEventListener('message', function messageHandler(evt) {
+    var message = evt.data;
+    if (/^OK /.exec(message)) {
+      ok(true, message.replace(/^OK /, ''));
+    } else if (/^KO /.exec(message)) {
+      ok(false, message.replace(/^KO /, ''));
+    } else if (/^INFO /.exec(message)) {
+      info(message.replace(/^INFO /, ''));
+    } else if (/^COMMAND /.exec(message)) {
+      var command = JSON.parse(message.replace(/^COMMAND /, ''));
+      gScript.sendAsyncMessage(command.name, command.data);
+    } else if (/^DONE$/.exec(message)) {
+      window.removeEventListener('message', messageHandler);
+      teardown();
+    }
+  }, false);
+  return Promise.resolve();
+}
+
+function testSetup() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testSetup ---');
+    request = new PresentationRequest("http://example.com");
+    request.getAvailability()
+    .then((aAvailability) => {
+      aAvailability.onchange = function() {
+        aAvailability.onchange = null;
+        ok(aAvailability.value, "Sender: Device should be available.");
+        aResolve();
+      }
+    })
+    .catch((aError) => {
+      ok(false, "Sender: Error occurred when getting availability: " + aError);
+      teardown();
+      aReject();
+    });
+    gScript.sendAsyncMessage('trigger-device-add');
+  });
+}
+
+function testStartConnection() {
+  var controllingInfoCreated = false, presentingInfoCreated = false;
+
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testStartConnection ---');
+    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+      gScript.sendAsyncMessage('trigger-device-prompt-select');
+      // mockedDevicePrompt.simulateSelect()
+      //   -> Call PresentationDeviceRequest::Select()
+      //   -> Call PresentationDevice::EstablishControlChannel()
+      //   -> 'control-channel-established' event emitted
+      //   -> Create PresentationControllingInfo
+    });
+
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+      gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
+      // PresentationDeviceManager.OnSessionRequest()
+      //   -> PresentationService.HandleSessionRequest()
+      //   -> Create PresentationPresentingInfo
+      //   -> mockRequestUIGlue.sendRequest()
+    });
+
+    gScript.addMessageListener('controlling-info-created', function controllingInfoCreatedHandler() {
+      gScript.removeMessageListener('controlling-info-created', controllingInfoCreatedHandler);
+      info('PresentationControllingInfo is created.');
+      controllingInfoCreated = true;
+    });
+
+    gScript.addMessageListener('presenting-info-created', function presentingInfoCreatedHandler() {
+      gScript.removeMessageListener('presenting-info-created', presentingInfoCreatedHandler);
+      info('PresentationPresentingInfo is created.');
+      presentingInfoCreated = true;
+    });
+
+    // Wait for receiver loaded and 'trigger-control-channel-open' event emit
+    // to trigger mockedControlChannelOfSender.sendOffer().
+    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      gScript.sendAsyncMessage('trigger-on-offer');
+      // mockedControlChannelOfReceiver.onOffer()
+      //   -> PresentationPresentingInfo.OnOffer()
+      //   -> PresentationPresentingInfo.InitTransportAndSendAnswer()
+      //   -> mockedControlChannelOfReceiver.sendAnswer()
+      //   -> 'answer-sent' event emitted
+    });
+
+    gScript.addMessageListener('answer-sent', function answerSentHandler() {
+      gScript.removeMessageListener('answer-sent', answerSentHandler);
+      gScript.sendAsyncMessage('trigger-on-answer');
+      // mockedControlChannelOfSender.onAnswer();
+      //   -> PresentationControllingInfo.OnAnswer()
+      //   -> PresentationSessionInfo.ReplySuccess()
+      //   -> PresentationRequesterCallback::NotifySuccess()
+      //   -> Create PresentationConnection
+    });
+
+    var connectionFromEvent;
+    request.onconnectionavailable = (aEvent) => {
+      request.onconnectionavailable = null;
+      connectionFromEvent = aEvent.connection;
+      ok(connectionFromEvent, "Sender: |connectionavailable| event is fired with a connection.");
+
+      if (connection) {
+        is(connection, connectionFromEvent,
+           "Sender: The connection from promise and the one from |connectionavailable| event should be the same.");
+        aResolve();
+      }
+    };
+
+    request.start()
+    .then((aConnection) => {
+
+      if (!controllingInfoCreated || !presentingInfoCreated) {
+        aReject();
+      }
+      ok(controllingInfoCreated && presentingInfoCreated,
+         'Sender: PresentationControllingInfo and PresentationPresentingInfo are both created.');
+
+      connection = aConnection;
+      ok(connection, "Sender: Connection should be available.");
+      ok(connection.id, "Sender: Connection ID should be set.");
+      is(connection.state, "connected", "Sender: Connection state at sender side should be connected by default.");
+
+      if (connectionFromEvent) {
+        is(connection, connectionFromEvent,
+           "Sender: The connection from promise and the one from |connectionavailable| event should be the same.");
+        aResolve();
+      }
+    })
+    .catch((aError) => {
+      ok(false, "Sender: Error occurred when establishing a connection: " + aError);
+      teardown();
+      aReject();
+    });
+  });
+}
+
+function testSendMessage() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testSendMessage ---');
+    gScript.addMessageListener('trigger-message-from-sender',
+      function triggerMessageFromSenderHandler() {
+        gScript.removeMessageListener('trigger-message-from-sender',
+                                      triggerMessageFromSenderHandler);
+        info('Send message to receiver');
+        connection.send('msg-sender-to-receiver');
+    });
+
+    gScript.addMessageListener('message-from-sender-received',
+      function messageFromSenderReceivedHandler() {
+        gScript.removeMessageListener('message-from-sender-received',
+                                      messageFromSenderReceivedHandler);
+        aResolve();
+    });
+  });
+}
+
+function testIncomingMessage() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testIncomingMessage ---');
+    connection.addEventListener('message', function messageHandler(evt) {
+      connection.removeEventListener('message', messageHandler);
+      let msg = evt.data;
+      is(msg, "msg-receiver-to-sender", "Sender: Sender should receive message from Receiver");
+      receiverIframe.contentWindow.postMessage({ type: 'message-from-receiver-received' }, '*');
+      aResolve();
+    });
+    receiverIframe.contentWindow.postMessage({ type: 'trigger-message-from-receiver' }, '*');
+  });
+}
+
+function testTerminateConnection() {
+  return new Promise(function(aResolve, aReject) {
+    info('Sender: --- testTerminateConnection ---');
+    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+      info("Sender: The data transport is closed. " + aReason);
+    });
+
+    connection.onstatechange = function() {
+      connection.onstatechange = null;
+      is(connection.state, "terminated", "Sender: Connection should be terminated.");
+      aResolve();
+    };
+
+    connection.terminate();
+  });
+}
+
+function teardown() {
+  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
+    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+    gScript.destroy();
+    SimpleTest.finish();
+  });
+
+  gScript.sendAsyncMessage('teardown');
+}
+
+function runTests() {
+  ok(window.PresentationRequest, "Sender: PresentationRequest should be available.");
+
+  setup()
+  .then(testSetup)
+  .then(testStartConnection)
+  .then(testSendMessage)
+  .then(testIncomingMessage)
+  .then(testTerminateConnection);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPermissions([
+  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: 'presentation', allow: true, context: document},
+], () => {
+  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      ["dom.presentation.test.enabled", true],
+                                      ["dom.presentation.test.stage", 0]]},
+                            runTests);
+});
+
+</script>
+  </body>
+</html>
