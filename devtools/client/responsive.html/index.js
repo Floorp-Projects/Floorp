@@ -43,10 +43,11 @@ let bootstrap = {
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let app = App({
-      onExit: () => window.postMessage({type: "exit"}, "*"),
+      onExit: () => window.postMessage({ type: "exit" }, "*"),
     });
     let provider = createElement(Provider, { store }, app);
     ReactDOM.render(provider, document.querySelector("#root"));
+    window.postMessage({ type: "init" }, "*");
   },
 
   destroy() {
