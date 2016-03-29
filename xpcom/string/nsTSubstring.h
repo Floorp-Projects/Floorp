@@ -384,12 +384,6 @@ public:
     Assign(static_cast<const char16_t*>(aData));
   }
 
-  MOZ_WARN_UNUSED_RESULT bool Assign(char16ptr_t aData,
-                                     const fallible_t& aFallible)
-  {
-    return Assign(static_cast<const char16_t*>(aData), aFallible);
-  }
-
   void Assign(char16ptr_t aData, size_type aLength)
   {
     Assign(static_cast<const char16_t*>(aData), aLength);
