@@ -12,6 +12,11 @@ wasmEvalText(`(module (func $func$0
 )`);
 
 wasmEvalText(`(module (func
+      (loop $out $in (br_table $out $out $in (i32.const 0)))
+  )
+)`);
+
+wasmEvalText(`(module (func
   (select
     (block
       (block
