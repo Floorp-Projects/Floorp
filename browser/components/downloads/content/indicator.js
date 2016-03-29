@@ -238,7 +238,7 @@ const DownloadsIndicatorView = {
     this.counter = "";
     this.percentComplete = 0;
     this.paused = false;
-    this.attention = false;
+    this.attention = DownloadsCommon.ATTENTION_NONE;
   },
 
   /**
@@ -466,15 +466,28 @@ const DownloadsIndicatorView = {
 
     if (this._attention != aValue) {
       this._attention = aValue;
-      if (aValue) {
-        this.indicator.setAttribute("attention", "true");
-      } else {
+
+      // Check if the downloads button is in the menu panel, to determine which
+      // button needs to get a badge.
+      let widgetGroup = CustomizableUI.getWidget("downloads-button");
+      let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
+
+      if (aValue == DownloadsCommon.ATTENTION_NONE) {
         this.indicator.removeAttribute("attention");
+        if (inMenu) {
+          gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD);
+        }
+      } else {
+        this.indicator.setAttribute("attention", aValue);
+        if (inMenu) {
+          let badgeClass = "download-" + aValue;
+          gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD, badgeClass);
+        }
       }
     }
     return aValue;
   },
-  _attention: false,
+  _attention: DownloadsCommon.ATTENTION_NONE,
 
   //////////////////////////////////////////////////////////////////////////////
   //// User interface event functions

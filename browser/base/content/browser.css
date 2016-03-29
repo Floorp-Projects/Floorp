@@ -994,16 +994,16 @@ chatbar[customSize] > .chatbar-innerbox {
 /* Bug 924050: If we've loaded the indicator, for now we hide it in the menu panel,
    and just show the icon. This is a hack to side-step very weird layout bugs that
    seem to be caused by the indicator stack interacting with the menu panel. */
-#downloads-button[indicator]:not([cui-areatype="menu-panel"]) > image.toolbarbutton-icon,
+#downloads-button[indicator]:not([cui-areatype="menu-panel"]) > .toolbarbutton-badge-stack > image.toolbarbutton-icon,
 #downloads-button[indicator][cui-areatype="menu-panel"] > #downloads-indicator-anchor {
   display: none;
 }
 
-toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > image.toolbarbutton-icon {
+toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
   display: -moz-box;
 }
 
-toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > stack.toolbarbutton-icon {
+toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-indicator-anchor {
   display: none;
 }
 
@@ -1026,7 +1026,7 @@ toolbar[mode="text"] > #downloads-button > .toolbarbutton-text {
   -moz-box-ordinal-group: 1;
 }
 
-toolbar[mode="text"] > #downloads-button > .toolbarbutton-icon {
+toolbar[mode="text"] > #downloads-button > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   display: -moz-box;
   -moz-box-ordinal-group: 2;
   visibility: collapse;
