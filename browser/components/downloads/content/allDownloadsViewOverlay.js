@@ -502,7 +502,7 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
 
   // Get the Download button out of the attention state since we're about to
   // view all downloads.
-  DownloadsCommon.getIndicatorData(window).attention = false;
+  DownloadsCommon.getIndicatorData(window).attention = DownloadsCommon.ATTENTION_NONE;
 
   // Make sure to unregister the view if the window is closed.
   window.addEventListener("unload", () => {
