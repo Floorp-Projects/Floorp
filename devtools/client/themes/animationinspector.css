@@ -139,7 +139,7 @@ body {
 }
 
 #element-picker::before {
-  background-image: url("chrome://devtools/skin/images/command-pick.svg");
+  background-image: url("chrome://devtools/skin/images/command-pick.png");
 }
 
 .pause-button::before {
@@ -155,6 +155,10 @@ body {
 }
 
 @media (min-resolution: 1.1dppx) {
+  #element-picker::before {
+    background-image: url("chrome://devtools/skin/images/command-pick@2x.png");
+  }
+
   .pause-button::before {
     background-image: url("images/debugger-pause@2x.png");
   }
