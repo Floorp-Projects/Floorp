@@ -10,7 +10,7 @@
 
 #include <EGL/eglext.h>
 #include <sstream>
-#include <VersionHelpers.h>
+#include <versionhelpers.h>
 
 #include "common/tls.h"
 #include "common/utilities.h"
