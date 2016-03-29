@@ -9,7 +9,7 @@ import org.mozilla.gecko.AppConstants;
 import android.content.Context;
 import android.content.Intent;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 import java.io.File;
 import java.io.FileReader;

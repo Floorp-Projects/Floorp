@@ -2,7 +2,7 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 /**
  * Tests session OOM save behavior.
