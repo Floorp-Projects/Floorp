@@ -217,11 +217,11 @@ gAnimationsTests.forEach(function(subtest) {
   promise_test(function(t) {
     var div = addDiv(t, { class: 'compositable' });
     var animation = div.animate(subtest.frames, 100000);
-    return animation.ready.then(t.step_func(function() {
+    return animation.ready.then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         subtest.expected);
-    }));
+    });
   }, subtest.desc);
 });
 
@@ -503,11 +503,11 @@ function start() {
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animation = div.animate(subtest.frames, 100000);
-      return animation.ready.then(t.step_func(function() {
+      return animation.ready.then(function() {
         assert_animation_property_state_equals(
           animation.effect.getProperties(),
           subtest.expected);
-      }));
+      });
     }, subtest.desc);
   });
 
@@ -520,23 +520,23 @@ function start() {
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animation = div.animate(subtest.frames, 100000);
-      return animation.ready.then(t.step_func(function() {
+      return animation.ready.then(function() {
         assert_property_state_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
         div.style = subtest.style;
         return waitForFrame();
-      })).then(t.step_func(function() {
+      }).then(function() {
         assert_animation_property_state_equals(
           animation.effect.getProperties(),
           subtest.expected);
         div.style = '';
         return waitForFrame();
-      })).then(t.step_func(function() {
+      }).then(function() {
         assert_property_state_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
-      }));
+      });
     }, subtest.desc);
   });
 
@@ -555,29 +555,29 @@ function start() {
         animation.expected = anim.expected;
         return animation;
       });
-      return waitForAllAnimations(animations).then(t.step_func(function() {
-        animations.forEach(t.step_func(function(anim) {
+      return waitForAllAnimations(animations).then(function() {
+        animations.forEach(function(anim) {
           assert_property_state_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
-        }));
+        });
         div.style = subtest.style;
         return waitForFrame();
-      })).then(t.step_func(function() {
-        animations.forEach(t.step_func(function(anim) {
+      }).then(function() {
+        animations.forEach(function(anim) {
           assert_animation_property_state_equals(
             anim.effect.getProperties(),
             anim.expected);
-        }));
+        });
         div.style = '';
         return waitForFrame();
-      })).then(t.step_func(function() {
-        animations.forEach(t.step_func(function(anim) {
+      }).then(function() {
+        animations.forEach(function(anim) {
           assert_property_state_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
-        }));
-      }));
+        });
+      });
     }, 'Multiple animations: ' + subtest.desc);
   });
 
@@ -591,13 +591,13 @@ function start() {
         animation.expected = anim.expected;
         return animation;
       });
-      return waitForAllAnimations(animations).then(t.step_func(function() {
-        animations.forEach(t.step_func(function(anim) {
+      return waitForAllAnimations(animations).then(function() {
+        animations.forEach(function(anim) {
           assert_animation_property_state_equals(
             anim.effect.getProperties(),
             anim.expected);
-        }));
-      }));
+        });
+      });
     }, 'Multiple animations with geometric property: ' + subtest.desc);
   });
 
@@ -614,35 +614,35 @@ function start() {
 
       var widthAnimation;
 
-      return waitForAllAnimations(animations).then(t.step_func(function() {
-        animations.forEach(t.step_func(function(anim) {
+      return waitForAllAnimations(animations).then(function() {
+        animations.forEach(function(anim) {
           assert_property_state_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
-        }));
-      })).then(t.step_func(function() {
+        });
+      }).then(function() {
         // Append 'width' animation on the same element.
         widthAnimation = div.animate({ width: ['100px', '200px'] }, 100000);
         return waitForFrame();
-      })).then(t.step_func(function() {
+      }).then(function() {
         // Now transform animations are not running on compositor because of
         // the 'width' animation.
-        animations.forEach(t.step_func(function(anim) {
+        animations.forEach(function(anim) {
           assert_animation_property_state_equals(
             anim.effect.getProperties(),
             anim.expected);
-        }));
+        });
         // Remove the 'width' animation.
         widthAnimation.cancel();
         return waitForFrame();
-      })).then(t.step_func(function() {
+      }).then(function() {
         // Now all animations are running on compositor.
-        animations.forEach(t.step_func(function(anim) {
+        animations.forEach(function(anim) {
           assert_property_state_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
-        }));
-      }));
+        });
+      });
     }, 'Multiple async animations and geometric animation: ' + subtest.desc);
   });
 
@@ -650,13 +650,13 @@ function start() {
     var div = addDiv(t, { class: 'compositable' });
     var animation = div.animate(
       { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
-    return animation.ready.then(t.step_func(function() {
+    return animation.ready.then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
       div.style = 'width: 10000px; height: 10000px';
       return waitForFrame();
-    })).then(t.step_func(function() {
+    }).then(function() {
       // viewport depends on test environment.
       var expectedWarning = new RegExp(
         "Async animation disabled because frame size \\(10000, 10000\\) is " +
@@ -671,12 +671,12 @@ function start() {
         } ]);
       div.style = 'width: 100px; height: 100px';
       return waitForFrame();
-    })).then(t.step_func(function() {
+    }).then(function() {
       // FIXME: Bug 1253164: the animation should get back on compositor.
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: false } ]);
-    }));
+    });
   }, 'transform on too big element');
 
   promise_test(function(t) {
@@ -695,13 +695,13 @@ function start() {
 
     var animation = svg.animate(
       { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
-    return animation.ready.then(t.step_func(function() {
+    return animation.ready.then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
       svg.setAttribute('transform', 'translate(10, 20)');
       return waitForFrame();
-    })).then(t.step_func(function() {
+    }).then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ {
@@ -711,11 +711,11 @@ function start() {
         } ]);
       svg.removeAttribute('transform');
       return waitForFrame();
-    })).then(t.step_func(function() {
+    }).then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
-    }));
+    });
   }, 'transform of nsIFrame with SVG transform');
 
   promise_test(function(t) {
