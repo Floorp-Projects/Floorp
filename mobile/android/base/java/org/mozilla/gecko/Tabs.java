@@ -63,6 +63,8 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DESKTOP      = 1 << 5;
     public static final int LOADURL_BACKGROUND   = 1 << 6;
     public static final int LOADURL_EXTERNAL     = 1 << 7;
+    /** Indicates the tab is the first shown after Firefox is hidden and restored. */
+    public static final int LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN = 1 << 8;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
@@ -860,6 +862,7 @@ public class Tabs implements GeckoEventListener {
             boolean userEntered = (flags & LOADURL_USER_ENTERED) != 0;
             boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
             boolean external = (flags & LOADURL_EXTERNAL) != 0;
+            final boolean isFirstShownAfterActivityUnhidden = (flags & LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN) != 0;
 
             args.put("url", url);
             args.put("engine", searchEngine);
@@ -920,6 +923,11 @@ public class Tabs implements GeckoEventListener {
                 tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex);
                 tabToSelect.setDesktopMode(desktopMode);
                 tabToSelect.setApplicationId(applicationId);
+                if (isFirstShownAfterActivityUnhidden) {
+                    // We just opened Firefox so we want to show
+                    // the toolbar but not animate it to avoid jank.
+                    tabToSelect.setShouldShowToolbarWithoutAnimationOnFirstSelection(true);
+                }
             }
         } catch (Exception e) {
             Log.w(LOGTAG, "Error building JSON arguments for loadUrl.", e);
