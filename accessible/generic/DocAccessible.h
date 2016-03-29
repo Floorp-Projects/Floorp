@@ -276,6 +276,12 @@ public:
   }
 
   /**
+   * Return an accessible for the given node if any, or an immediate accessible
+   * container for it.
+   */
+  Accessible* AccessibleOrTrueContainer(nsINode* aNode) const;
+
+  /**
    * Return an accessible for the given node or its first accessible descendant.
    */
   Accessible* GetAccessibleOrDescendant(nsINode* aNode) const;

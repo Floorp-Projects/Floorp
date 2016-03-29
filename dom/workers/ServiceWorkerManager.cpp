@@ -1129,7 +1129,7 @@ public:
     AssertIsOnMainThread();
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableMethod(this, &ServiceWorkerInstallJob::Install);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   }
 
   void
@@ -1340,7 +1340,7 @@ public:
               this,
               &ServiceWorkerRegisterJob::Done,
               NS_OK);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
           return;
         }
@@ -1364,7 +1364,7 @@ public:
             this,
             &ServiceWorkerRegisterJob::Fail,
             NS_ERROR_DOM_INVALID_STATE_ERR);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
         return;
       }
@@ -1382,7 +1382,7 @@ public:
             this,
             &ServiceWorkerRegisterJob::Fail,
             NS_ERROR_DOM_ABORT_ERR);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
         return;
       }
@@ -1825,8 +1825,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   // This allows checks for interfaces like nsILoadContext to yield the values used by the
   // the document, yet will not cancel the update job if the document's load group is cancelled.
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  rv = loadGroup->SetNotificationCallbacks(ir);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(loadGroup->SetNotificationCallbacks(ir));
 
   RefPtr<ServiceWorkerRegisterJob> job =
     new ServiceWorkerRegisterJob(queue, documentPrincipal, cleanedScope, spec,
@@ -1873,7 +1872,7 @@ ServiceWorkerRegistrationInfo::TryToActivateAsync()
   nsCOMPtr<nsIRunnable> r =
   NS_NewRunnableMethod(this,
                        &ServiceWorkerRegistrationInfo::TryToActivate);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 }
 
 /*
@@ -1955,7 +1954,7 @@ ServiceWorkerRegistrationInfo::Activate()
   nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("activate"),
                                                   callback, failRunnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(failRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(failRunnable));
     return;
   }
 }
@@ -2483,7 +2482,7 @@ public:
     AssertIsOnMainThread();
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableMethod(this, &ServiceWorkerUnregisterJob::UnregisterAndDone);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   }
 
 private:
@@ -3729,7 +3728,7 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
 
   // If there is no upload stream, then continue immediately
   if (!uploadChannel) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(continueRunnable->Run()));
+    MOZ_ALWAYS_SUCCEEDS(continueRunnable->Run());
     return;
   }
   // Otherwise, ensure the upload stream can be cloned directly.  This may
@@ -5234,7 +5233,7 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   }
   mState = aState;
   nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, mState);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r.forget())));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
 }
 
 ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,

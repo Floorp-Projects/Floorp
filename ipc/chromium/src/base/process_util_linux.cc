@@ -17,7 +17,6 @@
 #include "base/eintr_wrapper.h"
 #include "base/file_util.h"
 #include "base/logging.h"
-#include "base/string_tokenizer.h"
 #include "base/string_util.h"
 #include "nsLiteralString.h"
 #include "mozilla/UniquePtr.h"

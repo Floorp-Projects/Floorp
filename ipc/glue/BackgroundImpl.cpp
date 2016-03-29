@@ -435,7 +435,7 @@ private:
 
           nsCOMPtr<nsIRunnable> releaser =
             NS_NewNonOwningRunnableMethod(actor, &ChildImpl::Release);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(releaser)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(releaser));
         }
       }
       delete threadLocalInfo;
@@ -1026,7 +1026,7 @@ ParentImpl::GetContentParent(PBackgroundParent* aBackgroundActor)
       NS_NewNonOwningRunnableMethod(actor->mContent, &ContentParent::AddRef);
     MOZ_ASSERT(runnable);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   }
 
   return already_AddRefed<ContentParent>(actor->mContent.get());
@@ -1109,7 +1109,7 @@ ParentImpl::CreateActorForSameProcess(CreateCallback* aCallback)
   if (sBackgroundThreadMessageLoop) {
     nsCOMPtr<nsIRunnable> callbackRunnable =
       new CreateCallbackRunnable(aCallback);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(callbackRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(callbackRunnable));
     return true;
   }
 
@@ -1234,11 +1234,11 @@ ParentImpl::ShutdownBackgroundThread()
       // cleaned up. We also set a timeout to force-kill any hanging actors.
       TimerCallbackClosure closure(thread, liveActors);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      MOZ_ALWAYS_SUCCEEDS(
         shutdownTimer->InitWithFuncCallback(&ShutdownTimerCallback,
                                             &closure,
                                             kShutdownTimerDelayMS,
-                                            nsITimer::TYPE_ONE_SHOT)));
+                                            nsITimer::TYPE_ONE_SHOT));
 
       nsIThread* currentThread = NS_GetCurrentThread();
       MOZ_ASSERT(currentThread);
@@ -1249,16 +1249,15 @@ ParentImpl::ShutdownBackgroundThread()
 
       MOZ_ASSERT(liveActors->IsEmpty());
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(shutdownTimer->Cancel()));
+      MOZ_ALWAYS_SUCCEEDS(shutdownTimer->Cancel());
     }
 
     // Dispatch this runnable to unregister the thread from the profiler.
     nsCOMPtr<nsIRunnable> shutdownRunnable =
       new ShutdownBackgroundThreadRunnable();
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->Dispatch(shutdownRunnable,
-                                                  NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->Shutdown()));
+    MOZ_ALWAYS_SUCCEEDS(thread->Shutdown());
   }
 }
 
@@ -1280,8 +1279,8 @@ ParentImpl::ShutdownTimerCallback(nsITimer* aTimer, void* aClosure)
 
   nsCOMPtr<nsIRunnable> forceCloseRunnable =
     new ForceCloseBackgroundActorsRunnable(closure->mLiveActors);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(closure->mThread->Dispatch(forceCloseRunnable,
-                                                          NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(closure->mThread->Dispatch(forceCloseRunnable,
+						 NS_DISPATCH_NORMAL));
 }
 
 void
@@ -1295,7 +1294,7 @@ ParentImpl::Destroy()
     NS_NewNonOwningRunnableMethod(this, &ParentImpl::MainThreadActorDestroy);
   MOZ_ASSERT(destroyRunnable);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(destroyRunnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(destroyRunnable));
 }
 
 void
@@ -1387,7 +1386,7 @@ ParentImpl::ActorDestroy(ActorDestroyReason aWhy)
     NS_NewNonOwningRunnableMethod(this, &ParentImpl::Destroy);
   MOZ_ASSERT(destroyRunnable);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(destroyRunnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(destroyRunnable));
 }
 
 NS_IMPL_ISUPPORTS(ParentImpl::ShutdownObserver, nsIObserver)
@@ -1526,7 +1525,7 @@ ParentImpl::ForceCloseBackgroundActorsRunnable::Run()
     }
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   return NS_OK;
 }
@@ -1715,7 +1714,7 @@ ChildImpl::GetOrCreateForCurrentThread(
     // Runnable will use GetForCurrentThread() to retrieve actor again.  This
     // allows us to avoid addref'ing on the wrong thread.
     nsCOMPtr<nsIRunnable> runnable = new AlreadyCreatedCallbackRunnable();
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
     return true;
   }

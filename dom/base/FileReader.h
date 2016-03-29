@@ -107,7 +107,7 @@ public:
   }
 
   // WorkerFeature
-  bool Notify(JSContext* aCx, workers::Status) override;
+  bool Notify(workers::Status) override;
 
 private:
   virtual ~FileReader();

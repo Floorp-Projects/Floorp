@@ -929,7 +929,7 @@ public:
   }
 
   virtual bool
-  Notify(JSContext* aCx, workers::Status aStatus) override
+  Notify(workers::Status aStatus) override
   {
     // We don't care about the notification. We just want to keep the
     // mWorkerPrivate alive.
@@ -1415,7 +1415,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
       return false;
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(challenge)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(challenge));
     return true;
   }
 
@@ -2677,7 +2677,7 @@ BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams,
   if (!mCachedResponses.IsEmpty()) {
     nsCOMPtr<nsIRunnable> continueRunnable = new DelayedActionRunnable(
       this, &BackgroundCursorChild::SendDelayedContinueInternal);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(continueRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(continueRunnable));
   } else {
     MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(params, key));
   }
@@ -2766,7 +2766,7 @@ BackgroundCursorChild::HandleResponse(const void_t& aResponse)
   if (!mCursor) {
     nsCOMPtr<nsIRunnable> deleteRunnable = new DelayedActionRunnable(
       this, &BackgroundCursorChild::SendDeleteMeInternal);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(deleteRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(deleteRunnable));
   }
 }
 

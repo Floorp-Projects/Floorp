@@ -1,10 +1,9 @@
 #-----------------------------------------------------------------
-# dmd.py --filter-stacks-for-testing -o full-empty-live-actual.txt full-empty-live.json
+# dmd.py --filter-stacks-for-testing -o complete-empty-live-actual.txt complete-empty-live.json
 
 Invocation {
-  $DMD = '--mode=live --sample-below=1'
+  $DMD = '--mode=live --stacks=full'
   Mode = 'live'
-  Sample-below size = 1
 }
 
 #-----------------------------------------------------------------

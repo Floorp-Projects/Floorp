@@ -253,4 +253,13 @@ GonkAudioDecoderManager::ProcessFlush()
   GonkDecoderManager::ProcessFlush();
 }
 
+void
+GonkAudioDecoderManager::ResetEOS()
+{
+  GADM_LOG("ResetEOS(<<<");
+  mAudioQueue.Reset();
+  GADM_LOG(">>>ResetEOS(");
+  GonkDecoderManager::ResetEOS();
+}
+
 } // namespace mozilla

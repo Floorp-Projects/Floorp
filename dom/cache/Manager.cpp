@@ -914,8 +914,8 @@ private:
     // CompleteOnInitiatingThread is called.
     nsCOMPtr<nsIRunnable> runnable = NS_NewNonOwningRunnableMethodWithArgs<nsresult>(
       this, &CachePutAllAction::OnAsyncCopyComplete, aRv);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      mTargetThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(
+      mTargetThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
   }
 
   void
@@ -1763,7 +1763,7 @@ Manager::~Manager()
   // shutdown.  Defer this to the main thread, instead.
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(ioThread, &nsIThread::Shutdown);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 }
 
 void

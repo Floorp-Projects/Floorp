@@ -962,7 +962,7 @@ DataStoreChangeEventProxy::HandleEvent(nsIDOMEvent* aEvent)
 // WorkerFeature implementation.
 
 bool
-DataStoreChangeEventProxy::Notify(JSContext* aCx, Status aStatus)
+DataStoreChangeEventProxy::Notify(Status aStatus)
 {
   MutexAutoLock lock(mCleanUpLock);
 
@@ -974,7 +974,6 @@ DataStoreChangeEventProxy::Notify(JSContext* aCx, Status aStatus)
 
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
 
   // Release the WorkerStore and remove the DataStoreChangeEventProxy from the
   // features of the worker thread since the worker thread has been cancelled.

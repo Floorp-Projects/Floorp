@@ -534,14 +534,14 @@ interface nsILoadInfo : nsISupports
   mozilla::LoadTainting GetTainting()
   {
     uint32_t tainting = TAINTING_BASIC;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(GetTainting(&tainting)));
+    MOZ_ALWAYS_SUCCEEDS(GetTainting(&tainting));
     return static_cast<mozilla::LoadTainting>(tainting);
   }
 
   void MaybeIncreaseTainting(mozilla::LoadTainting aTainting)
   {
     uint32_t tainting = static_cast<uint32_t>(aTainting);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(MaybeIncreaseTainting(tainting)));
+    MOZ_ALWAYS_SUCCEEDS(MaybeIncreaseTainting(tainting));
   }
 %}
 };

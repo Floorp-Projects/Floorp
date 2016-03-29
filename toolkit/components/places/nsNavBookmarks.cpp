@@ -2577,7 +2577,7 @@ void
 nsNavBookmarks::NotifyItemVisited(const ItemVisitData& aData)
 {
   nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aData.bookmark.url)));
+  MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aData.bookmark.url));
   // Notify the visit only if we have a valid uri, otherwise the observer
   // couldn't gather enough data from the notification.
   // This should be false only if there's a bug in the code preceding us.
