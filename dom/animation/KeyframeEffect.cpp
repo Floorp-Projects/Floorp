@@ -457,6 +457,46 @@ KeyframeEffectReadOnly::SetAnimation(Animation* aAnimation)
   NotifyAnimationTimingUpdated();
 }
 
+static bool
+KeyframesEqualIgnoringComputedOffsets(const nsTArray<Keyframe>& aLhs,
+                                      const nsTArray<Keyframe>& aRhs)
+{
+  if (aLhs.Length() != aRhs.Length()) {
+    return false;
+  }
+
+  for (size_t i = 0, len = aLhs.Length(); i < len; ++i) {
+    const Keyframe& a = aLhs[i];
+    const Keyframe& b = aRhs[i];
+    if (a.mOffset != b.mOffset ||
+        a.mTimingFunction != b.mTimingFunction ||
+        a.mPropertyValues != b.mPropertyValues) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void
+KeyframeEffectReadOnly::SetFrames(nsTArray<Keyframe>&& aFrames,
+                                  nsStyleContext* aStyleContext)
+{
+  if (KeyframesEqualIgnoringComputedOffsets(aFrames, mFrames)) {
+    return;
+  }
+
+  mFrames = Move(aFrames);
+  KeyframeUtils::ApplyDistributeSpacing(mFrames);
+
+  if (mAnimation && mAnimation->IsRelevant()) {
+    nsNodeUtils::AnimationChanged(mAnimation);
+  }
+
+  if (aStyleContext) {
+    UpdateProperties(aStyleContext);
+  }
+}
+
 const AnimationProperty*
 KeyframeEffectReadOnly::GetAnimationOfProperty(nsCSSProperty aProperty) const
 {
@@ -529,6 +569,64 @@ KeyframeEffectReadOnly::UpdateProperties(
   }
 
   return true;
+}
+
+void
+KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
+{
+  MOZ_ASSERT(aStyleContext);
+
+  nsTArray<AnimationProperty> properties;
+  if (mTarget) {
+    properties =
+      KeyframeUtils::GetAnimationPropertiesFromKeyframes(aStyleContext,
+                                                         mTarget,
+                                                         mPseudoType,
+                                                         mFrames);
+  }
+
+  if (mProperties == properties) {
+    return;
+  }
+
+  // Preserve the state of mWinsInCascade and mIsRunningOnCompositor flags.
+  nsCSSPropertySet winningInCascadeProperties;
+  nsCSSPropertySet runningOnCompositorProperties;
+
+  for (const AnimationProperty& property : mProperties) {
+    if (property.mWinsInCascade) {
+      winningInCascadeProperties.AddProperty(property.mProperty);
+    }
+    if (property.mIsRunningOnCompositor) {
+      runningOnCompositorProperties.AddProperty(property.mProperty);
+    }
+  }
+
+  mProperties = Move(properties);
+
+  for (AnimationProperty& property : mProperties) {
+    property.mWinsInCascade =
+      winningInCascadeProperties.HasProperty(property.mProperty);
+    property.mIsRunningOnCompositor =
+      runningOnCompositorProperties.HasProperty(property.mProperty);
+  }
+
+  if (mTarget) {
+    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+    if (effectSet) {
+      effectSet->MarkCascadeNeedsUpdate();
+    }
+  }
+
+  if (mAnimation) {
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType,
+                       EffectCompositor::RestyleType::Layer,
+                       mAnimation->CascadeLevel());
+    }
+  }
 }
 
 void
@@ -721,7 +819,10 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
   if (aRv.Failed()) {
     return nullptr;
   }
-  KeyframeUtils::ApplyDistributeSpacing(keyframes);
+
+  RefPtr<KeyframeEffectType> effect =
+    new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
+                           pseudoType, timingParams);
 
   RefPtr<nsStyleContext> styleContext;
   nsIPresShell* shell = doc->GetShell();
@@ -733,20 +834,8 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
       nsComputedDOMStyle::GetStyleContextForElement(targetElement, pseudo,
                                                     shell);
   }
+  effect->SetFrames(Move(keyframes), styleContext);
 
-  nsTArray<AnimationProperty> animationProperties;
-  if (styleContext) {
-    animationProperties =
-      KeyframeUtils::GetAnimationPropertiesFromKeyframes(styleContext,
-                                                         targetElement,
-                                                         pseudoType,
-                                                         keyframes);
-  }
-
-  RefPtr<KeyframeEffectType> effect =
-    new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
-                           pseudoType, timingParams);
-  effect->mProperties = Move(animationProperties);
   return effect.forget();
 }
 
