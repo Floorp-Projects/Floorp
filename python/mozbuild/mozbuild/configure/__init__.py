@@ -490,7 +490,10 @@ class ConfigureSandbox(dict):
             import_line += 'import %s' % _import
             if _as:
                 import_line += ' as %s' % _as
-            exec(import_line, {}, glob)
+            # Some versions of python fail with "SyntaxError: unqualified exec
+            # is not allowed in function '_apply_imports' it contains a nested
+            # function with free variable" when using the exec function.
+            exec import_line in {}, glob
 
     def _resolve_and_set(self, data, name, value):
         # Don't set anything when --help was on the command line
