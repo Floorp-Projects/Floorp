@@ -6,12 +6,10 @@ describe("loop.store.ConversationAppStore", function() {
 
   var expect = chai.expect;
   var sharedActions = loop.shared.actions;
-  var sandbox, activeRoomStore, dispatcher, feedbackPeriodMs, roomUsed;
+  var sandbox, activeRoomStore, dispatcher, roomUsed;
 
   beforeEach(function() {
     roomUsed = false;
-    feedbackPeriodMs = 15770000000;
-
     activeRoomStore = {
       getStoreState: function() { return { used: roomUsed }; }
     };
@@ -221,38 +219,19 @@ describe("loop.store.ConversationAppStore", function() {
     });
 
     describe("#LoopHangupNowHandler", function() {
-      it("should dispatch a LeaveConversation action", function() {
+      beforeEach(function() {
+        sandbox.stub(loop.shared.mixins.WindowCloseMixin, "closeWindow");
+      });
+
+      it("should dispatch the correct action when a room was used", function() {
+        store.setStoreState({ windowType: "room" });
+        roomUsed = true;
+
         store.LoopHangupNowHandler();
 
         sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.LeaveConversation());
-      });
-    });
-
-    describe("#leaveConversation", function() {
-      beforeEach(function() {
-        sandbox.stub(loop.shared.mixins.WindowCloseMixin, "closeWindow");
-        roomUsed = true;
-      });
-
-      it("should close the window for window types other than `room`", function() {
-        store.setStoreState({ windowType: "foobar" });
-
-        store.leaveConversation();
-
-        sinon.assert.notCalled(dispatcher.dispatch);
-        sinon.assert.calledOnce(loop.shared.mixins.WindowCloseMixin.closeWindow);
-      });
-
-      it("should close the window when a room was not used", function() {
-        store.setStoreState({ windowType: "room" });
-        roomUsed = false;
-
-        store.leaveConversation();
-
-        sinon.assert.notCalled(dispatcher.dispatch);
-        sinon.assert.calledOnce(loop.shared.mixins.WindowCloseMixin.closeWindow);
+        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.LeaveRoom());
+        sinon.assert.notCalled(loop.shared.mixins.WindowCloseMixin.closeWindow);
       });
 
       it("should close the window when a room was used and it showed feedback", function() {
@@ -260,82 +239,29 @@ describe("loop.store.ConversationAppStore", function() {
           showFeedbackForm: true,
           windowType: "room"
         });
+        roomUsed = true;
 
-        store.leaveConversation();
+        store.LoopHangupNowHandler();
 
         sinon.assert.notCalled(dispatcher.dispatch);
         sinon.assert.calledOnce(loop.shared.mixins.WindowCloseMixin.closeWindow);
       });
 
-      it("should dispatch a LeaveRoom action if timestamp is 0", function() {
-        store.setStoreState({
-          feedbackTimestamp: 0,
-          windowType: "room"
-        });
+      it("should close the window when a room was not used", function() {
+        store.setStoreState({ windowType: "room" });
 
-        store.leaveConversation();
+        store.LoopHangupNowHandler();
 
-        sinon.assert.calledTwice(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.LeaveRoom({
-            windowStayingOpen: true
-          }));
+        sinon.assert.notCalled(dispatcher.dispatch);
+        sinon.assert.calledOnce(loop.shared.mixins.WindowCloseMixin.closeWindow);
       });
 
-      it("should dispatch a ShowFeedbackForm action if timestamp is 0", function() {
-        store.setStoreState({
-          feedbackTimestamp: 0,
-          windowType: "room"
-        });
+      it("should close the window for all other window types", function() {
+        store.setStoreState({ windowType: "foobar" });
 
-        store.leaveConversation();
+        store.LoopHangupNowHandler();
 
-        sinon.assert.calledTwice(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.ShowFeedbackForm());
-      });
-
-      it("should dispatch a LeaveRoom action if delta > feedback period", function() {
-        var feedbackTimestamp = new Date() - feedbackPeriodMs;
-        store.setStoreState({
-          feedbackTimestamp: feedbackTimestamp,
-          feedbackPeriod: feedbackPeriodMs,
-          windowType: "room"
-        });
-
-        store.leaveConversation();
-
-        sinon.assert.calledTwice(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.LeaveRoom({
-            windowStayingOpen: true
-          }));
-      });
-
-      it("should dispatch a ShowFeedbackForm action if delta > feedback period", function() {
-        var feedbackTimestamp = new Date() - feedbackPeriodMs;
-        store.setStoreState({
-          feedbackTimestamp: feedbackTimestamp,
-          feedbackPeriod: feedbackPeriodMs,
-          windowType: "room"
-        });
-
-        store.leaveConversation();
-
-        sinon.assert.calledTwice(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-                                       new sharedActions.ShowFeedbackForm());
-      });
-
-      it("should close the window if delta < feedback period", function() {
-        var feedbackTimestamp = new Date().getTime();
-        store.setStoreState({
-          feedbackTimestamp: feedbackTimestamp,
-          feedbackPeriod: feedbackPeriodMs
-        });
-
-        store.leaveConversation();
-
+        sinon.assert.notCalled(dispatcher.dispatch);
         sinon.assert.calledOnce(loop.shared.mixins.WindowCloseMixin.closeWindow);
       });
     });

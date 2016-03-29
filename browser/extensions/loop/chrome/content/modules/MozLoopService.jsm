@@ -190,6 +190,7 @@ function getJSONPref(aName) {
 
 var gHawkClient = null;
 var gLocalizedStrings = new Map();
+var gFxAEnabled = true;
 var gFxAOAuthClientPromise = null;
 var gFxAOAuthClient = null;
 var gErrors = new Map();
@@ -1004,17 +1005,6 @@ var MozLoopServiceInternal = {
             }
           });
 
-          // Disable drag feature if needed
-          if (!MozLoopService.getLoopPref("conversationPopOut.enabled")) {
-            let document = chatbox.ownerDocument;
-            let titlebarNode = document.getAnonymousElementByAttribute(chatbox, "class",
-              "chat-titlebar");
-            titlebarNode.addEventListener("dragend", event => {
-              event.stopPropagation();
-              return false;
-            });
-          }
-
           // Handle window.close correctly on the chatbox.
           mm.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
           messageName = "Social:DOMWindowClose";
@@ -1124,11 +1114,7 @@ var MozLoopServiceInternal = {
         // away to circumvent glitches.
         chatboxInstance.setAttribute("customSize", "loopDefault");
         chatboxInstance.parentNode.setAttribute("customSize", "loopDefault");
-        let buttons = "minimize,";
-        if (MozLoopService.getLoopPref("conversationPopOut.enabled")) {
-          buttons += "swap,";
-        }
-        Chat.loadButtonSet(chatboxInstance, buttons + kChatboxHangupButton.id);
+        Chat.loadButtonSet(chatboxInstance, "minimize,swap," + kChatboxHangupButton.id);
       // Final fall-through in case a unit test overloaded Chat.open. Here we can
       // immediately resolve the promise.
       } else {
@@ -1351,6 +1337,13 @@ this.MozLoopService = {
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
       return Promise.reject(new Error("loop is not enabled"));
+    }
+
+    if (Services.prefs.getPrefType("loop.fxa.enabled") == Services.prefs.PREF_BOOL) {
+      gFxAEnabled = Services.prefs.getBoolPref("loop.fxa.enabled");
+      if (!gFxAEnabled) {
+        yield this.logOutFromFxA();
+      }
     }
 
     // The Loop toolbar button should change icon when the room participant count
@@ -1591,6 +1584,10 @@ this.MozLoopService = {
    */
   set doNotDisturb(aFlag) {
     MozLoopServiceInternal.doNotDisturb = aFlag;
+  },
+
+  get fxAEnabled() {
+    return gFxAEnabled;
   },
 
   /**

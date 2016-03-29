@@ -6,7 +6,6 @@ describe("loop.shared.views.TextChatView", function() {
 
   var expect = chai.expect;
   var sharedActions = loop.shared.actions;
-  var sharedViews = loop.shared.views;
   var TestUtils = React.addons.TestUtils;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
@@ -44,11 +43,6 @@ describe("loop.shared.views.TextChatView", function() {
     sandbox.stub(mozL10n, "get", function(string) {
       return string;
     });
-
-    // Need to stub these methods because when mounting the AdsTileView we are
-    // attaching listeners to the window object and "AdsTileView" tests will failed
-    sandbox.stub(window, "addEventListener");
-    sandbox.stub(window, "removeEventListener");
   });
 
   afterEach(function() {
@@ -64,7 +58,8 @@ describe("loop.shared.views.TextChatView", function() {
       var basicProps = {
         dispatcher: dispatcher,
         messageList: [],
-        showInitialContext: true
+        showInitialContext: true,
+        useDesktopPaths: false
       };
 
       return TestUtils.renderIntoDocument(
@@ -76,7 +71,8 @@ describe("loop.shared.views.TextChatView", function() {
       var basicProps = {
         dispatcher: dispatcher,
         messageList: [],
-        showInitialContext: true
+        showInitialContext: true,
+        useDesktopPaths: false
       };
 
       return React.render(
@@ -271,40 +267,6 @@ describe("loop.shared.views.TextChatView", function() {
         expect(node.scrollTop).eql(node.scrollHeight - node.clientHeight);
       });
 
-      it("should scroll when a notification is added", function() {
-        var messageList = [{
-          type: CHAT_MESSAGE_TYPES.RECEIVED,
-          contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
-          message: "Bye!",
-          receivedTimestamp: "2015-06-25T17:53:55.357Z"
-        }];
-
-        view.setProps({ messageList: messageList });
-
-        node = view.getDOMNode();
-
-        expect(node.scrollTop).eql(node.scrollHeight - node.clientHeight);
-      });
-
-      it("should scroll when a context tile is added", function() {
-        var messageList = [{
-          type: CHAT_MESSAGE_TYPES.RECEIVED,
-          contentType: CHAT_CONTENT_TYPES.CONTEXT_TILE,
-          message: "A marvelous page!",
-          extraData: {
-            roomToken: "fake",
-            newRoomURL: "http://marvelous.invalid"
-          },
-          receivedTimestamp: "2015-06-25T17:53:55.357Z"
-        }];
-
-        view.setProps({ messageList: messageList });
-
-        node = view.getDOMNode();
-
-        expect(node.scrollTop).eql(node.scrollHeight - node.clientHeight);
-      });
-
       it("should not scroll when a context tile is added", function() {
         var messageList = [{
           type: CHAT_MESSAGE_TYPES.SPECIAL,
@@ -449,8 +411,8 @@ describe("loop.shared.views.TextChatView", function() {
       var props = _.extend({
         dispatcher: dispatcher,
         showInitialContext: true,
-        showAlways: true,
-        showTile: false
+        useDesktopPaths: false,
+        showAlways: true
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.shared.views.chat.TextChatView, props));
@@ -619,21 +581,6 @@ describe("loop.shared.views.TextChatView", function() {
       expect(node.querySelector(".context-url-view-wrapper")).to.not.eql(null);
     });
 
-    it("should render a ContextUrlView for a CONTEXT_TILE", function() {
-      view = mountTestComponent();
-
-      store.updateRoomContext(new sharedActions.UpdateRoomContext({
-        newRoomDescription: "fake",
-        newRoomThumbnail: "favicon",
-        newRoomURL: "https://www.fakeurl.com",
-        roomToken: "fakeRoomToken"
-      }));
-
-      expect(function() {
-        TestUtils.findRenderedComponentWithType(view, sharedViews.ContextUrlView);
-      }).to.not.Throw();
-    });
-
     it("should not render a room title and context url when show initial context is false", function() {
       view = mountTestComponent({
         showInitialContext: false
@@ -720,29 +667,5 @@ describe("loop.shared.views.TextChatView", function() {
 
       expect(textBox.placeholder).not.contain("placeholder");
     });
-
-    it("should add `text-chat-notif` CSS class selector to msg of contentType NOTIFICATION",
-      function() {
-        view = mountTestComponent();
-
-        store.remotePeerDisconnected(new sharedActions.RemotePeerDisconnected({
-          peerHungup: true
-        }));
-
-        var node = view.getDOMNode();
-        expect(node.querySelector(".text-chat-notif")).to.not.eql(null);
-    });
-
-    it("should render an icon for contentType NOTIFICATION",
-        function() {
-          view = mountTestComponent();
-
-          store.remotePeerDisconnected(new sharedActions.RemotePeerDisconnected({
-            peerHungup: true
-          }));
-
-          var node = view.getDOMNode();
-          expect(node.querySelectorAll(".notification-icon").length).to.eql(1);
-        });
   });
 });

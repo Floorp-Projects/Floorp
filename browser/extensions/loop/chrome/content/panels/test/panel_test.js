@@ -33,7 +33,6 @@ describe("loop.panel", function() {
     fakeWindow = {
       close: sandbox.stub(),
       addEventListener: function() {},
-      removeEventListener: function() {},
       document: { addEventListener: function() {} },
       setTimeout: function(callback) { callback(); }
     };
@@ -45,6 +44,7 @@ describe("loop.panel", function() {
       GetDoNotDisturb: function() { return true; },
       SetDoNotDisturb: sinon.stub(),
       GetErrors: function() { return null; },
+      GetFxAEnabled: function() { return true; },
       GetAllStrings: function() {
         return JSON.stringify({ textContent: "fakeText" });
       },
@@ -52,17 +52,12 @@ describe("loop.panel", function() {
       GetLocale: function() {
         return "en-US";
       },
-      GetPluralRule: function() {
-        return 1;
-      },
+      GetPluralRule: sinon.stub(),
       SetLoopPref: sinon.stub(),
       GetLoopPref: function(prefName) {
         if (prefName === "debug.dispatcher") {
           return false;
-        } else if (prefName === "facebook.enabled") {
-          return true;
         }
-
         return 1;
       },
       SetPanelHeight: function() { return null; },
@@ -82,12 +77,12 @@ describe("loop.panel", function() {
       NotifyUITour: sinon.stub(),
       OpenURL: sinon.stub(),
       GettingStartedURL: sinon.stub().returns("http://fakeFTUUrl.com"),
-      OpenGettingStartedTour: sinon.stub(),
       GetSelectedTabMetadata: sinon.stub().returns({}),
       GetUserProfile: function() { return null; }
     });
 
     loop.storedRequests = {
+      GetFxAEnabled: true,
       GetHasEncryptionKey: true,
       GetUserProfile: null,
       GetDoNotDisturb: false,
@@ -288,7 +283,8 @@ describe("loop.panel", function() {
 
     it("should hide the account entry when FxA is not enabled", function() {
       LoopMochaUtils.stubLoopRequest({
-        GetUserProfile: function() { return { email: "test@example.com" }; }
+        GetUserProfile: function() { return { email: "test@example.com" }; },
+        GetFxAEnabled: function() { return false; }
       });
 
       var view = TestUtils.renderIntoDocument(
@@ -330,12 +326,27 @@ describe("loop.panel", function() {
         sinon.assert.calledOnce(prevent);
       });
 
+      it("should be hidden if FxA is not enabled", function() {
+        LoopMochaUtils.stubLoopRequest({
+          GetFxAEnabled: function() { return false; }
+        });
+
+        var view = TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.AccountLink, {
+            fxAEnabled: false,
+            userProfile: null
+          }));
+
+        expect(view.getDOMNode()).to.be.null;
+      });
+
       it("should warn when user profile is different from {} or null",
          function() {
           var warnstub = sandbox.stub(console, "warn");
 
           TestUtils.renderIntoDocument(React.createElement(
             loop.panel.AccountLink, {
+              fxAEnabled: false,
               userProfile: []
             }
           ));
@@ -351,6 +362,7 @@ describe("loop.panel", function() {
 
           TestUtils.renderIntoDocument(React.createElement(
             loop.panel.AccountLink, {
+              fxAEnabled: false,
               userProfile: {}
             }
           ));
@@ -687,18 +699,6 @@ describe("loop.panel", function() {
       });
 
     });
-
-    describe("GettingStartedView", function() {
-      it("should render the Slidehow when clicked on the button", function() {
-        loop.storedRequests["GetLoopPref|gettingStarted.latestFTUVersion"] = 0;
-
-        var view = createTestPanelView();
-
-        TestUtils.Simulate.click(view.getDOMNode().querySelector(".fte-get-started-button"));
-
-        sinon.assert.calledOnce(requestStubs.OpenGettingStartedTour);
-      });
-    });
   });
 
   describe("loop.panel.RoomEntry", function() {
@@ -945,17 +945,12 @@ describe("loop.panel", function() {
     });
 
     describe("Room name updated", function() {
-      var roomEntry;
-
-      beforeEach(function() {
-        roomEntry = mountRoomEntry({
+      it("should update room name", function() {
+        var roomEntry = mountRoomEntry({
           dispatcher: dispatcher,
           isOpenedRoom: false,
           room: new loop.store.Room(roomData)
         });
-      });
-
-      it("should update room name", function() {
         var updatedRoom = new loop.store.Room(_.extend({}, roomData, {
           decryptedContext: {
             roomName: "New room name"
@@ -968,63 +963,6 @@ describe("loop.panel", function() {
         expect(
           roomEntry.getDOMNode().textContent)
         .eql("New room name");
-      });
-
-      it("should enter in edit mode when edit button is clicked", function() {
-        roomEntry.handleEditButtonClick(fakeEvent);
-
-        expect(roomEntry.state.editMode).eql(true);
-      });
-
-      it("should render an input while edit mode is active", function() {
-        roomEntry.setState({
-          editMode: true
-        });
-
-        expect(roomEntry.getDOMNode().querySelector("input")).not.eql(null);
-      });
-
-      it("should exit edit mode and update the room name when input lose focus", function() {
-        roomEntry.setState({
-          editMode: true
-        });
-
-        sandbox.stub(dispatcher, "dispatch");
-
-        var input = roomEntry.getDOMNode().querySelector("input");
-        input.value = "fakeName";
-        TestUtils.Simulate.change(input);
-        TestUtils.Simulate.blur(input);
-
-        expect(roomEntry.state.editMode).eql(false);
-        sinon.assert.called(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.UpdateRoomContext({
-          roomToken: roomData.roomToken,
-          newRoomName: "fakeName"
-        }));
-      });
-
-      it("should exit edit mode and update the room name when Enter key is pressed", function() {
-        roomEntry.setState({
-          editMode: true
-        });
-
-        sandbox.stub(dispatcher, "dispatch");
-
-        var input = roomEntry.getDOMNode().querySelector("input");
-        input.value = "fakeName";
-        TestUtils.Simulate.change(input);
-        TestUtils.Simulate.keyDown(input, {
-          key: "Enter",
-          which: 13
-        });
-
-        expect(roomEntry.state.editMode).eql(false);
-        sinon.assert.called(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.UpdateRoomContext({
-          roomToken: roomData.roomToken,
-          newRoomName: "fakeName"
-        }));
       });
     });
 
@@ -1129,7 +1067,7 @@ describe("loop.panel", function() {
       sinon.assert.calledWithExactly(dispatch, new sharedActions.GetAllRooms());
     });
 
-    it("should not close the panel once a room is created and there is no error", function() {
+    it("should close the panel once a room is created and there is no error", function() {
       createTestComponent();
 
       roomStore.setStoreState({ pendingCreation: true });
@@ -1138,13 +1076,13 @@ describe("loop.panel", function() {
 
       roomStore.setStoreState({ pendingCreation: false });
 
-      sinon.assert.notCalled(fakeWindow.close);
+      sinon.assert.calledOnce(fakeWindow.close);
     });
 
-    it("should have FTE element and not room-list element when room-list is empty", function() {
+    it("should have room-list-empty element and not room-list element when no rooms", function() {
       var view = createTestComponent();
       var node = view.getDOMNode();
-      expect(node.querySelectorAll(".fte-get-started-content").length).to.eql(1);
+      expect(node.querySelectorAll(".room-list-empty").length).to.eql(1);
       expect(node.querySelectorAll(".room-list").length).to.eql(0);
     });
 
@@ -1308,16 +1246,6 @@ describe("loop.panel", function() {
       var node = view.getDOMNode();
       expect(node.querySelector(".room-entry h2").textContent).to.equal("Fake title");
     });
-
-    describe("computeAdjustedTopPosition", function() {
-      it("should return 0 if clickYPos, menuNodeHeight, listTop, listHeight and clickOffset cause it to be less than 0",
-        function() {
-          var topPosTest = loop.panel.computeAdjustedTopPosition(119, 124, 0, 152, 10) < 0;
-
-          expect(topPosTest).to.equal(false);
-        });
-
-    });
   });
 
   describe("loop.panel.NewRoomView", function() {
@@ -1465,7 +1393,6 @@ describe("loop.panel", function() {
         React.createElement(loop.panel.ConversationDropdown, {
           handleCopyButtonClick: sandbox.stub(),
           handleDeleteButtonClick: sandbox.stub(),
-          handleEditButtonClick: sandbox.stub(),
           handleEmailButtonClick: sandbox.stub(),
           eventPosY: 0
         }));
@@ -1495,13 +1422,6 @@ describe("loop.panel", function() {
 
          sinon.assert.calledOnce(view.props.handleDeleteButtonClick);
        });
-
-    it("should trigger handleEditButtonClick when edit button is clicked",
-       function() {
-         TestUtils.Simulate.click(view.refs.editButton.getDOMNode());
-
-         sinon.assert.calledOnce(view.props.handleEditButtonClick);
-       });
   });
 
   describe("RoomEntryContextButtons", function() {
@@ -1514,8 +1434,7 @@ describe("loop.panel", function() {
         showMenu: false,
         room: roomData,
         toggleDropdownMenu: sandbox.stub(),
-        handleClick: sandbox.stub(),
-        handleEditButtonClick: sandbox.stub()
+        handleClick: sandbox.stub()
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.panel.RoomEntryContextButtons, props));
@@ -1573,154 +1492,6 @@ describe("loop.panel", function() {
 
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.DeleteRoom({ roomToken: roomData.roomToken }));
-    });
-  });
-
-  describe("SharePanelView", function() {
-    var view, dispatcher, roomStore;
-
-    function createTestComponent(extraProps) {
-      var props = _.extend({
-        dispatcher: dispatcher,
-        onSharePanelDisplayChange: sinon.stub(),
-        store: roomStore
-      }, extraProps);
-      return TestUtils.renderIntoDocument(
-        React.createElement(loop.panel.SharePanelView, props));
-    }
-
-    beforeEach(function() {
-      dispatcher = new loop.Dispatcher();
-      sandbox.stub(dispatcher, "dispatch");
-      roomStore = new loop.store.RoomStore(dispatcher, {
-        constants: {}
-      });
-
-      roomStore.setStoreState({
-        activeRoom: {
-          roomToken: "fakeToken"
-        },
-        openedRoom: null,
-        pendingCreation: false,
-        pendingInitialRetrieval: false,
-        rooms: [],
-        error: undefined
-      });
-
-      view = createTestComponent();
-      sandbox.stub(view, "closeWindow");
-    });
-
-    it("should not open the panel if there is no room pending of creation", function() {
-      expect(view.getDOMNode()).eql(null);
-    });
-
-    it("should open the panel after room creation", function() {
-      var clock = sinon.useFakeTimers();
-      // Simulate that the user has click the browse button
-      roomStore.setStoreState({
-        pendingCreation: true
-      });
-
-      // Room has been created succesfully
-      roomStore.setStoreState({
-        pendingCreation: false
-      });
-
-      var panel = view.getDOMNode();
-      clock.tick(loop.panel.SharePanelView.SHOW_PANEL_DELAY);
-
-      expect(view.state.showPanel).eql(true);
-      expect(panel.classList.contains("share-panel-open")).eql(true);
-    });
-
-    it("should close the share panel when clicking the overlay", function() {
-      view.setState({
-        showPanel: true
-      });
-
-      var overlay = view.getDOMNode().querySelector(".share-panel-overlay");
-      var panel = view.getDOMNode();
-
-      TestUtils.Simulate.click(overlay);
-
-      expect(view.state.showPanel).eql(false);
-      expect(panel.classList.contains("share-panel-open")).eql(false);
-    });
-
-    it("should close the share panel when clicking outside the panel", function() {
-      view.setState({
-        showPanel: true
-      });
-
-      var panel = view.getDOMNode();
-
-      view._onDocumentVisibilityChanged({
-        target: {
-          hidden: true
-        }
-      });
-
-      expect(view.state.showPanel).eql(false);
-      expect(panel.classList.contains("share-panel-open")).eql(false);
-    });
-
-    it("should close the hello panel when clicking outside the panel", function() {
-      view.setState({
-        showPanel: true
-      });
-
-      view._onDocumentVisibilityChanged({
-        target: {
-          hidden: true
-        }
-      });
-
-      expect(view.state.showPanel).eql(false);
-      sinon.assert.calledOnce(view.closeWindow);
-    });
-
-    it("should call openRoom when hello panel is closed", function() {
-      var openRoomSpy = sinon.spy(view, "openRoom");
-      view.setState({
-        showPanel: true
-      });
-
-      view._onDocumentVisibilityChanged({
-        target: {
-          hidden: true
-        }
-      });
-
-      sinon.assert.calledOnce(openRoomSpy);
-    });
-
-    it("should invoke onSharePanelDisplayChange when hello panel is closed", function() {
-      view.setState({
-        showPanel: true
-      });
-
-      view._onDocumentVisibilityChanged({
-        target: {
-          hidden: true
-        }
-      });
-
-      sinon.assert.calledOnce(view.props.onSharePanelDisplayChange);
-    });
-
-    it("should invoke onSharePanelDisplayChange when hello panel is displayed", function() {
-      // Simulate that the user has click the browse button
-      roomStore.setStoreState({
-        pendingCreation: true
-      });
-
-      // Room has been created succesfully
-      roomStore.setStoreState({
-        pendingCreation: false
-      });
-
-      sinon.assert.calledOnce(view.props.onSharePanelDisplayChange);
     });
   });
 });
