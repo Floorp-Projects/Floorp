@@ -44,37 +44,6 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Add a new test tab in the browser and load the given url.
- *
- * @param {String} url The url to be loaded in the new tab
- *
- * @return a promise that resolves to the content window when the url is loaded
- */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
-
-  // Bug 921935 should bring waitForFocus() support to e10s, which would
-  // probably cover the case of the test losing focus when the page is loading.
-  // For now, we just make sure the window is focused.
-  window.focus();
-
-  let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-  let linkedBrowser = tab.linkedBrowser;
-
-  linkedBrowser.addEventListener("load", function onload(event) {
-    if (event.originalTarget.location.href != url) {
-      return;
-    }
-    linkedBrowser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-    def.resolve(tab.linkedBrowser.contentWindow);
-  }, true);
-
-  return def.promise;
-}
-
-/**
  * This generator function opens the given url in a new tab, then sets up the
  * page by waiting for all cookies, indexedDB items etc. to be created; Then
  * opens the storage inspector and waits for the storage tree and table to be
@@ -85,7 +54,8 @@ function addTab(url) {
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
 function* openTabAndSetupStorage(url) {
-  let content = yield addTab(url);
+  let tab = yield addTab(url);
+  let content = tab.linkedBrowser.contentWindow;
 
   gWindow = content.wrappedJSObject;
 

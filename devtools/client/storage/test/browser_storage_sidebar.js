@@ -12,6 +12,8 @@
 //   <is the sidebar open>
 // ]
 
+/* import-globals-from head.js */
+
 "use strict";
 
 const testCases = [
