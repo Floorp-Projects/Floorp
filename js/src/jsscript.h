@@ -26,6 +26,7 @@
 #include "js/UniquePtr.h"
 #include "vm/NativeObject.h"
 #include "vm/Shape.h"
+#include "vm/SharedImmutableStringsCache.h"
 
 namespace JS {
 struct ScriptSourceInfo;
@@ -616,41 +617,28 @@ class ScriptSource
 
     struct Uncompressed
     {
-        Uncompressed(const char16_t* chars, bool ownsChars)
-          : chars(chars)
-          , ownsChars(ownsChars)
-        { }
+        SharedImmutableTwoByteString string;
 
-        const char16_t* chars;
-        bool ownsChars;
+        explicit Uncompressed(SharedImmutableTwoByteString&& str)
+          : string(mozilla::Move(str))
+        { }
     };
 
     struct Compressed
     {
-        Compressed(void* raw, size_t nbytes, HashNumber hash)
-          : raw(raw)
-          , nbytes(nbytes)
-          , hash(hash)
+        SharedImmutableString raw;
+        size_t length;
+
+        Compressed(SharedImmutableString&& raw, size_t length)
+          : raw(mozilla::Move(raw))
+          , length(length)
         { }
 
-        void* raw;
-        size_t nbytes;
-        HashNumber hash;
+        size_t nbytes() const { return raw.length(); }
     };
 
-    struct Parent
-    {
-        explicit Parent(ScriptSource* parent)
-          : parent(parent)
-        { }
-
-        ScriptSource* parent;
-    };
-
-    using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed, Parent>;
+    using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed>;
     SourceType data;
-
-    uint32_t length_;
 
     // The filename of this script.
     UniqueChars filename_;
@@ -696,14 +684,10 @@ class ScriptSource
     bool argumentsNotIncluded_:1;
     bool hasIntroductionOffset_:1;
 
-    // Whether this is in the runtime's set of compressed ScriptSources.
-    bool inCompressedSourceSet:1;
-
   public:
     explicit ScriptSource()
       : refs(0),
         data(SourceType(Missing())),
-        length_(0),
         filename_(nullptr),
         displayURL_(nullptr),
         sourceMapURL_(nullptr),
@@ -713,11 +697,10 @@ class ScriptSource
         introductionType_(nullptr),
         sourceRetrievable_(false),
         argumentsNotIncluded_(false),
-        hasIntroductionOffset_(false),
-        inCompressedSourceSet(false)
+        hasIntroductionOffset_(false)
     {
     }
-    ~ScriptSource();
+
     void incref() { refs++; }
     void decref() {
         MOZ_ASSERT(refs != 0);
@@ -733,10 +716,30 @@ class ScriptSource
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceData() const { return !data.is<Missing>(); }
     bool hasCompressedSource() const { return data.is<Compressed>(); }
+
     size_t length() const {
+        struct LengthMatcher
+        {
+            using ReturnType = size_t;
+
+            ReturnType match(const Uncompressed& u) {
+                return u.string.length();
+            }
+
+            ReturnType match(const Compressed& c) {
+                return c.length;
+            }
+
+            ReturnType match(const Missing& m) {
+                MOZ_CRASH("ScriptSource::length on a missing source");
+                return 0;
+            }
+        };
+
         MOZ_ASSERT(hasSourceData());
-        return length_;
+        return data.match(LengthMatcher());
     }
+
     bool argumentsNotIncluded() const {
         MOZ_ASSERT(hasSourceData());
         return argumentsNotIncluded_;
@@ -748,33 +751,19 @@ class ScriptSource
                                 JS::ScriptSourceInfo* info) const;
 
     const char16_t* uncompressedChars() const {
-        return data.as<Uncompressed>().chars;
+        return data.as<Uncompressed>().string.chars();
     }
 
-    bool ownsUncompressedChars() const {
-        return data.as<Uncompressed>().ownsChars;
-    }
-
-    void* compressedData() const {
-        return data.as<Compressed>().raw;
+    const void* compressedData() const {
+        return static_cast<const void*>(data.as<Compressed>().raw.chars());
     }
 
     size_t compressedBytes() const {
-        return data.as<Compressed>().nbytes;
+        return data.as<Compressed>().nbytes();
     }
 
-    HashNumber compressedHash() const {
-        return data.as<Compressed>().hash;
-    }
-
-    ScriptSource* parent() const {
-        return data.as<Parent>().parent;
-    }
-
-    void setSource(const char16_t* chars, size_t length, bool ownsChars = true);
-    void setCompressedSource(JSRuntime* maybert, void* raw, size_t nbytes, HashNumber hash);
-    void updateCompressedSourceSet(JSRuntime* rt);
-    bool ensureOwnsSource(ExclusiveContext* cx);
+    void setSource(SharedImmutableTwoByteString&& string);
+    void setCompressedSource(SharedImmutableString&& raw, size_t length);
 
     // XDR handling
     template <XDRMode mode>
@@ -824,9 +813,6 @@ class ScriptSource
         introductionOffset_ = offset;
         hasIntroductionOffset_ = true;
     }
-
-  private:
-    size_t computedSizeOfData() const;
 };
 
 class ScriptSourceHolder
@@ -856,27 +842,6 @@ class ScriptSourceHolder
         return ss;
     }
 };
-
-struct CompressedSourceHasher
-{
-    typedef ScriptSource* Lookup;
-
-    static HashNumber computeHash(const void* data, size_t nbytes) {
-        return mozilla::HashBytes(data, nbytes);
-    }
-
-    static HashNumber hash(const ScriptSource* ss) {
-        return ss->compressedHash();
-    }
-
-    static bool match(const ScriptSource* a, const ScriptSource* b) {
-        return a->compressedBytes() == b->compressedBytes() &&
-               a->compressedHash() == b->compressedHash() &&
-               !memcmp(a->compressedData(), b->compressedData(), a->compressedBytes());
-    }
-};
-
-typedef HashSet<ScriptSource*, CompressedSourceHasher, SystemAllocPolicy> CompressedSourceSet;
 
 class ScriptSourceObject : public NativeObject
 {
