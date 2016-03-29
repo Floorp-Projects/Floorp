@@ -1,0 +1,258 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=962251
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 962251</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function Test_ElementsInTheSameDocument() {
+    var button1 = document.getElementById("button1");
+    var button2 = document.getElementById("button2");
+
+    button1.focus();
+    is(button1.id, document.activeElement.id, "How did we call focus on button1 and it did" +
+                                              " not become the active element?");
+
+    var getBlurEvent = false;
+    button1.addEventListener("blur", function onBlur(aEvent) {
+      button1.removeEventListener("blur", onBlur);
+      is(aEvent.target.id, "button1", "Button1 should lose focus.");
+      ok(aEvent.relatedTarget, "The relatedTarget should not be null.");
+      is(aEvent.relatedTarget.id, "button2", "The relatedTarget should be button2.");
+      getBlurEvent = true;
+    });
+
+    button2.addEventListener("focus", function onFocus(aEvent) {
+      button2.removeEventListener("focus", onFocus);
+      ok(getBlurEvent, "Must get blur event first.");
+      is(aEvent.target.id, "button2", "Button2 should be focused.");
+      ok(aEvent.relatedTarget, "The relatedTarget should not be null.");
+      is(aEvent.relatedTarget.id, "button1", "The relatedTarget should be button1.");
+      button2.blur();
+    });
+
+    button2.addEventListener("blur", function onBlur(aEvent) {
+      button2.removeEventListener("blur", onBlur);
+      is(aEvent.target.id, "button2", "Button2 should lose focus.");
+      ok(aEvent.relatedTarget === null, "The relatedTarget should be null.");
+      runTests();
+    });
+
+    button2.focus();
+  }
+
+  function Test_ElementsInDifferentDocument() {
+    var button2 = document.getElementById("button2");
+    button2.focus();
+    button2.addEventListener("blur", function onBlur(aEvent) {
+      button2.removeEventListener("blur", onBlur);
+      is(aEvent.target.id, "button2", "Button2 should lose focus.");
+      ok(aEvent.relatedTarget === null, "The relatedTarget should be null, since it's in another document.");
+    });
+
+    var iframe = document.createElement("iframe");
+    iframe.id = "iframe";
+    iframe.src = "iframe_bug962251.html";
+    window.addEventListener("message", function onMessage(aEvent) {
+      window.removeEventListener("message", onMessage);
+      if (aEvent.data == "runNextTest") {
+        runTests();
+      }
+    });
+    document.getElementById("content").appendChild(iframe);
+  }
+
+  function Test_FocusEventOnWindow() {
+    var iframe1 = document.createElement("iframe");
+    iframe1.id = "iframe1";
+    iframe1.src = "about:blank";
+
+    document.getElementById("content").appendChild(iframe1);
+    document.getElementById("button2").focus();
+    var iframe = document.getElementById("iframe");
+    var expectedEventTarget = [iframe.contentDocument, iframe.contentWindow];
+    var expectedEventTarget1 = [iframe1.contentDocument, iframe1.contentWindow];
+    iframe.contentWindow.addEventListener("focus", function onFocus(aEvent) {
+      var eventTarget = expectedEventTarget.shift();
+      ok(aEvent.target === eventTarget, "Get expected focus event target.");
+      ok(aEvent.relatedTarget === null, "relatedTarget should be null.");
+      if (!expectedEventTarget.length) {
+        iframe.contentWindow.removeEventListener("focus", onFocus, true);
+        runTests();
+      }
+    }, true);
+    iframe1.contentWindow.addEventListener("focus", function onFocus(aEvent) {
+      var eventTarget = expectedEventTarget1.shift();
+      ok(aEvent.target === eventTarget, "Get expected focus event target.");
+      ok(aEvent.relatedTarget === null, "relatedTarget should be null.");
+      if (!expectedEventTarget1.length) {
+        iframe1.contentWindow.removeEventListener("focus", onFocus, true);
+        // Append items for blur event listener
+        expectedEventTarget1.push(iframe1.contentDocument);
+        expectedEventTarget1.push(iframe1.contentWindow);
+        iframe.contentWindow.focus();
+      }
+    }, true);
+    iframe1.contentWindow.addEventListener("blur", function onBlur(aEvent) {
+      var eventTarget = expectedEventTarget1.shift();
+      ok(aEvent.target === eventTarget, "Get expected blur event target.");
+      ok(aEvent.relatedTarget === null, "relatedTarget should be null.");
+      if (!expectedEventTarget1.length) {
+        iframe1.contentWindow.removeEventListener("blur", onBlur, true);
+      }
+    }, true);
+    iframe1.contentWindow.focus();
+  }
+
+  function Test_SetFocusInBlurEvent() {
+    var button1 = document.getElementById("button1");
+    var button2 = document.getElementById("button2");
+    var button3 = document.getElementById("button3");
+
+    button1.focus();
+    is(button1.id, document.activeElement.id, "document.activeElement.id is button1");
+
+    button1.addEventListener("blur", function onBlur(aEvent) {
+      button1.removeEventListener("blur", onBlur);
+      info("button1 blur");
+      is(aEvent.relatedTarget.id, button2.id, "relatedTarget.id should be button2.");
+      button3.focus();
+    });
+    button1.addEventListener("focus", function onFocus(aEvent) {
+      button1.removeEventListener("focus", onFocus);
+      info("button1 focus");
+    });
+
+    button2.addEventListener("blur", function onBlur(aEvent) {
+      button2.removeEventListener("blur", onBlur);
+      info("button2 blur");
+    });
+    button2.addEventListener("focus", function onFocus(aEvent) {
+      button2.removeEventListener("focus", onFocus);
+      info("button2 focus");
+    });
+
+    button3.addEventListener("blur", function onBlur(aEvent) {
+      button3.removeEventListener("blur", onBlur);
+      info("button3 blur");
+    });
+    button3.addEventListener("focus", function onFocus(aEvent) {
+      button3.removeEventListener("focus", onFocus);
+      info("button3 focus");
+      ok(aEvent.relatedTarget === null, "aEvent.relatedTarget is null.");
+      runTests();
+    });
+
+    button2.focus();
+  }
+
+  function Test_ListenFocusBlurEventOnWindow1() {
+    var button2 = document.getElementById("button2");
+    button2.focus();
+
+    var iframe = document.getElementById("iframe");
+    var input = iframe.contentDocument.getElementById("textinput");
+    var expectedEventTarget = [button2, document, window];
+    var expectedEventTarget1 = [iframe.contentDocument, iframe.contentWindow, input];
+    window.addEventListener("blur", function onBlur(aEvent) {
+      var item = expectedEventTarget.shift();
+      ok(aEvent.target === item, "Get an expected blur event.");
+      ok(aEvent.relatedTarget === null, "relatedTarget should be null.");
+      if (!expectedEventTarget.length) {
+        iframe.contentWindow.removeEventListener("blur", onBlur, true);
+      }
+    }, true);
+    iframe.contentWindow.addEventListener("focus", function onFocus(aEvent) {
+      var item = expectedEventTarget1.shift();
+      ok(aEvent.target === item, "Get an expected focus event.");
+      ok(aEvent.relatedTarget === null, "relatedTarget should be null.");
+      if (!expectedEventTarget1.length) {
+        iframe.contentWindow.removeEventListener("focus", onFocus, true);
+        runTests();
+      }
+    }, true);
+
+    input.focus();
+  }
+
+  function Test_ListenFocusBlurEventOnWindow2() {
+    var iframe = document.getElementById("iframe");
+    var input = iframe.contentDocument.getElementById("textinput");
+    var input1 = iframe.contentDocument.getElementById("textinput1");
+
+    ok(iframe.contentDocument.activeElement === input, "Current focused element should be input.");
+    iframe.contentWindow.addEventListener("focus", function onFocus(aEvent) {
+      iframe.contentWindow.removeEventListener("focus", onFocus, true);
+      ok(aEvent.target === input1, "Input1 is focused.");
+      ok(aEvent.relatedTarget === input, "relatedTarget should be input.");
+      runTests();
+    }, true);
+    iframe.contentWindow.addEventListener("blur", function onBlur(aEvent) {
+      iframe.contentWindow.removeEventListener("blur", onBlur, true);
+      ok(aEvent.target === input, "Input is not focused.");
+      ok(aEvent.relatedTarget === input1, "relatedTarget should be input1.");
+    }, true);
+
+    input1.focus();
+  }
+
+  function Test_ListenFocusBlurEventOnWindow3() {
+    var iframe = document.getElementById("iframe");
+    var input1 = iframe.contentDocument.getElementById("textinput1");
+
+    ok(iframe.contentDocument.activeElement === input1, "Current focused element should be input1.");
+    iframe.contentWindow.addEventListener("blur", function onBlur(aEvent) {
+      iframe.contentWindow.removeEventListener("blur", onBlur, true);
+      ok(aEvent.target === input1, "Input1 is not focused.");
+      ok(aEvent.relatedTarget === null, "relatedTarget should be null.");
+      runTests();
+    }, true);
+
+    input1.blur();
+  }
+
+  var tests = [
+    Test_ElementsInTheSameDocument,
+    Test_ElementsInDifferentDocument,
+    Test_FocusEventOnWindow,
+    Test_SetFocusInBlurEvent,
+    Test_ListenFocusBlurEventOnWindow1,
+    Test_ListenFocusBlurEventOnWindow2,
+    Test_ListenFocusBlurEventOnWindow3
+  ];
+
+  function runTests()
+  {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    window.setTimeout(function () {
+      test();
+    });
+  }
+
+  </script>
+</head>
+<body onload="runTests();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=962251">Mozilla Bug 962251</a>
+<p id="display"></p>
+<div id="content">
+  <button id="button1">1</button>
+  <button id="button2">2</button>
+  <button id="button3">3</button>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
