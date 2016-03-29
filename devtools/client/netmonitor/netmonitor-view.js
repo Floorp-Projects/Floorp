@@ -1849,12 +1849,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       }
       case "status": {
         let node = $(".requests-menu-status-icon", target);
+        // "code" attribute is only used by css to determine the icon color
         let code;
         if (value.cached) {
-          code = L10N.getStr("netmonitor.status.cached");
           code = "cached";
         } else if (value.serviceWorker) {
-          code = L10N.getStr("netmonitor.status.serviceWorker");
+          code = "service worker";
         } else {
           code = value.status;
         }
@@ -2915,11 +2915,12 @@ NetworkDetailsView.prototype = {
     }
 
     if (data.status) {
+      // "code" attribute is only used by css to determine the icon color
       let code;
       if (data.fromCache) {
-        code = L10N.getStr("netmonitor.status.cached");
+        code = "cached";
       } else if (data.fromServiceWorker) {
-        code = L10N.getStr("netmonitor.status.serviceWorker");
+        code = "service worker";
       } else {
         code = data.status;
       }
