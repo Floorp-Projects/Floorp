@@ -547,11 +547,12 @@ static const bool isthreaded = true;
 #define	CACHELINE		((size_t)(1U << CACHELINE_2POW))
 
 /*
- * Smallest size class to support.  On Linux and Mac, even malloc(1) must
- * reserve a word's worth of memory (see Mozilla bug 691003).
+ * Smallest size class to support.  On Windows the smallest allocation size
+ * must be 8 bytes on 32-bit, 16 bytes on 64-bit.  On Linux and Mac, even
+ * malloc(1) must reserve a word's worth of memory (see Mozilla bug 691003).
  */
 #ifdef MOZ_MEMORY_WINDOWS
-#define	TINY_MIN_2POW		1
+#define TINY_MIN_2POW           (sizeof(void*) == 8 ? 4 : 3)
 #else
 #define TINY_MIN_2POW           (sizeof(void*) == 8 ? 3 : 2)
 #endif
