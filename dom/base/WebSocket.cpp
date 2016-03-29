@@ -2631,8 +2631,6 @@ WebSocketImpl::CancelInternal()
     return NS_OK;
   }
 
-  ConsoleError();
-
   return CloseConnection(nsIWebSocketChannel::CLOSE_GOING_AWAY);
 }
 
