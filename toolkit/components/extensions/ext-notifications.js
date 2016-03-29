@@ -8,7 +8,7 @@ var {
   ignoreEvent,
 } = ExtensionUtils;
 
-// WeakMap[Extension -> Set[Notification]]
+// WeakMap[Extension -> Map[id -> Notification]]
 var notificationsMap = new WeakMap();
 
 // WeakMap[Extension -> Set[callback]]
@@ -47,7 +47,7 @@ Notification.prototype = {
     } catch (e) {
       // This will fail if the OS doesn't support this function.
     }
-    notificationsMap.get(this.extension).delete(this);
+    notificationsMap.get(this.extension).delete(this.id);
   },
 
   observe(subject, topic, data) {
@@ -59,18 +59,18 @@ Notification.prototype = {
       callback(this);
     }
 
-    notificationsMap.get(this.extension).delete(this);
+    notificationsMap.get(this.extension).delete(this.id);
   },
 };
 
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
-  notificationsMap.set(extension, new Set());
+  notificationsMap.set(extension, new Map());
   notificationCallbacksMap.set(extension, new Set());
 });
 
 extensions.on("shutdown", (type, extension) => {
-  for (let notification of notificationsMap.get(extension)) {
+  for (let notification of notificationsMap.get(extension).values()) {
     notification.clear();
   }
   notificationsMap.delete(extension);
@@ -80,47 +80,39 @@ extensions.on("shutdown", (type, extension) => {
 
 var nextId = 0;
 
-extensions.registerPrivilegedAPI("notifications", (extension, context) => {
+extensions.registerSchemaAPI("notifications", "notifications", (extension, context) => {
   return {
     notifications: {
-      create: function(...args) {
-        let notificationId, options, callback;
-        if (args.length == 1) {
-          options = args[0];
-        } else {
-          [notificationId, options, callback] = args;
+      create: function(notificationId, options) {
+        if (!notificationId) {
+          notificationId = String(nextId++);
         }
 
-        if (!notificationId) {
-          notificationId = nextId++;
+        let notifications = notificationsMap.get(extension);
+        if (notifications.has(notificationId)) {
+          notifications.get(notificationId).clear();
         }
 
         // FIXME: Lots of options still aren't supported, especially
         // buttons.
         let notification = new Notification(extension, notificationId, options);
-        notificationsMap.get(extension).add(notification);
+        notificationsMap.get(extension).set(notificationId, notification);
 
-        return context.wrapPromise(Promise.resolve(notificationId), callback);
+        return Promise.resolve(notificationId);
       },
 
-      clear: function(notificationId, callback) {
+      clear: function(notificationId) {
         let notifications = notificationsMap.get(extension);
-        let cleared = false;
-        for (let notification of notifications) {
-          if (notification.id == notificationId) {
-            notification.clear();
-            cleared = true;
-            break;
-          }
+        if (notifications.has(notificationId)) {
+          notifications.get(notificationId).clear();
+          return Promise.resolve(true);
         }
-
-        return context.wrapPromise(Promise.resolve(cleared), callback);
+        return Promise.resolve(false);
       },
 
-      getAll: function(callback) {
-        let notifications = notificationsMap.get(extension);
-        notifications = Array.from(notifications, notification => notification.id);
-        return context.wrapPromise(Promise.resolve(notifications), callback);
+      getAll: function() {
+        let result = Array.from(notificationsMap.get(extension).keys());
+        return Promise.resolve(result);
       },
 
       onClosed: new EventManager(context, "notifications.onClosed", fire => {
