@@ -128,6 +128,9 @@ function TabTarget(tab) {
     this._setupListeners();
   } else {
     this._form = tab.form;
+    this._url = this._form.url;
+    this._title = this._form.title;
+
     this._client = tab.client;
     this._chrome = tab.chrome;
   }
@@ -331,18 +334,14 @@ TabTarget.prototype = {
   },
 
   get name() {
-    if (this._tab && this._tab.linkedBrowser.contentDocument) {
-      return this._tab.linkedBrowser.contentDocument.title;
-    }
     if (this.isAddon) {
       return this._form.name;
     }
-    return this._form.title;
+    return this._title;
   },
 
   get url() {
-    return this._tab ? this._tab.linkedBrowser.currentURI.spec :
-                       this._form.url;
+    return this._url;
   },
 
   get isRemote() {
@@ -422,6 +421,9 @@ TabTarget.prototype = {
         .then(() => this._client.getTab({ tab: this.tab }))
         .then(response => {
           this._form = response.tab;
+          this._url = this._form.url;
+          this._title = this._form.title;
+
           attachTab();
         });
     } else if (this.isTabActor) {
@@ -476,11 +478,16 @@ TabTarget.prototype = {
     this.client.addListener("tabDetached", this._onTabDetached);
 
     this._onTabNavigated = (aType, aPacket) => {
+      // Update the title and url on tabNavigated event.
+      this._url = aPacket.url;
+      this._title = aPacket.title;
+
       let event = Object.create(null);
       event.url = aPacket.url;
       event.title = aPacket.title;
       event.nativeConsoleAPI = aPacket.nativeConsoleAPI;
       event.isFrameSwitching = aPacket.isFrameSwitching;
+
       // Send any stored event payload (DOMWindow or nsIRequest) for backwards
       // compatibility with non-remotable tools.
       if (aPacket.state == "start") {
