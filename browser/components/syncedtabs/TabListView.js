@@ -72,13 +72,15 @@ TabListView.prototype = {
     this._clearChilden();
     this.container.appendChild(wrapper);
 
-    // The search-box is outside of our container (it's not scrollable)
-    this.tabsFilter = this._doc.querySelector(".tabsFilter");
-    this.clearFilter = this._doc.querySelector(".textbox-search-clear");
-    this.searchBox = this._doc.querySelector(".search-box");
-    this.searchIcon = this._doc.querySelector(".textbox-search-icon");
-
+    this.tabsFilter = this.container.querySelector(".tabsFilter");
+    this.clearFilter = this.container.querySelector(".textbox-search-clear");
+    this.searchBox = this.container.querySelector(".search-box");
     this.list = this.container.querySelector(".list");
+    this.searchIcon = this.container.querySelector(".textbox-search-icon");
+
+    if (state.filter) {
+      this.tabsFilter.value = state.filter;
+    }
 
     this._createList(state);
     this._updateSearchBox(state);
@@ -183,7 +185,6 @@ TabListView.prototype = {
     } else {
       this.searchBox.classList.remove("filtered");
     }
-    this.tabsFilter.value = state.filter;
     if (state.inputFocused) {
       this.searchBox.setAttribute("focused", true);
       this.tabsFilter.focus();
