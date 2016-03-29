@@ -768,6 +768,39 @@ OpenAPIData(PlatformWriter& aWriter,
   aWriter.Open(extraDataPath);
 }
 
+#ifdef XP_WIN
+void
+WriteGlobalMemoryStatus(PlatformWriter* apiData, PlatformWriter* eventFile)
+{
+  char buffer[128];
+
+  // Try to get some information about memory.
+  MEMORYSTATUSEX statex;
+  statex.dwLength = sizeof(statex);
+  if (GlobalMemoryStatusEx(&statex)) {
+
+#define WRITE_STATEX_FIELD(field, name, conversionFunc)        \
+    conversionFunc(statex.field, buffer, 10);                  \
+    if (apiData) {                                             \
+      WriteAnnotation(*apiData, name, buffer);                  \
+    }                                                          \
+    if (eventFile) {                                           \
+      WriteAnnotation(*eventFile, name, buffer);                \
+    }
+
+    WRITE_STATEX_FIELD(dwMemoryLoad, "SystemMemoryUsePercentage", ltoa);
+    WRITE_STATEX_FIELD(ullTotalVirtual, "TotalVirtualMemory", _ui64toa);
+    WRITE_STATEX_FIELD(ullAvailVirtual, "AvailableVirtualMemory", _ui64toa);
+    WRITE_STATEX_FIELD(ullTotalPageFile, "TotalPageFile", _ui64toa);
+    WRITE_STATEX_FIELD(ullAvailPageFile, "AvailablePageFile", _ui64toa);
+    WRITE_STATEX_FIELD(ullTotalPhys, "TotalPhysicalMemory", _ui64toa);
+    WRITE_STATEX_FIELD(ullAvailPhys, "AvailablePhysicalMemory", _ui64toa);
+
+#undef WRITE_STATEX_FIELD
+  }
+}
+#endif
+
 bool MinidumpCallback(
 #ifdef XP_LINUX
                       const MinidumpDescriptor& descriptor,
@@ -968,27 +1001,7 @@ bool MinidumpCallback(
       DllBlocklist_WriteNotes(eventFile.Handle());
     }
 #endif
-
-    // Try to get some information about memory.
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    if (GlobalMemoryStatusEx(&statex)) {
-
-#define WRITE_STATEX_FIELD(field, name, conversionFunc)          \
-      conversionFunc(statex.field, buffer, 10);                  \
-      WriteAnnotation(apiData, name, buffer);                    \
-      WriteAnnotation(eventFile, name, buffer);
-
-      WRITE_STATEX_FIELD(dwMemoryLoad, "SystemMemoryUsePercentage", ltoa);
-      WRITE_STATEX_FIELD(ullTotalVirtual, "TotalVirtualMemory", _ui64toa);
-      WRITE_STATEX_FIELD(ullAvailVirtual, "AvailableVirtualMemory", _ui64toa);
-      WRITE_STATEX_FIELD(ullTotalPageFile, "TotalPageFile", _ui64toa);
-      WRITE_STATEX_FIELD(ullAvailPageFile, "AvailablePageFile", _ui64toa);
-      WRITE_STATEX_FIELD(ullTotalPhys, "TotalPhysicalMemory", _ui64toa);
-      WRITE_STATEX_FIELD(ullAvailPhys, "AvailablePhysicalMemory", _ui64toa);
-
-#undef WRITE_STATEX_FIELD
-    }
+    WriteGlobalMemoryStatus(&apiData, &eventFile);
 #endif // XP_WIN
 
     if (gMozCrashReason) {
@@ -1271,6 +1284,10 @@ PrepareChildExceptionTimeAnnotations()
 
   // ...and write out any annotations. These must be escaped if necessary
   // (but don't call EscapeAnnotation here, because it touches the heap).
+#ifdef XP_WIN
+  WriteGlobalMemoryStatus(&apiData, nullptr);
+#endif
+
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
     XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
