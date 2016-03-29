@@ -12,7 +12,7 @@ Cumulative {
   100 blocks in heap block record 1 of 17
   12,800 bytes (12,800 requested / 0 slop)
   Individual block sizes: 128 x 100
-  42.40% of the heap (42.40% cumulative)
+  42.37% of the heap (42.37% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -21,7 +21,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 2 of 17
   8,192 bytes (7,169 requested / 1,023 slop)
-  27.13% of the heap (69.53% cumulative)
+  27.12% of the heap (69.49% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -30,7 +30,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 3 of 17
   4,096 bytes (4,096 requested / 0 slop)
-  13.57% of the heap (83.09% cumulative)
+  13.56% of the heap (83.05% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -40,7 +40,7 @@ Cumulative {
   10 blocks in heap block record 4 of 17
   1,120 bytes (1,000 requested / 120 slop)
   Individual block sizes: 112 x 10
-  3.71% of the heap (86.80% cumulative)
+  3.71% of the heap (86.76% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -49,7 +49,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 5 of 17
   1,024 bytes (1,024 requested / 0 slop)
-  3.39% of the heap (90.20% cumulative)
+  3.39% of the heap (90.15% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -58,7 +58,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 6 of 17
   1,024 bytes (1,023 requested / 1 slop)
-  3.39% of the heap (93.59% cumulative)
+  3.39% of the heap (93.54% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -68,7 +68,7 @@ Cumulative {
   6 blocks in heap block record 7 of 17
   528 bytes (528 requested / 0 slop)
   Individual block sizes: 128; 112; 96; 80; 64; 48
-  1.75% of the heap (95.34% cumulative)
+  1.75% of the heap (95.29% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -78,7 +78,7 @@ Cumulative {
   6 blocks in heap block record 8 of 17
   528 bytes (528 requested / 0 slop)
   Individual block sizes: 128; 112; 96; 80; 64; 48
-  1.75% of the heap (97.09% cumulative)
+  1.75% of the heap (97.03% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -87,7 +87,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 9 of 17
   512 bytes (512 requested / 0 slop)
-  1.70% of the heap (98.78% cumulative)
+  1.69% of the heap (98.73% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -96,7 +96,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 10 of 17
   80 bytes (79 requested / 1 slop)
-  0.26% of the heap (99.05% cumulative)
+  0.26% of the heap (98.99% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -105,7 +105,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 11 of 17
   80 bytes (78 requested / 2 slop)
-  0.26% of the heap (99.31% cumulative)
+  0.26% of the heap (99.26% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -114,7 +114,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 12 of 17
   80 bytes (77 requested / 3 slop)
-  0.26% of the heap (99.58% cumulative)
+  0.26% of the heap (99.52% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -123,7 +123,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 13 of 17
   64 bytes (64 requested / 0 slop)
-  0.21% of the heap (99.79% cumulative)
+  0.21% of the heap (99.74% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -132,7 +132,7 @@ Cumulative {
 Cumulative {
   1 block in heap block record 14 of 17
   32 bytes (30 requested / 2 slop)
-  0.11% of the heap (99.89% cumulative)
+  0.11% of the heap (99.84% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -140,8 +140,8 @@ Cumulative {
 
 Cumulative {
   1 block in heap block record 15 of 17
-  16 bytes (10 requested / 6 slop)
-  0.05% of the heap (99.95% cumulative)
+  16 bytes (16 requested / 0 slop)
+  0.05% of the heap (99.89% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -149,8 +149,8 @@ Cumulative {
 
 Cumulative {
   1 block in heap block record 16 of 17
-  8 bytes (8 requested / 0 slop)
-  0.03% of the heap (99.97% cumulative)
+  16 bytes (16 requested / 0 slop)
+  0.05% of the heap (99.95% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -158,8 +158,8 @@ Cumulative {
 
 Cumulative {
   1 block in heap block record 17 of 17
-  8 bytes (8 requested / 0 slop)
-  0.03% of the heap (100.00% cumulative)
+  16 bytes (10 requested / 6 slop)
+  0.05% of the heap (100.00% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -168,6 +168,6 @@ Cumulative {
 #-----------------------------------------------------------------
 
 Summary {
-  Total: 30,192 bytes in 135 blocks
+  Total: 30,208 bytes in 135 blocks
 }
 
