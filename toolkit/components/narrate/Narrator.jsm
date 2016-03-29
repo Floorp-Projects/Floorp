@@ -36,17 +36,6 @@ Narrator.prototype = {
     return this._winRef.get();
   },
 
-  get _voiceMap() {
-    if (!this._voiceMapInner) {
-      this._voiceMapInner = new Map();
-      for (let voice of this._win.speechSynthesis.getVoices()) {
-        this._voiceMapInner.set(voice.voiceURI, voice);
-      }
-    }
-
-    return this._voiceMapInner;
-  },
-
   get _treeWalker() {
     if (!this._treeWalkerRef) {
       let wu = this._win.QueryInterface(
@@ -111,6 +100,15 @@ Narrator.prototype = {
   get speaking() {
     return this._win.speechSynthesis.speaking ||
       this._win.speechSynthesis.pending;
+  },
+
+  _getVoice: function(voiceURI) {
+    if (!this._voiceMap || !this._voiceMap.has(voiceURI)) {
+      this._voiceMap = new Map(
+        this._win.speechSynthesis.getVoices().map(v => [v.voiceURI, v]));
+    }
+
+    return this._voiceMap.get(voiceURI);
   },
 
   _isParagraphInView: function(paragraph) {
@@ -200,21 +198,17 @@ Narrator.prototype = {
       });
 
       utterance.addEventListener("error", () => {
-        reject("speech synthesis failed")
+        reject("speech synthesis failed");
       });
 
       this._win.speechSynthesis.speak(utterance);
     });
   },
 
-  getVoiceOptions: function() {
-    return Array.from(this._voiceMap.values());
-  },
-
   start: function(speechOptions) {
     this._speechOptions = {
       rate: speechOptions.rate,
-      voice: this._voiceMap.get(speechOptions.voice)
+      voice: this._getVoice(speechOptions.voice)
     };
 
     this._stopped = false;
@@ -258,7 +252,7 @@ Narrator.prototype = {
   },
 
   setVoice: function(voice) {
-    this._speechOptions.voice = this._voiceMap.get(voice);
+    this._speechOptions.voice = this._getVoice(voice);
     /* repeat current paragraph */
     this._treeWalker.previousNode();
     this._win.speechSynthesis.cancel();

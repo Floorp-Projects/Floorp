@@ -14,6 +14,8 @@ add_task(function* testVoiceselectDropdownAutoclose() {
   yield spawnInNewReaderTab(TEST_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
+    yield NarrateTestUtils.waitForVoiceOptions(content);
+
     $(NarrateTestUtils.TOGGLE).click();
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
       "popup is toggled");
@@ -47,6 +49,8 @@ add_task(function* testVoiceselectLabelChange() {
   yield spawnInNewReaderTab(TEST_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
+    yield NarrateTestUtils.waitForVoiceOptions(content);
+
     $(NarrateTestUtils.TOGGLE).click();
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
       "popup is toggled");
@@ -67,6 +71,8 @@ add_task(function* testVoiceselectKeyboard() {
 
   yield spawnInNewReaderTab(TEST_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
+
+    yield NarrateTestUtils.waitForVoiceOptions(content);
 
     $(NarrateTestUtils.TOGGLE).click();
     ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
