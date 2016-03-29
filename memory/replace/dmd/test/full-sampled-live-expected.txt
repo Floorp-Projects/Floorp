@@ -13,7 +13,7 @@ Live {
   ~4 blocks in heap block record 1 of 7
   ~512 bytes (~512 requested / ~0 slop)
   Individual block sizes: ~128 x 3; 128
-  35.56% of the heap (35.56% cumulative)
+  32.65% of the heap (32.65% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -22,16 +22,17 @@ Live {
 Live {
   1 block in heap block record 2 of 7
   256 bytes (256 requested / 0 slop)
-  17.78% of the heap (53.33% cumulative)
+  16.33% of the heap (48.98% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
 }
 
 Live {
-  1 block in heap block record 3 of 7
-  160 bytes (160 requested / 0 slop)
-  11.11% of the heap (64.44% cumulative)
+  ~2 blocks in heap block record 3 of 7
+  ~256 bytes (~256 requested / ~0 slop)
+  Individual block sizes: ~128 x 2
+  16.33% of the heap (65.31% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -39,17 +40,17 @@ Live {
 
 Live {
   1 block in heap block record 4 of 7
-  128 bytes (128 requested / 0 slop)
-  8.89% of the heap (73.33% cumulative)
+  160 bytes (160 requested / 0 slop)
+  10.20% of the heap (75.51% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
 }
 
 Live {
-  ~1 block in heap block record 5 of 7
-  ~128 bytes (~128 requested / ~0 slop)
-  8.89% of the heap (82.22% cumulative)
+  1 block in heap block record 5 of 7
+  128 bytes (128 requested / 0 slop)
+  8.16% of the heap (83.67% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -58,7 +59,7 @@ Live {
 Live {
   ~1 block in heap block record 6 of 7
   ~128 bytes (~128 requested / ~0 slop)
-  8.89% of the heap (91.11% cumulative)
+  8.16% of the heap (91.84% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -67,7 +68,7 @@ Live {
 Live {
   ~1 block in heap block record 7 of 7
   ~128 bytes (~128 requested / ~0 slop)
-  8.89% of the heap (100.00% cumulative)
+  8.16% of the heap (100.00% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
   }
@@ -76,6 +77,6 @@ Live {
 #-----------------------------------------------------------------
 
 Summary {
-  Total: ~1,440 bytes in ~10 blocks
+  Total: ~1,568 bytes in ~11 blocks
 }
 
