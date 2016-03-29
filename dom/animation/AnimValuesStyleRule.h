@@ -59,13 +59,6 @@ public:
     StyleAnimationValue mValue;
   };
 
-  void AddPropertiesToSet(nsCSSPropertySet& aSet) const
-  {
-    for (const PropertyValuePair& cv : mPropertyValuePairs) {
-      aSet.AddProperty(cv.mProperty);
-    }
-  }
-
 private:
   ~AnimValuesStyleRule() {}
 
