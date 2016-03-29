@@ -4,6 +4,8 @@
 
 this.EXPORTED_SYMBOLS = ["PageMenuParent", "PageMenuChild"];
 
+var {interfaces: Ci} = Components;
+
 this.PageMenu = function PageMenu() {
 }
 
@@ -162,8 +164,13 @@ PageMenu.prototype = {
         this._builder.click(target.getAttribute(this.GENERATEDITEMID_ATTR));
       }
       else if (this._browser) {
-        this._browser.messageManager.sendAsyncMessage("ContextMenu:DoCustomCommand",
-          target.getAttribute(this.GENERATEDITEMID_ATTR));
+        let win = target.ownerDocument.defaultView;
+        let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+        this._browser.messageManager.sendAsyncMessage("ContextMenu:DoCustomCommand", {
+          generatedItemId: target.getAttribute(this.GENERATEDITEMID_ATTR),
+          handlingUserInput: windowUtils.isHandlingUserInput
+        });
       }
     } else if (type == "popuphidden" && this._popup == target) {
       this.removeGeneratedContent(this._popup);
