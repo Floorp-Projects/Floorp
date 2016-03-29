@@ -212,6 +212,7 @@ public:
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
     mozilla::layers::DeviceManagerD3D9* GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
+    void D3D9DeviceReset();
     ID3D11Device *GetD3D11ContentDevice();
 
     // Create a D3D11 device to be used for DXVA decoding.
@@ -333,6 +334,7 @@ private:
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;
     bool mCompositorD3D11TextureSharingWorks;
+    mozilla::Atomic<bool> mHasD3D9DeviceReset;
     DeviceResetReason mDeviceResetReason;
 
     RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
