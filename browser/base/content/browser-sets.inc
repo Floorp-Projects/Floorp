@@ -227,7 +227,7 @@
                  command="Tools:Scratchpad"
                  key="key_scratchpad"/>
     <broadcaster id="devtoolsMenuBroadcaster_ResponsiveUI"
-                 label="&responsiveDesignTool.label;"
+                 label="&responsiveDesignMode.label;"
                  type="checkbox" autocheck="false"
                  command="Tools:ResponsiveUI"
                  key="key_responsiveUI"/>
@@ -304,7 +304,7 @@
     <key id="key_browserToolbox" key="&browserToolboxCmd.commandkey;" command="Tools:BrowserToolbox" modifiers="accel,alt,shift"/>
     <key id="key_devToolbar" keycode="&devToolbar.keycode;" modifiers="shift"
          keytext="&devToolbar.keytext;" command="Tools:DevToolbarFocus"/>
-    <key id="key_responsiveUI" key="&responsiveDesignTool.commandkey;" command="Tools:ResponsiveUI"
+    <key id="key_responsiveUI" key="&responsiveDesignMode.commandkey;" command="Tools:ResponsiveUI"
 #ifdef XP_MACOSX
         modifiers="accel,alt"
 #else
