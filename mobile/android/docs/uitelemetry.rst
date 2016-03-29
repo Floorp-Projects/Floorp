@@ -148,9 +148,8 @@ Events
 ``sanitize.1``
   Sent when the user chooses to clear private data.
 
-``save.1`` ``unsave.1``
+``save.1``, ``unsave.1``
   Saving or unsaving a resource (reader, bookmark, etc.) for viewing later.
-  Note: Only used in JavaScript for now.
 
 ``search.1``
   Sent when the user performs a search. Currently used in the search activity.
