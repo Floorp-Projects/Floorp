@@ -2,7 +2,7 @@ package org.mozilla.gecko.tests.components;
 
 import android.view.View;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
