@@ -3346,8 +3346,9 @@ GetWindowsStackSize()
     MOZ_RELEASE_ASSERT(stackSize >= 1 * 1024 * 1024);
     MOZ_RELEASE_ASSERT(stackSize <= 32 * 1024 * 1024);
 
-    // Subtract 20 KB to account for things like the guard page.
-    return stackSize - 20 * 1024;
+    // Subtract 40 KB (Win32) or 80 KB (Win64) to account for things like
+    // the guard page and large PGO stack frames.
+    return stackSize - 10 * sizeof(uintptr_t) * 1024;
 }
 #endif
 
