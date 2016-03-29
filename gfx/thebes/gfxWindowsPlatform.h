@@ -210,7 +210,7 @@ public:
     bool GetD3D11ImageBridgeDevice(RefPtr<ID3D11Device>* aOutDevice);
 
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
-    mozilla::layers::DeviceManagerD3D9* GetD3D9DeviceManager();
+    already_AddRefed<mozilla::layers::DeviceManagerD3D9> GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
     void D3D9DeviceReset();
     ID3D11Device *GetD3D11ContentDevice();
