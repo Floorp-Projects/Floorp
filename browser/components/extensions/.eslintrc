@@ -7,6 +7,7 @@
     "EventEmitter": true,
     "IconDetails": true,
     "makeWidgetId": true,
+    "pageActionFor": true,
     "PanelPopup": true,
     "TabContext": true,
     "ViewPopup": true,

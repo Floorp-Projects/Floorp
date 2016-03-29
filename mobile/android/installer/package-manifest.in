@@ -310,6 +310,8 @@
 @BINPATH@/components/NetworkGeolocationProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/extensions.manifest
+@BINPATH@/components/utils.manifest
+@BINPATH@/components/simpleServices.js
 @BINPATH@/components/addonManager.js
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amInstallTrigger.js

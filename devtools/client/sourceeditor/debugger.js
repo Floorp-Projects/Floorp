@@ -174,8 +174,28 @@ function addBreakpoint(ctx, line, cond) {
 }
 
 /**
+ * Helps reset the debugger's breakpoint state
+ * - removes the breakpoints in the editor
+ * - cleares the debugger's breakpoint state
+ *
+ * Note, does not *actually* remove a source's breakpoints.
+ * The canonical state is kept in the app state.
+ *
+ */
+function removeBreakpoints(ctx) {
+  let { ed, cm } = ctx;
+
+  let meta = dbginfo.get(ed);
+  if (meta.breakpoints != null) {
+    meta.breakpoints = {};
+  }
+
+  cm.doc.iter((line) => { removeBreakpoint(ctx, line) });
+}
+
+/**
  * Removes a visual breakpoint from a specified line and
- * makes Editor to emit a breakpointRemoved event.
+ * makes Editor emit a breakpointRemoved event.
  */
 function removeBreakpoint(ctx, line) {
   if (!hasBreakpoint(ctx, line)) {
@@ -303,7 +323,7 @@ function findPrev(ctx, query) {
 
 [
   initialize, hasBreakpoint, addBreakpoint, removeBreakpoint, moveBreakpoint,
-  setBreakpointCondition, removeBreakpointCondition, getBreakpoints,
+  setBreakpointCondition, removeBreakpointCondition, getBreakpoints, removeBreakpoints,
   setDebugLocation, getDebugLocation, clearDebugLocation, find, findNext,
   findPrev
 ].forEach(func => module.exports[func.name] = func);
