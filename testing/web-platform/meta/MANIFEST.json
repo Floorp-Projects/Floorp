@@ -28390,10 +28390,6 @@
         "url": "/web-animations/animatable/animate.html"
       },
       {
-        "path": "web-animations/animation-effect-timing/delay.html",
-        "url": "/web-animations/animation-effect-timing/delay.html"
-      },
-      {
         "path": "web-animations/animation-effect-timing/direction.html",
         "url": "/web-animations/animation-effect-timing/direction.html"
       },
@@ -28420,6 +28416,10 @@
       {
         "path": "web-animations/animation-effect-timing/iterations.html",
         "url": "/web-animations/animation-effect-timing/iterations.html"
+      },
+      {
+        "path": "web-animations/animation-model/animation-types/discrete-animation.html",
+        "url": "/web-animations/animation-model/animation-types/discrete-animation.html"
       },
       {
         "path": "web-animations/animation-timeline/document-timeline.html",
