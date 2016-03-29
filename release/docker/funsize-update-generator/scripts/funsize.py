@@ -181,9 +181,12 @@ def main():
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
 
     log.info("Refreshing clamav db...")
-    redo.retry(lambda:
-               sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
-    log.info("Done.")
+    try:
+        redo.retry(lambda:
+                   sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
+        log.info("Done.")
+    except sh.ErrorReturnCode:
+        log.warning("Freshclam failed, skipping DB update")
     manifest = []
     for e in task["extra"]["funsize"]["partials"]:
         for mar in (e["from_mar"], e["to_mar"]):
