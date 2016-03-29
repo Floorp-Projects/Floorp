@@ -617,16 +617,16 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                          computedTiming.mBeforeFlag);
 
     StyleAnimationValue val;
-#ifdef DEBUG
-    bool result =
-#endif
-      StyleAnimationValue::Interpolate(prop.mProperty,
-                                       segment->mFromValue,
-                                       segment->mToValue,
-                                       valuePosition, val);
-    MOZ_ASSERT(result, "interpolate must succeed now");
-
-    aStyleRule->AddValue(prop.mProperty, Move(val));
+    if (StyleAnimationValue::Interpolate(prop.mProperty,
+                                         segment->mFromValue,
+                                         segment->mToValue,
+                                         valuePosition, val)) {
+      aStyleRule->AddValue(prop.mProperty, Move(val));
+    } else if (valuePosition < 0.5) {
+      aStyleRule->AddValue(prop.mProperty, segment->mFromValue);
+    } else {
+      aStyleRule->AddValue(prop.mProperty, segment->mToValue);
+    }
   }
 }
 
