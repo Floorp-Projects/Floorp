@@ -59,6 +59,8 @@ public:
   RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess);
   virtual ~RenderFrameParent();
 
+  bool Init(nsFrameLoader* aFrameLoader);
+  bool IsInitted();
   void Destroy();
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -125,6 +127,7 @@ private:
   nsRegion mTouchRegion;
 
   bool mAsyncPanZoomEnabled;
+  bool mInitted;
 };
 
 } // namespace layout
