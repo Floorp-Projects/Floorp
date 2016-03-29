@@ -373,6 +373,12 @@ public:
   }
   StyleAnimationValue(const StyleAnimationValue& aOther)
     : mUnit(eUnit_Null) { *this = aOther; }
+  StyleAnimationValue(StyleAnimationValue&& aOther)
+    : mUnit(aOther.mUnit)
+    , mValue(aOther.mValue)
+  {
+    aOther.mUnit = eUnit_Null;
+  }
   enum IntegerConstructorType { IntegerConstructor };
   StyleAnimationValue(int32_t aInt, Unit aUnit, IntegerConstructorType);
   enum CoordConstructorType { CoordConstructor };
