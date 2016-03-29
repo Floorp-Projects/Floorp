@@ -1121,12 +1121,12 @@ class RunProgram(MachCommandBase):
         help='Enable DMD. The following arguments have no effect without this.')
     @CommandArgument('--mode', choices=['live', 'dark-matter', 'cumulative', 'scan'], group='DMD',
          help='Profiling mode. The default is \'dark-matter\'.')
-    @CommandArgument('--sample-below', default=None, type=str, group='DMD',
-        help='Sample blocks smaller than this. Use 1 for no sampling. The default is 4093.')
+    @CommandArgument('--stacks', choices=['partial', 'full'], group='DMD',
+        help='Allocation stack trace coverage. The default is \'partial\'.')
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
     def run(self, params, remote, background, noprofile, debug, debugger,
-        debugparams, slowscript, dmd, mode, sample_below, show_dump_stats):
+        debugparams, slowscript, dmd, mode, stacks, show_dump_stats):
 
         if conditions.is_android(self):
             # Running Firefox for Android is completely different
@@ -1207,8 +1207,8 @@ class RunProgram(MachCommandBase):
 
             if mode:
                 dmd_params.append('--mode=' + mode)
-            if sample_below:
-                dmd_params.append('--sample-below=' + sample_below)
+            if stacks:
+                dmd_params.append('--stacks=' + stacks)
             if show_dump_stats:
                 dmd_params.append('--show-dump-stats=yes')
 

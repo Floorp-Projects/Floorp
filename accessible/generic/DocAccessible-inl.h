@@ -22,6 +22,18 @@
 namespace mozilla {
 namespace a11y {
 
+inline Accessible*
+DocAccessible::AccessibleOrTrueContainer(nsINode* aNode) const
+{
+  // HTML comboboxes have no-content list accessible as an intermediate
+  // containing all options.
+  Accessible* container = GetAccessibleOrContainer(aNode);
+  if (container && container->IsHTMLCombobox()) {
+    return container->FirstChild();
+  }
+  return container;
+}
+
 inline nsIAccessiblePivot*
 DocAccessible::VirtualCursor()
 {

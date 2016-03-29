@@ -725,6 +725,13 @@ child:
                                          float aVolume,
                                          bool aMuted);
 
+    /**
+     * Tells the root child docShell whether or not to use
+     * global history. This is sent right after the PBrowser
+     * is bound to a frameloader element.
+     */
+    async SetUseGlobalHistory(bool aUse);
+
 /*
  * FIXME: write protocol!
 

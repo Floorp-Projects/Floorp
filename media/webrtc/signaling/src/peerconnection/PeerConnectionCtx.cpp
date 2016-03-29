@@ -55,7 +55,7 @@ public:
       rv = observerService->AddObserver(this,
                                         NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                         false);
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+      MOZ_ALWAYS_SUCCEEDS(rv);
 #endif
       (void) rv;
     }
@@ -73,7 +73,7 @@ public:
 
       nsresult rv = observerService->RemoveObserver(this,
                                                     NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+      MOZ_ALWAYS_SUCCEEDS(rv);
 
       // Make sure we're not deleted while still inside ::Observe()
       RefPtr<PeerConnectionCtxShutdown> kungFuDeathGrip(this);

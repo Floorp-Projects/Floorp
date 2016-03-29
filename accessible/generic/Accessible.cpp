@@ -16,6 +16,7 @@
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "DocAccessibleChild.h"
+#include "Logging.h"
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
@@ -1959,7 +1960,18 @@ Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
 
   if (mParent) {
     if (mParent != aParent) {
-      NS_ERROR("Adopting child!");
+#ifdef A11Y_LOG
+      if (logging::IsEnabled(logging::eTree)) {
+        logging::MsgBegin("TREE", "BindToParent: stealing accessible");
+        logging::AccessibleInfo("old parent", mParent);
+        logging::AccessibleInfo("new parent", aParent);
+        logging::AccessibleInfo("child", this);
+        logging::MsgEnd();
+      }
+#endif
+      // XXX: legalize adoption. As long as we don't invalidate the children,
+      // the accessibles start to steal them.
+
       mParent->InvalidateChildrenGroupInfo();
       mParent->RemoveChild(this);
     } else {

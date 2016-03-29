@@ -385,11 +385,11 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
   // About URIs shouldn't be able to access IndexedDB unless they have the
   // nsIAboutModule::ENABLE_INDEXED_DB flag set on them.
   nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(principal->GetURI(getter_AddRefs(uri))));
+  MOZ_ALWAYS_SUCCEEDS(principal->GetURI(getter_AddRefs(uri)));
   MOZ_ASSERT(uri);
 
   bool isAbout = false;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)));
+  MOZ_ALWAYS_SUCCEEDS(uri->SchemeIs("about", &isAbout));
 
   if (isAbout) {
     nsCOMPtr<nsIAboutModule> module;
@@ -707,7 +707,7 @@ IDBFactory::OpenInternal(JSContext* aCx,
       MOZ_ASSERT(uuidGen);
 
       nsID id;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(uuidGen->GenerateUUIDInPlace(&id)));
+      MOZ_ALWAYS_SUCCEEDS(uuidGen->GenerateUUIDInPlace(&id));
 
       newIDBThreadLocal = idbThreadLocal = new ThreadLocal(id);
     }

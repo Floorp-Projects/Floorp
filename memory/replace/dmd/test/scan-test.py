@@ -14,7 +14,7 @@ import json
 import sys
 
 # The DMD output version this script handles.
-outputVersion = 4
+outputVersion = 5
 
 
 def parseCommandLine():
@@ -60,10 +60,6 @@ def main():
     mode = invocation['mode']
     if mode != 'scan':
         raise Exception("bad 'mode' property: '{:s}'".format(mode))
-
-    sampleBelowSize = invocation['sampleBelowSize']
-    if sampleBelowSize != 1:
-        raise Exception("Expected sampleBelowSize of 1 but got " + sampleBelowSize)
 
     blockList = j['blockList']
 

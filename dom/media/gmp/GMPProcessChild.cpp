@@ -7,7 +7,6 @@
 
 #include "base/command_line.h"
 #include "base/string_util.h"
-#include "chrome/common/chrome_switches.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/BackgroundHangMonitor.h"
 

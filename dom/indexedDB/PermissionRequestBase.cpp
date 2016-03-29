@@ -229,7 +229,7 @@ PermissionRequestBase::Observe(nsISupports* aSubject,
 
   nsresult rv;
   uint32_t promptResult = nsDependentString(aData).ToInteger(&rv);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(rv);
 
   // The UI prompt code will only return one of these three values. We have to
   // transform it to our values.

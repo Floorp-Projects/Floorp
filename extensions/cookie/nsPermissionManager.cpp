@@ -580,7 +580,7 @@ IsExpandedPrincipal(nsIPrincipal* aPrincipal)
 
 nsPermissionManager::PermissionKey::PermissionKey(nsIPrincipal* aPrincipal)
 {
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aPrincipal->GetOrigin(mOrigin)));
+  MOZ_ALWAYS_SUCCEEDS(aPrincipal->GetOrigin(mOrigin));
 }
 
 /**

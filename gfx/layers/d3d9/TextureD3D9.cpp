@@ -341,7 +341,7 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   }
 
   uint32_t bpp = BytesPerPixel(aSurface->GetFormat());
-  DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  RefPtr<DeviceManagerD3D9> deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
 
   mSize = aSurface->GetSize();
   mFormat = aSurface->GetFormat();
@@ -568,7 +568,7 @@ D3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                         TextureAllocationFlags aAllocFlags)
 {
   _D3DFORMAT format = SurfaceFormatToD3D9Format(aFormat);
-  DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  RefPtr<DeviceManagerD3D9> deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   RefPtr<IDirect3DTexture9> d3d9Texture = deviceManager ? deviceManager->CreateTexture(aSize, format,
                                                                                        D3DPOOL_SYSTEMMEM,
                                                                                        nullptr)
@@ -830,7 +830,7 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
     mSize = IntSize(desc.Width, desc.Height);
   }
 
-  DeviceManagerD3D9* dm = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  RefPtr<DeviceManagerD3D9> dm = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   if (!dm || !dm->device()) {
     return false;
   }
@@ -904,7 +904,7 @@ TextureHostD3D9::UpdatedInternal(const nsIntRegion* aRegion)
   }
 
   if (!mTextureSource->UpdateFromTexture(mTexture, regionToUpdate)) {
-    gfxCriticalError() << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
+    gfxWarning() << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
   }
 }
 

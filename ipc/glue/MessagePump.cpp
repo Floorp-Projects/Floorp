@@ -246,7 +246,7 @@ DoWorkRunnable::Cancel()
   // after this.  Unfortunately we cannot use flags to verify this because
   // DoWorkRunnable is a stateless singleton that can be in the event queue
   // multiple times simultaneously.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Run()));
+  MOZ_ALWAYS_SUCCEEDS(Run());
   return NS_OK;
 }
 
