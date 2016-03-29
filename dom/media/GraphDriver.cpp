@@ -224,11 +224,14 @@ void
 ThreadedDriver::Start()
 {
   LIFECYCLE_LOG("Starting thread for a SystemClockDriver  %p\n", mGraphImpl);
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
-  // Note: mThread may be null during event->Run() if we pass to NewNamedThread!  See AudioInitTask
-  nsresult rv = NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread));
-  if (NS_SUCCEEDED(rv)) {
-    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  NS_WARN_IF(mThread);
+  if (!mThread) { // Ensure we haven't already started it
+    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
+    // Note: mThread may be null during event->Run() if we pass to NewNamedThread!  See AudioInitTask
+    nsresult rv = NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread));
+    if (NS_SUCCEEDED(rv)) {
+      mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    }
   }
 }
 
