@@ -275,9 +275,9 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY inspectContextMenu.label     "Inspect Element">
 <!ENTITY inspectContextMenu.accesskey "Q">
 
-<!ENTITY responsiveDesignTool.label   "Responsive Design View">
-<!ENTITY responsiveDesignTool.accesskey "R">
-<!ENTITY responsiveDesignTool.commandkey "M">
+<!ENTITY responsiveDesignMode.label   "Responsive Design Mode">
+<!ENTITY responsiveDesignMode.accesskey "R">
+<!ENTITY responsiveDesignMode.commandkey "M">
 
 <!ENTITY eyedropper.label   "Eyedropper">
 <!ENTITY eyedropper.accesskey "Y">

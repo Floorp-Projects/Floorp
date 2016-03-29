@@ -1032,7 +1032,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * If deviceSizeIsPageSize is set to true, device-width/height media queries
    * will be calculated from the page size, not the device size.
    *
-   * Used by the Responsive Design View and B2G Simulator.
+   * Used by the Responsive Design Mode and B2G Simulator.
    *
    * Default is False.
    * Default value can be overriden with
