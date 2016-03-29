@@ -484,7 +484,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // Only collect CERT_CHAIN_SHA1_POLICY_STATUS telemetry indicating a
       // failure when mSHA1Mode is the default.
       // NB: When we change the default, we have to change this.
-      if (sha1ModeResult && mSHA1Mode == SHA1Mode::ImportedRoot) {
+      if (sha1ModeResult && mSHA1Mode == SHA1Mode::Allowed) {
         *sha1ModeResult = SHA1ModeResult::Failed;
       }
 
