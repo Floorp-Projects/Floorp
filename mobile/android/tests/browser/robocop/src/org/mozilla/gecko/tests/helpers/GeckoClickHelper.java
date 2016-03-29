@@ -3,7 +3,7 @@ package org.mozilla.gecko.tests.helpers;
 import android.app.Activity;
 import android.util.DisplayMetrics;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.tests.StringHelper;

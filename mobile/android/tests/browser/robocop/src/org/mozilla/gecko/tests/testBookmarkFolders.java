@@ -15,7 +15,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Condition;
 
 public class testBookmarkFolders extends AboutHomeTest {
     private static String DESKTOP_BOOKMARK_URL;

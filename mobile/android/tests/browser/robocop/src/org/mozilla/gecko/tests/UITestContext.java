@@ -12,7 +12,7 @@ import org.mozilla.gecko.tests.components.BaseComponent;
 import android.app.Activity;
 import android.app.Instrumentation;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * Interface to the global information about a UITest environment.

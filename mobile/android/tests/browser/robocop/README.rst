@@ -5,7 +5,7 @@ Robocop Mochitest
  Firefox on Android devices.
 
 *Robocop Mochitest* tests run on Native Android builds marked with an
-'rc' on treeherder.  These are Java based tests which run from the mochitest
+'rc' in TBPL.  These are Java based tests which run from the mochitest
 harness and generate similar log files.  These are designed for
 testing the native UI of Android devices by sending events to the
 front end.
@@ -20,26 +20,26 @@ Development cycle
 To deploy the robocop APK to your device and start the robocop test
 suite, use::
 
-    mach robocop
+    make -C $OBJDIR mochitest-robocop
 
 To run a specific test case, such as ``testLoad``::
 
-    mach robocop testLoad
+    make -C $OBJDIR mochitest-robocop TEST_PATH=testLoad
 
-The Java files in ``mobile/android/tests/browser/robocop`` are dependencies of the
+The Java files in ``mobile/android/base/tests`` are dependencies of the
 robocop APK built by ``build/mobile/robocop``.  If you modify Java files
-in ``mobile/android/tests/browser/robocop``, you need to rebuild the robocop APK
+in ``mobile/android/base/tests``, you need to rebuild the robocop APK
 with::
 
     mach build build/mobile/robocop
 
 Changes to ``.html``, ``.css``, ``.sjs``, and ``.js`` files in
-``mobile/android/tests/browser/robocop`` do not require rebuilding the robocop
+``mobile/android/base/tests`` do not require rebuilding the robocop
 APK -- these changes are always 'live', since they are served by the
 mochitest HTTP server and downloaded each test run by your device.
 
-``mach package`` does build and sign a robocop APK, but ``mach
-robocop`` does not use it.  (This signed APK is used to test
+``mach package`` does build and sign a robocop APK, but ``make
+mochitest-robocop`` does not use it.  (This signed APK is used to test
 signed releases on the buildbots).
 
 As always, changes to ``mobile/android/base``, ``mobile/android/chrome``,
@@ -54,8 +54,8 @@ Licensing
 
 Robotium is an open source tool licensed under the Apache 2.0 license and the original
 source can be found here:
-https://github.com/RobotiumTech/robotium
+http://code.google.com/p/robotium/
 
-We are including robotium-solo-5.5.4.jar as a binary and are not modifying it in any way
+We are including robotium-solo-4.3.1.jar as a binary and are not modifying it in any way
 from the original download found at:
-https://github.com/RobotiumTech/robotium/wiki/Downloads
+http://code.google.com/p/robotium/

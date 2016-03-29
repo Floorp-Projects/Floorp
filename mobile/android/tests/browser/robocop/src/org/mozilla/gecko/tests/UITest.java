@@ -22,7 +22,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.text.TextUtils;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * A base test class for Robocop (UI-centric) tests. This and the related classes attempt to

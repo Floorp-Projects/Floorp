@@ -18,8 +18,8 @@ import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.UITestContext.ComponentType;
 import org.mozilla.gecko.tests.components.ToolbarComponent;
 
-import com.robotium.solo.Condition;
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * Provides functionality related to waiting on certain events to happen.
