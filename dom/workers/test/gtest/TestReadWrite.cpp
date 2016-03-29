@@ -370,7 +370,7 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
 }
 
-TEST(ServiceWorkerRegistrar, TestDedupe)
+TEST(ServiceWorkerRegistrar, TestDedupeRead)
 {
   nsAutoCString buffer("3" "\n");
 
@@ -431,6 +431,58 @@ TEST(ServiceWorkerRegistrar, TestDedupe)
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
+}
+
+TEST(ServiceWorkerRegistrar, TestDedupeWrite)
+{
+  {
+    RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+
+    for (int i = 0; i < 10; ++i) {
+      ServiceWorkerRegistrationData reg;
+
+      reg.scope() = NS_LITERAL_CSTRING("scope write dedupe");
+      reg.currentWorkerURL() = nsPrintfCString("currentWorkerURL write %d", i);
+      reg.cacheName() =
+        NS_ConvertUTF8toUTF16(nsPrintfCString("cacheName write %d", i));
+
+      nsAutoCString spec;
+      spec.AppendPrintf("spec write dedupe/%d", i);
+      reg.principal() =
+        mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(0, false), spec);
+
+      swr->TestRegisterServiceWorker(reg);
+    }
+
+    nsresult rv = swr->TestWriteData();
+    ASSERT_EQ(NS_OK, rv) << "WriteData() should not fail";
+  }
+
+  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+
+  nsresult rv = swr->TestReadData();
+  ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
+
+  // Duplicate entries should be removed.
+  const nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
+  ASSERT_EQ((uint32_t)1, data.Length()) << "1 entry should be found";
+
+  ASSERT_EQ(data[0].principal().type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
+  const mozilla::ipc::ContentPrincipalInfo& cInfo = data[0].principal();
+
+  mozilla::PrincipalOriginAttributes attrs(0, false);
+  nsAutoCString suffix, expectSuffix;
+  attrs.CreateSuffix(expectSuffix);
+  cInfo.attrs().CreateSuffix(suffix);
+
+  // Last entry passed to RegisterServiceWorkerInternal() should overwrite
+  // previous values.  So expect "9" in values here.
+  ASSERT_STREQ(expectSuffix.get(), suffix.get());
+  ASSERT_STREQ("scope write dedupe", cInfo.spec().get());
+  ASSERT_STREQ("scope write dedupe", data[0].scope().get());
+  ASSERT_STREQ("currentWorkerURL write 9", data[0].currentWorkerURL().get());
+  ASSERT_STREQ("cacheName write 9",
+               NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
 }
 
 int main(int argc, char** argv) {
