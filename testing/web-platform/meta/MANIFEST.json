@@ -28418,38 +28418,6 @@
         "url": "/web-animations/animation-effect-timing/direction.html"
       },
       {
-        "path": "web-animations/animation-node/animation-node-after.html",
-        "url": "/web-animations/animation-node/animation-node-after.html"
-      },
-      {
-        "path": "web-animations/animation-node/animation-node-before.html",
-        "url": "/web-animations/animation-node/animation-node-before.html"
-      },
-      {
-        "path": "web-animations/animation-node/animation-node-next-sibling.html",
-        "url": "/web-animations/animation-node/animation-node-next-sibling.html"
-      },
-      {
-        "path": "web-animations/animation-node/animation-node-parent.html",
-        "url": "/web-animations/animation-node/animation-node-parent.html"
-      },
-      {
-        "path": "web-animations/animation-node/animation-node-previous-sibling.html",
-        "url": "/web-animations/animation-node/animation-node-previous-sibling.html"
-      },
-      {
-        "path": "web-animations/animation-node/animation-node-remove.html",
-        "url": "/web-animations/animation-node/animation-node-remove.html"
-      },
-      {
-        "path": "web-animations/animation-node/animation-node-replace.html",
-        "url": "/web-animations/animation-node/animation-node-replace.html"
-      },
-      {
-        "path": "web-animations/animation-node/idlharness.html",
-        "url": "/web-animations/animation-node/idlharness.html"
-      },
-      {
         "path": "web-animations/animation-timeline/document-timeline.html",
         "url": "/web-animations/animation-timeline/document-timeline.html"
       },
