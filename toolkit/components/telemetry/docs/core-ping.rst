@@ -78,6 +78,12 @@ engine from the search plugins (in order):
 If the plugins fail to create a search engine instance, this field is also
 ``null``.
 
+profileDate
+~~~~~~~~~~~
+
+This field may be missing if `times.json` does not exist or could not be read from the profile.
+`Bug 1246816 <https://bugzilla.mozilla.org/show_bug.cgi?id=1246816>`_ will fix that with a fallback mechanism.
+
 Version history
 ---------------
 * v2: added ``defaultSearch``
