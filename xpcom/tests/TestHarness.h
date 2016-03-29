@@ -116,10 +116,10 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
         MOZ_ASSERT(os);
         if (os) {
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-change-net-teardown", nullptr)));
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-change-teardown", nullptr)));
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-before-change", nullptr)));
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-before-change2", nullptr)));
+          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-change-net-teardown", nullptr));
+          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-change-teardown", nullptr));
+          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change", nullptr));
+          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change2", nullptr));
         }
 
         if (NS_FAILED(mProfD->Remove(true))) {

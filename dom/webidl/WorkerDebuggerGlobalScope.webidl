@@ -8,6 +8,7 @@ interface WorkerDebuggerGlobalScope : EventTarget {
   [Throws]
   readonly attribute object global;
 
+  [Throws]
   object createSandbox(DOMString name, object prototype);
 
   [Throws]

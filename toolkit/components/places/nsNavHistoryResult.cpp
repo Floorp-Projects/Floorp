@@ -1080,7 +1080,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
   } else {
     nsAutoCString spec;
     if (NS_SUCCEEDED(a->GetUri(spec))){
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(a_uri), spec)));
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(a_uri), spec));
     }
     NS_ENSURE_TRUE(a_uri, 0);
   }
@@ -1090,7 +1090,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
   } else {
     nsAutoCString spec;
     if (NS_SUCCEEDED(b->GetUri(spec))) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(b_uri), spec)));
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(b_uri), spec));
     }
     NS_ENSURE_TRUE(b_uri, 0);
   }

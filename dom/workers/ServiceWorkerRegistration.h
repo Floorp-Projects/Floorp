@@ -239,7 +239,7 @@ public:
   }
 
   bool
-  Notify(JSContext* aCx, workers::Status aStatus) override;
+  Notify(workers::Status aStatus) override;
 
   already_AddRefed<WorkerPushManager>
   GetPushManager(ErrorResult& aRv);

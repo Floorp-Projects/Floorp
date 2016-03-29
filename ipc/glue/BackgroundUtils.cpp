@@ -166,7 +166,7 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     PrincipalInfo info;
 
     nsTArray< nsCOMPtr<nsIPrincipal> >* whitelist;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(expanded->GetWhiteList(&whitelist)));
+    MOZ_ALWAYS_SUCCEEDS(expanded->GetWhiteList(&whitelist));
 
     for (uint32_t i = 0; i < whitelist->Length(); i++) {
       rv = PrincipalToPrincipalInfo((*whitelist)[i], &info);

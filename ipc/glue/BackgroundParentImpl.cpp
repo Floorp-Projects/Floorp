@@ -548,8 +548,7 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
 
   RefPtr<CheckPrincipalRunnable> runnable =
     new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
   return true;
 }

@@ -106,7 +106,7 @@ MessageLoop::MessageLoop(Type type)
   get_tls_ptr().Set(this);
 
   switch (type_) {
-  case TYPE_MOZILLA_UI:
+  case TYPE_MOZILLA_PARENT:
     pump_ = new mozilla::ipc::MessagePump();
     return;
   case TYPE_MOZILLA_CHILD:

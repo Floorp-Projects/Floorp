@@ -820,6 +820,7 @@ JSCompartment::fixupAfterMovingGC()
     fixupGlobal();
     fixupInitialShapeTable();
     objectGroups.fixupTablesAfterMovingGC();
+    dtoaCache.purge();
 
 #ifdef DEBUG
     // Assert that none of the JSScript pointers, which are used as key of the

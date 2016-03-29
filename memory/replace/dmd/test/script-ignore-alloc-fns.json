@@ -1,15 +1,14 @@
 {
- "version": 4,
+ "version": 5,
  "invocation": {
   "dmdEnvVar": null,
-  "mode": "dark-matter",
-  "sampleBelowSize": 2500
+  "mode": "dark-matter"
  },
  "blockList": [
   {"req": 1048576,           "alloc": "A"},
   {"req": 65536,             "alloc": "B"},
   {"req": 8000, "slop": 192, "alloc": "C"},
-  {                          "alloc": "D"}
+  {"req": 2500,              "alloc": "D"}
  ],
  "traceTable": {
   "A": ["AA", "AB", "AC", "AD"],

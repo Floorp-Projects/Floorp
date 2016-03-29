@@ -206,7 +206,7 @@ EventTargetIsOnCurrentThread(nsIEventTarget* aEventTarget)
   }
 
   bool current;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aEventTarget->IsOnCurrentThread(&current)));
+  MOZ_ALWAYS_SUCCEEDS(aEventTarget->IsOnCurrentThread(&current));
 
   return current;
 }
@@ -301,10 +301,10 @@ ReleaseOnTarget(SmartPtr<T>& aDoomed, nsIEventTarget* aTarget)
     // cancelable.
     releaseRunnable = new CancelableRunnableWrapper(releaseRunnable, aTarget);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aTarget->Dispatch(releaseRunnable,
-                                                   NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(aTarget->Dispatch(releaseRunnable,
+                                          NS_DISPATCH_NORMAL));
   } else {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(releaseRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(releaseRunnable));
   }
 }
 
@@ -811,7 +811,7 @@ CreateBlobImpl(const nsTArray<uint8_t>& aMemoryData,
     blobImpl = new EmptyBlobImpl(aMetadata.mContentType);
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
+  MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
   return blobImpl.forget();
 }
@@ -914,7 +914,7 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
     return nullptr;
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
+  MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
   return blobImpl.forget();
 }
@@ -1013,7 +1013,7 @@ BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
   MOZ_ASSERT(isNonBlocking);
 
   uint64_t available;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(inputStream->Available(&available)));
+  MOZ_ALWAYS_SUCCEEDS(inputStream->Available(&available));
 
   MOZ_ASSERT(available <= uint64_t(UINT32_MAX));
 
@@ -1024,10 +1024,10 @@ BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
   blobData.SetLength(size_t(available));
 
   uint32_t readCount;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+  MOZ_ALWAYS_SUCCEEDS(
     inputStream->Read(reinterpret_cast<char*>(blobData.Elements()),
                       uint32_t(available),
-                      &readCount)));
+                      &readCount));
 }
 
 RemoteInputStream::RemoteInputStream(BlobImpl* aBlobImpl,
@@ -1631,7 +1631,7 @@ private:
       nsresult rv = mActorTarget->Dispatch(this, NS_DISPATCH_NORMAL);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
     }
 
     return NS_OK;
@@ -1656,7 +1656,7 @@ private:
       NS_NewRunnableMethod(ioTarget, &nsIThread::Shutdown);
     MOZ_ASSERT(shutdownRunnable);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(shutdownRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(shutdownRunnable));
 
     return NS_OK;
   }
@@ -2196,10 +2196,10 @@ RemoteBlobImpl::Destroy()
     destroyRunnable =
       new CancelableRunnableWrapper(destroyRunnable, mActorTarget);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mActorTarget->Dispatch(destroyRunnable,
-                                                        NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mActorTarget->Dispatch(destroyRunnable,
+                                               NS_DISPATCH_NORMAL));
   } else {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(destroyRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(destroyRunnable));
   }
 }
 
@@ -2544,7 +2544,7 @@ RemoteBlobSliceImpl::EnsureActorWasCreatedInternal()
   MOZ_ASSERT(baseActor->HasManager());
 
   nsID id;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
+  MOZ_ALWAYS_SUCCEEDS(gUUIDGenerator->GenerateUUIDInPlace(&id));
 
   ParentBlobConstructorParams params(
     SlicedBlobConstructorParams(nullptr /* sourceParent */,
@@ -2624,10 +2624,10 @@ RemoteBlobImpl::Destroy()
     destroyRunnable =
       new CancelableRunnableWrapper(destroyRunnable, mActorTarget);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mActorTarget->Dispatch(destroyRunnable,
-                                                        NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mActorTarget->Dispatch(destroyRunnable,
+                                               NS_DISPATCH_NORMAL));
   } else {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(destroyRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(destroyRunnable));
   }
 }
 
@@ -3479,10 +3479,10 @@ BlobChild::NoteDyingRemoteBlobImpl()
     if (mEventTarget) {
       runnable = new CancelableRunnableWrapper(runnable, mEventTarget);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mEventTarget->Dispatch(runnable,
-                                                          NS_DISPATCH_NORMAL)));
+      MOZ_ALWAYS_SUCCEEDS(mEventTarget->Dispatch(runnable,
+                                                 NS_DISPATCH_NORMAL));
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
     }
 
     return;
@@ -3810,7 +3810,7 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
   }
 
   nsID id;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
+  MOZ_ALWAYS_SUCCEEDS(gUUIDGenerator->GenerateUUIDInPlace(&id));
 
   RefPtr<IDTableEntry> idTableEntry =
     IDTableEntry::GetOrCreate(id, ActorManagerProcessID(aManager), aBlobImpl);
@@ -3866,7 +3866,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
       }
 
       nsID id;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
+      MOZ_ALWAYS_SUCCEEDS(gUUIDGenerator->GenerateUUIDInPlace(&id));
 
       RefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Create(id, ActorManagerProcessID(aManager), blobImpl);
@@ -3906,7 +3906,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
         return nullptr;
       }
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(slice->SetMutable(false)));
+      MOZ_ALWAYS_SUCCEEDS(slice->SetMutable(false));
 
       RefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Create(params.id(),
@@ -3948,7 +3948,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
       MOZ_ASSERT(blobImpl);
 
       nsID id;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
+      MOZ_ALWAYS_SUCCEEDS(gUUIDGenerator->GenerateUUIDInPlace(&id));
 
       RefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Create(id, ActorManagerProcessID(aManager), blobImpl);
@@ -4058,10 +4058,10 @@ BlobParent::NoteDyingRemoteBlobImpl()
     if (mEventTarget) {
       runnable = new CancelableRunnableWrapper(runnable, mEventTarget);
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mEventTarget->Dispatch(runnable,
-                                                          NS_DISPATCH_NORMAL)));
+      MOZ_ALWAYS_SUCCEEDS(mEventTarget->Dispatch(runnable,
+                                                 NS_DISPATCH_NORMAL));
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
     }
 
     return;

@@ -89,8 +89,8 @@ private:
     nsCOMPtr<nsIRunnable> destroyRunnable =
       NS_NewNonOwningRunnableMethod(this, &StreamWrapper::Destroy);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(destroyRunnable,
-                                                         NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(destroyRunnable,
+                                                NS_DISPATCH_NORMAL));
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -219,8 +219,8 @@ StreamWrapper::Close()
 
   RefPtr<CloseRunnable> closeRunnable = new CloseRunnable(this);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(closeRunnable,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(closeRunnable,
+                                              NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }

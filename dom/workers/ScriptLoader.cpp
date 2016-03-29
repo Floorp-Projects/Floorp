@@ -708,7 +708,7 @@ private:
   }
 
   virtual bool
-  Notify(JSContext* aCx, Status aStatus) override
+  Notify(Status aStatus) override
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -719,11 +719,7 @@ private:
         NS_NewRunnableMethod(this,
           &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted);
       NS_ASSERTION(runnable, "This should never fail!");
-
-      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-        JS_ReportError(aCx, "Failed to cancel script loader!");
-        return false;
-      }
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
     }
 
     return true;
@@ -1438,7 +1434,7 @@ CacheCreator::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
   Cache* cache = nullptr;
   nsresult rv = UNWRAP_OBJECT(Cache, obj, cache);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(rv);
 
   mCache = cache;
   MOZ_ASSERT(mCache);

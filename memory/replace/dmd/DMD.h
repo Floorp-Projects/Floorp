@@ -154,46 +154,45 @@ ClearReports()
 //   // backwards-incompatible changes are made. A mandatory integer.
 //   //
 //   // Version history:
-//   // - 1: Bug 1044709. The original format.
-//   // - 2: Bug 1094552. Added the "mode" property under "invocation".
-//   // - 3: Bug 1100851. The "dmdEnvVar" property under "invocation" can now
-//   //      be |null| if the |DMD| environment variable is not defined.
-//   // - 4: Bug 1121830. Added the "num" property in "blockList" object.
-//   //
-//   "version": 4,
+//   // - 1: Bug 1044709
+//   // - 2: Bug 1094552
+//   // - 3: Bug 1100851
+//   // - 4: Bug 1121830
+//   // - 5: Bug 1253512
+//   "version": 5,
 //
 //   // Information about how DMD was invoked. A mandatory object.
 //   "invocation": {
-//     // The contents of the $DMD environment variable. A string, or |null| is
+//     // The contents of the $DMD environment variable. A string, or |null| if
 //     // $DMD is undefined.
 //     "dmdEnvVar": "--mode=dark-matter",
 //
 //     // The profiling mode. A mandatory string taking one of the following
-//     // values: "live", "dark-matter", "cumulative".
+//     // values: "live", "dark-matter", "cumulative", "scan".
 //     "mode": "dark-matter",
-//
-//     // The value of the --sample-below-size option. A mandatory integer.
-//     "sampleBelowSize": 4093
 //   },
 //
 //   // Details of all analyzed heap blocks. A mandatory array.
 //   "blockList": [
-//     // An example of a non-sampled heap block.
+//     // An example of a heap block.
 //     {
-//       // Requested size, in bytes. In non-sampled blocks this is a
-//       // mandatory integer. In sampled blocks this is not present, and the
-//       // requested size is equal to the "sampleBelowSize" value. Therefore,
-//       // the block is sampled if and only if this property is absent.
+//       // Requested size, in bytes. This is a mandatory integer.
 //       "req": 3584,
 //
 //       // Requested slop size, in bytes. This is mandatory if it is non-zero,
-//       // but omitted otherwise. Because sampled blocks never have slop, this
-//       // property is never present for non-sampled blocks.
+//       // but omitted otherwise.
 //       "slop": 512,
 //
-//       // The stack trace at which the block was allocated. A mandatory
-//       // string which indexes into the "traceTable" object.
+//       // The stack trace at which the block was allocated. An optional
+//       // string that indexes into the "traceTable" object. If omitted, no
+//       // allocation stack trace was recorded for the block.
 //       "alloc": "A",
+//
+//       // One or more stack traces at which this heap block was reported by a
+//       // memory reporter. An optional array that will only be present in
+//       // "dark-matter" mode. The elements are strings that index into
+//       // the "traceTable" object.
+//       "reps": ["B"]
 //
 //       // The number of heap blocks with exactly the above properties. This
 //       // is mandatory if it is greater than one, but omitted otherwise.
@@ -201,25 +200,14 @@ ClearReports()
 //       // this property, but it can greatly reduce output file size.)
 //       "num": 5,
 //
-//       // The address of the block. This is mandatory in "scan" mode for
-//       // non-sampled blocks, but omitted otherwise.
+//       // The address of the block. This is mandatory in "scan" mode, but
+//       // omitted otherwise.
 //       "addr": "4e4e4e4e",
 //
 //       // The contents of the block, read one word at a time. This is
-//       // mandatory in "scan" mode for non-sampled blocks at least one word
-//       // long, but omitted otherwise.
+//       // mandatory in "scan" mode for blocks at least one word long, but
+//       // omitted otherwise.
 //       "contents": ["0", "6", "7f7f7f7f", "0"]
-//     },
-//
-//     // An example of a sampled heap block.
-//     {
-//       "alloc": "B",
-//
-//       // One or more stack traces at which this heap block was reported by a
-//       // memory reporter. An optional array that will only be present in
-//       // "dark-matter" mode. The elements are strings that index into
-//       // the "traceTable" object.
-//       "reps": ["C"]
 //     }
 //   ],
 //
@@ -230,8 +218,7 @@ ClearReports()
 //     // Each property corresponds to a stack trace mentioned in the "blocks"
 //     // object. Each element is an index into the "frameTable" object.
 //     "A": ["D", "E"],
-//     "B": ["D", "F"],
-//     "C": ["G", "H"]
+//     "B": ["F", "G"]
 //   },
 //
 //   // The stack frames referenced by the "traceTable" object. The
@@ -252,8 +239,7 @@ ClearReports()
 //     "D": "#00: foo (Foo.cpp:123)",
 //     "E": "#00: bar (Bar.cpp:234)",
 //     "F": "#00: baz (Baz.cpp:345)",
-//     "G": "#00: quux (Quux.cpp:456)",
-//     "H": "#00: quuux (Quux.cpp:567)"
+//     "G": "#00: quux (Quux.cpp:456)"
 //   }
 // }
 //

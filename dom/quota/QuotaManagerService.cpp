@@ -279,8 +279,8 @@ QuotaManagerService::AbortOperationsForProcess(ContentParentId aContentParentId)
   RefPtr<AbortOperationsRunnable> runnable =
     new AbortOperationsRunnable(aContentParentId);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(
+    mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL));
 }
 
 nsresult
@@ -463,8 +463,8 @@ QuotaManagerService::PerformIdleMaintenance()
       do_GetService(kIdleServiceContractId);
     MOZ_ASSERT(idleService);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      idleService->AddIdleObserver(this, kIdleObserverTimeSec)));
+    MOZ_ALWAYS_SUCCEEDS(
+      idleService->AddIdleObserver(this, kIdleObserverTimeSec));
 
     mIdleObserverRegistered = true;
   }
@@ -481,8 +481,8 @@ QuotaManagerService::RemoveIdleObserver()
       do_GetService(kIdleServiceContractId);
     MOZ_ASSERT(idleService);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      idleService->RemoveIdleObserver(this, kIdleObserverTimeSec)));
+    MOZ_ALWAYS_SUCCEEDS(
+      idleService->RemoveIdleObserver(this, kIdleObserverTimeSec));
 
     mIdleObserverRegistered = false;
   }

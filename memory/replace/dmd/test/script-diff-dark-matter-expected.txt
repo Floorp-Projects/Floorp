@@ -2,23 +2,21 @@
 # dmd.py --filter-stacks-for-testing -o script-diff-dark-matter-actual.txt script-diff-dark-matter1.json script-diff-dark-matter2.json
 
 Invocation 1 {
-  $DMD = '--mode=dark-matter --sample-below=127'
+  $DMD = '--mode=dark-matter'
   Mode = 'dark-matter'
-  Sample-below size = 127
 }
 
 Invocation 2 {
-  $DMD = '--sample-below=63'
+  $DMD is undefined
   Mode = 'dark-matter'
-  Sample-below size = 63
 }
 
 #-----------------------------------------------------------------
 
 Twice-reported {
-  ~-1 blocks in heap block record 1 of 1
-  ~-1,088 bytes (~-1,064 requested / ~-24 slop)
-  Individual block sizes: -1,024; ~-127; ~63
+  -1 blocks in heap block record 1 of 1
+  -1,088 bytes (-1,064 requested / -24 slop)
+  Individual block sizes: -1,024; -127; 63
   15.46% of the heap (15.46% cumulative)
   100.00% of twice-reported (100.00% cumulative)
   Allocated at {
@@ -46,9 +44,9 @@ Unreported {
 }
 
 Unreported {
-  ~7 blocks in heap block record 2 of 5
-  ~-11,968 bytes (~-12,016 requested / ~48 slop)
-  Individual block sizes: -15,360; 2,048; 512 x 2; 128; ~-127; 64 x 4; ~63
+  7 blocks in heap block record 2 of 5
+  -11,968 bytes (-12,016 requested / 48 slop)
+  Individual block sizes: -15,360; 2,048; 512 x 2; 128; -127; 64 x 4; 63
   170.02% of the heap (-62.74% cumulative)
   -271.01% of unreported (100.00% cumulative)
   Allocated at {
@@ -85,7 +83,7 @@ Unreported {
   -0.00% of the heap (-62.74% cumulative)
   0.00% of unreported (100.00% cumulative)
   Allocated at {
-    #01: G (G.cpp:99)
+    #01: (no stack trace recorded due to --stacks=partial)
   }
 }
 
@@ -106,8 +104,8 @@ Once-reported {
 }
 
 Once-reported {
-  ~-1 blocks in heap block record 2 of 2
-  ~-127 bytes (~-151 requested / ~24 slop)
+  -1 blocks in heap block record 2 of 2
+  -127 bytes (-151 requested / 24 slop)
   1.80% of the heap (147.28% cumulative)
   1.23% of once-reported (100.00% cumulative)
   Allocated at {
@@ -121,9 +119,9 @@ Once-reported {
 #-----------------------------------------------------------------
 
 Summary {
-  Total:               ~-7,039 bytes (100.00%) in      ~4 blocks (100.00%)
-  Unreported:           ~4,416 bytes (-62.74%) in      ~9 blocks (225.00%)
-  Once-reported:      ~-10,367 bytes (147.28%) in     ~-4 blocks (-100.00%)
-  Twice-reported:      ~-1,088 bytes ( 15.46%) in     ~-1 blocks (-25.00%)
+  Total:                -7,039 bytes (100.00%) in       4 blocks (100.00%)
+  Unreported:            4,416 bytes (-62.74%) in       9 blocks (225.00%)
+  Once-reported:       -10,367 bytes (147.28%) in      -4 blocks (-100.00%)
+  Twice-reported:       -1,088 bytes ( 15.46%) in      -1 blocks (-25.00%)
 }
 

@@ -209,6 +209,12 @@ var AboutConfig = {
       return new Pref(aPref);
     }, this);
 
+    // Support filtering about:config via a ?filter=<string> param
+    let match = /[?&]filter=([^&]+)/i.exec(window.location.href);
+    if (match) {
+      this.filterInput.value = decodeURIComponent(match[1]);
+    }
+
     // Display the current prefs list (retains searchFilter value)
     this.bufferFilterInput();
 

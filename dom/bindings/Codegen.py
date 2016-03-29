@@ -440,7 +440,7 @@ class CGDOMJSClass(CGThing):
 
         return fill(
             """
-            static const DOMJSClass Class = {
+            static const DOMJSClass sClass = {
               { "${name}",
                 ${flags},
                 ${addProperty}, /* addProperty */
@@ -507,7 +507,7 @@ class CGDOMProxyJSClass(CGThing):
         objectMovedHook = OBJECT_MOVED_HOOK_NAME if self.descriptor.wrapperCache else 'nullptr'
         return fill(
             """
-            static const DOMJSClass Class = {
+            static const DOMJSClass sClass = {
               PROXY_CLASS_WITH_EXT("${name}",
                                    ${flags},
                                    PROXY_MAKE_EXT(false,   /* isWrappedNative */
@@ -586,7 +586,7 @@ class CGPrototypeJSClass(CGThing):
         type = "eGlobalInterfacePrototype" if self.descriptor.isGlobal() else "eInterfacePrototype"
         return fill(
             """
-            static const DOMIfaceAndProtoJSClass PrototypeClass = {
+            static const DOMIfaceAndProtoJSClass sPrototypeClass = {
               {
                 "${name}Prototype",
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
@@ -682,7 +682,7 @@ class CGInterfaceObjectJSClass(CGThing):
 
         return fill(
             """
-            static const DOMIfaceAndProtoJSClass InterfaceObjectClass = {
+            static const DOMIfaceAndProtoJSClass sInterfaceObjectClass = {
               {
                 "Function",
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
@@ -1527,7 +1527,7 @@ class CGGetJSClassMethod(CGAbstractMethod):
                                   [])
 
     def definition_body(self):
-        return "return Class.ToJSClass();\n"
+        return "return sClass.ToJSClass();\n"
 
 
 class CGAddPropertyHook(CGAbstractClassHook):
@@ -2852,7 +2852,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             namedConstructors = "nullptr"
 
         if needInterfacePrototypeObject:
-            protoClass = "&PrototypeClass.mBase"
+            protoClass = "&sPrototypeClass.mBase"
             protoCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)" % self.descriptor.name
             parentProto = "parentProto"
             getParentProto = CGGeneric(getParentProto)
@@ -2863,7 +2863,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             getParentProto = None
 
         if needInterfaceObject:
-            interfaceClass = "&InterfaceObjectClass.mBase"
+            interfaceClass = "&sInterfaceObjectClass.mBase"
             interfaceCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(constructors::id::%s)" % self.descriptor.name
         else:
             # We don't have slots to store the named constructors.
@@ -2996,7 +2996,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 holderClass = "nullptr"
                 holderProto = "nullptr"
             else:
-                holderClass = "Class.ToJSClass()"
+                holderClass = "sClass.ToJSClass()"
                 holderProto = "*protoCache"
             createUnforgeableHolder = CGGeneric(fill(
                 """
@@ -3263,7 +3263,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
                 if (!interfaceObject) {
                   return nullptr;
                 }
-                for (unsigned slot = DOM_INTERFACE_SLOTS_BASE; slot < JSCLASS_RESERVED_SLOTS(&InterfaceObjectClass.mBase); ++slot) {
+                for (unsigned slot = DOM_INTERFACE_SLOTS_BASE; slot < JSCLASS_RESERVED_SLOTS(&sInterfaceObjectClass.mBase); ++slot) {
                   JSObject* constructor = &js::GetReservedSlot(interfaceObject, slot).toObject();
                   if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == JSID_TO_STRING(id)) {
                     return constructor;
@@ -3362,7 +3362,7 @@ def CreateBindingJSObject(descriptor, properties):
     if descriptor.proxy:
         create = dedent(
             """
-            creator.CreateProxyObject(aCx, &Class.mBase, DOMProxyHandler::getInstance(),
+            creator.CreateProxyObject(aCx, &sClass.mBase, DOMProxyHandler::getInstance(),
                                       proto, aObject, aReflector);
             if (!aReflector) {
               return false;
@@ -3378,7 +3378,7 @@ def CreateBindingJSObject(descriptor, properties):
     else:
         create = dedent(
             """
-            creator.CreateObject(aCx, Class.ToJSClass(), proto, aObject, aReflector);
+            creator.CreateObject(aCx, sClass.ToJSClass(), proto, aObject, aReflector);
             if (!aReflector) {
               return false;
             }
@@ -3786,7 +3786,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
               CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
-                                             Class.ToJSClass(),
+                                             sClass.ToJSClass(),
                                              aOptions,
                                              aPrincipal,
                                              aInitStandardClasses,

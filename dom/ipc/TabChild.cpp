@@ -2351,6 +2351,20 @@ TabChild::RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
 }
 
 bool
+TabChild::RecvSetUseGlobalHistory(const bool& aUse)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  MOZ_ASSERT(docShell);
+
+  nsresult rv = docShell->SetUseGlobalHistory(aUse);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to set UseGlobalHistory on TabChild docShell");
+  }
+
+  return true;
+}
+
+bool
 TabChild::RecvDestroy()
 {
   MOZ_ASSERT(mDestroyed == false);
@@ -2399,7 +2413,7 @@ TabChild::RecvDestroy()
   // Bounce through the event loop once to allow any delayed teardown runnables
   // that were just generated to have a chance to run.
   nsCOMPtr<nsIRunnable> deleteRunnable = new DelayedDeleteRunnable(this);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(deleteRunnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(deleteRunnable));
 
   return true;
 }

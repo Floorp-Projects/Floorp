@@ -388,7 +388,7 @@ public:
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     MOZ_ASSERT(os);
     if (os) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->AddObserver(this, TOPIC_PROFILE_CHANGE, false)));
+      MOZ_ALWAYS_SUCCEEDS(os->AddObserver(this, TOPIC_PROFILE_CHANGE, false));
     }
     mSpinner = new WaitForTopicSpinner(TOPIC_PLACES_CONNECTION_CLOSED);
   }
@@ -401,7 +401,7 @@ public:
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     MOZ_ASSERT(os);
     if (os) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->RemoveObserver(this, aTopic)));
+      MOZ_ALWAYS_SUCCEEDS(os->RemoveObserver(this, aTopic));
     }
 
     mSpinner->Spin();

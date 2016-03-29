@@ -86,6 +86,31 @@ struct nsID
   //@}
 };
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
+/**
+ * A stack helper class to convert a nsID to a string.  Useful
+ * for printing nsIDs.  For example:
+ *   nsID aID = ...;
+ *   printf("%s", nsIDToCString(aID).get());
+ */
+class nsIDToCString
+{
+public:
+  explicit nsIDToCString(const nsID& aID)
+  {
+    aID.ToProvidedString(mStringBytes);
+  }
+
+  const char *get() const
+  {
+    return mStringBytes;
+  }
+
+protected:
+  char mStringBytes[NSID_LENGTH];
+};
+#endif
+
 /*
  * Class IDs
  */

@@ -123,12 +123,12 @@ GeckoMediaPluginServiceParent::Init()
 
   nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
   MOZ_ASSERT(obsService);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "profile-change-teardown", false)));
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "last-pb-context-exited", false)));
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "browser:purge-session-history", false)));
+  MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(this, "profile-change-teardown", false));
+  MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(this, "last-pb-context-exited", false));
+  MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(this, "browser:purge-session-history", false));
 
 #ifdef DEBUG
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "mediakeys-request", false)));
+  MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(this, "mediakeys-request", false));
 #endif
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);

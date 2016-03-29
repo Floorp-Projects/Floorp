@@ -41,7 +41,7 @@ PrincipalVerifier::CreateAndDispatch(Listener* aListener,
                                                                aActor,
                                                                aPrincipalInfo);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(verifier)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(verifier));
 
   return verifier.forget();
 }
