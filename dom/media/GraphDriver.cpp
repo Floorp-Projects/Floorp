@@ -7,6 +7,7 @@
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/unused.h"
 #include "CubebUtils.h"
 
 #ifdef XP_MACOSX
@@ -224,7 +225,7 @@ void
 ThreadedDriver::Start()
 {
   LIFECYCLE_LOG("Starting thread for a SystemClockDriver  %p\n", mGraphImpl);
-  NS_WARN_IF(mThread);
+  Unused << NS_WARN_IF(mThread);
   if (!mThread) { // Ensure we haven't already started it
     nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
     // Note: mThread may be null during event->Run() if we pass to NewNamedThread!  See AudioInitTask
