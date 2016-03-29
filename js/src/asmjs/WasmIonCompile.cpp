@@ -1351,17 +1351,29 @@ class FunctionCompiler
 
         MBasicBlock* join = nullptr;
         MControlInstruction* ins = patches[0].ins;
-        if (!newBlock(ins->block(), &join))
+        MBasicBlock* pred = ins->block();
+        if (!newBlock(pred, &join))
             return false;
 
+        pred->mark();
         ins->replaceSuccessor(patches[0].index, join);
 
         for (size_t i = 1; i < patches.length(); i++) {
             ins = patches[i].ins;
-            if (!join->addPredecessor(alloc(), ins->block()))
-                return false;
+
+            pred = ins->block();
+            if (!pred->isMarked()) {
+                if (!join->addPredecessor(alloc(), pred))
+                    return false;
+                pred->mark();
+            }
+
             ins->replaceSuccessor(patches[i].index, join);
         }
+
+        MOZ_ASSERT_IF(curBlock_, !curBlock_->isMarked());
+        for (uint32_t i = 0; i < join->numPredecessors(); i++)
+            join->getPredecessor(i)->unmark();
 
         if (curBlock_ && !goToExistingBlock(curBlock_, join))
             return false;
