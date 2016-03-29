@@ -821,7 +821,7 @@ FileHandleThreadPool::AssertIsOnOwningThread() const
   MOZ_ASSERT(mOwningThread);
 
   bool current;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->IsOnCurrentThread(&current));
   MOZ_ASSERT(current);
 }
 
@@ -991,7 +991,7 @@ FileHandleThreadPool::Cleanup()
   MOZ_ASSERT(!mShutdownComplete);
   MOZ_ASSERT(!mDirectoryInfos.Count());
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mThreadPool->Shutdown()));
+  MOZ_ALWAYS_SUCCEEDS(mThreadPool->Shutdown());
 
   if (!mCompleteCallbacks.IsEmpty()) {
     // Run all callbacks manually now.
@@ -1012,7 +1012,7 @@ FileHandleThreadPool::Cleanup()
     nsIThread* currentThread = NS_GetCurrentThread();
     MOZ_ASSERT(currentThread);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProcessPendingEvents(currentThread)));
+    MOZ_ALWAYS_SUCCEEDS(NS_ProcessPendingEvents(currentThread));
   }
 
   mShutdownComplete = true;
@@ -1135,7 +1135,7 @@ FileHandleQueue::ProcessQueue()
   nsCOMPtr<nsIThreadPool> threadPool = mOwningFileHandleThreadPool->mThreadPool;
   MOZ_ASSERT(threadPool);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(threadPool->Dispatch(this, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 NS_IMETHODIMP
@@ -1156,8 +1156,8 @@ FileHandleQueue::Run()
 
     nsCOMPtr<nsIEventTarget> backgroundThread = mCurrentOp->OwningThread();
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      backgroundThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(
+      backgroundThread->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
@@ -2004,7 +2004,7 @@ FinishOp::RunOnThreadPool()
   nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(stream);
   MOZ_ASSERT(inputStream);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(inputStream->Close()));
+  MOZ_ALWAYS_SUCCEEDS(inputStream->Close());
 
   stream = nullptr;
 }
@@ -2256,9 +2256,9 @@ CopyFileHandleOp::DoFileWork(FileHandle* aFileHandle)
   MOZ_ASSERT(mOffset == mSize);
 
   if (mRead) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(outputStream->Close()));
+    MOZ_ALWAYS_SUCCEEDS(outputStream->Close());
   } else {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(inputStream->Close()));
+    MOZ_ALWAYS_SUCCEEDS(inputStream->Close());
   }
 
   return NS_OK;

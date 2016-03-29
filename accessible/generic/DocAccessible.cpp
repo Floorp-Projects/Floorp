@@ -1349,7 +1349,7 @@ DocAccessible::ContentInserted(nsIContent* aContainerNode,
     // Update the whole tree of this document accessible when the container is
     // null (document element is inserted or removed).
     Accessible* container = aContainerNode ?
-      GetAccessibleOrContainer(aContainerNode) : this;
+      AccessibleOrTrueContainer(aContainerNode) : this;
     if (container) {
       // Ignore notification if the container node is no longer in the DOM tree.
       mNotificationController->ScheduleContentInsertion(container,
@@ -1669,51 +1669,192 @@ DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
   return false;
 }
 
-void
-DocAccessible::ProcessContentInserted(Accessible* aContainer,
-                                      const nsTArray<nsCOMPtr<nsIContent> >* aInsertedContent)
+/**
+ * Content insertion helper.
+ */
+class InsertIterator final
 {
-  // Process insertions if the container accessible is still in tree.
-  if (!HasAccessible(aContainer->GetNode()))
-    return;
+public:
+  InsertIterator(Accessible* aContext,
+                 const nsTArray<nsCOMPtr<nsIContent> >* aNodes) :
+    mChild(nullptr), mChildBefore(nullptr), mWalker(aContext),
+    mStopNode(nullptr), mNodes(aNodes), mNodesIdx(0)
+  {
+    MOZ_ASSERT(aContext, "No context");
+    MOZ_ASSERT(aNodes, "No nodes to search for accessible elements");
+    MOZ_COUNT_CTOR(InsertIterator);
+  }
+  ~InsertIterator() { MOZ_COUNT_DTOR(InsertIterator); }
 
-  for (uint32_t idx = 0; idx < aInsertedContent->Length(); idx++) {
+  Accessible* Context() const { return mWalker.Context(); }
+  Accessible* Child() const { return mChild; }
+  Accessible* ChildBefore() const { return mChildBefore; }
+  DocAccessible* Document() const { return mWalker.Document(); }
+
+  /**
+   * Iterates to a next accessible within the inserted content.
+   */
+  bool Next();
+
+private:
+  Accessible* mChild;
+  Accessible* mChildBefore;
+  TreeWalker mWalker;
+  nsIContent* mStopNode;
+
+  const nsTArray<nsCOMPtr<nsIContent> >* mNodes;
+  uint32_t mNodesIdx;
+};
+
+bool
+InsertIterator::Next()
+{
+  if (mNodesIdx > 0) {
+    Accessible* nextChild = mWalker.Next(mStopNode);
+    if (nextChild) {
+      mChildBefore = mChild;
+      mChild = nextChild;
+      return true;
+    }
+  }
+
+  while (mNodesIdx < mNodes->Length()) {
+    // Ignore nodes that are not contained by the container anymore.
+
     // The container might be changed, for example, because of the subsequent
     // overlapping content insertion (i.e. other content was inserted between
     // this inserted content and its container or the content was reinserted
     // into different container of unrelated part of tree). To avoid a double
     // processing of the content insertion ignore this insertion notification.
-    // Note, the inserted content might be not in tree at all at this point what
-    // means there's no container. Ignore the insertion too.
-
-    Accessible* container =
-      GetContainerAccessible(aInsertedContent->ElementAt(idx));
-    if (container != aContainer)
+    // Note, the inserted content might be not in tree at all at this point
+    // what means there's no container. Ignore the insertion too.
+    nsIContent* prevNode = mNodes->SafeElementAt(mNodesIdx - 1);
+    nsIContent* node = mNodes->ElementAt(mNodesIdx++);
+    Accessible* container = Document()->AccessibleOrTrueContainer(node);
+    if (container != Context()) {
       continue;
-
-    if (container == this) {
-      // If new root content has been inserted then update it.
-      UpdateRootElIfNeeded();
-
-      // Continue to update the tree even if we don't have root content.
-      // For example, elements may be inserted under the document element while
-      // there is no HTML body element.
     }
 
     // HTML comboboxes have no-content list accessible as an intermediate
     // containing all options.
-    if (container && container->IsHTMLCombobox()) {
+    if (container->IsHTMLCombobox()) {
       container = container->FirstChild();
     }
 
-    // We have a DOM/layout change under the container accessible, and its tree
-    // might need an update. Since DOM/layout change of the element may affect
-    // on the accessibleness of adjacent elements (for example, insertion of
-    // extra HTML:body make the old body accessible) then we have to recache
-    // children of the container, and then fire show/hide events for a change.
-    UpdateTreeOnInsertion(container);
-    break;
+    if (!container->IsAcceptableChild(node)) {
+      continue;
+    }
+
+#ifdef A11Y_LOG
+    logging::TreeInfo("traversing an inserted node", logging::eVerbose,
+                      "container", container, "node", node);
+#endif
+
+    // If inserted nodes are siblings then just move the walker next.
+    if (prevNode && prevNode->GetNextSibling() == node) {
+      mStopNode = node;
+      Accessible* nextChild = mWalker.Next(mStopNode);
+      if (nextChild) {
+        mChildBefore = mChild;
+        mChild = nextChild;
+        return true;
+      }
+    }
+    else if (mWalker.Seek(node)) {
+      mStopNode = node;
+      mChildBefore = mWalker.Prev();
+      mChild = mWalker.Next(mStopNode);
+      if (mChild) {
+        return true;
+      }
+    }
   }
+
+  return false;
+}
+
+void
+DocAccessible::ProcessContentInserted(Accessible* aContainer,
+                                      const nsTArray<nsCOMPtr<nsIContent> >* aNodes)
+{
+  // Process insertions if the container accessible is still in tree.
+  if (!HasAccessible(aContainer->GetNode()))
+    return;
+
+  // If new root content has been inserted then update it.
+  if (aContainer == this) {
+    UpdateRootElIfNeeded();
+  }
+
+  uint32_t updateFlags = 0;
+  AutoTreeMutation mut(aContainer);
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("children before insertion", logging::eVerbose,
+                    aContainer);
+#endif
+
+  InsertIterator iter(aContainer, aNodes);
+  while (iter.Next()) {
+    Accessible* parent = iter.Child()->Parent();
+    if (parent) {
+      if (parent != aContainer) {
+#ifdef A11Y_LOG
+        logging::TreeInfo("stealing accessible", 0,
+                          "old parent", parent, "new parent",
+                          aContainer, "child", iter.Child(), nullptr);
+#endif
+        MOZ_ASSERT_UNREACHABLE("stealing accessible");
+        continue;
+      }
+
+#ifdef A11Y_LOG
+      logging::TreeInfo("binding to same parent", logging::eVerbose,
+                        "parent", aContainer, "child", iter.Child(), nullptr);
+#endif
+      continue;
+    }
+
+    if (aContainer->InsertAfter(iter.Child(), iter.ChildBefore())) {
+#ifdef A11Y_LOG
+      logging::TreeInfo("accessible was inserted", 0,
+                        "container", aContainer, "child", iter.Child(), nullptr);
+#endif
+
+      updateFlags |= UpdateTreeInternal(iter.Child(), true, reorderEvent);
+      continue;
+    }
+
+    MOZ_ASSERT_UNREACHABLE("accessible was rejected");
+  }
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("children after insertion", logging::eVerbose,
+                    aContainer);
+#endif
+
+  // Content insertion did not cause an accessible tree change.
+  if (updateFlags == eNoAccessible) {
+    return;
+  }
+
+  // Check to see if change occurred inside an alert, and fire an EVENT_ALERT
+  // if it did.
+  if (!(updateFlags & eAlertAccessible) &&
+      (aContainer->IsAlert() || aContainer->IsInsideAlert())) {
+    Accessible* ancestor = aContainer;
+    do {
+      if (ancestor->IsAlert()) {
+        FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, ancestor);
+        break;
+      }
+    }
+    while ((ancestor = ancestor->Parent()));
+  }
+
+  MaybeNotifyOfValueChange(aContainer);
+  FireDelayedEvent(reorderEvent);
 }
 
 void
@@ -2261,4 +2402,3 @@ DocAccessible::IsLoadEventTarget() const
   // It's content (not chrome) root document.
   return (treeItem->ItemType() == nsIDocShellTreeItem::typeContent);
 }
-

@@ -265,7 +265,7 @@ public:
     nsString eventType;
 
     if (aEvent) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aEvent->GetType(eventType)));
+      MOZ_ALWAYS_SUCCEEDS(aEvent->GetType(eventType));
     } else {
       eventType = nsDependentString(aDefault);
     }

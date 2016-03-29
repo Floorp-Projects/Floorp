@@ -116,7 +116,7 @@ public:
 protected:
   // WorkerFeature implementation.
 
-  bool Notify(JSContext* aCx, Status aStatus) override;
+  bool Notify(Status aStatus) override;
 
 private:
   ~DataStoreChangeEventProxy() {};

@@ -6,14 +6,16 @@
 
 this.EXPORTED_SYMBOLS = ["RemoteFinder", "RemoteFinderListener"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
+const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Geometry.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "GetClipboardSearchString",
   () => Cu.import("resource://gre/modules/Finder.jsm", {}).GetClipboardSearchString
+);
+XPCOMUtils.defineLazyGetter(this, "Rect",
+  () => Cu.import("resource://gre/modules/Geometry.jsm", {}).Rect
 );
 
 function RemoteFinder(browser) {
@@ -62,6 +64,10 @@ RemoteFinder.prototype = {
     switch (aMessage.name) {
       case "Finder:Result":
         this._searchString = aMessage.data.searchString;
+        // The rect stops being a Geometry.jsm:Rect over IPC.
+        if (aMessage.data.rect) {
+          aMessage.data.rect = Rect.fromRect(aMessage.data.rect);
+        }
         callback = "onFindResult";
         params = [ aMessage.data ];
         break;

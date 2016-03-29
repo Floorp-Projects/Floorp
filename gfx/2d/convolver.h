@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "base/basictypes.h"
-#include "base/cpu.h"
 #include "mozilla/Assertions.h"
 #include "skia/include/core/SkTypes.h"
 

@@ -83,11 +83,12 @@ DoSNISocketConfigBySubjectCN(PRFileDesc* aFd, const SECItem* aSrvNameArr,
                              uint32_t aSrvNameArrSize)
 {
   for (uint32_t i = 0; i < aSrvNameArrSize; i++) {
-    ScopedPORTString name((char*)PORT_ZAlloc(aSrvNameArr[i].len + 1));
+    UniquePORTString name(
+      static_cast<char*>(PORT_ZAlloc(aSrvNameArr[i].len + 1)));
     if (name) {
-      PORT_Memcpy(name, aSrvNameArr[i].data, aSrvNameArr[i].len);
-      if (SECSuccess == ConfigSecureServerWithNamedCert(aFd, name,
-                                                        nullptr, nullptr)) {
+      PORT_Memcpy(name.get(), aSrvNameArr[i].data, aSrvNameArr[i].len);
+      if (ConfigSecureServerWithNamedCert(aFd, name.get(), nullptr, nullptr)
+            == SECSuccess) {
         return 0;
       }
     }

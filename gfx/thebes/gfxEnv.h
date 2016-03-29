@@ -48,6 +48,10 @@ public:
   // Disabling the crash guard in DriverCrashGuard
   DECL_GFX_ENV_ONCE("MOZ_DISABLE_CRASH_GUARD", DisableCrashGuard);
 
+  // We force present to work around some Windows bugs - disable that if this
+  // environment variable is set.
+  DECL_GFX_ENV_ONCE("MOZ_DISABLE_FORCE_PRESENT", DisableForcePresent);
+
   // Together with paint dumping, only when MOZ_DUMP_PAINTING is defined.
   // Dumping compositor textures is broken pretty badly. For example,
   // on Linux it crashes TextureHost::GetAsSurface() returns null.

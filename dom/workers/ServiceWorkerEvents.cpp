@@ -386,7 +386,7 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
                                data->mScriptSpec,
                                data->mResponseURLSpec);
   }
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(event)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event));
 }
 
 namespace {
@@ -841,8 +841,7 @@ public:
 
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &WaitUntilHandler::ReportOnMainThread);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      NS_DispatchToMainThread(runnable.forget())));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
   }
 
   void

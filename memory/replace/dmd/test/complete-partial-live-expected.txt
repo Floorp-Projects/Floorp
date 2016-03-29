@@ -1,0 +1,56 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o complete-partial-live-actual.txt complete-partial-live.json
+
+Invocation {
+  $DMD = '--mode=live'
+  Mode = 'live'
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  9,539 blocks in heap block record 1 of 4
+  9,767,936 bytes (9,767,936 requested / 0 slop)
+  Individual block sizes: 1,024 x 9,539
+  84.21% of the heap (84.21% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  17,053 blocks in heap block record 2 of 4
+  1,426,800 bytes (1,426,800 requested / 0 slop)
+  Individual block sizes: 1,024 x 461; 128 x 6,850; 8 x 9,742
+  12.30% of the heap (96.51% cumulative)
+  Allocated at {
+    #01: (no stack trace recorded due to --stacks=partial)
+  }
+}
+
+Live {
+  3,150 blocks in heap block record 3 of 4
+  403,200 bytes (403,200 requested / 0 slop)
+  Individual block sizes: 128 x 3,150
+  3.48% of the heap (99.98% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  258 blocks in heap block record 4 of 4
+  2,064 bytes (2,064 requested / 0 slop)
+  Individual block sizes: 8 x 258
+  0.02% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 11,600,000 bytes in 30,000 blocks
+}
+

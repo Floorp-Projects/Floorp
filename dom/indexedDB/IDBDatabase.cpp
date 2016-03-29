@@ -279,8 +279,8 @@ IDBDatabase::CloseInternal()
         obsSvc->RemoveObserver(mObserver, kCycleCollectionObserverTopic);
         obsSvc->RemoveObserver(mObserver, kMemoryPressureObserverTopic);
 
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-          obsSvc->RemoveObserver(mObserver, kWindowObserverTopic)));
+        MOZ_ALWAYS_SUCCEEDS(
+          obsSvc->RemoveObserver(mObserver, kWindowObserverTopic));
       }
 
       mObserver = nullptr;
@@ -1042,7 +1042,7 @@ IDBDatabase::DelayedMaybeExpireFileActors()
     cancelable.swap(runnable);
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 }
 
 nsresult
@@ -1318,7 +1318,7 @@ Observer::Observe(nsISupports* aSubject,
       MOZ_ASSERT(supportsInt);
 
       uint64_t windowId;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(supportsInt->GetData(&windowId)));
+      MOZ_ALWAYS_SUCCEEDS(supportsInt->GetData(&windowId));
 
       if (windowId == mWindowId) {
         RefPtr<IDBDatabase> database = mWeakDatabase;

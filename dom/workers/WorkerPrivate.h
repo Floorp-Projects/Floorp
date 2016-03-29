@@ -1066,10 +1066,10 @@ public:
   ModifyBusyCountFromWorker(bool aIncrease);
 
   bool
-  AddChildWorker(JSContext* aCx, ParentType* aChildWorker);
+  AddChildWorker(ParentType* aChildWorker);
 
   void
-  RemoveChildWorker(JSContext* aCx, ParentType* aChildWorker);
+  RemoveChildWorker(ParentType* aChildWorker);
 
   bool
   AddFeature(WorkerFeature* aFeature);

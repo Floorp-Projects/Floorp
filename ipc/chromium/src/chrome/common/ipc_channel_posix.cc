@@ -141,110 +141,6 @@ int ChannelNameToClientFD(const std::string& channel_id) {
 //------------------------------------------------------------------------------
 const size_t kMaxPipeNameLength = sizeof(((sockaddr_un*)0)->sun_path);
 
-// Creates a Fifo with the specified name ready to listen on.
-bool CreateServerFifo(const std::string& pipe_name, int* server_listen_fd) {
-  DCHECK(server_listen_fd);
-  DCHECK_GT(pipe_name.length(), 0u);
-  DCHECK_LT(pipe_name.length(), kMaxPipeNameLength);
-
-  if (pipe_name.length() == 0 || pipe_name.length() >= kMaxPipeNameLength) {
-    return false;
-  }
-
-  // Create socket.
-  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (fd < 0) {
-    return false;
-  }
-
-  // Make socket non-blocking
-  if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
-    HANDLE_EINTR(close(fd));
-    return false;
-  }
-
-  // Delete any old FS instances.
-  unlink(pipe_name.c_str());
-
-  // Create unix_addr structure
-  struct sockaddr_un unix_addr;
-  memset(&unix_addr, 0, sizeof(unix_addr));
-  unix_addr.sun_family = AF_UNIX;
-  snprintf(unix_addr.sun_path, kMaxPipeNameLength, "%s", pipe_name.c_str());
-  size_t unix_addr_len = offsetof(struct sockaddr_un, sun_path) +
-      strlen(unix_addr.sun_path) + 1;
-
-  // Bind the socket.
-  if (bind(fd, reinterpret_cast<const sockaddr*>(&unix_addr),
-           unix_addr_len) != 0) {
-    HANDLE_EINTR(close(fd));
-    return false;
-  }
-
-  // Start listening on the socket.
-  const int listen_queue_length = 1;
-  if (listen(fd, listen_queue_length) != 0) {
-    HANDLE_EINTR(close(fd));
-    return false;
-  }
-
-  *server_listen_fd = fd;
-  return true;
-}
-
-// Accept a connection on a fifo.
-bool ServerAcceptFifoConnection(int server_listen_fd, int* server_socket) {
-  DCHECK(server_socket);
-
-  int accept_fd = HANDLE_EINTR(accept(server_listen_fd, NULL, 0));
-  if (accept_fd < 0)
-    return false;
-  if (fcntl(accept_fd, F_SETFL, O_NONBLOCK) == -1) {
-    HANDLE_EINTR(close(accept_fd));
-    return false;
-  }
-
-  *server_socket = accept_fd;
-  return true;
-}
-
-bool ClientConnectToFifo(const std::string &pipe_name, int* client_socket) {
-  DCHECK(client_socket);
-  DCHECK_LT(pipe_name.length(), kMaxPipeNameLength);
-
-  // Create socket.
-  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (fd < 0) {
-    CHROMIUM_LOG(ERROR) << "fd is invalid";
-    return false;
-  }
-
-  // Make socket non-blocking
-  if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
-    CHROMIUM_LOG(ERROR) << "fcntl failed";
-    HANDLE_EINTR(close(fd));
-    return false;
-  }
-
-  // Create server side of socket.
-  struct sockaddr_un  server_unix_addr;
-  memset(&server_unix_addr, 0, sizeof(server_unix_addr));
-  server_unix_addr.sun_family = AF_UNIX;
-  snprintf(server_unix_addr.sun_path, kMaxPipeNameLength, "%s",
-           pipe_name.c_str());
-  size_t server_unix_addr_len = offsetof(struct sockaddr_un, sun_path) +
-      strlen(server_unix_addr.sun_path) + 1;
-
-  if (HANDLE_EINTR(connect(fd, reinterpret_cast<sockaddr*>(&server_unix_addr),
-                           server_unix_addr_len)) != 0) {
-    HANDLE_EINTR(close(fd));
-    return false;
-  }
-
-  *client_socket = fd;
-  return true;
-}
-
 bool SetCloseOnExec(int fd) {
   int flags = fcntl(fd, F_GETFD);
   if (flags == -1)
@@ -264,7 +160,6 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
                                   Listener* listener)
     : factory_(this) {
   Init(mode, listener);
-  uses_fifo_ = CommandLine::ForCurrentProcess()->HasSwitch(switches::kIPCUseFIFO);
 
   if (!CreatePipe(channel_id, mode)) {
     // The pipe may have been closed already.
@@ -289,7 +184,6 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   mode_ = mode;
   is_blocked_on_write_ = false;
   message_send_bytes_written_ = 0;
-  uses_fifo_ = false;
   server_listen_pipe_ = -1;
   pipe_ = -1;
   client_pipe_ = -1;
@@ -307,56 +201,38 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
                                       Mode mode) {
   DCHECK(server_listen_pipe_ == -1 && pipe_ == -1);
 
-  if (uses_fifo_) {
-    // This only happens in unit tests; see the comment above PipeMap.
-    // TODO(playmobil): We shouldn't need to create fifos on disk.
-    // TODO(playmobil): If we do, they should be in the user data directory.
-    // TODO(playmobil): Cleanup any stale fifos.
-    pipe_name_ = "/var/tmp/chrome_" + WideToASCII(channel_id);
-    if (mode == MODE_SERVER) {
-      if (!CreateServerFifo(pipe_name_, &server_listen_pipe_)) {
-        return false;
-      }
-    } else {
-      if (!ClientConnectToFifo(pipe_name_, &pipe_)) {
-        return false;
-      }
-      waiting_connect_ = false;
+  // socketpair()
+  pipe_name_ = WideToASCII(channel_id);
+  if (mode == MODE_SERVER) {
+    int pipe_fds[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, pipe_fds) != 0) {
+      return false;
+    }
+    // Set both ends to be non-blocking.
+    if (fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK) == -1 ||
+	fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
+      HANDLE_EINTR(close(pipe_fds[0]));
+      HANDLE_EINTR(close(pipe_fds[1]));
+      return false;
+    }
+
+    if (!SetCloseOnExec(pipe_fds[0]) ||
+	!SetCloseOnExec(pipe_fds[1])) {
+      HANDLE_EINTR(close(pipe_fds[0]));
+      HANDLE_EINTR(close(pipe_fds[1]));
+      return false;
+    }
+
+    pipe_ = pipe_fds[0];
+    client_pipe_ = pipe_fds[1];
+
+    if (pipe_name_.length()) {
+      Singleton<PipeMap>()->Insert(pipe_name_, client_pipe_);
     }
   } else {
-    // socketpair()
-    pipe_name_ = WideToASCII(channel_id);
-    if (mode == MODE_SERVER) {
-      int pipe_fds[2];
-      if (socketpair(AF_UNIX, SOCK_STREAM, 0, pipe_fds) != 0) {
-        return false;
-      }
-      // Set both ends to be non-blocking.
-      if (fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK) == -1 ||
-          fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
-        HANDLE_EINTR(close(pipe_fds[0]));
-        HANDLE_EINTR(close(pipe_fds[1]));
-        return false;
-      }
-
-      if (!SetCloseOnExec(pipe_fds[0]) ||
-          !SetCloseOnExec(pipe_fds[1])) {
-        HANDLE_EINTR(close(pipe_fds[0]));
-        HANDLE_EINTR(close(pipe_fds[1]));
-        return false;
-      }
-
-      pipe_ = pipe_fds[0];
-      client_pipe_ = pipe_fds[1];
-
-      if (pipe_name_.length()) {
-        Singleton<PipeMap>()->Insert(pipe_name_, client_pipe_);
-      }
-    } else {
-      pipe_ = ChannelNameToClientFD(pipe_name_);
-      DCHECK(pipe_ > 0);
-      waiting_connect_ = false;
-    }
+    pipe_ = ChannelNameToClientFD(pipe_name_);
+    DCHECK(pipe_ > 0);
+    waiting_connect_ = false;
   }
 
   // Create the Hello message to be sent when Connect is called
@@ -402,28 +278,17 @@ void Channel::ChannelImpl::ClearAndShrinkInputOverflowBuf()
 }
 
 bool Channel::ChannelImpl::Connect() {
-  if (mode_ == MODE_SERVER && uses_fifo_) {
-    if (server_listen_pipe_ == -1) {
-      return false;
-    }
-    MessageLoopForIO::current()->WatchFileDescriptor(
-        server_listen_pipe_,
-        true,
-        MessageLoopForIO::WATCH_READ,
-        &server_listen_connection_watcher_,
-        this);
-  } else {
-    if (pipe_ == -1) {
-      return false;
-    }
-    MessageLoopForIO::current()->WatchFileDescriptor(
-        pipe_,
-        true,
-        MessageLoopForIO::WATCH_READ,
-        &read_watcher_,
-        this);
-    waiting_connect_ = false;
+  if (pipe_ == -1) {
+    return false;
   }
+
+  MessageLoopForIO::current()->WatchFileDescriptor(
+      pipe_,
+      true,
+      MessageLoopForIO::WATCH_READ,
+      &read_watcher_,
+      this);
+  waiting_connect_ = false;
 
   if (!waiting_connect_)
     return ProcessOutgoingMessages();
@@ -847,32 +712,6 @@ void Channel::ChannelImpl::CloseClientFileDescriptor() {
 
 // Called by libevent when we can read from th pipe without blocking.
 void Channel::ChannelImpl::OnFileCanReadWithoutBlocking(int fd) {
-  bool send_server_hello_msg = false;
-  if (waiting_connect_ && mode_ == MODE_SERVER) {
-    // In the case of a socketpair() the server starts listening on its end
-    // of the pipe in Connect().
-    DCHECK(uses_fifo_);
-
-    if (!ServerAcceptFifoConnection(server_listen_pipe_, &pipe_)) {
-      Close();
-    }
-
-    // No need to watch the listening socket any longer since only one client
-    // can connect.  So unregister with libevent.
-    server_listen_connection_watcher_.StopWatchingFileDescriptor();
-
-    // Start watching our end of the socket.
-    MessageLoopForIO::current()->WatchFileDescriptor(
-        pipe_,
-        true,
-        MessageLoopForIO::WATCH_READ,
-        &read_watcher_,
-        this);
-
-    waiting_connect_ = false;
-    send_server_hello_msg = true;
-  }
-
   if (!waiting_connect_ && fd == pipe_) {
     if (!ProcessIncomingMessages()) {
       Close();
@@ -880,16 +719,6 @@ void Channel::ChannelImpl::OnFileCanReadWithoutBlocking(int fd) {
       // The OnChannelError() call may delete this, so we need to exit now.
       return;
     }
-  }
-
-  // If we're a server and handshaking, then we want to make sure that we
-  // only send our handshake message after we've processed the client's.
-  // This gives us a chance to kill the client if the incoming handshake
-  // is invalid.
-  if (send_server_hello_msg) {
-    // This should be our first write so there's no chance we can block here...
-    DCHECK(is_blocked_on_write_ == false);
-    ProcessOutgoingMessages();
   }
 }
 
@@ -959,11 +788,6 @@ void Channel::ChannelImpl::Close() {
     Singleton<PipeMap>()->Remove(pipe_name_);
     HANDLE_EINTR(close(client_pipe_));
     client_pipe_ = -1;
-  }
-
-  if (uses_fifo_) {
-    // Unlink the FIFO
-    unlink(pipe_name_.c_str());
   }
 
   while (!output_queue_.empty()) {

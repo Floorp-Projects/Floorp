@@ -41,8 +41,9 @@ function run_test() {
   let spec2 = "http://bar.com/bar.html";
   let uri1 = NetUtil.newURI(spec1);
   let uri2 = NetUtil.newURI(spec2);
-  let channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true});
-  let channel2 = NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true});
+  const contentPolicyType = Ci.nsIContentPolicy.TYPE_DOCUMENT;
+  let channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true, contentPolicyType});
+  let channel2 = NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true, contentPolicyType});
 
   // Create some file:// URIs.
   let filespec1 = "file://foo.txt";
@@ -70,12 +71,12 @@ function run_test() {
   // hierarchy. We leave that to mochitests.
 
   // Test isThirdPartyChannel. As above, we can't test the bits that require
-  // a load context or window heirarchy. Because of that, the code assumes
-  // that these are all third-party loads.
+  // a load context or window heirarchy. Because of bug 1259873, we assume
+  // that these are not third-party.
   do_check_throws(function() { util.isThirdPartyChannel(null); },
     NS_ERROR_INVALID_ARG);
-  do_check_true(util.isThirdPartyChannel(channel1));
-  do_check_true(util.isThirdPartyChannel(channel1, uri1));
+  do_check_false(util.isThirdPartyChannel(channel1));
+  do_check_false(util.isThirdPartyChannel(channel1, uri1));
   do_check_true(util.isThirdPartyChannel(channel1, uri2));
 
   let httpchannel1 = channel1.QueryInterface(Ci.nsIHttpChannelInternal);

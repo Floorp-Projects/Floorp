@@ -106,7 +106,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mNextSibling = this;
   mPrevSibling = this;
   if (mParent) {
-    mParent->AddRef();
     mParent->AddChild(this);
 #ifdef DEBUG
     nsRuleNode *r1 = mParent->RuleNode(), *r2 = aRuleNode;
@@ -116,21 +115,11 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
       r2 = r2->GetParent();
     NS_ASSERTION(r1 == r2, "must be in the same rule tree as parent");
 #endif
+  } else {
+    mRuleNode->PresContext()->PresShell()->StyleSet()->RootStyleContextAdded();
   }
 
-  mRuleNode->AddRef();
   mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
-
-  if (!mParent) {
-    // Add as a root before ApplyStyleFixups, since ApplyStyleFixups
-    // can trigger rule tree GC.
-    nsStyleSet* styleSet =
-      mRuleNode->PresContext()->PresShell()->StyleSet()->GetAsGecko();
-    if (styleSet) {
-      styleSet->AddStyleContextRoot(this);
-    }
-  }
-
   ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
@@ -144,11 +133,10 @@ nsStyleContext::~nsStyleContext()
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
 
   nsPresContext *presContext = mRuleNode->PresContext();
-  nsStyleSet* styleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
-
-  NS_ASSERTION(!styleSet ||
-               styleSet->GetRuleTree() == mRuleNode->RuleTree() ||
-               styleSet->IsInRuleTreeReconstruct(),
+  StyleSetHandle styleSet = presContext->PresShell()->StyleSet();
+  NS_ASSERTION(!styleSet->IsGecko() ||
+               styleSet->AsGecko()->GetRuleTree() == mRuleNode->RuleTree() ||
+               styleSet->AsGecko()->IsInRuleTreeReconstruct(),
                "destroying style context from old rule tree too late");
 
 #ifdef DEBUG
@@ -169,15 +157,10 @@ nsStyleContext::~nsStyleContext()
   }
 #endif
 
-  mRuleNode->Release();
-
-  if (styleSet) {
-    styleSet->NotifyStyleContextDestroyed(this);
-  }
-
   if (mParent) {
     mParent->RemoveChild(this);
-    mParent->Release();
+  } else {
+    styleSet->RootStyleContextRemoved();
   }
 
   // Free up our data structs.
@@ -342,25 +325,18 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   MOZ_ASSERT(!aNewParent->IsStyleIfVisited());
   MOZ_ASSERT(!mStyleIfVisited || mStyleIfVisited->mParent == mParent);
 
-  nsStyleContext* oldParent = mParent;
-
-  if (oldParent->HasChildThatUsesResetStyle()) {
+  if (mParent->HasChildThatUsesResetStyle()) {
     aNewParent->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
   }
 
-  aNewParent->AddRef();
   mParent->RemoveChild(this);
   mParent = aNewParent;
   mParent->AddChild(this);
-  oldParent->Release();
 
   if (mStyleIfVisited) {
-    oldParent = mStyleIfVisited->mParent;
-    aNewParent->AddRef();
     mStyleIfVisited->mParent->RemoveChild(mStyleIfVisited);
     mStyleIfVisited->mParent = aNewParent;
     mStyleIfVisited->mParent->AddChild(mStyleIfVisited);
-    oldParent->Release();
   }
 }
 
@@ -1136,30 +1112,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   return NS_SubtractHint(hint, nsChangeHint_NeutralChange);
 }
 
-void
-nsStyleContext::Mark()
-{
-  // Mark our rule node.
-  mRuleNode->Mark();
-
-  // Mark our children (i.e., tell them to mark their rule nodes, etc.).
-  if (mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->Mark();
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  
-  if (mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->Mark();
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
-  }
-}
-
 #ifdef DEBUG
 void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 {
@@ -1600,7 +1552,7 @@ nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
 
   nsCString parent;
   if (aFirst) {
-    parent.AppendPrintf("parent=%p ", mParent);
+    parent.AppendPrintf("parent=%p ", mParent.get());
   }
 
   LOG_RESTYLE("%p(%d) %s%s%s%s",
