@@ -78,6 +78,7 @@ UNIFIED_SOURCES += [
     'testScriptObject.cpp',
     'testSetProperty.cpp',
     'testSetPropertyIgnoringNamedGetter.cpp',
+    'testSharedImmutableStringsCache.cpp',
     'testSourcePolicy.cpp',
     'testStringBuffer.cpp',
     'testStructuredClone.cpp',

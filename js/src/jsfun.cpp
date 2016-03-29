@@ -43,6 +43,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
+#include "vm/SharedImmutableStringsCache.h"
 #include "vm/StringBuffer.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
@@ -767,18 +768,23 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
 
     const char* rawSource = "() {\n}";
     size_t sourceLen = strlen(rawSource);
-    char16_t* source = InflateString(cx, rawSource, &sourceLen);
+    mozilla::UniquePtr<char16_t[], JS::FreePolicy> source(InflateString(cx, rawSource, &sourceLen));
     if (!source)
         return nullptr;
 
-    ScriptSource* ss =
-        cx->new_<ScriptSource>();
-    if (!ss) {
-        js_free(source);
+    ScriptSource* ss = cx->new_<ScriptSource>();
+    if (!ss)
+        return nullptr;
+    ScriptSourceHolder ssHolder(ss);
+
+    auto& cache = cx->runtime()->sharedImmutableStrings();
+    auto deduped = cache.getOrCreate(mozilla::Move(source), sourceLen);
+    if (!deduped) {
+        ReportOutOfMemory(cx);
         return nullptr;
     }
-    ScriptSourceHolder ssHolder(ss);
-    ss->setSource(source, sourceLen);
+    ss->setSource(mozilla::Move(*deduped));
+
     CompileOptions options(cx);
     options.setNoScriptRval(true)
            .setVersion(JSVERSION_DEFAULT);

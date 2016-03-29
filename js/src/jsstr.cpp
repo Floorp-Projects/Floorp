@@ -4747,14 +4747,31 @@ js::DuplicateString(const char* s)
     return UniqueChars(js_strdup(s));
 }
 
-UniqueTwoByteChars
-js::DuplicateString(const char16_t* s)
+UniqueChars
+js::DuplicateString(const char* s, size_t n)
 {
-    size_t n = js_strlen(s) + 1;
-    UniqueTwoByteChars ret(js_pod_malloc<char16_t>(n));
+    UniqueChars ret(js_pod_malloc<char>(n + 1));
     if (!ret)
         return nullptr;
     PodCopy(ret.get(), s, n);
+    ret[n] = 0;
+    return ret;
+}
+
+UniqueTwoByteChars
+js::DuplicateString(const char16_t* s)
+{
+    return DuplicateString(s, js_strlen(s));
+}
+
+UniqueTwoByteChars
+js::DuplicateString(const char16_t* s, size_t n)
+{
+    UniqueTwoByteChars ret(js_pod_malloc<char16_t>(n + 1));
+    if (!ret)
+        return nullptr;
+    PodCopy(ret.get(), s, n);
+    ret[n] = 0;
     return ret;
 }
 

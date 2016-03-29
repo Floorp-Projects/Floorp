@@ -453,7 +453,6 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
 
             JS::ScriptSourceInfo info;  // This zeroes all the sizes.
             ss->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &info);
-            MOZ_ASSERT(info.compressed == 0 || info.uncompressed == 0);
 
             rtStats->runtime.scriptSourceInfo.add(info);
 
@@ -926,4 +925,3 @@ AddServoSizeOf(JSRuntime *rt, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *o
 }
 
 } // namespace JS
-
