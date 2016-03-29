@@ -64,6 +64,8 @@ public class Tab {
     private SiteLogins mSiteLogins;
     private BitmapDrawable mThumbnail;
     private final int mParentId;
+    // Indicates the url was loaded from a source external to the app. This will be cleared
+    // when the user explicitly loads a new url (e.g. clicking a link is not explicit).
     private final boolean mExternal;
     private boolean mBookmark;
     private int mFaviconLoadId;
