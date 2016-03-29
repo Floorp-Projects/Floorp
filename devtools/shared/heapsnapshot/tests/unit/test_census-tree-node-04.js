@@ -70,6 +70,7 @@ function run_test() {
                 children: undefined,
                 id: 7,
                 parent: 5,
+                reportLeafIndex: 3,
               },
               {
                 name: stack2,
@@ -80,10 +81,12 @@ function run_test() {
                 children: undefined,
                 id: 6,
                 parent: 5,
+                reportLeafIndex: 2,
               }
             ],
             id: 5,
             parent: 2,
+            reportLeafIndex: undefined,
           },
           {
             name: stack4,
@@ -94,6 +97,7 @@ function run_test() {
             children: undefined,
             id: 8,
             parent: 2,
+            reportLeafIndex: 4,
           },
           {
             name: stack1.parent,
@@ -111,14 +115,17 @@ function run_test() {
                 children: undefined,
                 id: 4,
                 parent: 3,
+                reportLeafIndex: 1,
               },
             ],
             id: 3,
             parent: 2,
+            reportLeafIndex: undefined,
           },
         ],
         id: 2,
         parent: 1,
+        reportLeafIndex: undefined,
       },
       {
         name: "noStack",
@@ -129,6 +136,7 @@ function run_test() {
         children: undefined,
         id: 10,
         parent: 1,
+        reportLeafIndex: 6,
       },
       {
         name: stack5,
@@ -139,10 +147,12 @@ function run_test() {
         children: undefined,
         id: 9,
         parent: 1,
+        reportLeafIndex: 5
       },
     ],
     id: 1,
     parent: undefined,
+    reportLeafIndex: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED);

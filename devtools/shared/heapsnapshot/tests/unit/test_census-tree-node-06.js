@@ -68,10 +68,12 @@ function run_test() {
             children: undefined,
             id: 16,
             parent: 15,
+            reportLeafIndex: undefined,
           }
         ],
         id: 15,
         parent: 14,
+        reportLeafIndex: 6,
       },
       {
         name: abc_Stack,
@@ -89,6 +91,7 @@ function run_test() {
             children: undefined,
             id: 18,
             parent: 17,
+            reportLeafIndex: undefined,
           },
           {
             name: abc_Stack.parent,
@@ -106,6 +109,7 @@ function run_test() {
                 children: undefined,
                 id: 22,
                 parent: 19,
+                reportLeafIndex: undefined,
               },
               {
                 name: abc_Stack.parent.parent,
@@ -123,10 +127,12 @@ function run_test() {
                     children: undefined,
                     id: 21,
                     parent: 20,
+                    reportLeafIndex: undefined,
                   }
                 ],
                 id: 20,
                 parent: 19,
+                reportLeafIndex: undefined,
               },
               {
                 name: dbc_Stack.parent.parent,
@@ -144,14 +150,17 @@ function run_test() {
                     children: undefined,
                     id: 24,
                     parent: 23,
+                    reportLeafIndex: undefined,
                   }
                 ],
                 id: 23,
                 parent: 19,
+                reportLeafIndex: undefined,
               }
             ],
             id: 19,
             parent: 17,
+            reportLeafIndex: undefined,
           },
           {
             name: ec_Stack.parent,
@@ -169,18 +178,22 @@ function run_test() {
                 children: undefined,
                 id: 26,
                 parent: 25,
+                reportLeafIndex: undefined,
               },
             ],
             id: 25,
             parent: 17,
+            reportLeafIndex: undefined,
           },
         ],
         id: 17,
         parent: 14,
+        reportLeafIndex: new Set([1, 2, 3, 4, 5]),
       }
     ],
     id: 14,
     parent: undefined,
+    reportLeafIndex: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { invert: true });
