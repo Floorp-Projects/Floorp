@@ -224,7 +224,7 @@ WebGLContextLossHandler::DisableTimer()
 }
 
 bool
-WebGLContextLossHandler::Notify(JSContext* aCx, dom::workers::Status aStatus)
+WebGLContextLossHandler::Notify(dom::workers::Status aStatus)
 {
     bool isWorkerRunning = aStatus < dom::workers::Closing;
     if (!isWorkerRunning && mIsTimerRunning) {

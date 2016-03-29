@@ -24,6 +24,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsWindowGfx.h"
 #include "nsAppRunner.h"
 #include <windows.h>
+#include "gfxEnv.h"
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
 #include "gfxWindowsSurface.h"
@@ -526,9 +527,11 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         {
           result = listener->PaintWindow(
             this, LayoutDeviceIntRegion::FromUnknownRegion(region));
-          nsCOMPtr<nsIRunnable> event =
-            NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
-          NS_DispatchToMainThread(event);
+          if (!gfxEnv::DisableForcePresent()) {
+            nsCOMPtr<nsIRunnable> event =
+              NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
+            NS_DispatchToMainThread(event);
+          }
         }
         break;
       default:

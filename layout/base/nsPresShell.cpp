@@ -868,9 +868,11 @@ PresShell::Init(nsIDocument* aDocument,
   mPresContext = aPresContext;
   aPresContext->SetShell(this);
 
-  // Now we can initialize the style set.
-  aStyleSet->Init(aPresContext);
+  // Now we can initialize the style set. Make sure to set the member before
+  // calling Init, since various subroutines need to find the style set off
+  // the PresContext during initialization.
   mStyleSet = aStyleSet;
+  mStyleSet->Init(aPresContext);
 
   // Notify our prescontext that it now has a compatibility mode.  Note that
   // this MUST happen after we set up our style set but before we create any

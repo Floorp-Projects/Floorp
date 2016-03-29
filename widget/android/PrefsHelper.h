@@ -263,8 +263,8 @@ public:
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
-            MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Preferences::AddStrongObserver(
-                    appShell, nameStr->ToCString().get())));
+            MOZ_ALWAYS_SUCCEEDS(Preferences::AddStrongObserver(
+                    appShell, nameStr->ToCString().get()));
         }
     }
 
@@ -278,8 +278,8 @@ public:
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
-            MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Preferences::RemoveObserver(
-                    appShell, nameStr->ToCString().get())));
+            MOZ_ALWAYS_SUCCEEDS(Preferences::RemoveObserver(
+                    appShell, nameStr->ToCString().get()));
         }
     }
 

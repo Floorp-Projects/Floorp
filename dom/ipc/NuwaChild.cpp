@@ -135,7 +135,7 @@ NuwaChild::RecvFork()
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableFunction(&NuwaFork);
   MOZ_ASSERT(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
   return true;
 #else

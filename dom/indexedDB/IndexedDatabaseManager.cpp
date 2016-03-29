@@ -460,7 +460,7 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
   }
 
   nsString type;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(internalEvent->GetType(type)));
+  MOZ_ALWAYS_SUCCEEDS(internalEvent->GetType(type));
 
   MOZ_ASSERT(nsDependentString(kErrorEventType).EqualsLiteral("error"));
   if (!type.EqualsLiteral("error")) {
@@ -1146,8 +1146,7 @@ DeleteFilesRunnable::Dispatch()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State_Initial);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 NS_IMPL_ISUPPORTS(DeleteFilesRunnable, nsIRunnable)
@@ -1312,8 +1311,7 @@ DeleteFilesRunnable::Finish()
   // thread.
   mState = State_UnblockingOpen;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 void

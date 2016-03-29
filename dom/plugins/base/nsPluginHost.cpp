@@ -1861,7 +1861,8 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
   }
 
   if (aMIMEType.LowerCaseEqualsASCII("application/x-silverlight") ||
-      aMIMEType.LowerCaseEqualsASCII("application/x-silverlight-2")) {
+      aMIMEType.LowerCaseEqualsASCII("application/x-silverlight-2") ||
+      aMIMEType.LowerCaseEqualsASCII("application/x-silverlight-test")) {
     return eSpecialType_Silverlight;
   }
 

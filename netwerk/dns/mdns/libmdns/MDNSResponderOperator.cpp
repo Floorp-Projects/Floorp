@@ -449,14 +449,14 @@ RegisterOperator::Start()
     while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) &&
            hasMoreElements) {
       nsCOMPtr<nsISupports> element;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(element))));
+      MOZ_ALWAYS_SUCCEEDS(enumerator->GetNext(getter_AddRefs(element)));
       nsCOMPtr<nsIProperty> property = do_QueryInterface(element);
       MOZ_ASSERT(property);
 
       nsAutoString name;
       nsCOMPtr<nsIVariant> value;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(property->GetName(name)));
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(property->GetValue(getter_AddRefs(value))));
+      MOZ_ALWAYS_SUCCEEDS(property->GetName(name));
+      MOZ_ALWAYS_SUCCEEDS(property->GetValue(getter_AddRefs(value)));
 
       nsAutoCString str;
       if (NS_WARN_IF(NS_FAILED(value->GetAsACString(str)))) {

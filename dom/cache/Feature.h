@@ -33,7 +33,7 @@ public:
   bool Notified() const;
 
   // WorkerFeature methods
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override;
+  virtual bool Notify(workers::Status aStatus) override;
 
 private:
   explicit Feature(workers::WorkerPrivate *aWorkerPrivate);
