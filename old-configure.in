@@ -4302,14 +4302,12 @@ dnl ========================================================
 dnl = Disable PulseAudio
 dnl ========================================================
 
-dnl If using Linux, ensure that the PA library is available
+dnl If using Desktop Linux, ensure that the PA library is available
 case "$OS_TARGET" in
 WINNT|Darwin|Android|OpenBSD)
     ;;
 *)
-    if test -z "$MOZ_B2G"; then
-        MOZ_PULSEAUDIO=1
-    fi
+    MOZ_PULSEAUDIO=1
     ;;
 esac
 
