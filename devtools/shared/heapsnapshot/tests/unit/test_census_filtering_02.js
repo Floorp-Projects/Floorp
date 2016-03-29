@@ -67,7 +67,8 @@ function run_test() {
                 totalCount: 3,
                 children: undefined,
                 id: 15,
-                parent: 14
+                parent: 14,
+                reportLeafIndex: 3,
               },
               {
                 name: stack2,
@@ -77,11 +78,13 @@ function run_test() {
                 totalCount: 2,
                 children: undefined,
                 id: 16,
-                parent: 14
+                parent: 14,
+                reportLeafIndex: 2,
               }
             ],
             id: 14,
-            parent: 13
+            parent: 13,
+            reportLeafIndex: undefined,
           },
           {
             name: stack1.parent,
@@ -98,19 +101,23 @@ function run_test() {
                 totalCount: 1,
                 children: undefined,
                 id: 18,
-                parent: 17
+                parent: 17,
+                reportLeafIndex: 1,
               }
             ],
             id: 17,
-            parent: 13
+            parent: 13,
+            reportLeafIndex: undefined,
           }
         ],
         id: 13,
-        parent: 12
+        parent: 12,
+        reportLeafIndex: undefined,
       }
     ],
     id: 12,
-    parent: undefined
+    parent: undefined,
+    reportLeafIndex: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { filter: "bar" });
