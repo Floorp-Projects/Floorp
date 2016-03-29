@@ -208,7 +208,7 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
 
     // Including the Robotium JAR directly can cause issues with dexing.
-    androidTestCompile 'com.jayway.android.robotium:robotium-solo:4.3.1'
+    androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.5.4'
 }
 
 task syncOmnijarFromDistDir(type: Sync) {
