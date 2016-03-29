@@ -60,8 +60,8 @@ private:
     nsHttpPipeline *QueryPipeline() override;
 
     RefPtr<nsAHttpConnection>   mConnection;
-    nsTArray<nsAHttpTransaction*> mRequestQ;  // array of transactions
-    nsTArray<nsAHttpTransaction*> mResponseQ; // array of transactions
+    nsTArray<RefPtr<nsAHttpTransaction> > mRequestQ;
+    nsTArray<RefPtr<nsAHttpTransaction> > mResponseQ;
     nsresult                      mStatus;
 
     // these flags indicate whether or not the first request or response
