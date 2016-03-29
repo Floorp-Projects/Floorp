@@ -525,8 +525,8 @@ InternalCall(JSContext* cx, const AnyInvokeArgs& args)
     return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
 }
 
-static bool
-CallFromStack(JSContext* cx, const CallArgs& args)
+bool
+js::CallFromStack(JSContext* cx, const CallArgs& args)
 {
     return InternalCall(cx, static_cast<const AnyInvokeArgs&>(args));
 }
