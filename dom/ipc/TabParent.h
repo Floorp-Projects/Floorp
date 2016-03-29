@@ -550,6 +550,9 @@ public:
                                       AudioChannel aAudioChannel,
                                       float aVolume,
                                       bool aMuted);
+  bool SetRenderFrame(PRenderFrameParent* aRFParent);
+  bool GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                          uint64_t* aLayersId);
 
 protected:
   bool ReceiveMessage(const nsString& aMessage,
@@ -575,10 +578,6 @@ protected:
   virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) override;
 
   virtual bool RecvRemotePaintIsReady() override;
-
-  virtual bool RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
-                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                      uint64_t* aLayersId) override;
 
   virtual bool RecvSetDimensions(const uint32_t& aFlags,
                                  const int32_t& aX, const int32_t& aY,
