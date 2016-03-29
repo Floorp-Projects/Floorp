@@ -623,7 +623,7 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
   return nullptr;
 }
 
-void
+bool
 Factory::SetDirect3D11Device(ID3D11Device *aDevice)
 {
   mD3D11Device = aDevice;
@@ -634,7 +634,7 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
   }
 
   if (!aDevice) {
-    return;
+    return true;
   }
 
   RefPtr<ID2D1Factory1> factory = D2DFactory1();
@@ -644,7 +644,12 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
   HRESULT hr = factory->CreateDevice(device, &mD2D1Device);
   if (FAILED(hr)) {
     gfxCriticalError() << "[D2D1] Failed to create gfx factory's D2D1 device, code: " << hexa(hr);
+
+    mD3D11Device = nullptr;
+    return false;
   }
+
+  return true;
 }
 
 ID3D11Device*

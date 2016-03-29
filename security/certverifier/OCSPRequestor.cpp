@@ -8,8 +8,8 @@
 
 #include <limits>
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Base64.h"
-#include "mozilla/Scoped.h"
 #include "nsIURLParser.h"
 #include "nsNSSCallbacks.h"
 #include "nsNetCID.h"
@@ -32,13 +32,13 @@ ReleaseHttpRequestSession(nsNSSHttpRequestSession* httpRequestSession)
   httpRequestSession->Release();
 }
 
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedHTTPServerSession,
-                                          nsNSSHttpServerSession,
-                                          ReleaseHttpServerSession)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueHTTPServerSession,
+                                      nsNSSHttpServerSession,
+                                      ReleaseHttpServerSession)
 
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedHTTPRequestSession,
-                                          nsNSSHttpRequestSession,
-                                          ReleaseHttpRequestSession)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueHTTPRequestSession,
+                                      nsNSSHttpRequestSession,
+                                      ReleaseHttpRequestSession)
 
 } // namespace mozilla
 
@@ -142,7 +142,7 @@ DoOCSPRequest(PLArenaPool* arena, const char* url,
   if (rv != Success) {
     return rv;
   }
-  ScopedHTTPServerSession serverSession(
+  UniqueHTTPServerSession serverSession(
     reinterpret_cast<nsNSSHttpServerSession*>(serverSessionPtr));
 
   nsAutoCString path;
@@ -173,7 +173,7 @@ DoOCSPRequest(PLArenaPool* arena, const char* url,
     return rv;
   }
 
-  ScopedHTTPRequestSession requestSession(
+  UniqueHTTPRequestSession requestSession(
     reinterpret_cast<nsNSSHttpRequestSession*>(requestSessionPtr));
 
   if (!useGET) {

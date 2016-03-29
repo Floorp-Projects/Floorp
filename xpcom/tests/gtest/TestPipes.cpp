@@ -889,7 +889,7 @@ CloseDuringReadFunc(nsIInputStream *aReader,
   // (possibly from other end on another thread) simultaneously with the
   // read.  This is the easiest way to do trigger this case in a synchronous
   // gtest.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aReader->Close()));
+  MOZ_ALWAYS_SUCCEEDS(aReader->Close());
 
   nsTArray<char>* buffer = static_cast<nsTArray<char>*>(aClosure);
   buffer->AppendElements(aFromSegment, aCount);

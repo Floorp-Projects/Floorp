@@ -509,8 +509,8 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
     NS_ENSURE_STATE(cssDecl);
 
     // from these declarations, get the one we want and that one only
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      cssDecl->GetPropertyValue(nsDependentAtomString(aProperty), aValue)));
+    MOZ_ALWAYS_SUCCEEDS(
+      cssDecl->GetPropertyValue(nsDependentAtomString(aProperty), aValue));
 
     return NS_OK;
   }

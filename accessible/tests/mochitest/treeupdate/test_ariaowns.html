@@ -194,8 +194,8 @@
         // newly inserted child.
         var tree =
           { SECTION: [
-              { CHECKBUTTON: [ ] },
-              { RADIOBUTTON: [ ] },
+              { CHECKBUTTON: [ ] }, // existing explicit, t1_checkbox
+              { RADIOBUTTON: [ ] }, // new explicit, t1_child3
               { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
               { SECTION: [ ] }, // ARIA owned, t1_subdiv
               { GROUPING: [ ] } // ARIA owned, t1_group
@@ -228,8 +228,8 @@
         // subdiv should go away
         var tree =
           { SECTION: [
-              { CHECKBUTTON: [ ] },
-              { RADIOBUTTON: [ ] },
+              { CHECKBUTTON: [ ] }, // explicit, t1_checkbox
+              { RADIOBUTTON: [ ] }, // explicit, t1_child3
               { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
               { GROUPING: [ ] } // ARIA owned, t1_group
           ] };

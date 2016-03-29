@@ -329,6 +329,9 @@ typedef UniquePtr<Type, name##DeletePolicy> name;
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificate,
                                       CERTCertificate,
                                       CERT_DestroyCertificate)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificateList,
+                                      CERTCertificateList,
+                                      CERT_DestroyCertificateList)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificatePolicies,
                                       CERTCertificatePolicies,
                                       CERT_DestroyCertificatePoliciesExtension)
@@ -358,14 +361,26 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SlotInfo,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SlotList,
                                       PK11SlotList,
                                       PK11_FreeSlotList)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SymKey,
+                                      PK11SymKey,
+                                      PK11_FreeSymKey)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePLArenaPool,
                                       PLArenaPool,
                                       internal::PORT_FreeArena_false)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePORTString,
+                                      char,
+                                      PORT_Free);
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRFileDesc,
+                                      PRFileDesc,
+                                      PR_Close)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECItem,
                                       SECItem,
                                       internal::SECITEM_FreeItem_true)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPrivateKey,
+                                      SECKEYPrivateKey,
+                                      SECKEY_DestroyPrivateKey)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPublicKey,
                                       SECKEYPublicKey,
                                       SECKEY_DestroyPublicKey)

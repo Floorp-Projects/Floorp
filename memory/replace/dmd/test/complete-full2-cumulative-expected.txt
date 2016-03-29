@@ -1,10 +1,9 @@
 #-----------------------------------------------------------------
-# dmd.py --filter-stacks-for-testing -o full-unsampled2-cumulative-actual.txt full-unsampled2-cumulative.json
+# dmd.py --filter-stacks-for-testing -o complete-full2-cumulative-actual.txt complete-full2-cumulative.json
 
 Invocation {
-  $DMD = '--mode=cumulative --sample-below=1 --show-dump-stats=yes'
+  $DMD = '--mode=cumulative --stacks=full --show-dump-stats=yes'
   Mode = 'cumulative'
-  Sample-below size = 1
 }
 
 #-----------------------------------------------------------------

@@ -2,15 +2,13 @@
 # dmd.py --filter-stacks-for-testing -o script-diff-live-actual.txt script-diff-live1.json script-diff-live2.json
 
 Invocation 1 {
-  $DMD = '--mode=live --sample-below=127'
+  $DMD = '--mode=live'
   Mode = 'live'
-  Sample-below size = 127
 }
 
 Invocation 2 {
-  $DMD = '--mode=live --sample-below=63'
+  $DMD = '--mode=live --stacks=partial'
   Mode = 'live'
-  Sample-below size = 63
 }
 
 #-----------------------------------------------------------------
@@ -26,9 +24,9 @@ Live {
 }
 
 Live {
-  ~5 blocks in heap block record 2 of 6
-  ~-13,183 bytes (~-13,231 requested / ~48 slop)
-  Individual block sizes: -15,360; 2,048; -1,024; 512 x 2; 128; ~-127 x 3; 64 x 4; ~63 x 2
+  5 blocks in heap block record 2 of 6
+  -13,183 bytes (-13,231 requested / 48 slop)
+  Individual block sizes: -15,360; 2,048; -1,024; 512 x 2; 128; -127 x 3; 64 x 4; 63 x 2
   187.29% of the heap (-45.48% cumulative)
   Allocated at {
     #01: F (F.cpp:99)
@@ -61,7 +59,7 @@ Live {
   Individual block sizes: 20,480; -16,384; -8,192; 4,096
   -0.00% of the heap (100.00% cumulative)
   Allocated at {
-    #01: G (G.cpp:99)
+    #01: (no stack trace recorded due to --stacks=partial)
   }
 }
 
@@ -78,6 +76,6 @@ Live {
 #-----------------------------------------------------------------
 
 Summary {
-  Total: ~-7,039 bytes in ~4 blocks
+  Total: -7,039 bytes in 4 blocks
 }
 

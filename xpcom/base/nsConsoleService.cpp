@@ -463,7 +463,7 @@ nsConsoleService::Observe(nsISupports* aSubject, const char* aTopic,
     MOZ_ASSERT(supportsInt);
 
     uint64_t windowId;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(supportsInt->GetData(&windowId)));
+    MOZ_ALWAYS_SUCCEEDS(supportsInt->GetData(&windowId));
 
     ClearMessagesForWindowID(windowId);
   } else {

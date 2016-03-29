@@ -621,9 +621,8 @@ JS_GetRuntime(JSContext* cx)
 }
 
 JS_PUBLIC_API(JSRuntime*)
-JS_GetParentRuntime(JSContext* cx)
+JS_GetParentRuntime(JSRuntime* rt)
 {
-    JSRuntime* rt = cx->runtime();
     return rt->parentRuntime ? rt->parentRuntime : rt;
 }
 

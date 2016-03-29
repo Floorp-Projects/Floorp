@@ -589,7 +589,7 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
       MOZ_ASSERT(NS_SUCCEEDED(blobImpl->GetMutable(&isMutable)));
       MOZ_ASSERT(!isMutable);
     } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
+      MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
     }
 
     return blobImpl.forget();
@@ -639,7 +639,7 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
       return nullptr;
     }
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
+    MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
   }
 
   return blobImpl.forget();
@@ -698,7 +698,7 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
 
   MOZ_ASSERT(blobImpl);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
+  MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
   // We store the position of the blobImpl in the array as index.
   if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,

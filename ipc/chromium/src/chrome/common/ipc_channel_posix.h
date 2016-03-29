@@ -87,10 +87,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // to keep track of where we are.
   size_t message_send_bytes_written_;
 
-  // If the kTestingChannelID flag is specified, we use a FIFO instead of
-  // a socketpair().
-  bool uses_fifo_;
-
   int server_listen_pipe_;
   int pipe_;
   int client_pipe_;  // The client end of our socketpair().
