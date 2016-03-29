@@ -1110,11 +1110,80 @@ KeyframeEffectReadOnly::GetProperties(
   }
 }
 
+// TODO: This will eventually become the new GetFrames
+static void
+GetFramesFromFrames(JSContext*& aCx,
+                    const nsTArray<Keyframe>& aFrames,
+                    nsTArray<JSObject*>& aResult,
+                    ErrorResult& aRv)
+{
+  MOZ_ASSERT(aResult.IsEmpty());
+  MOZ_ASSERT(!aRv.Failed());
+
+  if (!aResult.SetCapacity(aFrames.Length(), mozilla::fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  for (const Keyframe& keyframe : aFrames) {
+    // Set up a dictionary object for the explicit members
+    BaseComputedKeyframe keyframeDict;
+    if (keyframe.mOffset) {
+      keyframeDict.mOffset.SetValue(keyframe.mOffset.value());
+    }
+    keyframeDict.mComputedOffset.Construct(keyframe.mComputedOffset);
+    if (keyframe.mTimingFunction) {
+      keyframeDict.mEasing.Truncate();
+      keyframe.mTimingFunction.ref().AppendToString(keyframeDict.mEasing);
+    } // else if null, leave easing as its default "linear".
+
+    JS::Rooted<JS::Value> keyframeJSValue(aCx);
+    if (!ToJSValue(aCx, keyframeDict, &keyframeJSValue)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    JS::Rooted<JSObject*> keyframeObject(aCx, &keyframeJSValue.toObject());
+    for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
+
+      const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
+
+      // nsCSSValue::AppendToString does not accept shorthands properties but
+      // works with token stream values if we pass eCSSProperty_UNKNOWN as
+      // the property.
+      nsCSSProperty propertyForSerializing =
+        nsCSSProps::IsShorthand(propertyValue.mProperty)
+        ? eCSSProperty_UNKNOWN
+        : propertyValue.mProperty;
+
+      nsAutoString stringValue;
+      propertyValue.mValue.AppendToString(
+        propertyForSerializing, stringValue, nsCSSValue::eNormalized);
+
+      JS::Rooted<JS::Value> value(aCx);
+      if (!ToJSValue(aCx, stringValue, &value) ||
+          !JS_DefineProperty(aCx, keyframeObject, name, value,
+                             JSPROP_ENUMERATE)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+    }
+
+    aResult.AppendElement(keyframeObject);
+  }
+}
+
 void
 KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
                                   nsTArray<JSObject*>& aResult,
                                   ErrorResult& aRv)
 {
+  // Use the specified frames if we have any
+  if (!mFrames.IsEmpty()) {
+    GetFramesFromFrames(aCx, mFrames, aResult, aRv);
+    return;
+  }
+
   nsTArray<OrderedKeyframeValueEntry> entries;
 
   for (const AnimationProperty& property : mProperties) {
