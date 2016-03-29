@@ -14,8 +14,7 @@ add_task(function*() {
   ok(devButton && downloadsButton && searchBox && palette, "Stuff should exist");
   simulateItemDrag(devButton, downloadsButton);
   simulateItemDrag(searchBox, palette);
-  gCustomizeMode.reset();
-  yield waitForCondition(() => !gCustomizeMode.resetting);
+  yield gCustomizeMode.reset();
   ok(CustomizableUI.inDefaultState, "Should be back in default state");
   yield endCustomizing();
 });
