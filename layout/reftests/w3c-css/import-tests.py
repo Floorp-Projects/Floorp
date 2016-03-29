@@ -173,9 +173,12 @@ def load_flags_for(fn, spec):
         if name == "flags":
             gTestFlags[destname] = meta.getAttribute("content").split()
 
+def is_html(fn):
+    return fn.endswith(".htm") or fn.endswith(".html")
+
 def get_document_for(fn):
     document = None # an xml.dom.minidom document
-    if fn.endswith(".htm") or fn.endswith(".html"):
+    if is_html(fn):
         # An HTML file
         f = open(fn, "rb")
         parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
@@ -218,6 +221,19 @@ def add_test_items(fn, spec):
     for notref in notrefs:
         add_test_items(notref, spec=spec)
 
+AHEM_DECL_CONTENT = """@font-face {
+  font-family: Ahem;
+  src: url("../../../fonts/Ahem.ttf");
+}"""
+AHEM_DECL_HTML = """<style type="text/css">
+""" + AHEM_DECL_CONTENT + """
+</style>
+"""
+AHEM_DECL_XML = """<style type="text/css"><![CDATA[
+""" + AHEM_DECL_CONTENT + """
+]]></style>
+"""
+
 def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=False):
     global gTestFlags
     newFile = open(aDestFileName, 'wb')
@@ -231,10 +247,7 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=
         if not isSupportFile and not ahemFontAdded and 'ahem' in gTestFlags[test] and re.search(searchRegex, line):
             # First put our ahem font declation before the first <style>
             # element
-            ahemFontDecl = "<style type=\"text/css\"><![CDATA[\n@font-face "\
-                           "{\n  font-family: Ahem;\n  src: url("\
-                           "\"../../../fonts/Ahem.ttf\");\n}\n]]></style>\n"
-            newFile.write(ahemFontDecl)
+            newFile.write(AHEM_DECL_HTML if is_html(aDestFileName) else AHEM_DECL_XML)
             ahemFontAdded = True
 
         for rule in aProps:
