@@ -2360,11 +2360,11 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
   // a later event in the block could potentially scroll an APZC earlier
   // in the handoff chain, than an earlier event in the block (because
   // the earlier APZC was scrolled to its extent in the original direction).
-  // If immediate handoff is disallowed, we want to disallow this (to
-  // preserve the property that a single input block only scrolls one APZC),
-  // so we skip the earlier APZC.
-  bool scrollThisApzc = gfxPrefs::APZAllowImmediateHandoff() ||
-      (CurrentInputBlock() && (!CurrentInputBlock()->GetScrolledApzc() || this == CurrentInputBlock()->GetScrolledApzc()));
+  // We want to disallow this.
+  bool scrollThisApzc = false;
+  if (InputBlockState* block = CurrentInputBlock()) {
+    scrollThisApzc = !block->GetScrolledApzc() || block->IsDownchainOfScrolledApzc(this);
+  }
 
   if (scrollThisApzc) {
     ReentrantMonitorAutoEnter lock(mMonitor);
@@ -2383,20 +2383,18 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
 
     if (!IsZero(adjustedDisplacement)) {
       ScrollBy(adjustedDisplacement / mFrameMetrics.GetZoom());
-      if (!gfxPrefs::APZAllowImmediateHandoff()) {
-        if (InputBlockState* block = CurrentInputBlock()) {
-          block->SetScrolledApzc(this);
-        }
+      if (InputBlockState* block = CurrentInputBlock()) {
+        block->SetScrolledApzc(this);
       }
       ScheduleCompositeAndMaybeRepaint();
       UpdateSharedCompositorFrameMetrics();
     }
+
+    // Adjust the start point to reflect the consumed portion of the scroll.
+    aStartPoint = aEndPoint + overscroll;
   } else {
     overscroll = displacement;
   }
-
-  // Adjust the start point to reflect the consumed portion of the scroll.
-  aStartPoint = aEndPoint + overscroll;
 
   // If we consumed the entire displacement as a normal scroll, great.
   if (IsZero(overscroll)) {
