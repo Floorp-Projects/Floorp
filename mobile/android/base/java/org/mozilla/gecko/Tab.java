@@ -86,6 +86,7 @@ public class Tab {
     private volatile int mRecordingCount;
     private volatile boolean mIsAudioPlaying;
     private String mMostRecentHomePanel;
+    private boolean mShouldShowToolbarWithoutAnimationOnFirstSelection;
 
     private int mHistoryIndex;
     private int mHistorySize;
@@ -898,5 +899,13 @@ public class Tab {
 
     public TabEditingState getEditingState() {
         return mEditingState;
+    }
+
+    public void setShouldShowToolbarWithoutAnimationOnFirstSelection(final boolean shouldShowWithoutAnimation) {
+        mShouldShowToolbarWithoutAnimationOnFirstSelection = shouldShowWithoutAnimation;
+    }
+
+    public boolean getShouldShowToolbarWithoutAnimationOnFirstSelection() {
+        return mShouldShowToolbarWithoutAnimationOnFirstSelection;
     }
 }
