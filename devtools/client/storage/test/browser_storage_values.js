@@ -12,6 +12,8 @@
 //   true if the check is to be made in the parsed value section
 // ]
 
+/* import-globals-from head.js */
+
 "use strict";
 
 const testCases = [
