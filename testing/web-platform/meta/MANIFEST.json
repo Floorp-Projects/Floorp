@@ -34873,6 +34873,12 @@
             "url": "/dom/collections/HTMLCollection-as-proto-length-get-throws.html"
           }
         ],
+        "dom/nodes/remove-unscopable.html": [
+          {
+            "path": "dom/nodes/remove-unscopable.html",
+            "url": "/dom/nodes/remove-unscopable.html"
+          }
+        ],
         "js/builtins/Promise-incumbent-global.sub.html": [
           {
             "path": "js/builtins/Promise-incumbent-global.sub.html",
