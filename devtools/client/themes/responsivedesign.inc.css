@@ -164,7 +164,7 @@
 }
 
 .devtools-responsiveui-close {
-  list-style-image: url("chrome://devtools/skin/images/close.svg");
+  list-style-image: url("chrome://devtools/skin/images/close.png");
 }
 
 .devtools-responsiveui-rotate {
@@ -172,6 +172,10 @@
 }
 
 @media (min-resolution: 1.1dppx) {
+  .devtools-responsiveui-close {
+    list-style-image: url("chrome://devtools/skin/images/close@2x.png");
+  }
+
   .devtools-responsiveui-rotate {
     list-style-image: url("chrome://devtools/skin/images/responsivemode/responsiveui-rotate@2x.png");
   }
