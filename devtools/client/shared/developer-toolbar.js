@@ -504,6 +504,10 @@ DeveloperToolbar.prototype.show = function(focus) {
             // If the toolbar was just inserted, the <textbox> may still have
             // its binding in process of being applied and not be focusable yet
             let waitForBinding = () => {
+              // Bail out if the toolbar has been destroyed in the meantime
+              if (!this._input) {
+                return;
+              }
               // mInputField is a xbl field of <xul:textbox>
               if (typeof this._input.mInputField != "undefined") {
                 this._input.focus();
