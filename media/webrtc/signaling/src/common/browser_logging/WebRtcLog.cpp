@@ -113,30 +113,9 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
 #if defined(ANDROID)
   // Special case: use callback to pipe to NSPR logging.
   aLogFile.Assign(default_log_name);
-  // For AEC, do not use a default value: force the user to specify a directory.
-  if (aAECLogDir.IsEmpty()) {
-    aAECLogDir.Assign(default_tmp_dir);
-  }
 #else
-  if (aLogFile.IsEmpty() || aAECLogDir.IsEmpty()) {
-    nsCOMPtr<nsIFile> tempDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
-
-    if (NS_SUCCEEDED(rv)) {
-      if (aAECLogDir.IsEmpty()) {
-        tempDir->GetNativePath(aAECLogDir);
-      }
-
-      if (aLogFile.IsEmpty()) {
-        tempDir->AppendNative(default_log_name);
-        tempDir->GetNativePath(aLogFile);
-      }
-    }
-  }
-#endif
 
   webrtc::Trace::set_level_filter(trace_mask);
-  webrtc::Trace::set_aec_debug_filename(aAECLogDir.get());
 
   if (trace_mask != 0) {
     if (aLogFile.EqualsLiteral("nspr")) {
@@ -145,11 +124,21 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
       webrtc::Trace::SetTraceFile(aLogFile.get(), multi_log);
     }
   }
+
+  if (aLogFile.IsEmpty()) {
+    nsCOMPtr<nsIFile> tempDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
+    if (NS_SUCCEEDED(rv)) {
+      tempDir->AppendNative(default_log_name);
+      tempDir->GetNativePath(aLogFile);
+    }
+  }
+#endif
+
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   if (XRE_IsParentProcess()) {
-    // Capture the final choices for the trace settings.
+    // Capture the final choice for the trace setting.
     mozilla::Preferences::SetCString("media.webrtc.debug.log_file", aLogFile);
-    mozilla::Preferences::SetCString("media.webrtc.debug.aec_log_dir", aAECLogDir);
   }
 #endif
   return;
@@ -210,4 +199,57 @@ void EnableWebRtcLog()
 void StopWebRtcLog()
 {
   webrtc::Trace::SetTraceFile(nullptr);
+}
+
+void ConfigAecLog(nsCString &aAECLogDir) {
+  if (webrtc::Trace::aec_debug()) {
+    return;
+  }
+#if defined(ANDROID)
+  // For AEC, do not use a default value: force the user to specify a directory.
+  if (aAECLogDir.IsEmpty()) {
+    aAECLogDir.Assign(default_tmp_dir);
+  }
+#else
+  if (aAECLogDir.IsEmpty()) {
+    nsCOMPtr<nsIFile> tempDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
+    if (NS_SUCCEEDED(rv)) {
+      if (aAECLogDir.IsEmpty()) {
+        tempDir->GetNativePath(aAECLogDir);
+      }
+    }
+  }
+#endif
+  webrtc::Trace::set_aec_debug_filename(aAECLogDir.get());
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  if (XRE_IsParentProcess()) {
+    // Capture the final choice for the aec_log_dir setting.
+    mozilla::Preferences::SetCString("media.webrtc.debug.aec_log_dir", aAECLogDir);
+  }
+#endif
+}
+
+void StartAecLog()
+{
+  if (webrtc::Trace::aec_debug()) {
+    return;
+  }
+  uint32_t trace_mask = 0;
+  bool multi_log = false;
+  nsAutoCString log_file;
+  nsAutoCString aec_log_dir;
+
+#ifdef MOZILLA_INTERNAL_API
+  GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
+#endif
+  CheckOverrides(&trace_mask, &log_file, &multi_log);
+  ConfigAecLog(aec_log_dir);
+
+  webrtc::Trace::set_aec_debug(true);
+}
+
+void StopAecLog()
+{
+  webrtc::Trace::set_aec_debug(false);
 }
