@@ -1390,8 +1390,21 @@ DocAccessible::ProcessInvalidationList()
     nsIContent* content = mInvalidationList[idx];
     if (!HasAccessible(content)) {
       Accessible* container = GetContainerAccessible(content);
-      if (container)
-        UpdateTreeOnInsertion(container);
+      if (container) {
+        TreeWalker walker(container);
+        if (container->IsAcceptableChild(content) && walker.Seek(content)) {
+          Accessible* child =
+            GetAccService()->GetOrCreateAccessible(content, container);
+          if (child) {
+            AutoTreeMutation mMut(container);
+            RefPtr<AccReorderEvent> reorderEvent =
+              new AccReorderEvent(container);
+            container->InsertAfter(child, walker.Prev());
+            uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
+            FireEventsOnInsertion(container, reorderEvent, flags);
+          }
+        }
+      }
     }
   }
 
@@ -1834,14 +1847,22 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
                     aContainer);
 #endif
 
+  FireEventsOnInsertion(aContainer, reorderEvent, updateFlags);
+}
+
+void
+DocAccessible::FireEventsOnInsertion(Accessible* aContainer,
+                                     AccReorderEvent* aReorderEvent,
+                                     uint32_t aUpdateFlags)
+{
   // Content insertion did not cause an accessible tree change.
-  if (updateFlags == eNoAccessible) {
+  if (aUpdateFlags == eNoAccessible) {
     return;
   }
 
   // Check to see if change occurred inside an alert, and fire an EVENT_ALERT
   // if it did.
-  if (!(updateFlags & eAlertAccessible) &&
+  if (!(aUpdateFlags & eAlertAccessible) &&
       (aContainer->IsAlert() || aContainer->IsInsideAlert())) {
     Accessible* ancestor = aContainer;
     do {
@@ -1854,7 +1875,7 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
   }
 
   MaybeNotifyOfValueChange(aContainer);
-  FireDelayedEvent(reorderEvent);
+  FireDelayedEvent(aReorderEvent);
 }
 
 void
