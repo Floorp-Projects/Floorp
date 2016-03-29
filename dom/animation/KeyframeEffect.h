@@ -89,11 +89,16 @@ struct Keyframe
 {
   Keyframe() = default;
   Keyframe(Keyframe&& aOther)
-    : mOffset(aOther.mOffset)
-    , mComputedOffset(aOther.mComputedOffset)
-    , mTimingFunction(Move(aOther.mTimingFunction))
-    , mPropertyValues(Move(aOther.mPropertyValues))
   {
+    *this = Move(aOther);
+  }
+  Keyframe& operator=(Keyframe&& aOther)
+  {
+    mOffset         = aOther.mOffset;
+    mComputedOffset = aOther.mComputedOffset;
+    mTimingFunction = Move(aOther.mTimingFunction);
+    mPropertyValues = Move(aOther.mPropertyValues);
+    return *this;
   }
 
   Maybe<double>                 mOffset;
