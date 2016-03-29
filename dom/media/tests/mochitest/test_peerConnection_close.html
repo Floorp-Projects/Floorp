@@ -29,6 +29,16 @@
       is(pc.signalingState, "closed", "signalingState is 'closed'");
       is(pc.iceConnectionState, "closed", "iceConnectionState is 'closed'");
 
+      // test that pc is really closed (and doesn't crash, bug 1259728)
+      try {
+        pc.getLocalStreams();
+      } catch (e) {
+        exception = e;
+      }
+      is(exception && exception.name, "InvalidStateError",
+         "pc.getLocalStreams should throw when closed");
+      exception = null;
+
       try {
         pc.close();
       } catch (e) {
