@@ -68,15 +68,10 @@ addMessageListener("Browser:Reload", function(message) {
   }
 
   let reloadFlags = message.data.flags;
-  let handlingUserInput;
   try {
-    handlingUserInput = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindowUtils)
-                               .setHandlingUserInput(message.data.handlingUserInput);
-    webNav.reload(reloadFlags);
+    E10SUtils.wrapHandlingUserInput(content, message.data.handlingUserInput,
+                                    () => webNav.reload(reloadFlags));
   } catch (e) {
-  } finally {
-    handlingUserInput.destruct();
   }
 });
 
