@@ -98,6 +98,10 @@ public:
     return NS_OK;
   }
 
+  bool AlwaysLoad() {
+    return mAlwaysLoad;
+  }
+
 private:
   ~ImageLoadTask() {}
   RefPtr<HTMLImageElement> mElement;
@@ -899,7 +903,13 @@ HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad)
     return;
   }
 
-  nsCOMPtr<nsIRunnable> task = new ImageLoadTask(this, aAlwaysLoad);
+  // Ensure that we don't overwrite a previous load request that requires
+  // a complete load to occur.
+  bool alwaysLoad = aAlwaysLoad;
+  if (mPendingImageLoadTask) {
+    alwaysLoad = alwaysLoad || mPendingImageLoadTask->AlwaysLoad();
+  }
+  RefPtr<ImageLoadTask> task = new ImageLoadTask(this, alwaysLoad);
   // The task checks this to determine if it was the last
   // queued event, and so earlier tasks are implicitly canceled.
   mPendingImageLoadTask = task;
