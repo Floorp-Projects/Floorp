@@ -15,7 +15,6 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
-import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
-import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
@@ -46,10 +44,8 @@ import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
@@ -89,9 +85,7 @@ import android.os.Environment;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.os.Vibrator;
-import android.provider.Browser;
 import android.provider.Settings;
-import android.support.v4.app.FragmentActivity;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -841,10 +835,10 @@ public class GeckoAppShell
 
     @WrapForJNI(stubName = "GetHandlersForMimeTypeWrapper")
     static String[] getHandlersForMimeType(String aMimeType, String aAction) {
-        Intent intent = getIntentForActionString(aAction);
+        Intent intent = IntentHelper.getIntentForActionString(aAction);
         if (aMimeType != null && aMimeType.length() > 0)
             intent.setType(aMimeType);
-        return getHandlersForIntent(intent);
+        return IntentHelper.getHandlersForIntent(intent);
     }
 
     @WrapForJNI(stubName = "GetHandlersForURLWrapper")
@@ -852,10 +846,10 @@ public class GeckoAppShell
         // aURL may contain the whole URL or just the protocol
         Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
 
-        Intent intent = getOpenURIIntent(getApplicationContext(), uri.toString(), "",
+        Intent intent = IntentHelper.getOpenURIIntent(getApplicationContext(), uri.toString(), "",
             TextUtils.isEmpty(aAction) ? Intent.ACTION_VIEW : aAction, "");
 
-        return getHandlersForIntent(intent);
+        return IntentHelper.getHandlersForIntent(intent);
     }
 
     @WrapForJNI(stubName = "GetHWEncoderCapability")
@@ -881,47 +875,6 @@ public class GeckoAppShell
         }
 
         return list;
-    }
-
-    static boolean hasHandlersForIntent(Intent intent) {
-        try {
-            return !queryIntentActivities(intent).isEmpty();
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Exception in GeckoAppShell.hasHandlersForIntent");
-            return false;
-        }
-    }
-
-    static String[] getHandlersForIntent(Intent intent) {
-        final PackageManager pm = getApplicationContext().getPackageManager();
-        try {
-            final List<ResolveInfo> list = queryIntentActivities(intent);
-
-            int numAttr = 4;
-            final String[] ret = new String[list.size() * numAttr];
-            for (int i = 0; i < list.size(); i++) {
-                ResolveInfo resolveInfo = list.get(i);
-                ret[i * numAttr] = resolveInfo.loadLabel(pm).toString();
-                if (resolveInfo.isDefault)
-                    ret[i * numAttr + 1] = "default";
-                else
-                    ret[i * numAttr + 1] = "";
-                ret[i * numAttr + 2] = resolveInfo.activityInfo.applicationInfo.packageName;
-                ret[i * numAttr + 3] = resolveInfo.activityInfo.name;
-            }
-            return ret;
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Exception in GeckoAppShell.getHandlersForIntent");
-            return new String[0];
-        }
-    }
-
-    static Intent getIntentForActionString(String aAction) {
-        // Default to the view action if no other action as been specified.
-        if (TextUtils.isEmpty(aAction)) {
-            return new Intent(Intent.ACTION_VIEW);
-        }
-        return new Intent(aAction);
     }
 
     @WrapForJNI(stubName = "GetExtensionFromMimeTypeWrapper")
@@ -975,277 +928,9 @@ public class GeckoAppShell
                                           String className,
                                           String action,
                                           String title) {
+
         // Default to showing prompt in private browsing to be safe.
-        return openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
-    }
-
-    /**
-     * Given the inputs to <code>getOpenURIIntent</code>, plus an optional
-     * package name and class name, create and fire an intent to open the
-     * provided URI. If a class name is specified but a package name is not,
-     * we will default to using the current fennec package.
-     *
-     * @param targetURI the string spec of the URI to open.
-     * @param mimeType an optional MIME type string.
-     * @param packageName an optional app package name.
-     * @param className an optional intent class name.
-     * @param action an Android action specifier, such as
-     *               <code>Intent.ACTION_SEND</code>.
-     * @param title the title to use in <code>ACTION_SEND</code> intents.
-     * @param showPromptInPrivateBrowsing whether or not the user should be prompted when opening
-     *                                    this uri from private browsing. This should be true
-     *                                    when the user doesn't explicitly choose to open an an
-     *                                    external app (e.g. just clicked a link).
-     * @return true if the activity started successfully or the user was prompted to open the
-     *              application; false otherwise.
-     */
-    public static boolean openUriExternal(String targetURI,
-                                          String mimeType,
-                                          String packageName,
-                                          String className,
-                                          String action,
-                                          String title,
-                                          final boolean showPromptInPrivateBrowsing) {
-        final GeckoInterface gi = getGeckoInterface();
-        final Context activityContext = gi != null ? gi.getActivity() : null;
-        final Context context = activityContext != null ? activityContext : getApplicationContext();
-        final Intent intent = getOpenURIIntent(context, targetURI,
-                                               mimeType, action, title);
-
-        if (intent == null) {
-            return false;
-        }
-
-        if (!TextUtils.isEmpty(className)) {
-            if (!TextUtils.isEmpty(packageName)) {
-                intent.setClassName(packageName, className);
-            } else {
-                // Default to using the fennec app context.
-                intent.setClassName(context, className);
-            }
-        }
-
-        if (!showPromptInPrivateBrowsing || activityContext == null) {
-            if (activityContext == null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            }
-            return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
-        } else {
-            // Ideally we retrieve the Activity from the calling args, rather than
-            // statically, but since this method is called from Gecko and I'm
-            // unfamiliar with that code, this is a simpler solution.
-            final FragmentActivity fragmentActivity = (FragmentActivity) activityContext;
-            return ExternalIntentDuringPrivateBrowsingPromptFragment.showDialogOrAndroidChooser(
-                    context, fragmentActivity.getSupportFragmentManager(), intent);
-        }
-    }
-
-    /**
-     * Return a <code>Uri</code> instance which is equivalent to <code>u</code>,
-     * but with a guaranteed-lowercase scheme as if the API level 16 method
-     * <code>u.normalizeScheme</code> had been called.
-     *
-     * @param u the <code>Uri</code> to normalize.
-     * @return a <code>Uri</code>, which might be <code>u</code>.
-     */
-    static Uri normalizeUriScheme(final Uri u) {
-        final String scheme = u.getScheme();
-        final String lower  = scheme.toLowerCase(Locale.US);
-        if (lower.equals(scheme)) {
-            return u;
-        }
-
-        // Otherwise, return a new URI with a normalized scheme.
-        return u.buildUpon().scheme(lower).build();
-    }
-
-    /**
-     * Given a URI, a MIME type, and a title,
-     * produce a share intent which can be used to query all activities
-     * than can open the specified URI.
-     *
-     * @param context a <code>Context</code> instance.
-     * @param targetURI the string spec of the URI to open.
-     * @param mimeType an optional MIME type string.
-     * @param title the title to use in <code>ACTION_SEND</code> intents.
-     * @return an <code>Intent</code>, or <code>null</code> if none could be
-     *         produced.
-     */
-    public static Intent getShareIntent(final Context context,
-                                        final String targetURI,
-                                        final String mimeType,
-                                        final String title) {
-        Intent shareIntent = getIntentForActionString(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
-        shareIntent.putExtra(ShareDialog.INTENT_EXTRA_DEVICES_ONLY, true);
-
-        // Note that EXTRA_TITLE is intended to be used for share dialog
-        // titles. Common usage (e.g., Pocket) suggests that it's sometimes
-        // interpreted as an alternate to EXTRA_SUBJECT, so we include it.
-        shareIntent.putExtra(Intent.EXTRA_TITLE, title);
-
-        if (mimeType != null && mimeType.length() > 0) {
-            shareIntent.setType(mimeType);
-        }
-
-        return shareIntent;
-    }
-
-    /**
-     * Given a URI, a MIME type, an Android intent "action", and a title,
-     * produce an intent which can be used to start an activity to open
-     * the specified URI.
-     *
-     * @param context a <code>Context</code> instance.
-     * @param targetURI the string spec of the URI to open.
-     * @param mimeType an optional MIME type string.
-     * @param action an Android action specifier, such as
-     *               <code>Intent.ACTION_SEND</code>.
-     * @param title the title to use in <code>ACTION_SEND</code> intents.
-     * @return an <code>Intent</code>, or <code>null</code> if none could be
-     *         produced.
-     */
-    static Intent getOpenURIIntent(final Context context,
-                                   final String targetURI,
-                                   final String mimeType,
-                                   final String action,
-                                   final String title) {
-
-        // The resultant chooser can return non-exported activities in 4.1 and earlier.
-        // https://code.google.com/p/android/issues/detail?id=29535
-        final Intent intent = getOpenURIIntentInner(context, targetURI, mimeType, action, title);
-
-        if (intent != null) {
-            // Some applications use this field to return to the same browser after processing the
-            // Intent. While there is some danger (e.g. denial of service), other major browsers already
-            // use it and so it's the norm.
-            intent.putExtra(Browser.EXTRA_APPLICATION_ID, AppConstants.ANDROID_PACKAGE_NAME);
-        }
-
-        return intent;
-    }
-
-    private static Intent getOpenURIIntentInner(final Context context,  final String targetURI,
-            final String mimeType, final String action, final String title) {
-
-        if (action.equalsIgnoreCase(Intent.ACTION_SEND)) {
-            Intent shareIntent = getShareIntent(context, targetURI, mimeType, title);
-            return Intent.createChooser(shareIntent,
-                                        context.getResources().getString(R.string.share_title)); 
-        }
-
-        Uri uri = normalizeUriScheme(targetURI.indexOf(':') >= 0 ? Uri.parse(targetURI) : new Uri.Builder().scheme(targetURI).build());
-        if (!TextUtils.isEmpty(mimeType)) {
-            Intent intent = getIntentForActionString(action);
-            intent.setDataAndType(uri, mimeType);
-            return intent;
-        }
-
-        if (!isUriSafeForScheme(uri)) {
-            return null;
-        }
-
-        final String scheme = uri.getScheme();
-        if ("intent".equals(scheme) || "android-app".equals(scheme)) {
-            final Intent intent;
-            try {
-                intent = Intent.parseUri(targetURI, 0);
-            } catch (final URISyntaxException e) {
-                Log.e(LOGTAG, "Unable to parse URI - " + e);
-                return null;
-            }
-
-            // Only open applications which can accept arbitrary data from a browser.
-            intent.addCategory(Intent.CATEGORY_BROWSABLE);
-
-            // Prevent site from explicitly opening our internal activities, which can leak data.
-            intent.setComponent(null);
-            nullIntentSelector(intent);
-
-            return intent;
-        }
-
-        // Compute our most likely intent, then check to see if there are any
-        // custom handlers that would apply.
-        // Start with the original URI. If we end up modifying it, we'll
-        // overwrite it.
-        final String extension = MimeTypeMap.getFileExtensionFromUrl(targetURI);
-        final Intent intent = getIntentForActionString(action);
-        intent.setData(uri);
-
-        if ("file".equals(scheme)) {
-            // Only set explicit mimeTypes on file://.
-            final String mimeType2 = getMimeTypeFromExtension(extension);
-            intent.setType(mimeType2);
-            return intent;
-        }
-
-        // Have a special handling for SMS based schemes, as the query parameters
-        // are not extracted from the URI automatically.
-        if (!"sms".equals(scheme) && !"smsto".equals(scheme) && !"mms".equals(scheme) && !"mmsto".equals(scheme)) {
-            return intent;
-        }
-
-        final String query = uri.getEncodedQuery();
-        if (TextUtils.isEmpty(query)) {
-            return intent;
-        }
-
-        // It is common to see sms*/mms* uris on the web without '//', it is W3C standard not to have the slashes,
-        // but android's Uri builder & Uri require the slashes and will interpret those without as malformed.
-        String currentUri = uri.toString();
-        String correctlyFormattedDataURIScheme = scheme + "://";
-        if (!currentUri.contains(correctlyFormattedDataURIScheme)) {
-            uri = Uri.parse(currentUri.replaceFirst(scheme + ":", correctlyFormattedDataURIScheme));
-        }
-
-        final String[] fields = query.split("&");
-        boolean shouldUpdateIntent = false;
-        String resultQuery = "";
-        for (String field : fields) {
-            if (field.startsWith("body=")) {
-                final String body = Uri.decode(field.substring(5));
-                intent.putExtra("sms_body", body);
-                shouldUpdateIntent = true;
-            } else if (field.startsWith("subject=")) {
-                final String subject = Uri.decode(field.substring(8));
-                intent.putExtra("subject", subject);
-                shouldUpdateIntent = true;
-            } else if (field.startsWith("cc=")) {
-                final String ccNumber = Uri.decode(field.substring(3));
-                String phoneNumber = uri.getAuthority();
-                if (phoneNumber != null) {
-                    uri = uri.buildUpon().encodedAuthority(phoneNumber + ";" + ccNumber).build();
-                }
-                shouldUpdateIntent = true;
-            } else {
-                resultQuery = resultQuery.concat(resultQuery.length() > 0 ? "&" + field : field);
-            }
-        }
-
-        if (!shouldUpdateIntent) {
-            // No need to rewrite the URI, then.
-            return intent;
-        }
-
-        // Form a new URI without the extracted fields in the query part, and
-        // push that into the new Intent.
-        final String newQuery = resultQuery.length() > 0 ? "?" + resultQuery : "";
-        final Uri pruned = uri.buildUpon().encodedQuery(newQuery).build();
-        intent.setData(pruned);
-
-        return intent;
-    }
-
-    // We create a separate method to better encapsulate the @TargetApi use.
-    @TargetApi(15)
-    private static void nullIntentSelector(final Intent intent) {
-        if (!Versions.feature15Plus) {
-            return;
-        }
-
-        intent.setSelector(null);
+        return IntentHelper.openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
     }
 
     /**
