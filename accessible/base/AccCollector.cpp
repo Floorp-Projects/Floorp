@@ -39,16 +39,6 @@ EmbeddedObjCollector::GetAccessibleAt(uint32_t aIndex)
   return EnsureNGetObject(aIndex);
 }
 
-int32_t
-AccCollector::GetIndexAt(Accessible* aAccessible)
-{
-  int32_t index = mObjects.IndexOf(aAccessible);
-  if (index != -1)
-    return index;
-
-  return EnsureNGetIndex(aAccessible);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccCollector protected
 
