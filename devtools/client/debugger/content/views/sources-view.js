@@ -66,6 +66,7 @@ function SourcesView(controller, DebuggerView) {
   this._onEditorContextMenuOpen = this._onEditorContextMenuOpen.bind(this);
   this._onCopyUrlCommand = this._onCopyUrlCommand.bind(this);
   this._onNewTabCommand = this._onNewTabCommand.bind(this);
+  this._onConditionalPopupHidden = this._onConditionalPopupHidden.bind(this);
 }
 
 SourcesView.prototype = Heritage.extend(WidgetMethods, {
@@ -113,10 +114,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
+    this._cbPanel.addEventListener("popuphidden", this._onConditionalPopupHidden, false);
     this._cbTextbox.addEventListener("keypress", this._onConditionalTextboxKeyPress, false);
     this._copyUrlMenuItem.addEventListener("command", this._onCopyUrlCommand, false);
     this._newTabMenuItem.addEventListener("command", this._onNewTabCommand, false);
 
+    this._cbPanel.hidden = true;
     this.allowFocusOnRightClick = true;
     this.autoFocusOnSelection = false;
     this.autoFocusOnFirstItem = false;
@@ -151,6 +154,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
+    this._cbPanel.removeEventListener("popuphidden", this._onConditionalPopupHidden, false);
     this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
     this._copyUrlMenuItem.removeEventListener("command", this._onCopyUrlCommand, false);
     this._newTabMenuItem.removeEventListener("command", this._onNewTabCommand, false);
@@ -677,26 +681,37 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // retrieve the current conditional epression.
     let bp = getBreakpoint(this.getState(), attachment);
     let expr = (bp ? (bp.condition || "") : "");
+    let cbPanel = this._cbPanel;
 
     // Update the conditional expression textbox. If no expression was
     // previously set, revert to using an empty string by default.
     this._cbTextbox.value = expr;
 
-    // Show the conditional expression panel. The popup arrow should be pointing
-    // at the line number node in the breakpoint item view.
-    this._cbPanel.hidden = false;
-    this._cbPanel.openPopup(breakpointItem.attachment.view.lineNumber,
-                            BREAKPOINT_CONDITIONAL_POPUP_POSITION,
-                            BREAKPOINT_CONDITIONAL_POPUP_OFFSET_X,
-                            BREAKPOINT_CONDITIONAL_POPUP_OFFSET_Y);
+
+    function openPopup() {
+      // Show the conditional expression panel. The popup arrow should be pointing
+      // at the line number node in the breakpoint item view.
+      cbPanel.hidden = false;
+      cbPanel.openPopup(breakpointItem.attachment.view.lineNumber,
+                              BREAKPOINT_CONDITIONAL_POPUP_POSITION,
+                              BREAKPOINT_CONDITIONAL_POPUP_OFFSET_X,
+                              BREAKPOINT_CONDITIONAL_POPUP_OFFSET_Y);
+
+      cbPanel.removeEventListener('popuphidden', openPopup, false);
+    }
+
+    // Wait until the other cb panel is closed
+    if (!this._cbPanel.hidden) {
+      this._cbPanel.addEventListener('popuphidden', openPopup, false);
+    } else {
+      openPopup();
+    }
   },
 
   /**
    * Hides a conditional breakpoint's expression input popup.
    */
   _hideConditionalPopup: function() {
-    this._cbPanel.hidden = true;
-
     // Sometimes this._cbPanel doesn't have hidePopup method which doesn't
     // break anything but simply outputs an exception to the console.
     if (this._cbPanel.hidePopup) {
@@ -1170,6 +1185,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       let condition = this._cbTextbox.value;
       this.actions.setBreakpointCondition(bp.location, condition);
     }
+  },
+
+  /**
+   * The popup hidden listener for the breakpoints conditional expression panel.
+   */
+  _onConditionalPopupHidden: function() {
+    this._cbPanel.hidden = true;
   },
 
   /**
