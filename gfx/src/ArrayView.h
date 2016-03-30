@@ -8,6 +8,10 @@
 
 #include "nsTArray.h"
 
+/* This is similar to mfbt/Range.h but has implicit conversion
+ * from nsTArray and less bounds checking.
+ * For now, prefer Range over ArrayView */
+
 namespace mozilla {
 namespace gfx {
 
