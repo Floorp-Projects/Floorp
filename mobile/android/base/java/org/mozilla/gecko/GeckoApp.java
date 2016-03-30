@@ -2304,6 +2304,11 @@ public abstract class GeckoApp
     }
 
     @Override
+    public PromptService getPromptService() {
+        return mPromptService;
+    }
+
+    @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             super.onBackPressed();
