@@ -2518,6 +2518,11 @@ function TextEditor(container, node, template) {
     stopOnReturn: true,
     trigger: "dblclick",
     multiline: true,
+    maxWidth: () => {
+      let elementRect = this.value.getBoundingClientRect();
+      let containerRect = this.container.elt.getBoundingClientRect();
+      return containerRect.right - elementRect.left - 2;
+    },
     trimOutput: false,
     done: (val, commit) => {
       if (!commit) {

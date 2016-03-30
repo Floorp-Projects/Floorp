@@ -233,7 +233,9 @@ TextPropertyEditor.prototype = {
         advanceChars: advanceValidate,
         contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
         property: this.prop,
-        popup: this.popup
+        popup: this.popup,
+        multiline: true,
+        maxWidth: () => this.container.getBoundingClientRect().width
       });
     }
   },
