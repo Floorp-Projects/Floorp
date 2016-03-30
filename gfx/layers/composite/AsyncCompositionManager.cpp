@@ -948,6 +948,12 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
         // our scroll clip to it instead of to this layer (see bug 1168263).
         // A layer with a perspective transform shouldn't have multiple
         // children with FrameMetrics, nor a child with multiple FrameMetrics.
+        // (A child with multiple FrameMetrics would mean that there's *another*
+        // scrollable element between the one with the CSS perspective and the
+        // transformed element. But you'd have to use preserve-3d on the inner
+        // scrollable element in order to have the perspective apply to the
+        // transformed child, and preserve-3d is not supported on scrollable
+        // elements, so this case can't occur.)
         MOZ_ASSERT(!aClipDeferredToParent);
         aClipDeferredToParent = Some(clip);
       } else {
