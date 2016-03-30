@@ -316,6 +316,8 @@ class JSString : public js::gc::TenuredCell
     /* Avoid lame compile errors in JSRope::flatten */
     friend class JSRope;
 
+    friend class js::gc::RelocationOverlay;
+
   protected:
     template <typename CharT>
     MOZ_ALWAYS_INLINE

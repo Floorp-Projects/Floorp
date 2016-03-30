@@ -540,6 +540,7 @@ class Shape : public gc::TenuredCell
     friend struct StackBaseShape;
     friend struct StackShape;
     friend struct JS::ubi::Concrete<Shape>;
+    friend class js::gc::RelocationOverlay;
 
   protected:
     HeapPtrBaseShape    base_;
