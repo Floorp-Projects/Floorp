@@ -10,16 +10,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
-
-import java.util.EnumSet;
 
 public class CombinedHistoryRecyclerView extends RecyclerView
         implements RecyclerViewClickSupport.OnItemClickListener, RecyclerViewClickSupport.OnItemLongClickListener {
-
-    protected HomePager.OnUrlOpenListener mOnUrlOpenListener;
 
     public CombinedHistoryRecyclerView(Context context) {
         super(context);
@@ -40,33 +34,10 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         LinearLayoutManager layoutManager = new LinearLayoutManager(context);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         setLayoutManager(layoutManager);
-
-        RecyclerViewClickSupport.addTo(this)
-            .setOnItemClickListener(this)
-            .setOnItemLongClickListener(this);
-    }
-
-    public void setOnHistoryClickedListener(HomePager.OnUrlOpenListener listener) {
-        this.mOnUrlOpenListener = listener;
     }
 
     @Override
-    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
-        final int viewType = getAdapter().getItemViewType(position);
-        final CombinedHistoryAdapter.ItemType itemType = CombinedHistoryAdapter.ItemType.viewTypeToItemType(viewType);
-
-        switch(itemType) {
-            case CLIENT:
-                // TODO: open new panel with all the remote children, and hide all the other items
-                return;
-            case HISTORY:
-                if (mOnUrlOpenListener != null) {
-                    final TwoLinePageRow historyItem = (TwoLinePageRow) v;
-                    Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "history");
-                    mOnUrlOpenListener.onUrlOpen(historyItem.getUrl(), EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
-                }
-        }
-    }
+    public void onItemClicked(RecyclerView recyclerView, int position, View v) {}
 
     @Override
     public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
