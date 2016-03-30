@@ -21,19 +21,12 @@ class Accessible;
 class AccCollector
 {
 public:
-  AccCollector(Accessible* aRoot, filters::FilterFuncPtr aFilterFunc);
   virtual ~AccCollector();
 
 protected:
-
-  filters::FilterFuncPtr mFilterFunc;
-  Accessible* mRoot;
-  uint32_t mRootChildIdx;
-
-  nsTArray<Accessible*> mObjects;
+  AccCollector() {}
 
 private:
-  AccCollector();
   AccCollector(const AccCollector&);
   AccCollector& operator =(const AccCollector&);
 };
@@ -76,7 +69,7 @@ protected:
 
   // Make sure it's used by Accessible class only.
   explicit EmbeddedObjCollector(Accessible* aRoot) :
-    AccCollector(aRoot, filters::GetEmbeddedObject) { }
+    mFilterFunc(filters::GetEmbeddedObject), mRoot(aRoot), mRootChildIdx(0) {}
 
   /**
    * Append the object to collection.
@@ -84,6 +77,11 @@ protected:
   void AppendObject(Accessible* aAccessible);
 
   friend class Accessible;
+
+  filters::FilterFuncPtr mFilterFunc;
+  Accessible* mRoot;
+  uint32_t mRootChildIdx;
+  nsTArray<Accessible*> mObjects;
 };
 
 } // namespace a11y
