@@ -52,7 +52,7 @@ protected:
 
   // Make sure it's used by Accessible class only.
   explicit EmbeddedObjCollector(Accessible* aRoot) :
-    mFilterFunc(filters::GetEmbeddedObject), mRoot(aRoot), mRootChildIdx(0) {}
+    mRoot(aRoot), mRootChildIdx(0) {}
 
   /**
    * Append the object to collection.
@@ -61,7 +61,6 @@ protected:
 
   friend class Accessible;
 
-  filters::FilterFuncPtr mFilterFunc;
   Accessible* mRoot;
   uint32_t mRootChildIdx;
   nsTArray<Accessible*> mObjects;
