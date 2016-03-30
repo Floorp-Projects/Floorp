@@ -2282,45 +2282,68 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
   nsTArray<RefPtr<Accessible> > containers;
   for (auto idx = aStartIdx; idx < aChildren->Length(); idx++) {
     Accessible* child = aChildren->ElementAt(idx);
-
-    // If the child is in the tree then remove it from the owner.
-    if (child->IsInDocument()) {
-      Accessible* owner = child->Parent();
-      if (!owner) {
-        NS_ERROR("Cannot put the child back. No parent, a broken tree.");
-        continue;
-      }
-      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
-      RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(child, false);
-      reorderEvent->AddSubMutationEvent(hideEvent);
-      FireDelayedEvent(hideEvent);
-
-      {
-        AutoTreeMutation mut(owner);
-        owner->RemoveChild(child);
-        child->SetRelocated(false);
-      }
-
-      MaybeNotifyOfValueChange(owner);
-      FireDelayedEvent(reorderEvent);
+    if (!child->IsInDocument()) {
+      continue;
     }
 
-    Accessible* container = GetContainerAccessible(child->GetContent());
-    if (container &&
-        containers.IndexOf(container) == nsTArray<Accessible*>::NoIndex) {
-      containers.AppendElement(container);
+    // Remove the child from the owner
+    Accessible* owner = child->Parent();
+    if (!owner) {
+      NS_ERROR("Cannot put the child back. No parent, a broken tree.");
+      continue;
+    }
+
+#ifdef A11Y_LOG
+    logging::TreeInfo("aria owns put child back", 0,
+                      "old parent", owner, "child", child, nullptr);
+#endif
+
+    RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
+    RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(child, false);
+    reorderEvent->AddSubMutationEvent(hideEvent);
+    FireDelayedEvent(hideEvent);
+
+    {
+      AutoTreeMutation mut(owner);
+      owner->RemoveChild(child);
+      child->SetRelocated(false);
+    }
+
+    MaybeNotifyOfValueChange(owner);
+    FireDelayedEvent(reorderEvent);
+
+#ifdef A11Y_LOG
+    logging::TreeInfo("aria owns put child back: old parent tree after",
+                      logging::eVerbose, owner);
+#endif
+
+    // and put it back where it belongs to.
+    Accessible* origContainer = GetContainerAccessible(child->GetContent());
+    if (origContainer) {
+      TreeWalker walker(origContainer);
+      if (walker.Seek(child->GetContent())) {
+        Accessible* prevChild = walker.Prev();
+        {
+          AutoTreeMutation mut(origContainer);
+          origContainer->InsertAfter(child, prevChild);
+        }
+
+        RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(origContainer);
+        RefPtr<AccMutationEvent> showEvent = new AccShowEvent(child);
+        reorderEvent->AddSubMutationEvent(showEvent);
+        FireDelayedEvent(showEvent);
+        MaybeNotifyOfValueChange(origContainer);
+        FireDelayedEvent(reorderEvent);
+
+#ifdef A11Y_LOG
+        logging::TreeInfo("aria owns put child back: new parent tree after",
+                          logging::eVerbose, origContainer);
+#endif
+      }
     }
   }
 
-  // And put it back where it belongs to.
   aChildren->RemoveElementsAt(aStartIdx, aChildren->Length() - aStartIdx);
-  for (uint32_t idx = 0; idx < containers.Length(); idx++) {
-    NS_ASSERTION(containers[idx]->IsInDocument(),
-                 "A container has been destroyed.");
-    if (containers[idx]->IsInDocument()) {
-      UpdateTreeOnInsertion(containers[idx]);
-    }
-  }
 }
 
 void
