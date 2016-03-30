@@ -7,17 +7,16 @@
 #include <sys/vfs.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "base/message_loop.h"
+#include "DiskSpaceWatcher.h"
+#include "fanotify.h"
 #include "nsIObserverService.h"
 #include "nsIDiskSpaceWatcher.h"
-#include "mozilla/ModuleUtils.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
-#include "base/message_loop.h"
+#include "nsXULAppAPI.h"
+#include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "nsXULAppAPI.h"
-#include "fanotify.h"
-#include "DiskSpaceWatcher.h"
 
 using namespace mozilla;
 
