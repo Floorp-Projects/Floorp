@@ -29,6 +29,7 @@
     for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
+    SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
       Task.spawn(function* () {

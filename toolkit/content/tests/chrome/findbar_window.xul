@@ -61,6 +61,7 @@
     for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
+    SimpleTest.requestLongerTimeout(2);
 
     function onLoad() {
       Task.spawn(function* () {
@@ -311,7 +312,7 @@
 
     function openFindbar() {
       document.getElementById("cmd_find").doCommand();
-      return gFindBar._startFindDeferred.promise;
+      return gFindBar._startFindDeferred && gFindBar._startFindDeferred.promise;
     }
 
     function* testNormalFindWithComposition() {
