@@ -26,11 +26,6 @@ public:
 
 protected:
   /**
-   * Ensure index for the given accessible is stored and return it.
-   */
-  int32_t EnsureNGetIndex(Accessible* aAccessible);
-
-  /**
    * Append the object to collection.
    */
   virtual void AppendObject(Accessible* aAccessible);
@@ -77,6 +72,11 @@ protected:
    * Ensure accessible at the given index is stored and return it.
    */
   Accessible* EnsureNGetObject(uint32_t aIndex);
+
+  /**
+   * Ensure index for the given accessible is stored and return it.
+   */
+  int32_t EnsureNGetIndex(Accessible* aAccessible);
 
   // Make sure it's used by Accessible class only.
   explicit EmbeddedObjCollector(Accessible* aRoot) :
