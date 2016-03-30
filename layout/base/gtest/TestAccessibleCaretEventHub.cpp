@@ -74,7 +74,7 @@ public:
                                         int32_t aIdentifier) const override
   {
     // Return the device point directly.
-    LayoutDeviceIntPoint touchIntPoint = aEvent->touches[0]->mRefPoint;
+    LayoutDeviceIntPoint touchIntPoint = aEvent->mTouches[0]->mRefPoint;
     return nsPoint(touchIntPoint.x, touchIntPoint.y);
   }
 
@@ -163,7 +163,7 @@ public:
 
     RefPtr<dom::Touch> touch(
       new dom::Touch(identifier, point, radius, rotationAngle, force));
-    event->touches.AppendElement(touch);
+    event->mTouches.AppendElement(touch);
 
     return Move(event);
   }

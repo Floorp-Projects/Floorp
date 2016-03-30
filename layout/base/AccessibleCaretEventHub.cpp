@@ -545,7 +545,7 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
 nsEventStatus
 AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
 {
-  if (aEvent->touches.IsEmpty()) {
+  if (aEvent->mTouches.IsEmpty()) {
     AC_LOG("%s: Receive a touch event without any touch data!", __FUNCTION__);
     return nsEventStatus_eIgnore;
   }
@@ -553,7 +553,7 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   int32_t id =
-    (mActiveTouchId == kInvalidTouchId ? aEvent->touches[0]->Identifier()
+    (mActiveTouchId == kInvalidTouchId ? aEvent->mTouches[0]->Identifier()
                                        : mActiveTouchId);
   nsPoint point = GetTouchEventPosition(aEvent, id);
 
@@ -781,7 +781,7 @@ nsPoint
 AccessibleCaretEventHub::GetTouchEventPosition(WidgetTouchEvent* aEvent,
                                                int32_t aIdentifier) const
 {
-  for (dom::Touch* touch : aEvent->touches) {
+  for (dom::Touch* touch : aEvent->mTouches) {
     if (touch->Identifier() == aIdentifier) {
       LayoutDeviceIntPoint touchIntPoint = touch->mRefPoint;
 

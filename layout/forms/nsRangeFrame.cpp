@@ -535,9 +535,9 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
 
   LayoutDeviceIntPoint absPoint;
   if (aEvent->mClass == eTouchEventClass) {
-    MOZ_ASSERT(aEvent->AsTouchEvent()->touches.Length() == 1,
-               "Unexpected number of touches");
-    absPoint = aEvent->AsTouchEvent()->touches[0]->mRefPoint;
+    MOZ_ASSERT(aEvent->AsTouchEvent()->mTouches.Length() == 1,
+               "Unexpected number of mTouches");
+    absPoint = aEvent->AsTouchEvent()->mTouches[0]->mRefPoint;
   } else {
     absPoint = aEvent->refPoint;
   }
