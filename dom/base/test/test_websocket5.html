@@ -270,6 +270,33 @@ function test47() {
   });
 }
 
+function test48() {
+  return new Promise(function(resolve, reject) {
+    const pref_close = "network.websocket.timeout.close";
+    SpecialPowers.setIntPref(pref_close, 1);
+
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-48");
+
+    ws.onopen = function() {
+      ws.close();
+
+      var date = new Date();
+      var curDate = null;
+      do {
+        curDate = new Date();
+      } while(curDate-date < 1500);
+
+    }
+
+    ws.onclose = function(e) {
+      ok(true, "ws close in test 48");
+      resolve();
+    }
+
+    SpecialPowers.clearUserPref(pref_close);
+  });
+}
+
 var tests = [
   test41, // HSTS
   test42, // non-char utf-8 sequences
@@ -278,6 +305,8 @@ var tests = [
   test45, // Test sending/receving binary Blob
   test46, // Test that we don't dispatch incoming msgs once in CLOSING state
   test47, // Make sure onerror/onclose aren't called during close()
+  test48, // see bug 1227136 - client calls close() from onopen() and waits
+          // until WebSocketChannel::mSocketIn is nulled out on socket thread
 ];
 
 function testWebSocket() {
