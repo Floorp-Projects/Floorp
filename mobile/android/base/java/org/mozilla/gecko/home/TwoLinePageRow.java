@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -26,6 +27,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -41,6 +43,7 @@ public class TwoLinePageRow extends LinearLayout
     private int mSwitchToTabIconId;
 
     private final FaviconView mFavicon;
+    private final View mReaderCached;
 
     private boolean mShowIcons;
     private int mLoadFaviconJobId = Favicons.NOT_LOADING;
@@ -103,6 +106,8 @@ public class TwoLinePageRow extends LinearLayout
 
         mFavicon = (FaviconView) findViewById(R.id.icon);
         mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
+
+        mReaderCached = findViewById(R.id.is_reader_cached);
     }
 
     @Override
@@ -224,10 +229,10 @@ public class TwoLinePageRow extends LinearLayout
      * @param url to display.
      */
     public void update(String title, String url) {
-        update(title, url, 0);
+        update(title, url, 0, false);
     }
 
-    protected void update(String title, String url, long bookmarkId) {
+    protected void update(String title, String url, long bookmarkId, boolean hasReaderCacheItem) {
         if (mShowIcons) {
             // The bookmark id will be 0 (null in database) when the url
             // is not a bookmark.
@@ -257,6 +262,8 @@ public class TwoLinePageRow extends LinearLayout
         mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
 
         updateDisplayedUrl(url);
+
+        mReaderCached.setVisibility(hasReaderCacheItem ? View.VISIBLE : View.INVISIBLE);
     }
 
     /**
@@ -285,6 +292,9 @@ public class TwoLinePageRow extends LinearLayout
             bookmarkId = 0;
         }
 
-        update(title, url, bookmarkId);
+        SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(getContext());
+        final boolean hasReaderCacheItem = rch.isURLCached(url);
+
+        update(title, url, bookmarkId, hasReaderCacheItem);
     }
 }
