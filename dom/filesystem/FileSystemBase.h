@@ -47,10 +47,16 @@ public:
   virtual void
   GetRootName(nsAString& aRetval) const = 0;
 
+  /*
+   * Return the local root path of the FileSystem implementation.
+   * For OSFileSystem, this is equal to the path of the root Directory;
+   * For DeviceStorageFileSystem, this is the path of the SDCard, parent
+   * directory of the exposed root Directory (per type).
+   */
   const nsAString&
-  GetLocalRootPath() const
+  LocalOrDeviceStorageRootPath() const
   {
-    return mLocalRootPath;
+    return mLocalOrDeviceStorageRootPath;
   }
 
   bool
@@ -92,9 +98,17 @@ protected:
 
   // The local path of the root (i.e. the OS path, with OS path separators, of
   // the OS directory that acts as the root of this OSFileSystem).
-  // Only available in the parent process.
-  // In the child process, we don't use it and its value should be empty.
-  nsString mLocalRootPath;
+  // This path must be set by the FileSystem implementation immediately
+  // because it will be used for the validation of any FileSystemTaskBase.
+  // The concept of this path is that, any task will never go out of it and this
+  // must be considered the OS 'root' of the current FileSystem. Different
+  // Directory object can have different OS 'root' path.
+  // To be more clear, any path managed by this FileSystem implementation must
+  // be discendant of this local root path.
+  // The reason why it's not just called 'localRootPath' is because for
+  // DeviceStorage this contains the path of the device storage SDCard, that is
+  // the parent directory of the exposed root path.
+  nsString mLocalOrDeviceStorageRootPath;
 
   bool mShutdown;
 
