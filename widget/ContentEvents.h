@@ -35,7 +35,7 @@ public:
   {
     eVertical,
     eHorizontal,
-    both       = 2
+    eBoth
   };
 
   InternalScrollPortEvent(bool aIsTrusted, EventMessage aMessage,
