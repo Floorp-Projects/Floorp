@@ -1172,9 +1172,17 @@ PresShell::Destroy()
 
   mSynthMouseMoveEvent.Revoke();
 
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "Destroy is re-entering on "
+                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
+  }
+  mInFrameVisibilityUpdate = true;
+
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
   ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
+
+  mInFrameVisibilityUpdate = false;
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5718,16 +5726,12 @@ PresShell::DecApproximateVisibleCount(VisibleFrames& aFrames,
       ReportBadStateDuringVisibilityUpdate();
     }
 
-    SetInFrameVisibilityUpdate(true);
-
     // Decrement the frame's visible count if we're still tracking its
     // visibility. (We may not be, if the frame disabled visibility tracking
     // after we added it to the visible frames list.)
     if (frame->TrackingVisibility()) {
       frame->DecApproximateVisibleCount(aNonvisibleAction);
     }
-
-    SetInFrameVisibilityUpdate(false);
   }
 }
 
@@ -5778,10 +5782,6 @@ void
 PresShell::ClearApproximatelyVisibleFramesList(Maybe<OnNonvisible> aNonvisibleAction
                                                  /* = Nothing() */)
 {
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "ClearApproximatelyVisibleFramesList is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
   DecApproximateVisibleCount(mApproximatelyVisibleFrames, aNonvisibleAction);
   mApproximatelyVisibleFrames.Clear();
 }
@@ -5891,11 +5891,6 @@ PresShell::RebuildApproximateFrameVisibility(nsRect* aRect,
     return;
   }
 
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "RebuildApproximateFrameVisibility is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-
   // Remove the entries of the mApproximatelyVisibleFrames hashtable and put
   // them in oldApproximatelyVisibleFrames.
   VisibleFrames oldApproximatelyVisibleFrames;
@@ -5936,7 +5931,14 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "DoUpdateApproximateFrameVisibility is re-entering on "
+                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
+  }
+  mInFrameVisibilityUpdate = true;
+
   if (mHaveShutDown || mIsDestroying) {
+    mInFrameVisibilityUpdate = false;
     return;
   }
 
@@ -5944,11 +5946,14 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
     ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
+    mInFrameVisibilityUpdate = false;
     return;
   }
 
   RebuildApproximateFrameVisibility(/* aRect = */ nullptr, aRemoveOnly);
   ClearApproximateFrameVisibilityVisited(rootFrame->GetView(), true);
+
+  mInFrameVisibilityUpdate = false;
 
 #ifdef DEBUG_FRAME_VISIBILITY_DISPLAY_LIST
   // This can be used to debug the frame walker by comparing beforeFrameList
@@ -6090,12 +6095,15 @@ PresShell::EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame)
     gfxCriticalNoteOnce << "EnsureFrameInApproximatelyVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
+  mInFrameVisibilityUpdate = true;
 
   if (!mApproximatelyVisibleFrames.Contains(aFrame)) {
     MOZ_ASSERT(!AssumeAllFramesVisible());
     mApproximatelyVisibleFrames.PutEntry(aFrame);
     aFrame->IncApproximateVisibleCount();
   }
+
+  mInFrameVisibilityUpdate = false;
 }
 
 void
@@ -6120,6 +6128,7 @@ PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame)
     gfxCriticalNoteOnce << "RemoveFrameFromApproximatelyVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
+  mInFrameVisibilityUpdate = true;
 
   uint32_t count = mApproximatelyVisibleFrames.Count();
   mApproximatelyVisibleFrames.RemoveEntry(aFrame);
@@ -6130,6 +6139,8 @@ PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame)
     // so we need to decrement its visible count.
     aFrame->DecApproximateVisibleCount();
   }
+
+  mInFrameVisibilityUpdate = false;
 }
 
 class nsAutoNotifyDidPaint
@@ -10901,6 +10912,7 @@ PresShell::UpdateImageLockingState()
       gfxCriticalNoteOnce << "UpdateImageLockingState is re-entering on "
                           << (NS_IsMainThread() ? "" : "non-") << "main thread";
     }
+    mInFrameVisibilityUpdate = true;
 
     // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
@@ -10910,6 +10922,7 @@ PresShell::UpdateImageLockingState()
         imageFrame->MaybeDecodeForPredictedSize();
       }
     }
+    mInFrameVisibilityUpdate = false;
   }
 
   return rv;
