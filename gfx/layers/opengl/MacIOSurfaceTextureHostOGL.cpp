@@ -69,10 +69,11 @@ void
 MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
-  mCompositor = glCompositor;
-  if (mTextureSource) {
-    mTextureSource->SetCompositor(glCompositor);
+  if (mCompositor != glCompositor) {
+    // Cannot share GL texture identifiers across compositors.
+    mTextureSource = nullptr;
   }
+  mCompositor = glCompositor;
 }
 
 gfx::SurfaceFormat
