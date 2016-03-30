@@ -574,15 +574,27 @@ WebConsoleFrame.prototype = {
     }
 
     /*
-     * Focus input line whenever the output area is clicked.
-     * Reusing _addMEssageLinkCallback since it correctly filters
-     * drag and select events.
+     * Focus the input line whenever the output area is clicked.
      */
-    this._addFocusCallback(this.outputNode, (evt) => {
-      if ((evt.target.nodeName.toLowerCase() != "a") &&
-          (evt.target.parentNode.nodeName.toLowerCase() != "a")) {
-        this.jsterm.focus();
+    this.outputWrapper.addEventListener("click", (event) => {
+      // Do not focus on middle/right-click or 2+ clicks.
+      if (event.detail !== 1 || event.button !== 0) {
+        return;
       }
+
+      // Do not focus if something is selected
+      let selection = this.window.getSelection();
+      if (selection && !selection.isCollapsed) {
+        return;
+      }
+
+      // Do not focus if a link was clicked
+      if (event.target.nodeName.toLowerCase() === "a" ||
+          event.target.parentNode.nodeName.toLowerCase() === "a") {
+        return;
+      }
+
+      this.jsterm.focus();
     });
 
     // Toggle the timestamp on preference change
@@ -2626,39 +2638,6 @@ WebConsoleFrame.prototype = {
       if (mousedown &&
           (this._startX != event.clientX) &&
           (this._startY != event.clientY)) {
-        this._startX = this._startY = undefined;
-        return;
-      }
-
-      this._startX = this._startY = undefined;
-
-      callback.call(this, event);
-    }, false);
-  },
-
-  _addFocusCallback: function(node, callback) {
-    node.addEventListener("mousedown", (event) => {
-      this._mousedown = true;
-      this._startX = event.clientX;
-      this._startY = event.clientY;
-    }, false);
-
-    node.addEventListener("click", (event) => {
-      let mousedown = this._mousedown;
-      this._mousedown = false;
-
-      // Do not allow middle/right-click or 2+ clicks.
-      if (event.detail != 1 || event.button != 0) {
-        return;
-      }
-
-      // If this event started with a mousedown event and it ends at a different
-      // location, we consider this text selection.
-      // Add a fuzz modifier of two pixels in any direction to account for
-      // sloppy clicking.
-      if (mousedown &&
-          (Math.abs(event.clientX - this._startX) >= 2) &&
-          (Math.abs(event.clientY - this._startY) >= 1)) {
         this._startX = this._startY = undefined;
         return;
       }
