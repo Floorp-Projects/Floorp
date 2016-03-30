@@ -33,7 +33,7 @@ public:
 
   enum OrientType
   {
-    vertical   = 0,
+    eVertical,
     horizontal = 1,
     both       = 2
   };
@@ -41,7 +41,7 @@ public:
   InternalScrollPortEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollPortEventClass)
-    , orient(vertical)
+    , orient(eVertical)
   {
   }
 

@@ -4126,7 +4126,7 @@ ScrollFrameHelper::FireScrollPortEvent()
     mVerticalOverflow = newVerticalOverflow;
   }
   else if (vertChanged) {
-    orient = InternalScrollPortEvent::vertical;
+    orient = InternalScrollPortEvent::eVertical;
     mVerticalOverflow = newVerticalOverflow;
     if (horizChanged) {
       // We need to dispatch a separate horizontal DOM event. Do that the next
