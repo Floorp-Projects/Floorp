@@ -578,8 +578,10 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
 
     StringBuffer buffer(cx);
     if (!wasm::BinaryToText(cx, bytes, length, buffer)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
-                             "print error");
+        if (!cx->isExceptionPending()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_DECODE_FAIL,
+                                 "print error");
+        }
         return false;
     }
 
