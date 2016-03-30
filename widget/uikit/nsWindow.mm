@@ -170,7 +170,7 @@ private:
     //XXX: I think nativeEvent.timestamp * 1000 is probably usable here but
     // I don't care that much right now.
     event.mTime = PR_IntervalNow();
-    event.touches.SetCapacity(aTouches.count);
+    event.mTouches.SetCapacity(aTouches.count);
     for (UITouch* touch in aTouches) {
         LayoutDeviceIntPoint loc = UIKitPointsToDevPixels([touch locationInView:self], [self contentScaleFactor]);
         LayoutDeviceIntPoint radius = UIKitPointsToDevPixels([touch majorRadius], [touch majorRadius]);
@@ -183,7 +183,7 @@ private:
         int id = reinterpret_cast<int>(value);
         RefPtr<Touch> t = new Touch(id, loc, radius, 0.0f, 1.0f);
         event.refPoint = loc;
-        event.touches.AppendElement(t);
+        event.mTouches.AppendElement(t);
     }
     aWindow->DispatchInputEvent(&event);
 }
