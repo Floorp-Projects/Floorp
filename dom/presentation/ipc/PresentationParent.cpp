@@ -45,17 +45,10 @@ PresentationParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   mActorDestroyed = true;
 
-  for (uint32_t i = 0; i < mSessionIdsAtController.Length(); i++) {
-    NS_WARN_IF(NS_FAILED(mService->
-      UnregisterSessionListener(mSessionIdsAtController[i], nsIPresentationService::ROLE_CONTROLLER)));
+  for (uint32_t i = 0; i < mSessionIds.Length(); i++) {
+    NS_WARN_IF(NS_FAILED(mService->UnregisterSessionListener(mSessionIds[i])));
   }
-  mSessionIdsAtController.Clear();
-
-  for (uint32_t i = 0; i < mSessionIdsAtReceiver.Length(); i++) {
-    NS_WARN_IF(NS_FAILED(mService->
-      UnregisterSessionListener(mSessionIdsAtReceiver[i], nsIPresentationService::ROLE_RECEIVER)));
-  }
-  mSessionIdsAtReceiver.Clear();
+  mSessionIds.Clear();
 
   for (uint32_t i = 0; i < mWindowIds.Length(); i++) {
     NS_WARN_IF(NS_FAILED(mService->UnregisterRespondingListener(mWindowIds[i])));
@@ -135,38 +128,28 @@ PresentationParent::RecvUnregisterAvailabilityHandler()
 }
 
 /* virtual */ bool
-PresentationParent::RecvRegisterSessionHandler(const nsString& aSessionId,
-                                               const uint8_t& aRole)
+PresentationParent::RecvRegisterSessionHandler(const nsString& aSessionId)
 {
   MOZ_ASSERT(mService);
 
   // Validate the accessibility (primarily for receiver side) so that a
   // compromised child process can't fake the ID.
   if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
-                  IsSessionAccessible(aSessionId, aRole, OtherPid()))) {
+                  IsSessionAccessible(aSessionId, OtherPid()))) {
     return true;
   }
 
-  if (nsIPresentationService::ROLE_CONTROLLER == aRole) {
-    mSessionIdsAtController.AppendElement(aSessionId);
-  } else {
-    mSessionIdsAtReceiver.AppendElement(aSessionId);
-  }
-  NS_WARN_IF(NS_FAILED(mService->RegisterSessionListener(aSessionId, aRole, this)));
+  mSessionIds.AppendElement(aSessionId);
+  NS_WARN_IF(NS_FAILED(mService->RegisterSessionListener(aSessionId, this)));
   return true;
 }
 
 /* virtual */ bool
-PresentationParent::RecvUnregisterSessionHandler(const nsString& aSessionId,
-                                                 const uint8_t& aRole)
+PresentationParent::RecvUnregisterSessionHandler(const nsString& aSessionId)
 {
   MOZ_ASSERT(mService);
-  if (nsIPresentationService::ROLE_CONTROLLER == aRole) {
-    mSessionIdsAtController.RemoveElement(aSessionId);
-  } else {
-    mSessionIdsAtReceiver.RemoveElement(aSessionId);
-  }
-  NS_WARN_IF(NS_FAILED(mService->UnregisterSessionListener(aSessionId, aRole)));
+  mSessionIds.RemoveElement(aSessionId);
+  NS_WARN_IF(NS_FAILED(mService->UnregisterSessionListener(aSessionId)));
   return true;
 }
 
@@ -280,7 +263,7 @@ PresentationRequestParent::DoRequest(const SendSessionMessageRequest& aRequest)
   // Validate the accessibility (primarily for receiver side) so that a
   // compromised child process can't fake the ID.
   if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
-                  IsSessionAccessible(aRequest.sessionId(), aRequest.role(), OtherPid()))) {
+                  IsSessionAccessible(aRequest.sessionId(), OtherPid()))) {
     return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
   }
 
@@ -290,7 +273,7 @@ PresentationRequestParent::DoRequest(const SendSessionMessageRequest& aRequest)
     return NotifyError(NS_ERROR_NOT_AVAILABLE);
   }
 
-  nsresult rv = mService->SendSessionMessage(aRequest.sessionId(), aRequest.role(), stream);
+  nsresult rv = mService->SendSessionMessage(aRequest.sessionId(), stream);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);
   }
@@ -305,11 +288,11 @@ PresentationRequestParent::DoRequest(const CloseSessionRequest& aRequest)
   // Validate the accessibility (primarily for receiver side) so that a
   // compromised child process can't fake the ID.
   if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
-                  IsSessionAccessible(aRequest.sessionId(), aRequest.role(), OtherPid()))) {
+                  IsSessionAccessible(aRequest.sessionId(), OtherPid()))) {
     return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  nsresult rv = mService->CloseSession(aRequest.sessionId(), aRequest.role());
+  nsresult rv = mService->CloseSession(aRequest.sessionId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);
   }
@@ -324,11 +307,11 @@ PresentationRequestParent::DoRequest(const TerminateSessionRequest& aRequest)
   // Validate the accessibility (primarily for receiver side) so that a
   // compromised child process can't fake the ID.
   if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
-                  IsSessionAccessible(aRequest.sessionId(), aRequest.role(), OtherPid()))) {
+                  IsSessionAccessible(aRequest.sessionId(), OtherPid()))) {
     return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  nsresult rv = mService->TerminateSession(aRequest.sessionId(), aRequest.role());
+  nsresult rv = mService->TerminateSession(aRequest.sessionId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);
   }
