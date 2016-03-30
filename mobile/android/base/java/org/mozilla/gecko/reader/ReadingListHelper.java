@@ -299,6 +299,23 @@ public final class ReadingListHelper implements NativeEventListener {
         }
     }
 
+    public static void removeCachedReaderItem(final String url, Context context) {
+        if (AboutPages.isAboutReader(url)) {
+            throw new IllegalArgumentException("Page url must be original (not about:reader) url");
+        }
+
+        SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
+
+        if (rch.isURLCached(url)) {
+            GeckoAppShell.notifyObservers("Reader:RemoveFromCache", url);
+        }
+
+        // When removing items from the cache we can probably spare ourselves the async callback
+        // that we use when adding cached items. We know the cached item will be gone, hence
+        // we no longer need to track it in the SavedReaderViewHelper
+        rch.remove(url);
+    }
+
     @RobocopTarget
     /**
      * Test code will want to disable background fetches to avoid upsetting
