@@ -1413,7 +1413,9 @@ var SyntaxTreeVisitor = {
       this[param.type](param, aNode, aCallbacks);
     }
     for (let _default of aNode.defaults) {
-      this[_default.type](_default, aNode, aCallbacks);
+      if (_default) {
+        this[_default.type](_default, aNode, aCallbacks);
+      }
     }
     if (aNode.rest) {
       this[aNode.rest.type](aNode.rest, aNode, aCallbacks);
@@ -1622,7 +1624,9 @@ var SyntaxTreeVisitor = {
       this[param.type](param, aNode, aCallbacks);
     }
     for (let _default of aNode.defaults) {
-      this[_default.type](_default, aNode, aCallbacks);
+      if (_default) {
+        this[_default.type](_default, aNode, aCallbacks);
+      }
     }
     if (aNode.rest) {
       this[aNode.rest.type](aNode.rest, aNode, aCallbacks);
@@ -1661,7 +1665,9 @@ var SyntaxTreeVisitor = {
       this[param.type](param, aNode, aCallbacks);
     }
     for (let _default of aNode.defaults) {
-      this[_default.type](_default, aNode, aCallbacks);
+      if (_default) {
+        this[_default.type](_default, aNode, aCallbacks);
+      }
     }
     if (aNode.rest) {
       this[aNode.rest.type](aNode.rest, aNode, aCallbacks);
@@ -2346,6 +2352,35 @@ var SyntaxTreeVisitor = {
     }
     if (aCallbacks.onLiteral) {
       aCallbacks.onLiteral(aNode);
+    }
+  },
+
+  /**
+   * A template string literal.
+   *
+   * interface TemplateLiteral <: Node {
+   *   type: "TemplateLiteral";
+   *   elements: [ Expression ];
+   * }
+   */
+  TemplateLiteral: function(aNode, aParent, aCallbacks) {
+    aNode._parent = aParent;
+
+    if (this.break) {
+      return;
+    }
+    if (aCallbacks.onNode) {
+      if (aCallbacks.onNode(aNode, aParent) === false) {
+        return;
+      }
+    }
+    if (aCallbacks.onTemplateLiteral) {
+      aCallbacks.onTemplateLiteral(aNode);
+    }
+    for (let element of aNode.elements) {
+      if (element) {
+        this[element.type](element, aNode, aCallbacks);
+      }
     }
   }
 };
