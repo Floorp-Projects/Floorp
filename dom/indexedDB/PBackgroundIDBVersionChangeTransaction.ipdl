@@ -30,11 +30,16 @@ parent:
 
   async CreateObjectStore(ObjectStoreMetadata metadata);
   async DeleteObjectStore(int64_t objectStoreId);
+  async RenameObjectStore(int64_t objectStoreId,
+                          nsString name);
 
   async CreateIndex(int64_t objectStoreId,
                     IndexMetadata metadata);
   async DeleteIndex(int64_t objectStoreId,
                     int64_t indexId);
+  async RenameIndex(int64_t objectStoreId,
+                    int64_t indexId,
+                    nsString name);
 
   async PBackgroundIDBCursor(OpenCursorParams params);
 

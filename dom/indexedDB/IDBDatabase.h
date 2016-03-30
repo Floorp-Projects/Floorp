@@ -56,6 +56,9 @@ class IDBDatabase final
   class Observer;
   friend class Observer;
 
+  friend class IDBObjectStore;
+  friend class IDBIndex;
+
   // The factory must be kept alive when IndexedDB is used in multiple
   // processes. If it dies then the entire actor tree will be destroyed with it
   // and the world will explode.
@@ -327,6 +330,14 @@ private:
              const nsAString& aFilename,
              uint32_t aLineNumber,
              uint32_t aColumnNumber);
+
+  // Only accessed by IDBObjectStore.
+  nsresult
+  RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
+
+  // Only accessed by IDBIndex.
+  nsresult
+  RenameIndex(int64_t aObjectStoreId, int64_t aIndexId, const nsAString& aName);
 };
 
 } // namespace dom
