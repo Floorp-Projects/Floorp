@@ -1,16 +1,17 @@
 package org.mozilla.gecko.prompts;
 
-import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class PromptListItem {
             String type = obj.isNull("type") ? GeckoActionProvider.DEFAULT_MIME_TYPE :
                                                obj.optString("type", GeckoActionProvider.DEFAULT_MIME_TYPE);
 
-            mIntent = IntentHelper.getShareIntent(context, uri, type, "");
+            mIntent = GeckoAppShell.getShareIntent(context, uri, type, "");
             isParent = true;
         } else {
             mIntent = null;

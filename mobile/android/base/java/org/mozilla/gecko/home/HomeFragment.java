@@ -12,7 +12,6 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.Restrictions;
@@ -211,7 +210,7 @@ public abstract class HomeFragment extends Fragment {
                 Log.e(LOGTAG, "Can't share because URL is null");
                 return false;
             } else {
-                IntentHelper.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
+                GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
                                               Intent.ACTION_SEND, info.getDisplayTitle(), false);
 
                 // Context: Sharing via chrome homepage contextmenu list (home session should be active)
