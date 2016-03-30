@@ -24,6 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Abs;
+using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
@@ -339,6 +340,32 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
 
     masm.bind(&done);
     return;
+}
+
+void
+CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
+{
+    MOZ_ASSERT(gen->compilingAsmJS());
+    MAsmReinterpret* ins = lir->mir();
+
+    MIRType to = ins->type();
+    DebugOnly<MIRType> from = ins->input()->type();
+
+    switch (to) {
+      case MIRType_Int32:
+        MOZ_ASSERT(from == MIRType_Float32);
+        masm.vmovd(ToFloatRegister(lir->input()), ToRegister(lir->output()));
+        break;
+      case MIRType_Float32:
+        MOZ_ASSERT(from == MIRType_Int32);
+        masm.vmovd(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+        break;
+      case MIRType_Double:
+      case MIRType_Int64:
+        MOZ_CRASH("not handled by this LIR opcode");
+      default:
+        MOZ_CRASH("unexpected AsmReinterpret");
+    }
 }
 
 void
@@ -932,7 +959,7 @@ CodeGeneratorX86Shared::visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation
     LInstruction* ins = ool->ins();
     Register reg = ToRegister(ins->getDef(0));
 
-    mozilla::DebugOnly<LAllocation*> lhs = ins->getOperand(0);
+    DebugOnly<LAllocation*> lhs = ins->getOperand(0);
     LAllocation* rhs = ins->getOperand(1);
 
     MOZ_ASSERT(reg == ToRegister(lhs));
@@ -1216,7 +1243,7 @@ void
 CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
 {
     Register lhs = ToRegister(ins->numerator());
-    mozilla::DebugOnly<Register> output = ToRegister(ins->output());
+    DebugOnly<Register> output = ToRegister(ins->output());
 
     int32_t shift = ins->shift();
     bool negativeDivisor = ins->negativeDivisor();

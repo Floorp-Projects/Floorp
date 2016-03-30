@@ -73,6 +73,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
     void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
+    void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
+    void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;
