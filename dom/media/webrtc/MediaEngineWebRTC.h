@@ -569,6 +569,9 @@ public:
   // before invoking Shutdown on this class.
   void Shutdown() override;
 
+  // Returns whether the host supports duplex audio stream.
+  bool SupportsDuplex();
+
   void EnumerateVideoDevices(dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaEngineVideoSource>>*) override;
   void EnumerateAudioDevices(dom::MediaSourceEnum,
