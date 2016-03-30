@@ -19,9 +19,11 @@ extern mozilla::LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPK11Token, nsIPK11Token)
 
-nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
+nsPK11Token::nsPK11Token(PK11SlotInfo* slot)
   : mUIContext(new PipUIContext())
 {
+  MOZ_ASSERT(slot);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
@@ -90,18 +92,23 @@ nsPK11Token::~nsPK11Token()
   shutdown(calledFromObject);
 }
 
-void nsPK11Token::virtualDestroyNSSReference()
+void
+nsPK11Token::virtualDestroyNSSReference()
 {
   destructorSafeDestroyNSSReference();
 }
 
-void nsPK11Token::destructorSafeDestroyNSSReference()
+void
+nsPK11Token::destructorSafeDestroyNSSReference()
 {
   mSlot = nullptr;
 }
 
-NS_IMETHODIMP nsPK11Token::GetTokenName(char16_t * *aTokenName)
+NS_IMETHODIMP
+nsPK11Token::GetTokenName(char16_t** aTokenName)
 {
+  NS_ENSURE_ARG_POINTER(aTokenName);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -120,8 +127,11 @@ NS_IMETHODIMP nsPK11Token::GetTokenName(char16_t * *aTokenName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::GetTokenLabel(char16_t **aTokLabel)
+NS_IMETHODIMP
+nsPK11Token::GetTokenLabel(char16_t** aTokLabel)
 {
+  NS_ENSURE_ARG_POINTER(aTokLabel);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -139,8 +149,11 @@ NS_IMETHODIMP nsPK11Token::GetTokenLabel(char16_t **aTokLabel)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::GetTokenManID(char16_t **aTokManID)
+NS_IMETHODIMP
+nsPK11Token::GetTokenManID(char16_t** aTokManID)
 {
+  NS_ENSURE_ARG_POINTER(aTokManID);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -158,8 +171,11 @@ NS_IMETHODIMP nsPK11Token::GetTokenManID(char16_t **aTokManID)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::GetTokenHWVersion(char16_t **aTokHWVersion)
+NS_IMETHODIMP
+nsPK11Token::GetTokenHWVersion(char16_t** aTokHWVersion)
 {
+  NS_ENSURE_ARG_POINTER(aTokHWVersion);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -177,8 +193,11 @@ NS_IMETHODIMP nsPK11Token::GetTokenHWVersion(char16_t **aTokHWVersion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::GetTokenFWVersion(char16_t **aTokFWVersion)
+NS_IMETHODIMP
+nsPK11Token::GetTokenFWVersion(char16_t** aTokFWVersion)
 {
+  NS_ENSURE_ARG_POINTER(aTokFWVersion);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -196,8 +215,11 @@ NS_IMETHODIMP nsPK11Token::GetTokenFWVersion(char16_t **aTokFWVersion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::GetTokenSerialNumber(char16_t **aTokSerialNum)
+NS_IMETHODIMP
+nsPK11Token::GetTokenSerialNumber(char16_t** aTokSerialNum)
 {
+  NS_ENSURE_ARG_POINTER(aTokSerialNum);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -215,8 +237,11 @@ NS_IMETHODIMP nsPK11Token::GetTokenSerialNumber(char16_t **aTokSerialNum)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::IsLoggedIn(bool *_retval)
+NS_IMETHODIMP
+nsPK11Token::IsLoggedIn(bool* _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -247,7 +272,8 @@ nsPK11Token::Login(bool force)
   return MapSECStatus(PK11_Authenticate(mSlot.get(), true, mUIContext));
 }
 
-NS_IMETHODIMP nsPK11Token::LogoutSimple()
+NS_IMETHODIMP
+nsPK11Token::LogoutSimple()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -259,7 +285,8 @@ NS_IMETHODIMP nsPK11Token::LogoutSimple()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::LogoutAndDropAuthenticatedResources()
+NS_IMETHODIMP
+nsPK11Token::LogoutAndDropAuthenticatedResources()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -275,7 +302,8 @@ NS_IMETHODIMP nsPK11Token::LogoutAndDropAuthenticatedResources()
   return nssComponent->LogoutAuthenticatedPK11();
 }
 
-NS_IMETHODIMP nsPK11Token::Reset()
+NS_IMETHODIMP
+nsPK11Token::Reset()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -284,8 +312,11 @@ NS_IMETHODIMP nsPK11Token::Reset()
   return MapSECStatus(PK11_ResetToken(mSlot.get(), nullptr));
 }
 
-NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(int32_t *aMinimumPasswordLength)
+NS_IMETHODIMP
+nsPK11Token::GetMinimumPasswordLength(int32_t* aMinimumPasswordLength)
 {
+  NS_ENSURE_ARG_POINTER(aMinimumPasswordLength);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -295,8 +326,11 @@ NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(int32_t *aMinimumPasswordLen
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(bool *aNeedsUserInit)
+NS_IMETHODIMP
+nsPK11Token::GetNeedsUserInit(bool* aNeedsUserInit)
 {
+  NS_ENSURE_ARG_POINTER(aNeedsUserInit);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -305,8 +339,12 @@ NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(bool *aNeedsUserInit)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::CheckPassword(const char16_t *password, bool *_retval)
+NS_IMETHODIMP
+nsPK11Token::CheckPassword(const char16_t* password, bool* _retval)
 {
+  // Note: It's OK for |password| to be null.
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -327,8 +365,10 @@ NS_IMETHODIMP nsPK11Token::CheckPassword(const char16_t *password, bool *_retval
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::InitPassword(const char16_t *initialPassword)
+NS_IMETHODIMP
+nsPK11Token::InitPassword(const char16_t* initialPassword)
 {
+  // Note: It's OK for |initialPassword| to be null.
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -341,6 +381,8 @@ NS_IMETHODIMP nsPK11Token::InitPassword(const char16_t *initialPassword)
 NS_IMETHODIMP
 nsPK11Token::GetAskPasswordTimes(int32_t* askTimes)
 {
+  NS_ENSURE_ARG_POINTER(askTimes);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -353,6 +395,8 @@ nsPK11Token::GetAskPasswordTimes(int32_t* askTimes)
 NS_IMETHODIMP
 nsPK11Token::GetAskPasswordTimeout(int32_t* askTimeout)
 {
+  NS_ENSURE_ARG_POINTER(askTimeout);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -374,8 +418,11 @@ nsPK11Token::SetAskPasswordDefaults(const int32_t askTimes,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::ChangePassword(const char16_t *oldPassword, const char16_t *newPassword)
+NS_IMETHODIMP
+nsPK11Token::ChangePassword(const char16_t* oldPassword,
+                            const char16_t* newPassword)
 {
+  // Note: It's OK for |oldPassword| and |newPassword| to be null.
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -393,8 +440,11 @@ NS_IMETHODIMP nsPK11Token::ChangePassword(const char16_t *oldPassword, const cha
     (newPassword ? const_cast<char*>(utf8NewPassword.get()) : nullptr)));
 }
 
-NS_IMETHODIMP nsPK11Token::IsHardwareToken(bool *_retval)
+NS_IMETHODIMP
+nsPK11Token::IsHardwareToken(bool* _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -404,8 +454,11 @@ NS_IMETHODIMP nsPK11Token::IsHardwareToken(bool *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::NeedsLogin(bool *_retval)
+NS_IMETHODIMP
+nsPK11Token::NeedsLogin(bool* _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -415,8 +468,11 @@ NS_IMETHODIMP nsPK11Token::NeedsLogin(bool *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11Token::IsFriendly(bool *_retval)
+NS_IMETHODIMP
+nsPK11Token::IsFriendly(bool* _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -444,8 +500,11 @@ nsPK11TokenDB::~nsPK11TokenDB()
   shutdown(calledFromObject);
 }
 
-NS_IMETHODIMP nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token **_retval)
+NS_IMETHODIMP
+nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -462,9 +521,12 @@ NS_IMETHODIMP nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPK11TokenDB::
-FindTokenByName(const char16_t* tokenName, nsIPK11Token **_retval)
+NS_IMETHODIMP
+nsPK11TokenDB::FindTokenByName(const char16_t* tokenName, nsIPK11Token** _retval)
 {
+  // Note: It's OK for |tokenName| to be null.
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -486,6 +548,8 @@ FindTokenByName(const char16_t* tokenName, nsIPK11Token **_retval)
 NS_IMETHODIMP
 nsPK11TokenDB::ListTokens(nsISimpleEnumerator** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
