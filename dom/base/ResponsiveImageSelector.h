@@ -86,9 +86,9 @@ private:
   // candidate
   void AppendCandidateIfUnique(const ResponsiveImageCandidate &aCandidate);
 
-  // Append a default candidate with this URL. Does not check if the array
-  // already contains one, use SetDefaultSource instead.
-  void AppendDefaultCandidate(const nsAString& aURLString);
+  // Append a default candidate with this URL if necessary. Does not check if
+  // the array already contains one, use SetDefaultSource instead.
+  void MaybeAppendDefaultCandidate();
 
   // Get index of selected candidate, triggering selection if necessary.
   int GetSelectedCandidateIndex();
@@ -105,6 +105,8 @@ private:
   bool ComputeFinalWidthForCurrentViewport(int32_t *aWidth);
 
   nsCOMPtr<nsINode> mOwnerNode;
+  // The cached URL for default candidate.
+  nsString mDefaultSourceURL;
   // If this array contains an eCandidateType_Default, it should be the last
   // element, such that the Setters can preserve/replace it respectively.
   nsTArray<ResponsiveImageCandidate> mCandidates;
