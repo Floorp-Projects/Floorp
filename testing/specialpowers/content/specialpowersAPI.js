@@ -360,13 +360,10 @@ function wrapCallbackObject(obj) {
   obj = Cu.waiveXrays(obj);
   var wrapper = {};
   for (var i in obj) {
-    var property = Object.getOwnPropertyDescriptor(obj, i);
-    for (var key in property) {
-      if (typeof property[key] == 'function') {
-        property[key] = wrapCallback(property[key]);
-      }
-    }
-    Object.defineProperty(wrapper, i, property);
+    if (typeof obj[i] == 'function')
+      wrapper[i] = wrapCallback(obj[i]);
+    else
+      wrapper[i] = obj[i];
   }
   return wrapper;
 }
@@ -693,7 +690,7 @@ SpecialPowersAPI.prototype = {
      we will revert the permission back to the original.
 
      inPermissions is an array of objects where each object has a type, action, context, ex:
-     [{'type': 'SystemXHR', 'allow': 1, 'context': document},
+     [{'type': 'SystemXHR', 'allow': 1, 'context': document}, 
       {'type': 'SystemXHR', 'allow': Ci.nsIPermissionManager.PROMPT_ACTION, 'context': document}]
 
      Allow can be a boolean value of true/false or ALLOW_ACTION/DENY_ACTION/PROMPT_ACTION/UNKNOWN_ACTION
