@@ -10474,6 +10474,14 @@
     "kind": "count",
     "description": "Remote JAR protocol usage"
   },
+  "MEDIA_DECODER_BACKEND_USED": {
+    "alert_emails": ["danderson@mozilla.com"],
+    "bug_numbers": [1259695],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Media decoder backend (0=WMF Software, 1=DXVA2D3D9, 2=DXVA2D3D11)"
+  },
   "PLUGIN_BLOCKED_FOR_STABILITY": {
     "alert_emails": ["cpeterson@mozilla.com"],
     "expires_in_version": "52",
