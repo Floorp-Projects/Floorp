@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/hidden_devices"
+    style="@style/Widget.Home.ActionItem"
+    android:background="@drawable/action_bar_button"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/home_remote_tabs_hidden_footer_height"
+    android:gravity="center"
+    android:maxLength="1024"
+    android:textColor="@color/tabs_tray_icon_grey" />
