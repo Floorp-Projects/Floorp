@@ -47,6 +47,7 @@ public class CombinedHistoryPanel extends HomeFragment {
         mRecyclerView = (CombinedHistoryRecyclerView) view.findViewById(R.id.combined_recycler_view);
         mAdapter = new CombinedHistoryAdapter(getContext());
         mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setOnHistoryClickedListener(mUrlOpenListener);
         mClearHistoryButton = view.findViewById(R.id.clear_history_button);
         // TODO: link up click handler for clear history button
         // TODO: Handle date headers.
