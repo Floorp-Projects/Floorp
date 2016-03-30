@@ -172,18 +172,23 @@ GetDirectoryListingTask::SetSuccessRequestResult(const FileSystemResponseValue& 
   for (uint32_t i = 0; i < r.data().Length(); ++i) {
     const FileSystemDirectoryListingResponseData& data = r.data()[i];
 
+    Directory::BlobImplOrDirectoryPath element;
+
     if (data.type() == FileSystemDirectoryListingResponseData::TFileSystemDirectoryListingResponseBlob) {
       PBlobChild* blob = data.get_FileSystemDirectoryListingResponseBlob().blobChild();
 
-      Directory::BlobImplOrDirectoryPath* element = mTargetData.AppendElement();
-      element->mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
-      element->mBlobImpl = static_cast<BlobChild*>(blob)->GetBlobImpl();
+      element.mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
+      element.mBlobImpl = static_cast<BlobChild*>(blob)->GetBlobImpl();
     } else {
       MOZ_ASSERT(data.type() == FileSystemDirectoryListingResponseData::TFileSystemDirectoryListingResponseDirectory);
 
-      Directory::BlobImplOrDirectoryPath* element = mTargetData.AppendElement();
-      element->mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
-      element->mDirectoryPath = data.get_FileSystemDirectoryListingResponseDirectory().directoryRealPath();
+      element.mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
+      element.mDirectoryPath = data.get_FileSystemDirectoryListingResponseDirectory().directoryRealPath();
+    }
+
+    if (!mTargetData.AppendElement(element, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
     }
   }
 }
@@ -287,21 +292,24 @@ GetDirectoryListingTask::Work()
       }
     }
 
+    Directory::BlobImplOrDirectoryPath element;
     if (isDir) {
       nsAutoString path;
       if (NS_WARN_IF(NS_FAILED(currFile->GetPath(path)))) {
         continue;
       }
 
-      Directory::BlobImplOrDirectoryPath* element = mTargetData.AppendElement();
-      element->mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
-      element->mDirectoryPath = path;
+      element.mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
+      element.mDirectoryPath = path;
     } else {
       BlobImplFile* impl = new BlobImplFile(currFile);
 
-      Directory::BlobImplOrDirectoryPath* element = mTargetData.AppendElement();
-      element->mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
-      element->mBlobImpl = impl;
+      element.mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
+      element.mBlobImpl = impl;
+    }
+
+    if (!mTargetData.AppendElement(element, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
   return NS_OK;
