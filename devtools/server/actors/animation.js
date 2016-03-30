@@ -444,15 +444,17 @@ var AnimationPlayerActor = ActorClass({
 
   /**
    * Get data about the animated properties of this animation player.
-   * @return {Object} Returns a list of animated properties.
+   * @return {Array} Returns a list of animated properties.
    * Each property contains a list of values and their offsets
    */
   getProperties: method(function() {
-    return this.player.effect.getProperties();
+    return this.player.effect.getProperties().map(property => {
+      return {name: property.property, values: property.values};
+    });
   }, {
     request: {},
     response: {
-      frames: RetVal("json")
+      properties: RetVal("array:json")
     }
   })
 });
