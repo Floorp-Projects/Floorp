@@ -319,14 +319,6 @@ Shape::fixupAfterMovingGC()
 }
 
 void
-BaseShape::fixupAfterMovingGC()
-{
-    if (hasTable())
-        table().fixupAfterMovingGC();
-}
-
-
-void
 Shape::fixupGetterSetterForBarrier(JSTracer* trc)
 {
     if (!hasGetterValue() && !hasSetterValue())
