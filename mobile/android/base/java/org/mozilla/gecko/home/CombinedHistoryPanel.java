@@ -13,33 +13,23 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.text.SpannableStringBuilder;
-import android.text.TextPaint;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.UnderlineSpan;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.widget.DividerItemDecoration;
 
 import java.util.List;
@@ -49,18 +39,12 @@ public class CombinedHistoryPanel extends HomeFragment {
     private final int LOADER_ID_HISTORY = 0;
     private final int LOADER_ID_REMOTE = 1;
 
-    // String placeholders to mark formatting.
-    private final static String FORMAT_S1 = "%1$s";
-    private final static String FORMAT_S2 = "%2$s";
-
     private CombinedHistoryRecyclerView mRecyclerView;
     private CombinedHistoryAdapter mAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
     private OnPanelLevelChangeListener.PanelLevel mPanelLevel = OnPanelLevelChangeListener.PanelLevel.PARENT;
     private Button mPanelFooterButton;
-    // Reference to the View to display when there are no results.
-    private View mEmptyView;
 
     public interface OnPanelLevelChangeListener {
         enum PanelLevel {
@@ -88,7 +72,9 @@ public class CombinedHistoryPanel extends HomeFragment {
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
+        mPanelFooterButton.setVisibility(View.VISIBLE);
 
+        // TODO: Check if empty state
         // TODO: Handle date headers.
     }
 
@@ -167,37 +153,25 @@ public class CombinedHistoryPanel extends HomeFragment {
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
                     // TODO: Handle hidden clients
                     mAdapter.setClients(clients);
+
                     break;
             }
 
-            // Check and set empty state.
-            updateButtonFromLevel(OnPanelLevelChangeListener.PanelLevel.PARENT);
-            updateEmptyView(mAdapter.getItemCount() == 0);
         }
     }
 
     protected class OnLevelChangeListener implements OnPanelLevelChangeListener {
         @Override
         public void onPanelLevelChange(PanelLevel level) {
-            updateButtonFromLevel(level);
-        }
-    }
-
-    private void updateButtonFromLevel(OnPanelLevelChangeListener.PanelLevel level) {
-        switch (level) {
-            case CHILD:
-                mPanelFooterButton.setVisibility(View.VISIBLE);
-                mPanelFooterButton.setText(R.string.home_open_all);
-                break;
-            case PARENT:
-                final boolean historyRestricted = !Restrictions.isAllowed(getActivity(), Restrictable.CLEAR_HISTORY);
-                if (historyRestricted || !mAdapter.containsHistory()) {
-                    mPanelFooterButton.setVisibility(View.GONE);
-                } else {
-                    mPanelFooterButton.setVisibility(View.VISIBLE);
+            mPanelLevel = level;
+            switch (mPanelLevel) {
+                case PARENT:
                     mPanelFooterButton.setText(R.string.home_clear_history_button);
-                }
-                break;
+                    break;
+                case CHILD:
+                    mPanelFooterButton.setText(R.string.home_open_all);
+                    break;
+            }
         }
     }
 
@@ -251,96 +225,5 @@ public class CombinedHistoryPanel extends HomeFragment {
                     break;
             }
         }
-    }
-
-    private void updateEmptyView(boolean isEmpty) {
-        if (isEmpty) {
-            if (mEmptyView == null) {
-                // Set empty panel view if it needs to be shown and hasn't been inflated.
-                final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
-                mEmptyView = emptyViewStub.inflate();
-
-                final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
-                emptyIcon.setImageResource(R.drawable.icon_most_recent_empty);
-
-                final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
-                emptyText.setText(R.string.home_most_recent_empty);
-
-                final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
-                final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
-
-                final SpannableStringBuilder hintBuilder = formatHintText(hintText);
-                if (hintBuilder != null) {
-                    emptyHint.setText(hintBuilder);
-                    emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
-                    emptyHint.setVisibility(View.VISIBLE);
-                }
-
-                if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
-                    emptyHint.setVisibility(View.GONE);
-                }
-                mEmptyView.setVisibility(View.VISIBLE);
-            } else {
-                if (mEmptyView != null) {
-                    mEmptyView.setVisibility(View.GONE);
-                }
-            }
-        }
-    }
-    /**
-     * Make Span that is clickable, and underlined
-     * between the string markers <code>FORMAT_S1</code> and
-     * <code>FORMAT_S2</code>.
-     *
-     * @param text String to format
-     * @return formatted SpannableStringBuilder, or null if there
-     * is not any text to format.
-     */
-    private SpannableStringBuilder formatHintText(String text) {
-        // Set formatting as marked by string placeholders.
-        final int underlineStart = text.indexOf(FORMAT_S1);
-        final int underlineEnd = text.indexOf(FORMAT_S2);
-
-        // Check that there is text to be formatted.
-        if (underlineStart >= underlineEnd) {
-            return null;
-        }
-
-        final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-
-        // Set clickable text.
-        final ClickableSpan clickableSpan = new ClickableSpan() {
-            @Override
-            public void onClick(View widget) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PANEL, "hint-private-browsing");
-                try {
-                    final JSONObject json = new JSONObject();
-                    json.put("type", "Menu:Open");
-                    EventDispatcher.getInstance().dispatchEvent(json, null);
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error forming JSON for Private Browsing contextual hint", e);
-                }
-            }
-        };
-
-        ssb.setSpan(clickableSpan, 0, text.length(), 0);
-
-        // Remove underlining set by ClickableSpan.
-        final UnderlineSpan noUnderlineSpan = new UnderlineSpan() {
-            @Override
-            public void updateDrawState(TextPaint textPaint) {
-                textPaint.setUnderlineText(false);
-            }
-        };
-
-        ssb.setSpan(noUnderlineSpan, 0, text.length(), 0);
-
-        // Add underlining for "Private Browsing".
-        ssb.setSpan(new UnderlineSpan(), underlineStart, underlineEnd, 0);
-
-        ssb.delete(underlineEnd, underlineEnd + FORMAT_S2.length());
-        ssb.delete(underlineStart, underlineStart + FORMAT_S1.length());
-
-        return ssb;
     }
 }
