@@ -31,7 +31,7 @@ public:
     return this;
   }
 
-  enum orientType
+  enum OrientType
   {
     vertical   = 0,
     horizontal = 1,
@@ -57,7 +57,7 @@ public:
     return result;
   }
 
-  orientType orient;
+  OrientType orient;
 
   void AssignScrollPortEventData(const InternalScrollPortEvent& aEvent,
                                  bool aCopyTargets)
