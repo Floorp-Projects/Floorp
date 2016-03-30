@@ -9,7 +9,6 @@
 #include "base/waitable_event.h"
 #include "GeckoProfiler.h"
 #include "mozilla/IOInterposer.h"
-#include "nsThreadUtils.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -152,8 +151,7 @@ void Thread::ThreadMain() {
   mozilla::IOInterposer::RegisterCurrentThread();
 
   // The message loop for this thread.
-  MessageLoop message_loop(startup_data_->options.message_loop_type,
-                           NS_GetCurrentThread());
+  MessageLoop message_loop(startup_data_->options.message_loop_type);
 
   // Complete the initialization of our Thread object.
   thread_id_ = PlatformThread::CurrentId();
