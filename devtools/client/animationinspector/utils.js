@@ -78,6 +78,11 @@ function drawGraphElementBackground(document, id, graphWidth, intervalWidth) {
   let canvas = document.createElement("canvas");
   let ctx = canvas.getContext("2d");
 
+  // Don't do anything if the graph or the intervals have a width of 0
+  if (graphWidth === 0 || intervalWidth === 0) {
+    return;
+  }
+
   // Set the canvas width (as requested) and height (1px, repeated along the Y
   // axis).
   canvas.width = graphWidth;
