@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462789
 /** Test for Bug 462789 **/
 
 function do_test() {
-  const ERROR_FAILURE = 0x80004005;
+  const ERROR_INVALID_ARG = 0x80070057;
   const DOCUMENT_NODE_TYPE = 9;
 
   var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
@@ -79,7 +79,7 @@ function do_test() {
   }
   catch(e) {
     e = SpecialPowers.wrap(e);
-    is(e.result, ERROR_FAILURE, "got the expected exception");
+    is(e.result, ERROR_INVALID_ARG, "got the expected exception");
   }
 
   SimpleTest.finish();
