@@ -24,11 +24,6 @@ public:
   AccCollector(Accessible* aRoot, filters::FilterFuncPtr aFilterFunc);
   virtual ~AccCollector();
 
-  /**
-   * Return index of the given accessible within the collection.
-   */
-  virtual int32_t GetIndexAt(Accessible* aAccessible);
-
 protected:
   /**
    * Ensure accessible at the given index is stored and return it.
@@ -67,7 +62,10 @@ public:
   virtual ~EmbeddedObjCollector() { }
 
 public:
-  virtual int32_t GetIndexAt(Accessible* aAccessible) override;
+  /**
+   * Return index of the given accessible within the collection.
+   */
+  int32_t GetIndexAt(Accessible* aAccessible);
 
   /**
    * Return accessible count within the collection.
