@@ -635,3 +635,17 @@ add_test(function() {
     Services.prefs.clearUserPref(PREF_DISCOVER_ENABLED);
   });
 });
+
+// Test for Bug 1219495 - should show placeholder content when offline
+add_test(function() {
+  // set a URL to cause an error
+  Services.prefs.setCharPref(PREF_DISCOVERURL, "https://nocert.example.com/");
+
+  open_manager("addons://discover/", function(aWindow) {
+    gManagerWindow = aWindow;
+
+    ok(isError(), "Should have shown the placeholder content");
+
+    close_manager(gManagerWindow, run_next_test);
+  });
+});
