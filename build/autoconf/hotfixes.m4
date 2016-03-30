@@ -16,7 +16,6 @@ dnl declares it, while the test itself is just expecting the function not to be
 dnl declared at all, and declares it differently (which doesn't matter for the
 dnl test itself).
 dnl More recent versions of autoconf are essentially doing this.
-define([ac_cv_func_], [ac_cv_func2_])dnl
 define([_AC_CHECK_FUNC],defn([AC_CHECK_FUNC]))dnl
 define([AC_CHECK_FUNC], [dnl
 patsubst(_AC_CHECK_FUNC($@), [#include.*$], [#define $1 innocuous_$1
