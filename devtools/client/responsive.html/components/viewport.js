@@ -18,6 +18,7 @@ module.exports = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
+    screenshot: PropTypes.shape(Types.screenshot).isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
@@ -55,6 +56,7 @@ module.exports = createClass({
     let {
       devices,
       location,
+      screenshot,
       viewport,
     } = this.props;
 
@@ -71,6 +73,7 @@ module.exports = createClass({
       ResizableViewport({
         devices,
         location,
+        screenshot,
         viewport,
         onChangeViewportDevice,
         onResizeViewport,
