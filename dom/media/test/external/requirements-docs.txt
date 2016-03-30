@@ -1,0 +1,5 @@
+sphinx
+sphinx-rtd-theme
+
+-e dom/media/test/external
+
