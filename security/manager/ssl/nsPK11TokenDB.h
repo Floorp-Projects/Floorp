@@ -31,7 +31,7 @@ protected:
 
 private:
   friend class nsPK11TokenDB;
-  void refreshTokenInfo(const nsNSSShutDownPreventionLock& proofOfLock);
+  nsresult refreshTokenInfo(const nsNSSShutDownPreventionLock& proofOfLock);
 
   nsString mTokenName;
   nsString mTokenLabel, mTokenManID, mTokenHWVersion, mTokenFWVersion;
