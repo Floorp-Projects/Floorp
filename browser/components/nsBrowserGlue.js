@@ -2618,6 +2618,16 @@ ContentPermissionPrompt.prototype = {
     var options = {
       learnMoreURL:
         Services.urlFormatter.formatURLPref("app.support.baseURL") + "push",
+      eventCallback(type) {
+        if (type == "dismissed") {
+          // Bug 1259148: Hide the doorhanger icon. Unlike other permission
+          // doorhangers, the user can't restore the doorhanger using the icon
+          // in the location bar. Instead, the site will be notified that the
+          // doorhanger was dismissed.
+          this.remove();
+          aRequest.cancel();
+        }
+      },
     };
 
     this._showPrompt(aRequest, message, "desktop-notification", actions,
