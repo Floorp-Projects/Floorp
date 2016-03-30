@@ -467,6 +467,9 @@ class StructTypeDescr : public ComplexTypeDescr
     ArrayObject& fieldInfoObject(size_t slot) const {
         return getReservedSlot(slot).toObject().as<ArrayObject>();
     }
+    ArrayObject& maybeForwardedFieldInfoObject(size_t slot) const {
+        return MaybeForwarded(&getReservedSlot(slot).toObject())->as<ArrayObject>();
+    }
 };
 
 typedef Handle<StructTypeDescr*> HandleStructTypeDescr;
