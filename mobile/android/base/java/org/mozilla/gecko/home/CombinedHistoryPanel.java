@@ -37,10 +37,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.db.RemoteTab;
 import org.mozilla.gecko.home.HistorySectionsHelper.SectionDateRange;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.widget.DividerItemDecoration;
@@ -106,8 +104,6 @@ public class CombinedHistoryPanel extends HomeFragment {
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));
         mRecyclerView.setOnHistoryClickedListener(mUrlOpenListener);
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
-        registerForContextMenu(mRecyclerView);
-
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
     }
@@ -376,27 +372,5 @@ public class CombinedHistoryPanel extends HomeFragment {
         ssb.delete(underlineStart, underlineStart + FORMAT_S1.length());
 
         return ssb;
-    }
-
-    protected static HomeContextMenuInfo populateHistoryInfoFromCursor(HomeContextMenuInfo info, Cursor cursor) {
-        info.url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
-        info.title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
-        info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
-        info.itemType = HomeContextMenuInfo.RemoveItemType.HISTORY;
-        final int bookmarkIdCol = cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID);
-        if (cursor.isNull(bookmarkIdCol)) {
-            // If this is a combined cursor, we may get a history item without a
-            // bookmark, in which case the bookmarks ID column value will be null.
-            info.bookmarkId =  -1;
-        } else {
-            info.bookmarkId = cursor.getInt(bookmarkIdCol);
-        }
-        return info;
-    }
-
-    protected static HomeContextMenuInfo populateChildInfoFromTab(HomeContextMenuInfo info, RemoteTab tab) {
-        info.url = tab.url;
-        info.title = tab.title;
-        return info;
     }
 }

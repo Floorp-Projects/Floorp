@@ -23,7 +23,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
     protected HomePager.OnUrlOpenListener mOnUrlOpenListener;
     protected OnPanelLevelChangeListener mOnPanelLevelChangeListener;
-    protected HomeContextMenuInfo mContextMenuInfo;
 
     public CombinedHistoryRecyclerView(Context context) {
         super(context);
@@ -85,13 +84,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
     @Override
     public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
-        mContextMenuInfo = ((CombinedHistoryAdapter) getAdapter()).makeContextMenuInfoFromPosition(v, position);
+        // TODO: open context menu if not a date title
         return showContextMenuForChild(this);
     }
-
-    @Override
-    public HomeContextMenuInfo getContextMenuInfo() {
-        return mContextMenuInfo;
-    }
-
 }
