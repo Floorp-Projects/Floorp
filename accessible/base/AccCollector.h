@@ -26,11 +26,6 @@ public:
 
 protected:
   /**
-   * Ensure accessible at the given index is stored and return it.
-   */
-  Accessible* EnsureNGetObject(uint32_t aIndex);
-
-  /**
    * Ensure index for the given accessible is stored and return it.
    */
   int32_t EnsureNGetIndex(Accessible* aAccessible);
@@ -78,6 +73,11 @@ public:
   Accessible* GetAccessibleAt(uint32_t aIndex);
 
 protected:
+  /**
+   * Ensure accessible at the given index is stored and return it.
+   */
+  Accessible* EnsureNGetObject(uint32_t aIndex);
+
   // Make sure it's used by Accessible class only.
   explicit EmbeddedObjCollector(Accessible* aRoot) :
     AccCollector(aRoot, filters::GetEmbeddedObject) { }
