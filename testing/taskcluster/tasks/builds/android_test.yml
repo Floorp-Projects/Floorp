@@ -1,28 +1,28 @@
 $inherits:
   from: 'tasks/builds/mobile_base.yml'
   variables:
-    build_name: 'android-api-15-frontend'
+    build_name: 'android-test'
     build_type: 'opt'
 task:
   metadata:
-      name: '[TC] Android armv7 API 15+ frontend'
-      description: 'Android armv7 API 15+ frontend'
+      name: '[TC] Android armv7 test'
+      description: 'Android armv7 unit tests'
 
   workerType: android-api-15
 
   routes:
-    - 'index.buildbot.branches.{{project}}.android-api-15-frontend'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15-frontend'
+    - 'index.buildbot.branches.{{project}}.android-test'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-test'
 
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-15-frontend-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-test-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-android-api-15-frontend-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-android-test-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
@@ -37,7 +37,7 @@ task:
           disable_signing.py
           platform_supports_post_upload_to_latest.py
       MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
-      MH_CUSTOM_BUILD_VARIANT_CFG: api-15-frontend
+      MH_CUSTOM_BUILD_VARIANT_CFG: android-test
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
       GRADLE_USER_HOME: '/home/worker/workspace/build/src/dotgradle'
