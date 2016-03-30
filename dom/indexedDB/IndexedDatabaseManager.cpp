@@ -394,7 +394,7 @@ IndexedDatabaseManager::Init()
   }
 
   if (mLocale.IsEmpty()) {
-    mLocale.AssignLiteral("en-US");
+    mLocale.AssignLiteral("en_US");
   }
 #endif
 
