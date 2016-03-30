@@ -16,16 +16,21 @@ import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.GLController;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.JNIObject;
+import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -175,15 +180,20 @@ public class GeckoView extends LayerView
 
     public GeckoView(Context context) {
         super(context);
-        init(context);
+        init(context, null, true);
     }
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GeckoView);
+        String url = a.getString(R.styleable.GeckoView_url);
+        boolean doInit = a.getBoolean(R.styleable.GeckoView_doinit, true);
+        a.recycle();
+        init(context, url, doInit);
     }
 
-    private void init(Context context) {
+    private void init(Context context, String url, boolean doInit) {
+
         if (GeckoAppShell.getApplicationContext() == null) {
             GeckoAppShell.setApplicationContext(context.getApplicationContext());
         }
@@ -199,6 +209,64 @@ public class GeckoView extends LayerView
         GeckoAppShell.setLayerView(this);
 
         initializeView(EventDispatcher.getInstance());
+
+        // TODO: Fennec currently takes care of its own initialization, so this
+        // flag is a hack used in Fennec to prevent GeckoView initialization.
+        // This should go away once Fennec also uses GeckoView for
+        // initialization.
+        if (!doInit)
+            return;
+
+        // If running outside of a GeckoActivity (eg, from a library project),
+        // load the native code and disable content providers
+        boolean isGeckoActivity = false;
+        try {
+            isGeckoActivity = context instanceof GeckoActivity;
+        } catch (NoClassDefFoundError ex) {}
+
+        if (!isGeckoActivity) {
+            Clipboard.init(context);
+            HardwareUtils.init(context);
+
+            // If you want to use GeckoNetworkManager, start it.
+
+            final GeckoProfile profile = GeckoProfile.get(context);
+         }
+
+        GeckoThread.ensureInit(null, null);
+        if (url != null) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(url));
+        }
+
+        if (context instanceof Activity) {
+            Tabs tabs = Tabs.getInstance();
+            tabs.attachToContext(context);
+        }
+
+        EventDispatcher.getInstance().registerGeckoThreadListener(mGeckoEventListener,
+            "Gecko:Ready",
+            "Accessibility:Event",
+            "Content:StateChange",
+            "Content:LoadError",
+            "Content:PageShow",
+            "DOMTitleChanged",
+            "Link:Favicon",
+            "Prompt:Show",
+            "Prompt:ShowTop");
+
+        EventDispatcher.getInstance().registerGeckoThreadListener(mNativeEventListener,
+            "Accessibility:Ready",
+            "GeckoView:Message");
+
+        if (GeckoThread.launch()) {
+            // This is the first launch, so finish initialization and go.
+            GeckoProfile profile = GeckoProfile.get(context).forceCreate();
+
+        } else if (GeckoThread.isRunning()) {
+            // If Gecko is already running, that means the Activity was
+            // destroyed, so we need to re-attach Gecko to this GeckoView.
+            connectToGecko();
+        }
     }
 
     @Override
