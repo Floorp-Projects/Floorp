@@ -32,6 +32,14 @@ this.SelectParentHelper = {
 
   handleEvent: function(event) {
     switch (event.type) {
+      case "mouseover":
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOver", {});
+        break;
+
+      case "mouseout":
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOut", {});
+        break;
+
       case "command":
         if (event.target.hasAttribute("value")) {
           currentBrowser.messageManager.sendAsyncMessage("Forms:SelectDropDownItem", {
@@ -53,11 +61,15 @@ this.SelectParentHelper = {
   _registerListeners: function(popup) {
     popup.addEventListener("command", this);
     popup.addEventListener("popuphidden", this);
+    popup.addEventListener("mouseover", this);
+    popup.addEventListener("mouseout", this);
   },
 
   _unregisterListeners: function(popup) {
     popup.removeEventListener("command", this);
     popup.removeEventListener("popuphidden", this);
+    popup.removeEventListener("mouseover", this);
+    popup.removeEventListener("mouseout", this);
   },
 
 };
