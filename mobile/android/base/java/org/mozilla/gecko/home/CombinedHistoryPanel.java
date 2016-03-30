@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.text.SpannableStringBuilder;
@@ -19,7 +20,10 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -31,9 +35,9 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.RemoteClientsDialogFragment;
 import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -45,9 +49,11 @@ import org.mozilla.gecko.home.HistorySectionsHelper.SectionDateRange;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.widget.DividerItemDecoration;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class CombinedHistoryPanel extends HomeFragment {
+public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsDialogFragment.RemoteClientsListener {
     private static final String LOGTAG = "GeckoCombinedHistoryPnl";
     private final int LOADER_ID_HISTORY = 0;
     private final int LOADER_ID_REMOTE = 1;
@@ -106,6 +112,7 @@ public class CombinedHistoryPanel extends HomeFragment {
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));
         mRecyclerView.setOnHistoryClickedListener(mUrlOpenListener);
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
+        mRecyclerView.setHiddenClientsDialogBuilder(new HiddenClientsHelper());
         registerForContextMenu(mRecyclerView);
 
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
@@ -170,7 +177,7 @@ public class CombinedHistoryPanel extends HomeFragment {
         return SectionHeader.OLDER_THAN_SIX_MONTHS;
     }
 
-    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
+    private class CursorLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
         private BrowserDB mDB;    // Pseudo-final: set in onCreateLoader.
 
         @Override
@@ -190,7 +197,8 @@ public class CombinedHistoryPanel extends HomeFragment {
             }
         }
 
-        protected void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final int loaderId = loader.getId();
             switch (loaderId) {
                 case LOADER_ID_HISTORY:
@@ -199,7 +207,7 @@ public class CombinedHistoryPanel extends HomeFragment {
 
                 case LOADER_ID_REMOTE:
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
-                    // TODO: Handle hidden clients
+
                     mAdapter.setClients(clients);
                     break;
             }
@@ -207,6 +215,12 @@ public class CombinedHistoryPanel extends HomeFragment {
             // Check and set empty state.
             updateButtonFromLevel(OnPanelLevelChangeListener.PanelLevel.PARENT);
             updateEmptyView(mAdapter.getItemCount() == 0);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            mAdapter.setClients(Collections.<RemoteClient>emptyList());
+            mAdapter.setHistory(null);
         }
     }
 
@@ -262,7 +276,7 @@ public class CombinedHistoryPanel extends HomeFragment {
                                 Log.e(LOGTAG, "JSON error", e);
                             }
 
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearData", json.toString()));
+                            GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
                             Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                         }
                     });
@@ -277,7 +291,7 @@ public class CombinedHistoryPanel extends HomeFragment {
                         try {
                             message.put("urls", tabUrls);
                             message.put("shouldNotifyTabsOpenedToJava", false);
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tabs:OpenMultiple", message.toString()));
+                            GeckoAppShell.notifyObservers("Tabs:OpenMultiple", message.toString());
                         } catch (JSONException e) {
                             Log.e(LOGTAG, "Error making JSON message to open tabs");
                         }
@@ -376,6 +390,81 @@ public class CombinedHistoryPanel extends HomeFragment {
         ssb.delete(underlineStart, underlineStart + FORMAT_S1.length());
 
         return ssb;
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        if (!(menuInfo instanceof RemoteTabsClientContextMenuInfo)) {
+            // Long pressed item was not a RemoteTabsGroup item. Superclass
+            // can handle this.
+            super.onCreateContextMenu(menu, view, menuInfo);
+            return;
+        }
+
+        // Long pressed item was a remote client; provide the appropriate menu.
+        final MenuInflater inflater = new MenuInflater(view.getContext());
+        inflater.inflate(R.menu.home_remote_tabs_client_contextmenu, menu);
+
+        final RemoteTabsClientContextMenuInfo info = (RemoteTabsClientContextMenuInfo) menuInfo;
+        menu.setHeaderTitle(info.client.name);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (super.onContextItemSelected(item)) {
+            // HomeFragment was able to handle to selected item.
+            return true;
+        }
+
+        final ContextMenu.ContextMenuInfo menuInfo = item.getMenuInfo();
+        if (!(menuInfo instanceof RemoteTabsClientContextMenuInfo)) {
+            return false;
+        }
+
+        final RemoteTabsClientContextMenuInfo info = (RemoteTabsClientContextMenuInfo) menuInfo;
+
+        final int itemId = item.getItemId();
+        if (itemId == R.id.home_remote_tabs_hide_client) {
+            ((CombinedHistoryAdapter) mRecyclerView.getAdapter()).removeItem(info.position);
+            return true;
+        }
+
+        return false;
+    }
+
+    interface DialogBuilder<E> {
+        void createAndShowDialog(List<E> items);
+    }
+
+    protected class HiddenClientsHelper implements DialogBuilder<RemoteClient> {
+        @Override
+        public void createAndShowDialog(List<RemoteClient> clientsList) {
+                        final RemoteClientsDialogFragment dialog = RemoteClientsDialogFragment.newInstance(
+                    getResources().getString(R.string.home_remote_tabs_hidden_devices_title),
+                    getResources().getString(R.string.home_remote_tabs_unhide_selected_devices),
+                    RemoteClientsDialogFragment.ChoiceMode.MULTIPLE, new ArrayList<>(clientsList));
+            dialog.setTargetFragment(CombinedHistoryPanel.this, 0);
+            dialog.show(getActivity().getSupportFragmentManager(), "show-clients");
+        }
+
+
+    }
+
+    @Override
+    public void onClients(List<RemoteClient> clients) {
+        ((CombinedHistoryAdapter) mRecyclerView.getAdapter()).unhideClients(clients);
+    }
+
+    /**
+     * Stores information regarding the creation of the context menu for a remote client.
+     */
+    protected static class RemoteTabsClientContextMenuInfo extends HomeContextMenuInfo {
+        protected final RemoteClient client;
+
+        public RemoteTabsClientContextMenuInfo(View targetView, int position, long id, RemoteClient client) {
+            super(targetView, position, id);
+            this.client = client;
+        }
     }
 
     protected static HomeContextMenuInfo populateHistoryInfoFromCursor(HomeContextMenuInfo info, Cursor cursor) {
