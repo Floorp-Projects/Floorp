@@ -259,7 +259,7 @@ GonkSensorsInterface::Connect(GonkSensorsNotificationHandler* aNotificationHandl
   mResultHandlerQ.AppendElement(aRes);
 
   if (!mProtocol) {
-    mProtocol = new GonkSensorsProtocol();
+    mProtocol = MakeUnique<GonkSensorsProtocol>();
   }
 
   if (!mListenSocket) {
@@ -269,7 +269,7 @@ GonkSensorsInterface::Connect(GonkSensorsNotificationHandler* aNotificationHandl
   // Init, step 1: Listen for data channel... */
 
   if (!mDataSocket) {
-    mDataSocket = new DaemonSocket(mProtocol, this, DATA_SOCKET);
+    mDataSocket = new DaemonSocket(mProtocol.get(), this, DATA_SOCKET);
   } else if (mDataSocket->GetConnectionStatus() == SOCKET_CONNECTED) {
     // Command channel should not be open; let's close it.
     mDataSocket->Close();
@@ -334,24 +334,24 @@ GonkSensorsRegistryInterface*
 GonkSensorsInterface::GetSensorsRegistryInterface()
 {
   if (mRegistryInterface) {
-    return mRegistryInterface;
+    return mRegistryInterface.get();
   }
 
-  mRegistryInterface = new GonkSensorsRegistryInterface(mProtocol);
+  mRegistryInterface = MakeUnique<GonkSensorsRegistryInterface>(mProtocol.get());
 
-  return mRegistryInterface;
+  return mRegistryInterface.get();
 }
 
 GonkSensorsPollInterface*
 GonkSensorsInterface::GetSensorsPollInterface()
 {
   if (mPollInterface) {
-    return mPollInterface;
+    return mPollInterface.get();
   }
 
-  mPollInterface = new GonkSensorsPollInterface(mProtocol);
+  mPollInterface = MakeUnique<GonkSensorsPollInterface>(mProtocol.get());
 
-  return mPollInterface;
+  return mPollInterface.get();
 }
 
 GonkSensorsInterface::GonkSensorsInterface()
