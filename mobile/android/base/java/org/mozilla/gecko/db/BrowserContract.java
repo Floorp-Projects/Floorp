@@ -533,7 +533,15 @@ public class BrowserContract {
              * Key:   feed_subscription
              * Value: JSON object describing feed
              */
-            FEED_SUBSCRIPTION("feed_subscription");
+            FEED_SUBSCRIPTION("feed_subscription"),
+
+            /**
+             * Indicates that this URL (if stored as a bookmark) should be opened into reader view.
+             *
+             * Key:   reader_view
+             * Value: String "true" to indicate that we would like to open into reader view.
+             */
+            READER_VIEW("reader_view");
 
             private final String dbValue;
 
