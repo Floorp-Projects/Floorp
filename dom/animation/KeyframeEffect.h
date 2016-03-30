@@ -301,12 +301,6 @@ public:
   InfallibleTArray<AnimationProperty>& Properties() {
     return mProperties;
   }
-  // Updates the set of properties using the supplied list whilst preserving
-  // the mWinsInCascade and mIsRunningOnCompositor state of any matching
-  // properties.
-  // Returns true if we updated anything in the properties.
-  bool UpdateProperties(
-    const InfallibleTArray<AnimationProperty>& aProperties);
 
   // Update |mProperties| by recalculating from |mFrames| using |aStyleContext|
   // to resolve specified values.
