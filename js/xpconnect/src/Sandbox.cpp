@@ -941,11 +941,12 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
 bool
 xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 {
+    // Properties will be exposed to System automatically but not to Sandboxes
+    // if |[Exposed=System]| is specified.
+    // This function holds common properties not exposed automatically but able
+    // to be requested either in |Cu.importGlobalProperties| or
+    // |wantGlobalProperties| of a sandbox.
     if (CSS && !dom::CSSBinding::GetConstructorObject(cx, obj))
-        return false;
-
-    if (indexedDB &&
-        !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
         return false;
 
     if (XMLHttpRequest &&
@@ -1002,6 +1003,29 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
         return false;
 
     return true;
+}
+
+bool
+xpc::GlobalProperties::DefineInXPCComponents(JSContext* cx, JS::HandleObject obj)
+{
+    if (indexedDB &&
+        !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
+        return false;
+
+    return Define(cx, obj);
+}
+
+bool
+xpc::GlobalProperties::DefineInSandbox(JSContext* cx, JS::HandleObject obj)
+{
+    MOZ_ASSERT(IsSandbox(obj));
+
+    if (indexedDB &&
+        !(IndexedDatabaseManager::ResolveSandboxBinding(cx, obj) &&
+          IndexedDatabaseManager::DefineIndexedDB(cx, obj)))
+        return false;
+
+    return Define(cx, obj);
 }
 
 nsresult
@@ -1170,7 +1194,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
              !JS_DefineFunction(cx, sandbox, "isProxy", SandboxIsProxy, 1, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
-        if (!options.globalProperties.Define(cx, sandbox))
+        if (!options.globalProperties.DefineInSandbox(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
 
 #ifndef SPIDERMONKEY_PROMISE
