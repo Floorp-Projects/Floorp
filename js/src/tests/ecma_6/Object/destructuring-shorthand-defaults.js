@@ -38,6 +38,7 @@ const SYNTAX_ERROR_STMTS = [
     "delete ({x=1})",
     "delete {x=1} = {}",
     "({x=1}.abc)",
+    "x > (0, {a = b} );",
     // declarations
     "var x = 0 + {a=1} = {}",
     "let o = {x=1};",
