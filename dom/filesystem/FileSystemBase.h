@@ -9,12 +9,12 @@
 
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "Directory.h"
 
 namespace mozilla {
 namespace dom {
 
 class BlobImpl;
-class Directory;
 
 class FileSystemBase
 {
@@ -46,6 +46,10 @@ public:
    */
   virtual void
   GetRootName(nsAString& aRetval) const = 0;
+
+  void
+  GetDOMPath(nsIFile* aFile, Directory::DirectoryType aType,
+             nsAString& aRetval, ErrorResult& aRv) const;
 
   /*
    * Return the local root path of the FileSystem implementation.
