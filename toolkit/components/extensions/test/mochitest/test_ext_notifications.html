@@ -113,9 +113,8 @@ add_task(function* test_notification_clear() {
 add_task(function* test_notifications_empty_getAll() {
   function backgroundScript() {
     browser.notifications.getAll().then(notifications => {
-      browser.test.assertTrue(Array.isArray(notifications),
-        "getAll() returned an array");
-      browser.test.assertEq(notifications.length, 0, "the array was empty");
+      browser.test.assertEq("object", typeof notifications, "getAll() returned an object");
+      browser.test.assertEq(0, Object.keys(notifications).length, "the object has no properties");
       browser.test.notifyPass("getAll empty");
     });
   }
@@ -144,14 +143,17 @@ add_task(function* test_notifications_populated_getAll() {
     }).then(() => {
       return browser.notifications.getAll();
     }).then(notifications => {
-      browser.test.assertTrue(Array.isArray(notifications),
-        "getAll() returned an array");
-      browser.test.assertEq(notifications.length, 2,
-        "the array contained two notification ids");
-      browser.test.assertTrue(notifications.includes("p1"),
-        "the array contains the first notification");
-      browser.test.assertTrue(notifications.includes("p2"),
-        "the array contains the second notification");
+      browser.test.assertEq("object", typeof notifications, "getAll() returned an object");
+      browser.test.assertEq(2, Object.keys(notifications).length, "the object has 2 properties");
+      for (let notificationId of ["p1", "p2"]) {
+        for (let key of Object.keys(opts)) {
+          browser.test.assertEq(
+            opts[key],
+            notifications[notificationId][key],
+            `the notification has the expected value for option: ${key}`
+          );
+        }
+      }
       browser.test.notifyPass("getAll populated");
     });
   }

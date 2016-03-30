@@ -277,11 +277,8 @@
             "parameters": [
               {
                 "name": "notifications",
-                "type": "array",
-                "description": "The set of notification_ids currently in the system.",
-                "items": {
-                  "type": "string"
-                }
+                "type": "object",
+                "description": "The set of notifications currently in the system."
               }
             ]
           }
