@@ -496,6 +496,15 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition* reinterpret(MDefinition* op, MIRType to)
+    {
+        if (inDeadCode())
+            return nullptr;
+        auto* ins = MAsmReinterpret::New(alloc(), op, to);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     template <class T>
     MDefinition* truncate(MDefinition* op, bool isUnsigned)
     {
@@ -2440,6 +2449,16 @@ EmitConvertI64ToFloatingPoint(FunctionCompiler& f, ValType type, bool isUnsigned
 }
 
 static bool
+EmitReinterpret(FunctionCompiler& f, ValType to, MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitExpr(f, &in))
+        return false;
+    *def = f.reinterpret(in, ToMIRType(to));
+    return true;
+}
+
+static bool
 EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign, MDefinition** def)
 {
     switch (op) {
@@ -2856,6 +2875,8 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::F64Gt:
       case Expr::F64Ge:
         return EmitComparison(f, op, def);
+      case Expr::I32ReinterpretF32:
+        return EmitReinterpret(f, ValType::I32, def);
 
       // I64
       case Expr::I64Const:
@@ -2893,6 +2914,8 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::I64RemS:
       case Expr::I64RemU:
         return EmitDivOrMod(f, ValType::I64, IsDiv(false), IsUnsigned(op == Expr::I64RemU), def);
+      case Expr::I64ReinterpretF64:
+        return EmitReinterpret(f, ValType::I64, def);
 
       // F32
       case Expr::F32Const:
@@ -2928,12 +2951,15 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::F32ConvertUI64:
         return EmitConvertI64ToFloatingPoint(f, ValType::F32,
                                              IsUnsigned(op == Expr::F32ConvertUI64), def);
+
       case Expr::F32Load:
         return EmitLoad(f, Scalar::Float32, def);
       case Expr::F32Store:
         return EmitStore(f, Scalar::Float32, def);
       case Expr::F32StoreF64:
         return EmitStoreWithCoercion(f, Scalar::Float32, Scalar::Float64, def);
+      case Expr::F32ReinterpretI32:
+        return EmitReinterpret(f, ValType::F32, def);
 
       // F64
       case Expr::F64Const:
@@ -2987,6 +3013,8 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitStore(f, Scalar::Float64, def);
       case Expr::F64StoreF32:
         return EmitStoreWithCoercion(f, Scalar::Float64, Scalar::Float32, def);
+      case Expr::F64ReinterpretI64:
+        return EmitReinterpret(f, ValType::F64, def);
 
       // SIMD
 #define CASE(TYPE, OP, SIGN)                                                    \
@@ -3055,10 +3083,6 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::F64CopySign:
       case Expr::F64Nearest:
       case Expr::F64Trunc:
-      case Expr::I64ReinterpretF64:
-      case Expr::F64ReinterpretI64:
-      case Expr::I32ReinterpretF32:
-      case Expr::F32ReinterpretI32:
       case Expr::I64Load8S:
       case Expr::I64Load16S:
       case Expr::I64Load32S:

@@ -178,6 +178,9 @@ if (getBuildConfiguration().x64) {
     testConversion('i64', 'trunc_u', 'f32', "nan", "0x8000000000000000");
     testConversion('i64', 'trunc_u', 'f32', "infinity", "0x8000000000000000");
     testConversion('i64', 'trunc_u', 'f32', "-infinity", "0x8000000000000000");
+
+    testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, 4630840390592548000);
+    testConversion('f64', 'reinterpret', 'i64', 4630840390592548000, 40.09999999999968);
 } else {
     // Sleeper test: once i64 works on more platforms, remove this if-else.
     try {
@@ -192,16 +195,13 @@ testConversion('i32', 'trunc_s', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_s', 'f64', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f64', 40.1, 40);
-//testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622); // TODO: NYI
-
-//testConversion('i64', 'reinterpret', 'f64', 40.1, 1109419622); // TODO: NYI
+testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622);
 
 testConversion('f32', 'convert_s', 'i32', 40, 40);
 testConversion('f32', 'convert_u', 'i32', 40, 40);
 testConversion('f32', 'demote', 'f64', 40.1, 40.099998474121094);
-//testConversion('f32', 'reinterpret', 'i32', 40, 5.605193857299268e-44); // TODO: NYI
+testConversion('f32', 'reinterpret', 'i32', 40, 5.605193857299268e-44);
 
 testConversion('f64', 'convert_s', 'i32', 40, 40);
 testConversion('f64', 'convert_u', 'i32', 40, 40);
 testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
-//testConversion('f64', 'reinterpret', 'i64', 40.1, 4630840390592548045); // TODO: NYI
