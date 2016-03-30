@@ -32,6 +32,12 @@ createEnum([
   // Rotate the viewport.
   "ROTATE_VIEWPORT",
 
+  // Take a screenshot of the viewport.
+  "TAKE_SCREENSHOT_START",
+
+  // Indicates when the screenshot action ends.
+  "TAKE_SCREENSHOT_END",
+
 ], module.exports);
 
 /**

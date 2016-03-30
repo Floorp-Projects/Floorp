@@ -24,6 +24,7 @@ module.exports = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
+    screenshot: PropTypes.shape(Types.screenshot).isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
@@ -112,11 +113,18 @@ module.exports = createClass({
     let {
       devices,
       location,
+      screenshot,
       viewport,
       onChangeViewportDevice,
       onResizeViewport,
       onRotateViewport,
     } = this.props;
+
+    let resizeHandleClass = "viewport-resize-handle";
+
+    if (screenshot.isCapturing) {
+      resizeHandleClass += " hidden";
+    }
 
     return dom.div(
       {
@@ -136,7 +144,7 @@ module.exports = createClass({
         isResizing: this.state.isResizing
       }),
       dom.div({
-        className: "viewport-resize-handle",
+        className: resizeHandleClass,
         onMouseDown: this.onResizeStart,
       }),
       dom.div({

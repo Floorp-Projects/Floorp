@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { getStr } = require("./utils/l10n");
+const { getStr } = require("../utils/l10n");
 const { DOM: dom, createClass, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
