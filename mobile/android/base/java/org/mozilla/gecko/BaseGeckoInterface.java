@@ -140,9 +140,4 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     // Bug 908792: Implement this
     @Override
     public void invalidateOptionsMenu() {}
-
-    @Override
-    public void createShortcut(String title, String URI) {
-        // By default, do nothing.
-    }
 }
