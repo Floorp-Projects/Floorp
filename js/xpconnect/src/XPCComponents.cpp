@@ -2548,7 +2548,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
     }
 
     if (!options.Parse(cx, propertyList) ||
-        !options.Define(cx, global))
+        !options.DefineInXPCComponents(cx, global))
     {
         return NS_ERROR_FAILURE;
     }
