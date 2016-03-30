@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import org.json.JSONArray;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.RemoteClient;
@@ -23,13 +24,14 @@ import org.mozilla.gecko.home.CombinedHistoryPanel.SectionHeader;
 
 import java.util.Collections;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> {
     private static final String LOGTAG = "GeckoCombinedHistAdapt";
 
     public enum ItemType {
-        CLIENT, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD;
+        CLIENT, HIDDEN_DEVICES, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD;
 
         public static ItemType viewTypeToItemType(int viewType) {
             if (viewType >= ItemType.values().length) {
@@ -47,6 +49,13 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     private List<RemoteTab> clientChildren;
     private Cursor historyCursor;
 
+    // Maintain group collapsed and hidden state. Only accessed from the UI thread.
+    protected static RemoteTabsExpandableListState sState;
+
+    // List of hidden remote clients.
+    // Only accessed from the UI thread.
+    protected final List<RemoteClient> hiddenClients = new ArrayList<>();
+
     // We use a sparse array to store each section header's position in the panel [more cheaply than a HashMap].
     private final SparseArray<CombinedHistoryPanel.SectionHeader> sectionHeaders;
 
@@ -58,17 +67,112 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         super();
         this.context = context;
         sectionHeaders = new SparseArray<>();
+
+        // This races when multiple Fragments are created. That's okay: one
+        // will win, and thereafter, all will be okay. If we create and then
+        // drop an instance the shared SharedPreferences backing all the
+        // instances will maintain the state for us. Since everything happens on
+        // the UI thread, this doesn't even need to be volatile.
+        if (sState == null) {
+            sState = new RemoteTabsExpandableListState(GeckoSharedPrefs.forProfile(context));
+        }
     }
 
     public void setClients(List<RemoteClient> clients) {
+        hiddenClients.clear();
+        remoteClients.clear();
+
+        final Iterator<RemoteClient> it = clients.iterator();
+        while (it.hasNext()) {
+            final RemoteClient client = it.next();
+            if (sState.isClientHidden(client.guid)) {
+                hiddenClients.add(client);
+                it.remove();
+            }
+        }
+
         remoteClients = clients;
-        notifyDataSetChanged();
+
+        // Add item for unhiding clients.
+        if (!hiddenClients.isEmpty()) {
+            remoteClients.add(null);
+        }
+
+        notifyItemRangeChanged(0, remoteClients.size());
     }
 
     public void setHistory(Cursor history) {
         historyCursor = history;
         populateSectionHeaders(historyCursor, sectionHeaders);
         notifyDataSetChanged();
+    }
+
+    public void removeItem(int position) {
+        final ItemType  itemType = getItemTypeForPosition(position);
+        switch (itemType) {
+            case CLIENT:
+                final boolean hadHiddenClients = !hiddenClients.isEmpty();
+                final RemoteClient client = remoteClients.remove(transformAdapterPositionForDataStructure(ItemType.CLIENT, position));
+                notifyItemRemoved(position);
+
+                sState.setClientHidden(client.guid, true);
+                hiddenClients.add(client);
+                if (!hadHiddenClients) {
+                    // Add item for unhiding clients;
+                    remoteClients.add(null);
+                } else {
+                    // Update "hidden clients" item because number of hidden clients changed.
+                    notifyItemChanged(getRemoteClientsHiddenItemsIndex());
+                }
+                break;
+            case HISTORY:
+                notifyItemRemoved(position);
+                break;
+        }
+    }
+
+    public void unhideClients(List<RemoteClient> selectedClients) {
+        if (selectedClients.size() == 0) {
+            return;
+        }
+
+        for (RemoteClient client : selectedClients) {
+            sState.setClientHidden(client.guid, false);
+            hiddenClients.remove(client);
+        }
+
+        final int insertIndex = getRemoteClientsHiddenItemsIndex();
+
+        remoteClients.addAll(insertIndex, selectedClients);
+        notifyItemRangeInserted(insertIndex, selectedClients.size());
+
+        if (hiddenClients.isEmpty()) {
+            // No more hidden clients, remove "unhide" item.
+            remoteClients.remove(getRemoteClientsHiddenItemsIndex());
+        } else {
+            // Update "hidden clients" item because number of hidden clients changed.
+            notifyItemChanged(getRemoteClientsHiddenItemsIndex());
+        }
+    }
+
+    /**
+     * Get the position of the "N devices hidden" item in the remoteClients List.
+     *
+     * This is the last item in the remoteClients list, if any items are hidden.
+     * <code>hiddenClients</code> must be in a consistent state with <code>remoteClients</code>
+     * (e.g. each client should be in exactly one of the two lists).
+     *
+     * @return index of the "N devices hidden" item, or -1 if it doesn't exist.
+     */
+    private int getRemoteClientsHiddenItemsIndex() {
+        if (hiddenClients.isEmpty()) {
+            return -1;
+        }
+        return remoteClients.size() - 1;
+    }
+
+    public List<RemoteClient> getHiddenClients() {
+        return hiddenClients;
     }
 
     public JSONArray getCurrentChildTabs() {
@@ -88,7 +192,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         }
         // Handle "back" view.
         clientChildren.add(null);
-        clientChildren.addAll(remoteClients.get(transformPosition(ItemType.CLIENT, parentPosition)).tabs);
+        clientChildren.addAll(remoteClients.get(transformAdapterPositionForDataStructure(ItemType.CLIENT, parentPosition)).tabs);
         inChildView = true;
         notifyDataSetChanged();
     }
@@ -99,7 +203,21 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         notifyDataSetChanged();
     }
 
-    private int transformPosition(ItemType type, int position) {
+    private ItemType getItemTypeForPosition(int position) {
+        return ItemType.viewTypeToItemType(getItemViewType(position));
+    }
+
+    /**
+     * Transform an adapter position to the position for the data structure backing the item type.
+     *
+     * The type is not strictly necessary and could be fetched from <code>getItemTypeForPosition</code>,
+     * but is used for explicitness.
+     *
+     * @param type ItemType of the item
+     * @param position position in the adapter
+     * @return position of the item in the data structure
+     */
+    private int transformAdapterPositionForDataStructure(ItemType type, int position) {
         if (type == ItemType.CLIENT) {
             return position;
         } else if (type == ItemType.SECTION_HEADER) {
@@ -112,7 +230,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     }
 
     public HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position) {
-        final ItemType itemType = ItemType.viewTypeToItemType(getItemViewType(position));
+        final ItemType itemType = getItemTypeForPosition(position);
         HomeContextMenuInfo info;
         switch (itemType) {
             case CHILD:
@@ -120,8 +238,12 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 return CombinedHistoryPanel.populateChildInfoFromTab(info, clientChildren.get(position));
             case HISTORY:
                 info = new HomeContextMenuInfo(view, position, -1);
-                historyCursor.moveToPosition(transformPosition(ItemType.HISTORY, position));
+                historyCursor.moveToPosition(transformAdapterPositionForDataStructure(ItemType.HISTORY, position));
                 return CombinedHistoryPanel.populateHistoryInfoFromCursor(info, historyCursor);
+            case CLIENT:
+                final int clientPosition = transformAdapterPositionForDataStructure(ItemType.CLIENT, position);
+                info = new CombinedHistoryPanel.RemoteTabsClientContextMenuInfo(view, position,-1, remoteClients.get(clientPosition));
+                return info;
         }
         return null;
     }
@@ -138,13 +260,17 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 view = inflater.inflate(R.layout.home_remote_tabs_group, viewGroup, false);
                 return new CombinedHistoryItem.ClientItem(view);
 
+            case HIDDEN_DEVICES:
+                view = inflater.inflate(R.layout.home_remote_tabs_hidden_devices, viewGroup, false);
+                return new CombinedHistoryItem.BasicItem(view);
+
             case NAVIGATION_BACK:
                 view = inflater.inflate(R.layout.home_combined_back_item, viewGroup, false);
                 return new CombinedHistoryItem.HistoryItem(view);
 
             case SECTION_HEADER:
                 view = inflater.inflate(R.layout.home_header_row, viewGroup, false);
-                return new CombinedHistoryItem.SectionItem(view);
+                return new CombinedHistoryItem.BasicItem(view);
 
             case CHILD:
             case HISTORY:
@@ -165,10 +291,13 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         } else {
             final int numClients = remoteClients.size();
             if (position < numClients) {
+                if (!hiddenClients.isEmpty() && position == numClients - 1) {
+                    return ItemType.itemTypeToViewType(ItemType.HIDDEN_DEVICES);
+                }
                 return ItemType.itemTypeToViewType(ItemType.CLIENT);
             }
 
-            final int sectionPosition = transformPosition(ItemType.SECTION_HEADER, position);
+            final int sectionPosition = transformAdapterPositionForDataStructure(ItemType.SECTION_HEADER, position);
             if (sectionHeaders.get(sectionPosition) != null) {
                 return ItemType.itemTypeToViewType(ItemType.SECTION_HEADER);
             }
@@ -182,9 +311,8 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         if (inChildView) {
             return (clientChildren == null) ? 0 : clientChildren.size();
         } else {
-            final int remoteSize = remoteClients.size();
             final int historySize = historyCursor == null ? 0 : historyCursor.getCount();
-            return remoteSize + historySize + sectionHeaders.size();
+            return remoteClients.size() + historySize + sectionHeaders.size();
         }
     }
 
@@ -229,14 +357,19 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     @Override
     public void onBindViewHolder(CombinedHistoryItem viewHolder, int position) {
-        final ItemType itemType = ItemType.viewTypeToItemType(getItemViewType(position));
-        final int localPosition = transformPosition(itemType, position);
+        final ItemType itemType = getItemTypeForPosition(position);
+        final int localPosition = transformAdapterPositionForDataStructure(itemType, position);
 
         switch (itemType) {
             case CLIENT:
                 final CombinedHistoryItem.ClientItem clientItem = (CombinedHistoryItem.ClientItem) viewHolder;
                 final RemoteClient client = remoteClients.get(localPosition);
                 clientItem.bind(client, context);
+                break;
+
+            case HIDDEN_DEVICES:
+                final String hiddenDevicesLabel = context.getResources().getString(R.string.home_remote_tabs_many_hidden_devices, hiddenClients.size());
+                ((TextView) viewHolder.itemView).setText(hiddenDevicesLabel);
                 break;
 
             case CHILD:
@@ -247,6 +380,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
             case SECTION_HEADER:
                 ((TextView) viewHolder.itemView).setText(CombinedHistoryPanel.getSectionHeaderTitle(sectionHeaders.get(localPosition)));
                 break;
+
 
             case HISTORY:
                 if (historyCursor == null || !historyCursor.moveToPosition(localPosition)) {
