@@ -17,6 +17,7 @@
 #include <mozilla/ipc/DaemonSocketConsumer.h>
 #include <mozilla/ipc/DaemonSocketMessageHandlers.h>
 #include <mozilla/ipc/ListenSocketConsumer.h>
+#include <mozilla/UniquePtr.h>
 #include "SensorsTypes.h"
 
 namespace mozilla {
@@ -174,14 +175,14 @@ private:
   nsCString mListenSocketName;
   RefPtr<mozilla::ipc::ListenSocket> mListenSocket;
   RefPtr<mozilla::ipc::DaemonSocket> mDataSocket;
-  nsAutoPtr<GonkSensorsProtocol> mProtocol;
+  UniquePtr<GonkSensorsProtocol> mProtocol;
 
   nsTArray<RefPtr<GonkSensorsResultHandler> > mResultHandlerQ;
 
   GonkSensorsNotificationHandler* mNotificationHandler;
 
-  nsAutoPtr<GonkSensorsRegistryInterface> mRegistryInterface;
-  nsAutoPtr<GonkSensorsPollInterface> mPollInterface;
+  UniquePtr<GonkSensorsRegistryInterface> mRegistryInterface;
+  UniquePtr<GonkSensorsPollInterface> mPollInterface;
 };
 
 } // namespace hal

@@ -145,7 +145,8 @@ protected:
 class GonkSensorsRegistryInterface final
 {
 public:
-  friend class GonkSensorsInterface;
+  GonkSensorsRegistryInterface(GonkSensorsRegistryModule* aModule);
+  ~GonkSensorsRegistryInterface();
 
   /**
    * Sends a RegisterModule command to the Sensors daemon. When the
@@ -166,11 +167,7 @@ public:
    */
   void UnregisterModule(uint8_t aId, GonkSensorsRegistryResultHandler* aRes);
 
-  ~GonkSensorsRegistryInterface();
-
 private:
-  GonkSensorsRegistryInterface(GonkSensorsRegistryModule* aModule);
-
   void DispatchError(GonkSensorsRegistryResultHandler* aRes,
                      SensorsError aError);
   void DispatchError(GonkSensorsRegistryResultHandler* aRes,
