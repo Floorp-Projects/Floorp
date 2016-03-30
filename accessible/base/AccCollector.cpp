@@ -43,7 +43,7 @@ EmbeddedObjCollector::GetAccessibleAt(uint32_t aIndex)
 // nsAccCollector protected
 
 Accessible*
-AccCollector::EnsureNGetObject(uint32_t aIndex)
+EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex)
 {
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
