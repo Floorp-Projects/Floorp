@@ -6,9 +6,10 @@ package org.mozilla.gecko.reader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
@@ -57,8 +58,7 @@ public final class ReadingListHelper implements NativeEventListener {
         this.readingListAccessor = db.getReadingListAccessor();
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
-            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest");
-
+            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:AddedToCache");
 
         contentObserver = new ContentObserver(null) {
             @Override
@@ -76,7 +76,7 @@ public final class ReadingListHelper implements NativeEventListener {
 
     public void uninit() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest");
+            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:AddedToCache");
 
         context.getContentResolver().unregisterContentObserver(contentObserver);
     }
@@ -96,6 +96,12 @@ public final class ReadingListHelper implements NativeEventListener {
             }
             case "Reader:FaviconRequest": {
                 handleReaderModeFaviconRequest(callback, message.getString("url"));
+                break;
+            }
+            case "Reader:AddedToCache": {
+                // AddedToCache is a one way message: callback will be null, and we therefore shouldn't
+                // attempt to handle it.
+                handleAddedToCache(message.getString("url"), message.getString("path"), message.getInt("size"));
                 break;
             }
         }
@@ -227,6 +233,12 @@ public final class ReadingListHelper implements NativeEventListener {
         }).execute();
     }
 
+    private void handleAddedToCache(final String url, final String path, final int size) {
+        final SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
+
+        rch.put(url, path, size);
+    }
+
     /**
      * Handle various reading list events (and display appropriate toasts).
      */
@@ -234,7 +246,7 @@ public final class ReadingListHelper implements NativeEventListener {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                switch(event) {
+                switch (event) {
                     case ADDED:
                         onReadingListEventListener.onAddedToReadingList(url);
                         break;
@@ -273,6 +285,18 @@ public final class ReadingListHelper implements NativeEventListener {
                 }
             }
         });
+    }
+
+    public static void cacheReaderItem(final String url, Context context) {
+        if (AboutPages.isAboutReader(url)) {
+            throw new IllegalArgumentException("Page url must be original (not about:reader) url");
+        }
+
+        SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
+
+        if (!rch.isURLCached(url)) {
+            GeckoAppShell.notifyObservers("Reader:AddToCache", url);
+        }
     }
 
     @RobocopTarget

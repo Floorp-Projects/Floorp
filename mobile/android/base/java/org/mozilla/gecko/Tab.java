@@ -25,6 +25,7 @@ import org.mozilla.gecko.favicons.RemoteFavicon;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -570,6 +571,10 @@ public class Tab {
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.BOOKMARK_ADDED);
             }
         });
+
+        if (AboutPages.isAboutReader(url)) {
+            ReadingListHelper.cacheReaderItem(pageUrl, mAppContext);
+        }
     }
 
     public void removeBookmark() {
