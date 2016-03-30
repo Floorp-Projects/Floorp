@@ -441,8 +441,14 @@ wasmEvalText('(module (import $bar "a" "") (func (call_import $bar)) (func $foo 
 // ----------------------------------------------------------------------------
 // select
 
-assertErrorMessage(() => wasmEvalText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (select (i32.const 0) (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
+
+assertEq(wasmEvalText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (select (block) (i32.const 0) (i32.const 0))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (i32.add (i32.const 0) (select (return) (i32.const 0) (i32.const 0)))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (select (if (i32.const 1) (i32.const 0) (f32.const 0)) (i32.const 0) (i32.const 0))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func) (func (select (call 0) (call 0) (i32.const 0))) (export "" 0))')(), undefined);
 
 (function testSideEffects() {
 
