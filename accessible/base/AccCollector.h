@@ -25,10 +25,6 @@ public:
   virtual ~AccCollector();
 
 protected:
-  /**
-   * Append the object to collection.
-   */
-  virtual void AppendObject(Accessible* aAccessible);
 
   filters::FilterFuncPtr mFilterFunc;
   Accessible* mRoot;
@@ -82,7 +78,10 @@ protected:
   explicit EmbeddedObjCollector(Accessible* aRoot) :
     AccCollector(aRoot, filters::GetEmbeddedObject) { }
 
-  virtual void AppendObject(Accessible* aAccessible) override;
+  /**
+   * Append the object to collection.
+   */
+  void AppendObject(Accessible* aAccessible);
 
   friend class Accessible;
 };
