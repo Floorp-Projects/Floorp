@@ -30,7 +30,7 @@ EmbeddedObjCollector::Count()
 }
 
 Accessible*
-AccCollector::GetAccessibleAt(uint32_t aIndex)
+EmbeddedObjCollector::GetAccessibleAt(uint32_t aIndex)
 {
   Accessible* accessible = mObjects.SafeElementAt(aIndex, nullptr);
   if (accessible)

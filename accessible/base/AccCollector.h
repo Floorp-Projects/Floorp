@@ -25,11 +25,6 @@ public:
   virtual ~AccCollector();
 
   /**
-   * Return an accessible from the collection at the given index.
-   */
-  Accessible* GetAccessibleAt(uint32_t aIndex);
-
-  /**
    * Return index of the given accessible within the collection.
    */
   virtual int32_t GetIndexAt(Accessible* aAccessible);
@@ -78,6 +73,11 @@ public:
    * Return accessible count within the collection.
    */
   uint32_t Count();
+
+  /**
+   * Return an accessible from the collection at the given index.
+   */
+  Accessible* GetAccessibleAt(uint32_t aIndex);
 
 protected:
   // Make sure it's used by Accessible class only.
