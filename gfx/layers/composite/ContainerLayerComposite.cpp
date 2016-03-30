@@ -360,7 +360,8 @@ ContainerRenderVR(ContainerT* aContainer,
 static bool
 NeedToDrawCheckerboardingForLayer(Layer* aLayer, Color* aOutCheckerboardingColor)
 {
-  return (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+  return (aLayer->Manager()->AsyncPanZoomEnabled() &&
+         aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
          aLayer->IsOpaqueForVisibility() &&
          LayerHasCheckerboardingAPZC(aLayer, aOutCheckerboardingColor);
 }
