@@ -57,19 +57,14 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
         switch(itemType) {
             case CLIENT:
-                ((CombinedHistoryAdapter) getAdapter()).showChildView(position);
-                break;
-            case NAVIGATION_BACK:
-                ((CombinedHistoryAdapter) getAdapter()).exitChildView();
-                break;
-            case CHILD:
+                // TODO: open new panel with all the remote children, and hide all the other items
+                return;
             case HISTORY:
                 if (mOnUrlOpenListener != null) {
                     final TwoLinePageRow historyItem = (TwoLinePageRow) v;
                     Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "history");
                     mOnUrlOpenListener.onUrlOpen(historyItem.getUrl(), EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
                 }
-                break;
         }
     }
 

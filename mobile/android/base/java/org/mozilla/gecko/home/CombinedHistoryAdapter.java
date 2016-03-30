@@ -14,17 +14,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.db.RemoteTab;
 
 import java.util.Collections;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> {
     private static final String LOGTAG = "GeckoCombinedHistAdapt";
 
     public enum ItemType {
-        CLIENT, HISTORY, NAVIGATION_BACK, CHILD;
+        CLIENT, HISTORY;
 
         public static ItemType viewTypeToItemType(int viewType) {
             if (viewType >= ItemType.values().length) {
@@ -39,11 +37,8 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     }
 
     private List<RemoteClient> remoteClients = Collections.emptyList();
-    private List<RemoteTab> clientChildren;
     private Cursor historyCursor;
     private final Context context;
-
-    private boolean inChildView = false;
 
     public CombinedHistoryAdapter(Context context) {
         super();
@@ -60,30 +55,11 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         notifyDataSetChanged();
     }
 
-    public void showChildView(int parentPosition) {
-        if (clientChildren == null) {
-            clientChildren = new ArrayList<>();
-        }
-        // Handle "back" view.
-        clientChildren.add(null);
-        clientChildren.addAll(remoteClients.get(transformPosition(ItemType.CLIENT, parentPosition)).tabs);
-        inChildView = true;
-        notifyDataSetChanged();
-    }
-
-    public void exitChildView() {
-        inChildView = false;
-        clientChildren.clear();
-        notifyDataSetChanged();
-    }
-
     private int transformPosition(ItemType type, int position) {
         if (type == ItemType.CLIENT) {
             return position;
-        } else if (type == ItemType.HISTORY){
-            return position - remoteClients.size();
         } else {
-            return position;
+            return position - remoteClients.size();
         }
     }
 
@@ -98,12 +74,6 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
             case CLIENT:
                 view = inflater.inflate(R.layout.home_remote_tabs_group, viewGroup, false);
                 return new CombinedHistoryItem.ClientItem(view);
-
-            case NAVIGATION_BACK:
-                view = inflater.inflate(R.layout.home_combined_back_item, viewGroup, false);
-                return new CombinedHistoryItem.HistoryItem(view);
-
-            case CHILD:
             case HISTORY:
                 view = inflater.inflate(R.layout.home_item_row, viewGroup, false);
                 return new CombinedHistoryItem.HistoryItem(view);
@@ -114,28 +84,15 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     @Override
     public int getItemViewType(int position) {
-        if (inChildView) {
-            if (position == 0) {
-                return ItemType.itemTypeToViewType(ItemType.NAVIGATION_BACK);
-            } else {
-                return ItemType.itemTypeToViewType(ItemType.CHILD);
-            }
-        } else {
-            final int numClients = remoteClients.size();
-            return (position < numClients) ? ItemType.itemTypeToViewType(ItemType.CLIENT) : ItemType.itemTypeToViewType(ItemType.HISTORY);
-        }
+        final int numClients = remoteClients.size();
+        return (position < numClients) ? ItemType.itemTypeToViewType(ItemType.CLIENT) : ItemType.itemTypeToViewType(ItemType.HISTORY);
     }
 
     @Override
     public int getItemCount() {
-
-        if (inChildView) {
-            return (clientChildren == null) ? 0 : clientChildren.size();
-        } else {
-            final int remoteSize = remoteClients.size();
-            final int historySize = historyCursor == null ? 0 : historyCursor.getCount();
-            return remoteSize + historySize;
-        }
+        final int remoteSize = remoteClients.size();
+        final int historySize = historyCursor == null ? 0 : historyCursor.getCount();
+        return remoteSize + historySize;
     }
 
     @Override
@@ -148,11 +105,6 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 final CombinedHistoryItem.ClientItem clientItem = (CombinedHistoryItem.ClientItem) viewHolder;
                 final RemoteClient client = remoteClients.get(localPosition);
                 clientItem.bind(client, context);
-                break;
-
-            case CHILD:
-                RemoteTab remoteTab = clientChildren.get(position);
-                ((CombinedHistoryItem.HistoryItem) viewHolder).bind(remoteTab);
                 break;
 
             case HISTORY:
