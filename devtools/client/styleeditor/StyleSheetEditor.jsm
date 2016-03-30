@@ -222,6 +222,9 @@ StyleSheetEditor.prototype = {
     }
 
     let relatedSheet = this.styleSheet.relatedStyleSheet;
+    if (!relatedSheet || !relatedSheet.href) {
+      return;
+    }
 
     let path;
     let href = removeQuery(relatedSheet.href);
