@@ -4,6 +4,8 @@ if (!('oomAfterAllocations' in this))
   quit();
 
 var du = new Debugger();
-var obj = du.drainTraceLogger();
-oomAfterAllocations(1);
-du.drainTraceLogger().length;
+if (typeof du.drainTraceLogger == "function") {
+    var obj = du.drainTraceLogger();
+    oomAfterAllocations(1);
+    du.drainTraceLogger().length;
+}
