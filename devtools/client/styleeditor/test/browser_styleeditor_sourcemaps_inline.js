@@ -1,0 +1,85 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// https rather than chrome to improve coverage
+const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps-inline.html";
+const PREF = "devtools.styleeditor.source-maps-enabled";
+
+const sassContent = `body {
+  background-color: black;
+  & > h1 {
+    color: white;
+  }
+}
+`;
+
+const cssContent = `body {
+  background-color: black;
+}
+body > h1 {
+  color: white;
+}
+` +
+"/*# sourceMappingURL=data:application/json;base64,ewoidmVyc2lvbiI6IDMsCiJtY" +
+"XBwaW5ncyI6ICJBQUFBLElBQUs7RUFDSCxnQkFBZ0IsRUFBRSxLQUFLO0VBQ3ZCLFNBQU87SUFD" +
+"TCxLQUFLLEVBQUUsS0FBSyIsCiJzb3VyY2VzIjogWyJ0ZXN0LnNjc3MiXSwKInNvdXJjZXNDb25" +
+"0ZW50IjogWyJib2R5IHtcbiAgYmFja2dyb3VuZC1jb2xvcjogYmxhY2s7XG4gICYgPiBoMSB7XG" +
+"4gICAgY29sb3I6IHdoaXRlO1xuICB9XG59XG4iXSwKIm5hbWVzIjogW10sCiJmaWxlIjogInRlc" +
+"3QuY3NzIgp9Cg== */";
+
+add_task(function* () {
+  let {ui} = yield openStyleEditorForURL(TESTCASE_URI);
+
+  is(ui.editors.length, 1,
+    "correct number of editors with source maps enabled");
+
+  yield testEditor(ui.editors[0], "test.scss", sassContent);
+
+  // Test disabling original sources
+  yield togglePref(ui);
+
+  is(ui.editors.length, 1, "correct number of editors after pref toggled");
+
+  // Test CSS editors
+  yield testEditor(ui.editors[0], "<inline style sheet #1>", cssContent);
+
+  Services.prefs.clearUserPref(PREF);
+});
+
+function* testEditor(editor, expectedName, expectedText) {
+  let name = getStylesheetNameFor(editor);
+  is(expectedName, name, name + " editor name is correct");
+
+  yield openEditor(editor);
+  let text = editor.sourceEditor.getText();
+  is(text, expectedText, name + " editor contains expected text");
+}
+
+/* Helpers */
+
+function togglePref(UI) {
+  let editorsPromise = UI.once("stylesheets-reset");
+  let selectedPromise = UI.once("editor-selected");
+
+  Services.prefs.setBoolPref(PREF, false);
+
+  return promise.all([editorsPromise, selectedPromise]);
+}
+
+function openEditor(editor) {
+  getLinkFor(editor).click();
+
+  return editor.getSourceEditor();
+}
+
+function getLinkFor(editor) {
+  return editor.summary.querySelector(".stylesheet-name");
+}
+
+function getStylesheetNameFor(editor) {
+  return editor.summary.querySelector(".stylesheet-name > label")
+    .getAttribute("value");
+}
