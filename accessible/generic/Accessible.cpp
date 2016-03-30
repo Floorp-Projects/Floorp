@@ -2519,20 +2519,6 @@ Accessible::LastRelease()
 }
 
 void
-Accessible::CacheChildren()
-{
-  NS_ENSURE_TRUE_VOID(Document());
-
-  AutoTreeMutation mt(this);
-  TreeWalker walker(this);
-  Accessible* child = nullptr;
-  while ((child = walker.Next()) && AppendChild(child)) {
-    mt.AfterInsertion(child);
-  }
-  mt.Done();
-}
-
-void
 Accessible::TestChildCache(Accessible* aCachedChild) const
 {
 #ifdef DEBUG
@@ -2553,21 +2539,6 @@ Accessible::TestChildCache(Accessible* aCachedChild) const
   NS_ASSERTION(child == aCachedChild,
                "[TestChildCache] cached accessible wasn't found. Wrong accessible tree!");
 #endif
-}
-
-void
-Accessible::EnsureChildren()
-{
-  NS_ASSERTION(!IsDefunct(), "Caching children for defunct accessible!");
-
-  if (!IsChildrenFlag(eChildrenUninitialized))
-    return;
-
-  // State is embedded children until text leaf accessible is appended.
-  SetChildrenFlag(eEmbeddedChildren); // Prevent reentry
-  if (KidsFromDOM()) {
-    CacheChildren();
-  }
 }
 
 Accessible*

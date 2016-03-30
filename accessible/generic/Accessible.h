@@ -376,11 +376,6 @@ public:
     { mRoleMapEntry = aRoleMapEntry; }
 
   /**
-   * Cache children if necessary.
-   */
-  void EnsureChildren();
-
-  /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
   bool AppendChild(Accessible* aChild)
@@ -982,11 +977,6 @@ protected:
    * Destroy the object.
    */
   void LastRelease();
-
-  /**
-   * Cache accessible children.
-   */
-  virtual void CacheChildren();
 
   /**
    * Set accessible parent and index in parent.
