@@ -4119,7 +4119,7 @@ ScrollFrameHelper::FireScrollPortEvent()
   // DOM event.
   bool both = vertChanged && horizChanged &&
                 newVerticalOverflow == newHorizontalOverflow;
-  InternalScrollPortEvent::orientType orient;
+  InternalScrollPortEvent::OrientType orient;
   if (both) {
     orient = InternalScrollPortEvent::both;
     mHorizontalOverflow = newHorizontalOverflow;
