@@ -21,12 +21,6 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
         super(view);
     }
 
-    public static class SectionItem extends CombinedHistoryItem {
-        public SectionItem(View view) {
-            super(view);
-        }
-    }
-
     public static class HistoryItem extends CombinedHistoryItem {
         public HistoryItem(View view) {
             super(view);
