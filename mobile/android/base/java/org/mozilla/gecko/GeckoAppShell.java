@@ -7,15 +7,18 @@ package org.mozilla.gecko;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,12 +38,14 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -91,9 +96,11 @@ import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Browser;
 import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -106,6 +113,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 import android.widget.AbsoluteLayout;
 
 public class GeckoAppShell
@@ -2527,6 +2535,84 @@ public class GeckoAppShell
         }
 
         return "DIRECT";
+    }
+
+    /* Downloads the URI pointed to by a share intent, and alters the intent to point to the locally stored file.
+     */
+    public static void downloadImageForIntent(final Intent intent) {
+        final String src = ContextUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
+        if (src == null) {
+            showImageShareFailureSnackbar();
+            return;
+        }
+
+        final File dir = GeckoApp.getTempDirectory();
+
+        if (dir == null) {
+            showImageShareFailureSnackbar();
+            return;
+        }
+
+        GeckoApp.deleteTempFiles();
+
+        String type = intent.getType();
+        OutputStream os = null;
+        try {
+            // Create a temporary file for the image
+            if (src.startsWith("data:")) {
+                final int dataStart = src.indexOf(",");
+
+                String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(type);
+
+                // If we weren't given an explicit mimetype, try to dig one out of the data uri.
+                if (TextUtils.isEmpty(extension) && dataStart > 5) {
+                    type = src.substring(5, dataStart).replace(";base64", "");
+                    extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(type);
+                }
+
+                final File imageFile = File.createTempFile("image", "." + extension, dir);
+                os = new FileOutputStream(imageFile);
+
+                byte[] buf = Base64.decode(src.substring(dataStart + 1), Base64.DEFAULT);
+                os.write(buf);
+
+                // Only alter the intent when we're sure everything has worked
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+            } else {
+                InputStream is = null;
+                try {
+                    final byte[] buf = new byte[2048];
+                    final URL url = new URL(src);
+                    final String filename = URLUtil.guessFileName(src, null, type);
+                    is = url.openStream();
+
+                    final File imageFile = new File(dir, filename);
+                    os = new FileOutputStream(imageFile);
+
+                    int length;
+                    while ((length = is.read(buf)) != -1) {
+                        os.write(buf, 0, length);
+                    }
+
+                    // Only alter the intent when we're sure everything has worked
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+                } finally {
+                    IOUtils.safeStreamClose(is);
+                }
+            }
+        } catch(IOException ex) {
+            // If something went wrong, we'll just leave the intent un-changed
+        } finally {
+            IOUtils.safeStreamClose(os);
+        }
+    }
+
+    // Don't fail silently, tell the user that we weren't able to share the image
+    private static final void showImageShareFailureSnackbar() {
+        SnackbarHelper.showSnackbar((Activity) getContext(),
+                getApplicationContext().getString(R.string.share_image_failed),
+                Snackbar.LENGTH_LONG
+        );
     }
 
     @WrapForJNI(allowMultithread = true)
