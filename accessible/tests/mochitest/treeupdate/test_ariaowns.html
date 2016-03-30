@@ -74,8 +74,8 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
-        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
       ];
