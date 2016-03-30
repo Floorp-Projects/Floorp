@@ -66,6 +66,10 @@ add_task(function*() {
 
   // For the time being, the actor does not update the style's owning
   // node's textContent.  See bug 1205380.
-  let textContent = yield executeInContent("Test:GetStyleContent", null, null);
+  let textContent = yield ContentTask.spawn(gBrowser.selectedBrowser, null,
+    function*() {
+      return content.document.querySelector("style").textContent;
+    });
+
   isnot(textContent, expectedText, "changes not written back to style node");
 });

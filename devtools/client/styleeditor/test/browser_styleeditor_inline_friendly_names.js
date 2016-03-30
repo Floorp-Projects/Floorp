@@ -10,17 +10,16 @@ const FIRST_TEST_PAGE = TEST_BASE_HTTP + "inline-1.html";
 const SECOND_TEST_PAGE = TEST_BASE_HTTP + "inline-2.html";
 const SAVE_PATH = "test.css";
 
-add_task(function* () {
+add_task(function*() {
   let { ui } = yield openStyleEditorForURL(FIRST_TEST_PAGE);
 
-  loadCommonFrameScript();
   testIndentifierGeneration(ui);
 
   yield saveFirstInlineStyleSheet(ui);
   yield testFriendlyNamesAfterSave(ui);
-  yield reloadPage(ui);
+  yield reloadPageAndWaitForStyleSheets(ui);
   yield testFriendlyNamesAfterSave(ui);
-  yield navigateToAnotherPage(ui);
+  yield navigateToAndWaitForStyleSheets(SECOND_TEST_PAGE, ui);
   yield testFriendlyNamesAfterNavigation(ui);
 });
 
@@ -72,21 +71,6 @@ function testFriendlyNamesAfterSave(ui) {
     "Friendly name for the second inline sheet isn't the same as the first.");
 
   return promise.resolve(null);
-}
-
-function reloadPage(ui) {
-  info("Reloading page.");
-  executeInContent("devtools:test:reload", {}, {},
-    /* no response */
-    false);
-  return ui.once("stylesheets-reset");
-}
-
-function navigateToAnotherPage(ui) {
-  info("Navigating to another page.");
-  executeInContent("devtools:test:navigate", { location: SECOND_TEST_PAGE },
-    {}, false);
-  return ui.once("stylesheets-reset");
 }
 
 function testFriendlyNamesAfterNavigation(ui) {
