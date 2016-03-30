@@ -136,14 +136,8 @@ DuplicateString(ExclusiveContext* cx, const char16_t* s);
 extern UniqueChars
 DuplicateString(const char* s);
 
-extern UniqueChars
-DuplicateString(const char* s, size_t n);
-
 extern UniqueTwoByteChars
 DuplicateString(const char16_t* s);
-
-extern UniqueTwoByteChars
-DuplicateString(const char16_t* s, size_t n);
 
 /*
  * Convert a non-string value to a string, returning null after reporting an
