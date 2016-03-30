@@ -9,6 +9,7 @@ EXPORTS += [
     'agnostic/OpusDecoder.h',
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
+    'MediaTelemetryConstants.h',
     'PDMFactory.h',
     'PlatformDecoderModule.h',
     'wrappers/FuzzingWrapper.h',
