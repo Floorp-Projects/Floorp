@@ -60,7 +60,7 @@ EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex)
 }
 
 int32_t
-AccCollector::EnsureNGetIndex(Accessible* aAccessible)
+EmbeddedObjCollector::EnsureNGetIndex(Accessible* aAccessible)
 {
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
