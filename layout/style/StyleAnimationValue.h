@@ -9,6 +9,7 @@
 #define mozilla_StyleAnimationValue_h_
 
 #include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/UniquePtr.h"
 #include "nsStringFwd.h"
 #include "nsStringBuffer.h"
 #include "nsCoord.h"
@@ -197,10 +198,14 @@ public:
   /**
    * Creates a specified value for the given computed value.
    *
-   * The first overload fills in an nsCSSValue object; the second
-   * produces a string.  The nsCSSValue result may depend on objects
-   * owned by the |aComputedValue| object, so users of that variant
+   * The first two overloads fill in an nsCSSValue object; the third
+   * produces a string.  For the overload that takes a const
+   * StyleAnimationValue& reference, the nsCSSValue result may depend on
+   * objects owned by the |aComputedValue| object, so users of that variant
    * must keep |aComputedValue| alive longer than |aSpecifiedValue|.
+   * The overload that takes an rvalue StyleAnimationValue reference
+   * transfers ownership for some resources such that the |aComputedValue|
+   * does not depend on the lifetime of |aSpecifiedValue|.
    *
    * @param aProperty      The property whose value we're uncomputing.
    * @param aComputedValue The computed value to be converted.
@@ -209,6 +214,9 @@ public:
    */
   static bool UncomputeValue(nsCSSProperty aProperty,
                              const StyleAnimationValue& aComputedValue,
+                             nsCSSValue& aSpecifiedValue);
+  static bool UncomputeValue(nsCSSProperty aProperty,
+                             StyleAnimationValue&& aComputedValue,
                              nsCSSValue& aSpecifiedValue);
   static bool UncomputeValue(nsCSSProperty aProperty,
                              const StyleAnimationValue& aComputedValue,
@@ -365,6 +373,19 @@ public:
 
   /// @return the scale for this value, calculated with reference to @aForFrame.
   gfxSize GetScaleValue(const nsIFrame* aForFrame) const;
+
+  UniquePtr<nsCSSValueList> TakeCSSValueListValue() {
+    nsCSSValueList* list = GetCSSValueListValue();
+    mValue.mCSSValueList = nullptr;
+    mUnit = eUnit_Null;
+    return UniquePtr<nsCSSValueList>(list);
+  }
+  UniquePtr<nsCSSValuePairList> TakeCSSValuePairListValue() {
+    nsCSSValuePairList* list = GetCSSValuePairListValue();
+    mValue.mCSSValuePairList = nullptr;
+    mUnit = eUnit_Null;
+    return UniquePtr<nsCSSValuePairList>(list);
+  }
 
   explicit StyleAnimationValue(Unit aUnit = eUnit_Null) : mUnit(aUnit) {
     NS_ASSERTION(aUnit == eUnit_Null || aUnit == eUnit_Normal ||
