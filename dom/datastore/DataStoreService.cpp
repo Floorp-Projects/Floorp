@@ -27,6 +27,7 @@
 #include "mozilla/dom/IDBTransaction.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/unused.h"
 
 #include "mozIApplication.h"
@@ -410,7 +411,9 @@ public:
         return;
       }
 
-      mRequest = store->OpenCursor(IDBCursorDirection::Prev, error);
+      AutoJSAPI jsapi;
+      jsapi.Init();
+      mRequest = store->OpenCursor(jsapi.cx(), IDBCursorDirection::Prev, error);
       if (NS_WARN_IF(error.Failed())) {
         return;
       }

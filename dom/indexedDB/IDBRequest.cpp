@@ -116,6 +116,7 @@ IDBRequest::Create(JSContext* aCx,
                    IDBDatabase* aDatabase,
                    IDBTransaction* aTransaction)
 {
+  MOZ_ASSERT(aCx);
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
 
