@@ -80,7 +80,9 @@
     cursor: n-resize;
   }
 
-  .devtools-responsive-container > .devtools-sidebar-tabs {
+  .devtools-responsive-container > .devtools-sidebar-tabs:not([pane-collapsed]) {
+    /* When the panel is collapsed min/max height should not be applied because
+       collapsing relies on negative margins, which implies constant height. */
     min-height: 35vh;
     max-height: 75vh;
   }
