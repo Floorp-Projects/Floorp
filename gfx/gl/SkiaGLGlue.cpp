@@ -371,10 +371,6 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
                 } else if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_framebuffer_object)) {
                     strcat(extensionsString, "GL_EXT_framebuffer_object ");
                 }
-
-                if (sGLContext.get()->IsSupported(GLFeature::texture_rg)) {
-                    strcat(extensionsString, "GL_ARB_texture_rg ");
-                }
             }
 
             if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
