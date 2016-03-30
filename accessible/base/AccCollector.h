@@ -15,27 +15,10 @@ namespace a11y {
 class Accessible;
 
 /**
- * Collect accessible children complying with filter function. Provides quick
- * access to accessible by index.
- */
-class AccCollector
-{
-public:
-  virtual ~AccCollector();
-
-protected:
-  AccCollector() {}
-
-private:
-  AccCollector(const AccCollector&);
-  AccCollector& operator =(const AccCollector&);
-};
-
-/**
  * Collect embedded objects. Provide quick access to accessible by index and
  * vice versa.
  */
-class EmbeddedObjCollector final : public AccCollector
+class EmbeddedObjCollector final
 {
 public:
   virtual ~EmbeddedObjCollector() { }
