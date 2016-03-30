@@ -57,6 +57,7 @@ import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
@@ -3885,9 +3886,13 @@ public class BrowserApp extends GeckoApp
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(url));
             startActivity(intent);
-        } else if (!maybeSwitchToTab(url, flags)) {
-            openUrlAndStopEditing(url);
-            clearSelectedTabApplicationId();
+        } else {
+            final String pageURL = SavedReaderViewHelper.getReaderURLIfCached(getContext(), url);
+
+            if (!maybeSwitchToTab(pageURL, flags)) {
+                openUrlAndStopEditing(pageURL);
+                clearSelectedTabApplicationId();
+            }
         }
     }
 
@@ -3901,6 +3906,10 @@ public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("flags must not be null");
         }
 
+        // We only use onUrlOpenInBackgroundListener for the homepanel context menus, hence
+        // we should always be checking whether we want the readermode version
+        final String pageURL = SavedReaderViewHelper.getReaderURLIfCached(getContext(), url);
+
         final boolean isPrivate = flags.contains(OnUrlOpenInBackgroundListener.Flags.PRIVATE);
 
         int loadFlags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
@@ -3908,7 +3917,7 @@ public class BrowserApp extends GeckoApp
             loadFlags |= Tabs.LOADURL_PRIVATE;
         }
 
-        final Tab newTab = Tabs.getInstance().loadUrl(url, loadFlags);
+        final Tab newTab = Tabs.getInstance().loadUrl(pageURL, loadFlags);
 
         // We switch to the desired tab by unique ID, which closes any window
         // for a race between opening the tab and closing it, and switching to
