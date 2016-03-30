@@ -8,6 +8,7 @@
 #define js_Utility_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
@@ -212,6 +213,7 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
         oomAfter_(0)
     {
         if (oomEnabled_) {
+            MOZ_ALWAYS_TRUE(owner_.compareExchange(nullptr, this));
             oomAfter_ = int64_t(oom::maxAllocations) - int64_t(oom::counter);
             oom::maxAllocations = UINT64_MAX;
         }
@@ -224,10 +226,14 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
             MOZ_ASSERT(maxAllocations >= 0,
                        "alloc count + oom limit exceeds range, your oom limit is probably too large");
             oom::maxAllocations = uint64_t(maxAllocations);
+            MOZ_ALWAYS_TRUE(owner_.compareExchange(this, nullptr));
         }
     }
 
   private:
+    // Used to catch concurrent use from other threads.
+    static mozilla::Atomic<AutoEnterOOMUnsafeRegion*> owner_;
+
     bool oomEnabled_;
     int64_t oomAfter_;
 #endif
