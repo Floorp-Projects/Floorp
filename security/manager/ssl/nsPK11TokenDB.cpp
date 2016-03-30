@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsPK11TokenDB.h"
 
+#include "mozilla/unused.h"
 #include "nsIMutableArray.h"
 #include "nsISupports.h"
 #include "nsNSSComponent.h"
@@ -28,17 +29,18 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
   mSlot.reset(PK11_ReferenceSlot(slot));
   mSeries = PK11_GetSlotSeries(slot);
 
-  refreshTokenInfo(locker);
+  Unused << refreshTokenInfo(locker);
 }
 
-void
+nsresult
 nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
   mTokenName = NS_ConvertUTF8toUTF16(PK11_GetTokenName(mSlot.get()));
 
   CK_TOKEN_INFO tokInfo;
-  if (PK11_GetTokenInfo(mSlot.get(), &tokInfo) != SECSuccess) {
-    return;
+  nsresult rv = MapSECStatus(PK11_GetTokenInfo(mSlot.get(), &tokInfo));
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // Set the Label field
@@ -74,6 +76,8 @@ nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
     ccSerial + PL_strnlen(ccSerial, sizeof(tokInfo.serialNumber)));
   mTokenSerialNum = NS_ConvertUTF8toUTF16(cSerial);
   mTokenSerialNum.Trim(" ", false, true);
+
+  return NS_OK;
 }
 
 nsPK11Token::~nsPK11Token()
@@ -105,7 +109,10 @@ NS_IMETHODIMP nsPK11Token::GetTokenName(char16_t * *aTokenName)
 
   // handle removals/insertions
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aTokenName = ToNewUnicode(mTokenName);
   if (!*aTokenName) return NS_ERROR_OUT_OF_MEMORY;
@@ -122,7 +129,10 @@ NS_IMETHODIMP nsPK11Token::GetTokenLabel(char16_t **aTokLabel)
 
   // handle removals/insertions
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aTokLabel = ToNewUnicode(mTokenLabel);
   if (!*aTokLabel) return NS_ERROR_OUT_OF_MEMORY;
@@ -138,7 +148,10 @@ NS_IMETHODIMP nsPK11Token::GetTokenManID(char16_t **aTokManID)
 
   // handle removals/insertions
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aTokManID = ToNewUnicode(mTokenManID);
   if (!*aTokManID) return NS_ERROR_OUT_OF_MEMORY;
@@ -154,7 +167,10 @@ NS_IMETHODIMP nsPK11Token::GetTokenHWVersion(char16_t **aTokHWVersion)
 
   // handle removals/insertions
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aTokHWVersion = ToNewUnicode(mTokenHWVersion);
   if (!*aTokHWVersion) return NS_ERROR_OUT_OF_MEMORY;
@@ -170,7 +186,10 @@ NS_IMETHODIMP nsPK11Token::GetTokenFWVersion(char16_t **aTokFWVersion)
 
   // handle removals/insertions
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aTokFWVersion = ToNewUnicode(mTokenFWVersion);
   if (!*aTokFWVersion) return NS_ERROR_OUT_OF_MEMORY;
@@ -186,7 +205,10 @@ NS_IMETHODIMP nsPK11Token::GetTokenSerialNumber(char16_t **aTokSerialNum)
 
   // handle removals/insertions
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aTokSerialNum = ToNewUnicode(mTokenSerialNum);
   if (!*aTokSerialNum) return NS_ERROR_OUT_OF_MEMORY;
@@ -212,7 +234,6 @@ nsPK11Token::Login(bool force)
     return NS_ERROR_NOT_AVAILABLE;
 
   nsresult rv;
-  SECStatus srv;
   bool test;
   rv = this->NeedsLogin(&test);
   if (NS_FAILED(rv)) return rv;
@@ -222,8 +243,8 @@ nsPK11Token::Login(bool force)
   }
   rv = setPassword(mSlot.get(), mUIContext, locker);
   if (NS_FAILED(rv)) return rv;
-  srv = PK11_Authenticate(mSlot.get(), true, mUIContext);
-  return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
+
+  return MapSECStatus(PK11_Authenticate(mSlot.get(), true, mUIContext));
 }
 
 NS_IMETHODIMP nsPK11Token::LogoutSimple()
@@ -232,9 +253,9 @@ NS_IMETHODIMP nsPK11Token::LogoutSimple()
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  // PK11_MapError sets CKR_USER_NOT_LOGGED_IN to SEC_ERROR_LIBRARY_FAILURE,
-  // so not going to learn anything here by a failure.  Treat it like void.
-  PK11_Logout(mSlot.get());
+  // PK11_Logout() can fail if the user wasn't logged in beforehand. We want
+  // this method to succeed even in this case, so we ignore the return value.
+  Unused << PK11_Logout(mSlot.get());
   return NS_OK;
 }
 
@@ -260,8 +281,7 @@ NS_IMETHODIMP nsPK11Token::Reset()
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  PK11_ResetToken(mSlot.get(), 0);
-  return NS_OK;
+  return MapSECStatus(PK11_ResetToken(mSlot.get(), nullptr));
 }
 
 NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(int32_t *aMinimumPasswordLength)
@@ -296,9 +316,10 @@ NS_IMETHODIMP nsPK11Token::CheckPassword(const char16_t *password, bool *_retval
     PK11_CheckUserPassword(mSlot.get(), const_cast<char*>(utf8Password.get()));
   if (srv != SECSuccess) {
     *_retval =  false;
-    if (PR_GetError() != SEC_ERROR_BAD_PASSWORD) {
+    PRErrorCode error = PR_GetError();
+    if (error != SEC_ERROR_BAD_PASSWORD) {
       /* something really bad happened - throw an exception */
-      return NS_ERROR_FAILURE;
+      return mozilla::psm::GetXPCOMFromNSSError(error);
     }
   } else {
     *_retval =  true;
@@ -313,12 +334,8 @@ NS_IMETHODIMP nsPK11Token::InitPassword(const char16_t *initialPassword)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ConvertUTF16toUTF8 utf8Password(initialPassword);
-  if (PK11_InitPin(mSlot.get(), "", const_cast<char*>(utf8Password.get()))
-        != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return MapSECStatus(
+    PK11_InitPin(mSlot.get(), "", const_cast<char*>(utf8Password.get())));
 }
 
 NS_IMETHODIMP
@@ -370,10 +387,10 @@ NS_IMETHODIMP nsPK11Token::ChangePassword(const char16_t *oldPassword, const cha
   // was initialized with nullptr. PK11_ChangePW() has different semantics for
   // the empty string and for nullptr, so we can't just use get().
   // See Bug 447589.
-  SECStatus srv = PK11_ChangePW(mSlot.get(),
+  return MapSECStatus(PK11_ChangePW(
+    mSlot.get(),
     (oldPassword ? const_cast<char*>(utf8OldPassword.get()) : nullptr),
-    (newPassword ? const_cast<char*>(utf8NewPassword.get()) : nullptr));
-  return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
+    (newPassword ? const_cast<char*>(utf8NewPassword.get()) : nullptr)));
 }
 
 NS_IMETHODIMP nsPK11Token::IsHardwareToken(bool *_retval)
