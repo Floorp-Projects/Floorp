@@ -80,14 +80,12 @@ AnimationDetails.prototype = {
      */
     if (this.serverTraits.hasGetProperties) {
       let properties = yield this.animation.getProperties();
-      for (let propertyObject of properties) {
-        let name = propertyObject.property;
-
+      for (let {name, values} of properties) {
         if (!tracks[name]) {
           tracks[name] = [];
         }
 
-        for (let {value, offset} of propertyObject.values) {
+        for (let {value, offset} of values) {
           tracks[name].push({value, offset});
         }
       }

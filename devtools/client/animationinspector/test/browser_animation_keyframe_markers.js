@@ -60,15 +60,12 @@ function* getExpectedKeyframesData(animation) {
 
   for (let expectedProperty of EXPECTED_PROPERTIES) {
     data[expectedProperty] = [];
-    for (let propertyObject of properties) {
-      if (propertyObject.property !== expectedProperty) {
+    for (let {name, values} of properties) {
+      if (name !== expectedProperty) {
         continue;
       }
-      for (let valueObject of propertyObject.values) {
-        data[expectedProperty].push({
-          offset: valueObject.offset,
-          value: valueObject.value
-        });
+      for (let {offset, value} of values) {
+        data[expectedProperty].push({offset, value});
       }
     }
   }
