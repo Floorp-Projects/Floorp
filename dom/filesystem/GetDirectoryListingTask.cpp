@@ -346,7 +346,7 @@ GetDirectoryListingTask::HandlerCallback()
 
 #ifdef DEBUG
       nsCOMPtr<nsIFile> rootPath;
-      rv = NS_NewLocalFile(mFileSystem->GetLocalRootPath(), false,
+      rv = NS_NewLocalFile(mFileSystem->LocalOrDeviceStorageRootPath(), false,
                            getter_AddRefs(rootPath));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         mPromise->MaybeReject(rv);
