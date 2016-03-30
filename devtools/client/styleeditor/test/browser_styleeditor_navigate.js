@@ -13,18 +13,13 @@ const COL_NO = 3;
 
 add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
-  loadCommonFrameScript();
 
   is(ui.editors.length, 2, "Two sheets present after load.");
 
   info("Selecting the second editor");
   yield ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
 
-  info("Navigating to another page.");
-  executeInContent("devtools:test:navigate", { location: NEW_URI }, {}, false);
-
-  info("Waiting for sheets to be loaded after navigation.");
-  yield ui.once("stylesheets-reset");
+  yield navigateToAndWaitForStyleSheets(NEW_URI, ui);
 
   info("Waiting for source editor to be ready.");
   yield ui.editors[0].getSourceEditor();

@@ -12,18 +12,13 @@ const COL_NO = 3;
 
 add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
-  loadCommonFrameScript();
 
   is(ui.editors.length, 2, "Two sheets present after load.");
 
   info("Selecting the second editor");
   yield ui.selectStyleSheet(ui.editors[1].styleSheet, LINE_NO, COL_NO);
 
-  info("Reloading page.");
-  executeInContent("devtools:test:reload", {}, {}, false);
-
-  info("Waiting for sheets to be loaded after reload.");
-  yield ui.once("stylesheets-reset");
+  yield reloadPageAndWaitForStyleSheets(ui);
 
   is(ui.editors.length, 2, "Two sheets present after reload.");
 

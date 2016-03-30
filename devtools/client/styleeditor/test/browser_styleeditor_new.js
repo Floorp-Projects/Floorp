@@ -74,7 +74,10 @@ function* testInitialState(editor) {
   let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), 0, "new editor initially shows 0 rules");
 
-  let color = yield getComputedStyleProperty("body", null, "background-color");
+  let color = yield getComputedStyleProperty({
+    selector: "body",
+    name: "background-color"
+  });
   is(color, "rgb(255, 255, 255)",
      "content's background color is initially white");
 }
