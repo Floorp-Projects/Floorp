@@ -75,7 +75,6 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.BOOKMARKS));
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.HISTORY));
-        panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.COMBINED_HISTORY));
 
         // We disable Synced Tabs for guest mode / restricted profiles.
         if (Restrictions.isAllowed(mContext, Restrictable.MODIFY_ACCOUNTS)) {
