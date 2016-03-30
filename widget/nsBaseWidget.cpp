@@ -592,15 +592,15 @@ double nsIWidget::DefaultScaleOverride()
 //-------------------------------------------------------------------------
 void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
-  MOZ_RELEASE_ASSERT(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
-                     "aChild not properly removed from its old child list");
+  NS_PRECONDITION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
+                  "aChild not properly removed from its old child list");
 
   if (!mFirstChild) {
     mFirstChild = mLastChild = aChild;
   } else {
     // append to the list
-    MOZ_RELEASE_ASSERT(mLastChild);
-    MOZ_RELEASE_ASSERT(!mLastChild->GetNextSibling());
+    NS_ASSERTION(mLastChild, "Bogus state");
+    NS_ASSERTION(!mLastChild->GetNextSibling(), "Bogus state");
     mLastChild->SetNextSibling(aChild);
     aChild->SetPrevSibling(mLastChild);
     mLastChild = aChild;
@@ -622,7 +622,7 @@ void nsBaseWidget::RemoveChild(nsIWidget* aChild)
   nsIWidget* parent = aChild->GetParent();
   NS_ASSERTION(!parent || parent == this, "Not one of our kids!");
 #else
-  MOZ_RELEASE_ASSERT(aChild->GetParent() == this, "Not one of our kids!");
+  NS_ASSERTION(aChild->GetParent() == this, "Not one of our kids!");
 #endif
 #endif
 
