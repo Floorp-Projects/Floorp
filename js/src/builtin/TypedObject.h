@@ -402,6 +402,10 @@ class ArrayTypeDescr : public ComplexTypeDescr
     TypeDescr& elementType() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<TypeDescr>();
     }
+    TypeDescr& maybeForwardedElementType() const {
+        JSObject* obj = MaybeForwarded(&getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject());
+        return obj->as<TypeDescr>();
+    }
 
     int32_t length() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
