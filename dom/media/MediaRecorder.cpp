@@ -639,7 +639,7 @@ private:
     mTrackUnionStream->AddListener(mEncoder);
     // Try to use direct listeners if possible
     DOMMediaStream* domStream = mRecorder->Stream();
-    if (domStream) {
+    if (domStream && domStream->GetInputStream()) {
       mInputStream = domStream->GetInputStream()->AsSourceStream();
       if (mInputStream) {
         mInputStream->AddDirectListener(mEncoder);
