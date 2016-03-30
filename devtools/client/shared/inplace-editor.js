@@ -1326,7 +1326,8 @@ InplaceEditor.prototype = {
       if (finalList.length > 1) {
         // Calculate the popup horizontal offset.
         let indent = this.input.selectionStart - query.length;
-        let offset = indent * this.inputCharWidth;
+        let offset = indent * this.inputCharDimensions.width;
+        offset = this._isSingleLine() ? offset : 0;
 
         // Select the most relevantItem if autoInsert is allowed
         let selectedIndex = autoInsert ? mostRelevantIndex : -1;
@@ -1341,6 +1342,16 @@ InplaceEditor.prototype = {
       this.emit("after-suggest");
       this._doValidation();
     }, 0);
+  },
+
+  /**
+   * Check if the current input is displaying more than one line of text.
+   *
+   * @return {Boolean} true if the input has a single line of text
+   */
+  _isSingleLine: function() {
+    let inputRect = this.input.getBoundingClientRect();
+    return inputRect.height < 2 * this.inputCharDimensions.height;
   },
 };
 
