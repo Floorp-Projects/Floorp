@@ -24,6 +24,8 @@ import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
+import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.Clipboard;
@@ -403,6 +405,12 @@ public abstract class HomeFragment extends Fragment {
                 case BOOKMARKS:
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "bookmark");
                     mDB.removeBookmarksWithURL(cr, mUrl);
+
+                    SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(mContext);
+                    if (rch.isURLCached(mUrl)) {
+                        ReadingListHelper.removeCachedReaderItem(mUrl, mContext);
+                    }
+
                     break;
 
                 case HISTORY:

@@ -592,6 +592,10 @@ public class Tab {
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.BOOKMARK_REMOVED);
             }
         });
+
+        // We need to ensure we remove readercached items here - we could have switched out of readermode
+        // before unbookmarking, so we don't necessarily have an about:reader URL here.
+        ReadingListHelper.removeCachedReaderItem(pageUrl, mAppContext);
     }
 
     public void addToReadingList() {
