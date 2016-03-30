@@ -158,39 +158,100 @@ struct Prefable {
   const T* const specs;
 };
 
-struct NativeProperties
-{
-  const Prefable<const JSFunctionSpec>* staticMethods;
-  jsid* staticMethodIds;
-  const JSFunctionSpec* staticMethodSpecs;
+// Conceptually, NativeProperties has seven (Prefable<T>*, jsid*, T*) trios
+// (where T is one of JSFunctionSpec, JSPropertySpec, or ConstantSpec), one for
+// each of: static methods and attributes, methods and attributes, unforgeable
+// methods and attributes, and constants.
+//
+// That's 21 pointers, but in most instances most of the trios are all null,
+// and there are many instances. To save space we use a variable-length type,
+// NativePropertiesN<N>, to hold the data and getters to access it. It has N
+// actual trios (stored in trios[]), plus four bits for each of the 7 possible
+// trios: 1 bit that states if that trio is present, and 3 that state that
+// trio's offset (if present) in trios[].
+//
+// All trio accesses should be done via the getters, which contain assertions
+// that check we don't overrun the end of the struct. (The trio data members are
+// public only so they can be statically initialized.) These assertions should
+// never fail so long as (a) accesses to the variable-length part are guarded by
+// appropriate Has*() calls, and (b) all instances are well-formed, i.e. the
+// value of N matches the number of mHas* members that are true.
+//
+// Finally, we define a typedef of NativePropertiesN<7>, NativeProperties, which
+// we use as a "base" type used to refer to all instances of NativePropertiesN.
+// (7 is used because that's the maximum valid parameter, though any other
+// value 1..6 could also be used.) This is reasonable because of the
+// aforementioned assertions in the getters. Upcast() is used to convert
+// specific instances to this "base" type.
+//
+template <int N>
+struct NativePropertiesN {
+  // Trio structs are stored in the trios[] array, and each element in the
+  // array could require a different T. Therefore, we can't use the correct
+  // type for mPrefables and mSpecs. Instead we use void* and cast to the
+  // correct type in the getters.
+  struct Trio {
+    const /*Prefable<const T>*/ void* const mPrefables;
+    const jsid* const mIds;
+    const /*T*/ void* const mSpecs;
+  };
 
-  const Prefable<const JSPropertySpec>* staticAttributes;
-  jsid* staticAttributeIds;
-  const JSPropertySpec* staticAttributeSpecs;
+  const int32_t iteratorAliasMethodIndex;
 
-  const Prefable<const JSFunctionSpec>* methods;
-  jsid* methodIds;
-  const JSFunctionSpec* methodSpecs;
+  constexpr const NativePropertiesN<7>* Upcast() const {
+    return reinterpret_cast<const NativePropertiesN<7>*>(this);
+  }
 
-  const Prefable<const JSPropertySpec>* attributes;
-  jsid* attributeIds;
-  const JSPropertySpec* attributeSpecs;
+#define DO(SpecT, FieldName) \
+public: \
+  /* The bitfields indicating the trio's presence and (if present) offset. */ \
+  const uint32_t mHas##FieldName##s:1; \
+  const uint32_t m##FieldName##sOffset:3; \
+private: \
+  const Trio* FieldName##sTrio() const { \
+    MOZ_ASSERT(Has##FieldName##s()); \
+    return &trios[m##FieldName##sOffset]; \
+  } \
+public: \
+  bool Has##FieldName##s() const { \
+    return mHas##FieldName##s; \
+  } \
+  const Prefable<const SpecT>* FieldName##s() const { \
+    return static_cast<const Prefable<const SpecT>*> \
+                      (FieldName##sTrio()->mPrefables); \
+  } \
+  const jsid* FieldName##Ids() const { \
+    return FieldName##sTrio()->mIds; \
+  } \
+  const SpecT* FieldName##Specs() const { \
+    return static_cast<const SpecT*>(FieldName##sTrio()->mSpecs); \
+  }
 
-  const Prefable<const JSFunctionSpec>* unforgeableMethods;
-  jsid* unforgeableMethodIds;
-  const JSFunctionSpec* unforgeableMethodSpecs;
+  DO(JSFunctionSpec, StaticMethod)
+  DO(JSPropertySpec, StaticAttribute)
+  DO(JSFunctionSpec, Method)
+  DO(JSPropertySpec, Attribute)
+  DO(JSFunctionSpec, UnforgeableMethod)
+  DO(JSPropertySpec, UnforgeableAttribute)
+  DO(ConstantSpec,   Constant)
 
-  const Prefable<const JSPropertySpec>* unforgeableAttributes;
-  jsid* unforgeableAttributeIds;
-  const JSPropertySpec* unforgeableAttributeSpecs;
+#undef DO
 
-  const Prefable<const ConstantSpec>* constants;
-  jsid* constantIds;
-  const ConstantSpec* constantSpecs;
-
-  // Index into methods for the entry that is [Alias="@@iterator"], -1 if none
-  int32_t iteratorAliasMethodIndex;
+  const Trio trios[N];
 };
+
+// Ensure the struct has the expected size. The 8 is for the
+// iteratorAliasMethodIndex plus the bitfields; the rest is for trios[].
+static_assert(sizeof(NativePropertiesN<1>) == 8 +  3*sizeof(void*), "1 size");
+static_assert(sizeof(NativePropertiesN<2>) == 8 +  6*sizeof(void*), "2 size");
+static_assert(sizeof(NativePropertiesN<3>) == 8 +  9*sizeof(void*), "3 size");
+static_assert(sizeof(NativePropertiesN<4>) == 8 + 12*sizeof(void*), "4 size");
+static_assert(sizeof(NativePropertiesN<5>) == 8 + 15*sizeof(void*), "5 size");
+static_assert(sizeof(NativePropertiesN<6>) == 8 + 18*sizeof(void*), "6 size");
+static_assert(sizeof(NativePropertiesN<7>) == 8 + 21*sizeof(void*), "7 size");
+
+// The "base" type.
+typedef NativePropertiesN<7> NativeProperties;
 
 struct NativePropertiesHolder
 {
