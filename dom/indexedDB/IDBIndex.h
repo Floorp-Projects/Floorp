@@ -107,6 +107,9 @@ public:
   }
 
   void
+  SetName(const nsAString& aName, ErrorResult& aRv);
+
+  void
   GetKeyPath(JSContext* aCx,
              JS::MutableHandle<JS::Value> aResult,
              ErrorResult& aRv);
