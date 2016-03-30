@@ -32,7 +32,9 @@ using namespace js;
 using namespace js::wasm;
 
 using mozilla::CheckedInt;
+using mozilla::IsInfinite;
 using mozilla::IsNaN;
+using mozilla::IsNegativeZero;
 
 struct WasmRenderContext
 {
@@ -43,11 +45,13 @@ struct WasmRenderContext
 
     DeclaredSigVector signatures;
     Uint32Vector funcSigs;
+    Uint32Vector funcLocals;
     Uint32Vector importSigs;
-    bool has_return;
+
+    uint32_t currentFuncIndex;
 
     WasmRenderContext(JSContext* cx, Decoder& d, StringBuffer& buffer)
-      : cx(cx), d(d), buffer(buffer), indent(0)
+      : cx(cx), d(d), buffer(buffer), indent(0), currentFuncIndex(0)
     {}
 };
 
@@ -81,8 +85,45 @@ RenderInt32(WasmRenderContext& c, int32_t num)
 }
 
 static bool
+RenderInt64(WasmRenderContext& c, int64_t num)
+{
+    if (num < 0 && !c.buffer.append("-"))
+        return false;
+    if (!num)
+        return c.buffer.append("0");
+
+    int64_t abs = mozilla::Abs(num);
+    int64_t n = abs;
+    uint64_t pow = 1;
+    while (n) {
+        pow *= 10;
+        n /= 10;
+    }
+    pow /= 10;
+
+    n = abs;
+    while (pow) {
+        if (!c.buffer.append("0123456789"[n / pow]))
+            return false;
+        n -= (n / pow) * pow;
+        pow /= 10;
+    }
+
+    return true;
+}
+
+static bool
 RenderDouble(WasmRenderContext& c, double num)
 {
+    if (IsNegativeZero(num))
+        return c.buffer.append("-0");
+    if (IsNaN(num))
+        return c.buffer.append("nan");
+    if (IsInfinite(num)) {
+        if (num > 0)
+            return c.buffer.append("infinity");
+        return c.buffer.append("-infinity");
+    }
     return NumberValueToStringBuffer(c.cx, DoubleValue(num), c.buffer);
 }
 
@@ -191,6 +232,9 @@ RenderCall(WasmRenderContext& c)
     if (!RenderInt32(c, funcIndex))
         return false;
 
+    if (funcIndex >= c.funcSigs.length())
+        return RenderFail(c, "callee index out of range");
+
     uint32_t sigIndex = c.funcSigs[funcIndex];
     if (!RenderCallWithSig(c, sigIndex))
         return false;
@@ -210,6 +254,9 @@ RenderCallImport(WasmRenderContext& c)
         return false;
     if (!RenderInt32(c, importIndex))
         return false;
+
+    if (importIndex >= c.importSigs.length())
+        return RenderFail(c, "import index out of range");
 
     uint32_t sigIndex = c.importSigs[importIndex];
     if (!RenderCallWithSig(c, sigIndex))
@@ -273,14 +320,11 @@ RenderConstI64(WasmRenderContext& c)
     if (!c.buffer.append("(i64.const "))
         return false;
 
-    uint64_t u64;
-    if (!c.d.readVarU64(&u64))
+    int64_t i64;
+    if (!c.d.readVarS64(&i64))
         return RenderFail(c, "unable to read i64.const immediate");
 
-    if (u64 != (uint64_t)(double)u64)
-        return RenderFail(c, "unable to render i64.const immediate");
-
-    if (!RenderDouble(c, u64))
+    if (!RenderInt64(c, i64))
         return false;
 
     if (!c.buffer.append(")"))
@@ -343,6 +387,9 @@ RenderGetLocal(WasmRenderContext& c)
     if (!c.d.readVarU32(&localIndex))
         return RenderFail(c, "unable to read get_local index");
 
+    if (localIndex >= c.funcLocals[c.currentFuncIndex])
+        return RenderFail(c, "get_local index out of range");
+
     if (!c.buffer.append("(get_local $var$"))
         return false;
     if (!RenderInt32(c, localIndex))
@@ -358,6 +405,9 @@ RenderSetLocal(WasmRenderContext& c)
     uint32_t localIndex;
     if (!c.d.readVarU32(&localIndex))
         return RenderFail(c, "unable to read set_local index");
+
+    if (localIndex >= c.funcLocals[c.currentFuncIndex])
+        return RenderFail(c, "set_local index out of range");
 
     if (!c.buffer.append("(set_local $var$"))
         return false;
@@ -434,6 +484,7 @@ RenderUnaryOperator(WasmRenderContext& c, Expr expr, ValType argType)
 
     bool success = false;
     switch (expr) {
+      case Expr::I32Eqz:     success = c.buffer.append("i32.eqz"); break;
       case Expr::I32Clz:     success = c.buffer.append("i32.clz"); break;
       case Expr::I32Ctz:     success = c.buffer.append("i32.ctz"); break;
       case Expr::I32Popcnt:  success = c.buffer.append("i32.popcnt"); break;
@@ -514,7 +565,7 @@ RenderBinaryOperator(WasmRenderContext& c, Expr expr, ValType argType)
       case Expr::F64Mul:      success = c.buffer.append("f64.mul"); break;
       case Expr::F64Div:      success = c.buffer.append("f64.div"); break;
       case Expr::F64Min:      success = c.buffer.append("f64.min"); break;
-      case Expr::F64Max:      success = c.buffer.append("f64.mix"); break;
+      case Expr::F64Max:      success = c.buffer.append("f64.max"); break;
       default: return false;
     }
     if (!success)
@@ -598,7 +649,7 @@ RenderConversionOperator(WasmRenderContext& c, Expr expr, ValType to, ValType ar
 
     bool success = false;
     switch (expr) {
-      case Expr::I32WrapI64:        success = c.buffer.append("i32.warp/i64"); break;
+      case Expr::I32WrapI64:        success = c.buffer.append("i32.wrap/i64"); break;
       case Expr::I32TruncSF32:      success = c.buffer.append("i32.trunc_s/f32"); break;
       case Expr::I32TruncUF32:      success = c.buffer.append("i32.trunc_u/f32"); break;
       case Expr::I32ReinterpretF32: success = c.buffer.append("i32.reinterpret/f32"); break;
@@ -688,6 +739,12 @@ RenderLoadStoreAddress(WasmRenderContext& c)
       if (!RenderInt32(c, offset))
           return false;
     }
+
+    uint32_t alignLog2 = flags;
+    if (!c.buffer.append(" align="))
+        return false;
+    if (!RenderInt32(c, 1 << alignLog2))
+        return false;
 
     if (!c.buffer.append(" "))
         return false;
@@ -794,34 +851,31 @@ RenderStore(WasmRenderContext& c, Expr expr, ValType storeType)
 static bool
 RenderBranch(WasmRenderContext& c, Expr expr)
 {
+    MOZ_ASSERT(expr == Expr::BrIf || expr == Expr::Br);
+
     uint32_t relativeDepth;
     if (!c.d.readVarU32(&relativeDepth))
         return RenderFail(c, "expected relative depth");
 
-    Expr value;
-    if (!c.d.readExpr(&value))
-        return RenderFail(c, "expected branch value");
-    if (value != Expr::Nop)
-        return RenderFail(c, "NYI: branch values");
+    if (expr == Expr::BrIf ? !c.buffer.append("(br_if ") : !c.buffer.append("(br "))
+        return false;
+
+    if (!RenderInt32(c, relativeDepth))
+        return false;
+
+    if (!c.buffer.append(" "))
+        return false;
+
+    if (!RenderExpr(c))
+        return false;
 
     if (expr == Expr::BrIf) {
-        if (!c.buffer.append("(br_if "))
-          return false;
-
-        if (!RenderInt32(c, relativeDepth))
-            return false;
-
         if (!c.buffer.append(" "))
             return false;
-
         if (!RenderExpr(c))
             return false;
-    } else {
-        if (!c.buffer.append("(br "))
-            return false;
-        if (!RenderInt32(c, relativeDepth))
-            return false;
     }
+
     if (!c.buffer.append(")"))
         return false;
     return true;
@@ -874,7 +928,7 @@ RenderReturn(WasmRenderContext& c)
     if (!c.buffer.append("(return"))
         return false;
 
-    if (c.has_return) {
+    if (c.signatures[c.funcSigs[c.currentFuncIndex]].ret() != ExprType::Void) {
         if (!c.buffer.append(" "))
             return false;
         if (!RenderExpr(c))
@@ -884,6 +938,30 @@ RenderReturn(WasmRenderContext& c)
     if (!c.buffer.append(")"))
         return false;
     return true;
+}
+
+static bool
+RenderSelect(WasmRenderContext& c)
+{
+    if (!c.buffer.append("(select "))
+        return false;
+
+    if (!RenderExpr(c))
+        return false;
+
+    if (!c.buffer.append(" "))
+        return false;
+
+    if (!RenderExpr(c))
+        return false;
+
+    if (!c.buffer.append(" "))
+        return false;
+
+    if (!RenderExpr(c))
+        return false;
+
+    return c.buffer.append(")");
 }
 
 static bool
@@ -927,6 +1005,7 @@ RenderExpr(WasmRenderContext& c)
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
+      case Expr::I32Eqz:
         return RenderUnaryOperator(c, expr, ValType::I32);
       case Expr::I64Clz:
       case Expr::I64Ctz:
@@ -1063,8 +1142,7 @@ RenderExpr(WasmRenderContext& c)
         return RenderFail(c, "NYI: reinterpret");
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return RenderFail(c, "NYI: i64") &&
-               RenderConversionOperator(c, expr, ValType::F32, ValType::I64);
+        return RenderConversionOperator(c, expr, ValType::F32, ValType::I64);
       case Expr::F32DemoteF64:
         return RenderConversionOperator(c, expr, ValType::F32, ValType::I64);
       case Expr::F64ConvertSI32:
@@ -1073,8 +1151,7 @@ RenderExpr(WasmRenderContext& c)
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
       case Expr::F64ReinterpretI64:
-        return RenderFail(c, "NYI: i64") &&
-               RenderConversionOperator(c, expr, ValType::F64, ValType::I64);
+        return RenderConversionOperator(c, expr, ValType::F64, ValType::I64);
       case Expr::F64PromoteF32:
         return RenderConversionOperator(c, expr, ValType::F64, ValType::F32);
       case Expr::I32Load8S:
@@ -1120,6 +1197,8 @@ RenderExpr(WasmRenderContext& c)
         return RenderBrTable(c);
       case Expr::Return:
         return RenderReturn(c);
+      case Expr::Select:
+        return RenderSelect(c);
       default:
         // Note: it's important not to remove this default since readExpr()
         // can return Expr values for which there is no enumerator.
@@ -1274,17 +1353,21 @@ RenderFunctionTable(WasmRenderContext& c)
     if (!c.d.readVarU32(&numTableElems))
         return RenderFail(c, "expected number of table elems");
 
-    Uint32Vector elems;
-    if (!elems.resize(numTableElems))
+    if (!c.buffer.append("(table "))
         return false;
 
     for (uint32_t i = 0; i < numTableElems; i++) {
         uint32_t funcIndex;
         if (!c.d.readVarU32(&funcIndex))
             return RenderFail(c, "expected table element");
-
-        elems[i] = funcIndex;
+        if (!RenderInt32(c, funcIndex))
+            return false;
+        if (!c.buffer.append(" "))
+            return false;
     }
+
+    if (!c.buffer.append(")"))
+        return false;
 
     if (!c.d.finishSection(sectionStart))
         return RenderFail(c, "table section byte size mismatch");
@@ -1398,6 +1481,9 @@ RenderMemory(WasmRenderContext& c, uint32_t* memInitial, uint32_t* memMax)
     if (!c.d.finishSection(sectionStart))
         return RenderFail(c, "memory section byte size mismatch");
 
+    if (exported && !c.buffer.append("(export \"memory\" memory)"))
+        return false;
+
     return true;
 }
 
@@ -1422,6 +1508,9 @@ RenderFunctionExport(WasmRenderContext& c)
     uint32_t funcIndex;
     if (!c.d.readVarU32(&funcIndex))
         return RenderFail(c, "expected export internal index");
+
+    if (funcIndex >= c.funcSigs.length())
+        return RenderFail(c, "export function index out of range");
 
     if (!RenderIndent(c))
         return false;
@@ -1507,6 +1596,11 @@ RenderFunctionBody(WasmRenderContext& c, uint32_t funcIndex, uint32_t paramsNum)
             return false;
     }
 
+    if (funcIndex >= c.funcLocals.length() && !c.funcLocals.resize(funcIndex + 1))
+        return false;
+
+    c.funcLocals[funcIndex] = localsNum + paramsNum;
+
     while (c.d.currentPosition() < bodyEnd) {
       if (!RenderFullLine(c))
           return false;
@@ -1553,7 +1647,7 @@ RenderFunctionBodies(WasmRenderContext& c)
         if (!c.buffer.append("\n"))
             return false;
 
-        c.has_return = sig.ret() != ExprType::Void;
+        c.currentFuncIndex = funcIndex;
 
         c.indent++;
         if (!RenderFunctionBody(c, funcIndex, sig.args().length()))
