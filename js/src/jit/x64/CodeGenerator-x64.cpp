@@ -493,6 +493,22 @@ CodeGeneratorX64::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
+CodeGeneratorX64::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Double);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType_Int64);
+    masm.vmovq(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+}
+
+void
+CodeGeneratorX64::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Int64);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType_Double);
+    masm.vmovq(ToFloatRegister(lir->input()), ToRegister(lir->output()));
+}
+
+void
 CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));

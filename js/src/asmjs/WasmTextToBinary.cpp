@@ -1625,6 +1625,11 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64PromoteF32,
                                      begin, cur_);
                 break;
+              case 'r':
+                if (consume(MOZ_UTF16("reinterpret/i64")))
+                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64ReinterpretI64,
+                                     begin, cur_);
+                break;
               case 's':
                 if (consume(MOZ_UTF16("sqrt")))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Sqrt, begin, cur_);

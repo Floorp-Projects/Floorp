@@ -1256,6 +1256,47 @@ class LAsmThrowUnreachable : public LInstructionHelper<0, 0, 0>
     { }
 };
 
+template<size_t Defs, size_t Ops>
+class LAsmReinterpretBase : public LInstructionHelper<Defs, Ops, 0>
+{
+    typedef LInstructionHelper<Defs, Ops, 0> Base;
+
+  public:
+    const LAllocation* input() {
+        return Base::getOperand(0);
+    }
+    MAsmReinterpret* mir() const {
+        return Base::mir_->toAsmReinterpret();
+    }
+};
+
+class LAsmReinterpret : public LAsmReinterpretBase<1, 1>
+{
+  public:
+    LIR_HEADER(AsmReinterpret);
+    explicit LAsmReinterpret(const LAllocation& input) {
+        setOperand(0, input);
+    }
+};
+
+class LAsmReinterpretFromI64 : public LAsmReinterpretBase<1, INT64_PIECES>
+{
+  public:
+    LIR_HEADER(AsmReinterpretFromI64);
+    explicit LAsmReinterpretFromI64(const LInt64Allocation& input) {
+        setInt64Operand(0, input);
+    }
+};
+
+class LAsmReinterpretToI64 : public LAsmReinterpretBase<INT64_PIECES, 1>
+{
+  public:
+    LIR_HEADER(AsmReinterpretToI64);
+    explicit LAsmReinterpretToI64(const LAllocation& input) {
+        setOperand(0, input);
+    }
+};
+
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
     Label* oolEntry_;

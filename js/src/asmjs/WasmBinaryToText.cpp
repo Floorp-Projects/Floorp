@@ -1011,7 +1011,7 @@ RenderExpr(WasmRenderContext& c)
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
         return RenderFail(c, "NYI: i64") &&
-            RenderUnaryOperator(c, expr, ValType::I64);
+               RenderUnaryOperator(c, expr, ValType::I64);
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
@@ -1118,9 +1118,8 @@ RenderExpr(WasmRenderContext& c)
         return RenderConversionOperator(c, expr, ValType::I32, ValType::I64);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
-        return RenderConversionOperator(c, expr, ValType::I32, ValType::F32);
       case Expr::I32ReinterpretF32:
-        return RenderFail(c, "NYI: reinterpret");
+        return RenderConversionOperator(c, expr, ValType::I32, ValType::F32);
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
         return RenderConversionOperator(c, expr, ValType::I32, ValType::F64);
@@ -1132,14 +1131,12 @@ RenderExpr(WasmRenderContext& c)
         return RenderConversionOperator(c, expr, ValType::I64, ValType::F32);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
-        return RenderConversionOperator(c, expr, ValType::I64, ValType::F64);
       case Expr::I64ReinterpretF64:
-        return RenderFail(c, "NYI: i64");
+        return RenderConversionOperator(c, expr, ValType::I64, ValType::F64);
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
-        return RenderConversionOperator(c, expr, ValType::F32, ValType::I32);
       case Expr::F32ReinterpretI32:
-        return RenderFail(c, "NYI: reinterpret");
+        return RenderConversionOperator(c, expr, ValType::F32, ValType::I32);
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
         return RenderConversionOperator(c, expr, ValType::F32, ValType::I64);
