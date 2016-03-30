@@ -333,8 +333,9 @@ static void
 UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld,
     TimingParams& aNewTiming,
-    InfallibleTArray<AnimationProperty>& aNewProperties,
-    bool aNewIsStylePaused)
+    nsTArray<Keyframe>& aNewFrames,
+    bool aNewIsStylePaused,
+    nsStyleContext* aStyleContext)
 {
   bool animationChanged = false;
 
@@ -345,8 +346,7 @@ UpdateOldAnimationPropertiesWithNew(
     animationChanged =
       oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
-    animationChanged |=
-      oldEffect->UpdateProperties(aNewProperties);
+    oldEffect->SetFrames(Move(aNewFrames), aStyleContext);
   }
 
   // Handle changes in play state. If the animation is idle, however,
@@ -638,8 +638,8 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
 
   TimingParams timing = TimingParamsFrom(aSrc);
 
-  InfallibleTArray<AnimationProperty> animationProperties;
-  BuildAnimationProperties(aPresContext, aSrc, aRule, animationProperties);
+  nsTArray<Keyframe> keyframes =
+    BuildAnimationFrames(aPresContext, aSrc, aRule);
 
   bool isStylePaused =
     aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
@@ -660,8 +660,9 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
     // In order to honor what the spec said, we'd copy more data over.
     UpdateOldAnimationPropertiesWithNew(*oldAnim,
                                         timing,
-                                        animationProperties,
-                                        isStylePaused);
+                                        keyframes,
+                                        isStylePaused,
+                                        mStyleContext);
     return oldAnim.forget();
   }
 
@@ -669,7 +670,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
     new KeyframeEffectReadOnly(aPresContext->Document(), mTarget,
                                mStyleContext->GetPseudoType(), timing);
 
-  effect->Properties() = Move(animationProperties);
+  effect->SetFrames(Move(keyframes), mStyleContext);
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
