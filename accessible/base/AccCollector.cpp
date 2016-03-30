@@ -23,7 +23,7 @@ AccCollector::~AccCollector()
 }
 
 uint32_t
-AccCollector::Count()
+EmbeddedObjCollector::Count()
 {
   EnsureNGetIndex(nullptr);
   return mObjects.Length();
