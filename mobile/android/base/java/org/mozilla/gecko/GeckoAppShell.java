@@ -35,7 +35,6 @@ import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
@@ -2096,10 +2095,47 @@ public class GeckoAppShell
 
         /**
          * Create a shortcut -- generally a home-screen icon -- linking the given title to the given URI.
+         * <p>
+         * This method is always invoked on the Gecko thread.
+         *
          * @param title of URI to link to.
          * @param URI to link to.
          */
         public void createShortcut(String title, String URI);
+
+        /**
+         * Check if the given URI is visited.
+         * <p/>
+         * If it has been visited, call {@link GeckoAppShell#notifyUriVisited(String)}.  (If it
+         * has not been visited, do nothing.)
+         * <p/>
+         * This method is always invoked on the Gecko thread.
+         *
+         * @param uri to check.
+         */
+        public void checkUriVisited(String uri);
+
+        /**
+         * Mark the given URI as visited in Gecko.
+         * <p/>
+         * Implementors may maintain some local store of visited URIs in order to be able to
+         * answer {@link #checkUriVisited(String)} requests affirmatively.
+         * <p/>
+         * This method is always invoked on the Gecko thread.
+         *
+         * @param uri to mark.
+         */
+        public void markUriVisited(final String uri);
+
+        /**
+         * Set the title of the given URI, as determined by Gecko.
+         * <p/>
+         * This method is always invoked on the Gecko thread.
+         *
+         * @param uri given.
+         * @param title to associate with the given URI.
+         */
+        public void setUriTitle(final String uri, final String title);
     };
 
     private static GeckoInterface sGeckoInterface;
@@ -2259,31 +2295,29 @@ public class GeckoAppShell
 
     @WrapForJNI(stubName = "CheckURIVisited")
     static void checkUriVisited(String uri) {
-        GlobalHistory.getInstance().checkUriVisited(uri);
+        final GeckoInterface geckoInterface = getGeckoInterface();
+        if (geckoInterface == null) {
+            return;
+        }
+        geckoInterface.checkUriVisited(uri);
     }
 
     @WrapForJNI(stubName = "MarkURIVisited")
     static void markUriVisited(final String uri) {
-        final Context context = getApplicationContext();
-        final BrowserDB db = GeckoProfile.get(context).getDB();
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalHistory.getInstance().add(context, db, uri);
-            }
-        });
+        final GeckoInterface geckoInterface = getGeckoInterface();
+        if (geckoInterface == null) {
+            return;
+        }
+        geckoInterface.markUriVisited(uri);
     }
 
     @WrapForJNI(stubName = "SetURITitle")
     static void setUriTitle(final String uri, final String title) {
-        final Context context = getApplicationContext();
-        final BrowserDB db = GeckoProfile.get(context).getDB();
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
-            }
-        });
+        final GeckoInterface geckoInterface = getGeckoInterface();
+        if (geckoInterface == null) {
+            return;
+        }
+        geckoInterface.setUriTitle(uri, title);
     }
 
     @WrapForJNI
