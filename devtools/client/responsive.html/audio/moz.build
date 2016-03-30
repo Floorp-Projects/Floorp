@@ -5,12 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'browser.js',
-    'device-selector.js',
-    'global-toolbar.js',
-    'resizable-viewport.js',
-    'viewport-dimension.js',
-    'viewport-toolbar.js',
-    'viewport.js',
-    'viewports.js',
+    'camera-click.mp3',
 )

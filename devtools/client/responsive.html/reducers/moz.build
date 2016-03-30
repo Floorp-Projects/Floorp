@@ -7,5 +7,6 @@
 DevToolsModules(
     'devices.js',
     'location.js',
+    'screenshot.js',
     'viewports.js',
 )
