@@ -10,8 +10,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
-import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener;
-import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
@@ -22,7 +20,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         implements RecyclerViewClickSupport.OnItemClickListener, RecyclerViewClickSupport.OnItemLongClickListener {
 
     protected HomePager.OnUrlOpenListener mOnUrlOpenListener;
-    protected OnPanelLevelChangeListener mOnPanelLevelChangeListener;
 
     public CombinedHistoryRecyclerView(Context context) {
         super(context);
@@ -53,10 +50,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         this.mOnUrlOpenListener = listener;
     }
 
-    public void setOnPanelLevelChangeListener(OnPanelLevelChangeListener listener) {
-        this.mOnPanelLevelChangeListener = listener;
-    }
-
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         final int viewType = getAdapter().getItemViewType(position);
@@ -64,11 +57,9 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
         switch(itemType) {
             case CLIENT:
-                mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.CHILD);
                 ((CombinedHistoryAdapter) getAdapter()).showChildView(position);
                 break;
             case NAVIGATION_BACK:
-                mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.PARENT);
                 ((CombinedHistoryAdapter) getAdapter()).exitChildView();
                 break;
             case CHILD:
