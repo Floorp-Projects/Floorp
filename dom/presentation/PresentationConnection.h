@@ -25,7 +25,6 @@ public:
 
   static already_AddRefed<PresentationConnection> Create(nsPIDOMWindowInner* aWindow,
                                                          const nsAString& aId,
-                                                         const uint8_t aRole,
                                                          PresentationConnectionState aState);
 
   virtual void DisconnectFromOwner() override;
@@ -51,7 +50,6 @@ public:
 private:
   PresentationConnection(nsPIDOMWindowInner* aWindow,
                          const nsAString& aId,
-                         const uint8_t aRole,
                          PresentationConnectionState aState);
 
   ~PresentationConnection();
@@ -65,7 +63,6 @@ private:
   nsresult DispatchMessageEvent(JS::Handle<JS::Value> aData);
 
   nsString mId;
-  uint8_t mRole;
   PresentationConnectionState mState;
 };
 
