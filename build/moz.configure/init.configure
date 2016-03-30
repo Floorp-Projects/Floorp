@@ -469,6 +469,16 @@ def target(value, host, shell):
     return split_triplet(config_sub(shell, value[0]))
 
 
+@depends(host, target)
+@checking('whether cross compiling')
+def cross_compiling(host, target):
+    return host != target
+
+set_config('CROSS_COMPILE', cross_compiling)
+set_define('CROSS_COMPILE', cross_compiling)
+add_old_configure_assignment('CROSS_COMPILE', cross_compiling)
+
+
 # Autoconf needs these set
 @depends(host)
 def host_for_old_configure(host):

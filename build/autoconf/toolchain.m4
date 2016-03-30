@@ -183,14 +183,6 @@ AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
 AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
 AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
 AC_CHECK_PROGS(OTOOL, "${target_alias}-otool" "${target}-otool", :)
-AC_DEFINE(CROSS_COMPILE)
-CROSS_COMPILE=1
-
-dnl If we cross compile for ppc on Mac OS X x86, cross_compiling will
-dnl dnl have erroneously been set to "no", because the x86 build host is
-dnl dnl able to run ppc code in a translated environment, making a cross
-dnl dnl compiler appear native.  So we override that here.
-cross_compiling=yes
 ])
 
 AC_DEFUN([MOZ_CXX11],
