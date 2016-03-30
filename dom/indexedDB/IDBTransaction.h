@@ -246,10 +246,16 @@ public:
   DeleteObjectStore(int64_t aObjectStoreId);
 
   void
+  RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
+
+  void
   CreateIndex(IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
 
   void
   DeleteIndex(IDBObjectStore* aObjectStore, int64_t aIndexId);
+
+  void
+  RenameIndex(IDBObjectStore* aObjectStore, int64_t aIndexId, const nsAString& aName);
 
   void
   Abort(IDBRequest* aRequest);
