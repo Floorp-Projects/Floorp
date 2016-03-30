@@ -225,10 +225,6 @@ gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape)
     } while (shape);
 }
 
-void
-TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trc,
-                                               void** thingp, JS::TraceKind kind);
-
 // Object groups can point to other object groups via an UnboxedLayout or the
 // the original unboxed group link. There can potentially be deep or cyclic
 // chains of such groups to trace through without going through a thing that
@@ -250,6 +246,12 @@ struct ObjectGroupCycleCollectorTracer : public JS::CallbackTracer
 void
 ObjectGroupCycleCollectorTracer::onChild(const JS::GCCellPtr& thing)
 {
+    if (thing.is<BaseShape>()) {
+        // The CC does not care about BaseShapes, and no additional GC things
+        // will be reached by following this edge.
+        return;
+    }
+
     if (thing.is<JSObject>() || thing.is<JSScript>()) {
         // Invoke the inner cycle collector callback on this child. It will not
         // recurse back into TraceChildren.
