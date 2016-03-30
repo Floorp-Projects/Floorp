@@ -317,6 +317,8 @@ public:
   static NotificationPermission GetPermissionInternal(nsIPrincipal* aPrincipal,
                                                       ErrorResult& rv);
 
+  static NotificationPermission TestPermission(nsIPrincipal* aPrincipal);
+
   bool DispatchClickEvent();
   bool DispatchNotificationClickEvent();
 
