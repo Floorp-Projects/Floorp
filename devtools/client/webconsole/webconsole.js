@@ -1053,6 +1053,8 @@ WebConsoleFrame.prototype = {
         node.classList.add("filtered-by-string");
       }
     }
+
+    this.resize();
   },
 
   /**
