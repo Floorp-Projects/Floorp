@@ -34,7 +34,7 @@ public:
   enum OrientType
   {
     eVertical,
-    horizontal = 1,
+    eHorizontal,
     both       = 2
   };
 

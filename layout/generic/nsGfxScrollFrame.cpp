@@ -4136,13 +4136,13 @@ ScrollFrameHelper::FireScrollPortEvent()
     }
   }
   else {
-    orient = InternalScrollPortEvent::horizontal;
+    orient = InternalScrollPortEvent::eHorizontal;
     mHorizontalOverflow = newHorizontalOverflow;
   }
 
   InternalScrollPortEvent event(true,
-    (orient == InternalScrollPortEvent::horizontal ? mHorizontalOverflow :
-                                                     mVerticalOverflow) ?
+    (orient == InternalScrollPortEvent::eHorizontal ? mHorizontalOverflow :
+                                                      mVerticalOverflow) ?
     eScrollPortOverflow : eScrollPortUnderflow, nullptr);
   event.orient = orient;
   return EventDispatcher::Dispatch(mOuter->GetContent(),
