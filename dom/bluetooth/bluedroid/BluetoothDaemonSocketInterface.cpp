@@ -221,7 +221,11 @@ public:
   {
     DaemonSocketPDU& pdu = GetPDU();
 
-    aArg1 = pdu.AcquireFd();
+    auto receiveFds = pdu.AcquireFds();
+    if (NS_WARN_IF(receiveFds.Length() == 0)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+    aArg1 = receiveFds[0];
 
     if (NS_WARN_IF(aArg1 < 0)) {
       return NS_ERROR_ILLEGAL_VALUE;
@@ -278,7 +282,14 @@ BluetoothDaemonSocketModule::ConnectRsp(const DaemonSocketPDUHeader& aHeader,
                                         BluetoothSocketResultHandler* aRes)
 {
   /* the file descriptor is attached in the PDU's ancillary data */
-  int fd = aPDU.AcquireFd();
+  auto receiveFds = aPDU.AcquireFds();
+  if (receiveFds.Length() == 0) {
+    ErrorRunnable::Dispatch(aRes, &BluetoothSocketResultHandler::OnError,
+                            ConstantInitOp1<BluetoothStatus>(STATUS_FAIL));
+    return;
+  }
+  int fd = -1;
+  fd = receiveFds[0];
   if (fd < 0) {
     ErrorRunnable::Dispatch(aRes, &BluetoothSocketResultHandler::OnError,
                             ConstantInitOp1<BluetoothStatus>(STATUS_FAIL));
