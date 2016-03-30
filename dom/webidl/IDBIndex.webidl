@@ -18,7 +18,7 @@ dictionary IDBIndexParameters {
     DOMString? locale = null;
 };
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker,System)]
 interface IDBIndex {
     readonly    attribute DOMString      name;
     readonly    attribute IDBObjectStore objectStore;
