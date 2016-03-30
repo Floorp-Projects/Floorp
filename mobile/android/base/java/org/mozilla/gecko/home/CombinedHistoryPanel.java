@@ -39,7 +39,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.home.HistorySectionsHelper.SectionDateRange;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.widget.DividerItemDecoration;
 
@@ -49,23 +48,6 @@ public class CombinedHistoryPanel extends HomeFragment {
     private static final String LOGTAG = "GeckoCombinedHistoryPnl";
     private final int LOADER_ID_HISTORY = 0;
     private final int LOADER_ID_REMOTE = 1;
-
-    // Semantic names for the time covered by each section
-    public enum SectionHeader {
-        TODAY,
-        YESTERDAY,
-        WEEK,
-        THIS_MONTH,
-        MONTH_AGO,
-        TWO_MONTHS_AGO,
-        THREE_MONTHS_AGO,
-        FOUR_MONTHS_AGO,
-        FIVE_MONTHS_AGO,
-        OLDER_THAN_SIX_MONTHS
-    }
-
-    // Array for the time ranges in milliseconds covered by each section.
-    private static final SectionDateRange[] sectionDateRangeArray = new SectionDateRange[SectionHeader.values().length];
 
     // String placeholders to mark formatting.
     private final static String FORMAT_S1 = "%1$s";
@@ -106,6 +88,8 @@ public class CombinedHistoryPanel extends HomeFragment {
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
+
+        // TODO: Handle date headers.
     }
 
     @Override
@@ -147,23 +131,9 @@ public class CombinedHistoryPanel extends HomeFragment {
         @Override
         public Cursor loadCursor() {
             final ContentResolver cr = getContext().getContentResolver();
-            HistorySectionsHelper.updateRecentSectionOffset(getContext().getResources(), sectionDateRangeArray);
+            // TODO: Handle time bracketing by fetching date ranges from cursor
             return mDB.getRecentHistory(cr, HISTORY_LIMIT);
         }
-    }
-
-    protected static String getSectionHeaderTitle(SectionHeader section) {
-        return sectionDateRangeArray[section.ordinal()].displayName;
-    }
-
-    protected static SectionHeader getSectionFromTime(long time) {
-        for (int i = 0; i < SectionHeader.OLDER_THAN_SIX_MONTHS.ordinal(); i++) {
-            if (time > sectionDateRangeArray[i].start) {
-                return SectionHeader.values()[i];
-            }
-        }
-
-        return SectionHeader.OLDER_THAN_SIX_MONTHS;
     }
 
     private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
