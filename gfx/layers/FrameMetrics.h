@@ -14,6 +14,7 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
+#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
 #include "nsStyleCoord.h"               // for nsStyleCoord
@@ -786,7 +787,7 @@ struct ScrollSnapInfo {
 struct ScrollMetadata {
   friend struct IPC::ParamTraits<mozilla::layers::ScrollMetadata>;
 public:
-  static const ScrollMetadata sNullMetadata;   // We sometimes need an empty metadata
+  static StaticAutoPtr<const ScrollMetadata> sNullMetadata;   // We sometimes need an empty metadata
 
   ScrollMetadata()
     : mMetrics()
