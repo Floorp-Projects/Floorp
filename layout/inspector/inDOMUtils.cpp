@@ -1095,21 +1095,36 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 
 NS_IMETHODIMP
 inDOMUtils::SetContentState(nsIDOMElement* aElement,
-                            EventStates::InternalType aState)
+                            EventStates::InternalType aState,
+                            bool* aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aElement);
 
   RefPtr<EventStateManager> esm =
     inLayoutUtils::GetEventStateManagerFor(aElement);
-  if (esm) {
-    nsCOMPtr<nsIContent> content;
-    content = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(esm, NS_ERROR_INVALID_ARG);
 
-    // XXX Invalid cast of bool to nsresult (bug 778108)
-    return (nsresult)esm->SetContentState(content, EventStates(aState));
-  }
+  nsCOMPtr<nsIContent> content;
+  content = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(content, NS_ERROR_INVALID_ARG);
 
-  return NS_ERROR_FAILURE;
+  *aRetVal = esm->SetContentState(content, EventStates(aState));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::RemoveContentState(nsIDOMElement* aElement,
+                               EventStates::InternalType aState,
+                               bool* aRetVal)
+{
+  NS_ENSURE_ARG_POINTER(aElement);
+
+  RefPtr<EventStateManager> esm =
+    inLayoutUtils::GetEventStateManagerFor(aElement);
+  NS_ENSURE_TRUE(esm, NS_ERROR_INVALID_ARG);
+
+  *aRetVal = esm->SetContentState(nullptr, EventStates(aState));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
