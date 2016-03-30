@@ -132,14 +132,6 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
     return false;
   }
 
-  // Preserve the default source if we have one, it has a separate setter.
-  uint32_t prevNumCandidates = mCandidates.Length();
-  nsString defaultURLString;
-  if (prevNumCandidates && (mCandidates[prevNumCandidates - 1].Type() ==
-                            ResponsiveImageCandidate::eCandidateType_Default)) {
-    defaultURLString = mCandidates[prevNumCandidates - 1].URLString();
-  }
-
   mCandidates.Clear();
 
   nsAString::const_iterator iter, end;
@@ -187,9 +179,7 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
   bool parsedCandidates = mCandidates.Length() > 0;
 
   // Re-add default to end of list
-  if (!defaultURLString.IsEmpty()) {
-    AppendDefaultCandidate(defaultURLString);
-  }
+  MaybeAppendDefaultCandidate();
 
   return parsedCandidates;
 }
@@ -233,10 +223,10 @@ ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString)
     mCandidates.RemoveElementAt(candidates - 1);
   }
 
-  // Add new default if set
-  if (!aURLString.IsEmpty()) {
-    AppendDefaultCandidate(aURLString);
-  }
+  mDefaultSourceURL = aURLString;
+
+  // Add new default to end of list
+  MaybeAppendDefaultCandidate();
 }
 
 void
@@ -286,13 +276,29 @@ ResponsiveImageSelector::AppendCandidateIfUnique(const ResponsiveImageCandidate 
 }
 
 void
-ResponsiveImageSelector::AppendDefaultCandidate(const nsAString& aURLString)
+ResponsiveImageSelector::MaybeAppendDefaultCandidate()
 {
-  NS_ENSURE_TRUE(!aURLString.IsEmpty(), /* void */);
+  NS_ENSURE_TRUE(!mDefaultSourceURL.IsEmpty(), /* void */);
+
+  int numCandidates = mCandidates.Length();
+
+  // https://html.spec.whatwg.org/multipage/embedded-content.html#update-the-source-set
+  // step 4.1.3:
+  // If child has a src attribute whose value is not the empty string and source
+  // set does not contain an image source with a density descriptor value of 1,
+  // and no image source with a width descriptor, append child's src attribute
+  // value to source set.
+  for (int i = 0; i < numCandidates; i++) {
+    if (mCandidates[i].IsComputedFromWidth()) {
+      return;
+    } else if (mCandidates[i].Density(this) == 1.0) {
+      return;
+    }
+  }
 
   ResponsiveImageCandidate defaultCandidate;
   defaultCandidate.SetParameterDefault();
-  defaultCandidate.SetURLSpec(aURLString);
+  defaultCandidate.SetURLSpec(mDefaultSourceURL);
   // We don't use MaybeAppend since we want to keep this even if it can never
   // match, as it may if the source set changes.
   mCandidates.AppendElement(defaultCandidate);
@@ -372,14 +378,6 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
       ComputeFinalWidthForCurrentViewport(&computedWidth);
     MOZ_ASSERT(computeResult,
                "Computed candidates not allowed without sizes data");
-
-    // If we have a default candidate in the list, don't consider it when using
-    // computed widths. (It has a static 1.0 density that is inapplicable to a
-    // sized-image)
-    if (numCandidates > 1 && mCandidates[numCandidates - 1].Type() ==
-        ResponsiveImageCandidate::eCandidateType_Default) {
-      numCandidates--;
-    }
   }
 
   int bestIndex = -1;
