@@ -407,34 +407,53 @@ def split_triplet(triplet):
     # old-configure will tell us if we need more
     if cpu.endswith('86') or (cpu.startswith('i') and '86' in cpu):
         canonical_cpu = 'x86'
-    elif cpu in ('s390', 's390x', 'x86_64', 'ia64'):
+        endianness = 'little'
+    elif cpu in ('x86_64', 'ia64'):
         canonical_cpu = cpu
+        endianness = 'little'
+    elif cpu in ('s390', 's390x'):
+        canonical_cpu = cpu
+        endianness = 'big'
     elif cpu in ('powerpc64', 'ppc64', 'powerpc64le', 'ppc64le'):
         canonical_cpu = 'ppc64'
+        endianness = 'little' if 'le' in cpu else 'big'
     elif cpu in ('powerpc', 'ppc', 'rs6000') or cpu.startswith('powerpc'):
         canonical_cpu = 'ppc'
+        endianness = 'big'
     elif cpu in ('Alpha', 'alpha', 'ALPHA'):
         canonical_cpu = 'Alpha'
+        endianness = 'little'
     elif cpu.startswith('hppa') or cpu == 'parisc':
         canonical_cpu = 'hppa'
+        endianness = 'big'
+    elif cpu.startswith('sparc64'):
+        canonical_cpu = 'sparc64'
+        endianness = 'big'
     elif cpu.startswith('sparc') or cpu == 'sun4u':
         canonical_cpu = 'sparc'
+        endianness = 'big'
     elif cpu.startswith('arm'):
         canonical_cpu = 'arm'
+        endianness = 'big' if cpu.startswith(('armeb', 'armbe')) else 'little'
     elif cpu in ('mips', 'mipsel'):
         canonical_cpu = 'mips32'
+        endianness = 'little' if 'le' in cpu else 'big'
     elif cpu in ('mips64', 'mips64el'):
         canonical_cpu = 'mips64'
+        endianness = 'little' if 'le' in cpu else 'big'
     elif cpu.startswith('aarch64'):
         canonical_cpu = 'aarch64'
+        endianness = 'little'
     else:
         canonical_cpu = cpu
+        endianness = 'unknown'
 
     return namespace(
         alias=triplet,
         cpu=canonical_cpu,
         kernel=canonical_kernel,
         os=canonical_os,
+        endianness=endianness,
         raw_cpu=cpu,
         raw_os=os,
     )
