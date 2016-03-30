@@ -5,14 +5,22 @@
 
 package org.mozilla.gecko.widget;
 
+import android.app.Activity;
+import android.net.Uri;
+import android.support.design.widget.Snackbar;
+import android.util.Base64;
 import android.view.Menu;
-import org.mozilla.gecko.GeckoAppShell;
+
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.QuickShareBarActionView;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.menu.MenuItemSwitcherLayout;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -25,7 +33,15 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -232,7 +248,7 @@ public class GeckoActionProvider {
                         // Share image downloads the image before sharing it.
                         String type = launchIntent.getType();
                         if (Intent.ACTION_SEND.equals(launchIntent.getAction()) && type != null && type.startsWith("image/")) {
-                            GeckoAppShell.downloadImageForIntent(launchIntent);
+                            downloadImageForIntent(launchIntent);
                         }
 
                         launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
@@ -269,5 +285,81 @@ public class GeckoActionProvider {
         DEFAULT,
         QUICK_SHARE_ICON,
         CONTEXT_MENU,
+    }
+
+
+    /**
+     * Downloads the URI pointed to by a share intent, and alters the intent to point to the
+     * locally stored file.
+     *
+     * @param intent share intent to alter in place.
+     */
+    public void downloadImageForIntent(final Intent intent) {
+        final String src = ContextUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
+        final File dir = GeckoApp.getTempDirectory();
+
+        if (src == null || dir == null) {
+            // We should be, but currently aren't, statically guaranteed an Activity context.
+            // Try our best.
+            if (mContext instanceof Activity) {
+                SnackbarHelper.showSnackbar((Activity) mContext,
+                        mContext.getApplicationContext().getString(R.string.share_image_failed),
+                        Snackbar.LENGTH_LONG);
+            }
+            return;
+        }
+
+        GeckoApp.deleteTempFiles();
+
+        String type = intent.getType();
+        OutputStream os = null;
+        try {
+            // Create a temporary file for the image
+            if (src.startsWith("data:")) {
+                final int dataStart = src.indexOf(",");
+
+                String extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(type);
+
+                // If we weren't given an explicit mimetype, try to dig one out of the data uri.
+                if (TextUtils.isEmpty(extension) && dataStart > 5) {
+                    type = src.substring(5, dataStart).replace(";base64", "");
+                    extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(type);
+                }
+
+                final File imageFile = File.createTempFile("image", "." + extension, dir);
+                os = new FileOutputStream(imageFile);
+
+                byte[] buf = Base64.decode(src.substring(dataStart + 1), Base64.DEFAULT);
+                os.write(buf);
+
+                // Only alter the intent when we're sure everything has worked
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+            } else {
+                InputStream is = null;
+                try {
+                    final byte[] buf = new byte[2048];
+                    final URL url = new URL(src);
+                    final String filename = URLUtil.guessFileName(src, null, type);
+                    is = url.openStream();
+
+                    final File imageFile = new File(dir, filename);
+                    os = new FileOutputStream(imageFile);
+
+                    int length;
+                    while ((length = is.read(buf)) != -1) {
+                        os.write(buf, 0, length);
+                    }
+
+                    // Only alter the intent when we're sure everything has worked
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+                } finally {
+                    IOUtils.safeStreamClose(is);
+                }
+            }
+        } catch(IOException ex) {
+            // If something went wrong, we'll just leave the intent un-changed
+        } finally {
+            IOUtils.safeStreamClose(os);
+        }
     }
 }
