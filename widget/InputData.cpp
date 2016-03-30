@@ -194,8 +194,8 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
       break;
   }
 
-  for (size_t i = 0; i < aTouchEvent.touches.Length(); i++) {
-    const Touch* domTouch = aTouchEvent.touches[i];
+  for (size_t i = 0; i < aTouchEvent.mTouches.Length(); i++) {
+    const Touch* domTouch = aTouchEvent.mTouches[i];
 
     // Extract data from weird interfaces.
     int32_t identifier = domTouch->Identifier();
@@ -251,7 +251,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
 
   for (size_t i = 0; i < mTouches.Length(); i++) {
-    *event.touches.AppendElement() = mTouches[i].ToNewDOMTouch();
+    *event.mTouches.AppendElement() = mTouches[i].ToNewDOMTouch();
   }
 
   return event;
