@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -15,6 +17,8 @@ import android.graphics.RectF;
 import android.hardware.SensorEventListener;
 import android.location.LocationListener;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AbsoluteLayout;
 
 public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
@@ -140,20 +144,5 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     @Override
     public void createShortcut(String title, String URI) {
         // By default, do nothing.
-    }
-
-    @Override
-    public void checkUriVisited(String uri) {
-        // By default, no URIs are considered visited.
-    }
-
-    @Override
-    public void markUriVisited(final String uri) {
-        // By default, no URIs are marked as visited.
-    }
-
-    @Override
-    public void setUriTitle(final String uri, final String title) {
-        // By default, no titles are associated with URIs.
     }
 }
