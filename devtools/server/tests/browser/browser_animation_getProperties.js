@@ -10,8 +10,7 @@
 const URL = MAIN_DOMAIN + "animation.html";
 
 add_task(function*() {
-  let {client, walker, animations} =
-    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+  let {client, walker, animations} = yield initAnimationsFrontForUrl(URL);
 
   info("Get the test node and its animation front");
   let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
@@ -23,7 +22,7 @@ add_task(function*() {
   is(properties.length, 1, "The correct number of properties was retrieved");
 
   let propertyObject = properties[0];
-  is(propertyObject.property, "transform", "Property 0 is transform");
+  is(propertyObject.name, "transform", "Property 0 is transform");
 
   is(propertyObject.values.length, 2,
     "The correct number of property values was retrieved");
