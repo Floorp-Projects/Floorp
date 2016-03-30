@@ -289,6 +289,7 @@ def wanted_mozconfig_variables(help):
          'PERL',
          'RPMBUILD',
          'TAR',
+         'TOOLCHAIN_PREFIX',
          'UNZIP',
          'USE_FC_FREETYPE',
          'WITHOUT_X',
@@ -456,6 +457,9 @@ def split_triplet(triplet):
         endianness=endianness,
         raw_cpu=cpu,
         raw_os=os,
+        # Toolchains, most notably for cross compilation may use cpu-os
+        # prefixes.
+        toolchain='%s-%s' % (cpu, os),
     )
 
 
@@ -717,7 +721,8 @@ add_old_configure_assignment('RELEASE_BUILD',
 
 
 # This is temporary until js/src/configure and configure are merged.
-# Use instead of option() in js/moz.configure
+# Use instead of option() in js/moz.configure and more generally, for
+# options that are shared between configure and js/src/configure.
 @template
 def js_option(*args, **kwargs):
     opt = option(*args, **kwargs)

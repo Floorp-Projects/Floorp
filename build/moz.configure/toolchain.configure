@@ -101,3 +101,22 @@ def using_compiler_wrapper(compiler_wrapper):
     return True
 
 set_config('MOZ_USING_COMPILER_WRAPPER', using_compiler_wrapper)
+
+
+# Cross-compilation related things.
+# ==============================================================
+js_option('--with-toolchain-prefix', env='TOOLCHAIN_PREFIX', nargs=1,
+          help='Prefix for the target toolchain')
+
+@depends('--with-toolchain-prefix', target, host, cross_compiling)
+def toolchain_prefix(value, target, host, cross_compiling):
+    if value:
+        return value[0]
+    # Special case x86-64 <-> x86 cross compiling until we have the right tests
+    # in moz.configure land.
+    if cross_compiling and not all(i.cpu in ('x86_64', 'x86')
+                                   for i in (target, host)):
+        return '%s-' % target.toolchain
+    return ''
+
+add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)

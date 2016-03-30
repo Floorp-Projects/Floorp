@@ -169,20 +169,33 @@ CC=$_SAVE_CC
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 
-AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
+dnl AC_CHECK_PROGS manually goes through $PATH, and as such fails to handle
+dnl absolute or relative paths. Relative paths wouldn't work anyways, but
+dnl absolute paths would. Trick AC_CHECK_PROGS into working in that case by
+dnl adding / to PATH. This is temporary until this moves to moz.configure
+dnl (soon).
+_SAVE_PATH=$PATH
+case "${TOOLCHAIN_PREFIX}" in
+/*)
+    PATH="/:$PATH"
+    ;;
+esac
+AC_CHECK_PROGS(CC, "${TOOLCHAIN_PREFIX}gcc", :)
 unset ac_cv_prog_CC
 AC_PROG_CC
-AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
+AC_CHECK_PROGS(CXX, "${TOOLCHAIN_PREFIX}g++", :)
 unset ac_cv_prog_CXX
 AC_PROG_CXX
 
-AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
-AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
-AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
-AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
-AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
-AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
-AC_CHECK_PROGS(OTOOL, "${target_alias}-otool" "${target}-otool", :)
+AC_CHECK_PROGS(RANLIB, "${TOOLCHAIN_PREFIX}ranlib", :)
+AC_CHECK_PROGS(AR, "${TOOLCHAIN_PREFIX}ar", :)
+AC_CHECK_PROGS(AS, "${TOOLCHAIN_PREFIX}as", :)
+AC_CHECK_PROGS(LD, "${TOOLCHAIN_PREFIX}ld", :)
+AC_CHECK_PROGS(STRIP, "${TOOLCHAIN_PREFIX}strip", :)
+AC_CHECK_PROGS(WINDRES, "${TOOLCHAIN_PREFIX}windres", :)
+AC_CHECK_PROGS(OTOOL, "${TOOLCHAIN_PREFIX}otool", :)
+AC_CHECK_PROGS(OBJCOPY, "${TOOLCHAIN_PREFIX}objcopy", :)
+PATH=$_SAVE_PATH
 ])
 
 AC_DEFUN([MOZ_CXX11],
