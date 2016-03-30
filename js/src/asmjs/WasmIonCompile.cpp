@@ -17,6 +17,9 @@
  */
 
 #include "asmjs/WasmIonCompile.h"
+
+#include <functional>
+
 #include "asmjs/WasmGenerator.h"
 
 #include "jit/CodeGenerator.h"
@@ -938,46 +941,36 @@ class FunctionCompiler
         return numPushed;
     }
 
-    static void push(MBasicBlock* block, MDefinition* def)
-    {
-        MOZ_ASSERT(!hasPushed(block));
-        block->push(def);
-    }
-
-    static void popAll(BlockVector* blocks)
-    {
-        for (MBasicBlock* block : *blocks)
-            block->pop();
-    }
-
   public:
-    bool addJoinPredecessor(MDefinition* def, BlockVector* blocks)
+    void pushDef(MDefinition* def)
     {
         if (inDeadCode())
-            return true;
+            return;
+        MOZ_ASSERT(!hasPushed(curBlock_));
+        if (def && def->type() != MIRType_None)
+            curBlock_->push(def);
+    }
 
-        // Preserve the invariant that, for every MBasicBlock in 'blocks',
+    typedef std::function<MBasicBlock*(size_t)> GetBlockFunction;
+
+    void ensurePushInvariants(GetBlockFunction getBlock, size_t numBlocks)
+    {
+        // Preserve the invariant that, for every iterated MBasicBlock,
         // either: every MBasicBlock has a non-void pushed expression OR no
         // MBasicBlock has any pushed expression. This is required by
         // MBasicBlock::addPredecessor.
-        if (def) {
-            if (blocks->empty()) {
-                if (def->type() != MIRType_None)
-                    push(curBlock_, def);
-            } else {
-                if (hasPushed((*blocks)[0])) {
-                    if (def->type() == MIRType_None)
-                        popAll(blocks);
-                    else
-                        push(curBlock_, def);
-                }
-            }
-        } else {
-            if (!blocks->empty() && hasPushed((*blocks)[0]))
-                popAll(blocks);
-        }
+        bool allPushed = true;
 
-        return blocks->append(curBlock_);
+        for (size_t i = 0; allPushed && i < numBlocks; i++)
+            allPushed = hasPushed(getBlock(i));
+
+        if (!allPushed) {
+            for (size_t i = 0; i < numBlocks; i++) {
+                MBasicBlock* block = getBlock(i);
+                if (hasPushed(block))
+                    block->pop();
+            }
+        }
     }
 
     bool joinIf(MBasicBlock* joinBlock, BlockVector* blocks, MDefinition** def)
@@ -995,10 +988,21 @@ class FunctionCompiler
         mirGraph().moveBlockToEnd(curBlock_);
     }
 
+    bool addJoinPredecessor(MDefinition* def, BlockVector* blocks)
+    {
+        if (inDeadCode())
+            return true;
+        pushDef(def);
+        return blocks->append(curBlock_);
+    }
+
     bool joinIfElse(MDefinition* elseDef, BlockVector* blocks, MDefinition** def)
     {
         if (!addJoinPredecessor(elseDef, blocks))
             return false;
+
+        auto getBlock = [&](size_t i) -> MBasicBlock* { return (*blocks)[i]; };
+        ensurePushInvariants(getBlock, blocks->length());
 
         if (blocks->empty()) {
             *def = nullptr;
@@ -1028,11 +1032,11 @@ class FunctionCompiler
         return true;
     }
 
-    bool finishBlock()
+    bool finishBlock(MDefinition** def)
     {
         MOZ_ASSERT(blockDepth_);
         uint32_t topLabel = --blockDepth_;
-        return bindBranches(topLabel);
+        return bindBranches(topLabel, def);
     }
 
     bool startLoop(MBasicBlock** loopHeader)
@@ -1073,8 +1077,7 @@ class FunctionCompiler
         }
     }
 
-    bool setLoopBackedge(MBasicBlock* loopEntry, MBasicBlock* loopBody, MBasicBlock* backedge,
-                         MDefinition** loopResult)
+    bool setLoopBackedge(MBasicBlock* loopEntry, MBasicBlock* loopBody, MBasicBlock* backedge)
     {
         if (!loopEntry->setBackedgeAsmJS(backedge))
             return false;
@@ -1085,10 +1088,6 @@ class FunctionCompiler
             if (phi->getOperand(0) == phi->getOperand(1))
                 phi->setUnused();
         }
-
-        // The loop result may also be referencing a recycled phi.
-        if (*loopResult && (*loopResult)->isUnused())
-            *loopResult = (*loopResult)->toPhi()->getOperand(0);
 
         // Fix up phis stored in the slots Vector of pending blocks.
         for (ControlFlowPatchVector& patches : blockPatches_) {
@@ -1143,23 +1142,27 @@ class FunctionCompiler
         // TODO (bug 1253544): blocks branching to the top join to a single
         // backedge block. Could they directly be set as backedges of the loop
         // instead?
-        if (!bindBranches(headerLabel))
+        MDefinition* _;
+        if (!bindBranches(headerLabel, &_))
             return false;
 
         MOZ_ASSERT(loopHeader->loopDepth() == loopDepth_);
 
         if (curBlock_) {
             // We're on the loop backedge block, created by bindBranches.
+            if (hasPushed(curBlock_))
+                curBlock_->pop();
+
             MOZ_ASSERT(curBlock_->loopDepth() == loopDepth_);
             curBlock_->end(MGoto::New(alloc(), loopHeader));
-            if (!setLoopBackedge(loopHeader, loopBody, curBlock_, loopResult))
+            if (!setLoopBackedge(loopHeader, loopBody, curBlock_))
                 return false;
         }
 
         curBlock_ = loopBody;
 
         loopDepth_--;
-        if (!bindBranches(afterLabel))
+        if (!bindBranches(afterLabel, loopResult))
             return false;
 
         // If we have not created a new block in bindBranches, we're still on
@@ -1185,7 +1188,7 @@ class FunctionCompiler
         return blockPatches_[absolute].append(ControlFlowPatch(ins, index));
     }
 
-    bool br(uint32_t relativeDepth)
+    bool br(uint32_t relativeDepth, MDefinition* maybeValue)
     {
         if (inDeadCode())
             return true;
@@ -1194,12 +1197,14 @@ class FunctionCompiler
         if (!addControlFlowPatch(jump, relativeDepth, MGoto::TargetIndex))
             return false;
 
+        pushDef(maybeValue);
+
         curBlock_->end(jump);
         curBlock_ = nullptr;
         return true;
     }
 
-    bool brIf(uint32_t relativeDepth, MDefinition* condition)
+    bool brIf(uint32_t relativeDepth, MDefinition* maybeValue, MDefinition* condition)
     {
         if (inDeadCode())
             return true;
@@ -1211,6 +1216,8 @@ class FunctionCompiler
         MTest* test = MTest::NewAsm(alloc(), condition, joinBlock);
         if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex))
             return false;
+
+        pushDef(maybeValue);
 
         curBlock_->end(test);
         curBlock_ = joinBlock;
@@ -1320,14 +1327,21 @@ class FunctionCompiler
         return next->addPredecessor(alloc(), prev);
     }
 
-    bool bindBranches(uint32_t absolute)
+    bool bindBranches(uint32_t absolute, MDefinition** def)
     {
-        if (absolute >= blockPatches_.length())
+        if (absolute >= blockPatches_.length() || blockPatches_[absolute].empty()) {
+            *def = !inDeadCode() && hasPushed(curBlock_) ? curBlock_->pop() : nullptr;
             return true;
+        }
 
         ControlFlowPatchVector& patches = blockPatches_[absolute];
-        if (patches.empty())
-            return true;
+
+        auto getBlock = [&](size_t i) -> MBasicBlock* {
+            if (i < patches.length())
+                return patches[i].ins->block();
+            return curBlock_;
+        };
+        ensurePushInvariants(getBlock, patches.length() + !!curBlock_);
 
         MBasicBlock* join = nullptr;
         MControlInstruction* ins = patches[0].ins;
@@ -1346,6 +1360,8 @@ class FunctionCompiler
         if (curBlock_ && !goToExistingBlock(curBlock_, join))
             return false;
         curBlock_ = join;
+
+        *def = hasPushed(curBlock_) ? curBlock_->pop() : nullptr;
 
         patches.clear();
         return true;
@@ -2530,10 +2546,10 @@ EmitLoop(FunctionCompiler& f, MDefinition** def)
             if (!EmitExpr(f, &_))
                 return false;
         }
-        if (!EmitExpr(f, def))
+        MDefinition* last = nullptr;
+        if (!EmitExpr(f, &last))
             return false;
-    } else {
-        *def = nullptr;
+        f.pushDef(last);
     }
 
     return f.closeLoop(loopHeader, def);
@@ -2608,7 +2624,7 @@ EmitBrTable(FunctionCompiler& f, MDefinition** def)
 
     // Empty table
     if (!numCases)
-        return f.br(defaultDepth);
+        return f.br(defaultDepth, nullptr);
 
     return f.brTable(index, defaultDepth, depths);
 }
@@ -2648,16 +2664,16 @@ EmitBlock(FunctionCompiler& f, MDefinition** def)
         return false;
     if (uint32_t numStmts = f.readVarU32()) {
         for (uint32_t i = 0; i < numStmts - 1; i++) {
-            MDefinition* _;
+            MDefinition* _ = nullptr;
             if (!EmitExpr(f, &_))
                 return false;
         }
-        if (!EmitExpr(f, def))
+        MDefinition* last = nullptr;
+        if (!EmitExpr(f, &last))
             return false;
-    } else {
-        *def = nullptr;
+        f.pushDef(last);
     }
-    return f.finishBlock();
+    return f.finishBlock(def);
 }
 
 static bool
@@ -2667,17 +2683,19 @@ EmitBranch(FunctionCompiler& f, Expr op, MDefinition** def)
 
     uint32_t relativeDepth = f.readVarU32();
 
-    MOZ_ALWAYS_TRUE(f.readExpr() == Expr::Nop);
+    MDefinition* maybeValue = nullptr;
+    if (!EmitExpr(f, &maybeValue))
+        return false;
 
     if (op == Expr::Br) {
-        if (!f.br(relativeDepth))
+        if (!f.br(relativeDepth, maybeValue))
             return false;
     } else {
         MDefinition* condition;
         if (!EmitExpr(f, &condition))
             return false;
 
-        if (!f.brIf(relativeDepth, condition))
+        if (!f.brIf(relativeDepth, maybeValue, condition))
             return false;
     }
 

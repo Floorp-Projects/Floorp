@@ -325,18 +325,22 @@ class WasmAstBranch : public WasmAstExpr
     Expr expr_;
     WasmAstExpr* cond_;
     WasmRef target_;
+    WasmAstExpr* value_;
 
   public:
     static const WasmAstExprKind Kind = WasmAstExprKind::Branch;
-    explicit WasmAstBranch(Expr expr, WasmAstExpr* cond, WasmRef target)
+    explicit WasmAstBranch(Expr expr, WasmAstExpr* cond, WasmRef target, WasmAstExpr* value)
       : WasmAstExpr(Kind),
         expr_(expr),
         cond_(cond),
-        target_(target)
+        target_(target),
+        value_(value)
     {}
+
     Expr expr() const { return expr_; }
     WasmRef& target() { return target_; }
     WasmAstExpr& cond() const { MOZ_ASSERT(cond_); return *cond_; }
+    WasmAstExpr* maybeValue() const { return value_; }
 };
 
 class WasmAstCall : public WasmAstExpr
@@ -2078,14 +2082,30 @@ ParseBranch(WasmParseContext& c, Expr expr)
     if (!c.ts.matchRef(&target, c.error))
         return nullptr;
 
-    WasmAstExpr* cond = nullptr;
-    if (expr == Expr::BrIf) {
-        cond = ParseExpr(c);
-        if (!cond)
+    WasmAstExpr* value = nullptr;
+    if (c.ts.getIf(WasmToken::OpenParen)) {
+        value = ParseExprInsideParens(c);
+        if (!value)
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstBranch(expr, cond, target);
+    WasmAstExpr* cond = nullptr;
+    if (expr == Expr::BrIf) {
+        if (c.ts.getIf(WasmToken::OpenParen)) {
+            cond = ParseExprInsideParens(c);
+            if (!cond)
+                return nullptr;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return nullptr;
+        } else {
+            cond = value;
+            value = nullptr;
+        }
+    }
+
+    return new(c.lifo) WasmAstBranch(expr, cond, target, value);
 }
 
 static bool
@@ -3609,7 +3629,7 @@ EncodeBranch(Encoder& e, WasmAstBranch& br)
     if (!e.writeVarU32(br.target().index()))
         return false;
 
-    if (!e.writeExpr(Expr::Nop))
+    if (br.maybeValue() ? !EncodeExpr(e, *br.maybeValue()) : !e.writeExpr(Expr::Nop))
         return false;
 
     if (br.expr() == Expr::BrIf) {
