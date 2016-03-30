@@ -76,7 +76,7 @@ var Reader = {
         break;
       }
 
-      case "Reader:Removed": {
+      case "Reader:RemoveFromCache": {
         ReaderMode.removeArticleFromCache(aData).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
       }
