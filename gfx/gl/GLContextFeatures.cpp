@@ -691,15 +691,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "texture_rg",
-        GLVersion::GL3,
-        GLESVersion::ES3,
-        GLContext::ARB_texture_rg,
-        {
-            GLContext::Extensions_End
-        }
-    },
-    {
         "texture_storage",
         GLVersion::GL4_2,
         GLESVersion::ES3,
