@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -834,20 +835,21 @@ public class GeckoAppShell
 
     @WrapForJNI(stubName = "GetHandlersForMimeTypeWrapper")
     static String[] getHandlersForMimeType(String aMimeType, String aAction) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return new String[] {};
-        }
-        return geckoInterface.getHandlersForMimeType(aMimeType, aAction);
+        Intent intent = IntentHelper.getIntentForActionString(aAction);
+        if (aMimeType != null && aMimeType.length() > 0)
+            intent.setType(aMimeType);
+        return IntentHelper.getHandlersForIntent(intent);
     }
 
     @WrapForJNI(stubName = "GetHandlersForURLWrapper")
     static String[] getHandlersForURL(String aURL, String aAction) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return new String[] {};
-        }
-        return geckoInterface.getHandlersForURL(aURL, aAction);
+        // aURL may contain the whole URL or just the protocol
+        Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
+
+        Intent intent = IntentHelper.getOpenURIIntent(getApplicationContext(), uri.toString(), "",
+            TextUtils.isEmpty(aAction) ? Intent.ACTION_VIEW : aAction, "");
+
+        return IntentHelper.getHandlersForIntent(intent);
     }
 
     @WrapForJNI(stubName = "GetHWEncoderCapability")
@@ -926,11 +928,9 @@ public class GeckoAppShell
                                           String className,
                                           String action,
                                           String title) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return false;
-        }
-        return geckoInterface.openUriExternal(targetURI, mimeType, packageName, className, action, title);
+
+        // Default to showing prompt in private browsing to be safe.
+        return IntentHelper.openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
     }
 
     /**
@@ -1815,11 +1815,6 @@ public class GeckoAppShell
         public void setUriTitle(final String uri, final String title);
 
         public void setAccessibilityEnabled(boolean enabled);
-
-        public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title);
-
-        public String[] getHandlersForMimeType(String mimeType, String action);
-        public String[] getHandlersForURL(String url, String action);
     };
 
     private static GeckoInterface sGeckoInterface;

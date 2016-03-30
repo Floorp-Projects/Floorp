@@ -2530,14 +2530,7 @@ public abstract class GeckoApp
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 
-    @Override
     public void setAccessibilityEnabled(boolean enabled) {
-    }
-
-    @Override
-    public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
-        // Default to showing prompt in private browsing to be safe.
-        return IntentHelper.openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
     }
 
     public static class MainLayout extends RelativeLayout {
@@ -2793,24 +2786,5 @@ public abstract class GeckoApp
                 GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
             }
         });
-    }
-
-    @Override
-    public String[] getHandlersForMimeType(String mimeType, String action) {
-        Intent intent = IntentHelper.getIntentForActionString(action);
-        if (mimeType != null && mimeType.length() > 0)
-            intent.setType(mimeType);
-        return IntentHelper.getHandlersForIntent(intent);
-    }
-
-    @Override
-    public String[] getHandlersForURL(String url, String action) {
-        // May contain the whole URL or just the protocol.
-        Uri uri = url.indexOf(':') >= 0 ? Uri.parse(url) : new Uri.Builder().scheme(url).build();
-
-        Intent intent = IntentHelper.getOpenURIIntent(getApplicationContext(), uri.toString(), "",
-                TextUtils.isEmpty(action) ? Intent.ACTION_VIEW : action, "");
-
-        return IntentHelper.getHandlersForIntent(intent);
     }
 }
