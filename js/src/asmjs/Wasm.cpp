@@ -450,7 +450,7 @@ DecodeConversionOperator(FunctionDecoder& f, ValType to, ValType argType, ExprTy
 }
 
 static bool
-DecodeSelectOperator(FunctionDecoder& f, ExprType* type)
+DecodeSelect(FunctionDecoder& f, ExprType* type)
 {
     ExprType trueType;
     if (!DecodeExpr(f, &trueType))
@@ -463,9 +463,6 @@ DecodeSelectOperator(FunctionDecoder& f, ExprType* type)
     if (!DecodeExpr(f, &falseType))
         return false;
 
-    if (!CheckType(f, falseType, trueType))
-        return false;
-
     ExprType condType;
     if (!DecodeExpr(f, &condType))
         return false;
@@ -473,7 +470,7 @@ DecodeSelectOperator(FunctionDecoder& f, ExprType* type)
     if (!CheckType(f, condType, ValType::I32))
         return false;
 
-    *type = trueType;
+    *type = Unify(trueType, falseType);
     return true;
 }
 
@@ -672,7 +669,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::SetLocal:
         return DecodeSetLocal(f, type);
       case Expr::Select:
-        return DecodeSelectOperator(f, type);
+        return DecodeSelect(f, type);
       case Expr::Block:
         return DecodeBlock(f, /* isLoop */ false, type);
       case Expr::Loop:
