@@ -10,7 +10,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
-import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener;
 import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel;
 import org.mozilla.gecko.Telemetry;
@@ -24,7 +23,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
     protected HomePager.OnUrlOpenListener mOnUrlOpenListener;
     protected OnPanelLevelChangeListener mOnPanelLevelChangeListener;
-    protected CombinedHistoryPanel.DialogBuilder<RemoteClient> mDialogBuilder;
     protected HomeContextMenuInfo mContextMenuInfo;
 
     public CombinedHistoryRecyclerView(Context context) {
@@ -60,10 +58,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         this.mOnPanelLevelChangeListener = listener;
     }
 
-    public void setHiddenClientsDialogBuilder(CombinedHistoryPanel.DialogBuilder<RemoteClient> builder) {
-        mDialogBuilder = builder;
-    }
-
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         final int viewType = getAdapter().getItemViewType(position);
@@ -74,12 +68,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
                 mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.CHILD);
                 ((CombinedHistoryAdapter) getAdapter()).showChildView(position);
                 break;
-            case HIDDEN_DEVICES:
-                if (mDialogBuilder != null) {
-                    mDialogBuilder.createAndShowDialog(((CombinedHistoryAdapter) getAdapter()).getHiddenClients());
-                }
-                break;
-
             case NAVIGATION_BACK:
                 mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.PARENT);
                 ((CombinedHistoryAdapter) getAdapter()).exitChildView();
