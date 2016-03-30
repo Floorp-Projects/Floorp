@@ -12,7 +12,7 @@
 
 var directory;
 
-function create_fileList() {
+function create_fileList(aPath) {
   var url = SimpleTest.getTestFileURL("script_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
 
@@ -31,7 +31,7 @@ function create_fileList() {
   }
 
   script.addMessageListener("dir.opened", onOpened);
-  script.sendAsyncMessage("dir.open");
+  script.sendAsyncMessage("dir.open", { path: aPath });
 }
 
 function test_basic() {
@@ -48,15 +48,17 @@ function checkSubDir(dir) {
       for (var i = 0; i < data.length; ++i) {
         ok (data[i] instanceof File || data[i] instanceof Directory, "Just Files or Directories");
         if (data[i] instanceof Directory) {
-          isnot(data[i].name, '/', "Subdirectory should be called with the leafname");
-          isnot(data[i].path, '/', "Subdirectory path should be called with the leafname");
+          isnot(data[i].name, '/', "Subdirectory should be called with the leafname: " + data[i].name);
+          isnot(data[i].path, '/', "Subdirectory path should be called with the leafname:" + data[i].path);
+          isnot(data[i].path, dir.path, "Subdirectory path should contain the parent path.");
+          is(data[i].path,dir.path + '/' + data[i].name, "Subdirectory path should be called parentdir.path + '/' + leafname");
         }
       }
     }
   );
 }
 
-function getFilesAndDirectories() {
+function getFilesAndDirectories(aRecursive) {
   directory.getFilesAndDirectories().then(
     function(data) {
       ok(data.length, "We should have some data.");
@@ -65,8 +67,11 @@ function getFilesAndDirectories() {
         ok (data[i] instanceof File || data[i] instanceof Directory, "Just Files or Directories");
         if (data[i] instanceof Directory) {
           isnot(data[i].name, '/', "Subdirectory should be called with the leafname");
-          isnot(data[i].path, '/', "Subdirectory path should be called with the leafname");
-          promises.push(checkSubDir(data[i]));
+          is(data[i].path, '/' + data[i].name, "Subdirectory path should be called '/' + leafname");
+
+          if (aRecursive) {
+            promises.push(checkSubDir(data[i]));
+          }
         }
       }
 
@@ -79,11 +84,13 @@ function getFilesAndDirectories() {
 }
 
 var tests = [
-  create_fileList,
-
+  function() { create_fileList('ProfD') },
   test_basic,
+  function() { getFilesAndDirectories(true) },
 
-  getFilesAndDirectories,
+  function() { create_fileList('root') },
+  test_basic,
+  function() { getFilesAndDirectories(false) },
 ];
 
 function next() {
