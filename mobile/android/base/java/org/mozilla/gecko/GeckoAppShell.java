@@ -17,6 +17,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -27,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +40,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.LocalURLMetadata;
 import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
@@ -47,6 +50,7 @@ import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
+import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
@@ -88,6 +92,7 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.display.DisplayManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
@@ -98,9 +103,12 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.MessageQueue;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Browser;
@@ -124,10 +132,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
 import android.widget.AbsoluteLayout;
+import android.widget.Toast;
 
 public class GeckoAppShell
 {
     private static final String LOGTAG = "GeckoAppShell";
+    private static final boolean LOGGING = false;
 
     // We have static members only.
     private GeckoAppShell() { }
@@ -2190,6 +2200,7 @@ public class GeckoAppShell
 
     public interface GeckoInterface {
         public GeckoProfile getProfile();
+        public PromptService getPromptService();
         public Activity getActivity();
         public String getDefaultUAString();
         public LocationListener getLocationListener();
