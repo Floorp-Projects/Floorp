@@ -41,7 +41,7 @@ public:
   InternalScrollPortEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollPortEventClass)
-    , orient(eVertical)
+    , mOrient(eVertical)
   {
   }
 
@@ -57,14 +57,14 @@ public:
     return result;
   }
 
-  OrientType orient;
+  OrientType mOrient;
 
   void AssignScrollPortEventData(const InternalScrollPortEvent& aEvent,
                                  bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    orient = aEvent.orient;
+    mOrient = aEvent.mOrient;
   }
 };
 
