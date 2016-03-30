@@ -20,8 +20,7 @@ import java.util.List;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> {
     private static final String LOGTAG = "GeckoCombinedHistAdapt";
-
-    public enum ItemType {
+    private enum ItemType {
         CLIENT, HISTORY;
 
         public static ItemType viewTypeToItemType(int viewType) {
