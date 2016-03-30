@@ -2823,7 +2823,7 @@ BytecodeEmitter::emitElemOperands(ParseNode* pn, EmitElemOption opts)
     if (opts == EmitElemOption::Set) {
         if (!emit2(JSOP_PICK, 2))
             return false;
-    } else if (opts == EmitElemOption::IncDec || opts == EmitElemOption::SelfAssign) {
+    } else if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
         if (!emit1(JSOP_TOID))
             return false;
     }
@@ -2845,7 +2845,7 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, EmitElemOption opts)
 
     // We need to convert the key to an object id first, so that we do not do
     // it inside both the GETELEM and the SETELEM.
-    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::SelfAssign) {
+    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
         if (!emit1(JSOP_TOID))
             return false;
     }
@@ -4608,7 +4608,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         break;
       case PNK_ELEM: {
         MOZ_ASSERT(lhs->isArity(PN_BINARY));
-        EmitElemOption opt = op == JSOP_NOP ? EmitElemOption::Get : EmitElemOption::SelfAssign;
+        EmitElemOption opt = op == JSOP_NOP ? EmitElemOption::Get : EmitElemOption::CompoundAssign;
         if (lhs->as<PropertyByValue>().isSuper()) {
             if (!emitSuperElemOperands(lhs, opt))
                 return false;
