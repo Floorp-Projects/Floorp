@@ -156,9 +156,4 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     public void setUriTitle(final String uri, final String title) {
         // By default, no titles are associated with URIs.
     }
-
-    @Override
-    public void setAccessibilityEnabled(boolean enabled) {
-        // By default, take no action when accessibility is toggled on or off.
-    }
 }
