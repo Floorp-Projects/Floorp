@@ -2128,8 +2128,6 @@ public class GeckoAppShell
          * @param title to associate with the given URI.
          */
         public void setUriTitle(final String uri, final String title);
-
-        public void setAccessibilityEnabled(boolean enabled);
     };
 
     private static GeckoInterface sGeckoInterface;
