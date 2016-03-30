@@ -96,11 +96,6 @@ DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_DEFAULT_COMPILER
 
-MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
-[  --with-gonk-toolchain-prefix=DIR
-                          prefix to gonk toolchain commands],
-    gonk_toolchain_prefix=$withval)
-
 if test -n "$gonkdir" ; then
     dnl export for js/src/configure. We can't pass the option down normally,
     dnl because it's a `--enable-project=b2g`-only option.
@@ -114,18 +109,6 @@ if test -n "$gonkdir" ; then
     if test -n "${PLATFORM_SDK_VERSION}"; then
         ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
     fi
-
-    dnl set up compilers
-    TOOLCHAIN_PREFIX="$gonk_toolchain_prefix"
-    AS="$gonk_toolchain_prefix"as
-    CC="$gonk_toolchain_prefix"gcc
-    CXX="$gonk_toolchain_prefix"g++
-    CPP="$gonk_toolchain_prefix"cpp
-    LD="$gonk_toolchain_prefix"ld
-    AR="$gonk_toolchain_prefix"ar
-    RANLIB="$gonk_toolchain_prefix"ranlib
-    STRIP="$gonk_toolchain_prefix"strip
-    OBJCOPY="$gonk_toolchain_prefix"objcopy
 
     if ! test -e "$gonkdir/ndk/sources/cxx-stl/stlport/src/iostream.cpp"; then
         AC_MSG_ERROR([Couldn't find path to stlport sources in the gonk tree])
