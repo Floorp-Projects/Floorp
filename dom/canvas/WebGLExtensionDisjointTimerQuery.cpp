@@ -242,9 +242,12 @@ WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl)
   gl::GLContext* gl = webgl->GL();
   return gl->IsSupported(gl::GLFeature::query_objects) &&
          gl->IsSupported(gl::GLFeature::get_query_object_i64v) &&
-         gl->IsSupported(gl::GLFeature::query_counter); // provides GL_TIMESTAMP
+         gl->IsSupported(gl::GLFeature::query_counter) && // provides GL_TIMESTAMP
+         gl->IsSupported(gl::GLFeature::sync); // provides glGetInteger64v
+  // 'sync' provides glGetInteger64v either by supporting ARB_sync, GL3+, or GLES3+.
+  // Since there are no differences between support for glGetInteger64v and support for
+  // 'sync', we just piggy-back off of 'sync'.
 }
-
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery, EXT_disjoint_timer_query)
 
