@@ -559,12 +559,15 @@ DecodeBranch(FunctionDecoder& f, Expr expr, ExprType* type)
     if (!f.d().readVarU32(&relativeDepth))
         return f.fail("expected relative depth");
 
-    ExprType brType;
-    if (!DecodeExpr(f, &brType))
+    if (!f.branchWithType(relativeDepth, ExprType::Void))
+        return f.fail("branch depth exceeds current nesting level");
+
+    Expr value;
+    if (!f.d().readExpr(&value))
         return f.fail("expected branch value");
 
-    if (!f.branchWithType(relativeDepth, brType))
-        return f.fail("branch depth exceeds current nesting level");
+    if (value != Expr::Nop)
+        return f.fail("NYI: branch values");
 
     if (expr == Expr::BrIf) {
         ExprType actual;
