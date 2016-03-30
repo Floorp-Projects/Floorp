@@ -14,7 +14,6 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.db.RemoteTab;
 
 public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
     public CombinedHistoryItem(View view) {
@@ -30,12 +29,6 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
             final TwoLinePageRow pageRow = (TwoLinePageRow) this.itemView;
             pageRow.setShowIcons(true);
             pageRow.updateFromCursor(historyCursor);
-        }
-
-        public void bind(RemoteTab remoteTab) {
-            final TwoLinePageRow childPageRow = (TwoLinePageRow) this.itemView;
-            childPageRow.setShowIcons(true);
-            childPageRow.update(remoteTab.title, remoteTab.url);
         }
     }
 
