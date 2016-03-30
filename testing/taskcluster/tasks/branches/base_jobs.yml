@@ -95,12 +95,6 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
-  android-api-15-frontend:
-    platforms:
-      - Android
-    types:
-      opt:
-        task: tasks/builds/android_api_15_frontend.yml
   linux64-mulet-haz:
     platforms:
       - Mulet Linux
@@ -411,6 +405,13 @@ tasks:
         - 'testing/docker/android-gradle-build/**'
         - 'testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py'
         - '**/*.gradle'
+  android-test:
+    task: tasks/builds/android_test.yml
+    root: true
+    when:
+      file_patterns:
+        - 'mobile/android/base/**'
+        - 'mobile/android/tests/background/junit4/**'
   android-checkstyle:
     task: tasks/builds/android_checkstyle.yml
     root: true
