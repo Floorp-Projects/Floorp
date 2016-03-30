@@ -198,6 +198,9 @@ void EnableWebRtcLog()
 
 void StopWebRtcLog()
 {
+  // TODO(NG) strip/fix gWebRtcTraceLoggingOn which is never set to true
+  webrtc::Trace::set_level_filter(webrtc::kTraceNone);
+  webrtc::Trace::SetTraceCallback(nullptr);
   webrtc::Trace::SetTraceFile(nullptr);
 }
 
