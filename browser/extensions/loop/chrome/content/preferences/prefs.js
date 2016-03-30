@@ -1,7 +1,12 @@
 pref("loop.enabled", true);
 pref("loop.remote.autostart", true);
+#ifdef LOOP_DEV_XPI
+pref("loop.server", "https://loop-dev.stage.mozaws.net/v0");
+pref("loop.linkClicker.url", "https://loop-webapp-dev.stage.mozaws.net/");
+#else
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.linkClicker.url", "https://hello.firefox.com/");
+#endif
 pref("loop.gettingStarted.latestFTUVersion", 1);
 pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start/");
 pref("loop.gettingStarted.resumeOnFirstJoin", false);
