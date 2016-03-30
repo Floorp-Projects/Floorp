@@ -22,6 +22,8 @@ namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
 
+class ImageLoadTask;
+
 class ResponsiveImageSelector;
 class HTMLImageElement final : public nsGenericHTMLElement,
                                public nsImageLoadingContent,
@@ -362,7 +364,7 @@ private:
                                     nsRuleData* aData);
 
   bool mInDocResponsiveContent;
-  nsCOMPtr<nsIRunnable> mPendingImageLoadTask;
+  RefPtr<ImageLoadTask> mPendingImageLoadTask;
 };
 
 } // namespace dom
