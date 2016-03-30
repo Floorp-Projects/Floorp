@@ -9,7 +9,6 @@ import android.content.Context;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
 import android.view.View;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener;
@@ -51,19 +50,6 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         RecyclerViewClickSupport.addTo(this)
             .setOnItemClickListener(this)
             .setOnItemLongClickListener(this);
-
-        setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                final int action = event.getAction();
-
-                // If the user hit the BACK key, try to move to the parent folder.
-                if (action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    return ((CombinedHistoryAdapter) getAdapter()).exitChildView();
-                }
-                return false;
-            }
-        });
     }
 
     public void setOnHistoryClickedListener(HomePager.OnUrlOpenListener listener) {
