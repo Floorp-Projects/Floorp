@@ -6,7 +6,5 @@
 <org.mozilla.gecko.home.BookmarkFolderView xmlns:android="http://schemas.android.com/apk/res/android"
                                            style="@style/Widget.FolderView"
                                            android:layout_width="match_parent"
-                                           android:paddingLeft="20dp"
-                                           android:drawablePadding="20dp"
                                            android:drawableLeft="@drawable/bookmark_folder"
                                            android:gravity="center_vertical"/>
