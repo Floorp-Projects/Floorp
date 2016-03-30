@@ -2187,7 +2187,15 @@ EmitSelect(FunctionCompiler& f, MDefinition** def)
     if (!EmitExpr(f, &condExpr))
         return false;
 
-    *def = f.select(trueExpr, falseExpr, condExpr);
+    if (trueExpr && falseExpr &&
+        trueExpr->type() == falseExpr->type() &&
+        trueExpr->type() != MIRType_None)
+    {
+        *def = f.select(trueExpr, falseExpr, condExpr);
+    } else {
+        *def = nullptr;
+    }
+
     return true;
 }
 
