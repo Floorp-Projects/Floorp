@@ -1525,27 +1525,27 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 [ div, pseudoTarget ].forEach(function(target) {
   addAsyncAnimTest("change_duration_and_currenttime",
                    { observe: div, subtree: true }, function*() {
-    var anim = target.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+    var anim = target.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
     yield await_frame();
     assert_records([{ added: [anim], changed: [], removed: [] }],
                    "records after animation is added");
 
-    anim.effect.timing.duration = 10 * MS_PER_SEC;
+    anim.effect.timing.duration = 100 * MS_PER_SEC;
     yield await_frame();
     assert_records([{ added: [], changed: [anim], removed: [] }],
                    "records after duration is changed");
 
-    anim.effect.timing.duration = 10 * MS_PER_SEC;
+    anim.effect.timing.duration = 100 * MS_PER_SEC;
     yield await_frame();
     assert_records([], "records after assigning same value");
 
-    anim.currentTime = 50 * MS_PER_SEC;
+    anim.currentTime = 500 * MS_PER_SEC;
     yield await_frame();
     assert_records([{ added: [], changed: [], removed: [anim] }],
                    "records after animation end");
 
-    anim.effect.timing.duration = 100 * MS_PER_SEC;
+    anim.effect.timing.duration = 1000 * MS_PER_SEC;
     yield await_frame();
     assert_records([{ added: [anim], changed: [], removed: [] }],
                    "records after animation restarted");
@@ -1597,7 +1597,8 @@ addAsyncAnimTest("change_enddelay_and_currenttime",
 addAsyncAnimTest("change_enddelay_and_currenttime",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] },
-                         { duration: 100, endDelay: -100 });
+                         { duration: 100 * MS_PER_SEC,
+                           endDelay: -100 * MS_PER_SEC });
   yield await_frame();
   assert_records([], "records after animation is added");
 });
