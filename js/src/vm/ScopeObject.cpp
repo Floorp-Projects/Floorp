@@ -1124,20 +1124,6 @@ ClonedBlockObject::thisValue() const
 static_assert(StaticBlockScope::RESERVED_SLOTS == ClonedBlockObject::RESERVED_SLOTS,
               "static block scopes and dynamic block environments share a Class");
 
-const ObjectOps ClonedBlockObject::objectOps_ = {
-    nullptr,          /* lookupProperty */
-    nullptr,          /* defineProperty */
-    nullptr,          /* hasProperty */
-    nullptr,          /* getProperty */
-    nullptr,          /* setProperty */
-    nullptr,          /* getOwnPropertyDescriptor */
-    nullptr,          /* deleteProperty */
-    nullptr, nullptr, /* watch/unwatch */
-    nullptr,          /* getElements */
-    nullptr,          /* enumerate (native enumeration of target doesn't work) */
-    nullptr,
-};
-
 const Class ClonedBlockObject::class_ = {
     "Block",
     JSCLASS_HAS_RESERVED_SLOTS(ClonedBlockObject::RESERVED_SLOTS) |
@@ -1156,7 +1142,7 @@ const Class ClonedBlockObject::class_ = {
     nullptr, /* trace */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    &ClonedBlockObject::objectOps_
+    JS_NULL_OBJECT_OPS
 };
 
 template<XDRMode mode>
