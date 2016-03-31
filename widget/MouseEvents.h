@@ -457,7 +457,7 @@ private:
     , mIsNoLineOrPageDelta(false)
     , lineOrPageDeltaX(0)
     , lineOrPageDeltaY(0)
-    , scrollType(SCROLL_DEFAULT)
+    , mScrollType(SCROLL_DEFAULT)
     , overflowDeltaX(0.0)
     , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
@@ -481,7 +481,7 @@ public:
     , mIsNoLineOrPageDelta(false)
     , lineOrPageDeltaX(0)
     , lineOrPageDeltaY(0)
-    , scrollType(SCROLL_DEFAULT)
+    , mScrollType(SCROLL_DEFAULT)
     , overflowDeltaX(0.0)
     , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
@@ -577,7 +577,7 @@ public:
     SCROLL_ASYNCHRONOUSELY,
     SCROLL_SMOOTHLY
   };
-  ScrollType scrollType;
+  ScrollType mScrollType;
 
   // overflowed delta values for scroll, these values are set by
   // nsEventStateManger.  If the default action of the wheel event isn't scroll,
@@ -620,7 +620,7 @@ public:
     mIsNoLineOrPageDelta = aEvent.mIsNoLineOrPageDelta;
     lineOrPageDeltaX = aEvent.lineOrPageDeltaX;
     lineOrPageDeltaY = aEvent.lineOrPageDeltaY;
-    scrollType = aEvent.scrollType;
+    mScrollType = aEvent.mScrollType;
     overflowDeltaX = aEvent.overflowDeltaX;
     overflowDeltaY = aEvent.overflowDeltaY;
     mViewPortIsOverscrolled = aEvent.mViewPortIsOverscrolled;

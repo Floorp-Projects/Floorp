@@ -2602,7 +2602,7 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     (aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL);
 
   nsIScrollableFrame::ScrollMode mode;
-  switch (aEvent->scrollType) {
+  switch (aEvent->mScrollType) {
     case WidgetWheelEvent::SCROLL_DEFAULT:
       if (isDeltaModePixel) {
         mode = nsIScrollableFrame::NORMAL;
@@ -2622,7 +2622,7 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
       mode = nsIScrollableFrame::SMOOTH;
       break;
     default:
-      MOZ_CRASH("Invalid scrollType value comes");
+      MOZ_CRASH("Invalid mScrollType value comes");
   }
 
   nsIScrollableFrame::ScrollMomentum momentum =
