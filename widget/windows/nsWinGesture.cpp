@@ -575,7 +575,7 @@ nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
   aWheelEvent.mIsNoLineOrPageDelta = true;
 
   aWheelEvent.mOverflowDeltaX = 0.0;
-  aWheelEvent.overflowDeltaY = 0.0;
+  aWheelEvent.mOverflowDeltaY = 0.0;
 
   // Don't scroll the view if we are currently at a bounds, or, if we are
   // panning back from a max feedback position. This keeps the original drag point

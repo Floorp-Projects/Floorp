@@ -1730,7 +1730,7 @@ nsPluginFrame::HandleWheelEventAsDefaultAction(WidgetWheelEvent* aWheelEvent)
   // plugin.  There is no way to know if it's actually consumed/handled.
   aWheelEvent->mViewPortIsOverscrolled = false;
   aWheelEvent->mOverflowDeltaX = 0;
-  aWheelEvent->overflowDeltaY = 0;
+  aWheelEvent->mOverflowDeltaY = 0;
   // Consume the event explicitly.
   aWheelEvent->PreventDefault();
 }

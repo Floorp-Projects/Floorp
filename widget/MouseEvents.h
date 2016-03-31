@@ -459,7 +459,7 @@ private:
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
     , mOverflowDeltaX(0.0)
-    , overflowDeltaY(0.0)
+    , mOverflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(false)
@@ -483,7 +483,7 @@ public:
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
     , mOverflowDeltaX(0.0)
-    , overflowDeltaY(0.0)
+    , mOverflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(true)
@@ -584,12 +584,12 @@ public:
   // these values always zero.  Otherwise, remaning delta values which are
   // not used by scroll are set.
   // NOTE: mDeltaX, mDeltaY and mDeltaZ may be modified by EventStateManager.
-  //       However, mOverflowDeltaX and overflowDeltaY indicate unused original
+  //       However, mOverflowDeltaX and mOverflowDeltaY indicate unused original
   //       delta values which are not applied the delta_multiplier prefs.
   //       So, if widget wanted to know the actual direction to be scrolled,
   //       it would need to check the mDeltaX and mDeltaY.
   double mOverflowDeltaX;
-  double overflowDeltaY;
+  double mOverflowDeltaY;
 
   // Whether or not the parent of the currently overscrolled frame is the
   // ViewPort. This is false in situations when an element on the page is being
@@ -622,7 +622,7 @@ public:
     mLineOrPageDeltaY = aEvent.mLineOrPageDeltaY;
     mScrollType = aEvent.mScrollType;
     mOverflowDeltaX = aEvent.mOverflowDeltaX;
-    overflowDeltaY = aEvent.overflowDeltaY;
+    mOverflowDeltaY = aEvent.mOverflowDeltaY;
     mViewPortIsOverscrolled = aEvent.mViewPortIsOverscrolled;
     mCanTriggerSwipe = aEvent.mCanTriggerSwipe;
     mAllowToOverrideSystemScrollSpeed =
