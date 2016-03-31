@@ -981,14 +981,14 @@ protected:
    */
   void AddToNameTable(nsIAtom* aName) {
     NS_ASSERTION(HasName(), "Node doesn't have name?");
-    nsIDocument* doc = GetCurrentDoc();
+    nsIDocument* doc = GetUncomposedDoc();
     if (doc && !IsInAnonymousSubtree()) {
       doc->AddToNameTable(this, aName);
     }
   }
   void RemoveFromNameTable() {
     if (HasName()) {
-      nsIDocument* doc = GetCurrentDoc();
+      nsIDocument* doc = GetUncomposedDoc();
       if (doc) {
         doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
                                          GetAtomValue());
@@ -1394,7 +1394,7 @@ protected:
    * with the id in @form. Otherwise, it *must* be null.
    *
    * @note Callers of UpdateFormOwner have to be sure the element is in a
-   * document (GetCurrentDoc() != nullptr).
+   * document (GetUncomposedDoc() != nullptr).
    */
   void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement);
 

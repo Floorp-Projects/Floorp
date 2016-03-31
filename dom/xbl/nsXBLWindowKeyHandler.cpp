@@ -745,7 +745,7 @@ nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
   }
 
   // XXX Shouldn't we check this earlier?
-  nsIDocument* doc = keyContent->GetCurrentDoc();
+  nsIDocument* doc = keyContent->GetUncomposedDoc();
   if (NS_WARN_IF(!doc)) {
     return false;
   }

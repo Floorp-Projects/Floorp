@@ -522,14 +522,6 @@ public:
   }
 
   /**
-   * @deprecated
-   */
-  nsIDocument *GetCurrentDoc() const
-  {
-    return GetUncomposedDoc();
-  }
-
-  /**
    * This method returns the owner doc if the node is in the
    * composed document (as defined in the Shadow DOM spec), otherwise
    * it returns null.

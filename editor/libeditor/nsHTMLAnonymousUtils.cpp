@@ -250,7 +250,7 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
           // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
           // in RestyleManager::RestyleForRemove should be changed back
           // to an assertion.
-          docObserver->ContentRemoved(content->GetCurrentDoc(),
+          docObserver->ContentRemoved(content->GetUncomposedDoc(),
                                       aParentContent, content, -1,
                                       content->GetPreviousSibling());
           if (document)

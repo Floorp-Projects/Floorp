@@ -4752,8 +4752,8 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
       // Don't try to descend into subdocuments.
       // If this ever changes we'd need to add handling for subdocuments with
       // different zoom levels.
-      else if (content->GetCurrentDoc() ==
-                 aRange->GetStartParent()->GetCurrentDoc()) {
+      else if (content->GetUncomposedDoc() ==
+                 aRange->GetStartParent()->GetUncomposedDoc()) {
         // if the node is within the range, append it to the temporary list
         bool before, after;
         nsresult rv =

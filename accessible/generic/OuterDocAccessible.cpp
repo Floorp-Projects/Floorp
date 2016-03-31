@@ -32,7 +32,7 @@ OuterDocAccessible::
 
   // Request document accessible for the content document to make sure it's
   // created. It will appended to outerdoc accessible children asynchronously.
-  nsIDocument* outerDoc = mContent->GetCurrentDoc();
+  nsIDocument* outerDoc = mContent->GetUncomposedDoc();
   if (outerDoc) {
     nsIDocument* innerDoc = outerDoc->GetSubDocumentFor(mContent);
     if (innerDoc)

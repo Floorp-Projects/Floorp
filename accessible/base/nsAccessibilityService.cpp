@@ -360,7 +360,7 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
 void
 nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
 {
-  nsIDocument* documentNode = aTargetNode->GetCurrentDoc();
+  nsIDocument* documentNode = aTargetNode->GetUncomposedDoc();
   if (documentNode) {
     DocAccessible* document = GetDocAccessible(documentNode);
     if (document)
