@@ -118,7 +118,7 @@ Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
   MOZ_ASSERT(aFileSystem);
 
   nsCOMPtr<nsIFile> path;
-  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(aFileSystem->GetLocalRootPath()),
+  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(aFileSystem->LocalOrDeviceStorageRootPath()),
                               true, getter_AddRefs(path));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -355,12 +355,20 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
 void
 Directory::GetPath(nsAString& aRetval, ErrorResult& aRv)
 {
-  if (mType == eDOMRootDirectory) {
-    aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-  } else {
-    // TODO: this should be a bit different...
-    GetName(aRetval, aRv);
+  // This operation is expensive. Better to cache the result.
+  if (mPath.IsEmpty()) {
+    RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    fs->GetDOMPath(mFile, mType, mPath, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
+
+  aRetval = mPath;
 }
 
 nsresult
@@ -402,19 +410,12 @@ FileSystemBase*
 Directory::GetFileSystem(ErrorResult& aRv)
 {
   if (!mFileSystem) {
-    nsCOMPtr<nsIFile> parent;
-    aRv = mFile->GetParent(getter_AddRefs(parent));
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    // Parent can be null if mFile is pointing to the top directory.
-    if (!parent) {
-      parent = mFile;
-    }
+    // Any subdir inherits the FileSystem of the parent Directory. If we are
+    // here it's because we are dealing with the DOM root.
+    MOZ_ASSERT(mType == eDOMRootDirectory);
 
     nsAutoString path;
-    aRv = parent->GetPath(path);
+    aRv = mFile->GetPath(path);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }

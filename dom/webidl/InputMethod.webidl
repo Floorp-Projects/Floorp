@@ -525,6 +525,24 @@ interface MozInputContext: EventTarget {
    */
   Promise<boolean> endComposition(optional DOMString text,
                                   optional MozInputMethodKeyboardEventDict dict);
+
+  /**
+   * The interface used to receive the native events from hardware keyboard
+   */
+  readonly attribute MozHardwareInput? hardwareinput;
+};
+
+/*
+ * This interface will be added into inputcontext and used to receive the
+ * events from the hardware keyboard.
+ * Example:
+ *   mozInputMethod.inputcontext.hardwareinput.addEventListener('keyup', this);
+ *   mozInputMethod.inputcontext.hardwareinput.removeEventListener('keyup', this);
+ */
+[JSImplementation="@mozilla.org/b2g-hardwareinput;1",
+ Pref="dom.mozInputMethod.enabled",
+ CheckAnyPermissions="input"]
+interface MozHardwareInput: EventTarget {
 };
 
 /**
@@ -535,7 +553,7 @@ interface MozInputContext: EventTarget {
  CheckAnyPermissions="input"]
 interface MozInputContextSelectionChangeEventDetail {
   /**
-   * Indicate whether or not the change is due to our own action from, 
+   * Indicate whether or not the change is due to our own action from,
    * for example, sendKey() call.
    *
    * Note: this property is untrustworthy because it would still be true even
@@ -559,7 +577,7 @@ interface MozInputContextSelectionChangeEventDetail {
  CheckAnyPermissions="input"]
 interface MozInputContextSurroundingTextChangeEventDetail {
   /**
-   * Indicate whether or not the change is due to our own action from, 
+   * Indicate whether or not the change is due to our own action from,
    * for example, sendKey() call.
    *
    * Note: this property is untrustworthy because it would still be true even

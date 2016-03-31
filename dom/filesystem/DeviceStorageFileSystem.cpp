@@ -44,7 +44,7 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
                                              aStorageName,
                                              getter_AddRefs(rootFile));
 
-  NS_WARN_IF(!rootFile || NS_FAILED(rootFile->GetPath(mLocalRootPath)));
+  NS_WARN_IF(!rootFile || NS_FAILED(rootFile->GetPath(mLocalOrDeviceStorageRootPath)));
 
   if (!XRE_IsParentProcess()) {
     return;
@@ -113,7 +113,7 @@ DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
   MOZ_ASSERT(aFile);
 
   nsCOMPtr<nsIFile> rootPath;
-  nsresult rv = NS_NewLocalFile(GetLocalRootPath(), false,
+  nsresult rv = NS_NewLocalFile(LocalOrDeviceStorageRootPath(), false,
                                 getter_AddRefs(rootPath));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;

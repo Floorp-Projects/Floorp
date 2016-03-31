@@ -402,6 +402,10 @@ class ArrayTypeDescr : public ComplexTypeDescr
     TypeDescr& elementType() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<TypeDescr>();
     }
+    TypeDescr& maybeForwardedElementType() const {
+        JSObject* obj = MaybeForwarded(&getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject());
+        return obj->as<TypeDescr>();
+    }
 
     int32_t length() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
@@ -467,6 +471,9 @@ class StructTypeDescr : public ComplexTypeDescr
     ArrayObject& fieldInfoObject(size_t slot) const {
         return getReservedSlot(slot).toObject().as<ArrayObject>();
     }
+    ArrayObject& maybeForwardedFieldInfoObject(size_t slot) const {
+        return MaybeForwarded(&getReservedSlot(slot).toObject())->as<ArrayObject>();
+    }
 };
 
 typedef Handle<StructTypeDescr*> HandleStructTypeDescr;
@@ -499,6 +506,8 @@ class TypedObject : public JSObject
                                     MutableHandleValue vp);
 
   protected:
+    static const ObjectOps objectOps_;
+
     HeapPtrShape shape_;
 
     static bool obj_lookupProperty(JSContext* cx, HandleObject obj,

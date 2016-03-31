@@ -11,6 +11,9 @@
    */
   function replacePushService(mockService) {
     chromeScript.sendSyncMessage("service-replace");
+    chromeScript.addMessageListener("service-delivery-error", function(msg) {
+      mockService.reportDeliveryError(msg.messageId, msg.reason);
+    });
     chromeScript.addMessageListener("service-request", function(msg) {
       let promise;
       try {
@@ -196,6 +199,10 @@ function injectControlledFrame(target = document.body) {
       waitOnWorkerMessage(type) {
         return iframe ? iframe.contentWindow.waitOnWorkerMessage(type) :
                Promise.reject(new Error("Frame removed from document"));
+      },
+      innerWindowId() {
+        var utils = SpecialPowers.getDOMWindowUtils(iframe.contentWindow);
+        return utils.currentInnerWindowID;
       },
     };
 

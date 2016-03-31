@@ -442,7 +442,7 @@ SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValu
 
     RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult result;
-    if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
+    if (MOZ_LIKELY(!obj->getOpsSetProperty())) {
         if (!NativeSetProperty(
                 cx, obj.as<NativeObject>(), id, value, receiver,
                 (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||

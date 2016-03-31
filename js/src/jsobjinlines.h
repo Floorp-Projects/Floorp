@@ -202,7 +202,7 @@ js::GetElement(JSContext* cx, HandleObject obj, HandleObject receiver, uint32_t 
 inline bool
 js::GetElementNoGC(JSContext* cx, JSObject* obj, const Value& receiver, uint32_t index, Value* vp)
 {
-    if (obj->getOps()->getProperty)
+    if (obj->getOpsGetProperty())
         return false;
 
     if (index > JSID_INT_MAX)
@@ -220,7 +220,7 @@ inline bool
 js::DeleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
 {
     MarkTypePropertyNonData(cx, obj, id);
-    if (DeletePropertyOp op = obj->getOps()->deleteProperty)
+    if (DeletePropertyOp op = obj->getOpsDeleteProperty())
         return op(cx, obj, id, result);
     return NativeDeleteProperty(cx, obj.as<NativeObject>(), id, result);
 }

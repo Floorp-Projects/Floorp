@@ -4865,11 +4865,11 @@ JS_RestoreFrameChain(JSContext* cx)
 }
 
 JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
-  JSContext* cx, HandleObject stack, HandleString asyncCause,
+  JSContext* cx, HandleObject stack, const char* asyncCause,
   JS::AutoSetAsyncStackForNewCalls::AsyncCallKind kind)
   : cx(cx),
     oldAsyncStack(cx, cx->runtime()->asyncStackForNewActivations),
-    oldAsyncCause(cx, cx->runtime()->asyncCauseForNewActivations),
+    oldAsyncCause(cx->runtime()->asyncCauseForNewActivations),
     oldAsyncCallIsExplicit(cx->runtime()->asyncCallIsExplicit)
 {
     CHECK_REQUEST(cx);
@@ -4881,7 +4881,6 @@ JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
         return;
 
     SavedFrame* asyncStack = &stack->as<SavedFrame>();
-    MOZ_ASSERT(!asyncCause->empty());
 
     cx->runtime()->asyncStackForNewActivations = asyncStack;
     cx->runtime()->asyncCauseForNewActivations = asyncCause;

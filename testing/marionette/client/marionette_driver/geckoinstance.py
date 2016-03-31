@@ -204,6 +204,7 @@ class DesktopInstance(GeckoInstance):
         'browser.safebrowsing.enabled': False,
         'browser.safebrowsing.forbiddenURIs.enabled': False,
         'browser.safebrowsing.malware.enabled': False,
+        'browser.safebrowsing.blockedURIs.enabled': False,
         'browser.search.update': False,
         'browser.tabs.animate': False,
         'browser.tabs.warnOnClose': False,

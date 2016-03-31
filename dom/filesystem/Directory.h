@@ -167,6 +167,7 @@ private:
   DirectoryType mType;
 
   nsString mFilters;
+  nsString mPath;
 };
 
 } // namespace dom

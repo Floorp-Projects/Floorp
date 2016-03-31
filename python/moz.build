@@ -34,6 +34,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozbuild/test/backend/test_recursivemake.py',
     'mozbuild/mozbuild/test/backend/test_visualstudio.py',
     'mozbuild/mozbuild/test/compilation/test_warnings.py',
+    'mozbuild/mozbuild/test/configure/test_checks_configure.py',
     'mozbuild/mozbuild/test/configure/test_configure.py',
     'mozbuild/mozbuild/test/configure/test_options.py',
     'mozbuild/mozbuild/test/configure/test_util.py',

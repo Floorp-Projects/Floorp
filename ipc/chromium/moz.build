@@ -165,3 +165,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DIRS += [
+    'atomics',
+]

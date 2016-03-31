@@ -61,7 +61,7 @@ js_option('--disable-export-js', default=building_js,
 def shared_js(shared_js, export_js):
     if shared_js:
         if not export_js:
-            error('Must export JS symbols when building a shared library.')
+            die('Must export JS symbols when building a shared library.')
         return True
 
 set_config('JS_SHARED_LIBRARY', shared_js)
@@ -96,8 +96,8 @@ def disable_shared_js(value):
     else:
         suggestion = '--enable-shared-js'
 
-    error('Setting %s is deprecated, use %s instead.'
-          % (value.format('DISABLE_SHARED_JS'), suggestion))
+    die('Setting %s is deprecated, use %s instead.',
+        value.format('DISABLE_SHARED_JS'), suggestion)
 
 @deprecated_option(env='DISABLE_EXPORT_JS', nargs='?')
 def disable_export_js(value):
@@ -107,8 +107,8 @@ def disable_export_js(value):
     else:
         suggestion = '--enable-export-js'
 
-    error('Setting %s is deprecated, use %s instead.'
-          % (value.format('DISABLE_EXPORT_JS'), suggestion))
+    die('Setting %s is deprecated, use %s instead.',
+        value.format('DISABLE_EXPORT_JS'), suggestion)
 
 
 # Profiling
@@ -119,8 +119,8 @@ js_option('--enable-instruments', env='MOZ_INSTRUMENTS',
 @depends('--enable-instruments', target)
 def instruments(value, target):
     if value and target.os != 'OSX':
-        error('--enable-instruments cannot be used when targeting %s'
-              % target.os)
+        die('--enable-instruments cannot be used when targeting %s',
+            target.os)
     if value:
         return True
 

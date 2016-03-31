@@ -283,7 +283,7 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
             varobj = &scope->as<DebugScopeObject>().scope().as<NativeObject>();
         else
             varobj = &scope->as<NativeObject>();
-        MOZ_ASSERT(!varobj->getOps()->setProperty);
+        MOZ_ASSERT(!varobj->getOpsSetProperty());
         ok = NativeSetProperty(cx, varobj, id, val, receiver, Unqualified, result);
     } else {
         ok = SetProperty(cx, scope, id, val, receiver, result);

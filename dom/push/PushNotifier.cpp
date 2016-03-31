@@ -6,10 +6,11 @@
 
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
-#include "nsXPCOM.h"
-#include "nsIXULRuntime.h"
-#include "ServiceWorkerManager.h"
 #include "nsICategoryManager.h"
+#include "nsIXULRuntime.h"
+#include "nsNetUtil.h"
+#include "nsXPCOM.h"
+#include "ServiceWorkerManager.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -20,6 +21,7 @@
 namespace mozilla {
 namespace dom {
 
+using workers::AssertIsOnMainThread;
 using workers::ServiceWorkerManager;
 
 PushNotifier::PushNotifier()
@@ -41,6 +43,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PushNotifier)
 NS_IMETHODIMP
 PushNotifier::NotifyPushWithData(const nsACString& aScope,
                                  nsIPrincipal* aPrincipal,
+                                 const nsAString& aMessageId,
                                  uint32_t aDataLen, uint8_t* aData)
 {
   nsTArray<uint8_t> data;
@@ -50,22 +53,20 @@ PushNotifier::NotifyPushWithData(const nsACString& aScope,
   if (!data.InsertElementsAt(0, aData, aDataLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return NotifyPush(aScope, aPrincipal, Some(data));
+  return NotifyPush(aScope, aPrincipal, aMessageId, Some(data));
 }
 
 NS_IMETHODIMP
-PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal)
+PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
+                         const nsAString& aMessageId)
 {
-  return NotifyPush(aScope, aPrincipal, Nothing());
+  return NotifyPush(aScope, aPrincipal, aMessageId, Nothing());
 }
 
 NS_IMETHODIMP
 PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
                                        nsIPrincipal* aPrincipal)
 {
-  if (XRE_IsContentProcess()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   nsresult rv;
   if (ShouldNotifyObservers(aPrincipal)) {
     rv = NotifySubscriptionChangeObservers(aScope);
@@ -82,13 +83,32 @@ PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PushNotifier::NotifyError(const nsACString& aScope, nsIPrincipal* aPrincipal,
+                          const nsAString& aMessage, uint32_t aFlags)
+{
+  if (ShouldNotifyWorkers(aPrincipal)) {
+    // For service worker subscriptions, report the error to all clients.
+    NotifyErrorWorkers(aScope, aMessage, aFlags);
+    return NS_OK;
+  }
+  // For system subscriptions, log the error directly to the browser console.
+  return nsContentUtils::ReportToConsoleNonLocalized(aMessage,
+                                                     aFlags,
+                                                     NS_LITERAL_CSTRING("Push"),
+                                                     nullptr, /* aDocument */
+                                                     nullptr, /* aURI */
+                                                     EmptyString(), /* aLine */
+                                                     0, /* aLineNumber */
+                                                     0, /* aColumnNumber */
+                                                     nsContentUtils::eOMIT_LOCATION);
+}
+
 nsresult
 PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
-                         Maybe<nsTArray<uint8_t>> aData)
+                         const nsAString& aMessageId,
+                         const Maybe<nsTArray<uint8_t>>& aData)
 {
-  if (XRE_IsContentProcess()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   nsresult rv;
   if (ShouldNotifyObservers(aPrincipal)) {
     rv = NotifyPushObservers(aScope, aData);
@@ -97,7 +117,7 @@ PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
     }
   }
   if (ShouldNotifyWorkers(aPrincipal)) {
-    rv = NotifyPushWorkers(aScope, aPrincipal, aData);
+    rv = NotifyPushWorkers(aScope, aPrincipal, aMessageId, aData);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -108,8 +128,10 @@ PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
 nsresult
 PushNotifier::NotifyPushWorkers(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
-                                Maybe<nsTArray<uint8_t>> aData)
+                                const nsAString& aMessageId,
+                                const Maybe<nsTArray<uint8_t>>& aData)
 {
+  AssertIsOnMainThread();
   if (!aPrincipal) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -127,7 +149,7 @@ PushNotifier::NotifyPushWorkers(const nsACString& aScope,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    return swm->SendPushEvent(originSuffix, aScope, aData);
+    return swm->SendPushEvent(originSuffix, aScope, aMessageId, aData);
   }
 
   // Otherwise, we're in the parent and e10s is enabled. Broadcast the event
@@ -138,10 +160,10 @@ PushNotifier::NotifyPushWorkers(const nsACString& aScope,
   for (uint32_t i = 0; i < contentActors.Length(); ++i) {
     if (aData) {
       ok &= contentActors[i]->SendPushWithData(PromiseFlatCString(aScope),
-        IPC::Principal(aPrincipal), aData.ref());
+        IPC::Principal(aPrincipal), PromiseFlatString(aMessageId), aData.ref());
     } else {
       ok &= contentActors[i]->SendPush(PromiseFlatCString(aScope),
-        IPC::Principal(aPrincipal));
+        IPC::Principal(aPrincipal), PromiseFlatString(aMessageId));
     }
   }
   return ok ? NS_OK : NS_ERROR_FAILURE;
@@ -151,6 +173,7 @@ nsresult
 PushNotifier::NotifySubscriptionChangeWorkers(const nsACString& aScope,
                                               nsIPrincipal* aPrincipal)
 {
+  AssertIsOnMainThread();
   if (!aPrincipal) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -180,9 +203,61 @@ PushNotifier::NotifySubscriptionChangeWorkers(const nsACString& aScope,
   return ok ? NS_OK : NS_ERROR_FAILURE;
 }
 
+void
+PushNotifier::NotifyErrorWorkers(const nsACString& aScope,
+                                 const nsAString& aMessage,
+                                 uint32_t aFlags)
+{
+  AssertIsOnMainThread();
+
+  if (XRE_IsContentProcess() || !BrowserTabsRemoteAutostart()) {
+    // Content process or e10s disabled.
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->ReportToAllClients(PromiseFlatCString(aScope),
+                              PromiseFlatString(aMessage),
+                              NS_ConvertUTF8toUTF16(aScope), /* aFilename */
+                              EmptyString(), /* aLine */
+                              0, /* aLineNumber */
+                              0, /* aColumnNumber */
+                              aFlags);
+    }
+    return;
+  }
+
+  // Parent process, e10s enabled.
+  nsTArray<ContentParent*> contentActors;
+  ContentParent::GetAll(contentActors);
+  if (!contentActors.IsEmpty()) {
+    // At least one content process active.
+    for (uint32_t i = 0; i < contentActors.Length(); ++i) {
+      Unused << NS_WARN_IF(
+        !contentActors[i]->SendPushError(PromiseFlatCString(aScope),
+          PromiseFlatString(aMessage), aFlags));
+    }
+    return;
+  }
+  // Report to the console if no content processes are active.
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+  Unused << NS_WARN_IF(NS_FAILED(
+    nsContentUtils::ReportToConsoleNonLocalized(aMessage,
+                                                aFlags,
+                                                NS_LITERAL_CSTRING("Push"),
+                                                nullptr, /* aDocument */
+                                                scopeURI, /* aURI */
+                                                EmptyString(), /* aLine */
+                                                0, /* aLineNumber */
+                                                0, /* aColumnNumber */
+                                                nsContentUtils::eOMIT_LOCATION)));
+}
+
 nsresult
 PushNotifier::NotifyPushObservers(const nsACString& aScope,
-                                  Maybe<nsTArray<uint8_t>> aData)
+                                  const Maybe<nsTArray<uint8_t>>& aData)
 {
   nsCOMPtr<nsIPushMessage> message = nullptr;
   if (aData) {

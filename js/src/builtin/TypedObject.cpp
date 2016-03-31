@@ -1029,7 +1029,7 @@ StructTypeDescr::fieldCount() const
 size_t
 StructTypeDescr::maybeForwardedFieldCount() const
 {
-    ArrayObject& fieldInfo = *MaybeForwarded(&fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES));
+    ArrayObject& fieldInfo = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES);
     return fieldInfo.getDenseInitializedLength();
 }
 
@@ -1065,7 +1065,7 @@ StructTypeDescr::fieldOffset(size_t index) const
 size_t
 StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
 {
-    ArrayObject& fieldOffsets = *MaybeForwarded(&fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS));
+    ArrayObject& fieldOffsets = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
     MOZ_ASSERT(index < fieldOffsets.getDenseInitializedLength());
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
@@ -1081,7 +1081,7 @@ StructTypeDescr::fieldDescr(size_t index) const
 TypeDescr&
 StructTypeDescr::maybeForwardedFieldDescr(size_t index) const
 {
-    ArrayObject& fieldDescrs = *MaybeForwarded(&fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES));
+    ArrayObject& fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     return MaybeForwarded(&fieldDescrs.getDenseElement(index).toObject())->as<TypeDescr>();
 }
@@ -2246,6 +2246,20 @@ OutlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
  * Typed object classes
  */
 
+const ObjectOps TypedObject::objectOps_ = {
+    TypedObject::obj_lookupProperty,
+    TypedObject::obj_defineProperty,
+    TypedObject::obj_hasProperty,
+    TypedObject::obj_getProperty,
+    TypedObject::obj_setProperty,
+    TypedObject::obj_getOwnPropertyDescriptor,
+    TypedObject::obj_deleteProperty,
+    nullptr, nullptr, /* watch/unwatch */
+    nullptr,   /* getElements */
+    TypedObject::obj_enumerate,
+    nullptr, /* thisValue */
+};
+
 #define DEFINE_TYPEDOBJ_CLASS(Name, Trace, flag)         \
     const Class Name::class_ = {                         \
         # Name,                                          \
@@ -2264,19 +2278,7 @@ OutlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
         Trace,                                           \
         JS_NULL_CLASS_SPEC,                              \
         JS_NULL_CLASS_EXT,                               \
-        {                                                \
-            TypedObject::obj_lookupProperty,             \
-            TypedObject::obj_defineProperty,             \
-            TypedObject::obj_hasProperty,                \
-            TypedObject::obj_getProperty,                \
-            TypedObject::obj_setProperty,                \
-            TypedObject::obj_getOwnPropertyDescriptor,   \
-            TypedObject::obj_deleteProperty,             \
-            nullptr, nullptr, /* watch/unwatch */        \
-            nullptr,   /* getElements */                 \
-            TypedObject::obj_enumerate,                  \
-            nullptr, /* thisValue */                     \
-        }                                                \
+        &TypedObject::objectOps_                         \
     }
 
 DEFINE_TYPEDOBJ_CLASS(OutlineTransparentTypedObject, OutlineTypedObject::obj_trace, 0);
@@ -2818,7 +2820,7 @@ visitReferences(TypeDescr& descr,
       case type::Array:
       {
         ArrayTypeDescr& arrayDescr = descr.as<ArrayTypeDescr>();
-        TypeDescr& elementDescr = *MaybeForwarded(&arrayDescr.elementType());
+        TypeDescr& elementDescr = arrayDescr.maybeForwardedElementType();
         for (int32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();

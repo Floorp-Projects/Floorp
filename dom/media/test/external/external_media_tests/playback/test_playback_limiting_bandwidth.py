@@ -4,20 +4,14 @@
 
 from marionette import BrowserMobProxyTestCaseMixin
 
-from external_media_harness.testcase import NetworkBandwidthTestCase
+from external_media_harness.testcase import (
+    NetworkBandwidthTestCase, NetworkBandwidthTestsMixin
+)
 
 
 class TestPlaybackLimitingBandwidth(NetworkBandwidthTestCase,
+                                    NetworkBandwidthTestsMixin,
                                     BrowserMobProxyTestCaseMixin):
 
-    def test_playback_limiting_bandwidth_250(self):
-        self.proxy.limits({'downstream_kbps': 250})
-        self.run_videos()
-
-    def test_playback_limiting_bandwidth_500(self):
-        self.proxy.limits({'downstream_kbps': 500})
-        self.run_videos()
-
-    def test_playback_limiting_bandwidth_1000(self):
-        self.proxy.limits({'downstream_kbps': 1000})
-        self.run_videos()
+    # Tests are in NetworkBandwidthTestsMixin
+    pass

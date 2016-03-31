@@ -53,6 +53,13 @@ jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
     Vector<MBasicBlock*, 4, SystemAllocPolicy> loopHeaders;
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        // Renumber all definitions inside the basic blocks.
+        for (MPhiIterator iter(block->phisBegin()); iter != block->phisEnd(); iter++)
+            iter->setId(nextId++);
+
+        for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++)
+            iter->setId(nextId++);
+
         // Don't reorder instructions within entry blocks, which have special requirements.
         if (*block == graph.entryBlock() || *block == graph.osrBlock())
             continue;
@@ -63,12 +70,6 @@ jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
         }
 
         MBasicBlock* innerLoop = loopHeaders.empty() ? nullptr : loopHeaders.back();
-
-        for (MPhiIterator iter(block->phisBegin()); iter != block->phisEnd(); iter++)
-            iter->setId(nextId++);
-
-        for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++)
-            iter->setId(nextId++);
 
         MInstruction* top = block->safeInsertTop();
         MInstructionReverseIterator rtop = ++block->rbegin(top);

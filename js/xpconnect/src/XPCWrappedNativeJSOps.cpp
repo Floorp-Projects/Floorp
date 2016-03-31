@@ -651,19 +651,7 @@ const js::Class XPC_WN_NoHelper_JSClass = {
     },
 
     // ObjectOps
-    {
-        nullptr, // lookupProperty
-        nullptr, // defineProperty
-        nullptr, // hasProperty
-        nullptr, // getProperty
-        nullptr, // setProperty
-        nullptr, // getOwnPropertyDescriptor
-        nullptr, // deleteProperty
-        nullptr, nullptr, // watch/unwatch
-        nullptr, // getElements
-        nullptr, // enumerate
-        nullptr, // funToString
-    }
+    JS_NULL_OBJECT_OPS
 };
 
 
@@ -957,6 +945,21 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
     return newObj;
 }
 
+static const js::ObjectOps XPC_WN_ObjectOpsWithEnumerate = {
+    nullptr,  // lookupProperty
+    nullptr,  // defineProperty
+    nullptr,  // hasProperty
+    nullptr,  // getProperty
+    nullptr,  // setProperty
+    nullptr,  // getOwnPropertyDescriptor
+    nullptr,  // deleteProperty
+    nullptr,  // watch
+    nullptr,  // unwatch
+    nullptr,  // getElements
+    XPC_WN_JSOp_Enumerate,
+    nullptr,  // funToString
+};
+
 XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
                                                      char* aName,
                                                      bool aPopulate)
@@ -1030,9 +1033,8 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
     else
         mJSClass.finalize = XPC_WN_NoHelper_Finalize;
 
-    js::ObjectOps* ops = &mJSClass.ops;
     if (mFlags.WantNewEnumerate())
-        ops->enumerate = XPC_WN_JSOp_Enumerate;
+        mJSClass.ops = &XPC_WN_ObjectOpsWithEnumerate;
 
     if (mFlags.WantCall())
         mJSClass.call = XPC_WN_Helper_Call;

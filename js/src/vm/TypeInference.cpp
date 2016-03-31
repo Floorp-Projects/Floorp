@@ -2467,8 +2467,8 @@ js::ClassCanHaveExtraProperties(const Class* clasp)
     if (clasp == &UnboxedPlainObject::class_ || clasp == &UnboxedArrayObject::class_)
         return false;
     return clasp->resolve
-        || clasp->ops.lookupProperty
-        || clasp->ops.getProperty
+        || clasp->getOpsLookupProperty()
+        || clasp->getOpsGetProperty()
         || IsTypedArrayClass(clasp);
 }
 

@@ -31,7 +31,7 @@ interface WorkerDebuggerGlobalScope : EventTarget {
   sequence<any> retrieveConsoleEvents();
 
   [Throws]
-  void setConsoleEventHandler(AnyCallback handler);
+  void setConsoleEventHandler(AnyCallback? handler);
 };
 
 // So you can debug while you debug

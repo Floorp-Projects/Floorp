@@ -1127,7 +1127,7 @@ EnableAlarm()
     return false;
   }
 
-  nsAutoPtr<AlarmData> alarmData(new AlarmData(alarmFd));
+  UniquePtr<AlarmData> alarmData = MakeUnique<AlarmData>(alarmFd);
 
   struct sigaction actions;
   memset(&actions, 0, sizeof(actions));
@@ -1146,7 +1146,7 @@ EnableAlarm()
   int status = pthread_create(&sAlarmFireWatcherThread, &attr, WaitForAlarm,
                               alarmData.get());
   if (status) {
-    alarmData = nullptr;
+    alarmData.reset();
     HAL_LOG("Failed to create alarm-watcher thread. Status: %d.", status);
     return false;
   }
@@ -1154,7 +1154,7 @@ EnableAlarm()
   pthread_attr_destroy(&attr);
 
   // The thread owns this now.  We only hold a pointer.
-  sAlarmData = alarmData.forget();
+  sAlarmData = alarmData.release();
   return true;
 }
 
@@ -1297,7 +1297,7 @@ OomVictimLogger::Observe(
   // deprecated the old klog defs.
   // Our current bionic does not hit this
   // change yet so handle the future change.
-  // (ICS doesn't have KLOG_SIZE_BUFFER but 
+  // (ICS doesn't have KLOG_SIZE_BUFFER but
   // JB and onwards does.)
   #define KLOG_SIZE_BUFFER KLOG_WRITE
 #endif
@@ -1463,7 +1463,7 @@ private:
     nsCString cgroupName = mGroup;
 
     /* If mGroup is empty, our cgroup.procs file is the root procs file,
-     * located at /sys/fs/cgroup/memory/cgroup.procs.  Otherwise our procs 
+     * located at /sys/fs/cgroup/memory/cgroup.procs.  Otherwise our procs
      * file is /sys/fs/cgroup/memory/NAME/cgroup.procs. */
 
     if (!mGroup.IsEmpty()) {

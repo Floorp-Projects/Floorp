@@ -23,6 +23,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "MediaTelemetryConstants.h"
 
 extern mozilla::LogModule* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -274,6 +275,11 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
     else {
       mDXVAFailureReason.AssignLiteral("Decoder returned false for MF_SA_D3D_AWARE");
     }
+  }
+
+  if (!mUseHwAccel) {
+    Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
+                          uint32_t(media::MediaDecoderBackend::WMFSoftware));
   }
 
   mDecoder = decoder;

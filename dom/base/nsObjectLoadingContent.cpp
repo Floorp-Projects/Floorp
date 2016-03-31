@@ -1153,6 +1153,20 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest *aRequest,
     if (thisNode && thisNode->IsInComposedDoc()) {
       thisNode->GetComposedDoc()->AddBlockedTrackingNode(thisNode);
     }
+  } else if (aStatusCode == NS_ERROR_BLOCKED_URI) {
+    // Logging is temporarily disabled until after experiment phase.
+    //
+    // nsAutoCString uri;
+    // mURI->GetSpec(uri);
+    // nsCOMPtr<nsIConsoleService> console(
+    //   do_GetService("@mozilla.org/consoleservice;1"));
+    // if (console) {
+    //   nsString message = NS_LITERAL_STRING("Blocking ") +
+    //     NS_ConvertASCIItoUTF16(uri) +
+    //     NS_LITERAL_STRING(" since it was found on an internal Firefox blocklist.");
+    //   console->LogStringMessage(message.get());
+    // }
+    Telemetry::Accumulate(Telemetry::PLUGIN_BLOCKED_FOR_STABILITY, 1);
   }
 
   NS_ENSURE_TRUE(nsContentUtils::LegacyIsCallerChromeOrNativeCode(), NS_ERROR_NOT_AVAILABLE);

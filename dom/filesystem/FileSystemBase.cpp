@@ -99,5 +99,78 @@ FileSystemBase::IsSafeDirectory(Directory* aDir) const
   return false;
 }
 
+void
+FileSystemBase::GetDOMPath(nsIFile* aFile,
+                           Directory::DirectoryType aType,
+                           nsAString& aRetval,
+                           ErrorResult& aRv) const
+{
+  MOZ_ASSERT(aFile);
+
+  if (aType == Directory::eDOMRootDirectory) {
+    aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    return;
+  }
+
+  nsCOMPtr<nsIFile> fileSystemPath;
+  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(LocalOrDeviceStorageRootPath()),
+                              true, getter_AddRefs(fileSystemPath));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  MOZ_ASSERT(FileSystemUtils::IsDescendantPath(fileSystemPath, aFile));
+
+  nsCOMPtr<nsIFile> path;
+  aRv = aFile->Clone(getter_AddRefs(path));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsTArray<nsString> parts;
+
+  while (true) {
+    bool equal = false;
+    aRv = fileSystemPath->Equals(path, &equal);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    if (equal) {
+      break;
+    }
+
+    nsAutoString leafName;
+    aRv = path->GetLeafName(leafName);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    parts.AppendElement(leafName);
+
+    nsCOMPtr<nsIFile> parentPath;
+    aRv = path->GetParent(getter_AddRefs(parentPath));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    MOZ_ASSERT(parentPath);
+
+    aRv = parentPath->Clone(getter_AddRefs(path));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  MOZ_ASSERT(!parts.IsEmpty());
+
+  aRetval.Truncate();
+
+  for (int32_t i = parts.Length() - 1; i >= 0; --i) {
+    aRetval.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    aRetval.Append(parts[i]);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

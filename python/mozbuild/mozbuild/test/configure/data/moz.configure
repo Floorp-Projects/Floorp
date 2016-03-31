@@ -142,51 +142,51 @@ def include_path(path, help):
 
 include(include_path)
 
-# @advanced functions are allowed to import modules and have access to
-# the standard builtins instead of restricted ones. The order of the decorators
-# matter: @advanced needs to appear last.
-option('--with-advanced', nargs='?', help='Advanced')
-@depends('--with-advanced')
-@advanced
-def with_advanced(value):
+# Sandboxed functions can import from modules through the use of the @imports
+# decorator.
+# The order of the decorators matter: @imports needs to appear after other
+# decorators.
+option('--with-imports', nargs='?', help='Imports')
+@depends('--with-imports')
+@imports(_from='mozbuild.configure.options', _import='OptionValue')
+def with_imports(value):
     if value:
-        from mozbuild.configure.options import OptionValue
         return isinstance(value, OptionValue)
 
-set_config('ADVANCED', with_advanced)
+set_config('IMPORTS', with_imports)
 
-# Trying to import without @advanced will fail at runtime.
-@depends('--with-advanced')
-def with_advanced(value):
+# Trying to import manually will fail at runtime.
+@depends('--with-imports')
+def with_imports(value):
     if len(value) and value[0] == 'break':
         from mozbuild.configure.options import OptionValue
         return isinstance(value, OptionValue)
 
-set_config('ADVANCED2', with_advanced)
+set_config('IMPORTS2', with_imports)
 
-# A limited set of functions from os.path are exposed to non @advanced
-# functions.
-@depends('--with-advanced')
-def with_advanced(value):
+# A limited set of functions from os.path are exposed by default.
+@depends('--with-imports')
+def with_imports(value):
     if len(value):
         return os.path.isfile(value[0])
 
-set_config('IS_FILE', with_advanced)
+set_config('IS_FILE', with_imports)
 
-# An @advanced function can still import the full set.
-@depends('--with-advanced')
-@advanced
-def with_advanced(value):
-    if len(value):
-        import os.path
-        return hasattr(os.path, 'getatime')
-
-set_config('HAS_GETATIME', with_advanced)
-
-@depends('--with-advanced')
-@advanced
-def with_advanced(value):
+# It is still possible to import the full set from os.path.
+# It is also possible to cherry-pick builtins.
+@depends('--with-imports')
+@imports('os.path')
+@imports(_from='__builtin__', _import='hasattr')
+def with_imports(value):
     if len(value):
         return hasattr(os.path, 'getatime')
 
-set_config('HAS_GETATIME2', with_advanced)
+set_config('HAS_GETATIME', with_imports)
+
+@depends('--with-imports')
+@imports(_from='__builtin__', _import='hasattr')
+def with_imports(value):
+    if len(value):
+        return hasattr(os.path, 'getatime')
+
+set_config('HAS_GETATIME2', with_imports)

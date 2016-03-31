@@ -118,6 +118,8 @@ add_task(function* setUp() {
           equal(typeof resolve, 'function',
             'Dropped unexpected channel ID ' + request.channelID);
           delete unregisterDefers[request.channelID];
+          equal(request.code, 202,
+            'Expected permission revoked unregister reason');
           resolve();
         },
         onACK(request) {},

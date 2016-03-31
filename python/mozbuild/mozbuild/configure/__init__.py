@@ -5,10 +5,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import inspect
+import logging
 import os
+import re
 import sys
 import types
 from collections import OrderedDict
+from contextlib import contextmanager
 from functools import wraps
 from mozbuild.configure.options import (
     CommandLineHelper,
@@ -20,6 +23,10 @@ from mozbuild.configure.options import (
     PositiveOptionValue,
 )
 from mozbuild.configure.help import HelpFormatter
+from mozbuild.configure.util import (
+    ConfigureOutputHandler,
+    LineIO,
+)
 from mozbuild.util import (
     ReadOnlyDict,
     ReadOnlyNamespace,
@@ -31,7 +38,7 @@ class ConfigureError(Exception):
     pass
 
 
-class DummyFunction(object):
+class DependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
     def __call__(self, *arg, **kwargs):
         raise RuntimeError('The `%s` function may not be called'
@@ -51,15 +58,18 @@ class ConfigureSandbox(dict):
     This is a different kind of sandboxing than the one used for moz.build
     processing.
 
-    The sandbox has 5 primitives:
+    The sandbox has 8 primitives:
     - option
     - depends
     - template
-    - advanced
+    - imports
     - include
+    - set_config
+    - set_define
+    - imply_option
 
-    `option` and `include` are functions. `depends`, `template` and `advanced`
-    are decorators.
+    `option`, `include`, `set_config`, `set_define` and `imply_option` are
+    functions. `depends`, `template`, and `imports` are decorators.
 
     These primitives are declared as name_impl methods to this class and
     the mapping name -> name_impl is done automatically in __getitem__.
@@ -77,12 +87,13 @@ class ConfigureSandbox(dict):
         do_stuff(config)
     """
 
-    # The default set of builtins.
+    # The default set of builtins. We expose unicode as str to make sandboxed
+    # files more python3-ready.
     BUILTINS = ReadOnlyDict({
         b: __builtins__[b]
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance')
-    }, __import__=forbidden_import)
+    }, __import__=forbidden_import, str=unicode)
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{
@@ -92,15 +103,17 @@ class ConfigureSandbox(dict):
     }))
 
     def __init__(self, config, environ=os.environ, argv=sys.argv,
-                 stdout=sys.stdout, stderr=sys.stderr):
+                 stdout=sys.stdout, stderr=sys.stderr, logger=None):
         dict.__setitem__(self, '__builtins__', self.BUILTINS)
 
         self._paths = []
         self._templates = set()
         # Store the real function and its dependencies, behind each
-        # DummyFunction generated from @depends.
+        # DependsFunction generated from @depends.
         self._depends = {}
         self._seen = set()
+        # Store the @imports added to a given function.
+        self._imports = {}
 
         self._options = OrderedDict()
         # Store the raw values returned by @depends functions
@@ -121,7 +134,30 @@ class ConfigureSandbox(dict):
         self._helper = CommandLineHelper(environ, argv)
 
         assert isinstance(config, dict)
-        self._config, self._stdout, self._stderr = config, stdout, stderr
+        self._config = config
+
+        if logger is None:
+            logger = moz_logger = logging.getLogger('moz.configure')
+            logger.setLevel(logging.DEBUG)
+            formatter = logging.Formatter('%(levelname)s: %(message)s')
+            handler = ConfigureOutputHandler(stdout, stderr)
+            handler.setFormatter(formatter)
+            queue_debug = handler.queue_debug
+            logger.addHandler(handler)
+
+        else:
+            assert isinstance(logger, logging.Logger)
+            moz_logger = None
+            @contextmanager
+            def queue_debug():
+                yield
+
+        log_namespace = {
+            k: getattr(logger, k)
+            for k in ('debug', 'info', 'warning', 'error')
+        }
+        log_namespace['queue_debug'] = queue_debug
+        self.log_impl = ReadOnlyNamespace(**log_namespace)
 
         self._help = None
         self._help_option = self.option_impl('--help',
@@ -132,6 +168,10 @@ class ConfigureSandbox(dict):
         if self._option_values[self._help_option]:
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
+        elif moz_logger:
+            handler = logging.FileHandler('config.log', mode='w', delay=True)
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
 
     def exec_file(self, path):
         '''Execute one file within the sandbox. Users of this class probably
@@ -182,7 +222,8 @@ class ConfigureSandbox(dict):
                 )
 
         if self._help:
-            self._help.usage(self._stdout)
+            with LineIO(self.log_impl.info) as out:
+                self._help.usage(out)
 
     def __getitem__(self, key):
         impl = '%s_impl' % key
@@ -197,15 +238,19 @@ class ConfigureSandbox(dict):
                 hasattr(self, '%s_impl' % key)):
             raise KeyError('Cannot reassign builtins')
 
-        if (not isinstance(value, DummyFunction) and
-                value not in self._templates):
+        if inspect.isfunction(value) and value not in self._templates:
+            value, _ = self._prepare_function(value)
+
+        elif (not isinstance(value, DependsFunction) and
+                value not in self._templates and
+                not (inspect.isclass(value) and issubclass(value, Exception))):
             raise KeyError('Cannot assign `%s` because it is neither a '
                            '@depends nor a @template' % key)
 
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
     def _resolve(self, arg, need_help_dependency=True):
-        if isinstance(arg, DummyFunction):
+        if isinstance(arg, DependsFunction):
             assert arg in self._depends
             func, deps = self._depends[arg]
             assert not inspect.isgeneratorfunction(func)
@@ -293,7 +338,7 @@ class ConfigureSandbox(dict):
                 dependencies.append(arg)
                 assert arg in self._option_values or self._help
                 resolved_arg = self._option_values.get(arg)
-            elif isinstance(arg, DummyFunction):
+            elif isinstance(arg, DependsFunction):
                 assert arg in self._depends
                 dependencies.append(arg)
                 arg, _ = self._depends[arg]
@@ -310,12 +355,12 @@ class ConfigureSandbox(dict):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
-            dummy = wraps(func)(DummyFunction())
+            dummy = wraps(func)(DependsFunction())
             self._depends[dummy] = func, dependencies
             with_help = self._help_option in dependencies
             if with_help:
                 for arg in args:
-                    if isinstance(arg, DummyFunction):
+                    if isinstance(arg, DependsFunction):
                         _, deps = self._depends[arg]
                         if self._help_option not in deps:
                             raise ConfigureError(
@@ -347,8 +392,8 @@ class ConfigureSandbox(dict):
         '''Implementation of @template.
         This function is a decorator. Template functions are called
         immediately. They are altered so that their global namespace exposes
-        a limited set of functions from os.path, as well as `advanced`,
-        `depends` and `option`.
+        a limited set of functions from os.path, as well as `depends` and
+        `option`.
         Templates allow to simplify repetitive constructs, or to implement
         helper decorators and somesuch.
         '''
@@ -357,17 +402,98 @@ class ConfigureSandbox(dict):
             (k[:-len('_impl')], getattr(self, k))
             for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
         )
-        self._templates.add(template)
-        return template
+        glob.update((k, v) for k, v in self.iteritems() if k not in glob)
 
-    def advanced_impl(self, func):
-        '''Implementation of @advanced.
-        This function gives the decorated function access to the complete set
-        of builtins, allowing the import keyword as an expected side effect.
+        # Any function argument to the template must be prepared to be sandboxed.
+        # If the template itself returns a function (in which case, it's very
+        # likely a decorator), that function must be prepared to be sandboxed as
+        # well.
+        def wrap_template(template):
+            isfunction = inspect.isfunction
+
+            def maybe_prepare_function(obj):
+                if isfunction(obj):
+                    func, _ = self._prepare_function(obj)
+                    return func
+                return obj
+
+            # The following function may end up being prepared to be sandboxed,
+            # so it mustn't depend on anything from the global scope in this
+            # file. It can however depend on variables from the closure, thus
+            # maybe_prepare_function and isfunction are declared above to be
+            # available there.
+            @wraps(template)
+            def wrapper(*args, **kwargs):
+                args = [maybe_prepare_function(arg) for arg in args]
+                kwargs = {k: maybe_prepare_function(v)
+                          for k, v in kwargs.iteritems()}
+                ret = template(*args, **kwargs)
+                if isfunction(ret):
+                    return wrap_template(ret)
+                return ret
+            return wrapper
+
+        wrapper = wrap_template(template)
+        self._templates.add(wrapper)
+        return wrapper
+
+    RE_MODULE = re.compile('^[a-zA-Z0-9_\.]+$')
+
+    def imports_impl(self, _import, _from=None, _as=None):
+        '''Implementation of @imports.
+        This decorator imports the given _import from the given _from module
+        optionally under a different _as name.
+        The options correspond to the various forms for the import builtin.
+            @imports('sys')
+            @imports(_from='mozpack', _import='path', _as='mozpath')
         '''
-        func, glob = self._prepare_function(func)
-        glob.update(__builtins__=__builtins__)
-        return func
+        for value, required in (
+                (_import, True), (_from, False), (_as, False)):
+            if not isinstance(value, types.StringTypes) and not (
+                    required or value is None):
+                raise TypeError("Unexpected type: '%s'" % type(value))
+            if value is not None and not self.RE_MODULE.match(value):
+                raise ValueError("Invalid argument to @imports: '%s'" % value)
+
+        def decorator(func):
+            if func in self._prepared_functions:
+                raise ConfigureError(
+                    '@imports must appear after other decorators')
+            # For the imports to apply in the order they appear in the
+            # .configure file, we accumulate them in reverse order and apply
+            # them later.
+            imports = self._imports.setdefault(func, [])
+            imports.insert(0, (_from, _import, _as))
+            return func
+
+        return decorator
+
+    def _apply_imports(self, func, glob):
+        for _from, _import, _as in self._imports.get(func, ()):
+            # The special `__sandbox__` module gives access to the sandbox
+            # instance.
+            if _from is None and _import == '__sandbox__':
+                glob[_as or _import] = self
+                continue
+            # Special case for the open() builtin, because otherwise, using it
+            # fails with "IOError: file() constructor not accessible in
+            # restricted mode"
+            if _from == '__builtin__' and _import == 'open':
+                glob[_as or _import] = \
+                    lambda *args, **kwargs: open(*args, **kwargs)
+                continue
+            # Until this proves to be a performance problem, just construct an
+            # import statement and execute it.
+            import_line = ''
+            if _from:
+                import_line += 'from %s ' % _from
+            import_line += 'import %s' % _import
+            if _as:
+                import_line += ' as %s' % _as
+            # Some versions of python fail with "SyntaxError: unqualified exec
+            # is not allowed in function '_apply_imports' it contains a nested
+            # function with free variable" when using the exec function.
+            exec import_line in {}, glob
 
     def _resolve_and_set(self, data, name, value):
         # Don't set anything when --help was on the command line
@@ -453,7 +579,7 @@ class ConfigureSandbox(dict):
         # Don't do anything when --help was on the command line
         if self._help:
             return
-        if not reason and isinstance(value, DummyFunction):
+        if not reason and isinstance(value, DependsFunction):
             deps = self._depends[value][1]
             possible_reasons = [d for d in deps if d != self._help_option]
             if len(possible_reasons) == 1:
@@ -461,7 +587,7 @@ class ConfigureSandbox(dict):
                     reason = (self._raw_options.get(possible_reasons[0]) or
                               possible_reasons[0].option)
 
-        if not reason or not isinstance(value, DummyFunction):
+        if not reason or not isinstance(value, DependsFunction):
             raise ConfigureError(
                 "Cannot infer what implies '%s'. Please add a `reason` to "
                 "the `imply_option` call."
@@ -488,19 +614,25 @@ class ConfigureSandbox(dict):
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground
-        for @depends, @template and @advanced.
+        for @depends, and @template.
         '''
         if not inspect.isfunction(func):
             raise TypeError("Unexpected type: '%s'" % type(func))
         if func in self._prepared_functions:
             return func, func.func_globals
 
-        glob = SandboxedGlobal(func.func_globals)
+        glob = SandboxedGlobal(
+            (k, v) for k, v in func.func_globals.iteritems()
+            if (inspect.isfunction(v) and v not in self._templates) or (
+                inspect.isclass(v) and issubclass(v, Exception))
+        )
         glob.update(
             __builtins__=self.BUILTINS,
-            __file__=self._paths[-1],
+            __file__=self._paths[-1] if self._paths else '',
             os=self.OS,
+            log=self.log_impl,
         )
+        self._apply_imports(func, glob)
         func = wraps(func)(types.FunctionType(
             func.func_code,
             glob,

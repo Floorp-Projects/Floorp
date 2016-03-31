@@ -515,7 +515,7 @@ union AsyncParentMessageData {
 };
 
 union AsyncChildMessageData {
-  OpRemoveTextureAsync;
+  CompositableOperation;
 };
 
 } // namespace

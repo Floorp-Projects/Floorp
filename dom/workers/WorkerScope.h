@@ -340,7 +340,7 @@ public:
                         ErrorResult& aRv);
 
   void
-  SetConsoleEventHandler(JSContext* aCx, AnyCallback& aHandler,
+  SetConsoleEventHandler(JSContext* aCx, AnyCallback* aHandler,
                          ErrorResult& aRv);
 
   Console*

@@ -397,7 +397,7 @@ private:
 
   Transaction* mTxn;
   MessageLoop* mMessageLoop;
-  std::vector<AsyncChildMessageData> mPendingAsyncMessages;
+  std::vector<CompositableOperation> mPendingAsyncMessages;
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
   bool mWindowOverlayChanged;

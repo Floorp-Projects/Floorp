@@ -2712,12 +2712,9 @@ nsXPCComponents_Utils::CallFunctionWithAsyncStack(HandleValue function,
     }
 
     JS::Rooted<JSObject*> asyncStackObj(cx, &asyncStack.toObject());
-    JS::Rooted<JSString*> asyncCauseString(cx, JS_NewUCStringCopyN(cx, asyncCause.BeginReading(),
-                                                                       asyncCause.Length()));
-    if (!asyncCauseString)
-        return NS_ERROR_OUT_OF_MEMORY;
 
-    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, asyncCauseString,
+    NS_ConvertUTF16toUTF8 utf8Cause(asyncCause);
+    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, utf8Cause.get(),
                                          JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
 
     if (!JS_CallFunctionValue(cx, nullptr, function,

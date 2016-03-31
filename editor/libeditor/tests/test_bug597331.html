@@ -24,10 +24,6 @@ line3
 
 /** Test for Bug 597331 **/
 
-// Bug 718316: This test fails on Windows 7 and 8
-if (navigator.userAgent.indexOf("Windows NT 6.1") == -1 &&
-    navigator.userAgent.indexOf("Windows NT 6.2") == -1) {
-
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SimpleTest.executeSoon(function() {
@@ -69,11 +65,6 @@ addLoadEvent(function() {
     });
   });
 });
-
-}
-else {
-  ok(true, "Somebody thought it was a great idea to make me type this.");
-}
 
 </script>
 </pre>

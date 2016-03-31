@@ -126,7 +126,7 @@ public:
                         ErrorResult& aRv);
 
   void
-  SetConsoleEventHandler(AnyCallback& aHandler);
+  SetConsoleEventHandler(AnyCallback* aHandler);
 
 private:
   explicit Console(nsPIDOMWindowInner* aWindow);

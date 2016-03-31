@@ -3446,23 +3446,31 @@ var SessionStoreInternal = {
     if (screen) {
       let screenLeft = {}, screenTop = {}, screenWidth = {}, screenHeight = {};
       screen.GetAvailRectDisplayPix(screenLeft, screenTop, screenWidth, screenHeight);
+      // screenX/Y are based on the origin of the screen's desktop-pixel coordinate space
+      let screenLeftCss = screenLeft.value;
+      let screenTopCss = screenTop.value;
+      // convert screen's device pixel dimensions to CSS px dimensions
+      screen.GetAvailRect(screenLeft, screenTop, screenWidth, screenHeight);
+      let cssToDevScale = screen.defaultCSSScaleFactor;
+      let screenWidthCss = screenWidth.value / cssToDevScale;
+      let screenHeightCss = screenHeight.value / cssToDevScale;
       // constrain the dimensions to the actual space available
-      if (aWidth > screenWidth.value) {
-        aWidth = screenWidth.value;
+      if (aWidth > screenWidthCss) {
+        aWidth = screenWidthCss;
       }
-      if (aHeight > screenHeight.value) {
-        aHeight = screenHeight.value;
+      if (aHeight > screenHeightCss) {
+        aHeight = screenHeightCss;
       }
       // and then pull the window within the screen's bounds
-      if (aLeft < screenLeft.value) {
-        aLeft = screenLeft.value;
-      } else if (aLeft + aWidth > screenLeft.value + screenWidth.value) {
-        aLeft = screenLeft.value + screenWidth.value - aWidth;
+      if (aLeft < screenLeftCss) {
+        aLeft = screenLeftCss;
+      } else if (aLeft + aWidth > screenLeftCss + screenWidthCss) {
+        aLeft = screenLeftCss + screenWidthCss - aWidth;
       }
-      if (aTop < screenTop.value) {
-        aTop = screenTop.value;
-      } else if (aTop + aHeight > screenTop.value + screenHeight.value) {
-        aTop = screenTop.value + screenHeight.value - aHeight;
+      if (aTop < screenTopCss) {
+        aTop = screenTopCss;
+      } else if (aTop + aHeight > screenTopCss + screenHeightCss) {
+        aTop = screenTopCss + screenHeightCss - aHeight;
       }
     }
 

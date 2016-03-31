@@ -9,7 +9,7 @@ import org.mozilla.gecko.AppConstants;
 import android.widget.Spinner;
 import android.view.View;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 import android.hardware.Camera;
 import android.os.Build;
