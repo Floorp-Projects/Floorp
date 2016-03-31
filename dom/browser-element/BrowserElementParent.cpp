@@ -23,9 +23,12 @@
 #include "nsVariant.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/layout/RenderFrameParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::layers;
+using namespace mozilla::layout;
 
 namespace {
 
@@ -205,9 +208,12 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
 BrowserElementParent::OpenWindowResult
 BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
                                     TabParent* aPopupTabParent,
+                                    PRenderFrameParent* aRenderFrame,
                                     const nsAString& aURL,
                                     const nsAString& aName,
-                                    const nsAString& aFeatures)
+                                    const nsAString& aFeatures,
+                                    TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                    uint64_t* aLayersId)
 {
   // Create an iframe owned by the same document which owns openerFrameElement.
   nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();
@@ -241,6 +247,13 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
   aPopupTabParent->SetOwnerElement(popupFrameElement);
   popupFrameElement->AllowCreateFrameLoader();
   popupFrameElement->CreateRemoteFrameLoader(aPopupTabParent);
+
+  RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
+  if (!aPopupTabParent->SetRenderFrame(rfp) ||
+      !aPopupTabParent->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
+    return BrowserElementParent::OPEN_WINDOW_IGNORED;
+  }
+
   return opened;
 }
 
