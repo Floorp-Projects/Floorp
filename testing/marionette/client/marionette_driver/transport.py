@@ -10,6 +10,20 @@ import time
 import types
 
 
+class SocketTimeout(object):
+    def __init__(self, socket, timeout):
+        self.sock = socket
+        self.timeout = timeout
+        self.old_timeout = None
+
+    def __enter__(self):
+        self.old_timeout = self.sock.gettimeout()
+        self.sock.settimeout(self.timeout)
+
+    def __exit__(self, *args, **kwargs):
+        self.sock.settimeout(self.old_timeout)
+
+
 class Message(object):
     def __init__(self, msgid):
         self.id = msgid
@@ -216,11 +230,10 @@ class TcpTransport(object):
             self.sock = None
             raise
 
-        self.sock.settimeout(2.0)
-
-        # first packet is always a JSON Object
-        # which we can use to tell which protocol level we are at
-        raw = self.receive(unmarshal=False)
+        with SocketTimeout(self.sock, 2.0):
+            # first packet is always a JSON Object
+            # which we can use to tell which protocol level we are at
+            raw = self.receive(unmarshal=False)
         hello = json.loads(raw)
         self.protocol = hello.get("marionetteProtocol", 1)
         self.application_type = hello.get("applicationType")
