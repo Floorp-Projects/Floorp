@@ -42,18 +42,6 @@
                     android:entryValues="@array/pref_cookies_values"
                     android:persistent="false" />
 
-    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.signon.manage"
-                                                  android:title="@string/pref_manage_logins"
-                                                  url="about:logins"/>
-
-    <CheckBoxPreference android:key="signon.rememberSignons"
-                        android:title="@string/pref_remember_signons"
-                        android:persistent="false" />
-
-    <CheckBoxPreference android:key="privacy.masterpassword.enabled"
-                        android:title="@string/pref_use_master_password"
-                        android:persistent="false" />
-
 
     <!-- This pref is persisted in both Gecko and Java -->
     <org.mozilla.gecko.preferences.ListCheckboxPreference
@@ -67,6 +55,25 @@
 
                         android:dialogTitle="@string/pref_clear_on_exit_dialog_title"
                         android:positiveButtonText="@string/button_set"/>
+
+    <PreferenceCategory android:title="@string/pref_category_logins">
+
+        <org.mozilla.gecko.preferences.LinkPreference
+            android:key="android.not_a_preference.signon.manage"
+            android:title="@string/pref_manage_logins"
+            url="about:logins"/>
+
+        <CheckBoxPreference
+            android:key="signon.rememberSignons"
+            android:title="@string/pref_remember_signons"
+            android:persistent="false" />
+
+        <CheckBoxPreference
+            android:key="privacy.masterpassword.enabled"
+            android:title="@string/pref_use_master_password"
+            android:persistent="false" />
+
+    </PreferenceCategory>
 
     <PreferenceCategory android:key="android.not_a_preference.datareporting.preferences"
                         android:title="@string/pref_category_datareporting">
