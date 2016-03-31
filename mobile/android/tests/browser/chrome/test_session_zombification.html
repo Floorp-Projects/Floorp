@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1044556</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript">
+
+  /** Test for Bug 1044556 **/
+
+  "use strict";
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Messaging.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+
+  // Import the MemoryObserver
+  Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+  XPCOMUtils.defineLazyGetter(this, "MemoryObserver", function() {
+    let sandbox = {};
+    Services.scriptloader.loadSubScript("chrome://browser/content/MemoryObserver.js", sandbox);
+    return sandbox["MemoryObserver"];
+  });
+
+  // The chrome window
+  let chromeWin;
+
+  // Track the tabs where the tests are happening
+  let tabBlank;
+  let tabTest;
+
+  const url1 = "data:text/html;charset=utf-8,It%20was%20a%20dark%20and%20stormy%20night.";
+  const url2 = "data:text/html;charset=utf-8,Suddenly%2C%20a%20tab%20was%20zombified.";
+
+  add_task(function* test_sessionStoreZombify() {
+    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let BrowserApp = chromeWin.BrowserApp;
+
+    SimpleTest.registerCleanupFunction(function() {
+      BrowserApp.closeTab(tabBlank);
+      BrowserApp.closeTab(tabTest);
+    });
+
+    // Add a new tab with some content
+    tabTest = BrowserApp.addTab(url1 , { selected: true, parentId: BrowserApp.selectedTab.id });
+    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+
+    // Add a new tab with a blank page
+    tabBlank = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id });
+    is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
+
+    // Zombify the backgrounded test tab
+    MemoryObserver.zombify(tabTest);
+
+    // Check that the test tab is actually zombified
+    ok(tabTest.browser.__SS_restore, "Test tab is set for delay loading.");
+
+    // Switch back to the test tab and wait for it to reload
+    BrowserApp.selectTab(tabTest);
+    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+
+    // Check that the test tab has loaded the correct url
+    is(tabTest.browser.currentURI.spec, url1, "Test tab is showing the first URL.");
+
+    // Navigate to some other content
+    BrowserApp.loadURI(url2, tabTest.browser);
+    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    is(tabTest.browser.currentURI.spec, url2, "Test tab is showing the second URL.");
+
+    // Switch to the other tab
+    BrowserApp.selectTab(tabBlank);
+    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
+
+    // Zombify the backgrounded test tab again
+    MemoryObserver.zombify(tabTest);
+
+    // Check that the test tab is actually zombified
+    ok(tabTest.browser.__SS_restore, "Test tab is set for delay loading.");
+
+    // Switch back to the test tab and wait for it to reload
+    BrowserApp.selectTab(tabTest);
+    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+
+    // Check that the test tab has loaded the correct url
+    is(tabTest.browser.currentURI.spec, url2, "Test tab is showing the second URL.");
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1044556">Mozilla Bug 1044556</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
