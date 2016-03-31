@@ -184,6 +184,7 @@ NrIceMediaStream::Create(NrIceCtx *ctx,
                          int components) {
   RefPtr<NrIceMediaStream> stream =
     new NrIceMediaStream(ctx, name, components);
+  MOZ_ASSERT(stream->ctx_ == ctx->ctx());
 
   int r = nr_ice_add_media_stream(ctx->ctx(),
                                   const_cast<char *>(name.c_str()),
@@ -195,6 +196,20 @@ NrIceMediaStream::Create(NrIceCtx *ctx,
   }
 
   return stream;
+}
+
+NrIceMediaStream::NrIceMediaStream(NrIceCtx *ctx,
+                                   const std::string& name,
+                                   size_t components) :
+      state_(ICE_CONNECTING),
+      ctx_(ctx->ctx()),
+      ctx_peer_(ctx->peer()),
+      name_(name),
+      components_(components),
+      stream_(nullptr),
+      level_(0),
+      has_parsed_attrs_(false)
+{
 }
 
 NrIceMediaStream::~NrIceMediaStream() {
@@ -214,7 +229,7 @@ nsresult NrIceMediaStream::ParseAttributes(std::vector<std::string>&
   }
 
   // Still need to call nr_ice_ctx_parse_stream_attributes.
-  int r = nr_ice_peer_ctx_parse_stream_attributes(ctx_->peer(),
+  int r = nr_ice_peer_ctx_parse_stream_attributes(ctx_peer_,
                                                   stream_,
                                                   attributes_in.size() ?
                                                   &attributes_in[0] : nullptr,
@@ -233,10 +248,10 @@ nsresult NrIceMediaStream::ParseAttributes(std::vector<std::string>&
 nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate) {
   int r;
 
-  MOZ_MTLOG(ML_DEBUG, "NrIceCtx(" << ctx_->name() << ")/STREAM(" <<
+  MOZ_MTLOG(ML_DEBUG, "NrIceCtx(" << ctx_->label << ")/STREAM(" <<
             name() << ") : parsing trickle candidate " << candidate);
 
-  r = nr_ice_peer_ctx_parse_trickle_candidate(ctx_->peer(),
+  r = nr_ice_peer_ctx_parse_trickle_candidate(ctx_peer_,
                                               stream_,
                                               const_cast<char *>(
                                                 candidate.c_str())
@@ -268,7 +283,7 @@ nsresult NrIceMediaStream::GetActivePair(int component,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  r = nr_ice_media_stream_get_active(ctx_->peer(),
+  r = nr_ice_media_stream_get_active(ctx_peer_,
                                      stream_,
                                      component,
                                      &local_int, &remote_int);
@@ -306,14 +321,14 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
   }
 
   // If we haven't at least started checking then there is nothing to report
-  if (ctx_->peer()->state != NR_ICE_PEER_STATE_PAIRED) {
+  if (ctx_peer_->state != NR_ICE_PEER_STATE_PAIRED) {
     return NS_OK;
   }
 
   // Get the check_list on the peer stream (this is where the check_list
   // actually lives, not in stream_)
   nr_ice_media_stream* peer_stream;
-  int r = nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peer_stream);
+  int r = nr_ice_peer_ctx_find_pstream(ctx_peer_, stream_, &peer_stream);
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
@@ -490,12 +505,12 @@ nsresult NrIceMediaStream::GetRemoteCandidates(
   }
 
   // If we haven't at least started checking then there is nothing to report
-  if (ctx_->peer()->state != NR_ICE_PEER_STATE_PAIRED) {
+  if (ctx_peer_->state != NR_ICE_PEER_STATE_PAIRED) {
     return NS_OK;
   }
 
   nr_ice_media_stream* peer_stream;
-  int r = nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peer_stream);
+  int r = nr_ice_peer_ctx_find_pstream(ctx_peer_, stream_, &peer_stream);
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
@@ -525,7 +540,7 @@ nsresult NrIceMediaStream::SendPacket(int component_id,
   if (!stream_)
     return NS_ERROR_FAILURE;
 
-  int r = nr_ice_media_stream_send(ctx_->peer(), stream_,
+  int r = nr_ice_media_stream_send(ctx_peer_, stream_,
                                    component_id,
                                    const_cast<unsigned char *>(data), len);
   if (r) {
@@ -558,7 +573,7 @@ void NrIceMediaStream::Close() {
   MOZ_MTLOG(ML_DEBUG, "Marking stream closed '" << name_ << "'");
   state_ = ICE_CLOSED;
 
-  int r = nr_ice_remove_media_stream(ctx_->ctx(), &stream_);
+  int r = nr_ice_remove_media_stream(ctx_, &stream_);
   if (r) {
     MOZ_ASSERT(false, "Failed to remove stream");
     MOZ_MTLOG(ML_ERROR, "Failed to remove stream, error=" << r);
