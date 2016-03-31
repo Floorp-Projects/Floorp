@@ -39,11 +39,13 @@ XPCSHELL_TESTS_MANIFESTS += [
 EXPORTS.mozilla.dom += [
     'PushManager.h',
     'PushNotifier.h',
+    'PushSubscription.h',
 ]
 
 UNIFIED_SOURCES += [
     'PushManager.cpp',
     'PushNotifier.cpp',
+    'PushSubscription.cpp',
 ]
 
 TEST_DIRS += ['test/xpcshell']
