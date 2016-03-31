@@ -858,9 +858,10 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
   if (aIframeMoz) {
     MOZ_ASSERT(aTabOpener);
-    newChild->SendBrowserFrameOpenWindow(aTabOpener, NS_ConvertUTF8toUTF16(url),
+    newChild->SendBrowserFrameOpenWindow(aTabOpener, renderFrame, NS_ConvertUTF8toUTF16(url),
                                          name, NS_ConvertUTF8toUTF16(features),
-                                         aWindowIsNew);
+                                         aWindowIsNew, &textureFactoryIdentifier,
+                                         &layersId);
   } else {
     nsAutoCString baseURIString;
     if (aTabOpener) {
