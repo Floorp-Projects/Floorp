@@ -1059,7 +1059,7 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
     // Initialize the js::ObjectOps.
 
     if (mFlags.WantNewEnumerate())
-        mJSClass.ops = &XPC_WN_ObjectOpsWithEnumerate;
+        mJSClass.oOps = &XPC_WN_ObjectOpsWithEnumerate;
 }
 
 /***************************************************************************/
