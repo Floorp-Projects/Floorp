@@ -154,6 +154,40 @@ def test_call_harness_with_no_args_yields_num_failures(runner_class):
         assert parse_args.call_count == 1
     assert failed == 0
 
+
+def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
+    """
+    If the necessary TestCase is not in test_handlers,
+    tests are omitted silently
+    """
+    harness = MarionetteHarness(args=mach_parsed_kwargs)
+    mach_parsed_kwargs.pop('tests')
+    runner = harness._runner_class(**mach_parsed_kwargs)
+    assert marionette_test.MarionetteTestCase in runner.test_handlers
+    assert marionette_test.MarionetteJSTestCase in runner.test_handlers
+
+
+def test_parsing_testvars(mach_parsed_kwargs):
+    mach_parsed_kwargs.pop('tests')
+    testvars_json_loads = [
+        {"wifi":{"ssid": "blah", "keyManagement": "WPA-PSK", "psk": "foo"}},
+        {"wifi":{"PEAP": "bar"}, "device": {"stuff": "buzz"}}
+    ]
+    expected_dict = {
+         "wifi": {
+             "ssid": "blah",
+             "keyManagement": "WPA-PSK",
+             "psk": "foo",
+             "PEAP":"bar"
+         },
+         "device": {"stuff":"buzz"}
+    }
+    with patch('marionette.runtests.MarionetteTestRunner._load_testvars') as load:
+        load.return_value = testvars_json_loads
+        runner = MarionetteTestRunner(**mach_parsed_kwargs)
+        assert runner.testvars == expected_dict
+        assert load.call_count == 1
+
 if __name__ == '__main__':
     import sys
     sys.exit(pytest.main(['--verbose', __file__]))

@@ -610,6 +610,34 @@ class BaseMarionetteTestRunner(object):
 
         self.result_callbacks.append(gather_debug)
 
+        # testvars are set up in self.testvars property
+        self._testvars = None
+        self.testvars_paths = testvars
+
+        self.test_handlers = []
+
+        self.reset_test_stats()
+
+        self.logger.info('Using workspace for temporary data: '
+                         '"{}"'.format(self.workspace_path))
+
+        if self.emulator and not self.logdir:
+            self.logdir = os.path.join(self.workspace_path or '', 'logcat')
+
+        if not gecko_log:
+            self.gecko_log = os.path.join(self.workspace_path or '', 'gecko.log')
+        else:
+            self.gecko_log = gecko_log
+
+        self.results = []
+
+    @property
+    def testvars(self):
+        if self._testvars is not None:
+            return self._testvars
+
+        self._testvars = {}
+
         def update(d, u):
             """ Update a dictionary that may contain nested dictionaries. """
             for k, v in u.iteritems():
@@ -620,39 +648,26 @@ class BaseMarionetteTestRunner(object):
                     d[k] = u[k]
             return d
 
-        self.testvars = {}
-        if testvars is not None:
-            for path in list(testvars):
+        json_testvars = self._load_testvars()
+        for j in json_testvars:
+            self._testvars = update(self._testvars, j)
+        return self._testvars
+
+    def _load_testvars(self):
+        data = []
+        if self.testvars_paths is not None:
+            for path in list(self.testvars_paths):
+                path = os.path.abspath(os.path.expanduser(path))
                 if not os.path.exists(path):
                     raise IOError('--testvars file %s does not exist' % path)
                 try:
                     with open(path) as f:
-                        self.testvars = update(self.testvars,
-                                               json.loads(f.read()))
+                        data.append(json.loads(f.read()))
                 except ValueError as e:
                     raise Exception("JSON file (%s) is not properly "
                                     "formatted: %s" % (os.path.abspath(path),
                                                        e.message))
-
-        # set up test handlers
-        self.test_handlers = []
-
-        self.reset_test_stats()
-
-        self.logger.info('Using workspace for temporary data: '
-                         '"{}"'.format(self.workspace_path))
-
-        if self.emulator and not self.logdir:
-            self.logdir = os.path.join(self.workspace_path or '', 'logcat')
-        if self.logdir and not os.access(self.logdir, os.F_OK):
-                os.mkdir(self.logdir)
-
-        if not gecko_log:
-            self.gecko_log = os.path.join(self.workspace_path or '', 'gecko.log')
-        else:
-            self.gecko_log = gecko_log
-
-        self.results = []
+        return data
 
     @property
     def capabilities(self):
@@ -725,6 +740,9 @@ class BaseMarionetteTestRunner(object):
         self.failures = []
 
     def _build_kwargs(self):
+        if self.logdir and not os.access(self.logdir, os.F_OK):
+            os.mkdir(self.logdir)
+
         kwargs = {
             'device_serial': self.device_serial,
             'symbols_path': self.symbols_path,
