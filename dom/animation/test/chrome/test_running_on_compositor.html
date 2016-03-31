@@ -286,8 +286,9 @@ promise_test(function(t) {
    'running on the compositor is overridden in the CSS cascade');
 
 promise_test(function(t) {
-  var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
+  var animation = addDivAndAnimate(t,
+                                   {},
+                                   { opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
@@ -304,8 +305,9 @@ promise_test(function(t) {
    'when timing.duration is made shorter than the current time');
 
 promise_test(function(t) {
-  var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+  var animation = addDivAndAnimate(t,
+                                   {},
+                                   { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
@@ -328,8 +330,9 @@ promise_test(function(t) {
    ' when timing.duration is made longer than the current time');
 
 promise_test(function(t) {
-  var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+  var animation = addDivAndAnimate(t,
+                                   {},
+                                   { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
@@ -352,8 +355,9 @@ promise_test(function(t) {
    ' when current time is made longer than the duration even during endDelay');
 
 promise_test(function(t) {
-  var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+  var animation = addDivAndAnimate(t,
+                                   {},
+                                   { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
@@ -370,8 +374,9 @@ promise_test(function(t) {
    ' when endTime is negative value');
 
 promise_test(function(t) {
-  var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+  var animation = addDivAndAnimate(t,
+                                   {},
+                                   { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
