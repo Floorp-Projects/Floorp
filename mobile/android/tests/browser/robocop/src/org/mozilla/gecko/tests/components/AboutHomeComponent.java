@@ -34,8 +34,7 @@ public class AboutHomeComponent extends BaseComponent {
     private static final List<PanelType> PANEL_ORDERING = Arrays.asList(
             PanelType.TOP_SITES,
             PanelType.BOOKMARKS,
-            PanelType.HISTORY,
-            PanelType.REMOTE_TABS,
+            PanelType.COMBINED_HISTORY,
             PanelType.RECENT_TABS,
             PanelType.READING_LIST
     );
