@@ -5444,7 +5444,7 @@ EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction(
   // If the wheel event is line scroll and the delta value is computed from
   // system settings, allow to override the system speed.
   bool allowScrollSpeedOverride =
-    (!aEvent->customizedByUserPrefs &&
+    (!aEvent->mCustomizedByUserPrefs &&
      aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE);
   DeltaValues acceleratedDelta =
     WheelTransaction::AccelerateWheelDelta(aEvent, allowScrollSpeedOverride);
@@ -5633,7 +5633,7 @@ EventStateManager::WheelPrefs::Init(EventStateManager::WheelPrefs::Index aIndex)
 void
 EventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
 {
-  if (aEvent->customizedByUserPrefs) {
+  if (aEvent->mCustomizedByUserPrefs) {
     return;
   }
 
@@ -5655,7 +5655,7 @@ EventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
     aEvent->lineOrPageDeltaY = 0;
   }
 
-  aEvent->customizedByUserPrefs =
+  aEvent->mCustomizedByUserPrefs =
     ((mMultiplierX[index] != 1.0) || (mMultiplierY[index] != 1.0) ||
      (mMultiplierZ[index] != 1.0));
 }
