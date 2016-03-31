@@ -166,7 +166,7 @@
 <!ENTITY pref_category_advanced_summary2 "Restore tabs, plugins, developer tools">
 <!ENTITY pref_category_notifications "Notifications">
 <!ENTITY pref_content_notifications "Website updates">
-<!ENTITY pref_content_notifications_summary "Allow notifications for supported sites">
+<!ENTITY pref_content_notifications_summary2 "Discover new content from supported sites">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
 <!ENTITY pref_developer_remotedebugging_wifi_disabled_summary "Wi-Fi debugging requires your device to have a QR code reader app installed.">
@@ -228,6 +228,9 @@
 <!ENTITY pref_tracking_protection_enabled "Enabled">
 <!ENTITY pref_tracking_protection_enabled_pb "Enabled in Private Browsing">
 <!ENTITY pref_tracking_protection_disabled "Disabled">
+
+<!ENTITY pref_whats_new_notification "What\'s new in &brandShortName;">
+<!ENTITY pref_whats_new_notification_summary "Learn about new features after an update">
 
 <!ENTITY tracking_protection_prompt_title "Now with Tracking Protection">
 <!ENTITY tracking_protection_prompt_text "Actively block tracking elements so you don\'t have to worry.">
