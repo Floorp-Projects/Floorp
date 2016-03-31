@@ -5993,7 +5993,7 @@ HTMLInputElement::AddedToRadioGroup()
 {
   // If the element is neither in a form nor a document, there is no group so we
   // should just stop here.
-  if (!mForm && !IsInDoc()) {
+  if (!mForm && !IsInUncomposedDoc()) {
     return;
   }
 

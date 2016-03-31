@@ -416,7 +416,7 @@ public:
 
   NS_IMETHODIMP Notify(nsITimer* aTimer) final
   {
-    if (!mContent->IsInDoc())
+    if (!mContent->IsInUncomposedDoc())
       return NS_OK;
 
     nsIPresShell* ps = mContent->OwnerDoc()->GetShell();

@@ -410,7 +410,7 @@ HTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
 
-  if (!mContentStyleRule && IsInDoc()) {
+  if (!mContentStyleRule && IsInUncomposedDoc()) {
     // XXXbz should this use OwnerDoc() or GetComposedDoc()?
     // sXBL/XBL2 issue!
     mContentStyleRule = new BodyRule(this);

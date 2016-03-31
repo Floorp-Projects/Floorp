@@ -312,10 +312,10 @@ private:
   bool ClearPreserveAspectRatioProperty();
 
   bool IsRoot() const {
-    NS_ASSERTION((IsInDoc() && !GetParent()) ==
+    NS_ASSERTION((IsInUncomposedDoc() && !GetParent()) ==
                  (OwnerDoc() && (OwnerDoc()->GetRootElement() == this)),
                  "Can't determine if we're root");
-    return IsInDoc() && !GetParent();
+    return IsInUncomposedDoc() && !GetParent();
   }
 
   /**

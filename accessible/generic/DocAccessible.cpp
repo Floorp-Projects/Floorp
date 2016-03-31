@@ -123,7 +123,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
       AttrRelProvider* provider = (*providers)[jdx];
       cb.NoteXPCOMChild(provider->mContent);
 
-      NS_ASSERTION(provider->mContent->IsInDoc(),
+      NS_ASSERTION(provider->mContent->IsInUncomposedDoc(),
                    "Referred content is not in document!");
     }
   }
