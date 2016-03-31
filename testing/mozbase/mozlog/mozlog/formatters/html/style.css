@@ -106,12 +106,12 @@ span.unexpected_pass, .unexpected_pass .col-result {
 }
 div.screenshot {
 	border: 1px solid #e6e6e6;
-	float: right;
+	float: left;
 	margin-left: 5px;
-	height: 240px
+	height: 220px
 }
 div.screenshot img {
-	height: 240px
+	height: 220px
 }
 
 /*if the result is passed or xpassed don't show debug row*/
