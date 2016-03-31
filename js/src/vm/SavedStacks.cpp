@@ -289,6 +289,17 @@ SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject 
     return FreezeObject(cx, proto);
 }
 
+const ClassSpec SavedFrame::classSpec_ = {
+    GenericCreateConstructor<SavedFrame::construct, 0, gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype,
+    SavedFrame::staticFunctions,
+    nullptr,
+    SavedFrame::protoFunctions,
+    SavedFrame::protoAccessors,
+    SavedFrame::finishSavedFrameInit,
+    ClassSpec::DontDefineConstructor
+};
+
 /* static */ const Class SavedFrame::class_ = {
     "SavedFrame",
     JSCLASS_HAS_PRIVATE |
@@ -307,18 +318,7 @@ SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject 
     nullptr,                    // hasInstance
     nullptr,                    // construct
     nullptr,                    // trace
-
-    // ClassSpec
-    {
-        GenericCreateConstructor<SavedFrame::construct, 0, gc::AllocKind::FUNCTION>,
-        GenericCreatePrototype,
-        SavedFrame::staticFunctions,
-        nullptr,
-        SavedFrame::protoFunctions,
-        SavedFrame::protoAccessors,
-        SavedFrame::finishSavedFrameInit,
-        ClassSpec::DontDefineConstructor
-    }
+    &SavedFrame::classSpec_
 };
 
 /* static */ const JSFunctionSpec
