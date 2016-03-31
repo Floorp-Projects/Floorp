@@ -73,6 +73,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.SwitchPreference;
 import android.preference.TwoStatePreference;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
@@ -182,7 +183,7 @@ OnSharedPreferenceChangeListener
 
     private static final int REQUEST_CODE_TAB_QUEUE = 8;
 
-    private CheckBoxPreference tabQueuePreference;
+    private SwitchPreference tabQueuePreference;
 
     /**
      * Track the last locale so we know whether to redisplay.
@@ -797,7 +798,7 @@ OnSharedPreferenceChangeListener
                         }
                     });
                 } else if (PREFS_TAB_QUEUE.equals(key)) {
-                    tabQueuePreference = (CheckBoxPreference) pref;
+                    tabQueuePreference = (SwitchPreference) pref;
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
                     if (!TabQueueHelper.TAB_QUEUE_ENABLED) {
                         preferences.removePreference(pref);
