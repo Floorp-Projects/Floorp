@@ -4909,7 +4909,7 @@ SVGTextFrame::GetTextPathPathElement(nsIFrame* aTextPathFrame)
     nsCOMPtr<nsIURI> targetURI;
     nsCOMPtr<nsIURI> base = content->GetBaseURI();
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
-                                              content->GetCurrentDoc(), base);
+                                              content->GetUncomposedDoc(), base);
 
     property = nsSVGEffects::GetTextPathProperty(targetURI, aTextPathFrame,
                                                  nsSVGEffects::HrefProperty());

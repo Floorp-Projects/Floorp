@@ -78,7 +78,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
     return;
 
   nsCOMPtr<nsIContent> tcContent(do_QueryInterface(tcElm));
-  nsIDocument *document = tcContent->GetCurrentDoc();
+  nsIDocument *document = tcContent->GetUncomposedDoc();
   if (!document)
     return;
 
