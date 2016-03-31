@@ -2195,21 +2195,21 @@ EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
           (aEvent->lineOrPageDeltaY > 0  ? nsIDOMUIEvent::SCROLL_PAGE_DOWN :
                                            nsIDOMUIEvent::SCROLL_PAGE_UP);
       pixelDeltaX = RoundDown(aEvent->mDeltaX * scrollAmountInCSSPixels.width);
-      pixelDeltaY = RoundDown(aEvent->deltaY * scrollAmountInCSSPixels.height);
+      pixelDeltaY = RoundDown(aEvent->mDeltaY * scrollAmountInCSSPixels.height);
       break;
 
     case nsIDOMWheelEvent::DOM_DELTA_LINE:
       scrollDeltaX = aEvent->lineOrPageDeltaX;
       scrollDeltaY = aEvent->lineOrPageDeltaY;
       pixelDeltaX = RoundDown(aEvent->mDeltaX * scrollAmountInCSSPixels.width);
-      pixelDeltaY = RoundDown(aEvent->deltaY * scrollAmountInCSSPixels.height);
+      pixelDeltaY = RoundDown(aEvent->mDeltaY * scrollAmountInCSSPixels.height);
       break;
 
     case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
       scrollDeltaX = aEvent->lineOrPageDeltaX;
       scrollDeltaY = aEvent->lineOrPageDeltaY;
       pixelDeltaX = RoundDown(aEvent->mDeltaX);
-      pixelDeltaY = RoundDown(aEvent->deltaY);
+      pixelDeltaY = RoundDown(aEvent->mDeltaY);
       break;
 
     default:
@@ -2360,7 +2360,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
                                        WidgetWheelEvent* aEvent,
                                        ComputeScrollTargetOptions aOptions)
 {
-  return ComputeScrollTarget(aTargetFrame, aEvent->mDeltaX, aEvent->deltaY,
+  return ComputeScrollTarget(aTargetFrame, aEvent->mDeltaX, aEvent->mDeltaY,
                              aEvent, aOptions);
 }
 
@@ -2662,11 +2662,11 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
                              COMPUTE_SCROLLABLE_ANCESTOR_ALONG_X_AXIS)) {
       aEvent->overflowDeltaX = aEvent->mDeltaX;
     }
-    if (aEvent->deltaY &&
+    if (aEvent->mDeltaY &&
         overflowStyle.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
         !ComputeScrollTarget(scrollFrame, aEvent,
                              COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS)) {
-      aEvent->overflowDeltaY = aEvent->deltaY;
+      aEvent->overflowDeltaY = aEvent->mDeltaY;
     }
   }
 
@@ -2674,7 +2674,7 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     (aEvent->overflowDeltaX > 0) == (aEvent->mDeltaX > 0),
     "The sign of overflowDeltaX is different from the scroll direction");
   NS_ASSERTION(aEvent->overflowDeltaY == 0 ||
-    (aEvent->overflowDeltaY > 0) == (aEvent->deltaY > 0),
+    (aEvent->overflowDeltaY > 0) == (aEvent->mDeltaY > 0),
     "The sign of overflowDeltaY is different from the scroll direction");
 
   WheelPrefs::GetInstance()->CancelApplyingUserPrefsFromOverflowDelta(aEvent);
@@ -3202,7 +3202,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           ScrollbarsForWheel::PrepareToScrollText(this, aTargetFrame, wheelEvent);
 
           if (aEvent->mMessage != eWheel ||
-              (!wheelEvent->mDeltaX && !wheelEvent->deltaY)) {
+              (!wheelEvent->mDeltaX && !wheelEvent->mDeltaY)) {
             break;
           }
 
@@ -3219,7 +3219,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             wheelEvent->mViewPortIsOverscrolled = true;
           }
           wheelEvent->overflowDeltaX = wheelEvent->mDeltaX;
-          wheelEvent->overflowDeltaY = wheelEvent->deltaY;
+          wheelEvent->overflowDeltaY = wheelEvent->mDeltaY;
           WheelPrefs::GetInstance()->
             CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           if (scrollTarget) {
@@ -3254,7 +3254,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           MOZ_ASSERT(pluginFrame);
 
           if (wheelEvent->mMessage != eWheel ||
-              (!wheelEvent->mDeltaX && !wheelEvent->deltaY)) {
+              (!wheelEvent->mDeltaX && !wheelEvent->mDeltaY)) {
             break;
           }
 
@@ -3290,7 +3290,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
           wheelEvent->overflowDeltaX = wheelEvent->mDeltaX;
-          wheelEvent->overflowDeltaY = wheelEvent->deltaY;
+          wheelEvent->overflowDeltaY = wheelEvent->mDeltaY;
           WheelPrefs::GetInstance()->
             CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           wheelEvent->mViewPortIsOverscrolled = true;
@@ -5358,7 +5358,7 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
       if (mX && aEvent->mDeltaX && ((aEvent->mDeltaX > 0.0) != (mX > 0.0))) {
         mX = mPendingScrollAmountX = 0.0;
       }
-      if (mY && aEvent->deltaY && ((aEvent->deltaY > 0.0) != (mY > 0.0))) {
+      if (mY && aEvent->mDeltaY && ((aEvent->mDeltaY > 0.0) != (mY > 0.0))) {
         mY = mPendingScrollAmountY = 0.0;
       }
     }
@@ -5381,15 +5381,15 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
     if (aEvent->mDeltaX) {
       mX = aEvent->mDeltaX;
     }
-    if (aEvent->deltaY) {
-      mY = aEvent->deltaY;
+    if (aEvent->mDeltaY) {
+      mY = aEvent->mDeltaY;
     }
     mLastTime = TimeStamp::Now();
     return;
   }
 
   mX += aEvent->mDeltaX;
-  mY += aEvent->deltaY;
+  mY += aEvent->mDeltaY;
 
   if (mHandlingDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
     // Records pixel delta values and init lineOrPageDeltaX and
@@ -5641,7 +5641,7 @@ EventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
   Init(index);
 
   aEvent->mDeltaX *= mMultiplierX[index];
-  aEvent->deltaY *= mMultiplierY[index];
+  aEvent->mDeltaY *= mMultiplierY[index];
   aEvent->deltaZ *= mMultiplierZ[index];
 
   // If the multiplier is 1.0 or -1.0, i.e., it doesn't change the absolute
@@ -5688,7 +5688,7 @@ EventStateManager::WheelPrefs::ComputeActionFor(WidgetWheelEvent* aEvent)
   Init(index);
 
   bool deltaXPreferred =
-    (Abs(aEvent->mDeltaX) > Abs(aEvent->deltaY) &&
+    (Abs(aEvent->mDeltaX) > Abs(aEvent->mDeltaY) &&
      Abs(aEvent->mDeltaX) > Abs(aEvent->deltaZ));
   Action* actions = deltaXPreferred ? mOverriddenActionsX : mActions;
   if (actions[index] == ACTION_NONE || actions[index] == ACTION_SCROLL) {
