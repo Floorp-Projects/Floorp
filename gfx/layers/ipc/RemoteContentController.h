@@ -42,9 +42,6 @@ public:
   // Needs to be called on the main thread.
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
 
-  virtual void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                                const mozilla::CSSPoint& aDestination) override;
-
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                        const uint32_t& aScrollGeneration) override;
 

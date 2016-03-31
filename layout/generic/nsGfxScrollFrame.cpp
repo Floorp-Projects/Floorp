@@ -3916,12 +3916,6 @@ ScrollFrameHelper::ScrollSnap(nsIScrollableFrame::ScrollMode aMode)
 }
 
 void
-ScrollFrameHelper::FlingSnap(const mozilla::CSSPoint& aDestination)
-{
-  ScrollSnap(CSSPoint::ToAppUnits(aDestination));
-}
-
-void
 ScrollFrameHelper::ScrollSnap(const nsPoint &aDestination,
                               nsIScrollableFrame::ScrollMode aMode)
 {
