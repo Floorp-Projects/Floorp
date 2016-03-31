@@ -574,7 +574,7 @@ nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
   aWheelEvent.mScrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
   aWheelEvent.mIsNoLineOrPageDelta = true;
 
-  aWheelEvent.overflowDeltaX = 0.0;
+  aWheelEvent.mOverflowDeltaX = 0.0;
   aWheelEvent.overflowDeltaY = 0.0;
 
   // Don't scroll the view if we are currently at a bounds, or, if we are

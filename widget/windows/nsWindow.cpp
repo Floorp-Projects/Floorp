@@ -6526,9 +6526,10 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
     }
 
     if (mDisplayPanFeedback) {
-      mGesture.UpdatePanFeedbackX(mWnd,
-                                  DeprecatedAbs(RoundDown(wheelEvent.overflowDeltaX)),
-                                  endFeedback);
+      mGesture.UpdatePanFeedbackX(
+                 mWnd,
+                 DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaX)),
+                 endFeedback);
       mGesture.UpdatePanFeedbackY(mWnd,
                                   DeprecatedAbs(RoundDown(wheelEvent.overflowDeltaY)),
                                   endFeedback);
