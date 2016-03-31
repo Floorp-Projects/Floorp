@@ -135,15 +135,6 @@ if test -z "$HOST_CXX"; then
 fi
 AC_MSG_RESULT([$HOST_CXX])
 
-if test -z "$HOST_CFLAGS"; then
-    HOST_CFLAGS="$CFLAGS"
-fi
-if test -z "$HOST_CXXFLAGS"; then
-    HOST_CXXFLAGS="$CXXFLAGS"
-fi
-if test -z "$HOST_LDFLAGS"; then
-    HOST_LDFLAGS="$LDFLAGS"
-fi
 if test -z "$HOST_AR_FLAGS"; then
     HOST_AR_FLAGS="$AR_FLAGS"
 fi
