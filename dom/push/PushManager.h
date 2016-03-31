@@ -45,8 +45,6 @@
 class nsIGlobalObject;
 class nsIPrincipal;
 
-#include "mozilla/dom/PushSubscriptionBinding.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -57,67 +55,7 @@ class WorkerPrivate;
 class Promise;
 class PushManagerImpl;
 
-class PushSubscription final : public nsISupports
-                             , public nsWrapperCache
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushSubscription)
 
-  explicit PushSubscription(nsIGlobalObject* aGlobal,
-                            const nsAString& aEndpoint,
-                            const nsAString& aScope,
-                            const nsTArray<uint8_t>& aP256dhKey,
-                            const nsTArray<uint8_t>& aAuthSecret);
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
-
-  void
-  GetEndpoint(nsAString& aEndpoint) const
-  {
-    aEndpoint = mEndpoint;
-  }
-
-  void
-  GetKey(JSContext* cx,
-         PushEncryptionKeyName aType,
-         JS::MutableHandle<JSObject*> aKey);
-
-  static already_AddRefed<PushSubscription>
-  Constructor(GlobalObject& aGlobal,
-              const nsAString& aEndpoint,
-              const nsAString& aScope,
-              const Nullable<ArrayBuffer>& aP256dhKey,
-              const Nullable<ArrayBuffer>& aAuthSecret,
-              ErrorResult& aRv);
-
-  void
-  SetPrincipal(nsIPrincipal* aPrincipal);
-
-  already_AddRefed<Promise>
-  Unsubscribe(ErrorResult& aRv);
-
-  void
-  ToJSON(PushSubscriptionJSON& aJSON);
-
-protected:
-  ~PushSubscription();
-
-private:
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsString mEndpoint;
-  nsString mScope;
-  nsTArray<uint8_t> mRawP256dhKey;
-  nsTArray<uint8_t> mAuthSecret;
-};
 
 class PushManager final : public nsISupports
                         , public nsWrapperCache
@@ -156,61 +94,6 @@ private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<PushManagerImpl> mImpl;
   nsString mScope;
-};
-
-class WorkerPushSubscription final : public nsISupports
-                                   , public nsWrapperCache
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkerPushSubscription)
-
-  explicit WorkerPushSubscription(const nsAString& aEndpoint,
-                                  const nsAString& aScope,
-                                  const nsTArray<uint8_t>& aRawP256dhKey,
-                                  const nsTArray<uint8_t>& aAuthSecret);
-
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return nullptr;
-  }
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  static already_AddRefed<WorkerPushSubscription>
-  Constructor(GlobalObject& aGlobal,
-              const nsAString& aEndpoint,
-              const nsAString& aScope,
-              const Nullable<ArrayBuffer>& aP256dhKey,
-              const Nullable<ArrayBuffer>& aAuthSecret,
-              ErrorResult& aRv);
-
-  void
-  GetEndpoint(nsAString& aEndpoint) const
-  {
-    aEndpoint = mEndpoint;
-  }
-
-  void
-  GetKey(JSContext* cx, PushEncryptionKeyName aType,
-         JS::MutableHandle<JSObject*> aP256dhKey);
-
-  already_AddRefed<Promise>
-  Unsubscribe(ErrorResult& aRv);
-
-  void
-  ToJSON(PushSubscriptionJSON& aJSON);
-
-protected:
-  ~WorkerPushSubscription();
-
-private:
-  nsString mEndpoint;
-  nsString mScope;
-  nsTArray<uint8_t> mRawP256dhKey;
-  nsTArray<uint8_t> mAuthSecret;
 };
 
 class WorkerPushManager final : public nsISupports
