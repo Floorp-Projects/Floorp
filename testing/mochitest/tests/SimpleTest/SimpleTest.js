@@ -217,6 +217,7 @@ if (typeof(computedStyle) == 'undefined') {
 SimpleTest._tests = [];
 SimpleTest._stopOnLoad = true;
 SimpleTest._cleanupFunctions = [];
+SimpleTest._timeoutFunctions = [];
 SimpleTest.expected = 'pass';
 SimpleTest.num_failed = 0;
 SimpleTest._inChaosMode = false;
@@ -988,6 +989,10 @@ SimpleTest.registerCleanupFunction = function(aFunc) {
     SimpleTest._cleanupFunctions.push(aFunc);
 };
 
+SimpleTest.registerTimeoutFunction = function(aFunc) {
+    SimpleTest._timeoutFunctions.push(aFunc);
+};
+
 SimpleTest.testInChaosMode = function() {
     if (SimpleTest._inChaosMode) {
       // It's already enabled for this test, don't enter twice
@@ -996,6 +1001,13 @@ SimpleTest.testInChaosMode = function() {
     SpecialPowers.DOMWindowUtils.enterChaosMode();
     SimpleTest._inChaosMode = true;
 };
+
+SimpleTest.timeout = function() {
+    for (let func of SimpleTest._timeoutFunctions) {
+        func();
+    }
+    SimpleTest._timeoutFunctions = [];
+}
 
 /**
  * Finishes the tests. This is automatically called, except when
@@ -1020,6 +1032,8 @@ SimpleTest.finish = function() {
         SimpleTest._logResult(test, successInfo, failureInfo);
         SimpleTest._tests.push(test);
     }
+
+    SimpleTest._timeoutFunctions = [];
 
     SimpleTest.testsLength = SimpleTest._tests.length;
 
