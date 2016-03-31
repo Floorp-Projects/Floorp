@@ -449,7 +449,7 @@ private:
 
   WidgetWheelEvent()
     : mDeltaX(0.0)
-    , deltaY(0.0)
+    , mDeltaY(0.0)
     , deltaZ(0.0)
     , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
     , customizedByUserPrefs(false)
@@ -472,7 +472,7 @@ public:
   WidgetWheelEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eWheelEventClass)
     , mDeltaX(0.0)
-    , deltaY(0.0)
+    , mDeltaY(0.0)
     , deltaZ(0.0)
     , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
     , customizedByUserPrefs(false)
@@ -511,12 +511,12 @@ public:
            this->overflowDeltaX != 0.0;
   }
 
-  // NOTE: mDeltaX, deltaY and deltaZ may be customized by
+  // NOTE: mDeltaX, mDeltaY and deltaZ may be customized by
   //       mousewheel.*.delta_multiplier_* prefs which are applied by
   //       EventStateManager.  So, after widget dispatches this event,
   //       these delta values may have different values than before.
   double mDeltaX;
-  double deltaY;
+  double mDeltaY;
   double deltaZ;
 
   // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
@@ -583,11 +583,11 @@ public:
   // nsEventStateManger.  If the default action of the wheel event isn't scroll,
   // these values always zero.  Otherwise, remaning delta values which are
   // not used by scroll are set.
-  // NOTE: mDeltaX, deltaY and deltaZ may be modified by EventStateManager.
+  // NOTE: mDeltaX, mDeltaY and deltaZ may be modified by EventStateManager.
   //       However, overflowDeltaX and overflowDeltaY indicate unused original
   //       delta values which are not applied the delta_multiplier prefs.
   //       So, if widget wanted to know the actual direction to be scrolled,
-  //       it would need to check the mDeltaX and deltaY.
+  //       it would need to check the mDeltaX and mDeltaY.
   double overflowDeltaX;
   double overflowDeltaY;
 
@@ -611,7 +611,7 @@ public:
     AssignMouseEventBaseData(aEvent, aCopyTargets);
 
     mDeltaX = aEvent.mDeltaX;
-    deltaY = aEvent.deltaY;
+    mDeltaY = aEvent.mDeltaY;
     deltaZ = aEvent.deltaZ;
     deltaMode = aEvent.deltaMode;
     customizedByUserPrefs = aEvent.customizedByUserPrefs;
