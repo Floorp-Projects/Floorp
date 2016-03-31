@@ -119,6 +119,7 @@ TestRunner._checkForHangs = function() {
 
   function killTest(win) {
     if ("SimpleTest" in win) {
+      win.SimpleTest.timeout();
       win.SimpleTest.finish();
     } else if ("W3CTest" in win) {
       win.W3CTest.timeout();
