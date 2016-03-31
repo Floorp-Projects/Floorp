@@ -993,12 +993,18 @@ SessionStore.prototype = {
   * point, but text data must be delayed until the content loads.
   */
   _restoreTab: function ss_restoreTab(aTabData, aBrowser) {
+    // aTabData shouldn't be empty here, but if it is,
+    // _restoreHistory() will crash otherwise.
+    if (!aTabData || aTabData.entries.length == 0) {
+      Cu.reportError("SessionStore.js: Error trying to restore tab with empty tabdata");
+      return;
+    }
     this._restoreHistory(aTabData, aBrowser.sessionHistory);
 
     // Restoring the text data requires waiting for the content to load. So
     // we set a flag and delay this until the "load" event.
     //this._restoreTextData(aTabData, aBrowser);
-    aBrowser.__SS_restore_data = aTabData || {};
+    aBrowser.__SS_restore_data = aTabData;
   },
 
   /**
