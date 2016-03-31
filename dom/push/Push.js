@@ -209,7 +209,6 @@ PushSubscriptionCallback.prototype = {
                                                        pushManager._scope,
                                                        publicKey,
                                                        authSecret);
-    sub.setPrincipal(pushManager._principal);
     this.resolve(sub);
   },
 
