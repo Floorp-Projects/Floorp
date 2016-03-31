@@ -6506,15 +6506,10 @@ js::AutoEnqueuePendingParseTasksAfterGC::~AutoEnqueuePendingParseTasksAfterGC()
 SliceBudget
 GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
 {
-    if (millis == 0) {
-        if (reason == JS::gcreason::ALLOC_TRIGGER)
-            millis = defaultSliceBudget();
-        else if (schedulingState.inHighFrequencyGCMode() && tunables.isDynamicMarkSliceEnabled())
-            millis = defaultSliceBudget() * IGC_MARK_SLICE_MULTIPLIER;
-        else
-            millis = defaultSliceBudget();
-    }
-
+    if (millis == 0)
+        millis = defaultSliceBudget();
+    if (schedulingState.inHighFrequencyGCMode() && tunables.isDynamicMarkSliceEnabled())
+        millis *= IGC_MARK_SLICE_MULTIPLIER;
     return SliceBudget(TimeBudget(millis));
 }
 
