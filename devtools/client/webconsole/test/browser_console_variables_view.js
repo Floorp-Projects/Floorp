@@ -21,6 +21,27 @@ add_task(function* () {
 
   gWebConsole = hud;
   gJSTerm = hud.jsterm;
+
+  let msg = yield gJSTerm.execute("(function foo(){})");
+
+  ok(msg, "output message found");
+  ok(msg.textContent.includes("function foo()"),
+                              "message text check");
+
+  executeSoon(() => {
+    EventUtils.synthesizeMouse(msg.querySelector("a"), 2, 2, {}, hud.iframeWindow);
+  });
+
+  let varView = yield hud.jsterm.once("variablesview-fetched");
+  ok(varView, "object inspector opened on click");
+
+  yield findVariableViewProperties(varView, [{
+    name: "name",
+    value: "foo",
+  }], { webconsole: hud });
+});
+
+add_task(function* () {
   let msg = yield gJSTerm.execute("fooObj");
 
   ok(msg, "output message found");
