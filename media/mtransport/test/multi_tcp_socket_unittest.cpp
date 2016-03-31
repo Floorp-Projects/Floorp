@@ -24,7 +24,7 @@ extern "C" {
 
 #include "stunserver.h"
 
-#include "nricectx.h"
+#include "nricectxhandler.h"
 #include "nricemediastream.h"
 
 #define GTEST_HAS_RTTI 0
@@ -47,7 +47,7 @@ class MultiTcpSocketTest : public MtransportTest {
   void SetUp() {
     MtransportTest::SetUp();
 
-    ice_ctx_ = NrIceCtx::Create("stun", true);
+    ice_ctx_ = NrIceCtxHandler::Create("stun", true);
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),

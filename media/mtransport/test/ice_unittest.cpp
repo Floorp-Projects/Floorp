@@ -25,7 +25,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
-#include "nricectx.h"
+#include "nricectxhandler.h"
 #include "nricemediastream.h"
 #include "nriceresolverfake.h"
 #include "nriceresolver.h"
@@ -383,8 +383,8 @@ class IceTestPeer : public sigslot::has_slots<> {
               bool allow_loopback = false, bool enable_tcp = true,
               bool allow_link_local = false, bool hide_non_default = false) :
       name_(name),
-      ice_ctx_(NrIceCtx::Create(name, offerer, allow_loopback,
-                                enable_tcp, allow_link_local, hide_non_default)),
+      ice_ctx_(NrIceCtxHandler::Create(name, offerer, allow_loopback,
+                                       enable_tcp, allow_link_local, hide_non_default)),
       candidates_(),
       gathering_complete_(false),
       ready_ct_(0),
@@ -1258,7 +1258,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
  private:
   std::string name_;
-  RefPtr<NrIceCtx> ice_ctx_;
+  RefPtr<NrIceCtxHandler> ice_ctx_;
   std::map<std::string, std::vector<std::string> > candidates_;
   // Maps from stream id to list of remote trickle candidates
   std::map<size_t, std::vector<SchedulableTrickleCandidate*> >
@@ -1827,7 +1827,7 @@ class WebRtcIcePacketFilterTest : public StunTest {
     StunTest::SetUp();
 
     // Set up enough of the ICE ctx to allow the packet filter to work
-    ice_ctx_ = NrIceCtx::Create("test", true);
+    ice_ctx_ = NrIceCtxHandler::Create("test", true);
 
     nsCOMPtr<nsISocketFilterHandler> udp_handler =
       do_GetService(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CONTRACTID);
@@ -1939,7 +1939,7 @@ class WebRtcIcePacketFilterTest : public StunTest {
 
   nsCOMPtr<nsISocketFilter> udp_filter_;
   nsCOMPtr<nsISocketFilter> tcp_filter_;
-  RefPtr<NrIceCtx> ice_ctx_;
+  RefPtr<NrIceCtxHandler> ice_ctx_;
 };
 }  // end namespace
 

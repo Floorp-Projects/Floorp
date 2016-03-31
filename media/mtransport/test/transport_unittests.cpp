@@ -26,7 +26,7 @@
 
 #include "databuffer.h"
 #include "dtlsidentity.h"
-#include "nricectx.h"
+#include "nricectxhandler.h"
 #include "nricemediastream.h"
 #include "transportflow.h"
 #include "transportlayer.h"
@@ -441,10 +441,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
         lossy_(new TransportLayerLossy()),
         dtls_(new TransportLayerDtls()),
         identity_(DtlsIdentity::Generate()),
-        ice_ctx_(NrIceCtx::Create(name,
-                                  name == "P2" ?
-                                  TransportLayerDtls::CLIENT :
-                                  TransportLayerDtls::SERVER)),
+        ice_ctx_(NrIceCtxHandler::Create(name,
+                                         name == "P2" ?
+                                         TransportLayerDtls::CLIENT :
+                                         TransportLayerDtls::SERVER)),
         streams_(), candidates_(),
         peer_(nullptr),
         gathering_complete_(false),
@@ -810,7 +810,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   TransportLayerDtls *dtls_;
   TransportLayerIce *ice_;
   RefPtr<DtlsIdentity> identity_;
-  RefPtr<NrIceCtx> ice_ctx_;
+  RefPtr<NrIceCtxHandler> ice_ctx_;
   std::vector<RefPtr<NrIceMediaStream> > streams_;
   std::map<std::string, std::vector<std::string> > candidates_;
   TransportTestPeer *peer_;

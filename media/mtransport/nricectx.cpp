@@ -396,10 +396,11 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
   s->SignalCandidate(s, candidate_str);
 }
 
-void NrIceCtx::Init(bool allow_loopback,
-                    bool tcp_enabled,
-                    bool allow_link_local)
-{
+
+void
+NrIceCtx::InitializeCryptoAndLogging(bool allow_loopback,
+                                     bool tcp_enabled,
+                                     bool allow_link_local) {
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
     NR_reg_init(NR_REG_MODE_LOCAL);
@@ -473,55 +474,48 @@ void NrIceCtx::Init(bool allow_loopback,
   }
 }
 
-RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
-                                  bool offerer,
-                                  bool allow_loopback,
-                                  bool tcp_enabled,
-                                  bool allow_link_local,
-                                  bool hide_non_default,
-                                  Policy policy) {
-   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer, policy);
-
-  // Initialize the crypto callbacks and logging stuff
-  Init(allow_loopback, tcp_enabled, allow_link_local);
-
+bool
+NrIceCtx::Initialize(NrIceCtx* ctx,
+                     bool hide_non_default)
+{
   // Create the ICE context
   int r;
 
-  UINT4 flags = offerer ? NR_ICE_CTX_FLAGS_OFFERER:
+  UINT4 flags = ctx->offerer_ ? NR_ICE_CTX_FLAGS_OFFERER:
       NR_ICE_CTX_FLAGS_ANSWERER;
   flags |= NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION;
-  if (policy == ICE_POLICY_RELAY) {
+  if (ctx->policy_ == ICE_POLICY_RELAY) {
     flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
   }
 
   if (hide_non_default)
     flags |= NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS;
 
-  r = nr_ice_ctx_create(const_cast<char *>(name.c_str()), flags,
+  r = nr_ice_ctx_create(const_cast<char *>(ctx->name_.c_str()),
+                        flags,
                         &ctx->ctx_);
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't create ICE ctx for '" << name << "'");
-    return nullptr;
+    MOZ_MTLOG(ML_ERROR, "Couldn't create ICE ctx for '" << ctx->name_ << "'");
+    return false;
   }
 
   nr_interface_prioritizer *prioritizer = CreateInterfacePrioritizer();
   if (!prioritizer) {
     MOZ_MTLOG(LogLevel::Error, "Couldn't create interface prioritizer.");
-    return nullptr;
+    return false;
   }
 
   r = nr_ice_ctx_set_interface_prioritizer(ctx->ctx_, prioritizer);
   if (r) {
     MOZ_MTLOG(LogLevel::Error, "Couldn't set interface prioritizer.");
-    return nullptr;
+    return false;
   }
 
   if (ctx->generating_trickle()) {
     r = nr_ice_ctx_set_trickle_cb(ctx->ctx_, &NrIceCtx::trickle_cb, ctx);
     if (r) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't set trickle cb for '" << name << "'");
-      return nullptr;
+      MOZ_MTLOG(ML_ERROR, "Couldn't set trickle cb for '" << ctx->name_ << "'");
+      return false;
     }
   }
 
@@ -575,21 +569,21 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
   // Create the peer ctx. Because we do not support parallel forking, we
   // only have one peer ctx.
-  std::string peer_name = name + ":default";
+  std::string peer_name = ctx->name_ + ":default";
   r = nr_ice_peer_ctx_create(ctx->ctx_, ctx->ice_handler_,
                              const_cast<char *>(peer_name.c_str()),
                              &ctx->peer_);
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't create ICE peer ctx for '" << name << "'");
-    return nullptr;
+    MOZ_MTLOG(ML_ERROR, "Couldn't create ICE peer ctx for '" << ctx->name_ << "'");
+    return false;
   }
 
   ctx->sts_target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
 
   if (!NS_SUCCEEDED(rv))
-    return nullptr;
+    return false;
 
-  return ctx;
+  return true;
 }
 
 int NrIceCtx::SetNat(const RefPtr<TestNat>& aNat) {
@@ -619,11 +613,6 @@ NrIceCtx::~NrIceCtx() {
   nr_ice_ctx_destroy(&ctx_);
   delete ice_handler_vtbl_;
   delete ice_handler_;
-}
-
-RefPtr<NrIceMediaStream>
-NrIceCtx::CreateStream(const std::string& name, int components) {
-  return NrIceMediaStream::Create(this, name, components);
 }
 
 void
