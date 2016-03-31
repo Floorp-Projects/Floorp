@@ -13,6 +13,17 @@ add_task(function* testWindowCreate() {
       });
     };
 
+    let promiseTabUpdated = (expected) => {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(tabId, changeInfo, tab) {
+          if (changeInfo.url === expected) {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    };
+
     let windowId;
     browser.windows.getCurrent().then(window => {
       windowId = window.id;
@@ -85,6 +96,35 @@ add_task(function* testWindowCreate() {
             browser.test.assertTrue(/`incognito` property must match the incognito state of tab/.test(error.message),
                                     "Create call failed as expected");
           });
+    }).then(() => {
+      browser.test.log("Try to create a window with an invalid tabId");
+
+      return browser.windows.create({tabId: 0}).then(
+        window => {
+          browser.test.fail("Create call should have failed");
+        },
+        error => {
+          browser.test.assertTrue(/Invalid tab ID: 0/.test(error.message),
+                                  "Create call failed as expected");
+        }
+      );
+    }).then(() => {
+      browser.test.log("Try to create a window with two URLs");
+
+      return browser.windows.create({url: ["http://example.com/", "http://example.org/"]});
+    }).then(window => {
+      return Promise.all([
+        promiseTabUpdated("http://example.com/"),
+        promiseTabUpdated("http://example.org/"),
+        Promise.resolve(window),
+      ]);
+    }).then(([, , window]) => {
+      return browser.windows.get(window.id, {populate: true});
+    }).then(window => {
+      browser.test.assertEq(2, window.tabs.length, "2 tabs were opened in new window");
+      browser.test.assertEq("http://example.com/", window.tabs[0].url, "Correct URL was loaded in tab 1");
+      browser.test.assertEq("http://example.org/", window.tabs[1].url, "Correct URL was loaded in tab 2");
+      return browser.windows.remove(window.id);
     }).then(() => {
       browser.test.notifyPass("window-create");
     }).catch(e => {
