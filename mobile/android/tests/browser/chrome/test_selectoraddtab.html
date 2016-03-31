@@ -21,19 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1216047
   Cu.import("resource://gre/modules/Messaging.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
 
-  function promiseTabEvent(container, eventType) {
-    return new Promise((resolve) => {
-      function handle(event) {
-        info("Received event " + eventType + " from container");
-        container.removeEventListener(eventType, handle, true);
-        resolve(event);
-      }
-
-      container.addEventListener(eventType, handle, true);
-      info("Now waiting for " + eventType + " event from container");
-    });
-  }
-
   // The chrome window
   let chromeWin;
 
