@@ -5642,7 +5642,7 @@ EventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
 
   aEvent->mDeltaX *= mMultiplierX[index];
   aEvent->mDeltaY *= mMultiplierY[index];
-  aEvent->deltaZ *= mMultiplierZ[index];
+  aEvent->mDeltaZ *= mMultiplierZ[index];
 
   // If the multiplier is 1.0 or -1.0, i.e., it doesn't change the absolute
   // value, we should use lineOrPageDelta values which were set by widget.
@@ -5689,7 +5689,7 @@ EventStateManager::WheelPrefs::ComputeActionFor(WidgetWheelEvent* aEvent)
 
   bool deltaXPreferred =
     (Abs(aEvent->mDeltaX) > Abs(aEvent->mDeltaY) &&
-     Abs(aEvent->mDeltaX) > Abs(aEvent->deltaZ));
+     Abs(aEvent->mDeltaX) > Abs(aEvent->mDeltaZ));
   Action* actions = deltaXPreferred ? mOverriddenActionsX : mActions;
   if (actions[index] == ACTION_NONE || actions[index] == ACTION_SCROLL) {
     return actions[index];
