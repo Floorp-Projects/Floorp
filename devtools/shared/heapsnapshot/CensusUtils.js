@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+const { flatten } = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
 
 /*** Visitor ****************************************************************/
 
@@ -62,6 +65,10 @@ Visitor.prototype.count = function (breakdown, report, edge) { }
 const EDGES = Object.create(null);
 
 EDGES.count = function (breakdown, report) {
+  return [];
+};
+
+EDGES.bucket = function (breakdown, report) {
   return [];
 };
 
@@ -460,4 +467,23 @@ exports.getReportLeaves = function(indices, breakdown, report) {
   const visitor = new GetLeavesVisitor(indices);
   walk(breakdown, report, visitor);
   return visitor.leaves();
+};
+
+/**
+ * Get a list of the individual node IDs that belong to the census report leaves
+ * of the given indices.
+ *
+ * @param {Set<Number>} indices
+ * @param {Object} breakdown
+ * @param {HeapSnapshot} snapshot
+ *
+ * @returns {Array<NodeId>}
+ */
+exports.getCensusIndividuals = function(indices, countBreakdown, snapshot) {
+  const bucketBreakdown = exports.countToBucketBreakdown(countBreakdown);
+  const bucketReport = snapshot.takeCensus({ breakdown: bucketBreakdown });
+  const buckets = exports.getReportLeaves(indices,
+                                          bucketBreakdown,
+                                          bucketReport);
+  return flatten(buckets);
 };
