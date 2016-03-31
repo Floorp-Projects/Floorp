@@ -1242,9 +1242,9 @@ Toolbox.prototype = {
         if (typeof panel.open == "function") {
           built = panel.open();
         } else {
-          let deferred = promise.defer();
-          deferred.resolve(panel);
-          built = deferred.promise;
+          let buildDeferred = promise.defer();
+          buildDeferred.resolve(panel);
+          built = buildDeferred.promise;
         }
       }
 
@@ -1286,10 +1286,30 @@ Toolbox.prototype = {
         iframe.removeEventListener("DOMContentLoaded", callback);
         onLoad();
       };
+
       iframe.addEventListener("DOMContentLoaded", callback);
     }
 
     return deferred.promise;
+  },
+
+  /**
+   * Mark all in collection as unselected; and id as selected
+   * @param {string} collection
+   *        DOM collection of items
+   * @param {string} id
+   *        The Id of the item within the collection to select
+   */
+  selectSingleNode: function(collection, id) {
+    [...collection].forEach(node => {
+      if (node.id === id) {
+        node.setAttribute("selected", "true");
+        node.setAttribute("aria-selected", "true");
+      } else {
+        node.removeAttribute("selected");
+        node.removeAttribute("aria-selected");
+      }
+    });
   },
 
   /**
@@ -1301,15 +1321,8 @@ Toolbox.prototype = {
   selectTool: function(id) {
     this.emit("before-select", id);
 
-    let selected = this.doc.querySelector(".devtools-tab[selected]");
-    if (selected) {
-      selected.removeAttribute("selected");
-      selected.setAttribute("aria-selected", "false");
-    }
-
-    let tab = this.doc.getElementById("toolbox-tab-" + id);
-    tab.setAttribute("selected", "true");
-    tab.setAttribute("aria-selected", "true");
+    let tabs = this.doc.querySelectorAll(".devtools-tab");
+    this.selectSingleNode(tabs, "toolbox-tab-" + id);
 
     // If options is selected, the separator between it and the
     // command buttons should be hidden.
@@ -1332,7 +1345,7 @@ Toolbox.prototype = {
       throw new Error("Can't select tool, wait for toolbox 'ready' event");
     }
 
-    tab = this.doc.getElementById("toolbox-tab-" + id);
+    let tab = this.doc.getElementById("toolbox-tab-" + id);
 
     if (tab) {
       if (this.currentToolId) {
@@ -1350,9 +1363,8 @@ Toolbox.prototype = {
     tabstrip.selectedItem = tab || tabstrip.childNodes[0];
 
     // and select the right iframe
-    let deck = this.doc.getElementById("toolbox-deck");
-    let panel = this.doc.getElementById("toolbox-panel-" + id);
-    deck.selectedPanel = panel;
+    let toolboxPanels = this.doc.querySelectorAll(".toolbox-panel");
+    this.selectSingleNode(toolboxPanels, "toolbox-panel-" + id);
 
     this.lastUsedToolId = this.currentToolId;
     this.currentToolId = id;
