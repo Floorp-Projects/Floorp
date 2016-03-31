@@ -5280,7 +5280,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
 
   // each event should use a clone of the original dataTransfer.
   initialDataTransfer->Clone(aDragEvent->target, aDragEvent->mMessage,
-                             aDragEvent->userCancelled,
+                             aDragEvent->mUserCancelled,
                              isCrossDomainSubFrameDrop,
                              getter_AddRefs(aDragEvent->mDataTransfer));
   if (NS_WARN_IF(!aDragEvent->mDataTransfer)) {

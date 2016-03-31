@@ -250,7 +250,7 @@ struct ParamTraits<mozilla::WidgetDragEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
-    WriteParam(aMsg, aParam.userCancelled);
+    WriteParam(aMsg, aParam.mUserCancelled);
     WriteParam(aMsg, aParam.mDefaultPreventedOnContent);
   }
 
@@ -258,7 +258,7 @@ struct ParamTraits<mozilla::WidgetDragEvent>
   {
     bool rv =
       ReadParam(aMsg, aIter, static_cast<mozilla::WidgetMouseEvent*>(aResult)) &&
-      ReadParam(aMsg, aIter, &aResult->userCancelled) &&
+      ReadParam(aMsg, aIter, &aResult->mUserCancelled) &&
       ReadParam(aMsg, aIter, &aResult->mDefaultPreventedOnContent);
     return rv;
   }
