@@ -215,7 +215,7 @@
                        class="subviewbutton cui-withicon"
                        oncommand="PlacesCommandHook.showPlacesOrganizer('BookmarksToolbar'); PanelUI.hide();"/>
         <toolbarbutton id="panelMenu_unsortedBookmarks"
-                       label="&unsortedBookmarksCmd.label;"
+                       label="&otherBookmarksCmd.label;"
                        class="subviewbutton cui-withicon"
                        oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
         <toolbarseparator class="small-separator"/>
