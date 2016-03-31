@@ -262,6 +262,11 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
         NS_ASSERTION(cIndex < aLength, "cIndex beyond word length");
         ++clusters[cIndex].nGlyphs;
 
+        // bump |after| index if it falls in the middle of a surrogate pair
+        if (NS_IS_HIGH_SURROGATE(aText[after]) && after < aLength - 1 &&
+            NS_IS_LOW_SURROGATE(aText[after + 1])) {
+            after++;
+        }
         // extend cluster if necessary to reach the glyph's "after" index
         if (clusters[cIndex].baseChar + clusters[cIndex].nChars < after + 1) {
             clusters[cIndex].nChars = after + 1 - clusters[cIndex].baseChar;
