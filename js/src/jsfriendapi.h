@@ -643,7 +643,7 @@ inline bool
 StandardClassIsDependent(JSProtoKey key)
 {
     const Class* clasp = ProtoKeyToClass(key);
-    return clasp && clasp->spec.defined() && clasp->spec.dependent();
+    return clasp && clasp->specDefined() && clasp->specDependent();
 }
 
 // Returns the key for the class inherited by a given standard class (that
@@ -662,7 +662,7 @@ ParentKeyForStandardClass(JSProtoKey key)
 
     // If we're dependent, return the key of the class we depend on.
     if (StandardClassIsDependent(key))
-        return ProtoKeyToClass(key)->spec.parentKey();
+        return ProtoKeyToClass(key)->specParentKey();
 
     // Otherwise, we inherit [Object].
     return JSProto_Object;

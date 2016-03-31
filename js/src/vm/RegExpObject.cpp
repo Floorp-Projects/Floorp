@@ -185,6 +185,15 @@ RegExpObject::trace(JSTracer* trc, JSObject* obj)
     }
 }
 
+static const ClassSpec RegExpObjectClassSpec = {
+    GenericCreateConstructor<js::regexp_construct, 2, gc::AllocKind::FUNCTION>,
+    CreateRegExpPrototype,
+    nullptr,
+    js::regexp_static_props,
+    js::regexp_methods,
+    js::regexp_properties
+};
+
 const Class RegExpObject::class_ = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE |
@@ -202,16 +211,7 @@ const Class RegExpObject::class_ = {
     nullptr, /* hasInstance */
     nullptr, /* construct */
     RegExpObject::trace,
-
-    // ClassSpec
-    {
-        GenericCreateConstructor<js::regexp_construct, 2, gc::AllocKind::FUNCTION>,
-        CreateRegExpPrototype,
-        nullptr,
-        js::regexp_static_props,
-        js::regexp_methods,
-        js::regexp_properties
-    }
+    &RegExpObjectClassSpec
 };
 
 RegExpObject*
