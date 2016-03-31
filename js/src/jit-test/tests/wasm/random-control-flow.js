@@ -10,3 +10,21 @@ wasmEvalText(`(module (func $func$0
       (block (if (i32.const 1) (loop (br_table 0 (br 0)))))
   )
 )`);
+
+wasmEvalText(`(module (func
+  (select
+    (block
+      (block
+        (br_table
+         1
+         0
+         (i32.const 1)
+        )
+      )
+      (i32.const 2)
+    )
+    (i32.const 3)
+    (i32.const 4)
+  )
+))
+`);
