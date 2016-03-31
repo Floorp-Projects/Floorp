@@ -533,14 +533,6 @@ public:
   }
 
   /**
-   * @deprecated
-   */
-  nsIDocument* GetCrossShadowCurrentDoc() const
-  {
-    return GetComposedDoc();
-  }
-
-  /**
    * Returns true if GetComposedDoc() would return a non-null value.
    */
   bool IsInComposedDoc() const
