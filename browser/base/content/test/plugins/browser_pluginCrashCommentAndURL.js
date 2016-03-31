@@ -146,8 +146,8 @@ add_task(function* () {
 function promisePluginCrashed() {
   return new ContentTask.spawn(gTestBrowser, {}, function* () {
     yield new Promise((resolve) => {
-      addEventListener("PluginCrashed", function onPluginCrashed() {
-        removeEventListener("PluginCrashed", onPluginCrashed);
+      addEventListener("PluginCrashReporterDisplayed", function onPluginCrashed() {
+        removeEventListener("PluginCrashReporterDisplayed", onPluginCrashed);
         resolve();
       });
     });
