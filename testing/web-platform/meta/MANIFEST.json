@@ -28430,6 +28430,14 @@
         "url": "/web-animations/animation/constructor.html"
       },
       {
+        "path": "web-animations/animation/finish.html",
+        "url": "/web-animations/animation/finish.html"
+      },
+      {
+        "path": "web-animations/animation/playbackRate.html",
+        "url": "/web-animations/animation/playbackRate.html"
+      },
+      {
         "path": "web-animations/keyframe-effect/constructor.html",
         "url": "/web-animations/keyframe-effect/constructor.html"
       },
