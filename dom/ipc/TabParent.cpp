@@ -2731,14 +2731,18 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
 
 bool
 TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
+                                      PRenderFrameParent* aRenderFrame,
                                       const nsString& aURL,
                                       const nsString& aName,
                                       const nsString& aFeatures,
-                                      bool* aOutWindowOpened)
+                                      bool* aOutWindowOpened,
+                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                      uint64_t* aLayersId)
 {
   BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(TabParent::GetFrom(aOpener),
-                                        this, aURL, aName, aFeatures);
+                                        this, aRenderFrame, aURL, aName, aFeatures,
+                                        aTextureFactoryIdentifier, aLayersId);
   *aOutWindowOpened = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   return true;
 }
