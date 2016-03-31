@@ -220,7 +220,7 @@ function Merge(list, start, mid, end, lBuffer, rBuffer, comparefn) {
 // dense array, filling remaining slots with holes.
 function MoveHoles(sparse, sparseLen, dense, denseLen) {
     for (var i = 0; i < denseLen; i++)
-        _DefineDataProperty(sparse, i, dense[i]);
+        sparse[i] = dense[i];
     for (var j = denseLen; j < sparseLen; j++)
         delete sparse[j];
 }
