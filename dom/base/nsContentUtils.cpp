@@ -7649,7 +7649,7 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
     return NS_ERROR_FAILURE;
 
   WidgetKeyboardEvent event(true, msg, aWidget);
-  event.modifiers = GetWidgetModifiers(aModifiers);
+  event.mModifiers = GetWidgetModifiers(aModifiers);
 
   if (msg == eKeyPress) {
     event.keyCode = aCharCode ? 0 : aKeyCode;
@@ -7781,7 +7781,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   WidgetMouseEvent event(true, msg, widget, WidgetMouseEvent::eReal,
                          contextMenuKey ? WidgetMouseEvent::eContextMenuKey :
                                           WidgetMouseEvent::eNormal);
-  event.modifiers = GetWidgetModifiers(aModifiers);
+  event.mModifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.buttons = GetButtonsFlagForButton(aButton);
   event.widget = widget;

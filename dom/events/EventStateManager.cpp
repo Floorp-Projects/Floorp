@@ -1600,7 +1600,7 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
       mGestureDownFrameOwner = mGestureDownContent;
     }
   }
-  mGestureModifiers = inDownEvent->modifiers;
+  mGestureModifiers = inDownEvent->mModifiers;
   mGestureDownButtons = inDownEvent->buttons;
 
   if (Prefs::ClickHoldContextMenu()) {
@@ -1639,7 +1639,7 @@ EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent)
   // the old event, adjusted for the fact that the widget might be
   // different
   aEvent->refPoint = mGestureDownPoint - aEvent->widget->WidgetToScreenOffset();
-  aEvent->modifiers = mGestureModifiers;
+  aEvent->mModifiers = mGestureModifiers;
   aEvent->buttons = mGestureDownButtons;
 }
 
@@ -2301,7 +2301,7 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.widget = aEvent->widget;
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
-  event.modifiers = aEvent->modifiers;
+  event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.delta = aDelta;
@@ -2341,7 +2341,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.widget = aEvent->widget;
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
-  event.modifiers = aEvent->modifiers;
+  event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.delta = aPixelDelta;
@@ -3440,7 +3440,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           event.refPoint += mouseEvent->widget->WidgetToScreenOffset();
         }
         event.refPoint -= widget->WidgetToScreenOffset();
-        event.modifiers = mouseEvent->modifiers;
+        event.mModifiers = mouseEvent->mModifiers;
         event.buttons = mouseEvent->buttons;
         event.inputSource = mouseEvent->inputSource;
 
@@ -3877,7 +3877,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     aNewEvent->relatedTarget = aRelatedContent;
   }
   aNewEvent->refPoint = aMouseEvent->refPoint;
-  aNewEvent->modifiers = aMouseEvent->modifiers;
+  aNewEvent->mModifiers = aMouseEvent->mModifiers;
   aNewEvent->button = aMouseEvent->button;
   aNewEvent->buttons = aMouseEvent->buttons;
   aNewEvent->pressure = aMouseEvent->pressure;
@@ -4486,7 +4486,7 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetDragEvent event(aDragEvent->IsTrusted(), aMessage, aDragEvent->widget);
   event.refPoint = aDragEvent->refPoint;
-  event.modifiers = aDragEvent->modifiers;
+  event.mModifiers = aDragEvent->mModifiers;
   event.buttons = aDragEvent->buttons;
   event.relatedTarget = aRelatedTarget;
   event.inputSource = aDragEvent->inputSource;
@@ -4643,7 +4643,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                            aEvent->widget, WidgetMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
-    event.modifiers = aEvent->modifiers;
+    event.mModifiers = aEvent->mModifiers;
     event.buttons = aEvent->buttons;
     event.mTime = aEvent->mTime;
     event.mTimeStamp = aEvent->mTimeStamp;
@@ -4677,7 +4677,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                                 aEvent->widget, WidgetMouseEvent::eReal);
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
-        event2.modifiers = aEvent->modifiers;
+        event2.mModifiers = aEvent->mModifiers;
         event2.buttons = aEvent->buttons;
         event2.mFlags.mNoContentDispatch = notDispatchToContents;
         event2.button = aEvent->button;
@@ -5528,11 +5528,11 @@ EventStateManager::WheelPrefs::GetIndexFor(WidgetWheelEvent* aEvent)
   }
 
   Modifiers modifiers =
-    (aEvent->modifiers & (MODIFIER_ALT |
-                          MODIFIER_CONTROL |
-                          MODIFIER_META |
-                          MODIFIER_SHIFT |
-                          MODIFIER_OS));
+    (aEvent->mModifiers & (MODIFIER_ALT |
+                           MODIFIER_CONTROL |
+                           MODIFIER_META |
+                           MODIFIER_SHIFT |
+                           MODIFIER_OS));
 
   switch (modifiers) {
     case MODIFIER_ALT:

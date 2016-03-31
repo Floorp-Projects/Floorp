@@ -664,12 +664,12 @@ protected:
   WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , modifiers(0)
+    , mModifiers(0)
   {
   }
 
   WidgetInputEvent()
-    : modifiers(0)
+    : mModifiers(0)
   {
   }
 
@@ -678,7 +678,7 @@ public:
 
   WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eInputEventClass)
-    , modifiers(0)
+    , mModifiers(0)
   {
   }
 
@@ -708,81 +708,81 @@ public:
   // true indicates the accel key on the environment is down
   bool IsAccel() const
   {
-    return ((modifiers & AccelModifier()) != 0);
+    return ((mModifiers & AccelModifier()) != 0);
   }
 
   // true indicates the shift key is down
   bool IsShift() const
   {
-    return ((modifiers & MODIFIER_SHIFT) != 0);
+    return ((mModifiers & MODIFIER_SHIFT) != 0);
   }
   // true indicates the control key is down
   bool IsControl() const
   {
-    return ((modifiers & MODIFIER_CONTROL) != 0);
+    return ((mModifiers & MODIFIER_CONTROL) != 0);
   }
   // true indicates the alt key is down
   bool IsAlt() const
   {
-    return ((modifiers & MODIFIER_ALT) != 0);
+    return ((mModifiers & MODIFIER_ALT) != 0);
   }
   // true indicates the meta key is down (or, on Mac, the Command key)
   bool IsMeta() const
   {
-    return ((modifiers & MODIFIER_META) != 0);
+    return ((mModifiers & MODIFIER_META) != 0);
   }
   // true indicates the win key is down on Windows. Or the Super or Hyper key
   // is down on Linux.
   bool IsOS() const
   {
-    return ((modifiers & MODIFIER_OS) != 0);
+    return ((mModifiers & MODIFIER_OS) != 0);
   }
   // true indicates the alt graph key is down
   // NOTE: on Mac, the option key press causes both IsAlt() and IsAltGrpah()
   //       return true.
   bool IsAltGraph() const
   {
-    return ((modifiers & MODIFIER_ALTGRAPH) != 0);
+    return ((mModifiers & MODIFIER_ALTGRAPH) != 0);
   }
   // true indicates the CapLock LED is turn on.
   bool IsCapsLocked() const
   {
-    return ((modifiers & MODIFIER_CAPSLOCK) != 0);
+    return ((mModifiers & MODIFIER_CAPSLOCK) != 0);
   }
   // true indicates the NumLock LED is turn on.
   bool IsNumLocked() const
   {
-    return ((modifiers & MODIFIER_NUMLOCK) != 0);
+    return ((mModifiers & MODIFIER_NUMLOCK) != 0);
   }
   // true indicates the ScrollLock LED is turn on.
   bool IsScrollLocked() const
   {
-    return ((modifiers & MODIFIER_SCROLLLOCK) != 0);
+    return ((mModifiers & MODIFIER_SCROLLLOCK) != 0);
   }
 
   // true indicates the Fn key is down, but this is not supported by native
   // key event on any platform.
   bool IsFn() const
   {
-    return ((modifiers & MODIFIER_FN) != 0);
+    return ((mModifiers & MODIFIER_FN) != 0);
   }
   // true indicates the FnLock LED is turn on, but we don't know such
   // keyboards nor platforms.
   bool IsFnLocked() const
   {
-    return ((modifiers & MODIFIER_FNLOCK) != 0);
+    return ((mModifiers & MODIFIER_FNLOCK) != 0);
   }
   // true indicates the Symbol is down, but this is not supported by native
   // key event on any platforms.
   bool IsSymbol() const
   {
-    return ((modifiers & MODIFIER_SYMBOL) != 0);
+    return ((mModifiers & MODIFIER_SYMBOL) != 0);
   }
   // true indicates the SymbolLock LED is turn on, but we don't know such
   // keyboards nor platforms.
   bool IsSymbolLocked() const
   {
-    return ((modifiers & MODIFIER_SYMBOLLOCK) != 0);
+    return ((mModifiers & MODIFIER_SYMBOLLOCK) != 0);
   }
 
   void InitBasicModifiers(bool aCtrlKey,
@@ -790,28 +790,28 @@ public:
                           bool aShiftKey,
                           bool aMetaKey)
   {
-    modifiers = 0;
+    mModifiers = 0;
     if (aCtrlKey) {
-      modifiers |= MODIFIER_CONTROL;
+      mModifiers |= MODIFIER_CONTROL;
     }
     if (aAltKey) {
-      modifiers |= MODIFIER_ALT;
+      mModifiers |= MODIFIER_ALT;
     }
     if (aShiftKey) {
-      modifiers |= MODIFIER_SHIFT;
+      mModifiers |= MODIFIER_SHIFT;
     }
     if (aMetaKey) {
-      modifiers |= MODIFIER_META;
+      mModifiers |= MODIFIER_META;
     }
   }
 
-  Modifiers modifiers;
+  Modifiers mModifiers;
 
   void AssignInputEventData(const WidgetInputEvent& aEvent, bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    modifiers = aEvent.modifiers;
+    mModifiers = aEvent.mModifiers;
   }
 };
 

@@ -2116,7 +2116,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
 
     event.direction = 0;
     event.delta = delta;
-    event.modifiers = 0;
+    event.mModifiers = 0;
     event.mTime = ae->Time();
     event.refPoint = pt;
 
@@ -2431,7 +2431,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
     const uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(keyCode);
     const int32_t charCode = unicodeChar ? unicodeChar : baseUnicodeChar;
 
-    event.modifiers = GetModifiers(metaState);
+    event.mModifiers = GetModifiers(metaState);
 
     if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
@@ -2447,8 +2447,8 @@ InitKeyEvent(WidgetKeyboardEvent& event,
         // causes text input even while right Alt key is pressed.  However,
         // this is necessary for Android 2.3 compatibility.
         if (unicodeChar && unicodeChar != baseUnicodeChar) {
-            event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL
-                                              | MODIFIER_META);
+            event.mModifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL
+                                               | MODIFIER_META);
         }
 
     } else {

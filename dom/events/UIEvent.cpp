@@ -468,7 +468,7 @@ UIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
   WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
   MOZ_ASSERT(inputEvent, "mEvent must be WidgetInputEvent or derived class");
-  return ((inputEvent->modifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
+  return ((inputEvent->mModifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
 }
 
 void
@@ -484,11 +484,11 @@ UIEvent::InitModifiers(const EventModifierInit& aParam)
     return;
   }
 
-  inputEvent->modifiers = MODIFIER_NONE;
+  inputEvent->mModifiers = MODIFIER_NONE;
 
 #define SET_MODIFIER(aName, aValue) \
   if (aParam.m##aName) { \
-    inputEvent->modifiers |= aValue; \
+    inputEvent->mModifiers |= aValue; \
   } \
 
   SET_MODIFIER(CtrlKey,                 MODIFIER_CONTROL)
