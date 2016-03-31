@@ -573,11 +573,11 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 
                     if (ShouldResolveStaticProperties(standardConstructor)) {
                         const js::Class* clasp = js::ProtoKeyToClass(standardConstructor);
-                        MOZ_ASSERT(clasp->spec.defined());
+                        MOZ_ASSERT(clasp->specDefined());
 
                         if (!TryResolvePropertyFromSpecs(cx, id, holder,
-                               clasp->spec.constructorFunctions(),
-                               clasp->spec.constructorProperties(), desc)) {
+                               clasp->specConstructorFunctions(),
+                               clasp->specConstructorProperties(), desc)) {
                             return false;
                         }
 
@@ -656,13 +656,13 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
     const js::Class* clasp = js::GetObjectClass(target);
-    MOZ_ASSERT(clasp->spec.defined());
+    MOZ_ASSERT(clasp->specDefined());
 
     // Indexed array properties are handled above, so we can just work with the
     // class spec here.
     if (!TryResolvePropertyFromSpecs(cx, id, holder,
-                                     clasp->spec.prototypeFunctions(),
-                                     clasp->spec.prototypeProperties(),
+                                     clasp->specPrototypeFunctions(),
+                                     clasp->specPrototypeProperties(),
                                      desc)) {
         return false;
     }
@@ -864,11 +864,11 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
 
                 if (ShouldResolveStaticProperties(standardConstructor)) {
                     const js::Class* clasp = js::ProtoKeyToClass(standardConstructor);
-                    MOZ_ASSERT(clasp->spec.defined());
+                    MOZ_ASSERT(clasp->specDefined());
 
                     if (!AppendNamesFromFunctionAndPropertySpecs(
-                           cx, clasp->spec.constructorFunctions(),
-                           clasp->spec.constructorProperties(), flags, props)) {
+                           cx, clasp->specConstructorFunctions(),
+                           clasp->specConstructorProperties(), flags, props)) {
                         return false;
                     }
                 }
@@ -905,11 +905,11 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
 
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
     const js::Class* clasp = js::GetObjectClass(target);
-    MOZ_ASSERT(clasp->spec.defined());
+    MOZ_ASSERT(clasp->specDefined());
 
     return AppendNamesFromFunctionAndPropertySpecs(
-        cx, clasp->spec.prototypeFunctions(),
-        clasp->spec.prototypeProperties(), flags, props);
+        cx, clasp->specPrototypeFunctions(),
+        clasp->specPrototypeProperties(), flags, props);
 }
 
 bool
