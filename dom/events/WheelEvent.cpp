@@ -65,7 +65,7 @@ WheelEvent::InitWheelEvent(const nsAString& aType,
                              aRelatedTarget, aModifiersList);
 
   WidgetWheelEvent* wheelEvent = mEvent->AsWheelEvent();
-  wheelEvent->deltaX = aDeltaX;
+  wheelEvent->mDeltaX = aDeltaX;
   wheelEvent->deltaY = aDeltaY;
   wheelEvent->deltaZ = aDeltaZ;
   wheelEvent->deltaMode = aDeltaMode;
@@ -75,9 +75,9 @@ double
 WheelEvent::DeltaX()
 {
   if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->deltaX;
+    return mEvent->AsWheelEvent()->mDeltaX;
   }
-  return mEvent->AsWheelEvent()->deltaX *
+  return mEvent->AsWheelEvent()->mDeltaX *
     mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
 }
 
