@@ -351,10 +351,10 @@ public:
 
 protected:
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
-  nsresult DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
-                                  nsIFrame* aFrame, const nsPoint& aPt,
-                                  const nsBoundingMetrics& aMetrics,
-                                  const nsDisplayListSet& aLists);
+  void DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame, const nsPoint& aPt,
+                              const nsBoundingMetrics& aMetrics,
+                              const nsDisplayListSet& aLists);
 #endif
 
   /**
