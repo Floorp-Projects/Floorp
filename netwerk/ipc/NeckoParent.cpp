@@ -94,6 +94,7 @@ NeckoParent::NeckoParent()
 
 NeckoParent::~NeckoParent()
 {
+  gNeckoParent = nullptr;
   if (mObserver) {
     mObserver->RemoveObserver();
   }

@@ -34,6 +34,11 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
         # Lazy lock initialization doesn't play well with lazy linking of
         # mozglue.dll on Windows XP (leads to startup crash), so disable it.
         ac_configure_args="$ac_configure_args --disable-lazy-lock"
+
+        # 64-bit Windows builds require a minimum 16-byte alignment.
+        if test -n "$HAVE_64BIT_BUILD"; then
+          ac_configure_args="$ac_configure_args --with-lg-tiny-min=4"
+        fi
       fi
     elif test "${OS_ARCH}" = Darwin; then
       # When building as a replace-malloc lib, disabling the zone allocator

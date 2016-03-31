@@ -17,7 +17,7 @@ import org.mozilla.gecko.tests.components.GeckoViewComponent.InputConnectionTest
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;

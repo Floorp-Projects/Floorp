@@ -3,6 +3,7 @@ config = {
     "products": {
         "installer": {
             "product-name": "Firefox-%(version)s",
+            "alias": "firefox-beta-latest",
             "ssl-only": False,
             "add-locales": False,
             "paths": {
@@ -57,6 +58,7 @@ config = {
         },
         "stub-installer": {
             "product-name": "Firefox-%(version)s-stub",
+            "alias": "firefox-beta-stub",
             "ssl-only": True,
             "add-locales": False,
             "paths": {

@@ -1059,7 +1059,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                                                                   in wstring fileName,
                                                                   in unsigned long lineNumber,
                                                                   in jsval asyncStack,
-                                                                  in jsval asyncCause);
+                                                                  in string asyncCause);
   [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
 
   /**

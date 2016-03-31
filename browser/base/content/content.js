@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/InlineSpellChecker.jsm");
 Cu.import("resource://gre/modules/InlineSpellCheckerContent.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
@@ -49,7 +51,9 @@ var global = this;
 var formSubmitObserver = new FormSubmitObserver(content, this);
 
 addMessageListener("ContextMenu:DoCustomCommand", function(message) {
-  PageMenuChild.executeMenu(message.data);
+  E10SUtils.wrapHandlingUserInput(
+    content, message.data.handlingUserInput,
+    () => PageMenuChild.executeMenu(message.data.generatedItemId));
 });
 
 addMessageListener("RemoteLogins:fillForm", function(message) {

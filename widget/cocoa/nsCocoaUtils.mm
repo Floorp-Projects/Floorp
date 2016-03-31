@@ -492,9 +492,14 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
       return NS_ERROR_FAILURE;
     }
 
-    aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
-                 aWhichFrame, Filter::POINT, Nothing(),
-                 imgIContainer::FLAG_SYNC_DECODE);
+    mozilla::image::DrawResult res =
+      aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
+                   aWhichFrame, Filter::POINT, Nothing(),
+                   imgIContainer::FLAG_SYNC_DECODE);
+
+    if (res != mozilla::image::DrawResult::SUCCESS) {
+      return NS_ERROR_FAILURE;
+    }
 
     surface = drawTarget->Snapshot();
   } else {

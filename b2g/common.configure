@@ -13,7 +13,7 @@ def mozttdir(value):
     if value:
         path = value[0]
         if not os.path.isdir(path):
-            error('MOZTTDIR "%s" is not a valid directory' % path)
+            die('MOZTTDIR "%s" is not a valid directory', path)
         return path
 
 set_config('MOZTTDIR', mozttdir)

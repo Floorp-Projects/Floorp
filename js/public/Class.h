@@ -629,23 +629,21 @@ inline ClassObjectCreationOp DELEGATED_CLASSSPEC(const ClassSpec* spec) {
 
 struct ObjectOps
 {
-    LookupPropertyOp    lookupProperty;
-    DefinePropertyOp    defineProperty;
-    HasPropertyOp       hasProperty;
-    GetPropertyOp       getProperty;
-    SetPropertyOp       setProperty;
-    GetOwnPropertyOp    getOwnPropertyDescriptor;
-    DeletePropertyOp    deleteProperty;
-    WatchOp             watch;
-    UnwatchOp           unwatch;
-    GetElementsOp       getElements;
-    JSNewEnumerateOp    enumerate;
-    JSFunToStringOp     funToString;
+    LookupPropertyOp lookupProperty;
+    DefinePropertyOp defineProperty;
+    HasPropertyOp    hasProperty;
+    GetPropertyOp    getProperty;
+    SetPropertyOp    setProperty;
+    GetOwnPropertyOp getOwnPropertyDescriptor;
+    DeletePropertyOp deleteProperty;
+    WatchOp          watch;
+    UnwatchOp        unwatch;
+    GetElementsOp    getElements;
+    JSNewEnumerateOp enumerate;
+    JSFunToStringOp  funToString;
 };
 
-#define JS_NULL_OBJECT_OPS                                                    \
-    {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,  \
-     nullptr, nullptr, nullptr, nullptr}
+#define JS_NULL_OBJECT_OPS nullptr
 
 } // namespace js
 
@@ -656,7 +654,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void*               reserved[23];
+    void*               reserved[12];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
@@ -760,7 +758,7 @@ struct Class
     JS_CLASS_MEMBERS(FinalizeOp);
     ClassSpec          spec;
     ClassExtension      ext;
-    ObjectOps           ops;
+    const ObjectOps*    ops;
 
     /*
      * Objects of this class aren't native objects. They don't have Shapes that
@@ -805,6 +803,21 @@ struct Class
     }
 
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
+
+    LookupPropertyOp getOpsLookupProperty() const { return ops ? ops->lookupProperty : nullptr; }
+    DefinePropertyOp getOpsDefineProperty() const { return ops ? ops->defineProperty : nullptr; }
+    HasPropertyOp    getOpsHasProperty()    const { return ops ? ops->hasProperty    : nullptr; }
+    GetPropertyOp    getOpsGetProperty()    const { return ops ? ops->getProperty    : nullptr; }
+    SetPropertyOp    getOpsSetProperty()    const { return ops ? ops->setProperty    : nullptr; }
+    GetOwnPropertyOp getOpsGetOwnPropertyDescriptor()
+                                            const { return ops ? ops->getOwnPropertyDescriptor
+                                                                                     : nullptr; }
+    DeletePropertyOp getOpsDeleteProperty() const { return ops ? ops->deleteProperty : nullptr; }
+    WatchOp          getOpsWatch()          const { return ops ? ops->watch          : nullptr; }
+    UnwatchOp        getOpsUnwatch()        const { return ops ? ops->unwatch        : nullptr; }
+    GetElementsOp    getOpsGetElements()    const { return ops ? ops->getElements    : nullptr; }
+    JSNewEnumerateOp getOpsEnumerate()      const { return ops ? ops->enumerate      : nullptr; }
+    JSFunToStringOp  getOpsFunToString()    const { return ops ? ops->funToString    : nullptr; }
 };
 
 static_assert(offsetof(JSClass, name) == offsetof(Class, name),

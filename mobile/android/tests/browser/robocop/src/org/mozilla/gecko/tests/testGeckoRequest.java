@@ -6,7 +6,7 @@ package org.mozilla.gecko.tests;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.tests.helpers.AssertionHelper;

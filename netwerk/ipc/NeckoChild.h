@@ -87,6 +87,8 @@ protected:
   /* Predictor Messsages */
   virtual bool RecvPredOnPredictPreconnect(const URIParams& aURI) override;
   virtual bool RecvPredOnPredictDNS(const URIParams& aURI) override;
+
+  virtual bool RecvSpeculativeConnectRequest(const nsCString& aNotificationData) override;
 };
 
 /**

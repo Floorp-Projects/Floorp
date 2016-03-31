@@ -700,20 +700,7 @@ class CGInterfaceObjectJSClass(CGThing):
                 nullptr,               /* trace */
                 JS_NULL_CLASS_SPEC,
                 JS_NULL_CLASS_EXT,
-                {
-                  nullptr, /* lookupProperty */
-                  nullptr, /* defineProperty */
-                  nullptr, /* hasProperty */
-                  nullptr, /* getProperty */
-                  nullptr, /* setProperty */
-                  nullptr, /* getOwnPropertyDescriptor */
-                  nullptr, /* deleteProperty */
-                  nullptr, /* watch */
-                  nullptr, /* unwatch */
-                  nullptr, /* getElements */
-                  nullptr, /* enumerate */
-                  InterfaceObjectToString, /* funToString */
-                }
+                &sInterfaceObjectClassObjectOps
               },
               eInterface,
               ${prototypeID},
@@ -2745,13 +2732,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
     properties should be a PropertyArrays instance.
     """
-    def __init__(self, descriptor, properties):
+    def __init__(self, descriptor, properties, haveUnscopables):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('ProtoAndIfaceCache&', 'aProtoAndIfaceCache'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
+        self.haveUnscopables = haveUnscopables
 
     def definition_body(self):
         (protoGetter, protoHandleGetter) = InterfacePrototypeObjectProtoGetter(self.descriptor)
@@ -2891,7 +2879,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
-                                        ${name}, aDefineOnGlobal);
+                                        ${name}, aDefineOnGlobal,
+                                        ${unscopableNames});
             """,
             protoClass=protoClass,
             parentProto=parentProto,
@@ -2903,7 +2892,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceCache=interfaceCache,
             properties=properties,
             chromeProperties=chromeProperties,
-            name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr")
+            name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr",
+            unscopableNames="unscopableNames" if self.haveUnscopables else "nullptr")
 
         # If we fail after here, we must clear interface and prototype caches
         # using this code: intermediate failure must not expose the interface in
@@ -11835,6 +11825,7 @@ class CGDescriptor(CGThing):
             hasPromiseReturningMethod) = False, False, False, False, False, False
         jsonifierMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
+        unscopableNames = list()
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
                                                NamedConstructorName(n)))
@@ -11847,6 +11838,9 @@ class CGDescriptor(CGThing):
             props = memberProperties(m, descriptor)
 
             if m.isMethod():
+                if m.getExtendedAttribute("Unscopable"):
+                    assert not m.isStatic()
+                    unscopableNames.append(m.identifier.name)
                 if props.isJsonifier:
                     jsonifierMethod = m
                 elif not m.isIdentifierLess() or m == descriptor.operations['Stringifier']:
@@ -11872,6 +11866,9 @@ class CGDescriptor(CGThing):
                     raise TypeError("Stringifier attributes not supported yet. "
                                     "See bug 824857.\n"
                                     "%s" % m.location)
+                if m.getExtendedAttribute("Unscopable"):
+                    assert not m.isStatic()
+                    unscopableNames.append(m.identifier.name)
                 if m.isStatic():
                     assert descriptor.interface.hasInterfaceObject()
                     cgThings.append(CGStaticGetter(descriptor, m))
@@ -12059,9 +12056,20 @@ class CGDescriptor(CGThing):
             cgThings.extend(CGClearCachedValueMethod(descriptor, m) for
                             m in clearableCachedAttrs(descriptor))
 
+        haveUnscopables = (len(unscopableNames) != 0 and
+                           descriptor.interface.hasInterfacePrototypeObject())
+        if haveUnscopables:
+            cgThings.append(
+                CGList([CGGeneric("static const char* const unscopableNames[] = {"),
+                        CGIndenter(CGList([CGGeneric('"%s"' % name) for
+                                           name in unscopableNames] +
+                                          [CGGeneric("nullptr")], ",\n")),
+                        CGGeneric("};\n")], "\n"))
+
         # CGCreateInterfaceObjectsMethod needs to come after our
-        # CGDOMJSClass, if any.
-        cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
+        # CGDOMJSClass and unscopables, if any.
+        cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties,
+                                                       haveUnscopables))
 
         # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
         # to come after CGCreateInterfaceObjectsMethod.

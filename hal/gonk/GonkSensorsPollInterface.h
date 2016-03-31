@@ -273,7 +273,8 @@ private:
 class GonkSensorsPollInterface final
 {
 public:
-  friend class GonkSensorsInterface;
+  GonkSensorsPollInterface(GonkSensorsPollModule* aModule);
+  ~GonkSensorsPollInterface();
 
   /**
    * This method sets the notification handler for poll notifications. Call
@@ -326,11 +327,7 @@ public:
    */
   void SetPeriod(int32_t aId, uint64_t aPeriod, GonkSensorsPollResultHandler* aRes);
 
-  ~GonkSensorsPollInterface();
-
 private:
-  GonkSensorsPollInterface(GonkSensorsPollModule* aModule);
-
   void DispatchError(GonkSensorsPollResultHandler* aRes, SensorsError aError);
   void DispatchError(GonkSensorsPollResultHandler* aRes, nsresult aRv);
 

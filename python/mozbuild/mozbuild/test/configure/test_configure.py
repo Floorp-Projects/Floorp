@@ -5,7 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from StringIO import StringIO
+import os
 import sys
+import textwrap
 import unittest
 
 from mozunit import main
@@ -75,10 +77,10 @@ class TestConfigure(unittest.TestCase):
             '  --option                  Option\n'
             '  --with-returned-default   Returned default [not-simple]\n'
             '  --returned-choices        Choices\n'
-            '  --enable-advanced-template\n'
-            '                            Advanced template\n'
+            '  --enable-imports-in-template\n'
+            '                            Imports in template\n'
             '  --enable-include          Include\n'
-            '  --with-advanced           Advanced\n'
+            '  --with-imports            Imports\n'
             '\n'
             'Environment variables:\n'
             '  CC                        C Compiler\n',
@@ -225,20 +227,123 @@ class TestConfigure(unittest.TestCase):
         config = self.get_config(env={'CC': 'clang'})
         self.assertNotIn('CFLAGS', config)
 
-    def test_advanced(self):
-        config = self.get_config(['--with-advanced'])
-        self.assertIn('ADVANCED', config)
-        self.assertEquals(config['ADVANCED'], True)
+    def test_imports(self):
+        config = self.get_config(['--with-imports'])
+        self.assertIn('IMPORTS', config)
+        self.assertEquals(config['IMPORTS'], True)
 
         with self.assertRaises(ImportError):
-            self.get_config(['--with-advanced=break'])
+            self.get_config(['--with-imports=break'])
+
+    def test_imports(self):
+        config = {}
+        out = StringIO()
+        sandbox = ConfigureSandbox(config, {}, [], out, out)
+
+        with self.assertRaises(ImportError):
+            exec(textwrap.dedent('''
+                @template
+                def foo():
+                    import sys
+                foo()'''),
+                sandbox
+            )
+
+        exec(textwrap.dedent('''
+            @template
+            @imports('sys')
+            def foo():
+                return sys'''),
+            sandbox
+        )
+
+        self.assertIs(sandbox['foo'](), sys)
+
+        exec(textwrap.dedent('''
+            @template
+            @imports(_from='os', _import='path')
+            def foo():
+                return path'''),
+            sandbox
+        )
+
+        self.assertIs(sandbox['foo'](), os.path)
+
+        exec(textwrap.dedent('''
+            @template
+            @imports(_from='os', _import='path', _as='os_path')
+            def foo():
+                return os_path'''),
+            sandbox
+        )
+
+        self.assertIs(sandbox['foo'](), os.path)
+
+        exec(textwrap.dedent('''
+            @template
+            @imports('__builtin__')
+            def foo():
+                return __builtin__'''),
+            sandbox
+        )
+
+        import __builtin__
+        self.assertIs(sandbox['foo'](), __builtin__)
+
+        exec(textwrap.dedent('''
+            @template
+            @imports(_from='__builtin__', _import='open')
+            def foo():
+                return open('%s')''' % os.devnull),
+            sandbox
+        )
+
+        f = sandbox['foo']()
+        self.assertEquals(f.name, os.devnull)
+        f.close()
+
+        # This unlocks the sandbox
+        exec(textwrap.dedent('''
+            @template
+            @imports(_import='__builtin__', _as='__builtins__')
+            def foo():
+                import sys
+                return sys'''),
+            sandbox
+        )
+
+        self.assertIs(sandbox['foo'](), sys)
+
+        exec(textwrap.dedent('''
+            @template
+            @imports('__sandbox__')
+            def foo():
+                return __sandbox__'''),
+            sandbox
+        )
+
+        self.assertIs(sandbox['foo'](), sandbox)
+
+        exec(textwrap.dedent('''
+            @template
+            @imports(_import='__sandbox__', _as='s')
+            def foo():
+                return s'''),
+            sandbox
+        )
+
+        self.assertIs(sandbox['foo'](), sandbox)
+
+        # Nothing leaked from the function being executed
+        self.assertEquals(sandbox.keys(), ['__builtins__', 'foo'])
+        self.assertEquals(sandbox['__builtins__'], ConfigureSandbox.BUILTINS)
 
     def test_os_path(self):
-        config = self.get_config(['--with-advanced=%s' % __file__])
+        config = self.get_config(['--with-imports=%s' % __file__])
         self.assertIn('IS_FILE', config)
         self.assertEquals(config['IS_FILE'], True)
 
-        config = self.get_config(['--with-advanced=%s.no-exist' % __file__])
+        config = self.get_config(['--with-imports=%s.no-exist' % __file__])
         self.assertIn('IS_FILE', config)
         self.assertEquals(config['IS_FILE'], False)
 
@@ -254,10 +359,21 @@ class TestConfigure(unittest.TestCase):
         self.assertIn('TEMPLATE_VALUE_2', config)
         self.assertEquals(config['TEMPLATE_VALUE_2'], 21)
 
-    def test_template_advanced(self):
-        config = self.get_config(['--enable-advanced-template'])
+    def test_template_imports(self):
+        config = self.get_config(['--enable-imports-in-template'])
         self.assertIn('PLATFORM', config)
         self.assertEquals(config['PLATFORM'], sys.platform)
+
+    def test_decorators(self):
+        config = {}
+        out = StringIO()
+        sandbox = ConfigureSandbox(config, {}, [], out, out)
+
+        sandbox.exec_file(mozpath.join(test_data_path, 'decorators.configure'))
+
+        self.assertNotIn('FOO', sandbox)
+        self.assertNotIn('BAR', sandbox)
+        self.assertNotIn('QUX', sandbox)
 
     def test_set_config(self):
         def get_config(*args):

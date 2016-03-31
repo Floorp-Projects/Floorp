@@ -28,7 +28,7 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 
-import com.jayway.android.robotium.solo.Solo;
+import com.robotium.solo.Solo;
 
 public class FennecNativeDriver implements Driver {
     private static final int FRAME_TIME_THRESHOLD = 25;     // allow 25ms per frame (40fps)

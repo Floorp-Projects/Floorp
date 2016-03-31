@@ -62,9 +62,8 @@ include(toolchain_include)
 
 
 @depends('--help')
-@advanced
+@imports(_from='mozbuild.backend', _import='backends')
 def build_backends_choices(help):
-    from mozbuild.backend import backends
     return tuple(backends)
 
 
@@ -110,24 +109,22 @@ add_old_configure_assignment('PERL', perl_for_old_configure)
 def perl_version_check(min_version):
     @depends(perl)
     @checking('for minimum required perl version >= %s' % min_version)
-    @advanced
+    @imports('subprocess')
     def get_perl_version(perl):
-        import subprocess
         try:
             return Version(subprocess.check_output([perl, '-e', 'print $]']))
         except subprocess.CalledProcessError as e:
-            error('Failed to get perl version: %s' % e.message)
+            die('Failed to get perl version: %s', e.message)
 
     @depends(get_perl_version)
     def check_perl_version(version):
         if version < min_version:
-            error('Perl %s or higher is required.' % min_version)
+            die('Perl %s or higher is required.', min_version)
 
     @depends(perl)
     @checking('for full perl installation')
-    @advanced
+    @imports('subprocess')
     def has_full_perl_installation(perl):
-        import subprocess
         ret = subprocess.call(
             [perl, '-e', 'use Config; exit(!-d $Config{archlib})'])
         return ret == 0
@@ -135,8 +132,8 @@ def perl_version_check(min_version):
     @depends(has_full_perl_installation)
     def require_full_perl_installation(has_full_perl_installation):
         if not has_full_perl_installation:
-            error('Cannot find Config.pm or $Config{archlib}. '
-                  'A full perl installation is required.')
+            die('Cannot find Config.pm or $Config{archlib}. '
+                'A full perl installation is required.')
 
 perl_version_check('5.006')
 
@@ -150,15 +147,21 @@ check_prog('XARGS', ('xargs',))
 check_prog('ZIP', ('zip',))
 
 @depends(target)
-def mac_programs(target):
+def extra_programs(target):
     if target.kernel == 'Darwin':
-        check_prog('DSYMUTIL', ('dsymutil', 'llvm-dsymutil'), allow_missing=True)
-        check_prog('GENISOIMAGE', ('genisoimage',), allow_missing=True)
-
-@depends(target)
-def linux_programs(target):
+        return namespace(
+            DSYMUTIL=('dsymutil', 'llvm-dsymutil'),
+            GENISOIMAGE=('genisoimage',),
+        )
     if target.os == 'GNU' and target.kernel == 'Linux':
-        check_prog('RPMBUILD', ('rpmbuild',), allow_missing=True)
+        return namespace(RPMBUILD=('rpmbuild',))
+
+check_prog('DSYMUTIL', delayed_getattr(extra_programs, 'DSYMUTIL'),
+           allow_missing=True)
+check_prog('GENISOIMAGE', delayed_getattr(extra_programs, 'GENISOIMAGE'),
+           allow_missing=True)
+check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
+           allow_missing=True)
 
 
 # Fallthrough to autoconf-based configure

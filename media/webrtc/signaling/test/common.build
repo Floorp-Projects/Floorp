@@ -79,6 +79,7 @@ if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
 
 USE_LIBS += [
     '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+    'chromium_atomics',
     'gkmedias',
     'nksrtp_s',
     'nss',

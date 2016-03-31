@@ -298,14 +298,8 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
       LayoutDeviceIntRect visibleBounds;
       // If the plugin is visible update it's geometry.
       if (isVisible) {
-        // bounds (content origin) - don't pass true to Resize, it triggers a
-        // sync paint update to the plugin process on Windows, which happens
-        // prior to clipping information being applied.
+        // Set bounds (content origin)
         bounds = aPlugins[pluginsIdx].bounds();
-        rv = widget->Resize(aContentOffset.x + bounds.x,
-                            aContentOffset.y + bounds.y,
-                            bounds.width, bounds.height, false);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
         nsTArray<LayoutDeviceIntRect> rectsOut;
         // This call may change the value of isVisible
         CalculatePluginClip(bounds, aPlugins[pluginsIdx].clip(),
@@ -314,6 +308,14 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
                             rectsOut, visibleBounds, isVisible);
         // content clipping region (widget origin)
         rv = widget->SetWindowClipRegion(rectsOut, false);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
+        // This will trigger a browser window paint event for areas uncovered
+        // by a child window move, and will call invalidate on the plugin
+        // parent window which the browser owns. The latter gets picked up in
+        // our OnPaint handler and forwarded over to the plugin process async.
+        rv = widget->Resize(aContentOffset.x + bounds.x,
+                            aContentOffset.y + bounds.y,
+                            bounds.width, bounds.height, true);
         NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
       }
 

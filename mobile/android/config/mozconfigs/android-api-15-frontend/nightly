@@ -9,6 +9,8 @@ MOZ_AUTOMATION_UPDATE_PACKAGING=0
 MOZ_AUTOMATION_UPLOAD=0
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 
+NO_CACHE=1
+
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 ac_add_options --with-gradle="$topsrcdir/gradle/bin/gradle"

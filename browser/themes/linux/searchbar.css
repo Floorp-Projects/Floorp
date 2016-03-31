@@ -163,6 +163,8 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
 .addengine-item {
   -moz-appearance: none;
+  background-color: Menu;
+  color: MenuText;
   border: none;
   height: 32px;
   margin: 0;

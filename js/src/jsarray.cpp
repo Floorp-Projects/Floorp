@@ -375,7 +375,7 @@ js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length, Value* vp)
         }
     }
 
-    if (js::GetElementsOp op = aobj->getOps()->getElements) {
+    if (js::GetElementsOp op = aobj->getOpsGetElements()) {
         ElementAdder adder(cx, vp, length, ElementAdder::GetElement);
         return op(cx, aobj, 0, length, &adder);
     }
@@ -1513,56 +1513,6 @@ struct SortComparatorStringifiedElements
                                       lessOrEqualp);
     }
 };
-
-struct SortComparatorFunction
-{
-    JSContext*         const cx;
-    const Value&       fval;
-    FastInvokeGuard&   fig;
-
-    SortComparatorFunction(JSContext* cx, const Value& fval, FastInvokeGuard& fig)
-      : cx(cx), fval(fval), fig(fig) { }
-
-    bool operator()(const Value& a, const Value& b, bool* lessOrEqualp);
-};
-
-bool
-SortComparatorFunction::operator()(const Value& a, const Value& b, bool* lessOrEqualp)
-{
-    /*
-     * array_sort deals with holes and undefs on its own and they should not
-     * come here.
-     */
-    MOZ_ASSERT(!a.isMagic() && !a.isUndefined());
-    MOZ_ASSERT(!a.isMagic() && !b.isUndefined());
-
-    if (!CheckForInterrupt(cx))
-        return false;
-
-    InvokeArgs& args = fig.args();
-    if (!args.init(2))
-        return false;
-
-    args.setCallee(fval);
-    args.setThis(UndefinedValue());
-    args[0].set(a);
-    args[1].set(b);
-
-    if (!fig.invoke(cx))
-        return false;
-
-    double cmp;
-    if (!ToNumber(cx, args.rval(), &cmp))
-        return false;
-
-    /*
-     * XXX eport some kind of error here if cmp is NaN? ECMA talks about
-     * 'consistent compare functions' that don't return NaN, but is silent
-     * about what the result should be. So we currently ignore it.
-     */
-    *lessOrEqualp = (IsNaN(cmp) || cmp <= 0);
-    return true;
-}
 
 struct NumericElement
 {
@@ -2788,7 +2738,7 @@ GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj, uint32_t begin, uin
     // properties.
     JSObject* pobj = obj;
     do {
-        if (!pobj->isNative() || pobj->getClass()->resolve || pobj->getOps()->lookupProperty)
+        if (!pobj->isNative() || pobj->getClass()->resolve || pobj->getOpsLookupProperty())
             return true;
     } while ((pobj = pobj->getProto()));
 
@@ -2980,7 +2930,7 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
     if (!narr)
         return false;
 
-    if (js::GetElementsOp op = obj->getOps()->getElements) {
+    if (js::GetElementsOp op = obj->getOpsGetElements()) {
         ElementAdder adder(cx, narr, end - begin, ElementAdder::CheckHasElemPreserveHoles);
         if (!op(cx, obj, begin, end, &adder))
             return false;

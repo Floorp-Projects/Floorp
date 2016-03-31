@@ -31,6 +31,9 @@ using mozilla::PodArrayZero;
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 /* For OOM testing functionality in Utility.h. */
 namespace js {
+
+mozilla::Atomic<AutoEnterOOMUnsafeRegion*> AutoEnterOOMUnsafeRegion::owner_;
+
 namespace oom {
 
 JS_PUBLIC_DATA(uint32_t) targetThread = 0;

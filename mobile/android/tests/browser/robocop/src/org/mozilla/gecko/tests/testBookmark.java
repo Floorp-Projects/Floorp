@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.tests;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 public class testBookmark extends AboutHomeTest {
     private static String BOOKMARK_URL;

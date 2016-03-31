@@ -31,6 +31,7 @@ add_task(function*() {
     "Accept-Language: " + navigator.languages.join(",") + ";q=0.5",
     "Accept-Encoding: gzip, deflate",
     "Connection: keep-alive",
+    "Upgrade-Insecure-Requests: 1",
     "Pragma: no-cache",
     "Cache-Control: no-cache"
   ].join("\n");

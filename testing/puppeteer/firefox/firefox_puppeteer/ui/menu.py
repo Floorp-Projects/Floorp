@@ -41,8 +41,7 @@ class MenuBar(BaseLib):
         """Get a :class:`MenuElement` instance corresponding to the specified
         ID.
 
-        :param menu_id: The ID of the menu, e.g., **file-menu** or
-        **view-menu**.
+        :param menu_id: The ID of the menu, e.g., **file-menu** or **view-menu**.
         :returns: A :class:`MenuElement` instance.
         """
         menu = [m for m in self.menus if m.get_attribute('id') == menu_id]
@@ -64,9 +63,8 @@ class MenuBar(BaseLib):
     def select_by_id(self, menu_id, item_id):
         """Select an item in a menu.
 
-        :param menu_id: The ID of the menu, e.g., **file-menu** or **view-menu**.
-        :param item_id: The ID of the item in the menu, e.g.,
-        **menu_newNavigatorTab**.
+        :param menu_id: The ID of the menu, e.g. **file-menu** or **view-menu**.
+        :param item_id: The ID of the item in the menu, e.g. **menu_newNavigatorTab**.
         """
         return self.get_menu_by_id(menu_id).select_by_id(item_id)
 
@@ -99,8 +97,7 @@ class MenuBar(BaseLib):
         def select_by_id(self, menu_item_id):
             """Click on a menu item within this menu.
 
-            :param menu_item_id: The ID of the menu item, e.g.,
-            **menu_newNavigatorTab**.
+            :param menu_item_id: The ID of the menu item, e.g. **menu_newNavigatorTab**.
             """
             item = [l for l in self.items if l.get_attribute('id') ==
                     menu_item_id]

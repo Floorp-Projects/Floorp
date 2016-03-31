@@ -499,7 +499,8 @@ public:
   nsresult
   SendPushEvent(const nsACString& aOriginAttributes,
                 const nsACString& aScope,
-                Maybe<nsTArray<uint8_t>> aData);
+                const nsAString& aMessageId,
+                const Maybe<nsTArray<uint8_t>>& aData);
 
   nsresult
   NotifyUnregister(nsIPrincipal* aPrincipal, const nsAString& aScope);

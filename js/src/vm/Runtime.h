@@ -708,7 +708,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /*
      * Value of asyncCause to be attached to asyncStackForNewActivations.
      */
-    JS::PersistentRooted<JSString*> asyncCauseForNewActivations;
+    const char* asyncCauseForNewActivations;
 
     /*
      * True if the async call was explicitly requested, e.g. via

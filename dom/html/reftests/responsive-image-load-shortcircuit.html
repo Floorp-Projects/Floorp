@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<iframe srcdoc="<img srcset=red.png>" width="150px"></iframe>
+<script>
+  var iframe = document.querySelector('iframe');
+  iframe.onload = function() {
+    var doc = iframe.contentDocument;
+    var img = doc.querySelector('img');
+    img.srcset = "pass.png";
+    iframe.width = "300px";
+    img.onload = function() {
+      document.documentElement.classList.remove('reftest-wait');
+    };
+  }
+</script>
+</html>

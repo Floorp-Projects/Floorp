@@ -15,8 +15,8 @@ option('--enable-systrace', env='MOZ_USE_SYSTRACE',
 @depends('--enable-systrace', target)
 def systrace(value, target):
     if value and target.os != 'Android':
-        error('--enable-systrace cannot be used when targetting %s'
-              % target.os)
+        die('--enable-systrace cannot be used when targeting %s',
+            target.os)
     if value:
         return True
 
@@ -81,7 +81,7 @@ def l10n_base(value):
     if value:
         path = value[0]
         if not os.path.isdir(path):
-            error("Invalid value --with-l10n-base, %s doesn't exist" % path)
+            die("Invalid value --with-l10n-base, %s doesn't exist", path)
         return os.path.realpath(os.path.abspath(path))
 
 set_config('L10NBASEDIR', l10n_base)
@@ -123,10 +123,8 @@ def toolkit(value, target, gonkdir):
 
     if value:
         if value[0] not in platform_choices:
-            error(
-                '`%s` is not a valid value for --enable-default-toolkit on %s\n'
-                'Valid values: %s'
-                % (value[0], os, ', '.join(platform_choices)))
+            die('`%s` is not a valid value for --enable-default-toolkit on %s\n'
+                'Valid values: %s', value[0], os, ', '.join(platform_choices))
         return value[0]
 
     return platform_choices[0]
@@ -165,12 +163,12 @@ option('--without-x', env='WITHOUT_X', help='Disable X11 support')
 @depends('--without-x', toolkit)
 def x11(value, toolkit):
     if not value and toolkit != 'qt':
-        error('--without-x is only valid with --enable-default-toolkit=qt')
+        die('--without-x is only valid with --enable-default-toolkit=qt')
 
     x11_toolkits = ('gtk2', 'gtk3', 'qt')
     if value and value.origin != 'default' and toolkit not in x11_toolkits:
-        error('--with-x is only valid with --enable-default-toolkit={%s}'
-              % ','.join(x11_toolkits))
+        die('--with-x is only valid with --enable-default-toolkit={%s}',
+            ','.join(x11_toolkits))
 
     return True if value and toolkit in x11_toolkits else None
 
@@ -287,8 +285,7 @@ def wmf(value, target):
         # guaranteed to have a recent-enough SDK to build WMF.
         enabled = target.os == 'WINNT'
     if enabled and target.os != 'WINNT':
-        error('Cannot enable Windows Media Foundation support on %s'
-              % target.os)
+        die('Cannot enable Windows Media Foundation support on %s', target.os)
     if enabled:
         return True
 
@@ -341,8 +338,8 @@ def eme(value, fmp4):
     if value.origin == 'default':
         enabled = enabled or fmp4
     if enabled and not fmp4:
-        error('Encrypted Media Extension support requires '
-              'Fragmented MP4 support')
+        die('Encrypted Media Extension support requires '
+            'Fragmented MP4 support')
     if enabled:
         return True
 

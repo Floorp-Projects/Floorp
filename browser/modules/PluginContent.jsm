@@ -422,8 +422,13 @@ PluginContent.prototype = {
         break;
 
       case "PluginInstantiated":
-        Services.telemetry.getKeyedHistogramById('PLUGIN_ACTIVATION_COUNT').add(this._getPluginInfo(plugin).pluginTag.niceName);
+        let key = this._getPluginInfo(plugin).pluginTag.niceName;
+        Services.telemetry.getKeyedHistogramById('PLUGIN_ACTIVATION_COUNT').add(key);
         shouldShowNotification = true;
+        let pluginRect = plugin.getBoundingClientRect();
+        if (pluginRect.width <= 5 && pluginRect.height <= 5) {
+          Services.telemetry.getKeyedHistogramById('PLUGIN_TINY_CONTENT').add(key);
+        }
         break;
     }
 

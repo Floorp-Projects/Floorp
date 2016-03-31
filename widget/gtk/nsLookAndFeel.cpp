@@ -83,6 +83,8 @@ GetGradientColors(const GValue* aValue,
         return false;
 
     auto pattern = static_cast<cairo_pattern_t*>(g_value_get_boxed(aValue));
+    if (!pattern)
+        return false;
 
     // Just picking the lightest and darkest colors as simple samples rather
     // than trying to blend, which could get messy if there are many stops.

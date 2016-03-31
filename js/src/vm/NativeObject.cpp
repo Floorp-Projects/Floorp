@@ -1731,8 +1731,8 @@ CallGetter(JSContext* cx, HandleObject obj, HandleValue receiver, HandleShape sh
     MOZ_ASSERT(!shape->hasDefaultGetter());
 
     if (shape->hasGetterValue()) {
-        Value fval = shape->getterValue();
-        return InvokeGetter(cx, receiver, fval, vp);
+        RootedValue getter(cx, shape->getterValue());
+        return js::CallGetter(cx, receiver, getter, vp);
     }
 
     // In contrast to normal getters JSGetterOps always want the holder.
@@ -2022,7 +2022,7 @@ NativeGetPropertyInline(JSContext* cx,
         // plumbing of JSObject::getGeneric; the top of the loop is where
         // we're going to end up anyway. But if pobj is non-native,
         // that optimization would be incorrect.
-        if (proto->getOps()->getProperty)
+        if (proto->getOpsGetProperty())
             return GeneralizedGetProperty(cx, proto, id, receiver, nameLookup, vp);
 
         pobj = &proto->as<NativeObject>();
@@ -2047,7 +2047,7 @@ bool
 js::GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     RootedValue receiver(cx, ObjectValue(*obj));
-    if (obj->getOps()->getProperty)
+    if (obj->getOpsGetProperty())
         return GeneralizedGetProperty(cx, obj, id, receiver, NameLookup, vp);
     return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), receiver, id, NameLookup, vp);
 }
@@ -2348,9 +2348,11 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
     MOZ_ASSERT_IF(!shape->hasSetterObject(), shape->hasDefaultSetter());
     if (shape->hasDefaultSetter())
         return result.fail(JSMSG_GETTER_ONLY);
-    Value setter = ObjectValue(*shape->setterObject());
-    if (!InvokeSetter(cx, receiver, setter, v))
+
+    RootedValue setter(cx, ObjectValue(*shape->setterObject()));
+    if (!js::CallSetter(cx, receiver, setter, v))
         return false;
+
     return result.succeed();
 }
 

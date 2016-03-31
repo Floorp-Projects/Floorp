@@ -7,8 +7,7 @@
 #include "nsISupports.idl"
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
-
-[scriptable, uuid(4b5ea59e-af89-44f7-8c1c-2dea47a170d1)]
+[scriptable, uuid(1accd618-4c80-4703-9d29-ecf257d397c8)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -108,6 +107,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRTC_HW_ACCELERATION_DECODE = 15;
   /* Whether Canvas acceleration is supported, starting in 45 */
   const long FEATURE_CANVAS2D_ACCELERATION = 16;
+  /* Whether hardware VP8 decoding is supported. */
+  const long FEATURE_VP8_HW_DECODE = 17;
+  /* Whether hardware VP9 decoding is supported. */
+  const long FEATURE_VP9_HW_DECODE = 18;
 
   /*
    * A set of return values from GetFeatureStatus

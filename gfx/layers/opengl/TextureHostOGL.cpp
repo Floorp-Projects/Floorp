@@ -353,6 +353,11 @@ GLTextureSource::SetCompositor(Compositor* aCompositor)
   if (!AssertGLCompositor(aCompositor)) {
     return;
   }
+
+  if (mCompositor && mCompositor != aCompositor) {
+    gfxCriticalError() << "GLTextureSource does not support changing compositors";
+  }
+
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
   if (mNextSibling) {
     mNextSibling->SetCompositor(aCompositor);

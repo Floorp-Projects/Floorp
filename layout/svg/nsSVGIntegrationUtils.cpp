@@ -552,10 +552,11 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
     if (svgMaskFrame) {
       // Generate maskSurface from a SVG mask.
       maskSurface = svgMaskFrame->GetMaskForMaskedFrame(&aContext,
-                                                     aFrame,
-                                                     cssPxToDevPxMatrix,
-                                                     opacity,
-                                                     &maskTransform);
+                                                        aFrame,
+                                                        cssPxToDevPxMatrix,
+                                                        opacity,
+                                                        &maskTransform,
+                                                        svgReset->mMask.mLayers[0].mMaskMode);
     } else if (hasMaskToDraw) {
       // Create maskSuface.
       gfxRect clipRect = aContext.GetClipExtents();

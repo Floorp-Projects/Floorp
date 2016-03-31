@@ -55,6 +55,7 @@ PushServiceBase.prototype = {
     Ci.nsISupportsWeakReference,
     Ci.nsIPushService,
     Ci.nsIPushQuotaManager,
+    Ci.nsIPushErrorReporter,
   ]),
 
   pushTopic: OBSERVER_TOPIC_PUSH,
@@ -117,6 +118,7 @@ Object.assign(PushServiceParent.prototype, {
     "Push:Clear",
     "Push:NotificationForOriginShown",
     "Push:NotificationForOriginClosed",
+    "Push:ReportError",
   ],
 
   // nsIPushService methods
@@ -171,6 +173,12 @@ Object.assign(PushServiceParent.prototype, {
     this.service.notificationForOriginClosed(origin);
   },
 
+  // nsIPushErrorReporter methods
+
+  reportDeliveryError(messageId, reason) {
+    this.service.reportDeliveryError(messageId, reason);
+  },
+
   receiveMessage(message) {
     if (!this._isValidMessage(message)) {
       return;
@@ -185,6 +193,10 @@ Object.assign(PushServiceParent.prototype, {
       return;
     }
     if (!target.assertPermission("push")) {
+      return;
+    }
+    if (name === "Push:ReportError") {
+      this.reportDeliveryError(data.messageId, data.reason);
       return;
     }
     let sender = target.QueryInterface(Ci.nsIMessageSender);
@@ -352,6 +364,15 @@ Object.assign(PushServiceContent.prototype, {
 
   notificationForOriginClosed(origin) {
     this._mm.sendAsyncMessage("Push:NotificationForOriginClosed", origin);
+  },
+
+  // nsIPushErrorReporter methods
+
+  reportDeliveryError(messageId, reason) {
+    this._mm.sendAsyncMessage("Push:ReportError", {
+      messageId: messageId,
+      reason: reason,
+    });
   },
 
   _addRequest(data) {

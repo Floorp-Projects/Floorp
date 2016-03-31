@@ -2237,8 +2237,30 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
   // size and position the window
 
   if (positionSpecified) {
-    treeOwnerAsWin->SetPosition(left * scale, top * scale);
-    // moving the window may have changed its scale factor
+    // Get the scale factor appropriate for the screen we're actually
+    // positioning on.
+    nsCOMPtr<nsIScreen> screen;
+    nsCOMPtr<nsIScreenManager> screenMgr(
+      do_GetService("@mozilla.org/gfx/screenmanager;1"));
+    if (screenMgr) {
+      screenMgr->ScreenForRect(left, top, 1, 1, getter_AddRefs(screen));
+    }
+    if (screen) {
+      screen->GetDefaultCSSScaleFactor(&scale);
+      int32_t screenLeft, screenTop, screenWd, screenHt;
+      screen->GetRectDisplayPix(&screenLeft, &screenTop, &screenWd, &screenHt);
+      // Adjust by desktop-pixel origin of the target screen to convert from
+      // per-screen CSS-px coordinates.
+      treeOwnerAsWin->SetPosition((left - screenLeft) * scale + screenLeft,
+                                  (top - screenTop) * scale + screenTop);
+    } else {
+      // Couldn't find screen? This shouldn't happen.
+      treeOwnerAsWin->SetPosition(left * scale, top * scale);
+    }
+    // This shouldn't be necessary, given the screen check above, but in case
+    // moving the window didn't put it where we expected (e.g. due to issues
+    // at the widget level, or whatever), let's re-fetch the scale factor for
+    // wherever it really ended up
     treeOwnerAsWin->GetUnscaledDevicePixelsPerCSSPixel(&scale);
   }
   if (aSizeSpec.SizeSpecified()) {

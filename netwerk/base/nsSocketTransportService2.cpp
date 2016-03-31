@@ -41,8 +41,8 @@ Atomic<PRThread*, Relaxed> gSocketThread;
 #define KEEPALIVE_IDLE_TIME_PREF "network.tcp.keepalive.idle_time"
 #define KEEPALIVE_RETRY_INTERVAL_PREF "network.tcp.keepalive.retry_interval"
 #define KEEPALIVE_PROBE_COUNT_PREF "network.tcp.keepalive.probe_count"
-#define SOCKET_LIMIT_TARGET 550U
-#define SOCKET_LIMIT_MIN     50U
+#define SOCKET_LIMIT_TARGET 1000U
+#define SOCKET_LIMIT_MIN      50U
 #define BLIP_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
@@ -226,6 +226,35 @@ nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler
     return rv;
 }
 
+// the number of sockets that can be attached at any given time is
+// limited.  this is done because some operating systems (e.g., Win9x)
+// limit the number of sockets that can be created by an application.
+// AttachSocket will fail if the limit is exceeded.  consumers should
+// call CanAttachSocket and check the result before creating a socket.
+
+bool
+nsSocketTransportService::CanAttachSocket()
+{
+    static bool reported900FDLimit = false;
+    static bool reported256FDLimit = false;
+
+    uint32_t total = mActiveCount + mIdleCount;
+    bool rv = total < gMaxCount;
+
+    if (mTelemetryEnabledPref) {
+        if (((total >= 900) || !rv) && !reported900FDLimit) {
+            reported900FDLimit = true;
+            Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
+        }
+        if ((total >= 256) && !reported256FDLimit) {
+            reported256FDLimit = true;
+            Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_256FD, true);
+        }
+    }
+
+    return rv;
+}
+
 nsresult
 nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *sock)
 {
@@ -378,11 +407,13 @@ bool
 nsSocketTransportService::GrowActiveList()
 {
     int32_t toAdd = gMaxCount - mActiveListSize;
-    if (toAdd > 100)
+    if (toAdd > 100) {
         toAdd = 100;
-    if (toAdd < 1)
+    } else if (toAdd < 1) {
+        MOZ_ASSERT(false, "CanAttachSocket() should prevent this");
         return false;
-    
+    }
+
     mActiveListSize += toAdd;
     mActiveList = (SocketContext *)
         moz_xrealloc(mActiveList, sizeof(SocketContext) * mActiveListSize);
@@ -395,10 +426,12 @@ bool
 nsSocketTransportService::GrowIdleList()
 {
     int32_t toAdd = gMaxCount - mIdleListSize;
-    if (toAdd > 100)
+    if (toAdd > 100) {
         toAdd = 100;
-    if (toAdd < 1)
+    } else if (toAdd < 1) {
+        MOZ_ASSERT(false, "CanAttachSocket() should prevent this");
         return false;
+    }
 
     mIdleListSize += toAdd;
     mIdleList = (SocketContext *)
@@ -794,7 +827,7 @@ nsSocketTransportService::Run()
     }
 #endif
 
-    SOCKET_LOG(("STS thread init\n"));
+    SOCKET_LOG(("STS thread init %d sockets\n", gMaxCount));
 
     psm::InitializeSSLServerCertVerificationThreads();
 
@@ -1407,6 +1440,7 @@ nsSocketTransportService::ProbeMaxCount()
         if (pfd[index].fd)
             PR_Close(pfd[index].fd);
 
+    Telemetry::Accumulate(Telemetry::NETWORK_PROBE_MAXCOUNT, gMaxCount);
     SOCKET_LOG(("Socket Limit Test max was confirmed at %d\n", gMaxCount));
 }
 #endif // windows
@@ -1420,35 +1454,37 @@ nsSocketTransportService::DiscoverMaxCount()
     // On unix and os x network sockets and file
     // descriptors are the same. OS X comes defaulted at 256,
     // most linux at 1000. We can reliably use [sg]rlimit to
-    // query that and raise it. We will try to raise it 250 past
-    // our target number of SOCKET_LIMIT_TARGET so that some descriptors
-    // are still available for other things.
+    // query that and raise it if needed.
 
     struct rlimit rlimitData;
-    if (getrlimit(RLIMIT_NOFILE, &rlimitData) == -1)
+    if (getrlimit(RLIMIT_NOFILE, &rlimitData) == -1) // rlimit broken - use min
         return PR_SUCCESS;
-    if (rlimitData.rlim_cur >=  SOCKET_LIMIT_TARGET + 250) {
+
+    if (rlimitData.rlim_cur >= SOCKET_LIMIT_TARGET) { // larger than target!
         gMaxCount = SOCKET_LIMIT_TARGET;
         return PR_SUCCESS;
     }
 
     int32_t maxallowed = rlimitData.rlim_max;
-    if (maxallowed == -1) {                       /* no limit */
-        maxallowed = SOCKET_LIMIT_TARGET + 250;
-    } else if ((uint32_t)maxallowed < SOCKET_LIMIT_MIN + 250) {
-        return PR_SUCCESS;
-    } else if ((uint32_t)maxallowed > SOCKET_LIMIT_TARGET + 250) {
-        maxallowed = SOCKET_LIMIT_TARGET + 250;
+    if ((uint32_t)maxallowed <= SOCKET_LIMIT_MIN) {
+        return PR_SUCCESS; // so small treat as if rlimit is broken
+    }
+
+    if ((maxallowed == -1) || // no hard cap - ok to set target
+        ((uint32_t)maxallowed >= SOCKET_LIMIT_TARGET)) {
+        maxallowed = SOCKET_LIMIT_TARGET;
     }
 
     rlimitData.rlim_cur = maxallowed;
     setrlimit(RLIMIT_NOFILE, &rlimitData);
-    if (getrlimit(RLIMIT_NOFILE, &rlimitData) != -1)
-        if (rlimitData.rlim_cur > SOCKET_LIMIT_MIN + 250)
-            gMaxCount = rlimitData.rlim_cur - 250;
+    if ((getrlimit(RLIMIT_NOFILE, &rlimitData) != -1) &&
+        (rlimitData.rlim_cur > SOCKET_LIMIT_MIN)) {
+        gMaxCount = rlimitData.rlim_cur;
+    }
 
 #elif defined(XP_WIN) && !defined(WIN_CE)
     // >= XP is confirmed to have at least 1000
+    PR_STATIC_ASSERT(SOCKET_LIMIT_TARGET <= 1000);
     gMaxCount = SOCKET_LIMIT_TARGET;
 #else
     // other platforms are harder to test - so leave at safe legacy value

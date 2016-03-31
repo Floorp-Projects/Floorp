@@ -2322,14 +2322,14 @@ Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
 }
 
 void
-Console::SetConsoleEventHandler(AnyCallback& aHandler)
+Console::SetConsoleEventHandler(AnyCallback* aHandler)
 {
   AssertIsOnOwningThread();
 
   // We don't want to expose this functionality to main-thread yet.
   MOZ_ASSERT(!NS_IsMainThread());
 
-  mConsoleEventNotifier = &aHandler;
+  mConsoleEventNotifier = aHandler;
 }
 
 void
