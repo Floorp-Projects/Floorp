@@ -592,11 +592,10 @@ class IceTestPeer : public sigslot::has_slots<> {
     std::vector<std::string> candidates_in =
       ice_ctx_->GetStream(stream)->GetCandidates();
 
-
     for (size_t i=0; i < candidates_in.size(); i++) {
       std::string candidate(FilterCandidate(candidates_in[i]));
       if (!candidate.empty()) {
-        std::cerr << "Returning candidate: " << candidate << std::endl;
+        std::cerr << name_ << " Returning candidate: " << candidate << std::endl;
         candidates.push_back(candidate);
       }
     }
@@ -673,6 +672,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     trickle_mode_ = trickle_mode;
     ice_complete_ = false;
+    ice_reached_checking_ = false;
     res = ice_ctx_->ParseGlobalAttributes(remote->GetGlobalAttributes());
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
@@ -687,7 +687,7 @@ class IceTestPeer : public sigslot::has_slots<> {
             remote->GetCandidates(i);
 
         for (size_t j=0; j<candidates.size(); ++j) {
-          std::cerr << "Candidate: " + candidates[j] << std::endl;
+          std::cerr << name_ << " Candidate: " + candidates[j] << std::endl;
         }
         res = aStream->ParseAttributes(candidates);
         ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -722,7 +722,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void SimulateTrickle(size_t stream) {
-    std::cerr << "Doing trickle for stream " << stream << std::endl;
+    std::cerr << name_ << " Doing trickle for stream " << stream << std::endl;
     // If we are in trickle deferred mode, now trickle in the candidates
     // for |stream|
 
@@ -833,14 +833,14 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void DumpAndCheckActiveCandidates_s() {
-    std::cerr << "Active candidates:" << std::endl;
+    std::cerr << name_ << " Active candidates:" << std::endl;
     for (size_t i=0; i < ice_ctx_->GetStreamCount(); ++i) {
       if (!ice_ctx_->GetStream(i)) {
         continue;
       }
 
       for (size_t j=0; j < ice_ctx_->GetStream(i)->components(); ++j) {
-        std::cerr << "Stream " << i << " component " << j+1 << std::endl;
+        std::cerr << name_ << " Stream " << i << " component " << j+1 << std::endl;
 
         UniquePtr<NrIceCandidate> local;
         UniquePtr<NrIceCandidate> remote;
@@ -892,6 +892,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void Shutdown() {
+    std::cerr << name_ << " Shutdown" << std::endl;
     for (auto s = controlled_trickle_candidates_.begin();
          s != controlled_trickle_candidates_.end();
          ++s) {
@@ -934,7 +935,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     std::cerr << "Gathering complete for " <<  name_ << std::endl;
     gathering_complete_ = true;
 
-    std::cerr << "CANDIDATES:" << std::endl;
+    std::cerr << name_ << " CANDIDATES:" << std::endl;
     for (size_t i=0; i<ice_ctx_->GetStreamCount(); ++i) {
       std::cerr << "Stream " << name_ << std::endl;
 
@@ -974,7 +975,7 @@ class IceTestPeer : public sigslot::has_slots<> {
           break;
         }
       }
-      ASSERT_NE(index, -1);
+      ASSERT_NE(index, -1u);
 
       ASSERT_GT(remote_->ice_ctx_->GetStreamCount(), index);
       nsresult res = remote_->ice_ctx_->GetStream(index)->ParseTrickleCandidate(
@@ -1124,11 +1125,11 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void StreamReady(NrIceMediaStream *stream) {
     ++ready_ct_;
-    std::cerr << "Stream ready " << stream->name() << " ct=" << ready_ct_ << std::endl;
+    std::cerr << "Stream ready for " << stream->name() << " ct=" << ready_ct_ << std::endl;
     DumpCandidatePairs_s(stream);
   }
   void StreamFailed(NrIceMediaStream *stream) {
-    std::cerr << "Stream failed " << stream->name() << " ct=" << ready_ct_ << std::endl;
+    std::cerr << "Stream failed for " << stream->name() << " ct=" << ready_ct_ << std::endl;
     DumpCandidatePairs_s(stream);
   }
 
@@ -1139,11 +1140,11 @@ class IceTestPeer : public sigslot::has_slots<> {
       case NrIceCtx::ICE_CTX_INIT:
         break;
       case NrIceCtx::ICE_CTX_CHECKING:
-        std::cerr << "ICE checking " << name_ << std::endl;
+        std::cerr << "ICE reached checking for " << name_ << std::endl;
         ice_reached_checking_ = true;
         break;
       case NrIceCtx::ICE_CTX_OPEN:
-        std::cerr << "ICE completed " << name_ << std::endl;
+        std::cerr << "ICE completed for " << name_ << std::endl;
         ice_complete_ = true;
         break;
       case NrIceCtx::ICE_CTX_FAILED:
@@ -1153,7 +1154,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void PacketReceived(NrIceMediaStream *stream, int component, const unsigned char *data,
                       int len) {
-    std::cerr << "Received " << len << " bytes" << std::endl;
+    std::cerr << name_ << ": received " << len << " bytes" << std::endl;
     ++received_;
   }
 
@@ -1167,7 +1168,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->GetStream(stream)->SendPacket(component, data, len)));
 
     ++sent_;
-    std::cerr << "Sent " << len << " bytes" << std::endl;
+    std::cerr << name_ << ": sent " << len << " bytes" << std::endl;
   }
 
   void SetCandidateFilter(CandidateFilter filter) {
@@ -1460,6 +1461,7 @@ class WebRtcIceConnectTest : public StunTest {
  public:
   WebRtcIceConnectTest() :
     initted_(false),
+    test_stun_server_initedd_(false),
     use_nat_(false),
     filtering_type_(TestNat::ENDPOINT_INDEPENDENT),
     mapping_type_(TestNat::ENDPOINT_INDEPENDENT),
@@ -1491,35 +1493,38 @@ class WebRtcIceConnectTest : public StunTest {
     p2_->RemoveStream(index);
   }
 
-  void Init(bool allow_loopback, bool enable_tcp, bool default_only = false) {
-    if (!initted_) {
-      p1_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, allow_loopback,
-                                    enable_tcp, false, default_only);
-      p2_ = MakeUnique<IceTestPeer>("P2", test_utils_, false, allow_loopback,
-                                    enable_tcp, false, default_only);
+  void Init(bool allow_loopback,
+            bool enable_tcp,
+            bool default_only = false,
+            bool setupStunServers = true) {
+    if (initted_) {
+      return;
     }
+
+    p1_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, allow_loopback,
+                                  enable_tcp, false, default_only);
+    p2_ = MakeUnique<IceTestPeer>("P2", test_utils_, false, allow_loopback,
+                                  enable_tcp, false, default_only);
+    InitPeer(p1_.get(), setupStunServers);
+    InitPeer(p2_.get(), setupStunServers);
+
     initted_ = true;
   }
 
-  bool Gather(unsigned int waitTime = kDefaultTimeout,
-              bool setupStunServers = true) {
-    Init(false, false);
+  void InitPeer(IceTestPeer* peer, bool setupStunServers = true) {
     if (use_nat_) {
       // If we enable nat simulation, but still use a real STUN server somewhere
       // on the internet, we will see failures if there is a real NAT in
       // addition to our simulated one, particularly if it disallows
       // hairpinning.
       if (setupStunServers) {
-        UseTestStunServer();
+        InitTestStunServer();
+        peer->UseTestStunServer();
       }
-      p1_->UseNat();
-      p2_->UseNat();
-      p1_->SetFilteringType(filtering_type_);
-      p2_->SetFilteringType(filtering_type_);
-      p1_->SetMappingType(mapping_type_);
-      p2_->SetMappingType(mapping_type_);
-      p1_->SetBlockUdp(block_udp_);
-      p2_->SetBlockUdp(block_udp_);
+      peer->UseNat();
+      peer->SetFilteringType(filtering_type_);
+      peer->SetMappingType(mapping_type_);
+      peer->SetBlockUdp(block_udp_);
     } else if (setupStunServers) {
       std::vector<NrIceStunServer> stun_servers;
 
@@ -1528,42 +1533,69 @@ class WebRtcIceConnectTest : public StunTest {
       stun_servers.push_back(*NrIceStunServer::Create(stun_server_address_,
                                                       kDefaultStunServerPort, kNrIceTransportTcp));
 
-      p1_->SetStunServers(stun_servers);
-      p2_->SetStunServers(stun_servers);
+      peer->SetStunServers(stun_servers);
     }
+  }
 
-    p1_->Gather();
-    p2_->Gather();
+  bool Gather(unsigned int waitTime = kDefaultTimeout) {
+    Init(false, false);
+
+    return GatherCallerAndCallee(p1_.get(), p2_.get(), waitTime);
+  }
+
+  bool GatherCallerAndCallee(IceTestPeer* caller,
+                             IceTestPeer* callee,
+                             unsigned int waitTime = kDefaultTimeout) {
+    caller->Gather();
+    callee->Gather();
 
     if (waitTime) {
-      EXPECT_TRUE_WAIT(p1_->gathering_complete(), waitTime);
-      if (!p1_->gathering_complete())
+      EXPECT_TRUE_WAIT(caller->gathering_complete(), waitTime);
+      if (!caller->gathering_complete())
         return false;
-      EXPECT_TRUE_WAIT(p2_->gathering_complete(), waitTime);
-      if (!p2_->gathering_complete())
+      EXPECT_TRUE_WAIT(callee->gathering_complete(), waitTime);
+      if (!callee->gathering_complete())
         return false;
     }
     return true;
   }
 
   void UseNat() {
+    // to be useful, this method should be called before Init
+    ASSERT_FALSE(initted_);
     use_nat_ = true;
   }
 
   void SetFilteringType(TestNat::NatBehavior type) {
+    // to be useful, this method should be called before Init
+    ASSERT_FALSE(initted_);
     filtering_type_ = type;
   }
 
   void SetMappingType(TestNat::NatBehavior type) {
+    // to be useful, this method should be called before Init
+    ASSERT_FALSE(initted_);
     mapping_type_ = type;
   }
 
   void BlockUdp() {
+    // to be useful, this method should be called before Init
+    ASSERT_FALSE(initted_);
     block_udp_ = true;
   }
 
-  void UseTestStunServer() {
+  void InitTestStunServer() {
+    if (test_stun_server_initedd_) {
+      return;
+    }
+
+    std::cerr << "Resetting TestStunServer" << std::endl;
     TestStunServer::GetInstance(AF_INET)->Reset();
+    test_stun_server_initedd_ = true;
+  }
+
+  void UseTestStunServer() {
+    InitTestStunServer();
     p1_->UseTestStunServer();
     p2_->UseTestStunServer();
   }
@@ -1589,21 +1621,34 @@ class WebRtcIceConnectTest : public StunTest {
   }
 
   void Connect() {
+    ConnectCallerAndCallee(p2_.get(), p1_.get());
+  }
+
+  void ConnectCallerAndCallee(IceTestPeer* caller, IceTestPeer* callee) {
+    ASSERT_TRUE(caller->ready_ct() == 0 && 
+                caller->ice_complete() == 0 && 
+                caller->ice_reached_checking() == 0);
+    ASSERT_TRUE(callee->ready_ct() == 0 && 
+                callee->ice_complete() == 0 && 
+                callee->ice_reached_checking() == 0);
+
     // IceTestPeer::Connect grabs attributes from the first arg, and gives them
     // to |this|, meaning that p2_->Connect(p1_, ...) simulates p1 sending an
     // offer to p2. Order matters here because it determines which peer is
     // controlling.
-    p2_->Connect(p1_.get(), TRICKLE_NONE);
-    p1_->Connect(p2_.get(), TRICKLE_NONE);
+    caller->Connect(callee, TRICKLE_NONE);
+    callee->Connect(caller, TRICKLE_NONE);
 
-    ASSERT_TRUE_WAIT(p1_->ready_ct() == 1 && p2_->ready_ct() == 1,
+    ASSERT_TRUE_WAIT(callee->ready_ct() == 1 && caller->ready_ct() == 1,
                      kDefaultTimeout);
-    ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(),
+    ASSERT_TRUE_WAIT(callee->ice_complete() && caller->ice_complete(),
                      kDefaultTimeout);
-    AssertCheckingReached();
 
-    p1_->DumpAndCheckActiveCandidates();
-    p2_->DumpAndCheckActiveCandidates();
+    ASSERT_TRUE(callee->ice_reached_checking());
+    ASSERT_TRUE(caller->ice_reached_checking());
+
+    callee->DumpAndCheckActiveCandidates();
+    caller->DumpAndCheckActiveCandidates();
   }
 
   void SetExpectedTypes(NrIceCandidate::Type local, NrIceCandidate::Type remote,
@@ -1687,19 +1732,35 @@ class WebRtcIceConnectTest : public StunTest {
     PR_Sleep(PR_MillisecondsToInterval(kDefaultTimeout));
   }
 
+  // default is p1_ sending to p2_
   void SendReceive() {
-    //    p1_->Send(2);
+    SendReceive(p1_.get(), p2_.get());
+  }
+
+  void SendReceive(IceTestPeer *p1, IceTestPeer *p2,
+                   bool expectTxFailure = false,
+                   bool expectRxFailure = false) {
     test_utils_->sts_target()->Dispatch(
-        WrapRunnable(p1_.get(),
+        WrapRunnable(p1,
                      &IceTestPeer::SendPacket, 0, 1,
                      reinterpret_cast<const unsigned char *>("TEST"), 4),
         NS_DISPATCH_SYNC);
-    ASSERT_EQ(1u, p1_->sent());
-    ASSERT_TRUE_WAIT(p2_->received() == 1, 1000);
+    if (expectTxFailure) {
+      ASSERT_NE(1u, p1->sent());
+    } else {
+      ASSERT_EQ(1u, p1->sent());
+    }
+    if (expectRxFailure) {
+      usleep(1000);
+      ASSERT_TRUE(p2->received() == 0);
+    } else {
+      ASSERT_TRUE_WAIT(p2->received() == 1, 1000);
+    }
   }
 
  protected:
   bool initted_;
+  bool test_stun_server_initedd_;
   nsCOMPtr<nsIEventTarget> target_;
   mozilla::UniquePtr<IceTestPeer> p1_;
   mozilla::UniquePtr<IceTestPeer> p2_;
@@ -2326,10 +2387,10 @@ TEST_F(WebRtcIceConnectTest, DISABLED_TestConnectDefaultRouteOnly) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestLoopbackOnlySortOf) {
-  Init(true, false);
+  Init(true, false, false, false);
   AddStream("first", 1);
   SetCandidateFilter(IsLoopbackCandidate);
-  ASSERT_TRUE(Gather(kDefaultTimeout, false));
+  ASSERT_TRUE(Gather());
   SetExpectedRemoteCandidateAddr("127.0.0.1");
   Connect();
 }
@@ -2401,28 +2462,22 @@ TEST_F(WebRtcIceConnectTest, TestTrickleIceLiteOfferer) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestGatherFullCone) {
-  AddStream("first", 1);
   UseNat();
-  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
-  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  AddStream("first", 1);
   ASSERT_TRUE(Gather());
 }
 
 TEST_F(WebRtcIceConnectTest, TestGatherFullConeAutoPrioritize) {
+  UseNat();
   Init(true, false);
   AddStream("first", 1);
-  UseNat();
-  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
-  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
   ASSERT_TRUE(Gather());
 }
 
 
 TEST_F(WebRtcIceConnectTest, TestConnectFullCone) {
-  AddStream("first", 1);
   UseNat();
-  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
-  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  AddStream("first", 1);
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
                    NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
   ASSERT_TRUE(Gather());
@@ -2430,7 +2485,7 @@ TEST_F(WebRtcIceConnectTest, TestConnectFullCone) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestConnectNoNatRouteOnly) {
-  Init(false, false, true);
+  Init(false, false, true, false);
   AddStream("first", 1);
   UseTestStunServer();
   // Because we are connecting from our host candidate to the
@@ -2438,16 +2493,14 @@ TEST_F(WebRtcIceConnectTest, TestConnectNoNatRouteOnly) {
   // we see a host/srflx pair.
   SetExpectedTypes(NrIceCandidate::Type::ICE_HOST,
                    NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
-  ASSERT_TRUE(Gather(kDefaultTimeout, false));
+  ASSERT_TRUE(Gather());
   Connect();
 }
 
 TEST_F(WebRtcIceConnectTest, TestConnectFullConeDefaultRouteOnly) {
+  UseNat();
   Init(false, false, true);
   AddStream("first", 1);
-  UseNat();
-  SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
-  SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
                    NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
   ASSERT_TRUE(Gather());
@@ -2455,18 +2508,18 @@ TEST_F(WebRtcIceConnectTest, TestConnectFullConeDefaultRouteOnly) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestGatherAddressRestrictedCone) {
-  AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::ADDRESS_DEPENDENT);
   SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  AddStream("first", 1);
   ASSERT_TRUE(Gather());
 }
 
 TEST_F(WebRtcIceConnectTest, TestConnectAddressRestrictedCone) {
-  AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::ADDRESS_DEPENDENT);
   SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  AddStream("first", 1);
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
                    NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
   ASSERT_TRUE(Gather());
@@ -2474,18 +2527,18 @@ TEST_F(WebRtcIceConnectTest, TestConnectAddressRestrictedCone) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestGatherPortRestrictedCone) {
-  AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::PORT_DEPENDENT);
   SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  AddStream("first", 1);
   ASSERT_TRUE(Gather());
 }
 
 TEST_F(WebRtcIceConnectTest, TestConnectPortRestrictedCone) {
-  AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::PORT_DEPENDENT);
   SetMappingType(TestNat::ENDPOINT_INDEPENDENT);
+  AddStream("first", 1);
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
                    NrIceCandidate::Type::ICE_SERVER_REFLEXIVE);
   ASSERT_TRUE(Gather());
@@ -2493,10 +2546,10 @@ TEST_F(WebRtcIceConnectTest, TestConnectPortRestrictedCone) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestGatherSymmetricNat) {
-  AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::PORT_DEPENDENT);
   SetMappingType(TestNat::PORT_DEPENDENT);
+  AddStream("first", 1);
   ASSERT_TRUE(Gather());
 }
 
@@ -2504,10 +2557,10 @@ TEST_F(WebRtcIceConnectTest, TestConnectSymmetricNat) {
   if (turn_server_.empty())
     return;
 
-  AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::PORT_DEPENDENT);
   SetMappingType(TestNat::PORT_DEPENDENT);
+  AddStream("first", 1);
   p1_->SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
                         NrIceCandidate::Type::ICE_RELAYED);
   p2_->SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
@@ -2522,9 +2575,9 @@ TEST_F(WebRtcIceConnectTest, TestGatherNatBlocksUDP) {
   if (turn_server_.empty())
     return;
 
-  AddStream("first", 1);
   UseNat();
   BlockUdp();
+  AddStream("first", 1);
   std::vector<NrIceTurnServer> turn_servers;
   std::vector<unsigned char> password_vec(turn_password_.begin(),
                                           turn_password_.end());
@@ -2543,9 +2596,9 @@ TEST_F(WebRtcIceConnectTest, TestConnectNatBlocksUDP) {
   if (turn_server_.empty())
     return;
 
-  AddStream("first", 1);
   UseNat();
   BlockUdp();
+  AddStream("first", 1);
   std::vector<NrIceTurnServer> turn_servers;
   std::vector<unsigned char> password_vec(turn_password_.begin(),
                                           turn_password_.end());
@@ -3106,8 +3159,9 @@ TEST_F(WebRtcIceConnectTest, TestPollCandPairsAfterConnect) {
 }
 
 TEST_F(WebRtcIceConnectTest, TestHostCandPairingFilter) {
+  Init(false, false, false, false);
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(kDefaultTimeout, false));
+  ASSERT_TRUE(Gather(kDefaultTimeout));
   SetCandidateFilter(IsIpv4Candidate);
 
   int host_net = p1_->GetCandidatesPrivateIpv4Range(0);
@@ -3139,6 +3193,7 @@ TEST_F(WebRtcIceConnectTest, DISABLED_TestSrflxCandPairingFilter) {
     return;
   }
 
+  Init(false, false, false, false);
   AddStream("first", 1);
   ASSERT_TRUE(Gather(kDefaultTimeout));
   SetCandidateFilter(IsSrflxCandidate);
