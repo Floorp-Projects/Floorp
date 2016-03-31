@@ -47,6 +47,7 @@ function* testCheckboxState(testData) {
   });
 
   let { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
 
   info("Install a test addon.");
   yield installAddon(document, "addons/unpacked/install.rdf", ADDON_NAME,
