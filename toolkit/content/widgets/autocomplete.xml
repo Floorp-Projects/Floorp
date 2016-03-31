@@ -1452,16 +1452,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // Find which regions of text match the search terms
           let regions = [];
           for (let search of Array.prototype.slice.call(aSearchTokens)) {
-            let matchIndex;
-            let startIndex = 0;
+            let matchIndex = -1;
             let searchLen = search.length;
 
             // Find all matches of the search terms, but stop early for perf
-            let lowerText = aText.toLowerCase().substr(0, this.boundaryCutoff);
-            while ((matchIndex = lowerText.indexOf(search, startIndex)) >= 0) {
-              // Start the next search from where this one finished
-              startIndex = matchIndex + searchLen;
-              regions.push([matchIndex, startIndex]);
+            let lowerText = aText.substr(0, this.boundaryCutoff).toLowerCase();
+            while ((matchIndex = lowerText.indexOf(search, matchIndex + 1)) >= 0) {
+              regions.push([matchIndex, matchIndex + searchLen]);
             }
           }
 
