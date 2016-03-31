@@ -100,7 +100,7 @@ let testcases = [
     },
     { search: "tat",
       result: "tatatat",
-      emphasis: ["tat", "a", "tat"],
+      emphasis: ["tatatat"],
       emphasizeFirst: true
     },
     { search: "cheval valise",
