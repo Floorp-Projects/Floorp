@@ -756,7 +756,7 @@ struct Class
     JS_CLASS_MEMBERS(FinalizeOp);
     const ClassSpec* spec;
     const ClassExtension* ext;
-    const ObjectOps* ops;
+    const ObjectOps* oOps;
 
     /*
      * Objects of this class aren't native objects. They don't have Shapes that
@@ -831,20 +831,20 @@ struct Class
     JSObjectMovedOp extObjectMovedOp()
                                const { return ext ? ext->objectMovedOp               : nullptr; }
 
-    LookupPropertyOp getOpsLookupProperty() const { return ops ? ops->lookupProperty : nullptr; }
-    DefinePropertyOp getOpsDefineProperty() const { return ops ? ops->defineProperty : nullptr; }
-    HasPropertyOp    getOpsHasProperty()    const { return ops ? ops->hasProperty    : nullptr; }
-    GetPropertyOp    getOpsGetProperty()    const { return ops ? ops->getProperty    : nullptr; }
-    SetPropertyOp    getOpsSetProperty()    const { return ops ? ops->setProperty    : nullptr; }
+    LookupPropertyOp getOpsLookupProperty() const { return oOps ? oOps->lookupProperty : nullptr; }
+    DefinePropertyOp getOpsDefineProperty() const { return oOps ? oOps->defineProperty : nullptr; }
+    HasPropertyOp    getOpsHasProperty()    const { return oOps ? oOps->hasProperty    : nullptr; }
+    GetPropertyOp    getOpsGetProperty()    const { return oOps ? oOps->getProperty    : nullptr; }
+    SetPropertyOp    getOpsSetProperty()    const { return oOps ? oOps->setProperty    : nullptr; }
     GetOwnPropertyOp getOpsGetOwnPropertyDescriptor()
-                                            const { return ops ? ops->getOwnPropertyDescriptor
+                                            const { return oOps ? oOps->getOwnPropertyDescriptor
                                                                                      : nullptr; }
-    DeletePropertyOp getOpsDeleteProperty() const { return ops ? ops->deleteProperty : nullptr; }
-    WatchOp          getOpsWatch()          const { return ops ? ops->watch          : nullptr; }
-    UnwatchOp        getOpsUnwatch()        const { return ops ? ops->unwatch        : nullptr; }
-    GetElementsOp    getOpsGetElements()    const { return ops ? ops->getElements    : nullptr; }
-    JSNewEnumerateOp getOpsEnumerate()      const { return ops ? ops->enumerate      : nullptr; }
-    JSFunToStringOp  getOpsFunToString()    const { return ops ? ops->funToString    : nullptr; }
+    DeletePropertyOp getOpsDeleteProperty() const { return oOps ? oOps->deleteProperty : nullptr; }
+    WatchOp          getOpsWatch()          const { return oOps ? oOps->watch          : nullptr; }
+    UnwatchOp        getOpsUnwatch()        const { return oOps ? oOps->unwatch        : nullptr; }
+    GetElementsOp    getOpsGetElements()    const { return oOps ? oOps->getElements    : nullptr; }
+    JSNewEnumerateOp getOpsEnumerate()      const { return oOps ? oOps->enumerate      : nullptr; }
+    JSFunToStringOp  getOpsFunToString()    const { return oOps ? oOps->funToString    : nullptr; }
 };
 
 static_assert(offsetof(JSClass, name) == offsetof(Class, name),
