@@ -2478,6 +2478,25 @@ nsCookieService::RemoveNative(const nsACString &aHost,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCookieService::UsePrivateMode(bool aIsPrivate,
+                                nsIPrivateModeCallback* aCallback)
+{
+  if (!aCallback) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!mDBState) {
+    NS_WARNING("No DBState! Profile already closed?");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = aIsPrivate ? mPrivateDBState : mDefaultDBState;
+
+  return aCallback->Callback();
+}
+
 /******************************************************************************
  * nsCookieService impl:
  * private file I/O functions
