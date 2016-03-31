@@ -956,6 +956,13 @@ PluginContent.prototype = {
       // enough to serve as in-content notification.
       this.hideNotificationBar("plugin-crashed");
       doc.mozNoPluginCrashedNotification = true;
+
+      // Notify others that the crash reporter UI is now ready.
+      // Currently, this event is only used by tests.
+      let winUtils = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
+      let event = new this.content.CustomEvent("PluginCrashReporterDisplayed", {bubbles: true});
+      winUtils.dispatchEventToChromeOnly(plugin, event);
     } else {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.
