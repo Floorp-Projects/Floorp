@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.json.JSONArray;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AdjustConstants;
 import org.mozilla.gecko.AppConstants;
@@ -17,7 +18,6 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityStatus;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.LocaleManager;
@@ -40,7 +40,6 @@ import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
@@ -89,8 +88,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-
-import com.keepsafe.switchboard.SwitchBoard;
 
 import org.json.JSONObject;
 
@@ -1154,12 +1151,28 @@ OnSharedPreferenceChangeListener
         put(AndroidImportPreference.PREF_KEY, new AndroidImportPreference.Handler());
     }};
 
+    private void recordSettingChangeTelemetry(String prefName, Object newValue) {
+        final String value;
+        if (newValue instanceof Boolean) {
+            value = (Boolean) newValue ? "1" : "0";
+        } else if (prefName.equals(PREFS_HOMEPAGE)) {
+            // Don't record the user's homepage preference.
+            value = "*";
+        } else {
+            value = newValue.toString();
+        }
+
+        final JSONArray extras = new JSONArray();
+        extras.put(prefName);
+        extras.put(value);
+        Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, Method.SETTINGS, extras.toString());
+    }
+
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         final String prefName = preference.getKey();
         Log.i(LOGTAG, "Changed " + prefName + " = " + newValue);
-
-        Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, Method.SETTINGS, prefName);
+        recordSettingChangeTelemetry(prefName, newValue);
 
         if (PREFS_MP_ENABLED.equals(prefName)) {
             showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
