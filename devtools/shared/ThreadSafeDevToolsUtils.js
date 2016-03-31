@@ -245,6 +245,13 @@ exports.isSavedFrame = function (thing) {
 };
 
 /**
+ * Return true iff `thing` is a `Set` object (possibly from another global).
+ */
+exports.isSet = function(thing) {
+  return Object.prototype.toString.call(thing) === "[object Set]";
+};
+
+/**
  * Given a list of lists, flatten it. Only flattens one level; does not
  * recursively flatten all levels.
  *
