@@ -2626,8 +2626,8 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   }
 
   nsIScrollableFrame::ScrollMomentum momentum =
-    aEvent->isMomentum ? nsIScrollableFrame::SYNTHESIZED_MOMENTUM_EVENT
-                       : nsIScrollableFrame::NOT_MOMENTUM;
+    aEvent->mIsMomentum ? nsIScrollableFrame::SYNTHESIZED_MOMENTUM_EVENT
+                        : nsIScrollableFrame::NOT_MOMENTUM;
 
   nsIntPoint overflow;
   aScrollableFrame->ScrollBy(actualDevPixelScrollAmount,
@@ -5696,7 +5696,7 @@ EventStateManager::WheelPrefs::ComputeActionFor(WidgetWheelEvent* aEvent)
   }
 
   // Momentum events shouldn't run special actions.
-  if (aEvent->isMomentum) {
+  if (aEvent->mIsMomentum) {
     // Use the default action.  Note that user might kill the wheel scrolling.
     Init(INDEX_DEFAULT);
     return (actions[INDEX_DEFAULT] == ACTION_SCROLL) ? ACTION_SCROLL :
