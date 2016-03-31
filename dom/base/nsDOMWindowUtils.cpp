@@ -795,7 +795,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   wheelEvent.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   wheelEvent.mDeltaX = aDeltaX;
   wheelEvent.mDeltaY = aDeltaY;
-  wheelEvent.deltaZ = aDeltaZ;
+  wheelEvent.mDeltaZ = aDeltaZ;
   wheelEvent.deltaMode = aDeltaMode;
   wheelEvent.isMomentum =
     (aOptions & WHEEL_EVENT_CAUSED_BY_MOMENTUM) != 0;
