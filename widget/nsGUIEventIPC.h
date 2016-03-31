@@ -162,7 +162,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
     WriteParam(aMsg, aParam.mDeltaX);
     WriteParam(aMsg, aParam.mDeltaY);
-    WriteParam(aMsg, aParam.deltaZ);
+    WriteParam(aMsg, aParam.mDeltaZ);
     WriteParam(aMsg, aParam.deltaMode);
     WriteParam(aMsg, aParam.customizedByUserPrefs);
     WriteParam(aMsg, aParam.mayHaveMomentum);
@@ -186,7 +186,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
                 static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
       ReadParam(aMsg, aIter, &aResult->mDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->mDeltaY) &&
-      ReadParam(aMsg, aIter, &aResult->deltaZ) &&
+      ReadParam(aMsg, aIter, &aResult->mDeltaZ) &&
       ReadParam(aMsg, aIter, &aResult->deltaMode) &&
       ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
       ReadParam(aMsg, aIter, &aResult->mayHaveMomentum) &&
