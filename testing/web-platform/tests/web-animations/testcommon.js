@@ -9,6 +9,7 @@ policies and contribution forms [3].
  */
 
 "use strict";
+var MS_PER_SEC = 1000;
 
 // creates div element, appends it to the document body and
 // removes the created element during test cleanup
