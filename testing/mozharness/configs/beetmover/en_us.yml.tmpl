@@ -51,7 +51,7 @@ mapping:
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/win32_info.txt
     sdk:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
-      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ version }}.{{ platform }}.sdk.zip
     mar_tools_mar:
       artifact: {{ artifact_base_url }}/mar.exe
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/win32/mar.exe
@@ -75,7 +75,7 @@ mapping:
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/win64_info.txt
     sdk:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
-      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ version }}.{{ platform }}.sdk.zip
     mar_tools_mar:
       artifact: {{ artifact_base_url }}/mar.exe
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/win64/mar.exe
@@ -96,7 +96,7 @@ mapping:
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/linux_info.txt
     sdk:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
-      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ version }}.{{ platform }}.sdk.tar.bz2
     mar_tools_mar:
       artifact: {{ artifact_base_url }}/mar
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/linux/mar
@@ -117,7 +117,7 @@ mapping:
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/linux64_info.txt
     sdk:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
-      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ version }}.{{ platform }}.sdk.tar.bz2
     mar_tools_mar:
       artifact: {{ artifact_base_url }}/mar
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/linux64/mar
@@ -138,7 +138,7 @@ mapping:
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/macosx64_info.txt
     sdk:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}-x86_64.sdk.tar.bz2
-      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}-x86_64.sdk.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ version }}.{{ platform }}-x86_64.sdk.tar.bz2
     mar_tools_mar:
       artifact: {{ artifact_base_url }}/mar
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/macosx64/mar
