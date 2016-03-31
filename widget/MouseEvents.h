@@ -324,7 +324,7 @@ private:
   friend class mozilla::dom::PBrowserChild;
 protected:
   WidgetDragEvent()
-    : userCancelled(false)
+    : mUserCancelled(false)
     , mDefaultPreventedOnContent(false)
   {
   }
@@ -333,7 +333,7 @@ public:
 
   WidgetDragEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEvent(aIsTrusted, aMessage, aWidget, eDragEventClass, eReal)
-    , userCancelled(false)
+    , mUserCancelled(false)
     , mDefaultPreventedOnContent(false)
   {
     mFlags.mCancelable =
@@ -355,7 +355,7 @@ public:
   nsCOMPtr<dom::DataTransfer> mDataTransfer;
 
   // If this is true, user has cancelled the drag operation.
-  bool userCancelled;
+  bool mUserCancelled;
   // If this is true, the drag event's preventDefault() is called on content.
   bool mDefaultPreventedOnContent;
 
@@ -365,8 +365,8 @@ public:
     AssignMouseEventData(aEvent, aCopyTargets);
 
     mDataTransfer = aEvent.mDataTransfer;
-    // XXX userCancelled isn't copied, is this instentionally?
-    userCancelled = false;
+    // XXX mUserCancelled isn't copied, is this intentionally?
+    mUserCancelled = false;
     mDefaultPreventedOnContent = aEvent.mDefaultPreventedOnContent;
   }
 };
