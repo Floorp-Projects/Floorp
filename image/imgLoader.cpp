@@ -1136,7 +1136,7 @@ imgLoader*
 imgLoader::Singleton()
 {
   if (!gSingleton) {
-    gSingleton = imgLoader::Create();
+    gSingleton = imgLoader::Create().take();
   }
   return gSingleton;
 }
@@ -1145,7 +1145,7 @@ imgLoader*
 imgLoader::PBSingleton()
 {
   if (!gPBSingleton) {
-    gPBSingleton = imgLoader::Create();
+    gPBSingleton = imgLoader::Create().take();
     gPBSingleton->RespectPrivacyNotifications();
   }
   return gPBSingleton;
