@@ -109,7 +109,7 @@ nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
   , mExplicitLanguage(false)
   , mAllowZoom(true)
   , mScriptUnconstrainedSize(mSize)
-  , mScriptMinSize(aPresContext->CSSTwipsToAppUnits(
+  , mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
       NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT)))
   , mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)
   , mLanguage(GetLanguage(aPresContext))
@@ -373,7 +373,7 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   }
 
   nscoord medium =
-    (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
+    (StaticPresData::Get()->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
   NS_FOR_CSS_SIDES(side) {
     mBorderImageSlice.Set(side, nsStyleCoord(1.0f, eStyleUnit_Percent));
     mBorderImageWidth.Set(side, nsStyleCoord(1.0f, eStyleUnit_Factor));
@@ -760,7 +760,8 @@ nsStyleColumn::nsStyleColumn(nsPresContext* aPresContext)
   mColumnGap.SetNormalValue();
   mColumnFill = NS_STYLE_COLUMN_FILL_BALANCE;
 
-  mColumnRuleWidth = (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
+  mColumnRuleWidth =
+    (StaticPresData::Get()->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
   mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
   mColumnRuleColor = NS_RGB(0, 0, 0);
   mColumnRuleColorIsForeground = true;
