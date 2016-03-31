@@ -2100,7 +2100,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   event.pressure = pressure;
   event.clickCount = clickCount;
   event.inputSource = inputSource;
-  event.modifiers = aSourceEvent->modifiers;
+  event.mModifiers = aSourceEvent->mModifiers;
   if (aExtraEventFlags) {
     // Be careful not to overwrite existing flags!
     event.mFlags.Union(*aExtraEventFlags);

@@ -669,7 +669,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   }
 
   WidgetPointerEvent event(true, msg, widget);
-  event.modifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
+  event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.buttons = nsContentUtils::GetButtonsFlagForButton(aButton);
   event.widget = widget;
@@ -792,7 +792,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   }
 
   WidgetWheelEvent wheelEvent(true, eWheel, widget);
-  wheelEvent.modifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
+  wheelEvent.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   wheelEvent.deltaX = aDeltaX;
   wheelEvent.deltaY = aDeltaY;
   wheelEvent.deltaZ = aDeltaZ;
@@ -937,7 +937,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
     return NS_ERROR_UNEXPECTED;
   }
   WidgetTouchEvent event(true, msg, widget);
-  event.modifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
+  event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   event.widget = widget;
   event.mTime = PR_Now();
 
@@ -1292,7 +1292,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   }
 
   WidgetSimpleGestureEvent event(true, msg, widget);
-  event.modifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
+  event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   event.direction = aDirection;
   event.delta = aDelta;
   event.clickCount = aClickCount;

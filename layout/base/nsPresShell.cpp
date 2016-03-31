@@ -5531,7 +5531,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
                          WidgetMouseEvent::eSynthesized);
   event.refPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
   event.mTime = PR_IntervalNow();
-  // XXX set event.modifiers ?
+  // XXX set event.mModifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 
   nsCOMPtr<nsIPresShell> shell = pointVM->GetPresShell();
@@ -6902,7 +6902,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.isPrimary = i == 0;
       event.pointerId = touch->Identifier();
       event.refPoint = touch->mRefPoint;
-      event.modifiers = touchEvent->modifiers;
+      event.mModifiers = touchEvent->mModifiers;
       event.width = touch->RadiusX();
       event.height = touch->RadiusY();
       event.tiltX = touch->tiltX;

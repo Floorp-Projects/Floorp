@@ -815,7 +815,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
     charAtPt.mReply.mRect.ToUnknownRect());
   notification.mMouseButtonEventData.mButton = aMouseEvent->button;
   notification.mMouseButtonEventData.mButtons = aMouseEvent->buttons;
-  notification.mMouseButtonEventData.mModifiers = aMouseEvent->modifiers;
+  notification.mMouseButtonEventData.mModifiers = aMouseEvent->mModifiers;
 
   nsresult rv = IMEStateManager::NotifyIME(notification, mWidget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
