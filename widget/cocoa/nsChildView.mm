@@ -5154,7 +5154,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   outWheelEvent->mDeltaMode =
     usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
                      : nsIDOMWheelEvent::DOM_DELTA_LINE;
-  outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
+  outWheelEvent->mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent

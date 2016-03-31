@@ -453,7 +453,7 @@ private:
     , mDeltaZ(0.0)
     , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
     , mCustomizedByUserPrefs(false)
-    , isMomentum(false)
+    , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
     , lineOrPageDeltaX(0)
     , lineOrPageDeltaY(0)
@@ -477,7 +477,7 @@ public:
     , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
     , mCustomizedByUserPrefs(false)
     , mMayHaveMomentum(false)
-    , isMomentum(false)
+    , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
     , lineOrPageDeltaX(0)
     , lineOrPageDeltaY(0)
@@ -531,7 +531,7 @@ public:
   // true if the momentum events directly tied to this event may follow it.
   bool mMayHaveMomentum;
   // true if the event is caused by momentum.
-  bool isMomentum;
+  bool mIsMomentum;
 
   // If device event handlers don't know when they should set lineOrPageDeltaX
   // and lineOrPageDeltaY, this is true.  Otherwise, false.
@@ -616,7 +616,7 @@ public:
     mDeltaMode = aEvent.mDeltaMode;
     mCustomizedByUserPrefs = aEvent.mCustomizedByUserPrefs;
     mMayHaveMomentum = aEvent.mMayHaveMomentum;
-    isMomentum = aEvent.isMomentum;
+    mIsMomentum = aEvent.mIsMomentum;
     mIsNoLineOrPageDelta = aEvent.mIsNoLineOrPageDelta;
     lineOrPageDeltaX = aEvent.lineOrPageDeltaX;
     lineOrPageDeltaY = aEvent.lineOrPageDeltaY;

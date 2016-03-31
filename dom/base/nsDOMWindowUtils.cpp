@@ -797,7 +797,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   wheelEvent.mDeltaY = aDeltaY;
   wheelEvent.mDeltaZ = aDeltaZ;
   wheelEvent.mDeltaMode = aDeltaMode;
-  wheelEvent.isMomentum =
+  wheelEvent.mIsMomentum =
     (aOptions & WHEEL_EVENT_CAUSED_BY_MOMENTUM) != 0;
   wheelEvent.mIsNoLineOrPageDelta =
     (aOptions & WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE) != 0;
