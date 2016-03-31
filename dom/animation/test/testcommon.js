@@ -2,6 +2,20 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
+ * Use this variable if you specify duration or some other properties
+ * for script animation.
+ * E.g., div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+ *
+ * NOTE: Creating animations with short duration may cause intermittent
+ * failures in asynchronous test. For example, the short duration animation
+ * might be finished when animation.ready has been fulfilled because of slow
+ * platforms or busyness of the main thread.
+ * Setting short duration to cancel its animation does not matter but
+ * if you don't want to cancel the animation, consider using longer duration.
+ */
+const MS_PER_SEC = 1000;
+
+/**
  * Appends a div to the document body.
  *
  * @param t  The testharness.js Test object. If provided, this will be used
