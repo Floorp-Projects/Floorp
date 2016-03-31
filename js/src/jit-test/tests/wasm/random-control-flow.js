@@ -33,3 +33,33 @@ wasmEvalText(`(module (func
   )
 ))
 `);
+
+wasmEvalText(`(module
+  (func (result i32) (param i32) (param i32) (i32.const 0))
+  (func (result i32)
+   (call 0 (i32.const 1) (call 0 (i32.const 2) (i32.const 3)))
+   (call 0 (trap) (i32.const 4))
+  )
+)`);
+
+wasmEvalText(`
+(module
+
+ (func
+  (param i32) (param i32) (param i32) (param i32)
+  (result i32)
+  (i32.const 0)
+ )
+
+ (func (result i32)
+  (call 0
+   (i32.const 42)
+   (i32.const 53)
+   (call 0 (i32.const 100) (i32.const 13) (i32.const 37) (i32.const 128))
+   (return (i32.const 42))
+  )
+ )
+
+ (export "" 1)
+)
+`)();

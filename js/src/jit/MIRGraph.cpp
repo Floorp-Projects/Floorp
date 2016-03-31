@@ -31,7 +31,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     error_(false),
     pauseBuild_(nullptr),
     cancelBuild_(false),
-    maxAsmJSStackArgBytes_(0),
+    wasmMaxStackArgBytes_(0),
     performsCall_(false),
     usesSimd_(false),
     usesSimdCached_(false),
