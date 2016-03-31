@@ -1742,7 +1742,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
                                    eLegacyDragGesture, widget);
       FillInEventFromGestureDown(&gestureEvent);
 
-      startEvent.dataTransfer = gestureEvent.dataTransfer = dataTransfer;
+      startEvent.mDataTransfer = gestureEvent.mDataTransfer = dataTransfer;
       startEvent.inputSource = gestureEvent.inputSource = aEvent->inputSource;
 
       // Dispatch to the DOM. By setting mCurrentTarget we are faking
@@ -3349,13 +3349,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
       if (nsEventStatus_eConsumeNoDefault == *aStatus) {
         // if the event has a dataTransfer set, use it.
-        if (dragEvent->dataTransfer) {
+        if (dragEvent->mDataTransfer) {
           // get the dataTransfer and the dropEffect that was set on it
-          dataTransfer = do_QueryInterface(dragEvent->dataTransfer);
+          dataTransfer = do_QueryInterface(dragEvent->mDataTransfer);
           dataTransfer->GetDropEffectInt(&dropEffect);
         }
         else {
-          // if dragEvent->dataTransfer is null, it means that no attempt was
+          // if dragEvent->mDataTransfer is null, it means that no attempt was
           // made to access the dataTransfer during the event, yet the event
           // was cancelled. Instead, use the initial data transfer available
           // from the drag session. The drop effect would not have been
@@ -4523,8 +4523,9 @@ void
 EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
 {
   NS_ASSERTION(dragEvent, "drag event is null in UpdateDragDataTransfer!");
-  if (!dragEvent->dataTransfer)
+  if (!dragEvent->mDataTransfer) {
     return;
+  }
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
 
@@ -4536,7 +4537,7 @@ EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
     if (initialDataTransfer) {
       // retrieve the current moz cursor setting and save it.
       nsAutoString mozCursor;
-      dragEvent->dataTransfer->GetMozCursor(mozCursor);
+      dragEvent->mDataTransfer->GetMozCursor(mozCursor);
       initialDataTransfer->SetMozCursor(mozCursor);
     }
   }
