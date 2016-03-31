@@ -146,6 +146,7 @@
   <string name="pref_category_vendor">&pref_category_vendor2;</string>
   <string name="pref_category_vendor_summary">&pref_category_vendor_summary2;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
+  <string name="pref_category_logins">&pref_category_logins;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
   <string name="pref_category_add_search_providers">&pref_category_add_search_providers;</string>
   <string name="pref_category_search_restore_defaults">&pref_category_search_restore_defaults;</string>
