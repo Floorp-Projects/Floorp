@@ -60,17 +60,21 @@ module.exports = createClass({
   },
 
   updateAddonsList() {
-    AddonManager.getAllAddons(addons => {
-      let extensions = addons.filter(addon => addon.isDebuggable).map(addon => {
-        return {
-          name: addon.name,
-          icon: addon.iconURL || ExtensionIcon,
-          addonID: addon.id
-        };
-      });
+    this.props.client.listAddons()
+      .then(({addons}) => {
+        let extensions = addons.filter(addon => addon.debuggable).map(addon => {
+          return {
+            name: addon.name,
+            icon: addon.iconURL || ExtensionIcon,
+            addonID: addon.id,
+            addonActor: addon.actor
+          };
+        });
 
-      this.setState({ extensions });
-    });
+        this.setState({ extensions });
+      }, error => {
+        throw new Error("Client error while listing addons: " + error);
+      });
   },
 
   /**
