@@ -566,7 +566,7 @@ bool
 nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
 {
   aWheelEvent.mDeltaX = aWheelEvent.mDeltaY = aWheelEvent.mDeltaZ = 0.0;
-  aWheelEvent.mLineOrPageDeltaX = aWheelEvent.lineOrPageDeltaY = 0;
+  aWheelEvent.mLineOrPageDeltaX = aWheelEvent.mLineOrPageDeltaY = 0;
 
   aWheelEvent.refPoint.x = mPanRefPoint.x;
   aWheelEvent.refPoint.y = mPanRefPoint.y;
