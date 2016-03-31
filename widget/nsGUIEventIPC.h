@@ -171,7 +171,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.mLineOrPageDeltaX);
     WriteParam(aMsg, aParam.mLineOrPageDeltaY);
     WriteParam(aMsg, static_cast<int32_t>(aParam.mScrollType));
-    WriteParam(aMsg, aParam.overflowDeltaX);
+    WriteParam(aMsg, aParam.mOverflowDeltaX);
     WriteParam(aMsg, aParam.overflowDeltaY);
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
     WriteParam(aMsg, aParam.mCanTriggerSwipe);
@@ -195,7 +195,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&
       ReadParam(aMsg, aIter, &scrollType) &&
-      ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->mOverflowDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->overflowDeltaY) &&
       ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled) &&
       ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe) &&
