@@ -3,98 +3,72 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var toolbox;
+"use strict";
 
-function test() {
-  addTab("about:blank").then(function() {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, "webconsole").then(testSelect);
-  });
-}
+const PAGE_URL = "data:text/html;charset=utf-8,test select events";
 
-var called = {
-  inspector: false,
-  webconsole: false,
-  styleeditor: false,
-  //jsdebugger: false,
-}
+add_task(function*() {
+  let tab = yield addTab(PAGE_URL);
 
-function testSelect(aToolbox) {
-  toolbox = aToolbox;
+  let toolbox = yield openToolboxForTab(tab, "webconsole", "bottom");
+  yield testSelectEvent("inspector");
+  yield testSelectEvent("webconsole");
+  yield testSelectEvent("styleeditor");
+  yield testSelectEvent("inspector");
+  yield testSelectEvent("webconsole");
+  yield testSelectEvent("styleeditor");
 
-  info("Toolbox fired a `ready` event");
+  yield testToolSelectEvent("inspector");
+  yield testToolSelectEvent("webconsole");
+  yield testToolSelectEvent("styleeditor");
+  yield toolbox.destroy();
 
-  toolbox.on("select", selectCB);
+  toolbox = yield openToolboxForTab(tab, "webconsole", "side");
+  yield testSelectEvent("inspector");
+  yield testSelectEvent("webconsole");
+  yield testSelectEvent("styleeditor");
+  yield testSelectEvent("inspector");
+  yield testSelectEvent("webconsole");
+  yield testSelectEvent("styleeditor");
+  yield toolbox.destroy();
 
-  toolbox.selectTool("inspector");
-  toolbox.selectTool("webconsole");
-  toolbox.selectTool("styleeditor");
-  //toolbox.selectTool("jsdebugger");
-}
+  toolbox = yield openToolboxForTab(tab, "webconsole", "window");
+  yield testSelectEvent("inspector");
+  yield testSelectEvent("webconsole");
+  yield testSelectEvent("styleeditor");
+  yield testSelectEvent("inspector");
+  yield testSelectEvent("webconsole");
+  yield testSelectEvent("styleeditor");
+  yield toolbox.destroy();
 
-function selectCB(event, id) {
-  called[id] = true;
-  info("toolbox-select event from " + id);
-
-  for (let tool in called) {
-    if (!called[tool]) {
-      return;
-    }
+  /**
+   * Assert that selecting the given toolId raises a select event
+   * @param {toolId} Id of the tool to test
+   */
+  function testSelectEvent(toolId) {
+    return new Promise(resolve => {
+      toolbox.once("select", (event, id) => {
+        is(id, toolId, toolId + " selected");
+        resolve();
+      });
+      toolbox.selectTool(toolId);
+    });
   }
 
-  ok(true, "All the tools fired a 'select event'");
-  toolbox.off("select", selectCB);
-
-  reselect();
-}
-
-function reselect() {
-  for (let tool in called) {
-    called[tool] = false;
+  /**
+   * Assert that selecting the given toolId raises its corresponding
+   * selected event
+   * @param {toolId} Id of the tool to test
+   */
+  function testToolSelectEvent(toolId) {
+    return new Promise(resolve => {
+      toolbox.once(toolId + "-selected", () => {
+        let msg = toolId + " tool selected";
+        is(toolbox.currentToolId, toolId, msg);
+        resolve();
+      });
+      toolbox.selectTool(toolId);
+    });
   }
+});
 
-  toolbox.once("inspector-selected", function() {
-    tidyUpIfAllCalled("inspector");
-  });
-
-  toolbox.once("webconsole-selected", function() {
-    tidyUpIfAllCalled("webconsole");
-  });
-
-  /*
-  toolbox.once("jsdebugger-selected", function() {
-    tidyUpIfAllCalled("jsdebugger");
-  });
-  */
-
-  toolbox.once("styleeditor-selected", function() {
-    tidyUpIfAllCalled("styleeditor");
-  });
-
-  toolbox.selectTool("inspector");
-  toolbox.selectTool("webconsole");
-  toolbox.selectTool("styleeditor");
-  //toolbox.selectTool("jsdebugger");
-}
-
-function tidyUpIfAllCalled(id) {
-  called[id] = true;
-  info("select event from " + id);
-
-  for (let tool in called) {
-    if (!called[tool]) {
-      return;
-    }
-  }
-
-  ok(true, "All the tools fired a {id}-selected event");
-  tidyUp();
-}
-
-function tidyUp() {
-  toolbox.destroy();
-  gBrowser.removeCurrentTab();
-
-  toolbox = null;
-  finish();
-}
