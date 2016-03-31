@@ -8,12 +8,17 @@
  * huge ammounts of data.
  */
 
+"use strict";
+
 const TAB_URL = EXAMPLE_URL + "doc_large-array-buffer.html";
 
 var gTab, gPanel, gDebugger;
 var gVariables, gEllipsis;
 
 function test() {
+  // this test does a lot of work on large objects, default 45s is not enough
+  requestLongerTimeout(4);
+
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
@@ -21,199 +26,219 @@ function test() {
     gVariables = gDebugger.DebuggerView.Variables;
     gEllipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 23)
-      .then(() => initialChecks())
-      .then(() => verifyFirstLevel())
-      .then(() => verifyNextLevels())
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 28)
+      .then(() => performTests())
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      .then(null, error => {
+        ok(false, "Got an error: " + error.message + "\n" + error.stack);
       });
 
     generateMouseClickInTab(gTab, "content.document.querySelector('button')");
   });
 }
 
-function initialChecks() {
-  let localScope = gVariables.getScopeAtIndex(0);
-  let bufferVar = localScope.get("buffer");
-  let arrayVar = localScope.get("largeArray");
-  let objectVar = localScope.get("largeObject");
+const VARS_TO_TEST = [
+  {
+    varName: "buffer",
+    stringified: "ArrayBuffer",
+    doNotExpand: true
+  },
+  {
+    varName: "largeArray",
+    stringified: "Int8Array[10000]",
+    extraProps: [
+      [ "buffer", "ArrayBuffer" ],
+      [ "byteLength", "10000" ],
+      [ "byteOffset", "0" ],
+      [ "length", "10000" ],
+      [ "__proto__", "Int8ArrayPrototype" ]
+    ]
+  },
+  {
+    varName: "largeObject",
+    stringified: "Object[10000]",
+    extraProps: [
+      [ "__proto__", "Object" ]
+    ]
+  },
+  {
+    varName: "largeMap",
+    stringified: "Map[10000]",
+    hasEntries: true,
+    extraProps: [
+      [ "size", "10000" ],
+      [ "__proto__", "Object" ]
+    ]
+  },
+  {
+    varName: "largeSet",
+    stringified: "Set[10000]",
+    hasEntries: true,
+    extraProps: [
+      [ "size", "10000" ],
+      [ "__proto__", "Object" ]
+    ]
+  }
+];
 
-  ok(bufferVar, "There should be a 'buffer' variable present in the scope.");
-  ok(arrayVar, "There should be a 'largeArray' variable present in the scope.");
-  ok(objectVar, "There should be a 'largeObject' variable present in the scope.");
+const PAGE_RANGES = [
+  [0, 2499], [2500, 4999], [5000, 7499], [7500, 9999]
+];
 
-  is(bufferVar.target.querySelector(".name").getAttribute("value"), "buffer",
-    "Should have the right property name for 'buffer'.");
-  is(bufferVar.target.querySelector(".value").getAttribute("value"), "ArrayBuffer",
-    "Should have the right property value for 'buffer'.");
-  ok(bufferVar.target.querySelector(".value").className.includes("token-other"),
-    "Should have the right token class for 'buffer'.");
-
-  is(arrayVar.target.querySelector(".name").getAttribute("value"), "largeArray",
-    "Should have the right property name for 'largeArray'.");
-  is(arrayVar.target.querySelector(".value").getAttribute("value"), "Int8Array[10000]",
-    "Should have the right property value for 'largeArray'.");
-  ok(arrayVar.target.querySelector(".value").className.includes("token-other"),
-    "Should have the right token class for 'largeArray'.");
-
-  is(objectVar.target.querySelector(".name").getAttribute("value"), "largeObject",
-    "Should have the right property name for 'largeObject'.");
-  is(objectVar.target.querySelector(".value").getAttribute("value"), "Object[10000]",
-    "Should have the right property value for 'largeObject'.");
-  ok(objectVar.target.querySelector(".value").className.includes("token-other"),
-    "Should have the right token class for 'largeObject'.");
-
-  is(bufferVar.expanded, false,
-    "The 'buffer' variable shouldn't be expanded.");
-  is(arrayVar.expanded, false,
-    "The 'largeArray' variable shouldn't be expanded.");
-  is(objectVar.expanded, false,
-    "The 'largeObject' variable shouldn't be expanded.");
-
-  return promise.all([arrayVar.expand(),objectVar.expand()]);
+function toPageNames(ranges) {
+  return ranges.map(([ from, to ]) => "[" + from + gEllipsis + to + "]");
 }
 
-function verifyFirstLevel() {
+function performTests() {
   let localScope = gVariables.getScopeAtIndex(0);
-  let arrayVar = localScope.get("largeArray");
-  let objectVar = localScope.get("largeObject");
 
-  let arrayEnums = arrayVar.target.querySelector(".variables-view-element-details.enum").childNodes;
-  let arrayNonEnums = arrayVar.target.querySelector(".variables-view-element-details.nonenum").childNodes;
-  is(arrayEnums.length, 0,
-    "The 'largeArray' shouldn't contain any enumerable elements.");
-  is(arrayNonEnums.length, 9,
-    "The 'largeArray' should contain all the created non-enumerable elements.");
+  return promise.all(VARS_TO_TEST.map(spec => {
+    let { varName, stringified, doNotExpand } = spec;
 
-  let objectEnums = objectVar.target.querySelector(".variables-view-element-details.enum").childNodes;
-  let objectNonEnums = objectVar.target.querySelector(".variables-view-element-details.nonenum").childNodes;
-  is(objectEnums.length, 0,
-    "The 'largeObject' shouldn't contain any enumerable elements.");
-  is(objectNonEnums.length, 5,
-    "The 'largeObject' should contain all the created non-enumerable elements.");
+    let variable = localScope.get(varName);
+    ok(variable,
+      `There should be a '${varName}' variable present in the scope.`);
 
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
-    "[0" + gEllipsis + "2499]", "The first page in the 'largeArray' is named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
-    "", "The first page in the 'largeArray' should not have a corresponding value.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
-    "[2500" + gEllipsis + "4999]", "The second page in the 'largeArray' is named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
-    "", "The second page in the 'largeArray' should not have a corresponding value.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
-    "[5000" + gEllipsis + "7499]", "The third page in the 'largeArray' is named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[2].getAttribute("value"),
-    "", "The third page in the 'largeArray' should not have a corresponding value.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
-    "[7500" + gEllipsis + "9999]", "The fourth page in the 'largeArray' is named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[3].getAttribute("value"),
-    "", "The fourth page in the 'largeArray' should not have a corresponding value.");
+    is(variable.target.querySelector(".name").getAttribute("value"), varName,
+      `Should have the right property name for '${varName}'.`);
+    is(variable.target.querySelector(".value").getAttribute("value"), stringified,
+      `Should have the right property value for '${varName}'.`);
+    ok(variable.target.querySelector(".value").className.includes("token-other"),
+      `Should have the right token class for '${varName}'.`);
 
-  is(objectVar.target.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
-    "[0" + gEllipsis + "2499]", "The first page in the 'largeObject' is named correctly.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
-    "", "The first page in the 'largeObject' should not have a corresponding value.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
-    "[2500" + gEllipsis + "4999]", "The second page in the 'largeObject' is named correctly.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
-    "", "The second page in the 'largeObject' should not have a corresponding value.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
-    "[5000" + gEllipsis + "7499]", "The thrid page in the 'largeObject' is named correctly.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .value")[2].getAttribute("value"),
-    "", "The thrid page in the 'largeObject' should not have a corresponding value.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
-    "[7500" + gEllipsis + "9999]", "The fourth page in the 'largeObject' is named correctly.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .value")[3].getAttribute("value"),
-    "", "The fourth page in the 'largeObject' should not have a corresponding value.");
+    is(variable.expanded, false,
+      `The '${varName}' variable shouldn't be expanded.`);
 
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[4].getAttribute("value"),
-    "buffer", "The other properties 'largeArray' are named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[4].getAttribute("value"),
-    "ArrayBuffer", "The other properties 'largeArray' have the correct value.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[5].getAttribute("value"),
-    "byteLength", "The other properties 'largeArray' are named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[5].getAttribute("value"),
-    "10000", "The other properties 'largeArray' have the correct value.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[6].getAttribute("value"),
-    "byteOffset", "The other properties 'largeArray' are named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[6].getAttribute("value"),
-    "0", "The other properties 'largeArray' have the correct value.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[7].getAttribute("value"),
-    "length", "The other properties 'largeArray' are named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[7].getAttribute("value"),
-    "10000", "The other properties 'largeArray' have the correct value.");
+    if (doNotExpand) {
+      return promise.resolve();
+    }
 
-  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[8].getAttribute("value"),
-    "__proto__", "The other properties 'largeArray' are named correctly.");
-  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[8].getAttribute("value"),
-    "Int8ArrayPrototype", "The other properties 'largeArray' have the correct value.");
-
-  is(objectVar.target.querySelectorAll(".variables-view-property .name")[4].getAttribute("value"),
-    "__proto__", "The other properties 'largeObject' are named correctly.");
-  is(objectVar.target.querySelectorAll(".variables-view-property .value")[4].getAttribute("value"),
-    "Object", "The other properties 'largeObject' have the correct value.");
+    return variable.expand()
+      .then(() => verifyFirstLevel(variable, spec));
+  }));
 }
 
-function verifyNextLevels() {
-  let localScope = gVariables.getScopeAtIndex(0);
-  let objectVar = localScope.get("largeObject");
+// In objects and arrays, the sliced pages are at the top-level of
+// the expanded object, but with Maps and Sets, we have to expand
+// <entries> first and look there.
+function getExpandedPages(variable, hasEntries) {
+  let expandedPages = promise.defer();
+  if (hasEntries) {
+    let entries = variable.get("<entries>");
+    ok(entries, "<entries> retrieved");
+    entries.expand().then(() => expandedPages.resolve(entries));
+  } else {
+    expandedPages.resolve(variable);
+  }
 
-  let lastPage1 = objectVar.get("[7500" + gEllipsis + "9999]");
-  ok(lastPage1, "The last page in the first level was retrieved successfully.");
-  return lastPage1.expand()
-                  .then(verifyNextLevels2.bind(null, lastPage1));
+  return expandedPages.promise;
 }
 
-function verifyNextLevels2(lastPage1) {
-  let pageEnums1 = lastPage1.target.querySelector(".variables-view-element-details.enum").childNodes;
-  let pageNonEnums1 = lastPage1.target.querySelector(".variables-view-element-details.nonenum").childNodes;
-  is(pageEnums1.length, 0,
-    "The last page in the first level shouldn't contain any enumerable elements.");
-  is(pageNonEnums1.length, 4,
-    "The last page in the first level should contain all the created non-enumerable elements.");
+function verifyFirstLevel(variable, spec) {
+  let { varName, hasEntries, extraProps } = spec;
 
-  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
-    "[7500" + gEllipsis + "8124]", "The first page in this level named correctly (1).");
-  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
-    "[8125" + gEllipsis + "8749]", "The second page in this level named correctly (1).");
-  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
-    "[8750" + gEllipsis + "9374]", "The third page in this level named correctly (1).");
-  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
-    "[9375" + gEllipsis + "9999]", "The fourth page in this level named correctly (1).");
+  let enums = variable._enum.childNodes;
+  let nonEnums = variable._nonenum.childNodes;
 
-  let lastPage2 = lastPage1.get("[9375" + gEllipsis + "9999]");
-  ok(lastPage2, "The last page in the second level was retrieved successfully.");
+  is(enums.length, hasEntries ? 1 : 4,
+    `The '${varName}' contains the right number of enumerable elements.`);
+  is(nonEnums.length, extraProps.length,
+    `The '${varName}' contains the right number of non-enumerable elements.`);
+
+  // the sliced pages begin after <entries> row
+  let pagesOffset = hasEntries ? 1 : 0;
+  let expandedPages = getExpandedPages(variable, hasEntries);
+
+  return expandedPages.then((pagesList) => {
+    toPageNames(PAGE_RANGES).forEach((pageName, i) => {
+      let index = i + pagesOffset;
+
+      is(pagesList.target.querySelectorAll(".variables-view-property .name")[index].getAttribute("value"),
+        pageName, `The page #${i + 1} in the '${varName}' is named correctly.`);
+      is(pagesList.target.querySelectorAll(".variables-view-property .value")[index].getAttribute("value"),
+        "", `The page #${i + 1} in the '${varName}' should not have a corresponding value.`);
+    });
+  }).then(() => {
+    extraProps.forEach(([ propName, propValue ], i) => {
+      // the extra props start after the 4 pages
+      let index = i + pagesOffset + 4;
+
+      is(variable.target.querySelectorAll(".variables-view-property .name")[index].getAttribute("value"),
+        propName, `The other properties in '${varName}' are named correctly.`);
+      is(variable.target.querySelectorAll(".variables-view-property .value")[index].getAttribute("value"),
+        propValue, `The other properties in '${varName}' have the correct value.`);
+    });
+  }).then(() => verifyNextLevels(variable, spec));
+}
+
+function verifyNextLevels(variable, spec) {
+  let { varName, hasEntries } = spec;
+
+  // the entries are already expanded in verifyFirstLevel
+  let pagesList = hasEntries ? variable.get("<entries>") : variable;
+
+  let lastPage = pagesList.get(toPageNames(PAGE_RANGES)[3]);
+  ok(lastPage, `The last page in the 1st level of '${varName}' was retrieved successfully.`);
+
+  return lastPage.expand()
+    .then(() => verifyNextLevels2(lastPage, varName));
+}
+
+function verifyNextLevels2(lastPage1, varName) {
+  const PAGE_RANGES_IN_LAST_PAGE = [
+    [7500, 8124], [8125, 8749], [8750, 9374], [9375, 9999]
+  ];
+
+  let pageEnums1 = lastPage1._enum.childNodes;
+  let pageNonEnums1 = lastPage1._nonenum.childNodes;
+  is(pageEnums1.length, 4,
+    `The last page in the 1st level of '${varName}' should contain all the created enumerable elements.`);
+  is(pageNonEnums1.length, 0,
+    `The last page in the 1st level of '${varName}' should not contain any non-enumerable elements.`);
+
+  let pageNames = toPageNames(PAGE_RANGES_IN_LAST_PAGE);
+  pageNames.forEach((pageName, i) => {
+    is(lastPage1._enum.querySelectorAll(".variables-view-property .name")[i].getAttribute("value"),
+      pageName, `The page #${i + 1} in the 2nd level of '${varName}' is named correctly.`);
+  });
+
+  let lastPage2 = lastPage1.get(pageNames[3]);
+  ok(lastPage2, "The last page in the 2nd level was retrieved successfully.");
+
   return lastPage2.expand()
-                  .then(verifyNextLevels3.bind(null, lastPage2));
+    .then(() => verifyNextLevels3(lastPage2, varName));
 }
 
-function verifyNextLevels3(lastPage2) {
-  let pageEnums2 = lastPage2.target.querySelector(".variables-view-element-details.enum").childNodes;
-  let pageNonEnums2 = lastPage2.target.querySelector(".variables-view-element-details.nonenum").childNodes;
+function verifyNextLevels3(lastPage2, varName) {
+  let pageEnums2 = lastPage2._enum.childNodes;
+  let pageNonEnums2 = lastPage2._nonenum.childNodes;
   is(pageEnums2.length, 625,
-    "The last page in the third level should contain all the created enumerable elements.");
+    `The last page in the 3rd level of '${varName}' should contain all the created enumerable elements.`);
   is(pageNonEnums2.length, 0,
-    "The last page in the third level shouldn't contain any non-enumerable elements.");
+    `The last page in the 3rd level of '${varName}' shouldn't contain any non-enumerable elements.`);
 
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
-    9375, "The properties in this level are named correctly (3).");
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
-    9376, "The properties in this level are named correctly (3).");
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .name")[623].getAttribute("value"),
-    9998, "The properties in this level are named correctly (3).");
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .name")[624].getAttribute("value"),
-    9999, "The properties in this level are named correctly (3).");
+  const LEAF_ITEMS = [
+    [0, 9375, 624],
+    [1, 9376, 623],
+    [623, 9998, 1],
+    [624, 9999, 0]
+  ];
 
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
-    624, "The properties in this level have the correct value (3).");
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
-    623, "The properties in this level have the correct value (3).");
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .value")[623].getAttribute("value"),
-    1, "The properties in this level have the correct value (3).");
-  is(lastPage2._enum.querySelectorAll(".variables-view-property .value")[624].getAttribute("value"),
-    0, "The properties in this level have the correct value (3).");
+  function expectedValue(name, value) {
+    switch (varName) {
+      case "largeArray": return 0;
+      case "largeObject": return value;
+      case "largeMap": return name + " \u2192 " + value;
+      case "largeSet": return value;
+    }
+  }
+
+  LEAF_ITEMS.forEach(([index, name, value]) => {
+    is(lastPage2._enum.querySelectorAll(".variables-view-property .name")[index].getAttribute("value"),
+      name, `The properties in the leaf level of '${varName}' are named correctly.`);
+    is(lastPage2._enum.querySelectorAll(".variables-view-property .value")[index].getAttribute("value"),
+      expectedValue(name, value), `The properties in the leaf level of '${varName}' have the correct value.`);
+  });
 }
 
 registerCleanupFunction(function() {
