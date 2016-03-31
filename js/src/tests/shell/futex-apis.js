@@ -59,7 +59,6 @@ let sab = new SharedArrayBuffer(16);
 	let view = values[i];
 	assertThrowsInstanceOf(() => Atomics.futexWait(view, 0, 0), TypeError);
 	assertThrowsInstanceOf(() => Atomics.futexWake(view, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 0, 1, 0), TypeError);
     }
 }
 
@@ -73,7 +72,6 @@ let sab = new SharedArrayBuffer(16);
 
 	assertThrowsInstanceOf(() => Atomics.futexWait(view, 0, 0), TypeError);
 	assertThrowsInstanceOf(() => Atomics.futexWake(view, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 0, 1, 0), TypeError);
     }
 }
 
@@ -88,7 +86,6 @@ let sab = new SharedArrayBuffer(16);
 
 	assertThrowsInstanceOf(() => Atomics.futexWait(view, 0, 0), TypeError);
 	assertThrowsInstanceOf(() => Atomics.futexWake(view, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 0, 1, 0), TypeError);
     }
 }
 
@@ -110,8 +107,6 @@ let sab = new SharedArrayBuffer(16);
 	let Idx = indices[iidx](view);
 	assertThrowsInstanceOf(() => Atomics.futexWait(view, Idx, 10), RangeError);
 	assertThrowsInstanceOf(() => Atomics.futexWake(view, Idx), RangeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, Idx, 5, 0, 0), RangeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 5, Idx, 0), RangeError);
     }
 }
 
