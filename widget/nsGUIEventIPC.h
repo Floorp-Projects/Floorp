@@ -160,7 +160,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
-    WriteParam(aMsg, aParam.deltaX);
+    WriteParam(aMsg, aParam.mDeltaX);
     WriteParam(aMsg, aParam.deltaY);
     WriteParam(aMsg, aParam.deltaZ);
     WriteParam(aMsg, aParam.deltaMode);
@@ -184,7 +184,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     bool rv =
       ReadParam(aMsg, aIter,
                 static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
-      ReadParam(aMsg, aIter, &aResult->deltaX) &&
+      ReadParam(aMsg, aIter, &aResult->mDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->deltaY) &&
       ReadParam(aMsg, aIter, &aResult->deltaZ) &&
       ReadParam(aMsg, aIter, &aResult->deltaMode) &&

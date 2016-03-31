@@ -30,7 +30,7 @@ namespace mozilla {
 /******************************************************************/
 
 DeltaValues::DeltaValues(WidgetWheelEvent* aEvent)
-  : deltaX(aEvent->deltaX)
+  : deltaX(aEvent->mDeltaX)
   , deltaY(aEvent->deltaY)
 {
 }
@@ -129,7 +129,7 @@ WheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
   }
 
   if (!WheelHandlingUtils::CanScrollOn(scrollToFrame,
-                                       aEvent->deltaX, aEvent->deltaY)) {
+                                       aEvent->mDeltaX, aEvent->deltaY)) {
     OnFailToScrollTarget();
     // We should not modify the transaction state when the view will not be
     // scrolled actually.
@@ -409,7 +409,7 @@ WheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
 
   // If the event doesn't scroll to both X and Y, we don't need to do anything
   // here.
-  if (!aEvent->deltaX && !aEvent->deltaY) {
+  if (!aEvent->mDeltaX && !aEvent->deltaY) {
     return DeltaValues(aEvent);
   }
 

@@ -448,7 +448,7 @@ private:
   friend class mozilla::dom::PBrowserChild;
 
   WidgetWheelEvent()
-    : deltaX(0.0)
+    : mDeltaX(0.0)
     , deltaY(0.0)
     , deltaZ(0.0)
     , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
@@ -471,7 +471,7 @@ public:
 
   WidgetWheelEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eWheelEventClass)
-    , deltaX(0.0)
+    , mDeltaX(0.0)
     , deltaY(0.0)
     , deltaZ(0.0)
     , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
@@ -511,11 +511,11 @@ public:
            this->overflowDeltaX != 0.0;
   }
 
-  // NOTE: deltaX, deltaY and deltaZ may be customized by
+  // NOTE: mDeltaX, deltaY and deltaZ may be customized by
   //       mousewheel.*.delta_multiplier_* prefs which are applied by
   //       EventStateManager.  So, after widget dispatches this event,
   //       these delta values may have different values than before.
-  double deltaX;
+  double mDeltaX;
   double deltaY;
   double deltaZ;
 
@@ -583,11 +583,11 @@ public:
   // nsEventStateManger.  If the default action of the wheel event isn't scroll,
   // these values always zero.  Otherwise, remaning delta values which are
   // not used by scroll are set.
-  // NOTE: deltaX, deltaY and deltaZ may be modified by EventStateManager.
+  // NOTE: mDeltaX, deltaY and deltaZ may be modified by EventStateManager.
   //       However, overflowDeltaX and overflowDeltaY indicate unused original
   //       delta values which are not applied the delta_multiplier prefs.
   //       So, if widget wanted to know the actual direction to be scrolled,
-  //       it would need to check the deltaX and deltaY.
+  //       it would need to check the mDeltaX and deltaY.
   double overflowDeltaX;
   double overflowDeltaY;
 
@@ -610,7 +610,7 @@ public:
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
 
-    deltaX = aEvent.deltaX;
+    mDeltaX = aEvent.mDeltaX;
     deltaY = aEvent.deltaY;
     deltaZ = aEvent.deltaZ;
     deltaMode = aEvent.deltaMode;
