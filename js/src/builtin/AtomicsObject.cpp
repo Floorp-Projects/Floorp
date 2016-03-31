@@ -885,124 +885,6 @@ js::atomics_futexWake(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    HandleValue objv = args.get(0);
-    HandleValue idx1v = args.get(1);
-    HandleValue countv = args.get(2);
-    HandleValue idx2v = args.get(3);
-    HandleValue valv = args.get(4);
-    MutableHandleValue r = args.rval();
-
-    Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
-        return false;
-    if (view->type() != Scalar::Int32)
-        return ReportBadArrayType(cx);
-    uint32_t offset1;
-    if (!GetTypedArrayIndex(cx, idx1v, view, &offset1))
-        return false;
-    double count;
-    if (countv.isUndefined()) {
-        count = mozilla::PositiveInfinity<double>();
-    } else {
-        if (!ToInteger(cx, countv, &count))
-            return false;
-        if (count < 0.0)
-            count = 0.0;
-    }
-    int32_t value;
-    if (!ToInt32(cx, valv, &value))
-        return false;
-    uint32_t offset2;
-    if (!GetTypedArrayIndex(cx, idx2v, view, &offset2))
-        return false;
-
-    AutoLockFutexAPI lock;
-
-    SharedMem<int32_t*> addr = view->viewDataShared().cast<int32_t*>() + offset1;
-    if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
-        r.setInt32(AtomicsObject::FutexNotequal);
-        return true;
-    }
-
-    Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
-    SharedArrayRawBuffer* sarb = sab->rawBufferObject();
-
-    // Walk the list of waiters looking for those waiting on offset1.
-    // Wake some and requeue the others.  There may already be other
-    // waiters on offset2, so those that are requeued must be moved to
-    // the back of the list.  Offset1 may equal offset2.  The list's
-    // first node may change, and the list may be emptied out by the
-    // operation.
-
-    FutexWaiter* waiters = sarb->waiters();
-    if (!waiters) {
-        r.setInt32(0);
-        return true;
-    }
-
-    int32_t woken = 0;
-    FutexWaiter whead((uint32_t)-1, nullptr); // Header node for waiters
-    FutexWaiter* first = waiters;
-    FutexWaiter* last = waiters->back;
-    whead.lower_pri = first;
-    whead.back = last;
-    first->back = &whead;
-    last->lower_pri = &whead;
-
-    FutexWaiter rhead((uint32_t)-1, nullptr); // Header node for requeued
-    rhead.lower_pri = rhead.back = &rhead;
-
-    FutexWaiter* iter = whead.lower_pri;
-    while (iter != &whead) {
-        FutexWaiter* c = iter;
-        iter = iter->lower_pri;
-        if (c->offset != offset1 || !c->rt->fx.isWaiting())
-            continue;
-        if (count > 0) {
-            c->rt->fx.wake(FutexRuntime::WakeExplicit);
-            ++woken;
-            --count;
-        } else {
-            c->offset = offset2;
-
-            // Remove the node from the waiters list.
-            c->back->lower_pri = c->lower_pri;
-            c->lower_pri->back = c->back;
-
-            // Insert the node at the back of the requeuers list.
-            c->lower_pri = &rhead;
-            c->back = rhead.back;
-            rhead.back->lower_pri = c;
-            rhead.back = c;
-        }
-    }
-
-    // If there are any requeuers, append them to the waiters.
-    if (rhead.lower_pri != &rhead) {
-        whead.back->lower_pri = rhead.lower_pri;
-        rhead.lower_pri->back = whead.back;
-
-        whead.back = rhead.back;
-        rhead.back->lower_pri = &whead;
-    }
-
-    // Make the final list and install it.
-    waiters = nullptr;
-    if (whead.lower_pri != &whead) {
-        whead.back->lower_pri = whead.lower_pri;
-        whead.lower_pri->back = whead.back;
-        waiters = whead.lower_pri;
-    }
-    sarb->setWaiters(waiters);
-
-    r.setInt32(woken);
-    return true;
-}
-
 /* static */ bool
 js::FutexRuntime::initialize()
 {
@@ -1239,7 +1121,6 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_INLINABLE_FN("isLockFree",         atomics_isLockFree,         1,0, AtomicsIsLockFree),
     JS_FN("futexWait",                    atomics_futexWait,          4,0),
     JS_FN("futexWake",                    atomics_futexWake,          3,0),
-    JS_FN("futexWakeOrRequeue",           atomics_futexWakeOrRequeue, 5,0),
     JS_FS_END
 };
 
