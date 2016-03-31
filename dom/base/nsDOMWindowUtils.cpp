@@ -837,15 +837,15 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   }
   bool failedY = false;
   if ((aOptions & WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_ZERO) &&
-      wheelEvent.overflowDeltaY != 0) {
+      wheelEvent.mOverflowDeltaY != 0) {
     failedY = true;
   }
   if ((aOptions & WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_POSITIVE) &&
-      wheelEvent.overflowDeltaY <= 0) {
+      wheelEvent.mOverflowDeltaY <= 0) {
     failedY = true;
   }
   if ((aOptions & WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_NEGATIVE) &&
-      wheelEvent.overflowDeltaY >= 0) {
+      wheelEvent.mOverflowDeltaY >= 0) {
     failedY = true;
   }
 
@@ -856,8 +856,8 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
     NS_WARNING(debugMsg.get());
   }
   if (failedY) {
-    nsPrintfCString debugMsg("SendWheelEvent(): unexpected overflowDeltaY: %f",
-                             wheelEvent.overflowDeltaY);
+    nsPrintfCString debugMsg("SendWheelEvent(): unexpected mOverflowDeltaY: %f",
+                             wheelEvent.mOverflowDeltaY);
     NS_WARNING(debugMsg.get());
   }
 #endif

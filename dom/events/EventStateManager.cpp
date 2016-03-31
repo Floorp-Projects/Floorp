@@ -2638,14 +2638,14 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     // If the scroll causes changing the layout, we can think that the event
     // has been completely consumed by the content.  Then, users probably don't
     // want additional action.
-    aEvent->mOverflowDeltaX = aEvent->overflowDeltaY = 0;
+    aEvent->mOverflowDeltaX = aEvent->mOverflowDeltaY = 0;
   } else if (isDeltaModePixel) {
     aEvent->mOverflowDeltaX = overflow.x;
-    aEvent->overflowDeltaY = overflow.y;
+    aEvent->mOverflowDeltaY = overflow.y;
   } else {
     aEvent->mOverflowDeltaX =
       static_cast<double>(overflow.x) / scrollAmountInDevPixels.width;
-    aEvent->overflowDeltaY =
+    aEvent->mOverflowDeltaY =
       static_cast<double>(overflow.y) / scrollAmountInDevPixels.height;
   }
 
@@ -2666,16 +2666,16 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
         overflowStyle.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
         !ComputeScrollTarget(scrollFrame, aEvent,
                              COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS)) {
-      aEvent->overflowDeltaY = aEvent->mDeltaY;
+      aEvent->mOverflowDeltaY = aEvent->mDeltaY;
     }
   }
 
   NS_ASSERTION(aEvent->mOverflowDeltaX == 0 ||
     (aEvent->mOverflowDeltaX > 0) == (aEvent->mDeltaX > 0),
     "The sign of mOverflowDeltaX is different from the scroll direction");
-  NS_ASSERTION(aEvent->overflowDeltaY == 0 ||
-    (aEvent->overflowDeltaY > 0) == (aEvent->mDeltaY > 0),
-    "The sign of overflowDeltaY is different from the scroll direction");
+  NS_ASSERTION(aEvent->mOverflowDeltaY == 0 ||
+    (aEvent->mOverflowDeltaY > 0) == (aEvent->mDeltaY > 0),
+    "The sign of mOverflowDeltaY is different from the scroll direction");
 
   WheelPrefs::GetInstance()->CancelApplyingUserPrefsFromOverflowDelta(aEvent);
 }
@@ -3219,7 +3219,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             wheelEvent->mViewPortIsOverscrolled = true;
           }
           wheelEvent->mOverflowDeltaX = wheelEvent->mDeltaX;
-          wheelEvent->overflowDeltaY = wheelEvent->mDeltaY;
+          wheelEvent->mOverflowDeltaY = wheelEvent->mDeltaY;
           WheelPrefs::GetInstance()->
             CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           if (scrollTarget) {
@@ -3290,7 +3290,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
           wheelEvent->mOverflowDeltaX = wheelEvent->mDeltaX;
-          wheelEvent->overflowDeltaY = wheelEvent->mDeltaY;
+          wheelEvent->mOverflowDeltaY = wheelEvent->mDeltaY;
           WheelPrefs::GetInstance()->
             CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           wheelEvent->mViewPortIsOverscrolled = true;
@@ -5677,7 +5677,7 @@ EventStateManager::WheelPrefs::CancelApplyingUserPrefsFromOverflowDelta(
     aEvent->mOverflowDeltaX /= mMultiplierX[index];
   }
   if (mMultiplierY[index]) {
-    aEvent->overflowDeltaY /= mMultiplierY[index];
+    aEvent->mOverflowDeltaY /= mMultiplierY[index];
   }
 }
 
