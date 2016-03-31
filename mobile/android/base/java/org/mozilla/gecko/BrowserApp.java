@@ -6,7 +6,9 @@
 package org.mozilla.gecko;
 
 import android.Manifest;
+import android.app.DownloadManager;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -689,6 +691,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Download:AndroidDownloadManager",
             "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
@@ -1401,6 +1404,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Download:AndroidDownloadManager",
             "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
@@ -1777,6 +1781,38 @@ public class BrowserApp extends GeckoApp
             }
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
+        } else if ("Download:AndroidDownloadManager".equals(event)) {
+            // Downloading via Android's download manager
+
+            final String uri = message.getString("uri");
+            final String filename = message.getString("filename");
+            final String mimeType = message.getString("mimeType");
+
+            final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(uri));
+            request.setMimeType(mimeType);
+
+            try {
+                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, filename);
+            } catch (IllegalStateException e) {
+                Log.e(LOGTAG, "Cannot create download directory");
+                return;
+            }
+
+            request.allowScanningByMediaScanner();
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.addRequestHeader("User-Agent", HardwareUtils.isTablet() ?
+                    AppConstants.USER_AGENT_FENNEC_TABLET :
+                    AppConstants.USER_AGENT_FENNEC_MOBILE);
+
+            try {
+                DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                manager.enqueue(request);
+
+                Log.d(LOGTAG, "Enqueued download (Download Manager)");
+            } catch (RuntimeException e) {
+                Log.e(LOGTAG, "Download failed: " + e);
+            }
+
         } else {
             super.handleMessage(event, message, callback);
         }
