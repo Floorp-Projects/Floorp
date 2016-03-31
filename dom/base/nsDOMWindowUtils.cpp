@@ -803,7 +803,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
     (aOptions & WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE) != 0;
   wheelEvent.mCustomizedByUserPrefs =
     (aOptions & WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS) != 0;
-  wheelEvent.lineOrPageDeltaX = aLineOrPageDeltaX;
+  wheelEvent.mLineOrPageDeltaX = aLineOrPageDeltaX;
   wheelEvent.lineOrPageDeltaY = aLineOrPageDeltaY;
   wheelEvent.widget = widget;
 

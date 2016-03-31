@@ -679,7 +679,7 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindowBase* aWidget
    (aMessage == MOZ_WM_VSCROLL) ? wheelEvent.mDeltaY : wheelEvent.mDeltaX;
   int32_t& lineOrPageDelta =
    (aMessage == MOZ_WM_VSCROLL) ? wheelEvent.lineOrPageDeltaY :
-                                  wheelEvent.lineOrPageDeltaX;
+                                  wheelEvent.mLineOrPageDeltaX;
 
   delta = 1.0;
   lineOrPageDelta = 1;
@@ -712,12 +712,12 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindowBase* aWidget
     ("MouseScroll::HandleScrollMessageAsMouseWheelMessage: aWidget=%p, "
      "aMessage=MOZ_WM_%sSCROLL, aWParam=0x%08X, aLParam=0x%08X, "
      "wheelEvent { refPoint: { x: %d, y: %d }, mDeltaX: %f, mDeltaY: %f, "
-     "lineOrPageDeltaX: %d, lineOrPageDeltaY: %d, "
+     "mLineOrPageDeltaX: %d, lineOrPageDeltaY: %d, "
      "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s }",
      aWidget, (aMessage == MOZ_WM_VSCROLL) ? "V" : "H", aWParam, aLParam,
      wheelEvent.refPoint.x, wheelEvent.refPoint.y,
      wheelEvent.mDeltaX, wheelEvent.mDeltaY,
-     wheelEvent.lineOrPageDeltaX, wheelEvent.lineOrPageDeltaY,
+     wheelEvent.mLineOrPageDeltaX, wheelEvent.lineOrPageDeltaY,
      GetBoolName(wheelEvent.IsShift()),
      GetBoolName(wheelEvent.IsControl()),
      GetBoolName(wheelEvent.IsAlt()),
@@ -850,7 +850,7 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
 
   double& delta = mIsVertical ? aWheelEvent.mDeltaY : aWheelEvent.mDeltaX;
   int32_t& lineOrPageDelta = mIsVertical ? aWheelEvent.lineOrPageDeltaY :
-                                           aWheelEvent.lineOrPageDeltaX;
+                                           aWheelEvent.mLineOrPageDeltaX;
 
   double nativeDeltaPerUnit =
     mIsPage ? static_cast<double>(WHEEL_DELTA) :
@@ -897,13 +897,13 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
     ("MouseScroll::LastEventInfo::InitWheelEvent: aWidget=%p, "
      "aWheelEvent { refPoint: { x: %d, y: %d }, mDeltaX: %f, mDeltaY: %f, "
-     "lineOrPageDeltaX: %d, lineOrPageDeltaY: %d, "
+     "mLineOrPageDeltaX: %d, lineOrPageDeltaY: %d, "
      "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s, "
      "mAllowToOverrideSystemScrollSpeed: %s }, "
      "mAccumulatedDelta: %d",
      aWidget, aWheelEvent.refPoint.x, aWheelEvent.refPoint.y,
      aWheelEvent.mDeltaX, aWheelEvent.mDeltaY,
-     aWheelEvent.lineOrPageDeltaX, aWheelEvent.lineOrPageDeltaY,
+     aWheelEvent.mLineOrPageDeltaX, aWheelEvent.lineOrPageDeltaY,
      GetBoolName(aWheelEvent.IsShift()),
      GetBoolName(aWheelEvent.IsControl()),
      GetBoolName(aWheelEvent.IsAlt()),
