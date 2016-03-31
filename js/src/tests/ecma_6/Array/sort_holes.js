@@ -54,19 +54,5 @@ assertDeepEq(oneHole[0], {size: 27});
 assertEq(oneHole.length, 2600);
 assertEq(denseCount(oneHole), 1);
 
-// Ensure that the array setter is touch touched during sorting.
-
-Object.defineProperty(Array.prototype, "0", {
-    set: (value) => {throw "Illegally touched the array's setter!"},
-    configurable: true
-});
-
-assertThrows(() => {o[1] = 11;});
-
-let o = [,,,,,,,,,,,,,,,,,,,,{size: 1},{size: 2}];
-o.sort((a, b) => {+a.size - +b.size});
-
-delete Array.prototype["0"];
-
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);
