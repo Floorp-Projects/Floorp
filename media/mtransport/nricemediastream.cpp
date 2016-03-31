@@ -306,7 +306,7 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
   }
 
   // If we haven't at least started checking then there is nothing to report
-  if (ctx_->connection_state() == NrIceCtx::ICE_CTX_INIT) {
+  if (ctx_->peer()->state != NR_ICE_PEER_STATE_PAIRED) {
     return NS_OK;
   }
 
@@ -490,7 +490,7 @@ nsresult NrIceMediaStream::GetRemoteCandidates(
   }
 
   // If we haven't at least started checking then there is nothing to report
-  if (ctx_->connection_state() == NrIceCtx::ICE_CTX_INIT) {
+  if (ctx_->peer()->state != NR_ICE_PEER_STATE_PAIRED) {
     return NS_OK;
   }
 
