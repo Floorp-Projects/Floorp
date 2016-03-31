@@ -171,7 +171,7 @@ public:
                        eTouchEventClass)
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
-    modifiers = aOther.modifiers;
+    mModifiers = aOther.mModifiers;
     mTime = aOther.mTime;
     mTimeStamp = aOther.mTimeStamp;
     touches.AppendElements(aOther.touches);

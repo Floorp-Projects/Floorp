@@ -607,7 +607,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         return event;
     }
 
-    event.modifiers = DOMModifiers();
+    event.mModifiers = DOMModifiers();
     event.mTime = Time();
 
     const LayoutDeviceIntPoint& offset = widget->WidgetToScreenOffset();
@@ -727,7 +727,7 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
     if (msg != eMouseMove) {
         event.clickCount = 1;
     }
-    event.modifiers = DOMModifiers();
+    event.mModifiers = DOMModifiers();
     event.mTime = Time();
 
     // We are dispatching this event directly into Gecko (as opposed to going

@@ -30,7 +30,7 @@ already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const
 
 MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
   : InputData(MOUSE_INPUT, aMouseEvent.mTime, aMouseEvent.mTimeStamp,
-              aMouseEvent.modifiers)
+              aMouseEvent.mModifiers)
   , mType(MOUSE_NONE)
   , mButtonType(NONE)
   , mButtons(aMouseEvent.buttons)
@@ -155,7 +155,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   }
 
   event.buttons = mButtons;
-  event.modifiers = modifiers;
+  event.mModifiers = modifiers;
   event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
   event.refPoint =
@@ -170,7 +170,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
   : InputData(MULTITOUCH_INPUT, aTouchEvent.mTime, aTouchEvent.mTimeStamp,
-              aTouchEvent.modifiers)
+              aTouchEvent.mModifiers)
   , mHandledByAPZ(aTouchEvent.mFlags.mHandledByAPZ)
 {
   MOZ_ASSERT(NS_IsMainThread(),
@@ -245,7 +245,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
     return event;
   }
 
-  event.modifiers = this->modifiers;
+  event.mModifiers = this->modifiers;
   event.mTime = this->mTime;
   event.mTimeStamp = this->mTimeStamp;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
@@ -290,7 +290,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.mTime = mTime;
   event.button = WidgetMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  event.modifiers = modifiers;
+  event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
 
   if (mouseEventMessage != eMouseMove) {
@@ -319,7 +319,7 @@ MultiTouchInput::IndexOfTouch(int32_t aTouchIdentifier)
 // and rotation angle.
 MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   : InputData(MULTITOUCH_INPUT, aMouseEvent.mTime, aMouseEvent.mTimeStamp,
-              aMouseEvent.modifiers)
+              aMouseEvent.mModifiers)
   , mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ)
 {
   MOZ_ASSERT(NS_IsMainThread(),
@@ -384,7 +384,7 @@ WidgetWheelEvent
 PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
-  wheelEvent.modifiers = this->modifiers;
+  wheelEvent.mModifiers = this->modifiers;
   wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
   wheelEvent.refPoint =
@@ -459,7 +459,7 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
   : InputData(SCROLLWHEEL_INPUT,
               aWheelEvent.mTime,
               aWheelEvent.mTimeStamp,
-              aWheelEvent.modifiers)
+              aWheelEvent.mModifiers)
   , mDeltaType(DeltaTypeForDeltaMode(aWheelEvent.deltaMode))
   , mScrollMode(SCROLLMODE_INSTANT)
   , mHandledByAPZ(aWheelEvent.mFlags.mHandledByAPZ)
@@ -484,7 +484,7 @@ WidgetWheelEvent
 ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
-  wheelEvent.modifiers = this->modifiers;
+  wheelEvent.mModifiers = this->modifiers;
   wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
   wheelEvent.refPoint =
