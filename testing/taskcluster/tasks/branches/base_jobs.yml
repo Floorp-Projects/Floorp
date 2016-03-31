@@ -316,3 +316,9 @@ tasks:
     when:
       file_patterns:
         - 'testing/mozharness/**'
+  marionette-harness:
+    task: tasks/tests/harness_marionette.yml
+    root: true
+    when:
+        file_patterns:
+          - 'testing/marionette/harness/**'
