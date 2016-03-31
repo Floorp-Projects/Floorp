@@ -352,7 +352,7 @@ public:
   }
 
   // The dragging data.
-  nsCOMPtr<dom::DataTransfer> dataTransfer;
+  nsCOMPtr<dom::DataTransfer> mDataTransfer;
 
   // If this is true, user has cancelled the drag operation.
   bool userCancelled;
@@ -364,7 +364,7 @@ public:
   {
     AssignMouseEventData(aEvent, aCopyTargets);
 
-    dataTransfer = aEvent.dataTransfer;
+    mDataTransfer = aEvent.mDataTransfer;
     // XXX userCancelled isn't copied, is this instentionally?
     userCancelled = false;
     mDefaultPreventedOnContent = aEvent.mDefaultPreventedOnContent;
