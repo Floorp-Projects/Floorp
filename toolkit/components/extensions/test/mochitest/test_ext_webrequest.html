@@ -98,7 +98,8 @@ function backgroundScript() {
   let savedTabId = -1;
 
   function shouldRecord(url) {
-    return url.startsWith(BASE) || /^data:.*\bwebRequestTest|\/invalid\./.test(url);
+    return url.startsWith(BASE) && !url.includes("_page3.html") ||
+           /^data:.*\bwebRequestTest|\/invalid\./.test(url);
   }
 
   let statuses = [
@@ -113,6 +114,12 @@ function backgroundScript() {
         browser.test.assertTrue(line.test(details.statusLine), `HTTP status line ${line} for ${details.url} (found ${details.statusLine})`);
       }
     }
+  }
+
+  function checkOrigin(details) {
+    let isCorrectOrigin = details.url.includes("_page1.html") ? details.originUrl.endsWith("/test_ext_webrequest.html")
+                                                              : /\/file_WebRequest_page\d\.html\b/.test(details.originUrl);
+    browser.test.assertTrue(isCorrectOrigin, `originUrl for ${details.url} is correct (${details.originUrl})`);
   }
 
   function checkType(details) {
@@ -280,6 +287,7 @@ function backgroundScript() {
       requestIDs.set(details.url, new Set([details.requestId]));
     }
     checkResourceType(details.type);
+    checkOrigin(details);
     if (shouldRecord(details.url)) {
       recorded.requested.push(details.url);
 
@@ -311,6 +319,7 @@ function backgroundScript() {
   function onBeforeSendHeaders(details) {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
     checkRequestId(details);
+    checkOrigin(details);
     checkResourceType(details.type);
     processHeaders("request", details);
     if (shouldRecord(details.url)) {
@@ -331,6 +340,7 @@ function backgroundScript() {
   function onBeforeRedirect(details) {
     browser.test.log(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
     checkRequestId(details, "redirect");
+    checkOrigin(details);
     checkResourceType(details.type);
     if (shouldRecord(details.url)) {
       recorded.beforeRedirect.push(details.url);
@@ -354,6 +364,7 @@ function backgroundScript() {
     browser.test.log(`${kind} ${details.requestId} ${details.url}`);
     checkResourceType(details.type);
     checkRequestId(details, kind);
+    checkOrigin(details);
     if (kind in recorded && shouldRecord(details.url)) {
       recorded[kind].push(details.url);
     }

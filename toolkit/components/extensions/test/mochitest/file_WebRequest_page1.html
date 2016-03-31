@@ -28,5 +28,16 @@
 <iframe src="data:text/plain,webRequestTest" width="200" height="200"></iframe>
 <iframe src="data:text/plain,webRequestTest_bad" width="200" height="200"></iframe>
 <iframe src="https://invalid.localhost/" width="200" height="200"></iframe>
+<a href="file_WebRequest_page3.html?trigger=a" target="webrequest_link">link</a>
+<form method="post" action="file_WebRequest_page3.html?trigger=form" target="webrequest_form"></form>
+<script>
+"use strict";
+for (let a of document.links) {
+  a.click();
+}
+for (let f of document.forms) {
+  f.submit();
+}
+</script>
 </body>
 </html>
