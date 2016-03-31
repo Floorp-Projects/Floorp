@@ -85,6 +85,7 @@ UNIFIED_SOURCES += [
     'testStructuredClone.cpp',
     'testSymbol.cpp',
     'testThreadingExclusiveData.cpp',
+    'testThreadingMultipleRuntimes.cpp',
     'testThreadingMutex.cpp',
     'testToIntWidth.cpp',
     'testTypedArrays.cpp',
