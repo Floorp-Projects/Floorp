@@ -473,7 +473,7 @@
       <menuseparator builder="end"
                      class="hide-if-empty-places-result"/>
       <menuitem id="menu_unsortedBookmarks"
-                label="&unsortedBookmarksCmd.label;"
+                label="&otherBookmarksCmd.label;"
                 oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
     </menupopup>
   </menu>

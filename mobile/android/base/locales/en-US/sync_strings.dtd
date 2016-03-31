@@ -33,7 +33,7 @@
 <!ENTITY bookmarks.folder.places.label ''>
 <!ENTITY bookmarks.folder.tags.label 'Tags'>
 <!ENTITY bookmarks.folder.toolbar.label 'Bookmarks Toolbar'>
-<!ENTITY bookmarks.folder.unfiled.label 'Unsorted Bookmarks'>
+<!ENTITY bookmarks.folder.other.label 'Other Bookmarks'>
 <!ENTITY bookmarks.folder.desktop.label 'Desktop Bookmarks'>
 <!ENTITY bookmarks.folder.mobile.label 'Mobile Bookmarks'>
 <!-- Pinned sites on about:home. This folder should never be shown to the user, but we have to give it a string name -->
