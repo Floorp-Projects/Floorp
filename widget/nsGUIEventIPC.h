@@ -170,7 +170,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.mIsNoLineOrPageDelta);
     WriteParam(aMsg, aParam.lineOrPageDeltaX);
     WriteParam(aMsg, aParam.lineOrPageDeltaY);
-    WriteParam(aMsg, static_cast<int32_t>(aParam.scrollType));
+    WriteParam(aMsg, static_cast<int32_t>(aParam.mScrollType));
     WriteParam(aMsg, aParam.overflowDeltaX);
     WriteParam(aMsg, aParam.overflowDeltaY);
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
@@ -200,7 +200,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled) &&
       ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe) &&
       ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed);
-    aResult->scrollType =
+    aResult->mScrollType =
       static_cast<mozilla::WidgetWheelEvent::ScrollType>(scrollType);
     return rv;
   }
