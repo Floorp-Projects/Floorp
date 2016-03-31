@@ -88,10 +88,13 @@ struct PropertyValuePair
 struct Keyframe
 {
   Keyframe() = default;
+  Keyframe(const Keyframe& aOther) = default;
   Keyframe(Keyframe&& aOther)
   {
     *this = Move(aOther);
   }
+
+  Keyframe& operator=(const Keyframe& aOther) = default;
   Keyframe& operator=(Keyframe&& aOther)
   {
     mOffset         = aOther.mOffset;
