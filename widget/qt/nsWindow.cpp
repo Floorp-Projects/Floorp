@@ -1277,7 +1277,7 @@ nsWindow::wheelEvent(QWheelEvent* aEvent)
 
     switch (aEvent->orientation()) {
     case Qt::Vertical:
-        wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = delta;
+        wheelEvent.mDeltaY = wheelEvent.lineOrPageDeltaY = delta;
         break;
     case Qt::Horizontal:
         wheelEvent.mDeltaX = wheelEvent.lineOrPageDeltaX = delta;

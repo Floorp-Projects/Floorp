@@ -2791,7 +2791,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         return;
     }
     if (event.mMessage == eWheel &&
-        (event.mDeltaX != 0 || event.deltaY != 0)) {
+        (event.mDeltaX != 0 || event.mDeltaY != 0)) {
       ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
     }
     return;
@@ -2852,7 +2852,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       return;
   }
   if (event.mMessage == eWheel &&
-      (event.mDeltaX != 0 || event.deltaY != 0)) {
+      (event.mDeltaX != 0 || event.mDeltaY != 0)) {
     DispatchEvent(&event, status);
   }
 }
