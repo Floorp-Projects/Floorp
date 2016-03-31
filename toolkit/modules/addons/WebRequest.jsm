@@ -125,6 +125,7 @@ var ContentPolicyManager = {
   receiveMessage(msg) {
     let browser = msg.target instanceof Ci.nsIDOMXULElement ? msg.target : null;
 
+    let requestId = RequestId.create();
     for (let id of msg.data.ids) {
       let callback = this.policies.get(id);
       if (!callback) {
@@ -134,14 +135,8 @@ var ContentPolicyManager = {
       }
       let response = null;
       let listenerKind = "onStop";
-      let data = {
-        url: msg.data.url,
-        windowId: msg.data.windowId,
-        parentWindowId: msg.data.parentWindowId,
-        type: msg.data.type,
-        browser: browser,
-        requestId: RequestId.create(),
-      };
+      let data = Object.assign({requestId, browser}, msg.data);
+      delete data.ids;
       try {
         response = callback(data);
         if (response) {
@@ -515,32 +510,51 @@ HttpObserverManager = {
                         kind === "onStart" ||
                         kind === "onStop";
 
+    let commonData = null;
+    let uri = channel.URI;
     for (let [callback, opts] of listeners.entries()) {
-      if (!this.shouldRunListener(policyType, channel.URI, opts.filter)) {
+      if (!this.shouldRunListener(policyType, uri, opts.filter)) {
         continue;
       }
 
-      let data = {
-        requestId: RequestId.get(channel),
-        url: channel.URI.spec,
-        method: channel.requestMethod,
-        browser: browser,
-        type: WebRequestCommon.typeForPolicyType(policyType),
-        windowId: loadInfo ? loadInfo.outerWindowID : 0,
-        parentWindowId: loadInfo ? loadInfo.parentOuterWindowID : 0,
-      };
+      if (!commonData) {
+        commonData = {
+          requestId: RequestId.get(channel),
+          url: uri.spec,
+          method: channel.requestMethod,
+          browser: browser,
+          type: WebRequestCommon.typeForPolicyType(policyType),
+        };
 
-      let httpChannel = channel.QueryInterface(Ci.nsIHttpChannelInternal);
-      try {
-        data.ip = httpChannel.remoteAddress;
-      } catch (e) {
-        // The remoteAddress getter throws if the address is unavailable,
-        // but ip is an optional property so just ignore the exception.
-      }
+        if (loadInfo) {
+          let originPrincipal = loadInfo.triggeringPrincipal || loadInfo.loadingPrincipal;
+          if (originPrincipal && originPrincipal.URI) {
+            commonData.originUrl = originPrincipal.URI.spec;
+          }
+          Object.assign(commonData, {
+            windowId: loadInfo.outerWindowID,
+            parentWindowId: loadInfo.parentOuterWindowID,
+          });
+        } else {
+          Object.assign(commonData, {
+            windowId: 0,
+            parentWindowId: 0,
+          });
+        }
 
-      if (extraData) {
-        Object.assign(data, extraData);
+        if (channel instanceof Ci.nsIHttpChannelInternal) {
+          try {
+            commonData.ip = channel.remoteAddress;
+          } catch (e) {
+            // The remoteAddress getter throws if the address is unavailable,
+            // but ip is an optional property so just ignore the exception.
+          }
+        }
+        if (extraData) {
+          Object.assign(commonData, extraData);
+        }
       }
+      let data = Object.assign({}, commonData);
       if (opts.requestHeaders) {
         data.requestHeaders = this.getHeaders(channel, "visitRequestHeaders", kind);
         requestHeaderNames = data.requestHeaders.map(h => h.name);
