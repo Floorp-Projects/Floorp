@@ -3199,7 +3199,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         GdkInputSource source = gdk_device_get_source(device);
         if (source == GDK_SOURCE_TOUCHSCREEN ||
             source == GDK_SOURCE_TOUCHPAD) {
-            wheelEvent.scrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
+            wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
         }
         break;
     }
