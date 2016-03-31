@@ -1330,7 +1330,7 @@ nsTreeSanitizer::Sanitize(nsIContent* aFragment)
   // in tree.
   NS_PRECONDITION(aFragment->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
       "Argument was not DOM fragment.");
-  NS_PRECONDITION(!aFragment->IsInDoc(), "The fragment is in doc?");
+  NS_PRECONDITION(!aFragment->IsInUncomposedDoc(), "The fragment is in doc?");
 
   mFullDocument = false;
   SanitizeChildren(aFragment);

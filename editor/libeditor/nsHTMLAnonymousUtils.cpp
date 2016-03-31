@@ -290,7 +290,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   // If we're not in a document, don't try to add resizers
   nsCOMPtr<dom::Element> focusElementNode = do_QueryInterface(focusElement);
   NS_ENSURE_STATE(focusElementNode);
-  if (!focusElementNode->IsInDoc()) {
+  if (!focusElementNode->IsInUncomposedDoc()) {
     return NS_OK;
   }
 
