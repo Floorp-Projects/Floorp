@@ -611,9 +611,9 @@ static bool
 WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
-          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL ||
-          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE);
+         (aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
+          aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL ||
+          aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE);
 }
 
 static bool
@@ -1084,9 +1084,9 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
 {
   ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
   if (gfxPrefs::SmoothScrollEnabled() &&
-      ((aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+      ((aEvent.mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
         gfxPrefs::WheelSmoothScrollEnabled()) ||
-       (aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE &&
+       (aEvent.mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE &&
         gfxPrefs::PageSmoothScrollEnabled())))
   {
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
@@ -1095,7 +1095,8 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
   ScreenPoint origin(aEvent.refPoint.x, aEvent.refPoint.y);
   ScrollWheelInput input(aEvent.mTime, aEvent.mTimeStamp, 0,
                          scrollMode,
-                         ScrollWheelInput::DeltaTypeForDeltaMode(aEvent.deltaMode),
+                         ScrollWheelInput::DeltaTypeForDeltaMode(
+                                             aEvent.mDeltaMode),
                          origin,
                          aEvent.mDeltaX, aEvent.mDeltaY,
                          aEvent.mAllowToOverrideSystemScrollSpeed);
