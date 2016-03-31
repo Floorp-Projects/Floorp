@@ -4,6 +4,8 @@
 
 // Basic test to check cookie table tab navigation.
 
+/* import-globals-from head.js */
+
 "use strict";
 
 add_task(function*() {

@@ -1,4 +1,7 @@
 // Tests the filter search box in the storage inspector
+
+/* import-globals-from head.js */
+
 "use strict";
 
 add_task(function*() {
