@@ -536,8 +536,19 @@ var WindowListener = {
         this._maybeShowBrowserSharingInfoBar();
 
         // Get the first window Id for the listener.
-        this.LoopAPI.broadcastPushMessage("BrowserSwitch",
-          gBrowser.selectedBrowser.outerWindowID);
+        let browser = gBrowser.selectedBrowser;
+        return new Promise(resolve => {
+          if (browser.outerWindowID) {
+            resolve(browser.outerWindowID);
+            return;
+          }
+
+          browser.messageManager.addMessageListener("Browser:Init", function initListener() {
+            browser.messageManager.removeMessageListener("Browser:Init", initListener);
+            resolve(browser.outerWindowID);
+          });
+        }).then(outerWindowID =>
+          this.LoopAPI.broadcastPushMessage("BrowserSwitch", outerWindowID));
       },
 
       /**
