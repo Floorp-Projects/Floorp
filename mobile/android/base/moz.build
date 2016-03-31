@@ -96,6 +96,7 @@ gujar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/ActivityUtils.java',
     'util/BundleEventListener.java',
     'util/Clipboard.java',
+    'util/ContextUtils.java',
     'util/DrawableUtil.java',
     'util/EventCallback.java',
     'util/FileUtils.java',
