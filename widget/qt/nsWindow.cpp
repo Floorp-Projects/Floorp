@@ -1280,7 +1280,7 @@ nsWindow::wheelEvent(QWheelEvent* aEvent)
         wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = delta;
         break;
     case Qt::Horizontal:
-        wheelEvent.deltaX = wheelEvent.lineOrPageDeltaX = delta;
+        wheelEvent.mDeltaX = wheelEvent.lineOrPageDeltaX = delta;
         break;
     default:
         Q_ASSERT(0);

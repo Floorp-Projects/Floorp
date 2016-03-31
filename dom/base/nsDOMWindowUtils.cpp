@@ -793,7 +793,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
 
   WidgetWheelEvent wheelEvent(true, eWheel, widget);
   wheelEvent.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
-  wheelEvent.deltaX = aDeltaX;
+  wheelEvent.mDeltaX = aDeltaX;
   wheelEvent.deltaY = aDeltaY;
   wheelEvent.deltaZ = aDeltaZ;
   wheelEvent.deltaMode = aDeltaMode;

@@ -277,7 +277,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
       // wheel event whose all delta values are zero by user pref applied, it
       // shouldn't cause a DOM event.
       const WidgetWheelEvent* wheelEvent = AsWheelEvent();
-      return wheelEvent->deltaX != 0.0 || wheelEvent->deltaY != 0.0 ||
+      return wheelEvent->mDeltaX != 0.0 || wheelEvent->deltaY != 0.0 ||
              wheelEvent->deltaZ != 0.0;
     }
 
@@ -385,9 +385,9 @@ double
 WidgetWheelEvent::OverriddenDeltaX() const
 {
   if (!mAllowToOverrideSystemScrollSpeed) {
-    return deltaX;
+    return mDeltaX;
   }
-  return ComputeOverriddenDelta(deltaX, false);
+  return ComputeOverriddenDelta(mDeltaX, false);
 }
 
 double
