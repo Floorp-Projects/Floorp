@@ -451,15 +451,15 @@ private:
     : mDeltaX(0.0)
     , mDeltaY(0.0)
     , mDeltaZ(0.0)
+    , mOverflowDeltaX(0.0)
+    , mOverflowDeltaY(0.0)
     , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
-    , mCustomizedByUserPrefs(false)
-    , mIsMomentum(false)
-    , mIsNoLineOrPageDelta(false)
     , mLineOrPageDeltaX(0)
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
-    , mOverflowDeltaX(0.0)
-    , mOverflowDeltaY(0.0)
+    , mCustomizedByUserPrefs(false)
+    , mIsMomentum(false)
+    , mIsNoLineOrPageDelta(false)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(false)
@@ -474,16 +474,16 @@ public:
     , mDeltaX(0.0)
     , mDeltaY(0.0)
     , mDeltaZ(0.0)
+    , mOverflowDeltaX(0.0)
+    , mOverflowDeltaY(0.0)
     , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    , mLineOrPageDeltaX(0)
+    , mLineOrPageDeltaY(0)
+    , mScrollType(SCROLL_DEFAULT)
     , mCustomizedByUserPrefs(false)
     , mMayHaveMomentum(false)
     , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
-    , mLineOrPageDeltaX(0)
-    , mLineOrPageDeltaY(0)
-    , mScrollType(SCROLL_DEFAULT)
-    , mOverflowDeltaX(0.0)
-    , mOverflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(true)
@@ -519,26 +519,20 @@ public:
   double mDeltaY;
   double mDeltaZ;
 
+  // overflowed delta values for scroll, these values are set by
+  // nsEventStateManger.  If the default action of the wheel event isn't scroll,
+  // these values always zero.  Otherwise, remaning delta values which are
+  // not used by scroll are set.
+  // NOTE: mDeltaX, mDeltaY and mDeltaZ may be modified by EventStateManager.
+  //       However, mOverflowDeltaX and mOverflowDeltaY indicate unused original
+  //       delta values which are not applied the delta_multiplier prefs.
+  //       So, if widget wanted to know the actual direction to be scrolled,
+  //       it would need to check the mDeltaX and mDeltaY.
+  double mOverflowDeltaX;
+  double mOverflowDeltaY;
+
   // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
   uint32_t mDeltaMode;
-
-  // Following members are for internal use only, not for DOM event.
-
-  // If the delta values are computed from prefs, this value is true.
-  // Otherwise, i.e., they are computed from native events, false.
-  bool mCustomizedByUserPrefs;
-
-  // true if the momentum events directly tied to this event may follow it.
-  bool mMayHaveMomentum;
-  // true if the event is caused by momentum.
-  bool mIsMomentum;
-
-  // If device event handlers don't know when they should set mLineOrPageDeltaX
-  // and mLineOrPageDeltaY, this is true.  Otherwise, false.
-  // If mIsNoLineOrPageDelta is true, ESM will generate
-  // eLegacyMouseLineOrPageScroll events when accumulated delta values reach
-  // a line height.
-  bool mIsNoLineOrPageDelta;
 
   // If widget sets mLineOrPageDelta, EventStateManager will dispatch
   // eLegacyMouseLineOrPageScroll event for compatibility.  Note that the delta
@@ -570,7 +564,7 @@ public:
   // Scroll type
   // The default value is SCROLL_DEFAULT, which means EventStateManager will
   // select preferred scroll type automatically.
-  enum ScrollType
+  enum ScrollType : uint8_t
   {
     SCROLL_DEFAULT,
     SCROLL_SYNCHRONOUSLY,
@@ -579,17 +573,21 @@ public:
   };
   ScrollType mScrollType;
 
-  // overflowed delta values for scroll, these values are set by
-  // nsEventStateManger.  If the default action of the wheel event isn't scroll,
-  // these values always zero.  Otherwise, remaning delta values which are
-  // not used by scroll are set.
-  // NOTE: mDeltaX, mDeltaY and mDeltaZ may be modified by EventStateManager.
-  //       However, mOverflowDeltaX and mOverflowDeltaY indicate unused original
-  //       delta values which are not applied the delta_multiplier prefs.
-  //       So, if widget wanted to know the actual direction to be scrolled,
-  //       it would need to check the mDeltaX and mDeltaY.
-  double mOverflowDeltaX;
-  double mOverflowDeltaY;
+  // If the delta values are computed from prefs, this value is true.
+  // Otherwise, i.e., they are computed from native events, false.
+  bool mCustomizedByUserPrefs;
+
+  // true if the momentum events directly tied to this event may follow it.
+  bool mMayHaveMomentum;
+  // true if the event is caused by momentum.
+  bool mIsMomentum;
+
+  // If device event handlers don't know when they should set mLineOrPageDeltaX
+  // and mLineOrPageDeltaY, this is true.  Otherwise, false.
+  // If mIsNoLineOrPageDelta is true, ESM will generate
+  // eLegacyMouseLineOrPageScroll events when accumulated delta values reach
+  // a line height.
+  bool mIsNoLineOrPageDelta;
 
   // Whether or not the parent of the currently overscrolled frame is the
   // ViewPort. This is false in situations when an element on the page is being
