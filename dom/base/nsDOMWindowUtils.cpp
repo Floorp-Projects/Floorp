@@ -801,7 +801,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
     (aOptions & WHEEL_EVENT_CAUSED_BY_MOMENTUM) != 0;
   wheelEvent.mIsNoLineOrPageDelta =
     (aOptions & WHEEL_EVENT_CAUSED_BY_NO_LINE_OR_PAGE_DELTA_DEVICE) != 0;
-  wheelEvent.customizedByUserPrefs =
+  wheelEvent.mCustomizedByUserPrefs =
     (aOptions & WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS) != 0;
   wheelEvent.lineOrPageDeltaX = aLineOrPageDeltaX;
   wheelEvent.lineOrPageDeltaY = aLineOrPageDeltaY;
