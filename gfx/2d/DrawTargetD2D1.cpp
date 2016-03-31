@@ -88,7 +88,7 @@ DrawTargetD2D1::Snapshot()
   }
   PopAllClips();
 
-  mDC->Flush();
+  Flush();
 
   mSnapshot = new SourceSurfaceD2D1(mBitmap, mDC, mFormat, mSize, this);
 
