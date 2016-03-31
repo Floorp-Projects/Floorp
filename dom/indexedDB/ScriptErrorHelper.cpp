@@ -67,7 +67,7 @@ public:
   }
 
   static void
-  DumpLocalizedMessage(const nsCString& aMessageName,
+  DumpLocalizedMessage(const nsACString& aMessageName,
                        const nsAString& aFilename,
                        uint32_t aLineNumber,
                        uint32_t aColumnNumber,
@@ -81,7 +81,7 @@ public:
     nsXPIDLString localizedMessage;
     if (NS_WARN_IF(NS_FAILED(
       nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                         aMessageName.get(),
+                                         aMessageName.BeginReading(),
                                          localizedMessage)))) {
       return;
     }
@@ -224,7 +224,7 @@ ScriptErrorHelper::DumpLocalizedMessage(const nsACString& aMessageName,
                                         uint64_t aInnerWindowID)
 {
   if (NS_IsMainThread()) {
-    ScriptErrorRunnable::DumpLocalizedMessage(nsAutoCString(aMessageName),
+    ScriptErrorRunnable::DumpLocalizedMessage(aMessageName,
                                               aFilename,
                                               aLineNumber,
                                               aColumnNumber,
