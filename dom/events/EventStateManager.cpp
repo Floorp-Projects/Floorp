@@ -2191,23 +2191,23 @@ EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
           (aEvent->mLineOrPageDeltaX > 0  ? nsIDOMUIEvent::SCROLL_PAGE_DOWN :
                                             nsIDOMUIEvent::SCROLL_PAGE_UP);
       scrollDeltaY =
-        !aEvent->lineOrPageDeltaY ? 0 :
-          (aEvent->lineOrPageDeltaY > 0  ? nsIDOMUIEvent::SCROLL_PAGE_DOWN :
-                                           nsIDOMUIEvent::SCROLL_PAGE_UP);
+        !aEvent->mLineOrPageDeltaY ? 0 :
+          (aEvent->mLineOrPageDeltaY > 0  ? nsIDOMUIEvent::SCROLL_PAGE_DOWN :
+                                            nsIDOMUIEvent::SCROLL_PAGE_UP);
       pixelDeltaX = RoundDown(aEvent->mDeltaX * scrollAmountInCSSPixels.width);
       pixelDeltaY = RoundDown(aEvent->mDeltaY * scrollAmountInCSSPixels.height);
       break;
 
     case nsIDOMWheelEvent::DOM_DELTA_LINE:
       scrollDeltaX = aEvent->mLineOrPageDeltaX;
-      scrollDeltaY = aEvent->lineOrPageDeltaY;
+      scrollDeltaY = aEvent->mLineOrPageDeltaY;
       pixelDeltaX = RoundDown(aEvent->mDeltaX * scrollAmountInCSSPixels.width);
       pixelDeltaY = RoundDown(aEvent->mDeltaY * scrollAmountInCSSPixels.height);
       break;
 
     case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
       scrollDeltaX = aEvent->mLineOrPageDeltaX;
-      scrollDeltaY = aEvent->lineOrPageDeltaY;
+      scrollDeltaY = aEvent->mLineOrPageDeltaY;
       pixelDeltaX = RoundDown(aEvent->mDeltaX);
       pixelDeltaY = RoundDown(aEvent->mDeltaY);
       break;
@@ -5393,7 +5393,7 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
 
   if (mHandlingDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
     // Records pixel delta values and init mLineOrPageDeltaX and
-    // lineOrPageDeltaY for wheel events which are caused by pixel only
+    // mLineOrPageDeltaY for wheel events which are caused by pixel only
     // devices.  Ignore mouse wheel transaction for computing this.  The
     // lineOrPageDelta values will be used by dispatching legacy
     // eMouseScrollEventClass (DOMMouseScroll) but not be used for scrolling
@@ -5411,15 +5411,15 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
       nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.height));
 
     aEvent->mLineOrPageDeltaX = RoundDown(mX) / scrollAmountInCSSPixels.width;
-    aEvent->lineOrPageDeltaY = RoundDown(mY) / scrollAmountInCSSPixels.height;
+    aEvent->mLineOrPageDeltaY = RoundDown(mY) / scrollAmountInCSSPixels.height;
 
     mX -= aEvent->mLineOrPageDeltaX * scrollAmountInCSSPixels.width;
-    mY -= aEvent->lineOrPageDeltaY * scrollAmountInCSSPixels.height;
+    mY -= aEvent->mLineOrPageDeltaY * scrollAmountInCSSPixels.height;
   } else {
     aEvent->mLineOrPageDeltaX = RoundDown(mX);
-    aEvent->lineOrPageDeltaY = RoundDown(mY);
+    aEvent->mLineOrPageDeltaY = RoundDown(mY);
     mX -= aEvent->mLineOrPageDeltaX;
-    mY -= aEvent->lineOrPageDeltaY;
+    mY -= aEvent->mLineOrPageDeltaY;
   }
 
   mLastTime = TimeStamp::Now();
@@ -5649,10 +5649,10 @@ EventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
   // Otherwise, we need to compute them from accumulated delta values.
   if (!NeedToComputeLineOrPageDelta(aEvent)) {
     aEvent->mLineOrPageDeltaX *= static_cast<int32_t>(mMultiplierX[index]);
-    aEvent->lineOrPageDeltaY *= static_cast<int32_t>(mMultiplierY[index]);
+    aEvent->mLineOrPageDeltaY *= static_cast<int32_t>(mMultiplierY[index]);
   } else {
     aEvent->mLineOrPageDeltaX = 0;
-    aEvent->lineOrPageDeltaY = 0;
+    aEvent->mLineOrPageDeltaY = 0;
   }
 
   aEvent->mCustomizedByUserPrefs =

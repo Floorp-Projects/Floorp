@@ -395,7 +395,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
   wheelEvent.mMayHaveMomentum = true; // pan inputs may have momentum
   wheelEvent.mIsMomentum = IsMomentum();
   wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
-  wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
+  wheelEvent.mLineOrPageDeltaY = mLineOrPageDeltaY;
   wheelEvent.mDeltaX = mPanDisplacement.x;
   wheelEvent.mDeltaY = mPanDisplacement.y;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
@@ -466,7 +466,7 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
   , mDeltaX(aWheelEvent.mDeltaX)
   , mDeltaY(aWheelEvent.mDeltaY)
   , mLineOrPageDeltaX(aWheelEvent.mLineOrPageDeltaX)
-  , mLineOrPageDeltaY(aWheelEvent.lineOrPageDeltaY)
+  , mLineOrPageDeltaY(aWheelEvent.mLineOrPageDeltaY)
   , mScrollSeriesNumber(0)
   , mUserDeltaMultiplierX(1.0)
   , mUserDeltaMultiplierY(1.0)
@@ -497,7 +497,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
   wheelEvent.mDeltaX = mDeltaX;
   wheelEvent.mDeltaY = mDeltaY;
   wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
-  wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
+  wheelEvent.mLineOrPageDeltaY = mLineOrPageDeltaY;
   wheelEvent.mAllowToOverrideSystemScrollSpeed =
     mAllowToOverrideSystemScrollSpeed;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;

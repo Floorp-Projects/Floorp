@@ -3205,10 +3205,10 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
     }
 #endif
     case GDK_SCROLL_UP:
-        wheelEvent.mDeltaY = wheelEvent.lineOrPageDeltaY = -3;
+        wheelEvent.mDeltaY = wheelEvent.mLineOrPageDeltaY = -3;
         break;
     case GDK_SCROLL_DOWN:
-        wheelEvent.mDeltaY = wheelEvent.lineOrPageDeltaY = 3;
+        wheelEvent.mDeltaY = wheelEvent.mLineOrPageDeltaY = 3;
         break;
     case GDK_SCROLL_LEFT:
         wheelEvent.mDeltaX = wheelEvent.mLineOrPageDeltaX = -1;

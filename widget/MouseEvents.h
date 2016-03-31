@@ -456,7 +456,7 @@ private:
     , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
     , mLineOrPageDeltaX(0)
-    , lineOrPageDeltaY(0)
+    , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
     , overflowDeltaX(0.0)
     , overflowDeltaY(0.0)
@@ -480,7 +480,7 @@ public:
     , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
     , mLineOrPageDeltaX(0)
-    , lineOrPageDeltaY(0)
+    , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
     , overflowDeltaX(0.0)
     , overflowDeltaY(0.0)
@@ -534,7 +534,7 @@ public:
   bool mIsMomentum;
 
   // If device event handlers don't know when they should set mLineOrPageDeltaX
-  // and lineOrPageDeltaY, this is true.  Otherwise, false.
+  // and mLineOrPageDeltaY, this is true.  Otherwise, false.
   // If mIsNoLineOrPageDelta is true, ESM will generate
   // eLegacyMouseLineOrPageScroll events when accumulated delta values reach
   // a line height.
@@ -544,27 +544,27 @@ public:
   // eLegacyMouseLineOrPageScroll event for compatibility.  Note that the delta
   // value means pages if the mDeltaMode is DOM_DELTA_PAGE, otherwise, lines.
   int32_t mLineOrPageDeltaX;
-  int32_t lineOrPageDeltaY;
+  int32_t mLineOrPageDeltaY;
 
   // When the default action for an wheel event is moving history or zooming,
   // need to chose a delta value for doing it.
   int32_t GetPreferredIntDelta()
   {
-    if (!mLineOrPageDeltaX && !lineOrPageDeltaY) {
+    if (!mLineOrPageDeltaX && !mLineOrPageDeltaY) {
       return 0;
     }
-    if (lineOrPageDeltaY && !mLineOrPageDeltaX) {
-      return lineOrPageDeltaY;
+    if (mLineOrPageDeltaY && !mLineOrPageDeltaX) {
+      return mLineOrPageDeltaY;
     }
-    if (mLineOrPageDeltaX && !lineOrPageDeltaY) {
+    if (mLineOrPageDeltaX && !mLineOrPageDeltaY) {
       return mLineOrPageDeltaX;
     }
-    if ((mLineOrPageDeltaX < 0 && lineOrPageDeltaY > 0) ||
-        (mLineOrPageDeltaX > 0 && lineOrPageDeltaY < 0)) {
+    if ((mLineOrPageDeltaX < 0 && mLineOrPageDeltaY > 0) ||
+        (mLineOrPageDeltaX > 0 && mLineOrPageDeltaY < 0)) {
       return 0; // We cannot guess the answer in this case.
     }
-    return (Abs(mLineOrPageDeltaX) > Abs(lineOrPageDeltaY)) ?
-             mLineOrPageDeltaX : lineOrPageDeltaY;
+    return (Abs(mLineOrPageDeltaX) > Abs(mLineOrPageDeltaY)) ?
+             mLineOrPageDeltaX : mLineOrPageDeltaY;
   }
 
   // Scroll type
@@ -619,7 +619,7 @@ public:
     mIsMomentum = aEvent.mIsMomentum;
     mIsNoLineOrPageDelta = aEvent.mIsNoLineOrPageDelta;
     mLineOrPageDeltaX = aEvent.mLineOrPageDeltaX;
-    lineOrPageDeltaY = aEvent.lineOrPageDeltaY;
+    mLineOrPageDeltaY = aEvent.mLineOrPageDeltaY;
     mScrollType = aEvent.mScrollType;
     overflowDeltaX = aEvent.overflowDeltaX;
     overflowDeltaY = aEvent.overflowDeltaY;
