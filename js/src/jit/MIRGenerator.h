@@ -135,19 +135,14 @@ class MIRGenerator
         return info_->compilingAsmJS();
     }
 
-    uint32_t maxAsmJSStackArgBytes() const {
+    uint32_t wasmMaxStackArgBytes() const {
         MOZ_ASSERT(compilingAsmJS());
-        return maxAsmJSStackArgBytes_;
+        return wasmMaxStackArgBytes_;
     }
-    uint32_t resetAsmJSMaxStackArgBytes() {
+    void initWasmMaxStackArgBytes(uint32_t n) {
         MOZ_ASSERT(compilingAsmJS());
-        uint32_t old = maxAsmJSStackArgBytes_;
-        maxAsmJSStackArgBytes_ = 0;
-        return old;
-    }
-    void setAsmJSMaxStackArgBytes(uint32_t n) {
-        MOZ_ASSERT(compilingAsmJS());
-        maxAsmJSStackArgBytes_ = n;
+        MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
+        wasmMaxStackArgBytes_ = n;
     }
     uint32_t minAsmJSHeapLength() const {
         return minAsmJSHeapLength_;
@@ -189,7 +184,7 @@ class MIRGenerator
     mozilla::Atomic<bool, mozilla::Relaxed>* pauseBuild_;
     mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
 
-    uint32_t maxAsmJSStackArgBytes_;
+    uint32_t wasmMaxStackArgBytes_;
     bool performsCall_;
     bool usesSimd_;
     bool usesSimdCached_;
