@@ -40,7 +40,7 @@ struct RTCOutboundRTPStreamStats;
 }
 }
 
-#include "nricectx.h"
+#include "nricectxhandler.h"
 #include "nriceresolver.h"
 #include "nricemediastream.h"
 #include "MediaPipeline.h"
@@ -295,7 +295,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // WARNING: This destroys the object!
   void SelfDestruct();
 
-  RefPtr<NrIceCtx> ice_ctx() const { return mIceCtx; }
+  RefPtr<NrIceCtxHandler> ice_ctx() const { return mIceCtx; }
 
   RefPtr<NrIceMediaStream> ice_media_stream(size_t i) const {
     return mIceCtx->GetStream(i);
@@ -565,7 +565,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   std::map<size_t, std::pair<bool, RefPtr<MediaSessionConduit>>> mConduits;
 
   // ICE objects
-  RefPtr<NrIceCtx> mIceCtx;
+  RefPtr<NrIceCtxHandler> mIceCtx;
 
   // DNS
   RefPtr<NrIceResolver> mDNSResolver;

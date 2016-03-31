@@ -213,18 +213,12 @@ class NrIceCtx {
                 ICE_POLICY_ALL
   };
 
-  static void Init(bool allow_loopback = false,
-                   bool tcp_enabled = true,
-                   bool allow_link_local = false);
+  static void InitializeCryptoAndLogging(bool allow_loopback = false,
+                                         bool tcp_enabled = true,
+                                         bool allow_link_local = false);
 
-  // TODO(ekr@rtfm.com): Too many bools here. Bug 1193437.
-  static RefPtr<NrIceCtx> Create(const std::string& name,
-                                 bool offerer,
-                                 bool allow_loopback = false,
-                                 bool tcp_enabled = true,
-                                 bool allow_link_local = false,
-                                 bool hide_non_default = false,
-                                 Policy policy = ICE_POLICY_ALL);
+  static bool Initialize(NrIceCtx* ice_ctx,
+                         bool hide_non_default);
 
   int SetNat(const RefPtr<TestNat>& aNat);
 
@@ -237,10 +231,6 @@ class NrIceCtx {
 
   // Testing only.
   void destroy_peer_ctx();
-
-  // Create a media stream
-  RefPtr<NrIceMediaStream> CreateStream(const std::string& name,
-                                        int components);
 
   void SetStream(size_t index, NrIceMediaStream* stream);
 
@@ -334,13 +324,14 @@ class NrIceCtx {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
- private:
+ protected:
+  virtual ~NrIceCtx();
+
   NrIceCtx(const std::string& name,
            bool offerer,
            Policy policy);
 
-  virtual ~NrIceCtx();
-
+ private:
   DISALLOW_COPY_ASSIGN(NrIceCtx);
 
   // Callbacks for nICEr
@@ -369,6 +360,7 @@ class NrIceCtx {
   // Set the state
   void SetGatheringState(GatheringState state);
 
+protected:
   ConnectionState connection_state_;
   GatheringState gathering_state_;
   const std::string name_;
