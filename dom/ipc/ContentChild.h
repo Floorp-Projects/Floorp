@@ -531,16 +531,22 @@ public:
 
   virtual bool
   RecvPush(const nsCString& aScope,
-           const IPC::Principal& aPrincipal) override;
+           const IPC::Principal& aPrincipal,
+           const nsString& aMessageId) override;
 
   virtual bool
   RecvPushWithData(const nsCString& aScope,
                    const IPC::Principal& aPrincipal,
+                   const nsString& aMessageId,
                    InfallibleTArray<uint8_t>&& aData) override;
 
   virtual bool
   RecvPushSubscriptionChange(const nsCString& aScope,
                              const IPC::Principal& aPrincipal) override;
+
+  virtual bool
+  RecvPushError(const nsCString& aScope, const nsString& aMessage,
+                const uint32_t& aFlags) override;
 
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value

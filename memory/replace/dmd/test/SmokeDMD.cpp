@@ -129,11 +129,11 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // A no-op.
   free(nullptr);
 
-  // Note: 8 bytes is the smallest requested size that gives consistent
+  // Note: 16 bytes is the smallest requested size that gives consistent
   // behaviour across all platforms with jemalloc.
   // Analyze 1: reported.
   // Analyze 2: thrice-reported.
-  char* a2 = (char*) malloc(8);
+  char* a2 = (char*) malloc(16);
   Report(a2);
 
   // Analyze 1: reported.
@@ -144,7 +144,7 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // ReportOnAlloc, then freed.
   // Analyze 1: freed, irrelevant.
   // Analyze 2: freed, irrelevant.
-  char* b2 = (char*) malloc(8);
+  char* b2 = (char*) malloc(16);
   ReportOnAlloc(b2);
   free(b2);
 
@@ -289,25 +289,25 @@ TestPartial(const char* aTestName, const char* aMode, int aSeven)
   // probability and seeds given to the FastBernoulliTrial instance in
   // ResetBernoulli(). If they change, the output will change too.
 
-  // Expected fraction with stacks: (1 - (1 - 0.003) ** 8) = 0.0237
-  // So we expect about 0.0237 * 10000 == 237.
-  // We actually get 258.
+  // Expected fraction with stacks: (1 - (1 - 0.003) ** 16) = 0.0469.
+  // So we expect about 0.0469 * 10000 == 469.
+  // We actually get 511.
   for (int i = 0; i < kTenThousand; i++) {
-    s = (char*) malloc(8);
+    s = (char*) malloc(16);
     UseItOrLoseIt(s, aSeven);
   }
 
-  // Expected fraction with stacks: (1 - (1 - 0.003) ** 128) = 0.3193,
+  // Expected fraction with stacks: (1 - (1 - 0.003) ** 128) = 0.3193.
   // So we expect about 0.3193 * 10000 == 3193.
-  // We actually get 3150.
+  // We actually get 3136.
   for (int i = 0; i < kTenThousand; i++) {
     s = (char*) malloc(128);
     UseItOrLoseIt(s, aSeven);
   }
 
-  // Expected fraction with stacks: (1 - (1 - 0.003) ** 1024) = 0.9539,
+  // Expected fraction with stacks: (1 - (1 - 0.003) ** 1024) = 0.9539.
   // So we expect about 0.9539 * 10000 == 9539.
-  // We actually get 9539.
+  // We actually get 9531.
   for (int i = 0; i < kTenThousand; i++) {
     s = (char*) malloc(1024);
     UseItOrLoseIt(s, aSeven);

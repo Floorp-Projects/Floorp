@@ -1422,5 +1422,43 @@ PuppetWidget::ZoomToRect(const uint32_t& aPresShellId,
   mTabChild->ZoomToRect(aPresShellId, aViewId, aRect, aFlags);
 }
 
+bool
+PuppetWidget::HasPendingInputEvent()
+{
+  if (!mTabChild) {
+    return false;
+  }
+
+  static const IPC::Message::msgid_t kInputEvents[] = {
+    mozilla::dom::PBrowser::Msg_RealMouseMoveEvent__ID,
+    mozilla::dom::PBrowser::Msg_SynthMouseMoveEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealMouseButtonEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealKeyEvent__ID,
+    mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealTouchEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealTouchMoveEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealDragEvent__ID,
+    mozilla::dom::PBrowser::Msg_UpdateDimensions__ID,
+    mozilla::dom::PBrowser::Msg_MouseEvent__ID,
+    mozilla::dom::PBrowser::Msg_KeyEvent__ID
+  };
+  bool ret = false;
+
+  for (IPC::Message::msgid_t e: kInputEvents) {
+    mTabChild->GetIPCChannel()->PeekMessages(
+      e,
+      [&ret](const IPC::Message& aMsg) -> bool {
+        ret = true;
+        return false;  // Stop peeking.
+      }
+    );
+    if (ret) {
+      break;
+    }
+  }
+
+  return ret;
+}
+
 } // namespace widget
 } // namespace mozilla

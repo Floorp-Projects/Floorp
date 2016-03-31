@@ -320,13 +320,19 @@ DataTransfer::GetFileListInternal(ErrorResult& aRv,
 
       RefPtr<File> domFile;
       if (file) {
-#ifdef DEBUG
-        if (XRE_GetProcessType() == GeckoProcessType_Default) {
-          bool isDir;
-          file->IsDirectory(&isDir);
-          MOZ_ASSERT(!isDir, "How did we get here?");
+        MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
+                   "nsIFile objects are not expected on the content process");
+
+        bool isDir;
+        aRv = file->IsDirectory(&isDir);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
         }
-#endif
+
+        if (isDir) {
+          continue;
+        }
+
         domFile = File::CreateFromFile(GetParentObject(), file);
       } else {
         nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports);
@@ -920,7 +926,7 @@ DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
   if (!dragNode) {
     return nullptr;
   }
-    
+
   nsIDocument* doc = dragNode->GetCurrentDoc();
   if (!doc) {
     return nullptr;
@@ -1032,7 +1038,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
     nsCOMPtr<nsISupports> data;
     if (NS_FAILED(aVariant->GetAsISupports(getter_AddRefs(data))))
        return false;
- 
+
     nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
     if (fdp) {
       // for flavour data providers, use kFlavorHasDataProvider (which has the

@@ -15,7 +15,7 @@ add_test(function test_service_instantiation() {
   let scope = "chrome://test-scope";
   let pushNotifier = Cc["@mozilla.org/push/Notifier;1"].getService(Ci.nsIPushNotifier);
   let principal = Services.scriptSecurityManager.getSystemPrincipal();
-  pushNotifier.notifyPush(scope, principal);
+  pushNotifier.notifyPush(scope, principal, "");
 
   // Now get a handle to our service and check it received the notification.
   let handlerService = Cc[kServiceContractID]

@@ -29,6 +29,11 @@ interface KeyboardEvent : UIEvent
   readonly attribute DOMString key;
   [Pref="dom.keyboardevent.code.enabled"]
   readonly attribute DOMString code;
+
+  // This returns the initialized dictionary for generating a
+  // same-type keyboard event
+  [Cached, ChromeOnly, Constant]
+  readonly attribute KeyboardEventInit initDict;
 };
 
 dictionary KeyboardEventInit : EventModifierInit

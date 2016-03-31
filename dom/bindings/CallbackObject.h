@@ -257,7 +257,6 @@ protected:
 
     // Members which are used to set the async stack.
     Maybe<JS::Rooted<JSObject*>> mAsyncStack;
-    Maybe<JS::Rooted<JSString*>> mAsyncCause;
     Maybe<JS::AutoSetAsyncStackForNewCalls> mAsyncStackSetter;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,

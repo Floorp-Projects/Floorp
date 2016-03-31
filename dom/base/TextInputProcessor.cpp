@@ -766,6 +766,8 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
         aKeyboardEvent.mKeyNameIndex);
   }
 
+  aKeyboardEvent.mIsSynthesizedByTIP = (mForTests)? false : true;
+
   return NS_OK;
 }
 

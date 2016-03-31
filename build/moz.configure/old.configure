@@ -4,11 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@template
-@advanced
+@imports('codecs')
+@imports('sys')
 def encoded_open(path, mode):
-    import codecs
-    import sys
     encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
     return codecs.open(path, mode, encoding)
 
@@ -16,10 +14,8 @@ def encoded_open(path, mode):
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 @depends(mozconfig, 'AUTOCONF')
-@advanced
+@imports('re')
 def autoconf(mozconfig, autoconf):
-    import re
-
     mozconfig_autoconf = None
     if mozconfig['path']:
         make_extra = mozconfig['make_extra']
@@ -51,10 +47,10 @@ def autoconf(mozconfig, autoconf):
                     'autoconf213'))
 
     if not autoconf:
-        error('Could not find autoconf 2.13')
+        die('Could not find autoconf 2.13')
 
     if not os.path.exists(autoconf):
-        error('Could not find autoconf 2.13 at %s' % (autoconf,))
+        die('Could not find autoconf 2.13 at %s', autoconf)
 
     return autoconf
 
@@ -63,37 +59,36 @@ set_config('AUTOCONF', autoconf)
 
 # See comment in mozconfig_options() from build/moz.configure/init.configure
 @template
-@advanced
+# This gives access to the sandbox. Don't copy this blindly.
+@imports('__sandbox__')
 def check_mozconfig_variables():
     # This escapes the sandbox. Don't copy this. This is only here because it
     # is a one off until old-configure is gone.
-    all_options = depends.__self__._options.itervalues()
+    all_options = __sandbox__._options.itervalues()
 
     @depends(early_options, wanted_mozconfig_variables)
     def check_mozconfig_variables(early_options, wanted_mozconfig_variables):
         for option in all_options:
             if (option.env and option.env not in early_options and
                     option.env not in wanted_mozconfig_variables):
-                error(
-                    'You need to add `%s` to the `wanted_mozconfig_variables` '
-                    'list in build/moz.configure/init.configure.' % option.env)
+                die('You need to add `%s` to the `wanted_mozconfig_variables` '
+                    'list in build/moz.configure/init.configure.', option.env)
 
 check_mozconfig_variables()
 
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
          old_configure_assignments, build_project)
-@advanced
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='print')
+@imports('glob')
+@imports('itertools')
+@imports('subprocess')
+# Import getmtime without overwriting the sandbox os.path.
+@imports(_from='os.path', _import='getmtime')
+@imports(_from='mozbuild.shellutil', _import='quote')
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                       old_configure_assignments, build_project):
-    import glob
-    import itertools
-    import subprocess
-    # Import getmtime without overwriting the sandbox os.path.
-    from os.path import getmtime
-
-    from mozbuild.shellutil import quote
-
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
@@ -121,12 +116,18 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             refresh = False
 
     if refresh:
-        warn('Refreshing %s with %s' % (old_configure, autoconf))
+        log.info('Refreshing %s with %s', old_configure, autoconf)
+        script = subprocess.check_output([
+            shell, autoconf,
+            '--localdir=%s' % os.path.dirname(old_configure),
+            old_configure + '.in'])
+
+        # Make old-configure append to config.log, where we put our own log.
+        # This could be done with a m4 macro, but it's way easier this way
+        script = script.replace('>./config.log', '>>./config.log')
+
         with open(old_configure, 'wb') as fh:
-            subprocess.check_call([
-                shell, autoconf,
-                '--localdir=%s' % os.path.dirname(old_configure),
-                old_configure + '.in'], stdout=fh)
+            fh.write(script)
 
     cmd = [shell, old_configure]
     with encoded_open('old-configure.vars', 'w') as out:
@@ -309,8 +310,6 @@ def old_configure_options(*options):
     '--with-arm-kuser',
     '--with-bing-api-keyfile',
     '--with-branding',
-    '--with-ccache',
-    '--with-compiler-wrapper',
     '--with-crashreporter-enable-percent',
     '--with-cross-lib',
     '--with-debug-label',
@@ -366,14 +365,16 @@ def old_configure_options(*options):
     '--enable-calendar',
     '--enable-incomplete-external-linkage',
 )
-@advanced
+@imports(_from='__builtin__', _import='compile')
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='zip')
+@imports('logging')
+@imports('os')
+@imports('subprocess')
+@imports('sys')
+@imports(_from='mozbuild.shellutil', _import='quote')
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
-    import os
-    import subprocess
-    import sys
-    from mozbuild.shellutil import quote
-
     cmd = prepare_configure
 
     # old-configure only supports the options listed in @old_configure_options
@@ -393,9 +394,27 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         cmd += extra_old_configure_args
 
     # For debugging purpose, in case it's not what we'd expect.
-    warn('running %s' % ' '.join(quote(a) for a in cmd))
+    log.info('running %s', ' '.join(quote(a) for a in cmd))
+
+    # Our logging goes to config.log, the same file old.configure uses.
+    # We can't share the handle on the file, so close it. We assume nothing
+    # beyond this point is going to be interesting to log to config.log from
+    # our end, so we don't make the effort to recreate a logging.FileHandler.
+    logger = logging.getLogger('moz.configure')
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.close()
+
+    log_size = os.path.getsize('config.log')
+
     ret = subprocess.call(cmd)
     if ret:
+        with log.queue_debug():
+            with open('config.log') as fh:
+                fh.seek(log_size)
+                for line in fh:
+                    log.debug(line.rstrip())
+            log.error('old-configure failed')
         sys.exit(ret)
 
     raw_config = {}
@@ -411,8 +430,8 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     all_options = set(all_options)
     for flag in raw_config['flags']:
         if flag not in all_options:
-            error('Missing option in `@old_configure_options` in %s: %s'
-                  % (__file__, flag))
+            die('Missing option in `@old_configure_options` in %s: %s',
+                __file__, flag)
 
     # If the code execution above fails, we want to keep the file around for
     # debugging.
@@ -423,21 +442,19 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
 # set_config is only available in the global namespace, not directly in
 # @depends functions, but we do need to enumerate the result of
 # old_configure, so we cheat.
-@template
+@imports('__sandbox__')
 def set_old_configure_config(name, value):
-    set_config(name, value)
+    __sandbox__.set_config_impl(name, value)
 
 # Same as set_old_configure_config, but for set_define.
-@template
+@imports('__sandbox__')
 def set_old_configure_define(name, value):
-    set_define(name, value)
+    __sandbox__.set_define_impl(name, value)
 
 
 @depends(old_configure)
-@advanced
+@imports('types')
 def post_old_configure(raw_config):
-    import types
-
     for k, v in raw_config['substs']:
         set_old_configure_config(
             k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)

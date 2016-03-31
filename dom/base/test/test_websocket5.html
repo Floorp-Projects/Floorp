@@ -19,6 +19,8 @@ var tests = [
   test45, // Test sending/receving binary Blob
   test46, // Test that we don't dispatch incoming msgs once in CLOSING state
   test47, // Make sure onerror/onclose aren't called during close()
+  test48, // see bug 1227136 - client calls close() from onopen() and waits
+          // until WebSocketChannel::mSocketIn is nulled out on socket thread
 ];
 
 function testWebSocket() {

@@ -4,6 +4,7 @@ config = {
     "default_vcs": "tc-vcs",
     "default_actions": [
         'checkout-sources',
+        'get-blobs',
         'build',
         'build-symbols',
         'make-updates',
@@ -50,4 +51,5 @@ config = {
         'http://android.git.linaro.org/git-ro/': 'https://git.mozilla.org/external/linaro',
         'git://github.com/apitrace/': 'https://git.mozilla.org/external/apitrace',
     },
+    "download_tooltool": True,
 }

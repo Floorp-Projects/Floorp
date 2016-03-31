@@ -197,6 +197,10 @@
 #include "nsIDocShellTreeOwner.h"
 #endif
 
+#ifdef MOZ_B2G
+#include "nsIHardwareKeyHandler.h"
+#endif
+
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
 using namespace mozilla::tasktracer;
@@ -745,6 +749,12 @@ PresShell::BeforeAfterKeyboardEventEnabled()
   return sBeforeAfterKeyboardEventEnabled;
 }
 
+/* static */ bool
+PresShell::IsTargetIframe(nsINode* aTarget)
+{
+  return aTarget && aTarget->IsHTMLElement(nsGkAtoms::iframe);
+}
+
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
@@ -1172,9 +1182,17 @@ PresShell::Destroy()
 
   mSynthMouseMoveEvent.Revoke();
 
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "Destroy is re-entering on "
+                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
+  }
+  mInFrameVisibilityUpdate = true;
+
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
   ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
+
+  mInFrameVisibilityUpdate = false;
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5718,16 +5736,12 @@ PresShell::DecApproximateVisibleCount(VisibleFrames& aFrames,
       ReportBadStateDuringVisibilityUpdate();
     }
 
-    SetInFrameVisibilityUpdate(true);
-
     // Decrement the frame's visible count if we're still tracking its
     // visibility. (We may not be, if the frame disabled visibility tracking
     // after we added it to the visible frames list.)
     if (frame->TrackingVisibility()) {
       frame->DecApproximateVisibleCount(aNonvisibleAction);
     }
-
-    SetInFrameVisibilityUpdate(false);
   }
 }
 
@@ -5778,10 +5792,6 @@ void
 PresShell::ClearApproximatelyVisibleFramesList(Maybe<OnNonvisible> aNonvisibleAction
                                                  /* = Nothing() */)
 {
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "ClearApproximatelyVisibleFramesList is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
   DecApproximateVisibleCount(mApproximatelyVisibleFrames, aNonvisibleAction);
   mApproximatelyVisibleFrames.Clear();
 }
@@ -5891,11 +5901,6 @@ PresShell::RebuildApproximateFrameVisibility(nsRect* aRect,
     return;
   }
 
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "RebuildApproximateFrameVisibility is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-
   // Remove the entries of the mApproximatelyVisibleFrames hashtable and put
   // them in oldApproximatelyVisibleFrames.
   VisibleFrames oldApproximatelyVisibleFrames;
@@ -5936,7 +5941,14 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
+  if (mInFrameVisibilityUpdate) {
+    gfxCriticalNoteOnce << "DoUpdateApproximateFrameVisibility is re-entering on "
+                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
+  }
+  mInFrameVisibilityUpdate = true;
+
   if (mHaveShutDown || mIsDestroying) {
+    mInFrameVisibilityUpdate = false;
     return;
   }
 
@@ -5944,11 +5956,14 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
     ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
+    mInFrameVisibilityUpdate = false;
     return;
   }
 
   RebuildApproximateFrameVisibility(/* aRect = */ nullptr, aRemoveOnly);
   ClearApproximateFrameVisibilityVisited(rootFrame->GetView(), true);
+
+  mInFrameVisibilityUpdate = false;
 
 #ifdef DEBUG_FRAME_VISIBILITY_DISPLAY_LIST
   // This can be used to debug the frame walker by comparing beforeFrameList
@@ -6090,12 +6105,15 @@ PresShell::EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame)
     gfxCriticalNoteOnce << "EnsureFrameInApproximatelyVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
+  mInFrameVisibilityUpdate = true;
 
   if (!mApproximatelyVisibleFrames.Contains(aFrame)) {
     MOZ_ASSERT(!AssumeAllFramesVisible());
     mApproximatelyVisibleFrames.PutEntry(aFrame);
     aFrame->IncApproximateVisibleCount();
   }
+
+  mInFrameVisibilityUpdate = false;
 }
 
 void
@@ -6120,6 +6138,7 @@ PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame)
     gfxCriticalNoteOnce << "RemoveFrameFromApproximatelyVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
+  mInFrameVisibilityUpdate = true;
 
   uint32_t count = mApproximatelyVisibleFrames.Count();
   mApproximatelyVisibleFrames.RemoveEntry(aFrame);
@@ -6130,6 +6149,8 @@ PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame)
     // so we need to decrement its visible count.
     aFrame->DecApproximateVisibleCount();
   }
+
+  mInFrameVisibilityUpdate = false;
 }
 
 class nsAutoNotifyDidPaint
@@ -6965,11 +6986,8 @@ CheckPermissionForBeforeAfterKeyboardEvent(Element* aElement)
 static void
 BuildTargetChainForBeforeAfterKeyboardEvent(nsINode* aTarget,
                                             nsTArray<nsCOMPtr<Element> >& aChain,
-                                            bool& aTargetIsIframe)
+                                            bool aTargetIsIframe)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aTarget));
-  aTargetIsIframe = content && content->IsHTMLElement(nsGkAtoms::iframe);
-
   Element* frameElement;
   // If event target is not an iframe, skip the event target and get its
   // parent frame.
@@ -7069,7 +7087,7 @@ PresShell::DispatchAfterKeyboardEvent(nsINode* aTarget,
 
   // Build up a target chain. Each item in the chain will receive an after event.
   AutoTArray<nsCOMPtr<Element>, 5> chain;
-  bool targetIsIframe = false;
+  bool targetIsIframe = IsTargetIframe(aTarget);
   BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
   DispatchAfterKeyboardEventInternal(chain, aEvent, aEmbeddedCancelled);
 }
@@ -7092,19 +7110,25 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
                                nsEventStatus* aStatus,
                                EventDispatchingCallback* aEventCB)
 {
+  MOZ_ASSERT(aTarget);
+  
+  // return true if the event target is in its child process
+  bool targetIsIframe = IsTargetIframe(aTarget);
+
+  // Dispatch event directly if the event is synthesized from
+  // nsITextInputProcessor, or there is no need to fire
+  // beforeKey* and afterKey* events.
   if (aEvent.mMessage == eKeyPress ||
       !BeforeAfterKeyboardEventEnabled()) {
-    EventDispatcher::Dispatch(aTarget, mPresContext,
-                              &aEvent, nullptr, aStatus, aEventCB);
+    ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
+                                         aStatus, aEventCB);
     return;
   }
 
-  MOZ_ASSERT(aTarget);
   MOZ_ASSERT(aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyUp);
 
   // Build up a target chain. Each item in the chain will receive a before event.
   AutoTArray<nsCOMPtr<Element>, 5> chain;
-  bool targetIsIframe = false;
   BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
 
   // Dispatch before events. If each item in the chain consumes the before
@@ -7132,9 +7156,10 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
     return;
   }
 
-  // Dispatch actual key event to event target.
-  EventDispatcher::Dispatch(aTarget, mPresContext,
-                            &aEvent, nullptr, aStatus, aEventCB);
+  if (ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
+                                           aStatus, aEventCB)) {
+    return;
+  }
 
   if (aEvent.DefaultPrevented()) {
     // When embedder prevents the default action of actual key event, attribute
@@ -7152,6 +7177,81 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
 
   // Dispatch after events to all items in the chain.
   DispatchAfterKeyboardEventInternal(chain, aEvent, aEvent.DefaultPrevented());
+}
+
+#ifdef MOZ_B2G
+bool
+PresShell::ForwardKeyToInputMethodApp(nsINode* aTarget,
+                                      WidgetKeyboardEvent& aEvent,
+                                      nsEventStatus* aStatus)
+{
+  if (!XRE_IsParentProcess() || aEvent.mIsSynthesizedByTIP) {
+    return false;
+  }
+
+  if (!mHardwareKeyHandler) {
+    nsresult rv;
+    mHardwareKeyHandler =
+      do_GetService("@mozilla.org/HardwareKeyHandler;1", &rv);
+    if (!NS_SUCCEEDED(rv) || !mHardwareKeyHandler) {
+      return false;
+    }
+  }
+
+  if (mHardwareKeyHandler->ForwardKeyToInputMethodApp(aTarget,
+                                                      aEvent.AsKeyboardEvent(),
+                                                      aStatus)) {
+    // No need to dispatch the forwarded keyboard event to it's child process
+    aEvent.mFlags.mNoCrossProcessBoundaryForwarding = true;
+    return true;
+  }
+
+  return false;
+}
+#endif // MOZ_B2G
+
+bool
+PresShell::ForwardKeyToInputMethodAppOrDispatch(bool aIsTargetRemote,
+                                                nsINode* aTarget,
+                                                WidgetKeyboardEvent& aEvent,
+                                                nsEventStatus* aStatus,
+                                                EventDispatchingCallback* aEventCB)
+{
+#ifndef MOZ_B2G
+  // No need to forward to input-method-app if the platform isn't run on B2G.
+  EventDispatcher::Dispatch(aTarget, mPresContext,
+                            &aEvent, nullptr, aStatus, aEventCB);
+  return false;
+#else
+  // In-process case: the event target is in the current process
+  if (!aIsTargetRemote) {
+    if(ForwardKeyToInputMethodApp(aTarget, aEvent, aStatus)) {
+      return true;
+    }
+
+    // If the keyboard event isn't forwarded to the input-method-app,
+    // then it should be dispatched to its event target directly.
+    EventDispatcher::Dispatch(aTarget, mPresContext,
+                              &aEvent, nullptr, aStatus, aEventCB);
+
+    return false;
+  }
+
+  // OOP case: the event target is in its child process.
+  // Dispatch the keyboard event to the iframe that embeds the remote
+  // event target first.
+  EventDispatcher::Dispatch(aTarget, mPresContext,
+                            &aEvent, nullptr, aStatus, aEventCB);
+
+  // If the event is defaultPrevented, then there is no need to forward it
+  // to the input-method-app.
+  if (aEvent.mFlags.mDefaultPrevented) {
+    return false;
+  }
+
+  // Try forwarding to the input-method-app.
+  return ForwardKeyToInputMethodApp(aTarget, aEvent, aStatus);
+#endif // MOZ_B2G
 }
 
 nsresult
@@ -10901,6 +11001,7 @@ PresShell::UpdateImageLockingState()
       gfxCriticalNoteOnce << "UpdateImageLockingState is re-entering on "
                           << (NS_IsMainThread() ? "" : "non-") << "main thread";
     }
+    mInFrameVisibilityUpdate = true;
 
     // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
@@ -10910,6 +11011,7 @@ PresShell::UpdateImageLockingState()
         imageFrame->MaybeDecodeForPredictedSize();
       }
     }
+    mInFrameVisibilityUpdate = false;
   }
 
   return rv;

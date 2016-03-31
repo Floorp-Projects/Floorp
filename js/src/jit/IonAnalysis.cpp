@@ -120,6 +120,12 @@ FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVect
         bool isUsed = false;
         for (size_t idx = 0; !isUsed && idx < worklist.length(); idx++) {
             phi = worklist[idx];
+            if (phi->isUseRemoved() || phi->isImplicitlyUsed()) {
+                // The phi is implicitly used.
+                isUsed = true;
+                break;
+            }
+
             MUseIterator usesEnd(phi->usesEnd());
             for (MUseIterator use(phi->usesBegin()); use != usesEnd; use++) {
                 MNode* consumer = (*use)->consumer();
@@ -143,12 +149,6 @@ FlagPhiInputsAsHavingRemovedUses(MBasicBlock* block, MBasicBlock* succ, MPhiVect
                 phi = cdef->toPhi();
                 if (phi->isInWorklist())
                     continue;
-
-                if (phi->isUseRemoved() || phi->isImplicitlyUsed()) {
-                    // The phi is implicitly used.
-                    isUsed = true;
-                    break;
-                }
 
                 phi->setInWorklist();
                 if (!worklist.append(phi))

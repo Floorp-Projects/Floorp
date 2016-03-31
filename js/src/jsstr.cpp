@@ -2810,8 +2810,8 @@ FindReplaceLength(JSContext* cx, RegExpStatics* res, ReplaceData& rdata, size_t*
          * to accessing a scripted getter or a value with a scripted toString.
          */
         MOZ_ASSERT(rdata.lambda);
-        MOZ_ASSERT(!rdata.elembase->getOps()->lookupProperty);
-        MOZ_ASSERT(!rdata.elembase->getOps()->getProperty);
+        MOZ_ASSERT(!rdata.elembase->getOpsLookupProperty());
+        MOZ_ASSERT(!rdata.elembase->getOpsGetProperty());
 
         RootedValue match(cx);
         if (!res->createLastMatch(cx, &match))
@@ -3701,7 +3701,7 @@ LambdaIsGetElem(JSContext* cx, JSObject& lambda, MutableHandleNativeObject pobj)
 
     JSObject& bobj = b.toObject();
     const Class* clasp = bobj.getClass();
-    if (!clasp->isNative() || clasp->ops.lookupProperty || clasp->ops.getProperty)
+    if (!clasp->isNative() || clasp->getOpsLookupProperty() || clasp->getOpsGetProperty())
         return true;
 
     pobj.set(&bobj.as<NativeObject>());

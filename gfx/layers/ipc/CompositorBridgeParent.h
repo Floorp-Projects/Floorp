@@ -594,9 +594,6 @@ protected:
   nsIntPoint mPluginsLayerOffset;
   nsIntRegion mPluginsLayerVisibleRegion;
   nsTArray<PluginWindowData> mCachedPluginData;
-  // indicates if we are currently waiting on a plugin update confirmation.
-  // When this is true, composition is currently on hold.
-  bool mPluginUpdateResponsePending;
   // indicates if plugin window visibility and metric updates are currently
   // being defered due to a scroll operation.
   bool mDeferPluginWindows;

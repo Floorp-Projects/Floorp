@@ -716,6 +716,20 @@ js::proxy_FunToString(JSContext* cx, HandleObject proxy, unsigned indent)
     return Proxy::fun_toString(cx, proxy, indent);
 }
 
+const ObjectOps js::ProxyObjectOps = {
+    js::proxy_LookupProperty,
+    js::proxy_DefineProperty,
+    js::proxy_HasProperty,
+    js::proxy_GetProperty,
+    js::proxy_SetProperty,
+    js::proxy_GetOwnPropertyDescriptor,
+    js::proxy_DeleteProperty,
+    js::proxy_Watch, js::proxy_Unwatch,
+    js::proxy_GetElements,
+    nullptr,  /* enumerate */
+    js::proxy_FunToString
+};
+
 const Class js::ProxyObject::proxyClass =
     PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
 

@@ -5,7 +5,7 @@
 TESTPATH := $(srcdir)/src/org/mozilla/gecko/tests
 
 ANDROID_EXTRA_JARS += \
-  $(srcdir)/libs/robotium-solo-4.3.1.jar \
+  $(srcdir)/libs/robotium-solo-5.5.4.jar \
   $(NULL)
 
 _JAVA_HARNESS := \

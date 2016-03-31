@@ -129,6 +129,8 @@ child:
   async PredOnPredictPreconnect(URIParams uri);
   async PredOnPredictDNS(URIParams uri);
 
+  async SpeculativeConnectRequest(nsCString notificationData);
+
 both:
   // Actually we need PTCPSocket() for parent. But ipdl disallows us having different
   // signatures on parent and child. So when constructing the parent side object, we just 

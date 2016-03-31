@@ -942,33 +942,8 @@ extern bool
 XPC_WN_GetterSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // Macros to initialize Object or Function like XPC_WN classes
-#define XPC_WN_WithCall_ObjectOps                                             \
-    {                                                                         \
-        nullptr, /* lookupProperty */                                         \
-        nullptr, /* defineProperty */                                         \
-        nullptr, /* hasProperty */                                            \
-        nullptr, /* getProperty    */                                         \
-        nullptr, /* setProperty    */                                         \
-        nullptr, /* getOwnPropertyDescriptor */                               \
-        nullptr, /* deleteProperty */                                         \
-        nullptr, nullptr, /* watch/unwatch */                                 \
-        nullptr, /* getElements */                                            \
-        nullptr, /* enumerate */                                              \
-    }
-
-#define XPC_WN_NoCall_ObjectOps                                               \
-    {                                                                         \
-        nullptr, /* lookupProperty */                                         \
-        nullptr, /* defineProperty */                                         \
-        nullptr, /* hasProperty */                                            \
-        nullptr, /* getProperty    */                                         \
-        nullptr, /* setProperty    */                                         \
-        nullptr, /* getOwnPropertyDescriptor */                               \
-        nullptr, /* deleteProperty */                                         \
-        nullptr, nullptr, /* watch/unwatch */                                 \
-        nullptr, /* getElements */                                            \
-        nullptr, /* enumerate */                                              \
-    }
+#define XPC_WN_WithCall_ObjectOps JS_NULL_OBJECT_OPS
+#define XPC_WN_NoCall_ObjectOps   JS_NULL_OBJECT_OPS
 
 // Maybe this macro should check for class->enumerate ==
 // XPC_WN_Shared_Proto_Enumerate or something rather than checking for

@@ -391,6 +391,17 @@ NeckoChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
   return true;
 }
 
+bool
+NeckoChild::RecvSpeculativeConnectRequest(const nsCString& aNotificationData)
+{
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "speculative-connect-request",
+                                NS_ConvertUTF8toUTF16(aNotificationData).get());
+  }
+  return true;
+}
+
 } // namespace net
 } // namespace mozilla
 

@@ -190,6 +190,16 @@ public:
     return mEvent->DefaultPrevented();
   }
 
+  bool DefaultPreventedByChrome() const
+  {
+    return mEvent->mFlags.mDefaultPreventedByChrome;
+  }
+
+  bool DefaultPreventedByContent() const
+  {
+    return mEvent->mFlags.mDefaultPreventedByContent;
+  }
+
   bool MultipleActionsPrevented() const
   {
     return mEvent->mFlags.mMultipleActionsPrevented;

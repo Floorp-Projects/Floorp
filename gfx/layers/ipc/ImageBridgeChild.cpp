@@ -226,8 +226,13 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->IsConnected());
-  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(),
-      aOverlay, aPictureRect));
+
+  CompositableOperation op(
+    nullptr,
+    aCompositable->GetIPDLActor(),
+    OpUseOverlaySource(aOverlay, aPictureRect));
+
+  mTxn->AddEdit(op);
 }
 #endif
 

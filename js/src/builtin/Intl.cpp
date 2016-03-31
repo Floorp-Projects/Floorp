@@ -540,30 +540,30 @@ intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
 /**
  * Returns the object holding the internal properties for obj.
  */
-static bool
-GetInternals(JSContext* cx, HandleObject obj, MutableHandleObject internals)
+static JSObject*
+GetInternals(JSContext* cx, HandleObject obj)
 {
     RootedValue getInternalsValue(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().getInternals,
                                          &getInternalsValue))
     {
-        return false;
+        return nullptr;
     }
     MOZ_ASSERT(getInternalsValue.isObject());
     MOZ_ASSERT(getInternalsValue.toObject().is<JSFunction>());
 
     InvokeArgs args(cx);
     if (!args.init(1))
-        return false;
+        return nullptr;
 
     args.setCallee(getInternalsValue);
     args.setThis(NullValue());
     args[0].setObject(*obj);
 
     if (!Invoke(cx, args))
-        return false;
-    internals.set(&args.rval().toObject());
-    return true;
+        return nullptr;
+
+    return &args.rval().toObject();
 }
 
 static bool
@@ -903,8 +903,8 @@ NewUCollator(JSContext* cx, HandleObject collator)
 {
     RootedValue value(cx);
 
-    RootedObject internals(cx);
-    if (!GetInternals(cx, collator, &internals))
+    RootedObject internals(cx, GetInternals(cx, collator));
+    if (!internals)
         return nullptr;
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
@@ -1368,8 +1368,8 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
 {
     RootedValue value(cx);
 
-    RootedObject internals(cx);
-    if (!GetInternals(cx, numberFormat, &internals))
+    RootedObject internals(cx, GetInternals(cx, numberFormat));
+    if (!internals)
        return nullptr;
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
@@ -1957,8 +1957,8 @@ NewUDateFormat(JSContext* cx, HandleObject dateTimeFormat)
 {
     RootedValue value(cx);
 
-    RootedObject internals(cx);
-    if (!GetInternals(cx, dateTimeFormat, &internals))
+    RootedObject internals(cx, GetInternals(cx, dateTimeFormat));
+    if (!internals)
        return nullptr;
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))

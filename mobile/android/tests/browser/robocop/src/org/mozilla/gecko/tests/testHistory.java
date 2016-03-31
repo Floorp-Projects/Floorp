@@ -10,7 +10,7 @@ import android.widget.ListView;
 
 import org.mozilla.gecko.home.HomePager;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 public class testHistory extends AboutHomeTest {
     private View mFirstChild;

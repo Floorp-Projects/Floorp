@@ -56,8 +56,10 @@
 #include "nsIOService.h"
 
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/NeckoParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/unused.h"
 
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
@@ -2175,6 +2177,9 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
         obsService->NotifyObservers(nullptr,
                                     "speculative-connect-request",
                                     NS_ConvertUTF8toUTF16(spec).get());
+        if (!IsNeckoChild() && gNeckoParent) {
+            Unused << gNeckoParent->SendSpeculativeConnectRequest(spec);
+        }
     }
 
     nsISiteSecurityService* sss = gHttpHandler->GetSSService();

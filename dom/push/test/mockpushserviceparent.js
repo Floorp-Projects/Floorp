@@ -157,6 +157,13 @@ var MockService = {
   unregister(pageRecord) {
     return this.sendRequest("unregister", pageRecord);
   },
+
+  reportDeliveryError(messageId, reason) {
+    sendAsyncMessage("service-delivery-error", {
+      messageId: messageId,
+      reason: reason,
+    });
+  },
 };
 
 addMessageListener("service-replace", function () {

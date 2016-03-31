@@ -259,6 +259,9 @@ public:
                           const FrameMetrics::ViewID& aViewId,
                           const CSSRect& aRect,
                           const uint32_t& aFlags) override;
+
+  virtual bool HasPendingInputEvent() override;
+
 protected:
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;

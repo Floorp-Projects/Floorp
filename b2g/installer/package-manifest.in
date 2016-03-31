@@ -674,6 +674,9 @@
 ; InputMethod API
 @RESPATH@/components/MozKeyboard.js
 @RESPATH@/components/InputMethod.manifest
+#ifdef MOZ_B2G
+@RESPATH@/components/inputmethod.xpt
+#endif
 
 @RESPATH@/components/EngineeringMode.manifest
 @RESPATH@/components/EngineeringModeAPI.js

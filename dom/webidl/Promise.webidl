@@ -63,7 +63,7 @@ interface _Promise {
 };
 #else // SPIDERMONKEY_PROMISE
 [NoInterfaceObject,
- Exposed=(Window,Worker,System)]
+ Exposed=(Window,Worker,WorkerDebugger,System)]
 // Need to escape "Promise" so it's treated as an identifier.
 interface _Promise {
 };

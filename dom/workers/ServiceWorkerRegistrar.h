@@ -66,6 +66,8 @@ protected:
   nsresult WriteData();
   void DeleteData();
 
+  void RegisterServiceWorkerInternal(const ServiceWorkerRegistrationData& aData);
+
   ServiceWorkerRegistrar();
   virtual ~ServiceWorkerRegistrar();
 

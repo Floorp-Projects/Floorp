@@ -110,10 +110,10 @@ class MessageChannel : HasResultCodes
         mAbortOnError = abort;
     }
 
-    // Call aInvoke for each pending message of type aId.
+    // Call aInvoke for each pending message of type aId until it returns false.
     // XXX: You must get permission from an IPC peer to use this function
     //      since it requires custom deserialization and re-orders events.
-    void PeekMessages(Message::msgid_t aId, mozilla::function<void(const Message& aMsg)> aInvoke);
+    void PeekMessages(Message::msgid_t aId, mozilla::function<bool(const Message& aMsg)> aInvoke);
 
     // Misc. behavioral traits consumers can request for this channel
     enum ChannelFlags {

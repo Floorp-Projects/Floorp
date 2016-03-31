@@ -5,7 +5,7 @@
 # Setup for build cache
 
 # Avoid duplication if the file happens to be included twice.
-if test -z "$bucket"; then
+if test -z "$bucket" -a -z "$NO_CACHE"; then
 
 read branch platform master <<EOF
 $(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.json").read())["properties"]; print p["branch"], p["platform"], p["master"]' 2> /dev/null)

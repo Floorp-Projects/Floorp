@@ -77,7 +77,7 @@ private:
 
   // We cannot store File or Directory objects bacause this object is created
   // on a different thread and File and Directory are not thread-safe.
-  nsTArray<Directory::BlobImplOrDirectoryPath> mTargetData;
+  FallibleTArray<Directory::BlobImplOrDirectoryPath> mTargetData;
 };
 
 } // namespace dom

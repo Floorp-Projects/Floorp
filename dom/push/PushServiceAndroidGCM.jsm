@@ -195,20 +195,8 @@ this.PushServiceAndroidGCM = {
     console.debug("disconnect");
   },
 
-  request: function(action, record) {
-    switch (action) {
-    case "register":
-      console.debug("register:", record);
-      return this._register(record);
-    case "unregister":
-      console.debug("unregister: ", record);
-      return this._unregister(record);
-    default:
-      console.debug("Ignoring unrecognized request action:", action);
-    }
-  },
-
-  _register: function(record) {
+  register: function(record) {
+    console.debug("register:", record);
     let ctime = Date.now();
     // Caller handles errors.
     return Messaging.sendRequestForResult({
@@ -234,7 +222,8 @@ this.PushServiceAndroidGCM = {
     });
   },
 
-  _unregister: function(record) {
+  unregister: function(record) {
+    console.debug("unregister: ", record);
     return Messaging.sendRequestForResult({
       type: "PushServiceAndroidGCM:UnsubscribeChannel",
       channelID: record.keyID,

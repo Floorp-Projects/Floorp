@@ -7,6 +7,7 @@
 #include "GonkSensorsRegistryInterface.h"
 #include "GonkSensorsHelpers.h"
 #include "HalLog.h"
+#include <mozilla/UniquePtr.h>
 
 namespace mozilla {
 namespace hal {
@@ -80,18 +81,18 @@ GonkSensorsRegistryModule::RegisterModuleCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_REGISTER_MODULE, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_REGISTER_MODULE, 0);
 
   nsresult rv = PackPDU(aId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -101,18 +102,18 @@ GonkSensorsRegistryModule::UnregisterModuleCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_UNREGISTER_MODULE, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_UNREGISTER_MODULE, 0);
 
   nsresult rv = PackPDU(aId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 

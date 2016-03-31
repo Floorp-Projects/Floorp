@@ -9058,15 +9058,16 @@ nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages() {
       mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()) {
     mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()->PeekMessages(
       mozilla::layers::PAPZ::Msg_UpdateFrame__ID,
-      [](const IPC::Message& aMsg) {
+      [](const IPC::Message& aMsg) -> bool {
         void* iter = nullptr;
         FrameMetrics frame;
         if (!IPC::ReadParam(&aMsg, &iter, &frame)) {
           MOZ_ASSERT(false);
-          return;
+          return true;
         }
 
         UpdateDisplayPortMarginsForPendingMetrics(frame);
+        return true;
       });
   }
 }
