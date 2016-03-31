@@ -60,7 +60,8 @@ struct TimingParams
           NS_LITERAL_STRING("duration"));
       }
     } else if (!aDuration.GetAsString().EqualsLiteral("auto")) {
-      aRv.ThrowTypeError<dom::MSG_INVALID_DURATION_ERROR>();
+      aRv.ThrowTypeError<dom::MSG_INVALID_DURATION_ERROR>(
+        aDuration.GetAsString());
     }
     return result;
   }
