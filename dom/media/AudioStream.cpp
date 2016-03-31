@@ -339,10 +339,8 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   params.channels = mOutChannels;
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
-  mAudioChannel = aAudioChannel;
   params.stream_type = CubebUtils::ConvertChannelToCubebType(aAudioChannel);
 #else
-  mAudioChannel = dom::AudioChannel::Content;
   params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
 #endif
 
