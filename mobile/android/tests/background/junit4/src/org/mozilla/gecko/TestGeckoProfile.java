@@ -31,6 +31,7 @@ public class TestGeckoProfile {
     private static final String PROFILE_NAME = "profileName";
 
     private static final String CLIENT_ID_JSON_ATTR = "clientID";
+    private static final String PROFILE_CREATION_DATE_JSON_ATTR = "created";
 
     @Rule
     public TemporaryFolder dirContainingProfile = new TemporaryFolder();
@@ -39,6 +40,7 @@ public class TestGeckoProfile {
     private GeckoProfile profile;
 
     private File clientIdFile;
+    private File timesFile;
 
     @Before
     public void setUp() throws IOException {
@@ -47,6 +49,7 @@ public class TestGeckoProfile {
         profile = GeckoProfile.get(context, PROFILE_NAME, profileDir);
 
         clientIdFile = new File(profileDir, "datareporting/state.json");
+        timesFile = new File(profileDir, "times.json");
     }
 
     public void assertValidClientId(final String clientId) {
@@ -199,6 +202,43 @@ public class TestGeckoProfile {
             assertTrue("Generated client ID from UUID, " + generatedClientId + ", is valid",
                     profile.isClientIdValid(generatedClientId));
         }
+    }
+
+    @Test
+    public void testGetProfileCreationDateFromTimesFile() throws Exception {
+        final long expectedDate = System.currentTimeMillis();
+        final JSONObject expectedObj = new JSONObject();
+        expectedObj.put(PROFILE_CREATION_DATE_JSON_ATTR, expectedDate);
+        FileUtil.writeJSONObjectToFile(timesFile, expectedObj);
+
+        final Context context = RuntimeEnvironment.application;
+        final long actualDate = profile.getAndPersistProfileCreationDate(context);
+        assertEquals("Date from disk equals date inserted to disk", expectedDate, actualDate);
+
+        final long actualDateFromDisk = readProfileCreationDateFromFile(timesFile);
+        assertEquals("Date in times.json has not changed after accessing profile creation date",
+                expectedDate, actualDateFromDisk);
+    }
+
+    @Test
+    public void testGetProfileCreationDateTimesFileDoesNotExist() throws Exception {
+        assertFalse("Times.json does not already exist", timesFile.exists());
+
+        final Context context = RuntimeEnvironment.application;
+        final long actualDate = profile.getAndPersistProfileCreationDate(context);
+        // I'd prefer to mock so we can return and verify a specific value but we can't mock
+        // GeckoProfile because it's final. Instead, we check if the value is at least reasonable.
+        assertTrue("Date from method is positive", actualDate >= 0);
+        assertTrue("Date from method is less than current time", actualDate < System.currentTimeMillis());
+
+        assertTrue("Times.json exists after getting profile", timesFile.exists());
+        final long actualDateFromDisk = readProfileCreationDateFromFile(timesFile);
+        assertEquals("Date from disk equals returned value", actualDate, actualDateFromDisk);
+    }
+
+    private static long readProfileCreationDateFromFile(final File file) throws Exception {
+        final JSONObject actualObj = FileUtil.readJSONObjectFromFile(file);
+        return actualObj.getLong(PROFILE_CREATION_DATE_JSON_ATTR);
     }
 
     private String readClientIdFromFile(final File file) throws Exception {
