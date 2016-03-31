@@ -172,7 +172,7 @@ add_task(function* test_pushNotifications() {
         return true;
       }
     }),
-    promiseObserverNotification(PushServiceComponent.pushTopic, function(subject, data) {
+    promiseObserverNotification('push-message', function(subject, data) {
       var message = subject.QueryInterface(Ci.nsIPushMessage);
       if (message && (data == "https://example.com/page/4")){
         equal(message.text(), "Yet another message", "decoded message is incorrect");
