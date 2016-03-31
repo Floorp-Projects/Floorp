@@ -1071,7 +1071,7 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
 }
 
 bool
-nsDefaultURIFixup::IsDomainWhitelisted(const nsAutoCString aAsciiHost,
+nsDefaultURIFixup::IsDomainWhitelisted(const nsACString& aAsciiHost,
                                        const uint32_t aDotLoc)
 {
   if (sDNSFirstForSingleWords) {
@@ -1098,7 +1098,7 @@ nsDefaultURIFixup::IsDomainWhitelisted(const nsACString& aDomain,
                                        const uint32_t aDotLoc,
                                        bool* aResult)
 {
-  *aResult = IsDomainWhitelisted(nsAutoCString(aDomain), aDotLoc);
+  *aResult = IsDomainWhitelisted(aDomain, aDotLoc);
   return NS_OK;
 }
 
