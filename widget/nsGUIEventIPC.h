@@ -165,7 +165,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.mDeltaZ);
     WriteParam(aMsg, aParam.mDeltaMode);
     WriteParam(aMsg, aParam.mCustomizedByUserPrefs);
-    WriteParam(aMsg, aParam.mayHaveMomentum);
+    WriteParam(aMsg, aParam.mMayHaveMomentum);
     WriteParam(aMsg, aParam.isMomentum);
     WriteParam(aMsg, aParam.mIsNoLineOrPageDelta);
     WriteParam(aMsg, aParam.lineOrPageDeltaX);
@@ -189,7 +189,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &aResult->mDeltaZ) &&
       ReadParam(aMsg, aIter, &aResult->mDeltaMode) &&
       ReadParam(aMsg, aIter, &aResult->mCustomizedByUserPrefs) &&
-      ReadParam(aMsg, aIter, &aResult->mayHaveMomentum) &&
+      ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
       ReadParam(aMsg, aIter, &aResult->isMomentum) &&
       ReadParam(aMsg, aIter, &aResult->mIsNoLineOrPageDelta) &&
       ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
