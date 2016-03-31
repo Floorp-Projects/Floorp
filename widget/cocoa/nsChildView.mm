@@ -5151,8 +5151,9 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(aMouseEvent) &&
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
-  outWheelEvent->deltaMode = usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
-                                              : nsIDOMWheelEvent::DOM_DELTA_LINE;
+  outWheelEvent->mDeltaMode =
+    usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
+                     : nsIDOMWheelEvent::DOM_DELTA_LINE;
   outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 

@@ -1266,7 +1266,7 @@ nsWindow::wheelEvent(QWheelEvent* aEvent)
 {
     // check to see if we should rollup
     WidgetWheelEvent wheelEvent(true, eWheel, this);
-    wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+    wheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
 
     // negative values for aEvent->delta indicate downward scrolling;
     // this is opposite Gecko usage.

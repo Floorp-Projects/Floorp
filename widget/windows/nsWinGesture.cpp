@@ -570,7 +570,7 @@ nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
 
   aWheelEvent.refPoint.x = mPanRefPoint.x;
   aWheelEvent.refPoint.y = mPanRefPoint.y;
-  aWheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  aWheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
   aWheelEvent.scrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
   aWheelEvent.mIsNoLineOrPageDelta = true;
 
