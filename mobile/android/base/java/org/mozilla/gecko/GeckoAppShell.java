@@ -302,6 +302,7 @@ public class GeckoAppShell
     public static native void onFullScreenPluginHidden(View view);
 
     private static LayerView sLayerView;
+    private static Rect sScreenSize;
 
     public static void setLayerView(LayerView lv) {
         if (sLayerView == lv) {
@@ -1267,7 +1268,7 @@ public class GeckoAppShell
         if (action.equalsIgnoreCase(Intent.ACTION_SEND)) {
             Intent shareIntent = getShareIntent(context, targetURI, mimeType, title);
             return Intent.createChooser(shareIntent,
-                                        context.getResources().getString(R.string.share_title)); 
+                                        context.getResources().getString(R.string.share_title));
         }
 
         Uri uri = normalizeUriScheme(targetURI.indexOf(':') >= 0 ? Uri.parse(targetURI) : new Uri.Builder().scheme(targetURI).build());
@@ -1733,7 +1734,7 @@ public class GeckoAppShell
                 return true;
             }
         };
-            
+
         EnumerateGeckoProcesses(visitor);
     }
 
@@ -1755,7 +1756,7 @@ public class GeckoAppShell
 
             // figure out the column offsets.  We only care about the pid and user fields
             StringTokenizer st = new StringTokenizer(headerOutput);
-            
+
             int tokenSoFar = 0;
             while (st.hasMoreTokens()) {
                 String next = st.nextToken();
@@ -1888,7 +1889,7 @@ public class GeckoAppShell
         final MimeTypeMap mtm = MimeTypeMap.getSingleton();
         return mtm.getMimeTypeFromExtension(ext);
     }
-    
+
     private static Drawable getDrawableForExtension(PackageManager pm, String aExt) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         final String mimeType = getMimeTypeFromExtension(aExt);
@@ -2612,7 +2613,7 @@ public class GeckoAppShell
         if (Proxy.NO_PROXY.equals(proxy)) {
             return "DIRECT";
         }
-        
+
         switch (proxy.type()) {
             case HTTP:
                 return "PROXY " + proxy.address().toString();
@@ -2855,11 +2856,18 @@ public class GeckoAppShell
         return 0;
     }
 
+    public static synchronized Rect getScreenSize(final boolean update) {
+        if (update || sScreenSize == null) {
+            final WindowManager wm = (WindowManager)
+                    getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+            final Display disp = wm.getDefaultDisplay();
+            sScreenSize = new Rect(0, 0, disp.getWidth(), disp.getHeight());
+        }
+        return sScreenSize;
+    }
+
     @WrapForJNI
-    static Rect getScreenSize() {
-        final WindowManager wm = (WindowManager)
-                getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-        final Display disp = wm.getDefaultDisplay();
-        return new Rect(0, 0, disp.getWidth(), disp.getHeight());
+    public static Rect getScreenSize() {
+        return getScreenSize(/* update */ false);
     }
 }

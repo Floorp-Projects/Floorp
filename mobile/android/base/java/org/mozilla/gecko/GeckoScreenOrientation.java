@@ -40,7 +40,7 @@ public class GeckoScreenOrientation {
             this.value = (short)value;
         }
 
-        private final static ScreenOrientation[] sValues = ScreenOrientation.values(); 
+        private final static ScreenOrientation[] sValues = ScreenOrientation.values();
 
         public static ScreenOrientation get(int value) {
             for (ScreenOrientation orient: sValues) {
@@ -156,6 +156,8 @@ public class GeckoScreenOrientation {
                 GeckoEvent.createScreenOrientationEvent(aScreenOrientation.value,
                                                         getAngle()));
         }
+        // Update screen size.
+        GeckoAppShell.getScreenSize(/* update */ true);
         return true;
     }
 
