@@ -170,7 +170,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.mIsNoLineOrPageDelta);
     WriteParam(aMsg, aParam.mLineOrPageDeltaX);
     WriteParam(aMsg, aParam.mLineOrPageDeltaY);
-    WriteParam(aMsg, static_cast<int32_t>(aParam.mScrollType));
+    WriteParam(aMsg, static_cast<uint8_t>(aParam.mScrollType));
     WriteParam(aMsg, aParam.mOverflowDeltaX);
     WriteParam(aMsg, aParam.mOverflowDeltaY);
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
@@ -180,7 +180,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    int32_t scrollType = 0;
+    uint8_t scrollType = 0;
     bool rv =
       ReadParam(aMsg, aIter,
                 static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
