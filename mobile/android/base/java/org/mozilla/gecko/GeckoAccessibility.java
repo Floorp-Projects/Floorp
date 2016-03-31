@@ -209,8 +209,8 @@ public class GeckoAccessibility {
                 for (int i = 1; i < textArray.length(); i++) {
                     sb.append(" ").append(textArray.optString(i));
                 }
+                sVirtualCursorNode.setText(sb.toString());
             }
-            sVirtualCursorNode.setText(sb.toString());
             sVirtualCursorNode.setContentDescription(message.optString("description"));
 
             JSONObject bounds = message.optJSONObject("bounds");
