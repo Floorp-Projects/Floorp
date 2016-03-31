@@ -257,7 +257,7 @@ IDRefsIterator::
                  nsIAtom* aIDRefsAttr) :
   mContent(aContent), mDoc(aDoc), mCurrIdx(0)
 {
-  if (mContent->IsInDoc())
+  if (mContent->IsInUncomposedDoc())
     mContent->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);
 }
 

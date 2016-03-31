@@ -98,7 +98,7 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
 
   // If we're not bound to the document yet, don't worry, we'll get called again
   // when that happens
-  if (!aContextNode->IsInDoc())
+  if (!aContextNode->IsInUncomposedDoc())
     return;
 
   // Hold ref to the old element so that it isn't destroyed in between resetting

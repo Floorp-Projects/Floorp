@@ -716,7 +716,7 @@ nsImageMap::FreeAreas()
   uint32_t i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
-    if (area->mArea->IsInDoc()) {
+    if (area->mArea->IsInUncomposedDoc()) {
       NS_ASSERTION(area->mArea->GetPrimaryFrame() == mImageFrame,
                    "Unexpected primary frame");
 

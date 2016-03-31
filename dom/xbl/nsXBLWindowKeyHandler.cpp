@@ -727,7 +727,7 @@ nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
 
   nsCOMPtr<Element> chromeHandlerElement = GetElement();
   if (!chromeHandlerElement) {
-    NS_WARN_IF(!keyContent->IsInDoc());
+    NS_WARN_IF(!keyContent->IsInUncomposedDoc());
     nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
     keyElement.swap(*aElementForHandler);
     return true;
@@ -738,7 +738,7 @@ nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
   keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
   if (command.IsEmpty()) {
     // There is no command element associated with the key element.
-    NS_WARN_IF(!keyContent->IsInDoc());
+    NS_WARN_IF(!keyContent->IsInUncomposedDoc());
     nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
     keyElement.swap(*aElementForHandler);
     return true;
