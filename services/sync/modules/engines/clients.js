@@ -140,6 +140,10 @@ ClientEngine.prototype = {
     Svc.Prefs.set("client.type", value);
   },
 
+  remoteClientExists(id) {
+    return !!this._store._remoteClients[id];
+  },
+
   isMobile: function isMobile(id) {
     if (this._store._remoteClients[id])
       return this._store._remoteClients[id].type == DEVICE_TYPE_MOBILE;
