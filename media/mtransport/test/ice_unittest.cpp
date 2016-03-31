@@ -3130,7 +3130,8 @@ TEST_F(WebRtcIceConnectTest, TestHostCandPairingFilter) {
   }
 }
 
-TEST_F(WebRtcIceConnectTest, TestSrflxCandPairingFilter) {
+// TODO Bug 1226838 - See Comment 2 - this test can't work as written
+TEST_F(WebRtcIceConnectTest, DISABLED_TestSrflxCandPairingFilter) {
   if (stun_server_address_.empty()) {
     return;
   }
