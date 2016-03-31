@@ -503,6 +503,11 @@ public:
     if (NS_SUCCEEDED(rv)) {
       MOZ_ASSERT(window);
 
+      rv = nsContentUtils::DispatchFocusChromeEvent(window);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
       MOZ_ASSERT(workerPrivate);
 
