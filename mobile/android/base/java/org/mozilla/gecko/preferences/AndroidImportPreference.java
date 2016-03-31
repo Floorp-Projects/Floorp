@@ -8,8 +8,8 @@ package org.mozilla.gecko.preferences;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.restrictions.Restrictable;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.Restrictions;
 
 import java.util.Set;
 
