@@ -274,8 +274,7 @@ NS_IMETHODIMP
 PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 {
 #ifdef DEBUG
-  debug_DumpInvalidate(stderr, this, &aRect,
-                       nsAutoCString("PuppetWidget"), 0);
+  debug_DumpInvalidate(stderr, this, &aRect, "PuppetWidget", 0);
 #endif
 
   if (mChild) {
@@ -309,8 +308,7 @@ NS_IMETHODIMP
 PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
-  debug_DumpEvent(stdout, event->widget, event,
-                  nsAutoCString("PuppetWidget"), 0);
+  debug_DumpEvent(stdout, event->widget, event, "PuppetWidget", 0);
 #endif
 
   MOZ_ASSERT(!mChild || mChild->mWindowType == eWindowType_popup,
@@ -1034,7 +1032,7 @@ PuppetWidget::Paint()
   if (GetCurrentWidgetListener()) {
 #ifdef DEBUG
     debug_DumpPaintEvent(stderr, this, region.ToUnknownRegion(),
-                         nsAutoCString("PuppetWidget"), 0);
+                         "PuppetWidget", 0);
 #endif
 
     if (mozilla::layers::LayersBackend::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
