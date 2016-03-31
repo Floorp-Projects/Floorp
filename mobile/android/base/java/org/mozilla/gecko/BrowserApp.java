@@ -61,6 +61,7 @@ import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.search.SearchEngineManager;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
