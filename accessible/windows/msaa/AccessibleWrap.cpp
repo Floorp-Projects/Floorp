@@ -493,7 +493,7 @@ AccessibleWrap::get_accRole(
     nsAutoString roleString;
     if (msaaRole != ROLE_SYSTEM_CLIENT &&
         !content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString)) {
-      nsIDocument * document = content->GetCurrentDoc();
+      nsIDocument * document = content->GetUncomposedDoc();
       if (!document)
         return E_FAIL;
 

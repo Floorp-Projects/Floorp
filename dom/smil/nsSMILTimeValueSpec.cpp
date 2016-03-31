@@ -113,7 +113,7 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);
   } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    nsIDocument* doc = aContextNode->GetCurrentDoc();
+    nsIDocument* doc = aContextNode->GetUncomposedDoc();
     MOZ_ASSERT(doc, "We are in the document but current doc is null");
     mReferencedElement.ResetWithElement(doc->GetRootElement());
   } else {
@@ -350,7 +350,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
   nsCOMPtr<EventTarget> target;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    nsIDocument* doc = aTarget->GetCurrentDoc();
+    nsIDocument* doc = aTarget->GetUncomposedDoc();
     if (!doc)
       return nullptr;
     nsPIDOMWindowOuter* win = doc->GetWindow();

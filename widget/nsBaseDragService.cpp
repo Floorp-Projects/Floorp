@@ -472,7 +472,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
   if (!content)
     return nullptr;
 
-  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> document = content->GetUncomposedDoc();
   if (document) {
     document->FlushPendingNotifications(Flush_Display);
 
