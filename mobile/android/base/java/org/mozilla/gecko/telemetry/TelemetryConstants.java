@@ -29,7 +29,7 @@ public class TelemetryConstants {
         private CorePing() { /* To prevent instantiation */ }
 
         public static final String NAME = "core";
-        public static final int VERSION_VALUE = 2; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
+        public static final int VERSION_VALUE = 3; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
         public static final String OS_VALUE = "Android";
 
         public static final String ARCHITECTURE = "arch";
