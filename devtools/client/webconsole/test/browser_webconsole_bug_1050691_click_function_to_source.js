@@ -37,7 +37,9 @@ function synthesizeClick(clickable, hud) {
 
 var printFunction = Task.async(function* (hud) {
   hud.jsterm.clearOutput();
-  content.wrappedJSObject.foo();
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    content.wrappedJSObject.foo();
+  });
   let [result] = yield waitForMessages({
     webconsole: hud,
     messages: [{
