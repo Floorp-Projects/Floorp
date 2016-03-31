@@ -272,16 +272,6 @@ public:
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
-   * maintain the scroll snap position constraints.  A predicted landing
-   * position determined by the APZC is used to select the best matching
-   * snap point, allowing touchscreen fling gestures to navigate between
-   * snap points.
-   * @param aDestination The desired landing position of the fling, which
-   * is used to select the best matching snap point.
-   */
-  virtual void FlingSnap(const mozilla::CSSPoint& aDestination) = 0;
-  /**
-   * Perform scroll snapping, possibly resulting in a smooth scroll to
    * maintain the scroll snap position constraints.  Velocity sampled from
    * main thread scrolling is used to determine best matching snap point
    * when called after a fling gesture on a trackpad or mouse wheel.
