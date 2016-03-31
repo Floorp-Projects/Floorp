@@ -804,7 +804,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   wheelEvent.mCustomizedByUserPrefs =
     (aOptions & WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS) != 0;
   wheelEvent.mLineOrPageDeltaX = aLineOrPageDeltaX;
-  wheelEvent.lineOrPageDeltaY = aLineOrPageDeltaY;
+  wheelEvent.mLineOrPageDeltaY = aLineOrPageDeltaY;
   wheelEvent.widget = widget;
 
   wheelEvent.mTime = PR_Now() / 1000;
