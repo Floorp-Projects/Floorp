@@ -779,14 +779,17 @@ workerdebuggersandbox_resolve(JSContext *cx, JS::Handle<JSObject *> obj,
 static void
 workerdebuggersandbox_finalize(js::FreeOp *fop, JSObject *obj)
 {
-  nsIGlobalObject *globalObject =
-    static_cast<nsIGlobalObject *>(JS_GetPrivate(obj));
-  NS_RELEASE(globalObject);
+  WorkerDebuggerSandboxPrivate *sandboxPrivate =
+    static_cast<WorkerDebuggerSandboxPrivate *>(JS_GetPrivate(obj));
+  NS_RELEASE(sandboxPrivate);
 }
 
 static void
 workerdebuggersandbox_moved(JSObject *obj, const JSObject *old)
 {
+  WorkerDebuggerSandboxPrivate *sandboxPrivate =
+    static_cast<WorkerDebuggerSandboxPrivate *>(JS_GetPrivate(obj));
+  sandboxPrivate->UpdateWrapper(obj, old);
 }
 
 const js::Class workerdebuggersandbox_class = {
@@ -846,11 +849,11 @@ WorkerDebuggerGlobalScope::CreateSandbox(JSContext* aCx, const nsAString& aName,
       return;
     }
 
-    nsCOMPtr<nsIGlobalObject> globalObject =
+    RefPtr<WorkerDebuggerSandboxPrivate> sandboxPrivate =
       new WorkerDebuggerSandboxPrivate(sandbox);
 
-    // Pass on ownership of globalObject to |sandbox|.
-    JS_SetPrivate(sandbox, globalObject.forget().take());
+    // Pass on ownership of sandboxPrivate to |sandbox|.
+    JS_SetPrivate(sandbox, sandboxPrivate.forget().take());
   }
 
   JS_FireOnNewGlobalObject(aCx, sandbox);
@@ -997,7 +1000,7 @@ GetGlobalObjectForGlobal(JSObject* global)
 
     if (!globalObject) {
       MOZ_ASSERT(IsDebuggerSandbox(global));
-      globalObject = static_cast<nsIGlobalObject *>(JS_GetPrivate(global));
+      globalObject = static_cast<WorkerDebuggerSandboxPrivate*>(JS_GetPrivate(global));
 
       MOZ_ASSERT(globalObject);
     }
