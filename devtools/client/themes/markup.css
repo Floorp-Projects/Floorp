@@ -32,8 +32,8 @@ body {
 }
 
 /* Don't display a parent-child outline for the root elements */
-#root > ul > li > .children::before {
-  display: none;
+#root > ul > li > .children {
+  background: none;
 }
 
 body.dragging .tag-line {
@@ -79,7 +79,6 @@ body.dragging .tag-line {
   list-style: none;
   padding: 0;
   margin: 0;
-  position: relative;
 }
 
 /* Tags are organized in a UL/LI tree and indented thanks to a left padding.
@@ -136,20 +135,17 @@ ul.children + .tag-line::before {
   padding-left: 2px;
 }
 
-.tag-line[selected] + .children::before {
-  content: "";
-  background: var(--markup-outline);
-  width: 1.5px;
-  height: calc(100% - 4px);
-  left: -6px;
-  top: 2px;
-  border-radius: 2px;
-  position: absolute;
-  display: block;
-}
-
-.tag-line:hover:not([selected]) + .children::before {
-  opacity: 0.5;
+.tag-line[selected] + .children {
+  background-image: linear-gradient(to top, var(--markup-outline), var(--markup-outline));
+  background-repeat: no-repeat;
+  /* Shorten the outline height by 4px to account for the 2px top padding and
+   * allow for a 2px bottom padding */
+  background-size: 1.5px calc(100% - 4px);
+  /* Align the outline to under the expander arrow and provide 2px top
+   * padding */
+  background-position: -6px 2px;
+  border-left: 6px solid transparent;
+  margin-left: -6px;
 }
 
 .html-editor-container {
