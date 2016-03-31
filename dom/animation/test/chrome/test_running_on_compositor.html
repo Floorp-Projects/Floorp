@@ -287,14 +287,14 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
-    animation.currentTime = 50 * MS_PER_SEC;
-    animation.effect.timing.duration = 10 * MS_PER_SEC;
+    animation.currentTime = 150 * MS_PER_SEC;
+    animation.effect.timing.duration = 100 * MS_PER_SEC;
 
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
