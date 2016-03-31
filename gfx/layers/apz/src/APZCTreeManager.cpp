@@ -1105,7 +1105,7 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
   // it, because if the input is converted back to a WidgetWheelEvent, then
   // EventStateManager would apply the delta a second time. We could in theory
   // work around this by asking ESM to customize the event much sooner, and
-  // then save the "customizedByUserPrefs" bit on ScrollWheelInput - but for
+  // then save the "mCustomizedByUserPrefs" bit on ScrollWheelInput - but for
   // now, this seems easier.
   EventStateManager::GetUserPrefsForWheelEvent(&aEvent,
     &input.mUserDeltaMultiplierX,
