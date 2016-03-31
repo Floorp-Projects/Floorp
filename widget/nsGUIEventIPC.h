@@ -168,7 +168,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.mMayHaveMomentum);
     WriteParam(aMsg, aParam.mIsMomentum);
     WriteParam(aMsg, aParam.mIsNoLineOrPageDelta);
-    WriteParam(aMsg, aParam.lineOrPageDeltaX);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaX);
     WriteParam(aMsg, aParam.lineOrPageDeltaY);
     WriteParam(aMsg, static_cast<int32_t>(aParam.mScrollType));
     WriteParam(aMsg, aParam.overflowDeltaX);
@@ -192,7 +192,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
       ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
       ReadParam(aMsg, aIter, &aResult->mIsNoLineOrPageDelta) &&
-      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaY) &&
       ReadParam(aMsg, aIter, &scrollType) &&
       ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
