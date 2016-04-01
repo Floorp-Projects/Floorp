@@ -2262,19 +2262,22 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
       FocusMgr()->HasDOMFocus(aRoot->GetContent()))
     *aFocusedAcc = aRoot;
 
-  aRoot->EnsureChildren();
+  Accessible* root = aRoot->IsHTMLCombobox() ? aRoot->FirstChild() : aRoot;
+  if (root->KidsFromDOM()) {
+    AutoTreeMutation mt(root);
+    TreeWalker walker(root);
+    while (Accessible* child = walker.Next()) {
+      if (child->IsBoundToParent()) {
+        MoveChild(child, root, root->ChildCount());
+        continue;
+      }
 
-  // Make sure we create accessible tree defined in DOM only, i.e. if accessible
-  // provides specific tree (like XUL trees) then tree creation is handled by
-  // this accessible.
-  uint32_t count = aRoot->ContentChildCount();
-  for (uint32_t idx = 0; idx < count; idx++) {
-    Accessible* child = aRoot->ContentChildAt(idx);
-    NS_ASSERTION(child, "Illicit tree change while tree is created!");
-    // Don't cross document boundaries.
-    if (child && child->IsContent()) {
+      root->AppendChild(child);
+      mt.AfterInsertion(child);
+
       CacheChildrenInSubtree(child, aFocusedAcc);
     }
+    mt.Done();
   }
 
   // Fire document load complete on ARIA documents.
