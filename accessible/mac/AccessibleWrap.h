@@ -46,7 +46,6 @@ public: // construction, destruction
   virtual Class GetNativeType ();
 
   virtual void Shutdown () override;
-  virtual void InvalidateChildren() override;
 
   virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) override;
   virtual bool RemoveChild(Accessible* aAccessible) override;

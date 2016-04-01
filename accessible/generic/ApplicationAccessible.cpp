@@ -149,13 +149,6 @@ ApplicationAccessible::NativeState()
   return 0;
 }
 
-void
-ApplicationAccessible::InvalidateChildren()
-{
-  // Do nothing because application children are kept updated by AppendChild()
-  // and RemoveChild() method calls.
-}
-
 KeyBinding
 ApplicationAccessible::AccessKey() const
 {
