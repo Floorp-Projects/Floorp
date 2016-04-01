@@ -785,7 +785,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
         generated_files = set()
         for obj in self._process_generated_files(context):
-            generated_files.add(obj.output)
+            for f in obj.outputs:
+                generated_files.add(f)
             yield obj
 
         for path in context['CONFIGURE_SUBST_FILES']:
@@ -1005,7 +1006,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for f in generated_files:
             flags = generated_files[f]
-            output = f
+            outputs = f
             inputs = []
             if flags.script:
                 method = "main"
@@ -1036,7 +1037,7 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 script = None
                 method = None
-            yield GeneratedFile(context, script, method, output, inputs)
+            yield GeneratedFile(context, script, method, outputs, inputs)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():

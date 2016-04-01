@@ -229,13 +229,14 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('generated-files')
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 2)
+        self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, GeneratedFile)
 
-        expected = ['bar.c', 'foo.c']
-        for o, expected_filename in zip(objs, expected):
-            self.assertEqual(o.output, expected_filename)
+        expected = ['bar.c', 'foo.c', ('xpidllex.py', 'xpidlyacc.py'), ]
+        for o, f in zip(objs, expected):
+            expected_filename = f if isinstance(f, tuple) else (f,)
+            self.assertEqual(o.outputs, expected_filename)
             self.assertEqual(o.script, None)
             self.assertEqual(o.method, None)
             self.assertEqual(o.inputs, [])
@@ -251,7 +252,7 @@ class TestEmitterBasic(unittest.TestCase):
         expected = ['bar.c', 'foo.c']
         expected_method_names = ['make_bar', 'main']
         for o, expected_filename, expected_method in zip(objs, expected, expected_method_names):
-            self.assertEqual(o.output, expected_filename)
+            self.assertEqual(o.outputs, (expected_filename,))
             self.assertEqual(o.method, expected_method)
             self.assertEqual(o.inputs, [])
 
@@ -263,7 +264,7 @@ class TestEmitterBasic(unittest.TestCase):
 
         o = objs[0]
         self.assertIsInstance(o, GeneratedFile)
-        self.assertEqual(o.output, 'bar.c')
+        self.assertEqual(o.outputs, ('bar.c',))
         self.assertRegexpMatches(o.script, 'script.py$')
         self.assertEqual(o.method, 'make_bar')
         self.assertEqual(o.inputs, [])

@@ -416,7 +416,11 @@ class StrictOrderingOnAppendListMixin(object):
         if isinstance(l, StrictOrderingOnAppendList):
             return
 
-        srtd = sorted(l, key=lambda x: x.lower())
+        def _first_element(e):
+            # If the list entry is a tuple, we sort based on the first element
+            # in the tuple.
+            return e[0] if isinstance(e, tuple) else e
+        srtd = sorted(l, key=lambda x: _first_element(x).lower())
 
         if srtd != l:
             raise UnsortedError(srtd, l)
