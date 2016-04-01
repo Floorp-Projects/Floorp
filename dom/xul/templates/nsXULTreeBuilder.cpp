@@ -373,7 +373,7 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
         return NS_OK;
 
     // Grab the new sort variable
-    mSortVariable = do_GetAtom(sort);
+    mSortVariable = NS_Atomize(sort);
 
     nsAutoString hints;
     header->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
@@ -1261,7 +1261,7 @@ nsXULTreeBuilder::EnsureSortVariables()
                 nsAutoString sort;
                 child->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
                 if (! sort.IsEmpty()) {
-                    mSortVariable = do_GetAtom(sort);
+                    mSortVariable = NS_Atomize(sort);
 
                     static nsIContent::AttrValuesArray strings[] =
                       {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};

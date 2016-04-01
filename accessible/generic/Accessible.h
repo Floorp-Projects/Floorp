@@ -381,14 +381,6 @@ public:
   void EnsureChildren();
 
   /**
-   * Set the child count to -1 (unknown) and null out cached child pointers.
-   * Should be called when accessible tree is changed because document has
-   * transformed. Note, if accessible cares about its parent relation chain
-   * itself should override this method to do nothing.
-   */
-  virtual void InvalidateChildren();
-
-  /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
   bool AppendChild(Accessible* aChild)
@@ -941,7 +933,13 @@ public:
    * Return true if the accessible doesn't allow accessible children from XBL
    * anonymous subtree.
    */
-  bool NoXBLKids() { return mStateFlags & eNoXBLKids; }
+  bool NoXBLKids() const { return mStateFlags & eNoXBLKids; }
+
+  /**
+   * Return true if the accessible allows accessible children from subtree of
+   * a DOM element of this accessible.
+   */
+  bool KidsFromDOM() const { return !(mStateFlags & eNoKidsFromDOM); }
 
   /**
    * Return true if this accessible has a parent whose name depends on this
@@ -1040,8 +1038,9 @@ protected:
     eSurvivingInUpdate = 1 << 8, // parent drops children to recollect them
     eRelocated = 1 << 9, // accessible was moved in tree
     eNoXBLKids = 1 << 10, // accessible don't allows XBL children
+    eNoKidsFromDOM = 1 << 11, // accessible doesn't allow children from DOM
 
-    eLastStateFlag = eNoXBLKids
+    eLastStateFlag = eNoKidsFromDOM
   };
 
   /**
@@ -1157,7 +1156,7 @@ protected:
   int32_t mIndexInParent;
 
   static const uint8_t kChildrenFlagsBits = 2;
-  static const uint8_t kStateFlagsBits = 11;
+  static const uint8_t kStateFlagsBits = 12;
   static const uint8_t kContextFlagsBits = 3;
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 15;

@@ -560,8 +560,8 @@ ShimInterfaceInfo::GetConstantCount(uint16_t* aCount)
         };
         for (size_t i = 0; i < ArrayLength(props); ++i) {
             auto prop = props[i];
-            if (prop && prop->constants) {
-                for (auto cs = prop->constants->specs; cs->name; ++cs) {
+            if (prop && prop->HasConstants()) {
+                for (auto cs = prop->Constants()->specs; cs->name; ++cs) {
                     // We have found one constant here.  We explicitly do not
                     // bother calling isEnabled() here because it's OK to define
                     // potentially extra constants on these shim interfaces.
@@ -606,8 +606,8 @@ ShimInterfaceInfo::GetConstant(uint16_t aIndex, JS::MutableHandleValue aConstant
         };
         for (size_t i = 0; i < ArrayLength(props); ++i) {
             auto prop = props[i];
-            if (prop && prop->constants) {
-                for (auto cs = prop->constants->specs; cs->name; ++cs) {
+            if (prop && prop->HasConstants()) {
+                for (auto cs = prop->Constants()->specs; cs->name; ++cs) {
                     // We have found one constant here.  We explicitly do not
                     // bother calling isEnabled() here because it's OK to define
                     // potentially extra constants on these shim interfaces.

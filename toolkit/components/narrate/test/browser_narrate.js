@@ -23,6 +23,8 @@ add_task(function* testNarrate() {
 
     ok(NarrateTestUtils.isVisible(popup), "popup toggled");
 
+    yield NarrateTestUtils.waitForVoiceOptions(content);
+
     let voiceOptions = $(NarrateTestUtils.VOICE_OPTIONS);
     ok(!NarrateTestUtils.isVisible(voiceOptions),
       "voice options are initially hidden");

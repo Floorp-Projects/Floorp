@@ -28,7 +28,7 @@ TX_ToLowerCaseAtom(nsIAtom* aAtom)
   nsAutoString str;
   aAtom->ToString(str);
   nsContentUtils::ASCIIToLower(str);
-  return do_GetAtom(str);
+  return NS_Atomize(str);
 }
 
 #endif // txStringUtils_h__

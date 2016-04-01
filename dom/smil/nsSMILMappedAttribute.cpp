@@ -146,5 +146,5 @@ nsSMILMappedAttribute::FlushChangesToTargetAttr() const
 already_AddRefed<nsIAtom>
 nsSMILMappedAttribute::GetAttrNameAtom() const
 {
-  return do_GetAtom(nsCSSProps::GetStringValue(mPropID));
+  return NS_Atomize(nsCSSProps::GetStringValue(mPropID));
 }

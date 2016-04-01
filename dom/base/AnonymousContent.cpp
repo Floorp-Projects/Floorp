@@ -141,7 +141,7 @@ Element*
 AnonymousContent::GetElementById(const nsAString& aElementId)
 {
   // This can be made faster in the future if needed.
-  nsCOMPtr<nsIAtom> elementId = do_GetAtom(aElementId);
+  nsCOMPtr<nsIAtom> elementId = NS_Atomize(aElementId);
   for (nsIContent* kid = mContentNode->GetFirstChild(); kid;
        kid = kid->GetNextNode(mContentNode)) {
     if (!kid->IsElement()) {

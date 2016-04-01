@@ -1528,23 +1528,32 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<char16_t>& aSrc
 }
 
 /**
- * This is used to determine whether a character is in one of the punctuation
- * mark classes which CSS says should be part of the first-letter.
- * See http://www.w3.org/TR/CSS2/selector.html#first-letter and
- *     http://www.w3.org/TR/selectors/#first-letter
+ * This is used to determine whether a character is in one of the classes
+ * which CSS says should be part of the first-letter.  Currently, that is
+ * all punctuation classes (P*).  Note that this is a change from CSS2
+ * which excluded Pc and Pd.
+ *
+ * https://www.w3.org/TR/css-pseudo-4/#first-letter-pseudo
+ * "Punctuation (i.e, characters that belong to the Punctuation (P*) Unicode
+ *  general category [UAX44]) [...]"
  */
 
 // static
 bool
 nsContentUtils::IsFirstLetterPunctuation(uint32_t aChar)
 {
-  uint8_t cat = mozilla::unicode::GetGeneralCategory(aChar);
-
-  return (cat == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION ||     // Ps
-          cat == HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION ||    // Pe
-          cat == HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION ||  // Pi
-          cat == HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION ||    // Pf
-          cat == HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION);     // Po
+  switch (mozilla::unicode::GetGeneralCategory(aChar)) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+      return true;
+    default:
+      return false;
+  }
 }
 
 // static
@@ -2850,11 +2859,11 @@ nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
     if (*aNamespace == kNameSpaceID_Unknown)
       return NS_ERROR_FAILURE;
 
-    *aLocalName = NS_NewAtom(Substring(colon + 1, end)).take();
+    *aLocalName = NS_Atomize(Substring(colon + 1, end)).take();
   }
   else {
     *aNamespace = kNameSpaceID_None;
-    *aLocalName = NS_NewAtom(aQName).take();
+    *aLocalName = NS_Atomize(aQName).take();
   }
   NS_ENSURE_TRUE(aLocalName, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
@@ -2879,7 +2888,7 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     const char16_t* end;
     qName.EndReading(end);
 
-    nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(qName.get(), colon));
+    nsCOMPtr<nsIAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
 
     rv = aNodeInfoManager->GetNodeInfo(Substring(colon + 1, end), prefix,
                                        nsID, aNodeType, aNodeInfo);
@@ -2939,7 +2948,7 @@ nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
     nameStart = (uriEnd + 1);
     if (nameEnd)  {
       const char16_t *prefixStart = nameEnd + 1;
-      *aPrefix = NS_NewAtom(Substring(prefixStart, pos)).take();
+      *aPrefix = NS_Atomize(Substring(prefixStart, pos)).take();
     }
     else {
       nameEnd = pos;
@@ -2952,7 +2961,7 @@ nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
     nameEnd = pos;
     *aPrefix = nullptr;
   }
-  *aLocalName = NS_NewAtom(Substring(nameStart, nameEnd)).take();
+  *aLocalName = NS_Atomize(Substring(nameStart, nameEnd)).take();
 }
 
 // static
@@ -3710,7 +3719,7 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
   }
 
   *aEventMessage = eUnidentifiedEvent;
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aName);
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(NS_LITERAL_STRING("on") + aName);
   sUserDefinedEvents->AppendObject(atom);
   mapping.mAtom = atom;
   mapping.mMessage = eUnidentifiedEvent;
@@ -3853,7 +3862,7 @@ nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
   NS_PRECONDITION(!aId.IsEmpty(), "Will match random elements");
   
   // ID attrs are generally stored as atoms, so just atomize this up front
-  nsCOMPtr<nsIAtom> id(do_GetAtom(aId));
+  nsCOMPtr<nsIAtom> id(NS_Atomize(aId));
   if (!id) {
     // OOM, so just bail
     return nullptr;
@@ -5126,7 +5135,7 @@ static void ProcessViewportToken(nsIDocument *aDocument,
 
   /* Check for known keys. If we find a match, insert the appropriate
    * information into the document header. */
-  nsCOMPtr<nsIAtom> key_atom = do_GetAtom(key);
+  nsCOMPtr<nsIAtom> key_atom = NS_Atomize(key);
   if (key_atom == nsGkAtoms::height)
     aDocument->SetHeaderData(nsGkAtoms::viewport_height, value);
   else if (key_atom == nsGkAtoms::width)
@@ -5229,7 +5238,7 @@ nsContentUtils::GetDragSession()
 nsresult
 nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
 {
-  if (aDragEvent->dataTransfer || !aDragEvent->IsTrusted()) {
+  if (aDragEvent->mDataTransfer || !aDragEvent->IsTrusted()) {
     return NS_OK;
   }
 
@@ -5271,10 +5280,12 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
 
   // each event should use a clone of the original dataTransfer.
   initialDataTransfer->Clone(aDragEvent->target, aDragEvent->mMessage,
-                             aDragEvent->userCancelled,
+                             aDragEvent->mUserCancelled,
                              isCrossDomainSubFrameDrop,
-                             getter_AddRefs(aDragEvent->dataTransfer));
-  NS_ENSURE_TRUE(aDragEvent->dataTransfer, NS_ERROR_OUT_OF_MEMORY);
+                             getter_AddRefs(aDragEvent->mDataTransfer));
+  if (NS_WARN_IF(!aDragEvent->mDataTransfer)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // for the dragenter and dragover events, initialize the drop effect
   // from the drop action, which platform specific widget code sets before
@@ -5282,8 +5293,9 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   if (aDragEvent->mMessage == eDragEnter || aDragEvent->mMessage == eDragOver) {
     uint32_t action, effectAllowed;
     dragSession->GetDragAction(&action);
-    aDragEvent->dataTransfer->GetEffectAllowedInt(&effectAllowed);
-    aDragEvent->dataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
+    aDragEvent->mDataTransfer->GetEffectAllowedInt(&effectAllowed);
+    aDragEvent->mDataTransfer->SetDropEffectInt(
+                                 FilterDropEffect(action, effectAllowed));
   }
   else if (aDragEvent->mMessage == eDrop ||
            aDragEvent->mMessage == eLegacyDragDrop ||
@@ -5294,7 +5306,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
     // dragover event.
     uint32_t dropEffect;
     initialDataTransfer->GetDropEffectInt(&dropEffect);
-    aDragEvent->dataTransfer->SetDropEffectInt(dropEffect);
+    aDragEvent->mDataTransfer->SetDropEffectInt(dropEffect);
   }
 
   return NS_OK;
@@ -7637,7 +7649,7 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
     return NS_ERROR_FAILURE;
 
   WidgetKeyboardEvent event(true, msg, aWidget);
-  event.modifiers = GetWidgetModifiers(aModifiers);
+  event.mModifiers = GetWidgetModifiers(aModifiers);
 
   if (msg == eKeyPress) {
     event.keyCode = aCharCode ? 0 : aKeyCode;
@@ -7769,7 +7781,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   WidgetMouseEvent event(true, msg, widget, WidgetMouseEvent::eReal,
                          contextMenuKey ? WidgetMouseEvent::eContextMenuKey :
                                           WidgetMouseEvent::eNormal);
-  event.modifiers = GetWidgetModifiers(aModifiers);
+  event.mModifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.buttons = GetButtonsFlagForButton(aButton);
   event.widget = widget;

@@ -62,22 +62,14 @@ function NarrateControls(mm, win) {
 
   this.narrator = new Narrator(win);
 
+  let branch = Services.prefs.getBranch("narrate.");
   let selectLabel = gStrings.GetStringFromName("selectvoicelabel");
-  let comparer = win.Intl ?
-    (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
-  let options = this.narrator.getVoiceOptions().map(v => {
-    return {
-      label: this._createVoiceLabel(v),
-      value: v.voiceURI
-    };
-  }).sort((a, b) => comparer(a.label, b.label));
-  options.unshift({
-    label: gStrings.GetStringFromName("defaultvoice"),
-    value: "automatic"
-  });
-  this.voiceSelect = new VoiceSelect(win, selectLabel, options);
+  this.voiceSelect = new VoiceSelect(win, selectLabel);
+  this.voiceSelect.addOptions(this._getVoiceOptions(),
+    branch.getCharPref("voice"));
   this.voiceSelect.element.addEventListener("change", this);
   this.voiceSelect.element.id = "voice-select";
+  win.speechSynthesis.addEventListener("voiceschanged", this);
   dropdown.querySelector("#narrate-voices").appendChild(
     this.voiceSelect.element);
 
@@ -88,8 +80,6 @@ function NarrateControls(mm, win) {
   rateRange.addEventListener("mousedown", this);
   rateRange.addEventListener("mouseup", this);
 
-  let branch = Services.prefs.getBranch("narrate.");
-  this.voiceSelect.value = branch.getCharPref("voice");
   // The rate is stored as an integer.
   rateRange.value = branch.getIntPref("rate");
 
@@ -115,7 +105,30 @@ NarrateControls.prototype = {
       case "click":
         this._onButtonClick(evt);
         break;
+      case "voiceschanged":
+        this.voiceSelect.clear();
+        this.voiceSelect.addOptions(this._getVoiceOptions(),
+          Services.prefs.getCharPref("narrate.voice"));
+        break;
     }
+  },
+
+  _getVoiceOptions: function() {
+    let win = this._win;
+    let comparer = win.Intl ?
+      (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
+    let options = win.speechSynthesis.getVoices().map(v => {
+      return {
+        label: this._createVoiceLabel(v),
+        value: v.voiceURI
+      };
+    }).sort((a, b) => comparer(a.label, b.label));
+    options.unshift({
+      label: gStrings.GetStringFromName("defaultvoice"),
+      value: "automatic"
+    });
+
+    return options;
   },
 
   _onRateInput: function(evt) {

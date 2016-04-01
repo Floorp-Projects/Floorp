@@ -32,7 +32,7 @@ static const mozilla::Module::ContractIDEntry kContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "profile-after-change", "Fake Speech Synth", FAKESYNTHSERVICE_CONTRACTID },
+  { "speech-synth-started", "Fake Speech Synth", FAKESYNTHSERVICE_CONTRACTID },
   { nullptr }
 };
 

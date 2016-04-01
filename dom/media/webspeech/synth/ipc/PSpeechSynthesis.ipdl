@@ -33,6 +33,8 @@ child:
 
     async IsSpeakingChanged(bool aIsSpeaking);
 
+    async NotifyVoicesChanged();
+
 parent:
     async __delete__();
 

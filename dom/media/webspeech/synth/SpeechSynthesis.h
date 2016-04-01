@@ -25,19 +25,16 @@ namespace dom {
 
 class nsSpeechTask;
 
-class SpeechSynthesis final : public nsIObserver
-                            , public nsWrapperCache
+class SpeechSynthesis final : public DOMEventTargetHelper
+                            , public nsIObserver
                             , public nsSupportsWeakReference
 {
 public:
   explicit SpeechSynthesis(nsPIDOMWindowInner* aParent);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SpeechSynthesis,
-                                                         nsIObserver)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
   NS_DECL_NSIOBSERVER
-
-  nsPIDOMWindowInner* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -63,12 +60,14 @@ public:
 
   void ForceEnd();
 
+  IMPL_EVENT_HANDLER(voiceschanged)
+
 private:
   virtual ~SpeechSynthesis();
 
   void AdvanceQueue();
 
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
+  bool HasVoices() const;
 
   nsTArray<RefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
 

@@ -258,3 +258,5 @@ CPUInfo::SetSSEVersion()
 
     popcntPresent = (flagsECX & POPCNTBit);
 }
+
+volatile uintptr_t* blackbox = nullptr;

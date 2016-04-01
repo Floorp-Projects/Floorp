@@ -1655,14 +1655,14 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
           if (mDocument->IsHTMLDocument() && aParentContent->IsHTMLElement()) {
             ToLowerCase(contentString);
           }
-          attrName = do_GetAtom(contentString);
+          attrName = NS_Atomize(contentString);
         }
       }
       else {
         if (mDocument->IsHTMLDocument() && aParentContent->IsHTMLElement()) {
           ToLowerCase(contentString);
         }
-        attrName = do_GetAtom(contentString);
+        attrName = NS_Atomize(contentString);
       }
 
       if (!attrName) {

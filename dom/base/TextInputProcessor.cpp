@@ -828,7 +828,7 @@ TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
   } else if (NS_WARN_IF(aKeyFlags & KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT)) {
     return NS_ERROR_INVALID_ARG;
   }
-  keyEvent.modifiers = GetActiveModifiers();
+  keyEvent.mModifiers = GetActiveModifiers();
 
   RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   rv = IsValidStateForComposition();
@@ -908,7 +908,7 @@ TextInputProcessor::KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
   } else if (NS_WARN_IF(aKeyFlags & KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT)) {
     return NS_ERROR_INVALID_ARG;
   }
-  keyEvent.modifiers = GetActiveModifiers();
+  keyEvent.mModifiers = GetActiveModifiers();
 
   RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   rv = IsValidStateForComposition();

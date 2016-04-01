@@ -276,7 +276,7 @@ nsTreeColumn::Invalidate()
 
   // If we have an Id, cache the Id as an atom.
   if (!mId.IsEmpty()) {
-    mAtom = do_GetAtom(mId);
+    mAtom = NS_Atomize(mId);
   }
 
   // Cache our index.

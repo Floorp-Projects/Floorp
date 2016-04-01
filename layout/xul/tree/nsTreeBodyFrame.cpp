@@ -919,7 +919,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     InternalScrollPortEvent event(true,
       mVerticalOverflow ? eScrollPortOverflow : eScrollPortUnderflow,
       nullptr);
-    event.orient = InternalScrollPortEvent::vertical;
+    event.mOrient = InternalScrollPortEvent::eVertical;
     EventDispatcher::Dispatch(content, presContext, &event);
   }
 
@@ -927,7 +927,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     InternalScrollPortEvent event(true,
       mHorizontalOverflow ? eScrollPortOverflow : eScrollPortUnderflow,
       nullptr);
-    event.orient = InternalScrollPortEvent::horizontal;
+    event.mOrient = InternalScrollPortEvent::eHorizontal;
     EventDispatcher::Dispatch(content, presContext, &event);
   }
 
@@ -2551,8 +2551,9 @@ static uint32_t GetDropEffect(WidgetGUIEvent* aEvent)
   nsContentUtils::SetDataTransferInEvent(dragEvent);
 
   uint32_t action = 0;
-  if (dragEvent->dataTransfer)
-    dragEvent->dataTransfer->GetDropEffectInt(&action);
+  if (dragEvent->mDataTransfer) {
+    dragEvent->mDataTransfer->GetDropEffectInt(&action);
+  }
   return action;
 }
 
@@ -2691,7 +2692,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
         // The dataTransfer was initialized by the call to GetDropEffect above.
         bool canDropAtNewLocation = false;
         mView->CanDrop(mSlots->mDropRow, mSlots->mDropOrient,
-                       aEvent->AsDragEvent()->dataTransfer,
+                       aEvent->AsDragEvent()->mDataTransfer,
                        &canDropAtNewLocation);
 
         if (canDropAtNewLocation) {
@@ -2724,7 +2725,8 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
     nsContentUtils::SetDataTransferInEvent(dragEvent);
 
-    mView->Drop(mSlots->mDropRow, mSlots->mDropOrient, dragEvent->dataTransfer);
+    mView->Drop(mSlots->mDropRow, mSlots->mDropOrient,
+                dragEvent->mDataTransfer);
     mSlots->mDropRow = -1;
     mSlots->mDropOrient = -1;
     mSlots->mIsDragging = false;

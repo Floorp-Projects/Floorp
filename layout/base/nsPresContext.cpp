@@ -1524,7 +1524,7 @@ nsPresContext::GetContentLanguage() const
   // in which case the HTML5 spec says to treat it as unknown
   if (!language.IsEmpty() &&
       !language.Contains(char16_t(','))) {
-    return do_GetAtom(language);
+    return NS_Atomize(language);
     // NOTE:  This does *not* count as an explicit language; in other
     // words, it doesn't trigger language-specific hyphenation.
   }
@@ -2014,7 +2014,7 @@ nsPresContext::EmulateMedium(const nsAString& aMediaType)
   nsAutoString mediaType;
   nsContentUtils::ASCIIToLower(aMediaType, mediaType);
 
-  mMediaEmulated = do_GetAtom(mediaType);
+  mMediaEmulated = NS_Atomize(mediaType);
   if (mMediaEmulated != previousMedium && mShell) {
     MediaFeatureValuesChanged(nsRestyleHint(0), nsChangeHint(0));
   }

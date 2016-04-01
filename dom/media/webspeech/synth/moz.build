@@ -6,6 +6,7 @@
 if CONFIG['MOZ_WEBSPEECH']:
     MOCHITEST_MANIFESTS += [
         'test/mochitest.ini',
+        'test/startup/mochitest.ini',
     ]
 
     XPIDL_MODULE = 'dom_webspeechsynth'

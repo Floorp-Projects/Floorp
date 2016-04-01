@@ -60,7 +60,7 @@ DragEvent::InitDragEvent(const nsAString& aType,
                              aClientX, aClientY, aCtrlKey, aAltKey,
                              aShiftKey, aMetaKey, aButton, aRelatedTarget);
   if (mEventIsInternal && mEvent) {
-    mEvent->AsDragEvent()->dataTransfer = aDataTransfer;
+    mEvent->AsDragEvent()->mDataTransfer = aDataTransfer;
   }
 }
 
@@ -90,7 +90,7 @@ DragEvent::GetDataTransfer()
     NS_ENSURE_SUCCESS(rv, nullptr);
   }
 
-  return dragEvent->dataTransfer;
+  return dragEvent->mDataTransfer;
 }
 
 // static

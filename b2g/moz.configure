@@ -11,4 +11,14 @@ def gonkdir(value):
     return value[0] if value else ''
 
 
+option('--with-gonk-toolchain-prefix', nargs=1,
+       help='Prefix to gonk toolchain commands')
+
+@depends_if('--with-gonk-toolchain-prefix')
+def gonk_toolchain_prefix(value):
+    return value
+
+imply_option('--with-toolchain-prefix', gonk_toolchain_prefix)
+
+
 include('common.configure')

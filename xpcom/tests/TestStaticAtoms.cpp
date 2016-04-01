@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
   NS_SealStaticAtomTable();
 
-  nsCOMPtr<nsIAtom> atom = do_GetAtom("foo");
+  nsCOMPtr<nsIAtom> atom = NS_Atomize("foo");
   if (!atom) {
     fail("Didn't get an atom for foo.");
     return 1;
@@ -41,15 +41,15 @@ int main(int argc, char** argv)
   }
 
   if (atom == staticAtom) {
-    passed("do_GetAtom and NS_GetStaticAtom returned the same atom.");
+    passed("NS_Atomize and NS_GetStaticAtom returned the same atom.");
   } else {
-    fail("do_GetAtom and NS_GetStaticAtom returned different atoms.");
+    fail("NS_Atomize and NS_GetStaticAtom returned different atoms.");
     return 1;
   }
 
   MoreTestingAtoms::AddRefAtoms();
   
-  atom = do_GetAtom("qux");
+  atom = NS_Atomize("qux");
   if (!atom) {
     fail("Didn't get an atom for qux.");
     return 1;

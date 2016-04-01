@@ -3487,7 +3487,19 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
               nsLayoutUtils::TransformRect(rootFrame, mOuter, rootCompBounds);
 
-              displayportBase = displayportBase.Intersect(rootCompBounds);
+              // Clamp the displayport base to the size of the transformed root
+              // composition bounds, by trimming an equal amount off opposite
+              // sides of the base rect.
+              if (rootCompBounds.width < displayportBase.width) {
+                nscoord diff = displayportBase.width - rootCompBounds.width;
+                displayportBase.x += diff / 2;
+                displayportBase.width -= diff;
+              }
+              if (rootCompBounds.height < displayportBase.height) {
+                nscoord diff = displayportBase.height - rootCompBounds.height;
+                displayportBase.y += diff / 2;
+                displayportBase.height -= diff;
+              }
             }
           }
         }
@@ -4119,14 +4131,14 @@ ScrollFrameHelper::FireScrollPortEvent()
   // DOM event.
   bool both = vertChanged && horizChanged &&
                 newVerticalOverflow == newHorizontalOverflow;
-  InternalScrollPortEvent::orientType orient;
+  InternalScrollPortEvent::OrientType orient;
   if (both) {
-    orient = InternalScrollPortEvent::both;
+    orient = InternalScrollPortEvent::eBoth;
     mHorizontalOverflow = newHorizontalOverflow;
     mVerticalOverflow = newVerticalOverflow;
   }
   else if (vertChanged) {
-    orient = InternalScrollPortEvent::vertical;
+    orient = InternalScrollPortEvent::eVertical;
     mVerticalOverflow = newVerticalOverflow;
     if (horizChanged) {
       // We need to dispatch a separate horizontal DOM event. Do that the next
@@ -4136,15 +4148,15 @@ ScrollFrameHelper::FireScrollPortEvent()
     }
   }
   else {
-    orient = InternalScrollPortEvent::horizontal;
+    orient = InternalScrollPortEvent::eHorizontal;
     mHorizontalOverflow = newHorizontalOverflow;
   }
 
   InternalScrollPortEvent event(true,
-    (orient == InternalScrollPortEvent::horizontal ? mHorizontalOverflow :
-                                                     mVerticalOverflow) ?
+    (orient == InternalScrollPortEvent::eHorizontal ? mHorizontalOverflow :
+                                                      mVerticalOverflow) ?
     eScrollPortOverflow : eScrollPortUnderflow, nullptr);
-  event.orient = orient;
+  event.mOrient = orient;
   return EventDispatcher::Dispatch(mOuter->GetContent(),
                                    mOuter->PresContext(), &event);
 }

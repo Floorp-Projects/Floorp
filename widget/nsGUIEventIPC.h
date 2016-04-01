@@ -114,14 +114,14 @@ struct ParamTraits<mozilla::WidgetInputEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
-    WriteParam(aMsg, aParam.modifiers);
+    WriteParam(aMsg, aParam.mModifiers);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->modifiers);
+           ReadParam(aMsg, aIter, &aResult->mModifiers);
   }
 };
 
@@ -250,7 +250,7 @@ struct ParamTraits<mozilla::WidgetDragEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
-    WriteParam(aMsg, aParam.userCancelled);
+    WriteParam(aMsg, aParam.mUserCancelled);
     WriteParam(aMsg, aParam.mDefaultPreventedOnContent);
   }
 
@@ -258,7 +258,7 @@ struct ParamTraits<mozilla::WidgetDragEvent>
   {
     bool rv =
       ReadParam(aMsg, aIter, static_cast<mozilla::WidgetMouseEvent*>(aResult)) &&
-      ReadParam(aMsg, aIter, &aResult->userCancelled) &&
+      ReadParam(aMsg, aIter, &aResult->mUserCancelled) &&
       ReadParam(aMsg, aIter, &aResult->mDefaultPreventedOnContent);
     return rv;
   }
@@ -896,14 +896,14 @@ struct ParamTraits<mozilla::WidgetPluginEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
-    WriteParam(aMsg, aParam.retargetToFocusedDocument);
+    WriteParam(aMsg, aParam.mRetargetToFocusedDocument);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->retargetToFocusedDocument);
+           ReadParam(aMsg, aIter, &aResult->mRetargetToFocusedDocument);
   }
 };
 

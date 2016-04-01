@@ -241,9 +241,6 @@ public:
 protected:
   virtual ~XULTreeItemAccessible();
 
-  // Accessible
-  virtual void CacheChildren() override;
-
   // XULTreeItemAccessible
   nsCOMPtr<nsITreeColumn> mColumn;
   nsString mCachedName;

@@ -264,10 +264,8 @@ EventQueue::CoalesceReorderEvents(AccEvent* aTailEvent)
         AccReorderEvent* tailReorder = downcast_accEvent(aTailEvent);
         uint32_t eventType = tailReorder->IsShowHideEventTarget(thisParent);
 
-        // Sometimes InvalidateChildren() and
-        // DocAccessible::CacheChildrenInSubtree() can conspire to reparent an
-        // accessible in this case no need for mutation events.  Se bug 883708
-        // for details.
+        // It can be either hide or show events which may occur because of
+        // accessible reparenting.
         if (eventType == nsIAccessibleEvent::EVENT_SHOW ||
             eventType == nsIAccessibleEvent::EVENT_HIDE) {
           AccReorderEvent* thisReorder = downcast_accEvent(thisEvent);

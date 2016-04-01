@@ -30,16 +30,14 @@ function onDone() {
   SimpleTest.finish();
 }
 
-function doTest() {
-  iframe = document.getElementById("testFrame");
-  iframe.src = "file_bfcache_frame.html";
-}
-
 SpecialPowers.pushPrefEnv({ set: [
   ['media.webspeech.synth.enabled', true],
   ['media.webspeech.synth.force_global_queue', true],
   ['browser.sessionhistory.cache_subframes', true],
-  ['browser.sessionhistory.max_total_viewers', 10]] }, doTest());
+  ['browser.sessionhistory.max_total_viewers', 10]] },
+  function() {
+    loadSpeechTest("file_bfcache_frame.html");
+  });
 
 </script>
 </pre>

@@ -24,8 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({ set: [['media.webspeech.synth.enabled', true]] },
-                          function() { document.getElementById("testFrame").src = "file_speech_simple.html"; });
+SpecialPowers.pushPrefEnv(
+  { set: [['media.webspeech.synth.enabled', true]] },
+  function() { loadSpeechTest("file_speech_simple.html"); });
 
 </script>
 </pre>

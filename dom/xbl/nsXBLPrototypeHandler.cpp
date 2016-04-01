@@ -227,7 +227,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
 
   // Look for a compiled handler on the element. 
   // Should be compiled and bound with "on" in front of the name.
-  nsCOMPtr<nsIAtom> onEventAtom = do_GetAtom(NS_LITERAL_STRING("onxbl") +
+  nsCOMPtr<nsIAtom> onEventAtom = NS_Atomize(NS_LITERAL_STRING("onxbl") +
                                              nsDependentAtomString(mEventName));
 
   // Compile the handler and bind it to the element.
@@ -766,7 +766,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       return;
   }
 
-  mEventName = do_GetAtom(event);
+  mEventName = NS_Atomize(event);
 
   if (aPhase) {
     const nsDependentString phase(aPhase);
@@ -960,7 +960,7 @@ nsXBLPrototypeHandler::Read(nsIObjectInputStream* aStream)
   nsAutoString name;
   rv = aStream->ReadString(name);
   NS_ENSURE_SUCCESS(rv, rv);
-  mEventName = do_GetAtom(name);
+  mEventName = NS_Atomize(name);
 
   rv = aStream->Read32(&mLineNumber);
   NS_ENSURE_SUCCESS(rv, rv);

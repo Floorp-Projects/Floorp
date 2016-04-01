@@ -2834,7 +2834,7 @@ SpdySession31::TakeTransport(nsISocketTransport **,
   return NS_ERROR_UNEXPECTED;
 }
 
-nsHttpConnection *
+already_AddRefed<nsHttpConnection>
 SpdySession31::TakeHttpConnection()
 {
   MOZ_ASSERT(false, "TakeHttpConnection of SpdySession31");

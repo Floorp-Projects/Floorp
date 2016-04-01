@@ -588,54 +588,54 @@ KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
 {
     KeymapWrapper* keymapWrapper = GetInstance();
 
-    aInputEvent.modifiers = 0;
+    aInputEvent.mModifiers = 0;
     // DOM Meta key should be TRUE only on Mac.  We need to discuss this
     // issue later.
     if (keymapWrapper->AreModifiersActive(SHIFT, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_SHIFT;
+        aInputEvent.mModifiers |= MODIFIER_SHIFT;
     }
     if (keymapWrapper->AreModifiersActive(CTRL, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_CONTROL;
+        aInputEvent.mModifiers |= MODIFIER_CONTROL;
     }
     if (keymapWrapper->AreModifiersActive(ALT, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_ALT;
+        aInputEvent.mModifiers |= MODIFIER_ALT;
     }
     if (keymapWrapper->AreModifiersActive(META, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_META;
+        aInputEvent.mModifiers |= MODIFIER_META;
     }
     if (keymapWrapper->AreModifiersActive(SUPER, aModifierState) ||
         keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_OS;
+        aInputEvent.mModifiers |= MODIFIER_OS;
     }
     if (keymapWrapper->AreModifiersActive(LEVEL3, aModifierState) ||
         keymapWrapper->AreModifiersActive(LEVEL5, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_ALTGRAPH;
+        aInputEvent.mModifiers |= MODIFIER_ALTGRAPH;
     }
     if (keymapWrapper->AreModifiersActive(CAPS_LOCK, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_CAPSLOCK;
+        aInputEvent.mModifiers |= MODIFIER_CAPSLOCK;
     }
     if (keymapWrapper->AreModifiersActive(NUM_LOCK, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_NUMLOCK;
+        aInputEvent.mModifiers |= MODIFIER_NUMLOCK;
     }
     if (keymapWrapper->AreModifiersActive(SCROLL_LOCK, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_SCROLLLOCK;
+        aInputEvent.mModifiers |= MODIFIER_SCROLLLOCK;
     }
 
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Debug,
         ("KeymapWrapper(%p): InitInputEvent, aModifierState=0x%08X, "
-         "aInputEvent.modifiers=0x%04X (Shift: %s, Control: %s, Alt: %s, "
+         "aInputEvent.mModifiers=0x%04X (Shift: %s, Control: %s, Alt: %s, "
          "Meta: %s, OS: %s, AltGr: %s, "
          "CapsLock: %s, NumLock: %s, ScrollLock: %s)",
-         keymapWrapper, aModifierState, aInputEvent.modifiers,
-         GetBoolName(aInputEvent.modifiers & MODIFIER_SHIFT),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_CONTROL),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_ALT),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_META),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_OS),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_ALTGRAPH),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_CAPSLOCK),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_NUMLOCK),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_SCROLLLOCK)));
+         keymapWrapper, aModifierState, aInputEvent.mModifiers,
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_SHIFT),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_CONTROL),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_ALT),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_META),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_OS),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_ALTGRAPH),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_CAPSLOCK),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_NUMLOCK),
+         GetBoolName(aInputEvent.mModifiers & MODIFIER_SCROLLLOCK)));
 
     switch(aInputEvent.mClass) {
         case eMouseEventClass:

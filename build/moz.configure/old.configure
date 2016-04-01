@@ -131,25 +131,30 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
 
     cmd = [shell, old_configure]
     with encoded_open('old-configure.vars', 'w') as out:
+        log.debug('Injecting the following to old-configure:')
+        def inject(command):
+            print(command, file=out)
+            log.debug('| %s', command)
+
         if mozconfig['path']:
             for key, value in mozconfig['env']['added'].items():
-                print("export %s=%s" % (key, quote(value)), file=out)
+                inject("export %s=%s" % (key, quote(value)))
             for key, (old, value) in mozconfig['env']['modified'].items():
-                print("export %s=%s" % (key, quote(value)), file=out)
+                inject("export %s=%s" % (key, quote(value)))
             for key, value in mozconfig['vars']['added'].items():
-                print("%s=%s" % (key, quote(value)), file=out)
+                inject("%s=%s" % (key, quote(value)))
             for key, (old, value) in mozconfig['vars']['modified'].items():
-                print("%s=%s" % (key, quote(value)), file=out)
+                inject("%s=%s" % (key, quote(value)))
             for t in ('env', 'vars'):
                 for key in mozconfig[t]['removed'].keys():
-                    print("unset %s" % key, file=out)
+                    inject("unset %s" % key)
 
         # Autoconf is special, because it might be passed from
         # mozconfig['make_extra'], which we don't pass automatically above.
-        print('export AUTOCONF=%s' % quote(autoconf), file=out)
+        inject('export AUTOCONF=%s' % quote(autoconf))
 
         for assignment in old_configure_assignments:
-            print(assignment, file=out)
+            inject(assignment)
 
     return cmd
 
@@ -320,7 +325,6 @@ def old_configure_options(*options):
     '--with-doc-output-dir',
     '--with-float-abi',
     '--with-fpu',
-    '--with-gonk-toolchain-prefix',
     '--with-google-api-keyfile',
     '--with-google-oauth-api-keyfile',
     '--with-intl-api',
@@ -394,7 +398,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         cmd += extra_old_configure_args
 
     # For debugging purpose, in case it's not what we'd expect.
-    log.info('running %s', ' '.join(quote(a) for a in cmd))
+    log.debug('Running %s', ' '.join(quote(a) for a in cmd))
 
     # Our logging goes to config.log, the same file old.configure uses.
     # We can't share the handle on the file, so close it. We assume nothing

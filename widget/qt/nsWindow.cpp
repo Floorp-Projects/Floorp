@@ -1109,7 +1109,7 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
     aEvent.mTime = 0;
 
     if (sAltGrModifier) {
-        aEvent.modifiers |= (MODIFIER_CONTROL | MODIFIER_ALT);
+        aEvent.mModifiers |= (MODIFIER_CONTROL | MODIFIER_ALT);
     }
 
     if (aQEvent->text().length() && aQEvent->text()[0].isPrint()) {

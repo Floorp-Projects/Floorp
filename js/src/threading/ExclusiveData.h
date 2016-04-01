@@ -7,6 +7,7 @@
 #ifndef threading_ExclusiveData_h
 #define threading_ExclusiveData_h
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
@@ -80,7 +81,7 @@ template <typename T>
 class ExclusiveData
 {
     mutable Mutex lock_;
-    mutable T value_;
+    mutable mozilla::AlignedStorage2<T> value_;
 
     ExclusiveData(const ExclusiveData&) = delete;
     ExclusiveData& operator=(const ExclusiveData&) = delete;
@@ -94,15 +95,19 @@ class ExclusiveData
      * value.
      */
     template <typename U>
-    explicit ExclusiveData(U&& u)
-      : value_(mozilla::Forward<U>(u))
-    {
+    explicit ExclusiveData(U&& u) {
+        new (value_.addr()) T(mozilla::Forward<U>(u));
     }
 
-    ExclusiveData(ExclusiveData&& rhs)
-      : value_(mozilla::Move(rhs.value_))
-    {
+    ~ExclusiveData() {
+        acquire();
+        value_.addr()->~T();
+        release();
+    }
+
+    ExclusiveData(ExclusiveData&& rhs) {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
+        new (value_.addr()) T(mozilla::Move(*rhs.value_.addr()));
     }
 
     ExclusiveData& operator=(ExclusiveData&& rhs) {
@@ -148,7 +153,7 @@ class ExclusiveData
 
         T& get() const {
             MOZ_ASSERT(parent_);
-            return parent_->value_;
+            return *parent_->value_.addr();
         }
 
         operator T& () const { return get(); }
