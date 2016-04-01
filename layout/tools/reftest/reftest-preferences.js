@@ -114,3 +114,6 @@ user_pref("startup.homepage_override_url", "");
 user_pref("browser.usedOnWindows10.introURL", "");
 
 user_pref("media.gmp-manager.url.override", "http://localhost/dummy-gmp-manager.xml");
+
+// A fake bool pref for "@supports -moz-bool-pref" sanify test.
+user_pref("testing.supports.moz-bool-pref", true);
