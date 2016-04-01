@@ -43,10 +43,12 @@ let bootstrap = {
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let app = App({
-      onExit: () => window.postMessage({type: "exit"}, "*"),
+      onExit: () => window.postMessage({ type: "exit" }, "*"),
     });
     let provider = createElement(Provider, { store }, app);
     ReactDOM.render(provider, document.querySelector("#root"));
+    this.initDevices();
+    window.postMessage({ type: "init" }, "*");
   },
 
   destroy() {
@@ -61,7 +63,26 @@ let bootstrap = {
    * to dispatch.  They can do so here.
    */
   dispatch(action) {
+    if (!this.store) {
+      // If actions are dispatched after store is destroyed, ignore them.  This
+      // can happen in tests that close the tool quickly while async tasks like
+      // initDevices() below are still pending.
+      return;
+    }
     this.store.dispatch(action);
+  },
+
+  initDevices() {
+    GetDevices().then(devices => {
+      for (let type of devices.TYPES) {
+        this.dispatch(addDeviceType(type));
+        for (let device of devices[type]) {
+          if (device.os != "fxos") {
+            this.dispatch(addDevice(device, type));
+          }
+        }
+      }
+    });
   },
 
 };
@@ -91,18 +112,6 @@ Object.defineProperty(window, "store", {
 window.addInitialViewport = contentURI => {
   try {
     bootstrap.dispatch(changeLocation(contentURI));
-
-    GetDevices().then(devices => {
-      for (let type of devices.TYPES) {
-        bootstrap.dispatch(addDeviceType(type));
-        for (let device of devices[type]) {
-          if (device.os != "fxos") {
-            bootstrap.dispatch(addDevice(device, type));
-          }
-        }
-      }
-    });
-
     bootstrap.dispatch(addViewport());
   } catch (e) {
     console.error(e);

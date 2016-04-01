@@ -1189,25 +1189,6 @@ auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool 
     return mozilla::jni::Method<OnPrefChange_t>::Call(PrefsHelper::Context(), nullptr, a0, a1, a2, a3, a4);
 }
 
-template<> const char mozilla::jni::Context<Restrictions, jobject>::name[] =
-        "org/mozilla/gecko/Restrictions";
-
-constexpr char Restrictions::IsAllowed_t::name[];
-constexpr char Restrictions::IsAllowed_t::signature[];
-
-auto Restrictions::IsAllowed(int32_t a0, mozilla::jni::String::Param a1) -> bool
-{
-    return mozilla::jni::Method<IsAllowed_t>::Call(Restrictions::Context(), nullptr, a0, a1);
-}
-
-constexpr char Restrictions::IsUserRestricted_t::name[];
-constexpr char Restrictions::IsUserRestricted_t::signature[];
-
-auto Restrictions::IsUserRestricted() -> bool
-{
-    return mozilla::jni::Method<IsUserRestricted_t>::Call(Restrictions::Context(), nullptr);
-}
-
 template<> const char mozilla::jni::Context<SurfaceBits, jobject>::name[] =
         "org/mozilla/gecko/SurfaceBits";
 
@@ -1788,6 +1769,25 @@ auto ViewTransform::Y() const -> float
 auto ViewTransform::Y(float a0) const -> void
 {
     return mozilla::jni::Field<Y_t>::Set(ViewTransform::mCtx, nullptr, a0);
+}
+
+template<> const char mozilla::jni::Context<Restrictions, jobject>::name[] =
+        "org/mozilla/gecko/restrictions/Restrictions";
+
+constexpr char Restrictions::IsAllowed_t::name[];
+constexpr char Restrictions::IsAllowed_t::signature[];
+
+auto Restrictions::IsAllowed(int32_t a0, mozilla::jni::String::Param a1) -> bool
+{
+    return mozilla::jni::Method<IsAllowed_t>::Call(Restrictions::Context(), nullptr, a0, a1);
+}
+
+constexpr char Restrictions::IsUserRestricted_t::name[];
+constexpr char Restrictions::IsUserRestricted_t::signature[];
+
+auto Restrictions::IsUserRestricted() -> bool
+{
+    return mozilla::jni::Method<IsUserRestricted_t>::Call(Restrictions::Context(), nullptr);
 }
 
 template<> const char mozilla::jni::Context<MatrixBlobCursor, jobject>::name[] =

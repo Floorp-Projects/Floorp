@@ -284,7 +284,11 @@
         <tabpanel id="sidebar-panel-layoutview" class="devtools-monospace theme-sidebar inspector-tabpanel">
           <html:div id="layout-container">
             <html:p id="layout-header">
-              <html:span id="layout-element-size"></html:span><html:span id="layout-element-position"></html:span>
+              <html:span id="layout-element-size"></html:span>
+              <html:section id="layout-position-group">
+                <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
+                <html:span id="layout-element-position"></html:span>
+              </html:section>
             </html:p>
 
             <html:div id="layout-main">

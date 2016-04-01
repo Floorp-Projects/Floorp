@@ -17,4 +17,5 @@ DevToolsModules(
     'reps.css',
     'string.js',
     'undefined.js',
+    'url.js',
 )

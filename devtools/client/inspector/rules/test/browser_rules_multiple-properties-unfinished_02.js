@@ -32,7 +32,8 @@ add_task(function*() {
   // Value is focused, lets add multiple rules here and make sure they get added
   onMutation = inspector.once("markupmutation");
   onRuleViewChanged = view.once("ruleview-changed");
-  let valueEditor = ruleEditor.propertyList.children[1].querySelector("input");
+  let valueEditor = ruleEditor.propertyList.children[1]
+    .querySelector(".styleinspector-propertyeditor");
   valueEditor.value = "10px;background:orangered;color: black;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onMutation;

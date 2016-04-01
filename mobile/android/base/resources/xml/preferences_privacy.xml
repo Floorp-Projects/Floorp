@@ -8,10 +8,10 @@
                   android:title="@string/pref_category_privacy_short"
                   android:enabled="false">
 
-    <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
-                        android:title="@string/pref_donottrack_title"
-                        android:summary="@string/pref_donottrack_summary"
-                        android:persistent="false" />
+    <SwitchPreference android:key="privacy.donottrackheader.enabled"
+                      android:title="@string/pref_donottrack_title"
+                      android:summary="@string/pref_donottrack_summary"
+                      android:persistent="false" />
 
     <org.mozilla.gecko.preferences.AlignRightLinkPreference
             android:key="android.not_a_preference.donottrackheader.learn_more"

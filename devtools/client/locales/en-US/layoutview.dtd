@@ -16,8 +16,13 @@
   -  The text appears on the bottom right corner of the layout view when
   -  the corresponding box is hovered. -->
 
-<!ENTITY layoutViewTitle        "Box Model">
-<!ENTITY margin.tooltip         "margin">
-<!ENTITY border.tooltip         "border">
-<!ENTITY padding.tooltip        "padding">
-<!ENTITY content.tooltip        "content">
+<!ENTITY layoutViewTitle          "Box Model">
+<!ENTITY margin.tooltip           "margin">
+<!ENTITY border.tooltip           "border">
+<!ENTITY padding.tooltip          "padding">
+<!ENTITY content.tooltip          "content">
+
+<!-- LOCALIZATION NOTE: This label is displayed as a tooltip that appears when
+  -  hovering over the button that allows users to edit the position of an
+  -  element in the page. -->
+<!ENTITY geometry.button.tooltip  "Edit position">

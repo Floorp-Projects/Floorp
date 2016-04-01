@@ -14,9 +14,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
@@ -145,6 +146,10 @@ public class PushService implements BundleEventListener {
                 Log.e(LOG_TAG, "Corrupt serviceData found for chid: " + chid + "; ignoring dom/push message.");
                 return;
             }
+
+            // Let's look to the future, when we'll deliver messages without regard to whether
+            // Gecko is running or not.
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "dom-push-api");
 
             if (!GeckoThread.isRunning()) {
                 Log.w(LOG_TAG, "dom/push message received but no Gecko thread is running; ignoring message.");
@@ -290,6 +295,8 @@ public class PushService implements BundleEventListener {
                     callback.sendError("Got exception handling message [" + event + "]: " + e.toString());
                     return;
                 }
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.SERVICE, "dom-push-api");
                 callback.sendSuccess(json);
                 return;
             }
@@ -303,6 +310,7 @@ public class PushService implements BundleEventListener {
                 // Fire and forget.  See comments in the function itself.
                 final PushSubscription pushSubscription = pushManager.unsubscribeChannel(channelID);
                 if (pushSubscription != null) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.SERVICE, "dom-push-api");
                     callback.sendSuccess(null);
                     return;
                 }

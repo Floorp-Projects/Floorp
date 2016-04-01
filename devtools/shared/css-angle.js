@@ -142,7 +142,7 @@ CssAngle.prototype = {
     if (this._angleUnitUppercase === true) {
       unitStr = unitStr.toUpperCase();
     }
-    return `${Math.round(radValue * 100) / 100}${unitStr}`;
+    return `${Math.round(radValue * 10000) / 10000}${unitStr}`;
   },
 
   get grad() {

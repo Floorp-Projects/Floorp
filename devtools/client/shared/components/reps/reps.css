@@ -46,6 +46,11 @@
   color: DarkGreen;
 }
 
+.objectLink-Location {
+  font-style: italic;
+  color: #555555;
+}
+
 .objectBox-null,
 .objectBox-undefined,
 .objectBox-hint,

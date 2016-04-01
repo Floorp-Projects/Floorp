@@ -40,7 +40,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.Restrictions;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.ThreadUtils;
 

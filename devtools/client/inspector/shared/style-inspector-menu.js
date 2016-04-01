@@ -276,8 +276,7 @@ StyleInspectorMenu.prototype = {
     let selection = this.styleWindow.getSelection();
 
     let node = this._getClickedNode();
-    if (node.nodeName == "input") {
-       // input type="text"
+    if (node.nodeName == "input" || node.nodeName == "textarea") {
       let { selectionStart, selectionEnd } = node;
       hasTextSelected = isFinite(selectionStart) && isFinite(selectionEnd)
         && selectionStart !== selectionEnd;

@@ -12,106 +12,168 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_notifications() {
+add_task(function* test_notification() {
   function backgroundScript() {
-    browser.test.log("running background script");
+    let opts = {
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+    };
 
-    let opts = {title: "Testing Notification", message: "Carry on"};
-
-    // Test an unimplemented listener.
-    browser.notifications.onClicked.addListener(function() {});
-
-    browser.notifications.create("5", opts, function(id) {
+    browser.notifications.create("", opts).then(id => {
       browser.test.sendMessage("running", id);
       browser.test.notifyPass("background test passed");
     });
   }
 
-  let extensionData = {
+  let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["notifications"],
     },
-    background: "(" + backgroundScript.toString() + ")()",
-  };
-
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
-  info("load complete");
+    background: `(${backgroundScript})()`,
+  });
   yield extension.startup();
-  info("startup complete");
   let x = yield extension.awaitMessage("running");
-  is(x, "5", "got correct value from extension");
+  is(x, "0", "got correct id from notifications.create");
   yield extension.awaitFinish();
-  info("test complete");
   yield extension.unload();
-  info("extension unloaded successfully");
+});
+
+add_task(function* test_notification_events() {
+  function backgroundScript() {
+    let opts = {
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+    };
+
+    // Test an ignored listener.
+    browser.notifications.onButtonClicked.addListener(function() {});
+
+    // We cannot test onClicked listener without a mock
+    // but we can attempt to add a listener.
+    browser.notifications.onClicked.addListener(function() {});
+
+    // Test onClosed listener.
+    browser.notifications.onClosed.addListener(id => {
+      browser.test.sendMessage("closed", id);
+      browser.test.notifyPass("background test passed");
+    });
+
+    browser.notifications.create("5", opts).then(id => {
+      return browser.notifications.create("5", opts);
+    }).then(id => {
+      browser.test.sendMessage("running", id);
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["notifications"],
+    },
+    background: `(${backgroundScript})()`,
+  });
+  yield extension.startup();
+  let x = yield extension.awaitMessage("closed");
+  is(x, "5", "got correct id from onClosed listener");
+  x = yield extension.awaitMessage("running");
+  is(x, "5", "got correct id from notifications.create");
+  yield extension.awaitFinish();
+  yield extension.unload();
+});
+
+add_task(function* test_notification_clear() {
+  function backgroundScript() {
+    let opts = {
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+    };
+
+    browser.notifications.onClosed.addListener(id => {
+      browser.test.sendMessage("closed", id);
+    });
+
+    browser.notifications.create("99", opts).then(id => {
+      return browser.notifications.clear(id);
+    }).then(wasCleared => {
+      browser.test.sendMessage("cleared", wasCleared);
+      browser.test.notifyPass("background test passed");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["notifications"],
+    },
+    background: `(${backgroundScript})()`,
+  });
+  yield extension.startup();
+  let x = yield extension.awaitMessage("closed");
+  is(x, "99", "got correct id from onClosed listener");
+  x = yield extension.awaitMessage("cleared");
+  is(x, true, "got correct boolean from notifications.clear");
+  yield extension.awaitFinish();
+  yield extension.unload();
 });
 
 add_task(function* test_notifications_empty_getAll() {
   function backgroundScript() {
-    browser.test.log("running background script");
-
-    browser.notifications.getAll(notifications => {
-      browser.test.assertTrue(Array.isArray(notifications),
-        "getAll() returned an array");
-      browser.test.assertEq(notifications.length, 0, "the array was empty");
+    browser.notifications.getAll().then(notifications => {
+      browser.test.assertEq("object", typeof notifications, "getAll() returned an object");
+      browser.test.assertEq(0, Object.keys(notifications).length, "the object has no properties");
       browser.test.notifyPass("getAll empty");
     });
   }
 
-  let extensionData = {
+  let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["notifications"],
     },
-    background: "(" + backgroundScript.toString() + ")()",
-  };
-
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
-  info("load complete");
+    background: `(${backgroundScript})()`,
+  });
   yield extension.startup();
-  info("startup complete");
   yield extension.awaitFinish("getAll empty");
-  info("test complete");
   yield extension.unload();
-  info("extension unloaded successfully");
 });
 
 add_task(function* test_notifications_populated_getAll() {
   function backgroundScript() {
-    browser.test.log("running background script");
+    let opts = {
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+    };
 
-    let opts = {title: "Testing Notification", message: "Carry on"};
-    browser.notifications.create("p1", opts, () => {
-      browser.notifications.create("p2", opts, () => {
-        browser.notifications.getAll(notifications => {
-          browser.test.assertTrue(Array.isArray(notifications),
-            "getAll() returned an array");
-          browser.test.assertEq(notifications.length, 2,
-            "the array contained two notification ids");
-          browser.test.assertTrue(notifications.includes("p1"),
-            "the array contains the first notification");
-          browser.test.assertTrue(notifications.includes("p2"),
-            "the array contains the second notification");
-          browser.test.notifyPass("getAll populated");
-        });
-      });
+    browser.notifications.create("p1", opts).then(() => {
+      return browser.notifications.create("p2", opts);
+    }).then(() => {
+      return browser.notifications.getAll();
+    }).then(notifications => {
+      browser.test.assertEq("object", typeof notifications, "getAll() returned an object");
+      browser.test.assertEq(2, Object.keys(notifications).length, "the object has 2 properties");
+      for (let notificationId of ["p1", "p2"]) {
+        for (let key of Object.keys(opts)) {
+          browser.test.assertEq(
+            opts[key],
+            notifications[notificationId][key],
+            `the notification has the expected value for option: ${key}`
+          );
+        }
+      }
+      browser.test.notifyPass("getAll populated");
     });
   }
 
-  let extensionData = {
+  let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["notifications"],
     },
-    background: "(" + backgroundScript.toString() + ")()",
-  };
-
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
-  info("load complete");
+    background: `(${backgroundScript})()`,
+  });
   yield extension.startup();
-  info("startup complete");
   yield extension.awaitFinish("getAll populated");
-  info("test complete");
   yield extension.unload();
-  info("extension unloaded successfully");
 });
 
 </script>
