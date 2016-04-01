@@ -337,6 +337,16 @@ HTMLComboboxAccessible::
 {
   mType = eHTMLComboboxType;
   mGenericTypes |= eCombobox;
+
+  nsIComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
+  if (comboFrame) {
+    nsIFrame* listFrame = comboFrame->GetDropDown();
+    if (listFrame) {
+      mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
+      Document()->BindToDocument(mListAccessible, nullptr);
+      AppendChild(mListAccessible);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,26 +372,6 @@ HTMLComboboxAccessible::RemoveChild(Accessible* aChild)
 void
 HTMLComboboxAccessible::CacheChildren()
 {
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
-  if (!comboFrame)
-    return;
-
-  nsIFrame* listFrame = comboFrame->GetDropDown();
-  if (!listFrame)
-    return;
-
-  if (!mListAccessible) {
-    mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
-
-    // Initialize and put into cache.
-    Document()->BindToDocument(mListAccessible, nullptr);
-  }
-
-  if (AppendChild(mListAccessible)) {
-    // Cache combobox option accessibles so that we build complete accessible
-    // tree for combobox.
-    mListAccessible->EnsureChildren();
-  }
 }
 
 void
