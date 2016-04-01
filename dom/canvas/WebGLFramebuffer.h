@@ -253,6 +253,10 @@ public:
         return mDepthStencilAttachment;
     }
 
+    void SetReadBufferMode(GLenum readBufferMode) {
+        mReadBufferMode = readBufferMode;
+    }
+
 protected:
     WebGLFBAttachPoint* GetAttachPoint(GLenum attachment); // Fallible
 
@@ -280,7 +284,8 @@ public:
 
     bool ValidateForRead(const char* info,
                          const webgl::FormatUsageInfo** const out_format,
-                         uint32_t* const out_width, uint32_t* const out_height);
+                         uint32_t* const out_width, uint32_t* const out_height,
+                         GLenum* const out_mode);
 
     JS::Value GetAttachmentParameter(const char* funcName, JSContext* cx, GLenum target,
                                      GLenum attachment, GLenum pname,
