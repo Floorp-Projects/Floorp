@@ -242,7 +242,7 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
     yield this.ensureInitialized();
 
     return SearchAutocompleteProviderInternal.aliasMatches
-                                             .find(m => m.alias == searchToken);
+             .find(m => m.alias.toLocaleLowerCase() == searchToken.toLocaleLowerCase());
   }),
 
   getDefaultMatch: Task.async(function* () {

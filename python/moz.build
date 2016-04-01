@@ -28,6 +28,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/dumbmake/test/test_dumbmake.py',
     'mozbuild/mozbuild/test/action/test_buildlist.py',
     'mozbuild/mozbuild/test/action/test_generate_browsersearch.py',
+    'mozbuild/mozbuild/test/action/test_package_fennec_apk.py',
     'mozbuild/mozbuild/test/backend/test_android_eclipse.py',
     'mozbuild/mozbuild/test/backend/test_build.py',
     'mozbuild/mozbuild/test/backend/test_configenvironment.py',

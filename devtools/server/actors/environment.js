@@ -91,7 +91,10 @@ let EnvironmentActor = ActorClass({
       this.obj.setVariable(name, value);
     } catch (e) {
       if (e instanceof Debugger.DebuggeeWouldRun) {
-        throw new Error("Assigning a value would cause the debuggee to run");
+        throw {
+          error: "threadWouldRun",
+          message: "Assigning a value would cause the debuggee to run"
+        };
       } else {
         throw e;
       }

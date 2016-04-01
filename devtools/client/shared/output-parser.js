@@ -8,6 +8,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const {angleUtils} = require("devtools/shared/css-angle");
 const {colorUtils} = require("devtools/shared/css-color");
 const Services = require("Services");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -339,6 +340,7 @@ OutputParser.prototype = {
           event.stopPropagation();
         }
       }, false);
+      EventEmitter.decorate(swatch);
       container.appendChild(swatch);
     }
 
@@ -396,6 +398,7 @@ OutputParser.prototype = {
         });
         this.colorSwatches.set(swatch, colorObj);
         swatch.addEventListener("mousedown", this._onColorSwatchMouseDown, false);
+        EventEmitter.decorate(swatch);
         container.appendChild(swatch);
       }
 
@@ -462,6 +465,7 @@ OutputParser.prototype = {
     let val = color.nextColorUnit();
 
     swatch.nextElementSibling.textContent = val;
+    swatch.emit("unit-change", val);
   },
 
   _onAngleSwatchMouseDown: function(event) {
@@ -477,6 +481,7 @@ OutputParser.prototype = {
     let val = angle.nextAngleUnit();
 
     swatch.nextElementSibling.textContent = val;
+    swatch.emit("unit-change", val);
   },
 
   /**

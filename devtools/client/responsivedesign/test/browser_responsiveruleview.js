@@ -81,12 +81,12 @@ function* testEscapeOpensSplitConsole(inspector) {
 }
 
 function* testMenuItem(rdm) {
-  is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
+  is(document.getElementById("menu_responsiveUI").getAttribute("checked"),
      "true", "The menu item is checked");
 
   yield closeRDM(rdm);
 
-  is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
+  is(document.getElementById("menu_responsiveUI").getAttribute("checked"),
      "false", "The menu item is unchecked");
 }
 

@@ -19,9 +19,26 @@ const CensusUtils = require("resource://devtools/shared/heapsnapshot/CensusUtils
 const DEFAULT_START_INDEX = 0;
 const DEFAULT_MAX_COUNT = 50;
 
-// The set of HeapSnapshot instances this worker has read into memory. Keyed by
-// snapshot file path.
+/**
+ * The set of HeapSnapshot instances this worker has read into memory. Keyed by
+ * snapshot file path.
+ */
 const snapshots = Object.create(null);
+
+/**
+ * The set of `DominatorTree`s that have been computed, mapped by their id (aka
+ * the index into this array).
+ *
+ * @see /dom/webidl/DominatorTree.webidl
+ */
+const dominatorTrees = [];
+
+/**
+ * The i^th HeapSnapshot in this array is the snapshot used to generate the i^th
+ * dominator tree in `dominatorTrees` above. This lets us map from a dominator
+ * tree id to the snapshot it came from.
+ */
+const dominatorTreeSnapshots = [];
 
 /**
  * @see HeapAnalysesClient.prototype.readHeapSnapshot
@@ -74,6 +91,49 @@ workerHelper.createTask(self, "takeCensus", ({ snapshotFilePath, censusOptions, 
 });
 
 /**
+ * @see HeapAnalysesClient.prototype.getCensusIndividuals
+ */
+workerHelper.createTask(self, "getCensusIndividuals", request => {
+  const {
+    dominatorTreeId,
+    indices,
+    censusBreakdown,
+    labelBreakdown,
+    maxRetainingPaths,
+    maxIndividuals,
+  } = request;
+
+  const dominatorTree = dominatorTrees[dominatorTreeId];
+  if (!dominatorTree) {
+    throw new Error(
+      `There does not exist a DominatorTree with the id ${dominatorTreeId}`);
+  }
+
+  const snapshot = dominatorTreeSnapshots[dominatorTreeId];
+  const nodeIds = CensusUtils.getCensusIndividuals(indices, censusBreakdown, snapshot);
+
+  const nodes = nodeIds
+    .sort((a, b) => dominatorTree.getRetainedSize(b) - dominatorTree.getRetainedSize(a))
+    .slice(0, maxIndividuals)
+    .map(id => {
+      const { label, shallowSize } =
+        DominatorTreeNode.getLabelAndShallowSize(id, snapshot, labelBreakdown);
+      const retainedSize = dominatorTree.getRetainedSize(id);
+      const node = new DominatorTreeNode(id, label, shallowSize, retainedSize);
+      node.moreChildrenAvailable = false;
+      return node;
+    });
+
+  DominatorTreeNode.attachShortestPaths(snapshot,
+                                        labelBreakdown,
+                                        dominatorTree.root,
+                                        nodes,
+                                        maxRetainingPaths);
+
+  return { nodes };
+});
+
+/**
  * @see HeapAnalysesClient.prototype.takeCensusDiff
  */
 workerHelper.createTask(self, "takeCensusDiff", request => {
@@ -118,21 +178,6 @@ workerHelper.createTask(self, "getCreationTime", snapshotFilePath => {
   }
   return snapshots[snapshotFilePath].creationTime;
 });
-
-/**
- * The set of `DominatorTree`s that have been computed, mapped by their id (aka
- * the index into this array).
- *
- * @see /dom/webidl/DominatorTree.webidl
- */
-const dominatorTrees = [];
-
-/**
- * The i^th HeapSnapshot in this array is the snapshot used to generate the i^th
- * dominator tree in `dominatorTrees` above. This lets us map from a dominator
- * tree id to the snapshot it came from.
- */
-const dominatorTreeSnapshots = [];
 
 /**
  * @see HeapAnalysesClient.prototype.computeDominatorTree

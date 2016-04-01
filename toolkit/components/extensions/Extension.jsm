@@ -82,6 +82,7 @@ ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extensio
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/idle.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/notifications.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/runtime.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/storage.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/test.json");

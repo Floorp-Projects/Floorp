@@ -31,6 +31,7 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 var loaderModules = {
   "Services": Object.create(Services),
   "toolkit/loader": Loader,
+  promise,
   PromiseDebugging,
   ChromeUtils,
   ThreadSafeChromeUtils,
@@ -105,8 +106,6 @@ BuiltinProvider.prototype = {
         "devtools": "resource://devtools",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "promise": "resource://gre/modules/Promise-backend.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn": "resource://devtools/acorn",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
