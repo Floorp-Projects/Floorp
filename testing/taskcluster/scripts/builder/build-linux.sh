@@ -35,7 +35,6 @@ fail() {
 
 export MOZ_CRASHREPORTER_NO_REPORT=1
 export MOZ_OBJDIR=obj-firefox
-export MOZ_SYMBOLS_EXTRA_BUILDID=linux64
 export TINDERBOX_OUTPUT=1
 
 # use "simple" package names so that they can be hard-coded in the task's
