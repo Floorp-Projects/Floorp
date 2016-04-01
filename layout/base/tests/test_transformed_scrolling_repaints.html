@@ -2,9 +2,9 @@
 <html>
 <head>
   <title>Test that scaled elements with scrolled contents don't repaint unnecessarily when we scroll inside them</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body onload="setPrefAndStartTest()">
 <div id="t" style="-moz-transform: scale(1.2, 1.2); -moz-transform-origin:top left; width:200px; height:100px; background:yellow; overflow:hidden">
@@ -18,17 +18,7 @@ SimpleTest.waitForExplicitFinish();
 
 var t = document.getElementById("t");
 var e = document.getElementById("e");
-var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-               getInterface(Components.interfaces.nsIDOMWindowUtils);
-const isLinux = navigator.platform.indexOf("Linux") >= 0;
-const is64 = navigator.platform.indexOf("x86_64") >= 0;
-var winLowerThanVista = navigator.platform.indexOf("Win") == 0;
-if (winLowerThanVista) {
-  var version = Components.classes["@mozilla.org/system-info;1"]
-                          .getService(Components.interfaces.nsIPropertyBag2)
-                          .getProperty("version");
-  winLowerThanVista = parseFloat(version) < 6.0;
-}
+var utils = SpecialPowers.getDOMWindowUtils(window);
 
 function startTest() {
   // Do a couple of scrolls to ensure we've triggered activity heuristics.
@@ -42,11 +32,7 @@ function startTest() {
         t.scrollTop = 15;
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(e);
-          if ((isLinux && !is64) || winLowerThanVista) {
-            todo(false, "Fully-visible scrolled element should not have been painted (random on Linux-32)");
-          } else {
-            is(painted, false, "Fully-visible scrolled element should not have been painted");
-          }
+          is(painted, false, "Fully-visible scrolled element should not have been painted");
           SimpleTest.finish();
         });
       });

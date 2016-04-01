@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Test that scaled elements with scrolled contents don't repaint unnecessarily when we scroll inside them</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
 </head>
 <!-- Need a timeout here to allow paint unsuppression before we start the test -->
 <body onload="setTimeout(startTest,0)" style="background:white;">
@@ -36,9 +36,9 @@ scientists.
 </body>"></iframe>
 <pre id="test">
 <script type="application/javascript">
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
-var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
-var is = window.opener.wrappedJSObject.is;
+var SimpleTest = window.opener.SimpleTest;
+var SpecialPowers = window.opener.SpecialPowers;
+var is = window.opener.is;
 var t, e, utils, iterations;
 var smoothScrollPref = "general.smoothScroll";
 
@@ -49,8 +49,7 @@ function runTest() {
     t = document.getElementById("t");
     e = t.contentDocument.getElementById("e");
     t.contentWindow.scrollTo(0,0);
-    utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                   getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils = SpecialPowers.getDOMWindowUtils(window);
     iterations = 0;
 
   // Do a couple of scrolls to ensure we've triggered activity heuristics.
