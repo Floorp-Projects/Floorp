@@ -16,7 +16,8 @@ const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
 const Telemetry = require("devtools/client/shared/telemetry");
-const {gDevTools} = require("./devtools");
+const { gDevTools } = require("./devtools");
+const { when: unload } = require("sdk/system/unload");
 
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
@@ -864,6 +865,10 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 }
 
+// Handle all already registered tools,
+gDevTools.getToolDefinitionArray()
+         .forEach(def => gDevToolsBrowser._addToolToWindows(def));
+// and the new ones.
 gDevTools.on("tool-registered", function(ev, toolId) {
   let toolDefinition = gDevTools._tools.get(toolId);
   gDevToolsBrowser._addToolToWindows(toolDefinition);
@@ -881,6 +886,7 @@ gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
 Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
+
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.
 let enumerator = Services.wm.getEnumerator("navigator:browser");
@@ -891,8 +897,7 @@ while (enumerator.hasMoreElements()) {
   }
 }
 
-// Load the browser devtools main module as the loader's main module.
-// This is done precisely here as main.js ends up dispatching the
-// tool-registered events we are listening in this module.
-loader.main("devtools/client/main");
-
+// Watch for module loader unload. Fires when the tools are reloaded.
+unload(function () {
+  gDevToolsBrowser.destroy();
+});
