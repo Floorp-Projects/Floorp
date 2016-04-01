@@ -4828,7 +4828,7 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        (NS_GET_A(StyleColor()->mColor) == 0 && !StyleText()->HasTextShadow())) &&
       aBuilder->IsForPainting() && !IsSVGText()) {
     isSelected.emplace(IsSelected());
-    if (!isSelected) {
+    if (!isSelected.value()) {
       TextDecorations textDecs;
       GetTextDecorations(PresContext(), eResolvedColors, textDecs);
       if (!textDecs.HasDecorationLines()) {
