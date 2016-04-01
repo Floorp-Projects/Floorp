@@ -25,9 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   const Cu = Components.utils;
   let global = Cu.getGlobalForObject.bind(Cu);
 
-  /** Needed for AppConstants.RELEASE_BUILD usage further down **/
-  Cu.import("resource://gre/modules/AppConstants.jsm")
-
   function checkThrows(f, rgxp, msg) {
     try {
       f();
@@ -173,19 +170,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
      "unwatch", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
      "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__",
      "__proto__"];
-
-  /** Bug 1251855 - "entries" and "values" are not exposed to release builds **/
   gConstructorProperties['Object'] =
     constructorProps(["setPrototypeOf", "getOwnPropertyDescriptor", "keys",
                       "is", "defineProperty", "defineProperties", "create",
                       "getOwnPropertyNames", "getOwnPropertySymbols",
                       "preventExtensions", "freeze", "isFrozen", "seal",
-                      "isSealed", "assign", "getPrototypeOf", "isExtensible"])
-  if (!AppConstants.RELEASE_BUILD) {
-    gConstructorProperties['Object'] = 
-      gConstructorProperties['Object'].concat(["values", "entries"]);
-  }
-
+                      "isSealed", "assign", "getPrototypeOf", "values",
+                      "entries", "isExtensible"])
   gPrototypeProperties['Array'] =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
