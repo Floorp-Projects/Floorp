@@ -4,8 +4,6 @@
 
 // Basic test to check the editing of cookies with the keyboard.
 
-/* import-globals-from head.js */
-
 "use strict";
 
 add_task(function*() {
