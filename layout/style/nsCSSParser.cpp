@@ -347,6 +347,9 @@ public:
   bool AgentRulesEnabled() const {
     return mParsingMode == css::eAgentSheetFeatures;
   }
+  bool ChromeRulesEnabled() const {
+    return mIsChrome;
+  }
   bool UserRulesEnabled() const {
     return mParsingMode == css::eAgentSheetFeatures ||
            mParsingMode == css::eUserSheetFeatures;
@@ -5877,7 +5880,10 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
       ((pseudoElementType < CSSPseudoElementType::Count &&
         nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
-        nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)))) {
+        nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)) ||
+       (!ChromeRulesEnabled() &&
+        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
+         nsCSSPseudoClasses::PseudoClassIsUASheetAndChromeOnly(pseudoClassType))))) {
     // This pseudo-element or pseudo-class is not exposed to content.
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
     UngetToken();
