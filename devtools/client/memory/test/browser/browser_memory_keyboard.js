@@ -7,19 +7,22 @@
 "use strict";
 
 const {
-  snapshotState
+  snapshotState,
+  censusState,
+  viewState
 } = require("devtools/client/memory/constants");
 const {
   takeSnapshotAndCensus
 } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 function waitUntilFocused(store, node) {
   return waitUntilState(store, state =>
       state.snapshots.length === 1 &&
-      state.snapshots[0].state === snapshotState.SAVED_CENSUS &&
       state.snapshots[0].census &&
+      state.snapshots[0].census.state === censusState.SAVED &&
       state.snapshots[0].census.focused &&
       state.snapshots[0].census.focused === node
   );
@@ -39,7 +42,10 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const { getState, dispatch } = store;
   const doc = panel.panelWin.document;
 
+  dispatch(changeView(viewState.CENSUS));
+
   is(getState().censusDisplay.breakdown.by, "coarseType");
+
   yield dispatch(takeSnapshotAndCensus(front, heapWorker));
   let census = getState().snapshots[0].census;
   let root1 = census.report.children[0];

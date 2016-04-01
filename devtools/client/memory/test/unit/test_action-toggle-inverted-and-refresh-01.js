@@ -7,6 +7,8 @@
 const {
   censusDisplays,
   snapshotState: states,
+  censusState,
+  viewState
 } = require("devtools/client/memory/constants");
 const {
   setCensusDisplayAndRefresh
@@ -15,6 +17,7 @@ const {
   takeSnapshotAndCensus,
   selectSnapshotAndRefresh,
 } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 function run_test() {
   run_next_test();
@@ -27,6 +30,8 @@ add_task(function *() {
   let store = Store();
   let { getState, dispatch } = store;
 
+  dispatch(changeView(viewState.CENSUS));
+
   // Select a non-inverted display.
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack));
   equal(getState().censusDisplay.inverted, false, "not inverted by default");
@@ -35,38 +40,38 @@ add_task(function *() {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
 
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED,
+                                                    censusState.SAVED,
+                                                    censusState.SAVED]);
   ok(true, "saved 3 snapshots and took a census of each of them");
 
   // Select an inverted display.
   dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.invertedAllocationStack));
 
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS,
-                                       states.SAVING_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED,
+                                                    censusState.SAVED,
+                                                    censusState.SAVING]);
   ok(true, "toggling inverted should recompute the selected snapshot's census");
 
   equal(getState().censusDisplay.inverted, true, "now inverted");
 
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED,
+                                                    censusState.SAVED,
+                                                    censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display.inverted, false);
   equal(getState().snapshots[1].census.display.inverted, false);
   equal(getState().snapshots[2].census.display.inverted, true);
 
   dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1].id));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS,
-                                       states.SAVING_CENSUS,
-                                       states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED,
+                                                    censusState.SAVING,
+                                                    censusState.SAVED]);
   ok(true, "selecting non-inverted census should trigger a recompute");
 
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS,
-                                       states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED,
+                                                    censusState.SAVED,
+                                                    censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display.inverted, false);
   equal(getState().snapshots[1].census.display.inverted, true);

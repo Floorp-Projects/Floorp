@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test clearSnapshots preserves snapshots with state != SAVED_CENSUS or ERROR
+// Test clearSnapshots preserves snapshots with state != READ or ERROR
 
 let { takeSnapshotAndCensus, clearSnapshots, takeSnapshot } = require("devtools/client/memory/actions/snapshot");
-let { snapshotState: states, actions } = require("devtools/client/memory/constants");
+let { snapshotState: states, treeMapState, actions } = require("devtools/client/memory/constants");
 
 function run_test() {
   run_next_test();
@@ -17,11 +17,13 @@ add_task(function *() {
   let store = Store();
   const { getState, dispatch } = store;
 
-  ok(true, "create a snapshot in SAVED_CENSUS state");
+  ok(true, "create a snapshot with a census in SAVED state");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   ok(true, "create a snapshot in SAVED state");
   dispatch(takeSnapshot(front));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED]);
+  yield waitUntilSnapshotState(store, [states.SAVED, states.SAVED]);
+  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+                             [treeMapState.SAVED, null]);
   ok(true, "snapshots created with expected states");
 
   ok(true, "dispatch clearSnapshots action");
@@ -35,8 +37,10 @@ add_task(function *() {
 
   equal(getState().snapshots.length, 1, "one snapshot remaining");
   let remainingSnapshot = getState().snapshots[0];
-  notEqual(remainingSnapshot.state, states.SAVED_CENSUS,
-    "remaining snapshot doesn't have the SAVED_CENSUS state");
+  equal(remainingSnapshot.treeMap, undefined,
+    "remaining snapshot doesn't have a treeMap property");
+  equal(remainingSnapshot.census, undefined,
+    "remaining snapshot doesn't have a census property");
 
   heapWorker.destroy();
   yield front.detach();

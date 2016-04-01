@@ -7,18 +7,24 @@
  */
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const { viewState, censusState } = require("devtools/client/memory/constants");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const { gStore, document } = panel.panelWin;
 
+  const { dispatch } = panel.panelWin.gStore;
+
   function $$(selector) {
     return [...document.querySelectorAll(selector)];
   }
+  dispatch(changeView(viewState.CENSUS));
 
   yield takeSnapshot(panel.panelWin);
 
   yield waitUntilState(gStore, state =>
-    state.snapshots[0].state === states.SAVED_CENSUS);
+    state.snapshots[0].census &&
+    state.snapshots[0].census.state === censusState.SAVED);
 
   info("Check coarse type heap view");
   ["Function", "js::Shape", "Object", "strings"].forEach(findNameCell);
