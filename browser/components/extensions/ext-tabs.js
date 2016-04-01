@@ -861,6 +861,61 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           });
         });
       },
+
+      getZoom(tabId) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let {ZoomManager} = tab.ownerDocument.defaultView;
+        let zoom = ZoomManager.getZoomForBrowser(tab.linkedBrowser);
+
+        return Promise.resolve(zoom);
+      },
+
+      setZoom(tabId, zoom) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let {FullZoom, ZoomManager} = tab.ownerDocument.defaultView;
+
+        if (zoom === 0) {
+          // A value of zero means use the default zoom factor.
+          return FullZoom.reset(tab.linkedBrowser);
+        } else if (zoom >= ZoomManager.MIN && zoom <= ZoomManager.MAX) {
+          FullZoom.setZoom(zoom, tab.linkedBrowser);
+        } else {
+          return Promise.reject({
+            message: `Zoom value ${zoom} out of range (must be between ${ZoomManager.MIN} and ${ZoomManager.MAX})`,
+          });
+        }
+
+        return Promise.resolve();
+      },
+
+      _getZoomSettings(tabId) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let {FullZoom} = tab.ownerDocument.defaultView;
+
+        return {
+          mode: "automatic",
+          scope: FullZoom.siteSpecific ? "per-origin" : "per-tab",
+          defaultZoomFactor: 1,
+        };
+      },
+
+      getZoomSettings(tabId) {
+        return Promise.resolve(this._getZoomSettings(tabId));
+      },
+
+      setZoomSettings(tabId, settings) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let currentSettings = this._getZoomSettings(tab.id);
+
+        if (!Object.keys(settings).every(key => settings[key] === currentSettings[key])) {
+          return Promise.reject(`Unsupported zoom settings: ${JSON.stringify(settings)}`);
+        }
+        return Promise.resolve();
+      },
     },
   };
   return self;
