@@ -1985,10 +1985,7 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
   aDrawBackgroundImage = true;
   aDrawBackgroundColor = true;
 
-  const nsStyleVisibility* visibility = aStyleContext->StyleVisibility();
-
-  if (visibility->mColorAdjust != NS_STYLE_COLOR_ADJUST_EXACT &&
-      aFrame->HonorPrintBackgroundSettings()) {
+  if (aFrame->HonorPrintBackgroundSettings()) {
     aDrawBackgroundImage = aPresContext->GetBackgroundImageDraw();
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
