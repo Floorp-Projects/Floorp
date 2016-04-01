@@ -311,7 +311,6 @@ def old_configure_options(*options):
     '--with-app-basename',
     '--with-app-name',
     '--with-arch',
-    '--with-arm-kuser',
     '--with-bing-api-keyfile',
     '--with-branding',
     '--with-crashreporter-enable-percent',
