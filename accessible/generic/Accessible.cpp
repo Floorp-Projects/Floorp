@@ -2593,7 +2593,9 @@ Accessible::EnsureChildren()
 
   // State is embedded children until text leaf accessible is appended.
   SetChildrenFlag(eEmbeddedChildren); // Prevent reentry
-  CacheChildren();
+  if (KidsFromDOM()) {
+    CacheChildren();
+  }
 }
 
 Accessible*

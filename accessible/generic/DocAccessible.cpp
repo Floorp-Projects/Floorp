@@ -2272,8 +2272,9 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
     Accessible* child = aRoot->ContentChildAt(idx);
     NS_ASSERTION(child, "Illicit tree change while tree is created!");
     // Don't cross document boundaries.
-    if (child && child->IsContent())
+    if (child && child->IsContent()) {
       CacheChildrenInSubtree(child, aFocusedAcc);
+    }
   }
 
   // Fire document load complete on ARIA documents.

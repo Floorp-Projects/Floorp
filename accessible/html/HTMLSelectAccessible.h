@@ -183,9 +183,6 @@ public:
   virtual void SetCurrentItem(Accessible* aItem) override;
 
 protected:
-  // Accessible
-  virtual void CacheChildren() override;
-
   /**
    * Return selected option.
    */
