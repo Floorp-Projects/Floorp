@@ -226,11 +226,13 @@ if test "$GNU_CXX"; then
         dnl from __clang_major__ and __clang_minor__), but the clang that
         dnl comes with Xcode has a completely different version scheme
         dnl despite exposing the version with the same defines.
-        dnl So instead of a version check, check for one of the C++11
-        dnl features that was added in clang 3.3.
-        AC_TRY_COMPILE([], [#if !__has_feature(cxx_inheriting_constructors)
-                            #error inheriting constructors are not supported
-                            #endif],,AC_MSG_ERROR([Only clang/llvm 3.3 or newer supported]))
+        dnl So instead of a version check, do a feature check. Normally,
+        dnl we'd use __has_feature, but there are unfortunately no C++11
+        dnl differences in clang 3.4. However, it supports the 2013-08-28
+        dnl draft of the ISO WG21 SG10 feature test macro recommendations.
+        AC_TRY_COMPILE([], [#if !__cpp_static_assert
+                            #error ISO WG21 SG10 feature test macros unsupported
+                            #endif],,AC_MSG_ERROR([Only clang/llvm 3.4 or newer supported]))
     fi
 
     AC_CACHE_CHECK([whether 64-bits std::atomic requires -latomic],
@@ -330,9 +332,9 @@ EOF
             AC_MSG_ERROR([Your host toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
         fi
         if test "$host_compiler" = CLANG; then
-            AC_TRY_COMPILE([], [#if !__has_feature(cxx_inheriting_constructors)
-                                #error inheriting constructors are not supported
-                                #endif],,AC_MSG_ERROR([Only clang/llvm 3.3 or newer supported]))
+            AC_TRY_COMPILE([], [#if !__cpp_static_assert
+                                #error ISO WG21 SG10 feature test macros unsupported
+                                #endif],,AC_MSG_ERROR([Only clang/llvm 3.4 or newer supported]))
         fi
 
         CXXFLAGS="$_SAVE_CXXFLAGS"
