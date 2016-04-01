@@ -153,7 +153,7 @@ StorageUI.prototype = {
     if (typeof actor.getEditableFields !== "undefined") {
       actor.getEditableFields().then(fields => {
         this.table.makeFieldsEditable(fields);
-      }).then(() => {
+      }).catch(() => {
         // Do nothing
       });
     } else if (this.table._editableFieldsEngine) {
