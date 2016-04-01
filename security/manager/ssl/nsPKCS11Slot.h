@@ -36,7 +36,7 @@ private:
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
-  void refreshSlotInfo(const nsNSSShutDownPreventionLock& proofOfLock);
+  nsresult refreshSlotInfo(const nsNSSShutDownPreventionLock& proofOfLock);
 };
 
 class nsPKCS11Module : public nsIPKCS11Module,
