@@ -29,6 +29,7 @@ loader.lazyGetter(this, "toolboxStrings", function () {
 loader.lazyRequireGetter(this, "gcliInit", "devtools/shared/gcli/commands/index");
 loader.lazyRequireGetter(this, "util", "gcli/util/util");
 loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/shared/webconsole/utils", true);
+loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 
 /**
  * A collection of utilities to help working with commands
@@ -318,8 +319,11 @@ DeveloperToolbar.prototype.createToolbar = function() {
   let toolboxBtn = this._doc.createElement("toolbarbutton");
   toolboxBtn.setAttribute("id", "developer-toolbar-toolbox-button");
   toolboxBtn.setAttribute("class", "developer-toolbar-button");
-  toolboxBtn.setAttribute("observes", "devtoolsMenuBroadcaster_DevToolbox");
   toolboxBtn.setAttribute("tooltiptext", "devToolbarToolsButton.tooltip");
+  toolboxBtn.addEventListener("command", function (event) {
+    let window = event.target.ownerDocument.defaultView;
+    gDevToolsBrowser.toggleToolboxCommand(window.gBrowser);
+  });
 
   // On Mac, the close button is on the left,
   // while it is on the right on every other platforms.
@@ -432,7 +436,7 @@ DeveloperToolbar.prototype.show = function(focus) {
     return promise.all(panelPromises).then(panels => {
       [ this.tooltipPanel, this.outputPanel ] = panels;
 
-      this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "true");
+      this._doc.getElementById("menu_devToolbar").setAttribute("checked", "true");
 
       this.target = TargetFactory.forTab(this._chromeWindow.gBrowser.selectedTab);
       const options = {
@@ -554,7 +558,7 @@ DeveloperToolbar.prototype.hide = function() {
 
     Services.prefs.setBoolPref("devtools.toolbar.visible", false);
 
-    this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "false");
+    this._doc.getElementById("menu_devToolbar").setAttribute("checked", "false");
     this.destroy();
 
     this._telemetry.toolClosed("developertoolbar");

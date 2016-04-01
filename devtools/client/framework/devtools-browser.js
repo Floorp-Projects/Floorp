@@ -80,7 +80,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   updateCommandAvailability: function(win) {
     let doc = win.document;
 
-    function toggleCmd(id, isEnabled) {
+    function toggleMenuItem(id, isEnabled) {
       let cmd = doc.getElementById(id);
       if (isEnabled) {
         cmd.removeAttribute("disabled");
@@ -93,8 +93,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
     // Enable developer toolbar?
     let devToolbarEnabled = Services.prefs.getBoolPref("devtools.toolbar.enabled");
-    toggleCmd("Tools:DevToolbar", devToolbarEnabled);
-    let focusEl = doc.getElementById("Tools:DevToolbarFocus");
+    toggleMenuItem("menu_devToolbar", devToolbarEnabled);
+    let focusEl = doc.getElementById("menu_devToolbar");
     if (devToolbarEnabled) {
       focusEl.removeAttribute("disabled");
     } else {
@@ -106,7 +106,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
     // Enable WebIDE?
     let webIDEEnabled = Services.prefs.getBoolPref("devtools.webide.enabled");
-    toggleCmd("Tools:WebIDE", webIDEEnabled);
+    toggleMenuItem("menu_webide", webIDEEnabled);
 
     let showWebIDEWidget = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
     if (webIDEEnabled && showWebIDEWidget) {
@@ -119,15 +119,15 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     let chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
     let devtoolsRemoteEnabled = Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
     let remoteEnabled = chromeEnabled && devtoolsRemoteEnabled;
-    toggleCmd("Tools:BrowserToolbox", remoteEnabled);
-    toggleCmd("Tools:BrowserContentToolbox", remoteEnabled && win.gMultiProcessBrowser);
+    toggleMenuItem("menu_browserToolbox", remoteEnabled);
+    toggleMenuItem("menu_browserContentToolbox", remoteEnabled && win.gMultiProcessBrowser);
 
     // Enable Error Console?
     let consoleEnabled = Services.prefs.getBoolPref("devtools.errorconsole.enabled");
-    toggleCmd("Tools:ErrorConsole", consoleEnabled);
+    toggleMenuItem("javascriptConsole", consoleEnabled);
 
     // Enable DevTools connection screen, if the preference allows this.
-    toggleCmd("Tools:DevToolsConnect", devtoolsRemoteEnabled);
+    toggleMenuItem("menu_devtools_connect", devtoolsRemoteEnabled);
   },
 
   observe: function(subject, topic, prefName) {
@@ -153,7 +153,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       Services.prefs.addObserver("devtools.", this, false);
     }
   },
-
 
   /**
    * This function is for the benefit of Tools:{toolId} commands,
@@ -348,14 +347,17 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * Add this DevTools's presence to a browser window's document
    *
    * @param {XULDocument} doc
-   *        The document to which menuitems and handlers are to be added
+   *        The document to which devtools should be hooked to.
    */
   _registerBrowserWindow: function(win) {
-    BrowserMenus.addMenus(win.document);
+    if (gDevToolsBrowser._trackedBrowserWindows.has(win)) {
+      return;
+    }
+    gDevToolsBrowser._trackedBrowserWindows.add(win);
 
+    BrowserMenus.addMenus(win.document);
     this.updateCommandAvailability(win);
     this.ensurePrefObserver();
-    gDevToolsBrowser._trackedBrowserWindows.add(win);
     win.addEventListener("unload", this);
 
     let tabContainer = win.gBrowser.tabContainer;
@@ -520,7 +522,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
       let hasToolbox = gDevToolsBrowser.hasToolboxOpened(win);
 
-      let broadcaster = win.document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
+      let broadcaster = win.document.getElementById("menu_devToolbox");
       if (hasToolbox) {
         broadcaster.setAttribute("checked", "true");
       } else {
@@ -555,6 +557,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   _forgetBrowserWindow: function(win) {
     gDevToolsBrowser._trackedBrowserWindows.delete(win);
     win.removeEventListener("unload", this);
+
+    BrowserMenus.removeMenus(win.document);
 
     // Destroy toolboxes for closed window
     for (let [target, toolbox] of gDevTools._toolboxes) {
