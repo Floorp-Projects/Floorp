@@ -1963,28 +1963,17 @@ Accessible::NativeName(nsString& aName)
 void
 Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
 {
-  NS_PRECONDITION(aParent, "This method isn't used to set null parent!");
+  MOZ_ASSERT(aParent, "This method isn't used to set null parent");
+  MOZ_ASSERT(!mParent, "The child was expected to be moved");
 
-  if (mParent) {
-    if (mParent != aParent) {
 #ifdef A11Y_LOG
-      logging::TreeInfo("BindToParent: stealing accessible", 0,
-                        "old parent", mParent.get(),
-                        "new parent", aParent,
-                        "child", this, nullptr);
-#endif
-      // XXX: legalize adoption. As long as we don't invalidate the children,
-      // the accessibles start to steal them.
-
-      AutoTreeMutation mt(mParent);
-      mt.BeforeRemoval(this);
-      mParent->RemoveChild(this);
-      mt.Done();
-    } else {
-      NS_ERROR("Binding to the same parent!");
-      return;
-    }
+  if (mParent) {
+    logging::TreeInfo("BindToParent: stealing accessible", 0,
+                      "old parent", mParent.get(),
+                      "new parent", aParent,
+                      "child", this, nullptr);
   }
+#endif
 
   mParent = aParent;
   mIndexInParent = aIndexInParent;
