@@ -1070,6 +1070,7 @@ XULTreeItemAccessible::
                         nsITreeView* aTreeView, int32_t aRow) :
   XULTreeItemAccessibleBase(aContent, aDoc, aParent, aTree, aTreeView, aRow)
 {
+  mStateFlags |= eNoKidsFromDOM;
   mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);
   GetCellName(mColumn, mCachedName);
 }
@@ -1141,14 +1142,6 @@ XULTreeItemAccessible::RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx)
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedName = name;
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeItemAccessible: Accessible protected implementation
-
-void
-XULTreeItemAccessible::CacheChildren()
-{
 }
 
 

@@ -173,7 +173,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
             if (NS_FAILED(tmp)) {
               rv = tmp;
             }
-            prefix = do_GetAtom(prefixStr);
+            prefix = NS_Atomize(prefixStr);
         }
         tmp = aStream->ReadString(localName);
         if (NS_FAILED(tmp)) {

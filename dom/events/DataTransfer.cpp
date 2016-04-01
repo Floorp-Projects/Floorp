@@ -162,7 +162,7 @@ DataTransfer::Constructor(const GlobalObject& aGlobal,
 {
   nsAutoCString onEventType("on");
   AppendUTF16toUTF8(aEventType, onEventType);
-  nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(onEventType);
+  nsCOMPtr<nsIAtom> eventTypeAtom = NS_Atomize(onEventType);
   if (!eventTypeAtom) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;

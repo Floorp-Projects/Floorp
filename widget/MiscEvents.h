@@ -156,7 +156,7 @@ public:
 
   WidgetPluginEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, ePluginEventClass)
-    , retargetToFocusedDocument(false)
+    , mRetargetToFocusedDocument(false)
   {
   }
 
@@ -175,14 +175,14 @@ public:
 
   // If true, this event needs to be retargeted to focused document.
   // Otherwise, never retargeted. Defaults to false.
-  bool retargetToFocusedDocument;
+  bool mRetargetToFocusedDocument;
 
   void AssignPluginEventData(const WidgetPluginEvent& aEvent,
                              bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    retargetToFocusedDocument = aEvent.retargetToFocusedDocument;
+    mRetargetToFocusedDocument = aEvent.mRetargetToFocusedDocument;
   }
 
 protected:

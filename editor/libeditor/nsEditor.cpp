@@ -1197,7 +1197,7 @@ nsEditor::SetAttribute(nsIDOMElement* aElement, const nsAString& aAttribute,
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttribute);
+  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
 
   RefPtr<ChangeAttributeTxn> txn =
     CreateTxnForSetAttribute(*element, *attribute, aValue);
@@ -1230,7 +1230,7 @@ nsEditor::RemoveAttribute(nsIDOMElement* aElement, const nsAString& aAttribute)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttribute);
+  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
 
   RefPtr<ChangeAttributeTxn> txn =
     CreateTxnForRemoveAttribute(*element, *attribute);
@@ -1331,7 +1331,7 @@ nsEditor::CreateNode(const nsAString& aTag,
                      int32_t aPosition,
                      nsIDOMNode** aNewNode)
 {
-  nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
+  nsCOMPtr<nsIAtom> tag = NS_Atomize(aTag);
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
   NS_ENSURE_STATE(parent);
   *aNewNode = GetAsDOMNode(CreateNode(tag, parent, aPosition).take());

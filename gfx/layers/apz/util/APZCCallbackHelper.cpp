@@ -581,7 +581,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
   if (aMsg != eMouseMove) {
     event.clickCount = 1;
   }
-  event.modifiers = aModifiers;
+  event.mModifiers = aModifiers;
   event.widget = aWidget;
 
   return DispatchWidgetEvent(event);

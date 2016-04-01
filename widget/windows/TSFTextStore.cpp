@@ -2904,7 +2904,7 @@ TSFTextStore::GetText(LONG acpStart,
           "*pacpNext=%ld)",
           this, pcchPlainOut, prgRunInfo ? prgRunInfo->uCount : 0,
           prgRunInfo ? GetTextRunTypeName(prgRunInfo->type) : "N/A",
-          pulRunInfoOut ? pulRunInfoOut : 0, pacpNext ? pacpNext : 0));
+          pulRunInfoOut ? *pulRunInfoOut : 0, pacpNext ? *pacpNext : 0));
   return S_OK;
 }
 

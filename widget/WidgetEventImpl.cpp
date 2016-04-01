@@ -208,14 +208,14 @@ bool
 WidgetEvent::IsRetargetedNativeEventDelivererForPlugin() const
 {
   const WidgetPluginEvent* pluginEvent = AsPluginEvent();
-  return pluginEvent && pluginEvent->retargetToFocusedDocument;
+  return pluginEvent && pluginEvent->mRetargetToFocusedDocument;
 }
 
 bool
 WidgetEvent::IsNonRetargetedNativeEventDelivererForPlugin() const
 {
   const WidgetPluginEvent* pluginEvent = AsPluginEvent();
-  return pluginEvent && !pluginEvent->retargetToFocusedDocument;
+  return pluginEvent && !pluginEvent->mRetargetToFocusedDocument;
 }
 
 bool

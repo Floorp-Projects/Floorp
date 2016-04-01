@@ -271,7 +271,7 @@ ModifierKeyState::Set(Modifiers aAddingModifiers)
 void
 ModifierKeyState::InitInputEvent(WidgetInputEvent& aInputEvent) const
 {
-  aInputEvent.modifiers = mModifiers;
+  aInputEvent.mModifiers = mModifiers;
 
   switch(aInputEvent.mClass) {
     case eMouseEventClass:

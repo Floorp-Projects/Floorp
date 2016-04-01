@@ -434,7 +434,7 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage)
         event.inputSource = mInputSource;
         if (aEventMessage == eDragEnd) {
           event.refPoint = mEndDragPoint;
-          event.userCancelled = mUserCancelled;
+          event.mUserCancelled = mUserCancelled;
         }
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);

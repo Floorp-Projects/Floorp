@@ -16,7 +16,7 @@ nsAtomService::nsAtomService()
 nsresult
 nsAtomService::GetAtom(const nsAString& aString, nsIAtom** aResult)
 {
-  *aResult = NS_NewAtom(aString).take();
+  *aResult = NS_Atomize(aString).take();
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

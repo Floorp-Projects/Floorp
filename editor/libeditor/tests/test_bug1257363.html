@@ -1,0 +1,182 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1257363
+-->
+<head>
+  <title>Test for Bug 1257363</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="display">
+</div>
+
+<div id="backspaceCSS" contenteditable><p style="color:red;">12345</p>67</div>
+<div id="backspace" contenteditable><p><font color="red">12345</font></p>67</div>
+<div id="deleteCSS" contenteditable><p style="color:red;">x</p></div>
+<div id="delete" contenteditable><p><font color="red">y</font></p></div>
+
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 1257363 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+
+  // ***** Backspace test *****
+  var div = document.getElementById("backspaceCSS");
+  div.focus();
+  synthesizeMouse(div, 100, 2, {}); /* click behind and down */
+
+  var sel = window.getSelection();
+  var selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 5, "offset should be 5");
+
+  // Return and backspace should take us to where we started.
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 5, "offset should be 5");
+
+  // Add an "a" to the end of the paragraph.
+  synthesizeKey("a", {});
+
+  // Return and forward delete should take us to the following line.
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_DELETE", {});
+
+  // Add a "b" to the start.
+  synthesizeKey("b", {});
+
+  is(div.innerHTML, "<p style=\"color:red;\">12345a</p>b67",
+                    "unexpected HTML");
+
+  // Let's repeat the whole thing, but a font tag instead of CSS.
+  // The behaviour is different since the font is carried over.
+  div = document.getElementById("backspace");
+  div.focus();
+  synthesizeMouse(div, 100, 2, {}); /* click behind and down */
+
+  sel = window.getSelection();
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 5, "offset should be 5");
+
+  // Return and backspace should take us to where we started.
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 5, "offset should be 5");
+
+  // Add an "a" to the end of the paragraph.
+  synthesizeKey("a", {});
+
+  // Return and forward delete should take us to the following line.
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_DELETE", {});
+
+  // Add a "b" to the start.
+  synthesizeKey("b", {});
+
+  // Here we get a somewhat ugly result since the red sticks.
+  is(div.innerHTML, "<p><font color=\"red\">12345a</font></p><font color=\"red\">b</font>67",
+                    "unexpected HTML");
+
+  // ***** Delete test *****
+  div = document.getElementById("deleteCSS");
+  div.focus();
+  synthesizeMouse(div, 100, 2, {}); /* click behind and down */
+
+  var sel = window.getSelection();
+  var selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 1, "offset should be 1");
+
+  // left, enter should create a new empty paragraph before
+  // but leave the selection at the start of the existing paragraph.
+  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("VK_RETURN", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
+  is(selRange.endOffset, 0, "offset should be 0");
+  is(selRange.endContainer.nodeValue, "x", "we should be in the text node with the x");
+
+  // Now moving up into the new empty paragraph.
+  synthesizeKey("VK_UP", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "P", "selection should be the new empty paragraph");
+  is(selRange.endOffset, 0, "offset should be 0");
+
+  // Forward delete should now take us to where we started.
+  synthesizeKey("VK_DELETE", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
+  is(selRange.endOffset, 0, "offset should be 0");
+
+  // Add an "a" to the start of the paragraph.
+  synthesizeKey("a", {});
+
+  is(div.innerHTML, "<p style=\"color:red;\">ax</p>",
+                    "unexpected HTML");
+
+  // Let's repeat the whole thing, but a font tag instead of CSS.
+  div = document.getElementById("delete");
+  div.focus();
+  synthesizeMouse(div, 100, 2, {}); /* click behind and down */
+
+  var sel = window.getSelection();
+  var selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 1, "offset should be 1");
+
+  // left, enter should create a new empty paragraph before
+  // but leave the selection at the start of the existing paragraph.
+  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("VK_RETURN", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
+  is(selRange.endOffset, 0, "offset should be 0");
+  is(selRange.endContainer.nodeValue, "y", "we should be in the text node with the y");
+
+  // Now moving up into the new empty paragraph.
+  synthesizeKey("VK_UP", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "FONT", "selection should be the font tag");
+  is(selRange.endOffset, 0, "offset should be 0");
+  is(selRange.endContainer.parentNode.nodeName, "P", "the parent of the font should be a paragraph");
+
+  // Forward delete should now take us to where we started.
+  synthesizeKey("VK_DELETE", {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
+  is(selRange.endOffset, 0, "offset should be 0");
+
+  // Add an "a" to the start of the paragraph.
+  synthesizeKey("a", {});
+
+  is(div.innerHTML, "<p><font color=\"red\">ay</font></p>",
+                    "unexpected HTML");
+
+  SimpleTest.finish();
+
+});
+
+</script>
+</body>
+
+</html>

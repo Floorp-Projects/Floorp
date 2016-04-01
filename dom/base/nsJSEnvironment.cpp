@@ -2464,6 +2464,14 @@ SetMemoryGCDynamicMarkSlicePrefChangedCallback(const char* aPrefName, void* aClo
 }
 
 static void
+SetMemoryGCRefreshFrameSlicesEnabledPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  bool pref = Preferences::GetBool(aPrefName);
+  JS_SetGCParameter(sRuntime, JSGC_REFRESH_FRAME_SLICES_ENABLED, pref);
+}
+
+
+static void
 SetIncrementalCCPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
@@ -2562,6 +2570,9 @@ nsJSContext::EnsureStatics()
 
   Preferences::RegisterCallbackAndCall(SetMemoryGCDynamicMarkSlicePrefChangedCallback,
                                        "javascript.options.mem.gc_dynamic_mark_slice");
+
+  Preferences::RegisterCallbackAndCall(SetMemoryGCRefreshFrameSlicesEnabledPrefChangedCallback,
+                                       "javascript.options.mem.gc_refresh_frame_slices_enabled");
 
   Preferences::RegisterCallbackAndCall(SetMemoryGCDynamicHeapGrowthPrefChangedCallback,
                                        "javascript.options.mem.gc_dynamic_heap_growth");

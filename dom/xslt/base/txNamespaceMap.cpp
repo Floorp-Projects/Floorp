@@ -89,7 +89,7 @@ txNamespaceMap::lookupNamespace(nsIAtom* aPrefix)
 int32_t
 txNamespaceMap::lookupNamespaceWithDefault(const nsAString& aPrefix)
 {
-    nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);
+    nsCOMPtr<nsIAtom> prefix = NS_Atomize(aPrefix);
     if (prefix != nsGkAtoms::_poundDefault) {
         return lookupNamespace(prefix);
     }

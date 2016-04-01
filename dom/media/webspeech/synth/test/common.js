@@ -58,7 +58,28 @@ function loadFrame(frameId) {
       frame.contentWindow.document.title = frameId;
       resolve(frame);
     });
-    frame1.src = 'data:text/html,' + encodeURI('<html><head></head><body></body></html>');
+    frame.src = 'data:text/html,' + encodeURI('<html><head></head><body></body></html>');
+  });
+}
+
+function waitForVoices(win) {
+  return new Promise(resolve => {
+    function resolver() {
+      if (win.speechSynthesis.getVoices().length) {
+        win.speechSynthesis.removeEventListener('voiceschanged', resolver);
+        resolve();
+      }
+    }
+
+    win.speechSynthesis.addEventListener('voiceschanged', resolver);
+    resolver();
+  });
+}
+
+function loadSpeechTest(fileName, prefs, frameId="testFrame") {
+  loadFrame(frameId).then(frame => {
+    waitForVoices(frame.contentWindow).then(
+      () => document.getElementById("testFrame").src = fileName);
   });
 }
 

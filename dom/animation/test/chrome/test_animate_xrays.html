@@ -19,7 +19,7 @@ var win = document.getElementById('iframe').contentWindow;
 async_test(function(t) {
   window.addEventListener('load', t.step_func(function() {
     var target = win.document.getElementById('target');
-    var anim = target.animate({ opacity: [ 0, 1 ] }, 2000);
+    var anim = target.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
     // In the x-ray case, the frames object will be given an opaque wrapper
     // so it won't be possible to fetch any frames from it.
     assert_equals(anim.effect.getFrames().length, 0);

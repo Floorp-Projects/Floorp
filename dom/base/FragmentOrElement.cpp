@@ -280,7 +280,7 @@ nsIContent::LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
 
   nsCOMPtr<nsIAtom> name;
   if (!aNamespacePrefix.IsEmpty()) {
-    name = do_GetAtom(aNamespacePrefix);
+    name = NS_Atomize(aNamespacePrefix);
     NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
   }
   else {

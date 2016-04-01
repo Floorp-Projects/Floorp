@@ -230,7 +230,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
 
   nsCOMPtr<nsIAtom> pseudoElt;
   if (!aPseudo.IsEmpty()) {
-    pseudoElt = do_GetAtom(aPseudo);
+    pseudoElt = NS_Atomize(aPseudo);
   }
 
   nsRuleNode* ruleNode = nullptr;
@@ -455,7 +455,7 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
   if (!aPseudo.IsEmpty()) {
     // We need to make sure that the requested pseudo element type
     // matches the selector pseudo element type before proceeding.
-    nsCOMPtr<nsIAtom> pseudoElt = do_GetAtom(aPseudo);
+    nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
     if (sel->mSelectors->PseudoType() !=
         nsCSSPseudoElements::GetPseudoType(pseudoElt)) {
       *aMatches = false;
@@ -1202,7 +1202,7 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
                 nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
                 "Length of PseudoClassStates array is incorrect");
 
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(aStatePseudo);
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(aStatePseudo);
 
   // Ignore :moz-any-link so we don't give the element simultaneous
   // visited and unvisited style state

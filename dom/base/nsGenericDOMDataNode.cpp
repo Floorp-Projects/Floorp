@@ -395,7 +395,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
       if (aLength > 0) {
         nsAutoString val;
         mText.AppendTo(val);
-        mutation.mNewAttrValue = do_GetAtom(val);
+        mutation.mNewAttrValue = NS_Atomize(val);
       }
 
       mozAutoSubtreeModified subtree(OwnerDoc(), this);
@@ -1100,7 +1100,7 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
 {
   nsAutoString val;
   GetData(val);
-  return NS_NewAtom(val);
+  return NS_Atomize(val);
 }
 
 NS_IMETHODIMP

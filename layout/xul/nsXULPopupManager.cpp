@@ -601,7 +601,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     if (event) {
       WidgetInputEvent* inputEvent = event->AsInputEvent();
       if (inputEvent) {
-        mCachedModifiers = inputEvent->modifiers;
+        mCachedModifiers = inputEvent->mModifiers;
       }
       nsIDocument* doc = aPopup->GetCurrentDoc();
       if (doc) {
@@ -1422,7 +1422,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   }
 
   event.refPoint = mCachedMousePoint;
-  event.modifiers = mCachedModifiers;
+  event.mModifiers = mCachedModifiers;
   EventDispatcher::Dispatch(popup, presContext, &event, nullptr, &status);
 
   mCachedMousePoint = LayoutDeviceIntPoint(0, 0);

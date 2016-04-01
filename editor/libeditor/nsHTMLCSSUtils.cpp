@@ -622,7 +622,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString& aString, float* aValue,
 {
   if (aString.IsEmpty()) {
     *aValue = 0;
-    *aUnit = NS_NewAtom(aString).take();
+    *aUnit = NS_Atomize(aString).take();
     return;
   }
 
@@ -661,7 +661,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString& aString, float* aValue,
     i++;
   }
   *aValue = value * sign;
-  *aUnit = NS_NewAtom(StringTail(aString, j-i)).take();
+  *aUnit = NS_Atomize(StringTail(aString, j-i)).take();
 }
 
 void

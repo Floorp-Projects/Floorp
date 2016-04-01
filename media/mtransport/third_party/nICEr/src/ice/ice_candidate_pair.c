@@ -49,10 +49,27 @@ static void nr_ice_candidate_pair_restart_stun_role_change_cb(NR_SOCKET s, int h
 static void nr_ice_candidate_pair_compute_codeword(nr_ice_cand_pair *pair,
   nr_ice_candidate *lcand, nr_ice_candidate *rcand);
 
+static void nr_ice_candidate_pair_set_priority(nr_ice_cand_pair *pair)
+  {
+    /* Priority computation S 5.7.2 */
+    UINT8 controlling_priority, controlled_priority;
+    if(pair->pctx->controlling)
+    {
+      controlling_priority=pair->local->priority;
+      controlled_priority=pair->remote->priority;
+    }
+    else{
+      controlling_priority=pair->remote->priority;
+      controlled_priority=pair->local->priority;
+    }
+    pair->priority=(MIN(controlling_priority, controlled_priority))<<32 |
+      (MAX(controlling_priority, controlled_priority))<<1 |
+      (controlled_priority > controlling_priority?0:1);
+  }
+
 int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,nr_ice_candidate *rcand,nr_ice_cand_pair **pairp)
   {
     nr_ice_cand_pair *pair=0;
-    UINT8 o_priority, a_priority;
     int r,_status;
     UINT4 RTO;
     nr_ice_candidate tmpcand;
@@ -73,20 +90,7 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     pair->local=lcand;
     pair->remote=rcand;
 
-    /* Priority computation S 5.7.2 */
-    if(pctx->ctx->flags & NR_ICE_CTX_FLAGS_OFFERER)
-    {
-      assert(!(pctx->ctx->flags & NR_ICE_CTX_FLAGS_ANSWERER));
-
-      o_priority=lcand->priority;
-      a_priority=rcand->priority;
-    }
-    else{
-      o_priority=rcand->priority;
-      a_priority=lcand->priority;
-    }
-    pair->priority=(MIN(o_priority, a_priority))<<32 |
-      (MAX(o_priority, a_priority))<<1 | (o_priority > a_priority?0:1);
+    nr_ice_candidate_pair_set_priority(pair);
 
     /*
        TODO(bcampen@mozilla.com): Would be nice to log why this candidate was
@@ -644,6 +648,7 @@ static void nr_ice_candidate_pair_restart_stun_role_change_cb(NR_SOCKET s, int h
 void nr_ice_candidate_pair_role_change(nr_ice_cand_pair *pair)
   {
     pair->stun_client->params.ice_binding_request.control = pair->pctx->controlling ? NR_ICE_CONTROLLING : NR_ICE_CONTROLLED;
+    nr_ice_candidate_pair_set_priority(pair);
 
     if(pair->state == NR_ICE_PAIR_STATE_IN_PROGRESS) {
       /* We could try only restarting in-progress pairs when they receive their

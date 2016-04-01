@@ -493,7 +493,7 @@ var gTests = [
 gTests.forEach(function(subtest) {
   test(function(t) {
     var div = addDiv(t);
-    var animation = div.animate(subtest.frames, 1000);
+    var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
     assert_properties_equal(animation.effect.getProperties(),
                             subtest.expected);
   }, subtest.desc);

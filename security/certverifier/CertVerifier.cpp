@@ -323,11 +323,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       for (size_t i = 0;
            i < sha1ModeConfigurationsCount && rv != Success && srv == SECSuccess;
            i++) {
-        // Because of the try-strict and fallback approach, we have to clear any
-        // previously noted telemetry information
-        if (pinningTelemetryInfo) {
-          pinningTelemetryInfo->Reset();
-        }
         // Don't attempt verification if the SHA1 mode set by preferences
         // (mSHA1Mode) is more restrictive than the SHA1 mode option we're on.
         // (To put it another way, only attempt verification if the SHA1 mode
@@ -337,6 +332,13 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
         if (SHA1ModeMoreRestrictiveThanGivenMode(sha1ModeConfigurations[i])) {
           continue;
         }
+
+        // Because of the try-strict and fallback approach, we have to clear any
+        // previously noted telemetry information
+        if (pinningTelemetryInfo) {
+          pinningTelemetryInfo->Reset();
+        }
+
         NSSCertDBTrustDomain
           trustDomain(trustSSL, evOCSPFetching,
                       mOCSPCache, pinArg, ocspGETConfig,
@@ -412,11 +414,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       for (size_t i = 0; i < keySizeOptionsCount && rv != Success; i++) {
         for (size_t j = 0; j < sha1ModeConfigurationsCount && rv != Success;
              j++) {
-          // invalidate any telemetry info relating to failed chains
-          if (pinningTelemetryInfo) {
-            pinningTelemetryInfo->Reset();
-          }
-
           // Don't attempt verification if the SHA1 mode set by preferences
           // (mSHA1Mode) is more restrictive than the SHA1 mode option we're on.
           // (To put it another way, only attempt verification if the SHA1 mode
@@ -425,6 +422,11 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
           // still enforcing the mode set by preferences.
           if (SHA1ModeMoreRestrictiveThanGivenMode(sha1ModeConfigurations[j])) {
             continue;
+          }
+
+          // invalidate any telemetry info relating to failed chains
+          if (pinningTelemetryInfo) {
+            pinningTelemetryInfo->Reset();
           }
 
           NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
@@ -484,7 +486,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // Only collect CERT_CHAIN_SHA1_POLICY_STATUS telemetry indicating a
       // failure when mSHA1Mode is the default.
       // NB: When we change the default, we have to change this.
-      if (sha1ModeResult && mSHA1Mode == SHA1Mode::Allowed) {
+      if (sha1ModeResult && mSHA1Mode == SHA1Mode::ImportedRoot) {
         *sha1ModeResult = SHA1ModeResult::Failed;
       }
 

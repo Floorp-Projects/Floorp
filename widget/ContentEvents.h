@@ -31,17 +31,17 @@ public:
     return this;
   }
 
-  enum orientType
+  enum OrientType
   {
-    vertical   = 0,
-    horizontal = 1,
-    both       = 2
+    eVertical,
+    eHorizontal,
+    eBoth
   };
 
   InternalScrollPortEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollPortEventClass)
-    , orient(vertical)
+    , mOrient(eVertical)
   {
   }
 
@@ -57,14 +57,14 @@ public:
     return result;
   }
 
-  orientType orient;
+  OrientType mOrient;
 
   void AssignScrollPortEventData(const InternalScrollPortEvent& aEvent,
                                  bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    orient = aEvent.orient;
+    mOrient = aEvent.mOrient;
   }
 };
 

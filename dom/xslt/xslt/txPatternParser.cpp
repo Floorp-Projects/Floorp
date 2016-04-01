@@ -130,7 +130,7 @@ nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
             // id(Literal) or key(Literal, Literal)
             {
                 nsCOMPtr<nsIAtom> nameAtom =
-                    do_GetAtom(aLexer.nextToken()->Value());
+                    NS_Atomize(aLexer.nextToken()->Value());
                 if (nameAtom == nsGkAtoms::id) {
                     rv = createIdPattern(aLexer, stepPattern);
                 }

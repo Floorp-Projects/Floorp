@@ -30,7 +30,7 @@ class MessagePump : public base::MessagePumpDefault
   friend class DoWorkRunnable;
 
 public:
-  MessagePump();
+  explicit MessagePump(nsIThread* aThread);
 
   // From base::MessagePump.
   virtual void
@@ -56,10 +56,11 @@ private:
   void DoDelayedWork(base::MessagePump::Delegate* aDelegate);
 
 protected:
+  nsIThread* mThread;
+
   // mDelayedWorkTimer and mThread are set in Run() by this class or its
   // subclasses.
   nsCOMPtr<nsITimer> mDelayedWorkTimer;
-  nsIThread* mThread;
 
 private:
   // Only accessed by this class.
@@ -70,7 +71,8 @@ class MessagePumpForChildProcess final: public MessagePump
 {
 public:
   MessagePumpForChildProcess()
-  : mFirstRun(true)
+    : MessagePump(nullptr),
+      mFirstRun(true)
   { }
 
   virtual void Run(base::MessagePump::Delegate* aDelegate) override;
@@ -85,7 +87,8 @@ private:
 class MessagePumpForNonMainThreads final : public MessagePump
 {
 public:
-  MessagePumpForNonMainThreads()
+  explicit MessagePumpForNonMainThreads(nsIThread* aThread)
+    : MessagePump(aThread)
   { }
 
   virtual void Run(base::MessagePump::Delegate* aDelegate) override;
@@ -116,8 +119,7 @@ public:
   NS_DECL_NSITHREADOBSERVER
 
 public:
-  MessagePumpForNonMainUIThreads() :
-    mThread(nullptr),
+  explicit MessagePumpForNonMainUIThreads(nsIThread* aThread) :
     mInWait(false),
     mWaitLock("mInWait")
   {
@@ -127,8 +129,6 @@ public:
   virtual void DoRunLoop() override;
 
 protected:
-  nsIThread* mThread;
-
   void SetInWait() {
     MutexAutoLock lock(mWaitLock);
     mInWait = true;
