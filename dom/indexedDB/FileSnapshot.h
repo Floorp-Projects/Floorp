@@ -55,7 +55,7 @@ private:
 
   // BlobImpl
   virtual void
-  GetName(nsAString& aName) override
+  GetName(nsAString& aName) const override
   {
     mBlobImpl->GetName(aName);
   }
