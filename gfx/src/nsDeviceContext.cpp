@@ -144,7 +144,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
                 mFontMetrics.AppendElement(fm);
             }
             fm->GetThebesFontGroup()->UpdateUserFonts();
-            return do_AddRef(Move(fm));
+            return do_AddRef(fm);
         }
     }
 
