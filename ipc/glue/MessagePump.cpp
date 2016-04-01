@@ -236,7 +236,10 @@ DoWorkRunnable::Notify(nsITimer* aTimer)
   MessageLoop* loop = MessageLoop::current();
   MOZ_ASSERT(loop);
 
+  bool nestableTasksAllowed = loop->NestableTasksAllowed();
+  loop->SetNestableTasksAllowed(true);
   mPump->DoDelayedWork(loop);
+  loop->SetNestableTasksAllowed(nestableTasksAllowed);
 
   return NS_OK;
 }
