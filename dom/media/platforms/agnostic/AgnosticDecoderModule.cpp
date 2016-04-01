@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AgnosticDecoderModule.h"
+#include "mozilla/Logging.h"
 #include "OpusDecoder.h"
 #include "VorbisDecoder.h"
 #include "VPXDecoder.h"
@@ -16,10 +17,14 @@ bool
 AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType,
                                         DecoderDoctorDiagnostics* aDiagnostics) const
 {
-  return VPXDecoder::IsVPX(aMimeType) ||
+  bool supports =
+    VPXDecoder::IsVPX(aMimeType) ||
     OpusDataDecoder::IsOpus(aMimeType) ||
     VorbisDataDecoder::IsVorbis(aMimeType) ||
     WaveDataDecoder::IsWave(aMimeType);
+  MOZ_LOG(sPDMLog, LogLevel::Debug, ("Agnostic decoder %s requested type",
+        supports ? "supports" : "rejects"));
+  return supports;
 }
 
 already_AddRefed<MediaDataDecoder>
