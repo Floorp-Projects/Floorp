@@ -979,6 +979,8 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
       // Update CSS animations in case the animation-name has just changed.
       PresContext()->AnimationManager()->UpdateAnimations(result,
                                                           aElementForAnimation);
+      PresContext()->EffectCompositor()->UpdateEffectProperties(
+        result, aElementForAnimation, result->GetPseudoType());
 
       animRule = PresContext()->EffectCompositor()->
                    GetAnimationRule(aElementForAnimation,
