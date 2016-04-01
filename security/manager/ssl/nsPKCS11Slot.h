@@ -29,14 +29,13 @@ protected:
   virtual ~nsPKCS11Slot();
 
 private:
-
   PK11SlotInfo *mSlot;
   nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
   int mSeries;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
-  void refreshSlotInfo();
+  void refreshSlotInfo(const nsNSSShutDownPreventionLock& proofOfLock);
 };
 
 class nsPKCS11Module : public nsIPKCS11Module,
@@ -58,8 +57,9 @@ private:
   void destructorSafeDestroyNSSReference();
 };
 
-class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB,
-                         public nsICryptoFIPSInfo
+class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB
+                       , public nsICryptoFIPSInfo
+                       , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -70,7 +70,9 @@ public:
 
 protected:
   virtual ~nsPKCS11ModuleDB();
-  /* additional members */
+
+  // Nothing to release.
+  virtual void virtualDestroyNSSReference() override {}
 };
 
 #define NS_PKCS11MODULEDB_CID \
