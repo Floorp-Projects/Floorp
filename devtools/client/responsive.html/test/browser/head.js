@@ -94,3 +94,29 @@ var waitForFrameLoad = Task.async(function*(frame, targetURL) {
   }
   yield once(frame, "load");
 });
+
+function waitForViewportResizeTo(ui, width, height) {
+  return new Promise(resolve => {
+    let onResize = (_, data) => {
+      if (data.width != width || data.height != height) {
+        return;
+      }
+      ui.off("content-resize", onResize);
+      info(`Got content-resize to ${width} x ${height}`);
+      resolve();
+    };
+    info(`Waiting for content-resize to ${width} x ${height}`);
+    ui.on("content-resize", onResize);
+  });
+}
+
+var setViewportSize = Task.async(function*(ui, manager, width, height) {
+  let size = ui.getViewportSize();
+  info(`Current size: ${size.width} x ${size.height}, ` +
+       `set to: ${width} x ${height}`);
+  if (size.width != width || size.height != height) {
+    let resized = waitForViewportResizeTo(ui, width, height);
+    ui.setViewportSize(width, height);
+    yield resized;
+  }
+});

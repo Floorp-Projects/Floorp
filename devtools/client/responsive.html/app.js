@@ -39,6 +39,14 @@ let App = createClass({
     this.props.dispatch(changeDevice(id, device));
   },
 
+  onContentResize({ width, height }) {
+    window.postMessage({
+      type: "content-resize",
+      width,
+      height,
+    }, "*");
+  },
+
   onExit() {
     window.postMessage({ type: "exit" }, "*");
   },
@@ -64,8 +72,9 @@ let App = createClass({
     } = this.props;
 
     let {
-      onChangeViewportDevice,
       onBrowserMounted,
+      onChangeViewportDevice,
+      onContentResize,
       onExit,
       onResizeViewport,
       onRotateViewport,
@@ -88,6 +97,7 @@ let App = createClass({
         viewports,
         onBrowserMounted,
         onChangeViewportDevice,
+        onContentResize,
         onRotateViewport,
         onResizeViewport,
       })
