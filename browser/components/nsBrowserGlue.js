@@ -1238,7 +1238,8 @@ BrowserGlue.prototype = {
     if (AppConstants.E10S_TESTING_ONLY) {
       E10SUINotification.checkStatus();
     }
-    if (AppConstants.platform == "win") {
+    if (AppConstants.platform == "win" ||
+        AppConstants.platform == "macosx") {
       // Handles prompting to inform about incompatibilites when accessibility
       // and e10s are active together.
       E10SAccessibilityCheck.init();

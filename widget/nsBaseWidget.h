@@ -548,7 +548,7 @@ protected:
   bool              mUpdateCursor;
   bool              mUseAttachedEvents;
   bool              mIMEHasFocus;
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
   bool              mAccessibilityInUseFlag;
 #endif
   static nsIRollupListener* gRollupListener;
