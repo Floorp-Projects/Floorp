@@ -864,81 +864,6 @@ struct KeyframeValue
   StyleAnimationValue mValue;
 };
 
-/**
- * Represents a relative position for a value in a keyframe animation.
- */
-enum class ValuePosition
-{
-  First,  // value at 0 used for reverse filling
-  Left,   // value coming in to a given offset
-  Right,  // value coming out from a given offset
-  Last    // value at 1 used for forward filling
-};
-
-/**
- * A single value in a keyframe animation, used by GetFrames to produce a
- * minimal set of keyframe objects.
- */
-struct OrderedKeyframeValueEntry : KeyframeValue
-{
-  float mOffset;
-  const Maybe<ComputedTimingFunction>* mTimingFunction;
-  ValuePosition mPosition;
-
-  bool SameKeyframe(const OrderedKeyframeValueEntry& aOther) const
-  {
-    return mOffset == aOther.mOffset &&
-           !!mTimingFunction == !!aOther.mTimingFunction &&
-           (!mTimingFunction || *mTimingFunction == *aOther.mTimingFunction) &&
-           mPosition == aOther.mPosition;
-  }
-
-  struct ForKeyframeGenerationComparator
-  {
-    static bool Equals(const OrderedKeyframeValueEntry& aLhs,
-                       const OrderedKeyframeValueEntry& aRhs)
-    {
-      return aLhs.SameKeyframe(aRhs) &&
-             aLhs.mProperty == aRhs.mProperty;
-    }
-    static bool LessThan(const OrderedKeyframeValueEntry& aLhs,
-                         const OrderedKeyframeValueEntry& aRhs)
-    {
-      // First, sort by offset.
-      if (aLhs.mOffset != aRhs.mOffset) {
-        return aLhs.mOffset < aRhs.mOffset;
-      }
-
-      // Second, by position.
-      if (aLhs.mPosition != aRhs.mPosition) {
-        return aLhs.mPosition < aRhs.mPosition;
-      }
-
-      // Third, by easing.
-      if (aLhs.mTimingFunction) {
-        if (aRhs.mTimingFunction) {
-          int32_t order =
-            ComputedTimingFunction::Compare(*aLhs.mTimingFunction,
-                                            *aRhs.mTimingFunction);
-          if (order != 0) {
-            return order < 0;
-          }
-        } else {
-          return true;
-        }
-      } else {
-        if (aRhs.mTimingFunction) {
-          return false;
-        }
-      }
-
-      // Last, by property IDL name.
-      return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty) <
-             nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
-    }
-  };
-};
-
 /* static */ already_AddRefed<KeyframeEffectReadOnly>
 KeyframeEffectReadOnly::Constructor(
     const GlobalObject& aGlobal,
@@ -1065,22 +990,20 @@ KeyframeEffectReadOnly::GetProperties(
   }
 }
 
-// TODO: This will eventually become the new GetFrames
-static void
-GetFramesFromFrames(JSContext*& aCx,
-                    const nsTArray<Keyframe>& aFrames,
-                    nsTArray<JSObject*>& aResult,
-                    ErrorResult& aRv)
+void
+KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
+                                  nsTArray<JSObject*>& aResult,
+                                  ErrorResult& aRv)
 {
   MOZ_ASSERT(aResult.IsEmpty());
   MOZ_ASSERT(!aRv.Failed());
 
-  if (!aResult.SetCapacity(aFrames.Length(), mozilla::fallible)) {
+  if (!aResult.SetCapacity(mFrames.Length(), mozilla::fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  for (const Keyframe& keyframe : aFrames) {
+  for (const Keyframe& keyframe : mFrames) {
     // Set up a dictionary object for the explicit members
     BaseComputedKeyframe keyframeDict;
     if (keyframe.mOffset) {
@@ -1125,109 +1048,6 @@ GetFramesFromFrames(JSContext*& aCx,
     }
 
     aResult.AppendElement(keyframeObject);
-  }
-}
-
-void
-KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
-                                  nsTArray<JSObject*>& aResult,
-                                  ErrorResult& aRv)
-{
-  // Use the specified frames if we have any
-  if (!mFrames.IsEmpty()) {
-    GetFramesFromFrames(aCx, mFrames, aResult, aRv);
-    return;
-  }
-
-  nsTArray<OrderedKeyframeValueEntry> entries;
-
-  for (const AnimationProperty& property : mProperties) {
-    for (size_t i = 0, n = property.mSegments.Length(); i < n; i++) {
-      const AnimationPropertySegment& segment = property.mSegments[i];
-
-      // We append the mFromValue for each segment.  If the mToValue
-      // differs from the following segment's mFromValue, or if we're on
-      // the last segment, then we append the mToValue as well.
-      //
-      // Each value is annotated with whether it is a "first", "left", "right",
-      // or "last" value.  "left" and "right" values represent the value coming
-      // in to and out of a given offset, in the middle of an animation.  For
-      // most segments, the mToValue is the "left" and the following segment's
-      // mFromValue is the "right".  The "first" and "last" values are the
-      // additional values assigned to offset 0 or 1 for reverse and forward
-      // filling.  These annotations are used to ensure multiple values for a
-      // given property are sorted correctly and that we do not merge Keyframes
-      // with different values for the same offset.
-
-      OrderedKeyframeValueEntry* entry = entries.AppendElement();
-      entry->mProperty = property.mProperty;
-      entry->mValue = segment.mFromValue;
-      entry->mOffset = segment.mFromKey;
-      entry->mTimingFunction = &segment.mTimingFunction;
-      entry->mPosition =
-        segment.mFromKey == segment.mToKey && segment.mFromKey == 0.0f ?
-          ValuePosition::First :
-          ValuePosition::Right;
-
-      if (i == n - 1 ||
-          segment.mToValue != property.mSegments[i + 1].mFromValue) {
-        entry = entries.AppendElement();
-        entry->mProperty = property.mProperty;
-        entry->mValue = segment.mToValue;
-        entry->mOffset = segment.mToKey;
-        entry->mTimingFunction = segment.mToKey == 1.0f ?
-          nullptr : &segment.mTimingFunction;
-        entry->mPosition =
-          segment.mFromKey == segment.mToKey && segment.mToKey == 1.0f ?
-            ValuePosition::Last :
-            ValuePosition::Left;
-      }
-    }
-  }
-
-  entries.Sort(OrderedKeyframeValueEntry::ForKeyframeGenerationComparator());
-
-  for (size_t i = 0, n = entries.Length(); i < n; ) {
-    OrderedKeyframeValueEntry* entry = &entries[i];
-    OrderedKeyframeValueEntry* previousEntry = nullptr;
-
-    // Create a JS object with the BaseComputedKeyframe dictionary members.
-    BaseComputedKeyframe keyframeDict;
-    keyframeDict.mOffset.SetValue(entry->mOffset);
-    keyframeDict.mComputedOffset.Construct(entry->mOffset);
-    if (entry->mTimingFunction && entry->mTimingFunction->isSome()) {
-      // If null, leave easing as its default "linear".
-      keyframeDict.mEasing.Truncate();
-      entry->mTimingFunction->value().AppendToString(keyframeDict.mEasing);
-    }
-
-    JS::Rooted<JS::Value> keyframeJSValue(aCx);
-    if (!ToJSValue(aCx, keyframeDict, &keyframeJSValue)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    JS::Rooted<JSObject*> keyframe(aCx, &keyframeJSValue.toObject());
-    do {
-      const char* name = nsCSSProps::PropertyIDLName(entry->mProperty);
-      nsString stringValue;
-      StyleAnimationValue::UncomputeValue(entry->mProperty,
-                                          entry->mValue,
-                                          stringValue);
-      JS::Rooted<JS::Value> value(aCx);
-      if (!ToJSValue(aCx, stringValue, &value) ||
-          !JS_DefineProperty(aCx, keyframe, name, value, JSPROP_ENUMERATE)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      if (++i == n) {
-        break;
-      }
-      previousEntry = entry;
-      entry = &entries[i];
-    } while (entry->SameKeyframe(*previousEntry));
-
-    aResult.AppendElement(keyframe);
   }
 }
 
