@@ -385,9 +385,17 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     result.mProgress.SetValue(1.0 - result.mProgress.Value());
   }
 
+  if ((result.mPhase == ComputedTiming::AnimationPhase::After &&
+       thisIterationReverse) ||
+      (result.mPhase == ComputedTiming::AnimationPhase::Before &&
+       !thisIterationReverse)) {
+    result.mBeforeFlag = ComputedTimingFunction::BeforeFlag::Set;
+  }
+
   if (aTiming.mFunction) {
     result.mProgress.SetValue(
-      aTiming.mFunction->GetValue(result.mProgress.Value()));
+      aTiming.mFunction->GetValue(result.mProgress.Value(),
+                                  result.mBeforeFlag));
   }
 
   return result;
@@ -607,7 +615,8 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       (segment->mToKey - segment->mFromKey);
     double valuePosition =
       ComputedTimingFunction::GetPortion(segment->mTimingFunction,
-                                         positionInSegment);
+                                         positionInSegment,
+                                         computedTiming.mBeforeFlag);
 
 #ifdef DEBUG
     bool result =

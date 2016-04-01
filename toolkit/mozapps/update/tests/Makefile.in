@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPCSHELLTESTROOT = $(topobjdir)/_tests/xpcshell/$(relativesrcdir)
-CHROMETESTROOT = $(topobjdir)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 pp_const_file = $(srcdir)/data/xpcshellConstantsPP.js
 
@@ -12,30 +11,6 @@ aus-test-const        := $(pp_const_file)
 aus-test-const_PATH   := $(XPCSHELLTESTROOT)/data
 aus-test-const_FLAGS  := -Fsubstitution $(DEFINES) $(ACDEFINES)
 aus-test-const_TARGET := misc
-
-INSTALL_TARGETS      += xpcshell-data
-xpcshell-data_FILES  := $(filter-out $(pp_const_file),$(wildcard $(srcdir)/data/*))
-xpcshell-data_DEST   := $(XPCSHELLTESTROOT)/data
-xpcshell-data_TARGET := misc
-
-ifndef MOZ_PROFILE_GENERATE
-ifdef COMPILE_ENVIRONMENT
-INSTALL_TARGETS        += xpcshell-helper
-xpcshell-helper_FILES  := $(DIST)/bin/TestAUSHelper$(BIN_SUFFIX)
-xpcshell-helper_DEST   := $(XPCSHELLTESTROOT)/data
-xpcshell-helper_TARGET := misc
-endif
-endif # Not MOZ_PROFILE_GENERATE
-
-_CHROME_DATA := \
-  shared.js \
-  sharedUpdateXML.js \
-  simple.mar \
-  $(NULL)
-INSTALL_TARGETS    += chrome-data
-chrome-data_FILES  := $(addprefix $(srcdir)/data/,$(_CHROME_DATA))
-chrome-data_DEST   := $(CHROMETESTROOT)/data
-chrome-data_TARGET := misc
 
 INI_TEST_FILES = \
   TestAUSReadStrings1.ini \

@@ -160,19 +160,19 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
-    WriteParam(aMsg, aParam.deltaX);
-    WriteParam(aMsg, aParam.deltaY);
-    WriteParam(aMsg, aParam.deltaZ);
-    WriteParam(aMsg, aParam.deltaMode);
-    WriteParam(aMsg, aParam.customizedByUserPrefs);
-    WriteParam(aMsg, aParam.mayHaveMomentum);
-    WriteParam(aMsg, aParam.isMomentum);
+    WriteParam(aMsg, aParam.mDeltaX);
+    WriteParam(aMsg, aParam.mDeltaY);
+    WriteParam(aMsg, aParam.mDeltaZ);
+    WriteParam(aMsg, aParam.mDeltaMode);
+    WriteParam(aMsg, aParam.mCustomizedByUserPrefs);
+    WriteParam(aMsg, aParam.mMayHaveMomentum);
+    WriteParam(aMsg, aParam.mIsMomentum);
     WriteParam(aMsg, aParam.mIsNoLineOrPageDelta);
-    WriteParam(aMsg, aParam.lineOrPageDeltaX);
-    WriteParam(aMsg, aParam.lineOrPageDeltaY);
-    WriteParam(aMsg, static_cast<int32_t>(aParam.scrollType));
-    WriteParam(aMsg, aParam.overflowDeltaX);
-    WriteParam(aMsg, aParam.overflowDeltaY);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaX);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaY);
+    WriteParam(aMsg, static_cast<uint8_t>(aParam.mScrollType));
+    WriteParam(aMsg, aParam.mOverflowDeltaX);
+    WriteParam(aMsg, aParam.mOverflowDeltaY);
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
     WriteParam(aMsg, aParam.mCanTriggerSwipe);
     WriteParam(aMsg, aParam.mAllowToOverrideSystemScrollSpeed);
@@ -180,27 +180,27 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    int32_t scrollType = 0;
+    uint8_t scrollType = 0;
     bool rv =
       ReadParam(aMsg, aIter,
                 static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
-      ReadParam(aMsg, aIter, &aResult->deltaX) &&
-      ReadParam(aMsg, aIter, &aResult->deltaY) &&
-      ReadParam(aMsg, aIter, &aResult->deltaZ) &&
-      ReadParam(aMsg, aIter, &aResult->deltaMode) &&
-      ReadParam(aMsg, aIter, &aResult->customizedByUserPrefs) &&
-      ReadParam(aMsg, aIter, &aResult->mayHaveMomentum) &&
-      ReadParam(aMsg, aIter, &aResult->isMomentum) &&
+      ReadParam(aMsg, aIter, &aResult->mDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->mDeltaY) &&
+      ReadParam(aMsg, aIter, &aResult->mDeltaZ) &&
+      ReadParam(aMsg, aIter, &aResult->mDeltaMode) &&
+      ReadParam(aMsg, aIter, &aResult->mCustomizedByUserPrefs) &&
+      ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
+      ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
       ReadParam(aMsg, aIter, &aResult->mIsNoLineOrPageDelta) &&
-      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaX) &&
-      ReadParam(aMsg, aIter, &aResult->lineOrPageDeltaY) &&
+      ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&
       ReadParam(aMsg, aIter, &scrollType) &&
-      ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
-      ReadParam(aMsg, aIter, &aResult->overflowDeltaY) &&
+      ReadParam(aMsg, aIter, &aResult->mOverflowDeltaX) &&
+      ReadParam(aMsg, aIter, &aResult->mOverflowDeltaY) &&
       ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled) &&
       ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe) &&
       ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed);
-    aResult->scrollType =
+    aResult->mScrollType =
       static_cast<mozilla::WidgetWheelEvent::ScrollType>(scrollType);
     return rv;
   }

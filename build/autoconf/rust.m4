@@ -47,6 +47,34 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
     # https://github.com/rust-lang/rust/tree/master/mk/cfg
     rust_target=
     case "$target" in
+      # Bitrig
+      x86_64-*-bitrig*)
+          rust_target=x86_64-unknown-bitrig
+          ;;
+
+      # DragonFly
+      x86_64-*-dragonfly*)
+          rust_target=x86_64-unknown-dragonfly
+          ;;
+
+      # FreeBSD, GNU/kFreeBSD
+      i*86-*-*freebsd*)
+          rust_target=i686-unknown-freebsd
+          ;;
+      x86_64-*-*freebsd*)
+          rust_target=x86_64-unknown-freebsd
+          ;;
+
+      # NetBSD
+      x86_64-*-netbsd*)
+          rust_target=x86_64-unknown-netbsd
+          ;;
+
+      # OpenBSD
+      x86_64-*-openbsd*)
+          rust_target=x86_64-unknown-openbsd
+          ;;
+
       # Linux
       i*86*linux-gnu)
           rust_target=i686-unknown-linux-gnu
@@ -85,21 +113,27 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
           rust_target=x86_64-pc-windows-msvc
           ;;
       *)
-          AC_ERROR([don't know how to translate $target for rustc])
+          # Fall back to implicit (native) target when not cross-compiling
+          if test -n "$CROSS_COMPILE"; then
+            AC_ERROR([don't know how to translate $target for rustc])
+          fi
+          ;;
     esac
 
-    # Check to see whether we need to pass --target to RUSTC.  This can
-    # happen when building Firefox on Windows: js's configure will receive
-    # a RUSTC from the toplevel configure that already has --target added to
-    # it.
-    rustc_target_arg=
-    case "$RUSTC" in
-      *--target=${rust_target}*)
-        ;;
-      *)
-        rustc_target_arg=--target=${rust_target}
-        ;;
-    esac
+    if test -n "$rust_target"; then
+      # Check to see whether we need to pass --target to RUSTC.  This can
+      # happen when building Firefox on Windows: js's configure will receive
+      # a RUSTC from the toplevel configure that already has --target added to
+      # it.
+      rustc_target_arg=
+      case "$RUSTC" in
+        *--target=${rust_target}*)
+          ;;
+        *)
+          rustc_target_arg=--target=${rust_target}
+          ;;
+      esac
+    fi
 
     # Check to see whether our rustc has a reasonably functional stdlib
     # for our chosen target.

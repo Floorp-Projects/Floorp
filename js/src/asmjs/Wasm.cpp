@@ -559,15 +559,12 @@ DecodeBranch(FunctionDecoder& f, Expr expr, ExprType* type)
     if (!f.d().readVarU32(&relativeDepth))
         return f.fail("expected relative depth");
 
-    if (!f.branchWithType(relativeDepth, ExprType::Void))
-        return f.fail("branch depth exceeds current nesting level");
-
-    Expr value;
-    if (!f.d().readExpr(&value))
+    ExprType brType;
+    if (!DecodeExpr(f, &brType))
         return f.fail("expected branch value");
 
-    if (value != Expr::Nop)
-        return f.fail("NYI: branch values");
+    if (!f.branchWithType(relativeDepth, brType))
+        return f.fail("branch depth exceeds current nesting level");
 
     if (expr == Expr::BrIf) {
         ExprType actual;
@@ -802,9 +799,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
                DecodeConversionOperator(f, ValType::I32, ValType::I64, type);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
-        return DecodeConversionOperator(f, ValType::I32, ValType::F32, type);
       case Expr::I32ReinterpretF32:
-        return f.fail("NYI: reinterpret");
+        return DecodeConversionOperator(f, ValType::I32, ValType::F32, type);
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
         return DecodeConversionOperator(f, ValType::I32, ValType::F64, type);
@@ -818,15 +814,13 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
                DecodeConversionOperator(f, ValType::I64, ValType::F32, type);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
+      case Expr::I64ReinterpretF64:
         return f.checkI64Support() &&
                DecodeConversionOperator(f, ValType::I64, ValType::F64, type);
-      case Expr::I64ReinterpretF64:
-        return f.fail("NYI: i64");
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
-        return DecodeConversionOperator(f, ValType::F32, ValType::I32, type);
       case Expr::F32ReinterpretI32:
-        return f.fail("NYI: reinterpret");
+        return DecodeConversionOperator(f, ValType::F32, ValType::I32, type);
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
         return f.checkI64Support() &&
@@ -838,10 +832,9 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeConversionOperator(f, ValType::F64, ValType::I32, type);
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
+      case Expr::F64ReinterpretI64:
         return f.checkI64Support() &&
                DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
-      case Expr::F64ReinterpretI64:
-        return f.fail("NYI: i64");
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, ValType::F64, ValType::F32, type);
       case Expr::I32Load8S:

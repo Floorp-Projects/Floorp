@@ -1963,36 +1963,20 @@ Accessible::NativeName(nsString& aName)
 void
 Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
 {
-  NS_PRECONDITION(aParent, "This method isn't used to set null parent!");
+  MOZ_ASSERT(aParent, "This method isn't used to set null parent");
+  MOZ_ASSERT(!mParent, "The child was expected to be moved");
 
-  if (mParent) {
-    if (mParent != aParent) {
 #ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eTree)) {
-        logging::MsgBegin("TREE", "BindToParent: stealing accessible");
-        logging::AccessibleInfo("old parent", mParent);
-        logging::AccessibleInfo("new parent", aParent);
-        logging::AccessibleInfo("child", this);
-        logging::MsgEnd();
-      }
-#endif
-      // XXX: legalize adoption. As long as we don't invalidate the children,
-      // the accessibles start to steal them.
-
-      mParent->InvalidateChildrenGroupInfo();
-      mParent->RemoveChild(this);
-    } else {
-      NS_ERROR("Binding to the same parent!");
-      return;
-    }
+  if (mParent) {
+    logging::TreeInfo("BindToParent: stealing accessible", 0,
+                      "old parent", mParent.get(),
+                      "new parent", aParent,
+                      "child", this, nullptr);
   }
+#endif
 
   mParent = aParent;
   mIndexInParent = aIndexInParent;
-
-#ifdef DEBUG
-  AssertInMutatingSubtree();
-#endif
 
   // Note: this is currently only used for richlistitems and their children.
   if (mParent->HasNameDependentParent() || mParent->IsXULListItem())
@@ -2012,9 +1996,6 @@ Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
 void
 Accessible::UnbindFromParent()
 {
-#ifdef DEBUG
-  AssertInMutatingSubtree();
-#endif
   mParent = nullptr;
   mIndexInParent = -1;
   mInt.mIndexOfEmbeddedChild = -1;
@@ -2090,13 +2071,7 @@ Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
     if (!mChildren.InsertElementAt(aIndex, aChild))
       return false;
 
-    for (uint32_t idx = aIndex + 1; idx < mChildren.Length(); idx++) {
-      NS_ASSERTION(static_cast<uint32_t>(mChildren[idx]->mIndexInParent) == idx - 1,
-                   "Accessible child index doesn't match");
-      mChildren[idx]->mIndexInParent = idx;
-    }
-
-    mEmbeddedObjCollector = nullptr;
+    MOZ_ASSERT(mStateFlags & eKidsMutating, "Illicit children change");
   }
 
   if (!nsAccUtils::IsEmbeddedObject(aChild))
@@ -2115,23 +2090,21 @@ Accessible::RemoveChild(Accessible* aChild)
   if (aChild->mParent != this || aChild->mIndexInParent == -1)
     return false;
 
-  uint32_t index = static_cast<uint32_t>(aChild->mIndexInParent);
-  if (index >= mChildren.Length() || mChildren[index] != aChild) {
-    NS_ERROR("Child is bound to parent but parent hasn't this child at its index!");
-    aChild->UnbindFromParent();
-    return false;
-  }
+  MOZ_ASSERT((mStateFlags & eKidsMutating) || aChild->IsDefunct() || aChild->IsDoc(),
+             "Illicit children change");
 
-  for (uint32_t idx = index + 1; idx < mChildren.Length(); idx++) {
-    NS_ASSERTION(static_cast<uint32_t>(mChildren[idx]->mIndexInParent) == idx,
-                 "Accessible child index doesn't match");
-    mChildren[idx]->mIndexInParent = idx - 1;
+  int32_t index = static_cast<uint32_t>(aChild->mIndexInParent);
+
+  // If we adopt a child during a tree construction, then indexes might be not
+  // rebuilt yet.
+  if (mChildren.SafeElementAt(index) != aChild) {
+    index = mChildren.IndexOf(aChild);
+    MOZ_ASSERT(index != -1,
+               "Child is bound to parent but parent hasn't this child at its index.");
   }
 
   aChild->UnbindFromParent();
   mChildren.RemoveElementAt(index);
-  mEmbeddedObjCollector = nullptr;
-
   return true;
 }
 
@@ -2144,11 +2117,6 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
   MOZ_ASSERT(static_cast<uint32_t>(aChild->mIndexInParent) != aNewIndex,
              "No move, same index");
   MOZ_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
-
-#ifdef DEBUG
-  // AutoTreeMutation should update group info.
-  AssertInMutatingSubtree();
-#endif
 
   mEmbeddedObjCollector = nullptr;
   mChildren.RemoveElementAt(aChild->mIndexInParent);
@@ -2176,6 +2144,7 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
 
   for (uint32_t idx = startIdx; idx <= endIdx; idx++) {
     mChildren[idx]->mIndexInParent = idx;
+    mChildren[idx]->mStateFlags |= eGroupInfoDirty;
     mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
   }
 }
@@ -2554,10 +2523,13 @@ Accessible::CacheChildren()
 {
   NS_ENSURE_TRUE_VOID(Document());
 
+  AutoTreeMutation mt(this);
   TreeWalker walker(this);
-
   Accessible* child = nullptr;
-  while ((child = walker.Next()) && AppendChild(child));
+  while ((child = walker.Next()) && AppendChild(child)) {
+    mt.AfterInsertion(child);
+  }
+  mt.Done();
 }
 
 void
@@ -2675,7 +2647,7 @@ Accessible::GetGroupInfo()
   if (mBits.groupInfo){
     if (HasDirtyGroupInfo()) {
       mBits.groupInfo->Update();
-      SetDirtyGroupInfo(false);
+      mStateFlags &= ~eGroupInfoDirty;
     }
 
     return mBits.groupInfo;
@@ -2683,16 +2655,6 @@ Accessible::GetGroupInfo()
 
   mBits.groupInfo = AccGroupInfo::CreateGroupInfo(this);
   return mBits.groupInfo;
-}
-
-void
-Accessible::InvalidateChildrenGroupInfo()
-{
-  uint32_t length = mChildren.Length();
-  for (uint32_t i = 0; i < length; i++) {
-    Accessible* child = mChildren[i];
-    child->SetDirtyGroupInfo(true);
-  }
 }
 
 void
@@ -2786,22 +2748,6 @@ Accessible::StaticAsserts() const
                 "Accessible::mContextFlags was oversized by eLastContextFlag!");
   static_assert(eLastAccGenericType <= (1 << kGenericTypesBits) - 1,
                 "Accessible::mGenericType was oversized by eLastAccGenericType!");
-}
-
-void
-Accessible::AssertInMutatingSubtree() const
-{
-  if (IsDoc() || IsApplication())
-    return;
-
-  const Accessible *acc = this;
-  while (!acc->IsDoc() && !(acc->mStateFlags & eSubtreeMutating)) {
-    acc = acc->Parent();
-    if (!acc)
-      return;
-  }
-
-  MOZ_ASSERT(acc->mStateFlags & eSubtreeMutating);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2899,3 +2845,33 @@ KeyBinding::ToAtkFormat(nsAString& aValue) const
   aValue.Append(mKey);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// AutoTreeMutation class
+
+void
+AutoTreeMutation::Done()
+{
+  MOZ_ASSERT(mParent->mStateFlags & Accessible::eKidsMutating,
+             "The parent is not in mutating state.");
+  mParent->mStateFlags &= ~Accessible::eKidsMutating;
+
+  uint32_t length = mParent->mChildren.Length();
+#ifdef DEBUG
+  for (uint32_t idx = 0; idx < mStartIdx && idx < length; idx++) {
+    MOZ_ASSERT(mParent->mChildren[idx]->mIndexInParent == static_cast<int32_t>(idx),
+               "Wrong index detected");
+  }
+#endif
+
+  for (uint32_t idx = mStartIdx; idx < length; idx++) {
+    mParent->mChildren[idx]->mIndexInParent = idx;
+    mParent->mChildren[idx]->mStateFlags |= Accessible::eGroupInfoDirty;
+  }
+
+  if (mStartIdx < mParent->mChildren.Length() - 1) {
+    mParent->mEmbeddedObjCollector = nullptr;
+  }
+
+  mParent->mStateFlags |= mStateFlagsCopy & Accessible::eKidsMutating;
+}

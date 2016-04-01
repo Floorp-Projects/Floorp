@@ -499,6 +499,17 @@ other kinds of objects.
     debuggee. If <i>global</i> does not designate a global object, throw a
     `TypeError`. Determine which global is designated by <i>global</i>
     using the same rules as [`Debugger.prototype.addDebuggee`][add].
+
+<code>adoptDebuggeeValue(<i>value</i>)</code>
+:    Given a debuggee value `value` owned by an arbitrary `Debugger`, return an
+     equivalent debuggee value owned by this `Debugger`.
+
+     If `value` is a primitive value, return it unchanged. If `value` is a
+     `Debugger.Object` owned by an arbitrary `Debugger`, return an equivalent
+     `Debugger.Object` owned by this `Debugger`. Otherwise, if `value` is some
+     other kind of object, and hence not a proper debuggee value, throw a
+     TypeError instead.
+
 ## Static methods of the Debugger Object
 
 The functions described below are not called with a `this` value.

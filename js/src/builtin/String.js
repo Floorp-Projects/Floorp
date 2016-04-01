@@ -4,6 +4,55 @@
 
 /*global intl_Collator: false, */
 
+/**
+ * A helper function implementing the logic for both String.prototype.padStart
+ * and String.prototype.padEnd as described in ES7 Draft March 29, 2016
+ */
+function String_pad(maxLength, fillString, padEnd=false) {
+
+    // Steps 1-2.
+    RequireObjectCoercible(this);
+    let str = ToString(this);
+
+    // Steps 3-4.
+    let intMaxLength = ToLength(maxLength);
+    let strLen = str.length;
+
+    // Step 5.
+    if (intMaxLength <= strLen)
+        return str;
+
+    // Steps 6-7.
+    let filler = fillString === undefined ? " " : ToString(fillString);
+
+    // Step 8.
+    if (filler === "")
+        return str;
+
+    // Step 9.
+    let fillLen = intMaxLength - strLen;
+
+    // Step 10.
+    let truncatedStringFiller = callFunction(String_repeat, filler,
+                                             fillLen / filler.length);
+
+    truncatedStringFiller += callFunction(String_substr, filler, 0,
+                                          fillLen % filler.length);
+
+    // Step 11.
+    if (padEnd === true)
+        return str + truncatedStringFiller;
+    return truncatedStringFiller + str;
+}
+
+function String_pad_start(maxLength, fillString=" ") {
+    return callFunction(String_pad, this, maxLength, fillString, false);
+}
+
+function String_pad_end(maxLength, fillString=" ") {
+    return callFunction(String_pad, this, maxLength, fillString, true);
+}
+
 /* ES6 Draft Oct 14, 2014 21.1.3.19 */
 function String_substring(start, end) {
     // Steps 1-3.

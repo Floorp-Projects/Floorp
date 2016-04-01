@@ -69,7 +69,7 @@ ElementPropertyTransition::CurrentValuePortion() const
              "Animation property should have one segment for a transition");
   return ComputedTimingFunction::GetPortion(
            mProperties[0].mSegments[0].mTimingFunction,
-           computedTiming.mProgress.Value());
+           computedTiming.mProgress.Value(), computedTiming.mBeforeFlag);
 }
 
 ////////////////////////// CSSTransition ////////////////////////////

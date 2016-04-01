@@ -611,9 +611,9 @@ static bool
 WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
-          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL ||
-          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE);
+         (aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
+          aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL ||
+          aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE);
 }
 
 static bool
@@ -1084,9 +1084,9 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
 {
   ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
   if (gfxPrefs::SmoothScrollEnabled() &&
-      ((aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+      ((aEvent.mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
         gfxPrefs::WheelSmoothScrollEnabled()) ||
-       (aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE &&
+       (aEvent.mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE &&
         gfxPrefs::PageSmoothScrollEnabled())))
   {
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
@@ -1095,16 +1095,17 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
   ScreenPoint origin(aEvent.refPoint.x, aEvent.refPoint.y);
   ScrollWheelInput input(aEvent.mTime, aEvent.mTimeStamp, 0,
                          scrollMode,
-                         ScrollWheelInput::DeltaTypeForDeltaMode(aEvent.deltaMode),
+                         ScrollWheelInput::DeltaTypeForDeltaMode(
+                                             aEvent.mDeltaMode),
                          origin,
-                         aEvent.deltaX, aEvent.deltaY,
+                         aEvent.mDeltaX, aEvent.mDeltaY,
                          aEvent.mAllowToOverrideSystemScrollSpeed);
 
   // We add the user multiplier as a separate field, rather than premultiplying
   // it, because if the input is converted back to a WidgetWheelEvent, then
   // EventStateManager would apply the delta a second time. We could in theory
   // work around this by asking ESM to customize the event much sooner, and
-  // then save the "customizedByUserPrefs" bit on ScrollWheelInput - but for
+  // then save the "mCustomizedByUserPrefs" bit on ScrollWheelInput - but for
   // now, this seems easier.
   EventStateManager::GetUserPrefsForWheelEvent(&aEvent,
     &input.mUserDeltaMultiplierX,
