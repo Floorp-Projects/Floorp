@@ -23,6 +23,7 @@ class nsCSSPropertySet;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
+struct Keyframe;
 struct StyleTransition;
 } // namespace mozilla
 
@@ -354,6 +355,13 @@ protected:
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,
                              nsCSSPropertySet* aWhichStarted);
+
+  nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
+    nsStyleContext* aStyleContext,
+    nsCSSProperty aProperty,
+    mozilla::StyleAnimationValue&& aStartValue,
+    mozilla::StyleAnimationValue&& aEndValue,
+    const nsTimingFunction& aTimingFunction);
 
   bool mInAnimationOnlyStyleUpdate;
 
