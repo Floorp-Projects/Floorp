@@ -831,6 +831,7 @@ describe("loop.shared.views", function() {
         matchMedia: window.matchMedia,
         renderRemoteVideo: false,
         showInitialContext: false,
+        showMediaWait: false,
         showTile: false
       };
 
@@ -967,6 +968,24 @@ describe("loop.shared.views", function() {
 
       expect(view.getDOMNode().querySelector(".media-wrapper")
         .classList.contains("showing-remote-streams")).eql(true);
+    });
+
+    it("should mark the wrapper as showing media wait tile when asking for user media", function() {
+      view = mountTestComponent({
+        showMediaWait: true
+      });
+
+      expect(view.getDOMNode().querySelector(".media-wrapper")
+        .classList.contains("showing-media-wait")).eql(true);
+    });
+
+    it("should display a media wait tile when asking for user media", function() {
+      view = mountTestComponent({
+        showMediaWait: true
+      });
+
+      expect(view.getDOMNode().querySelector(".prompt-media-message-wrapper"))
+        .not.eql(null);
     });
   });
 

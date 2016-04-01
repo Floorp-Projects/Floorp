@@ -8,7 +8,8 @@
               android:layout_height="wrap_content"
               android:minHeight="?android:attr/listPreferredItemHeight"
               android:gravity="center_vertical"
-              android:paddingLeft="15dp"
+              android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+              android:paddingStart="?android:attr/listPreferredItemPaddingStart"
               android:paddingRight="?android:attr/scrollbarSize">
 
     <org.mozilla.gecko.widget.FaviconView

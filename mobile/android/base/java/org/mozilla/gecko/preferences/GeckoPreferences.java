@@ -24,7 +24,6 @@ import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -35,6 +34,7 @@ import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.restrictions.Restrictable;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
@@ -73,6 +73,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.SwitchPreference;
 import android.preference.TwoStatePreference;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
@@ -157,6 +158,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_FAQ_LINK = NON_PREF_PREFIX + "faq.link";
     private static final String PREFS_FEEDBACK_LINK = NON_PREF_PREFIX + "feedback.link";
     public static final String PREFS_NOTIFICATIONS_CONTENT = NON_PREF_PREFIX + "notifications.content";
+    public static final String PREFS_NOTIFICATIONS_WHATS_NEW = NON_PREF_PREFIX + "notifications.whats_new";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -182,7 +184,7 @@ OnSharedPreferenceChangeListener
 
     private static final int REQUEST_CODE_TAB_QUEUE = 8;
 
-    private CheckBoxPreference tabQueuePreference;
+    private SwitchPreference tabQueuePreference;
 
     /**
      * Track the last locale so we know whether to redisplay.
@@ -797,7 +799,7 @@ OnSharedPreferenceChangeListener
                         }
                     });
                 } else if (PREFS_TAB_QUEUE.equals(key)) {
-                    tabQueuePreference = (CheckBoxPreference) pref;
+                    tabQueuePreference = (SwitchPreference) pref;
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
                     if (!TabQueueHelper.TAB_QUEUE_ENABLED) {
                         preferences.removePreference(pref);

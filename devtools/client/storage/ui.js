@@ -153,6 +153,8 @@ StorageUI.prototype = {
     if (typeof actor.getEditableFields !== "undefined") {
       actor.getEditableFields().then(fields => {
         this.table.makeFieldsEditable(fields);
+      }).catch(() => {
+        // Do nothing
       });
     } else if (this.table._editableFieldsEngine) {
       this.table._editableFieldsEngine.destroy();
@@ -375,6 +377,7 @@ StorageUI.prototype = {
       if (this.shouldResetColumns) {
         this.resetColumns(data[0], type);
       }
+      this.table.host = host;
       this.populateTable(data, reason);
       this.emit("store-objects-updated");
 

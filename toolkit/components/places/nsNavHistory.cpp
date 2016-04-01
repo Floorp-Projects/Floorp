@@ -2789,41 +2789,6 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 }
 
 
-// nsNavHistory::RemoveAllPages
-//
-//    This function is used to clear history.
-
-NS_IMETHODIMP
-nsNavHistory::RemoveAllPages()
-{
-  PLACES_WARN_DEPRECATED();
-
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-  nsresult rv = mDB->MainConn()->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_historyvisits"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Clear the registered embed visits.
-  clearEmbedVisits();
-
-  // Update the cached value for whether there's history or not.
-  mDaysOfHistory = 0;
-
-  // Expiration will take care of orphans.
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver, OnClearHistory());
-
-  // Invalidate frecencies for the remaining places.  This must happen
-  // after the notification to ensure it runs enqueued to expiration.
-  rv = invalidateFrecencies(EmptyCString());
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to fix invalid frecencies");
-
-  return NS_OK;
-}
-
-
 // Call this method before visiting a URL in order to help determine the
 // transition type of the visit.
 //

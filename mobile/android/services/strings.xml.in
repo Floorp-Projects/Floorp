@@ -12,7 +12,7 @@
 <string name="bookmarks_folder_places">&bookmarks.folder.places.label;</string>
 <string name="bookmarks_folder_tags">&bookmarks.folder.tags.label;</string>
 <string name="bookmarks_folder_toolbar">&bookmarks.folder.toolbar.label;</string>
-<string name="bookmarks_folder_unfiled">&bookmarks.folder.unfiled.label;</string>
+<string name="bookmarks_folder_unfiled">&bookmarks.folder.other.label;</string>
 <string name="bookmarks_folder_desktop">&bookmarks.folder.desktop.label;</string>
 <string name="bookmarks_folder_mobile">&bookmarks.folder.mobile.label;</string>
 <string name="bookmarks_folder_pinned">&bookmarks.folder.pinned.label;</string>

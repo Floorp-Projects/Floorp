@@ -171,17 +171,15 @@ VariablesViewController.prototype = {
    *        The Scope where the properties will be placed into.
    * @param object aGrip
    *        The property iterator grip.
-   * @param object aIterator
-   *        The property iterator client.
    */
-  _populatePropertySlices: function(aTarget, aGrip, aIterator) {
+  _populatePropertySlices: function(aTarget, aGrip) {
     if (aGrip.count < MAX_PROPERTY_ITEMS) {
       return this._populateFromPropertyIterator(aTarget, aGrip);
     }
 
     // Divide the keys into quarters.
     let items = Math.ceil(aGrip.count / 4);
-
+    let iterator = aGrip.propertyIterator;
     let promises = [];
     for(let i = 0; i < 4; i++) {
       let start = aGrip.start + i * items;
@@ -190,16 +188,16 @@ VariablesViewController.prototype = {
       // Create a new kind of grip, with additional fields to define the slice
       let sliceGrip = {
         type: "property-iterator",
-        propertyIterator: aIterator,
+        propertyIterator: iterator,
         start: start,
         count: count
       };
 
       // Query the name of the first and last items for this slice
       let deferred = promise.defer();
-      aIterator.names([start, start + count - 1], ({ names }) => {
+      iterator.names([start, start + count - 1], ({ names }) => {
         let label = "[" + names[0] + L10N.ellipsis + names[1] + "]";
-        let item = aTarget.addItem(label);
+        let item = aTarget.addItem(label, {}, { internalItem: true });
         item.showArrow();
         this.addExpander(item, sliceGrip);
         deferred.resolve();
@@ -222,7 +220,7 @@ VariablesViewController.prototype = {
   _populateFromPropertyIterator: function(aTarget, aGrip) {
     if (aGrip.count >= MAX_PROPERTY_ITEMS) {
       // We already started to split, but there is still too many properties, split again.
-      return this._populatePropertySlices(aTarget, aGrip, aGrip.propertyIterator);
+      return this._populatePropertySlices(aTarget, aGrip);
     }
     // We started slicing properties, and the slice is now small enough to be displayed
     let deferred = promise.defer();
@@ -272,7 +270,7 @@ VariablesViewController.prototype = {
           start: 0,
           count: iterator.count
         };
-        this._populatePropertySlices(aTarget, sliceGrip, iterator)
+        this._populatePropertySlices(aTarget, sliceGrip)
             .then(() => {
           // Then enumerate the rest of the properties, like length, buffer, etc.
           let options = {
@@ -287,7 +285,7 @@ VariablesViewController.prototype = {
               start: 0,
               count: iterator.count
             };
-            deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip, iterator));
+            deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
           });
         });
       });
@@ -300,7 +298,7 @@ VariablesViewController.prototype = {
           start: 0,
           count: iterator.count
         };
-        deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip, iterator));
+        deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
       });
 
     }
@@ -333,6 +331,27 @@ VariablesViewController.prototype = {
    *        The grip to use to populate the target.
    */
   _populateFromObject: function(aTarget, aGrip) {
+    if (aGrip.class === "Promise" && aGrip.promiseState) {
+      const { state, value, reason } = aGrip.promiseState;
+      aTarget.addItem("<state>", { value: state }, { internalItem: true });
+      if (state === "fulfilled") {
+        this.addExpander(
+          aTarget.addItem("<value>", { value }, { internalItem: true }),
+          value);
+      } else if (state === "rejected") {
+        this.addExpander(
+          aTarget.addItem("<reason>", { value: reason }, { internalItem: true }),
+          reason);
+      }
+    } else if (["Map", "WeakMap", "Set", "WeakSet"].includes(aGrip.class)) {
+      let entriesList = aTarget.addItem("<entries>", {}, { internalItem: true });
+      entriesList.showArrow();
+      this.addExpander(entriesList, {
+        type: "entries-list",
+        obj: aGrip
+      });
+    }
+
     // Fetch properties by slices if there is too many in order to prevent UI freeze.
     if ("ownPropertyLength" in aGrip && aGrip.ownPropertyLength >= MAX_PROPERTY_ITEMS) {
       return this._populateFromObjectWithIterator(aTarget, aGrip)
@@ -347,15 +366,6 @@ VariablesViewController.prototype = {
                  });
     }
 
-    if (aGrip.class === "Promise" && aGrip.promiseState) {
-      const { state, value, reason } = aGrip.promiseState;
-      aTarget.addItem("<state>", { value: state });
-      if (state === "fulfilled") {
-        this.addExpander(aTarget.addItem("<value>", { value }), value);
-      } else if (state === "rejected") {
-        this.addExpander(aTarget.addItem("<reason>", { value: reason }), reason);
-      }
-    }
     return this._populateProperties(aTarget, aGrip);
   },
 
@@ -488,6 +498,30 @@ VariablesViewController.prototype = {
     });
   },
 
+  _populateFromEntries: function(target, grip) {
+    let objGrip = grip.obj;
+    let objectClient = this._getObjectClient(objGrip);
+
+    return new promise((resolve, reject) => {
+      objectClient.enumEntries((response) => {
+        if (response.error) {
+          // Older server might not support the enumEntries method
+          console.warn(response.error + ": " + response.message);
+          resolve();
+        } else {
+          let sliceGrip = {
+            type: "property-iterator",
+            propertyIterator: response.iterator,
+            start: 0,
+            count: response.iterator.count
+          };
+
+          resolve(this._populatePropertySlices(target, sliceGrip));
+        }
+      });
+    });
+  },
+
   /**
    * Adds an 'onexpand' callback for a variable, lazily handling
    * the addition of new properties.
@@ -568,6 +602,21 @@ VariablesViewController.prototype = {
 
     if (aSource.type === "property-iterator") {
       return this._populateFromPropertyIterator(aTarget, aSource);
+    }
+
+    if (aSource.type === "entries-list") {
+      return this._populateFromEntries(aTarget, aSource);
+    }
+
+    if (aSource.type === "mapEntry") {
+      aTarget.addItems({
+        key: { value: aSource.preview.key },
+        value: { value: aSource.preview.value }
+      }, {
+        callback: this.addExpander
+      });
+
+      return promise.resolve();
     }
 
     // If the target is a Variable or Property then we're fetching properties.

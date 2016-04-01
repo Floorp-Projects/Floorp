@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+          style="@style/Widget.FolderView"
+          android:layout_width="match_parent"
+          android:text="@string/home_history_back_to"
+          android:paddingLeft="24dp"
+          android:drawablePadding="24dp"
+          android:drawableLeft="@drawable/arrow_up"
+          android:gravity="center_vertical"/>

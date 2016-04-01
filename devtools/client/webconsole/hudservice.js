@@ -589,11 +589,13 @@ WebConsole.prototype = {
     }
 
     let onDestroy = Task.async(function*() {
-      try {
-        yield this.target.activeTab.focus()
-      }
-      catch (ex) {
-        // Tab focus can fail if the tab or target is closed.
+      if (!this._browserConsole) {
+        try {
+          yield this.target.activeTab.focus();
+        }
+        catch (ex) {
+          // Tab focus can fail if the tab or target is closed.
+        }
       }
 
       let id = WebConsoleUtils.supportsString(this.hudId);

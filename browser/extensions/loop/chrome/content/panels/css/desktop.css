@@ -30,7 +30,6 @@
 }
 
 .room-invitation-content > * {
-  width: 100%;
   margin: 0 15px;
 }
 
@@ -228,10 +227,6 @@ html[dir="rtl"] .share-panel-container > .room-invitation-overlay {
 
 .share-panel-container > .room-invitation-overlay > .room-invitation-content {
   margin: 0 0 12px;
-}
-
-.share-panel-container > .room-invitation-overlay > .room-invitation-content > * {
-  width: initial;
 }
 
 .share-panel-open > .room-invitation-overlay,

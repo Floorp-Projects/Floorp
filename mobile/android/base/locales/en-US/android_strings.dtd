@@ -166,7 +166,7 @@
 <!ENTITY pref_category_advanced_summary2 "Restore tabs, plugins, developer tools">
 <!ENTITY pref_category_notifications "Notifications">
 <!ENTITY pref_content_notifications "Website updates">
-<!ENTITY pref_content_notifications_summary "Allow notifications for supported sites">
+<!ENTITY pref_content_notifications_summary2 "Discover new content from supported sites">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
 <!ENTITY pref_developer_remotedebugging_wifi_disabled_summary "Wi-Fi debugging requires your device to have a QR code reader app installed.">
@@ -229,6 +229,9 @@
 <!ENTITY pref_tracking_protection_enabled_pb "Enabled in Private Browsing">
 <!ENTITY pref_tracking_protection_disabled "Disabled">
 
+<!ENTITY pref_whats_new_notification "What\'s new in &brandShortName;">
+<!ENTITY pref_whats_new_notification_summary "Learn about new features after an update">
+
 <!ENTITY tracking_protection_prompt_title "Now with Tracking Protection">
 <!ENTITY tracking_protection_prompt_text "Actively block tracking elements so you don\'t have to worry.">
 <!ENTITY tracking_protection_prompt_tip_text "Visit Privacy settings to learn more">
@@ -262,6 +265,10 @@
 <!ENTITY tab_queue_notification_settings "To \&quot;Open multiple links\&quot;, please enable the \'Draw over other apps\' permission for &brandShortName;">
 
 <!ENTITY content_notification_summary "&brandShortName;">
+<!-- Localization note (content_notification_title_plural): &formatD; will be replaced with the number of websites that
+     have been updated (new content is available). The number of websites is always more than one (>= 2). For a single
+     update the website title is used instead of this string.
+     We can't use Android plural forms, sadly. See Bug #753859. -->
 <!ENTITY content_notification_title_plural "&formatD; websites updated">
 <!ENTITY content_notification_action_settings "Notifications Setting">
 <!-- Localization note (content_notification_updated_on): &formatS; will be replaced with a medium sized version of the
@@ -523,6 +530,7 @@ size. -->
      with the page title defined in aboutHome.dtd -->
 <!ENTITY home_title "&brandShortName; Home">
 <!ENTITY home_history_title "History">
+<!ENTITY home_history_back_to "Go back to all history">
 <!ENTITY home_clear_history_button "Clear browsing history">
 <!ENTITY home_clear_history_confirm "Are you sure you want to clear your history?">
 <!ENTITY home_bookmarks_empty "Bookmarks you save show up here.">

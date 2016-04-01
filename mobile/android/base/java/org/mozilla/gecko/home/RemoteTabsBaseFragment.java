@@ -142,13 +142,6 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
 
         final RemoteTabsClientContextMenuInfo info = (RemoteTabsClientContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.client.name);
-
-        // Hide unused menu items.
-        final boolean isHidden = sState.isClientHidden(info.client.guid);
-        final MenuItem item = menu.findItem(isHidden
-                ? R.id.home_remote_tabs_hide_client
-                : R.id.home_remote_tabs_show_client);
-        item.setVisible(false);
     }
 
     @Override
@@ -168,12 +161,6 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
         final int itemId = item.getItemId();
         if (itemId == R.id.home_remote_tabs_hide_client) {
             sState.setClientHidden(info.client.guid, true);
-            getLoaderManager().restartLoader(LOADER_ID_REMOTE_TABS, null, mCursorLoaderCallbacks);
-            return true;
-        }
-
-        if (itemId == R.id.home_remote_tabs_show_client) {
-            sState.setClientHidden(info.client.guid, false);
             getLoaderManager().restartLoader(LOADER_ID_REMOTE_TABS, null, mCursorLoaderCallbacks);
             return true;
         }

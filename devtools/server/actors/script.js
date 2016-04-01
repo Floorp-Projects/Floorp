@@ -15,6 +15,7 @@ const { FrameActor } = require("devtools/server/actors/frame");
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { SourceActor, getSourceURL } = require("devtools/server/actors/source");
 const { DebuggerServer } = require("devtools/server/main");
+const { ActorClass } = require("devtools/server/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn, update, fetch } = DevToolsUtils;
 const promise = require("promise");
@@ -22,6 +23,7 @@ const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
+const object = require("sdk/util/object");
 
 const { defer, resolve, reject, all } = promise;
 
@@ -407,54 +409,53 @@ EventLoop.prototype = {
  *        An optional (for content debugging only) reference to the content
  *        window.
  */
-function ThreadActor(aParent, aGlobal)
-{
-  this._state = "detached";
-  this._frameActors = [];
-  this._parent = aParent;
-  this._dbg = null;
-  this._gripDepth = 0;
-  this._threadLifetimePool = null;
-  this._tabClosed = false;
-  this._scripts = null;
-  this._pauseOnDOMEvents = null;
+const ThreadActor = ActorClass({
+  typeName: "context",
 
-  this._options = {
-    useSourceMaps: false,
-    autoBlackBox: false
-  };
+  initialize: function (aParent, aGlobal) {
+    this._state = "detached";
+    this._frameActors = [];
+    this._parent = aParent;
+    this._dbg = null;
+    this._gripDepth = 0;
+    this._threadLifetimePool = null;
+    this._tabClosed = false;
+    this._scripts = null;
+    this._pauseOnDOMEvents = null;
 
-  this.breakpointActorMap = new BreakpointActorMap();
-  this.sourceActorStore = new SourceActorStore();
+    this._options = {
+      useSourceMaps: false,
+      autoBlackBox: false
+    };
 
-  this._debuggerSourcesSeen = null;
+    this.breakpointActorMap = new BreakpointActorMap();
+    this.sourceActorStore = new SourceActorStore();
 
-  // A map of actorID -> actor for breakpoints created and managed by the
-  // server.
-  this._hiddenBreakpoints = new Map();
+    this._debuggerSourcesSeen = null;
 
-  this.global = aGlobal;
+    // A map of actorID -> actor for breakpoints created and managed by the
+    // server.
+    this._hiddenBreakpoints = new Map();
 
-  this._allEventsListener = this._allEventsListener.bind(this);
-  this.onNewGlobal = this.onNewGlobal.bind(this);
-  this.onSourceEvent = this.onSourceEvent.bind(this);
-  this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
-  this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
-  this.onNewScript = this.onNewScript.bind(this);
-  this.objectGrip = this.objectGrip.bind(this);
-  this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
-  this._onWindowReady = this._onWindowReady.bind(this);
-  events.on(this._parent, "window-ready", this._onWindowReady);
-  // Set a wrappedJSObject property so |this| can be sent via the observer svc
-  // for the xpcshell harness.
-  this.wrappedJSObject = this;
-}
+    this.global = aGlobal;
 
-ThreadActor.prototype = {
+    this._allEventsListener = this._allEventsListener.bind(this);
+    this.onNewGlobal = this.onNewGlobal.bind(this);
+    this.onSourceEvent = this.onSourceEvent.bind(this);
+    this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
+    this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
+    this.onNewScript = this.onNewScript.bind(this);
+    this.objectGrip = this.objectGrip.bind(this);
+    this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
+    this._onWindowReady = this._onWindowReady.bind(this);
+    events.on(this._parent, "window-ready", this._onWindowReady);
+    // Set a wrappedJSObject property so |this| can be sent via the observer svc
+    // for the xpcshell harness.
+    this.wrappedJSObject = this;
+  },
+
   // Used by the ObjectActor to keep track of the depth of grip() calls.
   _gripDepth: null,
-
-  actorPrefix: "context",
 
   get dbg() {
     if (!this._dbg) {
@@ -2032,9 +2033,9 @@ ThreadActor.prototype = {
     return { from: this.actorID,
              actors: result };
   }
-};
+});
 
-ThreadActor.prototype.requestTypes = {
+ThreadActor.prototype.requestTypes = object.merge(ThreadActor.prototype.requestTypes, {
   "attach": ThreadActor.prototype.onAttach,
   "detach": ThreadActor.prototype.onDetach,
   "reconfigure": ThreadActor.prototype.onReconfigure,
@@ -2046,8 +2047,8 @@ ThreadActor.prototype.requestTypes = {
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
-  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties,
-};
+  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties
+});
 
 exports.ThreadActor = ThreadActor;
 
@@ -2254,7 +2255,7 @@ function hackDebugger(Debugger) {
  */
 function ChromeDebuggerActor(aConnection, aParent)
 {
-  ThreadActor.call(this, aParent);
+  ThreadActor.prototype.initialize.call(this, aParent);
 }
 
 ChromeDebuggerActor.prototype = Object.create(ThreadActor.prototype);
@@ -2282,7 +2283,7 @@ exports.ChromeDebuggerActor = ChromeDebuggerActor;
  *        properties.
  */
 function AddonThreadActor(aConnect, aParent) {
-  ThreadActor.call(this, aParent);
+  ThreadActor.prototype.initialize.call(this, aParent);
 }
 
 AddonThreadActor.prototype = Object.create(ThreadActor.prototype);

@@ -84,7 +84,7 @@ function backgroundScript() {
     browser.test.assertTrue("parentId" in folder, "Folder has a parentId");
     browser.test.assertTrue("index" in folder, "Folder has an index");
     browser.test.assertFalse("url" in folder, "Folder does not have a url");
-    browser.test.assertEq("Unsorted Bookmarks", folder.title, "Folder has the expected title");
+    browser.test.assertEq("Other Bookmarks", folder.title, "Folder has the expected title");
     browser.test.assertTrue("dateAdded" in folder, "Folder has a dateAdded");
     browser.test.assertTrue("dateGroupModified" in folder, "Folder has a dateGroupModified");
     browser.test.assertFalse("unmodifiable" in folder, "Folder is not unmodifiable"); // TODO: Do we want to enable this?
@@ -120,7 +120,7 @@ function backgroundScript() {
     browser.test.assertEq(1, results.length, "getTree returns one result");
     let bookmark = results[0].children.find(bookmark => bookmark.id == unsortedId);
     browser.test.assertEq(
-        "Unsorted Bookmarks",
+        "Other Bookmarks",
         bookmark.title,
         "Folder returned from getTree has the expected title"
     );

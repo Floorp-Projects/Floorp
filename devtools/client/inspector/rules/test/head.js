@@ -877,3 +877,24 @@ function* addNewRule(inspector, view) {
   info("Waiting for rule view to change");
   yield view.once("ruleview-changed");
 }
+
+/**
+ * Simulate a sequence of non-character keys (return, escape, tab) and wait for
+ * a given element to receive the focus.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {DOMNode} element
+ *        The element that should be focused
+ * @param {Array} keys
+ *        Array of non-character keys, the part that comes after "DOM_VK_" eg.
+ *        "RETURN", "ESCAPE"
+ * @return a promise that resolves after the element received the focus
+ */
+function* sendKeysAndWaitForFocus(view, element, keys) {
+  let onFocus = once(element, "focus", true);
+  for (let key of keys) {
+    EventUtils.sendKey(key, view.styleWindow);
+  }
+  yield onFocus;
+}
