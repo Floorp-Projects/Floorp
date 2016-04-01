@@ -986,10 +986,13 @@ InplaceEditor.prototype = {
     let key = event.keyCode;
     let input = this.input;
 
+    let multilineNavigation = !this._isSingleLine() &&
+      isKeyIn(key, "UP", "DOWN", "LEFT", "RIGHT");
     let isPlainText = this.contentType == CONTENT_TYPES.PLAIN_TEXT;
+    let isPopupOpen = this.popup && this.popup.isOpen;
 
     let increment = 0;
-    if (!isPlainText) {
+    if (!isPlainText && !multilineNavigation) {
       increment = this._getIncrement(event);
     }
 
@@ -1002,18 +1005,21 @@ InplaceEditor.prototype = {
       this._updateSize();
       prevent = true;
       cycling = true;
-    } else if (increment && this.popup && this.popup.isOpen) {
+    }
+
+    if (isPopupOpen && isKeyIn(key, "UP", "DOWN", "PAGE_UP", "PAGE_DOWN")) {
       prevent = true;
       cycling = true;
-      this._cycleCSSSuggestion(increment > 0);
+      this._cycleCSSSuggestion(isKeyIn(key, "UP", "PAGE_UP"));
       this._doValidation();
     }
 
     if (isKeyIn(key, "BACK_SPACE", "DELETE", "LEFT", "RIGHT")) {
-      if (this.popup && this.popup.isOpen) {
+      if (isPopupOpen) {
         this.popup.hidePopup();
       }
-    } else if (!cycling && !event.metaKey && !event.altKey && !event.ctrlKey) {
+    } else if (!cycling && !multilineNavigation &&
+      !event.metaKey && !event.altKey && !event.ctrlKey) {
       this._maybeSuggestCompletion(true);
     }
 
