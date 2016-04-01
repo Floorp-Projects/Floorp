@@ -958,6 +958,80 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
         return Promise.resolve();
       },
+
+      onZoomChange: new EventManager(context, "tabs.onZoomChange", fire => {
+        let getZoomLevel = browser => {
+          let {ZoomManager} = browser.ownerDocument.defaultView;
+
+          return ZoomManager.getZoomForBrowser(browser);
+        };
+
+        // Stores the last known zoom level for each tab's browser.
+        // WeakMap[<browser> -> number]
+        let zoomLevels = new WeakMap();
+
+        // Store the zoom level for all existing tabs.
+        for (let window of WindowListManager.browserWindows()) {
+          for (let tab of window.gBrowser.tabs) {
+            let browser = tab.linkedBrowser;
+            zoomLevels.set(browser, getZoomLevel(browser));
+          }
+        }
+
+        let tabCreated = (eventName, event) => {
+          let browser = event.tab.linkedBrowser;
+          zoomLevels.set(browser, getZoomLevel(browser));
+        };
+
+
+        let zoomListener = event => {
+          let browser = event.originalTarget;
+
+          // For non-remote browsers, this event is dispatched on the document
+          // rather than on the <browser>.
+          if (browser instanceof Ci.nsIDOMDocument) {
+            browser = browser.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDocShell)
+                             .chromeEventHandler;
+          }
+
+          let {gBrowser} = browser.ownerDocument.defaultView;
+          let tab = gBrowser.getTabForBrowser(browser);
+          if (!tab) {
+            // We only care about zoom events in the top-level browser of a tab.
+            return;
+          }
+
+          let oldZoomFactor = zoomLevels.get(browser);
+          let newZoomFactor = getZoomLevel(browser);
+
+          if (oldZoomFactor != newZoomFactor) {
+            zoomLevels.set(browser, newZoomFactor);
+
+            let tabId = TabManager.getId(tab);
+            fire({
+              tabId,
+              oldZoomFactor,
+              newZoomFactor,
+              zoomSettings: self.tabs._getZoomSettings(tabId),
+            });
+          }
+        };
+
+        tabListener.init();
+        tabListener.on("tab-attached", tabCreated);
+        tabListener.on("tab-created", tabCreated);
+
+        AllWindowEvents.addListener("FullZoomChange", zoomListener);
+        AllWindowEvents.addListener("TextZoomChange", zoomListener);
+        return () => {
+          tabListener.off("tab-attached", tabCreated);
+          tabListener.off("tab-created", tabCreated);
+
+          AllWindowEvents.removeListener("FullZoomChange", zoomListener);
+          AllWindowEvents.removeListener("TextZoomChange", zoomListener);
+        };
+      }).api(),
     },
   };
   return self;
