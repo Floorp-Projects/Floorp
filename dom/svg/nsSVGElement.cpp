@@ -527,7 +527,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
       EnumAttributesInfo enumInfo = GetEnumInfo();
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aAttribute == *enumInfo.mEnumInfo[i].mName) {
-          nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aValue);
+          nsCOMPtr<nsIAtom> valAtom = NS_Atomize(aValue);
           rv = enumInfo.mEnums[i].SetBaseValueAtom(valAtom, this);
           if (NS_FAILED(rv)) {
             enumInfo.Reset(i);

@@ -44,9 +44,6 @@ public:
 
 protected:
   virtual ~HTMLImageMapAccessible() { }
-
-  // Accessible
-  virtual void CacheChildren() override;
 };
 
 /**
@@ -68,10 +65,12 @@ public:
   virtual uint32_t StartOffset() override;
   virtual uint32_t EndOffset() override;
 
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override
+    { return false; }
+
 protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) override;
-  virtual void CacheChildren() override;
 };
 
 

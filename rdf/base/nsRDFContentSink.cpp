@@ -1282,7 +1282,7 @@ RDFContentSinkImpl::RegisterNamespaces(const char16_t **aAttributes)
             ++endLocal;
         }
         nsDependentSubstring lname(attr, endLocal);
-        nsCOMPtr<nsIAtom> preferred = do_GetAtom(lname);
+        nsCOMPtr<nsIAtom> preferred = NS_Atomize(lname);
         if (preferred == kXMLNSAtom) {
             preferred = nullptr;
         }
@@ -1322,7 +1322,7 @@ RDFContentSinkImpl::SplitExpatName(const char16_t *aExpatName,
     }
 
     const nsDependentSubstring& nameSpaceURI = Substring(aExpatName, uriEnd);
-    *aLocalName = NS_NewAtom(Substring(nameStart, pos)).take();
+    *aLocalName = NS_Atomize(Substring(nameStart, pos)).take();
     return nameSpaceURI;
 }
 

@@ -22,7 +22,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
 
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
 
-  nsCOMPtr<nsIAtom> target = do_GetAtom(aTarget);
+  nsCOMPtr<nsIAtom> target = NS_Atomize(aTarget);
   MOZ_ASSERT(target);
 
   if (target == nsGkAtoms::xml_stylesheet) {

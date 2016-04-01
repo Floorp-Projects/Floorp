@@ -19,7 +19,7 @@
 #include "nsDebug.h"                    // for NS_NOTREACHED, NS_ASSERTION, etc
 #include "nsFont.h"                     // for nsFont
 #include "nsFontMetrics.h"              // for nsFontMetrics
-#include "nsIAtom.h"                    // for nsIAtom, do_GetAtom
+#include "nsIAtom.h"                    // for nsIAtom, NS_Atomize
 #include "nsID.h"
 #include "nsIDeviceContextSpec.h"       // for nsIDeviceContextSpec
 #include "nsILanguageAtomService.h"     // for nsILanguageAtomService, etc
@@ -100,7 +100,7 @@ nsFontCache::Init(nsDeviceContext* aContext)
         mLocaleLanguage = langService->GetLocaleLanguage();
     }
     if (!mLocaleLanguage) {
-        mLocaleLanguage = do_GetAtom("x-western");
+        mLocaleLanguage = NS_Atomize("x-western");
     }
 }
 

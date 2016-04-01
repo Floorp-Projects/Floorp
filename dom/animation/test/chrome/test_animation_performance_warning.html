@@ -215,8 +215,9 @@ var gAnimationsTests = [
 
 gAnimationsTests.forEach(function(subtest) {
   promise_test(function(t) {
-    var div = addDiv(t, { class: 'compositable' });
-    var animation = div.animate(subtest.frames, 100000);
+    var animation = addDivAndAnimate(t,
+                                     { class: 'compositable' },
+                                     subtest.frames, 100 * MS_PER_SEC);
     return animation.ready.then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
@@ -501,8 +502,9 @@ function start() {
 
   gAnimationsTests.forEach(function(subtest) {
     promise_test(function(t) {
-      var div = addDiv(t, { class: 'compositable' });
-      var animation = div.animate(subtest.frames, 100000);
+      var animation = addDivAndAnimate(t,
+                                       { class: 'compositable' },
+                                       subtest.frames, 100 * MS_PER_SEC);
       return animation.ready.then(function() {
         assert_animation_property_state_equals(
           animation.effect.getProperties(),
@@ -513,19 +515,20 @@ function start() {
 
   gPerformanceWarningTests.forEach(function(subtest) {
     promise_test(function(t) {
-      var div = addDiv(t, { class: 'compositable' });
-      var animation = div.animate(subtest.frames, 100000);
+      var animation = addDivAndAnimate(t,
+                                       { class: 'compositable' },
+                                       subtest.frames, 100 * MS_PER_SEC);
       return animation.ready.then(function() {
         assert_property_state_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
-        div.style = subtest.style;
+        animation.effect.target.style = subtest.style;
         return waitForFrame();
       }).then(function() {
         assert_animation_property_state_equals(
           animation.effect.getProperties(),
           subtest.expected);
-        div.style = '';
+        animation.effect.target.style = '';
         return waitForFrame();
       }).then(function() {
         assert_property_state_on_compositor(
@@ -539,7 +542,7 @@ function start() {
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animations = subtest.animations.map(function(anim) {
-        var animation = div.animate(anim.frames, 100000);
+        var animation = div.animate(anim.frames, 100 * MS_PER_SEC);
 
         // Bind expected values to animation object.
         animation.expected = anim.expected;
@@ -575,7 +578,7 @@ function start() {
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animations = subtest.animations.map(function(anim) {
-        var animation = div.animate(anim.frames, 100000);
+        var animation = div.animate(anim.frames, 100 * MS_PER_SEC);
 
         // Bind expected values to animation object.
         animation.expected = anim.expected;
@@ -595,7 +598,7 @@ function start() {
     promise_test(function(t) {
       var div = addDiv(t, { class: 'compositable' });
       var animations = subtest.animations.map(function(anim) {
-        var animation = div.animate(anim.frames, 100000);
+        var animation = div.animate(anim.frames, 100 * MS_PER_SEC);
 
         // Bind expected values to animation object.
         animation.expected = anim.expected;
@@ -612,7 +615,8 @@ function start() {
         });
       }).then(function() {
         // Append 'width' animation on the same element.
-        widthAnimation = div.animate({ width: ['100px', '200px'] }, 100000);
+        widthAnimation = div.animate({ width: ['100px', '200px'] },
+                                     100 * MS_PER_SEC);
         return waitForFrame();
       }).then(function() {
         // Now transform animations are not running on compositor because of
@@ -637,14 +641,16 @@ function start() {
   });
 
   promise_test(function(t) {
-    var div = addDiv(t, { class: 'compositable' });
-    var animation = div.animate(
-      { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
+    var animation = addDivAndAnimate(t,
+                                     { class: 'compositable' },
+                                     { transform: [ 'translate(0px)',
+                                                    'translate(100px)'] },
+                                     100 * MS_PER_SEC);
     return animation.ready.then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
-      div.style = 'width: 10000px; height: 10000px';
+      animation.effect.target.style = 'width: 10000px; height: 10000px';
       return waitForFrame();
     }).then(function() {
       // viewport depends on test environment.
@@ -659,7 +665,7 @@ function start() {
           runningOnCompositor: false,
           warning: expectedWarning
         } ]);
-      div.style = 'width: 100px; height: 100px';
+      animation.effect.target.style = 'width: 100px; height: 100px';
       return waitForFrame();
     }).then(function() {
       // FIXME: Bug 1253164: the animation should get back on compositor.
@@ -684,7 +690,7 @@ function start() {
     });
 
     var animation = svg.animate(
-      { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
+      { transform: ['translate(0px)', 'translate(100px)'] }, 100 * MS_PER_SEC);
     return animation.ready.then(function() {
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
@@ -712,7 +718,7 @@ function start() {
     var div = addDiv(t, { class: 'compositable',
                           style: 'animation: fade 100s' });
     var cssAnimation = div.getAnimations()[0];
-    var scriptAnimation = div.animate({ opacity: [ 1, 0 ] }, 100000);
+    var scriptAnimation = div.animate({ opacity: [ 1, 0 ] }, 100 * MS_PER_SEC);
     return scriptAnimation.ready.then(function() {
       assert_animation_property_state_equals(
         cssAnimation.effect.getProperties(),

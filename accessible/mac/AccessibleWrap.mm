@@ -135,18 +135,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void
-AccessibleWrap::InvalidateChildren()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [GetNativeObject() invalidateChildren];
-
-  Accessible::InvalidateChildren();
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 bool
 AccessibleWrap::InsertChildAt(uint32_t aIdx, Accessible* aAccessible)
 {

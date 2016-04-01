@@ -84,6 +84,12 @@ class ReadOnlyNamespace(object):
     def __setattr__(self, key, value):
         raise Exception('Object does not support assignment.')
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __eq__(self, other):
+        return self is other or self.__dict__ == other.__dict__
+
 
 class ReadOnlyDict(dict):
     """A read-only dictionary."""

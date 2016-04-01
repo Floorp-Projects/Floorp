@@ -155,7 +155,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case eDragEventClass:
     case ePointerEventClass:
     case eSimpleGestureEventClass:
-      mEvent->AsInputEvent()->modifiers = modifiers;
+      mEvent->AsInputEvent()->mModifiers = modifiers;
       return;
     default:
       MOZ_CRASH("There is no space to store the modifiers");

@@ -250,6 +250,9 @@ RegisterVoicesRunnable::Run()
       registry->SetDefaultVoice(voice.mUri, true);
     }
   }
+
+  registry->NotifyVoicesChanged();
+
   return NS_OK;
 }
 

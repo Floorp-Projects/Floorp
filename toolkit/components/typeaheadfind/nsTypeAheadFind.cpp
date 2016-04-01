@@ -876,8 +876,8 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   // We now have the correct start node for the range
   // Search for links, starting with startNode, and going up parent chain
 
-  nsCOMPtr<nsIAtom> tag, hrefAtom(do_GetAtom("href"));
-  nsCOMPtr<nsIAtom> typeAtom(do_GetAtom("type"));
+  nsCOMPtr<nsIAtom> tag, hrefAtom(NS_Atomize("href"));
+  nsCOMPtr<nsIAtom> typeAtom(NS_Atomize("type"));
 
   while (true) {
     // Keep testing while startContent is equal to something,

@@ -833,26 +833,29 @@ nsSocketTransportService::Run()
 
     gSocketThread = PR_GetCurrentThread();
 
-    mPollableEvent.reset(new PollableEvent());
-    //
-    // NOTE: per bug 190000, this failure could be caused by Zone-Alarm
-    // or similar software.
-    //
-    // NOTE: per bug 191739, this failure could also be caused by lack
-    // of a loopback device on Windows and OS/2 platforms (it creates
-    // a loopback socket pair on these platforms to implement a pollable
-    // event object).  if we can't create a pollable event, then we'll
-    // have to "busy wait" to implement the socket event queue :-(
-    //
-    if (!mPollableEvent->Valid()) {
-        mPollableEvent = nullptr;
-        NS_WARNING("running socket transport thread without a pollable event");
-        SOCKET_LOG(("running socket transport thread without a pollable event"));
-    }
+    {
+        DebugMutexAutoLock lock(mLock);
+        mPollableEvent.reset(new PollableEvent());
+        //
+        // NOTE: per bug 190000, this failure could be caused by Zone-Alarm
+        // or similar software.
+        //
+        // NOTE: per bug 191739, this failure could also be caused by lack
+        // of a loopback device on Windows and OS/2 platforms (it creates
+        // a loopback socket pair on these platforms to implement a pollable
+        // event object).  if we can't create a pollable event, then we'll
+        // have to "busy wait" to implement the socket event queue :-(
+        //
+        if (!mPollableEvent->Valid()) {
+            mPollableEvent = nullptr;
+            NS_WARNING("running socket transport thread without a pollable event");
+            SOCKET_LOG(("running socket transport thread without a pollable event"));
+        }
 
-    mPollList[0].fd = mPollableEvent ? mPollableEvent->PollableFD() : nullptr;
-    mPollList[0].in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
-    mPollList[0].out_flags = 0;
+        mPollList[0].fd = mPollableEvent ? mPollableEvent->PollableFD() : nullptr;
+        mPollList[0].in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
+        mPollList[0].out_flags = 0;
+    }
 
     mRawThread = NS_GetCurrentThread();
 

@@ -34853,6 +34853,13 @@
             "url": "/js/builtins/Promise-incumbent-global.sub.html"
           }
         ],
+        "selection/collapse.html": [
+          {
+            "path": "selection/collapse.html",
+            "timeout": "long",
+            "url": "/selection/collapse.html"
+          }
+        ],
         "selection/extend.html": [
           {
             "path": "selection/extend.html",

@@ -528,7 +528,7 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
   *aResult = nullptr;
   *aPersistent = true;
 
-  nsCOMPtr<nsIAtom> inAtom = do_GetAtom(aProp);
+  nsCOMPtr<nsIAtom> inAtom = NS_Atomize(aProp);
 
   // check to see if it is one of our defaults
 

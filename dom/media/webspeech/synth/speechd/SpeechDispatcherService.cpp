@@ -422,7 +422,7 @@ SpeechDispatcherService::Setup()
 void
 SpeechDispatcherService::RegisterVoices()
 {
-  nsSynthVoiceRegistry* registry = nsSynthVoiceRegistry::GetInstance();
+  RefPtr<nsSynthVoiceRegistry> registry = nsSynthVoiceRegistry::GetInstance();
   for (auto iter = mVoices.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<SpeechDispatcherVoice>& voice = iter.Data();
 
@@ -440,6 +440,8 @@ SpeechDispatcherService::RegisterVoices()
   mInitThread = nullptr;
 
   mInitialized = true;
+
+  registry->NotifyVoicesChanged();
 }
 
 // nsIObserver

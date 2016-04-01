@@ -7587,8 +7587,11 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
 
             // We begin by checking for an outer pending error since it would
             // have occurred first.
-            if (possibleError->checkForExprErrors())
-                possibleErrorInner.checkForExprErrors();
+            if (possibleError && !possibleError->checkForExprErrors())
+                return null();
+
+            // Go ahead and report the inner error.
+            possibleErrorInner.checkForExprErrors();
             return null();
         }
         handler.addList(seq, pn);

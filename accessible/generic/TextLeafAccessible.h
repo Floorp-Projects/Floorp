@@ -31,10 +31,6 @@ public:
   const nsString& Text() const { return mText; }
 
 protected:
-  // Accessible
-  virtual void CacheChildren() override;
-
-protected:
   nsString mText;
 };
 

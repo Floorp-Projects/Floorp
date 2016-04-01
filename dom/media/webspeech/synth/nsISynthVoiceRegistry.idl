@@ -7,7 +7,7 @@
 
 interface nsISpeechService;
 
-[scriptable, builtinclass, uuid(dac09c3a-156e-4025-a4ab-bc88b0ea92e7)]
+[scriptable, builtinclass, uuid(5d7a0b38-77e5-4ee5-897c-ce5db9b85d44)]
 interface nsISynthVoiceRegistry : nsISupports
 {
   /**
@@ -31,6 +31,12 @@ interface nsISynthVoiceRegistry : nsISupports
    * @param aUri     a unique identifier of an existing voice.
    */
   void removeVoice(in nsISpeechService aService, in DOMString aUri);
+
+  /**
+   * Notify content of voice availability changes. This allows content
+   * to be notified of voice catalog changes in real time.
+   */
+  void notifyVoicesChanged();
 
   /**
    * Set a voice as default.

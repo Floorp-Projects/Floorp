@@ -96,11 +96,6 @@ DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_DEFAULT_COMPILER
 
-MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
-[  --with-gonk-toolchain-prefix=DIR
-                          prefix to gonk toolchain commands],
-    gonk_toolchain_prefix=$withval)
-
 if test -n "$gonkdir" ; then
     dnl export for js/src/configure. We can't pass the option down normally,
     dnl because it's a `--enable-project=b2g`-only option.
@@ -114,18 +109,6 @@ if test -n "$gonkdir" ; then
     if test -n "${PLATFORM_SDK_VERSION}"; then
         ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
     fi
-
-    dnl set up compilers
-    TOOLCHAIN_PREFIX="$gonk_toolchain_prefix"
-    AS="$gonk_toolchain_prefix"as
-    CC="$gonk_toolchain_prefix"gcc
-    CXX="$gonk_toolchain_prefix"g++
-    CPP="$gonk_toolchain_prefix"cpp
-    LD="$gonk_toolchain_prefix"ld
-    AR="$gonk_toolchain_prefix"ar
-    RANLIB="$gonk_toolchain_prefix"ranlib
-    STRIP="$gonk_toolchain_prefix"strip
-    OBJCOPY="$gonk_toolchain_prefix"objcopy
 
     if ! test -e "$gonkdir/ndk/sources/cxx-stl/stlport/src/iostream.cpp"; then
         AC_MSG_ERROR([Couldn't find path to stlport sources in the gonk tree])
@@ -210,20 +193,6 @@ if test -n "$gonkdir" ; then
 
     LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ $LDFLAGS"
 
-    dnl prevent cross compile section from using these flags as host flags
-    if test -z "$HOST_CPPFLAGS" ; then
-        HOST_CPPFLAGS=" "
-    fi
-    if test -z "$HOST_CFLAGS" ; then
-        HOST_CFLAGS=" "
-    fi
-    if test -z "$HOST_CXXFLAGS" ; then
-        HOST_CXXFLAGS=" "
-    fi
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
-
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $ANDROID_VERSION)
     AC_SUBST(ANDROID_VERSION)
@@ -265,15 +234,6 @@ dnl ========================================================
 
 dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
 AR_FLAGS='crs $@'
-
-if test -z "$COMPILE_ENVIRONMENT"; then
-if test "$target" != "$host"; then
-# Assert that we're cross compiling, but don't require a compile toolchain (as
-# MOZ_CROSS_COMPILER does below).
-CROSS_COMPILE=1
-AC_DEFINE(CROSS_COMPILE)
-fi
-fi # !COMPILE_ENVIRONMENT
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -6926,7 +6886,7 @@ if test "$MOZ_ENABLE_SKIA"; then
     AC_DEFINE(SK_BUILD_FOR_ANDROID_NDK)
   fi
 
-  if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64" -a "${CPU_ARCH}" != "sparc" -a -z "$MOZ_DISABLE_SKIA_GPU" ; then
+  if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64" -a "${CPU_ARCH}" != "sparc" -a "${CPU_ARCH}" != "sparc64" -a -z "$MOZ_DISABLE_SKIA_GPU" ; then
     SKIA_INCLUDES="$SKIA_INCLUDES /gfx/skia/skia/include/gpu /gfx/skia/skia/include/utils"
     MOZ_ENABLE_SKIA_GPU=1
     AC_DEFINE(USE_SKIA_GPU)
@@ -7513,12 +7473,12 @@ AC_SUBST(OS_COMPILE_CFLAGS)
 AC_SUBST(OS_COMPILE_CXXFLAGS)
 AC_SUBST(OS_LDFLAGS)
 AC_SUBST(OS_LIBS)
-AC_SUBST(CROSS_COMPILE)
 AC_SUBST(WCHAR_CFLAGS)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
 AC_SUBST(HOST_CFLAGS)
+AC_SUBST(HOST_CPPFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
 AC_SUBST(HOST_LDFLAGS)
 AC_SUBST(HOST_OPTIMIZE_FLAGS)
@@ -7888,6 +7848,7 @@ export RUSTFLAGS
 export HOST_CC
 export HOST_CXX
 export HOST_CFLAGS
+export HOST_CPPFLAGS
 export HOST_CXXFLAGS
 export HOST_LDFLAGS
 

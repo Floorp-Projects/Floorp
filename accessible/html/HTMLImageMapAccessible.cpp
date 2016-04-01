@@ -30,6 +30,8 @@ HTMLImageMapAccessible::
   ImageAccessibleWrap(aContent, aDoc)
 {
   mType = eImageMapType;
+
+  UpdateChildAreas(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,16 +153,6 @@ HTMLImageMapAccessible::GetChildAccessibleFor(const nsINode* aNode) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HTMLImageMapAccessible: Accessible protected
-
-void
-HTMLImageMapAccessible::CacheChildren()
-{
-  UpdateChildAreas(false);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // HTMLAreaAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -229,15 +221,6 @@ uint32_t
 HTMLAreaAccessible::EndOffset()
 {
   return IndexInParent() + 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// HTMLAreaAccessible: Accessible protected
-
-void
-HTMLAreaAccessible::CacheChildren()
-{
-  // No children for aria accessible.
 }
 
 nsRect

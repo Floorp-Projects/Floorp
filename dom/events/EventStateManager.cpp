@@ -1600,7 +1600,7 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
       mGestureDownFrameOwner = mGestureDownContent;
     }
   }
-  mGestureModifiers = inDownEvent->modifiers;
+  mGestureModifiers = inDownEvent->mModifiers;
   mGestureDownButtons = inDownEvent->buttons;
 
   if (Prefs::ClickHoldContextMenu()) {
@@ -1639,7 +1639,7 @@ EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent)
   // the old event, adjusted for the fact that the widget might be
   // different
   aEvent->refPoint = mGestureDownPoint - aEvent->widget->WidgetToScreenOffset();
-  aEvent->modifiers = mGestureModifiers;
+  aEvent->mModifiers = mGestureModifiers;
   aEvent->buttons = mGestureDownButtons;
 }
 
@@ -1742,7 +1742,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
                                    eLegacyDragGesture, widget);
       FillInEventFromGestureDown(&gestureEvent);
 
-      startEvent.dataTransfer = gestureEvent.dataTransfer = dataTransfer;
+      startEvent.mDataTransfer = gestureEvent.mDataTransfer = dataTransfer;
       startEvent.inputSource = gestureEvent.inputSource = aEvent->inputSource;
 
       // Dispatch to the DOM. By setting mCurrentTarget we are faking
@@ -2301,7 +2301,7 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.widget = aEvent->widget;
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
-  event.modifiers = aEvent->modifiers;
+  event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.delta = aDelta;
@@ -2341,7 +2341,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.widget = aEvent->widget;
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
-  event.modifiers = aEvent->modifiers;
+  event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.delta = aPixelDelta;
@@ -3349,13 +3349,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
       if (nsEventStatus_eConsumeNoDefault == *aStatus) {
         // if the event has a dataTransfer set, use it.
-        if (dragEvent->dataTransfer) {
+        if (dragEvent->mDataTransfer) {
           // get the dataTransfer and the dropEffect that was set on it
-          dataTransfer = do_QueryInterface(dragEvent->dataTransfer);
+          dataTransfer = do_QueryInterface(dragEvent->mDataTransfer);
           dataTransfer->GetDropEffectInt(&dropEffect);
         }
         else {
-          // if dragEvent->dataTransfer is null, it means that no attempt was
+          // if dragEvent->mDataTransfer is null, it means that no attempt was
           // made to access the dataTransfer during the event, yet the event
           // was cancelled. Instead, use the initial data transfer available
           // from the drag session. The drop effect would not have been
@@ -3440,7 +3440,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           event.refPoint += mouseEvent->widget->WidgetToScreenOffset();
         }
         event.refPoint -= widget->WidgetToScreenOffset();
-        event.modifiers = mouseEvent->modifiers;
+        event.mModifiers = mouseEvent->mModifiers;
         event.buttons = mouseEvent->buttons;
         event.inputSource = mouseEvent->inputSource;
 
@@ -3877,7 +3877,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     aNewEvent->relatedTarget = aRelatedContent;
   }
   aNewEvent->refPoint = aMouseEvent->refPoint;
-  aNewEvent->modifiers = aMouseEvent->modifiers;
+  aNewEvent->mModifiers = aMouseEvent->mModifiers;
   aNewEvent->button = aMouseEvent->button;
   aNewEvent->buttons = aMouseEvent->buttons;
   aNewEvent->pressure = aMouseEvent->pressure;
@@ -4486,7 +4486,7 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetDragEvent event(aDragEvent->IsTrusted(), aMessage, aDragEvent->widget);
   event.refPoint = aDragEvent->refPoint;
-  event.modifiers = aDragEvent->modifiers;
+  event.mModifiers = aDragEvent->mModifiers;
   event.buttons = aDragEvent->buttons;
   event.relatedTarget = aRelatedTarget;
   event.inputSource = aDragEvent->inputSource;
@@ -4523,8 +4523,9 @@ void
 EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
 {
   NS_ASSERTION(dragEvent, "drag event is null in UpdateDragDataTransfer!");
-  if (!dragEvent->dataTransfer)
+  if (!dragEvent->mDataTransfer) {
     return;
+  }
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
 
@@ -4536,7 +4537,7 @@ EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
     if (initialDataTransfer) {
       // retrieve the current moz cursor setting and save it.
       nsAutoString mozCursor;
-      dragEvent->dataTransfer->GetMozCursor(mozCursor);
+      dragEvent->mDataTransfer->GetMozCursor(mozCursor);
       initialDataTransfer->SetMozCursor(mozCursor);
     }
   }
@@ -4642,7 +4643,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                            aEvent->widget, WidgetMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
-    event.modifiers = aEvent->modifiers;
+    event.mModifiers = aEvent->mModifiers;
     event.buttons = aEvent->buttons;
     event.mTime = aEvent->mTime;
     event.mTimeStamp = aEvent->mTimeStamp;
@@ -4676,7 +4677,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                                 aEvent->widget, WidgetMouseEvent::eReal);
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
-        event2.modifiers = aEvent->modifiers;
+        event2.mModifiers = aEvent->mModifiers;
         event2.buttons = aEvent->buttons;
         event2.mFlags.mNoContentDispatch = notDispatchToContents;
         event2.button = aEvent->button;
@@ -5527,11 +5528,11 @@ EventStateManager::WheelPrefs::GetIndexFor(WidgetWheelEvent* aEvent)
   }
 
   Modifiers modifiers =
-    (aEvent->modifiers & (MODIFIER_ALT |
-                          MODIFIER_CONTROL |
-                          MODIFIER_META |
-                          MODIFIER_SHIFT |
-                          MODIFIER_OS));
+    (aEvent->mModifiers & (MODIFIER_ALT |
+                           MODIFIER_CONTROL |
+                           MODIFIER_META |
+                           MODIFIER_SHIFT |
+                           MODIFIER_OS));
 
   switch (modifiers) {
     case MODIFIER_ALT:

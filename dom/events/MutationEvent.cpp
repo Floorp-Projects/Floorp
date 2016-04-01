@@ -101,11 +101,11 @@ MutationEvent::InitMutationEvent(const nsAString& aTypeArg,
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
   mutation->mRelatedNode = aRelatedNodeArg;
   if (!aPrevValueArg.IsEmpty())
-    mutation->mPrevAttrValue = do_GetAtom(aPrevValueArg);
+    mutation->mPrevAttrValue = NS_Atomize(aPrevValueArg);
   if (!aNewValueArg.IsEmpty())
-    mutation->mNewAttrValue = do_GetAtom(aNewValueArg);
+    mutation->mNewAttrValue = NS_Atomize(aNewValueArg);
   if (!aAttrNameArg.IsEmpty()) {
-    mutation->mAttrName = do_GetAtom(aAttrNameArg);
+    mutation->mAttrName = NS_Atomize(aAttrNameArg);
   }
   mutation->mAttrChange = aAttrChangeArg;
     

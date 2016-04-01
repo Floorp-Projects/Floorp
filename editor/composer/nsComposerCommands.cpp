@@ -725,7 +725,7 @@ nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
   NS_ENSURE_TRUE(htmlEditor, NS_ERROR_INVALID_ARG);
 
   nsAutoString outStateString;
-  nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
+  nsCOMPtr<nsIAtom> fontAtom = NS_Atomize("font");
   bool firstHas, anyHas, allHas;
   nsresult rv = htmlEditor->GetInlinePropertyWithAttrValue(fontAtom,
                                          NS_LITERAL_STRING("size"),
@@ -1501,7 +1501,7 @@ RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
   MOZ_ASSERT(aEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aProp);
+  nsCOMPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return aEditor->RemoveInlineProperty(styleAtom, EmptyString());
@@ -1530,7 +1530,7 @@ SetTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
   MOZ_ASSERT(aEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aProp);
+  nsCOMPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return aEditor->SetInlineProperty(styleAtom, EmptyString(), EmptyString());

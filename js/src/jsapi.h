@@ -1849,6 +1849,9 @@ typedef enum JSGCParamKey {
 
     /** Whether compacting GC is enabled. */
     JSGC_COMPACTING_ENABLED = 23,
+
+    /** If true, painting can trigger IGC slices. */
+    JSGC_REFRESH_FRAME_SLICES_ENABLED = 24,
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)

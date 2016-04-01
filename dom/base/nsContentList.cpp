@@ -228,12 +228,12 @@ NS_GetContentList(nsINode* aRootNode,
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
     // we have an entry
-    nsCOMPtr<nsIAtom> xmlAtom = do_GetAtom(aTagname);
+    nsCOMPtr<nsIAtom> xmlAtom = NS_Atomize(aTagname);
     nsCOMPtr<nsIAtom> htmlAtom;
     if (aMatchNameSpaceId == kNameSpaceID_Unknown) {
       nsAutoString lowercaseName;
       nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
-      htmlAtom = do_GetAtom(lowercaseName);
+      htmlAtom = NS_Atomize(lowercaseName);
     } else {
       htmlAtom = xmlAtom;
     }
@@ -517,7 +517,7 @@ nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
   uint32_t i, count = mElements.Length();
 
   // Typically IDs and names are atomized
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+  nsCOMPtr<nsIAtom> name = NS_Atomize(aName);
   NS_ENSURE_TRUE(name, nullptr);
 
   for (i = 0; i < count; i++) {

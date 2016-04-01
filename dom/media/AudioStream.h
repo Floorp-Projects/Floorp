@@ -343,9 +343,6 @@ private:
   uint32_t mOutRate;
   uint32_t mChannels;
   uint32_t mOutChannels;
-#if defined(__ANDROID__)
-  dom::AudioChannel mAudioChannel;
-#endif
   AudioClock mAudioClock;
   soundtouch::SoundTouch* mTimeStretcher;
 
