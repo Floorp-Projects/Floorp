@@ -442,14 +442,14 @@ ResponsiveUI.prototype = {
    * Check the menu items.
    */
    checkMenus: function RUI_checkMenus() {
-     this.chromeDoc.getElementById("Tools:ResponsiveUI").setAttribute("checked", "true");
+     this.chromeDoc.getElementById("menu_responsiveUI").setAttribute("checked", "true");
    },
 
   /**
    * Uncheck the menu items.
    */
    unCheckMenus: function RUI_unCheckMenus() {
-     this.chromeDoc.getElementById("Tools:ResponsiveUI").setAttribute("checked", "false");
+     this.chromeDoc.getElementById("menu_responsiveUI").setAttribute("checked", "false");
    },
 
   /**

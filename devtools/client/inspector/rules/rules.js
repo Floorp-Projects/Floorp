@@ -462,7 +462,8 @@ CssRuleView.prototype = {
     try {
       let text = "";
 
-      if (target && target.nodeName === "input") {
+      let nodeName = target && target.nodeName;
+      if (nodeName === "input" || nodeName == "textarea") {
         let start = Math.min(target.selectionStart, target.selectionEnd);
         let end = Math.max(target.selectionStart, target.selectionEnd);
         let count = end - start;

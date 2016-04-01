@@ -953,7 +953,7 @@ Database::CreateBookmarkRoots()
                   NS_LITERAL_CSTRING("tags________"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName(MOZ_UTF16("UnsortedBookmarksFolderTitle"),
+  rv = bundle->GetStringFromName(MOZ_UTF16("OtherBookmarksFolderTitle"),
                                  getter_Copies(rootTitle));
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"),
@@ -1072,7 +1072,7 @@ Database::UpdateBookmarkRootTitles()
   const char *titleStringIDs[] = { "BookmarksMenuFolderTitle"
                                  , "BookmarksToolbarFolderTitle"
                                  , "TagsFolderTitle"
-                                 , "UnsortedBookmarksFolderTitle"
+                                 , "OtherBookmarksFolderTitle"
                                  };
 
   for (uint32_t i = 0; i < ArrayLength(rootGuids); ++i) {

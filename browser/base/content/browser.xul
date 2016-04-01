@@ -860,7 +860,7 @@
             </menu>
             <menu id="BMB_unsortedBookmarks"
                   class="menu-iconic bookmark-item subviewbutton"
-                  label="&bookmarksMenuButton.unsorted.label;"
+                  label="&bookmarksMenuButton.other.label;"
                   container="true">
               <menupopup id="BMB_unsortedBookmarksPopup"
                          placespopup="true"

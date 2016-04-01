@@ -11,53 +11,83 @@ const TEST_URI = `
     body {
       color: #f00;
     }
+    span {
+      color: blue;
+    }
   </style>
-  Test cycling color types in the rule view!
+  <body><span>Test</span> cycling color types in the rule view!</body>
 `;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   let container = getRuleViewProperty(view, "body", "color").valueSpan;
-  checkColorCycling(container, view);
+  yield checkColorCycling(container, view);
+  yield checkColorCyclingPersist(inspector, view);
 });
 
-function checkColorCycling(container, view) {
-  let swatch = container.querySelector(".ruleview-colorswatch");
+function* checkColorCycling(container, view) {
   let valueNode = container.querySelector(".ruleview-color");
   let win = view.styleWindow;
 
   // Hex
   is(valueNode.textContent, "#f00", "Color displayed as a hex value.");
 
-  // HSL
-  EventUtils.synthesizeMouseAtCenter(swatch,
-                                     {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "hsl(0, 100%, 50%)",
-                            "Color displayed as an HSL value.");
+  let tests = [{
+    value: "hsl(0, 100%, 50%)",
+    comment: "Color displayed as an HSL value."
+  }, {
+    value: "rgb(255, 0, 0)",
+    comment: "Color displayed as an RGB value."
+  }, {
+    value: "red",
+    comment: "Color displayed as a color name."
+  }, {
+    value: "#f00",
+    comment: "Color displayed as an authored value."
+  }, {
+    value: "hsl(0, 100%, 50%)",
+    comment: "Color displayed as an HSL value again."
+  }];
 
-  // RGB
-  EventUtils.synthesizeMouseAtCenter(swatch,
-                                     {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "rgb(255, 0, 0)",
-                            "Color displayed as an RGB value.");
+  for (let test of tests) {
+    yield checkSwatchShiftClick(container, win, test.value, test.comment);
+  }
+}
 
-  // Color name
-  EventUtils.synthesizeMouseAtCenter(swatch,
-                                     {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "red",
-                            "Color displayed as a color name.");
+function* checkColorCyclingPersist(inspector, view) {
+  yield selectNode("span", inspector);
+  let container = getRuleViewProperty(view, "span", "color").valueSpan;
+  let valueNode = container.querySelector(".ruleview-color");
+  let win = view.styleWindow;
 
-  // "Authored"
-  EventUtils.synthesizeMouseAtCenter(swatch,
-                                     {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "#f00",
-                            "Color displayed as an authored value.");
+  is(valueNode.textContent, "blue", "Color displayed as a color name.");
 
-  // One more click skips hex, because it is the same as authored, and
-  // instead goes back to HSL.
-  EventUtils.synthesizeMouseAtCenter(swatch,
-                                     {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "hsl(0, 100%, 50%)",
-                            "Color displayed as an HSL value again.");
+  yield checkSwatchShiftClick(container, win, "#00f",
+    "Color displayed as a hex value.");
+
+  // Select the body and reselect the span to see
+  // if the new color unit persisted
+  yield selectNode("body", inspector);
+  yield selectNode("span", inspector);
+
+  // We have to query for the container and the swatch because
+  // they've been re-generated
+  container = getRuleViewProperty(view, "span", "color").valueSpan;
+  valueNode = container.querySelector(".ruleview-color");
+  is(valueNode.textContent, "#00f",
+    "Color  is still displayed as a hex value.");
+}
+
+function* checkSwatchShiftClick(container, win, expectedValue, comment) {
+  let swatch = container.querySelector(".ruleview-colorswatch");
+  let valueNode = container.querySelector(".ruleview-color");
+
+  let onUnitChange = swatch.once("unit-change");
+  EventUtils.synthesizeMouseAtCenter(swatch, {
+    type: "mousedown",
+    shiftKey: true
+  }, win);
+  yield onUnitChange;
+  is(valueNode.textContent, expectedValue, comment);
 }

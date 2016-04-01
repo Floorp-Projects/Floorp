@@ -169,6 +169,11 @@ AnimationsTimeline.prototype = {
   },
 
   onWindowResize: function() {
+    // Don't do anything if the root element has a width of 0
+    if (this.rootWrapperEl.offsetWidth === 0) {
+      return;
+    }
+
     if (this.windowResizeTimer) {
       this.win.clearTimeout(this.windowResizeTimer);
     }

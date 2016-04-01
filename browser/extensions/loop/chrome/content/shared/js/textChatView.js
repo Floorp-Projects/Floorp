@@ -216,6 +216,11 @@ loop.shared.views.chat = function (mozL10n) {
         React.createElement(
           "div",
           { className: "text-chat-scroller" },
+          loop.shared.utils.isDesktop() ? null : React.createElement(
+            "p",
+            { className: "welcome-message" },
+            mozL10n.get("rooms_welcome_text_chat_label", { clientShortname: mozL10n.get("clientShortname2") })
+          ),
           this.props.messageList.map(function (entry, i) {
             if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
               if (!this.props.showInitialContext) {

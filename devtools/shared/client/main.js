@@ -2488,6 +2488,31 @@ ObjectClient.prototype = {
   }),
 
   /**
+   * Request a PropertyIteratorClient instance to enumerate entries in a
+   * Map/Set-like object.
+   *
+   * @param aOnResponse function Called with the request's response.
+   */
+  enumEntries: DebuggerClient.requester({
+    type: "enumEntries"
+  }, {
+    before: function(packet) {
+      if (!["Map", "WeakMap", "Set", "WeakSet"].includes(this._grip.class)) {
+        throw new Error("enumEntries is only valid for Map/Set-like grips.");
+      }
+      return packet;
+    },
+    after: function(response) {
+      if (response.iterator) {
+        return {
+          iterator: new PropertyIteratorClient(this._client, response.iterator)
+        };
+      }
+      return response;
+    }
+  }),
+
+  /**
    * Request the property descriptor of the object's specified property.
    *
    * @param aName string The name of the requested property.

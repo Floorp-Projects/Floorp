@@ -542,14 +542,6 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         return Promise.resolve(tab);
       },
 
-      getAllInWindow: function(windowId) {
-        if (windowId === null) {
-          windowId = WindowManager.topWindow.windowId;
-        }
-
-        return self.tabs.query({windowId});
-      },
-
       query: function(queryInfo) {
         let pattern = null;
         if (queryInfo.url !== null) {
