@@ -6,13 +6,10 @@
 
 #include "mozilla/dom/PushManager.h"
 
-#include "mozilla/Base64.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushSubscription.h"
-#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -23,8 +20,7 @@
 #include "nsIPushService.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsFrameMessageManager.h"
-#include "nsContentCID.h"
+#include "nsContentUtils.h"
 
 #include "WorkerRunnable.h"
 #include "WorkerPrivate.h"
@@ -39,7 +35,7 @@ namespace {
 
 nsresult
 GetPermissionState(nsIPrincipal* aPrincipal,
-                            PushPermissionState& aState)
+                   PushPermissionState& aState)
 {
   nsCOMPtr<nsIPermissionManager> permManager =
     mozilla::services::GetPermissionManager();
@@ -63,95 +59,27 @@ GetPermissionState(nsIPrincipal* aPrincipal,
   } else {
     aState = PushPermissionState::Prompt;
   }
+
   return NS_OK;
-}
-
-} // anonymous namespace
-
-PushManager::PushManager(nsIGlobalObject* aGlobal, const nsAString& aScope)
-  : mGlobal(aGlobal), mScope(aScope)
-{
-  AssertIsOnMainThread();
-}
-
-PushManager::~PushManager()
-{}
-
-JSObject*
-PushManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  // XXXnsm I don't know if this is the right way to do it, but I want to assert
-  // that an implementation has been set before this object gets exposed to JS.
-  MOZ_ASSERT(mImpl);
-  return PushManagerBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-PushManager::SetPushManagerImpl(PushManagerImpl& foo, ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mImpl);
-  mImpl = &foo;
-}
-
-already_AddRefed<Promise>
-PushManager::Subscribe(ErrorResult& aRv)
-{
-  MOZ_ASSERT(mImpl);
-  return mImpl->Subscribe(aRv);
-}
-
-already_AddRefed<Promise>
-PushManager::GetSubscription(ErrorResult& aRv)
-{
-  MOZ_ASSERT(mImpl);
-  return mImpl->GetSubscription(aRv);
-}
-
-already_AddRefed<Promise>
-PushManager::PermissionState(ErrorResult& aRv)
-{
-  MOZ_ASSERT(mImpl);
-  return mImpl->PermissionState(aRv);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushManager, mGlobal, mImpl)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PushManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PushManager)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushManager)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-// WorkerPushManager
-
-WorkerPushManager::WorkerPushManager(const nsAString& aScope)
-  : mScope(aScope)
-{
-}
-
-JSObject*
-WorkerPushManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return PushManagerBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 class GetSubscriptionResultRunnable final : public WorkerRunnable
 {
 public:
-  GetSubscriptionResultRunnable(PromiseWorkerProxy* aProxy,
+  GetSubscriptionResultRunnable(WorkerPrivate* aWorkerPrivate,
+                                already_AddRefed<PromiseWorkerProxy>&& aProxy,
                                 nsresult aStatus,
                                 const nsAString& aEndpoint,
                                 const nsAString& aScope,
-                                const nsTArray<uint8_t>& aRawP256dhKey,
-                                const nsTArray<uint8_t>& aAuthSecret)
-    : WorkerRunnable(aProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
-    , mProxy(aProxy)
+                                nsTArray<uint8_t>&& aRawP256dhKey,
+                                nsTArray<uint8_t>&& aAuthSecret)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    , mProxy(Move(aProxy))
     , mStatus(aStatus)
     , mEndpoint(aEndpoint)
     , mScope(aScope)
-    , mRawP256dhKey(aRawP256dhKey)
-    , mAuthSecret(aAuthSecret)
+    , mRawP256dhKey(Move(aRawP256dhKey))
+    , mAuthSecret(Move(aAuthSecret))
   { }
 
   bool
@@ -163,8 +91,8 @@ public:
         promise->MaybeResolve(JS::NullHandleValue);
       } else {
         RefPtr<PushSubscription> sub =
-            new PushSubscription(nullptr, mEndpoint, mScope, mRawP256dhKey,
-                                 mAuthSecret);
+            new PushSubscription(nullptr, mEndpoint, mScope,
+                                 Move(mRawP256dhKey), Move(mAuthSecret));
         promise->MaybeResolve(sub);
       }
     } else if (NS_ERROR_GET_MODULE(mStatus) == NS_ERROR_MODULE_DOM_PUSH ) {
@@ -174,6 +102,7 @@ public:
     }
 
     mProxy->CleanUp();
+
     return true;
   }
 private:
@@ -206,10 +135,8 @@ public:
     AssertIsOnMainThread();
     MOZ_ASSERT(mProxy, "OnPushSubscription() called twice?");
 
-    RefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
-
-    MutexAutoLock lock(proxy->Lock());
-    if (proxy->CleanedUp()) {
+    MutexAutoLock lock(mProxy->Lock());
+    if (mProxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -220,14 +147,17 @@ public:
                                       authSecret);
     }
 
+    WorkerPrivate* worker = mProxy->GetWorkerPrivate();
     RefPtr<GetSubscriptionResultRunnable> r =
-      new GetSubscriptionResultRunnable(proxy,
+      new GetSubscriptionResultRunnable(worker,
+                                        mProxy.forget(),
                                         aStatus,
                                         endpoint,
                                         mScope,
-                                        rawP256dhKey,
-                                        authSecret);
-    r->Dispatch();
+                                        Move(rawP256dhKey),
+                                        Move(authSecret));
+    MOZ_ALWAYS_TRUE(r->Dispatch());
+
     return NS_OK;
   }
 
@@ -249,6 +179,7 @@ private:
   {
     NS_Free(aKey);
     NS_Free(aAuthSecret);
+
     return aStatus;
   }
 
@@ -306,7 +237,7 @@ class GetSubscriptionRunnable final : public nsRunnable
 public:
   GetSubscriptionRunnable(PromiseWorkerProxy* aProxy,
                           const nsAString& aScope,
-                          WorkerPushManager::SubscriptionAction aAction)
+                          PushManager::SubscriptionAction aAction)
     : mProxy(aProxy)
     , mScope(aScope), mAction(aAction)
   {}
@@ -317,6 +248,7 @@ public:
     AssertIsOnMainThread();
 
     nsCOMPtr<nsIPrincipal> principal;
+
     {
       // Bug 1228723: If permission is revoked or an error occurs, the
       // subscription callback will be called synchronously. This causes
@@ -328,6 +260,7 @@ public:
       }
       principal = mProxy->GetWorkerPrivate()->GetPrincipal();
     }
+
     MOZ_ASSERT(principal);
 
     RefPtr<GetSubscriptionCallback> callback = new GetSubscriptionCallback(mProxy, mScope);
@@ -340,7 +273,7 @@ public:
     }
 
     if (state != PushPermissionState::Granted) {
-      if (mAction == WorkerPushManager::GetSubscriptionAction) {
+      if (mAction == PushManager::GetSubscriptionAction) {
         callback->OnPushSubscriptionError(NS_OK);
         return NS_OK;
       }
@@ -350,15 +283,15 @@ public:
 
     nsCOMPtr<nsIPushService> service =
       do_GetService("@mozilla.org/push/Service;1");
-    if (!service) {
+    if (NS_WARN_IF(!service)) {
       callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
-    if (mAction == WorkerPushManager::SubscribeAction) {
+    if (mAction == PushManager::SubscribeAction) {
       rv = service->Subscribe(mScope, principal, callback);
     } else {
-      MOZ_ASSERT(mAction == WorkerPushManager::GetSubscriptionAction);
+      MOZ_ASSERT(mAction == PushManager::GetSubscriptionAction);
       rv = service->GetSubscription(mScope, principal, callback);
     }
 
@@ -376,46 +309,8 @@ private:
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
-  WorkerPushManager::SubscriptionAction mAction;
+  PushManager::SubscriptionAction mAction;
 };
-
-already_AddRefed<Promise>
-WorkerPushManager::PerformSubscriptionAction(SubscriptionAction aAction, ErrorResult& aRv)
-{
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIGlobalObject> global = worker->GlobalScope();
-  RefPtr<Promise> p = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
-  if (!proxy) {
-    p->MaybeReject(NS_ERROR_DOM_PUSH_ABORT_ERR);
-    return p.forget();
-  }
-
-  RefPtr<GetSubscriptionRunnable> r =
-    new GetSubscriptionRunnable(proxy, mScope, aAction);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
-
-  return p.forget();
-}
-
-already_AddRefed<Promise>
-WorkerPushManager::Subscribe(ErrorResult& aRv)
-{
-  return PerformSubscriptionAction(SubscribeAction, aRv);
-}
-
-already_AddRefed<Promise>
-WorkerPushManager::GetSubscription(ErrorResult& aRv)
-{
-  return PerformSubscriptionAction(GetSubscriptionAction, aRv);
-}
 
 class PermissionResultRunnable final : public WorkerRunnable
 {
@@ -445,6 +340,7 @@ public:
     }
 
     mProxy->CleanUp();
+
     return true;
   }
 
@@ -481,7 +377,8 @@ public:
 
     RefPtr<PermissionResultRunnable> r =
       new PermissionResultRunnable(mProxy, rv, state);
-    r->Dispatch();
+    MOZ_ALWAYS_TRUE(r->Dispatch());
+
     return NS_OK;
   }
 
@@ -492,9 +389,99 @@ private:
   RefPtr<PromiseWorkerProxy> mProxy;
 };
 
-already_AddRefed<Promise>
-WorkerPushManager::PermissionState(ErrorResult& aRv)
+} // anonymous namespace
+
+PushManager::PushManager(nsIGlobalObject* aGlobal, PushManagerImpl* aImpl)
+  : mGlobal(aGlobal)
+  , mImpl(aImpl)
 {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aImpl);
+}
+
+PushManager::PushManager(const nsAString& aScope)
+  : mScope(aScope)
+{
+#ifdef DEBUG
+  // There's only one global on a worker, so we don't need to pass a global
+  // object to the constructor.
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+#endif
+}
+
+PushManager::~PushManager()
+{}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushManager, mGlobal, mImpl)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PushManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PushManager)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+JSObject*
+PushManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  return PushManagerBinding::Wrap(aCx, this, aGivenProto);
+}
+
+// static
+already_AddRefed<PushManager>
+PushManager::Constructor(GlobalObject& aGlobal,
+                         const nsAString& aScope,
+                         ErrorResult& aRv)
+{
+  if (!NS_IsMainThread()) {
+    RefPtr<PushManager> ret = new PushManager(aScope);
+    return ret.forget();
+  }
+
+  RefPtr<PushManagerImpl> impl = PushManagerImpl::Constructor(aGlobal,
+                                                              aGlobal.Context(),
+                                                              aScope, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<PushManager> ret = new PushManager(global, impl);
+
+  return ret.forget();
+}
+
+already_AddRefed<Promise>
+PushManager::Subscribe(ErrorResult& aRv)
+{
+  if (mImpl) {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mImpl->Subscribe(aRv);
+  }
+
+  return PerformSubscriptionActionFromWorker(SubscribeAction, aRv);
+}
+
+already_AddRefed<Promise>
+PushManager::GetSubscription(ErrorResult& aRv)
+{
+  if (mImpl) {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mImpl->GetSubscription(aRv);
+  }
+
+  return PerformSubscriptionActionFromWorker(GetSubscriptionAction, aRv);
+}
+
+already_AddRefed<Promise>
+PushManager::PermissionState(ErrorResult& aRv)
+{
+  if (mImpl) {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mImpl->PermissionState(aRv);
+  }
+
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
@@ -518,15 +505,32 @@ WorkerPushManager::PermissionState(ErrorResult& aRv)
   return p.forget();
 }
 
-WorkerPushManager::~WorkerPushManager()
-{}
+already_AddRefed<Promise>
+PushManager::PerformSubscriptionActionFromWorker(
+  SubscriptionAction aAction, ErrorResult& aRv)
+{
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerPushManager)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WorkerPushManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WorkerPushManager)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerPushManager)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+  nsCOMPtr<nsIGlobalObject> global = worker->GlobalScope();
+  RefPtr<Promise> p = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
+  if (!proxy) {
+    p->MaybeReject(NS_ERROR_DOM_PUSH_ABORT_ERR);
+    return p.forget();
+  }
+
+  RefPtr<GetSubscriptionRunnable> r =
+    new GetSubscriptionRunnable(proxy, mScope, aAction);
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+
+  return p.forget();
+}
+
 } // namespace dom
 } // namespace mozilla

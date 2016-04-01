@@ -191,17 +191,30 @@ private:
   nsString mScope;
 };
 
+bool
+CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
+                       nsTArray<uint8_t>& aArray)
+{
+  aBuffer.ComputeLengthAndData();
+  if (!aArray.SetLength(aBuffer.Length(), fallible) ||
+      !aArray.ReplaceElementsAt(0, aBuffer.Length(), aBuffer.Data(),
+                                aBuffer.Length(), fallible)) {
+    return false;
+  }
+  return true;
+}
+
 } // anonymous namespace
 
 PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    const nsAString& aEndpoint,
                                    const nsAString& aScope,
-                                   const nsTArray<uint8_t>& aRawP256dhKey,
-                                   const nsTArray<uint8_t>& aAuthSecret)
+                                   nsTArray<uint8_t>&& aRawP256dhKey,
+                                   nsTArray<uint8_t>&& aAuthSecret)
   : mEndpoint(aEndpoint)
   , mScope(aScope)
-  , mRawP256dhKey(aRawP256dhKey)
-  , mAuthSecret(aAuthSecret)
+  , mRawP256dhKey(Move(aRawP256dhKey))
+  , mAuthSecret(Move(aAuthSecret))
 {
   if (NS_IsMainThread()) {
     mGlobal = aGlobal;
@@ -245,27 +258,20 @@ PushSubscription::Constructor(GlobalObject& aGlobal,
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
-  nsTArray<uint8_t> rawKey;
-  if (!aP256dhKey.IsNull()) {
-    const ArrayBuffer& key = aP256dhKey.Value();
-    key.ComputeLengthAndData();
-    rawKey.SetLength(key.Length());
-    rawKey.ReplaceElementsAt(0, key.Length(), key.Data(), key.Length());
+  nsTArray<uint8_t> rawKey, authSecret;
+  if ((!aP256dhKey.IsNull() && !CopyArrayBufferToArray(aP256dhKey.Value(),
+                                                       rawKey)) ||
+      (!aAuthSecret.IsNull() && !CopyArrayBufferToArray(aAuthSecret.Value(),
+                                                        authSecret))) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
 
-  nsTArray<uint8_t> authSecret;
-  if (!aAuthSecret.IsNull()) {
-    const ArrayBuffer& sekrit = aAuthSecret.Value();
-    sekrit.ComputeLengthAndData();
-    authSecret.SetLength(sekrit.Length());
-    authSecret.ReplaceElementsAt(0, sekrit.Length(),
-                                 sekrit.Data(), sekrit.Length());
-  }
   RefPtr<PushSubscription> sub = new PushSubscription(global,
                                                       aEndpoint,
                                                       aScope,
-                                                      rawKey,
-                                                      authSecret);
+                                                      Move(rawKey),
+                                                      Move(authSecret));
 
   return sub.forget();
 }

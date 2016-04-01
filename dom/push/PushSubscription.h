@@ -38,8 +38,8 @@ public:
   PushSubscription(nsIGlobalObject* aGlobal,
                    const nsAString& aEndpoint,
                    const nsAString& aScope,
-                   const nsTArray<uint8_t>& aP256dhKey,
-                   const nsTArray<uint8_t>& aAuthSecret);
+                   nsTArray<uint8_t>&& aP256dhKey,
+                   nsTArray<uint8_t>&& aAuthSecret);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
