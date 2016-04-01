@@ -1906,6 +1906,16 @@ HyperTextAccessible::RemoveChild(Accessible* aAccessible)
   return Accessible::RemoveChild(aAccessible);
 }
 
+bool
+HyperTextAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
+{
+  int32_t count = mOffsets.Length() - aIndex;
+  if (count > 0 ) {
+    mOffsets.RemoveElementsAt(aIndex, count);
+  }
+  return Accessible::InsertChildAt(aIndex, aChild);
+}
+
 Relation
 HyperTextAccessible::RelationByType(RelationType aType)
 {
