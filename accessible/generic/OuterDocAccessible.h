@@ -41,9 +41,6 @@ public:
 
 protected:
   virtual ~OuterDocAccessible() override;
-
-  // Accessible
-  virtual void CacheChildren() override;
 };
 
 inline OuterDocAccessible*
