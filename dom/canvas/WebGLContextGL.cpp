@@ -1571,7 +1571,8 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     const webgl::FormatUsageInfo* srcFormat;
     uint32_t srcWidth;
     uint32_t srcHeight;
-    if (!ValidateCurFBForRead("readPixels", &srcFormat, &srcWidth, &srcHeight))
+    GLenum srcMode;
+    if (!ValidateCurFBForRead("readPixels", &srcFormat, &srcWidth, &srcHeight, &srcMode))
         return;
 
     // Check the format and type params to assure they are an acceptable pair (as per spec)

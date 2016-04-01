@@ -556,6 +556,7 @@ WebGL2Context::ReadBuffer(GLenum mode)
         }
 
         MakeContextCurrent();
+        mBoundReadFramebuffer->SetReadBufferMode(mode);
         gl->fReadBuffer(mode);
         return;
     }
