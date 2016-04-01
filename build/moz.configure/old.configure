@@ -411,6 +411,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     for handler in logger.handlers:
         if isinstance(handler, logging.FileHandler):
             handler.close()
+            logger.removeHandler(handler)
 
     log_size = os.path.getsize('config.log')
 
