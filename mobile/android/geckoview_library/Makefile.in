@@ -2,22 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-INSTALL_TARGETS += GECKOVIEW_LIBRARY
-GECKOVIEW_LIBRARY_DEST = $(CURDIR)
-GECKOVIEW_LIBRARY_FILES := \
-  .classpath \
-  .project \
-  build.xml \
-  $(NULL)
-
-PP_TARGETS += gen
-gen := \
-  local.properties.in \
-  project.properties.in \
-  AndroidManifest.xml.in \
-  $(NULL)
-gen_FLAGS += -DANDROID_SDK_ROOT=$(ANDROID_SDK_ROOT)
-
 GARBAGE_DIRS = \
   bin \
   libs \

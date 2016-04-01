@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/StickyTimeDuration.h"
+#include "mozilla/ComputedTimingFunction.h"
 
 // X11 has a #define for None
 #ifdef None
@@ -67,6 +68,9 @@ struct ComputedTiming
     After   // Sampled after (or at) the end of the active interval
   };
   AnimationPhase      mPhase = AnimationPhase::Null;
+
+  ComputedTimingFunction::BeforeFlag mBeforeFlag =
+    ComputedTimingFunction::BeforeFlag::Unset;
 };
 
 } // namespace mozilla

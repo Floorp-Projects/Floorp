@@ -95,10 +95,7 @@ public:
     if (window) {
       nsCOMPtr<nsIDocument> doc = window->GetDocument();
       if (doc) {
-        nsContentUtils::DispatchChromeEvent(doc,
-                                            window->GetOuterWindow(),
-                                            NS_LITERAL_STRING("DOMServiceWorkerFocusClient"),
-                                            true, true);
+        nsContentUtils::DispatchFocusChromeEvent(window->GetOuterWindow());
         clientInfo.reset(new ServiceWorkerClientInfo(doc));
       }
     }

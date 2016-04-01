@@ -13,7 +13,7 @@ enum IDBRequestReadyState {
     "done"
 };
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker,System)]
 interface IDBRequest : EventTarget {
     [Throws]
     readonly    attribute any                  result;

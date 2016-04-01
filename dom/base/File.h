@@ -183,6 +183,12 @@ public:
                    const nsAString& aName, const nsAString& aContentType,
                    int64_t aLastModifiedDate);
 
+  // This method creates a BlobFileImpl for the new File object. This is
+  // thread-safe, cross-process, cross-thread as any other BlobImpl, but, when
+  // GetType() is called, it must dispatch a runnable to the main-thread in
+  // order to use nsIMIMEService.
+  // Would be nice if we try to avoid to use this method outside the
+  // main-thread to avoid extra runnables.
   static already_AddRefed<File>
   CreateFromFile(nsISupports* aParent, nsIFile* aFile, bool aTemporary = false);
 
@@ -224,7 +230,7 @@ public:
               const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
-  void GetName(nsAString& aName);
+  void GetName(nsAString& aName) const;
 
   int64_t GetLastModified(ErrorResult& aRv);
 
@@ -256,7 +262,7 @@ public:
 
   BlobImpl() {}
 
-  virtual void GetName(nsAString& aName) = 0;
+  virtual void GetName(nsAString& aName) const = 0;
 
   virtual void GetPath(nsAString& aName, ErrorResult& aRv) = 0;
 
@@ -392,7 +398,7 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  virtual void GetName(nsAString& aName) override;
+  virtual void GetName(nsAString& aName) const override;
 
   virtual void GetPath(nsAString& aName, ErrorResult& aRv) override;
 

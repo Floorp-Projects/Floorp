@@ -565,27 +565,27 @@ nsWinGesture::PanFeedbackFinalize(HWND hWnd, bool endFeedback)
 bool
 nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
 {
-  aWheelEvent.deltaX = aWheelEvent.deltaY = aWheelEvent.deltaZ = 0.0;
-  aWheelEvent.lineOrPageDeltaX = aWheelEvent.lineOrPageDeltaY = 0;
+  aWheelEvent.mDeltaX = aWheelEvent.mDeltaY = aWheelEvent.mDeltaZ = 0.0;
+  aWheelEvent.mLineOrPageDeltaX = aWheelEvent.mLineOrPageDeltaY = 0;
 
   aWheelEvent.refPoint.x = mPanRefPoint.x;
   aWheelEvent.refPoint.y = mPanRefPoint.y;
-  aWheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
-  aWheelEvent.scrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
+  aWheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  aWheelEvent.mScrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
   aWheelEvent.mIsNoLineOrPageDelta = true;
 
-  aWheelEvent.overflowDeltaX = 0.0;
-  aWheelEvent.overflowDeltaY = 0.0;
+  aWheelEvent.mOverflowDeltaX = 0.0;
+  aWheelEvent.mOverflowDeltaY = 0.0;
 
   // Don't scroll the view if we are currently at a bounds, or, if we are
   // panning back from a max feedback position. This keeps the original drag point
   // constant.
   if (!mXAxisFeedback) {
-    aWheelEvent.deltaX = mPixelScrollDelta.x;
+    aWheelEvent.mDeltaX = mPixelScrollDelta.x;
   }
   if (!mYAxisFeedback) {
-    aWheelEvent.deltaY = mPixelScrollDelta.y;
+    aWheelEvent.mDeltaY = mPixelScrollDelta.y;
   }
 
-  return (aWheelEvent.deltaX != 0 || aWheelEvent.deltaY != 0);
+  return (aWheelEvent.mDeltaX != 0 || aWheelEvent.mDeltaY != 0);
 }

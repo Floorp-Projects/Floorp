@@ -498,13 +498,7 @@ DocAccessible::Shutdown()
 
   mDependentIDsHash.Clear();
   mNodeToAccessibleMap.Clear();
-
-  {
-    // We're about to get rid of all of our children so there won't be anything
-    // to invalidate.
-    AutoTreeMutation mut(this, false);
-    ClearCache(mAccessibleCache);
-  }
+  ClearCache(mAccessibleCache);
 
   HyperTextAccessibleWrap::Shutdown();
 
@@ -1396,10 +1390,14 @@ DocAccessible::ProcessInvalidationList()
           Accessible* child =
             GetAccService()->GetOrCreateAccessible(content, container);
           if (child) {
-            AutoTreeMutation mMut(container);
             RefPtr<AccReorderEvent> reorderEvent =
               new AccReorderEvent(container);
+
+            AutoTreeMutation mt(container);
             container->InsertAfter(child, walker.Prev());
+            mt.AfterInsertion(child);
+            mt.Done();
+
             uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
             FireEventsOnInsertion(container, reorderEvent, flags);
           }
@@ -1475,9 +1473,7 @@ DocAccessible::DoInitialUpdate()
   // Set up a root element and ARIA role mapping.
   UpdateRootElIfNeeded();
 
-  // Build initial tree.  Since its the initial tree there's no group info to
-  // invalidate.
-  AutoTreeMutation mut(this, false);
+  // Build initial tree.
   CacheChildrenInSubtree(this);
 
   // Fire reorder event after the document tree is constructed. Note, since
@@ -1800,7 +1796,7 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
   }
 
   uint32_t updateFlags = 0;
-  AutoTreeMutation mut(aContainer);
+  AutoTreeMutation mt(aContainer);
   RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
 
 #ifdef A11Y_LOG
@@ -1835,12 +1831,14 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
                         "container", aContainer, "child", iter.Child(), nullptr);
 #endif
 
+      mt.AfterInsertion(iter.Child());
       updateFlags |= UpdateTreeInternal(iter.Child(), true, reorderEvent);
       continue;
     }
 
     MOZ_ASSERT_UNREACHABLE("accessible was rejected");
   }
+  mt.Done();
 
 #ifdef A11Y_LOG
   logging::TreeInfo("children after insertion", logging::eVerbose,
@@ -1899,16 +1897,19 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
 
   uint32_t updateFlags = eNoAccessible;
   RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
-  AutoTreeMutation mut(aContainer);
+  AutoTreeMutation mt(aContainer);
 
   if (child) {
+    mt.BeforeRemoval(child);
     updateFlags |= UpdateTreeInternal(child, false, reorderEvent);
   } else {
     TreeWalker walker(aContainer, aChildNode, TreeWalker::eWalkCache);
     while (Accessible* child = walker.Next()) {
+      mt.BeforeRemoval(child);
       updateFlags |= UpdateTreeInternal(child, false, reorderEvent);
     }
   }
+  mt.Done();
 
   // Content insertion/removal is not cause of accessible tree change.
   if (updateFlags == eNoAccessible)
@@ -2189,7 +2190,6 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
     reorderEvent->AddSubMutationEvent(hideEvent);
     FireDelayedEvent(hideEvent);
 
-    AutoTreeMutation mut(curParent);
     curParent->MoveChild(aIdxInParent, aChild);
 
     RefPtr<AccMutationEvent> showEvent = new AccShowEvent(aChild);
@@ -2215,10 +2215,10 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
   reorderEvent->AddSubMutationEvent(hideEvent);
   FireDelayedEvent(hideEvent);
 
-  {
-    AutoTreeMutation mut(curParent);
-    curParent->RemoveChild(aChild);
-  }
+  AutoTreeMutation rmut(curParent);
+  rmut.BeforeRemoval(aChild);
+  curParent->RemoveChild(aChild);
+  rmut.Done();
 
   MaybeNotifyOfValueChange(curParent);
   FireDelayedEvent(reorderEvent);
@@ -2228,10 +2228,10 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
     return true;
   }
 
-  {
-    AutoTreeMutation mut(aNewParent);
-    aNewParent->InsertChildAt(aIdxInParent, aChild);
-  }
+  AutoTreeMutation imut(aNewParent);
+  aNewParent->InsertChildAt(aIdxInParent, aChild);
+  imut.AfterInsertion(aChild);
+  imut.Done();
 
   reorderEvent = new AccReorderEvent(aNewParent);
   RefPtr<AccMutationEvent> showEvent = new AccShowEvent(aChild);
@@ -2262,19 +2262,22 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
       FocusMgr()->HasDOMFocus(aRoot->GetContent()))
     *aFocusedAcc = aRoot;
 
-  aRoot->EnsureChildren();
+  Accessible* root = aRoot->IsHTMLCombobox() ? aRoot->FirstChild() : aRoot;
+  if (root->KidsFromDOM()) {
+    AutoTreeMutation mt(root);
+    TreeWalker walker(root);
+    while (Accessible* child = walker.Next()) {
+      if (child->IsBoundToParent()) {
+        MoveChild(child, root, root->ChildCount());
+        continue;
+      }
 
-  // Make sure we create accessible tree defined in DOM only, i.e. if accessible
-  // provides specific tree (like XUL trees) then tree creation is handled by
-  // this accessible.
-  uint32_t count = aRoot->ContentChildCount();
-  for (uint32_t idx = 0; idx < count; idx++) {
-    Accessible* child = aRoot->ContentChildAt(idx);
-    NS_ASSERTION(child, "Illicit tree change while tree is created!");
-    // Don't cross document boundaries.
-    if (child && child->IsContent()) {
+      root->AppendChild(child);
+      mt.AfterInsertion(child);
+
       CacheChildrenInSubtree(child, aFocusedAcc);
     }
+    mt.Done();
   }
 
   // Fire document load complete on ARIA documents.

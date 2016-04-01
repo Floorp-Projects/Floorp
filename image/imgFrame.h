@@ -210,6 +210,11 @@ public:
   void Abort();
 
   /**
+   * Returns true if this imgFrame has been aborted.
+   */
+  bool IsAborted() const;
+
+  /**
    * Returns true if this imgFrame is completely decoded.
    */
   bool IsFinished() const;

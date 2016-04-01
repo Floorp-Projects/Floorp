@@ -14550,6 +14550,42 @@ class MAsmSelect
     ALLOW_CLONE(MAsmSelect)
 };
 
+class MAsmReinterpret
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    MAsmReinterpret(MDefinition* val, MIRType toType)
+      : MUnaryInstruction(val)
+    {
+        switch (val->type()) {
+          case MIRType_Int32:   MOZ_ASSERT(toType == MIRType_Float32); break;
+          case MIRType_Float32: MOZ_ASSERT(toType == MIRType_Int32);   break;
+          case MIRType_Double:  MOZ_ASSERT(toType == MIRType_Int64);   break;
+          case MIRType_Int64:   MOZ_ASSERT(toType == MIRType_Double);  break;
+          default:              MOZ_CRASH("unexpected reinterpret conversion");
+        }
+        setMovable();
+        setResultType(toType);
+    }
+
+  public:
+    INSTRUCTION_HEADER(AsmReinterpret)
+
+    static MAsmReinterpret* New(TempAllocator& alloc, MDefinition* val, MIRType toType)
+    {
+        return new(alloc) MAsmReinterpret(val, toType);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    ALLOW_CLONE(MAsmReinterpret)
+};
+
 class MUnknownValue : public MNullaryInstruction
 {
   protected:

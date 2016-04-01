@@ -232,6 +232,10 @@ public:
     void SetReadBuffer(GLenum userMode);
     void SetDrawBuffer(GLenum userMode);
 
+    GLenum GetReadBufferMode() const {
+        return mUserReadBufferMode;
+    }
+
     /**
      * Attempts to read pixels from the current bound framebuffer, if
      * it is backed by a SharedSurface.

@@ -102,6 +102,26 @@ function run_test() {
   throws(() => testModule.findSlotByName("Not Present"), /NS_ERROR_FAILURE/,
          "Non-present slot should not be findable by name");
 
+  // Check that the strangely named nsIPKCS11ModuleDB.findSlotByName() works.
+  // In particular, a comment in nsPKCS11Slot.cpp notes that the method
+  // "is essentially the same as nsIPK11Token::findTokenByName, except that it
+  //  returns an nsIPKCS11Slot".
+  let strBundleSvc = Cc["@mozilla.org/intl/stringbundle;1"]
+                       .getService(Ci.nsIStringBundleService);
+  let bundle =
+    strBundleSvc.createBundle("chrome://pipnss/locale/pipnss.properties");
+  let internalTokenName = bundle.GetStringFromName("PrivateTokenDescription");
+  let internalTokenAsSlot = gModuleDB.findSlotByName(internalTokenName);
+  notEqual(internalTokenAsSlot, null,
+           "Internal 'slot' should be findable by name via the module DB");
+  ok(internalTokenAsSlot instanceof Ci.nsIPKCS11Slot,
+     "Module DB findSlotByName() should return a token as an nsIPKCS11Slot");
+  equal(internalTokenAsSlot.name,
+        bundle.GetStringFromName("PrivateSlotDescription"),
+        "Spot check: actual and expected internal 'slot' names should be equal");
+  throws(() => gModuleDB.findSlotByName("Not Present"), /NS_ERROR_FAILURE/,
+         "Non-present 'slot' should not be findable by name via the module DB");
+
   // Check that deleting the test module makes it disappear from the module list.
   pkcs11.deleteModule("PKCS11 Test Module");
   checkTestModuleNotPresent();

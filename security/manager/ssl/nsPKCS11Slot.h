@@ -7,6 +7,7 @@
 #ifndef nsPKCS11Slot_h
 #define nsPKCS11Slot_h
 
+#include "ScopedNSSTypes.h"
 #include "nsICryptoFIPSInfo.h"
 #include "nsIPKCS11Module.h"
 #include "nsIPKCS11ModuleDB.h"
@@ -23,20 +24,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11SLOT
 
-  explicit nsPKCS11Slot(PK11SlotInfo *slot);
+  explicit nsPKCS11Slot(PK11SlotInfo* slot);
 
 protected:
   virtual ~nsPKCS11Slot();
 
 private:
-
-  PK11SlotInfo *mSlot;
+  mozilla::UniquePK11SlotInfo mSlot;
   nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
   int mSeries;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
-  void refreshSlotInfo();
+  nsresult refreshSlotInfo(const nsNSSShutDownPreventionLock& proofOfLock);
 };
 
 class nsPKCS11Module : public nsIPKCS11Module,
@@ -46,20 +46,21 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11MODULE
 
-  explicit nsPKCS11Module(SECMODModule *module);
+  explicit nsPKCS11Module(SECMODModule* module);
 
 protected:
   virtual ~nsPKCS11Module();
 
 private:
-  SECMODModule *mModule;
+  mozilla::UniqueSECMODModule mModule;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
 };
 
-class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB,
-                         public nsICryptoFIPSInfo
+class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB
+                       , public nsICryptoFIPSInfo
+                       , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -70,7 +71,9 @@ public:
 
 protected:
   virtual ~nsPKCS11ModuleDB();
-  /* additional members */
+
+  // Nothing to release.
+  virtual void virtualDestroyNSSReference() override {}
 };
 
 #define NS_PKCS11MODULEDB_CID \

@@ -84,9 +84,11 @@ _PDH_FMT_LONG = 0x00000100
 class WinCounterManager(CounterManager):
 
     def __init__(self, process_name, process, counters,
-                 childProcess="plugin-container"):
+                 childProcess="firefox-webcontent",
+                 pluginProcess="firefox-plugin-container"):
         CounterManager.__init__(self)
         self.childProcess = childProcess
+        self.pluginProcess = pluginProcess
         self.registeredCounters = {}
         self.registerCounters(counters)
         # PDH might need to be "refreshed" if it has been queried while the
@@ -179,6 +181,8 @@ class WinCounterManager(CounterManager):
         pdh.PdhEnumObjectsA(None, None, 0, 1, 0, True)
 
         expandedPaths = _getExpandedCounterPaths(self.childProcess, counter)
+        expandedPaths.append(_getExpandedCounterPaths(self.pluginProcess,
+                                                      counter))
         if not expandedPaths:
             return
         for expandedPath in expandedPaths:

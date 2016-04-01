@@ -74,6 +74,7 @@ function checkPasswordFeaturesAndResetPassword(token, initialPW) {
   token.reset();
   ok(token.needsUserInit,
      "Token should need password init after reset");
+  ok(!token.isLoggedIn(), "Token should be logged out of after reset");
 }
 
 function run_test() {
@@ -85,7 +86,12 @@ function run_test() {
   checkBasicAttributes(token);
 
   ok(!token.isLoggedIn(), "Token should not be logged into yet");
-  let initialPW = "foo 1234567890`~!#$%^&*()-_=+{[}]|\\:;'\",<.>/?";
+  // Test that attempting to log out even when the token was not logged into
+  // does not result in an error.
+  token.logoutSimple();
+  ok(!token.isLoggedIn(), "Token should still not be logged into");
+
+  let initialPW = "foo 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/? 一二三";
   token.initPassword(initialPW);
   token.login(/*force*/ false);
   ok(token.isLoggedIn(), "Token should now be logged into");
@@ -94,6 +100,8 @@ function run_test() {
 
   // We reset the password previously, so we need to initialize again.
   token.initPassword("arbitrary");
+  ok(token.isLoggedIn(),
+     "Token should be logged into after initializing password again");
   token.logoutSimple();
   ok(!token.isLoggedIn(),
      "Token should be logged out after calling logoutSimple()");
@@ -102,4 +110,6 @@ function run_test() {
      "The internal token should not be considered a hardware token");
   ok(token.isFriendly(),
      "The internal token should always be considered friendly");
+  ok(token.needsLogin(),
+     "The internal token should always need authentication");
 }

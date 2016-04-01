@@ -56,6 +56,8 @@ public:
   virtual KeyBinding AccessKey() const override;
 
   // ApplicationAccessible
+  void Init();
+
   void AppName(nsAString& aName) const
   {
     nsAutoCString cname;
@@ -86,7 +88,6 @@ protected:
   virtual ~ApplicationAccessible() {}
 
   // Accessible
-  virtual void CacheChildren() override;
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult *aError = nullptr) const override;
 

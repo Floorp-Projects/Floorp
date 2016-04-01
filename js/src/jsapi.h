@@ -5562,13 +5562,16 @@ JS_IsIdentifier(JSContext* cx, JS::HandleString str, bool* isIdentifier);
 extern JS_PUBLIC_API(bool)
 JS_IsIdentifier(const char16_t* chars, size_t length);
 
+namespace js {
+class ScriptSource;
+} // namespace js
+
 namespace JS {
 
 class MOZ_RAII JS_PUBLIC_API(AutoFilename)
 {
   private:
-    // Actually a ScriptSource, not put here to avoid including the world.
-    void* ss_;
+    js::ScriptSource* ss_;
     mozilla::Variant<const char*, UniqueChars> filename_;
 
     AutoFilename(const AutoFilename&) = delete;
@@ -5588,7 +5591,7 @@ class MOZ_RAII JS_PUBLIC_API(AutoFilename)
 
     void setOwned(UniqueChars&& filename);
     void setUnowned(const char* filename);
-    void setScriptSource(void* ss);
+    void setScriptSource(js::ScriptSource* ss);
 
     const char* get() const;
 };

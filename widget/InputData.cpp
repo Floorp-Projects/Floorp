@@ -391,13 +391,13 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
     RoundedToInt(ViewAs<LayoutDevicePixel>(mPanStartPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   wheelEvent.buttons = 0;
-  wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
-  wheelEvent.mayHaveMomentum = true; // pan inputs may have momentum
-  wheelEvent.isMomentum = IsMomentum();
-  wheelEvent.lineOrPageDeltaX = mLineOrPageDeltaX;
-  wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
-  wheelEvent.deltaX = mPanDisplacement.x;
-  wheelEvent.deltaY = mPanDisplacement.y;
+  wheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  wheelEvent.mMayHaveMomentum = true; // pan inputs may have momentum
+  wheelEvent.mIsMomentum = IsMomentum();
+  wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
+  wheelEvent.mLineOrPageDeltaY = mLineOrPageDeltaY;
+  wheelEvent.mDeltaX = mPanDisplacement.x;
+  wheelEvent.mDeltaY = mPanDisplacement.y;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
   return wheelEvent;
 }
@@ -460,18 +460,18 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
               aWheelEvent.mTime,
               aWheelEvent.mTimeStamp,
               aWheelEvent.mModifiers)
-  , mDeltaType(DeltaTypeForDeltaMode(aWheelEvent.deltaMode))
+  , mDeltaType(DeltaTypeForDeltaMode(aWheelEvent.mDeltaMode))
   , mScrollMode(SCROLLMODE_INSTANT)
   , mHandledByAPZ(aWheelEvent.mFlags.mHandledByAPZ)
-  , mDeltaX(aWheelEvent.deltaX)
-  , mDeltaY(aWheelEvent.deltaY)
-  , mLineOrPageDeltaX(aWheelEvent.lineOrPageDeltaX)
-  , mLineOrPageDeltaY(aWheelEvent.lineOrPageDeltaY)
+  , mDeltaX(aWheelEvent.mDeltaX)
+  , mDeltaY(aWheelEvent.mDeltaY)
+  , mLineOrPageDeltaX(aWheelEvent.mLineOrPageDeltaX)
+  , mLineOrPageDeltaY(aWheelEvent.mLineOrPageDeltaY)
   , mScrollSeriesNumber(0)
   , mUserDeltaMultiplierX(1.0)
   , mUserDeltaMultiplierY(1.0)
-  , mMayHaveMomentum(aWheelEvent.mayHaveMomentum)
-  , mIsMomentum(aWheelEvent.isMomentum)
+  , mMayHaveMomentum(aWheelEvent.mMayHaveMomentum)
+  , mIsMomentum(aWheelEvent.mIsMomentum)
   , mAllowToOverrideSystemScrollSpeed(
       aWheelEvent.mAllowToOverrideSystemScrollSpeed)
 {
@@ -491,13 +491,13 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
     RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   wheelEvent.buttons = 0;
-  wheelEvent.deltaMode = DeltaModeForDeltaType(mDeltaType);
-  wheelEvent.mayHaveMomentum = mMayHaveMomentum;
-  wheelEvent.isMomentum = mIsMomentum;
-  wheelEvent.deltaX = mDeltaX;
-  wheelEvent.deltaY = mDeltaY;
-  wheelEvent.lineOrPageDeltaX = mLineOrPageDeltaX;
-  wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
+  wheelEvent.mDeltaMode = DeltaModeForDeltaType(mDeltaType);
+  wheelEvent.mMayHaveMomentum = mMayHaveMomentum;
+  wheelEvent.mIsMomentum = mIsMomentum;
+  wheelEvent.mDeltaX = mDeltaX;
+  wheelEvent.mDeltaY = mDeltaY;
+  wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
+  wheelEvent.mLineOrPageDeltaY = mLineOrPageDeltaY;
   wheelEvent.mAllowToOverrideSystemScrollSpeed =
     mAllowToOverrideSystemScrollSpeed;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;

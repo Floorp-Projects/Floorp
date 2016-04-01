@@ -1327,12 +1327,15 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
+  gAccessibilityService = this;
+
   if (XRE_IsParentProcess())
     gApplicationAccessible = new ApplicationAccessibleWrap();
   else
     gApplicationAccessible = new ApplicationAccessible();
 
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()
+  gApplicationAccessible->Init();
 
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::
@@ -1828,9 +1831,7 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 
   statistics::A11yInitialized();
 
-  nsAccessibilityService::gAccessibilityService = service;
   NS_ADDREF(*aResult = service);
-
   return NS_OK;
 }
 

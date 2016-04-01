@@ -29,6 +29,8 @@ namespace mozilla {
 // RefCounted<T> is a helper class for adding reference counting mechanism.
 struct KeyboardInfo : public RefCounted<KeyboardInfo>
 {
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(KeyboardInfo)
+
   nsINode* mTarget;
   WidgetKeyboardEvent mEvent;
   nsEventStatus mStatus;
