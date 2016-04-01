@@ -67,7 +67,7 @@ function run_test() {
 
   listener.destroy();
 
-  listener = new ConsoleAPIListener(null, callback, {consoleID: "foo"});
+  listener = new ConsoleAPIListener(null, callback, "foo");
   listener.init();
   messages = listener.getCachedMessages();
 
