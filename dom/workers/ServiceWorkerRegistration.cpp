@@ -752,7 +752,8 @@ ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptio
 }
 
 already_AddRefed<PushManager>
-ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
+ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
+                                                    ErrorResult& aRv)
 {
   AssertIsOnMainThread();
 
@@ -768,24 +769,9 @@ ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
       return nullptr;
     }
 
-    // TODO: bug 1148117.  This will fail when swr is exposed on workers
-    JS::Rooted<JSObject*> jsImplObj(nsContentUtils::RootingCxForThread());
-    ConstructJSImplementation("@mozilla.org/push/PushManager;1",
-                              globalObject, &jsImplObj, aRv);
+    GlobalObject global(aCx, globalObject->GetGlobalJSObject());
+    mPushManager = PushManager::Constructor(global, mScope, aRv);
     if (aRv.Failed()) {
-      return nullptr;
-    }
-    mPushManager = new PushManager(globalObject, mScope);
-
-    RefPtr<PushManagerImpl> impl = new PushManagerImpl(jsImplObj, globalObject);
-    impl->SetScope(mScope, aRv);
-    if (aRv.Failed()) {
-      mPushManager = nullptr;
-      return nullptr;
-    }
-    mPushManager->SetPushManagerImpl(*impl, aRv);
-    if (aRv.Failed()) {
-      mPushManager = nullptr;
       return nullptr;
     }
   }
@@ -793,7 +779,7 @@ ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
   RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
 
-  #endif /* ! MOZ_SIMPLEPUSH */
+#endif /* ! MOZ_SIMPLEPUSH */
 }
 
 ////////////////////////////////////////////////////
@@ -1217,7 +1203,7 @@ ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOpt
   return Notification::WorkerGet(mWorkerPrivate, aOptions, mScope, aRv);
 }
 
-already_AddRefed<WorkerPushManager>
+already_AddRefed<PushManager>
 ServiceWorkerRegistrationWorkerThread::GetPushManager(ErrorResult& aRv)
 {
 #ifdef MOZ_SIMPLEPUSH
@@ -1225,13 +1211,13 @@ ServiceWorkerRegistrationWorkerThread::GetPushManager(ErrorResult& aRv)
 #else
 
   if (!mPushManager) {
-    mPushManager = new WorkerPushManager(mScope);
+    mPushManager = new PushManager(mScope);
   }
 
-  RefPtr<WorkerPushManager> ret = mPushManager;
+  RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
 
-  #endif /* ! MOZ_SIMPLEPUSH */
+#endif /* ! MOZ_SIMPLEPUSH */
 }
 
 } // dom namespace
