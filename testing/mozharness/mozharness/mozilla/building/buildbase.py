@@ -615,8 +615,8 @@ class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
         self.client_id = None
         self.access_token = None
 
-        # Call this before creating the virtualenv so that we have things like
-        # symbol_server_host in the config
+        # Call this before creating the virtualenv so that we can support
+        # substituting config values with other config values.
         self.query_build_env()
 
         # We need to create the virtualenv directly (without using an action) in
@@ -836,20 +836,13 @@ or run without that action (ie: --no-{action})"
         branch_enabled = self.branch in self.config.get('nightly_promotion_branches')
         return platform_enabled and branch_enabled
 
-    def query_build_env(self, replace_dict=None, **kwargs):
+    def query_build_env(self, **kwargs):
         c = self.config
-
-        if not replace_dict:
-            replace_dict = {}
-        # now let's grab the right host based off staging/production
-        # symbol_server_host is defined in build_pool_specifics.py
-        replace_dict.update({"symbol_server_host": c['symbol_server_host']})
 
         # let's evoke the base query_env and make a copy of it
         # as we don't always want every key below added to the same dict
         env = copy.deepcopy(
-            super(BuildScript, self).query_env(replace_dict=replace_dict,
-                                               **kwargs)
+            super(BuildScript, self).query_env(**kwargs)
         )
 
         # first grab the buildid
