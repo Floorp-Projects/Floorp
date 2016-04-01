@@ -652,6 +652,7 @@ class RefTest(object):
             # browser environment
             browserEnv = self.buildBrowserEnv(options, profileDir)
 
+            self.log.info("Running with e10s: {}".format(options.e10s))
             status = self.runApp(profile,
                                  binary=options.app,
                                  cmdargs=cmdargs,
@@ -662,6 +663,7 @@ class RefTest(object):
                                  symbolsPath=options.symbolsPath,
                                  options=options,
                                  debuggerInfo=debuggerInfo)
+            self.log.info("Process mode: {}".format('e10s' if options.e10s else 'non-e10s'))
             mozleak.process_leak_log(self.leakLogFile,
                                      leak_thresholds=options.leakThresholds,
                                      stack_fixer=get_stack_fixer_function(options.utilityPath,

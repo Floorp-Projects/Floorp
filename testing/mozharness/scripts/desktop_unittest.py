@@ -33,7 +33,7 @@ from mozharness.mozilla.testing.codecoverage import (
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
 SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill']
-SUITE_DEFAULT_E10S = ['mochitest']
+SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
 
 # DesktopUnittest {{{1
 class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin, CodeCoverageMixin):

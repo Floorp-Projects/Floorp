@@ -180,15 +180,9 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           "Valid values are `all', `needs-focus', or `non-needs-focus'. "
                           "Defaults to `all'.")
 
-        self.add_argument("--e10s",
-                          action="store_true",
-                          default=False,
-                          dest="e10s",
-                          help="enables content processes")
-
         self.add_argument("--disable-e10s",
                           action="store_false",
-                          default=False,
+                          default=True,
                           dest="e10s",
                           help="disables content processes")
 
@@ -754,3 +748,8 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
             if (width < 1366 or height < 1050):
                 self.error("ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (
                     width, height))
+
+        # Disable e10s by default on Android because we don't run Android
+        # e10s jobs anywhere yet.
+        options.e10s = False
+        return options
