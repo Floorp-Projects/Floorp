@@ -257,12 +257,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY inspectContextMenu.label     "Inspect Element">
 <!ENTITY inspectContextMenu.accesskey "Q">
 
-<!ENTITY devToolbarCloseButton.tooltiptext "Close Developer Toolbar">
-
-<!ENTITY devToolbarToolsButton.tooltip     "Toggle developer tools">
-
-<!ENTITY devToolbarOtherToolsButton.label  "More Tools">
-
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
 <!ENTITY newUserContext.label             "New Container Tab">
