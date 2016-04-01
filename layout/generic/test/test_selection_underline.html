@@ -11,6 +11,9 @@
 // Canvas related code stolen from layout/base/tests/bidi_numeral_test.js which
 // stole from http://developer.mozilla.org/en/docs/Code_snippets:Canvas
 
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+
 var RemoteCanvas = function(aIFrame, aTest) {
   this.iframe = aIFrame;
   this.test = aTest;
@@ -195,9 +198,19 @@ const kDecorations = [
 
 ];
 
+function IsD2DEnabled() {
+  var enabled = false;
+
+  try {
+    enabled = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).D2DEnabled;
+  } catch(e) {}
+
+  return enabled;
+}
+
 function getFuzz(test) {
-  // Only failing on Windows 8, and only for 16 permutations.
-  if (navigator.userAgent.indexOf("Windows NT 6.2") > -1 &&
+  // Only failing on Windows with Direct2D enabled, and only for 16 permutations.
+  if (IsD2DEnabled() &&
       test.decoration.styleName == "solid" &&
       test.decoration.relativeSize == "1" &&
       test.font.family == "mplusTest" &&
