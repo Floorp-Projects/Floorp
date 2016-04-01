@@ -4,7 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import codecs
 import itertools
+import locale
 import logging
 import os
 import sys
@@ -58,7 +60,19 @@ class ConfigureOutputHandler(logging.Handler):
     '''
     def __init__(self, stdout=sys.stdout, stderr=sys.stderr, maxlen=20):
         super(ConfigureOutputHandler, self).__init__()
-        self._stdout, self._stderr = stdout, stderr
+
+        # Python has this feature where it sets the encoding of pipes to
+        # ascii, which blatantly fails when trying to print out non-ascii.
+        def fix_encoding(fh):
+            try:
+                if not fh.isatty():
+                    return codecs.getwriter(locale.getpreferredencoding())(fh)
+            except AttributeError:
+                pass
+            return fh
+
+        self._stdout = fix_encoding(stdout)
+        self._stderr = fix_encoding(stderr) if stdout != stderr else self._stdout
         try:
             fd1 = self._stdout.fileno()
             fd2 = self._stderr.fileno()
