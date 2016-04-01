@@ -381,14 +381,6 @@ public:
   void EnsureChildren();
 
   /**
-   * Set the child count to -1 (unknown) and null out cached child pointers.
-   * Should be called when accessible tree is changed because document has
-   * transformed. Note, if accessible cares about its parent relation chain
-   * itself should override this method to do nothing.
-   */
-  virtual void InvalidateChildren();
-
-  /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
   bool AppendChild(Accessible* aChild)
