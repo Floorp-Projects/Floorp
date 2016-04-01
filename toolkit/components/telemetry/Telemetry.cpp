@@ -703,7 +703,6 @@ class TelemetryImpl final
 public:
   void InitMemoryReporter();
 
-  static bool IsInitialized();
   static bool CanRecordBase();
   static bool CanRecordExtended();
   static already_AddRefed<nsITelemetry> CreateTelemetryInstance();
@@ -3310,12 +3309,6 @@ TelemetryImpl::SetCanRecordBase(bool canRecord) {
   return NS_OK;
 }
 
-/* static */ bool
-TelemetryImpl::IsInitialized() const
-{
-  return sTelemetry;
-}
-
 /**
  * Indicates if Telemetry can record base data (FHR data). This is true if the
  * FHR data reporting service or self-support are enabled.
@@ -3909,7 +3902,7 @@ Accumulate(ID aHistogram, uint32_t aSample)
 void
 Accumulate(ID aID, const nsCString& aKey, uint32_t aSample)
 {
-  if (!TelemetryImpl::IsInitialized() || !TelemetryImpl::CanRecordBase()) {
+  if (!TelemetryImpl::CanRecordBase()) {
     return;
   }
   const TelemetryHistogram& th = gHistograms[aID];
