@@ -368,6 +368,15 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     result.DrawableRef()->WaitUntilFinished();
   }
 
+  // If we could have done some decoding in this function we need to check if
+  // that decoding encountered an error and hence aborted the surface. We want
+  // to avoid calling IsAborted if we weren't passed any sync decode flag because
+  // IsAborted acquires the monitor for the imgFrame.
+  if (aFlags & (FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST) &&
+    result.DrawableRef()->IsAborted()) {
+    return DrawableFrameRef();
+  }
+
   return Move(result.DrawableRef());
 }
 
