@@ -144,7 +144,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     if (fpChannel && !isPending) {
       fpChannel->ForcePending(true);
     }
-    if (mBrotli->mTotalOut == 0 && !BrotliStateIsStreamEnd(&mBrotli->mState)) {
+    if (mBrotli && (mBrotli->mTotalOut == 0) && !BrotliStateIsStreamEnd(&mBrotli->mState)) {
       status = NS_ERROR_INVALID_CONTENT_ENCODING;
     }
     LOG(("nsHttpCompresssConv %p onstop brotlihandler rv %x\n", this, status));
