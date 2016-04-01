@@ -1135,9 +1135,7 @@ case "$target" in
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
     fi
-    AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(HAVE__MSIZE)
-    AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     BIN_SUFFIX='.exe'
@@ -1874,25 +1872,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
-
-USE_ARM_KUSER=
-
-case "${target}" in
-    arm*-android*|arm*-linuxandroid*)
-        USE_ARM_KUSER=1
-        ;;
-esac
-
-dnl ========================================================
-dnl Use ARM userspace kernel helpers; tell NSPR to enable
-dnl their usage and use them in spidermonkey.
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(arm-kuser,
-[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
-    USE_ARM_KUSER=1,)
-if test -n "$USE_ARM_KUSER"; then
-   AC_DEFINE(USE_ARM_KUSER)
-fi
 
 dnl ========================================================
 dnl =
