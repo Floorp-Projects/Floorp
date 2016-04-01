@@ -417,7 +417,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     ret = subprocess.call(cmd)
     if ret:
         with log.queue_debug():
-            with open('config.log') as fh:
+            with encoded_open('config.log', 'r') as fh:
                 fh.seek(log_size)
                 for line in fh:
                     log.debug(line.rstrip())
