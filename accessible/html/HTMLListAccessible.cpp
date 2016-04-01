@@ -51,6 +51,7 @@ HTMLLIAccessible::
   if (blockFrame && blockFrame->HasBullet()) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     Document()->BindToDocument(mBullet, nullptr);
+    AppendChild(mBullet);
   }
 }
 
