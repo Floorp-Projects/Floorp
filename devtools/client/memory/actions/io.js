@@ -4,12 +4,18 @@
 "use strict";
 
 const { immutableUpdate, reportException, assert } = require("devtools/shared/DevToolsUtils");
-const { snapshotState: states, actions } = require("../constants");
+const { snapshotState: states, actions, viewState } = require("../constants");
 const { L10N, openFilePicker, createSnapshot } = require("../utils");
 const telemetry = require("../telemetry");
-const { selectSnapshot, computeSnapshotData, readSnapshot } = require("./snapshot");
 const { OS } = require("resource://gre/modules/osfile.jsm");
-const VALID_EXPORT_STATES = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
+const {
+  selectSnapshot,
+  computeSnapshotData,
+  readSnapshot,
+  takeCensus,
+  takeTreeMap
+} = require("./snapshot");
+const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
 exports.pickFileAndExportSnapshot = function (snapshot) {
   return function* (dispatch, getState) {

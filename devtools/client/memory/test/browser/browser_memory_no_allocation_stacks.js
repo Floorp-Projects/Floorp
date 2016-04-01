@@ -7,6 +7,8 @@
 
 const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 const censusDisplayActions = require("devtools/client/memory/actions/census-display");
+const { viewState } = require("devtools/client/memory/constants");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
@@ -15,6 +17,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const front = panel.panelWin.gFront;
   const { getState, dispatch } = panel.panelWin.gStore;
   const doc = panel.panelWin.document;
+
+  dispatch(changeView(viewState.CENSUS));
 
   ok(!getState().allocations.recording,
      "Should not be recording allocagtions");
