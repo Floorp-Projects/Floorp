@@ -1457,7 +1457,20 @@ public:
     }
 
     if (!StringBeginsWith(mRegistration->mScope, maxPrefix)) {
-      NS_WARNING("By default a service worker's scope is restricted to at or below it's script's location.");
+      nsXPIDLString message;
+      NS_ConvertUTF8toUTF16 reportScope(mRegistration->mScope);
+      NS_ConvertUTF8toUTF16 reportMaxPrefix(maxPrefix);
+      const char16_t* params[] = { reportScope.get(), reportMaxPrefix.get() };
+
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "ServiceWorkerScopePathMismatch",
+                                                 params, message);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to format localized string");
+      swm->ReportToAllClients(mScope,
+                              message,
+                              EmptyString(),
+                              EmptyString(), 0, 0,
+                              nsIScriptError::errorFlag);
       Fail(NS_ERROR_DOM_SECURITY_ERR);
       return;
     }
@@ -2711,9 +2724,13 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                          uint32_t aFlags)
 {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  nsresult rv;
+
+  if (!aFilename.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri), aFilename);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
   AutoTArray<uint64_t, 16> windows;
