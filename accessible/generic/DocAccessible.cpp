@@ -2063,11 +2063,20 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
   MOZ_ASSERT(aOwner, "aOwner must be a valid pointer");
   MOZ_ASSERT(aOwner->Elm(), "aOwner->Elm() must be a valid pointer");
 
+#ifdef A11Y_LOG
+  logging::TreeInfo("aria owns relocation", logging::eVerbose, aOwner);
+#endif
+
   IDRefsIterator iter(this, aOwner->Elm(), nsGkAtoms::aria_owns);
   Accessible* child = nullptr;
 
   uint32_t arrayIdx = 0, insertIdx = aOwner->ChildCount() - children->Length();
   while ((child = iter.Next())) {
+#ifdef A11Y_LOG
+  logging::TreeInfo("aria owns traversal", logging::eVerbose,
+                    "candidate", child, nullptr);
+#endif
+
     // Same child on same position, no change.
     if (child->Parent() == aOwner &&
         child->IndexInParent() == static_cast<int32_t>(insertIdx)) {
@@ -2095,18 +2104,11 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
       }
     }
 
-    if (child->Parent() == aOwner) {
-      if (child->IsRelocated()) {
-        children->RemoveElement(child);
-      }
-      MoveChild(child, insertIdx);
+    if (MoveChild(child, aOwner, insertIdx)) {
+      child->SetRelocated(true);
       children->InsertElementAt(arrayIdx, child);
       arrayIdx++;
       insertIdx = child->IndexInParent() + 1;
-
-    } else if (SeizeChild(aOwner, child, insertIdx)) {
-      children->InsertElementAt(arrayIdx, child);
-      insertIdx++; arrayIdx++;
     }
   }
 
@@ -2115,106 +2117,6 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
   if (children->Length() == 0) {
     mARIAOwnsHash.Remove(aOwner);
   }
-}
-
-bool
-DocAccessible::SeizeChild(Accessible* aNewParent, Accessible* aChild,
-                          int32_t aIdxInParent)
-{
-  Accessible* oldParent = aChild->Parent();
-  if (!oldParent) {
-    NS_ERROR("No parent? The tree is broken!");
-    return false;
-  }
-
-  int32_t oldIdxInParent = aChild->IndexInParent();
-
-#ifdef A11Y_LOG
-  logging::TreeInfo("aria owns seize child", 0,
-                    "old parent", oldParent, "new parent", aNewParent,
-                    "child", aChild, nullptr);
-#endif
-
-  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(oldParent);
-  RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(aChild, false);
-  reorderEvent->AddSubMutationEvent(hideEvent);
-
-  {
-    AutoTreeMutation mut(oldParent);
-    oldParent->RemoveChild(aChild);
-  }
-
-  bool isReinserted = false;
-  {
-    AutoTreeMutation mut(aNewParent);
-    isReinserted = aNewParent->InsertChildAt(aIdxInParent, aChild);
-  }
-
-#ifdef A11Y_LOG
-    logging::TreeInfo("aria owns seize child: new parent tree after",
-                      logging::eVerbose, aNewParent);
-#endif
-
-  if (!isReinserted) {
-    AutoTreeMutation mut(oldParent);
-    oldParent->InsertChildAt(oldIdxInParent, aChild);
-    return false;
-  }
-
-  // The child may be stolen from other ARIA owns element.
-  if (aChild->IsRelocated()) {
-    nsTArray<RefPtr<Accessible> >* children = mARIAOwnsHash.Get(oldParent);
-    children->RemoveElement(aChild);
-  }
-
-  FireDelayedEvent(hideEvent);
-  MaybeNotifyOfValueChange(oldParent);
-  FireDelayedEvent(reorderEvent);
-
-  reorderEvent = new AccReorderEvent(aNewParent);
-  RefPtr<AccMutationEvent> showEvent = new AccShowEvent(aChild);
-  reorderEvent->AddSubMutationEvent(showEvent);
-
-  FireDelayedEvent(showEvent);
-  MaybeNotifyOfValueChange(aNewParent);
-  FireDelayedEvent(reorderEvent);
-
-  aChild->SetRelocated(true);
-  return true;
-}
-
-void
-DocAccessible::MoveChild(Accessible* aChild, int32_t aIdxInParent)
-{
-  NS_PRECONDITION(aChild->Parent(), "No parent?");
-
-  Accessible* parent = aChild->Parent();
-  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(parent);
-  RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(aChild, false);
-  reorderEvent->AddSubMutationEvent(hideEvent);
-
-#ifdef A11Y_LOG
-  logging::TreeInfo("aria owns move child", 0,
-                    "parent", parent, "child", aChild, nullptr);
-#endif
-
-  AutoTreeMutation mut(parent);
-  parent->MoveChild(aIdxInParent, aChild);
-  aChild->SetRelocated(true);
-
-#ifdef A11Y_LOG
-  logging::TreeInfo("aria owns move child: parent tree after",
-                    logging::eVerbose, parent);
-#endif
-
-  FireDelayedEvent(hideEvent);
-
-  RefPtr<AccMutationEvent> showEvent = new AccShowEvent(aChild);
-  reorderEvent->AddSubMutationEvent(showEvent);
-  FireDelayedEvent(showEvent);
-
-  MaybeNotifyOfValueChange(parent);
-  FireDelayedEvent(reorderEvent);
 }
 
 void
@@ -2240,53 +2142,115 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
                       "old parent", owner, "child", child, nullptr);
 #endif
 
-    RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
-    RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(child, false);
-    reorderEvent->AddSubMutationEvent(hideEvent);
-    FireDelayedEvent(hideEvent);
+    // Unset relocated flag to find an insertion point for the child.
+    child->SetRelocated(false);
 
-    {
-      AutoTreeMutation mut(owner);
-      owner->RemoveChild(child);
-      child->SetRelocated(false);
-    }
-
-    MaybeNotifyOfValueChange(owner);
-    FireDelayedEvent(reorderEvent);
-
-#ifdef A11Y_LOG
-    logging::TreeInfo("aria owns put child back: old parent tree after",
-                      logging::eVerbose, owner);
-#endif
-
-    // and put it back where it belongs to.
+    int32_t idxInParent = -1;
     Accessible* origContainer = GetContainerAccessible(child->GetContent());
     if (origContainer) {
       TreeWalker walker(origContainer);
       if (walker.Seek(child->GetContent())) {
         Accessible* prevChild = walker.Prev();
-        {
-          AutoTreeMutation mut(origContainer);
-          origContainer->InsertAfter(child, prevChild);
-        }
-
-        RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(origContainer);
-        RefPtr<AccMutationEvent> showEvent = new AccShowEvent(child);
-        reorderEvent->AddSubMutationEvent(showEvent);
-        FireDelayedEvent(showEvent);
-        MaybeNotifyOfValueChange(origContainer);
-        FireDelayedEvent(reorderEvent);
-
-#ifdef A11Y_LOG
-        logging::TreeInfo("aria owns put child back: new parent tree after",
-                          logging::eVerbose, origContainer);
-#endif
+        idxInParent = prevChild ? prevChild->IndexInParent() + 1 : 0;
       }
     }
+    MoveChild(child, origContainer, idxInParent);
   }
 
   aChildren->RemoveElementsAt(aStartIdx, aChildren->Length() - aStartIdx);
 }
+
+bool
+DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
+                         int32_t aIdxInParent)
+{
+  MOZ_ASSERT(aChild, "No child");
+  MOZ_ASSERT(aChild->Parent(), "No parent");
+
+  Accessible* curParent = aChild->Parent();
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("move child", 0,
+                    "old parent", curParent, "new parent", aNewParent,
+                    "child", aChild, nullptr);
+#endif
+
+  // If the child was taken from from an ARIA owns element.
+  if (aChild->IsRelocated()) {
+    nsTArray<RefPtr<Accessible> >* children = mARIAOwnsHash.Get(curParent);
+    children->RemoveElement(aChild);
+  }
+
+  if (curParent == aNewParent) {
+    MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");
+
+    RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(curParent);
+    RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(aChild, false);
+    reorderEvent->AddSubMutationEvent(hideEvent);
+    FireDelayedEvent(hideEvent);
+
+    AutoTreeMutation mut(curParent);
+    curParent->MoveChild(aIdxInParent, aChild);
+
+    RefPtr<AccMutationEvent> showEvent = new AccShowEvent(aChild);
+    reorderEvent->AddSubMutationEvent(showEvent);
+    FireDelayedEvent(showEvent);
+
+    MaybeNotifyOfValueChange(curParent);
+    FireDelayedEvent(reorderEvent);
+
+#ifdef A11Y_LOG
+    logging::TreeInfo("move child: parent tree after",
+                      logging::eVerbose, curParent);
+#endif
+    return true;
+  }
+
+  if (!aNewParent->IsAcceptableChild(aChild->GetContent())) {
+    return false;
+  }
+
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(curParent);
+  RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(aChild, false);
+  reorderEvent->AddSubMutationEvent(hideEvent);
+  FireDelayedEvent(hideEvent);
+
+  {
+    AutoTreeMutation mut(curParent);
+    curParent->RemoveChild(aChild);
+  }
+
+  MaybeNotifyOfValueChange(curParent);
+  FireDelayedEvent(reorderEvent);
+
+  // No insertion point for the child.
+  if (aIdxInParent == -1) {
+    return true;
+  }
+
+  {
+    AutoTreeMutation mut(aNewParent);
+    aNewParent->InsertChildAt(aIdxInParent, aChild);
+  }
+
+  reorderEvent = new AccReorderEvent(aNewParent);
+  RefPtr<AccMutationEvent> showEvent = new AccShowEvent(aChild);
+  reorderEvent->AddSubMutationEvent(showEvent);
+  FireDelayedEvent(showEvent);
+
+  MaybeNotifyOfValueChange(aNewParent);
+  FireDelayedEvent(reorderEvent);
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("move child: old parent tree after",
+                    logging::eVerbose, curParent);
+  logging::TreeInfo("move child: new parent tree after",
+                    logging::eVerbose, aNewParent);
+#endif
+
+  return true;
+}
+
 
 void
 DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
