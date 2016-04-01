@@ -2336,6 +2336,7 @@ class MochitestDesktop(MochitestBase):
                 marionette_args['host'] = host
                 marionette_args['port'] = int(port)
 
+            self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
             self.log.info("runtests.py | Running tests: start.\n")
             try:
                 status = self.runApp(testURL,
