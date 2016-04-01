@@ -28398,6 +28398,10 @@
         "url": "/web-animations/animation-effect-timing/direction.html"
       },
       {
+        "path": "web-animations/animation-model/keyframes/effect-value-context.html",
+        "url": "/web-animations/animation-model/keyframes/effect-value-context.html"
+      },
+      {
         "path": "web-animations/animation-effect-timing/duration.html",
         "url": "/web-animations/animation-effect-timing/duration.html"
       },
