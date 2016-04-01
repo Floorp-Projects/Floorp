@@ -141,7 +141,7 @@ public:
                            MediaDecoderReader* aReader,
                            bool aRealTime = false);
 
-  nsresult Init();
+  nsresult Init(MediaDecoder* aDecoder);
 
   // Enumeration for the valid decoding states
   enum State {
