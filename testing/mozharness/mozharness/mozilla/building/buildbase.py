@@ -949,28 +949,6 @@ or run without that action (ie: --no-{action})"
                 check_test_env[env_var] = env_value % dirs
         return check_test_env
 
-    def _query_moz_symbols_buildid(self):
-        # this is a bit confusing but every platform that make
-        # uploadsymbols may or may not include a
-        # MOZ_SYMBOLS_EXTRA_BUILDID in the env and the value of this
-        # varies.
-        # logic goes:
-        #   If it's the release branch, we only include it for
-        # 64bit platforms and we use just the platform as value.
-        #   If it's a project branch off m-c, we include only the branch
-        # for the value on 32 bit platforms and we include both the
-        # platform and branch for 64 bit platforms
-        c = self.config
-        moz_symbols_extra_buildid = ''
-        if c.get('use_platform_in_symbols_extra_buildid'):
-            moz_symbols_extra_buildid += self.stage_platform
-        if c.get('use_branch_in_symbols_extra_buildid'):
-            if moz_symbols_extra_buildid:
-                moz_symbols_extra_buildid += '-%s' % (self.branch,)
-            else:
-                moz_symbols_extra_buildid = self.branch
-        return moz_symbols_extra_buildid
-
     def _query_who(self):
         """ looks for who triggered the build with a change.
 
@@ -1629,9 +1607,6 @@ or run without that action (ie: --no-{action})"
         """builds application."""
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
-        symbols_extra_buildid = self._query_moz_symbols_buildid()
-        if symbols_extra_buildid:
-            env['MOZ_SYMBOLS_EXTRA_BUILDID'] = symbols_extra_buildid
 
         # XXX Bug 1037883 - mozconfigs can not find buildprops.json when builds
         # are through mozharness. This is not pretty but it is a stopgap
