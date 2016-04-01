@@ -257,17 +257,8 @@ else
     if test -z "$HOST_CC"; then
         HOST_CC="$CC"
     fi
-    if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
-    fi
     if test -z "$HOST_CXX"; then
         HOST_CXX="$CXX"
-    fi
-    if test -z "$HOST_CXXFLAGS"; then
-        HOST_CXXFLAGS="$CXXFLAGS"
-    fi
-    if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
     fi
     if test -z "$HOST_RANLIB"; then
         HOST_RANLIB="$RANLIB"
