@@ -6207,7 +6207,7 @@ namespace JS {
 void AutoFilename::reset()
 {
     if (ss_) {
-        reinterpret_cast<ScriptSource*>(ss_)->decref();
+        ss_->decref();
         ss_ = nullptr;
     }
     if (filename_.is<const char*>())
@@ -6216,15 +6216,14 @@ void AutoFilename::reset()
         filename_.as<UniqueChars>().reset();
 }
 
-void AutoFilename::setScriptSource(void* p)
+void AutoFilename::setScriptSource(js::ScriptSource* p)
 {
     MOZ_ASSERT(!ss_);
     MOZ_ASSERT(!get());
     ss_ = p;
     if (p) {
-        ScriptSource* ss = reinterpret_cast<ScriptSource*>(p);
-        ss->incref();
-        setUnowned(ss->filename());
+        p->incref();
+        setUnowned(p->filename());
     }
 }
 
