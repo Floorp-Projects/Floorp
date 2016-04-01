@@ -17,8 +17,10 @@ extern mozilla::LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPKCS11Slot, nsIPKCS11Slot)
 
-nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
+nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo* slot)
 {
+  MOZ_ASSERT(slot);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
@@ -75,19 +77,23 @@ nsPKCS11Slot::~nsPKCS11Slot()
   shutdown(calledFromObject);
 }
 
-void nsPKCS11Slot::virtualDestroyNSSReference()
+void
+nsPKCS11Slot::virtualDestroyNSSReference()
 {
   destructorSafeDestroyNSSReference();
 }
 
-void nsPKCS11Slot::destructorSafeDestroyNSSReference()
+void
+nsPKCS11Slot::destructorSafeDestroyNSSReference()
 {
   mSlot = nullptr;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetName(char16_t **aName)
+NS_IMETHODIMP
+nsPKCS11Slot::GetName(char16_t** aName)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -109,9 +115,11 @@ nsPKCS11Slot::GetName(char16_t **aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetDesc(char16_t **aDesc)
+NS_IMETHODIMP
+nsPKCS11Slot::GetDesc(char16_t** aDesc)
 {
+  NS_ENSURE_ARG_POINTER(aDesc);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -125,9 +133,11 @@ nsPKCS11Slot::GetDesc(char16_t **aDesc)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetManID(char16_t **aManID)
+NS_IMETHODIMP
+nsPKCS11Slot::GetManID(char16_t** aManID)
 {
+  NS_ENSURE_ARG_POINTER(aManID);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -141,9 +151,11 @@ nsPKCS11Slot::GetManID(char16_t **aManID)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetHWVersion(char16_t **aHWVersion)
+NS_IMETHODIMP
+nsPKCS11Slot::GetHWVersion(char16_t** aHWVersion)
 {
+  NS_ENSURE_ARG_POINTER(aHWVersion);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -157,9 +169,11 @@ nsPKCS11Slot::GetHWVersion(char16_t **aHWVersion)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetFWVersion(char16_t **aFWVersion)
+NS_IMETHODIMP
+nsPKCS11Slot::GetFWVersion(char16_t** aFWVersion)
 {
+  NS_ENSURE_ARG_POINTER(aFWVersion);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -173,9 +187,11 @@ nsPKCS11Slot::GetFWVersion(char16_t **aFWVersion)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
+NS_IMETHODIMP
+nsPKCS11Slot::GetToken(nsIPK11Token** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -185,9 +201,11 @@ nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Slot::GetTokenName(char16_t **aName)
+NS_IMETHODIMP
+nsPKCS11Slot::GetTokenName(char16_t** aName)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -207,8 +225,10 @@ nsPKCS11Slot::GetTokenName(char16_t **aName)
 }
 
 NS_IMETHODIMP
-nsPKCS11Slot::GetStatus(uint32_t *_retval)
+nsPKCS11Slot::GetStatus(uint32_t* _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -232,8 +252,10 @@ nsPKCS11Slot::GetStatus(uint32_t *_retval)
 
 NS_IMPL_ISUPPORTS(nsPKCS11Module, nsIPKCS11Module)
 
-nsPKCS11Module::nsPKCS11Module(SECMODModule *module)
+nsPKCS11Module::nsPKCS11Module(SECMODModule* module)
 {
+  MOZ_ASSERT(module);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
@@ -251,19 +273,23 @@ nsPKCS11Module::~nsPKCS11Module()
   shutdown(calledFromObject);
 }
 
-void nsPKCS11Module::virtualDestroyNSSReference()
+void
+nsPKCS11Module::virtualDestroyNSSReference()
 {
   destructorSafeDestroyNSSReference();
 }
 
-void nsPKCS11Module::destructorSafeDestroyNSSReference()
+void
+nsPKCS11Module::destructorSafeDestroyNSSReference()
 {
   mModule = nullptr;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Module::GetName(char16_t **aName)
+NS_IMETHODIMP
+nsPKCS11Module::GetName(char16_t** aName)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -272,9 +298,11 @@ nsPKCS11Module::GetName(char16_t **aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Module::GetLibName(char16_t **aName)
+NS_IMETHODIMP
+nsPKCS11Module::GetLibName(char16_t** aName)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -287,10 +315,12 @@ nsPKCS11Module::GetLibName(char16_t **aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Module::FindSlotByName(const char16_t *aName,
-                               nsIPKCS11Slot **_retval)
+NS_IMETHODIMP
+nsPKCS11Module::FindSlotByName(const char16_t* aName, nsIPKCS11Slot** _retval)
 {
+  // Note: It's OK for |aName| to be null.
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -328,6 +358,8 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
 NS_IMETHODIMP
 nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -372,9 +404,11 @@ nsPKCS11ModuleDB::~nsPKCS11ModuleDB()
   shutdown(calledFromObject);
 }
 
-NS_IMETHODIMP 
-nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -391,9 +425,11 @@ nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module **_retval)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -410,10 +446,13 @@ nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11ModuleDB::FindModuleByName(const char16_t *aName,
-                                   nsIPKCS11Module **_retval)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::FindModuleByName(const char16_t* aName,
+                                   nsIPKCS11Module** _retval)
 {
+  // Note: It's OK for |aName| to be null.
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -433,10 +472,13 @@ nsPKCS11ModuleDB::FindModuleByName(const char16_t *aName,
 /* This is essentially the same as nsIPK11Token::findTokenByName, except
  * that it returns an nsIPKCS11Slot, which may be desired.
  */
-NS_IMETHODIMP 
-nsPKCS11ModuleDB::FindSlotByName(const char16_t *aName,
-                                 nsIPKCS11Slot **_retval)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::FindSlotByName(const char16_t* aName,
+                                 nsIPKCS11Slot** _retval)
 {
+  // Note: It's OK for |aName| to be null.
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -457,6 +499,8 @@ nsPKCS11ModuleDB::FindSlotByName(const char16_t *aName,
 NS_IMETHODIMP
 nsPKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -491,8 +535,11 @@ nsPKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
   return array->Enumerate(_retval);
 }
 
-NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(bool *aCanToggleFIPS)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS)
 {
+  NS_ENSURE_ARG_POINTER(aCanToggleFIPS);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -503,29 +550,28 @@ NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(bool *aCanToggleFIPS)
 }
 
 
-NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
+NS_IMETHODIMP
+nsPKCS11ModuleDB::ToggleFIPSMode()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // The way to toggle FIPS mode in NSS is extremely obscure.
-  // Basically, we delete the internal module, and voila it
-  // gets replaced with the opposite module, ie if it was 
-  // FIPS before, then it becomes non-FIPS next.
-  SECMODModule *internal;
-
-  // This function returns us a pointer to a local copy of 
-  // the internal module stashed in NSS.  We don't want to
-  // delete it since it will cause much pain in NSS.
-  internal = SECMOD_GetInternalModule();
-  if (!internal)
+  // The way to toggle FIPS mode in NSS is extremely obscure. Basically, we
+  // delete the internal module, and it gets replaced with the opposite module
+  // (i.e. if it was FIPS before, then it becomes non-FIPS next).
+  // SECMOD_GetInternalModule() returns a pointer to a local copy of the
+  // internal module stashed in NSS.  We don't want to delete it since it will
+  // cause much pain in NSS.
+  SECMODModule* internal = SECMOD_GetInternalModule();
+  if (!internal) {
     return NS_ERROR_FAILURE;
+  }
 
-  SECStatus srv = SECMOD_DeleteInternalModule(internal->commonName);
-  if (srv != SECSuccess)
+  if (SECMOD_DeleteInternalModule(internal->commonName) != SECSuccess) {
     return NS_ERROR_FAILURE;
+  }
 
   if (PK11_IsFIPS()) {
     Telemetry::Accumulate(Telemetry::FIPS_ENABLED, true);
@@ -534,8 +580,11 @@ NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSEnabled(bool *aIsFIPSEnabled)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::GetIsFIPSEnabled(bool* aIsFIPSEnabled)
 {
+  NS_ENSURE_ARG_POINTER(aIsFIPSEnabled);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -545,7 +594,8 @@ NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSEnabled(bool *aIsFIPSEnabled)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSModeActive(bool *aIsFIPSModeActive)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::GetIsFIPSModeActive(bool* aIsFIPSModeActive)
 {
   return GetIsFIPSEnabled(aIsFIPSModeActive);
 }
