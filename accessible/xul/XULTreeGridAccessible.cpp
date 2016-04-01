@@ -249,6 +249,7 @@ XULTreeGridRowAccessible::
   mAccessibleCache(kDefaultTreeCacheLength)
 {
   mGenericTypes |= eTableRow;
+  mStateFlags |= eNoKidsFromDOM;
 }
 
 XULTreeGridRowAccessible::~XULTreeGridRowAccessible()
@@ -409,13 +410,6 @@ XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridRowAccessible: Accessible protected implementation
-
-void
-XULTreeGridRowAccessible::CacheChildren()
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible
