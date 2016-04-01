@@ -6,6 +6,7 @@
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../../framework/test/shared-head.js */
 /* import-globals-from ../../../framework/test/shared-redux-head.js */
+/* import-globals-from ../../../commandline/test/helpers.js */
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
@@ -14,9 +15,15 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
+// Import the GCLI test helper
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
+  this);
+
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.html/test/browser/";
 
 SimpleTest.requestCompleteLog();
+SimpleTest.waitForExplicitFinish();
 
 DevToolsUtils.testing = true;
 Services.prefs.setCharPref("devtools.devices.url",
