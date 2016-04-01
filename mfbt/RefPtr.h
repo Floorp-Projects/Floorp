@@ -596,7 +596,7 @@ operator!=(decltype(nullptr), const RefPtr<T>& aRhs)
 
 template <class T>
 inline already_AddRefed<T>
-do_AddRef(T*&& aObj)
+do_AddRef(T* aObj)
 {
   RefPtr<T> ref(aObj);
   return ref.forget();
