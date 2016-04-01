@@ -59,13 +59,13 @@ function getTestData() {
   }, {
     authored: "180deg",
     deg: "180deg",
-    rad: "3.14rad",
+    rad: `${Math.round(Math.PI * 10000) / 10000}rad`,
     grad: "200grad",
     turn: "0.5turn"
   }, {
     authored: "180DEG",
     deg: "180DEG",
-    rad: "3.14RAD",
+    rad: `${Math.round(Math.PI * 10000) / 10000}RAD`,
     grad: "200GRAD",
     turn: "0.5TURN"
   }, {
@@ -83,25 +83,25 @@ function getTestData() {
   }, {
     authored: "100grad",
     deg: "90deg",
-    rad: "1.57rad",
+    rad: `${Math.round(Math.PI / 2 * 10000) / 10000}rad`,
     grad: "100grad",
     turn: "0.25turn"
   }, {
     authored: "100GRAD",
     deg: "90DEG",
-    rad: "1.57RAD",
+    rad: `${Math.round(Math.PI / 2 * 10000) / 10000}RAD`,
     grad: "100GRAD",
     turn: "0.25TURN"
   }, {
     authored: "-1turn",
     deg: "-360deg",
-    rad: "-6.28rad",
+    rad: `${-1 * Math.round(Math.PI * 2 * 10000) / 10000}rad`,
     grad: "-400grad",
     turn: "-1turn"
   }, {
     authored: "-10TURN",
     deg: "-3600DEG",
-    rad: "-62.83RAD",
+    rad: `${-1 * Math.round(Math.PI * 2 * 10 * 10000) / 10000}RAD`,
     grad: "-4000GRAD",
     turn: "-10TURN"
   }, {

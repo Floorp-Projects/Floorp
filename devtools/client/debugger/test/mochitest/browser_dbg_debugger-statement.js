@@ -3,6 +3,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejections should be fixed.
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed(
+  "Error: Assertion failure: Should have an event loop.");
+
 /**
  * Tests the behavior of the debugger statement.
  */

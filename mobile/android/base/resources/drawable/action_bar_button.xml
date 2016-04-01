@@ -19,6 +19,6 @@
         </shape>
     </item>
 
-    <item android:drawable="@android:color/transparent"/>
+    <item android:drawable="@color/about_page_header_grey"/>
 
 </selector>

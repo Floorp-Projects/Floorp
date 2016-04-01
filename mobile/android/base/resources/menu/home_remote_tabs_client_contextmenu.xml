@@ -8,7 +8,4 @@
     <item android:id="@+id/home_remote_tabs_hide_client"
           android:title="@string/pref_panels_hide"/>
 
-    <item android:id="@+id/home_remote_tabs_show_client"
-          android:title="@string/pref_panels_show"/>
-
 </menu>

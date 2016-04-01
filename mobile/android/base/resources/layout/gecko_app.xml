@@ -27,7 +27,6 @@
                         android:layout_above="@+id/find_in_page">
 
             <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
-                                         gecko:doinit="false"
                                          android:layout_width="match_parent"
                                          android:layout_height="match_parent"
                                          android:scrollbars="none"/>

@@ -2538,9 +2538,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     if (this._initialDescriptor.enumerable ||
         this._nameString == "this" ||
-        (this._internalItem &&
-         (this._nameString == "<return>" ||
-          this._nameString == "<exception>"))) {
+        this._internalItem) {
       this.ownerView._enum.appendChild(this._target);
       this.ownerView._enumItems.push(this);
     } else {
@@ -3488,6 +3486,19 @@ VariablesView.stringifiers.byType = {
     const name = aGrip.name || "";
     return "Symbol(" + name + ")";
   },
+
+  mapEntry: function(aGrip, {concise}) {
+    let { preview: { key, value }} = aGrip;
+
+    let keyString = VariablesView.getString(key, {
+      concise: true,
+      noStringQuotes: true,
+    });
+    let valueString = VariablesView.getString(value, { concise: true });
+
+    return keyString + " \u2192 " + valueString;
+  },
+
 }; // VariablesView.stringifiers.byType
 
 VariablesView.stringifiers.byObjectClass = {

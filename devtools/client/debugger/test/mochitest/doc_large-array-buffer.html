@@ -16,9 +16,14 @@
         var buffer = new ArrayBuffer(aNumber);
         var largeArray = new Int8Array(buffer);
         var largeObject = {};
+        var largeMap = new Map();
+        var largeSet = new Set();
 
         for (var i = 0; i < aNumber; i++) {
-          largeObject[i] = aNumber - i - 1;
+          let value = aNumber - i - 1;
+          largeObject[i] = value;
+          largeMap.set(i, value);
+          largeSet.add(value);
         }
         debugger;
       }

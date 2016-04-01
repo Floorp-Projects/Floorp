@@ -4,8 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <org.mozilla.gecko.home.BookmarkFolderView xmlns:android="http://schemas.android.com/apk/res/android"
-                                           style="@style/Widget.BookmarkFolderView"
+                                           style="@style/Widget.FolderView"
                                            android:layout_width="match_parent"
-                                           android:layout_height="@dimen/page_group_height"
-                                           android:minHeight="@dimen/page_group_height"
+                                           android:paddingLeft="20dp"
+                                           android:drawablePadding="20dp"
+                                           android:drawableLeft="@drawable/bookmark_folder"
                                            android:gravity="center_vertical"/>
