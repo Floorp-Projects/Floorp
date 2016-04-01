@@ -496,7 +496,6 @@ this.BrowserIDManager.prototype = {
           result = STATUS_OK;
         } else {
           result = LOGIN_FAILED_LOGIN_REJECTED;
-          Services.telemetry.getHistogramById("WEAVE_HAS_NO_KEYS_WHEN_UNLOCKED").add(1);
         }
         log.debug("unlockAndVerifyAuthState re-fetched credentials and is returning", result);
         return result;
@@ -636,7 +635,6 @@ this.BrowserIDManager.prototype = {
           this._log.error("Authentication error in _fetchTokenForUser", err);
           // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
           this._authFailureReason = LOGIN_FAILED_LOGIN_REJECTED;
-          Services.telemetry.getHistogramById("WEAVE_FXA_KEY_FETCH_AUTH_ERRORS").add(1);
         } else {
           this._log.error("Non-authentication error in _fetchTokenForUser", err);
           // for now assume it is just a transient network related problem
