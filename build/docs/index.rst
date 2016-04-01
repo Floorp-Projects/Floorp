@@ -25,6 +25,7 @@ Important Concepts
    jar-manifests
    defining-binaries
    toolchains
+   locales
 
 integrated development environment (IDE)
 ========================================
