@@ -1528,23 +1528,32 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<char16_t>& aSrc
 }
 
 /**
- * This is used to determine whether a character is in one of the punctuation
- * mark classes which CSS says should be part of the first-letter.
- * See http://www.w3.org/TR/CSS2/selector.html#first-letter and
- *     http://www.w3.org/TR/selectors/#first-letter
+ * This is used to determine whether a character is in one of the classes
+ * which CSS says should be part of the first-letter.  Currently, that is
+ * all punctuation classes (P*).  Note that this is a change from CSS2
+ * which excluded Pc and Pd.
+ *
+ * https://www.w3.org/TR/css-pseudo-4/#first-letter-pseudo
+ * "Punctuation (i.e, characters that belong to the Punctuation (P*) Unicode
+ *  general category [UAX44]) [...]"
  */
 
 // static
 bool
 nsContentUtils::IsFirstLetterPunctuation(uint32_t aChar)
 {
-  uint8_t cat = mozilla::unicode::GetGeneralCategory(aChar);
-
-  return (cat == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION ||     // Ps
-          cat == HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION ||    // Pe
-          cat == HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION ||  // Pi
-          cat == HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION ||    // Pf
-          cat == HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION);     // Po
+  switch (mozilla::unicode::GetGeneralCategory(aChar)) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+      return true;
+    default:
+      return false;
+  }
 }
 
 // static
