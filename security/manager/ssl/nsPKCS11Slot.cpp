@@ -23,8 +23,7 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
   if (isAlreadyShutDown())
     return;
 
-  PK11_ReferenceSlot(slot);
-  mSlot = slot;
+  mSlot.reset(PK11_ReferenceSlot(slot));
   mSeries = PK11_GetSlotSeries(slot);
   refreshSlotInfo(locker);
 }
@@ -32,33 +31,38 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
 void
 nsPKCS11Slot::refreshSlotInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  CK_SLOT_INFO slot_info;
-  if (PK11_GetSlotInfo(mSlot, &slot_info) == SECSuccess) {
-    // Set the Description field
-    const char *ccDesc = (const char*)slot_info.slotDescription;
-    const nsACString &cDesc = Substring(
-      ccDesc, 
-      ccDesc+PL_strnlen(ccDesc, sizeof(slot_info.slotDescription)));
-    mSlotDesc = NS_ConvertUTF8toUTF16(cDesc);
-    mSlotDesc.Trim(" ", false, true);
-    // Set the Manufacturer field
-    const char *ccManID = (const char*)slot_info.manufacturerID;
-    const nsACString &cManID = Substring(
-      ccManID, 
-      ccManID+PL_strnlen(ccManID, sizeof(slot_info.manufacturerID)));
-    mSlotManID = NS_ConvertUTF8toUTF16(cManID);
-    mSlotManID.Trim(" ", false, true);
-    // Set the Hardware Version field
-    mSlotHWVersion = EmptyString();
-    mSlotHWVersion.AppendInt(slot_info.hardwareVersion.major);
-    mSlotHWVersion.Append('.');
-    mSlotHWVersion.AppendInt(slot_info.hardwareVersion.minor);
-    // Set the Firmware Version field
-    mSlotFWVersion = EmptyString();
-    mSlotFWVersion.AppendInt(slot_info.firmwareVersion.major);
-    mSlotFWVersion.Append('.');
-    mSlotFWVersion.AppendInt(slot_info.firmwareVersion.minor);
+  CK_SLOT_INFO slotInfo;
+  if (PK11_GetSlotInfo(mSlot.get(), &slotInfo) != SECSuccess) {
+    return;
   }
+
+  // Set the Description field
+  const char* ccDesc = reinterpret_cast<const char*>(slotInfo.slotDescription);
+  const nsACString& cDesc = Substring(
+    ccDesc,
+    ccDesc + PL_strnlen(ccDesc, sizeof(slotInfo.slotDescription)));
+  mSlotDesc = NS_ConvertUTF8toUTF16(cDesc);
+  mSlotDesc.Trim(" ", false, true);
+
+  // Set the Manufacturer field
+  const char* ccManID = reinterpret_cast<const char*>(slotInfo.manufacturerID);
+  const nsACString& cManID = Substring(
+    ccManID,
+    ccManID + PL_strnlen(ccManID, sizeof(slotInfo.manufacturerID)));
+  mSlotManID = NS_ConvertUTF8toUTF16(cManID);
+  mSlotManID.Trim(" ", false, true);
+
+  // Set the Hardware Version field
+  mSlotHWVersion = EmptyString();
+  mSlotHWVersion.AppendInt(slotInfo.hardwareVersion.major);
+  mSlotHWVersion.Append('.');
+  mSlotHWVersion.AppendInt(slotInfo.hardwareVersion.minor);
+
+  // Set the Firmware Version field
+  mSlotFWVersion = EmptyString();
+  mSlotFWVersion.AppendInt(slotInfo.firmwareVersion.major);
+  mSlotFWVersion.Append('.');
+  mSlotFWVersion.AppendInt(slotInfo.firmwareVersion.minor);
 }
 
 nsPKCS11Slot::~nsPKCS11Slot()
@@ -78,10 +82,7 @@ void nsPKCS11Slot::virtualDestroyNSSReference()
 
 void nsPKCS11Slot::destructorSafeDestroyNSSReference()
 {
-  if (mSlot) {
-    PK11_FreeSlot(mSlot);
-    mSlot = nullptr;
-  }
+  mSlot = nullptr;
 }
 
 NS_IMETHODIMP 
@@ -91,10 +92,11 @@ nsPKCS11Slot::GetName(char16_t **aName)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  char *csn = PK11_GetSlotName(mSlot);
+  // |csn| is non-owning.
+  char* csn = PK11_GetSlotName(mSlot.get());
   if (*csn) {
     *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(csn));
-  } else if (PK11_HasRootCerts(mSlot)) {
+  } else if (PK11_HasRootCerts(mSlot.get())) {
     // This is a workaround to an Root Module bug - the root certs module has
     // no slot name.  Not bothering to localize, because this is a workaround
     // and for now all the slot names returned by NSS are char * anyway.
@@ -114,7 +116,7 @@ nsPKCS11Slot::GetDesc(char16_t **aDesc)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (mSeries != PK11_GetSlotSeries(mSlot)) {
+  if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     refreshSlotInfo(locker);
   }
 
@@ -131,7 +133,7 @@ nsPKCS11Slot::GetManID(char16_t **aManID)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mSeries != PK11_GetSlotSeries(mSlot)) {
+  if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     refreshSlotInfo(locker);
   }
   *aManID = ToNewUnicode(mSlotManID);
@@ -147,7 +149,7 @@ nsPKCS11Slot::GetHWVersion(char16_t **aHWVersion)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mSeries != PK11_GetSlotSeries(mSlot)) {
+  if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     refreshSlotInfo(locker);
   }
   *aHWVersion = ToNewUnicode(mSlotHWVersion);
@@ -163,7 +165,7 @@ nsPKCS11Slot::GetFWVersion(char16_t **aFWVersion)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mSeries != PK11_GetSlotSeries(mSlot)) {
+  if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     refreshSlotInfo(locker);
   }
   *aFWVersion = ToNewUnicode(mSlotFWVersion);
@@ -178,7 +180,7 @@ nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsCOMPtr<nsIPK11Token> token = new nsPK11Token(mSlot);
+  nsCOMPtr<nsIPK11Token> token = new nsPK11Token(mSlot.get());
   token.forget(_retval);
   return NS_OK;
 }
@@ -190,17 +192,16 @@ nsPKCS11Slot::GetTokenName(char16_t **aName)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (!PK11_IsPresent(mSlot)) {
+  if (!PK11_IsPresent(mSlot.get())) {
     *aName = nullptr;
     return NS_OK;
   }
 
-  if (mSeries != PK11_GetSlotSeries(mSlot)) {
+  if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     refreshSlotInfo(locker);
   }
 
-
-  *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(PK11_GetTokenName(mSlot)));
+  *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(PK11_GetTokenName(mSlot.get())));
   if (!*aName) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -212,18 +213,20 @@ nsPKCS11Slot::GetStatus(uint32_t *_retval)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (PK11_IsDisabled(mSlot))
+  if (PK11_IsDisabled(mSlot.get())) {
     *_retval = SLOT_DISABLED;
-  else if (!PK11_IsPresent(mSlot))
+  } else if (!PK11_IsPresent(mSlot.get())) {
     *_retval = SLOT_NOT_PRESENT;
-  else if (PK11_NeedLogin(mSlot) && PK11_NeedUserInit(mSlot))
+  } else if (PK11_NeedLogin(mSlot.get()) && PK11_NeedUserInit(mSlot.get())) {
     *_retval = SLOT_UNINITIALIZED;
-  else if (PK11_NeedLogin(mSlot) && !PK11_IsLoggedIn(mSlot, nullptr))
+  } else if (PK11_NeedLogin(mSlot.get()) &&
+             !PK11_IsLoggedIn(mSlot.get(), nullptr)) {
     *_retval = SLOT_NOT_LOGGED_IN;
-  else if (PK11_NeedLogin(mSlot))
+  } else if (PK11_NeedLogin(mSlot.get())) {
     *_retval = SLOT_LOGGED_IN;
-  else
+  } else {
     *_retval = SLOT_READY;
+  }
   return NS_OK;
 }
 
@@ -235,8 +238,7 @@ nsPKCS11Module::nsPKCS11Module(SECMODModule *module)
   if (isAlreadyShutDown())
     return;
 
-  SECMOD_ReferenceModule(module);
-  mModule = module;
+  mModule.reset(SECMOD_ReferenceModule(module));
 }
 
 nsPKCS11Module::~nsPKCS11Module()
@@ -256,10 +258,7 @@ void nsPKCS11Module::virtualDestroyNSSReference()
 
 void nsPKCS11Module::destructorSafeDestroyNSSReference()
 {
-  if (mModule) {
-    SECMOD_DestroyModule(mModule);
-    mModule = nullptr;
-  }
+  mModule = nullptr;
 }
 
 NS_IMETHODIMP 
@@ -296,38 +295,32 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  char *asciiname = ToNewUTF8String(nsDependentString(aName));
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"\n", asciiname));
-  PK11SlotInfo *slotinfo = nullptr;
-  PK11SlotList *slotList = PK11_FindSlotsByNames(mModule->dllName, 
-        asciiname /* slotName */, nullptr /* token Name */, false);
+  NS_ConvertUTF16toUTF8 asciiname(aName);
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"\n", asciiname.get()));
+  UniquePK11SlotInfo slotInfo;
+  UniquePK11SlotList slotList(PK11_FindSlotsByNames(mModule->dllName,
+                                                    asciiname.get() /*slotName*/,
+                                                    nullptr /*tokenName*/,
+                                                    false));
   if (!slotList) {
     /* name must be the token name */
-    slotList = PK11_FindSlotsByNames(mModule->dllName, 
-        nullptr /*slot Name */, asciiname /* token Name */, false);
+    slotList.reset(PK11_FindSlotsByNames(mModule->dllName, nullptr /*slotName*/,
+                                         asciiname.get() /*tokenName*/, false));
   }
-  if (slotList) {
-    /* should only be one */
-    if (slotList->head && slotList->head->slot) {
-      slotinfo =  PK11_ReferenceSlot(slotList->head->slot);
-    }
-    PK11_FreeSlotList(slotList);
+  if (slotList && slotList->head && slotList->head->slot) {
+    slotInfo.reset(PK11_ReferenceSlot(slotList->head->slot));
   }
-  if (!slotinfo) {
+  if (!slotInfo) {
     // workaround - the builtin module has no name
-    if (!asciiname) {
-      return NS_ERROR_FAILURE;
-    } else if (nsCRT::strcmp(asciiname, "Root Certificates") == 0) {
-      slotinfo = PK11_ReferenceSlot(mModule->slots[0]);
-    } else {
-      // give up
-      free(asciiname);
+    if (!asciiname.EqualsLiteral("Root Certificates")) {
+      // Give up.
       return NS_ERROR_FAILURE;
     }
-  } 
-  free(asciiname);
-  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
-  PK11_FreeSlot(slotinfo);
+
+    slotInfo.reset(PK11_ReferenceSlot(mModule->slots[0]));
+  }
+
+  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotInfo.get());
   slot.forget(_retval);
   return NS_OK;
 }
@@ -387,10 +380,13 @@ nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  SECMODModule *nssMod = 
-    SECMOD_CreateModule(nullptr, SECMOD_INT_NAME, nullptr, SECMOD_INT_FLAGS);
-  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
-  SECMOD_DestroyModule(nssMod);
+  UniqueSECMODModule nssMod(
+    SECMOD_CreateModule(nullptr, SECMOD_INT_NAME, nullptr, SECMOD_INT_FLAGS));
+  if (!nssMod) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod.get());
   module.forget(_retval);
   return NS_OK;
 }
@@ -403,10 +399,13 @@ nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module **_retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  SECMODModule *nssMod = 
-    SECMOD_CreateModule(nullptr, SECMOD_FIPS_NAME, nullptr, SECMOD_FIPS_FLAGS);
-  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
-  SECMOD_DestroyModule(nssMod);
+  UniqueSECMODModule nssMod(
+    SECMOD_CreateModule(nullptr, SECMOD_FIPS_NAME, nullptr, SECMOD_FIPS_FLAGS));
+  if (!nssMod) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod.get());
   module.forget(_retval);
   return NS_OK;
 }
@@ -420,13 +419,13 @@ nsPKCS11ModuleDB::FindModuleByName(const char16_t *aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ConvertUTF16toUTF8 aUtf8Name(aName);
-  SECMODModule *mod =
-    SECMOD_FindModule(const_cast<char *>(aUtf8Name.get()));
-  if (!mod)
+  NS_ConvertUTF16toUTF8 utf8Name(aName);
+  UniqueSECMODModule mod(SECMOD_FindModule(const_cast<char*>(utf8Name.get())));
+  if (!mod) {
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod);
-  SECMOD_DestroyModule(mod);
+  }
+
+  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod.get());
   module.forget(_retval);
   return NS_OK;
 }
@@ -443,13 +442,14 @@ nsPKCS11ModuleDB::FindSlotByName(const char16_t *aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ConvertUTF16toUTF8 aUtf8Name(aName);
-  PK11SlotInfo *slotinfo =
-   PK11_FindSlotByName(const_cast<char*>(aUtf8Name.get()));
-  if (!slotinfo)
+  NS_ConvertUTF16toUTF8 utf8Name(aName);
+  UniquePK11SlotInfo slotInfo(
+    PK11_FindSlotByName(const_cast<char*>(utf8Name.get())));
+  if (!slotInfo) {
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
-  PK11_FreeSlot(slotinfo);
+  }
+
+  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotInfo.get());
   slot.forget(_retval);
   return NS_OK;
 }
