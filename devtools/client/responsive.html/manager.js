@@ -197,6 +197,7 @@ ResponsiveUI.prototype = {
     let toolWindow = this.toolWindow = tabBrowser.contentWindow;
     yield waitForMessage(toolWindow, "init");
     toolWindow.addInitialViewport(contentURI);
+    yield waitForMessage(toolWindow, "browser-mounted");
     toolWindow.addEventListener("message", this);
   }),
 

@@ -2,12 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env browser */
+
 "use strict";
 
-const { DOM: dom, createClass, addons } =
+const { Task } = require("resource://gre/modules/Task.jsm");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { getToplevelWindow } = require("sdk/window/utils");
+const { DOM: dom, createClass, addons, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
+const { waitForMessage } = require("../utils/e10s");
 
 module.exports = createClass({
 
@@ -23,6 +29,40 @@ module.exports = createClass({
    */
   propTypes: {
     location: Types.location.isRequired,
+    onBrowserMounted: PropTypes.func.isRequired,
+  },
+
+  /**
+   * Once the browser element has mounted, load the frame script and enable
+   * various features, like floating scrollbars.
+   */
+  componentDidMount: Task.async(function*() {
+    let browser = this.refs.browserContainer.querySelector("iframe.browser");
+    let mm = browser.frameLoader.messageManager;
+    let ready = waitForMessage(mm, "ResponsiveMode:ChildScriptReady");
+    mm.loadFrameScript("resource://devtools/client/responsivedesign/" +
+                       "responsivedesign-child.js", true);
+    yield ready;
+
+    let browserWindow = getToplevelWindow(window);
+    let requiresFloatingScrollbars =
+      !browserWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
+    let started = waitForMessage(mm, "ResponsiveMode:Start:Done");
+    mm.sendAsyncMessage("ResponsiveMode:Start", {
+      requiresFloatingScrollbars,
+      // Tests expect events on resize to yield on various size changes
+      notifyOnResize: DevToolsUtils.testing,
+    });
+    yield started;
+
+    // manager.js waits for this signal before allowing browser tests to start
+    this.props.onBrowserMounted();
+  }),
+
+  componentWillUnmount() {
+    let browser = this.refs.browserContainer.querySelector("iframe.browser");
+    let mm = browser.frameLoader.messageManager;
+    mm.sendAsyncMessage("ResponsiveMode:Stop");
   },
 
   render() {
@@ -35,6 +75,7 @@ module.exports = createClass({
 
     return dom.div(
       {
+        ref: "browserContainer",
         className: "browser-container",
 
         /**
