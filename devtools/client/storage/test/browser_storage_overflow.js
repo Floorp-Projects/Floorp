@@ -1,8 +1,5 @@
 // Test endless scrolling when a lot of items are present in the storage
 // inspector table.
-
-/* import-globals-from head.js */
-
 "use strict";
 
 add_task(function*() {

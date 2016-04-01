@@ -18,8 +18,6 @@
 // indexedDB entries created in storage-listings.html,
 // storage-secured-iframe.html and storage-unsecured-iframe.html
 
-/* import-globals-from head.js */
-
 "use strict";
 
 const testCases = [
