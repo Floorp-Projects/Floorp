@@ -6158,6 +6158,13 @@ nsDisplayPerspective::BuildLayer(nsDisplayListBuilder *aBuilder,
   MOZ_ASSERT(hasPerspective, "Why did we create nsDisplayPerspective?");
 
   /*
+   * ClipListToRange can remove our child after we were created.
+   */
+  if (!mList.GetChildren()->GetTop()) {
+    return nullptr;
+  }
+
+  /*
    * The resulting matrix is still in the coordinate space of the transformed
    * frame. Append a translation to the reference frame coordinates.
    */
