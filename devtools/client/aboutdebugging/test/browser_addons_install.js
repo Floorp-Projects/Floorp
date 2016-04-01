@@ -28,3 +28,30 @@ add_task(function* () {
 
   yield closeAboutDebugging(tab);
 });
+
+add_task(function* () {
+  let { tab, document } = yield openAboutDebugging("addons");
+
+  // Start an observer that looks for the install error before
+  // actually doing the install
+  let top = document.querySelector(".addons-top");
+  let promise = waitForMutation(top, { childList: true });
+
+  // Mock the file picker to select a test addon
+  let MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(null);
+  let file = getSupportsFile("addons/bad/manifest.json");
+  MockFilePicker.returnFiles = [file.file];
+
+  // Trigger the file picker by clicking on the button
+  document.getElementById("load-addon-from-file").click();
+
+  // Now wait for the install error to appear.
+  yield promise;
+
+  // And check that it really is there.
+  let err = document.querySelector(".addons-install-error");
+  isnot(err, null, "Addon install error message appeared");
+
+  yield closeAboutDebugging(tab);
+});
