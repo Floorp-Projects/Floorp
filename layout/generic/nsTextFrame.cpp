@@ -4965,16 +4965,22 @@ nsTextFrame::GetTextDecorations(
   bool useOverride = false;
   nscolor overrideColor = NS_RGBA(0, 0, 0, 0);
 
-  // frameBStartOffset represents the offset to f's BStart from our baseline in our
-  // coordinate space
+  bool nearestBlockFound = false;
+  WritingMode wm = GetWritingMode();
+  bool vertical = wm.IsVertical();
+
+  // physicalBlockStartOffset represents the offset from our baseline
+  // to f's physical block start, which is top in horizontal writing
+  // mode, and left in vertical writing modes, in our coordinate space.
+  // This physical block start is logical block start in most cases,
+  // but for vertical-rl, it is logical block end, and consequently in
+  // that case, it starts from the descent instead of ascent.
+  nscoord physicalBlockStartOffset =
+    wm.IsVerticalRL() ? GetSize().width - mAscent : mAscent;
   // baselineOffset represents the offset from our baseline to f's baseline or
   // the nearest block's baseline, in our coordinate space, whichever is closest
   // during the particular iteration
-  nscoord frameBStartOffset = mAscent,
-          baselineOffset = 0;
-
-  bool nearestBlockFound = false;
-  bool vertical = GetWritingMode().IsVertical();
+  nscoord baselineOffset = 0;
 
   for (nsIFrame* f = this, *fChild = nullptr;
        f;
@@ -5017,19 +5023,22 @@ nsTextFrame::GetTextDecorations(
         const nscoord lineBaselineOffset = LazyGetLineBaselineOffset(fChild,
                                                                      fBlock);
 
-        baselineOffset = frameBStartOffset - lineBaselineOffset -
+        baselineOffset = physicalBlockStartOffset - lineBaselineOffset -
           (vertical ? fChild->GetNormalPosition().x
                     : fChild->GetNormalPosition().y);
       }
     }
     else if (!nearestBlockFound) {
-      // use a dummy WritingMode, because nsTextFrame::GetLogicalBaseLine
-      // doesn't use it anyway
-      baselineOffset = frameBStartOffset - f->GetLogicalBaseline(WritingMode());
+      // offset here is the offset from f's baseline to f's top/left
+      // boundary. It's descent for vertical-rl, and ascent otherwise.
+      nscoord offset = wm.IsVerticalRL() ?
+        f->GetSize().width - f->GetLogicalBaseline(wm) :
+        f->GetLogicalBaseline(wm);
+      baselineOffset = physicalBlockStartOffset - offset;
     }
 
     nearestBlockFound = nearestBlockFound || firstBlock;
-    frameBStartOffset +=
+    physicalBlockStartOffset +=
       vertical ? f->GetNormalPosition().x : f->GetNormalPosition().y;
 
     const uint8_t style = styleText->GetDecorationStyle();
