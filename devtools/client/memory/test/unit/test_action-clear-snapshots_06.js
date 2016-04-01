@@ -7,10 +7,13 @@
 
 const {
   takeSnapshotAndCensus,
-  clearSnapshots } = require("devtools/client/memory/actions/snapshot");
+  clearSnapshots
+} = require("devtools/client/memory/actions/snapshot");
 const {
   snapshotState: states,
-  actions } = require("devtools/client/memory/constants");
+  actions,
+  treeMapState
+} = require("devtools/client/memory/constants");
 const {
   toggleDiffing,
   selectSnapshotForDiffingAndRefresh
@@ -27,12 +30,12 @@ add_task(function* () {
   let store = Store();
   const { getState, dispatch } = store;
 
-  ok(true, "Create 2 snapshots in SAVED_CENSUS state");
+  ok(true, "create 2 snapshots with a saved census");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  ok(true, "Snapshots created in SAVED_CENSUS state");
-  yield waitUntilSnapshotState(store,
-    [states.SAVED_CENSUS, states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+                             [treeMapState.SAVED, treeMapState.SAVED]);
+  ok(true, "snapshots created with a saved census");
 
   dispatch(toggleDiffing());
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,

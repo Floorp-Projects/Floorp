@@ -6,6 +6,7 @@
 let {
   snapshotState: states,
   dominatorTreeState,
+  treeMapState,
 } = require("devtools/client/memory/constants");
 let {
   takeSnapshotAndCensus,
@@ -24,7 +25,7 @@ add_task(function *() {
   let { getState, dispatch } = store;
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
   ok(!getState().snapshots[0].dominatorTree,
      "There shouldn't be a dominator tree model yet since it is not computed " +
      "until we switch to the dominators view.");

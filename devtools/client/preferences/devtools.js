@@ -109,6 +109,7 @@ pref("devtools.memory.enabled", false);
 
 pref("devtools.memory.custom-census-displays", "{}");
 pref("devtools.memory.custom-dominator-tree-displays", "{}");
+pref("devtools.memory.custom-tree-map-displays", "{}");
 
 // Enable the Performance tools
 pref("devtools.performance.enabled", true);

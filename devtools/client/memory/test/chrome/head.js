@@ -25,7 +25,8 @@ var {
   dominatorTreeDisplays,
   dominatorTreeState,
   snapshotState,
-  viewState
+  viewState,
+  censusState
 } = constants;
 
 const {
@@ -41,6 +42,7 @@ var CensusTreeItem = React.createFactory(require("devtools/client/memory/compone
 var DominatorTreeComponent = React.createFactory(require("devtools/client/memory/components/dominator-tree"));
 var DominatorTreeItem = React.createFactory(require("devtools/client/memory/components/dominator-tree-item"));
 var ShortestPaths = React.createFactory(require("devtools/client/memory/components/shortest-paths"));
+var TreeMap = React.createFactory(require("devtools/client/memory/components/tree-map"));
 var Toolbar = React.createFactory(require("devtools/client/memory/components/toolbar"));
 
 // All tests are asynchronous.
@@ -186,16 +188,18 @@ var TEST_HEAP_PROPS = Object.freeze({
           other: Object.freeze({ by: "count", count: true, bytes: true }),
         }),
       }),
+      state: censusState.SAVED,
       inverted: false,
       filter: null,
       expanded: new Set(),
       focused: null,
+      parentMap: Object.freeze(Object.create(null))
     }),
     dominatorTree: TEST_DOMINATOR_TREE,
     error: null,
     imported: false,
     creationTime: 0,
-    state: snapshotState.SAVED_CENSUS,
+    state: snapshotState.READ,
   }),
   sizes: Object.freeze({ shortestPathsSize: .5 }),
   onShortestPathsResize: noop,
@@ -226,6 +230,47 @@ var TEST_TOOLBAR_PROPS = Object.freeze({
   ],
   onDominatorTreeDisplayChange: noop,
   snapshots: [],
+});
+
+function makeTestCensusNode() {
+  return {
+    name: "Function",
+    bytes: 100,
+    totalBytes: 100,
+    count: 100,
+    totalCount: 100,
+    children: []
+  };
+}
+
+var TEST_TREE_MAP_PROPS = Object.freeze({
+  treeMap: Object.freeze({
+    report: {
+      name: null,
+      bytes: 0,
+      totalBytes: 400,
+      count: 0,
+      totalCount: 400,
+      children: [
+        {
+          name: "objects",
+          bytes: 0,
+          totalBytes: 200,
+          count: 0,
+          totalCount: 200,
+          children: [ makeTestCensusNode(), makeTestCensusNode() ]
+        },
+        {
+          name: "other",
+          bytes: 0,
+          totalBytes: 200,
+          count: 0,
+          totalCount: 200,
+          children: [ makeTestCensusNode(), makeTestCensusNode() ],
+        }
+      ]
+    }
+  })
 });
 
 function onNextAnimationFrame(fn) {

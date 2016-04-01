@@ -8,7 +8,8 @@
 const { waitForTime } = require("devtools/shared/DevToolsUtils");
 const {
   snapshotState,
-  diffingState
+  diffingState,
+  treeMapState
 } = require("devtools/client/memory/constants");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
@@ -40,8 +41,9 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   yield waitUntilState(store, state =>
     state.snapshots.length === 2 &&
-    state.snapshots[0].state === snapshotState.SAVED_CENSUS &&
-    state.snapshots[1].state === snapshotState.SAVED_CENSUS);
+    state.snapshots[0].treeMap && state.snapshots[1].treeMap &&
+    state.snapshots[0].treeMap.state === treeMapState.SAVED &&
+    state.snapshots[1].treeMap.state === treeMapState.SAVED);
 
   const listItems = [...doc.querySelectorAll(".snapshot-list-item")];
   is(listItems.length, 2, "Should have two snapshot list items");

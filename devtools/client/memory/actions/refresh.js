@@ -29,6 +29,10 @@ exports.refresh = function (heapWorker) {
         yield dispatch(snapshot.refreshSelectedDominatorTree(heapWorker));
         return;
 
+      case viewState.TREE_MAP:
+        yield dispatch(snapshot.refreshSelectedTreeMap(heapWorker));
+        return;
+
       default:
         assert(false, `Unexpected view state: ${getState().view}`);
     }

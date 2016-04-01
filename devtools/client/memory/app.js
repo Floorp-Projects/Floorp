@@ -6,13 +6,16 @@ const { assert } = require("devtools/shared/DevToolsUtils");
 const { appinfo } = require("Services");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { censusDisplays, dominatorTreeDisplays, diffingState, viewState } = require("./constants");
+const { censusDisplays, dominatorTreeDisplays, treeMapDisplays, diffingState, viewState } = require("./constants");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setCensusDisplayAndRefresh } = require("./actions/census-display");
 const { setDominatorTreeDisplayAndRefresh } = require("./actions/dominator-tree-display");
+const { setTreeMapDisplayAndRefresh } = require("./actions/tree-map-display");
+
 const {
   getCustomCensusDisplays,
   getCustomDominatorTreeDisplays,
+  getCustomTreeMapDisplays,
 } = require("devtools/client/memory/utils");
 const {
   selectSnapshotForDiffingAndRefresh,
@@ -127,6 +130,18 @@ const MemoryApp = createClass({
     ].concat(custom);
   },
 
+  _getTreeMapDisplays() {
+    const customDisplays = getCustomTreeMapDisplays();
+    const custom = Object.keys(customDisplays).reduce((arr, key) => {
+      arr.push(customDisplays[key]);
+      return arr;
+    }, []);
+
+    return [
+      treeMapDisplays.coarseType
+    ].concat(custom);
+  },
+
   render() {
     let {
       dispatch,
@@ -173,6 +188,9 @@ const MemoryApp = createClass({
           dominatorTreeDisplays: this._getDominatorTreeDisplays(),
           onDominatorTreeDisplayChange: newDisplay =>
             dispatch(setDominatorTreeDisplayAndRefresh(heapWorker, newDisplay)),
+          treeMapDisplays: this._getTreeMapDisplays(),
+          onTreeMapDisplayChange: newDisplay =>
+            dispatch(setTreeMapDisplayAndRefresh(heapWorker, newDisplay)),
           onViewChange: v => dispatch(changeViewAndRefresh(v, heapWorker)),
         }),
 

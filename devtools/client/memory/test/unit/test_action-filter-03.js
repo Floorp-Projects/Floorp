@@ -4,9 +4,10 @@
 // Test that changing filter state in the middle of taking a snapshot results in
 // the properly fitered census.
 
-let { snapshotState: states } = require("devtools/client/memory/constants");
+let { snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
 let { setFilterString, setFilterStringAndRefresh } = require("devtools/client/memory/actions/filter");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+let { changeView } = require("devtools/client/memory/actions/view");
 
 function run_test() {
   run_next_test();
@@ -19,24 +20,29 @@ add_task(function *() {
   let store = Store();
   let { getState, dispatch } = store;
 
+  dispatch(changeView(viewState.CENSUS));
+
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVING]);
 
   dispatch(setFilterString("str"));
 
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, snapshot => snapshot.census,
+                             [censusState.SAVED]);
   equal(getState().filter, "str",
         "should want filtered trees");
   equal(getState().snapshots[0].census.filter, "str",
         "snapshot-we-were-in-the-middle-of-saving's census should be filtered");
 
   dispatch(setFilterStringAndRefresh("", heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVING_CENSUS]);
+  yield waitUntilCensusState(store, snapshot => snapshot.census,
+                             [censusState.SAVING]);
   ok(true, "changing filter string retriggers census");
   ok(!getState().filter, "no longer filtering");
 
   dispatch(setFilterString("obj"));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, snapshot => snapshot.census,
+                             [censusState.SAVED]);
   equal(getState().filter, "obj", "filtering for obj now");
   equal(getState().snapshots[0].census.filter, "obj",
         "census-we-were-in-the-middle-of-recomputing should be filtered again");

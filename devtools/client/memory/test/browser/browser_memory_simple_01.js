@@ -6,10 +6,14 @@
  */
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const { viewState, censusState } = require("devtools/client/memory/constants");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const { gStore, document } = panel.panelWin;
   const { getState, dispatch } = gStore;
+
+  dispatch(changeView(viewState.CENSUS));
 
   let snapshotEls = document.querySelectorAll("#memory-tool-container .list li");
   is(getState().snapshots.length, 0, "Starts with no snapshots in store");
@@ -28,9 +32,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   ok(!snapshotEls[0].classList.contains("selected"), "First snapshot no longer has `selected` class");
   ok(snapshotEls[1].classList.contains("selected"), "Second snapshot has `selected` class");
 
-  yield waitUntilState(gStore, state =>
-    state.snapshots[0].state === states.SAVED_CENSUS &&
-    state.snapshots[1].state === states.SAVED_CENSUS);
+  yield waitUntilCensusState(gStore, s => s.census, [censusState.SAVED,
+                                                     censusState.SAVED]);
 
   ok(document.querySelector(".heap-tree-item-name"),
     "Should have rendered some tree items");
