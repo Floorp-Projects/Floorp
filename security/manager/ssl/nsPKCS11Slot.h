@@ -7,6 +7,7 @@
 #ifndef nsPKCS11Slot_h
 #define nsPKCS11Slot_h
 
+#include "ScopedNSSTypes.h"
 #include "nsICryptoFIPSInfo.h"
 #include "nsIPKCS11Module.h"
 #include "nsIPKCS11ModuleDB.h"
@@ -29,7 +30,7 @@ protected:
   virtual ~nsPKCS11Slot();
 
 private:
-  PK11SlotInfo *mSlot;
+  mozilla::UniquePK11SlotInfo mSlot;
   nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
   int mSeries;
 
@@ -51,7 +52,7 @@ protected:
   virtual ~nsPKCS11Module();
 
 private:
-  SECMODModule *mModule;
+  mozilla::UniqueSECMODModule mModule;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
