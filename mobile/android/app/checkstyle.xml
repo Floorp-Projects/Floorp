@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<!-- TODO: Clean up code & add checks:
+       - WhitespaceAround
+       - EmptyLineSeparator
+       - NeedBraces
+       - LeftCurly // placement of "{" in new scope or literal
+       - RightCurly // placement of "}" in close scope or literal
+       - Indentation
+       - OneStatementPerLine
+       - OperatorWrap
+       - SeparatorWrap
+       - MultipleVariableDeclarations
+       - FallThrough
+       (I spent too much time already)
+
+     Maybe add:
+       - OneTopLevelClass
+       - OverloadMethodsDeclarationOrder
+       - Empty*Block // better to catch errors!
+       (I spent too much time already)
+
+     See http://checkstyle.sourceforge.net/google_style.html
+     for a good set of defaults.
+-->
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <!-- TODO: <property name="fileExtensions" value="java, properties, xml"/> -->
+
+    <module name="FileTabCharacter"> <!-- No tabs! -->
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="NoLineWrap">
+            <property name="tokens" value="IMPORT,PACKAGE_DEF"/>
+        </module>
+        <module name="OuterTypeFilename"/> <!-- `class Lol` only in Lol.java -->
+    </module>
+
+</module>

@@ -2,6 +2,7 @@ buildDir "${topobjdir}/gradle/build/mobile/android/app"
 
 apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
 apply plugin: 'com.android.application'
+apply plugin: 'checkstyle'
 
 android {
     compileSdkVersion 23
@@ -209,6 +210,18 @@ dependencies {
 
     // Including the Robotium JAR directly can cause issues with dexing.
     androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.5.4'
+}
+
+// TODO: (bug 1261486): This impl is not robust -
+// we just wanted to land something.
+task checkstyle(type: Checkstyle) {
+    configFile file("checkstyle.xml")
+    // TODO: should use sourceSets from project instead of hard-coded str.
+    source '../base/java/'
+    // TODO: This ignores our pre-processed resources.
+    include '**/*.java'
+    // TODO: classpath should probably be something.
+    classpath = files()
 }
 
 task syncOmnijarFromDistDir(type: Sync) {
