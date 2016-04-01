@@ -20,7 +20,7 @@ add_task(function*() {
   ok(close, "Close button exists");
 
   let toggleToolbox =
-    document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
+    document.getElementById("menu_devToolbox");
   ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);

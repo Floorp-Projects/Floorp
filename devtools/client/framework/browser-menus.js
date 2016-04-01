@@ -13,8 +13,147 @@
  */
 
 const Services = require("Services");
+const MenuStrings = Services.strings.createBundle("chrome://devtools/locale/menus.properties");
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+
+// Keep list of inserted DOM Elements in order to remove them on unload
+// Maps browser xul document => list of DOM Elements
+const FragmentsCache = new Map();
+
+function l10n(key) {
+  return MenuStrings.GetStringFromName(key);
+}
+
+/**
+ * Create a xul:key element
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys are to be added.
+ * @param {String} l10nKey
+ *        Prefix of the properties entry to look for key shortcut in
+ *        localization file. We will look for {property}.key and
+ *        {property}.keytext for non-character shortcuts like F12.
+ * @param {String} command
+ *        Id of the xul:command to map to.
+ * @param {Object} key definition dictionnary
+ *        Definition with following attributes:
+ *        - {String} id
+ *          xul:key's id, automatically prefixed with "key_",
+ *        - {String} modifiers
+ *          Space separater list of modifier names,
+ *        - {Boolean} keytext
+ *          If true, consider the shortcut as a characther one,
+ *          otherwise a non-character one like F12.
+ *
+ * @return XULKeyElement
+ */
+function createKey(doc, l10nKey, command, key) {
+  let k = doc.createElement("key");
+  k.id = "key_" + key.id;
+  let shortcut = l10n(l10nKey + ".key");
+  if (shortcut.startsWith("VK_")) {
+    k.setAttribute("keycode", shortcut);
+    k.setAttribute("keytext", l10n(l10nKey + ".keytext"));
+  } else {
+    k.setAttribute("key", shortcut);
+  }
+  if (command) {
+    k.setAttribute("command", command);
+  }
+  if (key.modifiers) {
+    k.setAttribute("modifiers", key.modifiers);
+  }
+  return k;
+}
+
+/**
+ * Create a xul:menuitem element
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys are to be added.
+ * @param {String} id
+ *        Element id.
+ * @param {String} label
+ *        Menu label.
+ * @param {String} broadcasterId (optional)
+ *        Id of the xul:broadcaster to map to.
+ * @param {String} accesskey (optional)
+ *        Access key of the menuitem, used as shortcut while opening the menu.
+ * @param {Boolean} isCheckbox
+ *        If true, the menuitem will act as a checkbox and have an optional
+ *        tick on its left.
+ *
+ * @return XULMenuItemElement
+ */
+function createMenuItem({ doc, id, label, broadcasterId, accesskey, isCheckbox }) {
+  let menuitem = doc.createElement("menuitem");
+  menuitem.id = id;
+  if (label) {
+    menuitem.setAttribute("label", label);
+  }
+  if (broadcasterId) {
+    menuitem.setAttribute("observes", broadcasterId);
+  }
+  if (accesskey) {
+    menuitem.setAttribute("accesskey", accesskey);
+  }
+  if (isCheckbox) {
+    menuitem.setAttribute("type", "checkbox");
+    menuitem.setAttribute("autocheck", "false");
+  }
+  return menuitem;
+}
+
+/**
+ * Create a xul:broadcaster element
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys are to be added.
+ * @param {String} id
+ *        Element id.
+ * @param {String} label
+ *        Broadcaster label.
+ * @param {Boolean} isCheckbox
+ *        If true, the broadcaster is a checkbox one.
+ *
+ * @return XULMenuItemElement
+ */
+function createBroadcaster({ doc, id, label, isCheckbox }) {
+  let broadcaster = doc.createElement("broadcaster");
+  broadcaster.id = id;
+  broadcaster.setAttribute("label", label);
+  if (isCheckbox) {
+    broadcaster.setAttribute("type", "checkbox");
+    broadcaster.setAttribute("autocheck", "false");
+  }
+  return broadcaster;
+}
+
+/**
+ * Create a xul:command element
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys are to be added.
+ * @param {String} id
+ *        Element id.
+ * @param {String} oncommand
+ *        JS String to run when the command is fired.
+ * @param {Boolean} disabled
+ *        If true, the command is disabled and hidden.
+ *
+ * @return XULCommandElement
+ */
+function createCommand({ doc, id, oncommand, disabled }) {
+  let command = doc.createElement("command");
+  command.id = id;
+  command.setAttribute("oncommand", oncommand);
+  if (disabled) {
+    command.setAttribute("disabled", "true");
+    command.setAttribute("hidden", "true");
+  }
+  return command;
+}
 
 /**
  * Add a <key> to <keyset id="devtoolsKeyset">.
@@ -55,10 +194,11 @@ function createToolMenuElements(toolDefinition, doc) {
     return;
   }
 
-  let cmd = doc.createElement("command");
-  cmd.id = "Tools:" + id;
-  cmd.setAttribute("oncommand",
-      'gDevToolsBrowser.selectToolCommand(gBrowser, "' + id + '");');
+  let cmd = createCommand({
+    doc,
+    id: "Tools:" + id,
+    oncommand: 'gDevToolsBrowser.selectToolCommand(gBrowser, "' + id + '");',
+  });
 
   let key = null;
   if (toolDefinition.key) {
@@ -75,22 +215,23 @@ function createToolMenuElements(toolDefinition, doc) {
     key.setAttribute("modifiers", toolDefinition.modifiers);
   }
 
-  let bc = doc.createElement("broadcaster");
-  bc.id = "devtoolsMenuBroadcaster_" + id;
-  bc.setAttribute("label", toolDefinition.menuLabel || toolDefinition.label);
+  let bc = createBroadcaster({
+    doc,
+    id: "devtoolsMenuBroadcaster_" + id,
+    label: toolDefinition.menuLabel || toolDefinition.label
+  });
   bc.setAttribute("command", cmd.id);
 
   if (key) {
     bc.setAttribute("key", "key_" + id);
   }
 
-  let menuitem = doc.createElement("menuitem");
-  menuitem.id = "menuitem_" + id;
-  menuitem.setAttribute("observes", "devtoolsMenuBroadcaster_" + id);
-
-  if (toolDefinition.accesskey) {
-    menuitem.setAttribute("accesskey", toolDefinition.accesskey);
-  }
+  let menuitem = createMenuItem({
+    doc,
+    id: "menuitem_" + id,
+    broadcasterId: "devtoolsMenuBroadcaster_" + id,
+    accesskey: toolDefinition.accesskey
+  });
 
   return {
     cmd: cmd,
@@ -213,11 +354,96 @@ function addAllToolsToMenu(doc) {
 }
 
 /**
- * Detect the presence of a Firebug.
+ * Add global menus and shortcuts that are not panel specific.
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys and menus are to be added.
  */
-function isFirebugInstalled() {
-  let bootstrappedAddons = Services.prefs.getCharPref("extensions.bootstrappedAddons");
-  return bootstrappedAddons.indexOf("firebug@software.joehewitt.com") != -1;
+function addTopLevelItems(doc) {
+  let keys = doc.createDocumentFragment();
+  let menuItems = doc.createDocumentFragment();
+
+  let { menuitems } = require("../menus");
+  for (let item of menuitems) {
+    if (item.separator) {
+      let separator = doc.createElement("menuseparator");
+      separator.id = item.id;
+      menuItems.appendChild(separator);
+    } else {
+      let { id, l10nKey } = item;
+
+      // Create a <menuitem>
+      let menuitem = createMenuItem({
+        doc,
+        id,
+        label: l10n(l10nKey + ".label"),
+        accesskey: l10n(l10nKey + ".accesskey"),
+        isCheckbox: item.checkbox
+      });
+      menuitem.addEventListener("command", item.oncommand);
+      menuItems.appendChild(menuitem);
+
+      if (item.key && l10nKey) {
+        // Create a <key>
+        let key = createKey(doc, l10nKey, null, item.key);
+        // Bug 371900: command event is fired only if "oncommand" attribute is set.
+        key.setAttribute("oncommand", ";");
+        key.addEventListener("command", item.oncommand);
+        // Refer to the key in order to display the key shortcut at menu ends
+        menuitem.setAttribute("key", key.id);
+        keys.appendChild(key);
+      }
+      if (item.additionalKeys) {
+        // Create additional <key>
+        for (let key of item.additionalKeys) {
+          let node = createKey(doc, key.l10nKey, null, key);
+          // Bug 371900: command event is fired only if "oncommand" attribute is set.
+          node.setAttribute("oncommand", ";");
+          node.addEventListener("command", item.oncommand);
+          keys.appendChild(node);
+        }
+      }
+    }
+  }
+
+  // Cache all nodes before insertion to be able to remove them on unload
+  let nodes = [];
+  for(let node of keys.children) {
+    nodes.push(node);
+  }
+  for(let node of menuItems.children) {
+    nodes.push(node);
+  }
+  FragmentsCache.set(doc, nodes);
+
+  attachKeybindingsToBrowser(doc, keys);
+
+  let menu = doc.getElementById("menuWebDeveloperPopup");
+  menu.appendChild(menuItems);
+
+  // There is still "Page Source" menuitem hardcoded into browser.xul. Instead
+  // of manually inserting everything around it, move it to the expected
+  // position.
+  let pageSource = doc.getElementById("menu_pageSource");
+  let endSeparator = doc.getElementById("devToolsEndSeparator");
+  menu.insertBefore(pageSource, endSeparator);
+}
+
+/**
+ * Remove global menus and shortcuts that are not panel specific.
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys and menus are to be added.
+ */
+function removeTopLevelItems(doc) {
+  let nodes = FragmentsCache.get(doc);
+  if (!nodes) {
+    return;
+  }
+  FragmentsCache.delete(doc);
+  for (let node of nodes) {
+    node.remove();
+  }
 }
 
 /**
@@ -227,10 +453,19 @@ function isFirebugInstalled() {
  *        The document to which keys and menus are to be added.
  */
 exports.addMenus = function (doc) {
-  addAllToolsToMenu(doc);
+  addTopLevelItems(doc);
 
-  if (isFirebugInstalled()) {
-    let broadcaster = doc.getElementById("devtoolsMenuBroadcaster_DevToolbox");
-    broadcaster.removeAttribute("key");
-  }
+  addAllToolsToMenu(doc);
+};
+
+/**
+ * Remove menus and shortcuts from a browser document
+ *
+ * @param {XULDocument} doc
+ *        The document to which keys and menus are to be removed.
+ */
+exports.removeMenus = function (doc) {
+  // We only remove top level entries. Per-tool entries are removed while
+  // unregistering each tool.
+  removeTopLevelItems(doc);
 };
