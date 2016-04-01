@@ -826,8 +826,6 @@ add_task(function* test_getDeviceList() {
 });
 
 add_task(function* test_client_metrics() {
-  Services.telemetry.getKeyedHistogramById("FXA_HAWK_ERRORS").clear();
-
   function writeResp(response, msg) {
     if (typeof msg === "object") {
       msg = JSON.stringify(msg);
@@ -856,11 +854,6 @@ add_task(function* test_client_metrics() {
   }), function(err) {
     return err.errno == 111;
   });
-
-  let histogram = Services.telemetry.getKeyedHistogramById("FXA_HAWK_ERRORS");
-  let snapshot = histogram.snapshot("/session/destroy");
-  do_check_eq(snapshot.sum, 1, "Should report Hawk authentication errors");
-  histogram.clear();
 
   yield deferredStop(server);
 });
