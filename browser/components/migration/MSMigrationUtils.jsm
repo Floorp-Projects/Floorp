@@ -710,8 +710,12 @@ function getTypedURLs(registryKeyPath) {
   } catch (ex) {
     Cu.reportError("Error reading typed URL history: " + ex);
   } finally {
-    typedURLKey.close();
-    typedURLTimeKey.close();
+    if (typedURLKey) {
+      typedURLKey.close();
+    }
+    if (typedURLTimeKey) {
+      typedURLTimeKey.close();
+    }
     cTypes.finalize();
   }
   return typedURLs;
