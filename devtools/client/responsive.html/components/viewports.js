@@ -21,6 +21,7 @@ module.exports = createClass({
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
+    onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
@@ -33,6 +34,7 @@ module.exports = createClass({
       viewports,
       onBrowserMounted,
       onChangeViewportDevice,
+      onContentResize,
       onResizeViewport,
       onRotateViewport,
     } = this.props;
@@ -50,6 +52,7 @@ module.exports = createClass({
           viewport,
           onBrowserMounted,
           onChangeViewportDevice,
+          onContentResize,
           onResizeViewport,
           onRotateViewport,
         });

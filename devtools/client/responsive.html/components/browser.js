@@ -30,6 +30,7 @@ module.exports = createClass({
   propTypes: {
     location: Types.location.isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
+    onContentResize: PropTypes.func.isRequired,
   },
 
   /**
@@ -37,8 +38,16 @@ module.exports = createClass({
    * various features, like floating scrollbars.
    */
   componentDidMount: Task.async(function*() {
+    let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
+
+    // Notify tests when the content has received a resize event.  This is not
+    // quite the same timing as when we _set_ a new size around the browser,
+    // since it still needs to do async work before the content is actually
+    // resized to match.
+    mm.addMessageListener("ResponsiveMode:OnContentResize", onContentResize);
+
     let ready = waitForMessage(mm, "ResponsiveMode:ChildScriptReady");
     mm.loadFrameScript("resource://devtools/client/responsivedesign/" +
                        "responsivedesign-child.js", true);
@@ -60,9 +69,20 @@ module.exports = createClass({
   }),
 
   componentWillUnmount() {
+    let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
+    mm.removeMessageListener("ResponsiveMode:OnContentResize", onContentResize);
     mm.sendAsyncMessage("ResponsiveMode:Stop");
+  },
+
+  onContentResize(msg) {
+    let { onContentResize } = this.props;
+    let { width, height } = msg.data;
+    onContentResize({
+      width,
+      height,
+    });
   },
 
   render() {

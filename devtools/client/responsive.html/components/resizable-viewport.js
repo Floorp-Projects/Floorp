@@ -28,6 +28,7 @@ module.exports = createClass({
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
+    onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
@@ -118,6 +119,7 @@ module.exports = createClass({
       viewport,
       onBrowserMounted,
       onChangeViewportDevice,
+      onContentResize,
       onResizeViewport,
       onRotateViewport,
     } = this.props;
@@ -154,6 +156,7 @@ module.exports = createClass({
         Browser({
           location,
           onBrowserMounted,
+          onContentResize,
         })
       ),
       dom.div({

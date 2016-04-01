@@ -195,10 +195,10 @@ ResponsiveUI.prototype = {
     tabBrowser.loadURI(TOOL_URL);
     yield tabLoaded(this.tab);
     let toolWindow = this.toolWindow = tabBrowser.contentWindow;
+    toolWindow.addEventListener("message", this);
     yield waitForMessage(toolWindow, "init");
     toolWindow.addInitialViewport(contentURI);
     yield waitForMessage(toolWindow, "browser-mounted");
-    toolWindow.addEventListener("message", this);
   }),
 
   destroy() {
@@ -219,6 +219,13 @@ ResponsiveUI.prototype = {
     }
 
     switch (event.data.type) {
+      case "content-resize":
+        let { width, height } = event.data;
+        this.emit("content-resize", {
+          width,
+          height,
+        });
+        break;
       case "exit":
         toolWindow.removeEventListener(event.type, this);
         ResponsiveUIManager.closeIfNeeded(window, tab);
@@ -226,12 +233,22 @@ ResponsiveUI.prototype = {
     }
   },
 
+  getViewportSize() {
+    return this.toolWindow.getViewportSize();
+  },
+
   setViewportSize: Task.async(function*(width, height) {
     yield this.inited;
     this.toolWindow.setViewportSize(width, height);
   }),
 
+  getViewportMessageManager() {
+    return this.toolWindow.getViewportMessageManager();
+  },
+
 };
+
+EventEmitter.decorate(ResponsiveUI.prototype);
 
 function waitForMessage(win, type) {
   let deferred = promise.defer();
