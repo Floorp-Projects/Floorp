@@ -69,8 +69,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
-static const int kMinTelemetryMessageSize = 8192;
-
 nsFrameMessageManager::nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                                              nsFrameMessageManager* aParentManager,
                                              /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
@@ -732,12 +730,6 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  if (data.DataLength() >= kMinTelemetryMessageSize) {
-    Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE,
-                          NS_ConvertUTF16toUTF8(aMessageName),
-                          data.DataLength());
-  }
-
   JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
     objects = &aObjects.toObject();
@@ -816,12 +808,6 @@ nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
   StructuredCloneData data;
   if (aArgc >= 2 && !GetParamsForMessage(aCx, aJSON, aTransfers, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
-  if (data.DataLength() >= kMinTelemetryMessageSize) {
-    Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE,
-                          NS_ConvertUTF16toUTF8(aMessageName),
-                          data.DataLength());
   }
 
   JS::Rooted<JSObject*> objects(aCx);
