@@ -24,6 +24,7 @@ loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/targe
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
+loader.lazyRequireGetter(this, "BrowserMenus", "devtools/client/framework/browser-menus");
 
 loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 
@@ -350,16 +351,12 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    *        The document to which menuitems and handlers are to be added
    */
   _registerBrowserWindow: function(win) {
+    BrowserMenus.addMenus(win.document);
+
     this.updateCommandAvailability(win);
     this.ensurePrefObserver();
     gDevToolsBrowser._trackedBrowserWindows.add(win);
     win.addEventListener("unload", this);
-    gDevToolsBrowser._addAllToolsToMenu(win.document);
-
-    if (this._isFirebugInstalled()) {
-      let broadcaster = win.document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
-      broadcaster.removeAttribute("key");
-    }
 
     let tabContainer = win.gBrowser.tabContainer;
     tabContainer.addEventListener("TabSelect", this, false);
@@ -367,29 +364,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     tabContainer.addEventListener("TabClose", this, false);
     tabContainer.addEventListener("TabPinned", this, false);
     tabContainer.addEventListener("TabUnpinned", this, false);
-  },
-
-  /**
-   * Add a <key> to <keyset id="devtoolsKeyset">.
-   * Appending a <key> element is not always enough. The <keyset> needs
-   * to be detached and reattached to make sure the <key> is taken into
-   * account (see bug 832984).
-   *
-   * @param {XULDocument} doc
-   *        The document to which keys are to be added
-   * @param {XULElement} or {DocumentFragment} keys
-   *        Keys to add
-   */
-  attachKeybindingsToBrowser: function DT_attachKeybindingsToBrowser(doc, keys) {
-    let devtoolsKeyset = doc.getElementById("devtoolsKeyset");
-
-    if (!devtoolsKeyset) {
-      devtoolsKeyset = doc.createElement("keyset");
-      devtoolsKeyset.setAttribute("id", "devtoolsKeyset");
-    }
-    devtoolsKeyset.appendChild(keys);
-    let mainKeyset = doc.getElementById("mainKeyset");
-    mainKeyset.parentNode.insertBefore(devtoolsKeyset, mainKeyset);
   },
 
   /**
@@ -485,16 +459,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Detect the presence of a Firebug.
-   *
-   * @return promise
-   */
-  _isFirebugInstalled: function DT_isFirebugInstalled() {
-    let bootstrappedAddons = Services.prefs.getCharPref("extensions.bootstrappedAddons");
-    return bootstrappedAddons.indexOf("firebug@software.joehewitt.com") != -1;
-  },
-
-  /**
    * Add the menuitem for a tool to all open browser windows.
    *
    * @param {object} toolDefinition
@@ -529,168 +493,12 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
 
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
-      let doc = win.document;
-      let elements = gDevToolsBrowser._createToolMenuElements(toolDefinition, doc);
-
-      doc.getElementById("mainCommandSet").appendChild(elements.cmd);
-
-      if (elements.key) {
-        this.attachKeybindingsToBrowser(doc, elements.key);
-      }
-
-      doc.getElementById("mainBroadcasterSet").appendChild(elements.bc);
-
-      let amp = doc.getElementById("appmenu_webDeveloper_popup");
-      if (amp) {
-        let ref;
-
-        if (prevDef != null) {
-          let menuitem = doc.getElementById("appmenuitem_" + prevDef.id);
-          ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
-        } else {
-          ref = doc.getElementById("appmenu_devtools_separator");
-        }
-
-        if (ref) {
-          amp.insertBefore(elements.appmenuitem, ref);
-        }
-      }
-
-      let ref;
-
-      if (prevDef) {
-        let menuitem = doc.getElementById("menuitem_" + prevDef.id);
-        ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
-      } else {
-        ref = doc.getElementById("menu_devtools_separator");
-      }
-
-      if (ref) {
-        ref.parentNode.insertBefore(elements.menuitem, ref);
-      }
+      BrowserMenus.insertToolMenuElements(win.document, toolDefinition, prevDef);
     }
 
     if (toolDefinition.id === "jsdebugger") {
       gDevToolsBrowser.setSlowScriptDebugHandler();
     }
-  },
-
-  /**
-   * Add all tools to the developer tools menu of a window.
-   *
-   * @param {XULDocument} doc
-   *        The document to which the tool items are to be added.
-   */
-  _addAllToolsToMenu: function DT_addAllToolsToMenu(doc) {
-    let fragCommands = doc.createDocumentFragment();
-    let fragKeys = doc.createDocumentFragment();
-    let fragBroadcasters = doc.createDocumentFragment();
-    let fragAppMenuItems = doc.createDocumentFragment();
-    let fragMenuItems = doc.createDocumentFragment();
-
-    for (let toolDefinition of gDevTools.getToolDefinitionArray()) {
-      if (!toolDefinition.inMenu) {
-        continue;
-      }
-
-      let elements = gDevToolsBrowser._createToolMenuElements(toolDefinition, doc);
-
-      if (!elements) {
-        return;
-      }
-
-      fragCommands.appendChild(elements.cmd);
-      if (elements.key) {
-        fragKeys.appendChild(elements.key);
-      }
-      fragBroadcasters.appendChild(elements.bc);
-      fragAppMenuItems.appendChild(elements.appmenuitem);
-      fragMenuItems.appendChild(elements.menuitem);
-    }
-
-    let mcs = doc.getElementById("mainCommandSet");
-    mcs.appendChild(fragCommands);
-
-    this.attachKeybindingsToBrowser(doc, fragKeys);
-
-    let mbs = doc.getElementById("mainBroadcasterSet");
-    mbs.appendChild(fragBroadcasters);
-
-    let amps = doc.getElementById("appmenu_devtools_separator");
-    if (amps) {
-      amps.parentNode.insertBefore(fragAppMenuItems, amps);
-    }
-
-    let mps = doc.getElementById("menu_devtools_separator");
-    if (mps) {
-      mps.parentNode.insertBefore(fragMenuItems, mps);
-    }
-  },
-
-  /**
-   * Add a menu entry for a tool definition
-   *
-   * @param {string} toolDefinition
-   *        Tool definition of the tool to add a menu entry.
-   * @param {XULDocument} doc
-   *        The document to which the tool menu item is to be added.
-   */
-  _createToolMenuElements: function DT_createToolMenuElements(toolDefinition, doc) {
-    let id = toolDefinition.id;
-
-    // Prevent multiple entries for the same tool.
-    if (doc.getElementById("Tools:" + id)) {
-      return;
-    }
-
-    let cmd = doc.createElement("command");
-    cmd.id = "Tools:" + id;
-    cmd.setAttribute("oncommand",
-        'gDevToolsBrowser.selectToolCommand(gBrowser, "' + id + '");');
-
-    let key = null;
-    if (toolDefinition.key) {
-      key = doc.createElement("key");
-      key.id = "key_" + id;
-
-      if (toolDefinition.key.startsWith("VK_")) {
-        key.setAttribute("keycode", toolDefinition.key);
-      } else {
-        key.setAttribute("key", toolDefinition.key);
-      }
-
-      key.setAttribute("command", cmd.id);
-      key.setAttribute("modifiers", toolDefinition.modifiers);
-    }
-
-    let bc = doc.createElement("broadcaster");
-    bc.id = "devtoolsMenuBroadcaster_" + id;
-    bc.setAttribute("label", toolDefinition.menuLabel || toolDefinition.label);
-    bc.setAttribute("command", cmd.id);
-
-    if (key) {
-      bc.setAttribute("key", "key_" + id);
-    }
-
-    let appmenuitem = doc.createElement("menuitem");
-    appmenuitem.id = "appmenuitem_" + id;
-    appmenuitem.setAttribute("observes", "devtoolsMenuBroadcaster_" + id);
-
-    let menuitem = doc.createElement("menuitem");
-    menuitem.id = "menuitem_" + id;
-    menuitem.setAttribute("observes", "devtoolsMenuBroadcaster_" + id);
-
-    if (toolDefinition.accesskey) {
-      menuitem.setAttribute("accesskey", toolDefinition.accesskey);
-    }
-
-    return {
-      cmd: cmd,
-      key: key,
-      bc: bc,
-      appmenuitem: appmenuitem,
-      menuitem: menuitem
-    };
   },
 
   hasToolboxOpened: function(win) {
@@ -729,46 +537,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   _removeToolFromWindows: function DT_removeToolFromWindows(toolId) {
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
-      gDevToolsBrowser._removeToolFromMenu(toolId, win.document);
+      BrowserMenus.removeToolFromMenu(toolId, win.document);
     }
 
     if (toolId === "jsdebugger") {
       gDevToolsBrowser.unsetSlowScriptDebugHandler();
-    }
-  },
-
-  /**
-   * Remove a tool's menuitem from a window
-   *
-   * @param {string} toolId
-   *        Id of the tool to add a menu entry for
-   * @param {XULDocument} doc
-   *        The document to which the tool menu item is to be removed from
-   */
-  _removeToolFromMenu: function DT_removeToolFromMenu(toolId, doc) {
-    let command = doc.getElementById("Tools:" + toolId);
-    if (command) {
-      command.parentNode.removeChild(command);
-    }
-
-    let key = doc.getElementById("key_" + toolId);
-    if (key) {
-      key.parentNode.removeChild(key);
-    }
-
-    let bc = doc.getElementById("devtoolsMenuBroadcaster_" + toolId);
-    if (bc) {
-      bc.parentNode.removeChild(bc);
-    }
-
-    let appmenuitem = doc.getElementById("appmenuitem_" + toolId);
-    if (appmenuitem) {
-      appmenuitem.parentNode.removeChild(appmenuitem);
-    }
-
-    let menuitem = doc.getElementById("menuitem_" + toolId);
-    if (menuitem) {
-      menuitem.parentNode.removeChild(menuitem);
     }
   },
 
