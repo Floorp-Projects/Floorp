@@ -426,7 +426,7 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
  *         - storeObjectType {string}
  *                           The RetVal type of the store object of this actor.
  * @param {object} overrides
- *        All the methods which you want to be differnt from the ones in
+ *        All the methods which you want to be different from the ones in
  *        StorageActors.defaults method plus the required ones described there.
  */
 StorageActors.createActor = function(options = {}, overrides = {}) {
@@ -674,6 +674,16 @@ StorageActors.createActor({
     response: {}
   }),
 
+  removeItem: method(Task.async(function*(host, name) {
+    this.removeCookie(host, name);
+  }), {
+    request: {
+      host: Arg(0),
+      name: Arg(1),
+    },
+    response: {}
+  }),
+
   maybeSetupChildProcess: function() {
     cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
 
@@ -682,6 +692,7 @@ StorageActors.createActor({
       this.addCookieObservers = cookieHelpers.addCookieObservers;
       this.removeCookieObservers = cookieHelpers.removeCookieObservers;
       this.editCookie = cookieHelpers.editCookie;
+      this.removeCookie = cookieHelpers.removeCookie;
       return;
     }
 
@@ -701,6 +712,8 @@ StorageActors.createActor({
       callParentProcess.bind(null, "removeCookieObservers");
     this.editCookie =
       callParentProcess.bind(null, "editCookie");
+    this.removeCookie =
+      callParentProcess.bind(null, "removeCookie");
 
     addMessageListener("storage:storage-cookie-request-child",
                        cookieHelpers.handleParentRequest);
@@ -854,6 +867,32 @@ var cookieHelpers = {
     );
   },
 
+  removeCookie: function(host, name) {
+    function hostMatches(cookieHost, matchHost) {
+      if (cookieHost == null) {
+        return matchHost == null;
+      }
+      if (cookieHost.startsWith(".")) {
+        return matchHost.endsWith(cookieHost);
+      }
+      return cookieHost == host;
+    }
+
+    let enumerator = Services.cookies.getCookiesFromHost(host);
+    while (enumerator.hasMoreElements()) {
+      let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+      if (hostMatches(cookie.host, host) && cookie.name === name) {
+        Services.cookies.remove(
+          cookie.host,
+          cookie.name,
+          cookie.path,
+          cookie.originAttributes,
+          false
+        );
+      }
+    }
+  },
+
   addCookieObservers: function() {
     Services.obs.addObserver(cookieHelpers, "cookie-changed", false);
     return null;
@@ -902,17 +941,26 @@ var cookieHelpers = {
 
   handleChildRequest: function(msg) {
     switch (msg.json.method) {
-      case "getCookiesFromHost":
+      case "getCookiesFromHost": {
         let host = msg.data.args[0];
         let cookies = cookieHelpers.getCookiesFromHost(host);
         return JSON.stringify(cookies);
-      case "addCookieObservers":
+      }
+      case "addCookieObservers": {
         return cookieHelpers.addCookieObservers();
-      case "removeCookieObservers":
+      }
+      case "removeCookieObservers": {
         return cookieHelpers.removeCookieObservers();
-      case "editCookie":
+      }
+      case "editCookie": {
         let rowdata = msg.data.args[0];
         return cookieHelpers.editCookie(rowdata);
+      }
+      case "removeCookie": {
+        let host = msg.data.args[0];
+        let name = msg.data.args[1];
+        return cookieHelpers.removeCookie(host, name);
+      }
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
         throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
@@ -1113,6 +1161,17 @@ function getObjectForLocalOrSessionStorage(type) {
         value: new LongStringActor(this.conn, item.value || "")
       };
     },
+
+    removeItem: method(Task.async(function*(host, name) {
+      let storage = this.hostVsStores.get(host);
+      storage.removeItem(name);
+    }), {
+      request: {
+        host: Arg(0),
+        name: Arg(1),
+      },
+      response: {}
+    }),
   };
 }
 
