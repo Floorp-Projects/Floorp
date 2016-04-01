@@ -6,6 +6,7 @@ DevToolsModules(
     'aboutdebugging.js',
     'addon-target.js',
     'addons-controls.js',
+    'addons-install-error.js',
     'addons-tab.js',
     'service-worker-target.js',
     'tab-header.js',
