@@ -467,6 +467,7 @@ StyleAnimationValue::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_None:
     case eUnit_Normal:
     case eUnit_UnparsedString:
+    case eUnit_URL:
       return false;
 
     case eUnit_Enumerated:
@@ -2002,6 +2003,7 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
     case eUnit_None:
     case eUnit_Normal:
     case eUnit_UnparsedString:
+    case eUnit_URL:
       return false;
 
     case eUnit_Enumerated:
@@ -2878,6 +2880,10 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
     case eUnit_CSSValuePairList:
       aSpecifiedValue.
         SetDependentPairListValue(aComputedValue.GetCSSValuePairListValue());
+      break;
+    case eUnit_URL:
+      aSpecifiedValue.
+      SetFloatValue(aComputedValue.GetURLV(), eCSSUnit_URL);
       break;
     default:
       return false;
