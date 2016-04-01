@@ -1224,18 +1224,7 @@ static const ClassSpec PlainObjectClassSpec = {
 const Class PlainObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    nullptr,  /* addProperty */
-    nullptr,  /* delProperty */
-    nullptr,  /* getProperty */
-    nullptr,  /* setProperty */
-    nullptr,  /* enumerate */
-    nullptr,  /* resolve */
-    nullptr,  /* mayResolve */
-    nullptr,  /* finalize */
-    nullptr,  /* call */
-    nullptr,  /* hasInstance */
-    nullptr,  /* construct */
-    nullptr,  /* trace */
+    JS_NULL_CLASS_OPS,
     &PlainObjectClassSpec
 };
 

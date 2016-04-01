@@ -484,7 +484,7 @@ IsCacheableNoProperty(JSObject* obj, JSObject* holder, Shape* shape, jsbytecode*
 
     // Just because we didn't find the property on the object doesn't mean it
     // won't magically appear through various engine hacks.
-    if (obj->getClass()->getProperty)
+    if (obj->getClass()->getGetProperty())
         return false;
 
     // Don't generate missing property ICs if we skipped a non-native object, as
@@ -3280,7 +3280,7 @@ IsPropertyAddInlineable(JSContext* cx, NativeObject* obj, HandleId id, ConstantO
         return false;
 
     // Likewise for an addProperty hook, since we'll need to invoke it.
-    if (obj->getClass()->addProperty)
+    if (obj->getClass()->getAddProperty())
         return false;
 
     if (!obj->nonProxyIsExtensible() || !shape->writable())

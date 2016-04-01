@@ -215,9 +215,7 @@ const Class js::TypedProto::class_ = {
  * distinguish which scalar type object this actually is.
  */
 
-const Class js::ScalarTypeDescr::class_ = {
-    "Scalar",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+static const ClassOps ScalarTypeDescrClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -227,6 +225,12 @@ const Class js::ScalarTypeDescr::class_ = {
     nullptr, /* mayResolve */
     TypeDescr::finalize,
     ScalarTypeDescr::call
+};
+
+const Class js::ScalarTypeDescr::class_ = {
+    "Scalar",
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+    &ScalarTypeDescrClassOps
 };
 
 const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
@@ -312,9 +316,7 @@ ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
  * reference type object this actually is.
  */
 
-const Class js::ReferenceTypeDescr::class_ = {
-    "Reference",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+static const ClassOps ReferenceTypeDescrClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -324,6 +326,12 @@ const Class js::ReferenceTypeDescr::class_ = {
     nullptr, /* mayResolve */
     TypeDescr::finalize,
     ReferenceTypeDescr::call
+};
+
+const Class js::ReferenceTypeDescr::class_ = {
+    "Reference",
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+    &ReferenceTypeDescrClassOps
 };
 
 const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
@@ -497,9 +505,7 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext* cx, HandleObject ctorProt
     return NewObjectWithGivenProto<TypedProto>(cx, ctorPrototypePrototype, SingletonObject);
 }
 
-const Class ArrayTypeDescr::class_ = {
-    "ArrayType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+static const ClassOps ArrayTypeDescrClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -511,6 +517,12 @@ const Class ArrayTypeDescr::class_ = {
     nullptr, /* call */
     nullptr, /* hasInstance */
     TypedObject::construct
+};
+
+const Class ArrayTypeDescr::class_ = {
+    "ArrayType",
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+    &ArrayTypeDescrClassOps
 };
 
 const JSPropertySpec ArrayMetaTypeDescr::typeObjectProperties[] = {
@@ -722,9 +734,7 @@ js::IsTypedObjectArray(JSObject& obj)
  * StructType class
  */
 
-const Class StructTypeDescr::class_ = {
-    "StructType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+static const ClassOps StructTypeDescrClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -736,6 +746,12 @@ const Class StructTypeDescr::class_ = {
     nullptr, /* call */
     nullptr, /* hasInstance */
     TypedObject::construct
+};
+
+const Class StructTypeDescr::class_ = {
+    "StructType",
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
+    &StructTypeDescrClassOps
 };
 
 const JSPropertySpec StructMetaTypeDescr::typeObjectProperties[] = {
@@ -2261,9 +2277,7 @@ const ObjectOps TypedObject::objectOps_ = {
 };
 
 #define DEFINE_TYPEDOBJ_CLASS(Name, Trace, flag)         \
-    const Class Name::class_ = {                         \
-        # Name,                                          \
-        Class::NON_NATIVE | flag,                        \
+    static const ClassOps Name##ClassOps = {             \
         nullptr,        /* addProperty */                \
         nullptr,        /* delProperty */                \
         nullptr,        /* getProperty */                \
@@ -2276,6 +2290,11 @@ const ObjectOps TypedObject::objectOps_ = {
         nullptr,        /* hasInstance */                \
         nullptr,        /* construct   */                \
         Trace,                                           \
+    };                                                   \
+    const Class Name::class_ = {                         \
+        # Name,                                          \
+        Class::NON_NATIVE | flag,                        \
+        &Name##ClassOps,                                 \
         JS_NULL_CLASS_SPEC,                              \
         JS_NULL_CLASS_EXT,                               \
         &TypedObject::objectOps_                         \

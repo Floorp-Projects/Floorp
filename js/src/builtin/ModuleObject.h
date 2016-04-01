@@ -264,6 +264,8 @@ class ModuleObject : public NativeObject
                                                   HandleObject exports);
 
   private:
+    static const ClassOps classOps_;
+
     static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(js::FreeOp* fop, JSObject* obj);
 

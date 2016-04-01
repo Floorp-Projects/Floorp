@@ -834,18 +834,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     return functionProto;
 }
 
-static const ClassSpec JSFunctionClassSpec = {
-    CreateFunctionConstructor,
-    CreateFunctionPrototype,
-    nullptr,
-    nullptr,
-    function_methods,
-    function_properties
-};
-
-const Class JSFunction::class_ = {
-    js_Function_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+static const ClassOps JSFunctionClassOps = {
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
     nullptr,                 /* getProperty */
@@ -858,6 +847,21 @@ const Class JSFunction::class_ = {
     fun_hasInstance,
     nullptr,                 /* construct   */
     fun_trace,
+};
+
+static const ClassSpec JSFunctionClassSpec = {
+    CreateFunctionConstructor,
+    CreateFunctionPrototype,
+    nullptr,
+    nullptr,
+    function_methods,
+    function_properties
+};
+
+const Class JSFunction::class_ = {
+    js_Function_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+    &JSFunctionClassOps,
     &JSFunctionClassSpec
 };
 
@@ -2110,8 +2114,8 @@ js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
         gop = nullptr;
         sop = nullptr;
     } else {
-        gop = obj->getClass()->getProperty;
-        sop = obj->getClass()->setProperty;
+        gop = obj->getClass()->getGetProperty();
+        sop = obj->getClass()->getSetProperty();
         MOZ_ASSERT(gop != JS_PropertyStub);
         MOZ_ASSERT(sop != JS_StrictPropertyStub);
     }

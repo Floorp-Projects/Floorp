@@ -430,10 +430,7 @@ str_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
     return true;
 }
 
-const Class StringObject::class_ = {
-    js_String_str,
-    JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+static const ClassOps StringObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -441,6 +438,13 @@ const Class StringObject::class_ = {
     str_enumerate,
     str_resolve,
     str_mayResolve
+};
+
+const Class StringObject::class_ = {
+    js_String_str,
+    JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+    &StringObjectClassOps
 };
 
 /*

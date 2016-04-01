@@ -98,12 +98,15 @@ struct DevTools : public ::testing::Test {
   }
 
   static const JSClass* getGlobalClass() {
-    static const JSClass globalClass = {
-      "global", JSCLASS_GLOBAL_FLAGS,
+    static const JSClassOps globalClassOps = {
       nullptr, nullptr, nullptr, nullptr,
       nullptr, nullptr, nullptr, nullptr,
       nullptr, nullptr, nullptr,
       JS_GlobalObjectTraceHook
+    };
+    static const JSClass globalClass = {
+      "global", JSCLASS_GLOBAL_FLAGS,
+      &globalClassOps
     };
     return &globalClass;
   }

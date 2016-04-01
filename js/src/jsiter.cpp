@@ -381,7 +381,7 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
             }
         } else if (pobj->isNative()) {
             // Give the object a chance to resolve all lazy properties
-            if (JSEnumerateOp enumerate = pobj->getClass()->enumerate) {
+            if (JSEnumerateOp enumerate = pobj->getClass()->getEnumerate()) {
                 if (!enumerate(cx, pobj.as<NativeObject>()))
                     return false;
             }
@@ -798,7 +798,7 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
         if (obj->is<TypedArrayObject>() ||
             obj->hasUncacheableProto() ||
             obj->getOpsEnumerate() ||
-            obj->getClass()->enumerate ||
+            obj->getClass()->getEnumerate() ||
             obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
         {
             return false;
@@ -1084,11 +1084,7 @@ PropertyIteratorObject::finalize(FreeOp* fop, JSObject* obj)
         fop->free_(ni);
 }
 
-const Class PropertyIteratorObject::class_ = {
-    "Iterator",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_BACKGROUND_FINALIZE,
+const ClassOps PropertyIteratorObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1101,6 +1097,14 @@ const Class PropertyIteratorObject::class_ = {
     nullptr, /* hasInstance */
     nullptr, /* construct   */
     trace
+};
+
+const Class PropertyIteratorObject::class_ = {
+    "Iterator",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_BACKGROUND_FINALIZE,
+    &PropertyIteratorObject::classOps_
 };
 
 static const Class ArrayIteratorPrototypeClass = {
@@ -1425,9 +1429,7 @@ stopiter_hasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v, bool
     return true;
 }
 
-const Class StopIterationObject::class_ = {
-    "StopIteration",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
+static const ClassOps StopIterationObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1438,6 +1440,12 @@ const Class StopIterationObject::class_ = {
     nullptr, /* finalize */
     nullptr, /* call */
     stopiter_hasInstance
+};
+
+const Class StopIterationObject::class_ = {
+    "StopIteration",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
+    &StopIterationObjectClassOps
 };
 
 static const JSFunctionSpec iterator_proto_methods[] = {

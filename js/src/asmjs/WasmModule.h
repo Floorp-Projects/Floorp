@@ -657,6 +657,8 @@ ExportedFunctionToIndex(JSFunction* fun);
 class WasmModuleObject : public NativeObject
 {
     static const unsigned MODULE_SLOT = 0;
+    static const ClassOps classOps_;
+
     bool hasModule() const;
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);

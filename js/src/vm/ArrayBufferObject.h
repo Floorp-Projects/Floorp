@@ -102,6 +102,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
     static bool fun_slice_impl(JSContext* cx, const CallArgs& args);
 
+    static const ClassOps classOps_;
+
   public:
     static const uint8_t DATA_SLOT = 0;
     static const uint8_t BYTE_LENGTH_SLOT = 1;

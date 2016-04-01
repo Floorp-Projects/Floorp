@@ -2196,9 +2196,9 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
     // setProperty ops".
     if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
         if (!getter)
-            getter = obj->getClass()->getProperty;
+            getter = obj->getClass()->getGetProperty();
         if (!setter)
-            setter = obj->getClass()->setProperty;
+            setter = obj->getClass()->getSetProperty();
     }
     if (getter == JS_PropertyStub)
         getter = nullptr;

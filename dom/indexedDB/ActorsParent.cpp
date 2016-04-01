@@ -7792,7 +7792,7 @@ class NormalJSRuntime
 {
   friend class nsAutoPtr<NormalJSRuntime>;
 
-  static const JSClass kGlobalClass;
+  static const JSClass sGlobalClass;
   static const uint32_t kRuntimeHeapSize = 768 * 1024;
 
   JSRuntime* mRuntime;
@@ -23761,9 +23761,7 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   return NS_OK;
 }
 
-const JSClass NormalJSRuntime::kGlobalClass = {
-  "IndexedDBTransactionThreadGlobal",
-  JSCLASS_GLOBAL_FLAGS,
+static const JSClassOps sNormalJSRuntimeGlobalClassOps = {
   /* addProperty */ nullptr,
   /* delProperty */ nullptr,
   /* getProperty */ nullptr,
@@ -23776,6 +23774,12 @@ const JSClass NormalJSRuntime::kGlobalClass = {
   /* hasInstance */ nullptr,
   /* construct */ nullptr,
   /* trace */ JS_GlobalObjectTraceHook
+};
+
+const JSClass NormalJSRuntime::sGlobalClass = {
+  "IndexedDBTransactionThreadGlobal",
+  JSCLASS_GLOBAL_FLAGS,
+  &sNormalJSRuntimeGlobalClassOps
 };
 
 bool
@@ -23799,7 +23803,7 @@ NormalJSRuntime::Init()
   JSAutoRequest ar(mContext);
 
   JS::CompartmentOptions options;
-  mGlobal = JS_NewGlobalObject(mContext, &kGlobalClass, nullptr,
+  mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
                                JS::FireOnNewGlobalHook, options);
   if (NS_WARN_IF(!mGlobal)) {
     return false;

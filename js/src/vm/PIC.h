@@ -253,12 +253,12 @@ struct ForOfPIC
     };
 
     // Class for object that holds ForOfPIC chain.
-    static const Class jsclass;
+    static const Class class_;
 
     static NativeObject* createForOfPICObject(JSContext* cx, Handle<GlobalObject*> global);
 
     static inline Chain* fromJSObject(NativeObject* obj) {
-        MOZ_ASSERT(js::GetObjectClass(obj) == &ForOfPIC::jsclass);
+        MOZ_ASSERT(js::GetObjectClass(obj) == &ForOfPIC::class_);
         return (ForOfPIC::Chain*) obj->getPrivate();
     }
     static inline Chain* getOrCreate(JSContext* cx) {
