@@ -3487,7 +3487,19 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
               nsLayoutUtils::TransformRect(rootFrame, mOuter, rootCompBounds);
 
-              displayportBase = displayportBase.Intersect(rootCompBounds);
+              // Clamp the displayport base to the size of the transformed root
+              // composition bounds, by trimming an equal amount off opposite
+              // sides of the base rect.
+              if (rootCompBounds.width < displayportBase.width) {
+                nscoord diff = displayportBase.width - rootCompBounds.width;
+                displayportBase.x += diff / 2;
+                displayportBase.width -= diff;
+              }
+              if (rootCompBounds.height < displayportBase.height) {
+                nscoord diff = displayportBase.height - rootCompBounds.height;
+                displayportBase.y += diff / 2;
+                displayportBase.height -= diff;
+              }
             }
           }
         }
