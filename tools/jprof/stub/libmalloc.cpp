@@ -95,7 +95,6 @@ JPROF_STATIC void CrawlStack(malloc_log_entry* me,
     void *array[500];
     int cnt, i;
     u_long numpcs = 0;
-    bool tracing = false;
 
     // This is from glibc.  A more generic version might use
     // libunwind and/or CaptureStackBackTrace() on Windows
@@ -633,12 +632,12 @@ NS_EXPORT_(void) setupProfilingStuff(void)
                 size_t size = atol(circular_op+strlen("JP_CIRCULAR="));
                 if (size < 1000) {
                     fprintf(stderr,
-                            "JP_CIRCULAR of %d less than 1000, using 10000\n",
-                            size);
+                            "JP_CIRCULAR of %lu less than 1000, using 10000\n",
+                            (unsigned long) size);
                     size = 10000;
                 }
                 JprofBufferInit(size);
-                fprintf(stderr,"JP_CIRCULAR buffer of %d bytes\n",size);
+                fprintf(stderr,"JP_CIRCULAR buffer of %lu bytes\n", (unsigned long) size);
                 circular = true;
 	    }
 
@@ -668,7 +667,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
                   
 #endif
             }
-            char *f = strstr(tst,"JP_FILENAME=");
+            const char *f = strstr(tst,"JP_FILENAME=");
             if (f)
                 f = f + strlen("JP_FILENAME=");
             else
