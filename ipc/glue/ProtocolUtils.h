@@ -334,6 +334,16 @@ DuplicateHandle(HANDLE aSourceHandle,
 #endif
 
 /**
+ * Annotate the crash reporter with the error error code from the most recent
+ * system call.
+ */
+#ifdef MOZ_CRASHREPORTER
+void AnnotateSystemError();
+#else
+#define AnnotateSystemError() do { } while (0)
+#endif
+
+/**
  * An endpoint represents one end of a partially initialized IPDL channel. To
  * set up a new top-level protocol:
  *
