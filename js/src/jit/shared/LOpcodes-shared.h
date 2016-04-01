@@ -346,6 +346,9 @@
     _(InterruptCheck)               \
     _(AsmJSInterruptCheck)          \
     _(AsmThrowUnreachable)          \
+    _(AsmReinterpret)               \
+    _(AsmReinterpretToI64)          \
+    _(AsmReinterpretFromI64)        \
     _(GetDOMProperty)               \
     _(GetDOMMemberV)                \
     _(GetDOMMemberT)                \

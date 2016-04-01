@@ -2790,7 +2790,8 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         MOZ_CRASH("unsupported event type");
         return;
     }
-    if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
+    if (event.mMessage == eWheel &&
+        (event.mDeltaX != 0 || event.mDeltaY != 0)) {
       ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
     }
     return;
@@ -2850,7 +2851,8 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       MOZ_CRASH("unexpected event type");
       return;
   }
-  if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
+  if (event.mMessage == eWheel &&
+      (event.mDeltaX != 0 || event.mDeltaY != 0)) {
     DispatchEvent(&event, status);
   }
 }
@@ -5149,9 +5151,10 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(aMouseEvent) &&
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
-  outWheelEvent->deltaMode = usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
-                                              : nsIDOMWheelEvent::DOM_DELTA_LINE;
-  outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
+  outWheelEvent->mDeltaMode =
+    usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
+                     : nsIDOMWheelEvent::DOM_DELTA_LINE;
+  outWheelEvent->mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent

@@ -987,6 +987,17 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[2], SharedLibrary)
         self.assertEqual(objs[2].basename, 'bar')
 
+    def test_install_shared_lib(self):
+        """Test that we can install a shared library with TEST_HARNESS_FILES"""
+        reader = self.reader('test-install-shared-lib')
+        objs = self.read_topsrcdir(reader)
+        self.assertIsInstance(objs[0], TestHarnessFiles)
+        self.assertIsInstance(objs[1], VariablePassthru)
+        self.assertIsInstance(objs[2], SharedLibrary)
+        for path, files in objs[0].files.walk():
+            for f in files:
+                self.assertEqual(str(f), '!libfoo.so')
+                self.assertEqual(path, 'foo/bar')
 
 if __name__ == '__main__':
     main()

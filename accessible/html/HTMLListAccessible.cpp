@@ -51,6 +51,7 @@ HTMLLIAccessible::
   if (blockFrame && blockFrame->HasBullet()) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     Document()->BindToDocument(mBullet, nullptr);
+    AppendChild(mBullet);
   }
 }
 
@@ -103,13 +104,14 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
   }
 
   RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
-  AutoTreeMutation mut(this);
+  AutoTreeMutation mt(this);
 
   DocAccessible* document = Document();
   if (aHasBullet) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     document->BindToDocument(mBullet, nullptr);
     InsertChildAt(0, mBullet);
+    mt.AfterInsertion(mBullet);
 
     RefPtr<AccShowEvent> event = new AccShowEvent(mBullet);
     mDoc->FireDelayedEvent(event);
@@ -119,9 +121,11 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
     mDoc->FireDelayedEvent(event);
     reorderEvent->AddSubMutationEvent(event);
 
+    mt.BeforeRemoval(mBullet);
     RemoveChild(mBullet);
     mBullet = nullptr;
   }
+  mt.Done();
 
   mDoc->FireDelayedEvent(reorderEvent);
 }

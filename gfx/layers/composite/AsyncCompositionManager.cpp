@@ -622,7 +622,8 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
     double portion =
       ComputedTimingFunction::GetPortion(animData.mFunctions[segmentIndex],
-                                         positionInSegment);
+                                         positionInSegment,
+                                         computedTiming.mBeforeFlag);
 
     // interpolate the property
     Animatable interpolatedValue;

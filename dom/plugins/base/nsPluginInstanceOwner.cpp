@@ -2192,8 +2192,8 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
     case eLegacyMouseLineOrPageScroll: {
       WidgetWheelEvent* wheelEvent = anEvent->AsWheelEvent();
       if (wheelEvent) {
-        cocoaEvent.data.mouse.deltaX = wheelEvent->lineOrPageDeltaX;
-        cocoaEvent.data.mouse.deltaY = wheelEvent->lineOrPageDeltaY;
+        cocoaEvent.data.mouse.deltaX = wheelEvent->mLineOrPageDeltaX;
+        cocoaEvent.data.mouse.deltaY = wheelEvent->mLineOrPageDeltaY;
       } else {
         NS_WARNING("eLegacyMouseLineOrPageScroll is not a WidgetWheelEvent? "
                    "(could be, haven't checked)");
@@ -2385,11 +2385,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       case eWheel: {
         const WidgetWheelEvent* wheelEvent = anEvent.AsWheelEvent();
         int32_t delta = 0;
-        if (wheelEvent->lineOrPageDeltaY) {
-          switch (wheelEvent->deltaMode) {
+        if (wheelEvent->mLineOrPageDeltaY) {
+          switch (wheelEvent->mDeltaMode) {
             case nsIDOMWheelEvent::DOM_DELTA_PAGE:
               pluginEvent.event = WM_MOUSEWHEEL;
-              delta = -WHEEL_DELTA * wheelEvent->lineOrPageDeltaY;
+              delta = -WHEEL_DELTA * wheelEvent->mLineOrPageDeltaY;
               break;
             case nsIDOMWheelEvent::DOM_DELTA_LINE: {
               UINT linesPerWheelDelta = 0;
@@ -2403,8 +2403,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
                 break;
               }
               pluginEvent.event = WM_MOUSEWHEEL;
-              delta = -WHEEL_DELTA / linesPerWheelDelta *
-                        wheelEvent->lineOrPageDeltaY;
+              delta = -WHEEL_DELTA / linesPerWheelDelta;
+              delta *= wheelEvent->mLineOrPageDeltaY;
               break;
             }
             case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
@@ -2413,11 +2413,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               MOZ_ASSERT(!pluginEvent.event);
               break;
           }
-        } else if (wheelEvent->lineOrPageDeltaX) {
-          switch (wheelEvent->deltaMode) {
+        } else if (wheelEvent->mLineOrPageDeltaX) {
+          switch (wheelEvent->mDeltaMode) {
             case nsIDOMWheelEvent::DOM_DELTA_PAGE:
               pluginEvent.event = WM_MOUSEHWHEEL;
-              delta = -WHEEL_DELTA * wheelEvent->lineOrPageDeltaX;
+              delta = -WHEEL_DELTA * wheelEvent->mLineOrPageDeltaX;
               break;
             case nsIDOMWheelEvent::DOM_DELTA_LINE: {
               pluginEvent.event = WM_MOUSEHWHEEL;
@@ -2432,8 +2432,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               if (!charsPerWheelDelta) {
                 break;
               }
-              delta =
-                WHEEL_DELTA / charsPerWheelDelta * wheelEvent->lineOrPageDeltaX;
+              delta = WHEEL_DELTA / charsPerWheelDelta;
+              delta *= wheelEvent->mLineOrPageDeltaX;
               break;
             }
             case nsIDOMWheelEvent::DOM_DELTA_PIXEL:

@@ -338,7 +338,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
               subject.QueryInterface(Ci.nsIArray);
               for (let i = 0; i < subject.length; i++) {
                 let cookie = subject.queryElementAt(i, Ci.nsICookie2);
-                if (!cookie.isSession && (cookie.expiry + 1) * 1000 <= Date.now()) {
+                if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
                   notify(true, cookie, "expired");
                 } else {
                   notify(true, cookie, "evicted");

@@ -60,24 +60,19 @@ this.getCryptoParams = function(headers) {
     return null;
   }
 
-  var requiresAuthenticationSecret = true;
   var keymap;
   var padSize;
   if (headers.encoding == AESGCM_ENCODING) {
     // aesgcm uses the Crypto-Key header, 2 bytes for the pad length, and an
     // authentication secret.
+    // https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01
     keymap = getEncryptionKeyParams(headers.crypto_key);
     padSize = 2;
   } else if (headers.encoding == AESGCM128_ENCODING) {
-    // aesgcm128 uses Crypto-Key or Encryption-Key, and 1 byte for the pad
-    // length.
-    keymap = getEncryptionKeyParams(headers.crypto_key);
+    // aesgcm128 uses Encryption-Key, 1 byte for the pad length, and no secret.
+    // https://tools.ietf.org/html/draft-thomson-http-encryption-02
+    keymap = getEncryptionKeyParams(headers.encryption_key);
     padSize = 1;
-    if (!keymap) {
-      // Encryption-Key header indicates unauthenticated encryption.
-      requiresAuthenticationSecret = false;
-      keymap = getEncryptionKeyParams(headers.encryption_key);
-    }
   }
   if (!keymap) {
     return null;
@@ -94,7 +89,7 @@ this.getCryptoParams = function(headers) {
   if (!dh || !salt || isNaN(rs) || (rs <= padSize)) {
     return null;
   }
-  return {dh, salt, rs, auth: requiresAuthenticationSecret, padSize};
+  return {dh, salt, rs, padSize};
 }
 
 var parseHeaderFieldParams = (m, v) => {
@@ -259,39 +254,31 @@ this.PushCrypto = {
     var kdfPromise;
     var context;
     var encryptInfo;
-    // The authenticationSecret, when present, is mixed with the ikm using HKDF.
-    // This is its primary purpose.  However, since the authentication secret
-    // was added at the same time that the info string was changed, we also use
-    // its presence to change how the final info string is calculated:
+    // The size of the padding determines which key derivation we use.
     //
-    // 1. When there is no authenticationSecret, the context string is simply
-    // "Content-Encoding: <blah>". This corresponds to old, deprecated versions
-    // of the content encoding.  This should eventually be removed: bug 1230038.
+    // 1. If the pad size is 1, we assume "aesgcm128". This scheme ignores the
+    // authenticationSecret, and uses "Content-Encoding: <blah>" for the
+    // context string. It should eventually be removed: bug 1230038.
     //
-    // 2. When there is an authenticationSecret, the context string is:
+    // 2. If the pad size is 2, we assume "aesgcm", and mix the
+    // authenticationSecret with the ikm using HKDF. The context string is:
     // "Content-Encoding: <blah>\0P-256\0" then the length and value of both the
     // receiver key and sender key.
-    if (authenticationSecret) {
+    if (padSize == 2) {
       // Since we are using an authentication secret, we need to run an extra
       // round of HKDF with the authentication secret as salt.
       var authKdf = new hkdf(authenticationSecret, ikm);
       kdfPromise = authKdf.extract(AUTH_INFO, 32)
         .then(ikm2 => new hkdf(salt, ikm2));
 
-      // We also use the presence of the authentication secret to indicate that
-      // we have extra context to add to the info parameter.
+      // aesgcm requires extra context for the info parameter.
       context = concatArray([
         new Uint8Array([0]), P256DH_INFO,
         this._encodeLength(receiverKey), receiverKey,
         this._encodeLength(senderKey), senderKey
       ]);
-      // Finally, we use the pad size to infer the content encoding.
-      encryptInfo = padSize == 2 ? AESGCM_ENCRYPT_INFO :
-                                   AESGCM128_ENCRYPT_INFO;
+      encryptInfo = AESGCM_ENCRYPT_INFO;
     } else {
-      if (padSize == 2) {
-        throw new Error("aesgcm encoding requires an authentication secret");
-      }
       kdfPromise = Promise.resolve(new hkdf(salt, ikm));
       context = new Uint8Array(0);
       encryptInfo = AESGCM128_ENCRYPT_INFO;

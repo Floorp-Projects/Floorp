@@ -64,6 +64,22 @@ if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
         '/media/pocketsphinx',
     ]
 
+if CONFIG['MOZ_WEBSPEECH_MODELS']:
+    FINAL_TARGET_FILES.models.dict += [
+        'models/dict/en-US.dic',
+        'models/dict/en-US.dic.dmp',
+    ]
+    FINAL_TARGET_FILES.models['en-US'] += [
+		'models/en-US/feat.params',
+		'models/en-US/mdef',
+		'models/en-US/means',
+		'models/en-US/mixture_weights',
+		'models/en-US/noisedict',
+		'models/en-US/sendump',
+		'models/en-US/transition_matrices',
+		'models/en-US/variances',
+    ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

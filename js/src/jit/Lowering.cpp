@@ -2473,6 +2473,17 @@ LIRGenerator::visitAsmThrowUnreachable(MAsmThrowUnreachable* ins)
 }
 
 void
+LIRGenerator::visitAsmReinterpret(MAsmReinterpret* ins)
+{
+    if (ins->type() == MIRType_Int64)
+        defineInt64(new(alloc()) LAsmReinterpretToI64(useRegisterAtStart(ins->input())), ins);
+    else if (ins->input()->type() == MIRType_Int64)
+        define(new(alloc()) LAsmReinterpretFromI64(useInt64RegisterAtStart(ins->input())), ins);
+    else
+        define(new(alloc()) LAsmReinterpret(useRegisterAtStart(ins->input())), ins);
+}
+
+void
 LIRGenerator::visitStoreSlot(MStoreSlot* ins)
 {
     LInstruction* lir;

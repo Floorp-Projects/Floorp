@@ -31,6 +31,8 @@ class MockConfig(object):
             'MOZ_BAR': 'bar',
             'MOZ_TRUE': '1',
             'MOZ_FALSE': '',
+            'DLL_PREFIX': 'lib',
+            'DLL_SUFFIX': '.so'
         }, **extra_substs)
 
         self.substs_unicode = ReadOnlyDict({k.decode('utf-8'): v.decode('utf-8',

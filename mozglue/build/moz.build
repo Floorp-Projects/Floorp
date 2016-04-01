@@ -44,6 +44,9 @@ if not CONFIG['JS_STANDALONE']:
         ]
 
     if CONFIG['OS_TARGET'] == 'WINNT':
+        LOCAL_INCLUDES += [
+            '/memory/build',
+        ]
         SOURCES += [
             'WindowsDllBlocklist.cpp',
         ]

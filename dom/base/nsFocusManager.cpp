@@ -98,11 +98,13 @@ struct nsDelayedBlurOrFocusEvent
   nsDelayedBlurOrFocusEvent(EventMessage aEventMessage,
                             nsIPresShell* aPresShell,
                             nsIDocument* aDocument,
-                            EventTarget* aTarget)
+                            EventTarget* aTarget,
+                            EventTarget* aRelatedTarget)
     : mPresShell(aPresShell)
     , mDocument(aDocument)
     , mTarget(aTarget)
     , mEventMessage(aEventMessage)
+    , mRelatedTarget(aRelatedTarget)
  {
  }
 
@@ -118,6 +120,7 @@ struct nsDelayedBlurOrFocusEvent
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<EventTarget> mTarget;
   EventMessage mEventMessage;
+  nsCOMPtr<EventTarget> mRelatedTarget;
 };
 
 inline void ImplCycleCollectionUnlink(nsDelayedBlurOrFocusEvent& aField)
@@ -125,6 +128,7 @@ inline void ImplCycleCollectionUnlink(nsDelayedBlurOrFocusEvent& aField)
   aField.mPresShell = nullptr;
   aField.mDocument = nullptr;
   aField.mTarget = nullptr;
+  aField.mRelatedTarget = nullptr;
 }
 
 inline void
@@ -136,6 +140,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   CycleCollectionNoteChild(aCallback, aField.mPresShell.get(), aName, aFlags);
   CycleCollectionNoteChild(aCallback, aField.mDocument.get(), aName, aFlags);
   CycleCollectionNoteChild(aCallback, aField.mTarget.get(), aName, aFlags);
+  CycleCollectionNoteChild(aCallback, aField.mRelatedTarget.get(), aName, aFlags);
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFocusManager)
@@ -1031,8 +1036,10 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
         EventMessage message = mDelayedBlurFocusEvents[i].mEventMessage;
         nsCOMPtr<EventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
         nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
+        nsCOMPtr<EventTarget> relatedTarget = mDelayedBlurFocusEvents[i].mRelatedTarget;
         mDelayedBlurFocusEvents.RemoveElementAt(i);
-        SendFocusOrBlurEvent(message, presShell, aDocument, target, 0, false);
+        SendFocusOrBlurEvent(message, presShell, aDocument, target, 0,
+                             false, false, relatedTarget);
         --i;
       }
     }
@@ -1282,6 +1289,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
            isElementInActiveWindow, isElementInFocusedWindow, sendFocusEvent));
 
   if (sendFocusEvent) {
+    nsCOMPtr<nsIContent> oldFocusedContent = mFocusedContent;
     // return if blurring fails or the focus changes during the blur
     if (mFocusedWindow) {
       // if the focus is being moved to another element in the same document,
@@ -1307,12 +1315,13 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
         commonAncestor = GetCommonAncestor(newWindow, mFocusedWindow);
 
       if (!Blur(currentIsSameOrAncestor ? mFocusedWindow.get() : nullptr,
-                commonAncestor, !isElementInFocusedWindow, aAdjustWidget))
+                commonAncestor, !isElementInFocusedWindow, aAdjustWidget,
+                contentToFocus))
         return;
     }
 
     Focus(newWindow, contentToFocus, aFlags, !isElementInFocusedWindow,
-          aFocusChanged, false, aAdjustWidget);
+          aFocusChanged, false, aAdjustWidget, oldFocusedContent);
   }
   else {
     // otherwise, for inactive windows and when the caller cannot steal the
@@ -1560,7 +1569,8 @@ bool
 nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
                      nsPIDOMWindowOuter* aAncestorWindowToFocus,
                      bool aIsLeavingDocument,
-                     bool aAdjustWidgets)
+                     bool aAdjustWidgets,
+                     nsIContent* aContentToFocus)
 {
   LOGFOCUS(("<<Blur begin>>"));
 
@@ -1670,7 +1680,8 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
       window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
     SendFocusOrBlurEvent(eBlur, presShell,
-                         content->GetComposedDoc(), content, 1, false);
+                         content->GetComposedDoc(), content, 1,
+                         false, false, aContentToFocus);
   }
 
   // if we are leaving the document or the window was lowered, make the caret
@@ -1741,7 +1752,8 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
                       bool aIsNewDocument,
                       bool aFocusChanged,
                       bool aWindowRaised,
-                      bool aAdjustWidgets)
+                      bool aAdjustWidgets,
+                      nsIContent* aContentLostFocus)
 {
   LOGFOCUS(("<<Focus begin>>"));
 
@@ -1895,7 +1907,7 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
       SendFocusOrBlurEvent(eFocus, presShell,
                            aContent->GetComposedDoc(),
                            aContent, aFlags & FOCUSMETHOD_MASK,
-                           aWindowRaised, isRefocus);
+                           aWindowRaised, isRefocus, aContentLostFocus);
     } else {
       IMEStateManager::OnChangeFocus(presContext, nullptr,
                                      GetFocusMoveActionCause(aFlags));
@@ -1951,12 +1963,13 @@ class FocusBlurEvent : public nsRunnable
 public:
   FocusBlurEvent(nsISupports* aTarget, EventMessage aEventMessage,
                  nsPresContext* aContext, bool aWindowRaised,
-                 bool aIsRefocus)
+                 bool aIsRefocus, EventTarget* aRelatedTarget)
     : mTarget(aTarget)
     , mContext(aContext)
     , mEventMessage(aEventMessage)
     , mWindowRaised(aWindowRaised)
     , mIsRefocus(aIsRefocus)
+    , mRelatedTarget(aRelatedTarget)
   {
   }
 
@@ -1967,6 +1980,7 @@ public:
     event.mFlags.mCancelable = false;
     event.mFromRaise = mWindowRaised;
     event.mIsRefocus = mIsRefocus;
+    event.mRelatedTarget = mRelatedTarget;
     return EventDispatcher::Dispatch(mTarget, mContext, &event);
   }
 
@@ -1975,7 +1989,20 @@ public:
   EventMessage            mEventMessage;
   bool                    mWindowRaised;
   bool                    mIsRefocus;
+  nsCOMPtr<EventTarget>   mRelatedTarget;
 };
+
+static nsIDocument*
+GetDocumentHelper(EventTarget* aTarget)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
+  if (!node) {
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget);
+    return win ? win->GetExtantDoc() : nullptr;
+  }
+
+  return node->OwnerDoc();
+}
 
 void
 nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
@@ -1984,19 +2011,23 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
                                      nsISupports* aTarget,
                                      uint32_t aFocusMethod,
                                      bool aWindowRaised,
-                                     bool aIsRefocus)
+                                     bool aIsRefocus,
+                                     EventTarget* aRelatedTarget)
 {
   NS_ASSERTION(aEventMessage == eFocus || aEventMessage == eBlur,
                "Wrong event type for SendFocusOrBlurEvent");
 
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIDocument> eventTargetDoc = GetDocumentHelper(eventTarget);
+  nsCOMPtr<nsIDocument> relatedTargetDoc = GetDocumentHelper(aRelatedTarget);
 
-  nsCOMPtr<nsINode> n = do_QueryInterface(aTarget);
-  if (!n) {
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget);
-    n = win ? win->GetExtantDoc() : nullptr;
+  // set aRelatedTarget to null if it's not in the same document as eventTarget
+  if (eventTargetDoc != relatedTargetDoc) {
+    aRelatedTarget = nullptr;
   }
-  bool dontDispatchEvent = n && nsContentUtils::IsUserFocusIgnored(n);
+
+  bool dontDispatchEvent =
+    eventTargetDoc && nsContentUtils::IsUserFocusIgnored(eventTargetDoc);
 
   // for focus events, if this event was from a mouse or key and event
   // handling on the document is suppressed, queue the event and fire it
@@ -2012,14 +2043,15 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
       if (mDelayedBlurFocusEvents[i - 1].mEventMessage == aEventMessage &&
           mDelayedBlurFocusEvents[i - 1].mPresShell == aPresShell &&
           mDelayedBlurFocusEvents[i - 1].mDocument == aDocument &&
-          mDelayedBlurFocusEvents[i - 1].mTarget == eventTarget) {
+          mDelayedBlurFocusEvents[i - 1].mTarget == eventTarget &&
+          mDelayedBlurFocusEvents[i - 1].mRelatedTarget == aRelatedTarget) {
         mDelayedBlurFocusEvents.RemoveElementAt(i - 1);
       }
     }
 
     mDelayedBlurFocusEvents.AppendElement(
       nsDelayedBlurOrFocusEvent(aEventMessage, aPresShell,
-                                aDocument, eventTarget));
+                                aDocument, eventTarget, aRelatedTarget));
     return;
   }
 
@@ -2037,7 +2069,7 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
   if (!dontDispatchEvent) {
     nsContentUtils::AddScriptRunner(
       new FocusBlurEvent(aTarget, aEventMessage, aPresShell->GetPresContext(),
-                         aWindowRaised, aIsRefocus));
+                         aWindowRaised, aIsRefocus, aRelatedTarget));
   }
 }
 

@@ -369,7 +369,7 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
-    def _handle_linkables(self, context, passthru):
+    def _handle_linkables(self, context, passthru, generated_files):
         has_linkables = False
 
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
@@ -560,6 +560,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
                 has_linkables = True
+                generated_files.add(lib.lib_name)
                 if is_component and not context['NO_COMPONENTS_MANIFEST']:
                     yield ChromeManifestEntry(context,
                         'components/components.manifest',
@@ -821,7 +822,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     local_include.full_path), context)
             yield LocalInclude(context, local_include)
 
-        for obj in self._handle_linkables(context, passthru):
+        for obj in self._handle_linkables(context, passthru, generated_files):
             yield obj
 
         generated_files.update(['%s%s' % (k, self.config.substs.get('BIN_SUFFIX', '')) for k in self._binaries.keys()])

@@ -50,6 +50,7 @@ XULLabelAccessible::
     nsAutoString text;
     textBoxFrame->GetCroppedTitle(text);
     mValueTextLeaf->SetText(text);
+    AppendChild(mValueTextLeaf);
   }
 }
 

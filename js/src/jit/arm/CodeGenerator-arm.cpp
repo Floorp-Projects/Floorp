@@ -2140,6 +2140,32 @@ CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
 }
 
 void
+CodeGeneratorARM::visitAsmReinterpret(LAsmReinterpret* lir)
+{
+    MOZ_ASSERT(gen->compilingAsmJS());
+    MAsmReinterpret* ins = lir->mir();
+
+    MIRType to = ins->type();
+    DebugOnly<MIRType> from = ins->input()->type();
+
+    switch (to) {
+      case MIRType_Int32:
+        MOZ_ASSERT(from == MIRType_Float32);
+        masm.ma_vxfer(ToFloatRegister(lir->input()), ToRegister(lir->output()));
+        break;
+      case MIRType_Float32:
+        MOZ_ASSERT(from == MIRType_Int32);
+        masm.ma_vxfer(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+        break;
+      case MIRType_Double:
+      case MIRType_Int64:
+        MOZ_CRASH("not handled by this LIR opcode");
+      default:
+        MOZ_CRASH("unexpected AsmReinterpret");
+    }
+}
+
+void
 CodeGeneratorARM::visitAsmJSCall(LAsmJSCall* ins)
 {
     MAsmJSCall* mir = ins->mir();
