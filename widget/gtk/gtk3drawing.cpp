@@ -3099,6 +3099,27 @@ moz_gtk_get_menu_separator_height(gint *size)
 }
 
 void
+moz_gtk_get_entry_min_height(gint* height)
+{
+    ensure_entry_widget();
+    GtkStyleContext* style = gtk_widget_get_style_context(gEntryWidget);
+    if (!gtk_check_version(3, 20, 0)) {
+        gtk_style_context_get(style, gtk_style_context_get_state(style),
+                              "min-height", height,
+                              nullptr);
+    } else {
+        *height = 0;
+    }
+
+    GtkBorder border;
+    GtkBorder padding;
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+
+    *height += (border.top + border.bottom + padding.top + padding.bottom);
+}
+
+void
 moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
                           gint* scale_height)
 {
