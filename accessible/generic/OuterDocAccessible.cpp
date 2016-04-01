@@ -29,6 +29,15 @@ OuterDocAccessible::
   AccessibleWrap(aContent, aDoc)
 {
   mType = eOuterDocType;
+
+  // Request document accessible for the content document to make sure it's
+  // created. It will appended to outerdoc accessible children asynchronously.
+  nsIDocument* outerDoc = mContent->GetCurrentDoc();
+  if (outerDoc) {
+    nsIDocument* innerDoc = outerDoc->GetSubDocumentFor(mContent);
+    if (innerDoc)
+      GetAccService()->GetDocAccessible(innerDoc);
+  }
 }
 
 OuterDocAccessible::~OuterDocAccessible()
@@ -151,23 +160,6 @@ OuterDocAccessible::RemoveChild(Accessible* aAccessible)
                "This child document of outerdoc accessible wasn't removed!");
 
   return wasRemoved;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Accessible protected
-
-void
-OuterDocAccessible::CacheChildren()
-{
-  // Request document accessible for the content document to make sure it's
-  // created. It will appended to outerdoc accessible children asynchronously.
-  nsIDocument* outerDoc = mContent->GetCurrentDoc();
-  if (outerDoc) {
-    nsIDocument* innerDoc = outerDoc->GetSubDocumentFor(mContent);
-    if (innerDoc)
-      GetAccService()->GetDocAccessible(innerDoc);
-  }
 }
 
 ProxyAccessible*
