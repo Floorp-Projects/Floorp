@@ -9,10 +9,9 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 var { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-// Require this module just to setup things like themes and tools
-// devtools-browser is special as it loads main module
-// To be cleaned up in bug 1247203.
-require("devtools/client/framework/devtools-browser");
+// Require this module to setup core modules
+loader.main("devtools/client/main");
+
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
