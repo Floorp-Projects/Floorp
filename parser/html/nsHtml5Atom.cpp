@@ -80,3 +80,11 @@ nsHtml5Atom::ScriptableEquals(const nsAString& aString, bool* aResult)
   NS_NOTREACHED("Should not call ScriptableEquals.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP_(size_t)
+nsHtml5Atom::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  NS_NOTREACHED("Should not call SizeOfIncludingThis.");
+  return 0;
+}
+
