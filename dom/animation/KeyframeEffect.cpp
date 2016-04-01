@@ -764,11 +764,6 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     pseudoType = target.GetAsCSSPseudoElement().GetType();
   }
 
-  if (!targetElement->GetComposedDoc()) {
-    aRv.Throw(NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR);
-    return nullptr;
-  }
-
   nsTArray<Keyframe> keyframes =
     KeyframeUtils::GetKeyframesFromObject(aGlobal.Context(), aFrames, aRv);
   if (aRv.Failed()) {
