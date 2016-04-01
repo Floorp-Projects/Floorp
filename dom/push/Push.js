@@ -56,8 +56,7 @@ Push.prototype = {
     this._principal = aWindow.document.nodePrincipal;
   },
 
-  setScope: function(scope){
-    console.debug("setScope()", scope);
+  __init: function(scope) {
     this._scope = scope;
   },
 
