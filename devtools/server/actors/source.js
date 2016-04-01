@@ -608,7 +608,10 @@ let SourceActor = ActorClass({
    */
   setBreakpoint: method(function (line, column, condition) {
     if (this.threadActor.state !== "paused") {
-      throw new Error("Cannot set breakpoint while debuggee is running.");
+      throw {
+        error: "wrongState",
+        message: "Cannot set breakpoint while debuggee is running."
+      };
     }
 
     let location = new OriginalLocation(this, line, column);
