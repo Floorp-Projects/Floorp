@@ -10,6 +10,8 @@
 #include "nsStringBuffer.h"
 %}
 
+native MallocSizeOf(mozilla::MallocSizeOf);
+
 /*
  * Should this really be scriptable?  Using atoms from script or proxies
  * could be dangerous since double-wrapping could lead to loss of
@@ -35,6 +37,9 @@ interface nsIAtom : nsISupports
    * Returns true if the atom is static and false otherwise.
    */
   [noscript, notxpcom] boolean isStaticAtom();
+
+  [noscript, notxpcom]
+  size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 
 %{C++
   // note this is NOT virtual so this won't muck with the vtable!
