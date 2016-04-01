@@ -794,14 +794,12 @@ ConsoleServiceListener.prototype =
  *        - onConsoleAPICall(). This method is invoked with one argument, the
  *        Console API message that comes from the observer service, whenever
  *        a relevant console API call is received.
- * @param object filteringOptions
- *        Options - The filteringOptions that this listener should listen to
-          (e.g. { addonId: "..." } or { consoleID: "..." }).
+ * @param string consoleID
+ *        Options - The consoleID that this listener should listen to
  */
-function ConsoleAPIListener(window, owner, {addonId, consoleID} = {}) {
+function ConsoleAPIListener(window, owner, consoleID) {
   this.window = window;
   this.owner = owner;
-  this.addonId = addonId;
   this.consoleID = consoleID;
 }
 exports.ConsoleAPIListener = ConsoleAPIListener;
@@ -827,10 +825,10 @@ ConsoleAPIListener.prototype =
   owner: null,
 
   /**
-   * The addonId that we listen for. If not null then only messages from this
+   * The consoleID that we listen for. If not null then only messages from this
    * console will be returned.
    */
-  addonId: null,
+  consoleID: null,
 
   /**
    * Initialize the window.console API observer.
@@ -898,31 +896,8 @@ ConsoleAPIListener.prototype =
       }
     }
 
-    if (this.consoleID) {
-      // Filtering based on the old-style consoleID property used by
-      // the legacy Console JSM module.
-      if (message.consoleID !== this.consoleID) {
-        return false;
-      }
-    }
-
-    if (this.addonId) {
-      if (!message.consoleID && !message.originAttributes) {
-        return false;
-      }
-
-      // Filtering based on the old-style consoleID property used by
-      // the legacy Console JSM module.
-      if (message.consoleID && message.consoleID !== `addon/${this.addonId}`) {
-        return false;
-      }
-
-      // Filtering based on the originAttributes used by
-      // the Console API object.
-      if (message.originAttributes &&
-          message.originAttributes.addonId !== this.addonId) {
-        return false;
-      }
+    if (this.consoleID && message.consoleID !== this.consoleID) {
+      return false;
     }
 
     return true;
