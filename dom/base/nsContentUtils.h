@@ -1552,14 +1552,6 @@ public:
   static bool URIIsLocalFile(nsIURI *aURI);
 
   /**
-   * Given a URI, return set beforeHash to the part before the '#', and
-   * afterHash to the remainder of the URI, including the '#'.
-   */
-  static nsresult SplitURIAtHash(nsIURI *aURI,
-                                 nsACString &aBeforeHash,
-                                 nsACString &aAfterHash);
-
-  /**
    * Get the application manifest URI for this document.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
    * document.
