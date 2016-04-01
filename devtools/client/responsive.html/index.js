@@ -26,7 +26,7 @@ const App = createFactory(require("./app"));
 const Store = require("./store");
 const { addDevice, addDeviceType } = require("./actions/devices");
 const { changeLocation } = require("./actions/location");
-const { addViewport } = require("./actions/viewports");
+const { addViewport, resizeViewport } = require("./actions/viewports");
 
 let bootstrap = {
 
@@ -111,6 +111,17 @@ window.addInitialViewport = contentURI => {
   try {
     bootstrap.dispatch(changeLocation(contentURI));
     bootstrap.dispatch(addViewport());
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+/**
+ * Called by manager.js to set viewport size from GCLI.
+ */
+window.setViewportSize = (width, height) => {
+  try {
+    bootstrap.dispatch(resizeViewport(0, width, height));
   } catch (e) {
     console.error(e);
   }
