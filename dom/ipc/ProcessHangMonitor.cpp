@@ -90,6 +90,7 @@ class HangMonitorChild
   void NotifyPluginHangAsync(uint32_t aPluginId);
 
   void ClearHang();
+  void ClearHangAsync();
 
   virtual bool RecvTerminateScript() override;
   virtual bool RecvBeginStartingDebugger() override;
@@ -166,6 +167,11 @@ public:
     mBrowserDumpId = aId;
   }
 
+  void ClearHang() {
+    mHangData = HangData();
+    mBrowserDumpId.Truncate();
+  }
+
 private:
   ~HangMonitoredProcess() {}
 
@@ -186,6 +192,7 @@ public:
   void Open(Transport* aTransport, ProcessId aPid, MessageLoop* aIOLoop);
 
   virtual bool RecvHangEvidence(const HangData& aHangData) override;
+  virtual bool RecvClearHang() override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -439,11 +446,27 @@ HangMonitorChild::ClearHang()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mSentReport) {
+    // bounce to background thread
+    MonitorLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableMethod(this, &HangMonitorChild::ClearHangAsync));
+
     MonitorAutoLock lock(mMonitor);
     mSentReport = false;
     mTerminateScript = false;
     mStartDebugger = false;
     mFinishedStartingDebugger = false;
+  }
+}
+
+void
+HangMonitorChild::ClearHangAsync()
+{
+  MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
+
+  // bounce back to parent on background thread
+  if (mIPCOpen) {
+    Unused << SendClearHang();
   }
 }
 
@@ -609,6 +632,51 @@ HangMonitorParent::RecvHangEvidence(const HangData& aHangData)
 
   nsCOMPtr<nsIRunnable> notifier =
     new HangObserverNotifier(mProcess, aHangData, crashId);
+  NS_DispatchToMainThread(notifier);
+
+  return true;
+}
+
+class ClearHangNotifier final : public nsRunnable
+{
+public:
+  explicit ClearHangNotifier(HangMonitoredProcess* aProcess)
+    : mProcess(aProcess)
+  {}
+
+  NS_IMETHOD
+  Run()
+  {
+    // chrome process, main thread
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    mProcess->ClearHang();
+
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    observerService->NotifyObservers(mProcess, "clear-hang-report", nullptr);
+    return NS_OK;
+  }
+
+private:
+  RefPtr<HangMonitoredProcess> mProcess;
+};
+
+bool
+HangMonitorParent::RecvClearHang()
+{
+  // chrome process, background thread
+  MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
+
+  if (!mReportHangs) {
+    return true;
+  }
+
+  mHangMonitor->InitiateCPOWTimeout();
+
+  MonitorAutoLock lock(mMonitor);
+
+  nsCOMPtr<nsIRunnable> notifier =
+    new ClearHangNotifier(mProcess);
   NS_DispatchToMainThread(notifier);
 
   return true;
