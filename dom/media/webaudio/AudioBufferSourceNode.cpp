@@ -615,8 +615,9 @@ size_t
 AudioBufferSourceNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
-
-  /* mBuffer can be shared and is accounted for separately. */
+  if (mBuffer) {
+    amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  }
 
   amount += mPlaybackRate->SizeOfIncludingThis(aMallocSizeOf);
   amount += mDetune->SizeOfIncludingThis(aMallocSizeOf);
