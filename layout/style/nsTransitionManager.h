@@ -148,6 +148,7 @@ public:
   void Tick() override;
 
   nsCSSProperty TransitionProperty() const;
+  StyleAnimationValue ToValue() const;
 
   bool HasLowerCompositeOrderThan(const CSSTransition& aOther) const;
   EffectCompositor::CascadeLevel CascadeLevel() const override

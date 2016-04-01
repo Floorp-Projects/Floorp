@@ -176,6 +176,17 @@ CSSTransition::TransitionProperty() const
   return effect->AsTransition()->TransitionProperty();
 }
 
+StyleAnimationValue
+CSSTransition::ToValue() const
+{
+  // FIXME: Once we support replacing/removing the effect (bug 1049975)
+  // the following assertion will no longer hold.
+  dom::KeyframeEffectReadOnly* effect = GetEffect();
+  MOZ_ASSERT(effect && effect->AsTransition(),
+             "Transition should have a transition effect");
+  return effect->AsTransition()->ToValue();
+}
+
 bool
 CSSTransition::HasLowerCompositeOrderThan(const CSSTransition& aOther) const
 {
@@ -424,24 +435,18 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     do {
       --i;
       CSSTransition* anim = animations[i];
-      dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
-      MOZ_ASSERT(effect && effect->Properties().Length() == 1,
-                 "Should have one animation property for a transition");
-      MOZ_ASSERT(effect && effect->Properties()[0].mSegments.Length() == 1,
-                 "Animation property should have one segment for a transition");
-      const AnimationProperty& prop = effect->Properties()[0];
-      const AnimationPropertySegment& segment = prop.mSegments[0];
           // properties no longer in 'transition-property'
       if ((checkProperties &&
-           !allTransitionProperties.HasProperty(prop.mProperty)) ||
+           !allTransitionProperties.HasProperty(anim->TransitionProperty())) ||
           // properties whose computed values changed but for which we
           // did not start a new transition (because delay and
           // duration are both zero, or because the new value is not
-          // interpolable); a new transition would have segment.mToValue
+          // interpolable); a new transition would have anim->ToValue()
           // matching currentValue
-          !ExtractComputedValueForTransition(prop.mProperty, afterChangeStyle,
+          !ExtractComputedValueForTransition(anim->TransitionProperty(),
+                                             afterChangeStyle,
                                              currentValue) ||
-          currentValue != segment.mToValue) {
+          currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
           EffectSet* effectSet = EffectSet::GetEffectSet(aElement, pseudoType);
@@ -800,20 +805,13 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
       continue;
     }
 
-    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
-    MOZ_ASSERT(effect->Properties().Length() == 1,
-               "Should have one animation property for a transition");
-    MOZ_ASSERT(effect->Properties()[0].mSegments.Length() == 1,
-               "Animation property should have one segment for a transition");
-    const AnimationProperty& prop = effect->Properties()[0];
-    const AnimationPropertySegment& segment = prop.mSegments[0];
-
     // Since effect is a finished transition, we know it didn't
     // influence style.
     StyleAnimationValue currentValue;
-    if (!ExtractComputedValueForTransition(prop.mProperty, aNewStyleContext,
+    if (!ExtractComputedValueForTransition(anim->TransitionProperty(),
+                                           aNewStyleContext,
                                            currentValue) ||
-        currentValue != segment.mToValue) {
+        currentValue != anim->ToValue()) {
       anim->CancelFromStyle();
       animations.RemoveElementAt(i);
     }
