@@ -374,11 +374,14 @@ var gSyncPane = {
           return fxAccounts.getSignedInUserProfile();
         }
       }).then(data => {
+        let fxaLoginStatus = document.getElementById("fxaLoginStatus");
         if (data && profileInfoEnabled) {
           if (data.displayName) {
-            fxaEmailAddress1Label.hidden = true;
+            fxaLoginStatus.setAttribute("hasName", true);
             displayNameLabel.hidden = false;
             displayNameLabel.textContent = data.displayName;
+          } else {
+            fxaLoginStatus.removeAttribute("hasName");
           }
           if (data.avatar) {
             let bgImage = "url(\"" + data.avatar + "\")";
@@ -395,6 +398,8 @@ var gSyncPane = {
             };
             img.src = data.avatar;
           }
+        } else {
+          fxaLoginStatus.removeAttribute("hasName");
         }
       }, err => {
         FxAccountsCommon.log.error(err);
