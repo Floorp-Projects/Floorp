@@ -39,4 +39,11 @@ function run_test() {
   //       PK11_IsPresent(), which checks whether the test token is present.
   //       The test module inserts and removes the test token in a tight loop,
   //       so the result might not be deterministic.
+
+  // Note: testSlot.tokenName isn't tested for the same reason testSlot.status
+  //       isn't.
+  let testToken = testSlot.getToken();
+  notEqual(testToken, null, "getToken() should succeed");
+  equal(testToken.tokenLabel, "Test PKCS11 Tokeñ Label",
+        "Spot check: the actual and expected test token labels should be equal");
 }
