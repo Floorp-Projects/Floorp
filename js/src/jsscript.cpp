@@ -1702,10 +1702,7 @@ ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj)
     sso->setReservedSlot(SOURCE_SLOT, PrivateValue(nullptr));
 }
 
-const Class ScriptSourceObject::class_ = {
-    "ScriptSource",
-    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS,
+static const ClassOps ScriptSourceObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1713,11 +1710,18 @@ const Class ScriptSourceObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    finalize,
+    ScriptSourceObject::finalize,
     nullptr, /* call */
     nullptr, /* hasInstance */
     nullptr, /* construct */
-    trace
+    ScriptSourceObject::trace
+};
+
+const Class ScriptSourceObject::class_ = {
+    "ScriptSource",
+    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
+    JSCLASS_IS_ANONYMOUS,
+    &ScriptSourceObjectClassOps
 };
 
 ScriptSourceObject*

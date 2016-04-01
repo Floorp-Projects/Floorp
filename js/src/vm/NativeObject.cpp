@@ -1000,7 +1000,7 @@ static inline bool
 CallAddPropertyHook(ExclusiveContext* cx, HandleNativeObject obj, HandleShape shape,
                     HandleValue value)
 {
-    if (JSAddPropertyOp addProperty = obj->getClass()->addProperty) {
+    if (JSAddPropertyOp addProperty = obj->getClass()->getAddProperty()) {
         if (!cx->shouldBeJSContext())
             return false;
 
@@ -1026,7 +1026,7 @@ CallAddPropertyHookDense(ExclusiveContext* cx, HandleNativeObject obj, uint32_t 
         return true;
     }
 
-    if (JSAddPropertyOp addProperty = obj->getClass()->addProperty) {
+    if (JSAddPropertyOp addProperty = obj->getClass()->getAddProperty()) {
         if (!cx->shouldBeJSContext())
             return false;
 
@@ -1873,7 +1873,7 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     // Non-standard extension: Call the getProperty hook. If it sets vp to a
     // value other than undefined, we're done. If not, fall through to the
     // warning/error checks below.
-    if (JSGetterOp getProperty = obj->getClass()->getProperty) {
+    if (JSGetterOp getProperty = obj->getClass()->getGetProperty()) {
         if (!CallJSGetterOp(cx, getProperty, obj, id, vp))
             return false;
 
@@ -2180,8 +2180,8 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
         existing
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
         : JSPROP_ENUMERATE;
-    JSGetterOp getter = clasp->getProperty;
-    JSSetterOp setter = clasp->setProperty;
+    JSGetterOp getter = clasp->getGetProperty();
+    JSSetterOp setter = clasp->getSetProperty();
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
     if (!DefineProperty(cx, receiver, id, v, getter, setter, attrs, result))
@@ -2451,7 +2451,7 @@ js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     if (!shape) {
         // If no property call the class's delProperty hook, passing succeeded
         // as the result parameter. This always succeeds when there is no hook.
-        return CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, result);
+        return CallJSDeletePropertyOp(cx, obj->getClass()->getDelProperty(), obj, id, result);
     }
 
     cx->runtime()->gc.poke();
@@ -2460,7 +2460,7 @@ js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     if (GetShapeAttributes(obj, shape) & JSPROP_PERMANENT)
         return result.failCantDelete();
 
-    if (!CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, result))
+    if (!CallJSDeletePropertyOp(cx, obj->getClass()->getDelProperty(), obj, id, result))
         return false;
     if (!result)
         return true;

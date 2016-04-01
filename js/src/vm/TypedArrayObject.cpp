@@ -1144,18 +1144,7 @@ TypedArrayObject::sharedTypedArrayPrototypeClass = {
     // until we implement @@toStringTag.
     "???",
     JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
-    nullptr,                /* addProperty */
-    nullptr,                /* delProperty */
-    nullptr,                /* getProperty */
-    nullptr,                /* setProperty */
-    nullptr,                /* enumerate */
-    nullptr,                /* resolve */
-    nullptr,                /* mayResolve */
-    nullptr,                /* finalize */
-    nullptr,                /* call */
-    nullptr,                /* hasInstance */
-    nullptr,                /* construct */
-    nullptr,                /* trace */
+    JS_NULL_CLASS_OPS,
     &TypedArrayObjectSharedTypedArrayPrototypeClassSpec
 };
 
@@ -2169,6 +2158,21 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint32, uint32_t, uint32_t)
 IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float32, float, float)
 IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 
+static const ClassOps TypedArrayClassOps = {
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
+    nullptr,                 /* getProperty */
+    nullptr,                 /* setProperty */
+    nullptr,                 /* enumerate   */
+    nullptr,                 /* resolve     */
+    nullptr,                 /* mayResolve  */
+    nullptr,                 /* finalize    */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
+    TypedArrayObject::trace, /* trace  */
+};
+
 #define IMPL_TYPED_ARRAY_CLASS_SPEC(_type)                                     \
 {                                                                              \
     _type##Array::createConstructor,                                           \
@@ -2200,18 +2204,7 @@ static const ClassSpec TypedArrayObjectClassSpecs[Scalar::MaxTypedArrayViewType]
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array) |                         \
     JSCLASS_DELAY_METADATA_BUILDER,                                            \
-    nullptr,                 /* addProperty */                                 \
-    nullptr,                 /* delProperty */                                 \
-    nullptr,                 /* getProperty */                                 \
-    nullptr,                 /* setProperty */                                 \
-    nullptr,                 /* enumerate   */                                 \
-    nullptr,                 /* resolve     */                                 \
-    nullptr,                 /* mayResolve  */                                 \
-    nullptr,                 /* finalize    */                                 \
-    nullptr,                 /* call        */                                 \
-    nullptr,                 /* hasInstance */                                 \
-    nullptr,                 /* construct   */                                 \
-    TypedArrayObject::trace, /* trace  */                                      \
+    &TypedArrayClassOps,                                                       \
     &TypedArrayObjectClassSpecs[Scalar::Type::_type]                           \
 }
 
@@ -2269,18 +2262,7 @@ static const ClassSpec TypedArrayObjectProtoClassSpecs[Scalar::MaxTypedArrayView
      */ \
     #_type "ArrayPrototype", \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array), \
-    nullptr, /* addProperty */ \
-    nullptr, /* delProperty */ \
-    nullptr, /* getProperty */ \
-    nullptr, /* setProperty */ \
-    nullptr, /* enumerate */ \
-    nullptr, /* resolve */ \
-    nullptr, /* mayResolve */ \
-    nullptr, /* finalize */ \
-    nullptr, /* call */ \
-    nullptr, /* hasInstance */ \
-    nullptr, /* construct */ \
-    nullptr, /* trace  */ \
+    JS_NULL_CLASS_OPS, \
     &TypedArrayObjectProtoClassSpecs[Scalar::Type::_type] \
 }
 
@@ -2309,11 +2291,7 @@ const Class DataViewObject::protoClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView)
 };
 
-const Class DataViewObject::class_ = {
-    "DataView",
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+static const ClassOps DataViewObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -2326,6 +2304,14 @@ const Class DataViewObject::class_ = {
     nullptr, /* hasInstance */
     nullptr, /* construct */
     ArrayBufferViewObject::trace
+};
+
+const Class DataViewObject::class_ = {
+    "DataView",
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+    &DataViewObjectClassOps
 };
 
 const JSFunctionSpec DataViewObject::jsfuncs[] = {

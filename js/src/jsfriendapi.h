@@ -314,6 +314,7 @@ JS_DefineFunctionsWithHelp(JSContext* cx, JS::HandleObject obj, const JSFunction
 
 namespace js {
 
+extern JS_FRIEND_DATA(const js::ClassOps) ProxyClassOps;
 extern JS_FRIEND_DATA(const js::ClassExtension) ProxyClassExtension;
 extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
 
@@ -336,18 +337,7 @@ extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
             JSCLASS_IS_PROXY |                                                          \
             JSCLASS_DELAY_METADATA_BUILDER |                                            \
             flags,                                                                      \
-        nullptr,                 /* addProperty */                                      \
-        nullptr,                 /* delProperty */                                      \
-        nullptr,                 /* getProperty */                                      \
-        nullptr,                 /* setProperty */                                      \
-        nullptr,                 /* enumerate */                                        \
-        nullptr,                 /* resolve */                                          \
-        nullptr,                 /* mayResolve */                                       \
-        js::proxy_Finalize,      /* finalize    */                                      \
-        nullptr,                 /* call        */                                      \
-        js::proxy_HasInstance,   /* hasInstance */                                      \
-        nullptr,                 /* construct   */                                      \
-        js::proxy_Trace,         /* trace       */                                      \
+        &js::ProxyClassOps,                                                             \
         JS_NULL_CLASS_SPEC,                                                             \
         extPtr,                                                                         \
         &js::ProxyObjectOps                                                             \

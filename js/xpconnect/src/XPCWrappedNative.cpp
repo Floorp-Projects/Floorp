@@ -775,8 +775,8 @@ XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
     MOZ_ASSERT(jsclazz &&
                jsclazz->name &&
                jsclazz->flags &&
-               jsclazz->resolve &&
-               jsclazz->finalize, "bad class");
+               jsclazz->getResolve() &&
+               jsclazz->hasFinalize(), "bad class");
 
     // XXXbz JS_GetObjectPrototype wants an object, even though it then asserts
     // that this object is same-compartment with cx, which means it could just

@@ -620,39 +620,34 @@ XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* reso
                                  resolvedp);
 }
 
+static const js::ClassOps XPC_WN_NoHelper_JSClassOps = {
+    XPC_WN_OnlyIWrite_AddPropertyStub, // addProperty
+    XPC_WN_CantDeletePropertyStub,     // delProperty
+    nullptr,                           // getProperty
+    nullptr,                           // setProperty
+    XPC_WN_Shared_Enumerate,           // enumerate
+    XPC_WN_NoHelper_Resolve,           // resolve
+    nullptr,                           // mayResolve
+    XPC_WN_NoHelper_Finalize,          // finalize
+    nullptr,                           // call
+    nullptr,                           // construct
+    nullptr,                           // hasInstance
+    XPCWrappedNative::Trace,           // trace
+};
+
 static const js::ClassExtension XPC_WN_JSClassExtension = {
     nullptr, // weakmapKeyDelegateOp
     WrappedNativeObjectMoved
 };
 
 const js::Class XPC_WN_NoHelper_JSClass = {
-    "XPCWrappedNative_NoHelper",    // name;
+    "XPCWrappedNative_NoHelper",
     WRAPPER_FLAGS |
     JSCLASS_IS_WRAPPED_NATIVE |
-    JSCLASS_PRIVATE_IS_NSISUPPORTS, // flags
-
-    /* Mandatory non-null function pointer members. */
-    XPC_WN_OnlyIWrite_AddPropertyStub, // addProperty
-    XPC_WN_CantDeletePropertyStub,     // delProperty
-    nullptr,                           // getProperty
-    nullptr,                           // setProperty
-
-    XPC_WN_Shared_Enumerate,           // enumerate
-    XPC_WN_NoHelper_Resolve,           // resolve
-    nullptr,                           // mayResolve
-    XPC_WN_NoHelper_Finalize,          // finalize
-
-    /* Optionally non-null members start here. */
-    nullptr,                         // call
-    nullptr,                         // construct
-    nullptr,                         // hasInstance
-    XPCWrappedNative::Trace,         // trace
+    JSCLASS_PRIVATE_IS_NSISUPPORTS,
+    &XPC_WN_NoHelper_JSClassOps,
     JS_NULL_CLASS_SPEC,
-
-    // ClassExtension
     &XPC_WN_JSClassExtension,
-
-    // ObjectOps
     JS_NULL_OBJECT_OPS
 };
 
@@ -984,73 +979,75 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
     if (mFlags.IsGlobalObject())
         mJSClass.flags |= XPCONNECT_GLOBAL_FLAGS;
 
-    JSAddPropertyOp addProperty;
-    if (mFlags.WantAddProperty())
-        addProperty = XPC_WN_Helper_AddProperty;
-    else if (mFlags.UseJSStubForAddProperty())
-        addProperty = nullptr;
-    else if (mFlags.AllowPropModsDuringResolve())
-        addProperty = XPC_WN_MaybeResolvingPropertyStub;
-    else
-        addProperty = XPC_WN_CannotModifyPropertyStub;
-    mJSClass.addProperty = addProperty;
+    // Initialize the js::ClassExtension.
 
-    JSDeletePropertyOp delProperty;
-    if (mFlags.UseJSStubForDelProperty())
-        delProperty = nullptr;
+    // This is an unusual js::ClassOps: it is heap-allocated and belongs to
+    // |this|.
+    js::ClassOps* cOps = new js::ClassOps;
+    memset(cOps, 0, sizeof(js::ClassOps));
+    mJSClass.cOps = cOps;
+
+    if (mFlags.WantAddProperty())
+        cOps->addProperty = XPC_WN_Helper_AddProperty;
+    else if (mFlags.UseJSStubForAddProperty())
+        cOps->addProperty = nullptr;
     else if (mFlags.AllowPropModsDuringResolve())
-        delProperty = XPC_WN_MaybeResolvingDeletePropertyStub;
+        cOps->addProperty = XPC_WN_MaybeResolvingPropertyStub;
     else
-        delProperty = XPC_WN_CantDeletePropertyStub;
-    mJSClass.delProperty = delProperty;
+        cOps->addProperty = XPC_WN_CannotModifyPropertyStub;
+
+    if (mFlags.UseJSStubForDelProperty())
+        cOps->delProperty = nullptr;
+    else if (mFlags.AllowPropModsDuringResolve())
+        cOps->delProperty = XPC_WN_MaybeResolvingDeletePropertyStub;
+    else
+        cOps->delProperty = XPC_WN_CantDeletePropertyStub;
 
     if (mFlags.WantGetProperty())
-        mJSClass.getProperty = XPC_WN_Helper_GetProperty;
+        cOps->getProperty = XPC_WN_Helper_GetProperty;
     else
-        mJSClass.getProperty = nullptr;
+        cOps->getProperty = nullptr;
 
-    JSSetterOp setProperty;
     if (mFlags.WantSetProperty())
-        setProperty = XPC_WN_Helper_SetProperty;
+        cOps->setProperty = XPC_WN_Helper_SetProperty;
     else if (mFlags.UseJSStubForSetProperty())
-        setProperty = nullptr;
+        cOps->setProperty = nullptr;
     else if (mFlags.AllowPropModsDuringResolve())
-        setProperty = XPC_WN_MaybeResolvingSetPropertyStub;
+        cOps->setProperty = XPC_WN_MaybeResolvingSetPropertyStub;
     else
-        setProperty = XPC_WN_CannotModifySetPropertyStub;
-    mJSClass.setProperty = setProperty;
+        cOps->setProperty = XPC_WN_CannotModifySetPropertyStub;
 
     MOZ_ASSERT_IF(mFlags.WantEnumerate(), !mFlags.WantNewEnumerate());
     MOZ_ASSERT_IF(mFlags.WantNewEnumerate(), !mFlags.WantEnumerate());
 
     // We will use ops->enumerate set below for NewEnumerate
     if (mFlags.WantNewEnumerate())
-        mJSClass.enumerate = nullptr;
+        cOps->enumerate = nullptr;
     else if (mFlags.WantEnumerate())
-        mJSClass.enumerate = XPC_WN_Helper_Enumerate;
+        cOps->enumerate = XPC_WN_Helper_Enumerate;
     else
-        mJSClass.enumerate = XPC_WN_Shared_Enumerate;
+        cOps->enumerate = XPC_WN_Shared_Enumerate;
 
     // We have to figure out resolve strategy at call time
-    mJSClass.resolve = XPC_WN_Helper_Resolve;
+    cOps->resolve = XPC_WN_Helper_Resolve;
 
     if (mFlags.WantFinalize())
-        mJSClass.finalize = XPC_WN_Helper_Finalize;
+        cOps->finalize = XPC_WN_Helper_Finalize;
     else
-        mJSClass.finalize = XPC_WN_NoHelper_Finalize;
+        cOps->finalize = XPC_WN_NoHelper_Finalize;
 
     if (mFlags.WantCall())
-        mJSClass.call = XPC_WN_Helper_Call;
+        cOps->call = XPC_WN_Helper_Call;
     if (mFlags.WantConstruct())
-        mJSClass.construct = XPC_WN_Helper_Construct;
+        cOps->construct = XPC_WN_Helper_Construct;
 
     if (mFlags.WantHasInstance())
-        mJSClass.hasInstance = XPC_WN_Helper_HasInstance;
+        cOps->hasInstance = XPC_WN_Helper_HasInstance;
 
     if (mFlags.IsGlobalObject())
-        mJSClass.trace = JS_GlobalObjectTraceHook;
+        cOps->trace = JS_GlobalObjectTraceHook;
     else
-        mJSClass.trace = XPCWrappedNative::Trace;
+        cOps->trace = XPCWrappedNative::Trace;
 
     // Initialize the js::ClassExtension.
 
@@ -1259,56 +1256,39 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, b
                                  JSPROP_ENUMERATE, resolvep);
 }
 
+static const js::ClassOps XPC_WN_ModsAllowed_Proto_JSClassOps = {
+    nullptr,                            // addProperty
+    nullptr,                            // delProperty
+    nullptr,                            // getProperty
+    nullptr,                            // setProperty
+    XPC_WN_Shared_Proto_Enumerate,      // enumerate
+    XPC_WN_ModsAllowed_Proto_Resolve,   // resolve
+    nullptr,                            // mayResolve
+    XPC_WN_Shared_Proto_Finalize,       // finalize
+    nullptr,                            // call
+    nullptr,                            // construct
+    nullptr,                            // hasInstance
+    XPC_WN_Shared_Proto_Trace,          // trace
+};
+
 static const js::ClassExtension XPC_WN_Shared_Proto_ClassExtension = {
     nullptr,    /* weakmapKeyDelegateOp */
     XPC_WN_Shared_Proto_ObjectMoved
 };
 
 const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
-    "XPC_WN_ModsAllowed_WithCall_Proto_JSClass", // name;
-    WRAPPER_FLAGS, // flags;
-
-    /* Function pointer members. */
-    nullptr,                        // addProperty;
-    nullptr,                        // delProperty;
-    nullptr,                        // getProperty;
-    nullptr,                        // setProperty;
-    XPC_WN_Shared_Proto_Enumerate,  // enumerate;
-    XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
-    nullptr,                        // mayResolve;
-    XPC_WN_Shared_Proto_Finalize,   // finalize;
-
-    /* Optionally non-null members start here. */
-    nullptr,                        // call;
-    nullptr,                        // construct;
-    nullptr,                        // hasInstance;
-    XPC_WN_Shared_Proto_Trace,      // trace;
-
+    "XPC_WN_ModsAllowed_WithCall_Proto_JSClass",
+    WRAPPER_FLAGS,
+    &XPC_WN_ModsAllowed_Proto_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_WithCall_ObjectOps
 };
 
 const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
-    "XPC_WN_ModsAllowed_NoCall_Proto_JSClass", // name;
-    WRAPPER_FLAGS,                  // flags;
-
-    /* Function pointer members. */
-    nullptr,                        // addProperty;
-    nullptr,                        // delProperty;
-    nullptr,                        // getProperty;
-    nullptr,                        // setProperty;
-    XPC_WN_Shared_Proto_Enumerate,  // enumerate;
-    XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
-    nullptr,                        // mayResolve;
-    XPC_WN_Shared_Proto_Finalize,   // finalize;
-
-    /* Optionally non-null members start here. */
-    nullptr,                         // call;
-    nullptr,                         // construct;
-    nullptr,                         // hasInstance;
-    XPC_WN_Shared_Proto_Trace,      // trace;
-
+    "XPC_WN_ModsAllowed_NoCall_Proto_JSClass",
+    WRAPPER_FLAGS,
+    &XPC_WN_ModsAllowed_Proto_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_NoCall_ObjectOps
@@ -1367,51 +1347,34 @@ XPC_WN_NoMods_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* 
                                  JSPROP_ENUMERATE, resolvedp);
 }
 
+static const js::ClassOps XPC_WN_NoMods_Proto_JSClassOps = {
+    XPC_WN_OnlyIWrite_Proto_AddPropertyStub,   // addProperty
+    XPC_WN_CantDeletePropertyStub,             // delProperty
+    nullptr,                                   // getProperty
+    nullptr,                                   // setProperty
+    XPC_WN_Shared_Proto_Enumerate,             // enumerate
+    XPC_WN_NoMods_Proto_Resolve,               // resolve
+    nullptr,                                   // mayResolve
+    XPC_WN_Shared_Proto_Finalize,              // finalize
+    nullptr,                                   // call
+    nullptr,                                   // construct
+    nullptr,                                   // hasInstance
+    XPC_WN_Shared_Proto_Trace,                 // trace
+};
+
 const js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
-    "XPC_WN_NoMods_WithCall_Proto_JSClass",    // name;
-    WRAPPER_FLAGS,                             // flags;
-
-    /* Mandatory non-null function pointer members. */
-    XPC_WN_OnlyIWrite_Proto_AddPropertyStub,   // addProperty;
-    XPC_WN_CantDeletePropertyStub,             // delProperty;
-    nullptr,                                   // getProperty;
-    nullptr,                                   // setProperty;
-    XPC_WN_Shared_Proto_Enumerate,             // enumerate;
-    XPC_WN_NoMods_Proto_Resolve,               // resolve;
-    nullptr,                                   // mayResolve;
-    XPC_WN_Shared_Proto_Finalize,              // finalize;
-
-    /* Optionally non-null members start here. */
-    nullptr,                         // call;
-    nullptr,                         // construct;
-    nullptr,                         // hasInstance;
-    XPC_WN_Shared_Proto_Trace,      // trace;
-
+    "XPC_WN_NoMods_WithCall_Proto_JSClass",
+    WRAPPER_FLAGS,
+    &XPC_WN_NoMods_Proto_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_WithCall_ObjectOps
 };
 
 const js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
-    "XPC_WN_NoMods_NoCall_Proto_JSClass",      // name;
-    WRAPPER_FLAGS,                             // flags;
-
-    /* Mandatory non-null function pointer members. */
-    XPC_WN_OnlyIWrite_Proto_AddPropertyStub,   // addProperty;
-    XPC_WN_CantDeletePropertyStub,             // delProperty;
-    nullptr,                                   // getProperty;
-    nullptr,                                   // setProperty;
-    XPC_WN_Shared_Proto_Enumerate,             // enumerate;
-    XPC_WN_NoMods_Proto_Resolve,               // resolve;
-    nullptr,                                   // mayResolve;
-    XPC_WN_Shared_Proto_Finalize,              // finalize;
-
-    /* Optionally non-null members start here. */
-    nullptr,                         // call;
-    nullptr,                         // construct;
-    nullptr,                         // hasInstance;
-    XPC_WN_Shared_Proto_Trace,      // trace;
-
+    "XPC_WN_NoMods_NoCall_Proto_JSClass",
+    WRAPPER_FLAGS,
+    &XPC_WN_NoMods_Proto_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_NoCall_ObjectOps
@@ -1488,31 +1451,31 @@ static_assert(((WRAPPER_FLAGS >> JSCLASS_RESERVED_SLOTS_SHIFT) &
                JSCLASS_RESERVED_SLOTS_MASK) == 0,
               "WRAPPER_FLAGS should not include any reserved slots");
 
+static const js::ClassOps XPC_WN_Tearoff_JSClassOps = {
+    XPC_WN_OnlyIWrite_AddPropertyStub,  // addProperty
+    XPC_WN_CantDeletePropertyStub,      // delProperty
+    nullptr,                            // getProperty
+    nullptr,                            // setProperty
+    XPC_WN_TearOff_Enumerate,           // enumerate
+    XPC_WN_TearOff_Resolve,             // resolve
+    nullptr,                            // mayResolve
+    XPC_WN_TearOff_Finalize,            // finalize
+    nullptr,                            // call
+    nullptr,                            // construct
+    nullptr,                            // hasInstance
+    nullptr,                            // trace
+};
+
 static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {
-    nullptr,                               // weakmapKeyDelegateOp
+    nullptr,                            // weakmapKeyDelegateOp
     XPC_WN_TearOff_ObjectMoved
 };
 
 const js::Class XPC_WN_Tearoff_JSClass = {
-    "WrappedNative_TearOff",                   // name;
+    "WrappedNative_TearOff",
     WRAPPER_FLAGS |
-    JSCLASS_HAS_RESERVED_SLOTS(XPC_WN_TEAROFF_RESERVED_SLOTS), // flags;
-    XPC_WN_OnlyIWrite_AddPropertyStub,         // addProperty;
-    XPC_WN_CantDeletePropertyStub,             // delProperty;
-    nullptr,                                   // getProperty;
-    nullptr,                                   // setProperty;
-    XPC_WN_TearOff_Enumerate,                  // enumerate;
-    XPC_WN_TearOff_Resolve,                    // resolve;
-    nullptr,                                   // mayResolve;
-    XPC_WN_TearOff_Finalize,                   // finalize;
-
-    /* Optionally non-null members start here. */
-    nullptr,                                   // call
-    nullptr,                                   // construct
-    nullptr,                                   // hasInstance
-    nullptr,                                   // trace
+    JSCLASS_HAS_RESERVED_SLOTS(XPC_WN_TEAROFF_RESERVED_SLOTS),
+    &XPC_WN_Tearoff_JSClassOps,
     JS_NULL_CLASS_SPEC,
-
-    // ClassExtension
     &XPC_WN_Tearoff_JSClassExtension
 };

@@ -2643,12 +2643,16 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     if (!compartment)
         return nullptr;
 
-    static const Class shgClass = {
-        "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
+    static const ClassOps shgClassOps = {
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook
+    };
+
+    static const Class shgClass = {
+        "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
+        &shgClassOps
     };
 
     AutoCompartment ac(cx, compartment);
