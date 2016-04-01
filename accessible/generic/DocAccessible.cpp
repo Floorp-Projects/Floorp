@@ -1879,64 +1879,6 @@ DocAccessible::FireEventsOnInsertion(Accessible* aContainer,
 }
 
 void
-DocAccessible::UpdateTreeOnInsertion(Accessible* aContainer)
-{
-  for (uint32_t idx = 0; idx < aContainer->ContentChildCount(); idx++) {
-    Accessible* child = aContainer->ContentChildAt(idx);
-    child->SetSurvivingInUpdate(true);
-   }
-
-  AutoTreeMutation mut(aContainer);
-  aContainer->InvalidateChildren();
-  aContainer->EnsureChildren();
-
-  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
-
-  uint32_t updateFlags = eNoAccessible;
-  for (uint32_t idx = 0; idx < aContainer->ContentChildCount(); idx++) {
-    Accessible* child = aContainer->ContentChildAt(idx);
-    if (child->IsSurvivingInUpdate()) {
-      child->SetSurvivingInUpdate(false);
-      continue;
-    }
-
-    // A new child has been created, update its tree.
-#ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eTree)) {
-      logging::MsgBegin("TREE", "process content insertion");
-      logging::Node("container", aContainer->GetNode());
-      logging::Node("child", child->GetContent());
-      logging::Address("child", child);
-      logging::MsgEnd();
-    }
-#endif
-
-    updateFlags |= UpdateTreeInternal(child, true, reorderEvent);
-  }
-
-  // Content insertion/removal is not cause of accessible tree change.
-  if (updateFlags == eNoAccessible)
-    return;
-
-  // Check to see if change occurred inside an alert, and fire an EVENT_ALERT
-  // if it did.
-  if (!(updateFlags & eAlertAccessible) &&
-      (aContainer->IsAlert() || aContainer->IsInsideAlert())) {
-    Accessible* ancestor = aContainer;
-    do {
-      if (ancestor->IsAlert()) {
-        FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, ancestor);
-        break;
-      }
-    }
-    while ((ancestor = ancestor->Parent()));
-  }
-
-  MaybeNotifyOfValueChange(aContainer);
-  FireDelayedEvent(reorderEvent);
-}
-
-void
 DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode)
 {
   // If child node is not accessible then look for its accessible children.
