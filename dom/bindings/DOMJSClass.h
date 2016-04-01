@@ -9,6 +9,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 
 #include "mozilla/dom/PrototypeList.h" // auto-generated
@@ -198,7 +199,7 @@ struct NativePropertiesN {
 
   const int32_t iteratorAliasMethodIndex;
 
-  constexpr const NativePropertiesN<7>* Upcast() const {
+  MOZ_CONSTEXPR const NativePropertiesN<7>* Upcast() const {
     return reinterpret_cast<const NativePropertiesN<7>*>(this);
   }
 
