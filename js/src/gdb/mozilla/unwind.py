@@ -378,6 +378,12 @@ class SpiderMonkeyUnwinder(Unwinder):
         super(SpiderMonkeyUnwinder, self).__init__("SpiderMonkey")
         self.typecache = typecache
         self.unwinder_state = None
+
+        # Disabled by default until we figure out issues in gdb.
+        self.enabled = False
+        gdb.write("SpiderMonkey unwinder is disabled by default, to enable it type:\n" +
+                  "\tenable unwinder .* SpiderMonkey\n")
+
         # We need to invalidate the unwinder state whenever the
         # inferior starts executing.  This avoids having a stale
         # cache.
