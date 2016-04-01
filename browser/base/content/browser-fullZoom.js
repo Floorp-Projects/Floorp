@@ -270,11 +270,20 @@ var FullZoom = {
   },
 
   /**
-   * Sets the zoom level of the page in the current browser to the global zoom
+   * Sets the zoom level for the given browser to the given floating
+   * point value, where 1 is the default zoom level.
+   */
+  setZoom: function (value, browser = gBrowser.selectedBrowser) {
+    ZoomManager.setZoomForBrowser(browser, value);
+    this._ignorePendingZoomAccesses(browser);
+    this._applyZoomToPref(browser);
+  },
+
+  /**
+   * Sets the zoom level of the page in the given browser to the global zoom
    * level.
    */
-  reset: function FullZoom_reset() {
-    let browser = gBrowser.selectedBrowser;
+  reset: function FullZoom_reset(browser = gBrowser.selectedBrowser) {
     let token = this._getBrowserToken(browser);
     this._getGlobalValue(browser, function (value) {
       if (token.isCurrent) {
