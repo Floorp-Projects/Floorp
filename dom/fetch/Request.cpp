@@ -413,6 +413,23 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetReferrerPolicy(aInit.mReferrerPolicy.Value());
   }
 
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+    if (window) {
+      nsCOMPtr<nsIDocument> doc;
+      doc = window->GetExtantDoc();
+      if (doc) {
+        request->SetEnvironmentReferrerPolicy(doc->GetReferrerPolicy());
+      }
+    }
+  } else {
+    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    if (worker) {
+      worker->AssertIsOnWorkerThread();
+      request->SetEnvironmentReferrerPolicy(worker->GetReferrerPolicy());
+    }
+  }
+
   if (mode != RequestMode::EndGuard_) {
     request->ClearCreatedByFetchEvent();
     request->SetMode(mode);
