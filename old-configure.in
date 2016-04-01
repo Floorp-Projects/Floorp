@@ -601,8 +601,6 @@ AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
-AC_SUBST(INTEL_CC)
-AC_SUBST(INTEL_CXX)
 
 AC_SUBST(STL_FLAGS)
 AC_SUBST(WRAP_STL_INCLUDES)
@@ -623,10 +621,8 @@ dnl = Mac OS X toolchain support
 dnl ========================================================
 
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
-dnl that a universal binary is being produced and MOZ_CAN_RUN_PROGRAMS
-dnl when we can run target binaries.
+dnl that a universal binary is being produced.
 AC_SUBST(UNIVERSAL_BINARY)
-AC_SUBST(MOZ_CAN_RUN_PROGRAMS)
 
 MOZ_ARG_WITH_STRING(unify-dist,
 [  --with-unify-dist=dir   Location of the dist directory to unify with at packaging time (Mac OS X universal build only)],
@@ -742,9 +738,7 @@ dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
 AS_BIN=$AS
-AR_LIST='$(AR) t'
 AR_EXTRACT='$(AR) x'
-AR_DELETE='$(AR) d'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
 DLL_PREFIX=lib
@@ -1548,7 +1542,6 @@ case "$target" in
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         MOZ_FIX_LINK_PATHS=
-        MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
@@ -2667,7 +2660,6 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_SYSTEM_PNG" = 1; then
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
 
-MOZ_PNG_ARM_NEON_CHECK=
 if test "$MOZ_SYSTEM_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
     MOZ_ARG_ENABLE_STRING(png-arm-neon-support,
         [  --enable-png-arm-neon-support=TYPE
@@ -2686,12 +2678,9 @@ if test "$MOZ_SYSTEM_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
             ;;
         *)
             MOZ_PNG_ARM_NEON=1
-            MOZ_PNG_ARM_NEON_CHECK=1
             ;;
     esac
 fi
-
-AC_SUBST(MOZ_PNG_ARM_NEON_CHECK)
 
 fi # SKIP_LIBRARY_CHECKS
 
@@ -2775,7 +2764,6 @@ MOZ_PERMISSIONS=1
 MOZ_PLACES=1
 MOZ_SOCIAL=1
 MOZ_PREF_EXTENSIONS=1
-MOZ_PROFILELOCKING=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
@@ -2847,15 +2835,6 @@ case "${target}" in
         ;;
 
 esac
-
-MOZ_ARG_WITH_STRING(xulrunner-stub-name,
-[  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
-  XULRUNNER_STUB_NAME=$withval)
-
-if test -z "$XULRUNNER_STUB_NAME"; then
-  XULRUNNER_STUB_NAME=xulrunner-stub
-fi
-AC_SUBST(XULRUNNER_STUB_NAME)
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh so it must be set before confvars.sh is called.
@@ -3316,14 +3295,10 @@ then
                       MOZ_ENABLE_QTMOBILITY=1,
                       MOZ_ENABLE_QTMOBILITY=)
     if test "$MOZ_ENABLE_QTMOBILITY"; then
-       MOZ_ENABLE_QTMOBILITY=1
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
-       AC_DEFINE(MOZ_ENABLE_QTMOBILITY)
-       AC_SUBST(MOZ_ENABLE_QTMOBILITY)
     else
        AC_CHECK_LIB(QtSensors, main, [
-          MOZ_ENABLE_QTMOBILITY=1
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMobility"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtSensors"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtFeedback"
@@ -3374,14 +3349,12 @@ then
     TK_LIBS=$MOZ_QT_LIBS
 fi
 
-AC_SUBST(GTK_CONFIG)
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
-AC_SUBST(MOZ_ENABLE_QTMOBILITY)
 AC_SUBST_LIST(MOZ_QT_CFLAGS)
 AC_SUBST_LIST(MOZ_QT_LIBS)
 
@@ -3877,7 +3850,6 @@ if test -n "$MOZ_WEBRTC_HARDWARE_AEC_NS"; then
 fi
 
 AC_SUBST(MOZ_WEBRTC)
-AC_SUBST(MOZ_WEBRTC_LEAKING_TESTS)
 AC_SUBST(MOZ_WEBRTC_SIGNALING)
 AC_SUBST(MOZ_PEERCONNECTION)
 AC_SUBST(MOZ_WEBRTC_ASSERT_ALWAYS)
@@ -4141,7 +4113,6 @@ if test -z "$MOZ_SYSTEM_LIBVPX"; then
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
     dnl We currently require gcc on all arm platforms.
-    VPX_NEED_OBJ_INT_EXTRACT=
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
@@ -4215,15 +4186,6 @@ if test -z "$MOZ_SYSTEM_LIBVPX"; then
 
     if test -n "$VPX_USE_YASM" && test "$OS_ARCH:$CPU_ARCH" != "WINNT:x86_64"; then
       VPX_ASFLAGS="-DPIC"
-    fi
-
-    if test -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
-      dnl We prefer to get asm offsets using inline assembler, which the above
-      dnl compilers can do. When we're not using one of those, we have to fall
-      dnl back to obj_int_extract, which reads them from a compiled object
-      dnl file. Unfortunately, that only works if we're compiling on a system
-      dnl with the header files for the appropriate object file format.
-      VPX_NEED_OBJ_INT_EXTRACT=1
     fi
 
     if test -n "$VPX_X86_ASM"; then
@@ -6492,25 +6454,6 @@ AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
 AC_SUBST(PROFILE_USE_LDFLAGS)
 
-dnl =============================================
-dnl Support for -fno-integrated-as (recent clang)
-dnl =============================================
-dnl Under clang 3.4+, use -fno-integrated-as to
-dnl build libvpx's vp8_asm_enc_offsets.c
-
-_SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fno-integrated-as -S"
-
-AC_MSG_CHECKING([whether C compiler supports -fno-integrated-as])
-AC_TRY_COMPILE([], [return 0;],
-               [ NO_INTEGRATED_AS_CFLAGS="-fno-integrated-as"
-                 result="yes" ], result="no")
-AC_MSG_RESULT([$result])
-
-CFLAGS="$_SAVE_CFLAGS"
-
-AC_SUBST(NO_INTEGRATED_AS_CFLAGS)
-
 fi # ! SKIP_COMPILER_CHECKS
 
 AC_DEFINE(CPP_THROW_NEW, [throw()])
@@ -6895,20 +6838,6 @@ fi
 AC_SUBST(MOZ_XUL)
 
 dnl ========================================================
-dnl disable profile locking
-dnl   do no use this in applications that can have more than
-dnl   one process accessing the profile directory.
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(profilelocking,
-[  --disable-profilelocking
-                          Disable profile locking],
-    MOZ_PROFILELOCKING=,
-    MOZ_PROFILELOCKING=1 )
-if test "$MOZ_PROFILELOCKING"; then
-  AC_DEFINE(MOZ_PROFILELOCKING)
-fi
-
-dnl ========================================================
 dnl necko configuration options
 dnl ========================================================
 
@@ -7073,9 +7002,7 @@ dnl ========================================================
 
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
-AC_SUBST(AR_LIST)
 AC_SUBST(AR_EXTRACT)
-AC_SUBST(AR_DELETE)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
@@ -7109,8 +7036,6 @@ AC_SUBST(JAVAH)
 AC_SUBST(JAR)
 AC_SUBST(JARSIGNER)
 AC_SUBST(KEYTOOL)
-
-AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
@@ -7161,7 +7086,6 @@ AC_SUBST(STRIP_FLAGS)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
 
@@ -7458,7 +7382,6 @@ AC_SUBST(OS_COMPILE_CFLAGS)
 AC_SUBST(OS_COMPILE_CXXFLAGS)
 AC_SUBST(OS_LDFLAGS)
 AC_SUBST(OS_LIBS)
-AC_SUBST(WCHAR_CFLAGS)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
@@ -7518,7 +7441,6 @@ AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
-AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)

@@ -248,7 +248,6 @@ def old_configure_options(*options):
     '--enable-posix-nspr-emulation',
     '--enable-pref-extensions',
     '--enable-printing',
-    '--enable-profilelocking',
     '--enable-pulseaudio',
     '--enable-raw',
     '--enable-readline',
@@ -362,7 +361,6 @@ def old_configure_options(*options):
     '--with-unify-dist',
     '--with-user-appdir',
     '--with-windows-version',
-    '--with-xulrunner-stub-name',
     '--x-includes',
     '--x-libraries',
 

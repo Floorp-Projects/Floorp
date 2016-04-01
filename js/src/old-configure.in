@@ -396,8 +396,6 @@ AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
-AC_SUBST(INTEL_CC)
-AC_SUBST(INTEL_CXX)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -414,10 +412,8 @@ dnl = Mac OS X toolchain support
 dnl ========================================================
 
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
-dnl that a universal binary is being produced and MOZ_CAN_RUN_PROGRAMS
-dnl when we can run target binaries.
+dnl that a universal binary is being produced.
 AC_SUBST(UNIVERSAL_BINARY)
-AC_SUBST(MOZ_CAN_RUN_PROGRAMS)
 
 dnl ========================================================
 dnl Check for MacOS deployment target version
@@ -575,9 +571,7 @@ dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
 AS_BIN=$AS
-AR_LIST='$(AR) t'
 AR_EXTRACT='$(AR) x'
-AR_DELETE='$(AR) d'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
 DLL_PREFIX=lib
@@ -2597,9 +2591,7 @@ dnl ========================================================
 
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
-AC_SUBST(AR_LIST)
 AC_SUBST(AR_EXTRACT)
-AC_SUBST(AR_DELETE)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
