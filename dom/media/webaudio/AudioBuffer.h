@@ -10,6 +10,8 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/StaticMutex.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "AudioContext.h"
