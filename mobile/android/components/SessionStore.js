@@ -424,6 +424,12 @@ SessionStore.prototype = {
       // hasn't yet fired, we need to restore any form data that
       // might have been present.
       aBrowser.__SS_data.formdata = formdata;
+    } else {
+      // When navigating via the forward/back buttons, Gecko restores
+      // the form data all by itself and doesn't invoke any input events.
+      // As _collectTabData() doesn't save any form data, we need to manually
+      // capture it to bridge the time until the next input event arrives.
+      this.onTabInput(aWindow, aBrowser);
     }
 
     this.saveStateDelayed();
