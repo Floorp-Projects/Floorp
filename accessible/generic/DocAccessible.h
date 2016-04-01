@@ -497,11 +497,6 @@ protected:
   void ProcessInvalidationList();
 
   /**
-   * Update the tree on content insertion.
-   */
-  void UpdateTreeOnInsertion(Accessible* aContainer);
-
-  /**
    * Update the accessible tree for content removal.
    */
   void UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode);
