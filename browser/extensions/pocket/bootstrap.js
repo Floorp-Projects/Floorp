@@ -383,8 +383,12 @@ var PocketOverlay = {
     CreatePocketWidget(reason);
     PocketContextMenu.init();
 
-    for (let win of allBrowserWindows()) {
-      this.onWindowOpened(win);
+    if (reason != APP_STARTUP) {
+      for (let win of allBrowserWindows()) {
+        this.setWindowScripts(win);
+        this.addStyles(win);
+        this.updateWindow(win);
+      }
     }
   },
   shutdown: function(reason) {
@@ -410,8 +414,6 @@ var PocketOverlay = {
     PocketReader.shutdown();
   },
   onWindowOpened: function(window) {
-    if (window.hasOwnProperty("pktUI"))
-      return;
     this.setWindowScripts(window);
     this.addStyles(window);
     this.updateWindow(window);
