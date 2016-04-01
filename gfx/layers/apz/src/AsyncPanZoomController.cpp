@@ -2814,7 +2814,6 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 
   CSSSize compositionSize = aFrameMetrics.CalculateBoundedCompositedSizeInCssPixels();
   CSSPoint velocity = aVelocity / aFrameMetrics.GetZoom();
-  CSSPoint scrollOffset = aFrameMetrics.GetScrollOffset();
   CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
 
   // Calculate the displayport size based on how fast we're moving along each axis.
@@ -2824,18 +2823,22 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
     RedistributeDisplayPortExcess(displayPortSize, scrollableRect);
   }
 
+  // We calculate a "displayport" here which is relative to the scroll offset.
+  // Note that the scroll offset we have here in the APZ code may not be the
+  // same as the base rect that gets used on the layout side when the displayport
+  // margins are actually applied, so it is important to only consider the
+  // displayport as margins relative to a scroll offset rather than relative to
+  // something more unchanging like the scrollable rect origin.
+
+  // Center the displayport based on its expansion over the composition size.
+  CSSRect displayPort((compositionSize.width - displayPortSize.width) / 2.0f,
+                      (compositionSize.height - displayPortSize.height) / 2.0f,
+                      displayPortSize.width, displayPortSize.height);
+
   // Offset the displayport, depending on how fast we're moving and the
   // estimated time it takes to paint, to try to minimise checkerboarding.
   float paintFactor = kDefaultEstimatedPaintDurationMs;
-  CSSRect displayPort = CSSRect(scrollOffset + (velocity * paintFactor * gfxPrefs::APZVelocityBias()),
-                                displayPortSize);
-
-  // Re-center the displayport based on its expansion over the composition size.
-  displayPort.MoveBy((compositionSize.width - displayPort.width)/2.0f,
-                     (compositionSize.height - displayPort.height)/2.0f);
-
-  // Make the displayport relative to the scroll offset
-  displayPort = displayPort - scrollOffset;
+  displayPort.MoveBy(velocity * paintFactor * gfxPrefs::APZVelocityBias());
 
   APZC_LOG_FM(aFrameMetrics,
     "Calculated displayport as (%f %f %f %f) from velocity %s paint time %f metrics",
