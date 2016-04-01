@@ -10,8 +10,10 @@
 
 #include "nsStringFwd.h"
 
-// This pseudo-element is accepted only in UA style sheets.
+// This pseudo-class is accepted only in UA style sheets.
 #define CSS_PSEUDO_CLASS_UA_SHEET_ONLY                 (1<<0)
+// This pseudo-class is accepted only in UA style sheets and chrome.
+#define CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME           (1<<1)
 
 class nsIAtom;
 
@@ -40,6 +42,9 @@ public:
 
   static bool PseudoClassIsUASheetOnly(Type aType) {
     return PseudoClassHasFlags(aType, CSS_PSEUDO_CLASS_UA_SHEET_ONLY);
+  }
+  static bool PseudoClassIsUASheetAndChromeOnly(Type aType) {
+    return PseudoClassHasFlags(aType, CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME);
   }
 
   // Should only be used on types other than Count and NotPseudoClass
