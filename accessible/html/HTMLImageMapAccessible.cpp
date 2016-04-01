@@ -88,7 +88,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
     return;
 
   bool treeChanged = false;
-  AutoTreeMutation mut(this);
+  AutoTreeMutation mt(this);
   RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
 
   // Remove areas that are not a valid part of the image map anymore.
@@ -103,6 +103,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
       reorderEvent->AddSubMutationEvent(event);
     }
 
+    mt.BeforeRemoval(area);
     RemoveChild(area);
     treeChanged = true;
   }
@@ -121,6 +122,8 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
         break;
       }
 
+      mt.AfterInsertion(area);
+
       if (aDoFireEvents) {
         RefPtr<AccShowEvent> event = new AccShowEvent(area);
         mDoc->FireDelayedEvent(event);
@@ -131,12 +134,11 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
     }
   }
 
+  mt.Done();
+
   // Fire reorder event if needed.
   if (treeChanged && aDoFireEvents)
     mDoc->FireDelayedEvent(reorderEvent);
-
-  if (!treeChanged)
-    mut.mInvalidationRequired = false;
 }
 
 Accessible*
