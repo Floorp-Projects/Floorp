@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
@@ -49,20 +50,18 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
     private void showTabQueueEnablePrompt() {
         setContentView(R.layout.tab_queue_prompt);
 
-        final int numberOfTimesTabQueuePromptSeen = GeckoSharedPrefs.forApp(this).getInt(TabQueueHelper.PREF_TAB_QUEUE_TIMES_PROMPT_SHOWN, 0);
-
         final View okButton = findViewById(R.id.ok_button);
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onConfirmButtonPressed();
-                Telemetry.addToHistogram("FENNEC_TABQUEUE_PROMPT_ENABLE_YES", numberOfTimesTabQueuePromptSeen);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "tabqueue_prompt_yes");
             }
         });
         findViewById(R.id.cancel_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Telemetry.addToHistogram("FENNEC_TABQUEUE_PROMPT_ENABLE_NO", numberOfTimesTabQueuePromptSeen);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "tabqueue_prompt_no");
                 setResult(TabQueueHelper.TAB_QUEUE_NO);
                 finish();
             }
@@ -168,8 +167,7 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
 
         if (TabQueueHelper.canDrawOverlays(this)) {
             // User granted the permission in Android's settings.
-            final int numberOfTimesTabQueuePromptSeen = GeckoSharedPrefs.forApp(this).getInt(TabQueueHelper.PREF_TAB_QUEUE_TIMES_PROMPT_SHOWN, 0);
-            Telemetry.addToHistogram("FENNEC_TABQUEUE_PROMPT_ENABLE_YES", numberOfTimesTabQueuePromptSeen);
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "tabqueue_prompt_yes");
 
             setResult(TabQueueHelper.TAB_QUEUE_YES);
             finish();
