@@ -337,6 +337,7 @@ HTMLComboboxAccessible::
 {
   mType = eHTMLComboboxType;
   mGenericTypes |= eCombobox;
+  mStateFlags |= eNoKidsFromDOM;
 
   nsIComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
   if (comboFrame) {
@@ -367,11 +368,6 @@ HTMLComboboxAccessible::RemoveChild(Accessible* aChild)
     return true;
   }
   return false;
-}
-
-void
-HTMLComboboxAccessible::CacheChildren()
-{
 }
 
 void
