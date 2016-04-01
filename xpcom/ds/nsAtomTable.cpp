@@ -24,6 +24,18 @@
 #include "nsAutoPtr.h"
 #include "nsUnicharUtils.h"
 
+// There are two kinds of atoms handled by this module.
+//
+// - DynamicAtom: the atom itself is heap allocated, as is the nsStringBuffer it
+//   points to. |gAtomTable| holds weak references to them DynamicAtoms, and
+//   when they are destroyed (due to their refcount reaching zero) they remove
+//   themselves from |gAtomTable|.
+//
+// - StaticAtom: the atom itself is heap allocated, but it points to a static
+//   nsStringBuffer. |gAtomTable| effectively owns StaticAtoms, because such
+//   atoms ignore all AddRef/Release calls, which ensures they stay alive until
+//   |gAtomTable| itself is destroyed whereupon they are explicitly deleted.
+
 using namespace mozilla;
 
 #if defined(__clang__)
@@ -51,6 +63,10 @@ public:
 
   explicit StaticAtomEntry(KeyTypePointer aKey) {}
   StaticAtomEntry(const StaticAtomEntry& aOther) : mAtom(aOther.mAtom) {}
+
+  // We do not delete the atom because that's done when gAtomTable is
+  // destroyed -- which happens immediately after gStaticAtomTable is destroyed
+  // -- in NS_PurgeAtomTable().
   ~StaticAtomEntry() {}
 
   bool KeyEquals(KeyTypePointer aKey) const
@@ -66,7 +82,7 @@ public:
 
   enum { ALLOW_MEMMOVE = true };
 
-  // mAtom only points to objects of type PermanentAtomImpl, which are not
+  // mAtom only points to objects of type StaticAtom, which are not
   // really refcounted.  But since these entries live in a global hashtable,
   // this reference is essentially owning.
   nsIAtom* MOZ_OWNING_REF mAtom;
@@ -86,101 +102,74 @@ static bool gStaticAtomTableSealed = false;
 
 //----------------------------------------------------------------------
 
-/**
- * Note that AtomImpl objects are sometimes converted into PermanentAtomImpl
- * objects using placement new and just overwriting the vtable pointer.
- */
-
-class AtomImpl : public nsIAtom
+class DynamicAtom final : public nsIAtom
 {
 public:
-  AtomImpl(const nsAString& aString, uint32_t aHash);
+  DynamicAtom(const nsAString& aString, uint32_t aHash);
 
-  // This is currently only used during startup when creating a permanent atom
-  // from NS_RegisterStaticAtoms
-  AtomImpl(nsStringBuffer* aData, uint32_t aLength, uint32_t aHash);
-
-protected:
-  // This is only intended to be used when a normal atom is turned into a
-  // permanent one.
-  AtomImpl()
-  {
-    // We can't really assert that mString is a valid nsStringBuffer string,
-    // so do the best we can do and check for some consistencies.
-    NS_ASSERTION((mLength + 1) * sizeof(char16_t) <=
-                 nsStringBuffer::FromData(mString)->StorageSize() &&
-                 mString[mLength] == 0,
-                 "Not initialized atom");
-  }
-
-  // We don't need a virtual destructor here because PermanentAtomImpl
-  // deletions aren't handled through Release().
-  ~AtomImpl();
+private:
+  // We don't need a virtual destructor because we always delete via a
+  // DynamicAtom* pointer (in Release(), defined via NS_IMPL_ISUPPORTS), not an
+  // nsIAtom* pointer.
+  ~DynamicAtom();
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 
-  enum { REFCNT_PERMANENT_SENTINEL = UINT32_MAX };
-
-  virtual bool IsPermanent();
-
-  // We can't use the virtual function in the base class destructor.
-  bool IsPermanentInDestructor()
-  {
-    return mRefCnt == REFCNT_PERMANENT_SENTINEL;
-  }
-
-  // for |#ifdef NS_BUILD_REFCNT_LOGGING| access to reference count
-  nsrefcnt GetRefCount() { return mRefCnt; }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
+  void TransmuteToStatic(nsStringBuffer* aStringBuffer);
 };
 
-/**
- * A non-refcounted implementation of nsIAtom.
- */
-
-class PermanentAtomImpl final : public AtomImpl
+class StaticAtom final : public nsIAtom
 {
+  // This is the function that calls the private constructor.
+  friend void DynamicAtom::TransmuteToStatic(nsStringBuffer*);
+
+  // This constructor must only be used in conjunction with placement new on an
+  // existing DynamicAtom (in DynamicAtom::TransmuteToStatic()) in order to
+  // transmute that DynamicAtom into a StaticAtom. The constructor does three
+  // notable things.
+  // - Overwrites the vtable pointer (implicitly).
+  // - Zeroes the refcount (via the nsIAtom constructor). Having a zero refcount
+  //   doesn't matter because StaticAtom's AddRef/Release methods don't consult
+  //   the refcount.
+  // - Releases the existing heap-allocated string buffer (explicitly),
+  //   replacing it with the static string buffer (which must contain identical
+  //   chars).
+  explicit StaticAtom(nsStringBuffer* aStaticBuffer)
+  {
+    static_assert(sizeof(DynamicAtom) >= sizeof(StaticAtom),
+                  "can't safely transmute a smaller object to a bigger one");
+
+    char16_t* staticString = static_cast<char16_t*>(aStaticBuffer->Data());
+    MOZ_ASSERT(nsCRT::strcmp(staticString, mString) == 0);
+    nsStringBuffer* dynamicBuffer = nsStringBuffer::FromData(mString);
+    mString = staticString;
+    dynamicBuffer->Release();
+  }
+
 public:
-  PermanentAtomImpl(const nsAString& aString, PLDHashNumber aKeyHash)
-    : AtomImpl(aString, aKeyHash)
-  {
-  }
-  PermanentAtomImpl(nsStringBuffer* aData, uint32_t aLength,
-                    PLDHashNumber aKeyHash)
-    : AtomImpl(aData, aLength, aKeyHash)
-  {
-  }
-  PermanentAtomImpl() {}
+  // This is the normal constructor.
+  StaticAtom(nsStringBuffer* aData, uint32_t aLength, PLDHashNumber aKeyHash);
 
-  ~PermanentAtomImpl();
+  // We don't need a virtual destructor because we always delete via a
+  // StaticAtom* pointer (in AtomTableClearEntry()), not an nsIAtom* pointer.
+  ~StaticAtom();
 
-  virtual bool IsPermanent();
-
-  // SizeOfIncludingThis() isn't needed -- the one inherited from AtomImpl is
-  // good enough, because PermanentAtomImpl doesn't add any new data members.
-
-  void* operator new(size_t aSize, AtomImpl* aAtom) CPP_THROW_NEW;
-  void* operator new(size_t aSize) CPP_THROW_NEW
-  {
-    return ::operator new(aSize);
-  }
-
-private:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef();
-  NS_IMETHOD_(MozExternalRefCountType) Release();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIATOM
 };
+
+NS_IMPL_QUERY_INTERFACE(StaticAtom, nsIAtom)
 
 //----------------------------------------------------------------------
 
 struct AtomTableEntry : public PLDHashEntryHdr
 {
-  // These references are either to non-permanent atoms, in which case they are
-  // non-owning, or they are to permanent atoms that are not really refcounted.
-  // The exact lifetime rules are documented in AtomTableClearEntry.
-  AtomImpl* MOZ_NON_OWNING_REF mAtom;
+  // These references are either to DynamicAtoms, in which case they are
+  // non-owning, or they are to StaticAtoms, which aren't really refcounted.
+  // See the comment at the top of this file for more details.
+  nsIAtom* MOZ_NON_OWNING_REF mAtom;
 };
 
 struct AtomTableKey
@@ -267,18 +256,14 @@ AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey)
 static void
 AtomTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
-  // Normal |AtomImpl| atoms are deleted when their refcount hits 0, and
-  // they then remove themselves from the table.  In other words, they
-  // are owned by the callers who own references to them.
-  // |PermanentAtomImpl| permanent atoms ignore their refcount and are
-  // deleted when they are removed from the table at table destruction.
-  // In other words, they are owned by the atom table.
-
-  AtomImpl* atom = static_cast<AtomTableEntry*>(aEntry)->mAtom;
-  if (atom->IsPermanent()) {
-    // Note that the cast here is important since AtomImpls doesn't have a
-    // virtual dtor.
-    delete static_cast<PermanentAtomImpl*>(atom);
+  auto entry = static_cast<AtomTableEntry*>(aEntry);
+  nsIAtom* atom = entry->mAtom;
+  if (atom->IsStaticAtom()) {
+    // This case -- when the entry being cleared holds a StaticAtom -- only
+    // occurs when gAtomTable is destroyed, whereupon all StaticAtoms within it
+    // must be explicitly deleted. The cast is required because StaticAtom
+    // doesn't have a virtual destructor.
+    delete static_cast<StaticAtom*>(atom);
   }
 }
 
@@ -288,7 +273,6 @@ AtomTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
   static_cast<AtomTableEntry*>(aEntry)->mAtom = nullptr;
 }
 
-
 static const PLDHashTableOps AtomTableOps = {
   AtomTableGetHash,
   AtomTableMatchKey,
@@ -296,22 +280,6 @@ static const PLDHashTableOps AtomTableOps = {
   AtomTableClearEntry,
   AtomTableInitEntry
 };
-
-
-static inline
-void
-PromoteToPermanent(AtomImpl* aAtom)
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  {
-    nsrefcnt refcount = aAtom->GetRefCount();
-    do {
-      NS_LOG_RELEASE(aAtom, --refcount, "AtomImpl");
-    } while (refcount);
-  }
-#endif
-  aAtom = new (aAtom) PermanentAtomImpl();
-}
 
 void
 NS_PurgeAtomTable()
@@ -324,12 +292,12 @@ NS_PurgeAtomTable()
     const char* dumpAtomLeaks = PR_GetEnv("MOZ_DUMP_ATOM_LEAKS");
     if (dumpAtomLeaks && *dumpAtomLeaks) {
       uint32_t leaked = 0;
-      printf("*** %d atoms still exist (including permanent):\n",
+      printf("*** %d atoms still exist (including static):\n",
              gAtomTable->EntryCount());
       for (auto iter = gAtomTable->Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<AtomTableEntry*>(iter.Get());
-        AtomImpl* atom = entry->mAtom;
-        if (!atom->IsPermanent()) {
+        nsIAtom* atom = entry->mAtom;
+        if (!atom->IsStaticAtom()) {
           leaked++;
           nsAutoCString str;
           atom->ToUTF8String(str);
@@ -337,7 +305,7 @@ NS_PurgeAtomTable()
           fputs("\n", stdout);
         }
       }
-      printf("*** %u non-permanent atoms leaked\n", leaked);
+      printf("*** %u dynamic atoms leaked\n", leaked);
     }
 #endif
     delete gAtomTable;
@@ -345,7 +313,7 @@ NS_PurgeAtomTable()
   }
 }
 
-AtomImpl::AtomImpl(const nsAString& aString, uint32_t aHash)
+DynamicAtom::DynamicAtom(const nsAString& aString, uint32_t aHash)
 {
   mLength = aString.Length();
   RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
@@ -370,8 +338,8 @@ AtomImpl::AtomImpl(const nsAString& aString, uint32_t aHash)
   mozilla::Unused << buf.forget();
 }
 
-AtomImpl::AtomImpl(nsStringBuffer* aStringBuffer, uint32_t aLength,
-                   uint32_t aHash)
+StaticAtom::StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength,
+                       uint32_t aHash)
 {
   mLength = aLength;
   mString = static_cast<char16_t*>(aStringBuffer->Data());
@@ -388,109 +356,116 @@ AtomImpl::AtomImpl(nsStringBuffer* aStringBuffer, uint32_t aLength,
                "correct storage");
 }
 
-AtomImpl::~AtomImpl()
+DynamicAtom::~DynamicAtom()
 {
   MOZ_ASSERT(gAtomTable, "uninitialized atom hashtable");
-  // Permanent atoms are removed from the hashtable at shutdown, and we
-  // don't want to remove them twice.  See comment above in
-  // |AtomTableClearEntry|.
-  if (!IsPermanentInDestructor()) {
-    AtomTableKey key(mString, mLength, mHash);
-    gAtomTable->Remove(&key);
-    if (gAtomTable->EntryCount() == 0) {
-      delete gAtomTable;
-      gAtomTable = nullptr;
-    }
-  }
+
+  // DynamicAtoms must be removed from gAtomTable when their refcount reaches
+  // zero and they are released.
+  AtomTableKey key(mString, mLength, mHash);
+  gAtomTable->Remove(&key);
 
   nsStringBuffer::FromData(mString)->Release();
 }
 
-NS_IMPL_ISUPPORTS(AtomImpl, nsIAtom)
+NS_IMPL_ISUPPORTS(DynamicAtom, nsIAtom)
 
-PermanentAtomImpl::~PermanentAtomImpl()
+StaticAtom::~StaticAtom()
 {
-  // So we can tell if we were permanent while running the base class dtor.
-  mRefCnt = REFCNT_PERMANENT_SENTINEL;
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-PermanentAtomImpl::AddRef()
+StaticAtom::AddRef()
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   return 2;
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-PermanentAtomImpl::Release()
+StaticAtom::Release()
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   return 1;
 }
 
-/* virtual */ bool
-AtomImpl::IsPermanent()
-{
-  return false;
-}
-
-/* virtual */ bool
-PermanentAtomImpl::IsPermanent()
-{
-  return true;
-}
-
-void*
-PermanentAtomImpl::operator new(size_t aSize, AtomImpl* aAtom) CPP_THROW_NEW
-{
-  MOZ_ASSERT(!aAtom->IsPermanent(),
-             "converting atom that's already permanent");
-
-  // Just let the constructor overwrite the vtable pointer.
-  return aAtom;
-}
-
 NS_IMETHODIMP
-AtomImpl::ScriptableToString(nsAString& aBuf)
+DynamicAtom::ScriptableToString(nsAString& aBuf)
 {
   nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AtomImpl::ToUTF8String(nsACString& aBuf)
+StaticAtom::ScriptableToString(nsAString& aBuf)
+{
+  nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DynamicAtom::ToUTF8String(nsACString& aBuf)
 {
   CopyUTF16toUTF8(nsDependentString(mString, mLength), aBuf);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AtomImpl::ScriptableEquals(const nsAString& aString, bool* aResult)
+StaticAtom::ToUTF8String(nsACString& aBuf)
+{
+  CopyUTF16toUTF8(nsDependentString(mString, mLength), aBuf);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DynamicAtom::ScriptableEquals(const nsAString& aString, bool* aResult)
+{
+  *aResult = aString.Equals(nsDependentString(mString, mLength));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StaticAtom::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
   *aResult = aString.Equals(nsDependentString(mString, mLength));
   return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
-AtomImpl::IsStaticAtom()
+DynamicAtom::IsStaticAtom()
 {
-  return IsPermanent();
+  return false;
 }
 
-size_t
-AtomImpl::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+NS_IMETHODIMP_(bool)
+StaticAtom::IsStaticAtom()
+{
+  return true;
+}
+
+NS_IMETHODIMP_(size_t)
+DynamicAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
-
-  // Don't measure static atoms. Nb: here "static" means "permanent", and while
-  // it's not guaranteed that permanent atoms are actually stored in static
-  // data, it is very likely. And we don't want to call |aMallocSizeOf| on
-  // static data, so we err on the side of caution.
-  if (!IsStaticAtom()) {
-    n += nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
-           aMallocSizeOf);
-  }
+  n += nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
+         aMallocSizeOf);
   return n;
+}
+
+NS_IMETHODIMP_(size_t)
+StaticAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  // Don't measure the string buffer pointed to by the StaticAtom because it's
+  // in static memory.
+  return n;
+}
+
+// See the comment on the private StaticAtom constructor for details of how
+// this works.
+void
+DynamicAtom::TransmuteToStatic(nsStringBuffer* aStringBuffer)
+{
+  new (this) StaticAtom(aStringBuffer);
 }
 
 //----------------------------------------------------------------------
@@ -508,8 +483,8 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
     }
   }
 
-  // The atoms in the this table are almost certainly stored in static data, so
-  // we don't need to measure entries separately.
+  // The atoms pointed to by gStaticAtomTable are also pointed to by gAtomTable,
+  // and they're measured by the loop above. So no need to measure them here.
   *aStatic = gStaticAtomTable
            ? gStaticAtomTable->ShallowSizeOfIncludingThis(aMallocSizeOf)
            : 0;
@@ -583,34 +558,37 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
   }
 
   for (uint32_t i = 0; i < aAtomCount; ++i) {
-    NS_ASSERTION(nsCRT::IsAscii((char16_t*)aAtoms[i].mStringBuffer->Data()),
-                 "Static atoms must be ASCII!");
+    nsStringBuffer* stringBuffer = aAtoms[i].mStringBuffer;
+    nsIAtom** atomp = aAtoms[i].mAtom;
 
-    uint32_t stringLen =
-      aAtoms[i].mStringBuffer->StorageSize() / sizeof(char16_t) - 1;
+    MOZ_ASSERT(nsCRT::IsAscii(static_cast<char16_t*>(stringBuffer->Data())));
+
+    uint32_t stringLen = stringBuffer->StorageSize() / sizeof(char16_t) - 1;
 
     uint32_t hash;
     AtomTableEntry* he =
-      GetAtomHashEntry((char16_t*)aAtoms[i].mStringBuffer->Data(),
+      GetAtomHashEntry(static_cast<char16_t*>(stringBuffer->Data()),
                        stringLen, &hash);
 
-    AtomImpl* atom = he->mAtom;
+    nsIAtom* atom = he->mAtom;
     if (atom) {
-      if (!atom->IsPermanent()) {
-        // We wanted to create a static atom but there is already a non-static
-        // atom there. So convert it to a non-refcounting permanent atom.
-        PromoteToPermanent(atom);
+      if (!atom->IsStaticAtom()) {
+        // A rare case: we're creating a StaticAtom but there is already a
+        // DynamicAtom of the same name. Transmute the DynamicAtom into a
+        // StaticAtom.
+        static_cast<DynamicAtom*>(atom)->TransmuteToStatic(stringBuffer);
       }
     } else {
-      atom = new PermanentAtomImpl(aAtoms[i].mStringBuffer, stringLen, hash);
+      atom = new StaticAtom(stringBuffer, stringLen, hash);
       he->mAtom = atom;
     }
-    *aAtoms[i].mAtom = atom;
+    *atomp = atom;
 
     if (!gStaticAtomTableSealed) {
       StaticAtomEntry* entry =
         gStaticAtomTable->PutEntry(nsDependentAtomString(atom));
-      entry->mAtom = atom;
+      MOZ_ASSERT(atom->IsStaticAtom());
+      entry->mAtom = static_cast<StaticAtom*>(atom);
     }
   }
 }
@@ -640,7 +618,7 @@ NS_Atomize(const nsACString& aUTF8String)
   // Actually, now there is, sort of: ForgetSharedBuffer.
   nsString str;
   CopyUTF8toUTF16(aUTF8String, str);
-  RefPtr<AtomImpl> atom = new AtomImpl(str, hash);
+  RefPtr<DynamicAtom> atom = new DynamicAtom(str, hash);
 
   he->mAtom = atom;
 
@@ -667,7 +645,7 @@ NS_Atomize(const nsAString& aUTF16String)
     return atom.forget();
   }
 
-  RefPtr<AtomImpl> atom = new AtomImpl(aUTF16String, hash);
+  RefPtr<DynamicAtom> atom = new DynamicAtom(aUTF16String, hash);
   he->mAtom = atom;
 
   return atom.forget();
