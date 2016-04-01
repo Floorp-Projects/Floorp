@@ -233,16 +233,16 @@
 
             <!-- logged in and verified and all is good -->
             <hbox id="fxaLoginVerified" class="fxaAccountBox">
-              <vbox>
+              <vbox align="center" pack="center">
                 <image id="fxaProfileImage" class="actionable"
                     role="button"
                     onclick="gSyncPane.openChangeProfileImage(event);" hidden="true"
                     onkeypress="gSyncPane.openChangeProfileImage(event);"
                     tooltiptext="&profilePicture.tooltip;"/>
               </vbox>
-              <vbox flex="1">
-                <label id="fxaEmailAddress1"/>
+              <vbox flex="1" pack="center">
                 <label id="fxaDisplayName" hidden="true"/>
+                <label id="fxaEmailAddress1"/>
                 <hbox class="fxaAccountBoxButtons" align="center">
                   <button id="fxaUnlinkButton" label="&disconnect.label;"/>
                   <label id="verifiedManage" class="text-link"
