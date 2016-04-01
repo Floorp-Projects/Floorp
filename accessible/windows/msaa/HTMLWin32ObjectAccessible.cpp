@@ -20,8 +20,10 @@ HTMLWin32ObjectOwnerAccessible::
   AccessibleWrap(aContent, aDoc), mHwnd(aHwnd)
 {
   // Our only child is a HTMLWin32ObjectAccessible object.
-  if (mHwnd)
+  if (mHwnd) {
     mNativeAccessible = new HTMLWin32ObjectAccessible(mHwnd, aDoc);
+    AppendChild(mNativeAccessible);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,8 +56,6 @@ HTMLWin32ObjectOwnerAccessible::NativelyUnavailable() const
 void
 HTMLWin32ObjectOwnerAccessible::CacheChildren()
 {
-  if (mNativeAccessible)
-    AppendChild(mNativeAccessible);
 }
 
 
