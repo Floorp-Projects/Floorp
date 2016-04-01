@@ -84,10 +84,6 @@ function createToolMenuElements(toolDefinition, doc) {
     bc.setAttribute("key", "key_" + id);
   }
 
-  let appmenuitem = doc.createElement("menuitem");
-  appmenuitem.id = "appmenuitem_" + id;
-  appmenuitem.setAttribute("observes", "devtoolsMenuBroadcaster_" + id);
-
   let menuitem = doc.createElement("menuitem");
   menuitem.id = "menuitem_" + id;
   menuitem.setAttribute("observes", "devtoolsMenuBroadcaster_" + id);
@@ -100,7 +96,6 @@ function createToolMenuElements(toolDefinition, doc) {
     cmd: cmd,
     key: key,
     bc: bc,
-    appmenuitem: appmenuitem,
     menuitem: menuitem
   };
 }
@@ -127,24 +122,7 @@ function insertToolMenuElements(doc, toolDefinition, prevDef) {
 
   doc.getElementById("mainBroadcasterSet").appendChild(elements.bc);
 
-  let amp = doc.getElementById("appmenu_webDeveloper_popup");
-  if (amp) {
-    let ref;
-
-    if (prevDef != null) {
-      let menuitem = doc.getElementById("appmenuitem_" + prevDef.id);
-      ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
-    } else {
-      ref = doc.getElementById("appmenu_devtools_separator");
-    }
-
-    if (ref) {
-      amp.insertBefore(elements.appmenuitem, ref);
-    }
-  }
-
   let ref;
-
   if (prevDef) {
     let menuitem = doc.getElementById("menuitem_" + prevDef.id);
     ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
@@ -182,11 +160,6 @@ function removeToolFromMenu(toolId, doc) {
     bc.parentNode.removeChild(bc);
   }
 
-  let appmenuitem = doc.getElementById("appmenuitem_" + toolId);
-  if (appmenuitem) {
-    appmenuitem.parentNode.removeChild(appmenuitem);
-  }
-
   let menuitem = doc.getElementById("menuitem_" + toolId);
   if (menuitem) {
     menuitem.parentNode.removeChild(menuitem);
@@ -204,7 +177,6 @@ function addAllToolsToMenu(doc) {
   let fragCommands = doc.createDocumentFragment();
   let fragKeys = doc.createDocumentFragment();
   let fragBroadcasters = doc.createDocumentFragment();
-  let fragAppMenuItems = doc.createDocumentFragment();
   let fragMenuItems = doc.createDocumentFragment();
 
   for (let toolDefinition of gDevTools.getToolDefinitionArray()) {
@@ -223,7 +195,6 @@ function addAllToolsToMenu(doc) {
       fragKeys.appendChild(elements.key);
     }
     fragBroadcasters.appendChild(elements.bc);
-    fragAppMenuItems.appendChild(elements.appmenuitem);
     fragMenuItems.appendChild(elements.menuitem);
   }
 
@@ -234,11 +205,6 @@ function addAllToolsToMenu(doc) {
 
   let mbs = doc.getElementById("mainBroadcasterSet");
   mbs.appendChild(fragBroadcasters);
-
-  let amps = doc.getElementById("appmenu_devtools_separator");
-  if (amps) {
-    amps.parentNode.insertBefore(fragAppMenuItems, amps);
-  }
 
   let mps = doc.getElementById("menu_devtools_separator");
   if (mps) {
