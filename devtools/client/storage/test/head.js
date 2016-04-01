@@ -5,10 +5,11 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../framework/test/shared-head.js */
 
-// shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { TargetFactory } = require("devtools/client/framework/target");
+var promise = require("promise");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
@@ -21,6 +22,8 @@ const PATH = "browser/devtools/client/storage/test/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
+
+waitForExplicitFinish();
 
 var gToolbox, gPanelWindow, gWindow, gUI;
 
