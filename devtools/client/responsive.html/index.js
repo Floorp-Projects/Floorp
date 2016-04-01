@@ -43,7 +43,6 @@ let bootstrap = {
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let provider = createElement(Provider, { store }, App());
-
     ReactDOM.render(provider, document.querySelector("#root"));
     this.initDevices();
     window.postMessage({ type: "init" }, "*");
