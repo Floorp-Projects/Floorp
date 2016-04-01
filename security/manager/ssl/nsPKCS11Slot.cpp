@@ -6,6 +6,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/unused.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 #include "nsPK11TokenDB.h"
@@ -27,15 +28,16 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo* slot)
 
   mSlot.reset(PK11_ReferenceSlot(slot));
   mSeries = PK11_GetSlotSeries(slot);
-  refreshSlotInfo(locker);
+  Unused << refreshSlotInfo(locker);
 }
 
-void
+nsresult
 nsPKCS11Slot::refreshSlotInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
   CK_SLOT_INFO slotInfo;
-  if (PK11_GetSlotInfo(mSlot.get(), &slotInfo) != SECSuccess) {
-    return;
+  nsresult rv = MapSECStatus(PK11_GetSlotInfo(mSlot.get(), &slotInfo));
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // Set the Description field
@@ -65,6 +67,8 @@ nsPKCS11Slot::refreshSlotInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
   mSlotFWVersion.AppendInt(slotInfo.firmwareVersion.major);
   mSlotFWVersion.Append('.');
   mSlotFWVersion.AppendInt(slotInfo.firmwareVersion.minor);
+
+  return NS_OK;
 }
 
 nsPKCS11Slot::~nsPKCS11Slot()
@@ -125,7 +129,10 @@ nsPKCS11Slot::GetDesc(char16_t** aDesc)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshSlotInfo(locker);
+    nsresult rv = refreshSlotInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   *aDesc = ToNewUnicode(mSlotDesc);
@@ -144,7 +151,10 @@ nsPKCS11Slot::GetManID(char16_t** aManID)
   }
 
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshSlotInfo(locker);
+    nsresult rv = refreshSlotInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aManID = ToNewUnicode(mSlotManID);
   if (!*aManID) return NS_ERROR_OUT_OF_MEMORY;
@@ -162,7 +172,10 @@ nsPKCS11Slot::GetHWVersion(char16_t** aHWVersion)
   }
 
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshSlotInfo(locker);
+    nsresult rv = refreshSlotInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aHWVersion = ToNewUnicode(mSlotHWVersion);
   if (!*aHWVersion) return NS_ERROR_OUT_OF_MEMORY;
@@ -180,7 +193,10 @@ nsPKCS11Slot::GetFWVersion(char16_t** aFWVersion)
   }
 
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshSlotInfo(locker);
+    nsresult rv = refreshSlotInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   *aFWVersion = ToNewUnicode(mSlotFWVersion);
   if (!*aFWVersion) return NS_ERROR_OUT_OF_MEMORY;
@@ -216,7 +232,10 @@ nsPKCS11Slot::GetTokenName(char16_t** aName)
   }
 
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    refreshSlotInfo(locker);
+    nsresult rv = refreshSlotInfo(locker);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(PK11_GetTokenName(mSlot.get())));
