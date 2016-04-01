@@ -12,11 +12,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1160342">Mozilla Bug 1160342</a>
 <p id="display"></p>
 <div id="content">
-<marquee id="a">marquee</marquee>
+<marquee id="a" style="border: 1px solid black;">marquee</marquee>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+/* The todos are cases where IE/Edge is throwing errors, but
+   for Mozilla it was decided to not do that for now */
   var x=document.getElementById('a');
 
   SimpleTest.waitForExplicitFinish();
@@ -26,13 +28,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
     x.setAttribute('behavior', 'alternate');
     is(x.behavior, "alternate", "Wrong behavior value");
     x.setAttribute('behavior', 'invalid');
-    todo_is(x.behavior, "scroll", "Wrong behavior value");;
+    is(x.behavior, "scroll", "Wrong behavior value");;
     x.setAttribute('behavior', 'Scroll');
     is(x.behavior, "scroll", "Wrong behavior value");
     x.setAttribute('behavior', 'Slide');
     is(x.behavior, "slide", "Wrong behavior value");
+    x.setAttribute('behavior', '');
+    is(x.behavior, "scroll", "Wrong behavior value");
+    x.setAttribute('behavior', 'slide');
     x.removeAttribute('behavior');
     is(x.behavior, "scroll", "Wrong behavior value");
+    is(x.getAttribute('behavior'), null, "Wrong behavior attribute");
 
     x.behavior = 'alternate';
     is(x.behavior, "alternate", "Wrong behavior value");
@@ -43,74 +49,129 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
       ok(true, "Exception was raised");
     }
     is(x.behavior, "alternate", "Wrong behavior value");
+    is(x.getAttribute('behavior'), "alternate", "Wrong behavior attribute");
     x.behavior = 'Slide';
     is(x.behavior, "slide", "Wrong behavior value");
+    is(x.getAttribute('behavior'), "slide", "Wrong behavior attribute");
     try {
       x.behavior = 'invalid';
       todo_is(false, true, "marquee.behavior = 'invalid' should throw");
     } catch(e) {
       ok(true, "Exception was raised");
     }
+    try {
+      x.behavior = null;
+      x.behavior = undefined;
+      todo_is(false, true, "marquee.behavior = 'invalid' should throw");
+    } catch(e) {
+      ok(true, "Exception was raised");
+    }
     is(x.behavior, "slide", "Wrong behavior value");
+    is(x.getAttribute('behavior'), "slide", "Wrong behavior attribute");
+    // This doesn't work in Mozilla due to chrome XBL security issues
+    x.behavior = { toString: function _toString() { return "scroll"} }
+    is(x.behavior, x.getAttribute('behavior'), "Wrong behavior value");
+    x.behavior = 'scroll';
+    is(x.behavior, "scroll", "Wrong behavior value");
 
     is(x.loop, -1, "Wrong loop value");
     x.setAttribute('loop', '1');
     is(x.loop, 1, "Wrong loop value");
     x.setAttribute('loop', 'invalid');
-    todo_is(x.loop, -1, "Wrong loop value");
+    is(x.loop, -1, "Wrong loop value");
+    x.setAttribute('loop', '');
+    is(x.loop, -1, "Wrong loop value");
+    x.setAttribute('loop', '0');
+    is(x.loop, -1, "Wrong loop value");
     x.setAttribute('loop', '1000');
     is(x.loop, 1000, "Wrong loop value");
+    x.setAttribute('loop', '-0.123');
+    is(x.loop, 1000, "Wrong loop value");
+    x.setAttribute('loop', '-1.123');
+    is(x.loop, -1, "Wrong loop value");
     x.setAttribute('loop', '-1');
     is(x.loop, -1, "Wrong loop value");
     x.setAttribute('loop', '1000');
     is(x.loop, 1000, "Wrong loop value");
     x.removeAttribute('loop');
     is(x.loop, -1, "Wrong loop value");
+    is(x.getAttribute('loop'), null, "Wrong loop attribute");
 
     x.loop = 1;
     is(x.loop, 1, "Wrong loop value");
+    is(x.getAttribute('loop'), "1", "Wrong loop attribute");
     try {
       x.loop = -2;
       todo_is(false, true, "marquee.loop = -2 should throw");
     } catch(e) {
       ok(true, "Exception was raised");
     }
-    todo_is(x.loop, 1, "Wrong loop value");
+    is(x.loop, 1, "Wrong loop value");
+    is(x.getAttribute('loop'), "1", "Wrong loop attribute");
     try {
       x.loop = 'invalid';
       todo_is(false, true, ".loop = 'invalid' should throw");
     } catch(e) {
       ok(true, "Exception was raised");
     }
-    todo_is(x.loop, 1, "Wrong loop value");
+    is(x.loop, 1, "Wrong loop value");
+    is(x.getAttribute('loop'), "1", "Wrong loop attribute");
     try {
       x.loop = null;
       todo_is(false, true, "marquee.loop = null should throw");
     } catch(e) {
       ok(true, "Exception was raised");
     }
-    todo_is(x.loop, 1, "Wrong loop value");
+    is(x.loop, 1, "Wrong loop value");
+    is(x.getAttribute('loop'), "1", "Wrong loop attribute");
     x.loop = -1;
     is(x.loop, -1, "Wrong loop value");
+    is(x.getAttribute('loop'), "-1", "Wrong loop attribute");
     x.loop = '100';
     is(x.loop, 100, "Wrong loop value");
+    is(x.getAttribute('loop'), "100", "Wrong loop attribute");
+    try {
+      x.loop = -0.123;
+      todo_is(false, true, "marquee.loop = null should throw");
+    } catch(e) {
+      ok(true, "Exception was raised");
+    }
+    is(x.loop, 100, "Wrong loop value");
+    is(x.getAttribute('loop'), "100", "Wrong loop attribute");
+    try {
+      x.loop = 0;
+      todo_is(false, true, "marquee.loop = null should throw");
+    } catch(e) {
+      ok(true, "Exception was raised");
+    }
+    is(x.loop, 100, "Wrong loop value");
+    is(x.getAttribute('loop'), "100", "Wrong loop attribute");
+    x.loop = -1.123;
+    is(x.loop, -1, "Wrong loop value");
+    is(x.getAttribute('loop'), "-1", "Wrong loop attribute");
+
 
     is(x.scrollAmount, 6, "Wrong scrollAmount value");
     x.setAttribute('scrollAmount', '1');
     is(x.scrollAmount, 1, "Wrong scrollAmount value");
     x.setAttribute('scrollAmount', 'invalid');
-    todo_is(x.scrollAmount, 6, "Wrong scrollAmount value");
+    is(x.scrollAmount, 6, "Wrong scrollAmount value");
     x.setAttribute('scrollAmount', '1000');
     is(x.scrollAmount, 1000, "Wrong scrollAmount value");
     x.setAttribute('scrollAmount', '-1');
     is(x.scrollAmount, 1000, "Wrong scrollAmount value");
     x.setAttribute('scrollAmount', '999');
     is(x.scrollAmount, 999, "Wrong scrollAmount value");
+    x.setAttribute('scrollAmount', '');
+    is(x.scrollAmount, 6, "Wrong scrollAmount value");
+    x.setAttribute('scrollAmount', '999');
     x.removeAttribute('scrollAmount');
     is(x.scrollAmount, 6, "Wrong scrollAmount value");
+    is(x.getAttribute('scrollamount'), null, "Wrong scrollamount attribute");
 
     x.scrollAmount = 1;
     is(x.scrollAmount, 1, "Wrong scrollAmount value");
+    is(x.getAttribute('scrollamount'), "1", "Wrong scrolldelay attribute");
     try {
       x.scrollAmount = -2;
       todo_is(false, true, "marquee.scrollAmount = -2 should throw");
@@ -118,20 +179,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
       ok(true, "Exception was raised");
     }
     is(x.scrollAmount, 1, "Wrong scrollAmount value");
+    is(x.getAttribute('scrollamount'), "1", "Wrong scrolldelay attribute");
     x.scrollAmount = 'invalid';
-    todo_is(x.scrollAmount, 0, "Wrong scrollAmount value");
+    is(x.scrollAmount, 0, "Wrong scrollAmount value");
+    is(x.getAttribute('scrollamount'), "0", "Wrong scrolldelay attribute");
     x.scrollAmount = 1;
     x.scrollAmount = null;
-    todo_is(x.scrollAmount, 0, "Wrong scrollAmount value");
+    is(x.scrollAmount, 0, "Wrong scrollAmount value");
+    is(x.getAttribute('scrollamount'), "0", "Wrong scrolldelay attribute");
     x.scrollAmount = '2';
     is(x.scrollAmount, 2, "Wrong scrollAmount value");
+    is(x.getAttribute('scrollamount'), "2", "Wrong scrolldelay attribute");
 
 
     is(x.scrollDelay, 85, "Wrong scrollDelay value");
     x.setAttribute('scrollDelay', '1');
     is(x.scrollDelay, 1, "Wrong scrollDelay value");
     x.setAttribute('scrollDelay', 'invalid');
-    todo_is(x.scrollDelay, 85, "Wrong scrollDelay value");
+    is(x.scrollDelay, 85, "Wrong scrollDelay value");
     x.setAttribute('scrollDelay', '70');
     is(x.scrollDelay, 70, "Wrong scrollDelay value");
     x.setAttribute('scrollDelay', '59');
@@ -140,11 +205,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
     is(x.scrollDelay, 1000, "Wrong scrollDelay value");
     x.setAttribute('scrollDelay', '-1');
     is(x.scrollDelay, 1000, "Wrong scrollDelay value");
+    x.setAttribute('scrollDelay', '');
+    is(x.scrollDelay, 85, "Wrong scrollDelay value");
+    x.setAttribute('scrollDelay', '1000');
     x.removeAttribute('scrollDelay');
     is(x.scrollDelay, 85, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), null, "Wrong scrolldelay attribute");
 
     x.scrollDelay = 100;
     is(x.scrollDelay, 100, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), "100", "Wrong scrolldelay attribute");
     try {
       x.scrollDelay = -2;
       todo_is(false, true, "marquee.scrollDelay = -2 should throw");
@@ -152,6 +222,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
       ok(true, "Exception was raised");
     }
     is(x.scrollDelay, 100, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), "100", "Wrong scrolldelay attribute");
     try {
       x.scrollDelay = 'invalid';
       todo_is(false, true, "marquee.scrollDelay = 'invalid' should throw");
@@ -159,6 +230,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
       ok(true, "Exception was raised");
     }
     is(x.scrollDelay, 100, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), "100", "Wrong scrolldelay attribute");
     try {
       x.scrollDelay = null;
       todo_is(false, true, "marquee.scrollDelay = null should throw");
@@ -166,6 +238,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
       ok(true, "Exception was raised");
     }
     is(x.scrollDelay, 100, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), "100", "Wrong scrolldelay attribute");
     try {
       x.scrollDelay = -1;
       todo_is(false, true, "marquee.scrollDelay = -1 should throw");
@@ -173,52 +246,88 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160342
       ok(true, "Exception was raised");
     }
     is(x.scrollDelay, 100, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), "100", "Wrong scrolldelay attribute");
     x.scrollDelay = '50';
     is(x.scrollDelay, 50, "Wrong scrollDelay value");
+    is(x.getAttribute('scrolldelay'), "50", "Wrong scrolldelay attribute");
+
 
     is(x.trueSpeed, false, "Wrong trueSpeed value");
     x.setAttribute('trueSpeed', '1');
     is(x.trueSpeed, true, "Wrong trueSpeed value");
     x.setAttribute('trueSpeed', 'false');
     is(x.trueSpeed, true, "Wrong trueSpeed value");
+    x.setAttribute('trueSpeed', '');
+    is(x.trueSpeed, true, "Wrong trueSpeed value");
     x.removeAttribute('trueSpeed');
     is(x.trueSpeed, false, "Wrong trueSpeed value");
+    is(x.getAttribute('truespeed'), null, "Wrong truespeed attribute");
 
     x.trueSpeed = 1;
     is(x.trueSpeed, true, "Wrong trueSpeed value");
+    is(x.getAttribute('truespeed'), "", "Wrong truespeed attribute");
     x.trueSpeed = -2;
     is(x.trueSpeed, true, "Wrong trueSpeed value");
+    is(x.getAttribute('truespeed'), "", "Wrong truespeed attribute");
     x.trueSpeed = null;
     is(x.trueSpeed, false, "Wrong trueSpeed value");
+    is(x.getAttribute('truespeed'), null, "Wrong truespeed attribute");
     x.trueSpeed = '100';
     is(x.trueSpeed, true, "Wrong trueSpeed value");
+    is(x.getAttribute('truespeed'), "", "Wrong truespeed attribute");
 
-    todo_is(x.direction, "left", "Wrong direction value");
+
+    is(x.direction, "left", "Wrong direction value");
     x.setAttribute('direction', 'right');
     is(x.direction, "right", "Wrong direction value");
     x.setAttribute('direction', 'invalid');
-    todo_is(x.direction, "left", "Wrong direction value");
+    is(x.direction, "left", "Wrong direction value");
     x.setAttribute('direction', 'RIGHT');
-    todo_is(x.direction, "right", "Wrong direction value");
+    is(x.direction, "right", "Wrong direction value");
+    x.setAttribute('direction', '');
+    is(x.direction, "left", "Wrong direction value");
+    x.setAttribute('direction', 'right');
     x.removeAttribute('direction');
-    todo_is(x.direction, "left", "Wrong direction value");
+    is(x.direction, "left", "Wrong direction value");
+    is(x.getAttribute('direction'), null, "Wrong direction attribute");
+    x.setAttribute('direction', 'up');
+    is(x.direction, "up", "Wrong direction value");
+    x.setAttribute('direction', 'down');
+    is(x.direction, "down", "Wrong direction value");
+    x.removeAttribute('direction');
+    is(x.direction, "left", "Wrong direction value");
+    is(x.getAttribute('direction'), null, "Wrong direction attribute");
 
     x.direction = 'right';
     is(x.direction, "right", "Wrong direction value");
+    is(x.getAttribute('direction'), "right", "Wrong direction attribute");
+    x.direction = 'up';
+    is(x.direction, "up", "Wrong direction value");
+    is(x.getAttribute('direction'), "up", "Wrong direction attribute");
+    x.direction = 'down';
+    is(x.direction, "down", "Wrong direction value");
+    is(x.getAttribute('direction'), "down", "Wrong direction attribute");
     try {
       x.direction = 1;
       todo_is(false, true, "marquee.direction = 1 should throw");
     } catch(e) {
       ok(true, "Exception was raised");
     }
-    todo_is(x.direction, "right", "Wrong direction value");
+    is(x.direction, "down", "Wrong direction value");
+    is(x.getAttribute('direction'), "down", "Wrong direction attribute");
     try {
       x.direction = null;
       todo_is(false, true, "marquee.direction = null should throw");
     } catch(e) {
       ok(true, "Exception was raised");
     }
-    todo_is(x.direction, "right", "Wrong direction value");
+    is(x.direction, "down", "Wrong direction value");
+    is(x.getAttribute('direction'), "down", "Wrong direction attribute");
+    // This doesn't work in Mozilla due to chrome XBL security issues
+    x.direction = { toString: function _toString() { return "right"} }
+    is(x.direction, x.getAttribute('direction'), "Wrong direction value");
+    x.direction = 'left';
+    is(x.direction, "left", "Wrong direction value");
     SimpleTest.finish();
   }, 0);
 
