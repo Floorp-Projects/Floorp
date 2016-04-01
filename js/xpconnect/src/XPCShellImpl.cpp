@@ -794,10 +794,14 @@ env_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
     return true;
 }
 
-static const JSClass env_class = {
-    "environment", JSCLASS_HAS_PRIVATE,
+static const JSClassOps env_classOps = {
     nullptr, nullptr, nullptr, env_setProperty,
     env_enumerate, env_resolve
+};
+
+static const JSClass env_class = {
+    "environment", JSCLASS_HAS_PRIVATE,
+    &env_classOps
 };
 
 /***************************************************************************/

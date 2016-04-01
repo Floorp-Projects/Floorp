@@ -8,9 +8,7 @@
 
 static TestJSPrincipals system_principals(1);
 
-static const JSClass global_class = {
-    "global",
-    JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS,
+static const JSClassOps global_classOps = {
     nullptr,
     nullptr,
     nullptr,
@@ -23,6 +21,12 @@ static const JSClass global_class = {
     nullptr,
     nullptr,
     JS_GlobalObjectTraceHook
+};
+
+static const JSClass global_class = {
+    "global",
+    JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS,
+    &global_classOps
 };
 
 static JS::PersistentRootedObject trusted_glob;

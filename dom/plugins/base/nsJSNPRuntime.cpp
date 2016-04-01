@@ -218,8 +218,23 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
                      JS::Handle<jsid> id,  NPVariant* getPropertyResult,
                      JS::MutableHandle<JS::Value> vp);
 
+const static js::ClassOps sNPObjectJSWrapperClassOps = {
+    NPObjWrapper_AddProperty,
+    NPObjWrapper_DelProperty,
+    NPObjWrapper_GetProperty,
+    NPObjWrapper_SetProperty,
+    nullptr,
+    NPObjWrapper_Resolve,
+    nullptr,                    /* mayResolve */
+    NPObjWrapper_Finalize,
+    NPObjWrapper_Call,
+    nullptr,                    /* hasInstance */
+    NPObjWrapper_Construct,
+    nullptr,                    /* trace */
+};
+
 const static js::ClassExtension sNPObjectJSWrapperClassExtension = {
-    nullptr,                                              /* weakmapKeyDelegateOp */
+    nullptr,                    /* weakmapKeyDelegateOp */
     NPObjWrapper_ObjectMoved
 };
 
@@ -237,26 +252,14 @@ const static js::ObjectOps sNPObjectJSWrapperObjectOps = {
     nullptr,
 };
 
-const static js::Class sNPObjectJSWrapperClass =
-  {
+const static js::Class sNPObjectJSWrapperClass = {
     NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE,
-    NPObjWrapper_AddProperty,
-    NPObjWrapper_DelProperty,
-    NPObjWrapper_GetProperty,
-    NPObjWrapper_SetProperty,
-    nullptr,
-    NPObjWrapper_Resolve,
-    nullptr,                                                /* mayResolve */
-    NPObjWrapper_Finalize,
-    NPObjWrapper_Call,
-    nullptr,                                                /* hasInstance */
-    NPObjWrapper_Construct,
-    nullptr,                                                /* trace */
+    &sNPObjectJSWrapperClassOps,
     JS_NULL_CLASS_SPEC,
     &sNPObjectJSWrapperClassExtension,
     &sNPObjectJSWrapperObjectOps
-  };
+};
 
 typedef struct NPObjectMemberPrivate {
     JS::Heap<JSObject *> npobjWrapper;
@@ -281,14 +284,17 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj);
 static bool
 NPObjectMember_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp);
 
-static const JSClass sNPObjectMemberClass =
-  {
-    "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, NPObjectMember_GetProperty, nullptr,
-    nullptr, nullptr, nullptr,
-    NPObjectMember_Finalize, NPObjectMember_Call,
-    nullptr, nullptr, NPObjectMember_Trace
-  };
+static const JSClassOps sNPObjectMemberClassOps = {
+  nullptr, nullptr, NPObjectMember_GetProperty, nullptr,
+  nullptr, nullptr, nullptr,
+  NPObjectMember_Finalize, NPObjectMember_Call,
+  nullptr, nullptr, NPObjectMember_Trace
+};
+
+static const JSClass sNPObjectMemberClass = {
+  "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE,
+  &sNPObjectMemberClassOps
+};
 
 static void
 OnWrapperDestroyed();

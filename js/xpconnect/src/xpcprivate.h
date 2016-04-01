@@ -1650,8 +1650,8 @@ public:
     XPCNativeScriptableShared(uint32_t aFlags, char* aName, bool aPopulate);
 
     ~XPCNativeScriptableShared() {
-        if (mJSClass.name)
-            free((void*)mJSClass.name);
+        free((void*)mJSClass.name);
+        free((void*)mJSClass.cOps);
         MOZ_COUNT_DTOR(XPCNativeScriptableShared);
     }
 
@@ -1667,6 +1667,10 @@ public:
 
 private:
     XPCNativeScriptableFlags mFlags;
+
+    // This is an unusual js::Class instance: its name and cOps members are
+    // heap-allocated, unlike all other instances for which they are statically
+    // allocated. So we must free them in the destructor.
     js::Class mJSClass;
 };
 

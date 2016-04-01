@@ -559,7 +559,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void finalize(FreeOp* fop, JSObject* obj);
     void markCrossCompartmentEdges(JSTracer* tracer);
 
-    static const Class jsclass;
+    static const ClassOps classOps_;
+    static const Class class_;
 
     static bool getHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg, Hook which);
     static bool setHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg, Hook which);
