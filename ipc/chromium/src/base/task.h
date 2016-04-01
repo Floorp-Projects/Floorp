@@ -214,24 +214,6 @@ class DeleteTask : public CancelableTask {
                     "external factors.") obj_;
 };
 
-// Task to Release() an object
-template<class T>
-class ReleaseTask : public CancelableTask {
- public:
-  explicit ReleaseTask(T* obj) : obj_(obj) {
-  }
-  virtual void Run() {
-    if (obj_)
-      obj_->Release();
-  }
-  virtual void Cancel() {
-    obj_ = NULL;
-  }
- private:
-  T* MOZ_UNSAFE_REF("The validity of this pointer must be enforced by "
-                    "external factors.") obj_;
-};
-
 // RunnableMethodTraits --------------------------------------------------------
 //
 // This traits-class is used by RunnableMethod to manage the lifetime of the
