@@ -7,8 +7,8 @@ package org.mozilla.gecko.tests;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertFalse;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.restrictions.Restrictable;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 
 public class testRestrictions extends UITest {

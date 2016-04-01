@@ -25,8 +25,8 @@ add_task(function*() {
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
   yield focusEditableField(view, propEditor.nameSpan);
-  yield sendCharsAndWaitForFocus(view, ruleEditor.element,
-    ["VK_DELETE", "VK_ESCAPE"]);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+    ["DELETE", "ESCAPE"]);
 
   is(propEditor.nameSpan.textContent, "background-color",
     "'background-color' property name is correctly set.");
@@ -35,8 +35,8 @@ add_task(function*() {
 
   yield focusEditableField(view, propEditor.valueSpan);
   let onValueDeleted = view.once("ruleview-changed");
-  yield sendCharsAndWaitForFocus(view, ruleEditor.element,
-    ["VK_DELETE", "VK_ESCAPE"]);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+    ["DELETE", "ESCAPE"]);
   yield onValueDeleted;
 
   is(propEditor.valueSpan.textContent, "#00F",
@@ -44,11 +44,3 @@ add_task(function*() {
   is((yield getComputedStyleProperty("#testid", null, "background-color")),
     "rgb(0, 0, 255)", "#00F background color is set.");
 });
-
-function* sendCharsAndWaitForFocus(view, element, chars) {
-  let onFocus = once(element, "focus", true);
-  for (let ch of chars) {
-    EventUtils.sendChar(ch, view.styleWindow);
-  }
-  yield onFocus;
-}

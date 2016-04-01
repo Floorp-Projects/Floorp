@@ -243,3 +243,21 @@ exports.isPromise = function (p) {
 exports.isSavedFrame = function (thing) {
   return Object.prototype.toString.call(thing) === "[object SavedFrame]";
 };
+
+/**
+ * Return true iff `thing` is a `Set` object (possibly from another global).
+ */
+exports.isSet = function(thing) {
+  return Object.prototype.toString.call(thing) === "[object Set]";
+};
+
+/**
+ * Given a list of lists, flatten it. Only flattens one level; does not
+ * recursively flatten all levels.
+ *
+ * @param {Array<Array<Any>>} lists
+ * @return {Array<Any>}
+ */
+exports.flatten = function(lists) {
+  return Array.prototype.concat.apply([], lists);
+};

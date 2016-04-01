@@ -10,7 +10,7 @@ add_task(function*() {
   let container = gBrowser.getBrowserContainer();
   is(container.getAttribute("responsivemode"), "true",
      "Should be in responsive mode.");
-  is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
+  is(document.getElementById("menu_responsiveUI").getAttribute("checked"),
      "true", "Menu item should be checked");
 
   ok(rdm, "An instance of the RDM should be attached to the tab.");
@@ -60,7 +60,7 @@ add_task(function*() {
 
   container = gBrowser.getBrowserContainer();
   is(container.getAttribute("responsivemode"), "true", "In responsive mode.");
-  is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
+  is(document.getElementById("menu_responsiveUI").getAttribute("checked"),
      "true", "menu item should be checked");
 
   let isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
@@ -69,7 +69,7 @@ add_task(function*() {
   }
 
   yield closeRDM(rdm);
-  is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
+  is(document.getElementById("menu_responsiveUI").getAttribute("checked"),
      "false", "menu item should be unchecked");
 });
 

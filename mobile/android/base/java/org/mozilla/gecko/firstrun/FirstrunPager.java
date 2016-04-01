@@ -17,11 +17,11 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.home.HomePager.Decor;
 import org.mozilla.gecko.home.TabMenuStrip;
+import org.mozilla.gecko.restrictions.Restrictions;
 
 import java.util.List;
 

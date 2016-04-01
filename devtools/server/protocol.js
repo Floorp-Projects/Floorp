@@ -903,15 +903,15 @@ var Actor = Class({
     return { actor: this.actorID }
   },
 
-  writeError: function(err) {
-    console.error(err);
-    if (err.stack) {
-      dump(err.stack);
+  writeError: function(error) {
+    console.error(error);
+    if (error.stack) {
+      dump(error.stack);
     }
     this.conn.send({
       from: this.actorID,
-      error: "unknownError",
-      message: err.toString()
+      error: error.error || "unknownError",
+      message: error.message
     });
   },
 

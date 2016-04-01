@@ -34,25 +34,17 @@ add_task(function*() {
 
   info("Deleting all the text out of a value field");
   let onRuleViewChanged = view.once("ruleview-changed");
-  yield sendCharsAndWaitForFocus(view, ruleEditor.element,
-    ["VK_DELETE", "VK_RETURN"]);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+    ["DELETE", "RETURN"]);
   yield onRuleViewChanged;
 
   info("Pressing enter a couple times to cycle through editors");
-  yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element, ["RETURN"]);
   onRuleViewChanged = view.once("ruleview-changed");
-  yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element, ["RETURN"]);
   yield onRuleViewChanged;
 
   isnot(ruleEditor.rule.textProps[1].editor.nameSpan.style.display, "none",
     "The name span is visible");
   is(ruleEditor.rule.textProps.length, 2, "Correct number of props");
 });
-
-function* sendCharsAndWaitForFocus(view, element, chars) {
-  let onFocus = once(element, "focus", true);
-  for (let ch of chars) {
-    EventUtils.sendChar(ch, element.ownerDocument.defaultView);
-  }
-  yield onFocus;
-}

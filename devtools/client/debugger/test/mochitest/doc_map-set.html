@@ -1,0 +1,42 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page for Maps and Sets</title>
+  </head>
+
+  <body>
+    <script>
+      function startTest() {
+        let obj0 = { a: 0 };
+        let obj1 = { a: 1 };
+
+        let map = new Map();
+        map.set(obj0, 0);
+        map.set(obj1, 1);
+        map.extraProp = true;
+
+        let weakMap = new WeakMap();
+        weakMap.set(obj0, 0);
+        weakMap.set(obj1, 1);
+        weakMap.extraProp = true;
+
+        let set = new Set();
+        set.add(obj0);
+        set.add(obj1);
+        set.extraProp = true;
+
+        let weakSet = new WeakSet();
+        weakSet.add(obj0);
+        weakSet.add(obj1);
+        weakSet.extraProp = true;
+
+        debugger;
+      };
+    </script>
+  </body>
+
+</html>

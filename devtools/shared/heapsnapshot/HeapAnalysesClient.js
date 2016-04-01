@@ -125,6 +125,35 @@ HeapAnalysesClient.prototype.takeCensus = function (snapshotFilePath,
 };
 
 /**
+ * Get the individual nodes that correspond to the given census report leaf
+ * indices.
+ *
+ * @param {Object} opts
+ *        An object with the following properties:
+ *        - {DominatorTreeId} dominatorTreeId: The id of the dominator tree.
+ *        - {Set<Number>} indices: The indices of the census report leaves we
+ *          would like to get the individuals for.
+ *        - {Object} censusBreakdown: The breakdown used to generate the census.
+ *        - {Object} labelBreakdown: The breakdown we would like to use when
+ *          labeling the resulting nodes.
+ *        - {Number} maxRetainingPaths: The maximum number of retaining paths to
+ *          compute for each node.
+ *        - {Number} maxIndividuals: The maximum number of individual nodes to
+ *          return.
+ *
+ * @returns {Promise<Object>}
+ *          A promise of an object with the following properties:
+ *          - {Array<DominatorTreeNode>} nodes: An array of `DominatorTreeNode`s
+ *            with their shortest paths attached, and without any dominator tree
+ *            child/parent information attached. The results are sorted by
+ *            retained size.
+ *
+ */
+HeapAnalysesClient.prototype.getCensusIndividuals = function(opts) {
+  return this._worker.performTask("getCensusIndividuals", opts);
+};
+
+/**
  * Request that the worker take a census on the heap snapshots with the given
  * paths and then return the difference between them. Both heap snapshots must
  * have already been read into memory by the worker (see `readHeapSnapshot`).

@@ -91,6 +91,10 @@ const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
  *      defaults to "click"
  *    {Boolean} multiline: Should the editor be a multiline textarea?
  *      defaults to false
+ *    {Function or Number} maxWidth:
+ *       Should the editor wrap to remain below the provided max width. Only
+ *       available if multiline is true. If a function is provided, it will be
+ *       called when replacing the element by the inplace input.
  *    {Boolean} trimOutput: Should the returned string be trimmed?
  *      defaults to true
  *    {Boolean} preserveTextStyles: If true, do not copy text-related styles
@@ -199,6 +203,11 @@ function InplaceEditor(options, event) {
   this.destroy = options.destroy;
   this.initial = options.initial ? options.initial : this.elt.textContent;
   this.multiline = options.multiline || false;
+  this.maxWidth = options.maxWidth;
+  if (typeof this.maxWidth == "function") {
+    this.maxWidth = this.maxWidth();
+  }
+
   this.trimOutput = options.trimOutput === undefined
                     ? true
                     : !!options.trimOutput;
@@ -218,9 +227,16 @@ function InplaceEditor(options, event) {
   this._onKeyup = this._onKeyup.bind(this);
 
   this._createInput();
-  this._autosize();
-  this.inputCharWidth = this._getInputCharWidth();
 
+  // Hide the provided element and add our editor.
+  this.originalDisplay = this.elt.style.display;
+  this.elt.style.display = "none";
+  this.elt.parentNode.insertBefore(this.input, this.elt);
+
+  // After inserting the input to have all CSS styles applied, start autosizing.
+  this._autosize();
+
+  this.inputCharDimensions = this._getInputCharDimensions();
   // Pull out character codes for advanceChars, listing the
   // characters that should trigger a blur.
   if (typeof options.advanceChars === "function") {
@@ -233,11 +249,6 @@ function InplaceEditor(options, event) {
     }
     this._advanceChars = charCode => charCode in advanceCharcodes;
   }
-
-  // Hide the provided element and add our editor.
-  this.originalDisplay = this.elt.style.display;
-  this.elt.style.display = "none";
-  this.elt.parentNode.insertBefore(this.input, this.elt);
 
   this.input.focus();
 
@@ -286,6 +297,13 @@ InplaceEditor.prototype = {
     this.input =
       this.doc.createElementNS(HTML_NS, this.multiline ? "textarea" : "input");
     this.input.inplaceEditor = this;
+
+    if (this.multiline) {
+      // Hide the textarea resize handle.
+      this.input.style.resize = "none";
+      this.input.style.overflow = "hidden";
+    }
+
     this.input.classList.add("styleinspector-propertyeditor");
     this.input.value = this.initial;
     if (!this.preserveTextStyles) {
@@ -352,6 +370,18 @@ InplaceEditor.prototype = {
     style.position = "absolute";
     style.top = "0";
     style.left = "0";
+
+    if (this.multiline) {
+      style.whiteSpace = "pre-wrap";
+      style.wordWrap = "break-word";
+      if (this.maxWidth) {
+        style.maxWidth = this.maxWidth + "px";
+        // Use position fixed to measure dimensions without any influence from
+        // the container of the editor.
+        style.position = "fixed";
+      }
+    }
+
     copyTextStyles(this.input, this._measurement);
     this._updateSize();
   },
@@ -374,36 +404,49 @@ InplaceEditor.prototype = {
     // Replace spaces with non-breaking spaces.  Otherwise setting
     // the span's textContent will collapse spaces and the measurement
     // will be wrong.
-    this._measurement.textContent = this.input.value.replace(/ /g, "\u00a0");
+    let content = this.input.value;
+    let unbreakableSpace = "\u00a0";
 
-    let width = this._measurement.offsetWidth;
+    // Make sure the content is not empty.
+    if (content === "") {
+      content = unbreakableSpace;
+    }
+
+    // If content ends with a new line, add a blank space to force the autosize
+    // element to adapt its height.
+    if (content.lastIndexOf("\n") === content.length - 1) {
+      content = content + unbreakableSpace;
+    }
+
+    if (!this.multiline) {
+      content = content.replace(/ /g, unbreakableSpace);
+    }
+
+    this._measurement.textContent = content;
+
+    // Do not use offsetWidth: it will round floating width values.
+    let width = this._measurement.getBoundingClientRect().width + 2;
     if (this.multiline) {
-      // Make sure there's some content in the current line.  This is a hack to
-      // account for the fact that after adding a newline the <pre> doesn't grow
-      // unless there's text content on the line.
-      width += 15;
-      this.input.style.height = this._measurement.offsetHeight + "px";
+      if (this.maxWidth) {
+        width = Math.min(this.maxWidth, width);
+      }
+      let height = this._measurement.getBoundingClientRect().height;
+      this.input.style.height = height + "px";
     }
-
-    if (width === 0) {
-      // If the editor is empty use a width corresponding to 1 character.
-      this.input.style.width = "1ch";
-    } else {
-      // Add 2 pixels to ensure the caret will be visible
-      width = width + 2;
-      this.input.style.width = width + "px";
-    }
+    this.input.style.width = width + "px";
   },
 
   /**
-   * Get the width of a single character in the input to properly position the
-   * autocompletion popup.
+   * Get the width and height of a single character in the input to properly
+   * position the autocompletion popup.
    */
-  _getInputCharWidth: function() {
-    // Just make the text content to be 'x' to get the width of any character in
-    // a monospace font.
+  _getInputCharDimensions: function() {
+    // Just make the text content to be 'x' to get the width and height of any
+    // character in a monospace font.
     this._measurement.textContent = "x";
-    return this._measurement.offsetWidth;
+    let width = this._measurement.clientWidth;
+    let height = this._measurement.clientHeight;
+    return { width, height };
   },
 
    /**
@@ -1283,7 +1326,8 @@ InplaceEditor.prototype = {
       if (finalList.length > 1) {
         // Calculate the popup horizontal offset.
         let indent = this.input.selectionStart - query.length;
-        let offset = indent * this.inputCharWidth;
+        let offset = indent * this.inputCharDimensions.width;
+        offset = this._isSingleLine() ? offset : 0;
 
         // Select the most relevantItem if autoInsert is allowed
         let selectedIndex = autoInsert ? mostRelevantIndex : -1;
@@ -1299,6 +1343,16 @@ InplaceEditor.prototype = {
       this._doValidation();
     }, 0);
   },
+
+  /**
+   * Check if the current input is displaying more than one line of text.
+   *
+   * @return {Boolean} true if the input has a single line of text
+   */
+  _isSingleLine: function() {
+    let inputRect = this.input.getBoundingClientRect();
+    return inputRect.height < 2 * this.inputCharDimensions.height;
+  },
 };
 
 /**
@@ -1307,10 +1361,54 @@ InplaceEditor.prototype = {
 function copyTextStyles(from, to) {
   let win = from.ownerDocument.defaultView;
   let style = win.getComputedStyle(from);
-  to.style.fontFamily = style.getPropertyCSSValue("font-family").cssText;
-  to.style.fontSize = style.getPropertyCSSValue("font-size").cssText;
-  to.style.fontWeight = style.getPropertyCSSValue("font-weight").cssText;
-  to.style.fontStyle = style.getPropertyCSSValue("font-style").cssText;
+  let getCssText = name => style.getPropertyCSSValue(name).cssText;
+
+  to.style.fontFamily = getCssText("font-family");
+  to.style.fontSize = getCssText("font-size");
+  to.style.fontWeight = getCssText("font-weight");
+  to.style.fontStyle = getCssText("font-style");
+  to.style.lineHeight = getCssText("line-height");
+
+  // If box-sizing is set to border-box, box model styles also need to be
+  // copied.
+  let boxSizing = getCssText("box-sizing");
+  if (boxSizing === "border-box") {
+    to.style.boxSizing = boxSizing;
+    copyBoxModelStyles(from, to);
+  }
+}
+
+/**
+ * Copy box model styles that can impact width and height measurements when box-
+ * sizing is set to "border-box" instead of "content-box".
+ *
+ * @param {DOMNode} from
+ *        the element from which styles are copied
+ * @param {DOMNode} to
+ *        the element on which copied styles are applied
+ */
+function copyBoxModelStyles(from, to) {
+  let win = from.ownerDocument.defaultView;
+  let style = win.getComputedStyle(from);
+  let getCssText = name => style.getPropertyCSSValue(name).cssText;
+
+  // Copy all paddings.
+  to.style.paddingTop = getCssText("padding-top");
+  to.style.paddingRight = getCssText("padding-right");
+  to.style.paddingBottom = getCssText("padding-bottom");
+  to.style.paddingLeft = getCssText("padding-left");
+
+  // Copy border styles.
+  to.style.borderTopStyle = getCssText("border-top-style");
+  to.style.borderRightStyle = getCssText("border-right-style");
+  to.style.borderBottomStyle = getCssText("border-bottom-style");
+  to.style.borderLeftStyle = getCssText("border-left-style");
+
+  // Copy border widths.
+  to.style.borderTopWidth = getCssText("border-top-width");
+  to.style.borderRightWidth = getCssText("border-right-width");
+  to.style.borderBottomWidth = getCssText("border-bottom-width");
+  to.style.borderLeftWidth = getCssText("border-left-width");
 }
 
 /**

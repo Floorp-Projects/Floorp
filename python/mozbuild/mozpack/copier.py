@@ -484,7 +484,13 @@ class Jarrer(FileRegistry, BaseFile):
         self.compress = compress
         self.optimize = optimize
         self._preload = []
+        self._compress_options = {}  # Map path to compress boolean option.
         FileRegistry.__init__(self)
+
+    def add(self, path, content, compress=None):
+        FileRegistry.add(self, path, content)
+        if compress is not None:
+            self._compress_options[path] = compress
 
     def copy(self, dest, skip_if_older=True):
         '''
@@ -540,12 +546,14 @@ class Jarrer(FileRegistry, BaseFile):
         with JarWriter(fileobj=dest, compress=self.compress,
                        optimize=self.optimize) as jar:
             for path, file in self:
+                compress = self._compress_options.get(path, self.compress)
+
                 if path in old_contents:
-                    deflater = DeflaterDest(old_contents[path], self.compress)
+                    deflater = DeflaterDest(old_contents[path], compress)
                 else:
-                    deflater = DeflaterDest(compress=self.compress)
+                    deflater = DeflaterDest(compress=compress)
                 file.copy(deflater, skip_if_older)
-                jar.add(path, deflater.deflater, mode=file.mode)
+                jar.add(path, deflater.deflater, mode=file.mode, compress=compress)
             if self._preload:
                 jar.preload(self._preload)
 

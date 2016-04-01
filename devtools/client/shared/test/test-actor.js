@@ -620,6 +620,17 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     }
   }),
 
+  /**
+   * Forces the reflow and waits for the next repaint.
+   */
+  reflow: protocol.method(function () {
+    let deferred = promise.defer();
+    this.content.document.documentElement.offsetWidth;
+    this.content.requestAnimationFrame(deferred.resolve);
+
+    return deferred.promise;
+  }),
+
   getNodeRect: protocol.method(Task.async(function* (selector) {
     let node = this._querySelector(selector);
     return getRect(this.content, node, this.content);

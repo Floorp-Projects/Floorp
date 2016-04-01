@@ -91,15 +91,11 @@ public class GeckoAccessibility {
 
                 @Override
                 public void onPostExecute(Void args) {
-                    boolean isGeckoApp = false;
-                    try {
-                        isGeckoApp = context instanceof GeckoApp;
-                    } catch (NoClassDefFoundError ex) {}
-                    if (isGeckoApp) {
-                        // Disable the dynamic toolbar when enabling accessibility.
-                        // These features tend not to interact well.
-                        ((GeckoApp) context).setAccessibilityEnabled(sEnabled);
+                    final GeckoAppShell.GeckoInterface geckoInterface = GeckoAppShell.getGeckoInterface();
+                    if (geckoInterface == null) {
+                        return;
                     }
+                    geckoInterface.setAccessibilityEnabled(sEnabled);
                 }
             }.execute();
     }
