@@ -919,22 +919,39 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
     return true;
 }
 
-bool
-Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
+static NativeObject*
+ToNativeDebuggerObject(JSContext* cx, MutableHandleObject obj)
 {
     if (obj->getClass() != &DebuggerObject_class) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Debugger", "Debugger.Object", obj->getClass()->name);
-        return false;
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NOT_EXPECTED_TYPE, "Debugger",
+                             "Debugger.Object", obj->getClass()->name);
+        return nullptr;
     }
+
     NativeObject* ndobj = &obj->as<NativeObject>();
 
     Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
-    if (owner.isUndefined() || &owner.toObject() != object) {
+    if (owner.isUndefined()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             owner.isUndefined()
-                             ? JSMSG_DEBUG_OBJECT_PROTO
-                             : JSMSG_DEBUG_OBJECT_WRONG_OWNER);
+                             JSMSG_DEBUG_OBJECT_PROTO);
+        return nullptr;
+    }
+
+    return ndobj;
+}
+
+bool
+Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
+{
+    NativeObject* ndobj = ToNativeDebuggerObject(cx, obj);
+    if (!ndobj)
+        return false;
+
+    Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
+    if (&owner.toObject() != object) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_DEBUG_OBJECT_WRONG_OWNER);
         return false;
     }
 
@@ -4743,6 +4760,33 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
+bool
+Debugger::adoptDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "adoptDebuggeeValue", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.adoptDebuggeeValue", 1))
+        return false;
+
+    RootedValue v(cx, args[0]);
+    if (v.isObject()) {
+        RootedObject obj(cx, &v.toObject());
+        NativeObject* ndobj = ToNativeDebuggerObject(cx, &obj);
+        if (!ndobj) {
+            return false;
+        }
+
+        obj.set(static_cast<JSObject*>(ndobj->getPrivate()));
+        v = ObjectValue(*obj);
+
+        if (!dbg->wrapDebuggeeValue(cx, &v)) {
+            return false;
+        }
+    }
+
+    args.rval().set(v);
+    return true;
+}
+
 const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -4786,6 +4830,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("drainTraceLogger", Debugger::drainTraceLogger, 0, 0),
 # endif
 #endif
+    JS_FN("adoptDebuggeeValue", Debugger::adoptDebuggeeValue, 1, 0),
     JS_FS_END
 };
 
