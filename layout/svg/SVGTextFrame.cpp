@@ -3250,6 +3250,10 @@ SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // painting.
     return;
   }
+  if (!IsVisibleForPainting(aBuilder) &&
+      aBuilder->IsForPainting()) {
+    return;
+  }
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
