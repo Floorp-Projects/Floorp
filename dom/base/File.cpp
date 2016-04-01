@@ -459,7 +459,7 @@ File::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-File::GetName(nsAString& aFileName)
+File::GetName(nsAString& aFileName) const
 {
   mImpl->GetName(aFileName);
 }
@@ -678,7 +678,7 @@ NS_IMPL_ISUPPORTS(BlobImpl, BlobImpl)
 NS_IMPL_ISUPPORTS_INHERITED0(BlobImplFile, BlobImpl)
 
 void
-BlobImplBase::GetName(nsAString& aName)
+BlobImplBase::GetName(nsAString& aName) const
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aName = mName;
