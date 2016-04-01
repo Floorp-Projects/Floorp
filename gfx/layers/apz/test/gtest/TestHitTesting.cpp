@@ -162,6 +162,8 @@ TEST_F(APZHitTestingTester, HitTesting1) {
 
 // A more involved hit testing test that involves css and async transforms.
 TEST_F(APZHitTestingTester, HitTesting2) {
+  SCOPED_GFX_PREF(APZVelocityBias, float, 0.0); // Velocity bias can cause extra repaint requests
+
   CreateHitTesting2LayerTree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
 
