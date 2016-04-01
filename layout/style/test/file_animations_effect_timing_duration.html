@@ -49,6 +49,10 @@ addAsyncAnimTest(function *() {
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
           "Animation is running on compositor");
   animation.effect.timing.duration = 2000;
+  // Setter of timing option should set up the changes to animations for the
+  // next layer transaction but it won't schedule a paint immediately so we need
+  // to tick the refresh driver before we can wait on the next paint.
+  advance_clock(0);
 
   yield waitForPaints();
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
@@ -76,7 +80,6 @@ addAsyncAnimTest(function *() {
           "Animation is running on compositor");
   done_div();
 })
-
 
 </script>
 </body>
