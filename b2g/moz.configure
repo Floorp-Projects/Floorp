@@ -11,6 +11,8 @@ def gonkdir(value):
     return value[0]
 
 add_old_configure_assignment('gonkdir', gonkdir)
+set_config('ANDROID_NDK',
+           depends_if(gonkdir)(lambda x: os.path.join(x, 'ndk')))
 
 @depends_if('--with-gonk')
 def gonk_toolkit(_):

@@ -103,7 +103,6 @@ if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
-    ANDROID_NDK="${ANDROID_SOURCE}/ndk"
     dnl Default to ICS
     ANDROID_VERSION=15
     if test -n "${PLATFORM_SDK_VERSION}"; then
@@ -6996,7 +6995,6 @@ AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_HELP_VIEWER)
-AC_SUBST(TOOLCHAIN_PREFIX)
 
 AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
