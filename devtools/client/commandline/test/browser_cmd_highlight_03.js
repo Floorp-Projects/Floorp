@@ -74,7 +74,7 @@ function* spawnTest() {
         status: 'ERROR'
       },
       exec: {
-        output: 'Error: Value required for \'region\'.'
+        output: 'Error: Value required for \u2018region\u2019.'
       }
     },
     {
@@ -98,7 +98,7 @@ function* spawnTest() {
         status: 'ERROR'
       },
       exec: {
-        output: 'Error: Value required for \'fill\'.'
+        output: 'Error: Value required for \u2018fill\u2019.'
       }
     },
     {
