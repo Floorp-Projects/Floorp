@@ -39,7 +39,7 @@
   </div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -3183,58 +3183,33 @@ function testContinuousTrustedEvents()
 
 function runTests()
 {
-  SpecialPowers.setIntPref("mousewheel.transaction.timeout", 100000);
-
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", 100);
-
-  prepareScrollUnits();
-  testContinuousTrustedEvents();
-
-  clearPrefs();
-  SimpleTest.finish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["mousewheel.transaction.timeout", 100000],
+    ["mousewheel.default.delta_multiplier_x", 100],
+    ["mousewheel.default.delta_multiplier_y", 100],
+    ["mousewheel.default.delta_multiplier_z", 100],
+    ["mousewheel.with_alt.delta_multiplier_x", 100],
+    ["mousewheel.with_alt.delta_multiplier_y", 100],
+    ["mousewheel.with_alt.delta_multiplier_z", 100],
+    ["mousewheel.with_control.delta_multiplier_x", 100],
+    ["mousewheel.with_control.delta_multiplier_y", 100],
+    ["mousewheel.with_control.delta_multiplier_z", 100],
+    ["mousewheel.with_meta.delta_multiplier_x", 100],
+    ["mousewheel.with_meta.delta_multiplier_y", 100],
+    ["mousewheel.with_meta.delta_multiplier_z", 100],
+    ["mousewheel.with_shift.delta_multiplier_x", 100],
+    ["mousewheel.with_shift.delta_multiplier_y", 100],
+    ["mousewheel.with_shift.delta_multiplier_z", 100],
+    ["mousewheel.with_win.delta_multiplier_x", 100],
+    ["mousewheel.with_win.delta_multiplier_y", 100],
+    ["mousewheel.with_win.delta_multiplier_z", 100]
+  ]},
+  function () {
+    prepareScrollUnits();
+    testContinuousTrustedEvents();
+    SimpleTest.finish();
+  });
 }
-
-function clearPrefs()
-{
-  SpecialPowers.clearUserPref("mousewheel.transaction.timeout");
-
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
-}
-
 </script>
 </pre>
 </body>
