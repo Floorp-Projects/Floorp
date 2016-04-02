@@ -69,6 +69,18 @@ if (helperThreadCount() === 0) {
 
 ////////////////////////////////////////////////////////////
 
+// wait() returns "not-equal" if the value is not the expected one.
+
+mem[0] = 42;
+
+assertEq(Atomics.wait(mem, 0, 33), "not-equal");
+
+// wait() returns "timed-out" if it times out
+
+assertEq(Atomics.wait(mem, 0, 42, 100), "timed-out");
+
+////////////////////////////////////////////////////////////
+
 // Main is sharing the buffer with the worker; the worker is clearing
 // the buffer.
 
@@ -94,7 +106,7 @@ assertEq(Atomics.wake(mem, 0, 1), 1); // Can fail spuriously but very unlikely
 `);
 
 var then = Date.now();
-assertEq(Atomics.wait(mem, 0, 42), Atomics.OK);
+assertEq(Atomics.wait(mem, 0, 42), "ok");
 dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 assertEq(mem[1], 1337); // what was written in the worker is read in the main thread
 assertEq(getSharedArrayBuffer(), null); // The worker's clearing of the mbx is visible
@@ -113,7 +125,7 @@ assertEq(Atomics.wake(mem, 0), 1);	// Last argument to wake should default to +I
 
 var then = Date.now();
 dprint("Main thread waiting on wakeup (2s)");
-assertEq(Atomics.wait(mem, 0, 42), Atomics.OK);
+assertEq(Atomics.wait(mem, 0, 42), "ok");
 dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 
 ////////////////////////////////////////////////////////////
@@ -129,7 +141,7 @@ timeout(2, function () {
 var exn = false;
 try {
     dprint("Starting outer wait");
-    assertEq(Atomics.wait(mem, 0, 42, 5000), Atomics.OK);
+    assertEq(Atomics.wait(mem, 0, 42, 5000), "ok");
 }
 catch (e) {
     dprint("Got the timeout exception!");
