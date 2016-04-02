@@ -17,7 +17,7 @@ function dprint(s) {
 }
 
 // Tests the SharedArrayBuffer mailbox in the shell.
-// Tests the futex functionality in the shell.
+// Tests the wait/wake functionality in the shell.
 
 var sab = new SharedArrayBuffer(12);
 var mem = new Int32Array(sab);
@@ -90,46 +90,46 @@ dprint("Sleeping for 2 seconds");
 sleep(2);
 dprint("Waking the main thread now");
 setSharedArrayBuffer(null);
-assertEq(Atomics.futexWake(mem, 0, 1), 1); // Can fail spuriously but very unlikely
+assertEq(Atomics.wake(mem, 0, 1), 1); // Can fail spuriously but very unlikely
 `);
 
 var then = Date.now();
-assertEq(Atomics.futexWait(mem, 0, 42), Atomics.OK);
+assertEq(Atomics.wait(mem, 0, 42), Atomics.OK);
 dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 assertEq(mem[1], 1337); // what was written in the worker is read in the main thread
 assertEq(getSharedArrayBuffer(), null); // The worker's clearing of the mbx is visible
 
 ////////////////////////////////////////////////////////////
 
-// Test the default argument to futexWake()
+// Test the default argument to atomics.wake()
 
 setSharedArrayBuffer(mem.buffer);
 
 evalInWorker(`
 var mem = new Int32Array(getSharedArrayBuffer());
 sleep(2);				// Probably long enough to avoid a spurious error next
-assertEq(Atomics.futexWake(mem, 0), 1);	// Last argument to futexWake should default to +Infinity
+assertEq(Atomics.wake(mem, 0), 1);	// Last argument to wake should default to +Infinity
 `);
 
 var then = Date.now();
 dprint("Main thread waiting on wakeup (2s)");
-assertEq(Atomics.futexWait(mem, 0, 42), Atomics.OK);
+assertEq(Atomics.wait(mem, 0, 42), Atomics.OK);
 dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 
 ////////////////////////////////////////////////////////////
 
 // A tricky case: while in the wait there will be an interrupt, and in
-// the interrupt handler we will execute a futexWait.  This is
+// the interrupt handler we will execute a wait.  This is
 // explicitly prohibited (for now), so there should be a catchable exception.
 
 timeout(2, function () {
     dprint("In the interrupt, starting inner wait with timeout 2s");
-    Atomics.futexWait(mem, 0, 42); // Should throw and propagate all the way out
+    Atomics.wait(mem, 0, 42); // Should throw and propagate all the way out
 });
 var exn = false;
 try {
     dprint("Starting outer wait");
-    assertEq(Atomics.futexWait(mem, 0, 42, 5000), Atomics.OK);
+    assertEq(Atomics.wait(mem, 0, 42, 5000), Atomics.OK);
 }
 catch (e) {
     dprint("Got the timeout exception!");

@@ -3,7 +3,7 @@
 // These do not test atomicity, just that calling and coercions and
 // indexing and exception behavior all work right.
 //
-// These do not test the futex operations.
+// These do not test the wait/wake operations.
 
 load(libdir + "asserts.js");
 
