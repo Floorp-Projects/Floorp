@@ -3166,7 +3166,7 @@ function* testContinuousTrustedEvents()
       yield currentWheelEventTest.prepare();
     }
 
-    synthesizeWheel(gScrollableElement, 10, 10, currentWheelEventTest.event);
+    yield sendWheelAndWait(10, 10, currentWheelEventTest.event);
 
     if (currentWheelEventTest.finished) {
       yield currentWheelEventTest.finished();
