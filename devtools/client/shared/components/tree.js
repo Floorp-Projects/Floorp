@@ -369,7 +369,7 @@ const Tree = module.exports = createClass({
    *
    * @param {Object} item
    */
-  _focus: function (item) {
+  _focus(item) {
     if (this.props.onFocus) {
       this.props.onFocus(item);
     }
@@ -378,7 +378,7 @@ const Tree = module.exports = createClass({
   /**
    * Sets the state to have no focused item.
    */
-  _onBlur: function () {
+  _onBlur() {
     this._focus(undefined);
   },
 
