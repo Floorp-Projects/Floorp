@@ -316,6 +316,24 @@ void AnnotateSystemError()
 #endif
 
 void
+LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
+                      const char* aContextDescription,
+                      const char* aMessageDescription,
+                      MessageDirection aDirection)
+{
+  nsPrintfCString logMessage("[time: %" PRId64 "][%d%s%d] [%s] %s %s\n",
+                             PR_Now(), base::GetCurrentProcId(),
+                             aDirection == MessageDirection::eReceiving ? "<-" : "->",
+                             aOtherPid, aTopLevelProtocol,
+                             aContextDescription,
+                             aMessageDescription);
+#ifdef ANDROID
+  __android_log_write(ANDROID_LOG_INFO, "GeckoIPC", logMessage.get());
+#endif
+  fputs(logMessage.get(), stderr);
+}
+
+void
 ProtocolErrorBreakpoint(const char* aMsg)
 {
     // Bugs that generate these error messages can be tough to

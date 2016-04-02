@@ -29,8 +29,21 @@ function* runTests() {
     ok(crashObserver.crashed, "Saw a crash from this test");
     next();
   }});
+  let crashPromise = new Promise(resolve => {
+    bgAddPageThumbObserver(waitUrl).catch(function(err) {
+      ok(true, `page-thumbnail error thrown for ${waitUrl}`);
+      resolve();
+    });
+  });
+  let capturePromise = new Promise(resolve => {
+    bgAddPageThumbObserver(goodUrl).then(() => {
+      ok(true, `page-thumbnail created for ${goodUrl}`);
+      resolve();
+    });
+  });
 
   info("Crashing the thumbnail content process.");
   mm.sendAsyncMessage("thumbnails-test:crash");
-  yield true;
+  yield crashPromise;
+  yield capturePromise;
 }

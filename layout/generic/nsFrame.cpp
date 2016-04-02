@@ -5474,7 +5474,7 @@ nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 static bool
 DoesLayerHaveOutOfDateFrameMetrics(Layer* aLayer)
 {
-  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+  for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
     const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
     if (!metrics.IsScrollable()) {
       continue;

@@ -37,8 +37,7 @@ add_task(function*() {
   is(CustomizableUI.inDefaultState, false, "Should no longer be in default state");
 
   yield startCustomizing();
-  gCustomizeMode.reset();
-  yield waitForCondition(() => !gCustomizeMode.resetting);
+  yield gCustomizeMode.reset();
   yield endCustomizing();
 
   is(bookmarksToolbar.collapsed, true, "Customization reset should restore collapsed-state to the bookmarks toolbar");
@@ -61,8 +60,7 @@ add_task(function*() {
   isnot(menubar.getBoundingClientRect().height, 0, "menubar should be visible now");
 
   yield startCustomizing();
-  gCustomizeMode.reset();
-  yield waitForCondition(() => !gCustomizeMode.resetting);
+  yield gCustomizeMode.reset();
 
   is(menubar.getAttribute("autohide"), "true", "The menubar should have autohide=true after reset in customization mode");
   is(menubar.getBoundingClientRect().height, 0, "The menubar should have height=0 after reset in customization mode");
@@ -89,8 +87,7 @@ add_task(function*() {
   ok(!navbar.collapsed, "The navbar should be visible before reset");
   ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");
 
-  gCustomizeMode.reset();
-  yield waitForCondition(() => !gCustomizeMode.resetting);
+  yield gCustomizeMode.reset();
 
   ok(bookmarksToolbar.collapsed, "The bookmarksToolbar should be collapsed after reset");
   ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");

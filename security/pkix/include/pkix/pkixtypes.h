@@ -349,6 +349,30 @@ protected:
   void operator=(const TrustDomain&) = delete;
 };
 
+enum class FallBackToSearchWithinSubject { No = 0, Yes = 1 };
+
+// Applications control the behavior of matching presented name information from
+// a certificate against a reference hostname by implementing the
+// NameMatchingPolicy interface. Used in concert with CheckCertHostname.
+class NameMatchingPolicy
+{
+public:
+  virtual ~NameMatchingPolicy() { }
+
+  // Given that the certificate in question has a notBefore field with the given
+  // value, should name matching fall back to searching within the subject
+  // common name field?
+  virtual Result FallBackToCommonName(
+    Time notBefore,
+    /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) = 0;
+
+protected:
+  NameMatchingPolicy() { }
+
+  NameMatchingPolicy(const NameMatchingPolicy&) = delete;
+  void operator=(const NameMatchingPolicy&) = delete;
+};
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix_pkixtypes_h

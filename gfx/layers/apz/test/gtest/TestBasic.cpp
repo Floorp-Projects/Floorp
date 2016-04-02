@@ -78,7 +78,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   RefPtr<LayerManager> lm;
   RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
 
-  FrameMetrics metrics;
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
   metrics.SetCompositionBounds(ParentLayerRect(0, 0, 24, 24));
   metrics.SetDisplayPort(CSSRect(-1, -1, 6, 6));
   metrics.SetScrollOffset(CSSPoint(10, 10));
@@ -89,11 +90,12 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(3));
   metrics.SetScrollId(FrameMetrics::START_SCROLL_ID);
 
-  FrameMetrics childMetrics = metrics;
+  ScrollMetadata childMetadata = metadata;
+  FrameMetrics& childMetrics = childMetadata.GetMetrics();
   childMetrics.SetScrollId(FrameMetrics::START_SCROLL_ID + 1);
 
-  layers[0]->SetFrameMetrics(metrics);
-  layers[1]->SetFrameMetrics(childMetrics);
+  layers[0]->SetScrollMetadata(metadata);
+  layers[1]->SetScrollMetadata(childMetadata);
 
   ParentLayerPoint pointOut;
   AsyncTransform viewTransformOut;
@@ -103,13 +105,13 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 
   // initial transform
   apzc->SetFrameMetrics(metrics);
-  apzc->NotifyLayersUpdated(metrics, true, true);
+  apzc->NotifyLayersUpdated(metadata, true, true);
   apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(AsyncTransform(LayerToParentLayerScale(1), ParentLayerPoint()), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
-  childApzc->NotifyLayersUpdated(childMetrics, true, true);
+  childApzc->NotifyLayersUpdated(childMetadata, true, true);
   childApzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(AsyncTransform(LayerToParentLayerScale(1), ParentLayerPoint()), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);

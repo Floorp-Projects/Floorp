@@ -25,6 +25,11 @@ const CLIENTS_TTL_REFRESH = 604800; // 7 days
 
 const SUPPORTED_PROTOCOL_VERSIONS = ["1.1", "1.5"];
 
+function hasDupeCommand(commands, action) {
+  return commands.some(other => other.command == action.command &&
+    Utils.deepEquals(other.args, action.args));
+}
+
 this.ClientsRec = function ClientsRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -135,6 +140,10 @@ ClientEngine.prototype = {
     Svc.Prefs.set("client.type", value);
   },
 
+  remoteClientExists(id) {
+    return !!this._store._remoteClients[id];
+  },
+
   isMobile: function isMobile(id) {
     if (this._store._remoteClients[id])
       return this._store._remoteClients[id].type == DEVICE_TYPE_MOBILE;
@@ -148,6 +157,27 @@ ClientEngine.prototype = {
       this.lastRecordUpload = Date.now() / 1000;
     }
     SyncEngine.prototype._syncStartup.call(this);
+  },
+
+  _processIncoming() {
+    // Fetch all records from the server.
+    this.lastSync = 0;
+    this._incomingClients = [];
+    try {
+      SyncEngine.prototype._processIncoming.call(this);
+      // Since clients are synced unconditionally, any records in the local store
+      // that don't exist on the server must be for disconnected clients. Remove
+      // them, so that we don't upload records with commands for clients that will
+      // never see them. We also do this to filter out stale clients from the
+      // tabs collection, since showing their list of tabs is confusing.
+      let remoteClientIDs = Object.keys(this._store._remoteClients);
+      let staleIDs = Utils.arraySub(remoteClientIDs, this._incomingClients);
+      for (let staleID of staleIDs) {
+        this._removeRemoteClient(staleID);
+      }
+    } finally {
+      this._incomingClients = null;
+    }
   },
 
   _syncFinish() {
@@ -170,9 +200,22 @@ ClientEngine.prototype = {
     SyncEngine.prototype._syncFinish.call(this);
   },
 
-  // Always process incoming items because they might have commands
-  _reconcile: function _reconcile() {
-    return true;
+  _reconcile: function _reconcile(item) {
+    // Every incoming record is reconciled, so we use this to track the
+    // contents of the collection on the server.
+    this._incomingClients.push(item.id);
+
+    if (!this._store.itemExists(item.id)) {
+      return true;
+    }
+    // Clients are synced unconditionally, so we'll always have new records.
+    // Unfortunately, this will cause the scheduler to use the immediate sync
+    // interval for the multi-device case, instead of the active interval. We
+    // work around this by updating the record during reconciliation, and
+    // returning false to indicate that the record doesn't need to be applied
+    // later.
+    this._store.update(item);
+    return false;
   },
 
   // Treat reset the same as wiping for locally cached clients
@@ -243,11 +286,6 @@ ClientEngine.prototype = {
       throw new Error("Unknown remote client ID: '" + clientId + "'.");
     }
 
-    // notDupe compares two commands and returns if they are not equal.
-    let notDupe = function(other) {
-      return other.command != command || !Utils.deepEquals(other.args, args);
-    };
-
     let action = {
       command: command,
       args: args,
@@ -257,7 +295,7 @@ ClientEngine.prototype = {
       client.commands = [action];
     }
     // Add the new action if there are no duplicates.
-    else if (client.commands.every(notDupe)) {
+    else if (!hasDupeCommand(client.commands, action)) {
       client.commands.push(action);
     }
     // It must be a dupe. Skip.
@@ -409,7 +447,12 @@ ClientEngine.prototype = {
 
     let subject = {uri: uri, client: clientId, title: title};
     Svc.Obs.notify("weave:engine:clients:display-uri", subject);
-  }
+  },
+
+  _removeRemoteClient(id) {
+    delete this._store._remoteClients[id];
+    this._tracker.removeChangedID(id);
+  },
 };
 
 function ClientStore(name, engine) {
@@ -426,8 +469,18 @@ ClientStore.prototype = {
     // Only grab commands from the server; local name/type always wins
     if (record.id == this.engine.localID)
       this.engine.localCommands = record.commands;
-    else
+    else {
+      let currentRecord = this._remoteClients[record.id];
+      if (currentRecord && currentRecord.commands) {
+        // Merge commands.
+        for (let action of currentRecord.commands) {
+          if (!hasDupeCommand(record.cleartext.commands, action)) {
+            record.cleartext.commands.push(action);
+          }
+        }
+      }
       this._remoteClients[record.id] = record.cleartext;
+    }
   },
 
   createRecord: function createRecord(id, collection) {

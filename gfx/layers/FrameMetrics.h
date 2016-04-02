@@ -14,8 +14,10 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
+#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
+#include "nsStyleCoord.h"               // for nsStyleCoord
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -38,7 +40,6 @@ public:
   static const ViewID NULL_SCROLL_ID;   // This container layer does not scroll.
   static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling subframes
                                         // will begin at.
-  static const FrameMetrics sNullMetrics;   // We often need an empty metrics
 
   FrameMetrics()
     : mScrollId(NULL_SCROLL_ID)
@@ -63,8 +64,6 @@ public:
     , mContentDescription()
     , mLineScrollAmount(0, 0)
     , mPageScrollAmount(0, 0)
-    , mClipRect()
-    , mMaskLayerIndex()
     , mPaintRequestTime()
     , mIsRootContent(false)
     , mHasScrollgrab(false)
@@ -105,8 +104,6 @@ public:
            // don't compare mContentDescription
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
-           mClipRect == aOther.mClipRect &&
-           mMaskLayerIndex == aOther.mMaskLayerIndex &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mIsRootContent == aOther.mIsRootContent &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
@@ -122,14 +119,6 @@ public:
   bool operator!=(const FrameMetrics& aOther) const
   {
     return !operator==(aOther);
-  }
-
-  bool IsDefault() const
-  {
-    FrameMetrics def;
-
-    def.mPresShellId = mPresShellId;
-    return (def == *this);
   }
 
   bool IsScrollable() const
@@ -203,6 +192,15 @@ public:
     size.width = std::min(size.width, mRootCompositionSize.width);
     size.height = std::min(size.height, mRootCompositionSize.height);
     return size;
+  }
+
+  CSSRect CalculateScrollRange() const
+  {
+    CSSSize scrollPortSize = CalculateCompositedSizeInCssPixels();
+    CSSRect scrollRange = mScrollableRect;
+    scrollRange.width = std::max(scrollRange.width - scrollPortSize.width, 0.0f);
+    scrollRange.height = std::max(scrollRange.height - scrollPortSize.height, 0.0f);
+    return scrollRange;
   }
 
   void ScrollBy(const CSSPoint& aPoint)
@@ -528,28 +526,6 @@ public:
     mAllowVerticalScrollWithWheel = aValue;
   }
 
-  void SetClipRect(const Maybe<ParentLayerIntRect>& aClipRect)
-  {
-    mClipRect = aClipRect;
-  }
-  const Maybe<ParentLayerIntRect>& GetClipRect() const
-  {
-    return mClipRect;
-  }
-  bool HasClipRect() const {
-    return mClipRect.isSome();
-  }
-  const ParentLayerIntRect& ClipRect() const {
-    return mClipRect.ref();
-  }
-
-  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
-    mMaskLayerIndex = aIndex;
-  }
-  const Maybe<size_t>& GetMaskLayerIndex() const {
-    return mMaskLayerIndex;
-  }
-
   void SetPaintRequestTime(const TimeStamp& aTime) {
     mPaintRequestTime = aTime;
   }
@@ -731,14 +707,6 @@ private:
   // The value of GetPageScrollAmount(), for scroll frames.
   LayoutDeviceIntSize mPageScrollAmount;
 
-  // The clip rect to use when compositing a layer with this FrameMetrics.
-  Maybe<ParentLayerIntRect> mClipRect;
-
-  // An extra clip mask layer to use when compositing a layer with this
-  // FrameMetrics. This is an index into the MetricsMaskLayers array on
-  // the Layer.
-  Maybe<size_t> mMaskLayerIndex;
-
   // The time at which the APZC last requested a repaint for this scrollframe.
   TimeStamp mPaintRequestTime;
 
@@ -792,6 +760,114 @@ private:
   void SetDoSmoothScroll(bool aValue) {
     mDoSmoothScroll = aValue;
   }
+};
+
+struct ScrollSnapInfo {
+  ScrollSnapInfo()
+    : mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+    , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  {}
+
+  // The scroll frame's scroll-snap-type.
+  // One of NS_STYLE_SCROLL_SNAP_{NONE, MANDATORY, PROXIMITY}.
+  uint8_t mScrollSnapTypeX;
+  uint8_t mScrollSnapTypeY;
+
+  // The intervals derived from the scroll frame's scroll-snap-points.
+  Maybe<nscoord> mScrollSnapIntervalX;
+  Maybe<nscoord> mScrollSnapIntervalY;
+
+  // The scroll frame's scroll-snap-destination, in cooked form (to avoid
+  // shipping the raw nsStyleCoord::CalcValue over IPC).
+  nsPoint mScrollSnapDestination;
+
+  // The scroll-snap-coordinates of any descendant frames of the scroll frame,
+  // relative to the origin of the scrolled frame.
+  nsTArray<nsPoint> mScrollSnapCoordinates;
+};
+
+/**
+ * Metadata about a scroll frame that's stored in the layer tree for use by
+ * the compositor (including APZ). This includes the scroll frame's FrameMetrics,
+ * as well as other metadata. We don't put the other metadata into FrameMetrics
+ * to avoid FrameMetrics becoming too bloated (as a FrameMetrics is e.g. sent
+ * over IPC for every repaint request for every active scroll frame).
+ */
+struct ScrollMetadata {
+  friend struct IPC::ParamTraits<mozilla::layers::ScrollMetadata>;
+public:
+  static StaticAutoPtr<const ScrollMetadata> sNullMetadata;   // We sometimes need an empty metadata
+
+  ScrollMetadata()
+    : mMetrics()
+    , mSnapInfo()
+    , mMaskLayerIndex()
+    , mClipRect()
+  {}
+
+  bool operator==(const ScrollMetadata& aOther) const
+  {
+    // TODO(botond): Should we include mSnapInfo in the comparison?
+    return mMetrics == aOther.mMetrics &&
+           mMaskLayerIndex == aOther.mMaskLayerIndex &&
+           mClipRect == aOther.mClipRect;
+  }
+
+  bool operator!=(const ScrollMetadata& aOther) const
+  {
+    return !operator==(aOther);
+  }
+
+  bool IsDefault() const
+  {
+    ScrollMetadata def;
+
+    def.mMetrics.SetPresShellId(mMetrics.GetPresShellId());
+    return (def == *this);
+  }
+
+  FrameMetrics& GetMetrics() { return mMetrics; }
+  const FrameMetrics& GetMetrics() const { return mMetrics; }
+
+  void SetSnapInfo(ScrollSnapInfo&& aSnapInfo) {
+    mSnapInfo = Move(aSnapInfo);
+  }
+  const ScrollSnapInfo& GetSnapInfo() const { return mSnapInfo; }
+
+  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
+    mMaskLayerIndex = aIndex;
+  }
+  const Maybe<size_t>& GetMaskLayerIndex() const {
+    return mMaskLayerIndex;
+  }
+
+  void SetClipRect(const Maybe<ParentLayerIntRect>& aClipRect)
+  {
+    mClipRect = aClipRect;
+  }
+  const Maybe<ParentLayerIntRect>& GetClipRect() const
+  {
+    return mClipRect;
+  }
+  bool HasClipRect() const {
+    return mClipRect.isSome();
+  }
+  const ParentLayerIntRect& ClipRect() const {
+    return mClipRect.ref();
+  }
+private:
+  FrameMetrics mMetrics;
+
+  // Information used to determine where to snap to for a given scroll.
+  ScrollSnapInfo mSnapInfo;
+
+  // An extra clip mask layer to use when compositing a layer with this
+  // FrameMetrics. This is an index into the MetricsMaskLayers array on
+  // the Layer.
+  Maybe<size_t> mMaskLayerIndex;
+
+  // The clip rect to use when compositing a layer with this FrameMetrics.
+  Maybe<ParentLayerIntRect> mClipRect;
 };
 
 /**

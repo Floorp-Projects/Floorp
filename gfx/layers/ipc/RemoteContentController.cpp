@@ -52,24 +52,6 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 }
 
 void
-RemoteContentController::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                                          const mozilla::CSSPoint& aDestination)
-{
-  if (MessageLoop::current() != mUILoop) {
-    // We have to send this message from the "UI thread" (main
-    // thread).
-    mUILoop->PostTask(
-      FROM_HERE,
-      NewRunnableMethod(this, &RemoteContentController::RequestFlingSnap,
-                        aScrollId, aDestination));
-    return;
-  }
-  if (CanSend()) {
-    Unused << SendRequestFlingSnap(aScrollId, aDestination);
-  }
-}
-
-void
 RemoteContentController::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                                  const uint32_t& aScrollGeneration)
 {

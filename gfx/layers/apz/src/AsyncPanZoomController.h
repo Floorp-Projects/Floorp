@@ -178,13 +178,13 @@ public:
   AsyncTransformComponentMatrix GetOverscrollTransform() const;
 
   /**
-   * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics
+   * A shadow layer update has arrived. |aScrollMetdata| is the new ScrollMetadata
    * for the container layer corresponding to this APZC.
    * |aIsFirstPaint| is a flag passed from the shadow
-   * layers code indicating that the frame metrics being sent with this call are
-   * the initial metrics and the initial paint of the frame has just happened.
+   * layers code indicating that the scroll metadata being sent with this call are
+   * the initial metadata and the initial paint of the frame has just happened.
    */
-  void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint,
+  void NotifyLayersUpdated(const ScrollMetadata& aScrollMetadata, bool aIsFirstPaint,
                            bool aThisLayerTreeUpdated);
 
   /**
@@ -643,13 +643,14 @@ protected:
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
 
-  // This is called to request that the main thread snap the scroll position
-  // to a nearby snap position if appropriate. The current scroll position is
-  // used as the final destination.
-  void RequestSnap();
-  // Same as above, but takes into account the current velocity to find a
-  // predicted destination.
-  void RequestSnapToDestination();
+  // Snap to a snap position nearby the current scroll position, if appropriate.
+  void ScrollSnap();
+  // Snap to a snap position nearby the destination predicted based on the
+  // current velocity, if appropriate.
+  void ScrollSnapToDestination();
+
+  // Helper function for ScrollSnap() and ScrollSnapToDestination().
+  void ScrollSnapNear(const CSSPoint& aDestination);
 
   uint64_t mLayersId;
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
@@ -681,7 +682,8 @@ protected:
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
   // monitor. Do not read from or modify either of them without locking.
-  FrameMetrics mFrameMetrics;
+  ScrollMetadata mScrollMetadata;
+  FrameMetrics& mFrameMetrics;  // for convenience, refers to mScrollMetadata.mMetrics
 
   // Protects |mFrameMetrics|, |mLastContentPaintMetrics|, and |mState|.
   // Before manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the
@@ -878,7 +880,7 @@ private:
   // Start an overscroll animation with the given initial velocity.
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
 
-  void StartSmoothScroll(ScrollSource aSource);
+  void SmoothScrollTo(const CSSPoint& aDestination);
 
   // Returns whether overscroll is allowed during an event.
   bool AllowScrollHandoffInCurrentBlock() const;

@@ -28,4 +28,5 @@ public interface PanZoomTarget {
     public void removeRenderTask(RenderTask task);
     public Object getLock();
     public PointF convertViewPointToLayerPoint(PointF viewPoint);
+    public void setScrollingRootContent(boolean isRootContent);
 }
