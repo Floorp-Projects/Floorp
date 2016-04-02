@@ -100,7 +100,6 @@ def namespace(**kwargs):
 @template
 def delayed_getattr(func, key):
     @depends(func)
-    @imports(_from='__builtin__', _import='getattr')
     def result(value):
         # The @depends function we're being passed may have returned
         # None, or an object that simply doesn't have the wanted key.
