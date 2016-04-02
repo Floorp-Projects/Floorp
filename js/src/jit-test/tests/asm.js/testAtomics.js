@@ -11,7 +11,6 @@ load(libdir + "asserts.js");
 
 var loadModule_int32_code =
     USE_ASM + `
-    var atomic_fence = stdlib.Atomics.fence;
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
@@ -23,10 +22,6 @@ var loadModule_int32_code =
     var atomic_xor = stdlib.Atomics.xor;
 
     var i32a = new stdlib.Int32Array(heap);
-
-    function do_fence() {
-        atomic_fence();
-    }
 
     // Load element 0
     function do_load() {
@@ -204,8 +199,7 @@ var loadModule_int32_code =
         return v|0;
     }
 
-    return { fence: do_fence,
-        load: do_load,
+    return { load: do_load,
         load_i: do_load_i,
         store: do_store,
         store_i: do_store_i,
@@ -237,8 +231,6 @@ function test_int32(heap) {
     var i32m = asmLink(loadModule_int32, this, {}, heap);
 
     var size = Int32Array.BYTES_PER_ELEMENT;
-
-    i32m.fence();
 
     i32a[0] = 12345;
     assertEq(i32m.load(), 12345);
@@ -328,7 +320,6 @@ function test_int32(heap) {
 
 var loadModule_uint32_code =
     USE_ASM + `
-    var atomic_fence = stdlib.Atomics.fence;
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
@@ -609,7 +600,6 @@ function test_uint32(heap) {
 
 var loadModule_int16_code =
     USE_ASM + `
-    var atomic_fence = stdlib.Atomics.fence;
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
@@ -621,10 +611,6 @@ var loadModule_int16_code =
     var atomic_xor = stdlib.Atomics.xor;
 
     var i16a = new stdlib.Int16Array(heap);
-
-    function do_fence() {
-        atomic_fence();
-    }
 
     // Load element 0
     function do_load() {
@@ -776,8 +762,7 @@ var loadModule_int16_code =
         return v|0;
     }
 
-    return { fence: do_fence,
-        load: do_load,
+    return { load: do_load,
         load_i: do_load_i,
         store: do_store,
         store_i: do_store_i,
@@ -806,8 +791,6 @@ function test_int16(heap) {
     var i16m = loadModule_int16(this, {}, heap);
 
     var size = Int16Array.BYTES_PER_ELEMENT;
-
-    i16m.fence();
 
     i16a[0] = 12345;
     assertEq(i16m.load(), 12345);
