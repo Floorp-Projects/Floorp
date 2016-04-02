@@ -89,6 +89,11 @@ nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
+bool
+nsHTMLButtonControlFrame::ShouldClipPaintingToBorderBox()
+{
+  return IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE;
+}
 
 void
 nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -117,7 +122,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!isForEventDelivery) {
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-    if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
+    if (ShouldClipPaintingToBorderBox()) {
       nsMargin border = StyleBorder()->GetComputedBorder();
       nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
       rect.Deflate(border);
@@ -214,7 +219,11 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   ReflowButtonContents(aPresContext, aDesiredSize,
                        aReflowState, firstKid);
 
-  ConsiderChildOverflow(aDesiredSize.mOverflowAreas, firstKid);
+  if (!ShouldClipPaintingToBorderBox()) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, firstKid);
+  }
+  // else, we ignore child overflow -- anything that overflows beyond our
+  // own border-box will get clipped when painting.
 
   aStatus = NS_FRAME_COMPLETE;
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Reference case</title>
+  <style>
+    input, button {
+      border: 0;             /* Combined, these mean the gray area is the */
+      background: lightgray; /* border-box size. */
+
+      outline: 2px solid black; /* The outlined area is the overflow area. */
+      width: 1px;   /* (To attempt to trigger overflow) */
+
+      display: block;     /* Put each button on its own line, w/ some margin, */
+      margin-bottom: 5px; /* so that any overflow doesn't get stomped on.     */
+
+      font: 8px serif; /* (This just lets the testcase fit better on mobile.) */
+    }
+
+    .oh { overflow: hidden }
+  </style>
+</head>
+<body>
+  <!-- For the reference case, we just put "overflow:hidden" on everything. -->
+  <input class="oh" type="reset">
+  <input class="oh" type="submit">
+  <input class="oh" type="button" value="InputTypeButton">
+  <!-- ...with one exception: button with (default) overflow:visible.
+       Such buttons *do* actually allow their contents to overflow. -->
+  <button>ActualButton</button>
+
+  <input  class="oh" type="reset">
+  <input  class="oh" type="submit">
+  <input  class="oh" type="button" value="InputTypeButton">
+  <button class="oh">ActualButton</button>
+
+  <input  class="oh" type="reset">
+  <input  class="oh" type="submit">
+  <input  class="oh" type="button" value="InputTypeButton">
+  <button class="oh">ActualButton</button>
+
+  <input  class="oh" type="reset">
+  <input  class="oh" type="submit">
+  <input  class="oh" type="button" value="InputTypeButton">
+  <button class="oh">ActualButton</button>
+</body>
+</html>
