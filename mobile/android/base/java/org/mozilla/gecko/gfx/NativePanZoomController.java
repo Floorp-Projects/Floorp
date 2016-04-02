@@ -324,6 +324,11 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         }
     }
 
+    @WrapForJNI
+    private void setScrollingRootContent(final boolean isRootContent) {
+        mTarget.setScrollingRootContent(isRootContent);
+    }
+
     /**
      * Active SelectionCaretDrag requires DynamicToolbarAnimator to be pinned
      * to avoid unwanted scroll interactions.

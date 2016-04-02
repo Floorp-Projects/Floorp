@@ -217,6 +217,17 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
   }
 };
 
+class DefaultNameMatchingPolicy : public NameMatchingPolicy
+{
+public:
+  virtual Result FallBackToCommonName(
+    Time, /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) override
+  {
+    fallBackToCommonName = FallBackToSearchWithinSubject::Yes;
+    return Success;
+  }
+};
+
 } } } // namespace mozilla::pkix::test
 
 #endif // mozilla_pkix_pkixgtest_h

@@ -5,24 +5,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * We would like to expose PushManager and PushSubscription on window and
- * workers. Parts of the Push API is implemented in JS out of necessity due to:
- * 1) Using frame message managers, in which
- *    nsIMessageListener::receiveMessage() must be in JS.
- * 2) It is easier to use certain APIs like the permission prompt and Promises
- *    from JS.
+ * PushManager and PushSubscription are exposed on the main and worker threads.
+ * The main thread version is implemented in Push.js. The JS implementation
+ * makes it easier to use certain APIs like the permission prompt and Promises.
  *
- * Unfortunately, JS-implemented WebIDL is not supported off the main thread. To
- * aid in fixing this, the nsIPushClient is introduced which deals with part (1)
- * above. Part (2) is handled by PushManagerImpl on the main thread. PushManager
- * wraps this in C++ since our bindings code cannot accomodate "JS-implemented
- * on the main thread, C++ on the worker" bindings. PushManager simply forwards
- * the calls to the JS component.
+ * Unfortunately, JS-implemented WebIDL is not supported off the main thread.
+ * To work around this, we use a chain of runnables to query the JS-implemented
+ * nsIPushService component for subscription information, and return the
+ * results to the worker. We don't have to deal with permission prompts, since
+ * we just reject calls if the principal does not have permission.
  *
- * On the worker threads, we don't have to deal with permission prompts, instead
- * we just reject calls if the principal does not have permission. On workers
- * WorkerPushManager dispatches runnables to the main thread which directly call
- * nsIPushClient.
+ * On the main thread, PushManager wraps a JS-implemented PushManagerImpl
+ * instance. The C++ wrapper is necessary because our bindings code cannot
+ * accomodate "JS-implemented on the main thread, C++ on the worker" bindings.
  *
  * PushSubscription is in C++ on both threads since it isn't particularly
  * verbose to implement in C++ compared to JS.
@@ -40,12 +35,9 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
-#include "jsapi.h"
 
 class nsIGlobalObject;
 class nsIPrincipal;
-
-#include "mozilla/dom/PushSubscriptionBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -57,68 +49,6 @@ class WorkerPrivate;
 class Promise;
 class PushManagerImpl;
 
-class PushSubscription final : public nsISupports
-                             , public nsWrapperCache
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushSubscription)
-
-  explicit PushSubscription(nsIGlobalObject* aGlobal,
-                            const nsAString& aEndpoint,
-                            const nsAString& aScope,
-                            const nsTArray<uint8_t>& aP256dhKey,
-                            const nsTArray<uint8_t>& aAuthSecret);
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
-
-  void
-  GetEndpoint(nsAString& aEndpoint) const
-  {
-    aEndpoint = mEndpoint;
-  }
-
-  void
-  GetKey(JSContext* cx,
-         PushEncryptionKeyName aType,
-         JS::MutableHandle<JSObject*> aKey);
-
-  static already_AddRefed<PushSubscription>
-  Constructor(GlobalObject& aGlobal,
-              const nsAString& aEndpoint,
-              const nsAString& aScope,
-              const Nullable<ArrayBuffer>& aP256dhKey,
-              const Nullable<ArrayBuffer>& aAuthSecret,
-              ErrorResult& aRv);
-
-  void
-  SetPrincipal(nsIPrincipal* aPrincipal);
-
-  already_AddRefed<Promise>
-  Unsubscribe(ErrorResult& aRv);
-
-  void
-  ToJSON(PushSubscriptionJSON& aJSON);
-
-protected:
-  ~PushSubscription();
-
-private:
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsString mEndpoint;
-  nsString mScope;
-  nsTArray<uint8_t> mRawP256dhKey;
-  nsTArray<uint8_t> mAuthSecret;
-};
-
 class PushManager final : public nsISupports
                         , public nsWrapperCache
 {
@@ -126,7 +56,16 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushManager)
 
-  explicit PushManager(nsIGlobalObject* aGlobal, const nsAString& aScope);
+  enum SubscriptionAction {
+    SubscribeAction,
+    GetSubscriptionAction,
+  };
+
+  // The main thread constructor.
+  PushManager(nsIGlobalObject* aGlobal, PushManagerImpl* aImpl);
+
+  // The worker thread constructor.
+  explicit PushManager(const nsAString& aScope);
 
   nsIGlobalObject*
   GetParentObject() const
@@ -137,6 +76,14 @@ public:
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  static already_AddRefed<PushManager>
+  Constructor(GlobalObject& aGlobal, const nsAString& aScope,
+              ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  PerformSubscriptionActionFromWorker(SubscriptionAction aAction,
+                                      ErrorResult& aRv);
+
   already_AddRefed<Promise>
   Subscribe(ErrorResult& aRv);
 
@@ -145,113 +92,16 @@ public:
 
   already_AddRefed<Promise>
   PermissionState(ErrorResult& aRv);
-
-  void
-  SetPushManagerImpl(PushManagerImpl& foo, ErrorResult& aRv);
 
 protected:
   ~PushManager();
 
 private:
+  // The following are only set and accessed on the main thread.
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<PushManagerImpl> mImpl;
-  nsString mScope;
-};
 
-class WorkerPushSubscription final : public nsISupports
-                                   , public nsWrapperCache
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkerPushSubscription)
-
-  explicit WorkerPushSubscription(const nsAString& aEndpoint,
-                                  const nsAString& aScope,
-                                  const nsTArray<uint8_t>& aRawP256dhKey,
-                                  const nsTArray<uint8_t>& aAuthSecret);
-
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return nullptr;
-  }
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  static already_AddRefed<WorkerPushSubscription>
-  Constructor(GlobalObject& aGlobal,
-              const nsAString& aEndpoint,
-              const nsAString& aScope,
-              const Nullable<ArrayBuffer>& aP256dhKey,
-              const Nullable<ArrayBuffer>& aAuthSecret,
-              ErrorResult& aRv);
-
-  void
-  GetEndpoint(nsAString& aEndpoint) const
-  {
-    aEndpoint = mEndpoint;
-  }
-
-  void
-  GetKey(JSContext* cx, PushEncryptionKeyName aType,
-         JS::MutableHandle<JSObject*> aP256dhKey);
-
-  already_AddRefed<Promise>
-  Unsubscribe(ErrorResult& aRv);
-
-  void
-  ToJSON(PushSubscriptionJSON& aJSON);
-
-protected:
-  ~WorkerPushSubscription();
-
-private:
-  nsString mEndpoint;
-  nsString mScope;
-  nsTArray<uint8_t> mRawP256dhKey;
-  nsTArray<uint8_t> mAuthSecret;
-};
-
-class WorkerPushManager final : public nsISupports
-                              , public nsWrapperCache
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkerPushManager)
-
-  enum SubscriptionAction {
-    SubscribeAction,
-    GetSubscriptionAction,
-  };
-
-  explicit WorkerPushManager(const nsAString& aScope);
-
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return nullptr;
-  }
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  already_AddRefed<Promise>
-  PerformSubscriptionAction(SubscriptionAction aAction, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Subscribe(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  GetSubscription(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  PermissionState(ErrorResult& aRv);
-
-protected:
-  ~WorkerPushManager();
-
-private:
+  // Only used on the worker thread.
   nsString mScope;
 };
 } // namespace dom

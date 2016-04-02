@@ -29,6 +29,11 @@ Service.engineManager.register(CatapultEngine);
 var scheduler = new SyncScheduler(Service);
 var clientsEngine = Service.clientsEngine;
 
+// Don't remove stale clients when syncing. This is a test-only workaround
+// that lets us add clients directly to the store, without losing them on
+// the next sync.
+clientsEngine._removeRemoteClient = id => {};
+
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {
     syncID: Service.syncID,
@@ -69,6 +74,7 @@ function setUp(server) {
 function cleanUpAndGo(server) {
   let deferred = Promise.defer();
   Utils.nextTick(function () {
+    clientsEngine._store.wipe();
     Service.startOver();
     if (server) {
       server.stop(deferred.resolve);

@@ -995,14 +995,12 @@ nsSVGElement::sTextContentElementsMap[] = {
   // { &nsGkAtoms::baseline_shift },
   { &nsGkAtoms::direction },
   { &nsGkAtoms::dominant_baseline },
-  // { &nsGkAtoms::glyph_orientation_horizontal },
-  // { &nsGkAtoms::glyph_orientation_vertical },
-  // { &nsGkAtoms::kerning },
   { &nsGkAtoms::letter_spacing },
   { &nsGkAtoms::text_anchor },
   { &nsGkAtoms::text_decoration },
   { &nsGkAtoms::unicode_bidi },
   { &nsGkAtoms::word_spacing },
+  { &nsGkAtoms::writing_mode },
   { nullptr }
 };
 

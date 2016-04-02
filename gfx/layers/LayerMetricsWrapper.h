@@ -142,7 +142,7 @@ public:
 
     switch (aStart) {
       case StartAt::TOP:
-        mIndex = mLayer->GetFrameMetricsCount();
+        mIndex = mLayer->GetScrollMetadataCount();
         if (mIndex > 0) {
           mIndex--;
         }
@@ -161,7 +161,7 @@ public:
     , mIndex(aMetricsIndex)
   {
     MOZ_ASSERT(mLayer);
-    MOZ_ASSERT(mIndex == 0 || mIndex < mLayer->GetFrameMetricsCount());
+    MOZ_ASSERT(mIndex == 0 || mIndex < mLayer->GetScrollMetadataCount());
   }
 
   bool IsValid() const
@@ -240,21 +240,26 @@ public:
     return LayerMetricsWrapper(nullptr);
   }
 
-  const FrameMetrics& Metrics() const
+  const ScrollMetadata& Metadata() const
   {
     MOZ_ASSERT(IsValid());
 
-    if (mIndex >= mLayer->GetFrameMetricsCount()) {
-      return FrameMetrics::sNullMetrics;
+    if (mIndex >= mLayer->GetScrollMetadataCount()) {
+      return *ScrollMetadata::sNullMetadata;
     }
-    return mLayer->GetFrameMetrics(mIndex);
+    return mLayer->GetScrollMetadata(mIndex);
+  }
+
+  const FrameMetrics& Metrics() const
+  {
+    return Metadata().GetMetrics();
   }
 
   AsyncPanZoomController* GetApzc() const
   {
     MOZ_ASSERT(IsValid());
 
-    if (mIndex >= mLayer->GetFrameMetricsCount()) {
+    if (mIndex >= mLayer->GetScrollMetadataCount()) {
       return nullptr;
     }
     return mLayer->GetAsyncPanZoomController(mIndex);
@@ -264,12 +269,12 @@ public:
   {
     MOZ_ASSERT(IsValid());
 
-    if (mLayer->GetFrameMetricsCount() == 0) {
+    if (mLayer->GetScrollMetadataCount() == 0) {
       MOZ_ASSERT(mIndex == 0);
       MOZ_ASSERT(aApzc == nullptr);
       return;
     }
-    MOZ_ASSERT(mIndex < mLayer->GetFrameMetricsCount());
+    MOZ_ASSERT(mIndex < mLayer->GetScrollMetadataCount());
     mLayer->SetAsyncPanZoomController(mIndex, aApzc);
   }
 
@@ -441,30 +446,30 @@ public:
 
   static const FrameMetrics& TopmostScrollableMetrics(Layer* aLayer)
   {
-    for (uint32_t i = aLayer->GetFrameMetricsCount(); i > 0; i--) {
+    for (uint32_t i = aLayer->GetScrollMetadataCount(); i > 0; i--) {
       if (aLayer->GetFrameMetrics(i - 1).IsScrollable()) {
         return aLayer->GetFrameMetrics(i - 1);
       }
     }
-    return FrameMetrics::sNullMetrics;
+    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
   static const FrameMetrics& BottommostScrollableMetrics(Layer* aLayer)
   {
-    for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+    for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
       if (aLayer->GetFrameMetrics(i).IsScrollable()) {
         return aLayer->GetFrameMetrics(i);
       }
     }
-    return FrameMetrics::sNullMetrics;
+    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
   static const FrameMetrics& BottommostMetrics(Layer* aLayer)
   {
-    if (aLayer->GetFrameMetricsCount() > 0) {
+    if (aLayer->GetScrollMetadataCount() > 0) {
       return aLayer->GetFrameMetrics(0);
     }
-    return FrameMetrics::sNullMetrics;
+    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
 private:
@@ -475,7 +480,7 @@ private:
 
   bool AtTopLayer() const
   {
-    return mLayer->GetFrameMetricsCount() == 0 || mIndex == mLayer->GetFrameMetricsCount() - 1;
+    return mLayer->GetScrollMetadataCount() == 0 || mIndex == mLayer->GetScrollMetadataCount() - 1;
   }
 
 private:

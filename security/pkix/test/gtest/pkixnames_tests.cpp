@@ -902,6 +902,8 @@ class pkixnames_MatchPresentedDNSIDWithReferenceDNSID
   : public ::testing::Test
   , public ::testing::WithParamInterface<PresentedMatchesReference>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_MatchPresentedDNSIDWithReferenceDNSID,
@@ -937,6 +939,8 @@ class pkixnames_Turkish_I_Comparison
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_Turkish_I_Comparison, MatchPresentedDNSIDWithReferenceDNSID)
@@ -982,6 +986,8 @@ class pkixnames_IsValidReferenceDNSID
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_IsValidReferenceDNSID, IsValidReferenceDNSID)
@@ -1006,6 +1012,8 @@ class pkixnames_ParseIPv4Address
   : public ::testing::Test
   , public ::testing::WithParamInterface<IPAddressParams<4>>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_ParseIPv4Address, ParseIPv4Address)
@@ -1032,6 +1040,8 @@ class pkixnames_ParseIPv6Address
   : public ::testing::Test
   , public ::testing::WithParamInterface<IPAddressParams<16>>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_ParseIPv6Address, ParseIPv6Address)
@@ -1074,6 +1084,8 @@ class pkixnames_CheckCertHostname
   : public ::testing::Test
   , public ::testing::WithParamInterface<CheckCertHostnameParams>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 #define WITH_SAN(r, ps, psan, result) \
@@ -1578,7 +1590,8 @@ TEST_P(pkixnames_CheckCertHostname, CheckCertHostname)
   ASSERT_EQ(Success, hostnameInput.Init(param.hostname.data(),
                                         param.hostname.length()));
 
-  ASSERT_EQ(param.result, CheckCertHostname(certInput, hostnameInput));
+  ASSERT_EQ(param.result, CheckCertHostname(certInput, hostnameInput,
+                                            mNameMatchingPolicy));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname,
@@ -1610,13 +1623,15 @@ TEST_F(pkixnames_CheckCertHostname, SANWithoutSequence)
 
   static const uint8_t a[] = { 'a' };
   ASSERT_EQ(Result::ERROR_EXTENSION_VALUE_INVALID,
-            CheckCertHostname(certInput, Input(a)));
+            CheckCertHostname(certInput, Input(a), mNameMatchingPolicy));
 }
 
 class pkixnames_CheckCertHostname_PresentedMatchesReference
   : public ::testing::Test
   , public ::testing::WithParamInterface<PresentedMatchesReference>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference, CN_NoSAN)
@@ -1636,7 +1651,7 @@ TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference, CN_NoSAN)
                                         param.referenceDNSID.length()));
 
   ASSERT_EQ(param.expectedMatches ? Success : Result::ERROR_BAD_CERT_DOMAIN,
-            CheckCertHostname(certInput, hostnameInput));
+            CheckCertHostname(certInput, hostnameInput, mNameMatchingPolicy));
 }
 
 TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference,
@@ -1660,7 +1675,8 @@ TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference,
     = param.expectedResult != Success ? param.expectedResult
     : param.expectedMatches ? Success
     : Result::ERROR_BAD_CERT_DOMAIN;
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput,
+                                              mNameMatchingPolicy));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_DNSID_MATCH_PARAMS,
@@ -1689,8 +1705,10 @@ TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_CN_NoSAN)
                         ? Success
                         : Result::ERROR_BAD_CERT_DOMAIN;
 
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I));
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I,
+                                              mNameMatchingPolicy));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I,
+                                              mNameMatchingPolicy));
 }
 
 TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_SAN)
@@ -1716,14 +1734,18 @@ TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_SAN)
        InputsAreEqual(UPPERCASE_I, input)) ? Success
     : Result::ERROR_BAD_CERT_DOMAIN;
 
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I));
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I,
+                                              mNameMatchingPolicy));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I,
+                                              mNameMatchingPolicy));
 }
 
 class pkixnames_CheckCertHostname_IPV4_Addresses
   : public ::testing::Test
   , public ::testing::WithParamInterface<IPAddressParams<4>>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
@@ -1745,7 +1767,7 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
                                         param.input.length()));
 
   ASSERT_EQ(param.isValid ? Success : Result::ERROR_BAD_CERT_DOMAIN,
-            CheckCertHostname(certInput, hostnameInput));
+            CheckCertHostname(certInput, hostnameInput, mNameMatchingPolicy));
 }
 
 TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
@@ -1772,7 +1794,8 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
                         ? Success
                         : Result::ERROR_BAD_CERT_DOMAIN;
 
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput,
+                                              mNameMatchingPolicy));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_IPV4_ADDRESSES,
@@ -2572,6 +2595,8 @@ class pkixnames_CheckNameConstraints
   : public ::testing::Test
   , public ::testing::WithParamInterface<NameConstraintParams>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_CheckNameConstraints,

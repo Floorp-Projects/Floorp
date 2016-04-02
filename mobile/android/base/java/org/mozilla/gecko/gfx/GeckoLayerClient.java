@@ -1086,6 +1086,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return layerPoint;
     }
 
+    @Override
+    public void setScrollingRootContent(boolean isRootContent) {
+        mToolbarAnimator.setScrollingRootContent(isRootContent);
+    }
+
     public void addDrawListener(DrawListener listener) {
         mDrawListeners.add(listener);
     }
