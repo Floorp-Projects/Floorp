@@ -825,7 +825,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-fxa[fxaprofileimage="enabled"] > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
-  list-style-image: url(chrome://browser/skin/fxa/default-avatar.png)
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
 }
 
 #PanelUI-customize:hover,
@@ -1616,10 +1616,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   #PanelUI-update-status {
     list-style-image: url(chrome://branding/content/icon32.png);
-  }
-
-  #PanelUI-footer-fxa[fxaprofileimage="enabled"] > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
-    list-style-image: url(chrome://browser/skin/fxa/default-avatar@2x.png)
   }
 
   #PanelUI-fxa-label,
