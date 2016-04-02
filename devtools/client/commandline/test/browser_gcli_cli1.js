@@ -212,13 +212,13 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: ' o',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionType\u2019.'
+            message: 'Value required for \'optionType\'.'
           },
           optionValue: {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }
@@ -241,13 +241,13 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: ' option',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionType\u2019.'
+            message: 'Value required for \'optionType\'.'
           },
           optionValue: {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }
@@ -272,13 +272,13 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: ' option',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionType\u2019.'
+            message: 'Value required for \'optionType\'.'
           },
           optionValue: {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }
@@ -301,13 +301,13 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: ' option ',
             status: 'ERROR',
-            message: 'Can\u2019t use \u2018option\u2019.'
+            message: 'Can\'t use \'option\'.'
           },
           optionValue: {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }
@@ -336,7 +336,7 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }
@@ -364,7 +364,7 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }
@@ -393,7 +393,7 @@ exports.testTsv = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            message: 'Value required for \'optionValue\'.'
           }
         }
       }

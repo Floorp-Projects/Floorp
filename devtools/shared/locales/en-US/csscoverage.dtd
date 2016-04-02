@@ -31,7 +31,7 @@
   -  <style> tag -->
 <!ENTITY csscoverage.optimize.body1 "You can sometimes speed up loading by moving">
 <!ENTITY csscoverage.optimize.body2 "tags to the bottom of the page and creating a new inline">
-<!ENTITY csscoverage.optimize.body3 "element with the styles needed before the ‘load’ event to the top. Here are the style blocks you need:">
+<!ENTITY csscoverage.optimize.body3 "element with the styles needed before the 'load' event to the top. Here are the style blocks you need:">
 
 <!-- LOCALIZATION NOTE (csscoverage.optimize.bodyX):
   -  This is what we say when we have no optimization suggestions -->
