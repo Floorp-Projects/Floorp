@@ -92,6 +92,12 @@ public:
 
 protected:
   virtual bool IsInput() { return false; }
+
+  // Indicates whether we should clip our children's painting to our
+  // border-box (either because of "overflow" or because of legacy reasons
+  // about how <input>-flavored buttons work).
+  bool ShouldClipPaintingToBorderBox();
+
   // Reflows the button's sole child frame, and computes the desired size
   // of the button itself from the results.
   void ReflowButtonContents(nsPresContext* aPresContext,
