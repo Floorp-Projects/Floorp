@@ -130,7 +130,7 @@ function* spawnTest() {
       },
       exec: {
         output: '101 nodes matched, but only 100 nodes highlighted. Use ' +
-          '\u2018--showall\u2019 to show all'
+          '\'--showall\' to show all'
       }
     },
     {
