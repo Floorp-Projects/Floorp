@@ -16,6 +16,7 @@ Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderMo
 
 const promise = require("promise");
 const Services = require("Services");
+const ErrorDocs = require("devtools/server/actors/errordocs");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
@@ -1489,6 +1490,7 @@ WebConsoleFrame.prototype = {
 
     // Select the body of the message node that is displayed in the console
     let msgBody = node.getElementsByClassName("message-body")[0];
+
     // Add the more info link node to messages that belong to certain categories
     this.addMoreInfoLink(msgBody, scriptError);
 
@@ -1697,11 +1699,14 @@ WebConsoleFrame.prototype = {
         url = TRACKING_PROTECTION_LEARN_MORE;
         break;
       default:
-        // Unknown category. Return without adding more info node.
-        return;
+        // If all else fails check for an error doc URL.
+        url = ErrorDocs.GetURL(scriptError.errorMessageName);
+        break;
     }
 
-    this.addLearnMoreWarningNode(node, url);
+    if (url) {
+      this.addLearnMoreWarningNode(node, url);
+    }
   },
 
   /*
