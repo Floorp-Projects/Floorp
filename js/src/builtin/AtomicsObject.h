@@ -18,13 +18,6 @@ class AtomicsObject : public JSObject
     static const Class class_;
     static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
     static bool toString(JSContext* cx, unsigned int argc, Value* vp);
-
-    // Result codes for Atomics.wait().
-    enum FutexWaitResult : int32_t {
-        FutexOK = 0,
-        FutexNotequal = -1,
-        FutexTimedout = -2
-    };
 };
 
 bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
@@ -68,6 +61,12 @@ public:
         WakeForJSInterrupt      // Interrupt requested
     };
 
+    // Result code from wait().
+    enum WaitResult {
+        FutexOK,
+        FutexTimedOut
+    };
+
     // Block the calling thread and wait.
     //
     // The futex lock must be held around this call.
@@ -78,7 +77,7 @@ public:
     // wait() will not wake up spuriously.  It will return true and
     // set *result to a return code appropriate for
     // Atomics.wait() on success, and return false on error.
-    bool wait(JSContext* cx, double timeout, AtomicsObject::FutexWaitResult* result);
+    bool wait(JSContext* cx, double timeout, WaitResult* result);
 
     // Wake the thread represented by this Runtime.
     //

@@ -791,7 +791,7 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
 
     SharedMem<int32_t*>(addr) = view->viewDataShared().cast<int32_t*>() + offset;
     if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
-        r.setInt32(AtomicsObject::FutexNotequal);
+        r.setString(cx->names().futexNotEqual);
         return true;
     }
 
@@ -809,10 +809,18 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
         sarb->setWaiters(&w);
     }
 
-    AtomicsObject::FutexWaitResult result = AtomicsObject::FutexOK;
+    FutexRuntime::WaitResult result = FutexRuntime::FutexOK;
     bool retval = rt->fx.wait(cx, timeout_ms, &result);
-    if (retval)
-        r.setInt32(result);
+    if (retval) {
+        switch (result) {
+          case FutexRuntime::FutexOK:
+            r.setString(cx->names().futexOK);
+            break;
+          case FutexRuntime::FutexTimedOut:
+            r.setString(cx->names().futexTimedOut);
+            break;
+        }
+    }
 
     if (w.lower_pri == &w) {
         sarb->setWaiters(nullptr);
@@ -954,7 +962,7 @@ js::FutexRuntime::isWaiting()
 }
 
 bool
-js::FutexRuntime::wait(JSContext* cx, double timeout_ms, AtomicsObject::FutexWaitResult* result)
+js::FutexRuntime::wait(JSContext* cx, double timeout_ms, WaitResult* result)
 {
     MOZ_ASSERT(&cx->runtime()->fx == this);
     MOZ_ASSERT(cx->runtime()->fx.canWait());
@@ -1011,14 +1019,14 @@ js::FutexRuntime::wait(JSContext* cx, double timeout_ms, AtomicsObject::FutexWai
             if (timed) {
                 uint64_t now = PRMJ_Now();
                 if (now >= finalEnd) {
-                    *result = AtomicsObject::FutexTimedout;
+                    *result = FutexTimedOut;
                     goto finished;
                 }
             }
             break;
 
           case FutexRuntime::Woken:
-            *result = AtomicsObject::FutexOK;
+            *result = FutexOK;
             goto finished;
 
           case FutexRuntime::WaitingNotifiedForInterrupt:
@@ -1059,7 +1067,7 @@ js::FutexRuntime::wait(JSContext* cx, double timeout_ms, AtomicsObject::FutexWai
             if (!retval)
                 goto finished;
             if (state_ == Woken) {
-                *result = AtomicsObject::FutexOK;
+                *result = FutexOK;
                 goto finished;
             }
             break;
@@ -1116,13 +1124,6 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_FS_END
 };
 
-static const JSConstDoubleSpec AtomicsConstants[] = {
-    {"OK",       AtomicsObject::FutexOK},
-    {"TIMEDOUT", AtomicsObject::FutexTimedout},
-    {"NOTEQUAL", AtomicsObject::FutexNotequal},
-    {0,          0}
-};
-
 JSObject*
 AtomicsObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 {
@@ -1136,8 +1137,6 @@ AtomicsObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
 
     if (!JS_DefineFunctions(cx, Atomics, AtomicsMethods))
-        return nullptr;
-    if (!JS_DefineConstDoubles(cx, Atomics, AtomicsConstants))
         return nullptr;
 
     RootedValue AtomicsValue(cx, ObjectValue(*Atomics));
