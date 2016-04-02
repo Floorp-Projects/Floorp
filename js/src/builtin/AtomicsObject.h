@@ -33,7 +33,6 @@ bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_fence(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_add(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_and(JSContext* cx, unsigned argc, Value* vp);

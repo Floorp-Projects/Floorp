@@ -121,15 +121,6 @@ GetTypedArrayIndex(JSContext* cx, HandleValue v, Handle<TypedArrayObject*> view,
     return true;
 }
 
-bool
-js::atomics_fence(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    jit::AtomicOperations::fenceSeqCst();
-    args.rval().setUndefined();
-    return true;
-}
-
 static int32_t
 CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidate,
                 SharedMem<void*> viewData, uint32_t offset, bool* badArrayType = nullptr)
@@ -1112,7 +1103,6 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_INLINABLE_FN("load",               atomics_load,               2,0, AtomicsLoad),
     JS_INLINABLE_FN("store",              atomics_store,              3,0, AtomicsStore),
     JS_INLINABLE_FN("exchange",           atomics_exchange,           3,0, AtomicsExchange),
-    JS_INLINABLE_FN("fence",              atomics_fence,              0,0, AtomicsFence),
     JS_INLINABLE_FN("add",                atomics_add,                3,0, AtomicsAdd),
     JS_INLINABLE_FN("sub",                atomics_sub,                3,0, AtomicsSub),
     JS_INLINABLE_FN("and",                atomics_and,                3,0, AtomicsAnd),

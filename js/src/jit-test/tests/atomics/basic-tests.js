@@ -66,8 +66,6 @@ function testMethod(a, ...indices) {
 	Atomics.store(a, x, 0);
 	// val = 0
 
-	Atomics.fence();
-
 	// val = 0
 	assertEq(Atomics.add(a, x, 3), 0);
 	// val = 3
@@ -136,8 +134,6 @@ function testFunction(a, ...indices) {
 	// val = 14
 	gAtomics_store(a, x, 0);
 	// val = 0
-
-	gAtomics_fence();
 
 	// val = 0
 	assertEq(gAtomics_add(a, x, 3), 0);
@@ -504,7 +500,6 @@ function runTests() {
     gAtomics_exchange = Atomics.exchange;
     gAtomics_load = Atomics.load;
     gAtomics_store = Atomics.store;
-    gAtomics_fence = Atomics.fence;
     gAtomics_add = Atomics.add;
     gAtomics_sub = Atomics.sub;
     gAtomics_and = Atomics.and;
