@@ -4,7 +4,6 @@
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runtest()">
@@ -38,7 +37,9 @@ function runtest()
 
   ok(true, "Test is run with tab modal prompts enabled.");
 
-  startCallbackTimer();
+  let url = SimpleTest.getTestFileURL("chromeScript.js");
+  let chrome = SpecialPowers.loadChromeScript(url);
+  chrome.sendAsyncMessage("cancelPrompt");
 
   try {
     alert();
@@ -47,7 +48,7 @@ function runtest()
     ok(false, "alert() without arguments should not throw!");
   }
 
-  startCallbackTimer();
+  chrome.sendAsyncMessage("cancelPrompt");
 
   try {
     confirm();
@@ -56,6 +57,7 @@ function runtest()
     ok(false, "confirm() without arguments should not throw!");
   }
 
+  chrome.destroy();
   SimpleTest.finish();
 }
 

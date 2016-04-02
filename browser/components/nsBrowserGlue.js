@@ -1794,7 +1794,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 36;
+    const UI_VERSION = 37;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2154,6 +2154,10 @@ BrowserGlue.prototype = {
       xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",
                            "passwordCol",
                            "hidden");
+    }
+
+    if (currentUIVersion < 37) {
+      Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
     }
 
     // Update the migration version.
