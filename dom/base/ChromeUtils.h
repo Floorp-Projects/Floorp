@@ -59,17 +59,13 @@ public:
                                const dom::OriginAttributesPatternDictionary& aPattern);
 
   static void
-  CreateDefaultOriginAttributes(dom::GlobalObject& aGlobal,
-                                dom::OriginAttributesDictionary& aAttrs);
-
-  static void
   CreateOriginAttributesFromOrigin(dom::GlobalObject& aGlobal,
                                    const nsAString& aOrigin,
                                    dom::OriginAttributesDictionary& aAttrs,
                                    ErrorResult& aRv);
 
   static void
-  CreateOriginAttributesFromDict(dom::GlobalObject& aGlobal,
+  FillNonDefaultOriginAttributes(dom::GlobalObject& aGlobal,
                                  const dom::OriginAttributesDictionary& aAttrs,
                                  dom::OriginAttributesDictionary& aNewAttrs);
 

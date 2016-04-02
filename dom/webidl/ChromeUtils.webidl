@@ -30,16 +30,6 @@ interface ChromeUtils : ThreadSafeChromeUtils {
                                optional OriginAttributesPatternDictionary pattern);
 
   /**
-   * Returns an OriginAttributesDictionary with all default attributes added
-   * and assigned default values.
-   *
-   * @returns                 An OriginAttributesDictionary populated with the
-   *                          default attributes added and assigned default values.
-   */
-  static OriginAttributesDictionary
-  createDefaultOriginAttributes();
-
-  /**
    * Returns an OriginAttributesDictionary with values from the |origin| suffix
    * and unspecified attributes added and assigned default values.
    *
@@ -62,7 +52,7 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    *                          default values.
    */
   static OriginAttributesDictionary
-  createOriginAttributesFromDict(optional OriginAttributesDictionary originAttrs);
+  fillNonDefaultOriginAttributes(optional OriginAttributesDictionary originAttrs);
 
   /**
    * Returns true if the 2 OriginAttributes are equal.
