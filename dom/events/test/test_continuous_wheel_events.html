@@ -3181,6 +3181,25 @@ function testContinuousTrustedEvents()
   window.removeEventListener("MozMousePixelScroll", legacyEventHandler, true);
 }
 
+var gTestContinuation = null;
+
+function continueTest()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function* testBody()
+{
+  prepareScrollUnits();
+  testContinuousTrustedEvents();
+}
+
 function runTests()
 {
   SpecialPowers.pushPrefEnv({"set": [
@@ -3203,12 +3222,7 @@ function runTests()
     ["mousewheel.with_win.delta_multiplier_x", 100],
     ["mousewheel.with_win.delta_multiplier_y", 100],
     ["mousewheel.with_win.delta_multiplier_z", 100]
-  ]},
-  function () {
-    prepareScrollUnits();
-    testContinuousTrustedEvents();
-    SimpleTest.finish();
-  });
+  ]}, continueTest);
 }
 </script>
 </pre>
