@@ -37,10 +37,13 @@ ANDROID_NDK_VERSION_32BIT="r8c"
 
 # Build Fennec
 ac_add_options --enable-application=mobile/android
-ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
 ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 
-ac_add_options --with-android-gnu-compiler-version=4.9
+if [ -z "$NO_NDK" ]; then
+    ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
+    ac_add_options --with-android-gnu-compiler-version=4.9
+fi
+
 ac_add_options --with-android-version=9
 ac_add_options --with-system-zlib
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}

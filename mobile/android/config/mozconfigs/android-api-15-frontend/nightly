@@ -10,6 +10,7 @@ MOZ_AUTOMATION_UPLOAD=0
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 
 NO_CACHE=1
+NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
