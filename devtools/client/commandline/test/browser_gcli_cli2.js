@@ -45,7 +45,7 @@ exports.testSingleString = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -67,7 +67,7 @@ exports.testSingleString = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -160,7 +160,7 @@ exports.testSingleNumber = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'num\'.'
+            message: 'Value required for \u2018num\u2019.'
           }
         }
       }
@@ -182,7 +182,7 @@ exports.testSingleNumber = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'num\'.'
+            message: 'Value required for \u2018num\u2019.'
           }
         }
       }
@@ -222,7 +222,7 @@ exports.testSingleNumber = function(options) {
             value: undefined,
             arg: ' x',
             status: 'ERROR',
-            message: 'Can\'t convert "x" to a number.'
+            message: 'Can\u2019t convert \u201cx\u201d to a number.'
           }
         }
       }
@@ -244,7 +244,7 @@ exports.testSingleNumber = function(options) {
             value: undefined,
             arg: ' 1.5',
             status: 'ERROR',
-            message: 'Can\'t convert "1.5" to an integer.'
+            message: 'Can\u2019t convert \u201c1.5\u201d to an integer.'
           }
         }
       }
@@ -271,7 +271,7 @@ exports.testSingleFloat = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'num\'.'
+            message: 'Value required for \u2018num\u2019.'
           }
         }
       }
@@ -360,7 +360,7 @@ exports.testSingleFloat = function(options) {
         cursor: 4,
         current: 'num',
         status: 'ERROR',
-        error: 'Can\'t convert "x" to a number.',
+        error: 'Can\u2019t convert \u201cx\u201d to a number.',
         predictions: [ ],
         unassigned: [ ],
         args: {
@@ -369,7 +369,7 @@ exports.testSingleFloat = function(options) {
             value: undefined,
             arg: ' x',
             status: 'ERROR',
-            message: 'Can\'t convert "x" to a number.'
+            message: 'Can\u2019t convert \u201cx\u201d to a number.'
           }
         }
       }
@@ -598,7 +598,7 @@ exports.testNestedCommand = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -620,7 +620,7 @@ exports.testNestedCommand = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -659,7 +659,7 @@ exports.testNestedCommand = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -681,7 +681,7 @@ exports.testNestedCommand = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -703,7 +703,7 @@ exports.testNestedCommand = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }
@@ -725,7 +725,7 @@ exports.testNestedCommand = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: 'Value required for \'text\'.'
+            message: 'Value required for \u2018text\u2019.'
           }
         }
       }

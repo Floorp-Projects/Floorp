@@ -164,7 +164,7 @@ exports.testDefault = function(options) {
             value: undefined,
             arg: ' on',
             status: 'INCOMPLETE',
-            message: 'Can\'t use \'on\'.'
+            message: 'Can\u2019t use \u2018on\u2019.'
           },
         }
       }
