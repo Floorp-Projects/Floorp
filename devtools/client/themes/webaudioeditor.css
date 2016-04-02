@@ -5,7 +5,6 @@
 /* Reload and waiting notices */
 .notice-container {
   margin-top: -50vh;
-  background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color-alt);
 }
 
@@ -62,15 +61,7 @@ g.edgeLabel tspan {
 .nodes rect {
   stroke-width: 1px;
   cursor: pointer;
-}
-
-.nodes rect {
   stroke: var(--theme-tab-toolbar-background);
-}
-.theme-light rect {
-  fill: var(--theme-tab-toolbar-background);
-}
-.theme-dark rect {
   fill: var(--theme-toolbar-background);
 }
 
