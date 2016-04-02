@@ -4,6 +4,7 @@
   <title>Test for D3E WheelEvent</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -55,7 +56,12 @@ var gHorizontalLine = 0;
 var gPageHeight = 0;
 var gPageWidth  = 0;
 
-function prepareScrollUnits()
+function sendWheelAndWait(aX, aY, aEvent)
+{
+  sendWheelAndPaint(gScrollableElement, aX, aY, aEvent, continueTest);
+}
+
+function* prepareScrollUnits()
 {
   var result = -1;
   function handler(aEvent)
@@ -65,32 +71,32 @@ function prepareScrollUnits()
   }
   window.addEventListener("MozMousePixelScroll", handler, true);
 
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
   gLineHeight = result;
   ok(gLineHeight > 10 && gLineHeight < 25, "prepareScrollUnits: gLineHeight may be illegal value, got " + gLineHeight);
 
   result = -1;
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
   gHorizontalLine = result;
   ok(gHorizontalLine > 5 && gHorizontalLine < 16, "prepareScrollUnits: gHorizontalLine may be illegal value, got " + gHorizontalLine);
 
   result = -1;
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
   gPageHeight = result;
   // XXX Cannot we know the actual scroll port size?
   ok(gPageHeight >= 150 && gPageHeight <= 200,
      "prepareScrollUnits: gPageHeight is strange value, got " + gPageHeight);
 
   result = -1;
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
   gPageWidth = result;
   ok(gPageWidth >= 150 && gPageWidth <= 200,
      "prepareScrollUnits: gPageWidth is strange value, got " + gPageWidth);
@@ -3196,7 +3202,7 @@ function continueTest()
 
 function* testBody()
 {
-  prepareScrollUnits();
+  yield* prepareScrollUnits();
   testContinuousTrustedEvents();
 }
 
