@@ -2,6 +2,7 @@
 != first-letter-1.html first-letter-1-noref.html
 == max-height.html max-height-ref.html
 == min-height.html min-height-ref.html
+== overflow-areas-1.html overflow-areas-1-ref.html
 
 # The buttons in these tests have some fancy shading applied to their corners
 # on B2G, despite their "-moz-appearance: none; background: gray", so they

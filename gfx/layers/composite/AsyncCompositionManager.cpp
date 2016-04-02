@@ -330,7 +330,7 @@ IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax)
 static LayerMetricsWrapper
 FindMetricsWithScrollId(Layer* aLayer, FrameMetrics::ViewID aScrollId)
 {
-  for (uint64_t i = 0; i < aLayer->GetFrameMetricsCount(); ++i) {
+  for (uint64_t i = 0; i < aLayer->GetScrollMetadataCount(); ++i) {
     if (aLayer->GetFrameMetrics(i).GetScrollId() == aScrollId) {
       return LayerMetricsWrapper(aLayer, i);
     }
@@ -687,7 +687,7 @@ AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer)
       RecordShadowTransforms(child);
   }
 
-  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+  for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
     AsyncPanZoomController* apzc = aLayer->GetAsyncPanZoomController(i);
     if (!apzc) {
       continue;
@@ -837,7 +837,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   // of all scroll frames inside the current one.
   nsTArray<Layer*> ancestorMaskLayers;
 
-  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+  for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
     AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController(i);
     if (!controller) {
       continue;
@@ -858,7 +858,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
       controller->MarkAsyncTransformAppliedToContent();
     }
 
-    const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
+    const ScrollMetadata& scrollMetadata = aLayer->GetScrollMetadata(i);
+    const FrameMetrics& metrics = scrollMetadata.GetMetrics();
 
 #if defined(MOZ_ANDROID_APZ)
     // If we find a metrics which is the root content doc, use that. If not, use
@@ -870,7 +871,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     if (!(*aOutFoundRoot)) {
       *aOutFoundRoot = metrics.IsRootContent() ||       /* RCD */
             (aLayer->GetParent() == nullptr &&          /* rootmost metrics */
-             i + 1 >= aLayer->GetFrameMetricsCount());
+             i + 1 >= aLayer->GetScrollMetadataCount());
       if (*aOutFoundRoot) {
         mRootScrollableId = metrics.GetScrollId();
         CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
@@ -939,8 +940,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // Combine the local clip with the ancestor scrollframe clip. This is not
     // included in the async transform above, since the ancestor clip should not
     // move with this APZC.
-    if (metrics.HasClipRect()) {
-      ParentLayerIntRect clip = metrics.ClipRect();
+    if (scrollMetadata.HasClipRect()) {
+      ParentLayerIntRect clip = scrollMetadata.ClipRect();
       if (aLayer->GetParent() && aLayer->GetParent()->GetTransformIsPerspective()) {
         // If our parent layer has a perspective transform, we want to apply
         // our scroll clip to it instead of to this layer (see bug 1168263).
@@ -962,8 +963,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     }
 
     // Append the ancestor mask layer for this scroll frame to ancestorMaskLayers.
-    if (metrics.GetMaskLayerIndex()) {
-      size_t maskLayerIndex = metrics.GetMaskLayerIndex().value();
+    if (scrollMetadata.GetMaskLayerIndex()) {
+      size_t maskLayerIndex = scrollMetadata.GetMaskLayerIndex().value();
       Layer* ancestorMaskLayer = aLayer->GetAncestorMaskLayerAt(maskLayerIndex);
       ancestorMaskLayers.AppendElement(ancestorMaskLayer);
     }

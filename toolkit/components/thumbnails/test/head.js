@@ -277,6 +277,27 @@ function bgTestPageURL(aOpts = {}) {
   return TEST_PAGE_URL + "?" + encodeURIComponent(JSON.stringify(aOpts));
 }
 
+function bgAddPageThumbObserver(url) {
+  return new Promise((resolve, reject) => {
+    function observe(subject, topic, data) { // jshint ignore:line
+      if (data === url) {
+        switch(topic) {
+          case "page-thumbnail:create":
+            resolve();
+            break;
+          case "page-thumbnail:error":
+            reject(new Error("page-thumbnail:error"));
+            break;
+        }
+        Services.obs.removeObserver(observe, "page-thumbnail:create");
+        Services.obs.removeObserver(observe, "page-thumbnail:error");
+      }
+    }
+    Services.obs.addObserver(observe, "page-thumbnail:create", false);
+    Services.obs.addObserver(observe, "page-thumbnail:error", false);
+  });
+}
+
 function bgAddCrashObserver() {
   let crashed = false;
   Services.obs.addObserver(function crashObserver(subject, topic, data) {

@@ -25,7 +25,7 @@ enum HitTestResult {
 enum CancelAnimationFlags : uint32_t {
   Default = 0x0,            /* Cancel all animations */
   ExcludeOverscroll = 0x1,  /* Don't clear overscroll */
-  RequestSnap = 0x2         /* Request snapping to snap points */
+  ScrollSnap = 0x2          /* Snap to snap points */
 };
 
 inline CancelAnimationFlags

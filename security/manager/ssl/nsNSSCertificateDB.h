@@ -35,6 +35,11 @@ public:
   ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx,
                      const nsNSSShutDownPreventionLock &proofOfLock);
 
+  // This is a separate static method so nsNSSComponent can use it during NSS
+  // initialization. Other code should probably not use it.
+  static nsresult
+  FindCertByDBKey(const char* aDBKey, mozilla::UniqueCERTCertificate& cert);
+
 protected:
   virtual ~nsNSSCertificateDB();
 

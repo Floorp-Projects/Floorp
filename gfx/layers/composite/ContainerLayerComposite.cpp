@@ -360,7 +360,8 @@ ContainerRenderVR(ContainerT* aContainer,
 static bool
 NeedToDrawCheckerboardingForLayer(Layer* aLayer, Color* aOutCheckerboardingColor)
 {
-  return (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+  return (aLayer->Manager()->AsyncPanZoomEnabled() &&
+         aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
          aLayer->IsOpaqueForVisibility() &&
          LayerHasCheckerboardingAPZC(aLayer, aOutCheckerboardingColor);
 }
@@ -478,7 +479,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
 {
   Compositor* compositor = aManager->GetCompositor();
 
-  if (aLayer->GetFrameMetricsCount() < 1) {
+  if (aLayer->GetScrollMetadataCount() < 1) {
     return;
   }
 
@@ -654,7 +655,7 @@ RenderLayers(ContainerT* aContainer,
     // frames higher up, so loop from the top down, and accumulate an async
     // transform as we go along.
     Matrix4x4 asyncTransform;
-    for (uint32_t i = layer->GetFrameMetricsCount(); i > 0; --i) {
+    for (uint32_t i = layer->GetScrollMetadataCount(); i > 0; --i) {
       if (layer->GetFrameMetrics(i - 1).IsScrollable()) {
         // Since the composition bounds are in the parent layer's coordinates,
         // use the parent's effective transform rather than the layer's own.

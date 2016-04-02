@@ -100,10 +100,18 @@ AndroidContentController::UpdateOverscrollVelocity(const float aX, const float a
 }
 
 void
-AndroidContentController::UpdateOverscrollOffset(const float aX,const  float aY)
+AndroidContentController::UpdateOverscrollOffset(const float aX, const float aY)
 {
   if (mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollOffset(aX, aY);
+  }
+}
+
+void
+AndroidContentController::SetScrollingRootContent(const bool isRootContent)
+{
+  if (mAndroidWindow) {
+    mAndroidWindow->SetScrollingRootContent(isRootContent);
   }
 }
 

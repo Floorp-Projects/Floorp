@@ -28,9 +28,6 @@ public:
 
   virtual bool RecvUpdateFrame(const FrameMetrics& frame) override;
 
-  virtual bool RecvRequestFlingSnap(const ViewID& aScrollID,
-                                    const CSSPoint& aDestination) override;
-
   virtual bool RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
                                            const uint32_t& aScrollGeneration) override;
 

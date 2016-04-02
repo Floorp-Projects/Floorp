@@ -88,7 +88,7 @@ InputBlockState::IsTargetConfirmed() const
 }
 
 bool
-InputBlockState::IsAncestorOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB)
+InputBlockState::IsDownchainOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB) const
 {
   if (aA == aB) {
     return true;
@@ -112,7 +112,7 @@ void
 InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc)
 {
   // An input block should only have one scrolled APZC.
-  MOZ_ASSERT(!mScrolledApzc || mScrolledApzc == aApzc);
+  MOZ_ASSERT(!mScrolledApzc || (gfxPrefs::APZAllowImmediateHandoff() ? IsDownchainOf(mScrolledApzc, aApzc) : mScrolledApzc == aApzc));
 
   mScrolledApzc = aApzc;
 }
@@ -121,6 +121,14 @@ AsyncPanZoomController*
 InputBlockState::GetScrolledApzc() const
 {
   return mScrolledApzc;
+}
+
+bool
+InputBlockState::IsDownchainOfScrolledApzc(AsyncPanZoomController* aApzc) const
+{
+  MOZ_ASSERT(aApzc && mScrolledApzc);
+
+  return IsDownchainOf(mScrolledApzc, aApzc);
 }
 
 CancelableBlockState::CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,

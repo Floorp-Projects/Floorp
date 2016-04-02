@@ -2366,7 +2366,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   nsFrameConstructorState state(mPresShell,
                                 GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
                                 nullptr,
-                                nullptr, do_AddRef(Move(aFrameState)));
+                                nullptr, do_AddRef(aFrameState));
   // Initialize the ancestor filter with null for now; we'll push
   // aDocElement once we finish resolving style for it.
   state.mTreeMatchContext.InitAncestors(nullptr);
@@ -7779,7 +7779,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
                                 GetFloatContainingBlock(insertion.mParentFrame),
-                                do_AddRef(Move(aFrameState)));
+                                do_AddRef(aFrameState));
   state.mTreeMatchContext.InitAncestors(aContainer ?
                                           aContainer->AsElement() :
                                           nullptr);

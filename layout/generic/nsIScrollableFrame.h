@@ -48,6 +48,7 @@ public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
@@ -271,16 +272,6 @@ public:
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
-   * maintain the scroll snap position constraints.  A predicted landing
-   * position determined by the APZC is used to select the best matching
-   * snap point, allowing touchscreen fling gestures to navigate between
-   * snap points.
-   * @param aDestination The desired landing position of the fling, which
-   * is used to select the best matching snap point.
-   */
-  virtual void FlingSnap(const mozilla::CSSPoint& aDestination) = 0;
-  /**
-   * Perform scroll snapping, possibly resulting in a smooth scroll to
    * maintain the scroll snap position constraints.  Velocity sampled from
    * main thread scrolling is used to determine best matching snap point
    * when called after a fling gesture on a trackpad or mouse wheel.
@@ -400,9 +391,9 @@ public:
   virtual bool WantAsyncScroll() const = 0;
   /**
    * aLayer's animated geometry root is this frame. If there needs to be a
-   * FrameMetrics contributed by this frame, append it to aOutput.
+   * ScrollMetadata contributed by this frame, append it to aOutput.
    */
-  virtual mozilla::Maybe<mozilla::layers::FrameMetrics> ComputeFrameMetrics(
+  virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
     mozilla::layers::Layer* aLayer,
     nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
@@ -470,6 +461,11 @@ public:
    * own displayport and schedule a timer to do that if it is safe.
    */
   virtual void TriggerDisplayPortExpiration() = 0;
+
+  /**
+   * Returns information required to determine where to snap to after a scroll.
+   */
+  virtual ScrollSnapInfo GetScrollSnapInfo() const = 0;
 };
 
 #endif

@@ -291,6 +291,14 @@
     "n_values": 10,
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
+  "FAMILY_SAFETY": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1239166],
+    "description": "Status of Family Safety detection and remediation. See nsNSSComponent.cpp."
+  },
   "FETCH_IS_MAINTHREAD": {
     "expires_in_version": "50",
     "kind": "boolean",
@@ -10239,10 +10247,11 @@
   },
   "PLUGIN_ACTIVATION_COUNT": {
     "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "48",
+    "expires_in_version": "53",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
+    "bug_numbers": [722110,1260065],
     "description": "Counts number of times a certain plugin has been activated."
   },
   "SCROLL_LINKED_EFFECT_FOUND": {
@@ -10495,5 +10504,25 @@
     "kind": "count",
     "bug_numbers": [1237198],
     "description": "Count tiny plugin content"
+  },
+  "IPC_MESSAGE_SIZE": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1260908],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 8000000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "Measures the size of IPC messages by message name"
+  },
+  "MESSAGE_MANAGER_MESSAGE_SIZE": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1260908],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 8000000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "Measures the size of message manager messages by message name"
   }
 }

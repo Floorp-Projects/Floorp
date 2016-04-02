@@ -52,6 +52,7 @@ public:
 
   void SetScrolledApzc(AsyncPanZoomController* aApzc);
   AsyncPanZoomController* GetScrolledApzc() const;
+  bool IsDownchainOfScrolledApzc(AsyncPanZoomController* aApzc) const;
 
 protected:
   virtual void UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc);
@@ -59,7 +60,7 @@ protected:
 private:
   // Checks whether |aA| is an ancestor of |aB| (or the same as |aB|) in
   // |mOverscrollHandoffChain|.
-  bool IsAncestorOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB);
+  bool IsDownchainOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB) const;
 
 private:
   RefPtr<AsyncPanZoomController> mTargetApzc;

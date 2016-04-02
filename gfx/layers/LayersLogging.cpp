@@ -145,6 +145,18 @@ AppendToString(std::stringstream& aStream, const EventRegions& e,
 }
 
 void
+AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  AppendToString(aStream, m.GetMetrics(), "{ [metrics=", "]");
+  if (m.HasClipRect()) {
+    AppendToString(aStream, m.ClipRect(), " [clip=", "]");
+  }
+  aStream << "}" << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const FrameMetrics& m,
                const char* pfx, const char* sfx, bool detailed)
 {
@@ -165,9 +177,6 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     }
     if (m.IsRootContent()) {
       aStream << "] [rcd";
-    }
-    if (m.HasClipRect()) {
-      AppendToString(aStream, m.ClipRect(), "] [clip=");
     }
     AppendToString(aStream, m.GetZoom(), "] [z=", "] }");
   } else {

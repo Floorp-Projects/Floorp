@@ -9,6 +9,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 
@@ -67,6 +68,7 @@
 #include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
+#include "FrameMetrics.h"
 #include "MainThreadUtils.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -757,6 +759,9 @@ gfxPlatform::Init()
       SkGraphics::SetFontCacheLimit(skiaCacheSize);
     }
 #endif
+
+    ScrollMetadata::sNullMetadata = new ScrollMetadata();
+    ClearOnShutdown(&ScrollMetadata::sNullMetadata);
 }
 
 static bool sLayersIPCIsUp = false;
