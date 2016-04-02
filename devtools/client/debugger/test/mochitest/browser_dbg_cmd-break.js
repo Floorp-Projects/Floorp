@@ -149,7 +149,7 @@ function test() {
           args: {
             breakpoint: {
               status: 'INCOMPLETE',
-              message: 'Value required for \u2018breakpoint\u2019.'
+              message: 'Value required for \'breakpoint\'.'
             }
           }
         }
