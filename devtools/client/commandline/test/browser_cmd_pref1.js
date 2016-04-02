@@ -105,7 +105,7 @@ function* spawnTest() {
         status: 'ERROR',
         args: {
           setting: { arg: ' devtools.netmonitor.enabled' },
-          value: { status: 'ERROR', message: 'Can\'t use \'4\'.' },
+          value: { status: 'ERROR', message: 'Can\u2019t use \u20184\u2019.' },
         }
       },
     },

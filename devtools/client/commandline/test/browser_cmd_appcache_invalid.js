@@ -15,8 +15,8 @@ function* spawnTest() {
   let lines = [
     'Manifest has a character encoding of ISO-8859-1. Manifests must have the ' +
       'utf-8 character encoding.',
-    'The first line of the manifest must be "CACHE MANIFEST" at line 1.',
-    '"CACHE MANIFEST" is only valid on the first line but was found at line 3.',
+    'The first line of the manifest must be \u201cCACHE MANIFEST\u201d at line 1.',
+    '\u201cCACHE MANIFEST\u201d is only valid on the first line but was found at line 3.',
     'images/sound-icon.png points to a resource that is not available at line 9.',
     'images/background.png points to a resource that is not available at line 10.',
     '/checking.cgi points to a resource that is not available at line 13.',
@@ -61,7 +61,7 @@ function* spawnTest() {
       'any URI not listed in the manifest will be treated as if the URI was ' +
       'listed in the NETWORK section. Otherwise such URIs will be treated as ' +
       'unavailable. Other uses of the * character are prohibited',
-    'The SETTINGS section may only contain a single value, "prefer-online" or "fast" at line 47.',
+    'The SETTINGS section may only contain a single value, \u201cprefer-online\u201d or \u201cfast\u201d at line 47.',
     'FALLBACK section line 50 (/section1/ /offline1.html) prevents caching of ' +
       'line 30 (/section1/blockedbyfallback.html) in the CACHE section.',
     '/offline1.html points to a resource that is not available at line 50.',

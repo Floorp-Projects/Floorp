@@ -12,6 +12,10 @@ function snapshotWindow(win, withCaret) {
   return SpecialPowers.snapshotWindow(win, withCaret);
 }
 
+function snapshotRect(win, rect) {
+  return SpecialPowers.snapshotRect(win, rect);
+}
+
 // If the two snapshots don't compare as expected (true for equal, false for
 // unequal), returns their serializations as data URIs.  In all cases, returns
 // whether the comparison was as expected.

@@ -89,8 +89,10 @@ RemoteFinder.prototype = {
       // Don't let one callback throwing stop us calling the rest
       try {
         l[callback].apply(l, params);
-      }
-      catch (e) {
+      } catch (e) {
+        if (!l[callback]) {
+          Cu.reportError(`Missing ${callback} callback on RemoteFinderListener`);
+        }
         Cu.reportError(e);
       }
     }
