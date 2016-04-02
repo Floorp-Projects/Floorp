@@ -70,7 +70,7 @@ add_task(function* () {
           resource: {
             arg: " http",
             status: "INCOMPLETE",
-            message: "Value required for \'resource\'."
+            message: "Value required for \u2018resource\u2019."
           },
           line: { status: "VALID" },
         }
@@ -88,7 +88,7 @@ add_task(function* () {
           resource: {
             arg: " page1",
             status: "INCOMPLETE",
-            message: "Value required for \'resource\'."
+            message: "Value required for \u2018resource\u2019."
           },
           line: { status: "VALID" },
         }
@@ -106,7 +106,7 @@ add_task(function* () {
           resource: {
             arg: " page2",
             status: "INCOMPLETE",
-            message: "Value required for \'resource\'."
+            message: "Value required for \u2018resource\u2019."
           },
           line: { status: "VALID" },
         }
@@ -122,7 +122,7 @@ add_task(function* () {
         args: {
           resource: {
             arg: " stylez",
-            status: "ERROR", message: "Can\'t use \'stylez\'." },
+            status: "ERROR", message: "Can\u2019t use \u2018stylez\u2019." },
           line: { status: "VALID" },
         }
       },

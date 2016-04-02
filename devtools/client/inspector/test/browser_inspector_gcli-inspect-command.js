@@ -19,7 +19,7 @@ add_task(function* () {
           status: 'ERROR',
           args: {
             selector: {
-              message: 'Value required for \'selector\'.'
+              message: 'Value required for \u2018selector\u2019.'
             },
           }
         },

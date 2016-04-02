@@ -8,6 +8,7 @@
 // in a Firefox tab or a custom html iframe in browser.html
 
 const { Ci, Cu, Cm, components } = require("chrome");
+const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 const Services = require("Services");
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { nsIAboutModule } = Ci;
@@ -42,11 +43,11 @@ AboutURL.createInstance = function(outer, iid) {
 };
 
 exports.register = function () {
-  if (Cm.isCIDRegistered(AboutURL.prototype.classID)) {
+  if (registrar.isCIDRegistered(AboutURL.prototype.classID)) {
     console.error("Trying to register " + AboutURL.prototype.classDescription +
                   " more than once.");
   } else {
-    Cm.registerFactory(AboutURL.prototype.classID,
+    registrar.registerFactory(AboutURL.prototype.classID,
                        AboutURL.prototype.classDescription,
                        AboutURL.prototype.contractID,
                        AboutURL);
@@ -54,7 +55,7 @@ exports.register = function () {
 }
 
 exports.unregister = function () {
-  if (Cm.isCIDRegistered(AboutURL.prototype.classID)) {
-    Cm.unregisterFactory(AboutURL.prototype.classID, AboutURL);
+  if (registrar.isCIDRegistered(AboutURL.prototype.classID)) {
+    registrar.unregisterFactory(AboutURL.prototype.classID, AboutURL);
   }
 }
