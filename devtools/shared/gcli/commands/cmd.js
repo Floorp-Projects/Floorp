@@ -149,7 +149,7 @@ exports.items = [
     runAt: "client",
     name: "cmd setdir",
     description: l10n.lookup("cmdSetdirDesc"),
-    manual: l10n.lookup("cmdSetdirManual2"),
+    manual: l10n.lookup("cmdSetdirManual3"),
     params: [
       {
         name: "directory",
