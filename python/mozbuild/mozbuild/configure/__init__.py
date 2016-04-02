@@ -93,14 +93,16 @@ class ConfigureSandbox(dict):
     BUILTINS = ReadOnlyDict({
         b: __builtins__[b]
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
-                  'list', 'tuple', 'set', 'dict', 'isinstance')
+                  'list', 'tuple', 'set', 'dict', 'isinstance', 'getattr',
+                  'hasattr', 'enumerate', 'range', 'zip')
     }, __import__=forbidden_import, str=unicode)
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{
         k: getattr(mozpath, k, getattr(os.path, k))
         for k in ('abspath', 'basename', 'dirname', 'exists', 'isabs', 'isdir',
-                  'isfile', 'join', 'normpath', 'realpath', 'relpath')
+                  'isfile', 'join', 'normcase', 'normpath', 'realpath',
+                  'relpath')
     }))
 
     def __init__(self, config, environ=os.environ, argv=sys.argv,
