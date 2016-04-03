@@ -478,15 +478,17 @@ TabTarget.prototype = {
     this.client.addListener("tabDetached", this._onTabDetached);
 
     this._onTabNavigated = (aType, aPacket) => {
-      // Update the title and url on tabNavigated event.
-      this._url = aPacket.url;
-      this._title = aPacket.title;
-
       let event = Object.create(null);
       event.url = aPacket.url;
       event.title = aPacket.title;
       event.nativeConsoleAPI = aPacket.nativeConsoleAPI;
       event.isFrameSwitching = aPacket.isFrameSwitching;
+
+      if (!aPacket.isFrameSwitching) {
+        // Update the title and url unless this is a frame switch.
+        this._url = aPacket.url;
+        this._title = aPacket.title;
+      }
 
       // Send any stored event payload (DOMWindow or nsIRequest) for backwards
       // compatibility with non-remotable tools.
