@@ -220,7 +220,10 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
     { channels, (UInt32)aSample->Size(), aSample->Data() };
 
   // Decompressed audio buffer
-  auto decoded = MakeUnique<AudioDataValue[]>(maxDecodedSamples);
+  AlignedAudioBuffer decoded(maxDecodedSamples);
+  if (!decoded) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   do {
     AudioBufferList decBuffer;
@@ -273,7 +276,10 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
       duration.ToSeconds());
 #endif
 
-  auto data = MakeUnique<AudioDataValue[]>(outputData.Length());
+  AlignedAudioBuffer data(outputData.Length());
+  if (!data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   PodCopy(data.get(), &outputData[0], outputData.Length());
   RefPtr<AudioData> audio = new AudioData(aSample->mOffset,
                                           aSample->mTime,
