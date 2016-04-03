@@ -51,7 +51,7 @@ public class Switch {
     }
 
     /**
-     * Returns true if the experiment has aditional values.
+     * Returns true if the experiment has additional values.
      * @return true when values exist
      */
     public boolean hasValues() {
@@ -65,7 +65,7 @@ public class Switch {
      */
     public JSONObject getValues() {
         if(hasValues())
-            return SwitchBoard.getExperimentValueFromJson(context, experimentName);
+            return SwitchBoard.getExperimentValuesFromJson(context, experimentName);
         else
             return null;
     }
