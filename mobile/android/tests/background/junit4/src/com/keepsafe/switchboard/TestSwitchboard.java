@@ -11,6 +11,7 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -53,6 +54,16 @@ public class TestSwitchboard {
         final JSONObject values = SwitchBoard.getExperimentValuesFromJson(c, "active-experiment");
         assertNotNull("active-experiment values are not null", values);
         assertTrue("\"foo\" extra value is true", values.getBoolean("foo"));
+    }
+
+    @Test
+    public void testGetActiveExperiments() {
+        final Context c = RuntimeEnvironment.application;
+        final List<String> experiments = SwitchBoard.getActiveExperiments(c);
+        assertNotNull("List of active experiments is not null", experiments);
+
+        assertTrue("List of active experiments contains active-experiemnt", experiments.contains("active-experiment"));
+        assertFalse("List of active experiments does not contain inactive-experiemnt", experiments.contains("inactive-experiment"));
     }
 
 }
