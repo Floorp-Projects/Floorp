@@ -218,7 +218,10 @@ bool WaveReader::DecodeAudioData()
                 sizeof(AudioDataValue) / MAX_CHANNELS,
                 "bufferSize calculation could overflow.");
   const size_t bufferSize = static_cast<size_t>(frames * mChannels);
-  auto sampleBuffer = MakeUnique<AudioDataValue[]>(bufferSize);
+  AlignedAudioBuffer sampleBuffer(bufferSize);
+  if (!sampleBuffer) {
+    return false;
+  }
 
   static_assert(uint64_t(BLOCK_SIZE) < UINT_MAX / sizeof(char),
                 "BLOCK_SIZE too large for enumerator.");
