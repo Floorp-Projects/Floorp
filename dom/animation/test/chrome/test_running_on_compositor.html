@@ -52,7 +52,7 @@ promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
        'Animation reports that it is running on the compositor'
        + ' during playback');
@@ -60,34 +60,34 @@ promise_test(function(t) {
     div.style.animationPlayState = 'paused';
 
     return animation.ready;
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' when paused');
-  }));
+  });
 }, '');
 
 promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: background 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' for animation of "background"');
-  }));
+  });
 }, 'isRunningOnCompositor is false for animation of "background"');
 
 promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: background_and_translate 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
        'Animation reports that it is running on the compositor'
         + ' when the animation has two properties, where one can run'
         + ' on the compositor, the other cannot');
-  }));
+  });
 }, 'isRunningOnCompositor is true if the animation has at least one ' +
    'property can run on compositor');
 
@@ -95,50 +95,50 @@ promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     animation.pause();
     return animation.ready;
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' when animation.pause() is called');
-  }));
+  });
 }, 'isRunningOnCompositor is false when the animation.pause() is called');
 
 promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     animation.finish();
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' immediately after animation.finish() is called');
     // Check that we don't set the flag back again on the next tick.
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' on the next tick after animation.finish() is called');
-  }));
+  });
 }, 'isRunningOnCompositor is false when the animation.finish() is called');
 
 promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     animation.currentTime = 100 * MS_PER_SEC;
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' immediately after manually seeking the animation to the end');
     // Check that we don't set the flag back again on the next tick.
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' on the next tick after manually seeking the animation to the end');
-  }));
+  });
 }, 'isRunningOnCompositor is false when manually seeking the animation to ' +
    'the end');
 
@@ -146,29 +146,29 @@ promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     animation.cancel();
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' immediately after animation.cancel() is called');
     // Check that we don't set the flag back again on the next tick.
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' on the next tick after animation.cancel() is called');
-  }));
+  });
 }, 'isRunningOnCompositor is false when animation.cancel() is called');
 
 promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' while in the delay phase');
-  }));
+  });
 }, 'isRunningOnCompositor is false while in the delay phase');
 
 // This is to test that we don't simply clobber the flag when ticking
@@ -177,46 +177,55 @@ promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
-    return new Promise(t.step_func(function(resolve) {
-      window.requestAnimationFrame(t.step_func(function() {
-        assert_equals(animation.isRunningOnCompositor, omtaEnabled,
-           'Animation reports that it is running on the compositor'
-            + ' in requestAnimationFrame callback');
+  return animation.ready.then(function() {
+    return new Promise(function(resolve) {
+      window.requestAnimationFrame(function() {
+        t.step(function() {
+          assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+            'Animation reports that it is running on the compositor'
+             + ' in requestAnimationFrame callback');
+        });
+
         resolve();
-      }));
-    }));
-  }));
+      });
+    });
+  });
 }, 'isRunningOnCompositor is true in requestAnimationFrame callback');
 
 promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
-    return new Promise(t.step_func(function(resolve) {
-      var observer = new MutationObserver(t.step_func(function(records) {
+  return animation.ready.then(function() {
+    return new Promise(function(resolve) {
+      var observer = new MutationObserver(function(records) {
         var changedAnimation;
+
         records.forEach(function(record) {
           changedAnimation =
             record.changedAnimations.find(function(changedAnim) {
               return changedAnim == animation;
             });
         });
-        assert_true(!!changedAnimation, 'The animation should be recorded '
-          + 'as one of the changedAnimations');
-        assert_equals(animation.isRunningOnCompositor, omtaEnabled,
-          'Animation reports that it is running on the compositor'
-           + ' in MutationObserver callback');
+
+        t.step(function() {
+          assert_true(!!changedAnimation, 'The animation should be recorded '
+            + 'as one of the changedAnimations');
+
+          assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+            'Animation reports that it is running on the compositor'
+             + ' in MutationObserver callback');
+        });
+
         resolve();
-      }));
+      });
       observer.observe(div, { animations: true, subtree: false });
       t.add_cleanup(function() {
         observer.disconnect();
       });
       div.style.animationDuration = "200s";
-    }));
-  }));
+    });
+  });
 }, 'isRunningOnCompositor is true in MutationObserver callback');
 
 // This is to test that we don't temporarily clear the flag when forcing
@@ -226,17 +235,19 @@ promise_test(function(t) {
     // Needs scrollbars to cause overflow.
     SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] },
                               resolve);
-  }).then(t.step_func(function() {
+  }).then(function() {
     var div = addDiv(t, { style: 'animation: rotate 100s' });
     var animation = div.getAnimations()[0];
 
-    return animation.ready.then(t.step_func(function() {
-      return new Promise(t.step_func(function(resolve) {
+    return animation.ready.then(function() {
+      return new Promise(function(resolve) {
         var timeAtStart = window.performance.now();
         function handleFrame() {
-          assert_equals(animation.isRunningOnCompositor, omtaEnabled,
-             'Animation reports that it is running on the compositor'
-              + ' in requestAnimationFrame callback');
+          t.step(function() {
+            assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+              'Animation reports that it is running on the compositor'
+               + ' in requestAnimationFrame callback');
+          });
 
           // we have to wait at least 200ms because this animation is
           // unthrottled on every 200ms.
@@ -248,9 +259,9 @@ promise_test(function(t) {
           window.requestAnimationFrame(handleFrame);
         }
         window.requestAnimationFrame(handleFrame);
-      }));
-    }));
-  }));
+      });
+    });
+  });
 }, 'isRunningOnCompositor remains true in requestAnimationFrameCallback for ' +
    'overflow animation');
 
@@ -262,11 +273,11 @@ promise_test(function(t) {
   div.style.opacity = 0;
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
        'Transition reports that it is running on the compositor'
        + ' during playback for opacity transition');
-  }));
+  });
 }, 'isRunningOnCompositor for transitions');
 
 promise_test(function(t) {
@@ -275,13 +286,13 @@ promise_test(function(t) {
                                'transform: none !important;' });
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
        'If an animation has a property that can run on the compositor and a '
        + 'property that cannot (due to Gecko limitations) but where the latter'
        + 'property is overridden in the CSS cascade, the animation should '
        + 'still report that it is running on the compositor');
-  }));
+  });
 }, 'isRunningOnCompositor is true when a property that would otherwise block ' +
    'running on the compositor is overridden in the CSS cascade');
 
@@ -290,7 +301,7 @@ promise_test(function(t) {
                                    {},
                                    { opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
@@ -300,7 +311,7 @@ promise_test(function(t) {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
        + ' when the animation is set a shorter duration than current time');
-  }));
+  });
 }, 'animation is immediately removed from compositor' +
    'when timing.duration is made shorter than the current time');
 
@@ -309,7 +320,7 @@ promise_test(function(t) {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
@@ -321,11 +332,11 @@ promise_test(function(t) {
 
     animation.effect.timing.duration = 1000 * MS_PER_SEC;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor'
       + ' when restarted');
-  }));
+  });
 }, 'animation is added to compositor' +
    ' when timing.duration is made longer than the current time');
 
@@ -334,7 +345,7 @@ promise_test(function(t) {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
@@ -346,11 +357,11 @@ promise_test(function(t) {
 
     animation.currentTime = 110 * MS_PER_SEC;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
       'Animation reports that it is NOT running on the compositor'
       + ' when currentTime is during endDelay');
-  }));
+  });
 }, 'animation is removed from compositor' +
    ' when current time is made longer than the duration even during endDelay');
 
@@ -359,17 +370,17 @@ promise_test(function(t) {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
     animation.effect.timing.endDelay = -200 * MS_PER_SEC;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
       'Animation reports that it is NOT running on the compositor'
       + ' when endTime is negative value');
-  }));
+  });
 }, 'animation is removed from compositor' +
    ' when endTime is negative value');
 
@@ -378,23 +389,23 @@ promise_test(function(t) {
                                    {},
                                    { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  return animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
     animation.effect.timing.endDelay = -50 * MS_PER_SEC;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor'
       + ' when endTime is positive and endDelay is negative');
     animation.currentTime = 60 * MS_PER_SEC;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.isRunningOnCompositor, false,
       'Animation reports that it is NOT running on the compositor'
       + ' when currentTime is after endTime');
-  }));
+  });
 }, 'animation is NOT running on compositor' +
    ' when endTime is positive and endDelay is negative');
 
