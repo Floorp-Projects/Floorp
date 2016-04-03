@@ -156,6 +156,14 @@ using mozilla::gfx::PointTyped;
  * pixels would make us drop to low-res at y=490...990.\n
  * This value is in layer pixels.
  *
+ * \li\b apz.disable_for_scroll_linked_effects
+ * Setting this pref to true will disable APZ scrolling on documents where
+ * scroll-linked effects are detected. A scroll linked effect is detected if
+ * positioning or transform properties are updated inside a scroll event
+ * dispatch; we assume that such an update is in response to the scroll event
+ * and is therefore a scroll-linked effect which will be laggy with APZ
+ * scrolling.
+ *
  * \li\b apz.displayport_expiry_ms
  * While a scrollable frame is scrolling async, we set a displayport on it
  * to make sure it is layerized. However this takes up memory, so once the

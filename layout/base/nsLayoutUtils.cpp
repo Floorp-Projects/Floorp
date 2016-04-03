@@ -1061,6 +1061,16 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
 }
 
 static bool
+ShouldDisableApzForElement(nsIContent* aContent)
+{
+  if (gfxPrefs::APZDisableForScrollLinkedEffects() && aContent) {
+    nsIDocument* doc = aContent->GetComposedDoc();
+    return (doc && doc->HasScrollLinkedEffect());
+  }
+  return false;
+}
+
+static bool
 GetDisplayPortImpl(nsIContent* aContent, nsRect *aResult, float aMultiplier)
 {
   DisplayPortPropertyData* rectData =
@@ -1094,7 +1104,7 @@ GetDisplayPortImpl(nsIContent* aContent, nsRect *aResult, float aMultiplier)
   nsRect result;
   if (rectData) {
     result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
-  } else if (APZCCallbackHelper::IsDisplayportSuppressed()) {
+  } else if (APZCCallbackHelper::IsDisplayportSuppressed() || ShouldDisableApzForElement(aContent)) {
     DisplayPortMarginsPropertyData noMargins(ScreenMargin(), 1);
     result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier);
   } else {
@@ -8799,6 +8809,10 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
           backgroundStyle->StyleBackground()->mBackgroundColor));
       }
     }
+  }
+
+  if (ShouldDisableApzForElement(aContent)) {
+    metrics.SetForceDisableApz(true);
   }
 
   return metadata;
