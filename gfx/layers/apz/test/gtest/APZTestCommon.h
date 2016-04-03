@@ -252,8 +252,10 @@ public:
                                       const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(0)) {
     mcc->AdvanceBy(aIncrement);
     bool ret = AdvanceAnimations(mcc->Time());
-    AsyncPanZoomController::SampleContentTransformForFrame(
-      aOutTransform, aScrollOffset);
+    if (aOutTransform) {
+      *aOutTransform = GetCurrentAsyncTransform();
+    }
+    aScrollOffset = GetCurrentAsyncScrollOffset();
     return ret;
   }
 
