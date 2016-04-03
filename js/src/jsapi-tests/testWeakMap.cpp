@@ -153,7 +153,6 @@ static JSObject* GetKeyDelegate(JSObject* obj)
 JSObject* newKey()
 {
     static const js::ClassExtension keyClassExtension = {
-        false,
         GetKeyDelegate
     };
 
@@ -209,7 +208,6 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
 JSObject* newDelegate()
 {
     static const js::ClassExtension delegateClassExtension = {
-        false,
         nullptr,
         DelegateObjectMoved
     };

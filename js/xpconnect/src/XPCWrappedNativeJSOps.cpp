@@ -621,7 +621,6 @@ XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* reso
 }
 
 static const js::ClassExtension XPC_WN_JSClassExtension = {
-    true,    // isWrappedNative
     nullptr, // weakmapKeyDelegateOp
     WrappedNativeObjectMoved
 };
@@ -629,6 +628,7 @@ static const js::ClassExtension XPC_WN_JSClassExtension = {
 const js::Class XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",    // name;
     WRAPPER_FLAGS |
+    JSCLASS_IS_WRAPPED_NATIVE |
     JSCLASS_PRIVATE_IS_NSISUPPORTS, // flags
 
     /* Mandatory non-null function pointer members. */
@@ -977,7 +977,9 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
     if (!aPopulate)
         return;
 
-    mJSClass.flags = WRAPPER_FLAGS | JSCLASS_PRIVATE_IS_NSISUPPORTS;
+    mJSClass.flags = WRAPPER_FLAGS |
+                     JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                     JSCLASS_IS_WRAPPED_NATIVE;
 
     if (mFlags.IsGlobalObject())
         mJSClass.flags |= XPCONNECT_GLOBAL_FLAGS;
@@ -1258,7 +1260,6 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, b
 }
 
 static const js::ClassExtension XPC_WN_Shared_Proto_ClassExtension = {
-    false,      /* isWrappedNative */
     nullptr,    /* weakmapKeyDelegateOp */
     XPC_WN_Shared_Proto_ObjectMoved
 };
@@ -1488,7 +1489,6 @@ static_assert(((WRAPPER_FLAGS >> JSCLASS_RESERVED_SLOTS_SHIFT) &
               "WRAPPER_FLAGS should not include any reserved slots");
 
 static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {
-    false,                                 // isWrappedNative
     nullptr,                               // weakmapKeyDelegateOp
     XPC_WN_TearOff_ObjectMoved
 };
