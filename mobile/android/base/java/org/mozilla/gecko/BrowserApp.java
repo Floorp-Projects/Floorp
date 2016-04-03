@@ -817,27 +817,22 @@ public class BrowserApp extends GeckoApp
         final String hostExtra = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_HOST);
         final String host = TextUtils.isEmpty(hostExtra) ? DEFAULT_SWITCHBOARD_HOST : hostExtra;
 
-        final String configServerUpdateUrl;
-        final String configServerUrl;
+        final String serverUrl;
         try {
-            configServerUpdateUrl = new URL("https", host, "urls").toString();
-            configServerUrl = new URL("https", host, "v1").toString();
+            serverUrl = new URL("https", host, "v2").toString();
         } catch (MalformedURLException e) {
             Log.e(LOGTAG, "Error creating Switchboard server URL", e);
             return;
         }
 
-        SwitchBoard.initDefaultServerUrls(configServerUpdateUrl, configServerUrl, true);
-
         final String switchboardUUID = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_UUID);
         SwitchBoard.setUUIDFromExtra(switchboardUUID);
 
-        // Looks at the server if there are changes in the server URL that should be used in the future
-        new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER, switchboardUUID).execute();
-
-        // Loads the actual config. This can be done on app start or on app onResume() depending
-        // how often you want to update the config.
-        new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER, switchboardUUID).execute();
+        // Loads the Switchboard config from the specified server URL. Eventually, we
+        // should use the endpoint returned by the server URL, to support migrating
+        // to a new endpoint. However, if we want to do that, we'll need to find a different
+        // solution for dynamically changing the server URL from the intent.
+        new AsyncConfigLoader(this, switchboardUUID, serverUrl).execute();
     }
 
     private void showUpdaterPermissionSnackbar() {
