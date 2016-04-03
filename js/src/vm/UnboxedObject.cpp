@@ -1592,7 +1592,6 @@ UnboxedArrayObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector&
 }
 
 static const ClassExtension UnboxedArrayObjectClassExtension = {
-    false,      /* isWrappedNative */
     nullptr,    /* weakmapKeyDelegateOp */
     UnboxedArrayObject::objectMoved
 };

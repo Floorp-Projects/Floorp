@@ -551,7 +551,6 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 #define XPCONNECT_SANDBOX_CLASS_METADATA_SLOT (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
 
 static const js::ClassExtension SandboxClassExtension = {
-    false,        /* isWrappedNative */
     nullptr,      /* weakmapKeyDelegateOp */
     sandbox_moved /* objectMovedOp */
 };

@@ -71,7 +71,6 @@ SimpleGlobal_moved(JSObject *obj, const JSObject *old)
 }
 
 static const js::ClassExtension SimpleGlobalClassExtension = {
-  false,
   nullptr,
   SimpleGlobal_moved
 };

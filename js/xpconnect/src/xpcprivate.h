@@ -219,7 +219,7 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 // wrappednative wrapper, holding the XPCWrappedNative in its private slot.
 static inline bool IS_WN_CLASS(const js::Class* clazz)
 {
-    return clazz->extIsWrappedNative();
+    return clazz->isWrappedNative();
 }
 
 static inline bool IS_WN_REFLECTOR(JSObject* obj)
