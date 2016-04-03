@@ -227,40 +227,31 @@ public class SwitchBoard {
     }
 
     /**
-     * Checks if a certain experiment exists.
+     * Checks if a certain experiment has additional values.
      * @param c ApplicationContext
      * @param experimentName Name of the experiment
      * @return true when experiment exists
      */
     public static boolean hasExperimentValues(Context c, String experimentName) {
-        if(getExperimentValueFromJson(c, experimentName) == null)
-            return false;
-        else
-            return true;
+        return getExperimentValuesFromJson(c, experimentName) != null;
     }
 
     /**
-     * Returns the experiment value as a JSONObject. Depending on what experiment is has to be converted to the right type.
-     * Typcasting is by convention. You have to know what it's in there. Use <code>hasExperiment()</code>
-     * before this to avoid NullPointerExceptions.
-     * @param experimentName Name of the experiment to lookup
+     * Returns the experiment value as a JSONObject.
+     * @param experimentName Name of the experiment
      * @return Experiment value as String, null if experiment does not exist.
      */
-    public static JSONObject getExperimentValueFromJson(Context c, String experimentName) {
-        String config = Preferences.getDynamicConfigJson(c);
+    public static JSONObject getExperimentValuesFromJson(Context c, String experimentName) {
+        final String config = Preferences.getDynamicConfigJson(c);
 
-        if(config == null)
+        if (config == null) {
             return null;
+        }
 
         try {
-            JSONObject experiment = (JSONObject) new JSONObject(config).get(experimentName);
-            JSONObject values = experiment.getJSONObject(EXPERIMENT_VALUES);
-
-            return values;
-
+            final JSONObject experiment = new JSONObject(config).getJSONObject(experimentName);
+            return experiment.getJSONObject(EXPERIMENT_VALUES);
         } catch (JSONException e) {
-            Log.e(TAG, "Config: " + config);
-            e.printStackTrace();
             Log.e(TAG, "Could not create JSON object from config string", e);
         }
 
