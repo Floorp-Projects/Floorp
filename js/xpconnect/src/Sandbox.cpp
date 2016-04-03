@@ -550,6 +550,12 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 
 #define XPCONNECT_SANDBOX_CLASS_METADATA_SLOT (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
 
+static const js::ClassExtension SandboxClassExtension = {
+    false,        /* isWrappedNative */
+    nullptr,      /* weakmapKeyDelegateOp */
+    sandbox_moved /* objectMovedOp */
+};
+
 static const js::Class SandboxClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
@@ -559,11 +565,7 @@ static const js::Class SandboxClass = {
     sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
-    {
-      false,        /* isWrappedNative */
-      nullptr,      /* weakmapKeyDelegateOp */
-      sandbox_moved /* objectMovedOp */
-    },
+    &SandboxClassExtension,
     JS_NULL_OBJECT_OPS
 };
 
@@ -578,11 +580,7 @@ static const js::Class SandboxWriteToProtoClass = {
     sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
-    {
-      false,        /* isWrappedNative */
-      nullptr,      /* weakmapKeyDelegateOp */
-      sandbox_moved /* objectMovedOp */
-    },
+    &SandboxClassExtension,
     JS_NULL_OBJECT_OPS
 };
 

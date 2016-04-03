@@ -2199,7 +2199,7 @@ RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize
         }
 
         // Call object moved hook if present.
-        if (JSObjectMovedOp op = srcObj->getClass()->ext.objectMovedOp)
+        if (JSObjectMovedOp op = srcObj->getClass()->extObjectMovedOp())
             op(dstObj, srcObj);
 
         MOZ_ASSERT_IF(dstObj->isNative(),

@@ -142,7 +142,7 @@ ObjectValueMap::findZoneEdges()
         JSObject* key = r.front().key();
         if (key->asTenured().isMarked(BLACK) && !key->asTenured().isMarked(GRAY))
             continue;
-        JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp;
+        JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
         if (!op)
             continue;
         JSObject* delegate = op(key);

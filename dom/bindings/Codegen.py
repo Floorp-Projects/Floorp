@@ -440,6 +440,12 @@ class CGDOMJSClass(CGThing):
 
         return fill(
             """
+            static const js::ClassExtension sClassExtension = {
+              false,   /* isWrappedNative */
+              nullptr, /* weakmapKeyDelegateOp */
+              ${objectMoved} /* objectMovedOp */
+            };
+
             static const DOMJSClass sClass = {
               { "${name}",
                 ${flags},
@@ -456,11 +462,7 @@ class CGDOMJSClass(CGThing):
                 nullptr,               /* construct */
                 ${trace}, /* trace */
                 JS_NULL_CLASS_SPEC,
-                {
-                  false,   /* isWrappedNative */
-                  nullptr, /* weakmapKeyDelegateOp */
-                  ${objectMoved} /* objectMovedOp */
-                },
+                &sClassExtension,
                 JS_NULL_OBJECT_OPS
               },
               $*{descriptor}
@@ -507,11 +509,15 @@ class CGDOMProxyJSClass(CGThing):
         objectMovedHook = OBJECT_MOVED_HOOK_NAME if self.descriptor.wrapperCache else 'nullptr'
         return fill(
             """
+            static const js::ClassExtension sClassExtension = PROXY_MAKE_EXT(
+                false,   /* isWrappedNative */
+                ${objectMoved}
+            );
+
             static const DOMJSClass sClass = {
               PROXY_CLASS_WITH_EXT("${name}",
                                    ${flags},
-                                   PROXY_MAKE_EXT(false,   /* isWrappedNative */
-                                                  ${objectMoved})),
+                                   &sClassExtension),
               $*{descriptor}
             };
             """,

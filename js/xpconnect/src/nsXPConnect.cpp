@@ -385,7 +385,7 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
     // Verify that the right trace hook is called. Note that this doesn't
     // work right for wrapped globals, since the tracing situation there is
     // more complicated. Manual inspection shows that they do the right thing.
-    if (!((const js::Class*)clasp)->ext.isWrappedNative)
+    if (!((const js::Class*)clasp)->extIsWrappedNative())
     {
         VerifyTraceProtoAndIfaceCacheCalledTracer trc(JS_GetRuntime(cx));
         TraceChildren(&trc, GCCellPtr(global.get()));
