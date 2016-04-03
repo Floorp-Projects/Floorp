@@ -716,6 +716,11 @@ js::proxy_FunToString(JSContext* cx, HandleObject proxy, unsigned indent)
     return Proxy::fun_toString(cx, proxy, indent);
 }
 
+const ClassExtension js::ProxyClassExtension = PROXY_MAKE_EXT(
+    false,   /* isWrappedNative */
+    js::proxy_ObjectMoved
+);
+
 const ObjectOps js::ProxyObjectOps = {
     js::proxy_LookupProperty,
     js::proxy_DefineProperty,
