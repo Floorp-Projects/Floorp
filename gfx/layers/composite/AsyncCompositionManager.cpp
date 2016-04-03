@@ -845,10 +845,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
 
     hasAsyncTransform = true;
 
-    AsyncTransform asyncTransformWithoutOverscroll;
-    ParentLayerPoint scrollOffset;
-    controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
-                                               scrollOffset);
+    AsyncTransform asyncTransformWithoutOverscroll = controller->GetCurrentAsyncTransform();
     AsyncTransformComponentMatrix overscrollTransform = controller->GetOverscrollTransform();
     AsyncTransformComponentMatrix asyncTransform =
         AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll)
@@ -882,6 +879,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                 geckoZoom,
                                 mContentRect);
         } else {
+          ParentLayerPoint scrollOffset = controller->GetCurrentAsyncScrollOffset();
           // Compute the painted displayport in document-relative CSS pixels.
           CSSRect displayPort(metrics.GetCriticalDisplayPort().IsEmpty() ?
               metrics.GetDisplayPort() :
