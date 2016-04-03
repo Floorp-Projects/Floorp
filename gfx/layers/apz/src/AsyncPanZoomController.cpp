@@ -3030,8 +3030,15 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
   return false;
 }
 
-AsyncTransformComponentMatrix AsyncPanZoomController::GetOverscrollTransform() const {
+AsyncTransformComponentMatrix
+AsyncPanZoomController::GetOverscrollTransform(AsyncMode aMode) const
+{
   ReentrantMonitorAutoEnter lock(mMonitor);
+
+  if (aMode == RESPECT_FORCE_DISABLE && mFrameMetrics.IsApzForceDisabled()) {
+    return AsyncTransformComponentMatrix();
+  }
+
   if (!IsOverscrolled()) {
     return AsyncTransformComponentMatrix();
   }
@@ -3125,16 +3132,26 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
 }
 
 ParentLayerPoint
-AsyncPanZoomController::GetCurrentAsyncScrollOffset() const
+AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncMode aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
+
+  if (aMode == RESPECT_FORCE_DISABLE && mFrameMetrics.IsApzForceDisabled()) {
+    return mLastContentPaintMetrics.GetScrollOffset() * mLastContentPaintMetrics.GetZoom();
+  }
 
   return (mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset)
       * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
 }
 
-AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
+AsyncTransform
+AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
+{
   ReentrantMonitorAutoEnter lock(mMonitor);
+
+  if (aMode == RESPECT_FORCE_DISABLE && mFrameMetrics.IsApzForceDisabled()) {
+    return AsyncTransform();
+  }
 
   CSSPoint lastPaintScrollOffset;
   if (mLastContentPaintMetrics.IsScrollable()) {
@@ -3170,9 +3187,11 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
     -translation);
 }
 
-AsyncTransformComponentMatrix AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll() const {
-  return AsyncTransformComponentMatrix(GetCurrentAsyncTransform())
-       * GetOverscrollTransform();
+AsyncTransformComponentMatrix
+AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncMode aMode) const
+{
+  return AsyncTransformComponentMatrix(GetCurrentAsyncTransform(aMode))
+       * GetOverscrollTransform(aMode);
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
