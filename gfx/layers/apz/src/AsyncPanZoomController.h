@@ -714,18 +714,31 @@ private:
    */
 public:
   /**
+   * Allows callers to specify which type of async transform they want:
+   * NORMAL provides the actual async transforms of the APZC, whereas
+   * RESPECT_FORCE_DISABLE will provide empty async transforms if and only if
+   * the metrics has the mForceDisableApz flag set. In general the latter should
+   * only be used by call sites that are applying the transform to update
+   * a layer's position.
+   */
+  enum AsyncMode {
+    NORMAL,
+    RESPECT_FORCE_DISABLE,
+  };
+
+  /**
    * Query the transforms that should be applied to the layer corresponding
    * to this APZC due to asynchronous panning and zooming.
    * This function returns the async transform via the |aOutTransform|
    * out parameter.
    */
-  ParentLayerPoint GetCurrentAsyncScrollOffset() const;
+  ParentLayerPoint GetCurrentAsyncScrollOffset(AsyncMode aMode) const;
 
   /**
    * Return a visual effect that reflects this apzc's
    * overscrolled state, if any.
    */
-  AsyncTransformComponentMatrix GetOverscrollTransform() const;
+  AsyncTransformComponentMatrix GetOverscrollTransform(AsyncMode aMode) const;
 
   /**
    * Returns the incremental transformation corresponding to the async pan/zoom
@@ -733,13 +746,13 @@ public:
    * existing transform, it will make the layer appear with the desired pan/zoom
    * amount.
    */
-  AsyncTransform GetCurrentAsyncTransform() const;
+  AsyncTransform GetCurrentAsyncTransform(AsyncMode aMode) const;
 
   /**
    * Returns the same transform as GetCurrentAsyncTransform(), but includes
    * any transform due to axis over-scroll.
    */
-  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll() const;
+  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(AsyncMode aMode) const;
 
 
 
