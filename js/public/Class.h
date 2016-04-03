@@ -588,12 +588,6 @@ struct ClassSpec
 struct ClassExtension
 {
     /**
-     * isWrappedNative is true only if the class is an XPCWrappedNative.
-     * WeakMaps use this to override the wrapper disposal optimization.
-     */
-    bool                isWrappedNative;
-
-    /**
      * If an object is used as a key in a weakmap, it may be desirable for the
      * garbage collector to keep that object around longer than it otherwise
      * would. A common case is when the key is a wrapper around an object in
@@ -661,6 +655,10 @@ struct JSClass {
 #define JSCLASS_DELAY_METADATA_BUILDER  (1<<1)  // class's initialization code
                                                 // will call
                                                 // SetNewObjectMetadata itself
+#define JSCLASS_IS_WRAPPED_NATIVE       (1<<2)  // class is an XPCWrappedNative.
+                                                // WeakMaps use this to override
+                                                // the wrapper disposal
+                                                // mechanism.
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  // private is (nsISupports*)
 #define JSCLASS_IS_DOMJSCLASS           (1<<4)  // objects are DOM
 #define JSCLASS_HAS_XRAYED_CONSTRUCTOR  (1<<5)  // if wrapped by an xray
@@ -802,6 +800,10 @@ struct Class
         return flags & JSCLASS_DELAY_METADATA_BUILDER;
     }
 
+    bool isWrappedNative() const {
+        return flags & JSCLASS_IS_WRAPPED_NATIVE;
+    }
+
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
 
     bool specDefined()         const { return spec ? spec->defined()   : false; }
@@ -824,7 +826,6 @@ struct Class
     FinishClassInitOp specFinishInitHook()
                                const { return spec ? spec->finishInitHook()          : nullptr; }
 
-    bool extIsWrappedNative()  const { return ext ? ext->isWrappedNative             : false; }
     JSWeakmapKeyDelegateOp extWeakmapKeyDelegateOp()
                                const { return ext ? ext->weakmapKeyDelegateOp        : nullptr; }
     JSObjectMovedOp extObjectMovedOp()

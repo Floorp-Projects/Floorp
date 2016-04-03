@@ -15,7 +15,6 @@
 #include "vm/ProxyObject.h"
 
 static const js::ClassExtension OuterWrapperClassExtension = PROXY_MAKE_EXT(
-    false,   /* isWrappedNative */
     nullptr  /* objectMoved */
 );
 

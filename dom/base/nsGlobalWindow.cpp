@@ -759,7 +759,6 @@ protected:
 };
 
 static const js::ClassExtension OuterWindowProxyClassExtension = PROXY_MAKE_EXT(
-    false,   /* isWrappedNative */
     nsOuterWindowProxy::ObjectMoved
 );
 

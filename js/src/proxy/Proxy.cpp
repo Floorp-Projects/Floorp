@@ -717,7 +717,6 @@ js::proxy_FunToString(JSContext* cx, HandleObject proxy, unsigned indent)
 }
 
 const ClassExtension js::ProxyClassExtension = PROXY_MAKE_EXT(
-    false,   /* isWrappedNative */
     js::proxy_ObjectMoved
 );
 

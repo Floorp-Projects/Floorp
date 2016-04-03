@@ -441,7 +441,6 @@ class CGDOMJSClass(CGThing):
         return fill(
             """
             static const js::ClassExtension sClassExtension = {
-              false,   /* isWrappedNative */
               nullptr, /* weakmapKeyDelegateOp */
               ${objectMoved} /* objectMovedOp */
             };
@@ -510,7 +509,6 @@ class CGDOMProxyJSClass(CGThing):
         return fill(
             """
             static const js::ClassExtension sClassExtension = PROXY_MAKE_EXT(
-                false,   /* isWrappedNative */
                 ${objectMoved}
             );
 

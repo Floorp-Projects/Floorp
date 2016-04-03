@@ -111,8 +111,8 @@ js::WeakMap_delete(JSContext* cx, unsigned argc, Value* vp)
 static bool
 TryPreserveReflector(JSContext* cx, HandleObject obj)
 {
-    if (obj->getClass()->extIsWrappedNative() ||
-        (obj->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
+    if (obj->getClass()->isWrappedNative() ||
+        obj->getClass()->isDOMClass() ||
         (obj->is<ProxyObject>() &&
          obj->as<ProxyObject>().handler()->family() == GetDOMProxyHandlerFamily()))
     {

@@ -97,7 +97,6 @@ const Class ArrayBufferObject::protoClass = {
 };
 
 static const ClassExtension ArrayBufferObjectClassExtension = {
-    false,      /* isWrappedNative */
     nullptr,    /* weakmapKeyDelegateOp */
     ArrayBufferObject::objectMoved
 };
