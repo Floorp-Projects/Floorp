@@ -488,10 +488,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
     return;
   }
 
-  AsyncTransform asyncTransformWithoutOverscroll;
-  ParentLayerPoint scrollOffset;
-  controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
-                                           scrollOffset);
+  ParentLayerPoint scrollOffset = controller->GetCurrentAsyncScrollOffset();
 
   // Options
   const int verticalPadding = 10;

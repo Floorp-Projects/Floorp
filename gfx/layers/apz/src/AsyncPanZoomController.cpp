@@ -3124,13 +3124,13 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   return requestAnimationFrame;
 }
 
-void AsyncPanZoomController::SampleContentTransformForFrame(AsyncTransform* aOutTransform,
-                                                            ParentLayerPoint& aScrollOffset)
+ParentLayerPoint
+AsyncPanZoomController::GetCurrentAsyncScrollOffset() const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
-  *aOutTransform = GetCurrentAsyncTransform();
+  return (mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset)
+      * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
 }
 
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
