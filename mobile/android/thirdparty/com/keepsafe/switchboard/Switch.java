@@ -51,16 +51,6 @@ public class Switch {
     }
 
     /**
-     * Returns the status of the experiment or the given default value when experiment
-     * does not exist.
-     * @param defaultValue Value to return when experiment does not exist.
-     * @return Experiment status
-     */
-    public boolean isActive(boolean defaultValue) {
-        return SwitchBoard.isInExperiment(context, experimentName, defaultValue);
-    }
-
-    /**
      * Returns true if the experiment has aditional values.
      * @return true when values exist
      */
