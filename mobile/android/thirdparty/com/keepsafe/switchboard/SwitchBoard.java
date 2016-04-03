@@ -178,45 +178,21 @@ public class SwitchBoard {
      * @return returns value for experiment or false if experiment does not exist.
      */
     public static boolean isInExperiment(Context c, String experimentName) {
-        return isInExperiment(c, experimentName, false);
-    }
+        final String config = Preferences.getDynamicConfigJson(c);
 
-    /**
-     * Looks up in config if user is in certain experiment.
-     * Experiment names are defined server side as Key in array for return values.
-     * @param experimentName Name of the experiment to lookup
-     * @param defaultReturnVal The return value that should be return when experiment does not exist
-     * @return returns value for experiment or defaultReturnVal if experiment does not exist.
-     */
-    public static boolean isInExperiment(Context c, String experimentName, boolean defaultReturnVal) {
-        //lookup experiment in config
-        String config = Preferences.getDynamicConfigJson(c);
-
-        //if it does not exist
-        if(config == null)
+        if (config == null) {
             return false;
-        else {
-
-            try {
-                JSONObject experiment = (JSONObject) new JSONObject(config).get(experimentName);
-                if(DEBUG) Log.d(TAG, "experiment " + experimentName + " JSON object: " + experiment.toString());
-                if(experiment == null)
-                    return defaultReturnVal;
-
-                boolean returnValue = defaultReturnVal;
-                returnValue = experiment.getBoolean(IS_EXPERIMENT_ACTIVE);
-
-                return returnValue;
-            } catch (JSONException e) {
-                Log.e(TAG, "Config: " + config);
-                e.printStackTrace();
-
-            }
-
-            //return false when JSON fails
-            return defaultReturnVal;
         }
 
+        try {
+            final JSONObject experiment = new JSONObject(config).getJSONObject(experimentName);
+            if(DEBUG) Log.d(TAG, "experiment " + experimentName + " JSON object: " + experiment.toString());
+
+            return experiment != null && experiment.getBoolean(IS_EXPERIMENT_ACTIVE);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error getting experiment from config", e);
+            return false;
+        }
     }
 
     /**
