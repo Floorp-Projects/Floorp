@@ -1591,6 +1591,12 @@ UnboxedArrayObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector&
     return true;
 }
 
+static const ClassExtension UnboxedArrayObjectClassExtension = {
+    false,      /* isWrappedNative */
+    nullptr,    /* weakmapKeyDelegateOp */
+    UnboxedArrayObject::objectMoved
+};
+
 static const ObjectOps UnboxedArrayObjectObjectOps = {
     UnboxedArrayObject::obj_lookupProperty,
     UnboxedArrayObject::obj_defineProperty,
@@ -1624,11 +1630,7 @@ const Class UnboxedArrayObject::class_ = {
     nullptr,        /* construct   */
     UnboxedArrayObject::trace,
     JS_NULL_CLASS_SPEC,
-    {
-        false,      /* isWrappedNative */
-        nullptr,    /* weakmapKeyDelegateOp */
-        UnboxedArrayObject::objectMoved
-    },
+    &UnboxedArrayObjectClassExtension,
     &UnboxedArrayObjectObjectOps
 };
 

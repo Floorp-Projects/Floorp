@@ -625,7 +625,7 @@ inline ClassObjectCreationOp DELEGATED_CLASSSPEC(const ClassSpec* spec) {
 }
 
 #define JS_NULL_CLASS_SPEC  nullptr
-#define JS_NULL_CLASS_EXT   {false,nullptr}
+#define JS_NULL_CLASS_EXT   nullptr
 
 struct ObjectOps
 {
@@ -654,7 +654,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void*               reserved[5];
+    void* reserved[3];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
@@ -756,9 +756,9 @@ namespace js {
 struct Class
 {
     JS_CLASS_MEMBERS(FinalizeOp);
-    const ClassSpec*    spec;
-    ClassExtension      ext;
-    const ObjectOps*    ops;
+    const ClassSpec* spec;
+    const ClassExtension* ext;
+    const ObjectOps* ops;
 
     /*
      * Objects of this class aren't native objects. They don't have Shapes that
@@ -823,6 +823,12 @@ struct Class
                                const { return spec ? spec->prototypeProperties()     : nullptr; }
     FinishClassInitOp specFinishInitHook()
                                const { return spec ? spec->finishInitHook()          : nullptr; }
+
+    bool extIsWrappedNative()  const { return ext ? ext->isWrappedNative             : false; }
+    JSWeakmapKeyDelegateOp extWeakmapKeyDelegateOp()
+                               const { return ext ? ext->weakmapKeyDelegateOp        : nullptr; }
+    JSObjectMovedOp extObjectMovedOp()
+                               const { return ext ? ext->objectMovedOp               : nullptr; }
 
     LookupPropertyOp getOpsLookupProperty() const { return ops ? ops->lookupProperty : nullptr; }
     DefinePropertyOp getOpsDefineProperty() const { return ops ? ops->defineProperty : nullptr; }
