@@ -84,12 +84,12 @@ function test_syncID() {
     do_check_eq(Svc.Prefs.get("client.syncID"), undefined);
 
     // Performing the first get on the attribute will generate a new GUID.
-    do_check_eq(Service.syncID, "fake-guid-0");
-    do_check_eq(Svc.Prefs.get("client.syncID"), "fake-guid-0");
+    do_check_eq(Service.syncID, "fake-guid-00");
+    do_check_eq(Svc.Prefs.get("client.syncID"), "fake-guid-00");
 
     Svc.Prefs.set("client.syncID", Utils.makeGUID());
-    do_check_eq(Svc.Prefs.get("client.syncID"), "fake-guid-1");
-    do_check_eq(Service.syncID, "fake-guid-1");
+    do_check_eq(Svc.Prefs.get("client.syncID"), "fake-guid-01");
+    do_check_eq(Service.syncID, "fake-guid-01");
   } finally {
     Svc.Prefs.resetBranch("");
     new FakeGUIDService();
