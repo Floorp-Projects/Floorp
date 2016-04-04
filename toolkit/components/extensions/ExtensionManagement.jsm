@@ -232,7 +232,7 @@ function getAPILevelForWindow(window, addonId) {
 
   // Non WebExtension URLs and WebExtension URLs from a different extension
   // has no access to APIs.
-  if (!addonId && getAddonIdForWindow(window) != addonId) {
+  if (!addonId || getAddonIdForWindow(window) != addonId) {
     return NO_PRIVILEGES;
   }
 
