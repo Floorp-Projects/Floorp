@@ -174,7 +174,7 @@ public:
     mModifiers = aOther.mModifiers;
     mTime = aOther.mTime;
     mTimeStamp = aOther.mTimeStamp;
-    touches.AppendElements(aOther.touches);
+    mTouches.AppendElements(aOther.mTouches);
     mFlags.mCancelable = mMessage != eTouchCancel;
     mFlags.mHandledByAPZ = aOther.mFlags.mHandledByAPZ;
   }
@@ -202,15 +202,15 @@ public:
     return result;
   }
 
-  TouchArray touches;
+  TouchArray mTouches;
 
   void AssignTouchEventData(const WidgetTouchEvent& aEvent, bool aCopyTargets)
   {
     AssignInputEventData(aEvent, aCopyTargets);
 
     // Assign*EventData() assume that they're called only new instance.
-    MOZ_ASSERT(touches.IsEmpty());
-    touches.AppendElements(aEvent.touches);
+    MOZ_ASSERT(mTouches.IsEmpty());
+    mTouches.AppendElements(aEvent.mTouches);
   }
 };
 

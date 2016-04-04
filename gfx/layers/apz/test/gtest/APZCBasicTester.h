@@ -96,7 +96,7 @@ protected:
 
       // Trigger computation of the overscroll tranform, to make sure
       // no assetions fire during the calculation.
-      apzc->GetOverscrollTransform();
+      apzc->GetOverscrollTransform(AsyncPanZoomController::NORMAL);
 
       if (!apzc->IsOverscrolled()) {
         recoveredFromOverscroll = true;

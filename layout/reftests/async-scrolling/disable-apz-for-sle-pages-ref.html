@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+ <head>
+  <title>Check that the apz.disable_for_sle_pages pref behaves as expected</title>
+  <script>
+    addEventListener('load', function() {
+        window.scrollTo(0, 100);
+        setTimeout(done, 0);
+    }, false);
+
+    function done() {
+        document.documentElement.classList.remove('reftest-wait');
+    }
+  </script>
+ </head>
+ <body style="height: 5000px; background-image:url(repeatable-diagonal-gradient.png);">
+  <div id="fake-fixed" style="position: absolute; top: 100px; left: 100px; width: 100px; height: 100px; background-color: green"></div>
+ </body>
+</html>

@@ -5025,7 +5025,7 @@ nsHTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
         // Move to the start of the next node if it's a text.
         nsCOMPtr<nsIContent> nextNode = mHTMLEditor->GetNextNode(blockParent,
                                                                  offset + 1, true);
-        if (mHTMLEditor->IsTextNode(nextNode)) {
+        if (nextNode && mHTMLEditor->IsTextNode(nextNode)) {
           res = aSelection->Collapse(nextNode, 0);
           NS_ENSURE_SUCCESS(res, res);
         }
@@ -5034,7 +5034,7 @@ nsHTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
         nsCOMPtr<nsIContent> priorNode = mHTMLEditor->GetPriorNode(blockParent,
                                                                    offset,
                                                                    true);
-        if (mHTMLEditor->IsTextNode(priorNode)) {
+        if (priorNode && mHTMLEditor->IsTextNode(priorNode)) {
           res = aSelection->Collapse(priorNode, priorNode->TextLength());
           NS_ENSURE_SUCCESS(res, res);
         } else {

@@ -18,6 +18,8 @@ class SavedFrame : public NativeObject {
     friend class SavedStacks;
     friend struct ::JSStructuredCloneReader;
 
+    static const ClassSpec      classSpec_;
+
   public:
     static const Class          class_;
     static const JSPropertySpec protoAccessors[];

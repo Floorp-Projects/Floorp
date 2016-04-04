@@ -1392,6 +1392,7 @@ WebConsoleActor.prototype =
 
     return {
       errorMessage: this._createStringGrip(aPageError.errorMessage),
+      errorMessageName: aPageError.errorMessageName,
       sourceName: aPageError.sourceName,
       lineText: lineText,
       lineNumber: aPageError.lineNumber,

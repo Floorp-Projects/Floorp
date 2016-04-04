@@ -8,6 +8,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
+ #include "mozilla/ChaosMode.h"
 
 #include "ImageLogging.h"
 #include "nsPrintfCString.h"
@@ -1770,6 +1771,12 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
     // bypass the cache, we don't allow this entry to be used.
     if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE) {
       return false;
+    }
+
+    if (MOZ_UNLIKELY(ChaosMode::isActive(ChaosFeature::ImageCache))) {
+      if (ChaosMode::randomUint32LessThan(4) < 1) {
+        return false;
+      }
     }
 
     // Determine whether the cache aEntry must be revalidated...
