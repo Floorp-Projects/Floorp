@@ -273,17 +273,16 @@ function createAppInfo(ID, name, version, platformVersion="1.0") {
   gAppInfo = tmp.getAppInfo();
 }
 
-function getManifestURIForBundle(file, manifest="manifest.json") {
+function getManifestURIForBundle(file) {
   if (file.isDirectory()) {
-    let path = file.clone();
-    path.append("install.rdf");
-    if (path.exists()) {
-      return NetUtil.newURI(path);
+    file.append("install.rdf");
+    if (file.exists()) {
+      return NetUtil.newURI(file);
     }
 
-    path.leafName = manifest;
-    if (path.exists()) {
-      return NetUtil.newURI(path);
+    file.leafName = "manifest.json";
+    if (file.exists()) {
+      return NetUtil.newURI(file);
     }
 
     throw new Error("No manifest file present");
@@ -299,8 +298,8 @@ function getManifestURIForBundle(file, manifest="manifest.json") {
       return NetUtil.newURI("jar:" + uri.spec + "!/" + "install.rdf");
     }
 
-    if (zip.hasEntry(manifest)) {
-      return NetUtil.newURI("jar:" + uri.spec + "!/" + manifest);
+    if (zip.hasEntry("manifest.json")) {
+      return NetUtil.newURI("jar:" + uri.spec + "!/" + "manifest.json");
     }
 
     throw new Error("No manifest file present");
@@ -342,12 +341,8 @@ let getIDForManifest = Task.async(function*(manifestURI) {
     return rdfID.QueryInterface(AM_Ci.nsIRDFLiteral).Value;
   }
   else {
-    try {
-      let manifest = JSON.parse(data);
-      return manifest.applications.gecko.id;
-    } catch (err) {
-      return null;
-    }
+    let manifest = JSON.parse(data);
+    return manifest.applications.gecko.id;
   }
 });
 
@@ -384,15 +379,6 @@ function overrideCertDB(handler) {
       let manifestURI = getManifestURIForBundle(file);
 
       let id = yield getIDForManifest(manifestURI);
-
-      if (!id) {
-        manifestURI = getManifestURIForBundle(file, "mozilla.json");
-        id = yield getIDForManifest(manifestURI);
-      }
-
-      if (!id) {
-        throw new Error("Cannot find addon ID");
-      }
 
       // Make sure to close the open zip file or it will be locked.
       if (file.isFile()) {
@@ -1126,7 +1112,7 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
  *          An optional string to override the default installation aId
  * @return  A file pointing to where the extension was installed
  */
-function writeWebManifestForExtension(aData, aDir, aId = undefined, aMozData = undefined) {
+function writeWebManifestForExtension(aData, aDir, aId = undefined) {
   if (!aId)
     aId = aData.applications.gecko.id;
 
@@ -1136,26 +1122,19 @@ function writeWebManifestForExtension(aData, aDir, aId = undefined, aMozData = u
     if (!dir.exists())
       dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
-    function writeOne(filename, raw) {
-      let file = dir.clone();
-      file.append(filename);
-      if (file.exists())
-        file.remove(true);
+    let file = dir.clone();
+    file.append("manifest.json");
+    if (file.exists())
+      file.remove(true);
 
-      let data = JSON.stringify(raw);
-      let fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-          createInstance(AM_Ci.nsIFileOutputStream);
-      fos.init(file,
-               FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
-               FileUtils.PERMS_FILE, 0);
-      fos.write(data, data.length);
-      fos.close();
-    }
-
-    writeOne("manifest.json", aData);
-    if (aMozData) {
-      writeOne("mozilla.json", aMozData);
-    }
+    let data = JSON.stringify(aData);
+    let fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
+              createInstance(AM_Ci.nsIFileOutputStream);
+    fos.init(file,
+             FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
+             FileUtils.PERMS_FILE, 0);
+    fos.write(data, data.length);
+    fos.close();
 
     return dir;
   }
@@ -1171,13 +1150,6 @@ function writeWebManifestForExtension(aData, aDir, aId = undefined, aMozData = u
     zipW.open(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
     zipW.addEntryStream("manifest.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
                         stream, false);
-    if (aMozData) {
-      let mozStream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
-                      createInstance(AM_Ci.nsIStringInputStream);
-      mozStream.setData(JSON.stringify(aMozData), -1);
-      zipW.addEntryStream("mozilla.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
-                          mozStream, false);
-    }
     zipW.close();
 
     return file;
