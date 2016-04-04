@@ -2451,40 +2451,40 @@ nsDocumentViewer::DetachFromTopLevelWidget()
 nsView*
 nsDocumentViewer::FindContainerView()
 {
-  nsView* containerView = nullptr;
-
-  if (mContainer) {
-    nsCOMPtr<nsIDocShell> docShell(mContainer);
-    nsCOMPtr<nsPIDOMWindowOuter> pwin(docShell->GetWindow());
-    if (pwin) {
-      nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
-      if (!containerElement) {
-        return nullptr;
-      }
-
-      nsIFrame* subdocFrame = nsLayoutUtils::GetRealPrimaryFrameFor(containerElement);
-      if (subdocFrame) {
-        // subdocFrame might not be a subdocument frame; the frame
-        // constructor can treat a <frame> as an inline in some XBL
-        // cases. Treat that as display:none, the document is not
-        // displayed.
-        if (subdocFrame->GetType() == nsGkAtoms::subDocumentFrame) {
-          NS_ASSERTION(subdocFrame->GetView(), "Subdoc frames must have views");
-          nsView* innerView =
-            static_cast<nsSubDocumentFrame*>(subdocFrame)->EnsureInnerView();
-          containerView = innerView;
-        } else {
-          NS_WARN_IF_FALSE(!subdocFrame->GetType(),
-                           "Subdocument container has non-subdocument frame");
-        }
-      } else {
-        // XXX Silenced by default in bug 1175289
-        LAYOUT_WARNING("Subdocument container has no frame");
-      }
-    }
+  if (!mContainer) {
+    return nullptr;
   }
 
-  return containerView;
+  nsCOMPtr<nsIDocShell> docShell(mContainer);
+  nsCOMPtr<nsPIDOMWindowOuter> pwin(docShell->GetWindow());
+  if (!pwin) {
+    return nullptr;
+  }
+
+  nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
+  if (!containerElement) {
+    return nullptr;
+  }
+
+  nsIFrame* subdocFrame = nsLayoutUtils::GetRealPrimaryFrameFor(containerElement);
+  if (!subdocFrame) {
+    // XXX Silenced by default in bug 1175289
+    LAYOUT_WARNING("Subdocument container has no frame");
+    return nullptr;
+  }
+
+  // subdocFrame might not be a subdocument frame; the frame
+  // constructor can treat a <frame> as an inline in some XBL
+  // cases. Treat that as display:none, the document is not
+  // displayed.
+  if (subdocFrame->GetType() != nsGkAtoms::subDocumentFrame) {
+    NS_WARN_IF_FALSE(!subdocFrame->GetType(),
+                     "Subdocument container has non-subdocument frame");
+    return nullptr;
+  }
+
+  NS_ASSERTION(subdocFrame->GetView(), "Subdoc frames must have views");
+  return static_cast<nsSubDocumentFrame*>(subdocFrame)->EnsureInnerView();
 }
 
 nsresult
