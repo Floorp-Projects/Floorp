@@ -104,9 +104,9 @@ impl <T: WebDriverHandler<U>,
                         if existing_session.id != *msg_session_id {
                             Err(WebDriverError::new(
                                 ErrorStatus::InvalidSessionId,
-                                &format!("Got unexpected session id {} expected {}",
-                                         msg_session_id,
-                                         existing_session.id)[..]))
+                                format!("Got unexpected session id {} expected {}",
+                                        msg_session_id,
+                                        existing_session.id)))
                         } else {
                             Ok(())
                         }

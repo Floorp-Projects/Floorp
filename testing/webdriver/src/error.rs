@@ -1,5 +1,6 @@
 use hyper::status::StatusCode;
 use rustc_serialize::json::{Json, ToJson, ParserError, DecoderError};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::error::Error;
@@ -99,7 +100,7 @@ pub type WebDriverResult<T> = Result<T, WebDriverError>;
 #[derive(Debug)]
 pub struct WebDriverError {
     pub error: ErrorStatus,
-    pub message: String,
+    pub message: Cow<'static, str>,
     delete_session: bool
 }
 
@@ -110,10 +111,12 @@ impl fmt::Display for WebDriverError {
 }
 
 impl WebDriverError {
-    pub fn new(error: ErrorStatus, message: &str) -> WebDriverError {
+    pub fn new<S>(error: ErrorStatus, message: S) -> WebDriverError
+        where S: Into<Cow<'static, str>>
+    {
         WebDriverError {
             error: error,
-            message: message.to_string(),
+            message: message.into(),
             delete_session: false
         }
     }
@@ -161,21 +164,20 @@ impl Error for WebDriverError {
 impl From<ParserError> for WebDriverError {
     fn from(err: ParserError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description())
+                            err.description().to_string())
     }
 }
 
 impl From<IoError> for WebDriverError {
     fn from(err: IoError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description())
+                            err.description().to_string())
     }
 }
 
 impl From<DecoderError> for WebDriverError {
     fn from(err: DecoderError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
-                            &format!(
-                                "Could not decode json string:\n{}", err.description())[..])
+                            format!("Could not decode json string:\n{}", err.description()))
     }
 }
