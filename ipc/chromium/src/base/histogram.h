@@ -353,7 +353,7 @@ class Histogram {
     void Resize(const Histogram& histogram);
 
     // Accessor for histogram to make routine additions.
-    void AccumulateWithLinearStats(Sample value, Count count, size_t index);
+    void Accumulate(Sample value, Count count, size_t index);
 
     // Arithmetic manipulation of corresponding elements of the set.
     void Add(const SampleSet& other);
@@ -375,15 +375,6 @@ class Histogram {
     int64_t sum(const OffTheBooksMutexAutoLock& ev) const {
        return sum_;
     }
-    uint64_t sum_squares(const OffTheBooksMutexAutoLock& ev) const {
-       return sum_squares_;
-    }
-    double log_sum(const OffTheBooksMutexAutoLock& ev) const {
-       return log_sum_;
-    }
-    double log_sum_squares(const OffTheBooksMutexAutoLock& ev) const {
-       return log_sum_squares_;
-    }
     int64_t redundant_count(const OffTheBooksMutexAutoLock& ev) const {
        return redundant_count_;
     }
@@ -396,9 +387,6 @@ class Histogram {
     const SampleSet& operator=(const SampleSet& other) {
        counts_          = other.counts_;
        sum_             = other.sum_;
-       sum_squares_     = other.sum_squares_;
-       log_sum_         = other.log_sum_;
-       log_sum_squares_ = other.log_sum_squares_;
        redundant_count_ = other.redundant_count_;
        return *this;
     }
@@ -415,13 +403,6 @@ class Histogram {
     // Save simple stats locally.  Note that this MIGHT get done in base class
     // without shared memory at some point.
     int64_t sum_;         // sum of samples.
-    uint64_t sum_squares_; // sum of squares of samples.
-
-    // These fields may or may not be updated at the discretion of the
-    // histogram.  We use the natural log and compute ln(sample+1) so that
-    // zeros are handled sanely.
-    double log_sum_;      // sum of logs of samples.
-    double log_sum_squares_; // sum of squares of logs of samples
 
     // To help identify memory corruption, we reduntantly save the number of
     // samples we've accumulated into all of our buckets.  We can compare this

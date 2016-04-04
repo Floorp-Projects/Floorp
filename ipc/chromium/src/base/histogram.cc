@@ -567,7 +567,7 @@ const std::string Histogram::GetAsciiBucketRange(size_t i) const {
 
 // Update histogram data with new sample.
 void Histogram::Accumulate(Sample value, Count count, size_t index) {
-  sample_.AccumulateWithLinearStats(value, count, index);
+  sample_.Accumulate(value, count, index);
 }
 
 void Histogram::SetBucketRange(size_t i, Sample value) {
@@ -720,9 +720,6 @@ void Histogram::WriteAsciiBucketGraph(double current_size, double max_size,
 Histogram::SampleSet::SampleSet()
     : counts_(),
       sum_(0),
-      sum_squares_(0),
-      log_sum_(0),
-      log_sum_squares_(0),
       redundant_count_(0),
       mutex_("Histogram::SampleSet::SampleSet") {
 }
@@ -747,12 +744,11 @@ void Histogram::SampleSet::Accumulate(const OffTheBooksMutexAutoLock& ev,
   DCHECK_GE(redundant_count_, 0);
 }
 
-void Histogram::SampleSet::AccumulateWithLinearStats(Sample value,
-                                                     Count count,
-                                                     size_t index) {
+void Histogram::SampleSet::Accumulate(Sample value,
+                                      Count count,
+                                      size_t index) {
   OffTheBooksMutexAutoLock locker(mutex_);
   Accumulate(locker, value, count, index);
-  sum_squares_ += static_cast<int64_t>(count) * value * value;
 }
 
 Count Histogram::SampleSet::TotalCount(const OffTheBooksMutexAutoLock& ev)
@@ -770,9 +766,6 @@ void Histogram::SampleSet::Add(const SampleSet& other) {
   OffTheBooksMutexAutoLock locker(mutex_);
   DCHECK_EQ(counts_.size(), other.counts_.size());
   sum_ += other.sum_;
-  sum_squares_ += other.sum_squares_;
-  log_sum_ += other.log_sum_;
-  log_sum_squares_ += other.log_sum_squares_;
   redundant_count_ += other.redundant_count_;
   for (size_t index = 0; index < counts_.size(); ++index)
     counts_[index] += other.counts_[index];
@@ -868,7 +861,7 @@ Histogram::ClassType LinearHistogram::histogram_type() const {
 }
 
 void LinearHistogram::Accumulate(Sample value, Count count, size_t index) {
-  sample_.AccumulateWithLinearStats(value, count, index);
+  sample_.Accumulate(value, count, index);
 }
 
 void LinearHistogram::SetRangeDescriptions(
