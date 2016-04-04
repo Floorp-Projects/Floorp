@@ -5,10 +5,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610419
 -->
 <head>
   <title>Test for Bug 610419</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <script type="application/javascript" src="imgutils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=610419">Mozilla Bug 610419</a>
@@ -22,12 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610419
 <script type="application/javascript;version=1.8">
 /** Test for Bug 610419**/
 
+SimpleTest.requestFlakyTimeout("Pre-existing timeouts when converting from mochitest-chrome");
 SimpleTest.waitForExplicitFinish();
 
 const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const gImg = document.getElementsByTagName("img")[0];
 
 var gMyDecoderObserver; // value will be set in main()
