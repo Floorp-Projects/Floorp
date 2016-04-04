@@ -11550,8 +11550,12 @@ ConnectionPool::Start(const nsID& aBackgroundChildLoggingId,
                                   /* aFromQueuedTransactions */ false);
   }
 
-  if (!databaseInfoIsNew && mIdleDatabases.RemoveElement(dbInfo)) {
-    AdjustIdleTimer();
+  if (!databaseInfoIsNew) {
+    MOZ_RELEASE_ASSERT(!mDatabasesPerformingIdleMaintenance.Contains(dbInfo));
+
+    if (mIdleDatabases.RemoveElement(dbInfo)) {
+      AdjustIdleTimer();
+    }
   }
 
   return transactionId;
