@@ -100,6 +100,7 @@ protected:
   int32_t     mTotNumPages;
 
   nsSharedPageData* mPD;
+  nsMargin mPageContentMargin;
 };
 
 

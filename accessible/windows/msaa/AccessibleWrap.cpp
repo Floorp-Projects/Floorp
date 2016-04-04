@@ -1525,7 +1525,7 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   // First handle the case that both this accessible and the id'd one are in
   // this process.
   if (!IsProxy()) {
-    void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
+    void* uniqueID = reinterpret_cast<void*>(intptr_t(-aVarChild.lVal));
 
     DocAccessible* document = Document();
     Accessible* child =

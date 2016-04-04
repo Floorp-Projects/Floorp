@@ -64,11 +64,7 @@ add_task(function* test_registration_success() {
     }
   });
 
-  yield waitForPromise(
-    handshakePromise,
-    DEFAULT_TIMEOUT,
-    'Timed out waiting for handshake'
-  );
+  yield handshakePromise;
 
   let registration = yield PushService.registration({
     scope: 'https://example.net/a',

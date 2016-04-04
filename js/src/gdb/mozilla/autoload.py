@@ -16,6 +16,7 @@ import mozilla.JSSymbol
 import mozilla.Root
 import mozilla.jsid
 import mozilla.jsval
+import mozilla.unwind
 
 # The user may have personal pretty-printers. Get those, too, if they exist.
 try:
@@ -28,3 +29,4 @@ def register(objfile):
     lookup = mozilla.prettyprinters.lookup_for_objfile(objfile)
     if lookup:
         gdb.printing.register_pretty_printer(objfile, lookup, replace=True)
+    mozilla.unwind.register_unwinder(objfile)

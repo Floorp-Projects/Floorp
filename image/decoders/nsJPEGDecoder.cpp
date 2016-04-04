@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLogging.h"
+#include "imgFrame.h"
 #include "nsJPEGDecoder.h"
 #include "Orientation.h"
 #include "EXIF.h"
@@ -583,7 +584,7 @@ nsJPEGDecoder::ReadOrientationFromEXIF()
 void
 nsJPEGDecoder::NotifyDone()
 {
-  PostFrameStop(Opacity::OPAQUE);
+  PostFrameStop(Opacity::FULLY_OPAQUE);
   PostDecodeDone();
 }
 

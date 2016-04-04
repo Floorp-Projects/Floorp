@@ -20,7 +20,6 @@
 #include "txNamespaceMap.h"
 #include "txURIUtils.h"
 #include "txXSLTFunctions.h"
-#include "nsNetUtil.h"
 
 using namespace mozilla;
 
@@ -303,7 +302,7 @@ getAtomAttr(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    *aAtom = NS_NewAtom(attr->mValue).take();
+    *aAtom = NS_Atomize(attr->mValue).take();
     NS_ENSURE_TRUE(*aAtom, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
@@ -757,12 +756,10 @@ txFnStartImport(int32_t aNamespaceID,
                       nsGkAtoms::href, true, &attr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), attr->mValue, nullptr,
-                   aState.mElementContext->mBaseURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aState.loadImportedStylesheet(uri, importPtr->mFrame);
+    nsAutoString absUri;
+    URIUtils::resolveHref(attr->mValue, aState.mElementContext->mBaseURI,
+                          absUri);
+    rv = aState.loadImportedStylesheet(absUri, importPtr->mFrame);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return aState.pushHandlerTable(gTxIgnoreHandler);
@@ -790,12 +787,10 @@ txFnStartInclude(int32_t aNamespaceID,
                                nsGkAtoms::href, true, &attr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), attr->mValue, nullptr,
-                   aState.mElementContext->mBaseURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aState.loadIncludedStylesheet(uri);
+    nsAutoString absUri;
+    URIUtils::resolveHref(attr->mValue, aState.mElementContext->mBaseURI,
+                          absUri);
+    rv = aState.loadIncludedStylesheet(absUri);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return aState.pushHandlerTable(gTxIgnoreHandler);
@@ -2864,7 +2859,7 @@ txHandlerTable::init(const txElementHandler* aHandlers, uint32_t aCount)
 
     uint32_t i;
     for (i = 0; i < aCount; ++i) {
-        nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aHandlers->mLocalName);
+        nsCOMPtr<nsIAtom> nameAtom = NS_Atomize(aHandlers->mLocalName);
         txExpandedName name(aHandlers->mNamespaceID, nameAtom);
         rv = mHandlers.add(name, aHandlers);
         NS_ENSURE_SUCCESS(rv, rv);

@@ -39,4 +39,3 @@ def decorate_task_json_routes(task, json_routes, parameters):
         routes.append(route.format(**parameters))
 
     task['routes'] = routes
-

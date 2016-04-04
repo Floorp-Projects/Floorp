@@ -10,18 +10,38 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-eval-in-stackframe.html";
 
-var gWebConsole, gJSTerm, gVariablesView;
+var hud, gVariablesView;
 
-var hud;
+registerCleanupFunction(function() {
+  hud = gVariablesView = null;
+});
 
 add_task(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();
 
-  gWebConsole = hud;
-  gJSTerm = hud.jsterm;
-  let msg = yield gJSTerm.execute("fooObj");
+  let msg = yield hud.jsterm.execute("(function foo(){})");
+
+  ok(msg, "output message found");
+  ok(msg.textContent.includes("function foo()"),
+                              "message text check");
+
+  executeSoon(() => {
+    EventUtils.synthesizeMouse(msg.querySelector("a"), 2, 2, {}, hud.iframeWindow);
+  });
+
+  let varView = yield hud.jsterm.once("variablesview-fetched");
+  ok(varView, "object inspector opened on click");
+
+  yield findVariableViewProperties(varView, [{
+    name: "name",
+    value: "foo",
+  }], { webconsole: hud });
+});
+
+add_task(function* () {
+  let msg = yield hud.jsterm.execute("fooObj");
 
   ok(msg, "output message found");
   ok(msg.textContent.includes('{ testProp: "testValue" }'),
@@ -30,10 +50,10 @@ add_task(function* () {
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");
 
-  let fetched = gJSTerm.once("variablesview-fetched");
+  let fetched = hud.jsterm.once("variablesview-fetched");
 
   // executeSoon
-  EventUtils.synthesizeMouse(anchor, 2, 2, {}, gWebConsole.iframeWindow);
+  EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
 
   let view = yield fetched;
 
@@ -52,8 +72,6 @@ add_task(function* () {
 
   let prop = results4[0].matchedProp;
   yield testPropDelete(prop);
-
-  gWebConsole = gJSTerm = gVariablesView = null;
 });
 
 function onFooObjFetch(aVar) {
@@ -62,7 +80,7 @@ function onFooObjFetch(aVar) {
 
   return findVariableViewProperties(aVar, [
     { name: "testProp", value: "testValue" },
-  ], { webconsole: gWebConsole });
+  ], { webconsole: hud });
 }
 
 function onTestPropFound(aResults) {
@@ -78,7 +96,7 @@ function onTestPropFound(aResults) {
     property: prop,
     field: "value",
     string: "document.title + window.location + $('p')",
-    webconsole: gWebConsole
+    webconsole: hud
   });
 }
 
@@ -89,7 +107,7 @@ function onFooObjFetchAfterUpdate(aVar) {
 
   return findVariableViewProperties(aVar, [
     { name: "testProp", value: expectedValue },
-  ], { webconsole: gWebConsole });
+  ], { webconsole: hud });
 }
 
 function onUpdatedTestPropFound(aResults) {
@@ -104,7 +122,7 @@ function onUpdatedTestPropFound(aResults) {
     property: prop,
     field: "name",
     string: "testUpdatedProp",
-    webconsole: gWebConsole
+    webconsole: hud
   });
 }
 
@@ -119,7 +137,7 @@ function* onFooObjFetchAfterPropRename(aVar) {
   // Check that the new value is in the variables view.
   return findVariableViewProperties(aVar, [
     { name: "testUpdatedProp", value: expectedValue },
-  ], { webconsole: gWebConsole });
+  ], { webconsole: hud });
 }
 
 function onRenamedTestPropFound(aResults) {
@@ -137,7 +155,7 @@ function onRenamedTestPropFound(aResults) {
     property: prop,
     field: "value",
     string: "foobarzFailure()",
-    webconsole: gWebConsole
+    webconsole: hud
   });
 }
 
@@ -152,7 +170,7 @@ function* onPropUpdateError(aVar) {
   // Make sure the property did not change.
   return findVariableViewProperties(aVar, [
     { name: "testUpdatedProp", value: expectedValue },
-  ], { webconsole: gWebConsole });
+  ], { webconsole: hud });
 }
 
 function onRenamedTestPropFoundAgain(aResults) {
@@ -160,7 +178,7 @@ function onRenamedTestPropFoundAgain(aResults) {
   ok(prop, "matched the renamed |testProp| property again");
 
   return waitForMessages({
-    webconsole: gWebConsole,
+    webconsole: hud,
     messages: [{
       name: "exception in property update reported in the web console output",
       text: "foobarzFailure",

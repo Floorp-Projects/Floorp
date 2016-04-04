@@ -64,25 +64,6 @@ Request::RequestContextEnabled(JSContext* aCx, JSObject* aObj)
   return workerPrivate->RequestContextEnabled();
 }
 
-// static
-bool
-Request::RequestCacheEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.requestcache.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->RequestCacheEnabled();
-}
-
 already_AddRefed<InternalRequest>
 Request::GetInternalRequest()
 {
@@ -383,7 +364,10 @@ Request::Constructor(const GlobalObject& aGlobal,
             nsresult rv = principal->CheckMayLoad(uri, /* report */ false,
                                                   /* allowIfInheritsPrincipal */ false);
             if (NS_FAILED(rv)) {
-              aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+              nsAutoCString globalOrigin;
+              principal->GetOrigin(globalOrigin);
+              aRv.ThrowTypeError<MSG_CROSS_ORIGIN_REFERRER_URL>(referrer,
+                                                                NS_ConvertUTF8toUTF16(globalOrigin));
               return nullptr;
             }
           }
@@ -411,7 +395,8 @@ Request::Constructor(const GlobalObject& aGlobal,
             new ReferrerSameOriginChecker(worker, referrerURL, rv);
           checker->Dispatch(aRv);
           if (aRv.Failed() || NS_FAILED(rv)) {
-            aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+            aRv.ThrowTypeError<MSG_CROSS_ORIGIN_REFERRER_URL>(referrer,
+                                                              worker->GetLocationInfo().mOrigin);
             return nullptr;
           }
         }

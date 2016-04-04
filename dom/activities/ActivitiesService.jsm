@@ -285,17 +285,10 @@ var Activities = {
             // Don't do this check until we have passed to UIGlue so the glue
             // can choose to launch its own activity if needed.
             if (aResults.options.length === 0) {
-              if (AppConstants.MOZ_B2GDROID) {
-                // Fallback on the Android Intent mapper.
-                let glue = Cc["@mozilla.org/dom/activities/android-ui-glue;1"]
-                             .createInstance(Ci.nsIActivityUIGlue);
-                glue.chooseActivity(aMsg.options, aResults.options, getActivityChoice);
-              } else {
                 self.trySendAndCleanup(aMsg.id, "Activity:FireError", {
                   "id": aMsg.id,
                   "error": "NO_PROVIDER"
                 });
-              }
               return;
             }
 

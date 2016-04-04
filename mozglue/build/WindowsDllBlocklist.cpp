@@ -3,6 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define MOZ_MEMORY_IMPL
+#include "mozmemory_wrap.h"
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
+// See mozmemory_wrap.h for more details. This file is part of libmozglue, so
+// it needs to use _impl suffixes.
+#define MALLOC_DECL(name, return_type, ...) \
+  extern "C" MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
+#include "malloc_decls.h"
+
 #include <windows.h>
 #include <winternl.h>
 #include <io.h>
@@ -12,7 +21,6 @@
 #include <map>
 #pragma warning( pop )
 
-#define MOZ_NO_MOZALLOC
 #include "nsAutoPtr.h"
 
 #include "nsWindowsDllInterceptor.h"
@@ -187,6 +195,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // Orbit Downloader, bug 1222819
   { "grabdll.dll", MAKE_VERSION(2, 6, 1, 0) },
   { "grabkernel.dll", MAKE_VERSION(1, 0, 0, 1) },
+
+  // ESET, bug 1229252
+  { "eOppMonitor.dll", ALL_VERSIONS },
 
   { nullptr, 0 }
 };

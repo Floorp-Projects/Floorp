@@ -227,6 +227,40 @@ class DecisionTask(object):
         print(json.dumps(task, indent=4))
 
 @CommandProvider
+class LoadImage(object):
+    @Command('taskcluster-load-image', category="ci",
+        description="Load a pre-built Docker image")
+    @CommandArgument('--task-id',
+        help="Load the image at public/image.tar in this task, rather than "
+             "searching the index")
+    @CommandArgument('image_name', nargs='?',
+        help="Load the image of this name based on the current contents of the tree "
+             "(as built for mozilla-central or mozilla-inbound)")
+    def load_image(self, image_name, task_id):
+        from taskcluster_graph.image_builder import (
+            task_id_for_image,
+            docker_load_from_url
+        )
+
+        if not image_name and not task_id:
+            print("Specify either IMAGE-NAME or TASK-ID")
+            sys.exit(1)
+
+        if not task_id:
+            task_id = task_id_for_image({}, 'mozilla-inbound', image_name, create=False)
+            if not task_id:
+                print("No task found in the TaskCluster index for {}".format(image_name))
+                sys.exit(1)
+
+        print("Task ID: {}".format(task_id))
+
+        ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
+        image_name = docker_load_from_url(ARTIFACT_URL.format(task_id, 'public/image.tar'))
+
+        print("Loaded image is named {}".format(image_name))
+
+
+@CommandProvider
 class Graph(object):
     @Command('taskcluster-graph', category="ci",
         description="Create taskcluster task graph")
@@ -285,6 +319,7 @@ class Graph(object):
         from slugid import nice as slugid
 
         import taskcluster_graph.transform.routes as routes_transform
+        import taskcluster_graph.transform.treeherder as treeherder_transform
         from taskcluster_graph.commit_parser import parse_commit
         from taskcluster_graph.image_builder import (
             docker_image,
@@ -454,6 +489,9 @@ class Graph(object):
                 remove_caches_from_task(build_task)
 
             if params['revision_hash']:
+                treeherder_transform.add_treeherder_revision_info(build_task['task'],
+                                                                  params['head_rev'],
+                                                                  params['revision_hash'])
                 routes_transform.decorate_task_treeherder_routes(build_task['task'],
                                                                  treeherder_route)
                 routes_transform.decorate_task_json_routes(build_task['task'],
@@ -526,6 +564,9 @@ class Graph(object):
                                         build_parameters,
                                         os.environ.get('TASK_ID', None))
                 set_interactive_task(post_task, interactive)
+                treeherder_transform.add_treeherder_revision_info(post_task['task'],
+                                                                  params['head_rev'],
+                                                                  params['revision_hash'])
                 graph['tasks'].append(post_task)
 
             for test in build['dependents']:
@@ -572,6 +613,9 @@ class Graph(object):
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
+                        treeherder_transform.add_treeherder_revision_info(test_task['task'],
+                                                                          params['head_rev'],
+                                                                          params['revision_hash'])
                         routes_transform.decorate_task_treeherder_routes(
                             test_task['task'],
                             treeherder_route

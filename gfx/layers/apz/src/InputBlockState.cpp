@@ -87,11 +87,32 @@ InputBlockState::IsTargetConfirmed() const
   return mTargetConfirmed;
 }
 
+bool
+InputBlockState::IsDownchainOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB) const
+{
+  if (aA == aB) {
+    return true;
+  }
+
+  bool seenA = false;
+  for (size_t i = 0; i < mOverscrollHandoffChain->Length(); ++i) {
+    AsyncPanZoomController* apzc = mOverscrollHandoffChain->GetApzcAtIndex(i);
+    if (apzc == aB) {
+      return seenA;
+    }
+    if (apzc == aA) {
+      seenA = true;
+    }
+  }
+  return false;
+}
+
+
 void
 InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc)
 {
   // An input block should only have one scrolled APZC.
-  MOZ_ASSERT(!mScrolledApzc || mScrolledApzc == aApzc);
+  MOZ_ASSERT(!mScrolledApzc || (gfxPrefs::APZAllowImmediateHandoff() ? IsDownchainOf(mScrolledApzc, aApzc) : mScrolledApzc == aApzc));
 
   mScrolledApzc = aApzc;
 }
@@ -100,6 +121,14 @@ AsyncPanZoomController*
 InputBlockState::GetScrolledApzc() const
 {
   return mScrolledApzc;
+}
+
+bool
+InputBlockState::IsDownchainOfScrolledApzc(AsyncPanZoomController* aApzc) const
+{
+  MOZ_ASSERT(aApzc && mScrolledApzc);
+
+  return IsDownchainOf(mScrolledApzc, aApzc);
 }
 
 CancelableBlockState::CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
@@ -719,16 +748,11 @@ TouchBlockState::IsDuringFastFling() const
   return mDuringFastFling;
 }
 
-bool
+void
 TouchBlockState::SetSingleTapOccurred()
 {
-  TBS_LOG("%p attempting to set single-tap occurred; disallowed=%d\n",
-    this, mDuringFastFling);
-  if (!mDuringFastFling) {
-    mSingleTapOccurred = true;
-    return true;
-  }
-  return false;
+  TBS_LOG("%p setting single-tap-occurred flag\n", this);
+  mSingleTapOccurred = true;
 }
 
 bool

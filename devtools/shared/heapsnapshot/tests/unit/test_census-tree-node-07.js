@@ -73,14 +73,17 @@ function run_test() {
                 children: undefined,
                 id: 14,
                 parent: 13,
+                reportLeafIndex: undefined,
               }
             ],
             id: 13,
             parent: 12,
+            reportLeafIndex: undefined,
           }
         ],
         id: 12,
         parent: 11,
+        reportLeafIndex: 9,
       },
       {
         name: "JSAtom",
@@ -105,14 +108,17 @@ function run_test() {
                 children: undefined,
                 id: 17,
                 parent: 16,
+                reportLeafIndex: undefined,
               }
             ],
             id: 16,
             parent: 15,
+            reportLeafIndex: undefined,
           }
         ],
         id: 15,
         parent: 11,
+        reportLeafIndex: 7,
       },
       {
         name: "Array",
@@ -137,14 +143,17 @@ function run_test() {
                 children: undefined,
                 id: 20,
                 parent: 19,
+                reportLeafIndex: undefined,
               }
             ],
             id: 19,
             parent: 18,
+            reportLeafIndex: undefined,
           }
         ],
         id: 18,
         parent: 11,
+        reportLeafIndex: 2,
       },
       {
         name: "js::jit::JitScript",
@@ -169,18 +178,22 @@ function run_test() {
                 children: undefined,
                 id: 23,
                 parent: 22,
+                reportLeafIndex: undefined,
               }
             ],
             id: 22,
             parent: 21,
+            reportLeafIndex: undefined,
           }
         ],
         id: 21,
         parent: 11,
+        reportLeafIndex: 5,
       },
     ],
     id: 11,
     parent: undefined,
+    reportLeafIndex: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { invert: true });

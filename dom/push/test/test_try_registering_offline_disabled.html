@@ -10,6 +10,7 @@ http://creativecommons.org/licenses/publicdomain/
 <head>
   <title>Test for Bug 1150812</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
@@ -86,6 +87,17 @@ http://creativecommons.org/licenses/publicdomain/
       });
   }
 
+  // Load chrome script to change offline status in the
+  // parent process.
+  var chromeScript = SpecialPowers.loadChromeScript(_ => {
+    var { classes: Cc, interfaces: Ci } = Components;
+    var ioService = Cc["@mozilla.org/network/io-service;1"]
+                      .getService(Ci.nsIIOService);
+    addMessageListener("change-status", function(offline) {
+      ioService.offline = offline;
+    });
+  });
+
   function offlineObserver(res) {
     this._res = res;
   }
@@ -110,16 +122,13 @@ http://creativecommons.org/licenses/publicdomain/
       obsService.addObserver(SpecialPowers.wrapCallbackObject(new offlineObserver(res)),
                              "network:offline-status-changed",
                              false);
-      var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                        .getService(SpecialPowers.Ci.nsIIOService);
-      ioService.offline = offline;
+      chromeScript.sendAsyncMessage("change-status", offline);
     });
   }
 
   function changePushServerConnectionEnabled(enable) {
     debug("changePushServerConnectionEnabled");
-    SpecialPowers.pushPrefEnv({"set": [["dom.push.connection.enabled", enable]]},
-                              null);
+    SpecialPowers.setBoolPref("dom.push.connection.enabled", enable);
   }
 
   function unsubscribe(sub) {
@@ -287,13 +296,7 @@ http://creativecommons.org/licenses/publicdomain/
     .then(SimpleTest.finish);
   }
 
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.push.connection.enabled", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true]
-    ]}, runTest);
+  setupPrefsAndMockSocket(new MockWebSocket()).then(_ => runTest());
   SpecialPowers.addPermission("desktop-notification", true, document);
   SimpleTest.waitForExplicitFinish();
 </script>

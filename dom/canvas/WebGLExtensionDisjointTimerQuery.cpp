@@ -12,6 +12,7 @@
 #include "GLContext.h"
 #include "WebGLContext.h"
 #include "WebGLTimerQuery.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 
@@ -117,6 +118,7 @@ WebGLExtensionDisjointTimerQuery::EndQueryEXT(GLenum target)
 
   mContext->MakeContextCurrent();
   mContext->GL()->fEndQuery(target);
+  mActiveQuery->QueueAvailablity();
   mActiveQuery = nullptr;
 }
 
@@ -139,6 +141,7 @@ WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLTimerQuery* query,
   mContext->MakeContextCurrent();
   mContext->GL()->fQueryCounter(query->mGLName, target);
   query->mTarget = LOCAL_GL_TIMESTAMP_EXT;
+  query->QueueAvailablity();
 }
 
 void
@@ -221,7 +224,8 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
     mContext->GL()->fGetQueryObjectuiv(query->mGLName,
                                        LOCAL_GL_QUERY_RESULT_AVAILABLE_EXT,
                                        &avail);
-    retval.set(JS::BooleanValue(bool(avail)));
+    bool canBeAvailable = query->CanBeAvailable() || gfxPrefs::WebGLImmediateQueries();
+    retval.set(JS::BooleanValue(bool(avail) && canBeAvailable));
     break;
   }
   default:
@@ -238,9 +242,12 @@ WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl)
   gl::GLContext* gl = webgl->GL();
   return gl->IsSupported(gl::GLFeature::query_objects) &&
          gl->IsSupported(gl::GLFeature::get_query_object_i64v) &&
-         gl->IsSupported(gl::GLFeature::query_counter); // provides GL_TIMESTAMP
+         gl->IsSupported(gl::GLFeature::query_counter) && // provides GL_TIMESTAMP
+         gl->IsSupported(gl::GLFeature::sync); // provides glGetInteger64v
+  // 'sync' provides glGetInteger64v either by supporting ARB_sync, GL3+, or GLES3+.
+  // Since there are no differences between support for glGetInteger64v and support for
+  // 'sync', we just piggy-back off of 'sync'.
 }
-
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery, EXT_disjoint_timer_query)
 

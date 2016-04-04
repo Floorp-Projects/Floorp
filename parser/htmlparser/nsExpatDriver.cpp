@@ -13,7 +13,6 @@
 #include "nsParserMsgUtils.h"
 #include "nsIURL.h"
 #include "nsIUnicharInputStream.h"
-#include "nsISimpleUnicharStreamFactory.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
@@ -40,14 +39,7 @@ using mozilla::LogLevel;
 
 static const char16_t kUTF16[] = { 'U', 'T', 'F', '-', '1', '6', '\0' };
 
-static PRLogModuleInfo *
-GetExpatDriverLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("expatdriver");
-  return sLog;
-}
+static mozilla::LazyLogModule gExpatDriverLog("expatdriver");
 
 /***************************** EXPAT CALL BACKS ******************************/
 // The callback handlers that get called from the expat parser.
@@ -1059,7 +1051,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
   nsScannerIterator end;
   aScanner.EndReading(end);
 
-  MOZ_LOG(GetExpatDriverLog(), LogLevel::Debug,
+  MOZ_LOG(gExpatDriverLog, LogLevel::Debug,
          ("Remaining in expat's buffer: %i, remaining in scanner: %i.",
           mExpatBuffered, Distance(start, end)));
 
@@ -1080,7 +1072,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
       length = 0;
 
       if (blocked) {
-        MOZ_LOG(GetExpatDriverLog(), LogLevel::Debug,
+        MOZ_LOG(gExpatDriverLog, LogLevel::Debug,
                ("Resuming Expat, will parse data remaining in Expat's "
                 "buffer.\nContent of Expat's buffer:\n-----\n%s\n-----\n",
                 NS_ConvertUTF16toUTF8(currentExpatPosition.get(),
@@ -1089,7 +1081,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
       else {
         NS_ASSERTION(mExpatBuffered == Distance(currentExpatPosition, end),
                      "Didn't pass all the data to Expat?");
-        MOZ_LOG(GetExpatDriverLog(), LogLevel::Debug,
+        MOZ_LOG(gExpatDriverLog, LogLevel::Debug,
                ("Last call to Expat, will parse data remaining in Expat's "
                 "buffer.\nContent of Expat's buffer:\n-----\n%s\n-----\n",
                 NS_ConvertUTF16toUTF8(currentExpatPosition.get(),
@@ -1100,7 +1092,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
       buffer = start.get();
       length = uint32_t(start.size_forward());
 
-      MOZ_LOG(GetExpatDriverLog(), LogLevel::Debug,
+      MOZ_LOG(gExpatDriverLog, LogLevel::Debug,
              ("Calling Expat, will parse data remaining in Expat's buffer and "
               "new data.\nContent of Expat's buffer:\n-----\n%s\n-----\nNew "
               "data:\n-----\n%s\n-----\n",
@@ -1146,7 +1138,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
     mExpatBuffered += length - consumed;
 
     if (BlockedOrInterrupted()) {
-      MOZ_LOG(GetExpatDriverLog(), LogLevel::Debug,
+      MOZ_LOG(gExpatDriverLog, LogLevel::Debug,
              ("Blocked or interrupted parser (probably for loading linked "
               "stylesheets or scripts)."));
 
@@ -1207,7 +1199,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
   aScanner.SetPosition(currentExpatPosition, true);
   aScanner.Mark();
 
-  MOZ_LOG(GetExpatDriverLog(), LogLevel::Debug,
+  MOZ_LOG(gExpatDriverLog, LogLevel::Debug,
          ("Remaining in expat's buffer: %i, remaining in scanner: %i.",
           mExpatBuffered, Distance(currentExpatPosition, end)));
 

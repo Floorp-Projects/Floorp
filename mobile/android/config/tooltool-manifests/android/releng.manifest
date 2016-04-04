@@ -1,9 +1,9 @@
 [
 {
-"version": "Android NDK r10e",
-"size": 357533004,
+"version": "Android NDK r11b",
+"size": 138378970,
 "visibility": "internal",
-"digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
+"digest": "cf352a6059666d284e572fe8b106d115acae94d5cff2594512026f4d2ad6f260b2143ae41d741e62dac50b99085250bed77307622ddeb9ccd562d875e538aa64",
 "algorithm": "sha512",
 "filename": "android-ndk.tar.bz2",
 "unpack": true
@@ -40,20 +40,36 @@
 "filename": "jsshell.tar.xz"
 },
 {
-"version": "gcc 4.7.3",
-"size": 80458572,
+"version": "gcc 4.8.5",
+"size": 81065660,
 "visibility": "public",
 "unpack": true,
-"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"digest": "db26f498ab56a3b5c65d7cda290cbb74174af9f2d021ca9c158f53b0382924ccf5ed9638d41eef449434aa9383a9113994d9729d9dd910321d1f35f9411eae38",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz"
 },
 {
-"size": 31013068,
+"size": 30899096,
 "visibility": "public",
-"digest": "e30a26f98a3448064857491aee1a7a26f98494f86a89113de9be17c37c8181ed60250706fed881ec1f035002fcdaf8b9b4a7d9ae70ce40acff2f1acfbb40f8d9",
+"digest": "ac9f5f95d11580d3dbeff87e80a585fe4d324b270dabb91b1165686acab47d99fa6651074ab0be09420239a5d6af38bb2c539506962a7b44e0ed4d080bba2953",
 "algorithm": "sha512",
 "filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz",
 "unpack": true
+},
+{
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "jcentral.tar.xz",
+"unpack": true,
+"digest": "d12adb85d03fff563ff7b799f7e3cbcaa226b6e8ca1ccef64c87ebf828f5ee8cc4d287c6e41070840074ad6afdd6c88d5b14f490f71bb4763a7722e58e373413",
+"size": 38855456
+},
+{
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "gradle.tar.xz",
+"unpack": true,
+"digest": "ef1d0038da879cc6840fced87671f8f6a18c51375498804f64d21fa48d7089ded4da2be36bd06a1457083e9110e59c0884f1e074dc609d29617c131caea8f234",
+"size": 50542140
 }
 ]

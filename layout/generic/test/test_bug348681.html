@@ -9,10 +9,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
 
 <head>
   <title>Test for Bug 348681</title>
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/MochiKit.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 
 <body onload="loaded()">
@@ -107,8 +106,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
               expect = this.ranges[x];
 
             var found = null;
-            if (x < testArr.length)
-              found = testArr[x];
+            if (x < testArr.length) {
+              // testArr may contain the results coming from
+              // nsISelectionPrivate.GetRangesForInterval(), which are
+              // wrappers for the underlying objects, therefore we may
+              // need to unwrap them before comparing them with the
+              // expected objects.
+              found = SpecialPowers.unwrap(testArr[x]);
+            }
 
             if (found) {
               foundMsg +="["+found.startOffset+","+found.endOffset+"] ";
@@ -303,7 +308,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        selection.addRange(range8);
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 8, 10);
-       var privSel = selection.QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+       var privSel = SpecialPowers.wrap(selection)
+                                  .QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
        ok(privSel, "Test 17 - QIed to instance of nsISelection2 interface");
        var results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,
                                                   false);

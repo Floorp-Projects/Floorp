@@ -10,9 +10,9 @@ const TEST_JSON_URL = URL_ROOT + "invalid_json.json";
 add_task(function* () {
   info("Test invalid JSON started");
 
-  let tab = yield addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
-  let count = yield getElementCount(".jsonPanelBox .domTable .memberRow");
+  let count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(count == 0, "There must be no row");
 
   let text = yield getElementText(".jsonPanelBox .jsonParseError");

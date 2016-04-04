@@ -167,17 +167,13 @@ public:
 
 protected:
     already_AddRefed<mozilla::gfx::SourceSurface>
-    GetInsetBlur(mozilla::gfx::IntMargin& aExtendDestBy,
-                 mozilla::gfx::IntMargin& aSlice,
-                 const mozilla::gfx::Rect aDestinationRect,
-                 const mozilla::gfx::Rect aShadowClipRect,
-                 const mozilla::gfx::IntSize& aBlurRadius,
-                 const mozilla::gfx::IntSize& aSpreadRadius,
-                 const RectCornerRadii& aInnerClipRadii,
+    GetInsetBlur(const mozilla::gfx::Rect aOuterRect,
+                 const mozilla::gfx::Rect aWhitespaceRect,
+                 const bool aIsDestRect,
                  const mozilla::gfx::Color& aShadowColor,
-                 const bool& aHasBorderRadius,
-                 const mozilla::gfx::Point aShadowOffset,
-                 bool& aMovedOffset,
+                 const mozilla::gfx::IntSize& aBlurRadius,
+                 const bool aHasBorderRadius,
+                 const RectCornerRadii& aInnerClipRadii,
                  DrawTarget* aDestDrawTarget);
 
     /**

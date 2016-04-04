@@ -395,3 +395,13 @@ LIRGeneratorX64::visitTruncateToInt64(MTruncateToInt64* ins)
     LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
     defineInt64(new(alloc()) LTruncateToInt64(useRegister(opd), maybeTemp), ins);
 }
+
+void
+LIRGeneratorX64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+{
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType_Int64);
+    MOZ_ASSERT(IsFloatingPointType(ins->type()));
+
+    define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
+}

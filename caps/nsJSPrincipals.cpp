@@ -83,7 +83,7 @@ nsJSPrincipals::Destroy(JSPrincipals *jsprin)
 #ifdef DEBUG
 
 // Defined here so one can do principals->dump() in the debugger
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JSPrincipals::dump()
 {
     if (debugToken == nsJSPrincipals::DEBUG_TOKEN) {

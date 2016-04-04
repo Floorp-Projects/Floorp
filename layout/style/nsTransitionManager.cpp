@@ -69,7 +69,7 @@ ElementPropertyTransition::CurrentValuePortion() const
              "Animation property should have one segment for a transition");
   return ComputedTimingFunction::GetPortion(
            mProperties[0].mSegments[0].mTimingFunction,
-           computedTiming.mProgress.Value());
+           computedTiming.mProgress.Value(), computedTiming.mBeforeFlag);
 }
 
 ////////////////////////// CSSTransition ////////////////////////////
@@ -656,7 +656,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 
   TimingParams timing;
-  timing.mDuration.SetAsUnrestrictedDouble() = duration;
+  timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(duration));
   timing.mDelay = TimeDuration::FromMilliseconds(delay);
   timing.mIterations = 1.0;
   timing.mDirection = dom::PlaybackDirection::Normal;

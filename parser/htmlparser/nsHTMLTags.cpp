@@ -225,7 +225,7 @@ nsHTMLTags::TestTagTable()
 
        NS_ASSERTION(id == CaseSensitiveLookupTag(tag), "wrong id");
 
-       atom = do_GetAtom(tag);
+       atom = NS_Atomize(tag);
        NS_ASSERTION(id == CaseSensitiveLookupTag(atom), "wrong id");
        NS_ASSERTION(atom == GetAtom(id), "can't map id back to atom");
      }
@@ -236,10 +236,10 @@ nsHTMLTags::TestTagTable()
      id = LookupTag(NS_LITERAL_STRING("zzzzz"));
      NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
-     atom = do_GetAtom("@");
+     atom = NS_Atomize("@");
      id = CaseSensitiveLookupTag(atom);
      NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
-     atom = do_GetAtom("zzzzz");
+     atom = NS_Atomize("zzzzz");
      id = CaseSensitiveLookupTag(atom);
      NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 

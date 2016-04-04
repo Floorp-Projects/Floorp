@@ -578,6 +578,10 @@ nsCSPParser::keywordSource()
   }
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_INLINE)) {
+      nsCOMPtr<nsIDocument> doc = do_QueryReferent(mCSPContext->GetLoadingContext());
+      if (doc) {
+        doc->SetHasUnsafeInlineCSP(true);
+      }
     // make sure script-src only contains 'unsafe-inline' once;
     // ignore duplicates and log warning
     if (mUnsafeInlineKeywordSrc) {
@@ -593,6 +597,10 @@ nsCSPParser::keywordSource()
   }
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_EVAL)) {
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mCSPContext->GetLoadingContext());
+    if (doc) {
+      doc->SetHasUnsafeEvalCSP(true);
+    }
     return new nsCSPKeywordSrc(CSP_KeywordToEnum(mCurToken));
   }
   return nullptr;
@@ -1008,6 +1016,11 @@ nsCSPParser::directiveName()
     return nullptr;
   }
 
+  // special case handling for block-all-mixed-content
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+    return new nsBlockAllMixedContentDirective(CSP_StringToCSPDirective(mCurToken));
+  }
+
   // special case handling for upgrade-insecure-requests
   if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
     return new nsUpgradeInsecureDirective(CSP_StringToCSPDirective(mCurToken));
@@ -1059,6 +1072,20 @@ nsCSPParser::directive()
     return;
   }
 
+  // special case handling for block-all-mixed-content, which is only specified
+  // by a directive name but does not include any srcs.
+  if (cspDir->equals(nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+    if (mCurDir.Length() > 1) {
+      const char16_t* params[] = { MOZ_UTF16("block-all-mixed-content") };
+      logWarningErrorToConsole(nsIScriptError::warningFlag,
+                               "ignoreSrcForDirective",
+                               params, ArrayLength(params));
+    }
+    // add the directive and return
+    mPolicy->addDirective(cspDir);
+    return;
+  }
+
   // special case handling for upgrade-insecure-requests, which is only specified
   // by a directive name but does not include any srcs.
   if (cspDir->equals(nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
@@ -1089,15 +1116,16 @@ nsCSPParser::directive()
     srcs.AppendElement(keyword);
   }
 
-  // if a hash or nonce is specified within script-src, then
-  // unsafe-inline should be ignored, see:
+  // Ignore unsafe-inline within script-src or style-src if nonce
+  // or hash is specified, see:
   // http://www.w3.org/TR/CSP2/#directive-script-src
-  if (cspDir->equals(nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE) &&
+  if ((cspDir->equals(nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE) ||
+       cspDir->equals(nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE)) &&
       mHasHashOrNonce && mUnsafeInlineKeywordSrc) {
     mUnsafeInlineKeywordSrc->invalidate();
     // log to the console that unsafe-inline will be ignored
     const char16_t* params[] = { MOZ_UTF16("'unsafe-inline'") };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringSrcWithinScriptSrc",
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringSrcWithinScriptStyleSrc",
                              params, ArrayLength(params));
   }
 

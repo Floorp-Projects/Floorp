@@ -1,13 +1,15 @@
-/* exported MODE_CHANNEL_MAP */
+/* exported NewTabRemoteResources */
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MODE_CHANNEL_MAP"];
+this.EXPORTED_SYMBOLS = ["NewTabRemoteResources"];
 
-const MODE_CHANNEL_MAP = {
-  "production": {origin: "https://content.cdn.mozilla.net"},
-  "staging": {origin: "https://content-cdn.stage.mozaws.net"},
-  "test": {origin: "https://example.com"},
-  "test2": {origin: "http://mochi.test:8888"},
-  "dev": {origin: "http://localhost:8888"}
+const NewTabRemoteResources = {
+  MODE_CHANNEL_MAP: {
+    production: {origin: "https://content.cdn.mozilla.net"},
+    staging: {origin: "https://s3_proxy_tiles.stage.mozaws.net"},
+    test: {origin: "https://example.com"},
+    test2: {origin: "http://mochi.test:8888"},
+    dev: {origin: "http://localhost:8888"}
+  }
 };

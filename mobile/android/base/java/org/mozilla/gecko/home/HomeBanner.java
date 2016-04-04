@@ -101,7 +101,7 @@ public class HomeBanner extends LinearLayout
                 HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Dismiss", (String) getTag()));
+                GeckoAppShell.notifyObservers("HomeBanner:Dismiss", (String) getTag());
             }
         });
 
@@ -111,7 +111,7 @@ public class HomeBanner extends LinearLayout
                 HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Click", (String) getTag()));
+                GeckoAppShell.notifyObservers("HomeBanner:Click", (String) getTag());
             }
         });
 
@@ -123,17 +123,6 @@ public class HomeBanner extends LinearLayout
         super.onDetachedFromWindow();
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "HomeBanner:Data");
-    }
-
-    @Override
-    public void setVisibility(int visibility) {
-        // On pre-Honeycomb devices, setting the visibility to GONE won't actually
-        // hide the view unless we clear animations first.
-        if (Versions.preHC && visibility == View.GONE) {
-            clearAnimation();
-        }
-
-        super.setVisibility(visibility);
     }
 
     public void setScrollingPages(boolean scrollingPages) {
@@ -160,7 +149,7 @@ public class HomeBanner extends LinearLayout
      * Sends a message to gecko to request a new banner message. UI is updated in handleMessage.
      */
     public void update() {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Get", null));
+        GeckoAppShell.notifyObservers("HomeBanner:Get", null);
     }
 
     @Override
@@ -195,7 +184,7 @@ public class HomeBanner extends LinearLayout
                     }
                 });
 
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Shown", id));
+                GeckoAppShell.notifyObservers("HomeBanner:Shown", id);
 
                 // Enable the banner after a message is set.
                 setEnabled(true);

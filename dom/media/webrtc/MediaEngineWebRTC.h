@@ -13,6 +13,7 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -195,11 +196,18 @@ public:
     return (*mDeviceIndexes)[aIndex]; // translate to mDevices index
   }
 
+  static StaticMutex& Mutex()
+  {
+    return sMutex;
+  }
+
   static bool GetDeviceID(int aDeviceIndex, CubebUtils::AudioDeviceID &aID)
   {
+    // Assert sMutex is held
+    sMutex.AssertCurrentThreadOwns();
     int dev_index = DeviceIndex(aDeviceIndex);
     if (dev_index != -1) {
-      aID = mDevices->device[dev_index]->device_id;
+      aID = mDevices->device[dev_index]->devid;
       return true;
     }
     return false;
@@ -280,6 +288,7 @@ private:
   static nsTArray<nsCString>* mDeviceNames;
   static cubeb_device_collection *mDevices;
   static bool mAnyInUse;
+  static StaticMutex sMutex;
 };
 
 class AudioInputWebRTC final : public AudioInput

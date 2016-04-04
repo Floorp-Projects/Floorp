@@ -1,6 +1,9 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
+/* import-globals-from ../../framework/test/shared-head.js */
+/* import-globals-from ../../framework/test/head.js */
 
 "use strict";
 
@@ -81,7 +84,8 @@ function getElementCount(selector) {
     selector: selector
   };
 
-  return executeInContent("Test:JsonView:GetElementCount", data).then(result => {
+  return executeInContent("Test:JsonView:GetElementCount", data)
+  .then(result => {
     return result.count;
   });
 }
@@ -93,7 +97,8 @@ function getElementText(selector) {
     selector: selector
   };
 
-  return executeInContent("Test:JsonView:GetElementText", data).then(result => {
+  return executeInContent("Test:JsonView:GetElementText", data)
+  .then(result => {
     return result.text;
   });
 }
@@ -125,9 +130,9 @@ function sendString(str, selector) {
   return executeInContent("Test:JsonView:SendString", data);
 }
 
-function waitForTime(aDelay) {
+function waitForTime(delay) {
   let deferred = promise.defer();
-  setTimeout(deferred.resolve, aDelay);
+  setTimeout(deferred.resolve, delay);
   return deferred.promise;
 }
 

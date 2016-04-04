@@ -21,28 +21,27 @@ txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 {
     mSourceDocument = aSourceDocument;
 
-    nsCOMPtr<nsIURI> baseURI;
-    txXPathNodeUtils::getBaseURI(*mSourceDocument, getter_AddRefs(baseURI));
+    nsAutoString baseURI;
+    txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
 
-    LookupOrAdd(baseURI)->mDocument = mSourceDocument;
+    PutEntry(baseURI)->mDocument = mSourceDocument;
 }
 
 txLoadedDocumentsHash::~txLoadedDocumentsHash()
 {
     if (mSourceDocument) {
-        nsCOMPtr<nsIURI> baseURI;
-        txXPathNodeUtils::getBaseURI(*mSourceDocument, getter_AddRefs(baseURI));
+        nsAutoString baseURI;
+        txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
 
-        txLoadedDocumentInfo* info = Get(baseURI);
-        if (info) {
-            delete info->mDocument.forget();
+        txLoadedDocumentEntry* entry = GetEntry(baseURI);
+        if (entry) {
+            delete entry->mDocument.forget();
         }
     }
 }
 
 txExecutionState::txExecutionState(txStylesheet* aStylesheet,
-                                   bool aDisableLoads,
-                                   nsIDocument* aLoadingDocument)
+                                   bool aDisableLoads)
     : mOutputHandler(nullptr),
       mResultHandler(nullptr),
       mStylesheet(aStylesheet),
@@ -52,7 +51,6 @@ txExecutionState::txExecutionState(txStylesheet* aStylesheet,
       mEvalContext(nullptr),
       mInitialEvalContext(nullptr),
       mGlobalParams(nullptr),
-      mLoadingDocument(aLoadingDocument),
       mKeyHash(aStylesheet->getKeyMap()),
       mDisableLoads(aDisableLoads)
 {
@@ -374,48 +372,41 @@ txExecutionState::getEvalContext()
 }
 
 const txXPathNode*
-txExecutionState::retrieveDocument(nsIURI* aUri)
+txExecutionState::retrieveDocument(const nsAString& aUri)
 {
-#ifdef DEBUG
-    {
-        bool hasFrag;
-        aUri->GetHasRef(&hasFrag);
-        MOZ_ASSERT(!hasFrag, "Remove the fragment");
-    }
-#endif
+    NS_ASSERTION(!aUri.Contains(char16_t('#')),
+                 "Remove the fragment.");
 
-    if (mDisableLoads || !mLoadingDocument) {
+    if (mDisableLoads) {
         return nullptr;
     }
 
-    if (MOZ_LOG_TEST(txLog::xslt, LogLevel::Debug)) {
-        nsAutoCString spec;
-        aUri->GetSpec(spec);
-        MOZ_LOG(txLog::xslt, LogLevel::Debug,
-                ("Retrieve Document %s", spec.get()));
-    }
+    MOZ_LOG(txLog::xslt, LogLevel::Debug,
+           ("Retrieve Document %s", NS_LossyConvertUTF16toASCII(aUri).get()));
 
     // try to get already loaded document
-    txLoadedDocumentInfo* info = mLoadedDocuments.LookupOrAdd(aUri);
+    txLoadedDocumentEntry *entry = mLoadedDocuments.PutEntry(aUri);
+    if (!entry) {
+        return nullptr;
+    }
 
-    if (!info->mDocument && !info->LoadingFailed()) {
+    if (!entry->mDocument && !entry->LoadingFailed()) {
         // open URI
         nsAutoString errMsg;
-        info->mLoadResult =
-            txParseDocumentFromURI(aUri, mLoadingDocument,
-                                   errMsg, getter_Transfers(info->mDocument));
+        // XXX we should get the loader from the actual node
+        // triggering the load, but this will do for the time being
+        entry->mLoadResult =
+            txParseDocumentFromURI(aUri, *mLoadedDocuments.mSourceDocument,
+                                   errMsg, getter_Transfers(entry->mDocument));
 
-        if (info->LoadingFailed()) {
-            nsAutoCString spec;
-            aUri->GetSpec(spec);
+        if (entry->LoadingFailed()) {
             receiveError(NS_LITERAL_STRING("Couldn't load document '") +
-                         NS_ConvertUTF8toUTF16(spec) +
-                         NS_LITERAL_STRING("': ") + errMsg,
-                         info->mLoadResult);
+                         aUri + NS_LITERAL_STRING("': ") + errMsg,
+                         entry->mLoadResult);
         }
     }
 
-    return info->mDocument;
+    return entry->mDocument;
 }
 
 nsresult

@@ -386,6 +386,18 @@ TEST_P(IndexedPointsTestUInt, VertexWithColorUnsignedIntOffset3)
 }
 
 // TODO(geofflang): Figure out why this test fails on Intel OpenGL
-ANGLE_INSTANTIATE_TEST(IndexedPointsTestUByte, ES2_D3D11(), ES2_D3D11_FL9_3());
-ANGLE_INSTANTIATE_TEST(IndexedPointsTestUShort, ES2_D3D11(), ES2_D3D11_FL9_3());
-ANGLE_INSTANTIATE_TEST(IndexedPointsTestUInt, ES2_D3D11(), ES2_D3D11_FL9_3());
+ANGLE_INSTANTIATE_TEST(IndexedPointsTestUByte,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(IndexedPointsTestUShort,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(IndexedPointsTestUInt,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());

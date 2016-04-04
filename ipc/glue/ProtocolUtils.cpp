@@ -7,6 +7,10 @@
 
 #include "base/process_util.h"
 
+#ifdef OS_POSIX
+#include <errno.h>
+#endif
+
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
@@ -295,6 +299,40 @@ bool DuplicateHandle(HANDLE aSourceHandle,
 }
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+void AnnotateSystemError()
+{
+  int64_t error = 0;
+#if defined(XP_WIN)
+  error = ::GetLastError();
+#elif defined(OS_POSIX)
+  error = errno;
+#endif
+  if (error) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("SystemError"),
+                                       nsPrintfCString("%lld", error));
+  }
+}
+#endif
+
+void
+LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
+                      const char* aContextDescription,
+                      const char* aMessageDescription,
+                      MessageDirection aDirection)
+{
+  nsPrintfCString logMessage("[time: %" PRId64 "][%d%s%d] [%s] %s %s\n",
+                             PR_Now(), base::GetCurrentProcId(),
+                             aDirection == MessageDirection::eReceiving ? "<-" : "->",
+                             aOtherPid, aTopLevelProtocol,
+                             aContextDescription,
+                             aMessageDescription);
+#ifdef ANDROID
+  __android_log_write(ANDROID_LOG_INFO, "GeckoIPC", logMessage.get());
+#endif
+  fputs(logMessage.get(), stderr);
+}
+
 void
 ProtocolErrorBreakpoint(const char* aMsg)
 {
@@ -325,6 +363,7 @@ FatalError(const char* aProtocolName, const char* aMsg,
                                        nsDependentCString(aProtocolName));
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCFatalErrorMsg"),
                                        nsDependentCString(aMsg));
+    AnnotateSystemError();
 #endif
     MOZ_CRASH("IPC FatalError in the parent process!");
   } else {

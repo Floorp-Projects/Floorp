@@ -6,7 +6,7 @@ import urllib
 import os
 
 from marionette_driver import By, errors
-from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase, skip_if_b2g
 
 
 def inline(doc):

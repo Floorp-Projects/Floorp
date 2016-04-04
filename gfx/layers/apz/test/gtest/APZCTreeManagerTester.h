@@ -13,11 +13,13 @@
  */
 
 #include "APZTestCommon.h"
+#include "gfxPlatform.h"
 
 class APZCTreeManagerTester : public ::testing::Test {
 protected:
   virtual void SetUp() {
     gfxPrefs::GetSingleton();
+    gfxPlatform::GetPlatform();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
@@ -57,7 +59,8 @@ protected:
 protected:
   static void SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
                                         CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1)) {
-    FrameMetrics metrics;
+    ScrollMetadata metadata;
+    FrameMetrics& metrics = metadata.GetMetrics();
     metrics.SetScrollId(aScrollId);
     // By convention in this test file, START_SCROLL_ID is the root, so mark it as such.
     if (aScrollId == FrameMetrics::START_SCROLL_ID) {
@@ -70,7 +73,7 @@ protected:
     metrics.SetScrollOffset(CSSPoint(0, 0));
     metrics.SetPageScrollAmount(LayoutDeviceIntSize(50, 100));
     metrics.SetAllowVerticalScrollWithWheel(true);
-    aLayer->SetFrameMetrics(metrics);
+    aLayer->SetScrollMetadata(metadata);
     aLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(layerBound)));
     if (!aScrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
       // The purpose of this is to roughly mimic what layout would do in the
@@ -84,13 +87,13 @@ protected:
   }
 
   void SetScrollHandoff(Layer* aChild, Layer* aParent) {
-    FrameMetrics metrics = aChild->GetFrameMetrics(0);
-    metrics.SetScrollParentId(aParent->GetFrameMetrics(0).GetScrollId());
-    aChild->SetFrameMetrics(metrics);
+    ScrollMetadata metadata = aChild->GetScrollMetadata(0);
+    metadata.GetMetrics().SetScrollParentId(aParent->GetFrameMetrics(0).GetScrollId());
+    aChild->SetScrollMetadata(metadata);
   }
 
   static TestAsyncPanZoomController* ApzcOf(Layer* aLayer) {
-    EXPECT_EQ(1u, aLayer->GetFrameMetricsCount());
+    EXPECT_EQ(1u, aLayer->GetScrollMetadataCount());
     return (TestAsyncPanZoomController*)aLayer->GetAsyncPanZoomController(0);
   }
 
@@ -151,9 +154,9 @@ protected:
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
 
     // Make layers[1] the root content
-    FrameMetrics childMetrics = layers[1]->GetFrameMetrics(0);
-    childMetrics.SetIsRootContent(true);
-    layers[1]->SetFrameMetrics(childMetrics);
+    ScrollMetadata childMetadata = layers[1]->GetScrollMetadata(0);
+    childMetadata.GetMetrics().SetIsRootContent(true);
+    layers[1]->SetScrollMetadata(childMetadata);
 
     // Both layers are fully dispatch-to-content
     EventRegions regions;

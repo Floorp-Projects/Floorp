@@ -3,16 +3,17 @@
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource://devtools/shared/event-emitter.js");
+
 var {
   EventManager,
   ignoreEvent,
 } = ExtensionUtils;
 
-// WeakMap[Extension -> Set[Notification]]
+// WeakMap[Extension -> Map[id -> Notification]]
 var notificationsMap = new WeakMap();
-
-// WeakMap[Extension -> Set[callback]]
-var notificationCallbacksMap = new WeakMap();
 
 // Manages a notification popup (notifications API) created by the extension.
 function Notification(extension, id, options) {
@@ -47,97 +48,101 @@ Notification.prototype = {
     } catch (e) {
       // This will fail if the OS doesn't support this function.
     }
-    notificationsMap.get(this.extension).delete(this);
+    notificationsMap.get(this.extension).delete(this.id);
   },
 
   observe(subject, topic, data) {
-    if (topic != "alertfinished") {
-      return;
+    if (topic === "alertclickcallback") {
+      notificationsMap.get(this.extension).emit("clicked", data);
+    }
+    if (topic === "alertfinished") {
+      notificationsMap.get(this.extension).emit("closed", data);
     }
 
-    for (let callback of notificationCallbacksMap.get(this.extension)) {
-      callback(this);
-    }
-
-    notificationsMap.get(this.extension).delete(this);
+    notificationsMap.get(this.extension).delete(this.id);
   },
 };
 
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
-  notificationsMap.set(extension, new Set());
-  notificationCallbacksMap.set(extension, new Set());
+  let map = new Map();
+  EventEmitter.decorate(map);
+  notificationsMap.set(extension, map);
 });
 
 extensions.on("shutdown", (type, extension) => {
-  for (let notification of notificationsMap.get(extension)) {
+  for (let notification of notificationsMap.get(extension).values()) {
     notification.clear();
   }
   notificationsMap.delete(extension);
-  notificationCallbacksMap.delete(extension);
 });
 /* eslint-enable mozilla/balanced-listeners */
 
 var nextId = 0;
 
-extensions.registerPrivilegedAPI("notifications", (extension, context) => {
+extensions.registerSchemaAPI("notifications", "notifications", (extension, context) => {
   return {
     notifications: {
-      create: function(...args) {
-        let notificationId, options, callback;
-        if (args.length == 1) {
-          options = args[0];
-        } else {
-          [notificationId, options, callback] = args;
+      create: function(notificationId, options) {
+        if (!notificationId) {
+          notificationId = String(nextId++);
         }
 
-        if (!notificationId) {
-          notificationId = nextId++;
+        let notifications = notificationsMap.get(extension);
+        if (notifications.has(notificationId)) {
+          notifications.get(notificationId).clear();
         }
 
         // FIXME: Lots of options still aren't supported, especially
         // buttons.
         let notification = new Notification(extension, notificationId, options);
-        notificationsMap.get(extension).add(notification);
+        notificationsMap.get(extension).set(notificationId, notification);
 
-        return context.wrapPromise(Promise.resolve(notificationId), callback);
+        return Promise.resolve(notificationId);
       },
 
-      clear: function(notificationId, callback) {
+      clear: function(notificationId) {
         let notifications = notificationsMap.get(extension);
-        let cleared = false;
-        for (let notification of notifications) {
-          if (notification.id == notificationId) {
-            notification.clear();
-            cleared = true;
-            break;
-          }
+        if (notifications.has(notificationId)) {
+          notifications.get(notificationId).clear();
+          return Promise.resolve(true);
         }
-
-        return context.wrapPromise(Promise.resolve(cleared), callback);
+        return Promise.resolve(false);
       },
 
-      getAll: function(callback) {
-        let notifications = notificationsMap.get(extension);
-        notifications = Array.from(notifications, notification => notification.id);
-        return context.wrapPromise(Promise.resolve(notifications), callback);
+      getAll: function() {
+        let result = {};
+        notificationsMap.get(extension).forEach((value, key) => {
+          result[key] = value.options;
+        });
+        return Promise.resolve(result);
       },
 
       onClosed: new EventManager(context, "notifications.onClosed", fire => {
-        let listener = notification => {
+        let listener = (event, notificationId) => {
           // FIXME: Support the byUser argument.
-          fire(notification.id, true);
+          fire(notificationId, true);
         };
 
-        notificationCallbacksMap.get(extension).add(listener);
+        notificationsMap.get(extension).on("closed", listener);
         return () => {
-          notificationCallbacksMap.get(extension).delete(listener);
+          notificationsMap.get(extension).off("closed", listener);
         };
       }).api(),
 
-      // FIXME
+      onClicked: new EventManager(context, "notifications.onClicked", fire => {
+        let listener = (event, notificationId) => {
+          fire(notificationId, true);
+        };
+
+        notificationsMap.get(extension).on("clicked", listener);
+        return () => {
+          notificationsMap.get(extension).off("clicked", listener);
+        };
+      }).api(),
+
+      // Intend to implement this later: https://bugzilla.mozilla.org/show_bug.cgi?id=1190681
       onButtonClicked: ignoreEvent(context, "notifications.onButtonClicked"),
-      onClicked: ignoreEvent(context, "notifications.onClicked"),
     },
   };
 });

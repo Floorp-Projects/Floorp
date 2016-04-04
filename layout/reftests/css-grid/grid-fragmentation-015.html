@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation edge cases</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-015-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: grid;
+  height: 90px;
+  grid-template-columns: 30px 30px;
+  grid-auto-rows: 30px;
+  grid-gap: 12px;
+  border:5px solid;
+  align-content: start;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+.break-before { page-break-before:always; break-before:always; }
+.break-after { page-break-after:always; break-after:always; }
+
+</style>
+</head>
+<body>
+
+<!-- grid wrapped in inline -->
+<div class="columns" style="height: 40px">
+<div style="padding-top:2px; background:grey">
+<y>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></y></div></div>
+
+<!-- grid wrapped in inline with orthogonal writing-mode -->
+<div class="columns" style="width: 40px; height:40px">
+<div style="padding-top:2px; background:grey">
+<y style="writing-mode:vertical-lr">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></y></div></div>
+
+<!-- grid wrapped in overflow:hidden block -->
+<div class="columns" style="height: 40px; margin-top:70px">
+<div style="padding-top:2px; background:grey">
+<y style="display:block;overflow:hidden">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></y></div></div>
+
+<!-- grid wrapped in FIELDSET block -->
+<div class="columns" style="height: 40px; margin-top:70px">
+<div style="padding-top:2px; background:grey">
+<fieldset style="display:block; border:none; padding:0; margin:0">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></fieldset></div></div>
+
+<!-- grid wrapped in FIELDSET inline -->
+<div class="columns" style="height: 40px; margin-left:200px">
+<div style="padding-top:2px; background:grey">
+<fieldset style="display:inline; border:none; padding:0; margin:0">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></fieldset></div></div>
+
+<!-- grid wrapped in FIELDSET overflow:hidden block -->
+<div class="columns" style="height: 40px; margin-left:400px">
+<div style="padding-top:2px; background:grey">
+<fieldset style="display:block; overflow:hidden; border:none; padding:0; margin:0">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></fieldset></div></div>
+
+<!-- grid with orthogonal writing-mode to fragmentainer -->
+<div class="columns" style="height: 40px; margin-top:70px">
+<div style="padding-top:2px; background:grey">
+<y>
+<div class="grid" style="writing-mode:vertical-lr">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></y></div></div>
+
+<!-- vertical grid and fragmentainer with intermediary horizontal writing-mode inline -->
+<!-- XXX bug 1242660: remove the visibility:hidden DIV when we know what the rendering should be -->
+<div style="visibility:hidden">
+<div class="columns" style="width: 50px; writing-mode:vertical-lr; margin-top:70px">
+<div style="padding-top:2px; background:grey">
+<y style="writing-mode:horizontal-lr">
+<div class="grid" style="writing-mode:vertical-lr">
+<span style="grid-row:span 2"><x></x></span>
+<span><x></x></span>
+<span><x></x></span>
+</div></y></div></div>
+</div>
+
+</body>
+</html>

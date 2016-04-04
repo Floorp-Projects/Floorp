@@ -45,7 +45,9 @@ On Posix systems, this resides in :file:`/ENV/bin/`, so you can run::
     $ source bin/activate
 
 For some shells (e.g. the original Bourne Shell) you may need to use the
-:command:`.` command, when :command:`source` does not exist.
+:command:`.` command, when :command:`source` does not exist. There are also
+separate activate files for some other shells, like csh and fish.
+:file:`bin/activate` should work for bash/zsh/dash.
 
 This will change your ``$PATH`` so its first entry is the virtualenv's
 ``bin/`` directory. (You have to use ``source`` because it changes your

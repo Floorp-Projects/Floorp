@@ -13,6 +13,11 @@ Cu.import("resource://services-sync/service.js");
 var scheduler = Service.scheduler;
 var clientsEngine = Service.clientsEngine;
 
+// Don't remove stale clients when syncing. This is a test-only workaround
+// that lets us add clients directly to the store, without losing them on
+// the next sync.
+clientsEngine._removeRemoteClient = id => {};
+
 function promiseStopServer(server) {
   let deferred = Promise.defer();
   server.stop(deferred.resolve);

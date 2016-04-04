@@ -23,6 +23,7 @@ class Framebuffer;
 namespace rx
 {
 class Renderer11;
+class TextureHelper11;
 class TextureStorage11;
 
 class Image11 : public ImageD3D
@@ -44,9 +45,10 @@ class Image11 : public ImageD3D
     virtual gl::Error loadData(const gl::Box &area, const gl::PixelUnpackState &unpack, GLenum type, const void *input);
     virtual gl::Error loadCompressedData(const gl::Box &area, const void *input);
 
-    virtual gl::Error copy(const gl::Offset &destOffset, const gl::Rectangle &sourceArea, RenderTargetD3D *source);
-    virtual gl::Error copy(const gl::Offset &destOffset, const gl::Box &sourceArea,
-                           const gl::ImageIndex &sourceIndex, TextureStorage *source);
+    gl::Error copyFromTexStorage(const gl::ImageIndex &imageIndex, TextureStorage *source) override;
+    gl::Error copyFromFramebuffer(const gl::Offset &destOffset,
+                                  const gl::Rectangle &sourceArea,
+                                  const gl::Framebuffer *source) override;
 
     gl::Error recoverFromAssociatedStorage();
     bool isAssociatedStorageValid(TextureStorage11* textureStorage) const;
@@ -57,8 +59,10 @@ class Image11 : public ImageD3D
     void unmap();
 
   private:
-    gl::Error copyToStorageImpl(TextureStorage11 *storage11, const gl::ImageIndex &index, const gl::Box &region);
-    gl::Error copy(const gl::Offset &destOffset, const gl::Box &sourceArea, ID3D11Resource *source, UINT sourceSubResource);
+    gl::Error copyWithoutConversion(const gl::Offset &destOffset,
+                                    const gl::Box &sourceArea,
+                                    const TextureHelper11 &textureHelper,
+                                    UINT sourceSubResource);
 
     gl::Error getStagingTexture(ID3D11Resource **outStagingTexture, unsigned int *outSubresourceIndex);
     gl::Error createStagingTexture();

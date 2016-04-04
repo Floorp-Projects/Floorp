@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>TABPAINT</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+<p>TABPAINT</p>
+</body>
+<script>
+  const { classes: Cc, interfaces: Ci } = Components;
+
+  /**
+   * When this page is loaded, we expect a search string to be
+   * appended with the "starting time" (in ms) of when the tab
+   * was opened.
+   *
+   * Example: target.htmml?1457063506846
+   */
+  addEventListener("load", function onLoad() {
+    removeEventListener("load", onLoad);
+    addEventListener("MozAfterPaint", function onPaint() {
+      let presented = Date.now();
+      removeEventListener("MozAfterPaint", onPaint);
+
+      let opened = parseInt(location.search.substring(1), 10);
+      let delta = presented - opened;
+
+      let mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIContentFrameMessageManager);
+
+      mm.sendAsyncMessage("TabPaint:Painted", { delta });
+    });
+  });
+</script>
+</html>

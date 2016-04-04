@@ -127,10 +127,10 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
     // Add the ``RDF'' prefix, by default.
     nsCOMPtr<nsIAtom> prefix;
 
-    prefix = do_GetAtom("RDF");
+    prefix = NS_Atomize("RDF");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
 
-    prefix = do_GetAtom("NC");
+    prefix = NS_Atomize("NC");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://home.netscape.com/NC-rdf#"));
 
     mPrefixID = 0;
@@ -192,7 +192,7 @@ nsRDFXMLSerializer::EnsureNewPrefix()
         isNewPrefix = true;
         qname.AssignLiteral("NS");
         qname.AppendInt(++mPrefixID, 10);
-        prefix = do_GetAtom(qname);
+        prefix = NS_Atomize(qname);
         nsNameSpaceMap::const_iterator iter = mNameSpaces.first();
         while (iter != mNameSpaces.last() && isNewPrefix) {
             isNewPrefix = (iter->mPrefix != prefix);

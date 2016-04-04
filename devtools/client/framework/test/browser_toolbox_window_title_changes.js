@@ -8,6 +8,8 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 function test() {
   const URL_1 = "data:text/plain;charset=UTF-8,abcde";
   const URL_2 = "data:text/plain;charset=UTF-8,12345";
+  const URL_3 = URL_ROOT + "browser_toolbox_window_title_changes_page.html";
+  const TITLE_URL_3 = "Toolbox test for title update";
 
   const TOOL_ID_1 = "webconsole";
   const TOOL_ID_2 = "jsdebugger";
@@ -31,7 +33,7 @@ function test() {
       .then(() => toolbox.selectTool(TOOL_ID_2))
       .then(checkTitle.bind(null, LABEL_2, URL_1, "tool changed"))
 
-    // navigate to different url and check title
+    // navigate to different local url and check title
       .then(function () {
         let deferred = promise.defer();
         target.once("navigate", () => deferred.resolve());
@@ -39,6 +41,15 @@ function test() {
         return deferred.promise;
       })
       .then(checkTitle.bind(null, LABEL_2, URL_2, "url changed"))
+
+    // navigate to a real url and check title
+      .then(() => {
+        let deferred = promise.defer();
+        target.once("navigate", () => deferred.resolve());
+        gBrowser.loadURI(URL_3);
+        return deferred.promise;
+      })
+      .then(checkTitle.bind(null, LABEL_2, TITLE_URL_3, "url changed"))
 
     // destroy toolbox, create new one hosted in a window (with a
     // different tool id), and check title
@@ -54,7 +65,7 @@ function test() {
             })
             .then(function (aToolbox) { toolbox = aToolbox; })
             .then(() => toolbox.selectTool(TOOL_ID_1))
-            .then(checkTitle.bind(null, LABEL_1, URL_2,
+            .then(checkTitle.bind(null, LABEL_1, TITLE_URL_3,
                                   "toolbox destroyed and recreated"))
 
             // clean up

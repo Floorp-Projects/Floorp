@@ -143,10 +143,25 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     insideEval(insideEval),
     insideNonGlobalEval(insideNonGlobalEval),
     insideModule(false),
-    emitterMode(emitterMode)
+    emitterMode(emitterMode),
+    functionBodyEndPosSet(false)
 {
     MOZ_ASSERT_IF(evalCaller, insideEval);
     MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
+}
+
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
+                                 Parser<FullParseHandler>* parser, SharedContext* sc,
+                                 HandleScript script, Handle<LazyScript*> lazyScript,
+                                 bool insideEval, HandleScript evalCaller,
+                                 bool insideNonGlobalEval, TokenPos bodyPosition,
+                                 EmitterMode emitterMode)
+    : BytecodeEmitter(parent, parser, sc, script, lazyScript, insideEval,
+                      evalCaller, insideNonGlobalEval,
+                      parser->tokenStream.srcCoords.lineNum(bodyPosition.begin),
+                      emitterMode)
+{
+    setFunctionBodyEndPos(bodyPosition);
 }
 
 bool
@@ -2820,8 +2835,13 @@ BytecodeEmitter::emitElemOperands(ParseNode* pn, EmitElemOption opts)
     if (!emitTree(pn->pn_right))
         return false;
 
-    if (opts == EmitElemOption::Set && !emit2(JSOP_PICK, 2))
-        return false;
+    if (opts == EmitElemOption::Set) {
+        if (!emit2(JSOP_PICK, 2))
+            return false;
+    } else if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
+        if (!emit1(JSOP_TOID))
+            return false;
+    }
     return true;
 }
 
@@ -2840,8 +2860,10 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, EmitElemOption opts)
 
     // We need to convert the key to an object id first, so that we do not do
     // it inside both the GETELEM and the SETELEM.
-    if (opts == EmitElemOption::IncDec && !emit1(JSOP_TOID))
-        return false;
+    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
+        if (!emit1(JSOP_TOID))
+            return false;
+    }
 
     if (!emitGetThisForSuperBase(pn->pn_left))
         return false;
@@ -2913,6 +2935,9 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
 
     bool isSuper = pn->pn_kid->as<PropertyByValue>().isSuper();
 
+    // We need to convert the key to an object id first, so that we do not do
+    // it inside both the GETELEM and the SETELEM. This is done by
+    // emit(Super)ElemOperands.
     if (isSuper) {
         if (!emitSuperElemOperands(pn->pn_kid, EmitElemOption::IncDec))
             return false;
@@ -2936,12 +2961,7 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
             return false;
         getOp = JSOP_GETELEM_SUPER;
     } else {
-        // We need to convert the key to an object id first, so that we do not do
-        // it inside both the GETELEM and the SETELEM. In the super case, this is
-        // done by emitSuperElemOperands.
-                                                        // OBJ KEY*
-        if (!emit1(JSOP_TOID))                          // OBJ KEY
-            return false;
+                                                        // OBJ KEY
         if (!emit1(JSOP_DUP2))                          // OBJ KEY OBJ KEY
             return false;
         getOp = JSOP_GETELEM;
@@ -3598,7 +3618,11 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
         switchToMain();
     }
 
+    setFunctionBodyEndPos(body->pn_pos);
     if (!emitTree(body))
+        return false;
+
+    if (!updateSourceCoordNotes(body->pn_pos.end))
         return false;
 
     if (sc->isFunctionBox()) {
@@ -3700,6 +3724,7 @@ BytecodeEmitter::emitModuleScript(ParseNode* body)
     // may walk the scope chain of currently compiling scripts.
     JSScript::linkToModuleFromEmitter(cx, script, modulebox);
 
+    setFunctionBodyEndPos(body->pn_pos);
     if (!emitTree(body))
         return false;
 
@@ -4601,20 +4626,20 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
             return false;
         break;
-      case PNK_ELEM:
+      case PNK_ELEM: {
         MOZ_ASSERT(lhs->isArity(PN_BINARY));
+        EmitElemOption opt = op == JSOP_NOP ? EmitElemOption::Get : EmitElemOption::CompoundAssign;
         if (lhs->as<PropertyByValue>().isSuper()) {
-            if (!emitSuperElemOperands(lhs))
+            if (!emitSuperElemOperands(lhs, opt))
                 return false;
             offset += 3;
         } else {
-            if (!emitTree(lhs->pn_left))
-                return false;
-            if (!emitTree(lhs->pn_right))
+            if (!emitElemOperands(lhs, opt))
                 return false;
             offset += 2;
         }
         break;
+      }
       case PNK_ARRAY:
       case PNK_OBJECT:
         break;
@@ -6390,11 +6415,16 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
         SharedContext* outersc = sc;
         if (fun->isInterpretedLazy()) {
-            if (!fun->lazyScript()->sourceObject()) {
-                JSObject* scope = innermostStaticScope();
-                JSObject* source = script->sourceObject();
-                fun->lazyScript()->setParent(scope, &source->as<ScriptSourceObject>());
-            }
+            // We need to update the static scope chain regardless of whether
+            // the LazyScript has already been initialized, due to the case
+            // where we previously successfully compiled an inner function's
+            // lazy script but failed to compile the outer script after the
+            // fact. If we attempt to compile the outer script again, the
+            // static scope chain will be newly allocated and will mismatch
+            // the previously compiled LazyScript's.
+            ScriptSourceObject* source = &script->sourceObject()->as<ScriptSourceObject>();
+            JSObject* scope = innermostStaticScope();
+            fun->lazyScript()->setEnclosingScopeAndSource(scope, source);
             if (emittingRunOnceLambda)
                 fun->lazyScript()->setTreatAsRunOnce();
         } else {
@@ -6421,10 +6451,9 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
             script->bindings = funbox->bindings;
 
-            uint32_t lineNum = parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
             BytecodeEmitter bce2(this, parser, funbox, script, /* lazyScript = */ nullptr,
                                  insideEval, evalCaller,
-                                 insideNonGlobalEval, lineNum, emitterMode);
+                                 insideNonGlobalEval, pn->pn_pos, emitterMode);
             if (!bce2.init())
                 return false;
 
@@ -6432,8 +6461,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             if (!bce2.emitFunctionScript(pn->pn_body))
                 return false;
 
-            if (funbox->usesArguments && funbox->usesApply && funbox->usesThis)
-                script->setUsesArgumentsApplyAndThis();
+            if (funbox->isLikelyConstructorWrapper())
+                script->setLikelyConstructorWrapper();
         }
         if (outersc->isFunctionBox())
             outersc->asFunctionBox()->function()->nonLazyScript()->setHasInnerFunctions(true);
@@ -6794,6 +6823,13 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
         if (!emitFinishIteratorResult(true))
             return false;
     }
+
+    // We know functionBodyEndPos is set because "return" is only
+    // valid in a function, and so we've passed through
+    // emitFunctionScript.
+    MOZ_ASSERT(functionBodyEndPosSet);
+    if (!updateSourceCoordNotes(functionBodyEndPos))
+        return false;
 
     /*
      * EmitNonLocalJumpFixup may add fixup bytecode to close open try

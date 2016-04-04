@@ -7,6 +7,7 @@ add_task(function* () {
     manifest: {
       "browser_action": {
         "default_popup": "popup.html",
+        "unrecognized_property": "with-a-random-value",
       },
     },
 
@@ -31,6 +32,13 @@ add_task(function* () {
     },
   });
 
+  SimpleTest.waitForExplicitFinish();
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{
+      message: /Reading manifest: Error processing browser_action.unrecognized_property: An unexpected property was found/,
+    }]);
+  });
+
   yield extension.startup();
 
   // Do this a few times to make sure the pop-up is reloaded each time.
@@ -43,4 +51,7 @@ add_task(function* () {
   }
 
   yield extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
 });

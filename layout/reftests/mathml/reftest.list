@@ -349,18 +349,18 @@ fails-if(B2G||Mulet||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) ==
 == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
 == mfrac-B-1.html mfrac-B-1-ref.html
-fails-if(winWidget) == mfrac-B-2.html mfrac-B-2-3-ref.html
-fails-if(winWidget) == mfrac-B-3.html mfrac-B-2-3-ref.html
+== mfrac-B-2.html mfrac-B-2-3-ref.html
+== mfrac-B-3.html mfrac-B-2-3-ref.html
 == mfrac-B-4.html mfrac-B-4-5-ref.html
 == mfrac-B-5.html mfrac-B-4-5-ref.html
 == mfrac-B-6.html mfrac-B-6-7-ref.html
 == mfrac-B-7.html mfrac-B-6-7-ref.html
 fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-C-1.html mfrac-C-1-ref.html
-fails-if(winWidget) == mfrac-C-2.html mfrac-C-2-ref.html
+== mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-C-3.html mfrac-C-3-ref.html
 == mfrac-C-4.html mfrac-C-4-ref.html
 fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-D-1.html mfrac-D-1-ref.html
-fails-if(winWidget) == mfrac-D-2.html mfrac-D-2-ref.html
+== mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-D-3.html mfrac-D-3-ref.html
 == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html

@@ -25,6 +25,39 @@ template<typename T, class D = DefaultDelete<T>> class UniquePtr;
 
 namespace mozilla {
 
+namespace detail {
+
+struct HasPointerTypeHelper
+{
+  template <class U> static double Test(...);
+  template <class U> static char Test(typename U::pointer* = 0);
+};
+
+template <class T>
+class HasPointerType : public IntegralConstant<bool, sizeof(HasPointerTypeHelper::Test<T>(0)) == 1>
+{
+};
+
+template <class T, class D, bool = HasPointerType<D>::value>
+struct PointerTypeImpl
+{
+  typedef typename D::pointer Type;
+};
+
+template <class T, class D>
+struct PointerTypeImpl<T, D, false>
+{
+  typedef T* Type;
+};
+
+template <class T, class D>
+struct PointerType
+{
+  typedef typename PointerTypeImpl<T, typename RemoveReference<D>::Type>::Type Type;
+};
+
+} // namespace detail
+
 /**
  * UniquePtr is a smart pointer that wholly owns a resource.  Ownership may be
  * transferred out of a UniquePtr through explicit action, but otherwise the
@@ -154,9 +187,9 @@ template<typename T, class D>
 class UniquePtr
 {
 public:
-  typedef T* Pointer;
   typedef T ElementType;
   typedef D DeleterType;
+  typedef typename detail::PointerType<T, DeleterType>::Type Pointer;
 
 private:
   Pair<Pointer, DeleterType> mTuple;

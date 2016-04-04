@@ -29,20 +29,4 @@ ImageD3D::ImageD3D()
 {
 }
 
-gl::Error ImageD3D::copy(const gl::Offset &destOffset, const gl::Rectangle &sourceArea, const gl::Framebuffer *source)
-{
-    const gl::FramebufferAttachment *srcAttachment = source->getReadColorbuffer();
-    ASSERT(srcAttachment);
-
-    RenderTargetD3D *renderTarget = NULL;
-    gl::Error error = srcAttachment->getRenderTarget(&renderTarget);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    ASSERT(renderTarget);
-    return copy(destOffset, sourceArea, renderTarget);
-}
-
-}
+}  // namespace rx

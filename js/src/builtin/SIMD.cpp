@@ -18,6 +18,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsnum.h"
 #include "jsprf.h"
 
 #include "builtin/TypedObject.h"
@@ -38,6 +39,8 @@ using mozilla::NumberIsInt32;
 // SIMD
 
 static_assert(unsigned(SimdType::Count) == 12, "sync with TypedObjectConstants.h");
+
+static bool ArgumentToLaneIndex(JSContext* cx, JS::HandleValue v, unsigned limit, unsigned* lane);
 
 static bool
 CheckVectorObject(HandleValue v, SimdType expectedType)
@@ -143,6 +146,13 @@ ErrorWrongTypeArg(JSContext* cx, size_t argIndex, Handle<TypeDescr*> typeDescr)
     return false;
 }
 
+static inline bool
+ErrorBadIndex(JSContext* cx)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+    return false;
+}
+
 template<typename T>
 static SimdTypeDescr*
 GetTypeDescr(JSContext* cx)
@@ -218,6 +228,8 @@ static const JSFunctionSpec TypeDescriptorMethods[] = {
 
 // Shared TypedObject methods for all SIMD types.
 static const JSFunctionSpec SimdTypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toString", "SimdToString", 0, 0),
+    JS_SELF_HOSTED_FN("valueOf", "SimdValueOf", 0, 0),
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
@@ -852,14 +864,12 @@ ExtractLane(JSContext* cx, unsigned argc, Value* vp)
     typedef typename V::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 2 || !IsVectorObject<V>(args[0]) || !args[1].isNumber())
+    if (args.length() < 2 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    int32_t lane;
-    if (!NumberIsInt32(args[1].toNumber(), &lane))
-        return ErrorBadArgs(cx);
-    if (lane < 0 || uint32_t(lane) >= V::lanes)
-        return ErrorBadArgs(cx);
+    unsigned lane;
+    if (!ArgumentToLaneIndex(cx, args[1], V::lanes, &lane))
+        return false;
 
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
     Elem val = vec[lane];
@@ -919,12 +929,9 @@ ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
     Elem result[V::lanes];
 
-    int32_t lanearg;
-    if (!args[1].isNumber() || !NumberIsInt32(args[1].toNumber(), &lanearg))
-        return ErrorBadArgs(cx);
-    if (lanearg < 0 || uint32_t(lanearg) >= V::lanes)
-        return ErrorBadArgs(cx);
-    uint32_t lane = uint32_t(lanearg);
+    unsigned lane;
+    if (!ArgumentToLaneIndex(cx, args[1], V::lanes, &lane))
+        return false;
 
     Elem value;
     if (!V::Cast(cx, args.get(2), &value))
@@ -945,14 +952,10 @@ Swizzle(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != (V::lanes + 1) || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    uint32_t lanes[V::lanes];
+    unsigned lanes[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
-        int32_t lane;
-        if (!args[i + 1].isNumber() || !NumberIsInt32(args[i + 1].toNumber(), &lane))
-            return ErrorBadArgs(cx);
-        if (lane < 0 || uint32_t(lane) >= V::lanes)
-            return ErrorBadArgs(cx);
-        lanes[i] = uint32_t(lane);
+        if (!ArgumentToLaneIndex(cx, args[i + 1], V::lanes, &lanes[i]))
+            return false;
     }
 
     Elem* val = TypedObjectMemory<Elem*>(args[0]);
@@ -974,14 +977,10 @@ Shuffle(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != (V::lanes + 2) || !IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]))
         return ErrorBadArgs(cx);
 
-    uint32_t lanes[V::lanes];
+    unsigned lanes[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
-        int32_t lane;
-        if (!args[i + 2].isNumber() || !NumberIsInt32(args[i + 2].toNumber(), &lane))
-            return ErrorBadArgs(cx);
-        if (lane < 0 || uint32_t(lane) >= (2 * V::lanes))
-            return ErrorBadArgs(cx);
-        lanes[i] = uint32_t(lane);
+        if (!ArgumentToLaneIndex(cx, args[i + 2], 2 * V::lanes, &lanes[i]))
+            return false;
     }
 
     Elem* lhs = TypedObjectMemory<Elem*>(args[0]);
@@ -1256,10 +1255,29 @@ Select(JSContext* cx, unsigned argc, Value* vp)
     return StoreResult<V>(cx, args, result);
 }
 
-template<class VElem, unsigned NumElem>
+// Extract an integer lane index from a function argument.
+//
+// Register an exception and return false if the argument is not suitable.
 static bool
-TypedArrayFromArgs(JSContext* cx, const CallArgs& args,
-                   MutableHandleObject typedArray, int32_t* byteStart)
+ArgumentToLaneIndex(JSContext* cx, JS::HandleValue v, unsigned limit, unsigned* lane)
+{
+    uint64_t arg;
+    if (!ToIntegerIndex(cx, v, &arg))
+        return false;
+    if (arg >= limit)
+        return ErrorBadIndex(cx);
+
+    *lane = unsigned(arg);
+    return true;
+}
+
+// Look for arguments (ta, idx) where ta is a TypedArray and idx is a
+// non-negative integer.
+// Check that accessBytes can be accessed starting from index idx in the array.
+// Return the array handle in typedArray and idx converted to a byte offset in byteStart.
+static bool
+TypedArrayFromArgs(JSContext* cx, const CallArgs& args, uint32_t accessBytes,
+                   MutableHandleObject typedArray, size_t* byteStart)
 {
     if (!args[0].isObject())
         return ErrorBadArgs(cx);
@@ -1270,18 +1288,18 @@ TypedArrayFromArgs(JSContext* cx, const CallArgs& args,
 
     typedArray.set(&argobj);
 
-    int32_t index;
-    if (!ToInt32(cx, args[1], &index))
+    uint64_t index;
+    if (!ToIntegerIndex(cx, args[1], &index))
         return false;
 
-    *byteStart = index * typedArray->as<TypedArrayObject>().bytesPerElement();
-    if (*byteStart < 0 || (uint32_t(*byteStart) + NumElem * sizeof(VElem)) >
-                          typedArray->as<TypedArrayObject>().byteLength())
-    {
-        // Keep in sync with AsmJS OnOutOfBounds function.
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-        return false;
-    }
+    // Do the range check in 64 bits even when size_t is 32 bits.
+    // This can't overflow because index <= 2^53.
+    uint64_t bytes = index * typedArray->as<TypedArrayObject>().bytesPerElement();
+    // Keep in sync with AsmJS OnOutOfBounds function.
+    if ((bytes + accessBytes) > typedArray->as<TypedArrayObject>().byteLength())
+        return ErrorBadIndex(cx);
+
+    *byteStart = bytes;
 
     return true;
 }
@@ -1296,9 +1314,9 @@ Load(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != 2)
         return ErrorBadArgs(cx);
 
-    int32_t byteStart;
+    size_t byteStart;
     RootedObject typedArray(cx);
-    if (!TypedArrayFromArgs<Elem, NumElem>(cx, args, &typedArray, &byteStart))
+    if (!TypedArrayFromArgs(cx, args, sizeof(Elem) * NumElem, &typedArray, &byteStart))
         return false;
 
     Rooted<TypeDescr*> typeDescr(cx, GetTypeDescr<V>(cx));
@@ -1328,9 +1346,9 @@ Store(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != 3)
         return ErrorBadArgs(cx);
 
-    int32_t byteStart;
+    size_t byteStart;
     RootedObject typedArray(cx);
-    if (!TypedArrayFromArgs<Elem, NumElem>(cx, args, &typedArray, &byteStart))
+    if (!TypedArrayFromArgs(cx, args, sizeof(Elem) * NumElem, &typedArray, &byteStart))
         return false;
 
     if (!IsVectorObject<V>(args[2]))

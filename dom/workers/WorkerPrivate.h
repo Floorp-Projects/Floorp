@@ -201,7 +201,7 @@ protected:
   // traversed by the cycle collector if the busy count is zero.
   RefPtr<WorkerPrivate> mSelfRef;
 
-  WorkerPrivateParent(JSContext* aCx, WorkerPrivate* aParent,
+  WorkerPrivateParent(WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
                       WorkerType aWorkerType,
                       const nsACString& aSharedWorkerName,
@@ -216,13 +216,11 @@ private:
     return static_cast<Derived*>(const_cast<WorkerPrivateParent*>(this));
   }
 
-  // aCx is null when called from the finalizer
   bool
   NotifyPrivate(Status aStatus);
 
-  // aCx is null when called from the finalizer
   bool
-  TerminatePrivate(JSContext* aCx)
+  TerminatePrivate()
   {
     return NotifyPrivate(Terminating);
   }
@@ -294,7 +292,7 @@ public:
   }
 
   bool
-  Kill(JSContext* aCx)
+  Kill()
   {
     return Notify(Killing);
   }
@@ -318,10 +316,10 @@ public:
   Resume();
 
   bool
-  Terminate(JSContext* aCx)
+  Terminate()
   {
     AssertIsOnParentThread();
-    return TerminatePrivate(aCx);
+    return TerminatePrivate();
   }
 
   bool
@@ -372,6 +370,9 @@ public:
 
   void
   OfflineStatusChangeEvent(bool aIsOffline);
+
+  void
+  MemoryPressure(bool aDummy);
 
   bool
   RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
@@ -1065,10 +1066,10 @@ public:
   ModifyBusyCountFromWorker(bool aIncrease);
 
   bool
-  AddChildWorker(JSContext* aCx, ParentType* aChildWorker);
+  AddChildWorker(ParentType* aChildWorker);
 
   void
-  RemoveChildWorker(JSContext* aCx, ParentType* aChildWorker);
+  RemoveChildWorker(ParentType* aChildWorker);
 
   bool
   AddFeature(WorkerFeature* aFeature);
@@ -1193,6 +1194,9 @@ public:
 
   void
   OfflineStatusChangeEventInternal(bool aIsOffline);
+
+  void
+  MemoryPressureInternal();
 
   JSContext*
   GetJSContext() const
@@ -1337,7 +1341,7 @@ public:
   MaybeDispatchLoadFailedRunnable();
 
 private:
-  WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,
+  WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
                 WorkerType aWorkerType, const nsACString& aSharedWorkerName,
                 WorkerLoadInfo& aLoadInfo);

@@ -9,7 +9,6 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.animation.TransitionsTracker;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
@@ -23,11 +22,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.AnimatorListenerAdapter;
-import com.nineoldandroids.animation.AnimatorSet;
-import com.nineoldandroids.animation.ObjectAnimator;
-import com.nineoldandroids.view.ViewHelper;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 
 public class TabQueuePrompt extends Locales.LocaleAwareActivity {
     public static final String LOGTAG = "Gecko" + TabQueuePrompt.class.getSimpleName();
@@ -96,8 +94,8 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
         buttonContainer = findViewById(R.id.button_container);
         enabledConfirmation = findViewById(R.id.enabled_confirmation);
 
-        ViewHelper.setTranslationY(containerView, 500);
-        ViewHelper.setAlpha(containerView, 0);
+        containerView.setTranslationY(500);
+        containerView.setAlpha(0);
 
         final Animator translateAnimator = ObjectAnimator.ofFloat(containerView, "translationY", 0);
         translateAnimator.setDuration(400);
@@ -109,7 +107,6 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
         final AnimatorSet set = new AnimatorSet();
         set.playTogether(alphaAnimator, translateAnimator);
         set.setStartDelay(400);
-        TransitionsTracker.track(set);
 
         set.start();
     }
@@ -124,7 +121,7 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
 
     private void onConfirmButtonPressed() {
         enabledConfirmation.setVisibility(View.VISIBLE);
-        ViewHelper.setAlpha(enabledConfirmation, 0);
+        enabledConfirmation.setAlpha(0);
 
         final Animator buttonsAlphaAnimator = ObjectAnimator.ofFloat(buttonContainer, "alpha", 0);
         buttonsAlphaAnimator.setDuration(300);
@@ -135,7 +132,6 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
 
         final AnimatorSet set = new AnimatorSet();
         set.playTogether(buttonsAlphaAnimator, messagesAlphaAnimator);
-        TransitionsTracker.track(set);
 
         set.addListener(new AnimatorListenerAdapter() {
 

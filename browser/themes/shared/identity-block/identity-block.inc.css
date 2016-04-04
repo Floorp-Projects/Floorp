@@ -55,8 +55,12 @@
   color: var(--identity-box-chrome-color);
 }
 
-#identity-icon-labels {
-  padding-inline-start: 2px;
+#identity-icon-labels:-moz-locale-dir(ltr) {
+  padding-left: 2px;
+}
+
+#identity-icon-labels:-moz-locale-dir(rtl) {
+  padding-right: 2px;
 }
 
 #notification-popup-box:not([hidden]) + #identity-box {

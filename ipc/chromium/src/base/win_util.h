@@ -14,19 +14,6 @@
 
 namespace win_util {
 
-// Returns true if the shift key is currently pressed.
-bool IsShiftPressed();
-
-// Returns true if the ctrl key is currently pressed.
-bool IsCtrlPressed();
-
-// Returns true if the alt key is currently pressed.
-bool IsAltPressed();
-
-// Use the Win32 API FormatMessage() function to generate a string, using
-// Windows's default Message Compiled resources; ignoring the inserts.
-std::wstring FormatMessage(unsigned messageid);
-
 // Uses the last Win32 error to generate a human readable message string.
 std::wstring FormatLastWin32Error();
 

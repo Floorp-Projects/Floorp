@@ -38,9 +38,6 @@ interface nsITCPSocketCallback : nsISupports {
   // Dispatch a "data" event at this object with an Array
   void fireDataArrayEvent(in DOMString type, [const] in nsUint8TArrayRef data);
 
-  // Dispatch a "data" event at this object with an ArrayBuffer argument
-  void fireDataEvent(in JSContextPtr cx, in DOMString type, in jsval data);
-
   // Dispatch an event of the given type at this object.
   void fireEvent(in DOMString type);
 

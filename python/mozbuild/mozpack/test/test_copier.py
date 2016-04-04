@@ -509,5 +509,21 @@ class TestJarrer(unittest.TestCase):
                          [p for p in copier.paths() if not p in preloaded])
         self.assertEqual(jar.last_preloaded, preloaded[-1])
 
+
+    def test_jarrer_compress(self):
+        copier = Jarrer()
+        copier.add('foo/bar', GeneratedFile('ffffff'))
+        copier.add('foo/qux', GeneratedFile('ffffff'), compress=False)
+
+        dest = MockDest()
+        copier.copy(dest)
+        self.check_jar(dest, copier)
+
+        dest.seek(0)
+        jar = JarReader(fileobj=dest)
+        self.assertTrue(jar['foo/bar'].compressed)
+        self.assertFalse(jar['foo/qux'].compressed)
+
+
 if __name__ == '__main__':
     mozunit.main()

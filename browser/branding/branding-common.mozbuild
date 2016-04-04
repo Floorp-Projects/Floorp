@@ -36,7 +36,7 @@ def FirefoxBranding():
             'dsstore',
             'firefox.icns',
         ]
-    elif CONFIG['MOZ_WIDGET_GTK']:
+    elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         BRANDING_FILES += [
             'default16.png',
             'default32.png',

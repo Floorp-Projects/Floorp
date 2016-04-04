@@ -24,7 +24,7 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 
-import com.jayway.android.robotium.solo.Solo;
+import com.robotium.solo.Solo;
 
 public class FennecNativeActions implements Actions {
     private static final String LOGTAG = "FennecNativeActions";
@@ -188,7 +188,7 @@ public class FennecNativeActions implements Actions {
     }
 
     public void sendGeckoEvent(final String geckoEvent, final String data) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(geckoEvent, data));
+        GeckoAppShell.notifyObservers(geckoEvent, data);
     }
 
     public static final class PrefProxy implements PrefsHelper.PrefHandler, PrefWaiter {

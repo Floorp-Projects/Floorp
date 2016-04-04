@@ -102,7 +102,6 @@ DEFAULT_EXCLUDES = [
     r"^.*json$",
     r"^.*/host.*$",
     r"^.*/mar-tools/.*$",
-    r"^.*gecko-unsigned-unaligned.apk$",
     r"^.*robocop.apk$",
     r"^.*contrib.*"
 ]
@@ -118,6 +117,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                 'create-virtualenv',
                 'activate-virtualenv',
                 'generate-candidates-manifest',
+                'refresh-antivirus',
                 'verify-bits',  # beets
                 'download-bits', # beets
                 'scan-bits',     # beets
@@ -213,6 +213,15 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         # TODO
         self.log('skipping verification. unimplemented...')
 
+    def refresh_antivirus(self):
+       self.info("Refreshing clamav db...")
+       try:
+           redo.retry(lambda:
+                      sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
+           self.info("Done.")
+       except sh.ErrorReturnCode:
+           self.warning("Freshclam failed, skipping DB update")
+
     def download_bits(self):
         """
         downloads list of artifacts to self.dest_dir dir based on a given manifest
@@ -305,10 +314,6 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
     def _scan_files(self):
         """Scan the files we've collected. We do the download and scan concurrently to make
         it easier to have a coherent log afterwards. Uses the venv python."""
-        self.info("Refreshing clamav db...")
-        redo.retry(lambda:
-            sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
-        self.info("Done.")
         external_tools_path = os.path.join(
                               os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))), 'external_tools')
         self.run_command([self.query_python_path(), os.path.join(external_tools_path,'extract_and_run_command.py'),

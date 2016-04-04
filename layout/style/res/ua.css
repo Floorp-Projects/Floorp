@@ -1,0 +1,444 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+/* magic -- some of these rules are important to keep pages from overriding
+            them
+*/
+
+/* Tables */
+
+*|*::-moz-table {
+  display: table !important;
+  box-sizing: border-box; /* XXX do we really want this? */
+}
+
+*|*::-moz-inline-table {
+  display: inline-table !important;
+  box-sizing: border-box; /* XXX do we really want this? */
+}
+
+*|*::-moz-table-outer {
+  display: inherit !important; /* table or inline-table */
+  margin: inherit ! important;
+  padding: 0 ! important;
+  border: none ! important;
+  float: inherit;
+  clear: inherit;
+  position: inherit;
+  top: inherit;
+  right: inherit;
+  bottom: inherit;
+  left: inherit;
+  z-index: inherit;
+  page-break-before: inherit;
+  page-break-after: inherit;
+  page-break-inside: inherit;
+  vertical-align: inherit; /* needed for inline-table */
+  line-height: inherit; /* needed for vertical-align on inline-table */
+  align-self: inherit;
+  justify-self: inherit;
+  order: inherit;   /* needed for "order" to work on table flex/grid items */
+  /* Bug 722777 */
+  transform: inherit;
+  transform-origin: inherit;
+  /* Bug 724750 */
+  backface-visibility: inherit;
+  clip: inherit;
+}
+
+*|*::-moz-table-row {
+  display: table-row !important;
+}
+
+/* The ::-moz-table-column pseudo-element is for extra columns at the end
+   of a table. */
+*|*::-moz-table-column {
+  display: table-column !important;
+}
+
+*|*::-moz-table-column-group {
+  display: table-column-group !important;
+}
+
+*|*::-moz-table-row-group {
+  display: table-row-group !important;
+}
+
+*|*::-moz-table-cell {
+  display: table-cell !important;
+  white-space: inherit;
+}
+
+/* Ruby */
+*|*::-moz-ruby {
+  display: ruby;
+  unicode-bidi: -moz-isolate;
+}
+*|*::-moz-ruby-base {
+  display: ruby-base;
+  unicode-bidi: -moz-isolate;
+}
+*|*::-moz-ruby-text {
+  display: ruby-text;
+  unicode-bidi: -moz-isolate;
+}
+*|*::-moz-ruby-base-container {
+  display: ruby-base-container;
+  unicode-bidi: -moz-isolate;
+}
+*|*::-moz-ruby-text-container {
+  display: ruby-text-container;
+  unicode-bidi: -moz-isolate;
+}
+
+/* Lists */
+
+*|*::-moz-list-bullet, *|*::-moz-list-number {
+  display: inline;
+  vertical-align: baseline;
+  font-variant-numeric: tabular-nums;
+  /* Prevent the element from being selected when clicking on the marker. */
+  -moz-user-select: none;
+}
+
+/* SVG documents don't always load this file but they do have links.
+ * If you change the link rules, consider carefully whether to make
+ * the same changes to svg.css.
+ */
+
+/* Links */
+
+*|*:-moz-any-link {
+  cursor: pointer;
+}
+
+*|*:-moz-any-link:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
+
+/* Miscellaneous */
+
+*|*::-moz-anonymous-block, *|*::-moz-cell-content {
+  display: block !important;
+  position: static !important;
+  unicode-bidi: inherit;
+  text-overflow: inherit;
+  overflow-clip-box: inherit;
+}
+
+*|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
+  /* we currently inherit from the inline that is split */
+  outline: inherit;
+  outline-offset: inherit;
+  clip-path: inherit;
+  filter: inherit;
+  mask: inherit;
+  opacity: inherit;
+  text-decoration: inherit;
+  -moz-box-ordinal-group: inherit !important;
+  overflow-clip-box: inherit;
+}
+
+*|*::-moz-xul-anonymous-block {
+  display: block ! important;
+  position: static ! important;
+  float: none ! important;
+  -moz-box-ordinal-group: inherit !important;
+  text-overflow: inherit;
+  overflow-clip-box: inherit;
+}
+
+*|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
+*|*::-moz-scrolled-page-sequence {
+  /* e.g., text inputs, select boxes */
+  padding: inherit;
+  /* The display doesn't affect the kind of frame constructed here.  This just
+     affects auto-width sizing of the block we create. */
+  display: block;
+  -moz-box-orient: inherit;
+  /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
+     blocks with overflow: scroll; */
+  unicode-bidi: inherit;
+  text-overflow: inherit;
+  /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
+     ::-moz-fieldset-content in forms.css */
+  /* Multicol container */
+  -moz-column-count: inherit;
+  -moz-column-width: inherit;
+  -moz-column-gap: inherit;
+  -moz-column-rule: inherit;
+  -moz-column-fill: inherit;
+  /* Flex container */
+  flex-direction: inherit;
+  flex-wrap: inherit;
+  /* Grid container */
+  grid-auto-columns: inherit;
+  grid-auto-rows: inherit;
+  grid-auto-flow: inherit;
+  grid-column-gap: inherit;
+  grid-row-gap: inherit;
+  grid-template-areas: inherit;
+  grid-template-columns: inherit;
+  grid-template-rows: inherit;
+  /* CSS Align */
+  align-content: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  justify-items: inherit;
+  /* Do not change these. nsCSSFrameConstructor depends on them to create a good
+     frame tree. */
+  position: static !important;
+  float: none !important;
+  overflow-clip-box: inherit;
+}
+
+*|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {
+  display: block !important;
+  background-color: inherit;
+}
+
+*|*::-moz-viewport-scroll {
+  overflow: auto;
+%ifdef XP_WIN
+  resize: both;
+%endif
+}
+
+*|*::-moz-column-content {
+  /* the column boxes inside a column-flowed block */
+  /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
+  unicode-bidi: inherit;
+  text-overflow: inherit;
+  /* inherit the outer frame's display, otherwise we turn into an inline */
+  display: inherit !important;
+  /* Carry through our parent's height so that %-height children get
+  their heights set */
+  height: 100%;
+}
+
+*|*::-moz-anonymous-flex-item,
+*|*::-moz-anonymous-grid-item {
+  /* Anonymous blocks that wrap contiguous runs of text
+   * inside of a flex or grid container. */
+  display: block;
+}
+
+*|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
+  /* Collection of pages in print/print preview. Visual styles may only appear
+   * in print preview. */
+  display: block !important;
+  background: linear-gradient(#606060, #8a8a8a) fixed;
+  height: 100%;
+}
+
+*|*::-moz-page {
+  /* Individual page in print/print preview. Visual styles may only appear
+   * in print preview. */
+  display: block !important;
+  background: white;
+  box-shadow: 5px 5px 8px #202020;
+  margin: 0.125in 0.25in;
+}
+
+*|*::-moz-pagecontent {
+  display: block !important;
+  margin: auto;
+}
+
+*|*::-moz-pagebreak {
+  display: block !important;
+}
+
+*|*::-moz-anonymous-positioned-block {
+  display: block !important;
+  position: inherit; /* relative or sticky */
+  top: inherit;
+  left: inherit;
+  bottom: inherit;
+  right: inherit;
+  z-index: inherit;
+  clip: inherit;
+  opacity: inherit;
+  unicode-bidi: inherit;
+  text-overflow: inherit;
+}
+
+/* Printing */
+
+@media print {
+
+  * {
+    cursor: default !important;
+  }
+
+}
+
+*|*:fullscreen:not(:root) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  box-sizing: border-box !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+/* Selectors here should match the check in
+ * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
+*|*:fullscreen:not(:root):not(:-moz-browser-frame) {
+  -moz-top-layer: top !important;
+}
+
+*|*::backdrop {
+  -moz-top-layer: top !important;
+  display: block;
+  position: fixed;
+  top: 0; left: 0;
+  right: 0; bottom: 0;
+}
+
+*|*:-moz-full-screen:not(:root)::backdrop {
+  background: black;
+}
+
+/* XML parse error reporting */
+
+parsererror|parsererror {
+  display: block;
+  font-family: sans-serif;
+  font-weight: bold;
+  white-space: pre;
+  margin: 1em;
+  padding: 1em;
+  border-width: thin;
+  border-style: inset;
+  border-color: red;
+  font-size: 14pt;
+  background-color: lightyellow;
+  color: black;
+}
+
+parsererror|sourcetext {
+  display: block;
+  white-space: pre;
+  font-family: -moz-fixed;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  color: red;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret,
+div:-moz-native-anonymous.moz-accessiblecaret > div.image,
+div:-moz-native-anonymous.moz-accessiblecaret > div.bar {
+  position: absolute;
+  z-index: 2147483647;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret > div.image {
+  background-position: center bottom;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+
+  /* Override this property in moz-custom-content-container to make dummy touch
+   * listener work. */
+  pointer-events: auto;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret > div.bar {
+  margin-left: 49%;
+  background-color: #008aa0;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.no-bar > div.bar {
+  display: none;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
+  background-image: url("resource://gre-resources/accessiblecaret-normal@1x.png");
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.left > div.image {
+  background-image: url("resource://gre-resources/accessiblecaret-tilt-left@1x.png");
+  margin-left: -39%;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.right > div.image {
+  background-image: url("resource://gre-resources/accessiblecaret-tilt-right@1x.png");
+  margin-left: 41%;
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.none {
+  display: none;
+}
+
+@media (min-resolution: 1.5dppx) {
+  div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-normal@1.5x.png");
+  }
+
+  div:-moz-native-anonymous.moz-accessiblecaret.left > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-left@1.5x.png");
+  }
+
+  div:-moz-native-anonymous.moz-accessiblecaret.right > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-right@1.5x.png");
+  }
+}
+
+@media (min-resolution: 2dppx) {
+  div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-normal@2x.png");
+  }
+
+  div:-moz-native-anonymous.moz-accessiblecaret.left > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-left@2x.png");
+  }
+
+  div:-moz-native-anonymous.moz-accessiblecaret.right > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-right@2x.png");
+  }
+}
+
+@media (min-resolution: 2.25dppx) {
+  div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-normal@2.25x.png");
+  }
+
+  div:-moz-native-anonymous.moz-accessiblecaret.left > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-left@2.25x.png");
+  }
+
+  div:-moz-native-anonymous.moz-accessiblecaret.right > div.image {
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-right@2.25x.png");
+  }
+}
+
+/* Custom content container in the CanvasFrame, fixed positioned on top of
+   everything else, not reacting to pointer events. */
+div:-moz-native-anonymous.moz-custom-content-container {
+  pointer-events: none;
+  -moz-top-layer: top;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}

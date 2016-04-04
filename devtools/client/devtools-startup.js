@@ -9,8 +9,8 @@
 /**
  * This XPCOM component is loaded very early.
  * It handles command line arguments like -jsconsole, but also ensures starting
- * core modules like devtools/devtools-browser that listen for application
- * startup.
+ * core modules like 'devtools-browser.js' that hooks the browser windows
+ * and ensure setting up tools.
  *
  * Be careful to lazy load dependencies as much as possible.
  **/
@@ -67,12 +67,10 @@ DevToolsStartup.prototype = {
   },
 
   initDevTools: function() {
-    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    let { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
-    // browser.xul or main top-level document used to load this module,
-    // but this code may be called without/before it.
-    require("devtools/client/framework/devtools-browser");
+    loader.main("devtools/client/main");
   },
 
   handleConsoleFlag: function(cmdLine) {

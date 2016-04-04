@@ -26,6 +26,7 @@
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
+#include "nsPrintfCString.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
@@ -154,7 +155,7 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
                     getter_AddRefs(childProcPath));
     // We need to use an App Bundle on OS X so that we can hide
     // the dock icon. See Bug 557225.
-    childProcPath->AppendNative(NS_LITERAL_CSTRING("plugin-container.app"));
+    childProcPath->AppendNative(NS_LITERAL_CSTRING("firefox-webcontent.app"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("Contents"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
     nsCString tempCPath;
@@ -185,7 +186,13 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
 
   exePath = exePath.AppendASCII(processName);
 #else
-  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+#ifdef OS_WIN
+  if (XRE_GetProcessType() == GeckoProcessType_Plugin ||
+      XRE_GetProcessType() == GeckoProcessType_GMPlugin) {
+    exePath = exePath.AppendASCII(MOZ_PLUGIN_PROCESS_NAME);
+  } else
+#endif
+    exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
 #endif
 }
 
@@ -474,44 +481,67 @@ GeckoChildProcessHost::SetAlreadyDead()
 
 int32_t GeckoChildProcessHost::mChildCounter = 0;
 
-//
-// Wrapper function for handling GECKO_SEPARATE_NSPR_LOGS
-//
-bool
-GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
+void
+GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogName)
 {
-  // If NSPR log files are not requested, we're done.
-  const char* origLogName = PR_GetEnv("NSPR_LOG_FILE");
-  if (!origLogName) {
-    return PerformAsyncLaunchInternal(aExtraOpts, arch);
-  }
-
   // We currently have no portable way to launch child with environment
   // different than parent.  So temporarily change NSPR_LOG_FILE so child
   // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
   // startup, so it's 'safe' to play with the parent's environment this way.)
-  nsAutoCString setChildLogName("NSPR_LOG_FILE=");
+  nsAutoCString setChildLogName(varName);
   setChildLogName.Append(origLogName);
-
-  // remember original value so we can restore it.
-  // - buffer needs to be permanently allocated for PR_SetEnv()
-  // - Note: this code is not called re-entrantly, nor are restoreOrigLogName
-  //   or mChildCounter touched by any other thread, so this is safe.
-  static char* restoreOrigLogName = 0;
-  if (!restoreOrigLogName)
-    restoreOrigLogName = strdup(setChildLogName.get());
 
   // Append child-specific postfix to name
   setChildLogName.AppendLiteral(".child-");
-  setChildLogName.AppendInt(++mChildCounter);
+  setChildLogName.AppendInt(mChildCounter);
 
   // Passing temporary to PR_SetEnv is ok here because env gets copied
   // by exec, etc., to permanent storage in child when process launched.
   PR_SetEnv(setChildLogName.get());
+}
+
+bool
+GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
+{
+  // If NSPR log files are not requested, we're done.
+  const char* origNSPRLogName = PR_GetEnv("NSPR_LOG_FILE");
+  const char* origMozLogName = PR_GetEnv("MOZ_LOG_FILE");
+  if (!origNSPRLogName && !origMozLogName) {
+    return PerformAsyncLaunchInternal(aExtraOpts, arch);
+  }
+
+  ++mChildCounter;
+
+  // remember original value so we can restore it.
+  // - Note: this code is not called re-entrantly, nor are restoreOrig*LogName
+  //   or mChildCounter touched by any other thread, so this is safe.
+  static nsAutoCString restoreOrigNSPRLogName;
+  static nsAutoCString restoreOrigMozLogName;
+
+  if (origNSPRLogName) {
+    if (restoreOrigNSPRLogName.IsEmpty()) {
+      restoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
+      restoreOrigNSPRLogName.Append(origNSPRLogName);
+    }
+    SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName);
+  }
+  if (origMozLogName) {
+    if (restoreOrigMozLogName.IsEmpty()) {
+      restoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
+      restoreOrigMozLogName.Append(origMozLogName);
+    }
+    SetChildLogName("MOZ_LOG_FILE=", origMozLogName);
+  }
+
   bool retval = PerformAsyncLaunchInternal(aExtraOpts, arch);
 
   // Revert to original value
-  PR_SetEnv(restoreOrigLogName);
+  if (origNSPRLogName) {
+    PR_SetEnv(restoreOrigNSPRLogName.get());
+  }
+  if (origMozLogName) {
+    PR_SetEnv(restoreOrigMozLogName.get());
+  }
 
   return retval;
 }
@@ -546,13 +576,13 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
       if (NS_SUCCEEDED(rv)) {
 #if defined(XP_WIN)
         nsString path;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(appDir->GetPath(path)));
+        MOZ_ALWAYS_SUCCEEDS(appDir->GetPath(path));
         aCmdLine.AppendLooseValue(UTF8ToWide("-appdir"));
         std::wstring wpath(path.get());
         aCmdLine.AppendLooseValue(wpath);
 #else
         nsAutoCString path;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(appDir->GetNativePath(path)));
+        MOZ_ALWAYS_SUCCEEDS(appDir->GetNativePath(path));
         aCmdLine.push_back("-appdir");
         aCmdLine.push_back(path.get());
 #endif
@@ -1087,7 +1117,13 @@ GeckoChildProcessHost::OpenPrivilegedHandle(base::ProcessId aPid)
     MOZ_ASSERT(aPid == base::GetProcId(mChildProcessHandle));
     return;
   }
-  if (!base::OpenPrivilegedProcessHandle(aPid, &mChildProcessHandle)) {
+  int64_t error = 0;
+  if (!base::OpenPrivilegedProcessHandle(aPid, &mChildProcessHandle, &error)) {
+#ifdef MOZ_CRASHREPORTER
+    CrashReporter::
+      AnnotateCrashReport(NS_LITERAL_CSTRING("LastError"),
+                          nsPrintfCString ("%lld", error));
+#endif
     NS_RUNTIMEABORT("can't open handle to child process");
   }
 }

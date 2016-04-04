@@ -102,14 +102,8 @@ a {
   text-decoration: underline;
 }
 
-.message-location > .filename {
-  text-overflow: ellipsis;
-  text-align: end;
-  overflow: hidden;
-}
-
-.message-location > .line-number {
-  flex: none;
+.message-location > .frame-link .frame-link-source {
+  width: 10em;
 }
 
 .message-flex-body {
@@ -215,7 +209,7 @@ a {
 }
 
 .message[category=network] > .indent {
-  -moz-border-end: solid #000 6px;
+  -moz-border-end: solid var(--theme-body-color-alt) 6px;
 }
 
 .message[category=network][severity=error] > .icon::before {
@@ -224,6 +218,7 @@ a {
 
 .message[category=network] > .message-body {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .message[category=network] .method {
@@ -262,7 +257,8 @@ a {
   font-size: 10px;
   padding: 2px;
   line-height: 10px;
-  -moz-margin-end: 1ex;
+  margin-inline-start: 3px;
+  margin-inline-end: 1ex;
 }
 
 /* CSS styles */

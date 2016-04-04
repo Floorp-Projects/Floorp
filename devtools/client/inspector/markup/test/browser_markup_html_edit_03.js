@@ -92,18 +92,18 @@ function* testBody(inspector, testActor) {
   let bodyHTML = '<body id="updated"><p></p></body>';
   let bodyFront = yield getNodeFront("body", inspector);
 
+  let onUpdated = inspector.once("inspector-updated");
   let onReselected = inspector.markup.once("reselectedonremoved");
   yield inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML,
                                              currentBodyHTML);
   yield onReselected;
+  yield onUpdated;
 
   let newBodyHTML = yield testActor.getProperty("body", "outerHTML");
   is(newBodyHTML, bodyHTML, "<body> HTML has been updated");
 
   let headsNum = yield testActor.getNumberOfElementMatches("head");
   is(headsNum, 1, "no extra <head>s have been added");
-
-  yield inspector.once("inspector-updated");
 }
 
 function* testHead(inspector, testActor) {
@@ -114,10 +114,12 @@ function* testHead(inspector, testActor) {
                  "<script>window.foo=\"bar\";</script></head>";
   let headFront = yield getNodeFront("head", inspector);
 
+  let onUpdated = inspector.once("inspector-updated");
   let onReselected = inspector.markup.once("reselectedonremoved");
   yield inspector.markup.updateNodeOuterHTML(headFront, headHTML,
                                              currentHeadHTML);
   yield onReselected;
+  yield onUpdated;
 
   is((yield testActor.eval("content.document.title")), "New Title",
      "New title has been added");
@@ -127,8 +129,6 @@ function* testHead(inspector, testActor) {
      "<head> HTML has been updated");
   is((yield testActor.getNumberOfElementMatches("body")), 1,
      "no extra <body>s have been added");
-
-  yield inspector.once("inspector-updated");
 }
 
 function* testDocumentElement(inspector, testActor) {

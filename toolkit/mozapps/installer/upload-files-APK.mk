@@ -8,60 +8,16 @@
 
 include $(MOZILLA_DIR)/config/android-common.mk
 
-DIST_FILES =
-
-# Place the files in the order they are going to be opened by the linker
-ifndef MOZ_FOLD_LIBS
-DIST_FILES += \
-  libnspr4.so \
-  libplc4.so \
-  libplds4.so \
-  libmozsqlite3.so \
-  libnssutil3.so \
-  $(NULL)
-endif
-DIST_FILES += libnss3.so
-ifndef MOZ_FOLD_LIBS
-DIST_FILES += \
-  libssl3.so \
-  libsmime3.so \
-  $(NULL)
-endif
-DIST_FILES += \
-  liblgpllibs.so \
-  libxul.so \
-  libnssckbi.so \
-  libfreebl3.so \
-  libsoftokn3.so \
-  resources.arsc \
-  AndroidManifest.xml \
-  chrome \
-  components \
-  defaults \
-  modules \
-  hyphenation \
-  res \
-  lib \
-  extensions \
+# Files packed into the APK root.  Packing files into the APK root is not
+# supported by modern Android build systems, including Gradle, so don't add to
+# this list without Android peer approval.
+ROOT_FILES := \
   application.ini \
   package-name.txt \
   ua-update.json \
   platform.ini \
-  greprefs.js \
-  browserconfig.properties \
-  blocklist.xml \
-  chrome.manifest \
-  update.locale \
   removed-files \
   $(NULL)
-
-NON_DIST_FILES = \
-  classes.dex \
-  $(NULL)
-
-UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
-
-DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 
 GECKO_APP_AP_PATH = $(topobjdir)/mobile/android/base
 
@@ -69,7 +25,6 @@ ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=true
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
-UPLOAD_EXTRA_FILES += fennec_ids.txt
 UPLOAD_EXTRA_FILES += geckoview_library/geckoview_library.zip
 UPLOAD_EXTRA_FILES += geckoview_library/geckoview_assets.zip
 
@@ -82,11 +37,7 @@ else
 robocop_apk := $(topobjdir)/gradle/build/mobile/android/app/outputs/apk/app-automation-debug-androidTest-unaligned.apk
 endif
 
-# Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
-# is used in a series of commands that run under a "cd something", while
-# $(NSINSTALL) is relative.
 INNER_ROBOCOP_PACKAGE= \
-  cp $(GECKO_APP_AP_PATH)/fennec_ids.txt $(ABS_DIST) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(robocop_apk),$(ABS_DIST)/robocop.apk)
 endif
 else
@@ -168,29 +119,6 @@ else
 INNER_MAKE_GECKOLIBS_AAR=echo 'Android geckolibs.aar packaging is disabled'
 endif # MOZ_ANDROID_GECKOLIBS_AAR
 
-ifdef MOZ_OMX_PLUGIN
-DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so \
-              libomxpluginhc.so libomxpluginkk.so
-endif
-
-SO_LIBRARIES := $(filter %.so,$(DIST_FILES))
-# These libraries are placed in the assets/$(ANDROID_CPU_ARCH) directory by packager.py.
-ASSET_SO_LIBRARIES := $(addprefix assets/$(ANDROID_CPU_ARCH)/,$(filter-out libmozglue.so $(MOZ_CHILD_PROCESS_NAME),$(SO_LIBRARIES)))
-
-DIST_FILES := $(filter-out $(SO_LIBRARIES),$(DIST_FILES))
-NON_DIST_FILES += libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(ASSET_SO_LIBRARIES)
-
-ifdef MOZ_ENABLE_SZIP
-# These libraries are szipped in-place in the
-# assets/$(ANDROID_CPU_ARCH) directory.
-SZIP_LIBRARIES := $(ASSET_SO_LIBRARIES)
-endif
-
-ifndef COMPILE_ENVIRONMENT
-# Any Fennec binary libraries we download are already szipped.
-ALREADY_SZIPPED=1
-endif
-
 # Fennec's OMNIJAR_NAME can include a directory; for example, it might
 # be "assets/omni.ja". This path specifies where the omni.ja file
 # lives in the APK, but should not root the resources it contains
@@ -209,76 +137,46 @@ OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
 # insert additional resources (translated strings) into the ap_
 # without the build system's participation.  This can do the wrong
 # thing if there are resource changes in between build time and
-# package time.  We try to prevent mismatched resources by erroring
-# out if the compiled resource IDs are not the same as the resource
-# IDs being packaged.  If we're doing a single locale repack, however,
-# we don't have a complete object directory, so we can't compare
-# resource IDs.
-
-# A note on the res/ directory.  We unzip the ap_ during packaging,
-# which produces the res/ directory.  This directory is then included
-# in the final package.  When we unpack (during locale repacks), we
-# need to remove the res/ directory because these resources confuse
-# the l10n packaging script that updates omni.ja: the script tries to
-# localize the contents of the res/ directory, which fails.  Instead,
-# after the l10n packaging script completes, we build the ap_
-# described above (which includes freshly localized Android resources)
-# and the res/ directory is taken from the ap_ as part of the regular
-# packaging.
-
+# package time.
 PKG_SUFFIX = .apk
 
-INNER_SZIP_LIBRARIES = \
-  $(if $(ALREADY_SZIPPED),,$(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(MOZ_SZIP_FLAGS) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && )) true
+INNER_FENNEC_PACKAGE = \
+  $(MAKE) -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
+  $(PYTHON) -m mozbuild.action.package_fennec_apk \
+    --verbose \
+    --inputs \
+      $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
+    --omnijar $(STAGEPATH)$(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
+    --classes-dex $(GECKO_APP_AP_PATH)/classes.dex \
+    --lib-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/lib \
+    --assets-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/assets \
+    $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_ENABLE_SZIP),--szip-assets-libs-with $(ABS_DIST)/host/bin/szip)) \
+    --root-files $(foreach f,$(ROOT_FILES),$(STAGEPATH)$(MOZ_PKG_DIR)/$(f)) \
+    --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
+  $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
 
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-INNER_CHECK_R_TXT=echo 'No R.txt checking for you!'
-else
-INNER_CHECK_R_TXT=\
-  ((test ! -f $(GECKO_APP_AP_PATH)/R.txt && echo "*** Warning: The R.txt that is being packaged might not agree with the R.txt that was built. This is normal during l10n repacks.") || \
-    diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
-    (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1))
-endif
-
-# Insert $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex into
-# $(ABS_DIST)/gecko.ap_, producing $(ABS_DIST)/gecko.apk.
-INNER_MAKE_APK = \
-  ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
-    unzip -o $(ABS_DIST)/gecko.ap_ && \
-    rm $(ABS_DIST)/gecko.ap_ && \
-    $(ZIP) -r9D $(ABS_DIST)/gecko.ap_ assets && \
-    $(ZIP) $(if $(ALREADY_SZIPPED),-0 ,$(if $(MOZ_ENABLE_SZIP),-0 ))$(ABS_DIST)/gecko.ap_ $(ASSET_SO_LIBRARIES) && \
-    $(ZIP) -r9D $(ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) $(SZIP_LIBRARIES) && \
-    $(if $(filter-out ./,$(OMNIJAR_DIR)), \
-      mkdir -p $(OMNIJAR_DIR) && mv $(OMNIJAR_NAME) $(OMNIJAR_DIR) && ) \
-    $(ZIP) -0 $(ABS_DIST)/gecko.ap_ $(OMNIJAR_DIR)$(OMNIJAR_NAME)) && \
-  rm -f $(ABS_DIST)/gecko.apk && \
-  cp $(ABS_DIST)/gecko.ap_ $(ABS_DIST)/gecko.apk && \
-  $(ZIP) -j0 $(ABS_DIST)/gecko.apk $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
-  cp $(ABS_DIST)/gecko.apk $(ABS_DIST)/gecko-unsigned-unaligned.apk && \
-  $(RELEASE_JARSIGNER) $(ABS_DIST)/gecko.apk && \
-  $(ZIPALIGN) -f -v 4 $(ABS_DIST)/gecko.apk $(PACKAGE)
-
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-INNER_MAKE_PACKAGE = \
-  $(INNER_SZIP_LIBRARIES) && \
-  make -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
-  cp $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ $(ABS_DIST)/gecko.ap_ && \
-  $(INNER_CHECK_R_TXT) && \
-  $(INNER_MAKE_APK) && \
+# Packaging produces many optional artifacts.
+package_fennec = \
+  $(INNER_FENNEC_PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE) && \
   $(INNER_INSTALL_BOUNCER_PACKAGE) && \
   $(INNER_MAKE_GECKOLIBS_AAR) && \
   $(INNER_MAKE_GECKOVIEW_LIBRARY)
-endif
 
-ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
-INNER_MAKE_PACKAGE = \
-  $(INNER_SZIP_LIBRARIES) && \
-  cp $(topobjdir)/mobile/android/b2gdroid/app/classes.dex $(ABS_DIST)/classes.dex && \
-  cp $(topobjdir)/mobile/android/b2gdroid/app/b2gdroid-unsigned-unaligned.apk $(ABS_DIST)/gecko.ap_ && \
-  $(INNER_MAKE_APK)
-endif
+# Re-packaging only replaces Android resources and the omnijar before
+# (re-)signing.
+repackage_fennec = \
+  $(MAKE) -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
+  $(PYTHON) -m mozbuild.action.package_fennec_apk \
+    --verbose \
+    --inputs \
+      $(UNPACKAGE) \
+      $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
+    --omnijar $(STAGEPATH)$(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
+    --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
+  $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
+
+INNER_MAKE_PACKAGE = $(if $(UNPACKAGE),$(repackage_fennec),$(package_fennec))
 
 # Language repacks root the resources contained in assets/omni.ja
 # under assets/, but the repacks expect them to be rooted at /.
@@ -286,10 +184,11 @@ endif
 # under the root here, in INNER_UNMAKE_PACKAGE. See comments about
 # OMNIJAR_NAME earlier in this file and in configure.in.
 
-INNER_UNMAKE_PACKAGE	= \
+INNER_UNMAKE_PACKAGE = \
   mkdir $(MOZ_PKG_DIR) && \
   ( cd $(MOZ_PKG_DIR) && \
-    $(UNZIP) $(UNPACKAGE) && \
-    rm -rf res \
+    $(UNZIP) $(UNPACKAGE) $(ROOT_FILES) && \
+    $(UNZIP) $(UNPACKAGE) $(OMNIJAR_DIR)$(OMNIJAR_NAME) && \
     $(if $(filter-out ./,$(OMNIJAR_DIR)), \
-      && mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME)) )
+      mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME), \
+      true) )

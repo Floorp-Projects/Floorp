@@ -9,7 +9,10 @@ OS_CXXFLAGS := $(filter-out -W%,$(OS_CXXFLAGS)) -fsyntax-only -Xclang -verify -f
 
 include $(topsrcdir)/config/rules.mk
 
-export:: $(OBJS)
+target:: $(OBJS)
 
 # We don't actually build anything.
 .PHONY: $(OBJS)
+
+# Don't actually build a library, since we don't actually build objects.
+$(LIBRARY): EXPAND_LIBS_GEN=true

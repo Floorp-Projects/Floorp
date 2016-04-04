@@ -82,7 +82,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       SimpleTest.is(dpFields.length, 4, "expected displayport string of form (x,y,w,h)");
       var dpWidth = dpFields[2];
       var dpHeight = dpFields[3];
-      SimpleTest.ok(dpWidth >= 50 && dpHeight >= 50,
+      var subframe = document.getElementById('subframe');
+      // The clientWidth and clientHeight may be less than 50 if there are scrollbars showing.
+      // In general they will be (50 - <scrollbarwidth>, 50 - <scrollbarheight>).
+      SimpleTest.ok(subframe.clientWidth > 0, "Expected a non-zero clientWidth, got: " + subframe.clientWidth);
+      SimpleTest.ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
+      SimpleTest.ok(dpWidth >= subframe.clientWidth && dpHeight >= subframe.clientHeight,
                     "expected a displayport at least as large as the scrollable element, got " + childDisplayport);
 
       window.opener.finishTest();
@@ -92,7 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
 <body style="overflow: hidden;"><!-- This combined with the user-scalable=no ensures the root frame is not scrollable -->
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=982141">Mozilla Bug 982141</a>
   <!-- A scrollable subframe, with enough content to make it have a nonzero scroll range -->
-  <div style="height: 50px; width: 50px; overflow: scroll">
+  <div id="subframe" style="height: 50px; width: 50px; overflow: scroll">
     <div style="width: 100px">
       Wide content so that the vertical scrollbar for the parent div
       doesn't eat into the 50px width and reduce the width of the

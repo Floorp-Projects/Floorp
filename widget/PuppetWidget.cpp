@@ -302,7 +302,7 @@ PuppetWidget::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
     // use the point override if provided
     event.refPoint = *aPoint;
   }
-  event.time = PR_Now() / 1000;
+  event.mTime = PR_Now() / 1000;
 }
 
 NS_IMETHODIMP
@@ -354,29 +354,6 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 nsEventStatus
 PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 {
-  if (!mTabChild) {
-    return nsEventStatus_eIgnore;
-  }
-
-  switch (aEvent->mClass) {
-    case eMouseEventClass:
-      Unused <<
-        mTabChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
-      break;
-    case eKeyboardEventClass:
-      Unused <<
-        mTabChild->SendDispatchKeyboardEvent(*aEvent->AsKeyboardEvent());
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unsupported event type");
-  }
-
-  return nsEventStatus_eIgnore;
-}
-
-nsEventStatus
-PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
-{
   if (!AsyncPanZoomEnabled()) {
     nsEventStatus status = nsEventStatus_eIgnore;
     DispatchEvent(aEvent, status);
@@ -391,6 +368,14 @@ PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
     case eWheelEventClass:
       Unused <<
         mTabChild->SendDispatchWheelEvent(*aEvent->AsWheelEvent());
+      break;
+    case eMouseEventClass:
+      Unused <<
+        mTabChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
+      break;
+    case eKeyboardEventClass:
+      Unused <<
+        mTabChild->SendDispatchKeyboardEvent(*aEvent->AsKeyboardEvent());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unsupported event type");
@@ -1435,6 +1420,44 @@ PuppetWidget::ZoomToRect(const uint32_t& aPresShellId,
   }
 
   mTabChild->ZoomToRect(aPresShellId, aViewId, aRect, aFlags);
+}
+
+bool
+PuppetWidget::HasPendingInputEvent()
+{
+  if (!mTabChild) {
+    return false;
+  }
+
+  static const IPC::Message::msgid_t kInputEvents[] = {
+    mozilla::dom::PBrowser::Msg_RealMouseMoveEvent__ID,
+    mozilla::dom::PBrowser::Msg_SynthMouseMoveEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealMouseButtonEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealKeyEvent__ID,
+    mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealTouchEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealTouchMoveEvent__ID,
+    mozilla::dom::PBrowser::Msg_RealDragEvent__ID,
+    mozilla::dom::PBrowser::Msg_UpdateDimensions__ID,
+    mozilla::dom::PBrowser::Msg_MouseEvent__ID,
+    mozilla::dom::PBrowser::Msg_KeyEvent__ID
+  };
+  bool ret = false;
+
+  for (IPC::Message::msgid_t e: kInputEvents) {
+    mTabChild->GetIPCChannel()->PeekMessages(
+      e,
+      [&ret](const IPC::Message& aMsg) -> bool {
+        ret = true;
+        return false;  // Stop peeking.
+      }
+    );
+    if (ret) {
+      break;
+    }
+  }
+
+  return ret;
 }
 
 } // namespace widget

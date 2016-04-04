@@ -18,7 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -252,8 +252,10 @@ public:
                                       const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(0)) {
     mcc->AdvanceBy(aIncrement);
     bool ret = AdvanceAnimations(mcc->Time());
-    AsyncPanZoomController::SampleContentTransformForFrame(
-      aOutTransform, aScrollOffset);
+    if (aOutTransform) {
+      *aOutTransform = GetCurrentAsyncTransform(AsyncPanZoomController::NORMAL);
+    }
+    aScrollOffset = GetCurrentAsyncScrollOffset(AsyncPanZoomController::NORMAL);
     return ret;
   }
 

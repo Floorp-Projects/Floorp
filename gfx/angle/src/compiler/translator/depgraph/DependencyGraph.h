@@ -142,27 +142,11 @@ class TDependencyGraph {
 public:
     TDependencyGraph(TIntermNode* intermNode);
     ~TDependencyGraph();
-    TGraphNodeVector::const_iterator begin() const { return mAllNodes.begin(); }
-    TGraphNodeVector::const_iterator end() const { return mAllNodes.end(); }
-
-    TGraphSymbolVector::const_iterator beginSamplerSymbols() const
+    const TGraphNodeVector &allNodes() const { return mAllNodes; }
+    const TGraphSymbolVector &samplerSymbols() const { return mSamplerSymbols; }
+    const TFunctionCallVector &userDefinedFunctionCalls() const
     {
-        return mSamplerSymbols.begin();
-    }
-
-    TGraphSymbolVector::const_iterator endSamplerSymbols() const
-    {
-        return mSamplerSymbols.end();
-    }
-
-    TFunctionCallVector::const_iterator beginUserDefinedFunctionCalls() const
-    {
-        return mUserDefinedFunctionCalls.begin();
-    }
-
-    TFunctionCallVector::const_iterator endUserDefinedFunctionCalls() const
-    {
-        return mUserDefinedFunctionCalls.end();
+        return mUserDefinedFunctionCalls;
     }
 
     TGraphArgument* createArgument(TIntermAggregate* intermFunctionCall, int argumentNumber);

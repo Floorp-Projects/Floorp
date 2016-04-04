@@ -525,8 +525,6 @@ child:
 
     async LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
-    async OpenURI(URIParams uri, uint32_t flags);
-
     async CacheFileDescriptor(nsString path, FileDescriptor fd);
 
     async UpdateDimensions(CSSRect rect, CSSSize size,
@@ -726,6 +724,13 @@ child:
     async AudioChannelChangeNotification(uint32_t aAudioChannel,
                                          float aVolume,
                                          bool aMuted);
+
+    /**
+     * Tells the root child docShell whether or not to use
+     * global history. This is sent right after the PBrowser
+     * is bound to a frameloader element.
+     */
+    async SetUseGlobalHistory(bool aUse);
 
 /*
  * FIXME: write protocol!

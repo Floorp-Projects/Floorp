@@ -18,6 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "PresentationLog.h"
 #include "PresentationService.h"
 
 using namespace mozilla;
@@ -47,6 +48,8 @@ private:
   nsString mId;
   nsString mOrigin;
 };
+
+LazyLogModule gPresentationLog("Presentation");
 
 } // namespace dom
 } // namespace mozilla

@@ -248,6 +248,7 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
       MOZ_ASSERT(mWaitOutput.Length() == 1);
       mWaitOutput.RemoveElementAt(0);
       mDecodeCallback->DrainComplete();
+      ResetEOS();
       return;
     } else if (rv == NS_ERROR_NOT_AVAILABLE) {
       break;
@@ -270,6 +271,17 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
       mToDo->setInt32("input-eos", 1);
     }
     mDecoder->requestActivityNotification(mToDo);
+  }
+}
+
+void
+GonkDecoderManager::ResetEOS()
+{
+  // After eos, android::MediaCodec needs to be flushed to receive next input
+  mWaitOutput.Clear();
+  if (mDecoder->flush() != OK) {
+    GMDD_LOG("flush error");
+    mDecodeCallback->Error();
   }
 }
 

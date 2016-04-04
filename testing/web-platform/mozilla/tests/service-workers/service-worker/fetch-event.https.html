@@ -120,7 +120,7 @@ function run_referrer_policy_tests(frame, referrer, href, origin) {
       .then(function(response_text) {
           assert_equals(
             response_text,
-            'Referrer: ' + origin + '\n' +
+            'Referrer: ' + origin + '/' + '\n' +
             'ReferrerPolicy: origin-only',
             'Service Worker should respond to fetch with the referrer origin with "origin-only" and a same origin request');
           var http_url = get_host_info()['HTTP_ORIGIN'] + base_path() +
@@ -132,7 +132,7 @@ function run_referrer_policy_tests(frame, referrer, href, origin) {
       .then(function(response_text) {
           assert_equals(
             response_text,
-            'Referrer: ' + origin + '\n' +
+            'Referrer: ' + origin + '/' + '\n' +
             'ReferrerPolicy: origin-only',
             'Service Worker should respond to fetch with the referrer origin with "origin-only" and a cross origin request');
           return frame.contentWindow.fetch('resources/simple.html?referrerFull',
@@ -154,7 +154,7 @@ function run_referrer_policy_tests(frame, referrer, href, origin) {
       .then(function(response_text) {
           assert_equals(
             response_text,
-            'Referrer: ' + origin + '\n' +
+            'Referrer: ' + origin + '/' + '\n' +
             'ReferrerPolicy: origin-when-cross-origin',
             'Service Worker should respond to fetch with the referrer origin with "origin-when-cross-origin" and a cross origin request');
           return frame.contentWindow.fetch('resources/simple.html?referrerFull',
@@ -426,6 +426,41 @@ async_test(function(t) {
         })
       .catch(unreached_rejection(t));
   }, 'Service Worker must not expose FetchEvent URL fragments.');
+
+async_test(function(t) {
+    var scope = 'resources/simple.html?cache';
+    var frame;
+    var cacheTypes = [
+      undefined, 'default', 'no-store', 'reload', 'no-cache', 'force-cache'
+    ];
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() { return with_iframe(scope); })
+      .then(function(f) {
+          frame = f;
+          var tests = cacheTypes.map(function(type) {
+            return new Promise(function(resolve) {
+                return frame.contentWindow.fetch(scope + '=' + type,
+                                                 {cache: type})
+                  .then(function(response) { return response.text(); })
+                  .then(function(response_text) {
+                      var expected = (type === undefined) ? 'default' : type;
+                      assert_equals(response_text, expected,
+                                    'Service Worker should respond to fetch with the correct type');
+                    })
+                  .then(resolve);
+              });
+          });
+          return Promise.all(tests);
+        })
+      .then(function() {
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Service Worker responds to fetch event with the correct cache types');
 
 </script>
 </body>

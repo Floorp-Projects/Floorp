@@ -109,7 +109,7 @@ static char		prof_dump_buf[
     1
 #endif
 ];
-static unsigned		prof_dump_buf_end;
+static size_t		prof_dump_buf_end;
 static int		prof_dump_fd;
 
 /* Do not dump any profiles until bootstrapping is complete. */
@@ -871,8 +871,7 @@ prof_sample_threshold_update(prof_tdata_t *tdata)
 	 *   pp 500
 	 *   (http://luc.devroye.org/rnbookindex.html)
 	 */
-	prng64(r, 53, tdata->prng_state, UINT64_C(6364136223846793005),
-	    UINT64_C(1442695040888963407));
+	r = prng_lg_range(&tdata->prng_state, 53);
 	u = (double)r * (1.0/9007199254740992.0L);
 	tdata->bytes_until_sample = (uint64_t)(log(u) /
 	    log(1.0 - (1.0 / (double)((uint64_t)1U << lg_prof_sample))))
@@ -990,7 +989,7 @@ prof_dump_close(bool propagate_err)
 static bool
 prof_dump_write(bool propagate_err, const char *s)
 {
-	unsigned i, slen, n;
+	size_t i, slen, n;
 
 	cassert(config_prof);
 
@@ -1360,6 +1359,7 @@ label_return:
 	return (ret);
 }
 
+#ifndef _WIN32
 JEMALLOC_FORMAT_PRINTF(1, 2)
 static int
 prof_open_maps(const char *format, ...)
@@ -1375,6 +1375,18 @@ prof_open_maps(const char *format, ...)
 
 	return (mfd);
 }
+#endif
+
+static int
+prof_getpid(void)
+{
+
+#ifdef _WIN32
+	return (GetCurrentProcessId());
+#else
+	return (getpid());
+#endif
+}
 
 static bool
 prof_dump_maps(bool propagate_err)
@@ -1385,9 +1397,11 @@ prof_dump_maps(bool propagate_err)
 	cassert(config_prof);
 #ifdef __FreeBSD__
 	mfd = prof_open_maps("/proc/curproc/map");
+#elif defined(_WIN32)
+	mfd = -1; // Not implemented
 #else
 	{
-		int pid = getpid();
+		int pid = prof_getpid();
 
 		mfd = prof_open_maps("/proc/%d/task/%d/maps", pid, pid);
 		if (mfd == -1)
@@ -1556,12 +1570,12 @@ prof_dump_filename(char *filename, char v, uint64_t vseq)
 	        /* "<prefix>.<pid>.<seq>.v<vseq>.heap" */
 		malloc_snprintf(filename, DUMP_FILENAME_BUFSIZE,
 		    "%s.%d.%"FMTu64".%c%"FMTu64".heap",
-		    opt_prof_prefix, (int)getpid(), prof_dump_seq, v, vseq);
+		    opt_prof_prefix, prof_getpid(), prof_dump_seq, v, vseq);
 	} else {
 	        /* "<prefix>.<pid>.<seq>.<v>.heap" */
 		malloc_snprintf(filename, DUMP_FILENAME_BUFSIZE,
 		    "%s.%d.%"FMTu64".%c.heap",
-		    opt_prof_prefix, (int)getpid(), prof_dump_seq, v);
+		    opt_prof_prefix, prof_getpid(), prof_dump_seq, v);
 	}
 	prof_dump_seq++;
 }

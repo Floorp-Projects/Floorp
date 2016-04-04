@@ -62,23 +62,9 @@ bool ChildThread::Send(IPC::Message* msg) {
   return channel_->Send(msg);
 }
 
-void ChildThread::AddRoute(int32_t routing_id, IPC::Channel::Listener* listener) {
-  DCHECK(MessageLoop::current() == message_loop());
-
-  router_.AddRoute(routing_id, listener);
-}
-
-void ChildThread::RemoveRoute(int32_t routing_id) {
-  DCHECK(MessageLoop::current() == message_loop());
-
-  router_.RemoveRoute(routing_id);
-}
-
 void ChildThread::OnMessageReceived(const IPC::Message& msg) {
   if (msg.routing_id() == MSG_ROUTING_CONTROL) {
     OnControlMessageReceived(msg);
-  } else {
-    router_.OnMessageReceived(msg);
   }
 }
 

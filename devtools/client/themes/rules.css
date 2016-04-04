@@ -289,6 +289,8 @@
   width: 0.9em;
   height: 0.9em;
   vertical-align: middle;
+  /* align the swatch with its value */
+  margin-top: -1px;
   -moz-margin-end: 5px;
   display: inline-block;
   position: relative;
@@ -317,6 +319,11 @@
 
 .ruleview-filterswatch {
   background: url("chrome://devtools/skin/images/filter-swatch.svg");
+  background-size: 1em;
+}
+
+.ruleview-angleswatch {
+  background: url("chrome://devtools/skin/images/angle-swatch.svg");
   background-size: 1em;
 }
 

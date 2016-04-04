@@ -8,31 +8,29 @@
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681</a>
-<p id="display"></p>
-<div id="content" style="display: none">
+
+<div id="framediv">
+  <iframe id="testing_frame"></iframe>
 </div>
-<pre id="test">
+
 <script class="testbody" type="text/javascript">
+
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.setBoolPref("security.webauth.u2f", true);
-SpecialPowers.setBoolPref("security.webauth.u2f.softtoken", false);
-SpecialPowers.setBoolPref("security.webauth.u2f.usbtoken", false);
 
-var challenge = new Uint8Array(16);
-window.crypto.getRandomValues(challenge);
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
+                                   ["security.webauth.u2f.softtoken", false],
+                                   ["security.webauth.u2f.usbtoken", false]]},
+function() {
+  onmessage = function(event) {
+    //event.data is the response.errorCode
+    isnot(event.data, 0, "The registration should be rejected.");
+    SimpleTest.finish();
+  }
 
-var regRequest = {
-  version: "U2F_V2",
-  challenge: bytesToBase64UrlSafe(challenge),
-};
-
-u2f.register(window.location.origin, [regRequest], [], function (regResponse) {
-  isnot(regResponse.errorCode, 0, "The registration should be rejected.");
-
-  SimpleTest.finish();
+  document.getElementById('testing_frame').src = 'frame_no_token.html';
 });
 
 </script>
-</pre>
+
 </body>
 </html>

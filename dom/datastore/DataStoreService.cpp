@@ -27,6 +27,7 @@
 #include "mozilla/dom/IDBTransaction.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/unused.h"
 
 #include "mozIApplication.h"
@@ -410,9 +411,9 @@ public:
         return;
       }
 
-      AutoSafeJSContext cx;
-      mRequest = store->OpenCursor(cx, JS::UndefinedHandleValue,
-                                   IDBCursorDirection::Prev, error);
+      AutoJSAPI jsapi;
+      jsapi.Init();
+      mRequest = store->OpenCursor(jsapi.cx(), IDBCursorDirection::Prev, error);
       if (NS_WARN_IF(error.Failed())) {
         return;
       }
@@ -492,11 +493,9 @@ public:
     MOZ_ASSERT(type.EqualsASCII("success"));
 #endif
 
-    AutoSafeJSContext cx;
-
     ErrorResult error;
-    JS::Rooted<JS::Value> result(cx);
-    request->GetResult(cx, &result, error);
+    JS::Rooted<JS::Value> result(nsContentUtils::RootingCx());
+    request->GetResult(&result, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }

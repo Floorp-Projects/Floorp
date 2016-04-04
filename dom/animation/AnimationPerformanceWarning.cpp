@@ -52,14 +52,14 @@ AnimationPerformanceWarning::ToLocalizedString(
     case Type::TransformSVG:
       key = "AnimationWarningTransformSVG";
       break;
+    case Type::TransformWithGeometricProperties:
+      key = "AnimationWarningTransformWithGeometricProperties";
+      break;
     case Type::TransformFrameInactive:
       key = "AnimationWarningTransformFrameInactive";
       break;
     case Type::OpacityFrameInactive:
       key = "AnimationWarningOpacityFrameInactive";
-      break;
-    case Type::WithGeometricProperties:
-      key = "AnimationWarningWithGeometricProperties";
       break;
   }
 

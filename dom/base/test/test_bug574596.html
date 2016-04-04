@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=574596
+-->
+<head>
+  <title>Test for Bug 574596</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=574596">Mozilla Bug 574596</a>
+<style type="text/css">
+#link1 a { -moz-user-select:none; }
+</style>
+<div id="link1"><a href="http://www.mozilla.org/">link1</a></div>
+<div id="link2"><a href="http://www.mozilla.org/">link2</a></div>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 574596 **/
+
+function ignoreFunc(actualData, expectedData) {
+  return true;
+}
+
+var dragLinkText = [[
+  { type:"text/x-moz-url",          data:"", eqTest:ignoreFunc },
+  { type:"text/x-moz-url-data",     data:"http://www.mozilla.org/" },
+  { type:"text/x-moz-url-desc",     data:"link1" },
+  { type:"text/uri-list",           data:"http://www.mozilla.org/" },
+  { type:"text/_moz_htmlcontext",   data:"", eqTest:ignoreFunc },
+  { type:"text/_moz_htmlinfo",      data:"", eqTest:ignoreFunc },
+  { type:"text/html",               data:'<div id="link1"><a href="http://www.mozilla.org/">link1</a></div>' },
+  { type:"text/plain",              data:"http://www.mozilla.org/" }
+]];
+
+
+function dumpTransfer(dataTransfer,expect) {
+  dtData = dataTransfer.mozItemCount + "items:\n";
+  for (var i = 0; i < dataTransfer.mozItemCount; i++) {
+    var dtTypes = dataTransfer.mozTypesAt(i);
+    for (var j = 0; j < dtTypes.length; j++) {
+      var actualData = dataTransfer.mozGetDataAt(dtTypes[j],i)
+      if (expect && expect[i] && expect[i][j]) {
+        if (expect[i][j].eqTest)
+          dtData += expect[i][j].eqTest(actualData,expect[i][j].data) ? "ok" : "fail";
+        else
+          dtData += (actualData == expect[i][j].data) ? "ok" : "fail";
+      }
+      dtData += "["+i+"]" + "["+j+"]: " + '"' + dtTypes[j] + '"  "' + actualData + '"\n';
+    }
+  }
+  alert(dtData);
+}
+
+function runTest() {
+  var result = synthesizeDragStart($('link1'), dragLinkText, window);
+  is(result, null, "Drag -moz-user-select:none link (#link1)");
+  // if (result) dumpTransfer(result,dragLinkText);
+
+  dragLinkText[0][2].data = "link2";
+  dragLinkText[0][6].data = '<div id="link2"><a href="http://www.mozilla.org/">link2</a></div>'
+  var result = synthesizeDragStart($('link2'), dragLinkText, window);
+  is(result, null, "Drag link (#link2)");
+  // if (result) dumpTransfer(result,dragLinkText);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+
+</script>
+</pre>
+</body>
+</html>

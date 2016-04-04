@@ -104,7 +104,6 @@ function installApp(manifestURL, expectedError) {
 
 function runTest() {
   // Set up.
-  SpecialPowers.setAllAppsLaunchable(true);
   SpecialPowers.allowUnsignedAddons();
   SpecialPowers.debugUserCustomizations(true);
   SpecialPowers.pushPrefEnv({'set': [

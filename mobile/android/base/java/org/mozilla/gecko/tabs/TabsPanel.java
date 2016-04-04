@@ -5,11 +5,11 @@
 
 package org.mozilla.gecko.tabs;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -17,7 +17,7 @@ import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.restrictions.Restrictable;
-import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
@@ -89,8 +89,8 @@ public class TabsPanel extends LinearLayout
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private IconTabWidget mTabWidget;
-    private static View mMenuButton;
-    private static ImageButton mAddTab;
+    private View mMenuButton;
+    private ImageButton mAddTab;
     private ImageButton mNavBackButton;
 
     private Panel mCurrentPanel;
@@ -263,7 +263,7 @@ public class TabsPanel extends LinearLayout
     @Override
     @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
     public void onLightweightThemeChanged() {
-        final int background = ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey);
+        final int background = ContextCompat.getColor(getContext(), R.color.text_and_tabs_tray_grey);
         final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background, true);
         if (drawable == null)
             return;
@@ -274,7 +274,7 @@ public class TabsPanel extends LinearLayout
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundColor(ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey));
+        setBackgroundColor(ContextCompat.getColor(getContext(), R.color.text_and_tabs_tray_grey));
     }
 
     @Override
@@ -308,7 +308,7 @@ public class TabsPanel extends LinearLayout
         @Override
         @SuppressWarnings("deprecation") // setBackgroundDrawable deprecated by API level 16
         public void onLightweightThemeChanged() {
-            final int background = ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey);
+            final int background = ContextCompat.getColor(getContext(), R.color.text_and_tabs_tray_grey);
             final LightweightThemeDrawable drawable = mTheme.getColorDrawable(this, background);
             if (drawable == null)
                 return;
@@ -319,7 +319,7 @@ public class TabsPanel extends LinearLayout
 
         @Override
         public void onLightweightThemeReset() {
-            setBackgroundColor(ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey));
+            setBackgroundColor(ContextCompat.getColor(getContext(), R.color.text_and_tabs_tray_grey));
         }
 
         @Override
@@ -407,9 +407,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public void setHWLayerEnabled(boolean enabled) {
-        if (Versions.preHC) {
-            return;
-        }
         if (enabled) {
             mHeader.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             mTabsContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -420,12 +417,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public void prepareTabsAnimation(PropertyAnimator animator) {
-        // Not worth doing this on pre-Honeycomb without proper
-        // hardware accelerated animations.
-        if (Versions.preHC) {
-            return;
-        }
-
         if (!mHeaderVisible) {
             final Resources resources = getContext().getResources();
             final int toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
@@ -444,10 +435,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public void finishTabsAnimation() {
-        if (Versions.preHC) {
-            return;
-        }
-
         setHWLayerEnabled(false);
 
         // If the tray is now hidden, call hide() on current panel and unset it as the current panel

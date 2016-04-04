@@ -248,7 +248,7 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
       --start;
       haveTwoColons = false;
     }
-    mPseudo = do_GetAtom(Substring(start, end));
+    mPseudo = NS_Atomize(Substring(start, end));
     MOZ_ASSERT(mPseudo);
 
     // There aren't any non-CSS2 pseudo-elements with a single ':'
@@ -976,6 +976,16 @@ nsComputedDOMStyle::DoGetColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetToRGBAColor(val, StyleColor()->mColor);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetColorAdjust()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleVisibility()->mColorAdjust,
+                                   nsCSSProps::kColorAdjustKTable));
   return val.forget();
 }
 
@@ -3911,6 +3921,17 @@ nsComputedDOMStyle::DoGetTextSizeAdjust()
       val->SetIdent(eCSSKeyword_none);
       break;
   }
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWebkitTextFillColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  const nsStyleText* text = StyleText();
+  nscolor color = text->mWebkitTextFillColorForeground ?
+    StyleColor()->mColor : text->mWebkitTextFillColor;
+  SetToRGBAColor(val, color);
   return val.forget();
 }
 

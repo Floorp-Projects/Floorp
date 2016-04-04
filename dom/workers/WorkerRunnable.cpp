@@ -328,7 +328,6 @@ WorkerRunnable::Run()
     jsapi = maybeJSAPI.ptr();
     cx = jsapi->cx();
   }
-  jsapi->TakeOwnershipOfErrorReporting();
 
   // Note that we can't assert anything about mWorkerPrivate->GetWrapper()
   // existing, since it may in fact have been GCed (and we may be one of the

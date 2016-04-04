@@ -74,10 +74,10 @@ Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, cons
  * getter/setter calls.
  */
 extern bool
-InvokeGetter(JSContext* cx, const Value& thisv, Value fval, MutableHandleValue rval);
+CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHandleValue rval);
 
 extern bool
-InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
+CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue rval);
 
 // ES6 7.3.13 Construct(F, argumentsList, newTarget).  All parameters are
 // required, hopefully forcing callers to be careful not to (say) blindly pass
@@ -86,8 +86,20 @@ InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
 // NOTE: As with the ES6 spec operation, it's the caller's responsibility to
 //       ensure |fval| and |newTarget| are both |IsConstructor|.
 extern bool
-Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
+Construct(JSContext* cx, HandleValue fval, const AnyConstructArgs& args, HandleValue newTarget,
           MutableHandleObject objp);
+
+// Check that in the given |args|, which must be |args.isConstructing()|, that
+// |IsConstructor(args.callee())|. If this is not the case, throw a TypeError.
+// Otherwise, the user must ensure that, additionally, |IsConstructor(args.newTarget())|.
+// (If |args| comes directly from the interpreter stack, as set up by JSOP_NEW,
+// this comes for free.) Then perform a Construct() operation using |args|.
+//
+// This internal operation is intended only for use with arguments known to be
+// on the JS stack, or at least in carefully-rooted memory. The vast majority of
+// potential users should instead use ConstructArgs in concert with Construct().
+extern bool
+ConstructFromStack(JSContext* cx, const CallArgs& args);
 
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
 // during construction of |fval|.
@@ -97,7 +109,7 @@ Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValu
 // |CreateThis|.  If that's not you, use Construct()!
 extern bool
 InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue thisv,
-                                  const ConstructArgs& args, HandleValue newTarget,
+                                  const AnyConstructArgs& args, HandleValue newTarget,
                                   MutableHandleValue rval);
 
 /*

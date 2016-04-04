@@ -141,13 +141,6 @@ PrefObserver.register({
  */
 this.DownloadsCommon = {
   /**
-   * Constants with the different types of unblock messages.
-   */
-  BLOCK_VERDICT_MALWARE: "Malware",
-  BLOCK_VERDICT_POTENTIALLY_UNWANTED: "PotentiallyUnwanted",
-  BLOCK_VERDICT_UNCOMMON: "Uncommon",
-
-  /**
    * Returns an object whose keys are the string names from the downloads string
    * bundle, and whose values are either the translated strings or functions
    * returning formatted strings.
@@ -528,15 +521,17 @@ this.DownloadsCommon = {
    * Displays an alert message box which asks the user if they want to
    * unblock the downloaded file or not.
    *
-   * @param aType
-   *        The type of malware the downloaded file contains.
+   * @param aVerdict
+   *        The detailed reason why the download was blocked, according to the
+   *        "Downloads.Error.BLOCK_VERDICT_" constants. If an unknown reason is
+   *        specified, "Downloads.Error.BLOCK_VERDICT_MALWARE" is assumed.
    * @param aOwnerWindow
    *        The window with which this action is associated.
    *
    * @return True to unblock the file, false to keep the user safe and
    *         cancel the operation.
    */
-  confirmUnblockDownload: Task.async(function* (aType, aOwnerWindow) {
+  confirmUnblockDownload: Task.async(function* (aVerdict, aOwnerWindow) {
     let s = DownloadsCommon.strings;
     let title = s.unblockHeader;
     let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
@@ -547,15 +542,15 @@ this.DownloadsCommon = {
     let okButton = s.unblockButtonContinue;
     let cancelButton = s.unblockButtonCancel;
 
-    switch (aType) {
-      case this.BLOCK_VERDICT_MALWARE:
-        type = s.unblockTypeMalware;
+    switch (aVerdict) {
+      case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+        type = s.unblockTypeUncommon;
         break;
-      case this.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+      case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         type = s.unblockTypePotentiallyUnwanted;
         break;
-      case this.BLOCK_VERDICT_UNCOMMON:
-        type = s.unblockTypeUncommon;
+      default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
+        type = s.unblockTypeMalware;
         break;
     }
 
@@ -733,7 +728,11 @@ DownloadsDataCtor.prototype = {
             if (download.succeeded) {
               downloadMetaData.fileSize = download.target.size;
             }
-  
+            if (download.error && download.error.reputationCheckVerdict) {
+              downloadMetaData.reputationCheckVerdict =
+                download.error.reputationCheckVerdict;
+            }
+
             PlacesUtils.annotations.setPageAnnotation(
                           NetUtil.newURI(download.source.url),
                           "downloads/metaData",

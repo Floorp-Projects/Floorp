@@ -15,16 +15,20 @@ module.exports = createClass({
   displayName: "Viewports",
 
   propTypes: {
+    devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+    onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
 
   render() {
     let {
+      devices,
       location,
       viewports,
+      onChangeViewportDevice,
       onResizeViewport,
       onRotateViewport,
     } = this.props;
@@ -36,8 +40,10 @@ module.exports = createClass({
       viewports.map(viewport => {
         return Viewport({
           key: viewport.id,
+          devices,
           location,
           viewport,
+          onChangeViewportDevice,
           onResizeViewport,
           onRotateViewport,
         });

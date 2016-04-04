@@ -13,6 +13,7 @@ const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/responsive.html/",
   window: this
 });
+const { GetDevices } = require("devtools/client/shared/devices");
 const Telemetry = require("devtools/client/shared/telemetry");
 
 const { createFactory, createElement } =
@@ -22,8 +23,10 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const App = createFactory(require("./app"));
 const Store = require("./store");
+const { addDevice, addDeviceType } = require("./actions/devices");
 const { changeLocation } = require("./actions/location");
 const { addViewport } = require("./actions/viewports");
+const { loadSheet } = require("sdk/stylesheet/utils");
 
 let bootstrap = {
 
@@ -32,13 +35,20 @@ let bootstrap = {
   store: null,
 
   init() {
+    // Load a special UA stylesheet to reset certain styles such as dropdown
+    // lists.
+    loadSheet(window,
+              "resource://devtools/client/responsive.html/responsive-ua.css",
+              "agent");
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let app = App({
-      onExit: () => window.postMessage({type: "exit"}, "*"),
+      onExit: () => window.postMessage({ type: "exit" }, "*"),
     });
     let provider = createElement(Provider, { store }, app);
     ReactDOM.render(provider, document.querySelector("#root"));
+    this.initDevices();
+    window.postMessage({ type: "init" }, "*");
   },
 
   destroy() {
@@ -53,7 +63,26 @@ let bootstrap = {
    * to dispatch.  They can do so here.
    */
   dispatch(action) {
+    if (!this.store) {
+      // If actions are dispatched after store is destroyed, ignore them.  This
+      // can happen in tests that close the tool quickly while async tasks like
+      // initDevices() below are still pending.
+      return;
+    }
     this.store.dispatch(action);
+  },
+
+  initDevices() {
+    GetDevices().then(devices => {
+      for (let type of devices.TYPES) {
+        this.dispatch(addDeviceType(type));
+        for (let device of devices[type]) {
+          if (device.os != "fxos") {
+            this.dispatch(addDevice(device, type));
+          }
+        }
+      }
+    });
   },
 
 };

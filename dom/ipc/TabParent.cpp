@@ -29,7 +29,7 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -370,6 +370,12 @@ TabParent::SetOwnerElement(Element* aElement)
 
   if (newTopLevelWin && !isSameTopLevelWin) {
     newTopLevelWin->AddBrowser(this);
+  }
+
+  if (mFrameElement) {
+    bool useGlobalHistory =
+      !mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
+    Unused << SendSetUseGlobalHistory(useGlobalHistory);
   }
 
   AddWindowListeners();
@@ -1362,7 +1368,7 @@ bool TabParent::RecvDispatchWheelEvent(const mozilla::WidgetWheelEvent& aEvent)
   localEvent.widget = widget;
   localEvent.refPoint -= GetChildProcessOffset();
 
-  widget->DispatchAPZAwareEvent(&localEvent);
+  widget->DispatchInputEvent(&localEvent);
   return true;
 }
 
@@ -1652,9 +1658,9 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   // that the added touches are part of the touchend/cancel, when actually
   // they're not.
   if (event.mMessage == eTouchEnd || event.mMessage == eTouchCancel) {
-    for (int i = event.touches.Length() - 1; i >= 0; i--) {
-      if (!event.touches[i]->mChanged) {
-        event.touches.RemoveElementAt(i);
+    for (int i = event.mTouches.Length() - 1; i >= 0; i--) {
+      if (!event.mTouches[i]->mChanged) {
+        event.mTouches.RemoveElementAt(i);
       }
     }
   }
@@ -1669,8 +1675,8 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   }
 
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
-  for (uint32_t i = 0; i < event.touches.Length(); i++) {
-    event.touches[i]->mRefPoint += offset;
+  for (uint32_t i = 0; i < event.mTouches.Length(); i++) {
+    event.mTouches[i]->mRefPoint += offset;
   }
 
   return (event.mMessage == eTouchMove) ?
@@ -2108,9 +2114,8 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& event)
   NS_ENSURE_TRUE(mFrameElement, true);
 
   WidgetKeyboardEvent localEvent(event);
-  // Set mNoCrossProcessBoundaryForwarding to avoid this event from
-  // being infinitely redispatched and forwarded to the child again.
-  localEvent.mFlags.mNoCrossProcessBoundaryForwarding = true;
+  // Mark the event as not to be dispatched to remote process again.
+  localEvent.StopCrossProcessForwarding();
 
   // Here we convert the WidgetEvent that we received to an nsIDOMEvent
   // to be able to dispatch it to the <browser> element as the target element.
@@ -2140,7 +2145,7 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
       PresShell::BeforeAfterKeyboardEventEnabled() &&
       localEvent.mMessage != eKeyPress) {
     presShell->DispatchAfterKeyboardEvent(mFrameElement, localEvent,
-                                          aEvent.mFlags.mDefaultPrevented);
+                                          aEvent.DefaultPrevented());
   }
 
   return true;
@@ -2759,8 +2764,8 @@ TabParent::InjectTouchEvent(const nsAString& aType,
   }
 
   WidgetTouchEvent event(true, msg, widget);
-  event.modifiers = aModifiers;
-  event.time = PR_IntervalNow();
+  event.mModifiers = aModifiers;
+  event.mTime = PR_IntervalNow();
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
   if (!content || !content->OwnerDoc()) {
@@ -2773,7 +2778,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
   }
   nsPresContext* presContext = doc->GetShell()->GetPresContext();
 
-  event.touches.SetCapacity(aCount);
+  event.mTouches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
     LayoutDeviceIntPoint pt =
       LayoutDeviceIntPoint::FromAppUnitsRounded(
@@ -2792,7 +2797,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
     // about the meaning of changedTouches for each event, see
     // https://developer.mozilla.org/docs/Web/API/TouchEvent.changedTouches
     t->mChanged = true;
-    event.touches.AppendElement(t);
+    event.mTouches.AppendElement(t);
   }
 
   SendRealTouchEvent(event);
@@ -2915,8 +2920,9 @@ TabParent::RequestNotifyLayerTreeReady()
   if (!frame) {
     mNeedLayerTreeReadyNotification = true;
   } else {
-    CompositorParent::RequestNotifyLayerTreeReady(frame->GetLayersId(),
-                                                  new LayerTreeUpdateObserver());
+    CompositorBridgeParent::RequestNotifyLayerTreeReady(
+      frame->GetLayersId(),
+      new LayerTreeUpdateObserver());
   }
   return true;
 }
@@ -2929,8 +2935,9 @@ TabParent::RequestNotifyLayerTreeCleared()
     return false;
   }
 
-  CompositorParent::RequestNotifyLayerTreeCleared(frame->GetLayersId(),
-                                                  new LayerTreeUpdateObserver());
+  CompositorBridgeParent::RequestNotifyLayerTreeCleared(
+    frame->GetLayersId(),
+    new LayerTreeUpdateObserver());
   return true;
 }
 
@@ -2965,12 +2972,13 @@ TabParent::SwapLayerTreeObservers(TabParent* aOther)
 
   RenderFrameParent* rfp = GetRenderFrame();
   RenderFrameParent* otherRfp = aOther->GetRenderFrame();
-  if(!rfp || !otherRfp) {
+  if (!rfp || !otherRfp) {
     return;
   }
 
-  CompositorParent::SwapLayerTreeObservers(rfp->GetLayersId(),
-                                           otherRfp->GetLayersId());
+  CompositorBridgeParent::SwapLayerTreeObservers(
+    rfp->GetLayersId(),
+    otherRfp->GetLayersId());
 }
 
 bool

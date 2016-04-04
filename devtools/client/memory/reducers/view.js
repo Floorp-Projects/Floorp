@@ -11,7 +11,7 @@ handlers[actions.CHANGE_VIEW] = function (_, { view }) {
   return view;
 };
 
-module.exports = function (view = viewState.CENSUS, action) {
+module.exports = function (view = viewState.TREE_MAP, action) {
   const handler = handlers[action.type];
   return handler ? handler(view, action) : view;
 };

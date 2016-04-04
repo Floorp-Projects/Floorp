@@ -185,4 +185,13 @@ MOZ_BEGIN_EXTERN_C
 
 MOZ_END_EXTERN_C
 
+class MOZ_EXPORT TestClass final {
+public:
+  explicit TestClass(int32_t);
+  int32_t Add(int32_t);
+
+private:
+  int32_t mInt;
+};
+
 #endif

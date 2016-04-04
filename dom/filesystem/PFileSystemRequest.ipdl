@@ -20,9 +20,26 @@ struct FileSystemDirectoryResponse
   nsString realPath;
 };
 
+struct FileSystemDirectoryListingResponseBlob
+{
+  PBlob blob;
+};
+
+struct FileSystemDirectoryListingResponseDirectory
+{
+  // This is the full real path for the directory that we are sending via IPC.
+  nsString directoryRealPath;
+};
+
+union FileSystemDirectoryListingResponseData
+{
+  FileSystemDirectoryListingResponseBlob;
+  FileSystemDirectoryListingResponseDirectory;
+};
+
 struct FileSystemDirectoryListingResponse
 {
-  PBlob[] blobs;
+  FileSystemDirectoryListingResponseData[] data;
 };
 
 struct FileSystemErrorResponse

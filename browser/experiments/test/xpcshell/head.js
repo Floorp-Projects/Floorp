@@ -65,8 +65,6 @@ const EXPERIMENT2_XPI_SHA1 = "sha1:" + sha1File(EXPERIMENT2_PATH);
 const EXPERIMENT3_ID       = "test-experiment-3@tests.mozilla.org";
 const EXPERIMENT4_ID       = "test-experiment-4@tests.mozilla.org";
 
-const DEFAULT_BUILDID      = "2014060601";
-
 const FAKE_EXPERIMENTS_1 = [
   {
     id: "id1",
@@ -162,63 +160,15 @@ function getExperimentAddons(previous=false) {
   return deferred.promise;
 }
 
-function createAppInfo(optionsIn) {
-  const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-  const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
-
-  let options = optionsIn || {};
-  let id = options.id || "xpcshell@tests.mozilla.org";
-  let name = options.name || "XPCShell";
-  let version = options.version || "1.0";
-  let platformVersion = options.platformVersion || "1.0";
-  let date = options.date || new Date();
-
-  let buildID = options.buildID || DEFAULT_BUILDID;
-
-  gAppInfo = {
-    // nsIXULAppInfo
-    vendor: "Mozilla",
-    name: name,
-    ID: id,
-    version: version,
-    appBuildID: buildID,
-    platformVersion: platformVersion ? platformVersion : "1.0",
-    platformBuildID: buildID,
-
-    // nsIXULRuntime
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    invalidateCachesOnRestart: function invalidateCachesOnRestart() {
-      // Do nothing
-    },
-
-    // nsICrashReporter
-    annotations: {},
-
-    annotateCrashReport: function(key, data) {
-      this.annotations[key] = data;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo,
-                                           Ci.nsIXULRuntime,
-                                           Ci.nsICrashReporter,
-                                           Ci.nsISupports])
-  };
-
-  let XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      }
-      return gAppInfo.QueryInterface(iid);
-    }
-  };
-
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                            XULAPPINFO_CONTRACTID, XULAppInfoFactory);
+function createAppInfo(ID="xpcshell@tests.mozilla.org", name="XPCShell",
+                       version="1.0", platformVersion="1.0") {
+  let tmp = {};
+  Cu.import("resource://testing-common/AppInfo.jsm", tmp);
+  tmp.updateAppInfo({
+    ID, name, version, platformVersion,
+    crashReporter: true,
+  });
+  gAppInfo = tmp.getAppInfo();
 }
 
 /**

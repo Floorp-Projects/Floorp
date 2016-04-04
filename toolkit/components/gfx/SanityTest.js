@@ -245,7 +245,7 @@ SanityTest.prototype = {
     // Only test gfx features if firefox has updated, or if the user has a new
     // gpu or drivers.
     var appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-    var xulVersion = appInfo.version;
+    var buildId = Services.appinfo.platformBuildID;
     var gfxinfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
     if (Preferences.get(RUNNING_PREF, false)) {
@@ -270,7 +270,7 @@ SanityTest.prototype = {
     // TODO: Handle dual GPU setups
     if (checkPref(DRIVER_PREF, gfxinfo.adapterDriverVersion, REASON_DRIVER_CHANGED) &&
         checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
-        checkPref(VERSION_PREF, xulVersion, REASON_FIREFOX_CHANGED))
+        checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED))
     {
       return false;
     }
@@ -280,7 +280,7 @@ SanityTest.prototype = {
     Preferences.set(DISABLE_VIDEO_PREF, false);
     Preferences.set(DRIVER_PREF, gfxinfo.adapterDriverVersion);
     Preferences.set(DEVICE_PREF, gfxinfo.adapterDeviceID);
-    Preferences.set(VERSION_PREF, xulVersion);
+    Preferences.set(VERSION_PREF, buildId);
 
     // Update the prefs so that this test doesn't run again until the next update.
     Preferences.set(RUNNING_PREF, true);

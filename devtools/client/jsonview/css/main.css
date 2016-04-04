@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import "resource://devtools/client/shared/components/reps/reps.css";
+@import "resource://devtools/client/shared/components/tree/tree-view.css";
 
 @import "general.css";
-@import "dom-tree.css";
 @import "search-box.css";
 @import "tabs.css";
 @import "toolbar.css";
@@ -20,6 +20,18 @@
 
 .panelContent {
   overflow-y: auto;
+  font-size: 11px;
+  font-family: var(--monospace-font-family);
+}
+
+/* The tree takes the entire horizontal space within the panel content. */
+.panelContent .treeTable {
+  width: 100%;
+}
+
+/* Make sure there is a little space between label and value columns. */
+.panelContent .treeTable .treeLabelCell {
+  padding-right: 17px;
 }
 
 /******************************************************************************/

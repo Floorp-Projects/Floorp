@@ -7,8 +7,6 @@
 "use strict";
 
 const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 
 const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
@@ -61,7 +59,7 @@ ConverterObserver.prototype = {
       case "nsPref:changed":
         this.onPrefChanged();
         break;
-    };
+    }
   },
 
   onShutdown: function() {

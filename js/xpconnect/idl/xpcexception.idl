@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 #include "nsIException.idl"
 
-[scriptable, uuid(875e6645-e762-4da6-9ec8-bf19ab0050df)]
+[scriptable, builtinclass, uuid(875e6645-e762-4da6-9ec8-bf19ab0050df)]
 interface nsIXPCException : nsIException
 {
     // inherits methods from nsIException

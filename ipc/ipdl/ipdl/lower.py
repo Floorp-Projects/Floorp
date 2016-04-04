@@ -924,12 +924,6 @@ class MessageDecl(ipdl.ast.MessageDecl):
     def pqMsgClass(self):
         return '%s::%s'% (self.namespace, self.msgClass())
 
-    def msgCast(self, msgexpr):
-        return ExprCast(msgexpr, self.msgCxxType(const=1, ptr=1), static=1)
-
-    def msgCxxType(self, const=0, ref=0, ptr=0):
-        return Type(self.pqMsgClass(), const=const, ref=ref, ptr=ptr)
-
     def msgId(self):  return self.msgClass()+ '__ID'
     def pqMsgId(self):
         return '%s::%s'% (self.namespace, self.msgId())
@@ -939,10 +933,6 @@ class MessageDecl(ipdl.ast.MessageDecl):
 
     def pqReplyClass(self):
         return '%s::%s'% (self.namespace, self.replyClass())
-
-    def replyCast(self, replyexpr):
-        return ExprCast(replyexpr, Type(self.pqReplyClass(), const=1, ptr=1),
-                        static=1)
 
     def replyId(self):  return self.replyClass()+ '__ID'
     def pqReplyId(self):
@@ -1662,20 +1652,28 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         self.funcDefns.append(tfDefn)
 
         for md in p.messageDecls:
-            ns.addstmts([
-                _generateMessageClass(md.msgClass(), md.msgId(),
-                                      md.decl.type.priority,
-                                      md.prettyMsgName(p.name+'::'),
-                                      md.decl.type.compress),
-                Whitespace.NL ])
+            decls = []
+
+            mfDecl, mfDefn = _splitFuncDeclDefn(
+                _generateMessageConstructor(md.msgClass(), md.msgId(),
+                                            md.decl.type.priority,
+                                            md.prettyMsgName(p.name+'::'),
+                                            md.decl.type.compress))
+            decls.append(mfDecl)
+            self.funcDefns.append(mfDefn)
+
             if md.hasReply():
-                ns.addstmts([
-                    _generateMessageClass(
+                rfDecl, rfDefn = _splitFuncDeclDefn(
+                    _generateMessageConstructor(
                         md.replyClass(), md.replyId(),
                         md.decl.type.priority,
                         md.prettyReplyName(p.name+'::'),
-                        md.decl.type.compress),
-                    Whitespace.NL ])
+                        md.decl.type.compress))
+                decls.append(rfDecl)
+                self.funcDefns.append(rfDefn)
+
+            decls.append(Whitespace.NL)
+            ns.addstmts(decls)
 
         ns.addstmts([ Whitespace.NL, Whitespace.NL ])
 
@@ -1897,22 +1895,21 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
-    cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
-    cls.addstmt(Label.PUBLIC)
+def _generateMessageConstructor(clsname, msgid, priority, prettyName, compress):
+    routingId = ExprVar('routingId')
 
-    idenum = TypeEnum()
-    idenum.addId('ID', msgid)
-    cls.addstmt(StmtDecl(Decl(idenum, '')))
+    func = FunctionDefn(FunctionDecl(
+        clsname,
+        params=[ Decl(Type('int32_t'), routingId.name) ],
+        ret=Type('IPC::Message', ptr=1)))
 
-    # make the message constructor
     if compress == 'compress':
-        compression = ExprVar('COMPRESSION_ENABLED')
+        compression = ExprVar('IPC::Message::COMPRESSION_ENABLED')
     elif compress:
         assert compress == 'compressall'
-        compression = ExprVar('COMPRESSION_ALL')
+        compression = ExprVar('IPC::Message::COMPRESSION_ALL')
     else:
-        compression = ExprVar('COMPRESSION_NONE')
+        compression = ExprVar('IPC::Message::COMPRESSION_NONE')
     if priority == ipdl.ast.NORMAL_PRIORITY:
         priorityEnum = 'IPC::Message::PRIORITY_NORMAL'
     elif priority == ipdl.ast.HIGH_PRIORITY:
@@ -1920,74 +1917,16 @@ def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
     else:
         assert priority == ipdl.ast.URGENT_PRIORITY
         priorityEnum = 'IPC::Message::PRIORITY_URGENT'
-    routingId = ExprVar('routingId')
-    ctor = ConstructorDefn(
-        ConstructorDecl(clsname, params=[ Decl(Type('int32_t'), routingId.name) ]),
-        memberinits=[ ExprMemberInit(ExprVar('IPC::Message'),
-                                     [ routingId,
-                                       ExprVar('ID'),
-                                       ExprVar(priorityEnum),
-                                       compression,
-                                       ExprLiteral.String(prettyName) ]) ])
-    cls.addstmts([ ctor, Whitespace.NL ])
 
-    # generate a logging function
-    # 'pfx' will be something like "[FooParent] sent"
-    pfxvar = ExprVar('pfx__')
-    otherpid = ExprVar('otherPid__')
-    receiving = ExprVar('receiving__')
-    logger = MethodDefn(MethodDecl(
-        'Log',
-        params=([ Decl(Type('std::string', const=1, ref=1), pfxvar.name),
-                  Decl(Type('base::ProcessId'), otherpid.name),
-                  Decl(Type('bool'), receiving.name) ]),
-        const=1))
-    # TODO/cjones: allow selecting what information is printed to
-    # the log
-    msgvar = ExprVar('logmsg__')
-    logger.addstmt(StmtDecl(Decl(Type('std::string'), msgvar.name)))
+    func.addstmt(
+        StmtReturn(ExprNew(Type('IPC::Message'),
+                           args=[ routingId,
+                                  ExprVar(msgid),
+                                  ExprVar(priorityEnum),
+                                  compression,
+                                  ExprLiteral.String(prettyName) ])))
 
-    def appendToMsg(thing):
-        return StmtExpr(ExprCall(ExprSelect(msgvar, '.', 'append'),
-                                 args=[ thing ]))
-    logger.addstmts([
-        StmtExpr(ExprCall(
-            ExprVar('StringAppendF'),
-            args=[ ExprAddrOf(msgvar),
-                   ExprLiteral.String('[time:%" PRId64 "][%d%s%d]'),
-                   ExprCall(ExprVar('PR_Now')),
-                   ExprCall(ExprVar('base::GetCurrentProcId')),
-                   ExprConditional(receiving, ExprLiteral.String('<-'),
-                                   ExprLiteral.String('->')),
-                   otherpid ])),
-        appendToMsg(pfxvar),
-        appendToMsg(ExprLiteral.String(clsname +'(')),
-        Whitespace.NL
-    ])
-
-    # TODO turn this back on when string stuff is sorted
-
-    logger.addstmt(appendToMsg(ExprLiteral.String('[TODO])\\n')))
-
-    logger.addstmts([
-        CppDirective('ifdef', 'ANDROID'),
-        StmtExpr(ExprCall(
-            ExprVar('__android_log_write'),
-            args=[ ExprVar('ANDROID_LOG_INFO'),
-                   ExprLiteral.String('GeckoIPC'),
-                   ExprCall(ExprSelect(msgvar, '.', 'c_str')) ])),
-        CppDirective('endif')
-    ])
-
-    # and actually print the log message
-    logger.addstmt(StmtExpr(ExprCall(
-        ExprVar('fputs'),
-        args=[ ExprCall(ExprSelect(msgvar, '.', 'c_str')),
-               ExprVar('stderr') ])))
-
-    cls.addstmt(logger)
-
-    return cls
+    return func
 
 ##--------------------------------------------------
 
@@ -5168,9 +5107,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         this = None
         if md.decl.type.isDtor():  this = md.actorDecl().var()
 
-        stmts = ([ StmtDecl(Decl(Type(md.pqMsgClass(), ptr=1), msgvar.name),
-                            init=ExprNew(Type(md.pqMsgClass()),
-                                         args=[ routingId ])) ]
+        stmts = ([ StmtDecl(Decl(Type('IPC::Message', ptr=1), msgvar.name),
+                            init=ExprCall(ExprVar(md.pqMsgClass()),
+                                          args=[ routingId ])) ]
                  + [ Whitespace.NL ]
                  + [ StmtExpr(self.write(p.ipdltype, p.var(), msgvar, this))
                      for p in md.params ]
@@ -5189,12 +5128,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         replyvar = self.replyvar
         return (
             [ StmtExpr(ExprAssn(
-                replyvar, ExprNew(Type(md.pqReplyClass()), args=[ routingId ]))),
+                replyvar, ExprCall(ExprVar(md.pqReplyClass()), args=[ routingId ]))),
               Whitespace.NL ]
             + [ StmtExpr(self.write(r.ipdltype, r.var(), replyvar))
                 for r in md.returns ]
             + self.setMessageFlags(md, replyvar, reply=1)
-            + [ self.logMessage(md, md.replyCast(replyvar), 'Sending reply ') ])
+            + [ self.logMessage(md, replyvar, 'Sending reply ') ])
 
 
     def setMessageFlags(self, md, var, reply):
@@ -5229,7 +5168,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '.', 'set_name'),
                 args=[ ExprLiteral.String(md.prettyMsgName(self.protocol.name
                                                            +'::')) ])),
-            self.logMessage(md, md.msgCast(msgexpr), 'Received ',
+            self.logMessage(md, msgexpr, 'Received ',
                             receiving=True),
             self.profilerLabel('Recv', md.decl.progname),
             Whitespace.NL
@@ -5267,7 +5206,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def deserializeReply(self, md, replyexpr, side, errfn, actor=None):
         stmts = [ Whitespace.NL,
-                   self.logMessage(md, md.replyCast(replyexpr),
+                   self.logMessage(md, replyexpr,
                                    'Received reply ', actor, receiving=True) ]
         if 0 == len(md.returns):
             return stmts
@@ -5380,12 +5319,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def logMessage(self, md, msgptr, pfx, actor=None, receiving=False):
         actorname = _actorName(self.protocol.name, self.side)
 
-        topLevel = self.protocol.decl.type.toplevel().name()
-        return _ifLogging(ExprLiteral.String(topLevel), [ StmtExpr(ExprCall(
-            ExprSelect(msgptr, '->', 'Log'),
-            args=[ ExprLiteral.String('['+ actorname +'] '+ pfx),
-                   self.protocol.callOtherPid(actor),
-                   ExprLiteral.TRUE if receiving else ExprLiteral.FALSE ])) ])
+        return _ifLogging(ExprLiteral.String(actorname),
+                          [ StmtExpr(ExprCall(
+                              ExprVar('mozilla::ipc::LogMessageForProtocol'),
+                              args=[ ExprLiteral.String(actorname),
+                                     self.protocol.callOtherPid(actor),
+                                     ExprLiteral.String(pfx),
+                                     ExprCall(ExprSelect(msgptr, '->', 'name')),
+                                     ExprVar('mozilla::ipc::MessageDirection::eReceiving'
+                                             if receiving
+                                             else 'mozilla::ipc::MessageDirection::eSending') ])) ])
 
     def profilerLabel(self, tag, msgname):
         return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),

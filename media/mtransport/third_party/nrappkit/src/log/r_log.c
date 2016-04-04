@@ -102,7 +102,7 @@ typedef struct log_type_ {
      NR_registry dest_facility_key[LOG_NUM_DESTINATIONS];
 } log_type;
 
-#define MAX_LOG_TYPES 1024
+#define MAX_LOG_TYPES 16
 
 static log_type log_types[MAX_LOG_TYPES];
 static int log_type_ct;

@@ -26,7 +26,7 @@
 #include <CoreVideo/CoreVideo.h>
 
 #include "nsCocoaFeatures.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "VsyncSource.h"
 
 using namespace mozilla;
@@ -131,13 +131,6 @@ gfxPlatformMac::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
     return font->GetScaledFont(aTarget);
 }
 
-nsresult
-gfxPlatformMac::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
-{
-    gfxPlatformFontList::PlatformFontList()->GetStandardFamilyName(aFontName, aFamilyName);
-    return NS_OK;
-}
-
 gfxFontGroup *
 gfxPlatformMac::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle *aStyle,
@@ -147,38 +140,6 @@ gfxPlatformMac::CreateFontGroup(const FontFamilyList& aFontFamilyList,
 {
     return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf,
                             aUserFontSet, aDevToCssSize);
-}
-
-// these will move to gfxPlatform once all platforms support the fontlist
-gfxFontEntry* 
-gfxPlatformMac::LookupLocalFont(const nsAString& aFontName,
-                                uint16_t aWeight,
-                                int16_t aStretch,
-                                uint8_t aStyle)
-{
-    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
-                                                                    aWeight,
-                                                                    aStretch,
-                                                                    aStyle);
-}
-
-gfxFontEntry* 
-gfxPlatformMac::MakePlatformFont(const nsAString& aFontName,
-                                 uint16_t aWeight,
-                                 int16_t aStretch,
-                                 uint8_t aStyle,
-                                 const uint8_t* aFontData,
-                                 uint32_t aLength)
-{
-    // Ownership of aFontData is received here, and passed on to
-    // gfxPlatformFontList::MakePlatformFont(), which must ensure the data
-    // is released with free when no longer needed
-    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
-                                                                     aWeight,
-                                                                     aStretch,
-                                                                     aStyle,
-                                                                     aFontData,
-                                                                     aLength);
 }
 
 bool
@@ -201,23 +162,6 @@ gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 
     // no format hint set, need to look at data
     return true;
-}
-
-// these will also move to gfxPlatform once all platforms support the fontlist
-nsresult
-gfxPlatformMac::GetFontList(nsIAtom *aLangGroup,
-                            const nsACString& aGenericFamily,
-                            nsTArray<nsString>& aListOfFonts)
-{
-    gfxPlatformFontList::PlatformFontList()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
-    return NS_OK;
-}
-
-nsresult
-gfxPlatformMac::UpdateFontList()
-{
-    gfxPlatformFontList::PlatformFontList()->UpdateFontList();
-    return NS_OK;
 }
 
 static const char kFontArialUnicodeMS[] = "Arial Unicode MS";

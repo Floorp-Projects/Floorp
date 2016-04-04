@@ -1264,6 +1264,9 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
   // The next two entries are controlled by the layout.css.grid.enabled pref.
   { eCSSKeyword_grid,                NS_STYLE_DISPLAY_GRID },
   { eCSSKeyword_inline_grid,         NS_STYLE_DISPLAY_INLINE_GRID },
+  // The next two entries are controlled by the layout.css.prefixes.webkit pref.
+  { eCSSKeyword__webkit_box,         NS_STYLE_DISPLAY_WEBKIT_BOX },
+  { eCSSKeyword__webkit_inline_box,  NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX },
   // The next entry is controlled by the layout.css.display-contents.enabled
   // pref.
   { eCSSKeyword_contents,            NS_STYLE_DISPLAY_CONTENTS },
@@ -1862,12 +1865,11 @@ const KTableEntry nsCSSProps::kPointerEventsKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-KTableEntry nsCSSProps::kPositionKTable[] = {
+const KTableEntry nsCSSProps::kPositionKTable[] = {
   { eCSSKeyword_static, NS_STYLE_POSITION_STATIC },
   { eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE },
   { eCSSKeyword_absolute, NS_STYLE_POSITION_ABSOLUTE },
   { eCSSKeyword_fixed, NS_STYLE_POSITION_FIXED },
-  // The next entry is controlled by the layout.css.sticky.enabled pref.
   { eCSSKeyword_sticky, NS_STYLE_POSITION_STICKY },
   { eCSSKeyword_UNKNOWN, -1 }
 };
@@ -2361,6 +2363,12 @@ const KTableEntry nsCSSProps::kTextRenderingKTable[] = {
 const KTableEntry nsCSSProps::kVectorEffectKTable[] = {
   { eCSSKeyword_none, NS_STYLE_VECTOR_EFFECT_NONE },
   { eCSSKeyword_non_scaling_stroke, NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kColorAdjustKTable[] = {
+  { eCSSKeyword_economy, NS_STYLE_COLOR_ADJUST_ECONOMY },
+  { eCSSKeyword_exact, NS_STYLE_COLOR_ADJUST_EXACT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

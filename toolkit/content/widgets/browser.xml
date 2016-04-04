@@ -498,6 +498,13 @@
                        return val;"
                 onget="return this.getAttribute('showresizer') == 'true';"/>
 
+      <property name="manifestURI"
+                readonly="true">
+        <getter><![CDATA[
+          return this.contentDocument.documentElement &&
+                 this.contentDocument.documentElement.getAttribute("manifest");
+        ]]></getter>
+      </property>
 
       <property name="fullZoom">
         <getter><![CDATA[
@@ -532,11 +539,6 @@
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefBranch);
-      </field>
-
-      <field name="mAtomService" readonly="true">
-        Components.classes['@mozilla.org/atom-service;1']
-                  .getService(Components.interfaces.nsIAtomService);
       </field>
 
       <field name="_mStrBundle">null</field>
@@ -1219,6 +1221,7 @@
               "_textZoom",
               "_isSyntheticDocument",
               "_innerWindowID",
+              "_manifestURI",
             ]);
           }
 

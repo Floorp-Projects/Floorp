@@ -6,7 +6,8 @@
 
 /* globals Services, sendAsyncMessage, addMessageListener */
 
-// XXX Some helper API could go to testing/mochitest/tests/SimpleTest/AsyncContentUtils.js
+// XXX Some helper API could go to:
+// testing/mochitest/tests/SimpleTest/AsyncContentUtils.js
 // (or at least to share test API in devtools)
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
@@ -15,8 +16,8 @@
 let EventUtils = {};
 EventUtils.window = content;
 EventUtils.parent = EventUtils.window;
-EventUtils._EU_Ci = Components.interfaces;
-EventUtils._EU_Cc = Components.classes;
+EventUtils._EU_Ci = Components.interfaces; // eslint-disable-line
+EventUtils._EU_Cc = Components.classes; // eslint-disable-line
 EventUtils.navigator = content.navigator;
 EventUtils.KeyboardEvent = content.KeyboardEvent;
 
@@ -71,7 +72,7 @@ addMessageListener("Test:JsonView:SendString", function(msg) {
 
 addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   let firstRow = content.document.querySelector(
-    ".jsonPanelBox .domTable .memberRow");
+    ".jsonPanelBox .treeTable .treeRow");
 
   // Check if the filter is already set.
   if (firstRow.classList.contains("hidden")) {
@@ -80,7 +81,7 @@ addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   }
 
   // Wait till the first row has 'hidden' class set.
-  var observer = new content.MutationObserver(function(mutations) {
+  let observer = new content.MutationObserver(function(mutations) {
     for (let i = 0; i < mutations.length; i++) {
       let mutation = mutations[i];
       if (mutation.attributeName == "class") {

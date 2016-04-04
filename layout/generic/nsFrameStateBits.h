@@ -180,6 +180,12 @@ FRAME_STATE_BIT(Generic, 33, NS_FRAME_DRAWING_AS_PAINTSERVER)
 // situation (possibly the frame itself).
 FRAME_STATE_BIT(Generic, 34, NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)
 
+// A flag that tells us we can take the common path with respect to style
+// properties for this frame when building event regions. This flag is cleared
+// when any styles are changed and then we recompute it on the next build
+// of the event regions.
+FRAME_STATE_BIT(Generic, 35, NS_FRAME_SIMPLE_EVENT_REGIONS)
+
 // Frame is a display root and the retained layer tree needs to be updated
 // at the next paint via display list construction.
 // Only meaningful for display roots, so we don't really need a global state
@@ -222,6 +228,10 @@ FRAME_STATE_BIT(Generic, 44, NS_FRAME_MAY_HAVE_GENERATED_CONTENT)
 // alpha children. With BasicLayers we avoid creating these, so we mark
 // the frames for future reference.
 FRAME_STATE_BIT(Generic, 45, NS_FRAME_NO_COMPONENT_ALPHA)
+
+// This bit indicates that we're tracking visibility for this frame, and that
+// the frame has a VisibilityStateProperty property.
+FRAME_STATE_BIT(Generic, 46, NS_FRAME_VISIBILITY_IS_TRACKED)
 
 // The frame is a descendant of SVGTextFrame and is thus used for SVG
 // text layout.
@@ -297,6 +307,20 @@ FRAME_STATE_GROUP(FlexContainer, nsFlexContainerFrame)
 // Set for a flex container whose children have been reordered due to 'order'.
 // (Means that we have to be more thorough about checking them for sortedness.)
 FRAME_STATE_BIT(FlexContainer, 20, NS_STATE_FLEX_CHILDREN_REORDERED)
+
+// == Frame state bits that apply to grid container frames ====================
+
+FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)
+
+// True iff the normal flow children are already in CSS 'order' in the
+// order they occur in the child frame list.
+FRAME_STATE_BIT(GridContainer, 20, NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
+
+// True iff some first-in-flow in-flow children were pushed.
+// Note that those child frames may have been removed without this bit
+// being updated for performance reasons, so code shouldn't depend on
+// actually finding any pushed items when this bit is set.
+FRAME_STATE_BIT(GridContainer, 21, NS_STATE_GRID_DID_PUSH_ITEMS)
 
 // == Frame state bits that apply to SVG frames ===============================
 

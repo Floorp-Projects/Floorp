@@ -465,7 +465,7 @@ function writeFullPinset(certNameToSKD, certSKDToName, pinset) {
 
 function writeFingerprints(certNameToSKD, certSKDToName, name, hashes) {
   let varPrefix = "kPinset_" + name;
-  writeString("static const char* " + varPrefix + "_Data[] = {\n");
+  writeString("static const char* const " + varPrefix + "_Data[] = {\n");
   let SKDList = [];
   for (let certName of hashes) {
     if (!(certName in certNameToSKD)) {

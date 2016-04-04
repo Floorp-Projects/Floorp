@@ -63,18 +63,18 @@ template <class AnimationType>
 AnimationCollection<AnimationType>::GetAnimationCollection(
   const nsIFrame* aFrame)
 {
-  Maybe<Pair<dom::Element*, CSSPseudoElementType>> pseudoElement =
+  Maybe<NonOwningAnimationTarget> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (!pseudoElement) {
     return nullptr;
   }
 
-  if (!pseudoElement->first()->MayHaveAnimations()) {
+  if (!pseudoElement->mElement->MayHaveAnimations()) {
     return nullptr;
   }
 
-  return GetAnimationCollection(pseudoElement->first(),
-                                pseudoElement->second());
+  return GetAnimationCollection(pseudoElement->mElement,
+                                pseudoElement->mPseudoType);
 }
 
 template <class AnimationType>

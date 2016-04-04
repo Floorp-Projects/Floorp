@@ -241,9 +241,6 @@ public class DateTimePicker extends FrameLayout {
 
     public DateTimePicker(Context context, String dateFormat, String dateTimeValue, PickersState state, String minDateValue, String maxDateValue) {
         super(context);
-        if (Versions.preHC) {
-            throw new UnsupportedOperationException("Custom DateTimePicker is only available for SDK > 10");
-        }
 
         setCurrentLocale(Locale.getDefault());
 
@@ -555,8 +552,7 @@ public class DateTimePicker extends FrameLayout {
     }
 
     public void toggleCalendar(boolean shown) {
-        if (Versions.preHC ||
-            (mState != PickersState.DATE && mState != PickersState.DATETIME) ||
+        if ((mState != PickersState.DATE && mState != PickersState.DATETIME) ||
             mScreenWidth < SCREEN_SIZE_THRESHOLD) {
             if (DEBUG) {
                 Log.d(LOGTAG, "Cannot display calendar on this device, in this state" +

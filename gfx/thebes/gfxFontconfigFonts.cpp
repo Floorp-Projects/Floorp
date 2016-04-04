@@ -1266,7 +1266,7 @@ gfxPangoFontGroup::gfxPangoFontGroup(const FontFamilyList& aFontFamilyList,
     // This language is passed to the font for shaping.
     // Shaping doesn't know about lang groups so make it a real language.
     if (mPangoLanguage) {
-        mStyle.language = do_GetAtom(pango_language_to_string(mPangoLanguage));
+        mStyle.language = NS_Atomize(pango_language_to_string(mPangoLanguage));
     }
 
     // dummy entry, will be replaced when actually needed
@@ -1491,7 +1491,7 @@ gfxPangoFontGroup::MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
     RefPtr<nsIAtom> langGroup;
     if (aLang != mPangoLanguage) {
         // Set up langGroup for Mozilla's font prefs.
-        langGroup = do_GetAtom(lang);
+        langGroup = NS_Atomize(lang);
     }
 
     AutoTArray<nsString, 20> fcFamilyList;
@@ -2262,7 +2262,7 @@ ApplyGdkScreenFontOptions(FcPattern *aPattern)
     cairo_ft_font_options_substitute(options, aPattern);
 }
 
-#endif // MOZ_WIDGET_GTK2
+#endif // MOZ_WIDGET_GTK
 
 #ifdef USE_SKIA
 already_AddRefed<mozilla::gfx::GlyphRenderingOptions>

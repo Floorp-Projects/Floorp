@@ -496,10 +496,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Push the return address and make a call. On platforms where this function
     // is not defined, push the link register (pushReturnAddress) at the entry
     // point of the callee.
-    void callAndPushReturnAddress(Register reg) DEFINED_ON(mips_shared, x86_shared);
-    void callAndPushReturnAddress(Label* label) DEFINED_ON(mips_shared, x86_shared);
+    void callAndPushReturnAddress(Register reg) DEFINED_ON(x86_shared);
+    void callAndPushReturnAddress(Label* label) DEFINED_ON(x86_shared);
 
-    void pushReturnAddress() DEFINED_ON(arm, arm64);
+    void pushReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
+    void popReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
 
   public:
     // ===============================================================
@@ -816,11 +817,18 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(x86_shared);
     inline void branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
 
-    inline void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
-    inline void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) DEFINED_ON(x86_shared);
+    inline void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) DEFINED_ON(x86_shared);
 
     inline void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    inline void branch64(Condition cond, const Address& lhs, Imm64 val, Label* label) PER_ARCH;
+
+    // Compare the value at |lhs| with the value at |rhs|.  The scratch
+    // register *must not* be the base of |lhs| or |rhs|.
+    inline void branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
+                         Label* label) PER_ARCH;
 
     inline void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
@@ -848,6 +856,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    void branchPtrInNurseryRange(Condition cond, const Address& address, Register temp, Label* label)
+        DEFINED_ON(x86);
+    void branchValueIsNurseryObject(Condition cond, const Address& address, Register temp, Label* label) PER_ARCH;
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
 
     // This function compares a Value (lhs) which is having a private pointer
@@ -1005,6 +1016,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestMagic(Condition cond, const ValueOperand& value, L label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
+    inline void branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label) PER_ARCH;
+
     inline void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
                                      Label* label);
 
@@ -1030,6 +1043,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T, typename S>
     inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
         DEFINED_ON(x86_shared);
+
+    template <typename T>
+    void branchPtrInNurseryRangeImpl(Condition cond, const T& ptr, Register temp, Label* label)
+        DEFINED_ON(x86);
+    template <typename T>
+    void branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp, Label* label)
+        DEFINED_ON(arm64, mips64, x64);
 
     template <typename T>
     inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)

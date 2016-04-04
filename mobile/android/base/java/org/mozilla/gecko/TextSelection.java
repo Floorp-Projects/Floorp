@@ -85,7 +85,7 @@ class TextSelection extends Layer implements GeckoEventListener,
             @Override
             public void drawFinished() {
                 if (!mDraggingHandles) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:LayerReflow", ""));
+                    GeckoAppShell.notifyObservers("TextSelection:LayerReflow", "");
                 }
             }
         };
@@ -337,17 +337,6 @@ class TextSelection extends Layer implements GeckoEventListener,
                         public void onBitmapFound(Drawable d) {
                             if (d != null) {
                                 menuitem.setIcon(d);
-
-                                // Dynamically add padding to align the share icon on GB devices.
-                                // To be removed in bug 1122752.
-                                if (Versions.preHC && "drawable://ic_menu_share".equals(iconString)) {
-                                    final View view = menuitem.getActionView();
-
-                                    final Resources res = view.getContext().getResources();
-                                    final int padding = res.getDimensionPixelSize(R.dimen.ab_share_padding);
-
-                                    view.setPadding(padding, padding, padding, padding);
-                                }
                             }
                         }
                     });
@@ -368,7 +357,7 @@ class TextSelection extends Layer implements GeckoEventListener,
         public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item) {
             try {
                 final JSONObject obj = mItems.getJSONObject(item.getItemId());
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Action", obj.optString("id")));
+                GeckoAppShell.notifyObservers("TextSelection:Action", obj.optString("id"));
                 return true;
             } catch(Exception ex) {
                 Log.i(LOGTAG, "Exception calling action", ex);
@@ -389,9 +378,7 @@ class TextSelection extends Layer implements GeckoEventListener,
                 return;
             }
 
-            final GeckoEvent event =
-                GeckoEvent.createBroadcastEvent("TextSelection:End", args.toString());
-            GeckoAppShell.sendEventToGecko(event);
+            GeckoAppShell.notifyObservers("TextSelection:End", args.toString());
         }
     }
 }

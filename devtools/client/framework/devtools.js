@@ -15,6 +15,8 @@ const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {JsonView} = require("devtools/client/jsonview/main");
+const AboutDevTools = require("devtools/client/framework/about-devtools-toolbox");
+const {when: unload} = require("sdk/system/unload");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -30,15 +32,20 @@ this.DevTools = function DevTools() {
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
-  this._teardown = this._teardown.bind(this);
 
   // JSON Viewer for 'application/json' documents.
   JsonView.initialize();
 
+  AboutDevTools.register();
+
   EventEmitter.decorate(this);
 
-  Services.obs.addObserver(this._teardown, "devtools-unloaded", false);
   Services.obs.addObserver(this.destroy, "quit-application", false);
+
+  // This is important step in initialization codepath where we are going to
+  // start registering all default tools and themes: create menuitems, keys, emit
+  // related events.
+  this.registerDefaults();
 };
 
 DevTools.prototype = {
@@ -470,6 +477,7 @@ DevTools.prototype = {
     for (let [target, toolbox] of this._toolboxes) {
       toolbox.destroy();
     }
+    AboutDevTools.unregister();
   },
 
   /**
@@ -477,13 +485,14 @@ DevTools.prototype = {
    */
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
-    Services.obs.removeObserver(this._teardown, "devtools-unloaded");
 
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
 
     JsonView.destroy();
+
+    gDevTools.unregisterDefaults();
 
     // Cleaning down the toolboxes: i.e.
     //   for (let [target, toolbox] of this._toolboxes) toolbox.destroy();
@@ -500,5 +509,9 @@ DevTools.prototype = {
   }
 };
 
-exports.gDevTools = new DevTools();
+const gDevTools = exports.gDevTools = new DevTools();
 
+// Watch for module loader unload. Fires when the tools are reloaded.
+unload(function () {
+  gDevTools._teardown();
+});

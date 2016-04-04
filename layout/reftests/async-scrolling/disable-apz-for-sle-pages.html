@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait" reftest-async-scroll
+      reftest-async-scroll-y="200">
+ <head>
+  <title>Check that the apz.disable_for_sle_pages pref behaves as expected</title>
+  <script>
+    // Upon load, this page scrolls to (0, 100). This triggers a scroll event,
+    // which runs the scroll listener below. The scroll listener updates the
+    // position of the div to simulate position:fixed using a scroll-linked
+    // effect. The scroll-linked effect detector should then report that the
+    // document contains such an effect, which will disable APZ on the page.
+    // That in turn will cause the reftest-async-scroll-y to get ignored, and
+    // that's what the reftest checks for.
+
+    addEventListener('scroll', function() {
+        document.getElementById('fake-fixed').style.top = window.scrollY + "px";
+    }, false);
+
+    addEventListener('load', function() {
+        window.scrollTo(0, 100);
+        setTimeout(done, 0);
+    }, false);
+
+    function done() {
+        document.documentElement.classList.remove('reftest-wait');
+    }
+  </script>
+ </head>
+ <body style="height: 5000px; background-image:url(repeatable-diagonal-gradient.png);">
+  <div id="fake-fixed" style="position: absolute; top: 0; left: 100px; width: 100px; height: 100px; background-color: green"></div>
+ </body>
+</html>

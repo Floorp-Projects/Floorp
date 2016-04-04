@@ -20,11 +20,18 @@ const TEST_DATA_JSON_CONTENT =
 const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging " +
                  "tests";
 
-var lastRequest = null;
-var requestCallback = null;
-var hud, browser;
+const PAGE_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("test-network-request.html");
 
-function test() {
+const TEST_DATA_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("test-data.json");
+
+const XHR_WARN_REQUEST_PREDICATE =
+  ({ request }) => request.url.endsWith("sjs_cors-test-server.sjs");
+
+let hud;
+
+add_task(function*() {
   const PREF = "devtools.webconsole.persistlog";
   const NET_PREF = "devtools.webconsole.filter.networkinfo";
   const NETXHR_PREF = "devtools.webconsole.filter.netxhr";
@@ -41,145 +48,113 @@ function test() {
     Services.prefs.setBoolPref(NETXHR_PREF, originalXhr);
     Services.prefs.setBoolPref(MIXED_AC_PREF, originalMixedActive);
     Services.prefs.clearUserPref(PREF);
+    hud = null;
   });
 
-  loadTab(TEST_URI).then((tab) => {
-    browser = tab.browser;
-    openConsole().then((hudConsole) => {
-      hud = hudConsole;
+  yield loadTab(TEST_URI);
+  hud = yield openConsole();
 
-      HUDService.lastFinishedRequest.callback = function(request) {
-        lastRequest = request;
-        if (requestCallback) {
-          requestCallback();
-        }
-      };
-
-      executeSoon(testPageLoad);
-    });
-  });
-}
+  yield testPageLoad();
+  yield testXhrGet();
+  yield testXhrWarn();
+  yield testXhrPost();
+  yield testFormSubmission();
+  yield testLiveFilteringOnSearchStrings();
+});
 
 function testPageLoad() {
-  requestCallback = function() {
-    // Check if page load was logged correctly.
-    ok(lastRequest, "Page load was logged");
-    is(lastRequest.request.url, TEST_NETWORK_REQUEST_URI,
-      "Logged network entry is page load");
-    is(lastRequest.request.method, "GET", "Method is correct");
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testPageLoadBody);
-  };
 
-  content.location = TEST_NETWORK_REQUEST_URI;
-}
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_NETWORK_REQUEST_URI);
+  let lastRequest = yield waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
 
-function testPageLoadBody() {
-  let loaded = false;
-  let requestCallbackInvoked = false;
-
-  // Turn off logging of request bodies and check again.
-  requestCallback = function() {
-    ok(lastRequest, "Page load was logged again");
-    lastRequest = null;
-    requestCallback = null;
-    requestCallbackInvoked = true;
-
-    if (loaded) {
-      executeSoon(testXhrGet);
-    }
-  };
-
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    loaded = true;
-
-    if (requestCallbackInvoked) {
-      executeSoon(testXhrGet);
-    }
-  }, true);
-
-  content.location.reload();
+  // Check if page load was logged correctly.
+  ok(lastRequest, "Page load was logged");
+  is(lastRequest.request.url, TEST_NETWORK_REQUEST_URI,
+    "Logged network entry is page load");
+  is(lastRequest.request.method, "GET", "Method is correct");
 }
 
 function testXhrGet() {
-  requestCallback = function() {
-    ok(lastRequest, "testXhrGet() was logged");
-    is(lastRequest.request.method, "GET", "Method is correct");
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testXhrWarn);
-  };
-
   // Start the XMLHttpRequest() GET test.
-  content.wrappedJSObject.testXhrGet();
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    content.wrappedJSObject.testXhrGet();
+  });
+
+  let lastRequest = yield waitForFinishedRequest(TEST_DATA_REQUEST_PREDICATE);
+
+  ok(lastRequest, "testXhrGet() was logged");
+  is(lastRequest.request.method, "GET", "Method is correct");
+  ok(lastRequest.isXHR, "It's an XHR request");
 }
 
 function testXhrWarn() {
-  requestCallback = function() {
-    ok(lastRequest, "testXhrWarn() was logged");
-    is(lastRequest.request.method, "GET", "Method is correct");
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testXhrPost);
-  };
-
   // Start the XMLHttpRequest() warn test.
-  content.wrappedJSObject.testXhrWarn();
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    content.wrappedJSObject.testXhrWarn();
+  });
+
+  let lastRequest = yield waitForFinishedRequest(XHR_WARN_REQUEST_PREDICATE);
+
+  ok(lastRequest, "testXhrWarn() was logged");
+  is(lastRequest.request.method, "GET", "Method is correct");
+  ok(lastRequest.isXHR, "It's an XHR request");
+  is(lastRequest.securityInfo, "insecure", "It's an insecure request");
 }
 
 function testXhrPost() {
-  requestCallback = function() {
-    ok(lastRequest, "testXhrPost() was logged");
-    is(lastRequest.request.method, "POST", "Method is correct");
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testFormSubmission);
-  };
-
   // Start the XMLHttpRequest() POST test.
-  content.wrappedJSObject.testXhrPost();
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    content.wrappedJSObject.testXhrPost();
+  });
+
+  let lastRequest = yield waitForFinishedRequest(TEST_DATA_REQUEST_PREDICATE);
+
+  ok(lastRequest, "testXhrPost() was logged");
+  is(lastRequest.request.method, "POST", "Method is correct");
+  ok(lastRequest.isXHR, "It's an XHR request");
 }
 
 function testFormSubmission() {
   // Start the form submission test. As the form is submitted, the page is
   // loaded again. Bind to the load event to catch when this is done.
-  requestCallback = function() {
-    ok(lastRequest, "testFormSubmission() was logged");
-    is(lastRequest.request.method, "POST", "Method is correct");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    let form = content.document.querySelector("form");
+    ok(form, "we have the HTML form");
+    form.submit();
+  });
 
-    // There should be 3 network requests pointing to the HTML file.
-    waitForMessages({
-      webconsole: hud,
-      messages: [
-        {
-          text: "test-network-request.html",
-          category: CATEGORY_NETWORK,
-          severity: SEVERITY_LOG,
-          count: 3,
-        },
-        {
-          text: "test-data.json",
-          category: CATEGORY_NETWORK,
-          severity: SEVERITY_INFO,
-          isXhr: true,
-          count: 2,
-        },
-        {
-          text: "http://example.com/",
-          category: CATEGORY_NETWORK,
-          severity: SEVERITY_WARNING,
-          isXhr: true,
-          count: 1,
-        },
-      ],
-    }).then(testLiveFilteringOnSearchStrings);
-  };
+  // The form POSTs to the page URL but over https (page over http).
+  let lastRequest = yield waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
 
-  let form = content.document.querySelector("form");
-  ok(form, "we have the HTML form");
-  form.submit();
+  ok(lastRequest, "testFormSubmission() was logged");
+  is(lastRequest.request.method, "POST", "Method is correct");
+
+  // There should be 3 network requests pointing to the HTML file.
+  waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        text: "test-network-request.html",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+        count: 3,
+      },
+      {
+        text: "test-data.json",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_INFO,
+        isXhr: true,
+        count: 2,
+      },
+      {
+        text: "http://example.com/",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_WARNING,
+        isXhr: true,
+        count: 1,
+      },
+    ],
+  });
 }
 
 function testLiveFilteringOnSearchStrings() {
@@ -213,12 +188,6 @@ function testLiveFilteringOnSearchStrings() {
   setStringFilter("foo\"bar'baz\"boo'");
   is(countMessageNodes(), 0, "the log nodes are hidden when searching for " +
     "the string \"foo\"bar'baz\"boo'\"");
-
-  HUDService.lastFinishedRequest.callback = null;
-  lastRequest = null;
-  requestCallback = null;
-  hud = browser = null;
-  finishTest();
 }
 
 function countMessageNodes() {

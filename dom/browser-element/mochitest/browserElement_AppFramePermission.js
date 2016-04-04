@@ -8,8 +8,6 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
-SpecialPowers.setAllAppsLaunchable(true);
-
 function testAppElement(expectAnApp, callback) {
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');

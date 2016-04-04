@@ -333,8 +333,10 @@ nsPresContext::Destroy()
 
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
-  if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
-    mRefreshDriver->Disconnect();
+  if (mRefreshDriver) {
+    if (mRefreshDriver->PresContext() == this) {
+      mRefreshDriver->Disconnect();
+    }
     mRefreshDriver = nullptr;
   }
 }
@@ -1203,9 +1205,14 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     }
 
     if (IsRoot()) {
+      nsRootPresContext* thisRoot = static_cast<nsRootPresContext*>(this);
+
       // Have to cancel our plugin geometry timer, because the
       // callback for that depends on a non-null presshell.
-      static_cast<nsRootPresContext*>(this)->CancelApplyPluginGeometryTimer();
+      thisRoot->CancelApplyPluginGeometryTimer();
+
+      // The did-paint timer also depends on a non-null pres shell.
+      thisRoot->CancelDidPaintTimer();
     }
   }
 }
@@ -1517,7 +1524,7 @@ nsPresContext::GetContentLanguage() const
   // in which case the HTML5 spec says to treat it as unknown
   if (!language.IsEmpty() &&
       !language.Contains(char16_t(','))) {
-    return do_GetAtom(language);
+    return NS_Atomize(language);
     // NOTE:  This does *not* count as an explicit language; in other
     // words, it doesn't trigger language-specific hyphenation.
   }
@@ -2007,7 +2014,7 @@ nsPresContext::EmulateMedium(const nsAString& aMediaType)
   nsAutoString mediaType;
   nsContentUtils::ASCIIToLower(aMediaType, mediaType);
 
-  mMediaEmulated = do_GetAtom(mediaType);
+  mMediaEmulated = NS_Atomize(mediaType);
   if (mMediaEmulated != previousMedium && mShell) {
     MediaFeatureValuesChanged(nsRestyleHint(0), nsChangeHint(0));
   }
@@ -2204,8 +2211,7 @@ nsPresContext::SizeModeChanged(nsSizeMode aSizeMode)
     nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
                                             NotifyTabSizeModeChanged,
                                             &aSizeMode);
-    MediaFeatureValuesChangedAllDocuments(eRestyle_Subtree,
-                                          NS_STYLE_HINT_REFLOW);
+    MediaFeatureValuesChangedAllDocuments(nsRestyleHint(0));
   }
 }
 

@@ -253,6 +253,17 @@ function assertStructurallyEquivalent(actual, expected, path="root") {
 
       equal(expectedKeys.size, 0,
             `${path}: every key in expected should also exist in actual, did not see ${[...expectedKeys]}`);
+    } else if (actualProtoString === "[object Set]") {
+      const expectedItems = new Set([...expected]);
+
+      for (let item of actual) {
+        ok(expectedItems.has(item),
+           `${path}: every set item in actual should exist in expected: ${item}`);
+        expectedItems.delete(item);
+      }
+
+      equal(expectedItems.size, 0,
+            `${path}: every set item in expected should also exist in actual, did not see ${[...expectedItems]}`);
     } else {
       const expectedKeys = new Set(Object.keys(expected));
 
@@ -416,6 +427,17 @@ function assertDeduplicatedPaths({ target, paths, expectedNodes, expectedEdges }
     equal(count, 1,
           "should have exactly one matching edge for the expected edge = " + JSON.stringify(edge));
   }
+}
+
+function assertCountToBucketBreakdown(breakdown, expected) {
+  dumpn("count => bucket breakdown");
+  dumpn("Initial breakdown = ", JSON.stringify(breakdown, null, 2));
+  dumpn("Expected results = ", JSON.stringify(expected, null, 2));
+
+  const actual = CensusUtils.countToBucketBreakdown(breakdown);
+  dumpn("Actual results = ", JSON.stringify(actual, null, 2));
+
+  assertStructurallyEquivalent(actual, expected);
 }
 
 /**

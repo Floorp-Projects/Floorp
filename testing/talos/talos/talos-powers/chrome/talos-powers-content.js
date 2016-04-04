@@ -43,3 +43,10 @@ addMessageListener("TalosContentProfiler:Response", (msg) => {
   content.dispatchEvent(
     new content.CustomEvent("TalosContentProfilerResponse", event));
 });
+
+addEventListener("TalosPowersContentForceCCAndGC", (e) => {
+  Cu.forceGC();
+  Cu.forceCC();
+  Cu.forceShrinkingGC();
+  sendSyncMessage("TalosPowersContent:ForceCCAndGC");
+});

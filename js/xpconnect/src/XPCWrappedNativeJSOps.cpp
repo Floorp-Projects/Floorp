@@ -620,8 +620,7 @@ XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* reso
                                  resolvedp);
 }
 
-const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
-  { // base
+const js::Class XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",    // name;
     WRAPPER_FLAGS |
     JSCLASS_PRIVATE_IS_NSISUPPORTS, // flags
@@ -652,20 +651,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
     },
 
     // ObjectOps
-    {
-        nullptr, // lookupProperty
-        nullptr, // defineProperty
-        nullptr, // hasProperty
-        nullptr, // getProperty
-        nullptr, // setProperty
-        nullptr, // getOwnPropertyDescriptor
-        nullptr, // deleteProperty
-        nullptr, nullptr, // watch/unwatch
-        nullptr, // getElements
-        nullptr, // enumerate
-        nullptr, // funToString
-    }
-  }
+    JS_NULL_OBJECT_OPS
 };
 
 
@@ -959,16 +945,38 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
     return newObj;
 }
 
-void
-XPCNativeScriptableShared::PopulateJSClass()
-{
-    MOZ_ASSERT(mJSClass.base.name, "bad state!");
+static const js::ObjectOps XPC_WN_ObjectOpsWithEnumerate = {
+    nullptr,  // lookupProperty
+    nullptr,  // defineProperty
+    nullptr,  // hasProperty
+    nullptr,  // getProperty
+    nullptr,  // setProperty
+    nullptr,  // getOwnPropertyDescriptor
+    nullptr,  // deleteProperty
+    nullptr,  // watch
+    nullptr,  // unwatch
+    nullptr,  // getElements
+    XPC_WN_JSOp_Enumerate,
+    nullptr,  // funToString
+};
 
-    mJSClass.base.flags = WRAPPER_FLAGS |
-                          JSCLASS_PRIVATE_IS_NSISUPPORTS;
+XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
+                                                     char* aName,
+                                                     bool aPopulate)
+    : mFlags(aFlags)
+{
+    MOZ_COUNT_CTOR(XPCNativeScriptableShared);
+
+    memset(&mJSClass, 0, sizeof(mJSClass));
+    mJSClass.name = aName;  // take ownership
+
+    if (!aPopulate)
+        return;
+
+    mJSClass.flags = WRAPPER_FLAGS | JSCLASS_PRIVATE_IS_NSISUPPORTS;
 
     if (mFlags.IsGlobalObject())
-        mJSClass.base.flags |= XPCONNECT_GLOBAL_FLAGS;
+        mJSClass.flags |= XPCONNECT_GLOBAL_FLAGS;
 
     JSAddPropertyOp addProperty;
     if (mFlags.WantAddProperty())
@@ -979,7 +987,7 @@ XPCNativeScriptableShared::PopulateJSClass()
         addProperty = XPC_WN_MaybeResolvingPropertyStub;
     else
         addProperty = XPC_WN_CannotModifyPropertyStub;
-    mJSClass.base.addProperty = addProperty;
+    mJSClass.addProperty = addProperty;
 
     JSDeletePropertyOp delProperty;
     if (mFlags.UseJSStubForDelProperty())
@@ -988,12 +996,12 @@ XPCNativeScriptableShared::PopulateJSClass()
         delProperty = XPC_WN_MaybeResolvingDeletePropertyStub;
     else
         delProperty = XPC_WN_CantDeletePropertyStub;
-    mJSClass.base.delProperty = delProperty;
+    mJSClass.delProperty = delProperty;
 
     if (mFlags.WantGetProperty())
-        mJSClass.base.getProperty = XPC_WN_Helper_GetProperty;
+        mJSClass.getProperty = XPC_WN_Helper_GetProperty;
     else
-        mJSClass.base.getProperty = nullptr;
+        mJSClass.getProperty = nullptr;
 
     JSSetterOp setProperty;
     if (mFlags.WantSetProperty())
@@ -1004,46 +1012,45 @@ XPCNativeScriptableShared::PopulateJSClass()
         setProperty = XPC_WN_MaybeResolvingSetPropertyStub;
     else
         setProperty = XPC_WN_CannotModifySetPropertyStub;
-    mJSClass.base.setProperty = setProperty;
+    mJSClass.setProperty = setProperty;
 
     MOZ_ASSERT_IF(mFlags.WantEnumerate(), !mFlags.WantNewEnumerate());
     MOZ_ASSERT_IF(mFlags.WantNewEnumerate(), !mFlags.WantEnumerate());
 
     // We will use ops->enumerate set below for NewEnumerate
     if (mFlags.WantNewEnumerate())
-        mJSClass.base.enumerate = nullptr;
+        mJSClass.enumerate = nullptr;
     else if (mFlags.WantEnumerate())
-        mJSClass.base.enumerate = XPC_WN_Helper_Enumerate;
+        mJSClass.enumerate = XPC_WN_Helper_Enumerate;
     else
-        mJSClass.base.enumerate = XPC_WN_Shared_Enumerate;
+        mJSClass.enumerate = XPC_WN_Shared_Enumerate;
 
     // We have to figure out resolve strategy at call time
-    mJSClass.base.resolve = XPC_WN_Helper_Resolve;
+    mJSClass.resolve = XPC_WN_Helper_Resolve;
 
     if (mFlags.WantFinalize())
-        mJSClass.base.finalize = XPC_WN_Helper_Finalize;
+        mJSClass.finalize = XPC_WN_Helper_Finalize;
     else
-        mJSClass.base.finalize = XPC_WN_NoHelper_Finalize;
+        mJSClass.finalize = XPC_WN_NoHelper_Finalize;
 
-    js::ObjectOps* ops = &mJSClass.base.ops;
     if (mFlags.WantNewEnumerate())
-        ops->enumerate = XPC_WN_JSOp_Enumerate;
+        mJSClass.ops = &XPC_WN_ObjectOpsWithEnumerate;
 
     if (mFlags.WantCall())
-        mJSClass.base.call = XPC_WN_Helper_Call;
+        mJSClass.call = XPC_WN_Helper_Call;
     if (mFlags.WantConstruct())
-        mJSClass.base.construct = XPC_WN_Helper_Construct;
+        mJSClass.construct = XPC_WN_Helper_Construct;
 
     if (mFlags.WantHasInstance())
-        mJSClass.base.hasInstance = XPC_WN_Helper_HasInstance;
+        mJSClass.hasInstance = XPC_WN_Helper_HasInstance;
 
     if (mFlags.IsGlobalObject())
-        mJSClass.base.trace = JS_GlobalObjectTraceHook;
+        mJSClass.trace = JS_GlobalObjectTraceHook;
     else
-        mJSClass.base.trace = XPCWrappedNative::Trace;
+        mJSClass.trace = XPCWrappedNative::Trace;
 
-    mJSClass.base.ext.isWrappedNative = true;
-    mJSClass.base.ext.objectMovedOp = WrappedNativeObjectMoved;
+    mJSClass.ext.isWrappedNative = true;
+    mJSClass.ext.objectMovedOp = WrappedNativeObjectMoved;
 }
 
 /***************************************************************************/
@@ -1069,7 +1076,7 @@ XPCNativeScriptableShared::PopulateJSClass()
 // Components.utils because it implements nsIXPCScriptable (giving it a custom
 // JSClass) but not nsIClassInfo (which would put the methods on a prototype).
 
-#define IS_NOHELPER_CLASS(clasp) (clasp == &XPC_WN_NoHelper_JSClass.base)
+#define IS_NOHELPER_CLASS(clasp) (clasp == &XPC_WN_NoHelper_JSClass)
 #define IS_CU_CLASS(clasp) (clasp->name[0] == 'n' && !strcmp(clasp->name, "nsXPCComponents_Utils"))
 
 MOZ_ALWAYS_INLINE JSObject*

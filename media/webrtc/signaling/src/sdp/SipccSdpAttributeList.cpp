@@ -684,14 +684,7 @@ SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
             !!(fmtp->level_asymmetry_allowed);
 
         h264Parameters->packetization_mode = fmtp->packetization_mode;
-// Copied from VcmSIPCCBinding
-#ifdef _WIN32
-        sscanf_s(fmtp->profile_level_id, "%x",
-                 &h264Parameters->profile_level_id, sizeof(unsigned*));
-#else
-        sscanf(fmtp->profile_level_id, "%xu",
-               &h264Parameters->profile_level_id);
-#endif
+        sscanf(fmtp->profile_level_id, "%x", &h264Parameters->profile_level_id);
         h264Parameters->max_mbps = fmtp->max_mbps;
         h264Parameters->max_fs = fmtp->max_fs;
         h264Parameters->max_cpb = fmtp->max_cpb;

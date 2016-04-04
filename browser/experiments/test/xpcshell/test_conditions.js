@@ -93,6 +93,33 @@ const sanityFilter = function filter(c) {
   return true;
 }
 
+// Utility function to generate build ID for previous/next date.
+function addDate(buildId, diff) {
+  let m = /^([0-9]{4})([0-9]{2})([0-9]{2})(.*)$/.exec(buildId);
+  if (!m) {
+    throw Error("Unsupported build ID: " + buildId);
+  }
+  let year = Number.parseInt(m[1], 10);
+  let month = Number.parseInt(m[2], 10);
+  let date = Number.parseInt(m[3], 10);
+  let remainingParts = m[4];
+
+  let d = new Date();
+  d.setUTCFullYear(year, month - 1, date);
+  d.setTime(d.getTime() + diff * 24 * 60 * 60 * 1000);
+
+  let yearStr = String(d.getUTCFullYear());
+  let monthStr = ("0" + String(d.getUTCMonth() + 1)).slice(-2);
+  let dateStr = ("0" + String(d.getUTCDate())).slice(-2);
+  return yearStr + monthStr + dateStr + remainingParts;
+}
+function prevDate(buildId) {
+  return addDate(buildId, -1);
+}
+function nextDate(buildId) {
+  return addDate(buildId, 1);
+}
+
 add_task(function* test_simpleFields() {
   let testData = [
     // "expected applicable?", failure reason or null, manifest data
@@ -138,13 +165,13 @@ add_task(function* test_simpleFields() {
     [false, ["buildIDs"], {buildIDs: ["not-a-build-id", gAppInfo.platformBuildID + "-invalid"]}],
     [true,  null,         {buildIDs: ["not-a-build-id", gAppInfo.platformBuildID]}],
 
-    [true,  null,           {minBuildID: "2014060501"}],
-    [true,  null,           {minBuildID: "2014060601"}],
-    [false, ["minBuildID"], {minBuildID: "2014060701"}],
+    [true,  null,           {minBuildID: prevDate(gAppInfo.platformBuildID)}],
+    [true,  null,           {minBuildID: gAppInfo.platformBuildID}],
+    [false, ["minBuildID"], {minBuildID: nextDate(gAppInfo.platformBuildID)}],
 
-    [false, ["maxBuildID"], {maxBuildID: "2014010101"}],
-    [true,  null,           {maxBuildID: "2014060601"}],
-    [true,  null,           {maxBuildID: "2014060901"}],
+    [false, ["maxBuildID"], {maxBuildID: prevDate(gAppInfo.platformBuildID)}],
+    [true,  null,           {maxBuildID: gAppInfo.platformBuildID}],
+    [true,  null,           {maxBuildID: nextDate(gAppInfo.platformBuildID)}],
 
     // sample
 

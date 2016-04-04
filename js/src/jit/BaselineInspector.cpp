@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/BaselineCacheIR.h"
 #include "jit/BaselineIC.h"
 
 #include "vm/ObjectGroup-inl.h"
@@ -104,6 +105,55 @@ AddReceiver(const ReceiverGuard& receiver,
     return VectorAppendNoDuplicate(receivers, receiver);
 }
 
+static bool
+GetCacheIRReceiverForNativeReadSlot(ICCacheIR_Monitored* stub, ReceiverGuard* receiver)
+{
+    // If this is a getprop stub to get an own object's read-slot stub.
+    //
+    // We match either:
+    //
+    //   GuardIsObject 0
+    //   GuardShape 0
+    //   LoadFixedSlotResult or LoadDynamicSlotResult
+    //
+    // or
+    //
+    //   GuardIsObject 0
+    //   GuardGroup 0
+    //   1: GuardAndLoadUnboxedExpando 0
+    //   GuardShape 1
+    //   LoadUnboxedExpando 0
+    //   LoadFixedSlotResult or LoadDynamicSlotResult
+
+    CacheIRReader reader(stub->stubInfo());
+
+    ObjOperandId objId = ObjOperandId(0);
+    if (!reader.matchOp(CacheOp::GuardIsObject, objId))
+        return false;
+
+    if (reader.matchOp(CacheOp::GuardGroup, objId)) {
+        receiver->group = stub->stubInfo()->getStubField<ObjectGroup*>(stub, reader.stubOffset());
+
+        if (!reader.matchOp(CacheOp::GuardAndLoadUnboxedExpando, objId))
+            return false;
+        objId = reader.objOperandId();
+    }
+
+    if (reader.matchOp(CacheOp::GuardShape, objId)) {
+        receiver->shape = stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
+
+        // Skip LoadUnboxedExpando. Note that this op is redundant with the
+        // previous GuardAndLoadUnboxedExpando op, but for now we match the
+        // Ion IC codegen.
+        if (reader.matchOp(CacheOp::LoadUnboxedExpando, ObjOperandId(0)))
+            objId = reader.objOperandId();
+
+        return reader.matchOpEither(CacheOp::LoadFixedSlotResult, CacheOp::LoadDynamicSlotResult);
+    }
+
+    return false;
+}
+
 bool
 BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                           ObjectGroupVector& convertUnboxedGroups)
@@ -125,8 +175,11 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
     ICStub* stub = entry.firstStub();
     while (stub->next()) {
         ReceiverGuard receiver;
-        if (stub->isGetProp_Native()) {
-            receiver = stub->toGetProp_Native()->receiverGuard();
+        if (stub->isCacheIR_Monitored()) {
+            if (!GetCacheIRReceiverForNativeReadSlot(stub->toCacheIR_Monitored(), &receiver)) {
+                receivers.clear();
+                return true;
+            }
         } else if (stub->isSetProp_Native()) {
             receiver = ReceiverGuard(stub->toSetProp_Native()->group(),
                                      stub->toSetProp_Native()->shape());
@@ -712,6 +765,16 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
     return true;
 }
 
+static MIRType
+GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub)
+{
+    CacheIRReader reader(stub->stubInfo());
+
+    // For now, all CacheIR stubs expect an object.
+    MOZ_ALWAYS_TRUE(reader.matchOp(CacheOp::GuardIsObject, ObjOperandId(0)));
+    return MIRType_Object;
+}
+
 MIRType
 BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
 {
@@ -742,11 +805,6 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
             // Either an object or magic arguments.
             return MIRType_Value;
 
-          case ICStub::GetProp_ArrayLength:
-          case ICStub::GetProp_UnboxedArrayLength:
-          case ICStub::GetProp_Native:
-          case ICStub::GetProp_NativeDoesNotExist:
-          case ICStub::GetProp_NativePrototype:
           case ICStub::GetProp_Unboxed:
           case ICStub::GetProp_TypedObject:
           case ICStub::GetProp_CallScripted:
@@ -777,6 +835,12 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
 
           case ICStub::GetProp_StringLength:
             stubType = MIRType_String;
+            break;
+
+          case ICStub::CacheIR_Monitored:
+            stubType = GetCacheIRExpectedInputType(stub->toCacheIR_Monitored());
+            if (stubType == MIRType_Value)
+                return MIRType_Value;
             break;
 
           default:

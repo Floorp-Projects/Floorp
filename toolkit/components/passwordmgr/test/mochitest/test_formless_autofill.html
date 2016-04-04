@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofilling of fields outside of a form</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript;version=1.8">
+let mm = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("loginFrame").addEventListener("load", (evt) => {
+    // Tell the parent to setup test logins.
+    mm.sendAsyncMessage("setupParent", { selfFilling: true });
+  });
+});
+
+// When the setup is done, load a recipe for this test.
+mm.addMessageListener("doneSetup", function doneSetup() {
+  mm.sendAsyncMessage("loadRecipes", {
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      usernameSelector: "input[name='recipeuname']",
+      passwordSelector: "input[name='recipepword']",
+    }],
+  });
+});
+
+let loadedRecipesPromise = new Promise(resolve => {
+  mm.addMessageListener("loadedRecipes", resolve);
+});
+
+add_task(function* setup() {
+  yield loadedRecipesPromise;
+});
+
+
+const DEFAULT_ORIGIN = "http://mochi.test:8888";
+const TESTCASES = [
+  {
+    // Inputs
+    document: `<input type=password>`,
+
+    // Expected outputs
+    expectedInputValues: ["testpass"],
+  },
+  {
+    document: `<input>
+      <input type=password>`,
+    expectedInputValues: ["testuser", "testpass"],
+  },
+  {
+    document: `<input>
+      <input type=password>
+      <input type=password>`,
+    expectedInputValues: ["testuser", "testpass", ""],
+  },
+  {
+    document: `<input>
+      <input type=password>
+      <input type=password>
+      <input type=password>`,
+    expectedInputValues: ["testuser", "testpass", "", ""],
+  },
+  {
+    document: `<input>
+      <input type=password form="form1">
+      <input type=password>
+      <form id="form1">
+        <input>
+        <input type=password>
+      </form>`,
+    expectedFormCount: 2,
+    expectedInputValues: ["testuser", "testpass", "testpass", "", ""],
+  },
+  {
+    document: `<!-- formless password field selector recipe test -->
+      <input>
+      <input type=password>
+      <input>
+      <input type=password name="recipepword">`,
+    expectedInputValues: ["", "", "testuser", "testpass"],
+  },
+  {
+    document: `<!-- formless username and password field selector recipe test -->
+      <input name="recipeuname">
+      <input>
+      <input type=password>
+      <input type=password name="recipepword">`,
+    expectedInputValues: ["testuser", "", "", "testpass"],
+  },
+  {
+    document: `<!-- form and formless recipe field selector test -->
+      <input name="recipeuname">
+      <input>
+      <input type=password form="form1"> <!-- not filled since recipe affects both FormLikes -->
+      <input type=password>
+      <input type=password name="recipepword">
+      <form id="form1">
+        <input>
+        <input type=password>
+      </form>`,
+    expectedFormCount: 2,
+    expectedInputValues: ["testuser", "", "", "", "testpass", "", ""],
+  },
+];
+
+add_task(function* test() {
+  let loginFrame = document.getElementById("loginFrame");
+  let frameDoc = loginFrame.contentWindow.document;
+
+  for (let tc of TESTCASES) {
+    info("Starting testcase: " + JSON.stringify(tc));
+
+    let numFormLikesExpected = tc.expectedFormCount || 1;
+
+    let processedFormPromise = promiseFormsProcessed(numFormLikesExpected);
+
+    frameDoc.documentElement.innerHTML = tc.document;
+    info("waiting for " + numFormLikesExpected + " processed form(s)");
+    yield processedFormPromise;
+
+    let testInputs = frameDoc.documentElement.querySelectorAll("input");
+    is(testInputs.length, tc.expectedInputValues.length, "Check number of inputs");
+    for (let i = 0; i < tc.expectedInputValues.length; i++) {
+      let expectedValue = tc.expectedInputValues[i];
+      is(testInputs[i].value, expectedValue,
+         "Check expected input value " + i + ": " + expectedValue);
+    }
+  }
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="loginFrame" src="http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/blank.html"></iframe>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

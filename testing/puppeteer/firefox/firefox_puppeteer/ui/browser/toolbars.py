@@ -97,7 +97,9 @@ class LocationBar(UIBaseLib):
         """Clears the contents of the url bar (via the DELETE shortcut)."""
         self.focus('shortcut')
         self.urlbar.send_keys(keys.Keys.DELETE)
-        Wait(self.marionette).until(lambda _: self.urlbar.get_attribute('value') == '')
+        Wait(self.marionette).until(
+            lambda _: self.urlbar.get_attribute('value') == '',
+            message='Contents of location bar could not be cleared.')
 
     def close_context_menu(self):
         """Closes the Location Bar context menu by a key event."""
@@ -152,7 +154,9 @@ class LocationBar(UIBaseLib):
         else:
             raise ValueError("An unknown event type was passed: %s" % event)
 
-        Wait(self.marionette).until(lambda _: self.focused)
+        Wait(self.marionette).until(
+            lambda _: self.focused,
+            message='Location bar has not be focused.')
 
     def get_contextmenu_entry(self, action):
         """Retrieves the urlbar context menu entry corresponding
@@ -232,8 +236,11 @@ class LocationBar(UIBaseLib):
         return self.marionette.find_element(By.ID, "notification-popup")
 
     def open_identity_popup(self):
+        """Open the identity popup."""
         self.identity_box.click()
-        Wait(self.marionette).until(lambda _: self.identity_popup.is_open)
+        Wait(self.marionette).until(
+            lambda _: self.identity_popup.is_open,
+            message='Identity popup has not been opened.')
 
     @property
     def reload_button(self):
@@ -313,7 +320,9 @@ class AutocompleteResults(UIBaseLib):
         else:
             self.element.send_keys(keys.Keys.ESCAPE)
 
-        Wait(self.marionette).until(lambda _: not self.is_open)
+        Wait(self.marionette).until(
+            lambda _: not self.is_open,
+            message='Autocomplete popup has not been closed.')
 
     def get_matching_text(self, result, match_type):
         """Returns an array of strings of the matching text within an autocomplete
@@ -446,7 +455,9 @@ class IdentityPopup(UIBaseLib):
         else:
             self.element.send_keys(keys.Keys.ESCAPE)
 
-        Wait(self.marionette).until(lambda _: not self.is_open)
+        Wait(self.marionette).until(
+            lambda _: not self.is_open,
+            message='Identity popup has not been closed.')
 
     @property
     def view(self):

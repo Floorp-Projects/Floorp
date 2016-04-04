@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include <sstream>
 #include "Units.h"
+#include <vector>
 
 namespace mozilla {
 namespace layers {

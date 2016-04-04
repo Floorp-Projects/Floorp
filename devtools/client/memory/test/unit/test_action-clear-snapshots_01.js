@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test clearSnapshots deletes snapshots with state SAVED_CENSUS
+// Test clearSnapshots deletes snapshots with READ censuses
 
 let { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/actions/snapshot");
 let { snapshotState: states, actions } = require("devtools/client/memory/constants");
+const { treeMapState } = require("devtools/client/memory/constants");
 
 function run_test() {
   run_next_test();
@@ -18,7 +19,7 @@ add_task(function *() {
   const { getState, dispatch } = store;
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
   ok(true, "snapshot created");
 
   ok(true, "dispatch clearSnapshots action");

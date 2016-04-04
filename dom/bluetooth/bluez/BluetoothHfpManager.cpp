@@ -13,7 +13,7 @@
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 
 #include "jsapi.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
@@ -447,7 +447,7 @@ BluetoothHfpManager::Init()
   Notify(batteryInfo);
 
 #ifdef MOZ_B2G_RIL
-  mListener = new BluetoothRilListener();
+  mListener = MakeUnique<BluetoothRilListener>();
   if (!mListener->Listen(true)) {
     BT_WARNING("Failed to start listening RIL");
     return false;
@@ -733,7 +733,7 @@ BluetoothHfpManager::ParseAtCommand(const nsACString& aAtCommand,
 // Virtual function of class SocketConsumer
 void
 BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
-                                       nsAutoPtr<UnixSocketBuffer>& aMessage)
+                                       UniquePtr<UnixSocketBuffer>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSocket);

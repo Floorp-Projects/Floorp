@@ -71,7 +71,7 @@ configuration_tokens = ('branch',
 # phase
 runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
                          'abs_objdir', 'abs_merge_dir', 'version',
-                         'to_buildid', 'en_us_binary_url')
+                         'to_buildid', 'en_us_binary_url', 'mar_tools_url')
 
 
 # DesktopSingleLocale {{{1
@@ -263,6 +263,16 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.fatal(' '.join(msg))
         self.info('configuration looks ok')
 
+        self.read_buildbot_config()
+        if not self.buildbot_config:
+            self.warning("Skipping buildbot properties overrides")
+            return
+        props = self.buildbot_config["properties"]
+        for prop in ['mar_tools_url']:
+            if props.get(prop):
+                self.info("Overriding %s with %s" % (prop, props[prop]))
+                self.config[prop] = props.get(prop)
+
     def _get_configuration_tokens(self, iterable):
         """gets a list of tokens in iterable"""
         regex = re.compile('%\(\w+\)s')
@@ -359,6 +369,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             if binary.endswith('.exe'):
                 binary_path = binary_path.replace('\\', '\\\\\\\\')
             bootstrap_env[name] = binary_path
+            if 'LOCALE_MERGEDIR' in bootstrap_env:
+                # windows fix
+                bootstrap_env['LOCALE_MERGEDIR'] = bootstrap_env['LOCALE_MERGEDIR'].replace('\\', '\\\\\\\\')
         if self.query_is_nightly():
             bootstrap_env["IS_NIGHTLY"] = "yes"
         self.bootstrap_env = bootstrap_env

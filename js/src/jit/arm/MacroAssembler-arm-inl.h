@@ -481,38 +481,38 @@ MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label*
     branch32(cond, scratch2, rhs, label);
 }
 
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
-{
-    if (lhs.getTag() == Operand::OP2) {
-        branch32(cond, lhs.toReg(), rhs, label);
-    } else {
-        ScratchRegisterScope scratch(*this);
-        ma_ldr(lhs.toAddress(), scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-}
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
-{
-    if (lhs.getTag() == Operand::OP2) {
-        branch32(cond, lhs.toReg(), rhs, label);
-    } else {
-        // branch32 will use ScratchRegister.
-        AutoRegisterScope scratch(*this, secondScratchReg_);
-        ma_ldr(lhs.toAddress(), scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-}
-
 void
 MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
 {
     ScratchRegisterScope scratch(*this);
     loadPtr(lhs, scratch);
     branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+
+    branch32(cond, lhs, val.firstHalf(), label);
+    branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)), val.secondHalf(), label);
+}
+
+void
+MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
+                         Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+    MOZ_ASSERT(lhs.base != scratch);
+    MOZ_ASSERT(rhs.base != scratch);
+
+    load32(rhs, scratch);
+    branch32(cond, lhs, scratch, label);
+
+    load32(Address(rhs.base, rhs.offset + sizeof(uint32_t)), scratch);
+    branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)), scratch, label);
 }
 
 void
@@ -1162,6 +1162,13 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
 {
     cond = testMagic(cond, t);
     ma_b(label, cond);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    branchTestMagic(cond, valaddr, label);
+    branch32(cond, ToPayload(valaddr), Imm32(why), label);
 }
 
 //}}} check_macroassembler_style

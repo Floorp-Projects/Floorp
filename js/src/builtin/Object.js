@@ -60,21 +60,21 @@ function Object_toLocaleString() {
     return callContentFunction(O.toString, O);
 }
 
+// ES7 draft (2016 March 8) B.2.2.3
 function ObjectDefineSetter(name, setter) {
-    var object;
-    if (this === null || this === undefined) {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
-        object = global;
-    } else {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
-        object = ToObject(this);
-    }
+    if (this === null || this === undefined)
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
+    else
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
 
+    // Step 1.
+    var object = ToObject(this);
+
+    // Step 2.
     if (!IsCallable(setter))
         ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "setter");
 
-    var key = ToPropertyKey(name);
-
+    // Step 3.
     var desc = {
         __proto__: null,
         enumerable: true,
@@ -82,24 +82,30 @@ function ObjectDefineSetter(name, setter) {
         set: setter
     };
 
+    // Step 4.
+    var key = ToPropertyKey(name);
+
+    // Step 5.
     std_Object_defineProperty(object, key, desc);
+
+    // Step 6. (implicit)
 }
 
+// ES7 draft (2016 March 8) B.2.2.2
 function ObjectDefineGetter(name, getter) {
-    var object;
-    if (this === null || this === undefined) {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
-        object = global;
-    } else {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
-        object = ToObject(this);
-    }
+    if (this === null || this === undefined)
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
+    else
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
 
+    // Step 1.
+    var object = ToObject(this);
+
+    // Step 2.
     if (!IsCallable(getter))
         ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "getter");
 
-    var key = ToPropertyKey(name);
-
+    // Step 3.
     var desc = {
         __proto__: null,
         enumerable: true,
@@ -107,35 +113,69 @@ function ObjectDefineGetter(name, getter) {
         get: getter
     };
 
+    // Step 4.
+    var key = ToPropertyKey(name);
+
+    // Step 5.
     std_Object_defineProperty(object, key, desc);
+
+    // Step 6. (implicit)
 }
 
+// ES7 draft (2016 March 8) B.2.2.5
 function ObjectLookupSetter(name) {
-    var key = ToPropertyKey(name);
+    // Step 1.
     var object = ToObject(this);
 
+    // Step 2.
+    var key = ToPropertyKey(name)
+
     do {
+        // Step 3.a.
         var desc = std_Object_getOwnPropertyDescriptor(object, key);
+
+        // Step 3.b.
         if (desc) {
+            // Step.b.i.
             if (callFunction(std_Object_hasOwnProperty, desc, "set"))
                 return desc.set;
+
+            // Step.b.ii.
             return undefined;
         }
+
+        // Step 3.c.
         object = std_Reflect_getPrototypeOf(object);
     } while (object !== null);
+
+    // Step 3.d. (implicit)
 }
 
+// ES7 draft (2016 March 8) B.2.2.4
 function ObjectLookupGetter(name) {
-    var key = ToPropertyKey(name);
+    // Step 1.
     var object = ToObject(this);
 
+    // Step 2.
+    var key = ToPropertyKey(name)
+
     do {
+        // Step 3.a.
         var desc = std_Object_getOwnPropertyDescriptor(object, key);
+
+        // Step 3.b.
         if (desc) {
+            // Step.b.i.
             if (callFunction(std_Object_hasOwnProperty, desc, "get"))
                 return desc.get;
+
+            // Step.b.ii.
             return undefined;
         }
+
+        // Step 3.c.
         object = std_Reflect_getPrototypeOf(object);
     } while (object !== null);
+
+    // Step 3.d. (implicit)
 }

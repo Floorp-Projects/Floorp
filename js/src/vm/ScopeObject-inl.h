@@ -240,7 +240,7 @@ StaticScopeIter<allowGC>::module() const
 }  /* namespace js */
 
 inline JSObject*
-JSObject::enclosingScope()
+JSObject::enclosingScope() const
 {
     if (is<js::ScopeObject>())
         return &as<js::ScopeObject>().enclosingScope();

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-print"><head>
+  <meta charset="utf-8">
+  <title>Reference: Fragmentation in print context of height:auto grid, not top-of-page, forced breaks</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <style type="text/css">
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 0.6in 0.6in 0.6in;
+  grid-auto-rows: 0.5in;
+  grid-gap: 0.1in;
+  border: 0.1in solid;
+  border-top-width: 0;
+}
+span { display:block; background:lime; border:0.05in solid black; }
+x { display:block; height:0.2in; }
+.t { border-bottom-width:0; }
+.b { border-top-width:0; }
+br { page-break-after:always; break-after:always; display:block; height:1px; }
+
+</style>
+</head>
+<body>
+
+<div style="padding-top:0.5in; background:grey">
+<div class="grid t">
+<span><x></x></span>
+<span class="t"><x></x></span>
+<span style="background:cyan" class="t"><x></x></span>
+</div>
+<br>
+<div class="grid b">
+<span><x></x></span>
+<span class="b"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:3; height:0.15in; background:cyan"><x></x></span>
+<span style="grid-row:1; grid-column:3; align-self:end; background:pink"><x></x></span>
+</div></div>
+
+</body>
+</html>

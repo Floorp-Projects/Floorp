@@ -13,17 +13,19 @@
   display: flex;
 }
 
-.focused .frame-link-filename,
-.focused .frame-link-column,
-.focused .frame-link-line,
-.focused .frame-link-host,
-.focused .frame-link-colon {
-  color: var(--theme-selection-color);
+.frame-link .frame-link-source {
+  display: flex;
+}
+.frame-link a.frame-link-source {
+  cursor: pointer;
+  text-decoration: none;
+}
+.frame-link a.frame-link-source:hover {
+  text-decoration: underline;
 }
 
-.frame-link a.frame-link-filename {
+.frame-link .frame-link-filename {
   color: var(--theme-highlight-blue);
-  cursor: pointer;
   text-overflow: ellipsis;
   overflow: hidden;
   flex: 1;
@@ -31,10 +33,6 @@
   /* overrides styling some tools have with anchors */
   text-decoration: none;
   font-style: normal;
-}
-
-.frame-link .frame-link-filename:hover {
-  text-decoration: underline;
 }
 
 .frame-link .frame-link-host {
@@ -52,4 +50,12 @@
 .frame-link .frame-link-colon {
   color: var(--theme-highlight-orange);
   display: block;
+}
+
+.focused .frame-link .frame-link-filename,
+.focused .frame-link .frame-link-column,
+.focused .frame-link .frame-link-line,
+.focused .frame-link .frame-link-host,
+.focused .frame-link .frame-link-colon {
+  color: var(--theme-selection-color);
 }

@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     # Disabled on suspicion of causing bug 904227
     #'gfxWordCacheTest.cpp',
     'TestArena.cpp',
+    'TestArrayView.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
     'TestCompositor.cpp',

@@ -78,12 +78,8 @@ GamepadService::Observe(nsISupports* aSubject,
 }
 
 void
-GamepadService::BeginShutdown()
+GamepadService::StopMonitoring()
 {
-  mShuttingDown = true;
-  if (mTimer) {
-    mTimer->Cancel();
-  }
   if (mStarted) {
     if (XRE_IsParentProcess()) {
       MaybeStopGamepadMonitoring();
@@ -92,12 +88,22 @@ GamepadService::BeginShutdown()
     }
     mStarted = false;
   }
+  mGamepads.Clear();
+}
+
+void
+GamepadService::BeginShutdown()
+{
+  mShuttingDown = true;
+  if (mTimer) {
+    mTimer->Cancel();
+  }
+  StopMonitoring();
   // Don't let windows call back to unregister during shutdown
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->SetHasGamepadEventListener(false);
   }
   mListeners.Clear();
-  mGamepads.Clear();
   sShutdown = true;
 }
 
@@ -144,7 +150,11 @@ GamepadService::RemoveListener(nsGlobalWindow* aWindow)
   mListeners.RemoveElement(aWindow);
 
   if (mListeners.Length() == 0 && !mShuttingDown && mStarted) {
-    StartCleanupTimer();
+    if (XRE_IsParentProcess()) {
+      StartCleanupTimer();
+    } else {
+      StopMonitoring();
+    }
   }
 }
 
@@ -506,16 +516,9 @@ GamepadService::TimeoutHandler(nsITimer* aTimer, void* aClosure)
   }
 
   if (self->mListeners.Length() == 0) {
-    if (XRE_IsParentProcess()) {
-      MaybeStopGamepadMonitoring();
-    } else {
-      ContentChild::GetSingleton()->SendGamepadListenerRemoved();
-    }
-
-    self->mStarted = false;
-      self->mGamepads.Clear();
-    }
+    self->StopMonitoring();
   }
+}
 
 void
 GamepadService::StartCleanupTimer()

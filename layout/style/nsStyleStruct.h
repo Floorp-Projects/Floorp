@@ -31,6 +31,7 @@
 #include "imgRequestProxy.h"
 #include "Orientation.h"
 #include "CounterStyleManager.h"
+#include <cstddef> // offsetof()
 
 class nsIFrame;
 class nsIURI;
@@ -83,7 +84,7 @@ struct nsStyleVisibility;
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_IS_ANIMATION_RULE      0x01000000
-#define NS_RULE_NODE_GC_MARK                0x02000000
+// Free bit here!
 #define NS_RULE_NODE_USED_DIRECTLY          0x04000000
 #define NS_RULE_NODE_IS_IMPORTANT           0x08000000
 #define NS_RULE_NODE_LEVEL_MASK             0xf0000000
@@ -98,8 +99,51 @@ static_assert(int(mozilla::SheetType::Count) - 1 <=
 
 static_assert(NS_RULE_NODE_IS_ANIMATION_RULE == (1 << nsStyleStructID_Length),
   "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
-// The lifetime of these objects is managed by the presshell's arena.
 
+/**
+ * These *_Simple types are used to map Gecko types to layout-equivalent but
+ * simpler Rust types, to aid Rust binding generation.
+ *
+ * If something in this types or the assertions below needs to change, ask
+ * bholley, heycam or emilio before!
+ *
+ * <div rustbindgen="true" replaces="nsPoint">
+ */
+struct nsPoint_Simple {
+  nscoord x, y;
+};
+
+static_assert(sizeof(nsPoint_Simple) == sizeof(nsPoint), "Wrong nsPoint_Simple size");
+static_assert(offsetof(nsPoint_Simple, x) == offsetof(nsPoint, x), "Wrong nsPoint_Simple member alignment");
+static_assert(offsetof(nsPoint_Simple, y) == offsetof(nsPoint, y), "Wrong nsPoint_Simple member alignment");
+
+/**
+ * <div rustbindgen="true" replaces="nsMargin">
+ */
+struct nsMargin_Simple {
+  nscoord top, right, bottom, left;
+};
+
+static_assert(sizeof(nsMargin_Simple) == sizeof(nsMargin), "Wrong nsMargin_Simple size");
+static_assert(offsetof(nsMargin_Simple, top) == offsetof(nsMargin, top), "Wrong nsMargin_Simple member alignment");
+static_assert(offsetof(nsMargin_Simple, right) == offsetof(nsMargin, right), "Wrong nsMargin_Simple member alignment");
+static_assert(offsetof(nsMargin_Simple, bottom) == offsetof(nsMargin, bottom), "Wrong nsMargin_Simple member alignment");
+static_assert(offsetof(nsMargin_Simple, left) == offsetof(nsMargin, left), "Wrong nsMargin_Simple member alignment");
+
+/**
+ * <div rustbindgen="true" replaces="nsRect">
+ */
+struct nsRect_Simple {
+  nscoord x, y, width, height;
+};
+
+static_assert(sizeof(nsRect_Simple) == sizeof(nsRect), "Wrong nsRect_Simple size");
+static_assert(offsetof(nsRect_Simple, x) == offsetof(nsRect, x), "Wrong nsRect_Simple member alignment");
+static_assert(offsetof(nsRect_Simple, y) == offsetof(nsRect, y), "Wrong nsRect_Simple member alignment");
+static_assert(offsetof(nsRect_Simple, width) == offsetof(nsRect, width), "Wrong nsRect_Simple member alignment");
+static_assert(offsetof(nsRect_Simple, height) == offsetof(nsRect, height), "Wrong nsRect_Simple member alignment");
+
+// The lifetime of these objects is managed by the presshell's arena.
 struct nsStyleFont
 {
   nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
@@ -1768,6 +1812,13 @@ struct nsStyleTextReset
       FreeByObjectID(mozilla::eArenaObjectID_nsStyleTextReset, this);
   }
 
+  // Note the difference between this and
+  // nsStyleContext::HasTextDecorationLines.
+  bool HasTextDecorationLines() const {
+    return mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
+           mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
+  }
+
   uint8_t GetDecorationStyle() const
   {
     return (mTextDecorationStyle & BORDER_STYLE_MASK);
@@ -1865,6 +1916,7 @@ struct nsStyleText
   bool mTextAlignTrue : 1;              // [inherited] see nsStyleConsts.h
   bool mTextAlignLastTrue : 1;          // [inherited] see nsStyleConsts.h
   bool mTextEmphasisColorForeground : 1;// [inherited] whether text-emphasis-color is currentColor
+  bool mWebkitTextFillColorForeground : 1;    // [inherited] whether -webkit-text-fill-color is currentColor
   uint8_t mTextTransform;               // [inherited] see nsStyleConsts.h
   uint8_t mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   uint8_t mWordBreak;                   // [inherited] see nsStyleConsts.h
@@ -1879,6 +1931,7 @@ struct nsStyleText
   uint8_t mTextEmphasisStyle;           // [inherited] see nsStyleConsts.h
   int32_t mTabSize;                     // [inherited] see nsStyleConsts.h
   nscolor mTextEmphasisColor;           // [inherited]
+  nscolor mWebkitTextFillColor;         // [inherited]
 
   nsStyleCoord mWordSpacing;            // [inherited] coord, percent, calc
   nsStyleCoord mLetterSpacing;          // [inherited] coord, normal
@@ -2056,7 +2109,8 @@ struct nsStyleVisibility
 
   nsChangeHint CalcDifference(const nsStyleVisibility& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return NS_STYLE_HINT_FRAMECHANGE |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -2072,6 +2126,7 @@ struct nsStyleVisibility
   uint8_t mPointerEvents;              // [inherited] see nsStyleConsts.h
   uint8_t mWritingMode;                // [inherited] see nsStyleConsts.h
   uint8_t mTextOrientation;            // [inherited] see nsStyleConsts.h
+  uint8_t mColorAdjust;                // [inherited] see nsStyleConsts.h
 
   bool IsVisible() const {
     return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
@@ -2448,6 +2503,7 @@ struct nsStyleDisplay
   bool IsBlockOutsideStyle() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
            NS_STYLE_DISPLAY_FLEX == mDisplay ||
+           NS_STYLE_DISPLAY_WEBKIT_BOX == mDisplay ||
            NS_STYLE_DISPLAY_GRID == mDisplay ||
            NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
            NS_STYLE_DISPLAY_TABLE == mDisplay;
@@ -2459,6 +2515,7 @@ struct nsStyleDisplay
            NS_STYLE_DISPLAY_INLINE_TABLE == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_BOX == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_FLEX == aDisplay ||
+           NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_GRID == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_XUL_GRID == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_STACK == aDisplay ||
@@ -2517,13 +2574,6 @@ struct nsStyleDisplay
 
   bool IsRubyDisplayType() const {
     return IsRubyDisplayType(mDisplay);
-  }
-
-  bool IsFlexOrGridDisplayType() const {
-    return NS_STYLE_DISPLAY_FLEX == mDisplay ||
-           NS_STYLE_DISPLAY_INLINE_FLEX == mDisplay ||
-           NS_STYLE_DISPLAY_GRID == mDisplay ||
-           NS_STYLE_DISPLAY_INLINE_GRID == mDisplay;
   }
 
   bool IsOutOfFlowStyle() const {

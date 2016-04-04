@@ -89,7 +89,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
     SessionStore.setWindowValue(window, "socialSidebar", "");
     for (let i = 0; i < manifests.length; i++) {
       let m = manifests[i];
-      for (let what of ['sidebarURL', 'workerURL', 'iconURL', 'shareURL', 'markURL']) {
+      for (let what of ['sidebarURL', 'iconURL', 'shareURL', 'markURL']) {
         if (m[what]) {
           yield promiseSocialUrlNotRemembered(m[what]);
         }
@@ -194,8 +194,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
       return;
     }
     let [name, func] = result.value;
-    // We run on a timeout as the frameworker also makes use of timeouts, so
-    // this helps keep the debug messages sane.
+    // We run on a timeout to help keep the debug messages sane.
     executeSoon(function() {
       function cleanupAndRunNextTest() {
         info("sub-test " + name + " complete");
@@ -441,9 +440,6 @@ function get3ChatsForCollapsing(mode, cb) {
   // ensure a second can be created fully visible but a third can not - then
   // create the other 2.  first will will be collapsed, second fully visible
   // and the third also visible and the "selected" one.
-  // To make our life easier we don't go via the worker and ports so we get
-  // more control over creation *and* to make the code much simpler.  We
-  // assume the worker/port stuff is individually tested above.
   let chatbar = getChatBar();
   let chatWidth = undefined;
   let num = 0;
@@ -508,7 +504,7 @@ function makeChat(mode, uniqueid, cb) {
     chatbox.content.messageManager.sendAsyncMessage("Social:SetDocumentTitle", {
       title: uniqueid
     });
-    cb();
+    cb(chatbox);
   });
 }
 
@@ -630,15 +626,15 @@ function getPopupWidth() {
   return popup.parentNode.getBoundingClientRect().width + margins;
 }
 
-function promiseCloseChat(chat) {
+function promiseNodeRemoved(aNode) {
   let deferred = Promise.defer();
-  let parent = chat.parentNode;
+  let parent = aNode.parentNode;
 
   let observer = new MutationObserver(function onMutatations(mutations) {
     for (let mutation of mutations) {
       for (let i = 0; i < mutation.removedNodes.length; i++) {
         let node = mutation.removedNodes.item(i);
-        if (node != chat) {
+        if (node != aNode) {
           continue;
         }
         observer.disconnect();
@@ -647,8 +643,13 @@ function promiseCloseChat(chat) {
     }
   });
   observer.observe(parent, {childList: true});
-  chat.close();
   return deferred.promise;
+}
+
+function promiseCloseChat(chat) {
+  let promise = promiseNodeRemoved(chat);
+  chat.close();
+  return promise;
 }
 
 function closeAllChats() {
@@ -656,6 +657,15 @@ function closeAllChats() {
   while (chatbar.selectedChat) {
     yield promiseCloseChat(chatbar.selectedChat);
   }
+}
+
+function openChatViaUser() {
+  let sidebarDoc = document.getElementById("social-sidebar-browser").contentDocument;
+  let button = sidebarDoc.getElementById("chat-opener");
+  // Note we must use synthesizeMouseAtCenter() rather than calling
+  // .click() directly as this causes nsIDOMWindowUtils.isHandlingUserInput
+  // to be true.
+  EventUtils.synthesizeMouseAtCenter(button, {}, sidebarDoc.defaultView);
 }
 
 

@@ -39,6 +39,7 @@ DevToolsModules(
     'async-storage.js',
     'async-utils.js',
     'content-observer.js',
+    'css-angle.js',
     'css-color.js',
     'deprecated-sync-thenables.js',
     'DevToolsUtils.js',

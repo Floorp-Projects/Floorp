@@ -132,6 +132,7 @@ enum class LogReason : int {
   CannotDraw3D, // 20
   IncompatibleBasicTexturedEffect,
   InvalidFont,
+  PAllocTextureBackendMismatch,
   // End
   MustBeLessThanThis = 101,
 };
@@ -545,6 +546,7 @@ typedef Log<LOG_CRITICAL, CriticalLogger> CriticalLog;
 // while the critical error is
 // gfxCriticalError() << "Something to report and assert";
 #define gfxCriticalNote gfxCriticalError(gfxCriticalError::DefaultOptions(false))
+#define gfxCriticalNoteOnce static gfxCriticalError GFX_LOGGING_GLUE(sOnceAtLine,__LINE__) = gfxCriticalNote
 
 // The "once" versions will only trigger the first time through. You can do this:
 // gfxCriticalErrorOnce() << "This message only shows up once;

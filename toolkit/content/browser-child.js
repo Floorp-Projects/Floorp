@@ -210,7 +210,7 @@ var WebProgressListener = {
   },
 
   sendLoadCallResult() {
-    this._send("Content:LoadURIResult");
+    sendAsyncMessage("Content:LoadURIResult");
   },
 
   QueryInterface: function QueryInterface(aIID) {
@@ -632,10 +632,10 @@ addMessageListener("PermitUnload", msg => {
 var outerWindowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils)
                            .outerWindowID;
-var initData = sendSyncMessage("Browser:Init", {outerWindowID: outerWindowID});
-if (initData.length && initData[0]) {
-  docShell.useGlobalHistory = initData[0].useGlobalHistory;
-  if (initData[0].initPopup) {
-    setTimeout(() => AutoCompletePopup.init(), 0);
+sendAsyncMessage("Browser:Init", {outerWindowID: outerWindowID});
+addMessageListener("Browser:InitReceived", function onInitReceived(msg) {
+  removeMessageListener("Browser:InitReceived", onInitReceived);
+  if (msg.data.initPopup) {
+    AutoCompletePopup.init();
   }
-}
+});

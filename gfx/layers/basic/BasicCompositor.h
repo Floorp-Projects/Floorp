@@ -42,7 +42,7 @@ public:
 class BasicCompositor : public Compositor
 {
 public:
-  explicit BasicCompositor(nsIWidget *aWidget);
+  explicit BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget);
 
 protected:
   virtual ~BasicCompositor();
@@ -63,7 +63,7 @@ public:
                                const gfx::IntPoint &aSourcePoint) override;
 
   virtual already_AddRefed<CompositingRenderTarget>
-  CreateRenderTargetForWindow(const gfx::IntRect& aRect,
+  CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect,
                               SurfaceInitMode aInit,
                               BufferMode aBufferMode);
 

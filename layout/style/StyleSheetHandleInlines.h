@@ -21,6 +21,21 @@
 
 namespace mozilla {
 
+StyleSheet*
+StyleSheetHandle::Ptr::AsStyleSheet()
+{
+  if (IsServo()) {
+    return AsServo();
+  }
+  return AsGecko();
+}
+
+const StyleSheet*
+StyleSheetHandle::Ptr::AsStyleSheet() const
+{
+  return const_cast<Ptr*>(this)->AsStyleSheet();
+}
+
 MozExternalRefCountType
 StyleSheetHandle::Ptr::AddRef()
 {
@@ -31,6 +46,12 @@ MozExternalRefCountType
 StyleSheetHandle::Ptr::Release()
 {
   FORWARD(Release, ());
+}
+
+bool
+StyleSheetHandle::Ptr::IsInline() const
+{
+  FORWARD(IsInline, ());
 }
 
 nsIURI*
@@ -61,12 +82,6 @@ bool
 StyleSheetHandle::Ptr::IsApplicable() const
 {
   FORWARD(IsApplicable, ());
-}
-
-void
-StyleSheetHandle::Ptr::SetComplete()
-{
-  FORWARD(SetComplete, ());
 }
 
 void

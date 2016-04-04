@@ -30,7 +30,6 @@ XPIDL_SOURCES += [
     'nsIScriptableBase64Encoder.idl',
     'nsIScriptableInputStream.idl',
     'nsISeekableStream.idl',
-    'nsISimpleUnicharStreamFactory.idl',
     'nsIStorageStream.idl',
     'nsIStreamBufferAccess.idl',
     'nsIStringStream.idl',
@@ -135,3 +134,9 @@ if CONFIG['OS_ARCH'] == 'Linux' and 'lib64' in CONFIG['libdir']:
     DEFINES['HAVE_USR_LIB64_DIR'] = True
 
 LOCAL_INCLUDES += ['!..']
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary hack to support building with VS2015.
+    # '_snwprintf' : format string '%s' requires an argument of type 'wchar_t *',
+    # but variadic argument 3 has type 'char16ptr_t'
+    CXXFLAGS += ['-wd4477']

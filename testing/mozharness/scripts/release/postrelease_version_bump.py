@@ -48,6 +48,30 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
             "type": "string",
             "help": "Path to SSH key.",
         }],
+        [['--product', ], {
+            "action": "store",
+            "dest": "product",
+            "type": "string",
+            "help": "Product name",
+        }],
+        [['--version', ], {
+            "action": "store",
+            "dest": "version",
+            "type": "string",
+            "help": "Version",
+        }],
+        [['--build-number', ], {
+            "action": "store",
+            "dest": "build_number",
+            "type": "string",
+            "help": "Build number",
+        }],
+        [['--revision', ], {
+            "action": "store",
+            "dest": "revision",
+            "type": "string",
+            "help": "HG revision to tag",
+        }],
     ]
 
     def __init__(self, require_config_file=True):
@@ -59,6 +83,7 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
                 'pull',
                 'bump_postrelease',
                 'commit-changes',
+                'tag',
                 'push',
             ],
             default_actions=[
@@ -66,6 +91,7 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
                 'pull',
                 'bump_postrelease',
                 'commit-changes',
+                'tag',
                 'push',
             ],
             config={
@@ -82,12 +108,13 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
         if not self.buildbot_config:
             self.warning("Skipping buildbot properties overrides")
         else:
-            next_version = self.buildbot_config["properties"].get("next_version")
-            if next_version:
-                if self.config.get("next_version"):
-                    self.warning("Overriding next_version %s by %s" %
-                                 (self.config["next_version"], next_version))
-                self.config["next_version"] = next_version
+            props = self.buildbot_config["properties"]
+            for prop in ['next_version', 'product', 'version', 'build_number',
+                         'revision']:
+                if props.get(prop):
+                    self.info("Overriding %s with %s" % (prop, props[prop]))
+                    self.config[prop] = props.get(prop)
+
         if not self.config.get("next_version"):
             self.fatal("Next version has to be set. Use --next-version or "
                        "pass `next_version' via buildbot properties.")
@@ -135,6 +162,22 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
                 self.get_version(dirs['abs_gecko_dir'], f["file"]))
             self.replace(os.path.join(dirs['abs_gecko_dir'], f["file"]),
                          curr_version, self.config["next_version"])
+
+    def tag(self):
+        dirs = self.query_abs_dirs()
+        tags = ["{product}_{version}_BUILD{build_number}",
+                "{product}_{version}_RELEASE"]
+        tags = [t.format(product=self.config["product"].upper(),
+                         version=self.config["version"].replace(".", "_"),
+                         build_number=self.config["build_number"])
+                for t in tags]
+        message = "No bug - Tagging {revision} with {tags} a=release CLOSED TREE"
+        message = message.format(
+            revision=self.config["revision"],
+            tags=', '.join(tags))
+        self.hg_tag(cwd=dirs["abs_gecko_dir"], tags=tags,
+                    revision=self.config["revision"], message=message,
+                    user=self.config["hg_user"], force=True)
 
 # __main__ {{{1
 if __name__ == '__main__':

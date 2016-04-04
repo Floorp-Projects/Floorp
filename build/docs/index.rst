@@ -24,6 +24,8 @@ Important Concepts
    preprocessor
    jar-manifests
    defining-binaries
+   toolchains
+   locales
 
 integrated development environment (IDE)
 ========================================

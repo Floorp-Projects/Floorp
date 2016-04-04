@@ -101,8 +101,6 @@ const CACHE_VERSION = 1;
 
 const CACHE_FILENAME = "search.json.mozlz4";
 
-const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
-
 const NEW_LINES = /(\r\n|\r|\n)/;
 
 // Set an arbitrary cap on the maximum icon size. Without this, large icons can
@@ -1311,7 +1309,11 @@ function Engine(aLocation, aIsReadOnly) {
 
     // Build the id used for the legacy metadata storage, so that we
     // can do a one-time import of data from old profiles.
-    if (this._isDefault) {
+    if (this._isDefault ||
+        (uri && uri.spec.startsWith(APP_SEARCH_PREFIX))) {
+      // The second part of the check is to catch engines from language packs.
+      // They aren't default engines (because they aren't app-shipped), but we
+      // still need to give their id an [app] prefix for backward compat.
       this._id = "[app]/" + this._shortName + ".xml";
     }
     else if (!aIsReadOnly) {
@@ -1736,6 +1738,11 @@ Engine.prototype = {
    *        String with the icon's URI.
    */
   _addIconToMap: function SRCH_ENG_addIconToMap(aWidth, aHeight, aURISpec) {
+    if (aWidth == 16 && aHeight == 16) {
+      // The 16x16 icon is stored in _iconURL, we don't need to store it twice.
+      return;
+    }
+
     // Use an object instead of a Map() because it needs to be serializable.
     this._iconMapObj = this._iconMapObj || {};
     let key = this._getIconKey(aWidth, aHeight);
@@ -1785,7 +1792,6 @@ Engine.prototype = {
       case "http":
       case "https":
       case "ftp":
-        // No use downloading the icon if the engine file is read-only
         LOG("_setIcon: Downloading icon: \"" + uri.spec +
             "\" for engine: \"" + this.name + "\"");
         var chan = NetUtil.newChannel({
@@ -1804,8 +1810,12 @@ Engine.prototype = {
             return;
           }
 
-          var str = btoa(String.fromCharCode.apply(null, aByteArray));
-          let dataURL = ICON_DATAURL_PREFIX + str;
+          let type = chan.contentType;
+          if (!type.startsWith("image/"))
+            type = "image/x-icon";
+          let dataURL = "data:" + type + ";base64," +
+            btoa(String.fromCharCode.apply(null, aByteArray));
+
           aEngine._iconURI = makeURI(dataURL);
 
           if (aWidth && aHeight) {
@@ -1814,7 +1824,7 @@ Engine.prototype = {
 
           notifyAction(aEngine, SEARCH_ENGINE_CHANGED);
           aEngine._hasPreferredIcon = aIsPreferred;
-        }
+        };
 
         // If we're currently acting as an "update engine", then the callback
         // should set the icon on the engine we're updating and not us, since
@@ -2507,6 +2517,9 @@ Engine.prototype = {
    *        Height of the requested icon.
    */
   getIconURLBySize: function SRCH_ENG_getIconURLBySize(aWidth, aHeight) {
+    if (aWidth == 16 && aHeight == 16)
+      return this._iconURL;
+
     if (!this._iconMapObj)
       return null;
 
@@ -2525,6 +2538,8 @@ Engine.prototype = {
    */
   getIcons: function SRCH_ENG_getIcons() {
     let result = [];
+    if (this._iconURL)
+      result.push({width: 16, height: 16, url: this._iconURL});
 
     if (!this._iconMapObj)
       return result;
@@ -2852,6 +2867,9 @@ SearchService.prototype = {
     }
 
     try {
+      if (!cache.engines.length)
+        throw "cannot write without any engine.";
+
       LOG("_buildCache: Writing to cache file.");
       let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
       let data = gEncoder.encode(JSON.stringify(cache));
@@ -3170,7 +3188,10 @@ SearchService.prototype = {
       bis.readArrayBuffer(count, array.buffer);
 
       let bytes = Lz4.decompressFileContent(array);
-      return JSON.parse(new TextDecoder().decode(bytes));
+      let json = JSON.parse(new TextDecoder().decode(bytes));
+      if (!json.engines || !json.engines.length)
+        throw "no engine in the file";
+      return json;
     } catch(ex) {
       LOG("_readCacheFile: Error reading cache file: " + ex);
     } finally {
@@ -3182,8 +3203,8 @@ SearchService.prototype = {
       stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
       stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-      let metadata = json.decodeFromStream(stream, stream.available());
-      let json;
+      let metadata = parseJsonFromStream(stream);
+      let json = {};
       if ("[global]" in metadata) {
         LOG("_readCacheFile: migrating metadata from search-metadata.json");
         let data = metadata["[global]"];
@@ -3202,7 +3223,7 @@ SearchService.prototype = {
 
       return json;
     } catch(ex) {
-      LOG("_readCacheFile: failed to read old metadata");
+      LOG("_readCacheFile: failed to read old metadata: " + ex);
       return {};
     } finally {
       stream.close();
@@ -3223,6 +3244,8 @@ SearchService.prototype = {
         let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
         let bytes = yield OS.File.read(cacheFilePath, {compression: "lz4"});
         json = JSON.parse(new TextDecoder().decode(bytes));
+        if (!json.engines || !json.engines.length)
+          throw "no engine in the file";
         this._cacheFileJSON = json;
       } catch (ex) {
         LOG("_asyncReadCacheFile: Error reading cache file: " + ex);

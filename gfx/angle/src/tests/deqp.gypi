@@ -19,7 +19,6 @@
         'angle_standalone%': '<(angle_standalone)',
 
         'deqp_path': '<(DEPTH)/third_party/deqp/src',
-        'delibs_path': '<(deqp_path)/framework/delibs',
         'libpng_path': '<(DEPTH)/third_party/libpng',
         'zlib_path': '<(DEPTH)/third_party/zlib',
 
@@ -28,105 +27,32 @@
         'angle_build_deqp_executables%' : 0,
         'angle_build_deqp_gtest_executables%' :0,
 
-        'conditions':
+        'clang_warning_flags':
         [
-            ['(OS=="win" or OS=="linux" or OS=="mac")',
-            {
-                # Build the dEQP libraries for all Windows/Linux builds
-                'angle_build_deqp_libraries%': 1,
-            }],
-            ['((OS=="win" or OS=="linux" or OS=="mac") and angle_build_winrt==0)',
-            {
-                # Build the dEQP GoogleTest support helpers for all Windows/Linux builds except WinRT
-                # GoogleTest doesn't support WinRT
-                'angle_build_deqp_gtest_support%': 1,
-            }],
-            ['((OS=="win" or OS=="linux" or OS=="mac") and angle_standalone==1 and angle_build_winrt==0)',
-            {
-                # Build the dEQP executables for all standalone Windows/Linux builds except WinRT
-                # GYP doesn't support generating standalone WinRT executables
-                'angle_build_deqp_executables%': 1,
-
-                # Build the GoogleTest versions of dEQP for all standalone Windows/Linux builds except WinRT
-                # GoogleTest doesn't support WinRT
-                'angle_build_deqp_gtest_executables%': 1,
-            }],
-
-            ['OS=="win"',
-            {
-                'deqp_include_dirs':
-                [
-                    '<(deqp_path)/framework/platform/win32',
-                ],
-                'deqp_libtester_sources':
-                [
-                    '<(deqp_path)/framework/delibs/dethread/win32/deMutexWin32.c',
-                    '<(deqp_path)/framework/delibs/dethread/win32/deSemaphoreWin32.c',
-                    '<(deqp_path)/framework/delibs/dethread/win32/deThreadLocalWin32.c',
-                    '<(deqp_path)/framework/delibs/dethread/win32/deThreadWin32.c',
-                ],
-            }],
-            ['OS=="linux" and use_x11==1',
-            {
-                'deqp_include_dirs':
-                [
-                    '<(deqp_path)/framework/platform/x11',
-                ],
-                'deqp_defines':
-                [
-                    # Ask the system headers to expose all the regular function otherwise
-                    # dEQP doesn't compile and produces warnings about implicitly defined
-                    # functions.
-                    # This has to be GNU_SOURCE as on Linux dEQP uses syscall()
-                    '_GNU_SOURCE',
-                ],
-            }],
-            ['OS=="mac"',
-            {
-                'deqp_include_dirs':
-                [
-                    '<(deqp_path)/framework/platform/osx',
-                ],
-                'deqp_defines':
-                [
-                    # Ask the system headers to expose all the regular function otherwise
-                    # dEQP doesn't compile and produces warnings about implicitly defined
-                    # functions.
-                    '_XOPEN_SOURCE=600',
-                ],
-            }],
-            ['(OS=="linux" and use_x11==1) or OS=="mac"',
-            {
-                'deqp_libtester_sources':
-                [
-                    '<(deqp_path)/framework/delibs/dethread/unix/deMutexUnix.c',
-                    '<(deqp_path)/framework/delibs/dethread/unix/deNamedSemaphoreUnix.c',
-                    '<(deqp_path)/framework/delibs/dethread/unix/deSemaphoreUnix.c',
-                    '<(deqp_path)/framework/delibs/dethread/unix/deThreadLocalUnix.c',
-                    '<(deqp_path)/framework/delibs/dethread/unix/deThreadUnix.c',
-                ],
-            }],
+             # tcu::CommandLine has virtual functions but no virtual destructor
+            '-Wno-no-delete-non-virtual-dtor',
         ],
 
-        'deqp_msvs_disabled_warnings':
+        'deqp_win_cflags':
         [
-            '4091', # typedef ignored when no variable is declared
-            '4100',
-            '4125', # decimal digit terminates octal escape sequence
-            '4127', # conditional expression constant
-            '4244', # possible loss of data
-            '4245', # argument signed/unsigned mismatch
-            '4297', # function assumed not to throw an exception but does
-            '4389', # signed/unsigned mismatch
-            '4510', # default constructor could not be generated
-            '4512',
-            '4610', # cannot be instantiated
-            '4611', # setjmp interaction non-portable
-            '4701', # potentially uninit used
-            '4702', # unreachable code
-            '4706',
-            '4838', # conversion requires a narrowing conversion
-            '4996', # deprecated
+            '/EHsc',   # dEQP requires exceptions
+            '/wd4091', # typedef ignored when no variable is declared
+            '/wd4100',
+            '/wd4125', # decimal digit terminates octal escape sequence
+            '/wd4127', # conditional expression constant
+            '/wd4244', # possible loss of data
+            '/wd4245', # argument signed/unsigned mismatch
+            '/wd4297', # function assumed not to throw an exception but does
+            '/wd4389', # signed/unsigned mismatch
+            '/wd4510', # default constructor could not be generated
+            '/wd4512',
+            '/wd4610', # cannot be instantiated
+            '/wd4611', # setjmp interaction non-portable
+            '/wd4701', # potentially uninit used
+            '/wd4702', # unreachable code
+            '/wd4706', # assignment within conditional expression
+            '/wd4838', # conversion requires a narrowing conversion
+            '/wd4996', # deprecated
         ],
         'deqp_defines':
         [
@@ -147,24 +73,24 @@
         ],
         'deqp_include_dirs':
         [
-            '<(libpng_path)',
-            '<(zlib_path)',
-            '<(delibs_path)/debase',
-            '<(delibs_path)/decpp',
-            '<(delibs_path)/depool',
-            '<(delibs_path)/dethread',
-            '<(delibs_path)/deutil',
-            '<(delibs_path)/destream',
+            '<(deqp_path)/executor',
+            '<(deqp_path)/execserver',
             '<(deqp_path)/framework/common',
-            '<(deqp_path)/framework/qphelper',
-            '<(deqp_path)/framework/platform/null',
+            '<(deqp_path)/framework/delibs/debase',
+            '<(deqp_path)/framework/delibs/decpp',
+            '<(deqp_path)/framework/delibs/depool',
+            '<(deqp_path)/framework/delibs/dethread',
+            '<(deqp_path)/framework/delibs/deutil',
+            '<(deqp_path)/framework/delibs/destream',
             '<(deqp_path)/framework/egl',
             '<(deqp_path)/framework/egl/wrapper',
             '<(deqp_path)/framework/opengl',
-            '<(deqp_path)/framework/opengl/wrapper',
-            '<(deqp_path)/framework/referencerenderer',
             '<(deqp_path)/framework/opengl/simplereference',
+            '<(deqp_path)/framework/opengl/wrapper',
+            '<(deqp_path)/framework/platform/null',
+            '<(deqp_path)/framework/qphelper',
             '<(deqp_path)/framework/randomshaders',
+            '<(deqp_path)/framework/referencerenderer',
             '<(deqp_path)/modules/gles2',
             '<(deqp_path)/modules/gles2/functional',
             '<(deqp_path)/modules/gles2/accuracy',
@@ -182,8 +108,8 @@
             '<(deqp_path)/modules/gles31/stress',
             '<(deqp_path)/modules/glshared',
             '<(deqp_path)/modules/glusecases',
-            '<(deqp_path)/executor',
-            '<(deqp_path)/execserver',
+            '<(libpng_path)',
+            '<(zlib_path)',
         ],
         'deqp_gles2_sources':
         [
@@ -904,7 +830,6 @@
             '<(deqp_path)/framework/egl/egluDefs.cpp',
             '<(deqp_path)/framework/egl/egluGLContextFactory.cpp',
             '<(deqp_path)/framework/egl/egluGLFunctionLoader.cpp',
-            '<(deqp_path)/framework/egl/egluGLFunctionLoader.cpp',
             '<(deqp_path)/framework/egl/egluGLUtil.cpp',
             '<(deqp_path)/framework/egl/egluNativeDisplay.cpp',
             '<(deqp_path)/framework/egl/egluNativePixmap.cpp',
@@ -1034,6 +959,83 @@
             # TODO(jmadill): integrate with dEQP
             '<(angle_path)/src/tests/deqp_support/tcuRandomOrderExecutor.cpp',
             '<(angle_path)/src/tests/deqp_support/tcuRandomOrderExecutor.h',
+        ],
+        'deqp_libtester_sources_win':
+        [
+            '<(deqp_path)/framework/delibs/dethread/win32/deMutexWin32.c',
+            '<(deqp_path)/framework/delibs/dethread/win32/deSemaphoreWin32.c',
+            '<(deqp_path)/framework/delibs/dethread/win32/deThreadLocalWin32.c',
+            '<(deqp_path)/framework/delibs/dethread/win32/deThreadWin32.c',
+        ],
+        'deqp_libtester_sources_unix':
+        [
+            '<(deqp_path)/framework/delibs/dethread/unix/deMutexUnix.c',
+            '<(deqp_path)/framework/delibs/dethread/unix/deNamedSemaphoreUnix.c',
+            '<(deqp_path)/framework/delibs/dethread/unix/deSemaphoreUnix.c',
+            '<(deqp_path)/framework/delibs/dethread/unix/deThreadLocalUnix.c',
+            '<(deqp_path)/framework/delibs/dethread/unix/deThreadUnix.c',
+        ],
+        'deqp_gpu_test_expectations_sources':
+        [
+            'third_party/gpu_test_expectations/gpu_info.cc',
+            'third_party/gpu_test_expectations/gpu_info.h',
+            'third_party/gpu_test_expectations/gpu_test_config.cc',
+            'third_party/gpu_test_expectations/gpu_test_config.h',
+            'third_party/gpu_test_expectations/gpu_test_expectations_parser.cc',
+            'third_party/gpu_test_expectations/gpu_test_expectations_parser.h',
+        ],
+        'conditions':
+        [
+            ['(OS=="win" or OS=="linux" or OS=="mac")',
+            {
+                # Build the dEQP libraries for all Windows/Linux builds
+                'angle_build_deqp_libraries%': 1,
+            }],
+            ['((OS=="win" or OS=="linux" or OS=="mac") and angle_build_winrt==0)',
+            {
+                # Build the dEQP GoogleTest support helpers for all Windows/Linux builds except WinRT
+                # GoogleTest doesn't support WinRT
+                'angle_build_deqp_gtest_support%': 1,
+            }],
+            ['((OS=="win" or OS=="linux" or OS=="mac") and angle_standalone==1 and angle_build_winrt==0)',
+            {
+                # Build the dEQP executables for all standalone Windows/Linux builds except WinRT
+                # GYP doesn't support generating standalone WinRT executables
+                'angle_build_deqp_executables%': 1,
+
+                # Build the GoogleTest versions of dEQP for all standalone Windows/Linux builds except WinRT
+                # GoogleTest doesn't support WinRT
+                'angle_build_deqp_gtest_executables%': 1,
+            }],
+            ['OS=="linux" and use_x11==1',
+            {
+                'deqp_include_dirs':
+                [
+                    '<(deqp_path)/framework/platform/x11',
+                ],
+                'deqp_defines':
+                [
+                    # Ask the system headers to expose all the regular function otherwise
+                    # dEQP doesn't compile and produces warnings about implicitly defined
+                    # functions.
+                    # This has to be GNU_SOURCE as on Linux dEQP uses syscall()
+                    '_GNU_SOURCE',
+                ],
+            }],
+            ['OS=="mac"',
+            {
+                'deqp_include_dirs':
+                [
+                    '<(deqp_path)/framework/platform/osx',
+                ],
+                'deqp_defines':
+                [
+                    # Ask the system headers to expose all the regular function otherwise
+                    # dEQP doesn't compile and produces warnings about implicitly defined
+                    # functions.
+                    '_XOPEN_SOURCE=600',
+                ],
+            }],
         ],
     },
     'conditions':
@@ -1182,11 +1184,6 @@
                                 },
                                 'msvs_settings':
                                 {
-                                    'VCCLCompilerTool':
-                                    {
-                                        # dEQP requires exceptions
-                                        'ExceptionHandling': 1,
-                                    },
                                     'VCLinkerTool':
                                     {
                                         'conditions':
@@ -1244,13 +1241,36 @@
                             '-fno-exceptions',
                             '-fno-rtti',
                         ],
-                        'msvs_disabled_warnings':
-                        [
-                            '<@(deqp_msvs_disabled_warnings)',
-                        ],
                         'include_dirs': ['<@(deqp_include_dirs)'],
                         'defines': ['<@(deqp_defines)'],
                         'defines!': [ '<@(deqp_undefines)' ],
+                        'msvs_settings':
+                        {
+                            'VCCLCompilerTool':
+                            {
+                                'AdditionalOptions': ['<@(deqp_win_cflags)'],
+                            },
+                        },
+                        'conditions':
+                        [
+                            ['clang==1',
+                            {
+                                # TODO(jmadill): Remove this once we fix dEQP.
+                                'cflags_cc':
+                                [
+                                    '-Wno-delete-non-virtual-dtor',
+                                ],
+                            }],
+                            ['OS=="win"',
+                            {
+                                'cflags': ['<@(deqp_win_cflags)'],
+                                'cflags_cc': ['<@(deqp_win_cflags)'],
+                                'include_dirs':
+                                [
+                                    '<(deqp_path)/framework/platform/win32',
+                                ],
+                            }],
+                        ],
                     },
                     'conditions':
                     [
@@ -1348,6 +1368,14 @@
                                     'DYLIB_INSTALL_NAME_BASE': '@rpath',
                                 },
                             },
+                        }],
+                        ['OS=="win"',
+                        {
+                            'sources': [ '<@(deqp_libtester_sources_win)', ],
+                        }],
+                        ['(OS=="linux" and use_x11==1) or OS=="mac"',
+                        {
+                            'sources': [ '<@(deqp_libtester_sources_unix)', ],
                         }],
                     ],
                 },
@@ -1506,13 +1534,8 @@
                         ],
                         'sources':
                         [
+                            '<@(deqp_gpu_test_expectations_sources)',
                             'deqp_support/angle_deqp_gtest.cpp',
-                            'third_party/gpu_test_expectations/gpu_info.cc',
-                            'third_party/gpu_test_expectations/gpu_info.h',
-                            'third_party/gpu_test_expectations/gpu_test_config.cc',
-                            'third_party/gpu_test_expectations/gpu_test_config.h',
-                            'third_party/gpu_test_expectations/gpu_test_expectations_parser.cc',
-                            'third_party/gpu_test_expectations/gpu_test_expectations_parser.h',
                         ],
 
                         'defines':
@@ -1540,11 +1563,11 @@
                             {
                                 'ldflags':
                                 [
-                                    '<!@(pkg-config --libs-only-L --libs-only-other libpci)',
+                                    '<!@(<(pkg-config) --libs-only-L --libs-only-other libpci)',
                                 ],
                                 'libraries':
                                 [
-                                    '<!@(pkg-config --libs-only-l libpci)',
+                                    '<!@(<(pkg-config) --libs-only-l libpci)',
                                 ],
                             }],
                             ['OS=="mac"',

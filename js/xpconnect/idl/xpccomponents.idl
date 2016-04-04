@@ -710,6 +710,7 @@ interface nsIXPCComponents : nsIXPCComponentsBase
 {
     readonly attribute nsIXPCComponents_Classes         classes;
     readonly attribute nsIXPCComponents_ClassesByID     classesByID;
+    // Will return null if there is no JS stack right now.
     readonly attribute nsIStackFrame                    stack;
     readonly attribute nsIComponentManager              manager;
     readonly attribute nsIXPCComponents_Utils           utils;

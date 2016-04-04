@@ -18,7 +18,7 @@ add_task(function*() {
     ]}, resolve);
   });
 
-  yield addTab(TEST_URL_ROOT + "doc_modify_playbackRate.html");
+  yield addTab(URL_ROOT + "doc_modify_playbackRate.html");
 
   let {panel} = yield openAnimationInspector();
 

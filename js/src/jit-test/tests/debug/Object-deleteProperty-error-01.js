@@ -12,5 +12,5 @@ dbg.onDebuggerStatement = function (frame) {
 };
 
 g.eval("function h(obj) { debugger; }");
-g.eval("h(Proxy.create({delete: function () { throw Error.prototype; }}));");
+g.eval("h(new Proxy({}, { deleteProperty() { throw Error.prototype; }}));");
 

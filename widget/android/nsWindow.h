@@ -25,8 +25,8 @@ namespace mozilla {
     class WidgetTouchEvent;
 
     namespace layers {
-        class CompositorParent;
-        class CompositorChild;
+        class CompositorBridgeParent;
+        class CompositorBridgeChild;
         class LayerManager;
         class APZCTreeManager;
     }
@@ -64,7 +64,6 @@ private:
 
 public:
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
-    static mozilla::gfx::IntSize GetAndroidScreenBounds();
     static nsWindow* TopWindow();
 
     bool OnContextmenuEvent(mozilla::AndroidGeckoEvent *ae);
@@ -80,6 +79,7 @@ public:
 
     void UpdateOverscrollVelocity(const float aX, const float aY);
     void UpdateOverscrollOffset(const float aX, const float aY);
+    void SetScrollingRootContent(const bool isRootContent);
 
     //
     // nsIWidget
@@ -159,10 +159,11 @@ public:
     NS_IMETHOD_(InputContext) GetInputContext() override;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
-    LayerManager* GetLayerManager (PLayerTransactionChild* aShadowManager = nullptr,
-                                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
-                                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                   bool* aAllowRetaining = nullptr) override;
+    void SetSelectionDragState(bool aState);
+    LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
+                                  LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
+                                  LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                  bool* aAllowRetaining = nullptr) override;
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override;
 
@@ -170,7 +171,8 @@ public:
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
 
-    virtual mozilla::layers::CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight) override;
+    virtual mozilla::layers::CompositorBridgeParent* NewCompositorBridgeParent(
+      int aSurfaceWidth, int aSurfaceHeight) override;
 
     static bool IsCompositionPaused();
     static void InvalidateAndScheduleComposite();

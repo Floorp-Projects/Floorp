@@ -361,7 +361,7 @@
     function showHiddenParentOfVisibleChild()
     {
       this.eventSeq = [
-        new todo_invokerChecker(EVENT_HIDE, getNode("c4_child")),
+        new invokerChecker(EVENT_HIDE, getNode("c4_child")),
         new invokerChecker(EVENT_SHOW, getNode("c4_middle")),
         new invokerChecker(EVENT_REORDER, getNode("c4"))
       ];
@@ -414,11 +414,13 @@
       return aNode.parentNode;
     }
 
+    //gA11yEventDumpToConsole = true; // debug stuff
+    //enableLogging("tree,verbose");
+
     /**
      * Do tests.
      */
     var gQueue = null;
-    //gA11yEventDumpToConsole = true; // debug stuff
 
     function doTests()
     {
@@ -569,6 +571,5 @@
     <div style="visibility:hidden" id="c4_middle">
      <div style="visibility:visible" id="c4_child"></div>
    </div>
-  </div>
 </body>
 </html>

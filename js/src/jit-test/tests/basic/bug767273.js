@@ -1,4 +1,4 @@
-var prox = Proxy.create({
+var prox = new Proxy({}, {
   getOwnPropertyDescriptor: function() { return undefined; },
   has:                      function() { return true; },
 });

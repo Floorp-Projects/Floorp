@@ -437,7 +437,7 @@ js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength
     UTF8Chars utf8(utf8Chars, utf8ByteLength);
 
     size_t length;
-    UniquePtr<char16_t> chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get());
+    UniqueTwoByteChars chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get());
     if (!chars)
         return nullptr;
 

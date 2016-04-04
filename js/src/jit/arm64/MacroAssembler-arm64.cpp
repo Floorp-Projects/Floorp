@@ -563,6 +563,12 @@ MacroAssembler::pushReturnAddress()
     push(lr);
 }
 
+void
+MacroAssembler::popReturnAddress()
+{
+    pop(lr);
+}
+
 // ===============================================================
 // ABI function calls.
 
@@ -711,10 +717,25 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
 }
 
 void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
+                                           Label* label)
+{
+    branchValueIsNurseryObjectImpl(cond, address, temp, label);
+}
+
+void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                            Label* label)
 {
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    branchValueIsNurseryObjectImpl(cond, value.valueReg(), temp, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp,
+                                               Label* label)
+{
+   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     MOZ_ASSERT(temp != ScratchReg && temp != ScratchReg2); // Both may be used internally.
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
@@ -727,7 +748,7 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
     Value start = ObjectValue(*reinterpret_cast<JSObject*>(nursery.start()));
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), temp);
-    addPtr(value.valueReg(), temp);
+    addPtr(value, temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, ImmWord(nursery.nurserySize()), label);
 }

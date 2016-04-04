@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.widget;
 
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,8 +16,10 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.view.View;
+
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.toolbar.SiteIdentityPopup;
-import org.mozilla.gecko.util.ColorUtils;
 
 public class ContentSecurityDoorHanger extends DoorHanger {
     private static final String LOGTAG = "GeckoSecurityDoorHanger";
@@ -81,11 +84,11 @@ public class ContentSecurityDoorHanger extends DoorHanger {
                 if (enabled) {
                     mMessage.setText(R.string.doorhanger_tracking_message_enabled);
                     mSecurityState.setText(R.string.doorhanger_tracking_state_enabled);
-                    mSecurityState.setTextColor(ColorUtils.getColor(getContext(), R.color.affirmative_green));
+                    mSecurityState.setTextColor(ContextCompat.getColor(getContext(), R.color.affirmative_green));
                 } else {
                     mMessage.setText(R.string.doorhanger_tracking_message_disabled);
                     mSecurityState.setText(R.string.doorhanger_tracking_state_disabled);
-                    mSecurityState.setTextColor(ColorUtils.getColor(getContext(), R.color.rejection_red));
+                    mSecurityState.setTextColor(ContextCompat.getColor(getContext(), R.color.rejection_red));
                 }
                 mMessage.setVisibility(VISIBLE);
                 mSecurityState.setVisibility(VISIBLE);
@@ -94,10 +97,13 @@ public class ContentSecurityDoorHanger extends DoorHanger {
     }
 
     @Override
-    protected OnClickListener makeOnButtonClickListener(final int id) {
+    protected OnClickListener makeOnButtonClickListener(final int id, final String telemetryExtra) {
         return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final String expandedExtra = mType.toString().toLowerCase() + "-" + telemetryExtra;
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
+
                 final JSONObject response = new JSONObject();
                 try {
                     switch (mType) {

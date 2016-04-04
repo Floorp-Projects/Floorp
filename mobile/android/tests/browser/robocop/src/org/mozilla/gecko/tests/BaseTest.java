@@ -46,9 +46,9 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import com.jayway.android.robotium.solo.Condition;
-import com.jayway.android.robotium.solo.Solo;
-import com.jayway.android.robotium.solo.Timeout;
+import com.robotium.solo.Condition;
+import com.robotium.solo.Solo;
+import com.robotium.solo.Timeout;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
@@ -56,7 +56,7 @@ import com.jayway.android.robotium.solo.Timeout;
 @SuppressWarnings("unchecked")
 abstract class BaseTest extends BaseRobocopTest {
     private static final int VERIFY_URL_TIMEOUT = 2000;
-    private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
+    private static final int MAX_WAIT_ENABLED_TEXT_MS = 15000;
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
     private static final int MAX_WAIT_VERIFY_PAGE_TITLE_MS = 15000;
     public static final int MAX_WAIT_MS = 4500;
@@ -103,14 +103,6 @@ abstract class BaseTest extends BaseRobocopTest {
         // Ensure Robocop tests have access to network, and are run with Display powered on.
         throwIfHttpGetFails();
         throwIfScreenNotOn();
-    }
-
-    protected GeckoProfile getTestProfile() {
-        if (mProfile.startsWith("/")) {
-            return GeckoProfile.get(getActivity(), "default", mProfile);
-        }
-
-        return GeckoProfile.get(getActivity(), mProfile);
     }
 
     protected void initializeProfile() {
@@ -435,18 +427,11 @@ abstract class BaseTest extends BaseRobocopTest {
     public final void selectMenuItem(String menuItemName) {
         // build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
-        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        if (waitForText(itemName, true)) {
-            mSolo.clickOnText(itemName);
-        } else {
-            // Older versions of Android have additional settings under "More",
-            // including settings that newer versions have under "Tools."
-            if (mSolo.searchText("(^More$|^Tools$)")) {
-                mSolo.clickOnText("(^More$|^Tools$)");
-            }
-            waitForText(itemName);
-            mSolo.clickOnText(itemName);
-        }
+        final View menuView = mSolo.getView(R.id.menu);
+        mAsserter.isnot(menuView, null, "Menu view is not null");
+        mSolo.clickOnView(menuView, true);
+        mAsserter.ok(waitForEnabledText(itemName), "Waiting for menu item " + itemName, itemName + " is present and enabled");
+        mSolo.clickOnText(itemName);
     }
 
     public final void verifyHomePagerHidden() {

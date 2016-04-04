@@ -195,9 +195,10 @@ public:
 class ServiceWorkerInfo final : public nsIServiceWorkerInfo
 {
 private:
-  const ServiceWorkerRegistrationInfo* mRegistration;
-  nsCString mScriptSpec;
-  nsString mCacheName;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  const nsCString mScope;
+  const nsCString mScriptSpec;
+  const nsString mCacheName;
   ServiceWorkerState mState;
 
   // This id is shared with WorkerPrivate to match requests issued by service
@@ -234,7 +235,7 @@ public:
   nsIPrincipal*
   GetPrincipal() const
   {
-    return mRegistration->mPrincipal;
+    return mPrincipal;
   }
 
   const nsCString&
@@ -246,13 +247,7 @@ public:
   const nsCString&
   Scope() const
   {
-    return mRegistration->mScope;
-  }
-
-  void SetScriptSpec(const nsCString& aSpec)
-  {
-    MOZ_ASSERT(!aSpec.IsEmpty());
-    mScriptSpec = aSpec;
+    return mScope;
   }
 
   bool SkipWaitingFlag() const
@@ -267,7 +262,8 @@ public:
     mSkipWaitingFlag = true;
   }
 
-  ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
+  ServiceWorkerInfo(nsIPrincipal* aPrincipal,
+                    const nsACString& aScope,
                     const nsACString& aScriptSpec,
                     const nsAString& aCacheName);
 
@@ -503,7 +499,8 @@ public:
   nsresult
   SendPushEvent(const nsACString& aOriginAttributes,
                 const nsACString& aScope,
-                Maybe<nsTArray<uint8_t>> aData);
+                const nsAString& aMessageId,
+                const Maybe<nsTArray<uint8_t>>& aData);
 
   nsresult
   NotifyUnregister(nsIPrincipal* aPrincipal, const nsAString& aScope);

@@ -42,7 +42,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
   }
   else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
   
   // Fill mDetail and mView according to the mEvent (widget-generated
@@ -50,14 +50,14 @@ UIEvent::UIEvent(EventTarget* aOwner,
   switch(mEvent->mClass) {
     case eUIEventClass:
     {
-      mDetail = mEvent->AsUIEvent()->detail;
+      mDetail = mEvent->AsUIEvent()->mDetail;
       break;
     }
 
     case eScrollPortEventClass:
     {
       InternalScrollPortEvent* scrollEvent = mEvent->AsScrollPortEvent();
-      mDetail = (int32_t)scrollEvent->orient;
+      mDetail = static_cast<int32_t>(scrollEvent->mOrient);
       break;
     }
 
@@ -468,7 +468,7 @@ UIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
   WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
   MOZ_ASSERT(inputEvent, "mEvent must be WidgetInputEvent or derived class");
-  return ((inputEvent->modifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
+  return ((inputEvent->mModifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
 }
 
 void
@@ -484,11 +484,11 @@ UIEvent::InitModifiers(const EventModifierInit& aParam)
     return;
   }
 
-  inputEvent->modifiers = MODIFIER_NONE;
+  inputEvent->mModifiers = MODIFIER_NONE;
 
 #define SET_MODIFIER(aName, aValue) \
   if (aParam.m##aName) { \
-    inputEvent->modifiers |= aValue; \
+    inputEvent->mModifiers |= aValue; \
   } \
 
   SET_MODIFIER(CtrlKey,                 MODIFIER_CONTROL)

@@ -120,6 +120,8 @@ public class DoorHangerPopup extends AnchoredPopup
             doorhangerType = DoorHanger.Type.GEOLOCATION;
         } else if (DoorHanger.Type.DESKTOPNOTIFICATION2.toString().equals(typeString)) {
             doorhangerType = DoorHanger.Type.DESKTOPNOTIFICATION2;
+        } else if (DoorHanger.Type.WEBRTC.toString().equals(typeString)) {
+            doorhangerType = DoorHanger.Type.WEBRTC;
         }
 
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
@@ -209,8 +211,7 @@ public class DoorHangerPopup extends AnchoredPopup
      */
     @Override
     public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Doorhanger:Reply", response.toString());
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Doorhanger:Reply", response.toString());
         removeDoorHanger(doorhanger);
         updatePopup();
     }

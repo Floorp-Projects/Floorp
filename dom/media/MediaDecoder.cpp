@@ -30,6 +30,10 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
 
+#ifdef MOZ_ANDROID_OMX
+#include "AndroidBridge.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::media;
@@ -560,6 +564,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                      "MediaDecoder::mDecoderPosition (Canonical)")
   , mMediaSeekable(AbstractThread::MainThread(), true,
                    "MediaDecoder::mMediaSeekable (Canonical)")
+  , mMediaSeekableOnlyInBufferedRanges(AbstractThread::MainThread(), false,
+                   "MediaDecoder::mMediaSeekableOnlyInBufferedRanges (Canonical)")
   , mTelemetryReported(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
@@ -871,6 +877,7 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
               aInfo->HasAudio(), aInfo->HasVideo());
 
   SetMediaSeekable(aInfo->mMediaSeekable);
+  SetMediaSeekableOnlyInBufferedRanges(aInfo->mMediaSeekableOnlyInBufferedRanges);
   mInfo = aInfo.forget();
   ConstructMediaTracks();
 
@@ -1373,6 +1380,12 @@ MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
   mMediaSeekable = aMediaSeekable;
 }
 
+void
+MediaDecoder::SetMediaSeekableOnlyInBufferedRanges(bool aMediaSeekableOnlyInBufferedRanges){
+  MOZ_ASSERT(NS_IsMainThread());
+  mMediaSeekableOnlyInBufferedRanges = aMediaSeekableOnlyInBufferedRanges;
+}
+
 bool
 MediaDecoder::IsTransportSeekable()
 {
@@ -1388,14 +1401,23 @@ MediaDecoder::IsMediaSeekable()
   return mMediaSeekable;
 }
 
+bool
+MediaDecoder::IsMediaSeekableOnlyInBufferedRanges()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mMediaSeekableOnlyInBufferedRanges;
+}
+
 media::TimeIntervals
 MediaDecoder::GetSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
   // We can seek in buffered range if the media is seekable. Also, we can seek
   // in unbuffered ranges if the transport level is seekable (local file or the
-  // server supports range requests, etc.)
-  if (!IsMediaSeekable()) {
+  // server supports range requests, etc.) or in cue-less WebMs
+  if (IsMediaSeekableOnlyInBufferedRanges()) {
+    return GetBuffered();
+  } else if (!IsMediaSeekable()) {
     return media::TimeIntervals();
   } else if (!IsTransportSeekable()) {
     return GetBuffered();
@@ -1691,9 +1713,11 @@ MediaDecoder::IsOmxEnabled()
 
 #ifdef MOZ_ANDROID_OMX
 bool
-MediaDecoder::IsAndroidMediaEnabled()
+MediaDecoder::IsAndroidMediaPluginEnabled()
 {
-  return Preferences::GetBool("media.plugins.enabled");
+  return AndroidBridge::Bridge() &&
+         AndroidBridge::Bridge()->GetAPIVersion() < 16 &&
+         Preferences::GetBool("media.plugins.enabled");
 }
 #endif
 

@@ -11,6 +11,9 @@
             android:id="@+id/pref_header_search">
     </header>
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+            android:id="@+id/pref_header_notifications">
+    </header>
+    <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
             android:id="@+id/pref_header_advanced">
     </header>
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"

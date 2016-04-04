@@ -1103,5 +1103,14 @@
         "requiresConversion": "true"
       }
     ]
+  },
+  "GL_ETC1_RGB8_LOSSY_DECODE_ANGLE": {
+    "GL_UNSIGNED_BYTE": [
+      {
+        "loadFunction": "LoadETC1RGB8ToBC1",
+        "dxgiFormat": "DXGI_FORMAT_BC1_UNORM",
+        "requiresConversion": "true"
+      }
+    ]
   }
 }

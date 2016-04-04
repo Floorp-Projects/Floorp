@@ -11,13 +11,9 @@
   locale/@AB_CD@/browser/aboutAccounts.properties (%chrome/aboutAccounts.properties)
   locale/@AB_CD@/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
   locale/@AB_CD@/browser/aboutAddons.properties   (%chrome/aboutAddons.properties)
-#ifdef MOZ_DEVICES
-  locale/@AB_CD@/browser/aboutDevices.dtd         (%chrome/aboutDevices.dtd)
-#endif
   locale/@AB_CD@/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
   locale/@AB_CD@/browser/aboutDownloads.dtd       (%chrome/aboutDownloads.dtd)
   locale/@AB_CD@/browser/aboutDownloads.properties (%chrome/aboutDownloads.properties)
-  locale/@AB_CD@/browser/aboutFeedback.dtd        (%chrome/aboutFeedback.dtd)
   locale/@AB_CD@/browser/aboutHome.dtd            (%chrome/aboutHome.dtd)
   locale/@AB_CD@/browser/aboutHome.properties     (%chrome/aboutHome.properties)
   locale/@AB_CD@/browser/aboutPrivateBrowsing.dtd (%chrome/aboutPrivateBrowsing.dtd)

@@ -434,7 +434,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // content websockets within the websockets implementation, so we don't need
   // to do any blocking here, nor do we need to provide a way to undo or
   // override the blocking. Websockets without TLS are very flaky anyway in the
-  // face of many HTTP-aware proxies. Compared to psasive content, there is
+  // face of many HTTP-aware proxies. Compared to passive content, there is
   // additional risk that the script using WebSockets will disclose sensitive
   // information from the HTTPS page and/or eval (directly or indirectly)
   // received data.
@@ -500,6 +500,17 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       break;
   }
 
+  // Make sure to get the URI the load started with. No need to check
+  // outer schemes because all the wrapping pseudo protocols inherit the
+  // security properties of the actual network request represented
+  // by the innerMost URL.
+  nsCOMPtr<nsIURI> innerContentLocation = NS_GetInnermostURI(aContentLocation);
+  if (!innerContentLocation) {
+    NS_ERROR("Can't get innerURI from aContentLocation");
+    *aDecision = REJECT_REQUEST;
+    return NS_OK;
+  }
+
  /* Get the scheme of the sub-document resource to be requested. If it is
   * a safe to load in an https context then mixed content doesn't apply.
   *
@@ -521,16 +532,16 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   bool schemeNoReturnData = false;
   bool schemeInherits = false;
   bool schemeSecure = false;
-  if (NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
-      NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA, &schemeNoReturnData)) ||
-      NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT, &schemeInherits)) ||
-      NS_FAILED(NS_URIChainHasFlags(aContentLocation, nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT, &schemeSecure))) {
+  if (NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
+      NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA, &schemeNoReturnData)) ||
+      NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT, &schemeInherits)) ||
+      NS_FAILED(NS_URIChainHasFlags(innerContentLocation, nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT, &schemeSecure))) {
     *aDecision = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
   }
   // TYPE_IMAGE redirects are cached based on the original URI, not the final
   // destination and hence cache hits for images may not have the correct
-  // aContentLocation.  Check if the cached hit went through an http redirect,
+  // innerContentLocation.  Check if the cached hit went through an http redirect,
   // and if it did, we can't treat this as a secure subresource.
   if (!aHadInsecureImageRedirect &&
       (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure)) {
@@ -614,14 +625,14 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // Check the parent scheme. If it is not an HTTPS page then mixed content
   // restrictions do not apply.
   bool parentIsHttps;
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(requestingLocation);
-  if (!innerURI) {
+  nsCOMPtr<nsIURI> innerRequestingLocation = NS_GetInnermostURI(requestingLocation);
+  if (!innerRequestingLocation) {
     NS_ERROR("Can't get innerURI from requestingLocation");
     *aDecision = REJECT_REQUEST;
     return NS_OK;
   }
 
-  nsresult rv = innerURI->SchemeIs("https", &parentIsHttps);
+  nsresult rv = innerRequestingLocation->SchemeIs("https", &parentIsHttps);
   if (NS_FAILED(rv)) {
     NS_ERROR("requestingLocation->SchemeIs failed");
     *aDecision = REJECT_REQUEST;
@@ -632,26 +643,51 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(aRequestingContext);
+  NS_ENSURE_TRUE(docShell, NS_OK);
+
+  // The page might have set the CSP directive 'block-all-mixed-content' which
+  // should block not only active mixed content loads but in fact all mixed content
+  // loads, see https://www.w3.org/TR/mixed-content/#strict-checking
+  // Block all non secure loads in case the CSP directive is present. Please note
+  // that at this point we already know, based on |schemeSecure| that the load is
+  // not secure, so we can bail out early at this point.
+  if (docShell->GetDocument()->GetBlockAllMixedContent(isPreload)) {
+    // log a message to the console before returning.
+    nsAutoCString spec;
+    rv = aContentLocation->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ConvertUTF8toUTF16 reportSpec(spec);
+
+    const char16_t* params[] = { reportSpec.get()};
+    CSP_LogLocalizedStr(MOZ_UTF16("blockAllMixedContent"),
+                        params, ArrayLength(params),
+                        EmptyString(), // aSourceFile
+                        EmptyString(), // aScriptSample
+                        0, // aLineNumber
+                        0, // aColumnNumber
+                        nsIScriptError::errorFlag, "CSP",
+                        docShell->GetDocument()->InnerWindowID());
+    *aDecision = REJECT_REQUEST;
+    return NS_OK;
+  }
+
   // Disallow mixed content loads for workers, shared workers and service
   // workers.
   if (isWorkerType) {
     // For workers, we can assume that we're mixed content at this point, since
-    // the parent is https, and the protocol associated with aContentLocation
+    // the parent is https, and the protocol associated with innerContentLocation
     // doesn't map to the secure URI flags checked above.  Assert this for
     // sanity's sake
 #ifdef DEBUG
     bool isHttpsScheme = false;
-    rv = aContentLocation->SchemeIs("https", &isHttpsScheme);
+    rv = innerContentLocation->SchemeIs("https", &isHttpsScheme);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(!isHttpsScheme);
 #endif
     *aDecision = REJECT_REQUEST;
     return NS_OK;
   }
-
-  // Determine if the rootDoc is https and if the user decided to allow Mixed Content
-  nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(aRequestingContext);
-  NS_ENSURE_TRUE(docShell, NS_OK);
 
   // The page might have set the CSP directive 'upgrade-insecure-requests'. In such
   // a case allow the http: load to succeed with the promise that the channel will
@@ -665,13 +701,14 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // subresource load uses http: and the CSP directive 'upgrade-insecure-requests'
   // is present on the page.
   bool isHttpScheme = false;
-  rv = aContentLocation->SchemeIs("http", &isHttpScheme);
+  rv = innerContentLocation->SchemeIs("http", &isHttpScheme);
   NS_ENSURE_SUCCESS(rv, rv);
   if (isHttpScheme && docShell->GetDocument()->GetUpgradeInsecureRequests(isPreload)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }
 
+  // Determine if the rootDoc is https and if the user decided to allow Mixed Content
   bool rootHasSecureConnection = false;
   bool allowMixedContent = false;
   bool isRootDocShell = false;
@@ -761,13 +798,13 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   bool active = (classification == eMixedScript);
   if (!aHadInsecureImageRedirect) {
     if (XRE_IsParentProcess()) {
-      AccumulateMixedContentHSTS(aContentLocation, active);
+      AccumulateMixedContentHSTS(innerContentLocation, active);
     } else {
       // Ask the parent process to do the same call
       mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
       if (cc) {
         mozilla::ipc::URIParams uri;
-        SerializeURI(aContentLocation, uri);
+        SerializeURI(innerContentLocation, uri);
         cc->SendAccumulateMixedContentHSTS(uri, active);
       }
     }
@@ -884,9 +921,6 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     *aDecision = ACCEPT;
     return NS_OK;
   }
-
-  *aDecision = REJECT_REQUEST;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

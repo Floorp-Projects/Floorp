@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Animated pseudo elements</title>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+      }
+
+      body {
+        animation: color 2s linear infinite;
+        background: #333;
+      }
+
+      @keyframes color {
+        to {
+          filter: hue-rotate(360deg);
+        }
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        flex-grow: 1;
+        height: 100%;
+        animation: grow 1s linear infinite alternate;
+      }
+
+      body::before {
+        background: hsl(120, 80%, 80%);
+      }
+      body::after {
+        background: hsl(240, 80%, 80%);
+        animation-delay: -.5s;
+      }
+
+      @keyframes grow {
+        0% {height: 100%; animation-timing-function: ease-in-out;}
+        10% {height: 80%; animation-timing-function: ease-in-out;}
+        20% {height: 60%; animation-timing-function: ease-in-out;}
+        30% {height: 70%; animation-timing-function: ease-in-out;}
+        40% {height: 50%; animation-timing-function: ease-in-out;}
+        50% {height: 30%; animation-timing-function: ease-in-out;}
+        60% {height: 80%; animation-timing-function: ease-in-out;}
+        70% {height: 90%; animation-timing-function: ease-in-out;}
+        80% {height: 70%; animation-timing-function: ease-in-out;}
+        90% {height: 60%; animation-timing-function: ease-in-out;}
+        100% {height: 100%; animation-timing-function: ease-in-out;}
+      }
+    </style>
+  </head>
+  <body>
+  </body>
+</html>

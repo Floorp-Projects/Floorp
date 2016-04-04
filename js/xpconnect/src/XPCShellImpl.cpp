@@ -44,6 +44,9 @@
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"
 #include <windows.h>
+#if defined(MOZ_SANDBOX)
+#include "SandboxBroker.h"
+#endif
 #endif
 
 // all this crap is needed to do the interactive shell stuff
@@ -141,7 +144,7 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
     //XXX: your platform should really implement this
     return false;
 #else
-    JS::UniqueChars filename;
+    JS::AutoFilename filename;
     if (JS::DescribeScriptedCaller(cx, &filename) && filename.get()) {
         nsresult rv;
         nsCOMPtr<nsIXPConnect> xpc =
@@ -1518,6 +1521,14 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
         // Plugin may require audio session if installed plugin can initialize
         // asynchronized.
         AutoAudioSession audioSession;
+
+#if defined(MOZ_SANDBOX)
+        // Required for sandboxed child processes.
+        if (!SandboxBroker::Initialize()) {
+          NS_WARNING("Failed to initialize broker services, sandboxed "
+                     "processes will fail to start.");
+        }
+#endif
 #endif
 
         {
@@ -1567,9 +1578,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
                 AutoEntryScript aes(backstagePass, "xpcshell argument processing");
 
                 // If an exception is thrown, we'll set our return code
-                // appropriately, and then let the AutoJSAPI destructor report
+                // appropriately, and then let the AutoEntryScript destructor report
                 // the error to the console.
-                aes.TakeOwnershipOfErrorReporting();
                 if (!ProcessArgs(aes, argv, argc, &dirprovider)) {
                     if (gExitCode) {
                         result = gExitCode;

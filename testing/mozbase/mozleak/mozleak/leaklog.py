@@ -52,13 +52,13 @@ def expectedTabProcessLeakCounts():
         'nsThread': 1,
     })
 
-    # Bug 1215265 - CompositorChild is not shut down.
+    # Bug 1215265 - CompositorBridgeChild is not shut down.
     appendExpectedLeakCounts({
-        'CompositorChild': 1,
+        'CompositorBridgeChild': 1,
         'CondVar': 1,
         'IPC::Channel': 1,
         'Mutex': 1,
-        'PCompositorChild': 1,
+        'PCompositorBridgeChild': 1,
         'RefCountedMonitor': 1,
         'RefCountedTask': 2,
         'StoreRef': 1,
@@ -68,7 +68,7 @@ def expectedTabProcessLeakCounts():
     })
 
     # Bug 1215265 - Windows-specific graphics leaks, maybe related to
-    # CompositorChild and/or ImageBridgeChild not being shut down.
+    # CompositorBridgeChild and/or ImageBridgeChild not being shut down.
     if mozinfo.isWin:
         # Windows leaks comment to all content processes.
         # 2696 bytes leaked total on Win7.
@@ -115,6 +115,22 @@ def expectedTabProcessLeakCounts():
             'TextureData': 5,
             'WeakReference<MessageListener>': 10,
             'nsTArray_base': 17,
+        })
+
+        # Canvas mochitests leak even more textures, as seen in bug 1252677.
+        numExtraTextureLeaks = 4
+        appendExpectedLeakCounts({
+            'CondVar': numExtraTextureLeaks,
+            'Mutex': numExtraTextureLeaks,
+            'PTextureChild': numExtraTextureLeaks,
+            'SharedMemory': numExtraTextureLeaks,
+            'TextureChild': numExtraTextureLeaks,
+            'TextureData': numExtraTextureLeaks,
+        })
+
+        # dom/html/test/ mochitests leak even more stuff.
+        appendExpectedLeakCounts({
+            'WeakReference<MessageListener>': 3
         })
 
     return leaks

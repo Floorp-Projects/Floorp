@@ -4,13 +4,9 @@
 
 "use strict";
 
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/responsive.properties";
-
-const {
-  ViewHelpers
-} = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 module.exports = {
   getStr: (...args) => L10N.getStr(...args),

@@ -17,13 +17,6 @@
 #include <algorithm>
 #include "ImageContainer.h"
 #include "gfxPrefs.h"
-#ifdef MOZ_ENABLE_SKIA
-#include "skia/include/core/SkCanvas.h"              // for SkCanvas
-#include "skia/include/core/SkBitmapDevice.h"        // for SkBitmapDevice
-#else
-#define PIXMAN_DONT_DEFINE_STDINT
-#include "pixman.h"                     // for pixman_f_transform, etc
-#endif
 
 namespace mozilla {
 using namespace mozilla::gfx;
@@ -85,8 +78,9 @@ public:
   bool mWrappingExistingData;
 };
 
-BasicCompositor::BasicCompositor(nsIWidget *aWidget)
-  : mWidget(aWidget)
+BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget)
+  : Compositor(aParent)
+  , mWidget(aWidget)
   , mDidExternalComposition(false)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
@@ -166,29 +160,34 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
 }
 
 already_AddRefed<CompositingRenderTarget>
-BasicCompositor::CreateRenderTargetForWindow(const IntRect& aRect, SurfaceInitMode aInit, BufferMode aBufferMode)
+BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, SurfaceInitMode aInit, BufferMode aBufferMode)
 {
-  if (aBufferMode != BufferMode::BUFFER_NONE) {
-    return CreateRenderTarget(aRect, aInit);
-  }
-
+  MOZ_ASSERT(mDrawTarget);
   MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
 
   if (aRect.width * aRect.height == 0) {
     return nullptr;
   }
 
-  MOZ_ASSERT(mDrawTarget);
+  RefPtr<BasicCompositingRenderTarget> rt;
+  IntRect rect = aRect.ToUnknownRect();
 
-  // Adjust bounds rect to account for new origin at (0, 0).
-  IntRect windowRect = aRect;
-  if (aRect.Size() != mDrawTarget->GetSize()) {
-    windowRect.ExpandToEnclose(IntPoint(0, 0));
-  }
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
-
-  if (aInit == INIT_MODE_CLEAR) {
-    mDrawTarget->ClearRect(Rect(aRect - rt->GetOrigin()));
+  if (aBufferMode != BufferMode::BUFFER_NONE) {
+    RefPtr<DrawTarget> target = mWidget->CreateBackBufferDrawTarget(mDrawTarget, aRect, aInit == INIT_MODE_CLEAR);
+    if (!target) {
+      return nullptr;
+    }
+    rt = new BasicCompositingRenderTarget(target, rect);
+  } else {
+    IntRect windowRect = rect;
+    // Adjust bounds rect to account for new origin at (0, 0).
+    if (windowRect.Size() != mDrawTarget->GetSize()) {
+      windowRect.ExpandToEnclose(IntPoint(0, 0));
+    }
+    rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
+    if (aInit == INIT_MODE_CLEAR) {
+      mDrawTarget->ClearRect(Rect(rect - rt->GetOrigin()));
+    }
   }
 
   return rt.forget();
@@ -254,142 +253,23 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                    mode, aMask, aMaskTransform, &matrix);
 }
 
-#ifdef MOZ_ENABLE_SKIA
-static SkMatrix
-Matrix3DToSkia(const Matrix4x4& aMatrix)
-{
-  SkMatrix transform;
-  transform.setAll(aMatrix._11,
-                   aMatrix._21,
-                   aMatrix._41,
-                   aMatrix._12,
-                   aMatrix._22,
-                   aMatrix._42,
-                   aMatrix._14,
-                   aMatrix._24,
-                   aMatrix._44);
-
-  return transform;
-}
-
 static void
-Transform(DataSourceSurface* aDest,
-          DataSourceSurface* aSource,
-          const Matrix4x4& aTransform,
-          const Point& aDestOffset)
+SetupMask(const EffectChain& aEffectChain,
+          DrawTarget* aDest,
+          const IntPoint& aOffset,
+          RefPtr<SourceSurface>& aMaskSurface,
+          Matrix& aMaskTransform)
 {
-  if (aTransform.IsSingular()) {
-    return;
+  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
+    EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
+    aMaskSurface = effectMask->mMaskTexture->AsSourceBasic()->GetSurface(aDest);
+    if (!aMaskSurface) {
+      gfxWarning() << "Invalid sourceMask effect";
+    }
+    MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
+    aMaskTransform = effectMask->mMaskTransform.As2D();
+    aMaskTransform.PostTranslate(-aOffset.x, -aOffset.y);
   }
-
-  IntSize destSize = aDest->GetSize();
-  SkImageInfo destInfo = SkImageInfo::Make(destSize.width,
-                                           destSize.height,
-                                           kBGRA_8888_SkColorType,
-                                           kPremul_SkAlphaType);
-  SkBitmap destBitmap;
-  destBitmap.setInfo(destInfo, aDest->Stride());
-  destBitmap.setPixels((uint32_t*)aDest->GetData());
-  SkCanvas destCanvas(destBitmap);
-
-  IntSize srcSize = aSource->GetSize();
-  SkImageInfo srcInfo = SkImageInfo::Make(srcSize.width,
-                                          srcSize.height,
-                                          kBGRA_8888_SkColorType,
-                                          kPremul_SkAlphaType);
-  SkBitmap src;
-  src.setInfo(srcInfo, aSource->Stride());
-  src.setPixels((uint32_t*)aSource->GetData());
-
-  Matrix4x4 transform = aTransform;
-  transform.PostTranslate(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
-  destCanvas.setMatrix(Matrix3DToSkia(transform));
-
-  SkPaint paint;
-  paint.setXfermodeMode(SkXfermode::kSrc_Mode);
-  paint.setAntiAlias(true);
-  paint.setFilterQuality(kLow_SkFilterQuality);
-  SkRect destRect = SkRect::MakeXYWH(0, 0, srcSize.width, srcSize.height);
-  destCanvas.drawBitmapRect(src, destRect, &paint);
-}
-#else
-static pixman_transform
-Matrix3DToPixman(const Matrix4x4& aMatrix)
-{
-  pixman_f_transform transform;
-
-  transform.m[0][0] = aMatrix._11;
-  transform.m[0][1] = aMatrix._21;
-  transform.m[0][2] = aMatrix._41;
-  transform.m[1][0] = aMatrix._12;
-  transform.m[1][1] = aMatrix._22;
-  transform.m[1][2] = aMatrix._42;
-  transform.m[2][0] = aMatrix._14;
-  transform.m[2][1] = aMatrix._24;
-  transform.m[2][2] = aMatrix._44;
-
-  pixman_transform result;
-  pixman_transform_from_pixman_f_transform(&result, &transform);
-
-  return result;
-}
-
-static void
-Transform(DataSourceSurface* aDest,
-          DataSourceSurface* aSource,
-          const Matrix4x4& aTransform,
-          const Point& aDestOffset)
-{
-  IntSize destSize = aDest->GetSize();
-  pixman_image_t* dest = pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                                                  destSize.width,
-                                                  destSize.height,
-                                                  (uint32_t*)aDest->GetData(),
-                                                  aDest->Stride());
-
-  IntSize srcSize = aSource->GetSize();
-  pixman_image_t* src = pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                                                 srcSize.width,
-                                                 srcSize.height,
-                                                 (uint32_t*)aSource->GetData(),
-                                                 aSource->Stride());
-
-  MOZ_ASSERT(src !=0 && dest != 0, "Failed to create pixman images?");
-
-  pixman_transform pixTransform = Matrix3DToPixman(aTransform);
-  pixman_transform pixTransformInverted;
-
-  // If the transform is singular then nothing would be drawn anyway, return here
-  if (!pixman_transform_invert(&pixTransformInverted, &pixTransform)) {
-    pixman_image_unref(dest);
-    pixman_image_unref(src);
-    return;
-  }
-  pixman_image_set_transform(src, &pixTransformInverted);
-
-  pixman_image_composite32(PIXMAN_OP_SRC,
-                           src,
-                           nullptr,
-                           dest,
-                           aDestOffset.x,
-                           aDestOffset.y,
-                           0,
-                           0,
-                           0,
-                           0,
-                           destSize.width,
-                           destSize.height);
-
-  pixman_image_unref(dest);
-  pixman_image_unref(src);
-}
-#endif
-
-static inline IntRect
-RoundOut(Rect r)
-{
-  r.RoundOut();
-  return IntRect(r.x, r.y, r.width, r.height);
 }
 
 void
@@ -417,7 +297,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     newTransform = aTransform.As2D();
   } else {
     // Create a temporary surface for the transform.
-    dest = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(RoundOut(aRect).Size(), SurfaceFormat::B8G8R8A8);
+    dest = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(RoundedOut(aRect).Size(), SurfaceFormat::B8G8R8A8);
     if (!dest) {
       return;
     }
@@ -432,12 +312,12 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       return;
     }
 
-    // Propagate the coordinate offset to our 2D draw target.
-    newTransform = Matrix::Translation(transformBounds.x, transformBounds.y);
+    newTransform = Matrix();
 
     // When we apply the 3D transformation, we do it against a temporary
     // surface, so undo the coordinate offset.
-    new3DTransform = Matrix4x4::Translation(aRect.x, aRect.y, 0) * aTransform;
+    new3DTransform = aTransform;
+    new3DTransform.PreTranslate(aRect.x, aRect.y, 0);
   }
 
   buffer->PushClipRect(aClipRect);
@@ -447,16 +327,8 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
   RefPtr<SourceSurface> sourceMask;
   Matrix maskTransform;
-  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
-    EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
-    sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface(dest);
-    if (!sourceMask) {
-      gfxWarning() << "Invalid sourceMask effect";
-    }
-    MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
-    MOZ_ASSERT(!effectMask->mIs3D);
-    maskTransform = effectMask->mMaskTransform.As2D();
-    maskTransform.PostTranslate(-offset.x, -offset.y);
+  if (aTransform.Is2D()) {
+    SetupMask(aEffectChain, dest, offset, sourceMask, maskTransform);
   }
 
   CompositionOp blendMode = CompositionOp::OP_OVER;
@@ -548,23 +420,45 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   if (!aTransform.Is2D()) {
     dest->Flush();
 
-    RefPtr<SourceSurface> snapshot = dest->Snapshot();
-    RefPtr<DataSourceSurface> source = snapshot->GetDataSurface();
-    RefPtr<DataSourceSurface> temp =
-      Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), SurfaceFormat::B8G8R8A8
-#ifdef MOZ_ENABLE_SKIA
-        , true
-#endif
-        );
-    if (NS_WARN_IF(!temp)) {
-      buffer->PopClip();
-      return;
+    RefPtr<SourceSurface> destSnapshot = dest->Snapshot();
+
+    SetupMask(aEffectChain, buffer, offset, sourceMask, maskTransform);
+
+    if (sourceMask) {
+      RefPtr<DrawTarget> transformDT =
+        dest->CreateSimilarDrawTarget(IntSize(transformBounds.width, transformBounds.height),
+                                      SurfaceFormat::B8G8R8A8);
+      new3DTransform.PostTranslate(-transformBounds.x, -transformBounds.y, 0);
+      if (transformDT &&
+          transformDT->Draw3DTransformedSurface(destSnapshot, new3DTransform)) {
+        RefPtr<SourceSurface> transformSnapshot = transformDT->Snapshot();
+
+        // Transform the source by it's normal transform, and then the inverse
+        // of the mask transform so that it's in the mask's untransformed
+        // coordinate space.
+        Matrix sourceTransform = newTransform;
+        sourceTransform.PostTranslate(transformBounds.TopLeft());
+
+        Matrix inverseMask = maskTransform;
+        inverseMask.Invert();
+
+        sourceTransform *= inverseMask;
+
+        SurfacePattern source(transformSnapshot, ExtendMode::CLAMP, sourceTransform);
+
+        buffer->PushClipRect(transformBounds);
+
+        // Mask in the untransformed coordinate space, and then transform
+        // by the mask transform to put the result back into destination
+        // coords.
+        buffer->SetTransform(maskTransform);
+        buffer->MaskSurface(source, sourceMask, Point(0, 0));
+
+        buffer->PopClip();
+      }
+    } else {
+      buffer->Draw3DTransformedSurface(destSnapshot, new3DTransform);
     }
-
-    Transform(temp, source, new3DTransform, transformBounds.TopLeft());
-
-    transformBounds.MoveTo(0, 0);
-    buffer->DrawSurface(temp, transformBounds, transformBounds);
   }
 
   buffer->PopClip();
@@ -631,7 +525,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
-    CreateRenderTargetForWindow(mInvalidRect.ToUnknownRect(),
+    CreateRenderTargetForWindow(mInvalidRect,
                                 aOpaque ? INIT_MODE_NONE : INIT_MODE_CLEAR,
                                 bufferMode);
   if (!target) {

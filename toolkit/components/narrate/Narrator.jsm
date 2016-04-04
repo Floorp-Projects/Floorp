@@ -36,17 +36,6 @@ Narrator.prototype = {
     return this._winRef.get();
   },
 
-  get _voiceMap() {
-    if (!this._voiceMapInner) {
-      this._voiceMapInner = new Map();
-      for (let voice of this._win.speechSynthesis.getVoices()) {
-        this._voiceMapInner.set(voice.voiceURI, voice);
-      }
-    }
-
-    return this._voiceMapInner;
-  },
-
   get _treeWalker() {
     if (!this._treeWalkerRef) {
       let wu = this._win.QueryInterface(
@@ -66,14 +55,20 @@ Narrator.prototype = {
             return nf.FILTER_REJECT;
           }
 
+          if (!/\S/.test(node.textContent)) {
+            // Reject nodes with no text.
+            return nf.FILTER_REJECT;
+          }
+
           let bb = wu.getBoundsWithoutFlushing(node);
           if (!bb.width || !bb.height) {
-            // Skip non-rendered nodes.
+            // Skip non-rendered nodes. We don't reject because a zero-sized
+            // container can still have visible, "overflowed", content.
             return nf.FILTER_SKIP;
           }
 
           for (let c = node.firstChild; c; c = c.nextSibling) {
-            if (c.nodeType == c.TEXT_NODE && !!c.textContent.match(/\S/)) {
+            if (c.nodeType == c.TEXT_NODE && /\S/.test(c.textContent)) {
               // If node has a non-empty text child accept it.
               this._matches.add(node);
               return nf.FILTER_ACCEPT;
@@ -105,6 +100,15 @@ Narrator.prototype = {
   get speaking() {
     return this._win.speechSynthesis.speaking ||
       this._win.speechSynthesis.pending;
+  },
+
+  _getVoice: function(voiceURI) {
+    if (!this._voiceMap || !this._voiceMap.has(voiceURI)) {
+      this._voiceMap = new Map(
+        this._win.speechSynthesis.getVoices().map(v => [v.voiceURI, v]));
+    }
+
+    return this._voiceMap.get(voiceURI);
   },
 
   _isParagraphInView: function(paragraph) {
@@ -156,7 +160,7 @@ Narrator.prototype = {
 
     this._startTime = Date.now();
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       utterance.addEventListener("start", () => {
         paragraph.classList.add("narrating");
         let bb = paragraph.getBoundingClientRect();
@@ -189,22 +193,22 @@ Narrator.prototype = {
           // User pressed stopped.
           resolve();
         } else {
-          this._speakInner().then(resolve);
+          this._speakInner().then(resolve, reject);
         }
+      });
+
+      utterance.addEventListener("error", () => {
+        reject("speech synthesis failed");
       });
 
       this._win.speechSynthesis.speak(utterance);
     });
   },
 
-  getVoiceOptions: function() {
-    return Array.from(this._voiceMap.values());
-  },
-
   start: function(speechOptions) {
     this._speechOptions = {
       rate: speechOptions.rate,
-      voice: this._voiceMap.get(speechOptions.voice)
+      voice: this._getVoice(speechOptions.voice)
     };
 
     this._stopped = false;
@@ -248,7 +252,7 @@ Narrator.prototype = {
   },
 
   setVoice: function(voice) {
-    this._speechOptions.voice = this._voiceMap.get(voice);
+    this._speechOptions.voice = this._getVoice(voice);
     /* repeat current paragraph */
     this._treeWalker.previousNode();
     this._win.speechSynthesis.cancel();

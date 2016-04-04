@@ -106,7 +106,7 @@ public final class Reporter extends BroadcastReceiver {
 
     private void receivedGpsMessage(Intent intent) {
         String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-        if (subject.equals(GPSScanner.SUBJECT_NEW_LOCATION)) {
+        if (GPSScanner.SUBJECT_NEW_LOCATION.equals(subject)) {
             reportCollectedLocation();
             Location newPosition = intent.getParcelableExtra(GPSScanner.NEW_LOCATION_ARG_LOCATION);
             mBundle = (newPosition != null) ? new StumblerBundle(newPosition, mPhoneType) : mBundle;

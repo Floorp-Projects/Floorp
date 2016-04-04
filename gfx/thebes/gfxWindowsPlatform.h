@@ -26,6 +26,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 
 #include <windows.h>
@@ -159,17 +160,9 @@ public:
      */
     void VerifyD2DDevice(bool aAttemptForce);
 
-    nsresult GetFontList(nsIAtom *aLangGroup,
-                         const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts) override;
-
-    nsresult UpdateFontList();
-
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                         int32_t aRunScript,
                                         nsTArray<const char*>& aFontList) override;
-
-    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) override;
 
     gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
@@ -177,24 +170,6 @@ public:
                     gfxTextPerfMetrics* aTextPerf,
                     gfxUserFontSet *aUserFontSet,
                     gfxFloat aDevToCssSize) override;
-
-    /**
-     * Look up a local platform font using the full font face name (needed to support @font-face src local() )
-     */
-    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
-                                          int16_t aStretch,
-                                          uint8_t aStyle) override;
-
-    /**
-     * Activate a platform font (needed to support @font-face src url() )
-     */
-    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
-                                           int16_t aStretch,
-                                           uint8_t aStyle,
-                                           const uint8_t* aFontData,
-                                           uint32_t aLength) override;
 
     virtual bool CanUseHardwareVideoDecoding() override;
 
@@ -230,14 +205,15 @@ public:
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
     { return mRenderingParams[aRenderMode]; }
 
+    bool GetD3D11Device(RefPtr<ID3D11Device>* aOutDevice);
+    bool GetD3D11DeviceForCurrentThread(RefPtr<ID3D11Device>* aOutDevice);
+    bool GetD3D11ImageBridgeDevice(RefPtr<ID3D11Device>* aOutDevice);
+
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
-    mozilla::layers::DeviceManagerD3D9* GetD3D9DeviceManager();
+    already_AddRefed<mozilla::layers::DeviceManagerD3D9> GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
-    ID3D11Device *GetD3D11Device();
+    void D3D9DeviceReset();
     ID3D11Device *GetD3D11ContentDevice();
-    ID3D11Device* GetD3D11DeviceForCurrentThread();
-    // Device to be used on the ImageBridge thread
-    ID3D11Device *GetD3D11ImageBridgeDevice();
 
     // Create a D3D11 device to be used for DXVA decoding.
     already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
@@ -317,11 +293,15 @@ private:
 
     mozilla::gfx::FeatureStatus AttemptD3D11DeviceCreation();
     bool AttemptD3D11DeviceCreationHelper(
-        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
+        IDXGIAdapter1* aAdapter,
+        RefPtr<ID3D11Device>& aOutDevice,
+        HRESULT& aResOut);
 
     mozilla::gfx::FeatureStatus AttemptWARPDeviceCreation();
     bool AttemptWARPDeviceCreationHelper(
-        mozilla::ScopedGfxFeatureReporter& aReporterWARP, HRESULT& aResOut);
+        mozilla::ScopedGfxFeatureReporter& aReporterWARP,
+        RefPtr<ID3D11Device>& aOutDevice,
+        HRESULT& aResOut);
 
     bool AttemptD3D11ImageBridgeDeviceCreationHelper(
         IDXGIAdapter1* aAdapter, HRESULT& aResOut);
@@ -344,17 +324,20 @@ private:
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 
+    mozilla::Mutex mDeviceLock;
     RefPtr<IDXGIAdapter1> mAdapter;
-    RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     RefPtr<ID3D11Device> mD3D11Device;
     RefPtr<ID3D11Device> mD3D11ContentDevice;
     RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
-    RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
+    RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     bool mIsWARP;
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;
     bool mCompositorD3D11TextureSharingWorks;
+    mozilla::Atomic<bool> mHasD3D9DeviceReset;
     DeviceResetReason mDeviceResetReason;
+
+    RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
 
     // These should not be accessed directly. Use the Get[Feature]Status
     // accessors instead.

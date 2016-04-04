@@ -5,16 +5,18 @@
 "use strict";
 
 const { Ci } = require("chrome");
+const { createClass, createFactory, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const Services = require("Services");
 
-const { createClass, createFactory, DOM: dom } =
-  require("devtools/client/shared/vendor/react");
 const TabHeader = createFactory(require("./tab-header"));
 const TargetList = createFactory(require("./target-list"));
+const WorkerTarget = createFactory(require("./worker-target"));
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
+
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
 
 module.exports = createClass({
@@ -48,31 +50,41 @@ module.exports = createClass({
   render() {
     let { client } = this.props;
     let { workers } = this.state;
+    let targetClass = WorkerTarget;
 
     return dom.div({
       id: "tab-workers",
       className: "tab",
       role: "tabpanel",
-      "aria-labelledby": "tab-workers-header-name" },
+      "aria-labelledby": "tab-workers-header-name"
+    },
     TabHeader({
       id: "tab-workers-header-name",
-      name: Strings.GetStringFromName("workers") }),
+      name: Strings.GetStringFromName("workers")
+    }),
     dom.div({ id: "workers", className: "inverted-icons" },
       TargetList({
+        client,
         id: "service-workers",
         name: Strings.GetStringFromName("serviceWorkers"),
-        targets: workers.service,
-        client }),
+        targetClass,
+        targets: workers.service
+      }),
       TargetList({
+        client,
         id: "shared-workers",
         name: Strings.GetStringFromName("sharedWorkers"),
-        targets: workers.shared,
-        client }),
+        targetClass,
+        targets: workers.shared
+      }),
       TargetList({
+        client,
         id: "other-workers",
         name: Strings.GetStringFromName("otherWorkers"),
-        targets: workers.other,
-        client })));
+        targetClass,
+        targets: workers.other
+      })
+    ));
   },
 
   update() {
@@ -81,7 +93,6 @@ module.exports = createClass({
     this.getWorkerForms().then(forms => {
       forms.registrations.forEach(form => {
         workers.service.push({
-          type: "serviceworker",
           icon: WorkerIcon,
           name: form.url,
           url: form.url,
@@ -92,7 +103,6 @@ module.exports = createClass({
 
       forms.workers.forEach(form => {
         let worker = {
-          type: "worker",
           icon: WorkerIcon,
           name: form.url,
           url: form.url,
@@ -113,7 +123,6 @@ module.exports = createClass({
             }
             break;
           case Ci.nsIWorkerDebugger.TYPE_SHARED:
-            worker.type = "sharedworker";
             workers.shared.push(worker);
             break;
           default:

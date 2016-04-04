@@ -1143,8 +1143,7 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
   // the event being dispatched.
   if (!sIsBeforeUnloadDisabled && *aShouldPrompt && dialogsAreEnabled && mDocument &&
       (!sBeforeUnloadRequiresInteraction || mDocument->UserHasInteracted()) &&
-      (event->WidgetEventPtr()->mFlags.mDefaultPrevented ||
-       !text.IsEmpty())) {
+      (event->WidgetEventPtr()->DefaultPrevented() || !text.IsEmpty())) {
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShell);
@@ -2463,17 +2462,19 @@ nsDocumentViewer::FindContainerView()
       if (!containerElement) {
         return nullptr;
       }
+
       nsCOMPtr<nsIPresShell> parentPresShell;
-      nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
-      docShell->GetParent(getter_AddRefs(parentDocShellItem));
-      if (parentDocShellItem) {
-        nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
-        parentPresShell = parentDocShell->GetPresShell();
+      nsCOMPtr<nsIDocument> parentDoc = containerElement->GetCurrentDoc();
+      if (parentDoc) {
+        parentPresShell = parentDoc->GetShell();
       }
+
       if (!parentPresShell) {
-        nsCOMPtr<nsIDocument> parentDoc = containerElement->GetCurrentDoc();
-        if (parentDoc) {
-          parentPresShell = parentDoc->GetShell();
+        nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
+        docShell->GetParent(getter_AddRefs(parentDocShellItem));
+        if (parentDocShellItem) {
+          nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
+          parentPresShell = parentDocShell->GetPresShell();
         }
       }
       if (!parentPresShell) {

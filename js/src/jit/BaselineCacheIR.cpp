@@ -1,0 +1,1159 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "jit/BaselineCacheIR.h"
+
+#include "jit/CacheIR.h"
+#include "jit/Linker.h"
+#include "jit/SharedICHelpers.h"
+
+#include "jit/MacroAssembler-inl.h"
+
+using namespace js;
+using namespace js::jit;
+
+// OperandLocation represents the location of an OperandId. The operand is
+// either in a register or on the stack, and is either boxed or unboxed.
+class OperandLocation
+{
+  public:
+    enum Kind {
+        Uninitialized = 0,
+        PayloadReg,
+        ValueReg,
+        PayloadStack,
+        ValueStack,
+    };
+
+  private:
+    Kind kind_;
+
+    union Data {
+        struct {
+            Register reg;
+            JSValueType type;
+        } payloadReg;
+        ValueOperand valueReg;
+        struct {
+            uint32_t stackPushed;
+            JSValueType type;
+        } payloadStack;
+        uint32_t valueStackPushed;
+
+        Data() : valueStackPushed(0) {}
+    };
+    Data data_;
+
+  public:
+    OperandLocation() : kind_(Uninitialized) {}
+
+    Kind kind() const { return kind_; }
+
+    void setUninitialized() {
+        kind_ = Uninitialized;
+    }
+
+    ValueOperand valueReg() const {
+        MOZ_ASSERT(kind_ == ValueReg);
+        return data_.valueReg;
+    }
+    Register payloadReg() const {
+        MOZ_ASSERT(kind_ == PayloadReg);
+        return data_.payloadReg.reg;
+    }
+    uint32_t payloadStack() const {
+        MOZ_ASSERT(kind_ == PayloadStack);
+        return data_.payloadStack.stackPushed;
+    }
+    uint32_t valueStack() const {
+        MOZ_ASSERT(kind_ == ValueStack);
+        return data_.valueStackPushed;
+    }
+    JSValueType payloadType() const {
+        if (kind_ == PayloadReg)
+            return data_.payloadReg.type;
+        MOZ_ASSERT(kind_ == PayloadStack);
+        return data_.payloadStack.type;
+    }
+    void setPayloadReg(Register reg, JSValueType type) {
+        kind_ = PayloadReg;
+        data_.payloadReg.reg = reg;
+        data_.payloadReg.type = type;
+    }
+    void setValueReg(ValueOperand reg) {
+        kind_ = ValueReg;
+        data_.valueReg = reg;
+    }
+    void setPayloadStack(uint32_t stackPushed, JSValueType type) {
+        kind_ = PayloadStack;
+        data_.payloadStack.stackPushed = stackPushed;
+        data_.payloadStack.type = type;
+    }
+    void setValueStack(uint32_t stackPushed) {
+        kind_ = ValueStack;
+        data_.valueStackPushed = stackPushed;
+    }
+
+    bool aliasesReg(Register reg) {
+        if (kind_ == PayloadReg)
+            return payloadReg() == reg;
+        if (kind_ == ValueReg)
+            return valueReg().aliases(reg);
+        return false;
+    }
+    bool aliasesReg(ValueOperand reg) {
+#if defined(JS_NUNBOX32)
+        return aliasesReg(reg.typeReg()) || aliasesReg(reg.payloadReg());
+#else
+        return aliasesReg(reg.valueReg());
+#endif
+    }
+
+    bool operator==(const OperandLocation& other) const {
+        if (kind_ != other.kind_)
+            return false;
+        switch (kind()) {
+          case Uninitialized:
+            return true;
+          case PayloadReg:
+            return payloadReg() == other.payloadReg() && payloadType() == other.payloadType();
+          case ValueReg:
+            return valueReg() == other.valueReg();
+          case PayloadStack:
+            return payloadStack() == other.payloadStack() && payloadType() == other.payloadType();
+          case ValueStack:
+            return valueStack() == other.valueStack();
+        }
+        MOZ_CRASH("Invalid OperandLocation kind");
+    }
+    bool operator!=(const OperandLocation& other) const { return !operator==(other); }
+};
+
+// Class to track and allocate registers while emitting IC code.
+class MOZ_RAII CacheRegisterAllocator
+{
+    // The original location of the inputs to the cache.
+    Vector<OperandLocation, 4, SystemAllocPolicy> origInputLocations_;
+
+    // The current location of each operand.
+    Vector<OperandLocation, 8, SystemAllocPolicy> operandLocations_;
+
+    // The registers allocated while emitting the current CacheIR op.
+    // This prevents us from allocating a register and then immediately
+    // clobbering it for something else, while we're still holding on to it.
+    LiveGeneralRegisterSet currentOpRegs_;
+
+    // Registers that are currently unused and available.
+    AllocatableGeneralRegisterSet availableRegs_;
+
+    // The number of bytes pushed on the native stack.
+    uint32_t stackPushed_;
+
+    // The index of the CacheIR instruction we're currently emitting.
+    uint32_t currentInstruction_;
+
+    const CacheIRWriter& writer_;
+
+    CacheRegisterAllocator(const CacheRegisterAllocator&) = delete;
+    CacheRegisterAllocator& operator=(const CacheRegisterAllocator&) = delete;
+
+  public:
+    friend class AutoScratchRegister;
+
+    explicit CacheRegisterAllocator(const CacheIRWriter& writer)
+      : stackPushed_(0),
+        currentInstruction_(0),
+        writer_(writer)
+    {}
+
+    MOZ_WARN_UNUSED_RESULT bool init(const AllocatableGeneralRegisterSet& available) {
+        availableRegs_ = available;
+        if (!origInputLocations_.resize(writer_.numInputOperands()))
+            return false;
+        if (!operandLocations_.resize(writer_.numOperandIds()))
+            return false;
+        return true;
+    }
+
+    OperandLocation operandLocation(size_t i) const {
+        return operandLocations_[i];
+    }
+    OperandLocation origInputLocation(size_t i) const {
+        return origInputLocations_[i];
+    }
+    void initInputLocation(size_t i, ValueOperand reg) {
+        origInputLocations_[i].setValueReg(reg);
+        operandLocations_[i] = origInputLocations_[i];
+    }
+
+    void nextOp() {
+        currentOpRegs_.clear();
+        currentInstruction_++;
+    }
+
+    uint32_t stackPushed() const {
+        return stackPushed_;
+    }
+
+    // Allocates a new register.
+    Register allocateRegister(MacroAssembler& masm);
+    ValueOperand allocateValueRegister(MacroAssembler& masm);
+
+    // Returns the register for the given operand. If the operand is currently
+    // not in a register, it will load it into one.
+    ValueOperand useRegister(MacroAssembler& masm, ValOperandId val);
+    Register useRegister(MacroAssembler& masm, ObjOperandId obj);
+
+    // Allocates an output register for the given operand.
+    Register defineRegister(MacroAssembler& masm, ObjOperandId obj);
+};
+
+// RAII class to put a scratch register back in the allocator's availableRegs
+// set when we're done with it.
+class MOZ_RAII AutoScratchRegister
+{
+    CacheRegisterAllocator& alloc_;
+    Register reg_;
+
+  public:
+    AutoScratchRegister(CacheRegisterAllocator& alloc, MacroAssembler& masm)
+      : alloc_(alloc)
+    {
+        reg_ = alloc.allocateRegister(masm);
+        MOZ_ASSERT(alloc_.currentOpRegs_.has(reg_));
+    }
+    ~AutoScratchRegister() {
+        MOZ_ASSERT(alloc_.currentOpRegs_.has(reg_));
+        alloc_.availableRegs_.add(reg_);
+    }
+    operator Register() const { return reg_; }
+};
+
+// The FailurePath class stores everything we need to generate a failure path
+// at the end of the IC code. The failure path restores the input registers, if
+// needed, and jumps to the next stub.
+class FailurePath
+{
+    Vector<OperandLocation, 4, SystemAllocPolicy> inputs_;
+    NonAssertingLabel label_;
+    uint32_t stackPushed_;
+
+  public:
+    FailurePath() = default;
+
+    FailurePath(FailurePath&& other)
+      : inputs_(Move(other.inputs_)),
+        label_(other.label_),
+        stackPushed_(other.stackPushed_)
+    {}
+
+    Label* label() { return &label_; }
+
+    void setStackPushed(uint32_t i) { stackPushed_ = i; }
+    uint32_t stackPushed() const { return stackPushed_; }
+
+    bool appendInput(OperandLocation loc) {
+        return inputs_.append(loc);
+    }
+    OperandLocation input(size_t i) const {
+        return inputs_[i];
+    }
+
+    // If canShareFailurePath(other) returns true, the same machine code will
+    // be emitted for two failure paths, so we can share them.
+    bool canShareFailurePath(const FailurePath& other) const {
+        if (stackPushed_ != other.stackPushed_)
+            return false;
+
+        MOZ_ASSERT(inputs_.length() == other.inputs_.length());
+
+        for (size_t i = 0; i < inputs_.length(); i++) {
+            if (inputs_[i] != other.inputs_[i])
+                return false;
+        }
+        return true;
+    }
+};
+
+// Base class for BaselineCacheIRCompiler and IonCacheIRCompiler.
+class MOZ_RAII CacheIRCompiler
+{
+  protected:
+    JSContext* cx_;
+    CacheIRReader reader;
+    const CacheIRWriter& writer_;
+    MacroAssembler masm;
+
+    CacheRegisterAllocator allocator;
+    Vector<FailurePath, 4, SystemAllocPolicy> failurePaths;
+
+    CacheIRCompiler(JSContext* cx, const CacheIRWriter& writer)
+      : cx_(cx),
+        reader(writer),
+        writer_(writer),
+        allocator(writer_)
+    {}
+
+    void emitFailurePath(size_t i);
+};
+
+void
+CacheIRCompiler::emitFailurePath(size_t i)
+{
+    FailurePath& failure = failurePaths[i];
+
+    masm.bind(failure.label());
+
+    uint32_t stackPushed = failure.stackPushed();
+    size_t numInputOperands = writer_.numInputOperands();
+
+    for (size_t j = 0; j < numInputOperands; j++) {
+        OperandLocation orig = allocator.origInputLocation(j);
+        OperandLocation cur = failure.input(j);
+
+        MOZ_ASSERT(orig.kind() == OperandLocation::ValueReg);
+
+        // We have a cycle if a destination register will be used later
+        // as source register. If that happens, just push the current value
+        // on the stack and later get it from there.
+        for (size_t k = j + 1; k < numInputOperands; k++) {
+            OperandLocation laterSource = failure.input(k);
+            switch (laterSource.kind()) {
+              case OperandLocation::ValueReg:
+                if (orig.aliasesReg(laterSource.valueReg())) {
+                    stackPushed += sizeof(js::Value);
+                    masm.pushValue(laterSource.valueReg());
+                    laterSource.setValueStack(stackPushed);
+                }
+                break;
+              case OperandLocation::PayloadReg:
+                if (orig.aliasesReg(laterSource.payloadReg())) {
+                    stackPushed += sizeof(uintptr_t);
+                    masm.push(laterSource.payloadReg());
+                    laterSource.setPayloadStack(stackPushed, laterSource.payloadType());
+                }
+                break;
+              case OperandLocation::PayloadStack:
+              case OperandLocation::ValueStack:
+              case OperandLocation::Uninitialized:
+                break;
+            }
+        }
+
+        switch (cur.kind()) {
+          case OperandLocation::ValueReg:
+            masm.moveValue(cur.valueReg(), orig.valueReg());
+            break;
+          case OperandLocation::PayloadReg:
+            masm.tagValue(cur.payloadType(), cur.payloadReg(), orig.valueReg());
+            break;
+          case OperandLocation::PayloadStack: {
+            MOZ_ASSERT(stackPushed >= sizeof(uintptr_t));
+            Register scratch = orig.valueReg().scratchReg();
+            if (cur.payloadStack() == stackPushed) {
+                masm.pop(scratch);
+                stackPushed -= sizeof(uintptr_t);
+            } else {
+                MOZ_ASSERT(cur.payloadStack() < stackPushed);
+                masm.loadPtr(Address(masm.getStackPointer(), stackPushed - cur.payloadStack()),
+                             scratch);
+            }
+            masm.tagValue(cur.payloadType(), scratch, orig.valueReg());
+            break;
+          }
+          case OperandLocation::ValueStack:
+            MOZ_ASSERT(stackPushed >= sizeof(js::Value));
+            if (cur.valueStack() == stackPushed) {
+                masm.popValue(orig.valueReg());
+                stackPushed -= sizeof(js::Value);
+            } else {
+                MOZ_ASSERT(cur.valueStack() < stackPushed);
+                masm.loadValue(Address(masm.getStackPointer(), stackPushed - cur.valueStack()),
+                               orig.valueReg());
+            }
+            break;
+          default:
+            MOZ_CRASH();
+        }
+    }
+
+    if (stackPushed > 0)
+        masm.addToStackPtr(Imm32(stackPushed));
+}
+
+// BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
+class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
+{
+    uint32_t stubDataOffset_;
+
+  public:
+    BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, uint32_t stubDataOffset)
+      : CacheIRCompiler(cx, writer),
+        stubDataOffset_(stubDataOffset)
+    {}
+
+    MOZ_WARN_UNUSED_RESULT bool init(CacheKind kind);
+
+    JitCode* compile();
+
+  private:
+#define DEFINE_OP(op) MOZ_WARN_UNUSED_RESULT bool emit##op();
+    CACHE_IR_OPS(DEFINE_OP)
+#undef DEFINE_OP
+
+    Address stubAddress(uint32_t offset) const {
+        return Address(ICStubReg, stubDataOffset_ + offset * sizeof(uintptr_t));
+    }
+
+    bool addFailurePath(FailurePath** failure) {
+        FailurePath newFailure;
+        for (size_t i = 0; i < writer_.numInputOperands(); i++) {
+            if (!newFailure.appendInput(allocator.operandLocation(i)))
+                return false;
+        }
+        newFailure.setStackPushed(allocator.stackPushed());
+
+        // Reuse the previous failure path if the current one is the same, to
+        // avoid emitting duplicate code.
+        if (failurePaths.length() > 0 && failurePaths.back().canShareFailurePath(newFailure)) {
+            *failure = &failurePaths.back();
+            return true;
+        }
+
+        if (!failurePaths.append(Move(newFailure)))
+            return false;
+
+        *failure = &failurePaths.back();
+        return true;
+    }
+    void emitEnterTypeMonitorIC() {
+        if (allocator.stackPushed() > 0)
+            masm.addToStackPtr(Imm32(allocator.stackPushed()));
+        EmitEnterTypeMonitorIC(masm);
+    }
+    void emitReturnFromIC() {
+        if (allocator.stackPushed() > 0)
+            masm.addToStackPtr(Imm32(allocator.stackPushed()));
+        EmitReturnFromIC(masm);
+    }
+};
+
+JitCode*
+BaselineCacheIRCompiler::compile()
+{
+#ifndef JS_USE_LINK_REGISTER
+    // The first value contains the return addres,
+    // which we pull into ICTailCallReg for tail calls.
+    masm.adjustFrame(sizeof(intptr_t));
+#endif
+#ifdef JS_CODEGEN_ARM
+    masm.setSecondScratchReg(BaselineSecondScratchReg);
+#endif
+
+    do {
+        switch (reader.readOp()) {
+#define DEFINE_OP(op)                   \
+          case CacheOp::op:             \
+            if (!emit##op())            \
+                return nullptr;         \
+            break;
+    CACHE_IR_OPS(DEFINE_OP)
+#undef DEFINE_OP
+
+          default:
+            MOZ_CRASH("Invalid op");
+        }
+
+        allocator.nextOp();
+    } while (reader.more());
+
+    // Done emitting the main IC code. Now emit the failure paths.
+    for (size_t i = 0; i < failurePaths.length(); i++) {
+        emitFailurePath(i);
+        EmitStubGuardFailure(masm);
+    }
+
+    Linker linker(masm);
+    AutoFlushICache afc("getStubCode");
+    Rooted<JitCode*> newStubCode(cx_, linker.newCode<NoGC>(cx_, BASELINE_CODE));
+    if (!newStubCode) {
+        cx_->recoverFromOutOfMemory();
+        return nullptr;
+    }
+
+    // All barriers are emitted off-by-default, enable them if needed.
+    if (cx_->zone()->needsIncrementalBarrier())
+        newStubCode->togglePreBarriers(true, DontReprotect);
+
+    return newStubCode;
+}
+
+ValueOperand
+CacheRegisterAllocator::useRegister(MacroAssembler& masm, ValOperandId op)
+{
+    OperandLocation& loc = operandLocations_[op.id()];
+
+    switch (loc.kind()) {
+      case OperandLocation::ValueReg:
+        currentOpRegs_.add(loc.valueReg());
+        return loc.valueReg();
+
+      case OperandLocation::ValueStack: {
+        // The Value is on the stack. If it's on top of the stack, unbox and
+        // then pop it. If we need the registers later, we can always spill
+        // back. If it's not on the top of the stack, just unbox.
+        ValueOperand reg = allocateValueRegister(masm);
+        if (loc.valueStack() == stackPushed_) {
+            masm.popValue(reg);
+            MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
+            stackPushed_ -= sizeof(js::Value);
+        } else {
+            MOZ_ASSERT(loc.valueStack() < stackPushed_);
+            masm.loadValue(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()), reg);
+        }
+        loc.setValueReg(reg);
+        return reg;
+      }
+
+      // The operand should never be unboxed.
+      case OperandLocation::PayloadStack:
+      case OperandLocation::PayloadReg:
+      case OperandLocation::Uninitialized:
+        break;
+    }
+
+    MOZ_CRASH();
+}
+
+Register
+CacheRegisterAllocator::useRegister(MacroAssembler& masm, ObjOperandId op)
+{
+    OperandLocation& loc = operandLocations_[op.id()];
+    switch (loc.kind()) {
+      case OperandLocation::PayloadReg:
+        currentOpRegs_.add(loc.payloadReg());
+        return loc.payloadReg();
+
+      case OperandLocation::ValueReg: {
+        // It's possible the value is still boxed: as an optimization, we unbox
+        // the first time we use a value as object.
+        ValueOperand val = loc.valueReg();
+        availableRegs_.add(val);
+        Register reg = val.scratchReg();
+        availableRegs_.take(reg);
+        masm.unboxObject(val, reg);
+        loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+        currentOpRegs_.add(reg);
+        return reg;
+      }
+
+      case OperandLocation::PayloadStack: {
+        // The payload is on the stack. If it's on top of the stack we can just
+        // pop it, else we emit a load.
+        Register reg = allocateRegister(masm);
+        if (loc.payloadStack() == stackPushed_) {
+            masm.pop(reg);
+            MOZ_ASSERT(stackPushed_ >= sizeof(uintptr_t));
+            stackPushed_ -= sizeof(uintptr_t);
+        } else {
+            MOZ_ASSERT(loc.payloadStack() < stackPushed_);
+            masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - loc.payloadStack()), reg);
+        }
+        loc.setPayloadReg(reg, loc.payloadType());
+        return reg;
+      }
+
+      case OperandLocation::ValueStack: {
+        // The value is on the stack, but boxed. If it's on top of the stack we
+        // unbox it and then remove it from the stack, else we just unbox.
+        Register reg = allocateRegister(masm);
+        if (loc.valueStack() == stackPushed_) {
+            masm.unboxObject(Address(masm.getStackPointer(), 0), reg);
+            masm.addToStackPtr(Imm32(sizeof(js::Value)));
+            MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
+            stackPushed_ -= sizeof(js::Value);
+        } else {
+            MOZ_ASSERT(loc.valueStack() < stackPushed_);
+            masm.unboxObject(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()),
+                             reg);
+        }
+        loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+        return reg;
+      }
+
+      case OperandLocation::Uninitialized:
+        break;
+    }
+
+    MOZ_CRASH();
+}
+
+Register
+CacheRegisterAllocator::defineRegister(MacroAssembler& masm, ObjOperandId op)
+{
+    OperandLocation& loc = operandLocations_[op.id()];
+    MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
+
+    Register reg = allocateRegister(masm);
+    loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+    return reg;
+}
+
+Register
+CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
+{
+    if (availableRegs_.empty()) {
+        // No registers available. See if any operands are dead so we can reuse
+        // their registers. Note that we skip the input operands, as those are
+        // also used by failure paths, and we currently don't track those uses.
+        for (size_t i = writer_.numInputOperands(); i < operandLocations_.length(); i++) {
+            if (!writer_.operandIsDead(i, currentInstruction_))
+                continue;
+
+            OperandLocation& loc = operandLocations_[i];
+            switch (loc.kind()) {
+              case OperandLocation::PayloadReg:
+                availableRegs_.add(loc.payloadReg());
+                break;
+              case OperandLocation::ValueReg:
+                availableRegs_.add(loc.valueReg());
+                break;
+              case OperandLocation::Uninitialized:
+              case OperandLocation::PayloadStack:
+              case OperandLocation::ValueStack:
+                break;
+            }
+            loc.setUninitialized();
+        }
+    }
+
+    if (availableRegs_.empty()) {
+        // Still no registers available, try to spill unused operands to
+        // the stack.
+        for (size_t i = 0; i < operandLocations_.length(); i++) {
+            OperandLocation& loc = operandLocations_[i];
+            if (loc.kind() == OperandLocation::PayloadReg) {
+                Register reg = loc.payloadReg();
+                if (currentOpRegs_.has(reg))
+                    continue;
+
+                masm.push(reg);
+                stackPushed_ += sizeof(uintptr_t);
+                loc.setPayloadStack(stackPushed_, loc.payloadType());
+                availableRegs_.add(reg);
+                break; // We got a register, so break out of the loop.
+            }
+            if (loc.kind() == OperandLocation::ValueReg) {
+                ValueOperand reg = loc.valueReg();
+                if (currentOpRegs_.aliases(reg))
+                    continue;
+
+                masm.pushValue(reg);
+                stackPushed_ += sizeof(js::Value);
+                loc.setValueStack(stackPushed_);
+                availableRegs_.add(reg);
+                break; // Break out of the loop.
+            }
+        }
+    }
+
+    // At this point, there must be a free register. (Ion ICs don't have as
+    // many registers available, so once we support Ion code generation, we may
+    // have to spill some unrelated registers.)
+    MOZ_RELEASE_ASSERT(!availableRegs_.empty());
+
+    Register reg = availableRegs_.takeAny();
+    currentOpRegs_.add(reg);
+    return reg;
+}
+
+ValueOperand
+CacheRegisterAllocator::allocateValueRegister(MacroAssembler& masm)
+{
+#ifdef JS_NUNBOX32
+    Register reg1 = allocateRegister(masm);
+    Register reg2 = allocateRegister(masm);
+    return ValueOperand(reg1, reg2);
+#else
+    Register reg = allocateRegister(masm);
+    return ValueOperand(reg);
+#endif
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardIsObject()
+{
+    ValueOperand input = allocator.useRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestObject(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardShape()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address addr(stubAddress(reader.stubOffset()));
+    masm.loadPtr(addr, scratch);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, scratch, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardGroup()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address addr(stubAddress(reader.stubOffset()));
+    masm.loadPtr(addr, scratch);
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, scratch, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardProto()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address addr(stubAddress(reader.stubOffset()));
+    masm.loadObjProto(obj, scratch);
+    masm.branchPtr(Assembler::NotEqual, addr, scratch, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardClass()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    const Class* clasp = nullptr;
+    switch (reader.guardClassKind()) {
+      case GuardClassKind::Array:
+        clasp = &ArrayObject::class_;
+        break;
+      case GuardClassKind::UnboxedArray:
+        clasp = &UnboxedArrayObject::class_;
+        break;
+      case GuardClassKind::MappedArguments:
+        clasp = &MappedArgumentsObject::class_;
+        break;
+      case GuardClassKind::UnmappedArguments:
+        clasp = &UnmappedArgumentsObject::class_;
+        break;
+    }
+
+    MOZ_ASSERT(clasp);
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardNoUnboxedExpando()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address expandoAddr(obj, UnboxedPlainObject::offsetOfExpando());
+    masm.branchPtr(Assembler::NotEqual, expandoAddr, ImmWord(0), failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardAndLoadUnboxedExpando()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register output = allocator.defineRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address expandoAddr(obj, UnboxedPlainObject::offsetOfExpando());
+    masm.loadPtr(expandoAddr, output);
+    masm.branchTestPtr(Assembler::Zero, output, output, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadFixedSlotResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    masm.load32(stubAddress(reader.stubOffset()), scratch);
+    masm.loadValue(BaseIndex(obj, scratch, TimesOne), R0);
+    emitEnterTypeMonitorIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    // We're about to return, so it's safe to clobber obj now.
+    masm.load32(stubAddress(reader.stubOffset()), scratch);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), obj);
+    masm.loadValue(BaseIndex(obj, scratch, TimesOne), R0);
+    emitEnterTypeMonitorIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadUndefinedResult()
+{
+    masm.moveValue(UndefinedValue(), R0);
+
+    // Normally for this op, the result would have to be monitored by TI.
+    // However, since this stub ALWAYS returns UndefinedValue(), and we can be sure
+    // that undefined is already registered with the type-set, this can be avoided.
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadInt32ArrayLengthResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+    masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
+
+    // Guard length fits in an int32.
+    masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
+
+    // The int32 type was monitored when attaching the stub, so we can
+    // just return.
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadUnboxedArrayLengthResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    masm.load32(Address(obj, UnboxedArrayObject::offsetOfLength()), R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
+
+    // The int32 type was monitored when attaching the stub, so we can
+    // just return.
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadArgumentsObjectLengthResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Get initial length value.
+    masm.unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), scratch);
+
+    // Test if length has been overridden.
+    masm.branchTest32(Assembler::NonZero,
+                      scratch,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      failure->label());
+
+    // Shift out arguments length and return it. No need to type monitor
+    // because this stub always returns int32.
+    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
+    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadObject()
+{
+    Register reg = allocator.defineRegister(masm, reader.objOperandId());
+    masm.loadPtr(stubAddress(reader.stubOffset()), reg);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadProto()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register reg = allocator.defineRegister(masm, reader.objOperandId());
+    masm.loadObjProto(obj, reg);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadUnboxedExpando()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register output = allocator.defineRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address expandoAddr(obj, UnboxedPlainObject::offsetOfExpando());
+    masm.loadPtr(expandoAddr, output);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::init(CacheKind kind)
+{
+    size_t numInputs = writer_.numInputOperands();
+    if (!allocator.init(ICStubCompiler::availableGeneralRegs(numInputs)))
+        return false;
+
+    MOZ_ASSERT(numInputs == 1);
+    allocator.initInputLocation(0, R0);
+
+    return true;
+}
+
+template <typename T>
+static HeapPtr<T>*
+AsHeapPtr(uintptr_t* ptr)
+{
+    return reinterpret_cast<HeapPtr<T>*>(ptr);
+}
+
+template<class T>
+HeapPtr<T>&
+CacheIRStubInfo::getStubField(ICStub* stub, uint32_t field) const
+{
+    uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
+    MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+
+    return *AsHeapPtr<T>((uintptr_t*)stubData + field);
+}
+
+template HeapPtr<Shape*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
+template HeapPtr<ObjectGroup*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
+template HeapPtr<JSObject*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
+
+template <typename T>
+static void
+InitHeapPtr(uintptr_t* ptr, uintptr_t val)
+{
+    AsHeapPtr<T*>(ptr)->init((T*)val);
+}
+
+void
+CacheIRWriter::copyStubData(uint8_t* dest) const
+{
+    uintptr_t* destWords = reinterpret_cast<uintptr_t*>(dest);
+
+    for (size_t i = 0; i < stubFields_.length(); i++) {
+        switch (stubFields_[i].gcType) {
+          case StubField::GCType::NoGCThing:
+            destWords[i] = stubFields_[i].word;
+            continue;
+          case StubField::GCType::Shape:
+            InitHeapPtr<Shape>(destWords + i, stubFields_[i].word);
+            continue;
+          case StubField::GCType::JSObject:
+            InitHeapPtr<JSObject>(destWords + i, stubFields_[i].word);
+            continue;
+          case StubField::GCType::ObjectGroup:
+            InitHeapPtr<ObjectGroup>(destWords + i, stubFields_[i].word);
+            continue;
+          case StubField::GCType::Limit:
+            break;
+        }
+        MOZ_CRASH();
+    }
+}
+
+HashNumber
+CacheIRStubKey::hash(const CacheIRStubKey::Lookup& l)
+{
+    HashNumber hash = mozilla::HashBytes(l.code, l.length);
+    return mozilla::AddToHash(hash, uint32_t(l.kind));
+}
+
+bool
+CacheIRStubKey::match(const CacheIRStubKey& entry, const CacheIRStubKey::Lookup& l)
+{
+    if (entry.stubInfo->kind() != l.kind)
+        return false;
+
+    if (entry.stubInfo->codeLength() != l.length)
+        return false;
+
+    if (!mozilla::PodEqual(entry.stubInfo->code(), l.code, l.length))
+        return false;
+
+    return true;
+}
+
+CacheIRReader::CacheIRReader(const CacheIRStubInfo* stubInfo)
+  : CacheIRReader(stubInfo->code(), stubInfo->code() + stubInfo->codeLength())
+{}
+
+CacheIRStubInfo*
+CacheIRStubInfo::New(CacheKind kind, uint32_t stubDataOffset, const CacheIRWriter& writer)
+{
+    size_t numStubFields = writer.numStubFields();
+    size_t bytesNeeded = sizeof(CacheIRStubInfo) +
+                         writer.codeLength() +
+                         (numStubFields + 1); // +1 for the GCType::Limit terminator.
+    uint8_t* p = js_pod_malloc<uint8_t>(bytesNeeded);
+    if (!p)
+        return nullptr;
+
+    // Copy the CacheIR code.
+    uint8_t* codeStart = p + sizeof(CacheIRStubInfo);
+    mozilla::PodCopy(codeStart, writer.codeStart(), writer.codeLength());
+
+    static_assert(uint32_t(StubField::GCType::Limit) <= UINT8_MAX,
+                  "All StubField::GCTypes must fit in uint8_t");
+
+    // Copy the GC types of the stub fields.
+    uint8_t* gcTypes = codeStart + writer.codeLength();
+    for (size_t i = 0; i < numStubFields; i++)
+        gcTypes[i] = uint8_t(writer.stubFieldGCType(i));
+    gcTypes[numStubFields] = uint8_t(StubField::GCType::Limit);
+
+    return new(p) CacheIRStubInfo(kind, stubDataOffset, codeStart, writer.codeLength(), gcTypes);
+}
+
+static const size_t MaxOptimizedCacheIRStubs = 16;
+
+ICStub*
+jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
+                               ICFallbackStub* stub)
+{
+    // We shouldn't GC or report OOM (or any other exception) here.
+    AutoAssertNoPendingException aanpe(cx);
+    JS::AutoCheckCannotGC nogc;
+
+    if (writer.failed())
+        return nullptr;
+
+    // Just a sanity check: the caller should ensure we don't attach an
+    // unlimited number of stubs.
+    MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
+
+    MOZ_ASSERT(kind == CacheKind::GetProp);
+    uint32_t stubDataOffset = sizeof(ICCacheIR_Monitored);
+
+    JitCompartment* jitCompartment = cx->compartment()->jitCompartment();
+
+    // Check if we already have JitCode for this stub.
+    CacheIRStubInfo* stubInfo;
+    CacheIRStubKey::Lookup lookup(kind, writer.codeStart(), writer.codeLength());
+    JitCode* code = jitCompartment->getCacheIRStubCode(lookup, &stubInfo);
+    if (!code) {
+        // We have to generate stub code.
+        JitContext jctx(cx, nullptr);
+        BaselineCacheIRCompiler comp(cx, writer, stubDataOffset);
+        if (!comp.init(kind))
+            return nullptr;
+
+        code = comp.compile();
+        if (!code)
+            return nullptr;
+
+        // Allocate the shared CacheIRStubInfo. Note that the putCacheIRStubCode
+        // call below will transfer ownership to the stub code HashMap, so we
+        // don't have to worry about freeing it below.
+        MOZ_ASSERT(!stubInfo);
+        stubInfo = CacheIRStubInfo::New(kind, stubDataOffset, writer);
+        if (!stubInfo)
+            return nullptr;
+
+        CacheIRStubKey key(stubInfo);
+        if (!jitCompartment->putCacheIRStubCode(lookup, key, code))
+            return nullptr;
+    }
+
+    // We got our shared stub code and stub info. Time to allocate and attach a
+    // new stub.
+
+    MOZ_ASSERT(code);
+    MOZ_ASSERT(stubInfo);
+    MOZ_ASSERT(stub->isMonitoredFallback());
+
+    size_t bytesNeeded = stubInfo->stubDataOffset() + writer.stubDataSize();
+
+    // For now, no stubs can make calls so they are all allocated in the
+    // optimized stub space.
+    void* newStub = cx->zone()->jitZone()->optimizedStubSpace()->alloc(bytesNeeded);
+    if (!newStub)
+        return nullptr;
+
+    ICStub* monitorStub = stub->toMonitoredFallbackStub()->fallbackMonitorStub()->firstMonitorStub();
+    new(newStub) ICCacheIR_Monitored(code, monitorStub, stubInfo);
+
+    writer.copyStubData((uint8_t*)newStub + stubInfo->stubDataOffset());
+    stub->addNewStub((ICStub*)newStub);
+    return (ICStub*)newStub;
+}
+
+void
+jit::TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo)
+{
+    uint32_t field = 0;
+    while (true) {
+        switch (stubInfo->gcType(field)) {
+          case StubField::GCType::NoGCThing:
+            break;
+          case StubField::GCType::Shape:
+            TraceNullableEdge(trc, &stubInfo->getStubField<Shape*>(stub, field),
+                              "baseline-cacheir-shape");
+            break;
+          case StubField::GCType::ObjectGroup:
+            TraceNullableEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, field),
+                              "baseline-cacheir-group");
+            break;
+          case StubField::GCType::JSObject:
+            TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, field),
+                              "baseline-cacheir-object");
+            break;
+          case StubField::GCType::Limit:
+            return; // Done.
+          default:
+            MOZ_CRASH();
+        }
+        field++;
+    }
+}

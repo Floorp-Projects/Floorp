@@ -4,29 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-test_certificates = (
-    'bad-scheme.pem',
-    'ca.pem',
-    'empty-port.pem',
-    'empty-scheme-url.pem',
-    'ftp-url.pem',
-    'hTTp-url.pem',
-    'https-url.pem',
-    'int.pem',
-    'negative-port.pem',
-    'no-host-url.pem',
-    'no-path-url.pem',
-    'no-scheme-host-port.pem',
-    'no-scheme-url.pem',
-    'unknown-scheme.pem',
-)
-
-for test_certificate in test_certificates:
-    GeneratedTestCertificate(test_certificate)
-
-test_keys = (
-    'int.key',
-)
-
-for test_key in test_keys:
-    GeneratedTestKey(test_key)
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'bad-scheme.pem',
+#    'ca.pem',
+#    'empty-scheme-url.pem',
+#    'ftp-url.pem',
+#    'hTTp-url.pem',
+#    'https-url.pem',
+#    'int.pem',
+#    'negative-port.pem',
+#    'no-host-url.pem',
+#    'no-path-url.pem',
+#    'no-scheme-host-port.pem',
+#    'no-scheme-url.pem',
+#    'unknown-scheme.pem',
+#    'user-pass.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)
+#
+#test_keys = (
+#    'int.key',
+#)
+#
+#for test_key in test_keys:
+#    GeneratedTestKey(test_key)

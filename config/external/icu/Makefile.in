@@ -4,7 +4,7 @@
 
 # Ensure that this happens before including rules.mk
 ifdef USE_ICU
-  ifndef MOZ_NATIVE_ICU
+  ifndef MOZ_SYSTEM_ICU
   # Library names: On Windows, ICU uses modified library names for static
   # and debug libraries.
     ifdef MOZ_SHARED_ICU
@@ -29,13 +29,13 @@ ifdef USE_ICU
                              cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(MOZ_ICU_DBG_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname)$(MOZ_ICU_DBG_SUFFIX).lib;)
       endif
     endif # MOZ_SHARED_ICU
-  endif # !MOZ_NATIVE_ICU
+  endif # !MOZ_SYSTEM_ICU
 endif # USE_ICU
 
 include $(topsrcdir)/config/rules.mk
 
 ifdef USE_ICU
-ifndef MOZ_NATIVE_ICU
+ifndef MOZ_SYSTEM_ICU
 target:: buildicu
 $(STATIC_LIBS): buildicu
 

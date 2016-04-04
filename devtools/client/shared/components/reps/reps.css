@@ -16,22 +16,9 @@
 }
 
 .objectBox-object {
-  font-family: Lucida Grande, sans-serif;
   font-weight: bold;
   color: DarkGreen;
   white-space: pre-wrap;
-}
-
-.objectBox-string,
-.objectBox-text,
-.objectBox-number,
-.objectLink-element,
-.objectLink-textNode,
-.objectLink-function,
-.objectBox-stackTrace,
-.objectLink-profile,
-.objectBox-table {
-  font-family: monospace;
 }
 
 .objectBox-string,
@@ -59,6 +46,11 @@
   color: DarkGreen;
 }
 
+.objectLink-Location {
+  font-style: italic;
+  color: #555555;
+}
+
 .objectBox-null,
 .objectBox-undefined,
 .objectBox-hint,
@@ -79,7 +71,6 @@
   right: 4px;
   top: 2px;
   padding-left: 8px;
-  font-family: Lucida Grande, sans-serif;
   font-weight: bold;
   color: #0000FF;
 }
@@ -96,7 +87,6 @@
 .objectLink-regexp,
 .objectLink-object,
 .objectLink-Date {
-  font-family: Lucida Grande, sans-serif;
   font-weight: bold;
   color: DarkGreen;
   white-space: pre-wrap;
@@ -122,16 +112,6 @@
 
 .objectLeftBrace,
 .objectRightBrace,
-.objectEqual,
-.objectComma,
-.arrayLeftBracket,
-.arrayRightBracket,
-.arrayComma {
-  font-family: monospace;
-}
-
-.objectLeftBrace,
-.objectRightBrace,
 .arrayLeftBracket,
 .arrayRightBracket {
   cursor: pointer;
@@ -152,7 +132,6 @@
 /* Cycle reference*/
 
 .objectLink-Reference {
-  font-family: monospace;
   font-weight: bold;
   color: rgb(102, 102, 255);
 }
@@ -165,7 +144,6 @@
 /******************************************************************************/
 
 .caption {
-  font-family: Lucida Grande, Tahoma, sans-serif;
   font-weight: bold;
   color:  #444444;
 }
@@ -205,7 +183,6 @@
 
 .theme-dark .objectBox-object,
 .theme-light .objectBox-object {
-  font-family: Lucida Grande, sans-serif;
   font-weight: normal;
   color: var(--theme-highlight-blue);
   white-space: pre-wrap;
@@ -213,7 +190,6 @@
 
 .theme-dark .caption,
 .theme-light .caption {
-  font-family: Lucida Grande, Tahoma, sans-serif;
   font-weight: normal;
   color: var(--theme-highlight-blue);
 }

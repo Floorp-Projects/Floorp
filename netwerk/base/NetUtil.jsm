@@ -203,8 +203,9 @@ this.NetUtil = {
      *        the following properties:
      *        {
      *          uri:
-     *            The full URI spec string or nsIURI to create the channel for.
-     *            Note that this cannot be an nsIFile and you cannot specify a
+     *            The full URI spec string, nsIURI or nsIFile to create the
+     *            channel for.
+     *            Note that this cannot be an nsIFile if you have to specify a
      *            non-default charset or base URI.  Call NetUtil.newURI first if
      *            you need to construct an URI using those options.
      *          loadingNode:
@@ -274,11 +275,9 @@ this.NetUtil = {
      *        The base URI for the spec.  Only used if aWhatToLoad is a string,
      *        which is a deprecated API.  Must be undefined otherwise.  Use
      *        NetUtil.newURI if you need to use this option.
-     *
      * @return an nsIChannel object.
      */
-    newChannel: function NetUtil_newChannel(aWhatToLoad, aOriginCharset,
-                                            aBaseURI)
+    newChannel: function NetUtil_newChannel(aWhatToLoad, aOriginCharset, aBaseURI)
     {
         // Check for the deprecated API first.
         if (typeof aWhatToLoad == "string" ||
@@ -289,14 +288,27 @@ this.NetUtil = {
                       ? aWhatToLoad
                       : this.newURI(aWhatToLoad, aOriginCharset, aBaseURI);
 
-            return this.ioService.newChannelFromURI(uri);
+            // log deprecation warning for developers.
+            Services.console.logStringMessage(
+              "Warning: NetUtil.newChannel(uri) deprecated, please provide argument 'aWhatToLoad'");
+
+            // Provide default loadinfo arguments and call the new API.
+            let systemPrincipal =
+              Services.scriptSecurityManager.getSystemPrincipal();
+
+            return this.ioService.newChannelFromURI2(
+                     uri,
+                     null, // loadingNode
+                     systemPrincipal, // loadingPrincipal
+                     null, // triggeringPrincipal
+                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     Ci.nsIContentPolicy.TYPE_OTHER);
         }
 
         // We are using the updated API, that requires only the options object.
         if (typeof aWhatToLoad != "object" ||
-            aOriginCharset !== undefined ||
-            aBaseURI !== undefined) {
-
+             aOriginCharset !== undefined ||
+             aBaseURI !== undefined) {
             throw new Components.Exception(
                 "newChannel requires a single object argument",
                 Cr.NS_ERROR_INVALID_ARG,
@@ -320,7 +332,7 @@ this.NetUtil = {
             );
         }
 
-        if (typeof uri == "string") {
+        if (typeof uri == "string" || uri instanceof Ci.nsIFile) {
             uri = this.newURI(uri);
         }
 

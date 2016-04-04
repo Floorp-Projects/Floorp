@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SheetType.h"
 
@@ -261,9 +262,6 @@ class nsStyleSet final
   // Free all of the data associated with this style set.
   void Shutdown();
 
-  // Notification that a style context is being destroyed.
-  void NotifyStyleContextDestroyed(nsStyleContext* aStyleContext);
-
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent is the
   // same as the old parent.
@@ -358,6 +356,14 @@ class nsStyleSet final
     return mInReconstruct;
   }
 
+  void RootStyleContextAdded() {
+    ++mRootStyleContextCount;
+  }
+  void RootStyleContextRemoved() {
+    MOZ_ASSERT(mRootStyleContextCount > 0);
+    --mRootStyleContextCount;
+  }
+
   // Return whether the rule tree has cached data such that we need to
   // do dynamic change handling for changes that change the results of
   // media queries or require rebuilding all style data.
@@ -365,18 +371,25 @@ class nsStyleSet final
   // they have cached rule cascades; getting the rule cascades again in
   // order to do rule matching will get the correct rule cascade.
   bool HasCachedStyleData() const {
-    return (mRuleTree && mRuleTree->TreeHasCachedData()) || !mRoots.IsEmpty();
+    return (mRuleTree && mRuleTree->TreeHasCachedData()) || mRootStyleContextCount > 0;
   }
 
   // Notify the style set that a rulenode is no longer in use, or was
   // just created and is not in use yet.
-  void RuleNodeUnused() {
+  static const uint32_t kGCInterval = 300;
+  void RuleNodeUnused(nsRuleNode* aNode, bool aMayGC) {
     ++mUnusedRuleNodeCount;
+    mUnusedRuleNodeList.insertBack(aNode);
+    if (aMayGC && mUnusedRuleNodeCount >= kGCInterval && !mInGC && !mInReconstruct) {
+      GCRuleTrees();
+    }
   }
 
   // Notify the style set that a rulenode that wasn't in use now is
-  void RuleNodeInUse() {
+  void RuleNodeInUse(nsRuleNode* aNode) {
+    MOZ_ASSERT(mUnusedRuleNodeCount > 0);
     --mUnusedRuleNodeCount;
+    aNode->removeFrom(mUnusedRuleNodeList);
   }
 
   // Returns true if a restyle of the document is needed due to cloning
@@ -406,7 +419,11 @@ private:
   nsStyleSet(const nsStyleSet& aCopy) = delete;
   nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;
 
-  // Run mark-and-sweep GC on mRuleTree and mOldRuleTrees, based on mRoots.
+  // Free all the rules with reference-count zero. This continues iterating
+  // over the free list until it is empty, which allows immediate collection
+  // of nodes whose reference-count drops to zero during the destruction of
+  // a child node. This allows the collection of entire trees at once, since
+  // children hold their parents alive.
   void GCRuleTrees();
 
   nsresult DirtyRuleProcessors(mozilla::SheetType aType);
@@ -493,21 +510,36 @@ private:
 
   RefPtr<nsBindingManager> mBindingManager;
 
-  nsRuleNode* mRuleTree; // This is the root of our rule tree.  It is a
-                         // lexicographic tree of matched rules that style
-                         // contexts use to look up properties.
+  RefPtr<nsRuleNode> mRuleTree; // This is the root of our rule tree.  It is a
+                                // lexicographic tree of matched rules that style
+                                // contexts use to look up properties.
 
   uint16_t mBatching;
 
   unsigned mInShutdown : 1;
+  unsigned mInGC : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
   unsigned mInitFontFeatureValuesLookup : 1;
   unsigned mNeedsRestyleAfterEnsureUniqueInner : 1;
   unsigned mDirty : int(mozilla::SheetType::Count);  // one bit per sheet type
 
-  uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
-  nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
+  uint32_t mRootStyleContextCount;
+
+#ifdef DEBUG
+  // In debug builds, we stash a weak pointer here to the old root during
+  // reconstruction. During GC, we check for this pointer, and null it out
+  // when we encounter it. This allows us to assert that the old root (and
+  // thus all of its subtree) was GCed after reconstruction, which implies
+  // that there are no style contexts holding on to old rule nodes.
+  nsRuleNode* mOldRootNode;
+#endif
+
+  // Track our rule nodes with zero refcount. When this hits a threshold, we
+  // sweep and free. Keeping unused rule nodes around for a bit allows us to
+  // reuse them in many cases.
+  mozilla::LinkedList<nsRuleNode> mUnusedRuleNodeList;
+  uint32_t mUnusedRuleNodeCount;
 
   // Empty style rules to force things that restrict which properties
   // apply into different branches of the rule tree.
@@ -521,11 +553,6 @@ private:
   // <svg:text> elements to disable the effect of text zooming.
   RefPtr<nsDisableTextZoomStyleRule> mDisableTextZoomStyleRule;
 
-  // Old rule trees, which should only be non-empty between
-  // BeginReconstruct and EndReconstruct, but in case of bugs that cause
-  // style contexts to exist too long, may last longer.
-  nsTArray<nsRuleNode*> mOldRuleTrees;
-
   // whether font feature values lookup object needs initialization
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 };
@@ -534,20 +561,20 @@ private:
 inline
 void nsRuleNode::AddRef()
 {
-  if (mRefCnt++ == 0 && !IsRoot()) {
+  if (mRefCnt++ == 0) {
     MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
                "ServoStyleSets should not have rule nodes");
-    mPresContext->StyleSet()->AsGecko()->RuleNodeInUse();
+    mPresContext->StyleSet()->AsGecko()->RuleNodeInUse(this);
   }
 }
 
 inline
 void nsRuleNode::Release()
 {
-  if (--mRefCnt == 0 && !IsRoot()) {
+  if (--mRefCnt == 0) {
     MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
                "ServoStyleSets should not have rule nodes");
-    mPresContext->StyleSet()->AsGecko()->RuleNodeUnused();
+    mPresContext->StyleSet()->AsGecko()->RuleNodeUnused(this, /* aMayGC = */ true);
   }
 }
 #endif

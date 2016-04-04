@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'BRNameMatchingPolicy.h',
     'CertVerifier.h',
     'OCSPCache.h',
 ]
 
 UNIFIED_SOURCES += [
+    'BRNameMatchingPolicy.cpp',
     'CertVerifier.cpp',
     'NSSCertDBTrustDomain.cpp',
     'OCSPCache.cpp',
@@ -63,6 +65,12 @@ if CONFIG['_MSC_VER']:
       '-wd4548', # expression before comma has no effect; ...
       '-wd4668', # 'symbol' is not defined as a preprocessor macro...
       '-wd4987', # nonstandard extension used
+  ]
+
+  # MSVC 2015 triggers these
+  CXXFLAGS += [
+      '-wd4456', # declaration of 'rv' hides previous local declaration
+      '-wd4458', # declaration of 'input' hides class member
   ]
 
   # Gecko headers aren't warning-free enough for us to enable these warnings

@@ -911,6 +911,13 @@ class EDtrAddr
     uint32_t encode() const {
         return data;
     }
+#ifdef DEBUG
+    Register maybeOffsetRegister() const {
+        if (data & IsImmEDTR)
+            return InvalidReg;
+        return Register::FromCode(data & 0xf);
+    }
+#endif
 };
 
 class VFPOff
@@ -1135,6 +1142,18 @@ class Operand
         return VFPAddr(baseReg(), VFPOffImm(offset));
     }
 };
+
+inline Imm32
+Imm64::firstHalf() const
+{
+    return low();
+}
+
+inline Imm32
+Imm64::secondHalf() const
+{
+    return hi();
+}
 
 void
 PatchJump(CodeLocationJump& jump_, CodeLocationLabel label,

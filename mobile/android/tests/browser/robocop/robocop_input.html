@@ -5,47 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <p><input id="input" type="text"></p>
-    <p><input id="resetting-input" type="text"></p>
+    <p>Input: <input id="input" type="text"></p>
+    <p>Text area: <textarea id="text-area"></textarea></p>
+    <p>Content editable: <div id="content-editable" contentEditable="true"></div></p>
+    <p>Design mode: <iframe id="design-mode" src="data:text/html;charset=utf-8,<html><body></body></html>"></iframe></p>
+    <p>Resetting input: <input id="resetting-input" type="text"></p>
+    <p>Hiding input: <input id="hiding-input" type="text"></p>
     <script type="application/javascript;version=1.8" src="robocop_head.js"></script>
     <script type="application/javascript;version=1.8">
       let input = document.getElementById("input");
+      let textArea = document.getElementById("text-area");
+      let contentEditable = document.getElementById("content-editable");
+
+      let designMode = document.getElementById("design-mode");
+      designMode.contentDocument.designMode = "on";
+
+      // Spatial navigation interferes with design-mode key event tests.
+      SpecialPowers.setBoolPref("snav.enabled", false);
 
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
-      resetting_input.addEventListener('input', function () {
-          this.value = this.value;
+      resetting_input.addEventListener('input', function() {
+        this.value = this.value;
       });
+
+      // An input that hides on input.
+      let hiding_input = document.getElementById("hiding-input");
+      hiding_input.addEventListener('keydown', function(e) {
+        if (e.key === "!") { // '!' key event as sent by testInputConnection.java.
+          this.value = "";
+          this.style.display = "none";
+        }
+      });
+
+      let getEditor, setValue, setSelection;
 
       let test = {
         focus_input: function(val) {
-          input.value = val;
+          getEditor = function() {
+            return SpecialPowers.wrap(input).QueryInterface(
+                SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+          };
+          setValue = function(val) {
+            input.value = val;
+          };
+          setSelection = function(pos) {
+            input.setSelectionRange(pos, pos);
+          };
+          setValue(val);
           input.focus();
         },
 
+        focus_text_area: function(val) {
+          getEditor = function() {
+            return SpecialPowers.wrap(textArea).QueryInterface(
+                SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+          };
+          setValue = function(val) {
+            textArea.value = val;
+          };
+          setSelection = function(pos) {
+            textArea.setSelectionRange(pos, pos);
+          };
+          setValue(val);
+          textArea.focus();
+        },
+
+        focus_content_editable: function(val) {
+          getEditor = function() {
+            return SpecialPowers.wrap(window).QueryInterface(
+                SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
+                SpecialPowers.Ci.nsIWebNavigation).QueryInterface(
+                SpecialPowers.Ci.nsIDocShell).editor;
+          };
+          setValue = function(val) {
+            contentEditable.innerHTML = val;
+          };
+          setSelection = function(pos) {
+            window.getSelection().collapse(contentEditable.firstChild, pos);
+          };
+          setValue(val);
+          contentEditable.focus();
+        },
+
+        focus_design_mode: function(val) {
+          getEditor = function() {
+            return SpecialPowers.wrap(designMode.contentWindow).QueryInterface(
+                SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
+                SpecialPowers.Ci.nsIWebNavigation).QueryInterface(
+                SpecialPowers.Ci.nsIDocShell).editor;
+          };
+          setValue = function(val) {
+            designMode.contentDocument.body.innerHTML = val;
+          };
+          setSelection = function(pos) {
+            designMode.contentWindow.getSelection().collapse(
+                designMode.contentDocument.body.firstChild, pos);
+          };
+          setValue(val);
+          designMode.contentWindow.focus();
+          designMode.contentDocument.body.focus();
+        },
+
         test_reflush_changes: function() {
-          let inputEditable = SpecialPowers.wrap(input).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
-          let inputIme = inputEditable.editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
+          let inputIme = getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
           do_check_true(inputIme.composing);
 
           // Ending the composition then setting the input value triggers the bug.
           inputIme.forceCompositionEnd();
-          input.value = "good";
+          setValue("good"); // Value that testInputConnection.java expects.
+          setSelection(4);
         },
 
         test_set_selection: function() {
-          let inputEditable = SpecialPowers.wrap(input).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
-          let inputIme = inputEditable.editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
+          let inputIme = getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
           do_check_true(inputIme.composing);
 
           // Ending the composition then setting the selection triggers the bug.
           inputIme.forceCompositionEnd();
-          input.setSelectionRange(3, 3);
+          setSelection(3); // Offsets that testInputConnection.java expects.
         },
 
         focus_resetting_input: function(val) {
           resetting_input.value = val;
           resetting_input.focus();
+        },
+
+        focus_hiding_input: function(val) {
+          hiding_input.value = val;
+          hiding_input.style.display = "";
+          hiding_input.focus();
         },
 
         finish_test: function() {

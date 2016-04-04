@@ -90,7 +90,7 @@ StyleEditorPanel.prototype = {
       return;
     }
 
-    let errorMessage = _(data.key);
+    let errorMessage = getString(data.key);
     if (data.append) {
       errorMessage += " " + data.append;
     }

@@ -58,6 +58,9 @@ interface nsPIWindowWatcher : nsISupports
                          nsITabParent is a remote tab belonging to aParent. Can
                          be nullptr if this window is not being opened from a tab.
       @param aArgs Window argument
+      @param aOpenerFullZoom the full zoom multiplier for the opener window.
+                             this can be null in the single process case where
+                             the opener full zoom is obtained from aParent.
       @return the new window
 
       @note This method may examine the JS context stack for purposes of
@@ -68,13 +71,15 @@ interface nsPIWindowWatcher : nsISupports
             (which is determined based on the JS stack and the value of
             aParent).  This is not guaranteed, however.
   */
+  [optional_argc]
   mozIDOMWindowProxy openWindow2(in mozIDOMWindowProxy aParent, in string aUrl,
                                  in string aName, in string aFeatures,
                                  in boolean aCalledFromScript,
                                  in boolean aDialog,
                                  in boolean aNavigate,
                                  in nsITabParent aOpeningTab,
-                                 in nsISupports aArgs);
+                                 in nsISupports aArgs,
+                                 [optional] in float aOpenerFullZoom);
 
   /**
    * Find a named docshell tree item amongst all windows registered

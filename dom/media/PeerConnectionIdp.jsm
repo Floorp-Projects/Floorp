@@ -177,7 +177,7 @@ PeerConnectionIdp.prototype = {
         .getService(Components.interfaces.nsIIDNService);
     if (idnService.convertUTF8toACE(tail) !==
         idnService.convertUTF8toACE(provider)) {
-      error('name "' + identity.name +
+      error('name "' + name +
             '" doesn\'t match IdP: "' + this.provider + '"');
     }
   },

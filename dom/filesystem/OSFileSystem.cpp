@@ -9,51 +9,63 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "nsIGlobalObject.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIFile.h"
-#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
 
 OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 {
-  mLocalRootPath = aRootDir;
-  FileSystemUtils::LocalPathToNormalizedPath(mLocalRootPath,
-                                             mNormalizedLocalRootPath);
+  mLocalOrDeviceStorageRootPath = aRootDir;
 
   // Non-mobile devices don't have the concept of separate permissions to
   // access different parts of devices storage like Pictures, or Videos, etc.
   mRequiresPermissionChecks = false;
-
-  mString = mLocalRootPath;
 
 #ifdef DEBUG
   mPermission.AssignLiteral("never-used");
 #endif
 }
 
-void
-OSFileSystem::Init(nsPIDOMWindowInner* aWindow)
+already_AddRefed<FileSystemBase>
+OSFileSystem::Clone()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(!mWindow, "No duple Init() calls");
-  MOZ_ASSERT(aWindow);
-  mWindow = aWindow;
+  RefPtr<OSFileSystem> fs = new OSFileSystem(mLocalOrDeviceStorageRootPath);
+  if (mParent) {
+    fs->Init(mParent);
+  }
+
+  return fs.forget();
 }
 
-nsPIDOMWindowInner*
-OSFileSystem::GetWindow() const
+void
+OSFileSystem::Init(nsISupports* aParent)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return mWindow;
+  MOZ_ASSERT(!mParent, "No duple Init() calls");
+  MOZ_ASSERT(aParent);
+  mParent = aParent;
+
+#ifdef DEBUG
+  nsCOMPtr<nsIGlobalObject> obj = do_QueryInterface(aParent);
+  MOZ_ASSERT(obj);
+#endif
+}
+
+nsISupports*
+OSFileSystem::GetParentObject() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  return mParent;
 }
 
 void
 OSFileSystem::GetRootName(nsAString& aRetval) const
 {
-  return aRetval.AssignLiteral("/");
+  aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
 }
 
 bool
@@ -79,14 +91,20 @@ OSFileSystem::IsSafeDirectory(Directory* aDir) const
 void
 OSFileSystem::Unlink()
 {
-  mWindow = nullptr;
+  mParent = nullptr;
 }
 
 void
 OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
   OSFileSystem* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent);
+}
+
+void
+OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
+{
+  aOutput = mLocalOrDeviceStorageRootPath;
 }
 
 } // namespace dom

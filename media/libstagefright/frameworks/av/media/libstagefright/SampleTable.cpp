@@ -636,8 +636,8 @@ SampleTable::parseSampleCencInfo() {
         return OK;
     }
 
-    if (!mCencSizes.IsEmpty() && mCencOffsets.Length() > 1 &&
-        mCencSizes.IsEmpty() != mCencOffsets.Length()) {
+    if ((mCencOffsets.Length() > 1 && mCencOffsets.Length() < mCencInfoCount) ||
+        (!mCencDefaultSize && mCencSizes.Length() < mCencInfoCount)) {
         return ERROR_MALFORMED;
     }
 

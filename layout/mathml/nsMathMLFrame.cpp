@@ -232,10 +232,8 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   }
   else if (eCSSUnit_XHeight == unit) {
     aPresContext->SetUsesExChUnits(true);
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
-                                                 getter_AddRefs(fm),
-                                                 aFontSizeInflation);
+    RefPtr<nsFontMetrics> fm = nsLayoutUtils::
+      GetFontMetricsForStyleContext(aStyleContext, aFontSizeInflation);
     nscoord xHeight = fm->XHeight();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
@@ -313,28 +311,28 @@ private:
 void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
                                            nsRenderingContext* aCtx)
 {
-  DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
   Rect r = NSRectToRect(mRect + ToReferenceFrame(),
                         mFrame->PresContext()->AppUnitsPerDevPixel());
   ColorPattern blue(ToDeviceColor(Color(0.f, 0.f, 1.f, 1.f)));
   drawTarget->StrokeRect(r, blue);
 }
 
-nsresult
+void
 nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame, const nsPoint& aPt,
                                       const nsBoundingMetrics& aMetrics,
                                       const nsDisplayListSet& aLists) {
   if (!NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
-    return NS_OK;
+    return;
     
   nscoord x = aPt.x + aMetrics.leftBearing;
   nscoord y = aPt.y - aMetrics.ascent;
   nscoord w = aMetrics.rightBearing - aMetrics.leftBearing;
   nscoord h = aMetrics.ascent + aMetrics.descent;
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayMathMLBoundingMetrics(aBuilder, this, nsRect(x,y,w,h)));
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayMathMLBoundingMetrics(aBuilder, aFrame, nsRect(x,y,w,h)));
 }
 #endif
 

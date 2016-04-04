@@ -21,8 +21,8 @@ using media::TimeUnit;
 using media::TimeIntervals;
 
 MediaSourceDemuxer::MediaSourceDemuxer()
-  : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                             /* aSupportsTailDispatch = */ false))
+  : mTaskQueue(new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+                                 /* aSupportsTailDispatch = */ false))
   , mMonitor("MediaSourceDemuxer")
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -250,8 +250,6 @@ MediaSourceDemuxer::GetManager(TrackType aTrack)
 MediaSourceDemuxer::~MediaSourceDemuxer()
 {
   mInitPromise.RejectIfExists(DemuxerFailureReason::SHUTDOWN, __func__);
-  mTaskQueue->BeginShutdown();
-  mTaskQueue = nullptr;
 }
 
 void

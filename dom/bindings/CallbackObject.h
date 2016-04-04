@@ -67,6 +67,16 @@ public:
     }
   }
 
+  // Instead of capturing the current stack to use as an async parent when the
+  // callback is invoked, the caller can use this overload to pass in a stack
+  // for that purpose.
+  explicit CallbackObject(JS::Handle<JSObject*> aCallback,
+                          JS::Handle<JSObject*> aAsyncStack,
+                          nsIGlobalObject *aIncumbentGlobal)
+  {
+    Init(aCallback, aAsyncStack, aIncumbentGlobal);
+  }
+
   JS::Handle<JSObject*> Callback() const
   {
     JS::ExposeObjectToActiveJS(mCallback);
@@ -247,7 +257,6 @@ protected:
 
     // Members which are used to set the async stack.
     Maybe<JS::Rooted<JSObject*>> mAsyncStack;
-    Maybe<JS::Rooted<JSString*>> mAsyncCause;
     Maybe<JS::AutoSetAsyncStackForNewCalls> mAsyncStackSetter;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,

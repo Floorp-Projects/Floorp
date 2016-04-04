@@ -165,7 +165,14 @@ Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length)
 }
 
 void
-Servo_ReleaseStylesheet(RawServoStyleSheet* sheet)
+Servo_AddRefStyleSheet(RawServoStyleSheet* sheet)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_AddRefStylesheet in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_ReleaseStyleSheet(RawServoStyleSheet* sheet)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_ReleaseStylesheet in a "
             "non-MOZ_STYLO build");
@@ -208,6 +215,35 @@ void
 Servo_DropStyleSet(RawServoStyleSet* set)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_DropStyleSet in a "
+            "non-MOZ_STYLO build");
+}
+
+ServoComputedValues*
+Servo_GetComputedValues(RawGeckoElement* element)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValues in a "
+            "non-MOZ_STYLO build");
+}
+
+ServoComputedValues*
+Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
+                                       nsIAtom* pseudoTag)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValuesForAnonymousBox in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_AddRefComputedValues(ServoComputedValues*)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_AddRefComputedValues in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_ReleaseComputedValues(ServoComputedValues*)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_ReleaseComputedValues in a "
             "non-MOZ_STYLO build");
 }
 

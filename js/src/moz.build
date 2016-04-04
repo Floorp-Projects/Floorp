@@ -33,7 +33,7 @@ with Files('jit/**'):
 for gcfile in ['jsgc*', 'devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace']:
     with Files(gcfile):
         BUG_COMPONENT = component_gc
-for header in ('GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'SliceBudget.h', 'TraceKind.h', 'TracingAPI.h', 'WeakMapPtr.h'):
+for header in ('GCAnnotations.h', 'GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'SliceBudget.h', 'TraceKind.h', 'TracingAPI.h', 'WeakMapPtr.h'):
     with Files('../public/' + header):
         BUG_COMPONENT = component_gc
 
@@ -53,7 +53,6 @@ with Files('../public/TrackedOptimizationInfo.h'):
 if CONFIG['JS_BUNDLED_EDITLINE']:
     DIRS += ['editline']
 
-# editline needs to get built before the shell
 if not CONFIG['JS_DISABLE_SHELL']:
     DIRS += ['shell']
 
@@ -78,10 +77,16 @@ CONFIGURE_DEFINE_FILES += [
     'js-config.h',
 ]
 
+if CONFIG['HAVE_DTRACE']:
+    GENERATED_FILES += ['javascript-trace.h']
+
+    EXPORTS += ['!javascript-trace.h']
+
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
 # doing!
 EXPORTS += [
+    '!js-config.h',
     'js.msg',
     'jsalloc.h',
     'jsapi.h',
@@ -109,9 +114,11 @@ EXPORTS.js += [
     '../public/Conversions.h',
     '../public/Date.h',
     '../public/Debug.h',
+    '../public/GCAnnotations.h',
     '../public/GCAPI.h',
     '../public/GCHashTable.h',
     '../public/GCPolicyAPI.h',
+    '../public/GCVariant.h',
     '../public/GCVector.h',
     '../public/HashTable.h',
     '../public/HeapAPI.h',
@@ -148,13 +155,14 @@ UNIFIED_SOURCES += [
     'asmjs/AsmJS.cpp',
     'asmjs/Wasm.cpp',
     'asmjs/WasmBinary.cpp',
+    'asmjs/WasmBinaryToText.cpp',
     'asmjs/WasmFrameIterator.cpp',
     'asmjs/WasmGenerator.cpp',
     'asmjs/WasmIonCompile.cpp',
     'asmjs/WasmModule.cpp',
     'asmjs/WasmSignalHandlers.cpp',
     'asmjs/WasmStubs.cpp',
-    'asmjs/WasmText.cpp',
+    'asmjs/WasmTextToBinary.cpp',
     'asmjs/WasmTypes.cpp',
     'builtin/AtomicsObject.cpp',
     'builtin/Eval.cpp',
@@ -163,6 +171,7 @@ UNIFIED_SOURCES += [
     'builtin/ModuleObject.cpp',
     'builtin/Object.cpp',
     'builtin/Profilers.cpp',
+    'builtin/Promise.cpp',
     'builtin/Reflect.cpp',
     'builtin/ReflectParse.cpp',
     'builtin/SIMD.cpp',
@@ -205,6 +214,7 @@ UNIFIED_SOURCES += [
     'jit/BacktrackingAllocator.cpp',
     'jit/Bailouts.cpp',
     'jit/BaselineBailouts.cpp',
+    'jit/BaselineCacheIR.cpp',
     'jit/BaselineCompiler.cpp',
     'jit/BaselineDebugModeOSR.cpp',
     'jit/BaselineFrame.cpp',
@@ -215,6 +225,7 @@ UNIFIED_SOURCES += [
     'jit/BitSet.cpp',
     'jit/BytecodeAnalysis.cpp',
     'jit/C1Spewer.cpp',
+    'jit/CacheIR.cpp',
     'jit/CodeGenerator.cpp',
     'jit/CompileWrappers.cpp',
     'jit/Disassembler.cpp',
@@ -291,10 +302,8 @@ UNIFIED_SOURCES += [
     'proxy/OpaqueCrossCompartmentWrapper.cpp',
     'proxy/Proxy.cpp',
     'proxy/ScriptedDirectProxyHandler.cpp',
-    'proxy/ScriptedIndirectProxyHandler.cpp',
     'proxy/SecurityWrapper.cpp',
     'proxy/Wrapper.cpp',
-    'threading/ExclusiveData.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/CallNonGenericMethod.cpp',
@@ -544,12 +553,14 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'jit/ExecutableAllocatorWin.cpp',
+        'threading/windows/Mutex.cpp',
     ]
     # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
     DEFINES['_CRT_RAND_S'] = True
 else:
     SOURCES += [
         'jit/ExecutableAllocatorPosix.cpp',
+        'threading/posix/Mutex.cpp',
     ]
 
 if CONFIG['JS_HAS_CTYPES']:
@@ -557,7 +568,7 @@ if CONFIG['JS_HAS_CTYPES']:
         'ctypes/CTypes.cpp',
         'ctypes/Library.cpp',
     ]
-    if not CONFIG['MOZ_NATIVE_FFI']:
+    if not CONFIG['MOZ_SYSTEM_FFI']:
         LOCAL_INCLUDES += [
             '!ctypes/libffi/include',
         ]
@@ -661,6 +672,12 @@ if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4146'] # FIXME: unary minus operator applied to unsigned type (bug 1229189)
     CXXFLAGS += ['-wd4273'] # FIXME: inconsistent dll linkage (bug 1229666)
 
+    # This is intended as a temporary hack to support building with VS2015.
+    # 'noexcept' used with no exception handling mode specified;
+    # termination on exception is not guaranteed. Specify /EHsc
+    CXXFLAGS += ['-wd4577']
+    CXXFLAGS += ['-wd4312']
+
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
         'm',
@@ -724,8 +741,11 @@ selfhosted.inputs = [
     'builtin/WeakSet.js'
 ]
 
+if CONFIG['SPIDERMONKEY_PROMISE']:
+    selfhosted.inputs += ['builtin/Promise.js']
+
 if CONFIG['JS_HAS_CTYPES']:
-    if CONFIG['MOZ_NATIVE_FFI']:
+    if CONFIG['MOZ_SYSTEM_FFI']:
         CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
     else:
         # Windows needs this to be linked with a static library.

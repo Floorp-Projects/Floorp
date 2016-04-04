@@ -36,7 +36,7 @@ class URIParams;
 }// namespace ipc
 
 namespace layers {
-class PCompositorChild;
+class PCompositorBridgeChild;
 } // namespace layers
 
 namespace dom {
@@ -149,9 +149,9 @@ public:
   bool
   DeallocPAPZChild(PAPZChild* aActor) override;
 
-  PCompositorChild*
-  AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
-                        base::ProcessId aOtherProcess) override;
+  PCompositorBridgeChild*
+  AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
+                              base::ProcessId aOtherProcess) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
@@ -441,8 +441,6 @@ public:
 
   virtual bool RecvAddPermission(const IPC::Permission& permission) override;
 
-  virtual bool RecvScreenSizeChanged(const gfx::IntSize &size) override;
-
   virtual bool RecvFlushMemory(const nsString& reason) override;
 
   virtual bool RecvActivateA11y() override;
@@ -533,20 +531,22 @@ public:
 
   virtual bool
   RecvPush(const nsCString& aScope,
-           const IPC::Principal& aPrincipal) override;
+           const IPC::Principal& aPrincipal,
+           const nsString& aMessageId) override;
 
   virtual bool
   RecvPushWithData(const nsCString& aScope,
                    const IPC::Principal& aPrincipal,
+                   const nsString& aMessageId,
                    InfallibleTArray<uint8_t>&& aData) override;
 
   virtual bool
   RecvPushSubscriptionChange(const nsCString& aScope,
                              const IPC::Principal& aPrincipal) override;
 
-#ifdef ANDROID
-  gfx::IntSize GetScreenSize() { return mScreenSize; }
-#endif
+  virtual bool
+  RecvPushError(const nsCString& aScope, const nsString& aMessage,
+                const uint32_t& aFlags) override;
 
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value
@@ -610,6 +610,12 @@ public:
 
   virtual bool RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
 
+  // Windows specific - set up audio session
+  virtual bool
+  RecvSetAudioSessionData(const nsID& aId,
+                          const nsString& aDisplayName,
+                          const nsString& aIconPath) override;
+
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -638,10 +644,6 @@ private:
   ContentParentId mID;
 
   AppInfo mAppInfo;
-
-#ifdef ANDROID
-  gfx::IntSize mScreenSize;
-#endif
 
   bool mIsForApp;
   bool mIsForBrowser;

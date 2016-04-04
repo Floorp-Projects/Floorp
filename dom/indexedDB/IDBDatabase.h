@@ -53,9 +53,6 @@ class IDBDatabase final
   typedef mozilla::dom::StorageType StorageType;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
-  class LogWarningRunnable;
-  friend class LogWarningRunnable;
-
   class Observer;
   friend class Observer;
 
@@ -225,13 +222,15 @@ public:
 
   // This will be called from the DOM.
   already_AddRefed<IDBTransaction>
-  Transaction(const StringOrStringSequence& aStoreNames,
+  Transaction(JSContext* aCx,
+              const StringOrStringSequence& aStoreNames,
               IDBTransactionMode aMode,
               ErrorResult& aRv);
 
   // This can be called from C++ to avoid JS exception.
   nsresult
-  Transaction(const StringOrStringSequence& aStoreNames,
+  Transaction(JSContext* aCx,
+              const StringOrStringSequence& aStoreNames,
               IDBTransactionMode aMode,
               IDBTransaction** aTransaction);
 
@@ -243,16 +242,18 @@ public:
   IMPL_EVENT_HANDLER(versionchange)
 
   already_AddRefed<IDBRequest>
-  CreateMutableFile(const nsAString& aName,
+  CreateMutableFile(JSContext* aCx,
+                    const nsAString& aName,
                     const Optional<nsAString>& aType,
                     ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  MozCreateFileHandle(const nsAString& aName,
+  MozCreateFileHandle(JSContext* aCx,
+                      const nsAString& aName,
                       const Optional<nsAString>& aType,
                       ErrorResult& aRv)
   {
-    return CreateMutableFile(aName, aType, aRv);
+    return CreateMutableFile(aCx, aName, aType, aRv);
   }
 
   void

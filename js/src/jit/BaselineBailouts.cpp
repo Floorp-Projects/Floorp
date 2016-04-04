@@ -1090,16 +1090,13 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 //
                 // Note that we never resume at this pc, it is set for the sake
                 // of frame iterators giving the correct answer.
-                //
-                // We also set nativeCodeForPC to nullptr as this address
-                // won't be used anywhere.
                 jsbytecode* throwPC = script->offsetToPC(iter.pcOffset());
                 builder.setResumePC(throwPC);
-                nativeCodeForPC = nullptr;
+                nativeCodeForPC = baselineScript->nativeCodeForPC(script, throwPC);
             } else {
                 nativeCodeForPC = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
-                MOZ_ASSERT(nativeCodeForPC);
             }
+            MOZ_ASSERT(nativeCodeForPC);
 
             unsigned numUnsynced = slotInfo.numUnsynced();
 

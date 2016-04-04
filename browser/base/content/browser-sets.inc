@@ -95,20 +95,7 @@
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
-    <command id="Tools:DevToolbox" oncommand="gDevToolsBrowser.toggleToolboxCommand(gBrowser);"/>
-    <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();" disabled="true" hidden="true"/>
-    <command id="Tools:DevToolbarFocus" oncommand="DeveloperToolbar.focusToggle();" disabled="true"/>
-    <command id="Tools:WebIDE" oncommand="gDevToolsBrowser.openWebIDE();" disabled="true" hidden="true"/>
-    <command id="Tools:BrowserToolbox" oncommand="BrowserToolboxProcess.init();" disabled="true" hidden="true"/>
-    <command id="Tools:BrowserContentToolbox" oncommand="gDevToolsBrowser.openContentProcessToolbox();" disabled="true" hidden="true"/>
-    <command id="Tools:BrowserConsole" oncommand="HUDService.openBrowserConsoleOrFocus();"/>
-    <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();"/>
-    <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();"/>
-    <command id="Tools:Eyedropper" oncommand="openEyedropper();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
-    <command id="Tools:ErrorConsole" oncommand="toJavaScriptConsole()" disabled="true" hidden="true"/>
-    <command id="Tools:ServiceWorkers" oncommand="gDevToolsBrowser.openAboutDebugging(gBrowser, 'workers')"/>
-    <command id="Tools:DevToolsConnect" oncommand="gDevToolsBrowser.openConnectScreen(gBrowser)" disabled="true" hidden="true"/>
     <command id="Tools:Sanitize"
      oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
     <command id="Tools:PrivateBrowsing"
@@ -196,63 +183,12 @@
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
 
-    <!-- DevTools broadcasters -->
-    <broadcaster id="devtoolsMenuBroadcaster_DevToolbox"
-                 label="&devToolboxMenuItem.label;"
-                 type="checkbox" autocheck="false"
-                 command="Tools:DevToolbox"
-                 key="key_devToolboxMenuItem"/>
-    <broadcaster id="devtoolsMenuBroadcaster_DevToolbar"
-                 label="&devToolbarMenu.label;"
-                 type="checkbox" autocheck="false"
-                 command="Tools:DevToolbar"
-                 key="key_devToolbar"/>
-    <broadcaster id="devtoolsMenuBroadcaster_webide"
-                 label="&webide.label;"
-                 command="Tools:WebIDE"
-                 key="key_webide"/>
-    <broadcaster id="devtoolsMenuBroadcaster_BrowserToolbox"
-                 label="&browserToolboxMenu.label;"
-                 key="key_browserToolbox"
-                 command="Tools:BrowserToolbox"/>
-    <broadcaster id="devtoolsMenuBroadcaster_BrowserContentToolbox"
-                 label="&browserContentToolboxMenu.label;"
-                 command="Tools:BrowserContentToolbox"/>
-    <broadcaster id="devtoolsMenuBroadcaster_BrowserConsole"
-                 label="&browserConsoleCmd.label;"
-                 key="key_browserConsole"
-                 command="Tools:BrowserConsole"/>
-    <broadcaster id="devtoolsMenuBroadcaster_Scratchpad"
-                 label="&scratchpad.label;"
-                 command="Tools:Scratchpad"
-                 key="key_scratchpad"/>
-    <broadcaster id="devtoolsMenuBroadcaster_ResponsiveUI"
-                 label="&responsiveDesignTool.label;"
-                 type="checkbox" autocheck="false"
-                 command="Tools:ResponsiveUI"
-                 key="key_responsiveUI"/>
-    <broadcaster id="devtoolsMenuBroadcaster_Eyedropper"
-                 label="&eyedropper.label;"
-                 type="checkbox" autocheck="false"
-                 command="Tools:Eyedropper"/>
     <broadcaster id="devtoolsMenuBroadcaster_PageSource"
                  label="&pageSourceCmd.label;"
                  key="key_viewSource"
                  command="View:PageSource">
       <observes element="canViewSource" attribute="disabled"/>
     </broadcaster>
-    <broadcaster id="devtoolsMenuBroadcaster_ErrorConsole"
-                 label="&errorConsoleCmd.label;"
-                 command="Tools:ErrorConsole"/>
-    <broadcaster id="devtoolsMenuBroadcaster_GetMoreTools"
-                 label="&getMoreDevtoolsCmd.label;"
-                 oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
-    <broadcaster id="devtoolsMenuBroadcaster_ServiceWorkers"
-                 label="&devtoolsServiceWorkers.label;"
-                 command="Tools:ServiceWorkers"/>
-    <broadcaster id="devtoolsMenuBroadcaster_connect"
-                 label="&devtoolsConnect.label;"
-                 command="Tools:DevToolsConnect"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
@@ -299,31 +235,6 @@
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="key_openAddons" key="&addons.commandkey;" command="Tools:Addons" modifiers="accel,shift"/>
-    <key id="key_devToolboxMenuItemF12" keycode="&devToolsCmd.keycode;" keytext="&devToolsCmd.keytext;" command="Tools:DevToolbox"/>
-    <key id="key_browserConsole" key="&browserConsoleCmd.commandkey;" command="Tools:BrowserConsole" modifiers="accel,shift"/>
-    <key id="key_browserToolbox" key="&browserToolboxCmd.commandkey;" command="Tools:BrowserToolbox" modifiers="accel,alt,shift"/>
-    <key id="key_devToolbar" keycode="&devToolbar.keycode;" modifiers="shift"
-         keytext="&devToolbar.keytext;" command="Tools:DevToolbarFocus"/>
-    <key id="key_responsiveUI" key="&responsiveDesignTool.commandkey;" command="Tools:ResponsiveUI"
-#ifdef XP_MACOSX
-        modifiers="accel,alt"
-#else
-        modifiers="accel,shift"
-#endif
-    />
-    <key id="key_webide" keycode="&webide.keycode;" command="Tools:WebIDE"
-         modifiers="shift" keytext="&webide.keytext;"/>
-    <key id="key_devToolboxMenuItem" keytext="&devToolboxMenuItem.keytext;"
-         command="Tools:DevToolbox" key="&devToolboxMenuItem.keytext;"
-#ifdef XP_MACOSX
-        modifiers="accel,alt"
-#else
-        modifiers="accel,shift"
-#endif
-    />
-
-    <key id="key_scratchpad" keycode="&scratchpad.keycode;" modifiers="shift"
-         keytext="&scratchpad.keytext;" command="Tools:Scratchpad"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb" key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>

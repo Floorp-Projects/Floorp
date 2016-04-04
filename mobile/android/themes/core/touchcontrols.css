@@ -35,25 +35,33 @@
 .muteButton,
 .fullscreenButton {
   -moz-appearance: none;
-  min-height: 42px;
-  min-width: 42px;
+  height: 24px;
+  width: 24px;
   border: none !important;
 }
 
+.muteButton {
+  width: 28px;
+}
+
 .playButton {
-  background: url("chrome://browser/skin/images/pause-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/pause.svg") no-repeat center;
+  background-size: contain;
 }
 
 .playButton[paused="true"] {
-  background: url("chrome://browser/skin/images/play-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/play.svg") no-repeat center;
+  background-size: contain;
 }
 
 .castingButton {
-  background: url("chrome://browser/skin/images/cast-ready-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/cast-ready.svg") no-repeat center;
+  background-size: contain;
 }
 
 .castingButton[active="true"] {
-  background: url("chrome://browser/skin/images/cast-active-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/cast-active.svg") no-repeat center;
+  background-size: contain;
 }
 
 /* If the casting button is showing, there will be two buttons on the right side of the controls.
@@ -64,20 +72,24 @@
 }
 
 .muteButton {
-  background: url("chrome://browser/skin/images/mute-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/mute.svg") no-repeat left;
+  background-size: contain;
 }
 
 .muteButton[muted="true"] {
-  background: url("chrome://browser/skin/images/unmute-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/unmute.svg") no-repeat left;
+  background-size: contain;
 }
 
 .fullscreenButton {
   background-color: transparent;
-  background: url("chrome://browser/skin/images/fullscreen-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/fullscreen.svg") no-repeat center;
+  background-size: contain;
 }
 
 .fullscreenButton[fullscreened] {
-  background: url("chrome://browser/skin/images/exitfullscreen-hdpi.png") no-repeat center;
+  background: url("chrome://browser/skin/images/exitfullscreen.svg") no-repeat center;
+  background-size: contain;
 }
 
 .controlBar[fullscreen-unavailable] .fullscreenButton {
@@ -134,7 +146,7 @@
   display: -moz-box;
   margin: 0px !important;
   padding: 0px !important;
-  background: url("chrome://browser/skin/images/scrubber-hdpi.png") no-repeat;
+  background: url("chrome://browser/skin/images/scrubber.svg") no-repeat;
   background-size: 32px 32px;
   height: 32px;
   width: 32px;

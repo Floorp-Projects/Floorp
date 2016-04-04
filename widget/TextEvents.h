@@ -71,6 +71,26 @@ struct AlternativeCharCode
 };
 
 /******************************************************************************
+ * mozilla::ShortcutKeyCandidate
+ *
+ * This stores a candidate of shortcut key combination.
+ ******************************************************************************/
+
+struct ShortcutKeyCandidate
+{
+  ShortcutKeyCandidate(uint32_t aCharCode, bool aIgnoreShift)
+    : mCharCode(aCharCode)
+    , mIgnoreShift(aIgnoreShift)
+  {
+  }
+  // The charCode value which must match keyboard shortcut definition.
+  uint32_t mCharCode;
+  // true if Shift state can be ignored.  Otherwise, Shift key state must
+  // match keyboard shortcut definition.
+  bool mIgnoreShift;
+};
+
+/******************************************************************************
  * mozilla::WidgetKeyboardEvent
  ******************************************************************************/
 
@@ -84,6 +104,7 @@ protected:
   WidgetKeyboardEvent()
     : keyCode(0)
     , charCode(0)
+    , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
     , mIsRepeat(false)
@@ -96,6 +117,8 @@ protected:
     , mNativeKeyCode(0)
     , mNativeModifierFlags(0)
 #endif
+    , mInputMethodAppState(eNotHandled)
+    , mIsSynthesizedByTIP(false)
   {
   }
 
@@ -108,6 +131,7 @@ public:
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , keyCode(0)
     , charCode(0)
+    , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
     , mIsRepeat(false)
@@ -120,6 +144,8 @@ public:
     , mNativeKeyCode(0)
     , mNativeModifierFlags(0)
 #endif
+    , mInputMethodAppState(eNotHandled)
+    , mIsSynthesizedByTIP(false)
   {
   }
 
@@ -143,6 +169,10 @@ public:
   // character when some modifiers are active.  Then, this value should be an
   // unmodified value except Shift and AltGr.
   uint32_t charCode;
+  // mPseudoCharCode is valid only when mMessage is an eKeyDown event.
+  // This stores charCode value of keypress event which is fired with same
+  // key value and same modifier state.
+  uint32_t mPseudoCharCode;
   // One of nsIDOMKeyEvent::DOM_KEY_LOCATION_*
   uint32_t location;
   // OS translated Unicode chars which are used for accesskey and accelkey
@@ -185,9 +215,41 @@ public:
   nsString mPluginTextEventString;
 #endif
 
+  // Indicates that the event is being handled by input method app
+  typedef uint8_t InputMethodAppStateType;
+  enum InputMethodAppState : InputMethodAppStateType
+  {
+    eNotHandled, // not yet handled by intput method app
+    eHandling,   // being handled by intput method app
+    eHandled     // handled by input method app
+  };
+  InputMethodAppState mInputMethodAppState;
+
+  // Indicates whether the event is synthesized from Text Input Processor
+  // or an actual event from nsAppShell.
+  bool mIsSynthesizedByTIP;
+
   // If the key should cause keypress events, this returns true.
   // Otherwise, false.
   bool ShouldCauseKeypressEvents() const;
+
+  // charCode value of non-eKeyPress events is always 0.  However, if
+  // non-eKeyPress event has one or more alternative char code values,
+  // its first item should be the charCode value of following eKeyPress event.
+  // PseudoCharCode() returns charCode value for eKeyPress event,
+  // the first alternative char code value of non-eKeyPress event or 0.
+  uint32_t PseudoCharCode() const
+  {
+    return mMessage == eKeyPress ? charCode : mPseudoCharCode;
+  }
+  void SetCharCode(uint32_t aCharCode)
+  {
+    if (mMessage == eKeyPress) {
+      charCode = aCharCode;
+    } else {
+      mPseudoCharCode = aCharCode;
+    }
+  }
 
   void GetDOMKeyName(nsAString& aKeyName)
   {
@@ -210,6 +272,22 @@ public:
   {
     return GetModifierForKeyName(mKeyNameIndex) != MODIFIER_NONE;
   }
+
+  /**
+   * Get the candidates for shortcut key.
+   *
+   * @param aCandidates [out] the candidate shortcut key combination list.
+   *                          the first item is most preferred.
+   */
+  void GetShortcutKeyCandidates(ShortcutKeyCandidateArray& aCandidates);
+
+  /**
+   * Get the candidates for access key.
+   *
+   * @param aCandidates [out] the candidate access key list.
+   *                          the first item is most preferred.
+   */
+  void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates);
 
   static void Shutdown();
 
@@ -256,6 +334,7 @@ public:
 
     keyCode = aEvent.keyCode;
     charCode = aEvent.charCode;
+    mPseudoCharCode = aEvent.mPseudoCharCode;
     location = aEvent.location;
     alternativeCharCodes = aEvent.alternativeCharCodes;
     isChar = aEvent.isChar;
@@ -277,11 +356,13 @@ public:
       Assign(aEvent.mNativeCharactersIgnoringModifiers);
     mPluginTextEventString.Assign(aEvent.mPluginTextEventString);
 #endif
+    mInputMethodAppState = aEvent.mInputMethodAppState;
+    mIsSynthesizedByTIP = aEvent.mIsSynthesizedByTIP;
   }
 
 private:
-  static const char16_t* kKeyNames[];
-  static const char16_t* kCodeNames[];
+  static const char16_t* const kKeyNames[];
+  static const char16_t* const kCodeNames[];
   typedef nsDataHashtable<nsStringHashKey,
                           KeyNameIndex> KeyNameIndexHashtable;
   typedef nsDataHashtable<nsStringHashKey,

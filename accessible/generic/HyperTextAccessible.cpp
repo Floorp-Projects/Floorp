@@ -1314,7 +1314,8 @@ HyperTextAccessible::GetEditor() const
   }
 
   nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(mContent);
-  nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(docShell));
+  nsCOMPtr<nsIEditingSession> editingSession;
+  docShell->GetEditingSession(getter_AddRefs(editingSession));
   if (!editingSession)
     return nullptr; // No editing session interface
 
@@ -1888,11 +1889,10 @@ HyperTextAccessible::NativeName(nsString& aName)
 }
 
 void
-HyperTextAccessible::InvalidateChildren()
+HyperTextAccessible::Shutdown()
 {
   mOffsets.Clear();
-
-  AccessibleWrap::InvalidateChildren();
+  AccessibleWrap::Shutdown();
 }
 
 bool

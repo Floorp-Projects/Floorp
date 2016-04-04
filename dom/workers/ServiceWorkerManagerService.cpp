@@ -7,6 +7,7 @@
 #include "ServiceWorkerManagerService.h"
 #include "ServiceWorkerManagerParent.h"
 #include "ServiceWorkerRegistrar.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/unused.h"
@@ -75,8 +76,8 @@ public:
           data.mParent = nullptr;
         }
       }
-      nsresult rv = mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL);
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+
+      MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL));
       return NS_OK;
     }
 
@@ -230,8 +231,7 @@ ServiceWorkerManagerService::PropagateSoftUpdate(
     new NotifySoftUpdateIfPrincipalOkRunnable(notifySoftUpdateDataArray,
                                               aOriginAttributes, aScope);
   MOZ_ASSERT(!notifySoftUpdateDataArray);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
 #ifdef DEBUG
   MOZ_ASSERT(parentFound);

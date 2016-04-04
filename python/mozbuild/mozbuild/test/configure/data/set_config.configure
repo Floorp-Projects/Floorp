@@ -1,0 +1,43 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option('--set-foo', help='set foo')
+
+@depends('--set-foo')
+def foo(value):
+    if value:
+        return True
+
+set_config('FOO', foo)
+
+
+option('--set-bar', help='set bar')
+
+@depends('--set-bar')
+def bar(value):
+    return bool(value)
+
+set_config('BAR', bar)
+
+
+option('--set-value', nargs=1, help='set value')
+
+@depends('--set-value')
+def set_value(value):
+    if value:
+        return value[0]
+
+set_config('VALUE', set_value)
+
+
+option('--set-name', nargs=1, help='set name')
+
+@depends('--set-name')
+def set_name(value):
+    if value:
+        return value[0]
+
+set_config(set_name, True)

@@ -13,15 +13,24 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
 
+<commandset>
+  <command id="expectedCommand" oncommand="this.activeCount++" disabled="true"/>
+  <command id="unexpectedCommand" oncommand="this.activeCount++" disabled="true"/>
+  <command id="expectedReservedCommand" oncommand="this.activeCount++" reserved="true" disabled="true"/>
+</commandset>
 <keyset>
-  <key id="unshiftedKey" key=";" modifiers="accel" oncommand="this.activeCount++"/>
-  <key id="shiftedKey" key=":" modifiers="accel" oncommand="this.activeCount++"/>
-  <key id="commandOptionF" key='f' modifiers="accel,alt" oncommand="this.activeCount++"/>
-  <key id="question" key='?' modifiers="accel" oncommand="this.activeCount++"/>
-  <key id="unshiftedX" key="x" modifiers="accel" oncommand="this.activeCount++"/>
-  <key id="shiftedX" key="X" modifiers="accel,shift" oncommand="this.activeCount++"/>
-  <key id="unshiftedPlus" key="+" modifiers="accel" oncommand="this.activeCount++"/>
+  <key id="unshiftedKey" key=";" modifiers="accel" command="unexpectedCommand"/>
+  <key id="shiftedKey" key=":" modifiers="accel" command="unexpectedCommand"/>
+  <key id="commandOptionF" key='f' modifiers="accel,alt" command="unexpectedCommand"/>
+  <key id="question" key='?' modifiers="accel" command="unexpectedCommand"/>
+  <key id="unshiftedX" key="x" modifiers="accel" command="unexpectedCommand"/>
+  <key id="shiftedX" key="X" modifiers="accel,shift" command="unexpectedCommand"/>
+  <key id="unshiftedPlus" key="+" modifiers="accel" command="unexpectedCommand"/>
+  <key id="reservedUnshiftedKey" key="'" modifiers="accel" command="unexpectedCommand"/>
+  <key id="reservedShiftedKey" key='"' modifiers="accel" command="unexpectedCommand"/>
 </keyset>
+
+<browser id="browser" type="content" src="data:text/html;charset=utf-8,&lt;button id='content_button'&gt;button&lt;/button&gt;" width="200" height="32"/>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
@@ -42,6 +51,29 @@
 
 const IS_MAC = navigator.platform.indexOf("Mac") == 0;
 const IS_WIN = navigator.platform.indexOf("Win") == 0;
+
+function isModifierKeyEvent(aEvent)
+{
+  switch (aEvent.key) {
+    case "Alt":
+    case "AltGraph":
+    case "CapsLock":
+    case "Control":
+    case "Fn":
+    case "FnLock":
+    case "Hyper":
+    case "Meta":
+    case "NumLock":
+    case "ScrollLock":
+    case "Shift":
+    case "Super":
+    case "Symbol":
+    case "SymbolLock":
+      return true;
+    default:
+      return false;
+  }
+}
 
 /**
  * Firefox infobar UI can have access keys which conflict with this test. Really
@@ -97,9 +129,45 @@ function eventToString(aEvent)
   return name;  
 }
 
+function getPhase(aDOMEvent)
+{
+  switch (aDOMEvent.eventPhase) {
+    case aDOMEvent.None:
+      return "none";
+    case aDOMEvent.CAPTURING_PHASE:
+      return "capture";
+    case aDOMEvent.AT_TARGET:
+      return "target";
+    case aDOMEvent.BUBBLING_PHASE:
+      return "bubble";
+    default:
+      return "";
+   }
+}
+
+function eventTargetToString(aEventTarget)
+{
+  if (aEventTarget.navigator) {
+    return "window";
+  }
+  switch (aEventTarget.nodeType) {
+    case Node.ELEMENT_NODE:
+      return "element (" + aEventTarget.tagName + ")";
+    case Node.DOCUMENT_NODE:
+      return "document";
+    default:
+      return "";
+  }
+}
+
 function synthesizeKey(aEvent, aFocusElementId, aCallback)
 {
-  document.getElementById(aFocusElementId).focus();
+  if (aFocusElementId.startsWith("content_")) {
+    var browser = document.getElementById("browser");
+    browser.contentDocument.getElementById(aFocusElementId).focus();
+  } else {
+    document.getElementById(aFocusElementId).focus();
+  }
 
   return synthesizeNativeKey(aEvent.layout, aEvent.keyCode,
                              aEvent.modifiers,
@@ -194,9 +262,11 @@ function* runKeyEventTests()
     // Ignore the state changing key events which is fired by the testing event.
     if (!isStateChangingModifierKeyEvent(e))
       eventList.push(e);
-    if (e.type == "keypress") {
-      e.preventDefault();
-    }
+  }
+
+  function consumer(aEvent)
+  {
+    aEvent.preventDefault();
   }
 
   const SHOULD_DELIVER_NONE             = 0x0;
@@ -327,6 +397,8 @@ function* runKeyEventTests()
   document.addEventListener("keydown",  onKeyEvent, false);
   document.addEventListener("keypress", onKeyEvent, false);
   document.addEventListener("keyup",    onKeyEvent, false);
+  // Prevent almost all shortcut key handlers.
+  SpecialPowers.addSystemEventListener(document, "keypress", consumer, true);
 
   if (IS_MAC) {
     // On Mac, you can produce event records for any desired keyboard input
@@ -671,7 +743,7 @@ function* runKeyEventTests()
                   nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_E,
                    modifiers:{altKey:1}, chars:"", unmodifiedChars:"e"},
-                  nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+                  nsIDOMKeyEvent.DOM_VK_E, "\u00B4", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_E,
                    modifiers:{metaKey:1}, chars:"e", unmodifiedChars:"e"},
                   nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -732,7 +804,7 @@ function* runKeyEventTests()
                   nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_I,
                    modifiers:{altKey:1}, chars:"", unmodifiedChars:"i"},
-                  nsIDOMKeyEvent.DOM_VK_I, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+                  nsIDOMKeyEvent.DOM_VK_I, "\u02C6", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     // XXX This test causes memory leak.
     // yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_I,
     //                modifiers:{metaKey:1}, chars:"i", unmodifiedChars:"i"},
@@ -808,7 +880,7 @@ function* runKeyEventTests()
                   nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_N,
                    modifiers:{altKey:1}, chars:"", unmodifiedChars:"n"},
-                  nsIDOMKeyEvent.DOM_VK_N, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+                  nsIDOMKeyEvent.DOM_VK_N, "\u02DC", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_N,
                    modifiers:{metaKey:1}, chars:"n", unmodifiedChars:"n"},
                   nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -915,7 +987,7 @@ function* runKeyEventTests()
                   nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_U,
                    modifiers:{altKey:1}, chars:"", unmodifiedChars:"u"},
-                  nsIDOMKeyEvent.DOM_VK_U, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+                  nsIDOMKeyEvent.DOM_VK_U, "\u00A8", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_U,
                    modifiers:{metaKey:1}, chars:"u", unmodifiedChars:"u"},
                   nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -1090,7 +1162,7 @@ function* runKeyEventTests()
                    modifiers:{}, chars:"7", unmodifiedChars:"7"},
                   nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_7,
-                   modifiers:{shiftKey:1}, chars:"\u0026;", unmodifiedChars:"\u0026;"},
+                   modifiers:{shiftKey:1}, chars:"\u0026", unmodifiedChars:"\u0026"},
                   nsIDOMKeyEvent.DOM_VK_7, "\u0026", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_7,
                    modifiers:{ctrlKey:1}, chars:"7", unmodifiedChars:"7"},
@@ -1159,7 +1231,7 @@ function* runKeyEventTests()
                   nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Grave,
                    modifiers:{altKey:1}, chars:"", unmodifiedChars:"`"},
-                  nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+                  nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Grave,
                    modifiers:{metaKey:1}, chars:"`", unmodifiedChars:"`"},
                   nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -1801,7 +1873,7 @@ function* runKeyEventTests()
                   nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_DVORAK_QWERTY, keyCode:MAC_VK_ANSI_D,
                    modifiers:{altKey:1}, chars:"", unmodifiedChars:"e"},
-                  nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+                  nsIDOMKeyEvent.DOM_VK_E, "\u00B4", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     yield testKey({layout:KEYBOARD_LAYOUT_DVORAK_QWERTY, keyCode:MAC_VK_ANSI_D,
                    modifiers:{metaKey:1}, chars:"d", unmodifiedChars:"e"},
                   nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -2894,6 +2966,7 @@ function* runKeyEventTests()
   document.removeEventListener("keydown",  onKeyEvent, false);
   document.removeEventListener("keypress", onKeyEvent, false);
   document.removeEventListener("keyup",    onKeyEvent, false);
+  SpecialPowers.removeSystemEventListener(document, "keypress", consumer, true);
 }
 
 // Test the activation (or not) of an HTML accesskey
@@ -3034,141 +3107,342 @@ function* runAccessKeyTests()
 
 function* runXULKeyTests()
 {
-  function testKey(aEvent, aElem, aShouldActivate)
+  var commandElements = {
+    expectedCommand: document.getElementById("expectedCommand"),
+    unexpectedCommand: document.getElementById("unexpectedCommand"),
+    expectedReservedCommand: document.getElementById("expectedReservedCommand")
+  };
+  // Enable all command elements.
+  for (var id in commandElements) {
+    commandElements[id].removeAttribute("disabled");
+  }
+
+  var keyEvents = [];
+
+  function onKeyInDefaultEventGroup(aDOMEvent)
   {
-    var elem = document.getElementById(aElem);
-    elem.activeCount = 0;
+    if (isModifierKeyEvent(aDOMEvent)) {
+      return;
+    }
+    keyEvents.push({ type: aDOMEvent.type, group: "default", phase: getPhase(aDOMEvent), currentTarget: eventTargetToString(aDOMEvent.currentTarget) });
+  }
 
+  function onKeyInSystemEventGroup(aDOMEvent)
+  {
+    if (isModifierKeyEvent(aDOMEvent)) {
+      return;
+    }
+    keyEvents.push({ type: aDOMEvent.type, group: "system", phase: getPhase(aDOMEvent), currentTarget: eventTargetToString(aDOMEvent.currentTarget) });
+  }
+
+  var buttonParent = document.getElementById("button").parentNode;
+  buttonParent.addEventListener("keydown", onKeyInDefaultEventGroup, true);
+  buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup, true);
+  buttonParent.addEventListener("keydown", onKeyInDefaultEventGroup, false);
+  buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup, false);
+  SpecialPowers.addSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, true);
+  SpecialPowers.addSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, true);
+  SpecialPowers.addSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, false);
+  SpecialPowers.addSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, false);
+
+  function finializeKeyElementTest()
+  {
+    buttonParent.removeEventListener("keydown", onKeyInDefaultEventGroup, true);
+    buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup, true);
+    buttonParent.removeEventListener("keydown", onKeyInDefaultEventGroup, false);
+    buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup, false);
+    SpecialPowers.removeSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, true);
+    SpecialPowers.removeSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, true);
+    SpecialPowers.removeSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, false);
+    SpecialPowers.removeSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, false);
+  }
+
+  // If aKeyElement is empty string, this function tests if the event kicks
+  // no key elements.
+  function testKeyElement(aEvent, aKeyElementId)
+  {
+    var testName = "testKeyElement (with non-reserved command element): " + eventToString(aEvent) + " ";
+    var keyElement = aKeyElementId == "" ? null : document.getElementById(aKeyElementId);
+    if (keyElement) {
+      keyElement.setAttribute("command", "expectedCommand");
+    }
+
+    for (var id in commandElements) {
+      commandElements[id].activeCount = 0;
+    }
+
+    keyEvents = [];
     return synthesizeKey(aEvent, "button", function() {
+      if (keyElement) {
+        is(commandElements["expectedCommand"].activeCount, 1, testName + "the command element (id='expectedCommand') should be preformed");
+      } else {
+        is(commandElements["expectedCommand"].activeCount, 0, testName + "the command element (id='expectedCommand') shouldn't be preformed");
+      }
+      is(commandElements["unexpectedCommand"].activeCount, 0, testName + "the command element (id='unexpectedCommand') shouldn't be preformed");
+      is(commandElements["expectedReservedCommand"].activeCount, 0, testName + "the command element (id='expectedReservedCommand') shouldn't be preformed");
 
-      var name = eventToString(aEvent);
+      function checkFiredEvents()
+      {
+        is(keyEvents.length, 8, testName + "wrong number events fired");
+        is(JSON.stringify(keyEvents[0]), JSON.stringify({ type: "keydown", group: "default", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the default event group #0");
+        is(JSON.stringify(keyEvents[1]), JSON.stringify({ type: "keydown", group: "default", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the default event group #1");
 
-      is(elem.activeCount, aShouldActivate ? 1 : 0,
-         name + " activating " + aElem);
+        is(JSON.stringify(keyEvents[2]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the system event group #2");
+        is(JSON.stringify(keyEvents[3]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the system event group #3");
+
+        is(JSON.stringify(keyEvents[4]), JSON.stringify({ type: "keypress", group: "default", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the default event group #4");
+        is(JSON.stringify(keyEvents[5]), JSON.stringify({ type: "keypress", group: "default", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the default event group #5");
+
+        is(JSON.stringify(keyEvents[6]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the system event group #6");
+        is(JSON.stringify(keyEvents[7]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the system event group #7");
+      }
+
+      checkFiredEvents();
+
+      if (keyElement) {
+        testName = "testKeyElement (with reserved command element): " + eventToString(aEvent) + " ";
+        keyElement.setAttribute("command", "expectedReservedCommand");
+
+        for (id in commandElements) {
+          commandElements[id].activeCount = 0;
+        }
+        keyEvents = [];
+        synthesizeKey(aEvent, "button", function() {
+          is(commandElements["expectedCommand"].activeCount, 0, testName + "the command element (id='expectedCommand') shouldn't be preformed");
+          is(commandElements["unexpectedCommand"].activeCount, 0, testName + "the command element (id='unexpectedCommand') shouldn't be preformed");
+          is(commandElements["expectedReservedCommand"].activeCount, 1, testName + "the command element (id='expectedReservedCommand') should be preformed");
+
+          checkFiredEvents();
+
+          if (keyElement) {
+            keyElement.setAttribute("command", "unexpectedCommand");
+          }
+          continueTest();
+        });
+      } else {
+        if (keyElement) {
+          keyElement.setAttribute("command", "unexpectedCommand");
+        }
+        continueTest();
+      }
+    });
+  }
+
+  if (IS_MAC) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
+                          modifiers:{metaKey:1}, chars:";", unmodifiedChars:";"},
+                         "unshiftedKey");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
+                          modifiers:{metaKey:1, shiftKey:1}, chars:";", unmodifiedChars:":"},
+                         "shiftedKey");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Quote,
+                          modifiers:{metaKey:1}, chars:"'", unmodifiedChars:"'"},
+                         "reservedUnshiftedKey");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Quote,
+                          modifiers:{metaKey:1, shiftKey:1}, chars:"\"", unmodifiedChars:"'"},
+                         "reservedShiftedKey");
+  }
+  else if (IS_WIN) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
+                          modifiers:{ctrlKey:1}, chars:";"},
+                         "unshiftedKey");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:";"},
+                         "shiftedKey");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                          modifiers:{ctrlKey:1}, chars:"'"},
+                         "reservedUnshiftedKey");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:"'"},
+                         "reservedShiftedKey");
+  }
+
+  // 429160
+  if (IS_MAC) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_F,
+                          modifiers:{metaKey:1, altKey:1}, chars:"\u0192", unmodifiedChars:"f"},
+                         "commandOptionF");
+  }
+  else if (IS_WIN) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
+                          modifiers:{ctrlKey:1, altKey:1}, chars:"\u0006"},
+                         "commandOptionF");
+  }
+  
+  // 432112
+  if (IS_MAC) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_SWEDISH, keyCode:MAC_VK_ANSI_Minus,
+                          modifiers:{metaKey:1, shiftKey:1}, chars:"+", unmodifiedChars:"?"},
+                         "question");
+  }
+  else if (IS_WIN) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_SWEDISH, keyCode:WIN_VK_OEM_PLUS,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                         "question");
+    // For testing if Ctrl+? is kicked without Shift state, temporarily disable
+    // Ctrl-+ key element.
+    var unshiftedPlusKeyElement = document.getElementById("unshiftedPlus");
+    unshiftedPlusKeyElement.setAttribute("disabled", "true");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_SWEDISH, keyCode:WIN_VK_OEM_PLUS,
+                          modifiers:{ctrlKey:1}, chars:""},
+                         "");
+    unshiftedPlusKeyElement.removeAttribute("disabled");
+  }
+
+  // bug 433192
+  if (IS_WIN) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
+                          modifiers:{ctrlKey:1}, chars:"\u0018"},
+                         "unshiftedX");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
+                         "shiftedX");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_X,
+                          modifiers:{ctrlKey:1}, chars:"\u0018"},
+                         "unshiftedX");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_X,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
+                         "shiftedX");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_HEBREW, keyCode:WIN_VK_X,
+                          modifiers:{ctrlKey:1}, chars:"\u0018"},
+                         "unshiftedX");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_HEBREW, keyCode:WIN_VK_X,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
+                         "shiftedX");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_JAPANESE, keyCode:WIN_VK_OEM_PLUS,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                         "unshiftedPlus");
+  }
+
+  // bug 759346
+  if (IS_WIN) {
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_1,
+                          modifiers:{ctrlKey:1}, chars:""},
+                         "");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_1,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                         "unshiftedPlus");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_OEM_PLUS,
+                          modifiers:{ctrlKey:1}, chars:""},
+                         "unshiftedPlus");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_OEM_PLUS,
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                         "");
+  }
+
+  for (id in commandElements) {
+    commandElements[id].setAttribute("disabled", "true");
+  }
+  finializeKeyElementTest();
+}
+
+function* runReservedKeyTests()
+{
+  var browser = document.getElementById("browser");
+  var contents = [
+    browser.contentWindow,
+    browser.contentDocument,
+    browser.contentDocument.documentElement,
+    browser.contentDocument.body,
+    browser.contentDocument.getElementById("content_button")
+  ];
+
+  for (var i = 0; i < contents.length; i++) {
+    contents[i].addEventListener("keydown", onKeyInDefaultEventGroup, true);
+    contents[i].addEventListener("keypress", onKeyInDefaultEventGroup, true);
+    contents[i].addEventListener("keydown", onKeyInDefaultEventGroup, false);
+    contents[i].addEventListener("keypress", onKeyInDefaultEventGroup, false);
+    SpecialPowers.addSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, true);
+    SpecialPowers.addSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, true);
+    SpecialPowers.addSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, false);
+    SpecialPowers.addSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, false);
+  }
+
+  var keyEvents = [];
+
+  function onKeyInDefaultEventGroup(aDOMEvent)
+  {
+    if (isModifierKeyEvent(aDOMEvent)) {
+      return;
+    }
+    keyEvents.push({ type: aDOMEvent.type, group: "default", phase: getPhase(aDOMEvent), currentTarget: eventTargetToString(aDOMEvent.currentTarget) });
+  }
+
+  function onKeyInSystemEventGroup(aDOMEvent)
+  {
+    if (isModifierKeyEvent(aDOMEvent)) {
+      return;
+    }
+    keyEvents.push({ type: aDOMEvent.type, group: "system", phase: getPhase(aDOMEvent), currentTarget: eventTargetToString(aDOMEvent.currentTarget) });
+    // prevents reserved default action
+    if (aDOMEvent.type == "keypress" &&
+        aDOMEvent.eventPhase == aDOMEvent.BUBBLING_PHASE &&
+        aDOMEvent.currentTarget == browser.contentWindow) {
+      aDOMEvent.preventDefault();
+    }
+  }
+
+  function finializeKeyElementTest()
+  {
+    for (var i = 0; i < contents.length; i++) {
+      contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup, true);
+      contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup, true);
+      contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup, false);
+      contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup, false);
+      SpecialPowers.removeSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, true);
+      SpecialPowers.removeSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, true);
+      SpecialPowers.removeSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, false);
+      SpecialPowers.removeSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, false);
+    }
+  }
+
+  function testReservedKey(aEvent)
+  {
+    keyEvents = [];
+    return synthesizeKey(aEvent, "content_button", function() {
+      testName = "testReservedKey: " + eventToString(aEvent) + " ";
+      is(keyEvents.length, 20, testName + "wrong number events fired");
+      is(JSON.stringify(keyEvents[0]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content only in the system event group #0");
+      is(JSON.stringify(keyEvents[1]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content only in the system event group #1");
+      is(JSON.stringify(keyEvents[2]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content only in the system event group #2");
+      is(JSON.stringify(keyEvents[3]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content only in the system event group #3");
+
+      is(JSON.stringify(keyEvents[4]), JSON.stringify({ type: "keydown", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content only in the system event group #4");
+      is(JSON.stringify(keyEvents[5]), JSON.stringify({ type: "keydown", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content only in the system event group #5");
+
+      is(JSON.stringify(keyEvents[6]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content only in the system event group #6");
+      is(JSON.stringify(keyEvents[7]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content only in the system event group #7");
+      is(JSON.stringify(keyEvents[8]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content only in the system event group #8");
+      is(JSON.stringify(keyEvents[9]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content only in the system event group #9");
+
+      is(JSON.stringify(keyEvents[10]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keypress event should be fired on content only in the system event group #10");
+      is(JSON.stringify(keyEvents[11]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keypress event should be fired on content only in the system event group #11");
+      is(JSON.stringify(keyEvents[12]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keypress event should be fired on content only in the system event group #12");
+      is(JSON.stringify(keyEvents[13]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keypress event should be fired on content only in the system event group #13");
+
+      is(JSON.stringify(keyEvents[14]), JSON.stringify({ type: "keypress", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keypress event should be fired on content only in the system event group #14");
+      is(JSON.stringify(keyEvents[15]), JSON.stringify({ type: "keypress", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keypress event should be fired on content only in the system event group #15");
+
+      is(JSON.stringify(keyEvents[16]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keypress event should be fired on content only in the system event group #16");
+      is(JSON.stringify(keyEvents[17]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keypress event should be fired on content only in the system event group #17");
+      is(JSON.stringify(keyEvents[18]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keypress event should be fired on content only in the system event group #18");
+      is(JSON.stringify(keyEvents[19]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keypress event should be fired on content only in the system event group #19");
 
       continueTest();
     });
   }
 
   if (IS_MAC) {
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
-                   modifiers:{metaKey:1}, chars:";", unmodifiedChars:";"},
-                  "unshiftedKey", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
-                   modifiers:{metaKey:1}, chars:";", unmodifiedChars:";"},
-                  "shiftedKey", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
-                   modifiers:{metaKey:1, shiftKey:1}, chars:";", unmodifiedChars:":"},
-                  "shiftedKey", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
-                   modifiers:{metaKey:1, shiftKey:1}, chars:";", unmodifiedChars:":"},
-                  "unshiftedKey", false);
-  }
-  else if (IS_WIN) {
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
-                   modifiers:{ctrlKey:1}, chars:";"},
-                  "unshiftedKey", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
-                   modifiers:{ctrlKey:1}, chars:";"},
-                  "shiftedKey", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:";"},
-                  "shiftedKey", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:";"},
-                  "unshiftedKey", false);
+    // Cmd+T is reserved for opening new tab.
+    yield testReservedKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_T,
+                           modifiers:{metaKey:1}, chars:"t", unmodifiedChars:"t"});
+  } else if (IS_WIN) {
+    // Ctrl+T is reserved for opening new tab.
+    yield testReservedKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
+                           modifiers:{ctrlKey:1}, chars:"t"});
   }
 
-  keyElems = ["commandOptionF"];
-
-  // 429160
-  if (IS_MAC) {
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_F,
-                   modifiers:{metaKey:1, altKey:1}, chars:"\u0192", unmodifiedChars:"f"},
-                  "commandOptionF", true);
-  }
-  else if (IS_WIN) {
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
-                   modifiers:{ctrlKey:1, altKey:1}, chars:"\u0006"},
-                  "commandOptionF", true);
-  }
-  
-  // 432112
-  if (IS_MAC) {
-    yield testKey({layout:KEYBOARD_LAYOUT_SWEDISH, keyCode:MAC_VK_ANSI_Minus,
-                   modifiers:{metaKey:1, shiftKey:1}, chars:"+", unmodifiedChars:"?"},
-                  "question", true);
-  }
-  else if (IS_WIN) {
-    yield testKey({layout:KEYBOARD_LAYOUT_SWEDISH, keyCode:WIN_VK_OEM_PLUS,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
-                  "question", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_SWEDISH, keyCode:WIN_VK_OEM_PLUS,
-                   modifiers:{ctrlKey:1}, chars:""},
-                  "question", false);
-  }
-
-  // bug 433192
-  if (IS_WIN) {
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1}, chars:"\u0018"},
-                  "unshiftedX", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1}, chars:"\u0018"},
-                  "shiftedX", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
-                  "unshiftedX", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
-                  "shiftedX", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1}, chars:"\u0018"},
-                  "unshiftedX", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1}, chars:"\u0018"},
-                  "shiftedX", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
-                  "unshiftedX", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
-                  "shiftedX", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_HEBREW, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1}, chars:"\u0018"},
-                  "unshiftedX", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_HEBREW, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1}, chars:"\u0018"},
-                  "shiftedX", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_HEBREW, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
-                  "unshiftedX", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_HEBREW, keyCode:WIN_VK_X,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
-                  "shiftedX", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_JAPANESE, keyCode:WIN_VK_OEM_PLUS,
-                   modifiers:{ctrlKey:1}, chars:""},
-                  "unshiftedPlus", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_JAPANESE, keyCode:WIN_VK_OEM_PLUS,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
-                  "unshiftedPlus", true);
-  }
-
-  // bug 759346
-  if (IS_WIN) {
-    yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_1,
-                   modifiers:{ctrlKey:1}, chars:""},
-                  "unshiftedPlus", false);
-    yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_1,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
-                  "unshiftedPlus", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_OEM_PLUS,
-                   modifiers:{ctrlKey:1}, chars:""},
-                  "unshiftedPlus", true);
-    yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_OEM_PLUS,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
-                  "unshiftedPlus", false);
-  }
+  finializeKeyElementTest();
 }
 
 function* runTextInputTests()
@@ -3234,6 +3508,7 @@ function* runAllTests() {
   yield* runKeyEventTests();
   yield* runAccessKeyTests();
   yield* runXULKeyTests();
+  yield* runReservedKeyTests();
   yield* runTextInputTests();
 }
 

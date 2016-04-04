@@ -38,13 +38,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
 Cu.permitCPOWsInScope(this);
 
 var gSendCharCount = 0;
+var gSynthesizeKeyCount = 0;
+var gSynthesizeCompositionCount = 0;
+var gSynthesizeCompositionChangeCount = 0;
 
 this.BrowserTestUtils = {
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
    *
    * @param options
-   *        An object with the following properties:
+   *        An object  or string.
+   *        If this is a string it is the url to open and will be opened in the
+   *        currently active browser window.
+   *        If an object it should have the following properties:
    *        {
    *          gBrowser:
    *            Reference to the "tabbrowser" element where the new tab should
@@ -62,6 +68,12 @@ this.BrowserTestUtils = {
    * @rejects Any exception from taskFn is propagated.
    */
   withNewTab: Task.async(function* (options, taskFn) {
+    if (typeof(options) == "string") {
+      options = {
+        gBrowser: Services.wm.getMostRecentWindow("navigator:browser").gBrowser,
+        url: options
+      }
+    }
     let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
     let result = yield taskFn(tab.linkedBrowser);
     options.gBrowser.removeTab(tab);
@@ -464,6 +476,8 @@ this.BrowserTestUtils = {
    *        event is the expected one, or false if it should be ignored and
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise.
+   * @param {bool} wantsUntrusted [optional]
+   *        True to receive synthetic events dispatched by web content.
    *
    * @note Because this function is intended for testing, any error in checkFn
    *       will cause the returned promise to be rejected instead of waiting for
@@ -472,7 +486,7 @@ this.BrowserTestUtils = {
    * @returns {Promise}
    * @resolves The Event object.
    */
-  waitForEvent(subject, eventName, capture, checkFn) {
+  waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted) {
     return new Promise((resolve, reject) => {
       subject.addEventListener(eventName, function listener(event) {
         try {
@@ -489,7 +503,7 @@ this.BrowserTestUtils = {
           }
           reject(ex);
         }
-      }, capture);
+      }, capture, wantsUntrusted);
     });
   },
 
@@ -827,7 +841,7 @@ this.BrowserTestUtils = {
 
   /**
    * Version of EventUtils' `sendChar` function; it will synthesize a keypress
-   * event in a child process and returns a Promise that will result when the
+   * event in a child process and returns a Promise that will resolve when the
    * event was fired. Instead of a Window, a Browser object is required to be
    * passed to this function.
    *
@@ -849,7 +863,7 @@ this.BrowserTestUtils = {
           return;
 
         mm.removeMessageListener("Test:SendCharDone", charMsg);
-        resolve(message.data.sendCharResult);
+        resolve(message.data.result);
       });
 
       mm.sendAsyncMessage("Test:SendChar", {
@@ -860,11 +874,105 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * Version of EventUtils' `synthesizeKey` function; it will synthesize a key
+   * event in a child process and returns a Promise that will resolve when the
+   * event was fired. Instead of a Window, a Browser object is required to be
+   * passed to this function.
+   *
+   * @param {String} key
+   *        See the documentation available for EventUtils#synthesizeKey.
+   * @param {Object} event
+   *        See the documentation available for EventUtils#synthesizeKey.
+   * @param {Browser} browser
+   *        Browser element, must not be null.
+   *
+   * @returns {Promise}
+   */
+  synthesizeKey(key, event, browser) {
+    return new Promise(resolve => {
+      let seq = ++gSynthesizeKeyCount;
+      let mm = browser.messageManager;
+
+      mm.addMessageListener("Test:SynthesizeKeyDone", function keyMsg(message) {
+        if (message.data.seq != seq)
+          return;
+
+        mm.removeMessageListener("Test:SynthesizeKeyDone", keyMsg);
+        resolve();
+      });
+
+      mm.sendAsyncMessage("Test:SynthesizeKey", { key, event, seq });
+    });
+  },
+
+  /**
+   * Version of EventUtils' `synthesizeComposition` function; it will synthesize
+   * a composition event in a child process and returns a Promise that will
+   * resolve when the event was fired. Instead of a Window, a Browser object is
+   * required to be passed to this function.
+   *
+   * @param {Object} event
+   *        See the documentation available for EventUtils#synthesizeComposition.
+   * @param {Browser} browser
+   *        Browser element, must not be null.
+   *
+   * @returns {Promise}
+   * @resolves False if the composition event could not be synthesized.
+   */
+  synthesizeComposition(event, browser) {
+    return new Promise(resolve => {
+      let seq = ++gSynthesizeCompositionCount;
+      let mm = browser.messageManager;
+
+      mm.addMessageListener("Test:SynthesizeCompositionDone", function compMsg(message) {
+        if (message.data.seq != seq)
+          return;
+
+        mm.removeMessageListener("Test:SynthesizeCompositionDone", compMsg);
+        resolve(message.data.result);
+      });
+
+      mm.sendAsyncMessage("Test:SynthesizeComposition", { event, seq });
+    });
+  },
+
+  /**
+   * Version of EventUtils' `synthesizeCompositionChange` function; it will
+   * synthesize a compositionchange event in a child process and returns a
+   * Promise that will resolve when the event was fired. Instead of a Window, a
+   * Browser object is required to be passed to this function.
+   *
+   * @param {Object} event
+   *        See the documentation available for EventUtils#synthesizeCompositionChange.
+   * @param {Browser} browser
+   *        Browser element, must not be null.
+   *
+   * @returns {Promise}
+   */
+  synthesizeCompositionChange(event, browser) {
+    return new Promise(resolve => {
+      let seq = ++gSynthesizeCompositionChangeCount;
+      let mm = browser.messageManager;
+
+      mm.addMessageListener("Test:SynthesizeCompositionChangeDone", function compMsg(message) {
+        if (message.data.seq != seq)
+          return;
+
+        mm.removeMessageListener("Test:SynthesizeCompositionChangeDone", compMsg);
+        resolve();
+      });
+
+      mm.sendAsyncMessage("Test:SynthesizeCompositionChange", { event, seq });
+    });
+  },
+
+  /**
    * Will poll a condition function until it returns true.
    *
    * @param condition
    *        A condition function that must return true or false. If the
-   *        condition ever throws, this is also treated as a false.
+   *        condition ever throws, this is also treated as a false. The
+   *        function can be a generator.
    * @param interval
    *        The time interval to poll the condition function. Defaults
    *        to 100ms.
@@ -879,7 +987,7 @@ this.BrowserTestUtils = {
   waitForCondition(condition, msg, interval=100, maxTries=50) {
     return new Promise((resolve, reject) => {
       let tries = 0;
-      let intervalID = setInterval(() => {
+      let intervalID = setInterval(Task.async(function* () {
         if (tries >= maxTries) {
           clearInterval(intervalID);
           msg += ` - timed out after ${maxTries} tries.`;
@@ -889,7 +997,7 @@ this.BrowserTestUtils = {
 
         let conditionPassed = false;
         try {
-          conditionPassed = condition();
+          conditionPassed = yield condition();
         } catch(e) {
           msg += ` - threw exception: ${e}`;
           clearInterval(intervalID);
@@ -902,7 +1010,7 @@ this.BrowserTestUtils = {
           resolve();
         }
         tries++;
-      }, interval);
+      }), interval);
     });
   },
 

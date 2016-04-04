@@ -1395,7 +1395,7 @@ class Value
     friend jsval_layout (::JSVAL_TO_IMPL)(Value);
     friend Value JS_VALUE_CONSTEXPR (::IMPL_TO_JSVAL)(jsval_layout l);
     friend Value JS_VALUE_CONSTEXPR (JS::UndefinedValue)();
-};
+} JS_HAZ_GC_POINTER;
 
 inline bool
 IsOptimizedPlaceholderMagicValue(const Value& v)

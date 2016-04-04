@@ -8,10 +8,18 @@ const Census = createFactory(require("./census"));
 const CensusHeader = createFactory(require("./census-header"));
 const DominatorTree = createFactory(require("./dominator-tree"));
 const DominatorTreeHeader = createFactory(require("./dominator-tree-header"));
+const TreeMap = createFactory(require("./tree-map"));
 const HSplitBox = createFactory(require("devtools/client/shared/components/h-split-box"));
 const ShortestPaths = createFactory(require("./shortest-paths"));
 const { getStatusTextFull, L10N } = require("../utils");
-const { snapshotState: states, diffingState, viewState, dominatorTreeState } = require("../constants");
+const {
+  snapshotState: states,
+  diffingState,
+  viewState,
+  censusState,
+  treeMapState,
+  dominatorTreeState
+} = require("../constants");
 const { snapshot: snapshotModel, diffingModel } = require("../models");
 
 /**
@@ -28,10 +36,17 @@ const { snapshot: snapshotModel, diffingModel } = require("../models");
 function getState(view, snapshot, diffing) {
   switch (view) {
     case viewState.CENSUS:
-      return snapshot.state;
+      return snapshot.census
+        ? snapshot.census.state
+        : snapshot.state;
 
     case viewState.DIFFING:
       return diffing.state;
+
+    case viewState.TREE_MAP:
+    return snapshot.treeMap
+      ? snapshot.treeMap.state
+      : snapshot.state;
 
     case viewState.DOMINATOR_TREE:
       return snapshot.dominatorTree
@@ -59,8 +74,8 @@ function shouldDisplayStatus(state, view, snapshot) {
     case states.SAVING:
     case states.SAVED:
     case states.READING:
-    case states.READ:
-    case states.SAVING_CENSUS:
+    case censusState.SAVING:
+    case treeMapState.SAVING:
     case diffingState.SELECTING:
     case diffingState.TAKING_DIFF:
     case dominatorTreeState.COMPUTING:
@@ -110,13 +125,26 @@ function shouldDisplayThrobber(diffing) {
  * @returns {Error|null}
  */
 function getError(snapshot, diffing) {
-  if (diffing && diffing.state === diffingState.ERROR) {
-    return diffing.error;
+  if (diffing) {
+    if (diffing.state === diffingState.ERROR) {
+      return diffing.error;
+    }
+    if (diffing.census === censusState.ERROR) {
+      return diffing.census.error;
+    }
   }
 
   if (snapshot) {
     if (snapshot.state === states.ERROR) {
       return snapshot.error;
+    }
+
+    if (snapshot.census === censusState.ERROR) {
+      return snapshot.census.error;
+    }
+
+    if (snapshot.treeMap === treeMapState.ERROR) {
+      return snapshot.treeMap.error;
     }
 
     if (snapshot.dominatorTree &&
@@ -185,7 +213,14 @@ const Heap = module.exports = createClass({
       const census = view === viewState.CENSUS
         ? snapshot.census
         : diffing.census;
+      if (!census) {
+        return this._renderStatus(state, statusText, diffing);
+      }
       return this._renderCensus(state, census, diffing, onViewSourceInDebugger);
+    }
+
+    if (view === viewState.TREE_MAP) {
+      return this._renderTreeMap(state, snapshot.treeMap);
     }
 
     assert(view === viewState.DOMINATOR_TREE,
@@ -256,10 +291,18 @@ const Heap = module.exports = createClass({
   },
 
   _renderCensus(state, census, diffing, onViewSourceInDebugger) {
+    assert(census.report, "Should not render census that does not have a report");
+
+    if (!census.report.children) {
+      const msg = diffing       ? L10N.getStr("heapview.no-difference")
+                : census.filter ? L10N.getStr("heapview.none-match")
+                : /* else */      L10N.getStr("heapview.empty");
+      return this._renderHeapView(state, dom.div({ className: "empty" }, msg));
+    }
+
     const contents = [];
 
     if (census.display.breakdown.by === "allocationStack"
-        && census.report
         && census.report.children
         && census.report.children.length === 1
         && census.report.children[0].name === "noStack") {
@@ -278,6 +321,13 @@ const Heap = module.exports = createClass({
     }));
 
     return this._renderHeapView(state, ...contents);
+  },
+
+  _renderTreeMap(state, treeMap) {
+    return this._renderHeapView(
+      state,
+      TreeMap({ treeMap })
+    );
   },
 
   _renderDominatorTree(state, onViewSourceInDebugger, dominatorTree, onLoadMoreSiblings) {

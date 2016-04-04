@@ -49,9 +49,8 @@ private:
 static gfxTextRun*
 GetEllipsisTextRun(nsIFrame* aFrame)
 {
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(aFrame));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
   LazyReferenceRenderingDrawTargetGetterFromFrame lazyRefDrawTargetGetter(aFrame);
   return fm->GetThebesFontGroup()->GetEllipsisTextRun(
     aFrame->PresContext()->AppUnitsPerDevPixel(),
@@ -256,9 +255,8 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                     gfxTextRun::DrawParams(aCtx->ThebesContext()));
     }
   } else {
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm),
-      nsLayoutUtils::FontSizeInflationFor(mFrame));
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(mFrame);
     nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle->mString.get(),
                               mStyle->mString.Length(), pt);
   }
@@ -723,10 +721,11 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
                                   nsIFrame*             aBlockFrame)
 {
   // Nothing to do for text-overflow:clip or if 'overflow-x/y:visible' or if
-  // we're just building items for event processing or image visibility.
+  // we're just building items for event processing or frame visibility.
   if (HasClippedOverflow(aBlockFrame) ||
       IsInlineAxisOverflowVisible(aBlockFrame) ||
-      aBuilder->IsForEventDelivery() || aBuilder->IsForImageVisibility()) {
+      aBuilder->IsForEventDelivery() ||
+      aBuilder->IsForFrameVisibility()) {
     return false;
   }
 
@@ -810,9 +809,8 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   } else {
     nsRenderingContext rc(
       aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext());
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
-      nsLayoutUtils::FontSizeInflationFor(aFrame));
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
     mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,
                                                      *fm, rc);
   }

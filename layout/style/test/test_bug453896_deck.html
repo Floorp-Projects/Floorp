@@ -30,6 +30,7 @@ function run()
   var subwin = iframe.contentWindow;
 
   subwin.run(window);
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -450,8 +450,23 @@ void
 MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     MOZ_ASSERT(ptr != temp);
+    branchPtrInNurseryRangeImpl(cond, ptr, temp, label);
+}
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, const Address& address, Register temp,
+                                        Label* label)
+{
+    branchPtrInNurseryRangeImpl(cond, address, temp, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchPtrInNurseryRangeImpl(Condition cond, const T& ptr, Register temp,
+                                            Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
@@ -459,6 +474,20 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
     addPtr(ptr, temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, Imm32(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
+                                           Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, address, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, address, temp, label);
+
+    bind(&done);
 }
 
 void

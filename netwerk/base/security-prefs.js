@@ -44,6 +44,24 @@ pref("security.OCSP.require", false);
 pref("security.OCSP.GET.enabled", false);
 
 pref("security.pki.cert_short_lifetime_in_days", 10);
+// NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+// See the comment in CertVerifier.cpp.
+// 3 = allow SHA-1 for certificates issued before 2016 or by an imported root.
+pref("security.pki.sha1_enforcement_level", 3);
+
+// security.pki.name_matching_mode controls how the platform matches hostnames
+// to name information in TLS certificates. The possible values are:
+// 0: always fall back to the subject common name if necessary (as in, if the
+//    subject alternative name extension is either not present or does not
+//    contain any DNS names or IP addresses)
+// 1: fall back to the subject common name for certificates valid before 23
+//    August 2016 if necessary
+// 2: only use name information from the subject alternative name extension
+#ifdef RELEASE_BUILD
+pref("security.pki.name_matching_mode", 1);
+#else
+pref("security.pki.name_matching_mode", 2);
+#endif
 
 pref("security.webauth.u2f", false);
 pref("security.webauth.u2f.softtoken", false);

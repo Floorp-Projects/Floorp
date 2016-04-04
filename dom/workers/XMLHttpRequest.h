@@ -109,7 +109,7 @@ public:
   Unpin();
 
   bool
-  Notify(JSContext* aCx, Status aStatus) override;
+  Notify(Status aStatus) override;
 
   IMPL_EVENT_HANDLER(readystatechange)
 

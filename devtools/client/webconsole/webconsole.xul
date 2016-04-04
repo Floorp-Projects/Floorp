@@ -11,6 +11,8 @@
                  type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/webconsole.css"
                  type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/components-frame.css"
+                 type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-webconsole"
@@ -25,6 +27,7 @@
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="text/javascript" src="resource://devtools/client/webconsole/net/main.js"/>
   <script type="text/javascript"><![CDATA[
 function goUpdateConsoleCommands() {
   goUpdateCommand("consoleCmd_openURL");
@@ -90,13 +93,17 @@ function goUpdateConsoleCommands() {
   <box class="hud-outer-wrapper devtools-responsive-container theme-body" flex="1">
     <vbox class="hud-console-wrapper devtools-main-content" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
+        <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton devtools-clear-icon"
+                       tooltiptext="&btnClear.tooltip;"
+                       accesskey="&btnClear.accesskey;"
+                       tabindex="3"/>
         <hbox class="devtools-toolbarbutton-group">
           <toolbarbutton label="&btnPageNet.label;" type="menu-button"
                          category="net" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageNet.tooltip;"
                          accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
                          accesskey="&btnPageNet.accesskey;"
-                         tabindex="3">
+                         tabindex="4">
             <menupopup id="net-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                         prefKey="network"/>
@@ -112,7 +119,7 @@ function goUpdateConsoleCommands() {
                          category="css" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageCSS.tooltip2;"
                          accesskey="&btnPageCSS.accesskey;"
-                         tabindex="4">
+                         tabindex="5">
             <menupopup id="css-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                         prefKey="csserror"/>
@@ -126,7 +133,7 @@ function goUpdateConsoleCommands() {
                          category="js" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageJS.tooltip;"
                          accesskey="&btnPageJS.accesskey;"
-                         tabindex="5">
+                         tabindex="6">
             <menupopup id="js-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox"
                         autocheck="false" prefKey="exception"/>
@@ -140,7 +147,7 @@ function goUpdateConsoleCommands() {
                          category="security" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageSecurity.tooltip;"
                          accesskey="&btnPageSecurity.accesskey;"
-                         tabindex="6">
+                         tabindex="7">
             <menupopup id="security-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox"
                         autocheck="false" prefKey="secerror"/>
@@ -152,7 +159,7 @@ function goUpdateConsoleCommands() {
                          category="logging" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageLogging.tooltip;"
                          accesskey="&btnPageLogging.accesskey3;"
-                         tabindex="7">
+                         tabindex="8">
             <menupopup id="logging-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox"
                         autocheck="false" prefKey="error"/>
@@ -175,7 +182,7 @@ function goUpdateConsoleCommands() {
                          category="server" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnServerLogging.tooltip;"
                          accesskey="&btnServerLogging.accesskey;"
-                         tabindex="8">
+                         tabindex="9">
             <menupopup id="server-logging-contextmenu">
               <menuitem label="&btnServerErrors;" type="checkbox"
                         autocheck="false" prefKey="servererror"/>
@@ -188,10 +195,6 @@ function goUpdateConsoleCommands() {
             </menupopup>
           </toolbarbutton>
         </hbox>
-        <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
-                       label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"
-                       accesskey="&btnClear.accesskey;"
-                       tabindex="9"/>
 
         <spacer flex="1"/>
 

@@ -438,6 +438,22 @@ class Assembler : public AssemblerX86Shared
         masm.movq_rr(src.encoding(), dest.encoding());
     }
 
+    void cmovzq(const Operand& src, Register dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.cmovzq_rr(src.reg(), dest.encoding());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.cmovzq_mr(src.disp(), src.base(), dest.encoding());
+            break;
+          case Operand::MEM_SCALE:
+            masm.cmovzq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+
     void xchgq(Register src, Register dest) {
         masm.xchgq_rr(src.encoding(), dest.encoding());
     }

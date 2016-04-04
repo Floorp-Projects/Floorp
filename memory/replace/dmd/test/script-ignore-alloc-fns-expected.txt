@@ -4,7 +4,6 @@
 Invocation {
   $DMD is undefined
   Mode = 'dark-matter'
-  Sample-below size = 2500
 }
 
 #-----------------------------------------------------------------
@@ -45,8 +44,8 @@ Unreported {
 }
 
 Unreported {
-  ~1 block in heap block record 4 of 4
-  ~2,500 bytes (~2,500 requested / ~0 slop)
+  1 block in heap block record 4 of 4
+  2,500 bytes (2,500 requested / 0 slop)
   0.22% of the heap (100.00% cumulative)
   0.22% of unreported (100.00% cumulative)
   Allocated at {
@@ -65,9 +64,9 @@ Unreported {
 #-----------------------------------------------------------------
 
 Summary {
-  Total:            ~1,124,804 bytes (100.00%) in      ~4 blocks (100.00%)
-  Unreported:       ~1,124,804 bytes (100.00%) in      ~4 blocks (100.00%)
-  Once-reported:            ~0 bytes (  0.00%) in      ~0 blocks (  0.00%)
-  Twice-reported:           ~0 bytes (  0.00%) in      ~0 blocks (  0.00%)
+  Total:             1,124,804 bytes (100.00%) in       4 blocks (100.00%)
+  Unreported:        1,124,804 bytes (100.00%) in       4 blocks (100.00%)
+  Once-reported:             0 bytes (  0.00%) in       0 blocks (  0.00%)
+  Twice-reported:            0 bytes (  0.00%) in       0 blocks (  0.00%)
 }
 

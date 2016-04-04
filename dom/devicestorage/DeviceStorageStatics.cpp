@@ -198,13 +198,6 @@ DeviceStorageStatics::InitDirs()
     NS_NewLocalFile(path, /* aFollowLinks */ true,
                     getter_AddRefs(mDirs[TYPE_SDCARD]));
   }
-#ifdef MOZ_B2GDROID
-  if (NS_SUCCEEDED(mozilla::AndroidBridge::GetExternalPublicDirectory(
-      NS_LITERAL_STRING(DEVICESTORAGE_APPS), path))) {
-    NS_NewLocalFile(path, /* aFollowLinks */ true,
-                    getter_AddRefs(mDirs[TYPE_APPS]));
-  }
-#endif
 
 #elif defined (XP_UNIX)
   dirService->Get(NS_UNIX_XDG_PICTURES_DIR,
@@ -239,10 +232,8 @@ DeviceStorageStatics::InitDirs()
   }
 #endif // !MOZ_WIDGET_ANDROID
 
-#ifndef MOZ_B2GDROID
   dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                   getter_AddRefs(mDirs[TYPE_APPS]));
-#endif
 
   if (mDirs[TYPE_APPS]) {
     mDirs[TYPE_APPS]->AppendRelativeNativePath(NS_LITERAL_CSTRING("webapps"));
@@ -582,7 +573,16 @@ DeviceStorageStatics::ResetOverrideRootDir()
   nsCOMPtr<nsIFile> f;
   DS_LOG_INFO("");
 
-  if (Preferences::GetBool(kPrefTesting, false)) {
+  // For users running on desktop, it's convenient to be able to override
+  // all of the directories to point to a single tree, much like what happens
+  // on a real device.
+  const nsAdoptingString& overrideRootDir =
+    mozilla::Preferences::GetString(kPrefOverrideRootDir);
+  if (overrideRootDir && !overrideRootDir.IsEmpty()) {
+    NS_NewLocalFile(overrideRootDir, false, getter_AddRefs(f));
+  }
+
+  if (!f && Preferences::GetBool(kPrefTesting, false)) {
     DS_LOG_INFO("temp");
     nsCOMPtr<nsIProperties> dirService
       = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
@@ -591,15 +591,6 @@ DeviceStorageStatics::ResetOverrideRootDir()
     if (f) {
       f->AppendRelativeNativePath(
         NS_LITERAL_CSTRING("device-storage-testing"));
-    }
-  } else {
-    // For users running on desktop, it's convenient to be able to override
-    // all of the directories to point to a single tree, much like what happens
-    // on a real device.
-    const nsAdoptingString& overrideRootDir =
-      mozilla::Preferences::GetString(kPrefOverrideRootDir);
-    if (overrideRootDir && !overrideRootDir.IsEmpty()) {
-      NS_NewLocalFile(overrideRootDir, false, getter_AddRefs(f));
     }
   }
 

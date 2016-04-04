@@ -53,7 +53,7 @@ VsyncParent::NotifyVsync(TimeStamp aTimeStamp)
     NS_NewRunnableMethodWithArg<TimeStamp>(this,
                                            &VsyncParent::DispatchVsyncEvent,
                                            aTimeStamp);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mBackgroundThread->Dispatch(vsyncEvent, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(vsyncEvent, NS_DISPATCH_NORMAL));
   return true;
 }
 

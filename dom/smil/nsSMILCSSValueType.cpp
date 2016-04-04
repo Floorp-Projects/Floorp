@@ -359,13 +359,15 @@ ValueFromStringHelper(nsCSSProperty aPropID,
       subStringBegin = (uint32_t)absValuePos; // Start parsing after '-' sign
     }
   }
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElement(aTargetElement, nullptr,
+                                                  aPresContext->PresShell());
+  if (!styleContext) {
+    return false;
+  }
   nsDependentSubstring subString(aString, subStringBegin);
-  if (!StyleAnimationValue::ComputeValue(aPropID,
-                                         aTargetElement,
-                                         CSSPseudoElementType::NotPseudo,
-                                         subString,
-                                         true,
-                                         aStyleAnimValue,
+  if (!StyleAnimationValue::ComputeValue(aPropID, aTargetElement, styleContext,
+                                         subString, true, aStyleAnimValue,
                                          aIsContextSensitive)) {
     return false;
   }

@@ -210,25 +210,29 @@ module.exports = {
    *        Whether the global can be overwritten.
    */
   addVarToScope: function(name, scope, writable) {
-    // If the variable is already defined then skip it
-    if (scope.set && scope.set.has(name)) {
-      return;
-    }
+    scope.__defineGeneric(name, scope.set, scope.variables, null, null);
 
-    writable = writable === undefined ? true : writable;
-    var variables = scope.variables;
-    var variable = new escope.Variable(name, scope);
-
+    let variable = scope.set.get(name);
     variable.eslintExplicitGlobal = false;
     variable.writeable = writable;
-    variables.push(variable);
 
-    // Since eslint 1.10.3, scope variables are now duplicated in the scope.set
-    // map, so we need to store them there too if it exists.
-    // See https://groups.google.com/forum/#!msg/eslint/Y4_oHMWwP-o/5S57U8jXd8kJ
-    if (scope.set) {
-      scope.set.set(name, variable);
+    // Walk to the global scope which holds all undeclared variables.
+    while (scope.type != "global") {
+      scope = scope.upper;
     }
+
+    // "through" contains all references with no found definition.
+    scope.through = scope.through.filter(function(reference) {
+      if (reference.identifier.name != name) {
+        return true;
+      }
+
+      // Links the variable and the reference.
+      // And this reference is removed from `Scope#through`.
+      reference.resolved = variable;
+      variable.references.push(reference);
+      return false;
+    });
   },
 
   /**
@@ -411,6 +415,10 @@ module.exports = {
       //   fileName: /path/to/mozilla/repo/a/b/c/d.js
       //   cwd: /path/to/mozilla/repo
       return fileName;
+    } else if (path.basename(fileName) == fileName) {
+      // Case 1b: executed from a nested directory, fileName is the base name
+      // without any path info (happens in Atom with linter-eslint)
+      return path.join(cwd, fileName);
     } else {
       // Case 1: executed form in a nested directory, e.g. from a text editor:
       //   fileName: a/b/c/d.js

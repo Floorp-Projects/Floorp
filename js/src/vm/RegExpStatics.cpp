@@ -64,20 +64,6 @@ RegExpStatics::create(ExclusiveContext* cx, Handle<GlobalObject*> parent)
     return obj;
 }
 
-void
-RegExpStatics::markFlagsSet(JSContext* cx)
-{
-    // Flags set on the RegExp function get propagated to constructed RegExp
-    // objects, which interferes with optimizations that inline RegExp cloning
-    // or avoid cloning entirely. Scripts making this assumption listen to
-    // type changes on RegExp.prototype, so mark a state change to trigger
-    // recompilation of all such code (when recompiling, a stub call will
-    // always be performed).
-    MOZ_ASSERT_IF(cx->global()->hasRegExpStatics(), this == cx->global()->getRegExpStatics(cx));
-
-    MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_REGEXP_FLAGS_SET);
-}
-
 bool
 RegExpStatics::executeLazy(JSContext* cx)
 {

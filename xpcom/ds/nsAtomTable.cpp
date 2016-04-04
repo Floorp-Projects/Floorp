@@ -236,15 +236,14 @@ struct AtomTableKey
 };
 
 static PLDHashNumber
-AtomTableGetHash(PLDHashTable* aTable, const void* aKey)
+AtomTableGetHash(const void* aKey)
 {
   const AtomTableKey* k = static_cast<const AtomTableKey*>(aKey);
   return k->mHash;
 }
 
 static bool
-AtomTableMatchKey(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry,
-                  const void* aKey)
+AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const AtomTableEntry* he = static_cast<const AtomTableEntry*>(aEntry);
   const AtomTableKey* k = static_cast<const AtomTableKey*>(aKey);
@@ -465,13 +464,6 @@ AtomImpl::ToUTF8String(nsACString& aBuf)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
-AtomImpl::EqualsUTF8(const nsACString& aString)
-{
-  return CompareUTF8toUTF16(aString,
-                            nsDependentString(mString, mLength)) == 0;
-}
-
 NS_IMETHODIMP
 AtomImpl::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
@@ -523,7 +515,18 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
            : 0;
 }
 
-#define ATOM_HASHTABLE_INITIAL_LENGTH  2048
+// The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
+// But choosing the best initial length has some subtleties: we add ~2700
+// static atoms to the table at start-up, and then we start adding and removing
+// dynamic atoms. If we make the table too big to start with, when the first
+// dynamic atom gets removed the load factor will be < 25% and so we will
+// shrink it to 4096 entries.
+//
+// By choosing an initial length of 4096, we get an initial capacity of 8192.
+// That's the biggest initial capacity that will let us be > 25% full when the
+// first dynamic atom is removed (when the count is ~2700), thus avoiding any
+// shrinking.
+#define ATOM_HASHTABLE_INITIAL_LENGTH  4096
 
 static inline void
 EnsureTableExists()
@@ -572,7 +575,7 @@ class CheckStaticAtomSizes
   }
 };
 
-nsresult
+void
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
@@ -610,17 +613,16 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
       entry->mAtom = atom;
     }
   }
-  return NS_OK;
 }
 
 already_AddRefed<nsIAtom>
-NS_NewAtom(const char* aUTF8String)
+NS_Atomize(const char* aUTF8String)
 {
-  return NS_NewAtom(nsDependentCString(aUTF8String));
+  return NS_Atomize(nsDependentCString(aUTF8String));
 }
 
 already_AddRefed<nsIAtom>
-NS_NewAtom(const nsACString& aUTF8String)
+NS_Atomize(const nsACString& aUTF8String)
 {
   uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF8String.Data(),
@@ -646,13 +648,13 @@ NS_NewAtom(const nsACString& aUTF8String)
 }
 
 already_AddRefed<nsIAtom>
-NS_NewAtom(const char16_t* aUTF16String)
+NS_Atomize(const char16_t* aUTF16String)
 {
-  return NS_NewAtom(nsDependentString(aUTF16String));
+  return NS_Atomize(nsDependentString(aUTF16String));
 }
 
 already_AddRefed<nsIAtom>
-NS_NewAtom(const nsAString& aUTF16String)
+NS_Atomize(const nsAString& aUTF16String)
 {
   uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF16String.Data(),
@@ -669,28 +671,6 @@ NS_NewAtom(const nsAString& aUTF16String)
   he->mAtom = atom;
 
   return atom.forget();
-}
-
-nsIAtom*
-NS_NewPermanentAtom(const nsAString& aUTF16String)
-{
-  uint32_t hash;
-  AtomTableEntry* he = GetAtomHashEntry(aUTF16String.Data(),
-                                        aUTF16String.Length(),
-                                        &hash);
-
-  AtomImpl* atom = he->mAtom;
-  if (atom) {
-    if (!atom->IsPermanent()) {
-      PromoteToPermanent(atom);
-    }
-  } else {
-    atom = new PermanentAtomImpl(aUTF16String, hash);
-    he->mAtom = atom;
-  }
-
-  // No need to addref since permanent atoms aren't refcounted anyway
-  return atom;
 }
 
 nsrefcnt

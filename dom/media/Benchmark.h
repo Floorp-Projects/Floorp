@@ -22,7 +22,7 @@ class Benchmark;
 
 class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
 {
-public:
+  friend class Benchmark;
   explicit BenchmarkPlayback(Benchmark* aMainThreadState, MediaDataDemuxer* aDemuxer);
   void DemuxSamples();
   void DemuxNextSample();
@@ -37,14 +37,12 @@ public:
   void DrainComplete() override;
   bool OnReaderTaskQueue() override;
 
-private:
   Atomic<Benchmark*> mMainThreadState;
 
   RefPtr<FlushableTaskQueue> mDecoderTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
 
-  RefPtr<TaskQueue> mTaskQueue;
-  // Object only accessed on mTaskQueue
+  // Object only accessed on Thread()
   RefPtr<MediaDataDemuxer> mDemuxer;
   RefPtr<MediaTrackDemuxer> mTrackDemuxer;
   nsTArray<RefPtr<MediaRawData>> mSamples;
@@ -54,6 +52,8 @@ private:
   bool mFinished;
 };
 
+// Init() must have been called at least once prior on the
+// main thread.
 class Benchmark : public QueueObject
 {
 public:
@@ -85,13 +85,15 @@ public:
 
   explicit Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters = Parameters());
   RefPtr<BenchmarkPromise> Run();
-  void ReturnResult(uint32_t aDecodeFps);
-  void Dispose();
 
-  const Parameters mParameters;
+  static void Init();
 
 private:
+  friend class BenchmarkPlayback;
   virtual ~Benchmark();
+  void ReturnResult(uint32_t aDecodeFps);
+  void Dispose();
+  const Parameters mParameters;
   RefPtr<Benchmark> mKeepAliveUntilComplete;
   BenchmarkPlayback mPlaybackState;
   MozPromiseHolder<BenchmarkPromise> mPromise;

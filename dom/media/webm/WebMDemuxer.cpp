@@ -11,6 +11,7 @@
 #include "WebMDemuxer.h"
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
@@ -41,6 +42,8 @@ LazyLogModule gNesteggLog("Nestegg");
 // This value is based on what appears to be a reasonable value as most webm
 // files encountered appear to have keyframes located < 4s.
 #define MAX_LOOK_AHEAD 10000000
+
+static Atomic<uint32_t> sStreamSourceID(0u);
 
 // Functions for reading and seeking using WebMDemuxer required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -434,6 +437,12 @@ WebMDemuxer::IsSeekable() const
   return mContext && nestegg_has_cues(mContext);
 }
 
+bool
+WebMDemuxer::IsSeekableOnlyInBufferedRanges() const
+{
+  return mContext && !nestegg_has_cues(mContext);
+}
+
 void
 WebMDemuxer::EnsureUpToDateIndex()
 {
@@ -566,6 +575,22 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
           break;
       }
       isKeyframe = si.is_kf;
+      if (isKeyframe) {
+        // We only look for resolution changes on keyframes for both VP8 and
+        // VP9. Other resolution changes are invalid.
+        if (mLastSeenFrameWidth.isSome() && mLastSeenFrameHeight.isSome() &&
+            (si.w != mLastSeenFrameWidth.value() ||
+             si.h != mLastSeenFrameHeight.value())) {
+          // We ignore cropping information on resizes during streams.
+          // Cropping alone is rare, and we do not consider cropping to
+          // still be valid after a resolution change
+          mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
+          mInfo.mVideo.mImage = nsIntRect(0, 0, si.w, si.h);
+          mSharedVideoTrackInfo = new SharedTrackInfo(mInfo.mVideo, ++sStreamSourceID);
+        }
+        mLastSeenFrameWidth = Some(si.w);
+        mLastSeenFrameHeight = Some(si.h);
+      }
     }
 
     WEBM_DEBUG("push sample tstamp: %ld next_tstamp: %ld length: %ld kf: %d",
@@ -576,11 +601,14 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     sample->mDuration = next_tstamp - tstamp;
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
-    if (discardPadding) {
+    if (discardPadding && i == count - 1) {
       uint8_t c[8];
       BigEndian::writeInt64(&c[0], discardPadding);
       sample->mExtraData = new MediaByteBuffer;
       sample->mExtraData->AppendElements(&c[0], 8);
+    }
+    if (aType == TrackInfo::kVideoTrack) {
+      sample->mTrackInfo = mSharedVideoTrackInfo;
     }
     aSamples->Push(sample);
   }

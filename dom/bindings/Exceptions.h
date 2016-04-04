@@ -48,8 +48,11 @@ already_AddRefed<Exception>
 CreateException(JSContext* aCx, nsresult aRv,
                 const nsACString& aMessage = EmptyCString());
 
+// aMaxDepth can be used to define a maximal depth for the stack trace. If the
+// value is -1, a default maximal depth will be selected.  Will return null if
+// there is no JS stack right now.
 already_AddRefed<nsIStackFrame>
-GetCurrentJSStack();
+GetCurrentJSStack(int32_t aMaxDepth = -1);
 
 // Throwing a TypeError on an ErrorResult may result in SpiderMonkey using its
 // own error reporting mechanism instead of just setting the exception on the
@@ -68,7 +71,8 @@ public:
 namespace exceptions {
 
 // aMaxDepth can be used to define a maximal depth for the stack trace. If the
-// value is -1, a default maximal depth will be selected.
+// value is -1, a default maximal depth will be selected.  Will return null if
+// there is no JS stack right now.
 already_AddRefed<nsIStackFrame>
 CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
 

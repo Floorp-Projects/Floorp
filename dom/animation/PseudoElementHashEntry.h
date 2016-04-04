@@ -9,24 +9,17 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/NonOwningAnimationTarget.h"
 #include "PLDHashTable.h"
 
 namespace mozilla {
-
-enum class CSSPseudoElementType : uint8_t;
-
-struct PseudoElementHashKey
-{
-  dom::Element* mElement;
-  CSSPseudoElementType mPseudoType;
-};
 
 // A hash entry that uses a RefPtr<dom::Element>, CSSPseudoElementType pair
 class PseudoElementHashEntry : public PLDHashEntryHdr
 {
 public:
-  typedef PseudoElementHashKey KeyType;
-  typedef const PseudoElementHashKey* KeyTypePointer;
+  typedef NonOwningAnimationTarget KeyType;
+  typedef const NonOwningAnimationTarget* KeyTypePointer;
 
   explicit PseudoElementHashEntry(KeyTypePointer aKey)
     : mElement(aKey->mElement)
@@ -35,7 +28,7 @@ public:
 
   ~PseudoElementHashEntry() = default;
 
-  KeyType GetKey() const { return {mElement, mPseudoType}; }
+  KeyType GetKey() const { return { mElement, mPseudoType }; }
   bool KeyEquals(KeyTypePointer aKey) const
   {
     return mElement == aKey->mElement &&

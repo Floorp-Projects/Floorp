@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase, skip_if_b2g
 from marionette_driver.keys import Keys
 from marionette_driver.marionette import Actions
+from marionette_driver.by import By
+
 
 class TestKeyActions(MarionetteTestCase):
 
@@ -16,7 +18,7 @@ class TestKeyActions(MarionetteTestCase):
             self.mod_key = Keys.CONTROL
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        self.reporter_element = self.marionette.find_element("id", "keyReporter")
+        self.reporter_element = self.marionette.find_element(By.ID, "keyReporter")
         self.reporter_element.click()
         self.key_action = Actions(self.marionette)
 
@@ -69,7 +71,7 @@ class TestKeyActions(MarionetteTestCase):
 
     @skip_if_b2g
     def test_open_in_new_window_shortcut(self):
-        el = self.marionette.find_element('id', 'updatediv')
+        el = self.marionette.find_element(By.ID, 'updatediv')
         start_win = self.marionette.current_chrome_window_handle
         (self.key_action.key_down(Keys.SHIFT)
                         .press(el)

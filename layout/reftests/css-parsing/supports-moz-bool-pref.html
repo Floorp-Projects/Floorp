@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  /* This is not a user agent style sheet, so the style will be ignored.
+     "testing.supports.moz-bool-pref" is set to true in
+     layout/tools/reftest/reftest-preferences.js. */
+  @supports -moz-bool-pref("testing.supports.moz-bool-pref") {
+    p {
+      background-color: red;
+    }
+  }
+  </style>
+  <body>
+    <p>This text should not have background color.</p>
+  </body>
+</html>
+

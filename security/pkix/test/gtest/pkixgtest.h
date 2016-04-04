@@ -77,11 +77,12 @@ PrintTo(const Result& result, ::std::ostream* os)
 
 namespace mozilla { namespace pkix { namespace test {
 
-extern const std::time_t ONE_DAY_IN_SECONDS_AS_TIME_T;
-
-extern const std::time_t now;
 extern const std::time_t oneDayBeforeNow;
 extern const std::time_t oneDayAfterNow;
+extern const std::time_t twoDaysBeforeNow;
+extern const std::time_t twoDaysAfterNow;
+extern const std::time_t tenDaysBeforeNow;
+extern const std::time_t tenDaysAfterNow;
 
 
 class EverythingFailsByDefaultTrustDomain : public TrustDomain
@@ -212,6 +213,17 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
   Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA, KeyPurposeId)
                                    override
   {
+    return Success;
+  }
+};
+
+class DefaultNameMatchingPolicy : public NameMatchingPolicy
+{
+public:
+  virtual Result FallBackToCommonName(
+    Time, /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) override
+  {
+    fallBackToCommonName = FallBackToSearchWithinSubject::Yes;
     return Success;
   }
 };

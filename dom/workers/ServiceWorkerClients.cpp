@@ -4,18 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ServiceWorkerClients.h"
+
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 
 #include "ServiceWorkerClient.h"
-#include "ServiceWorkerClients.h"
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerWindowClient.h"
 
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
+#include "nsContentUtils.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindow.h"
@@ -24,6 +28,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#include "nsNetUtil.h"
 #include "nsPIWindowWatcher.h"
 #include "nsWindowWatcher.h"
 #include "nsWeakReference.h"
@@ -498,6 +503,11 @@ public:
     if (NS_SUCCEEDED(rv)) {
       MOZ_ASSERT(window);
 
+      rv = nsContentUtils::DispatchFocusChromeEvent(window);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
       MOZ_ASSERT(workerPrivate);
 
@@ -596,7 +606,7 @@ private:
                            spec.get(),
                            nullptr,
                            nullptr,
-                           false, false, true, nullptr, nullptr,
+                           false, false, true, nullptr, nullptr, 1.0f, 0,
                            getter_AddRefs(newWindow));
       nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);
@@ -665,7 +675,7 @@ ServiceWorkerClients::Get(const nsAString& aClientId, ErrorResult& aRv)
 
   RefPtr<GetRunnable> r =
     new GetRunnable(promiseProxy, aClientId);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   return promise.forget();
 }
 
@@ -701,7 +711,7 @@ ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
     new MatchAllRunnable(promiseProxy,
                          NS_ConvertUTF16toUTF8(scope),
                          aOptions.mIncludeUncontrolled);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   return promise.forget();
 }
 
@@ -742,7 +752,7 @@ ServiceWorkerClients::OpenWindow(const nsAString& aUrl,
 
   RefPtr<OpenWindowRunnable> r = new OpenWindowRunnable(promiseProxy,
                                                           aUrl, scope);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return promise.forget();
 }
@@ -771,6 +781,6 @@ ServiceWorkerClients::Claim(ErrorResult& aRv)
   RefPtr<ClaimRunnable> runnable =
     new ClaimRunnable(promiseProxy, NS_ConvertUTF16toUTF8(scope));
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
   return promise.forget();
 }

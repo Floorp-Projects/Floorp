@@ -20,25 +20,31 @@ var PerformanceView = {
   states: {
     "unavailable": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#unavailable-notice") },
+      { sel: "#performance-view-content", opt: "hidden", val: () => true },
     ],
     "empty": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#empty-notice") }
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#empty-notice") },
+      { sel: "#performance-view-content", opt: "hidden", val: () => true },
     ],
     "recording": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#recording-notice") }
+      { sel: "#performance-view-content", opt: "hidden", val: () => false },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#recording-notice") },
     ],
     "console-recording": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#console-recording-notice") }
+      { sel: "#performance-view-content", opt: "hidden", val: () => false },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#console-recording-notice") },
     ],
     "recorded": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#details-pane") }
+      { sel: "#performance-view-content", opt: "hidden", val: () => false },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#details-pane") },
     ],
     "loading": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#loading-notice") }
+      { sel: "#performance-view-content", opt: "hidden", val: () => false },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#loading-notice") },
     ]
   },
 
@@ -66,10 +72,10 @@ var PerformanceView = {
 
     // Bind to controller events to unlock the record button
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
-    PerformanceController.on(EVENTS.PROFILER_STATUS_UPDATED, this._onProfilerStatusUpdated);
+    PerformanceController.on(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, this._onProfilerStatusUpdated);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.NEW_RECORDING, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.NEW_RECORDING_FAILED, this._onNewRecordingFailed);
+    PerformanceController.on(EVENTS.RECORDING_ADDED, this._onRecordingStateChange);
+    PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START, this._onNewRecordingFailed);
 
     if (yield PerformanceController.canCurrentlyRecord()) {
       this.setState("empty");
@@ -96,10 +102,10 @@ var PerformanceView = {
     this._clearButton.removeEventListener("click", this._onClearButtonClick);
 
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
-    PerformanceController.off(EVENTS.PROFILER_STATUS_UPDATED, this._onProfilerStatusUpdated);
+    PerformanceController.off(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, this._onProfilerStatusUpdated);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.NEW_RECORDING, this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.NEW_RECORDING_FAILED, this._onNewRecordingFailed);
+    PerformanceController.off(EVENTS.RECORDING_ADDED, this._onRecordingStateChange);
+    PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START, this._onNewRecordingFailed);
 
     yield ToolbarView.destroy();
     yield RecordingsView.destroy();
@@ -181,7 +187,7 @@ var PerformanceView = {
     }
 
     $bufferLabel.value = L10N.getFormatStr("profiler.bufferFull", percent);
-    this.emit(EVENTS.UI_BUFFER_STATUS_UPDATED, percent);
+    this.emit(EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED, percent);
   },
 
   /**
@@ -298,10 +304,10 @@ var PerformanceView = {
    * Fired when the controller has updated information on the buffer's status.
    * Update the buffer status display if shown.
    */
-  _onProfilerStatusUpdated: function (_, data) {
+  _onProfilerStatusUpdated: function (_, profilerStatus) {
     // We only care about buffer status here, so check to see
     // if it has position.
-    if (!data || data.position === void 0) {
+    if (!profilerStatus || profilerStatus.position === void 0) {
       return;
     }
     // If this is our first buffer event, set the status and add a class

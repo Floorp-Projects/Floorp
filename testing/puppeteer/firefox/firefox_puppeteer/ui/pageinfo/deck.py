@@ -118,7 +118,9 @@ class Deck(UIBaseLib):
         :returns: :class:`Panel` instance of the selected panel.
         """
         panel.tab.click()
-        Wait(self.marionette).until(lambda _: self.selected_panel == panel)
+        Wait(self.marionette).until(
+            lambda _: self.selected_panel == panel,
+            message='Panel with ID "%s" could not be selected.' % panel)
 
         return panel
 

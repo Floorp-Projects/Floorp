@@ -10,7 +10,7 @@
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 #include "ObexBase.h"
 
 #include "mozilla/dom/BluetoothMapParametersBinding.h"
@@ -21,7 +21,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIInputStream.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -458,14 +457,14 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
 // Virtual function of class SocketConsumer
 void
 BluetoothMapSmsManager::ReceiveSocketData(BluetoothSocket* aSocket,
-                                          nsAutoPtr<UnixSocketBuffer>& aMessage)
+                                          UniquePtr<UnixSocketBuffer>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aSocket == mMnsSocket) {
-    MnsDataHandler(aMessage);
+    MnsDataHandler(aMessage.get());
   } else {
-    MasDataHandler(aMessage);
+    MasDataHandler(aMessage.get());
   }
 }
 

@@ -308,7 +308,7 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
   ByteString certDER(CreateEncodedCertificate(
                        v3, sha256WithRSAEncryption(),
                        serialNumber, issuerDER,
-                       oneDayBeforeNow - ONE_DAY_IN_SECONDS_AS_TIME_T,
+                       twoDaysBeforeNow,
                        oneDayBeforeNow,
                        subjectDER, *reusedKey, nullptr, *reusedKey,
                        sha256WithRSAEncryption()));

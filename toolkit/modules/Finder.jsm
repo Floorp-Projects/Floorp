@@ -5,9 +5,7 @@
 
 this.EXPORTED_SYMBOLS = ["Finder","GetClipboardSearchString"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
+const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Geometry.jsm");
@@ -519,10 +517,15 @@ Finder.prototype = {
       let nodes = win.document.querySelectorAll("input, textarea");
       for (let node of nodes) {
         if (node instanceof Ci.nsIDOMNSEditableElement && node.editor) {
-          let sc = node.editor.selectionController;
-          selection = sc.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
-          if (selection.rangeCount && !selection.isCollapsed) {
-            break;
+          try {
+            let sc = node.editor.selectionController;
+            selection = sc.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+            if (selection.rangeCount && !selection.isCollapsed) {
+              break;
+            }
+          } catch (e) {
+            // If this textarea is hidden, then its selection controller might
+            // not be intialized. Ignore the failure.
           }
         }
       }

@@ -39,10 +39,10 @@ function testViewSource() {
   }).then(([error1Rule, error2Rule]) => {
     let error1Msg = [...error1Rule.matched][0];
     let error2Msg = [...error2Rule.matched][0];
-    nodes = [error1Msg.querySelector(".message-location"),
-             error2Msg.querySelector(".message-location")];
-    ok(nodes[0], ".message-location node for the first error");
-    ok(nodes[1], ".message-location node for the second error");
+    nodes = [error1Msg.querySelector(".message-location .frame-link"),
+             error2Msg.querySelector(".message-location .frame-link")];
+    ok(nodes[0], ".frame-link node for the first error");
+    ok(nodes[1], ".frame-link node for the second error");
 
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
@@ -51,7 +51,7 @@ function testViewSource() {
       deferred.resolve(panel);
     });
 
-    EventUtils.sendMouseEvent({ type: "click" }, nodes[0]);
+    EventUtils.sendMouseEvent({ type: "click" }, nodes[0].querySelector(".frame-link-filename"));
   });
 
   return deferred.promise;
@@ -71,14 +71,14 @@ function onStyleEditorReady(panel) {
       checkStyleEditorForSheetAndLine(href, line - 1).then(deferred.resolve);
     });
 
-    EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
+    EventUtils.sendMouseEvent({ type: "click" }, nodes[1].querySelector(".frame-link-filename"));
   }
 
   waitForFocus(function() {
     info("style editor window focused");
 
-    let href = nodes[0].getAttribute("title");
-    let line = nodes[0].sourceLine;
+    let href = nodes[0].getAttribute("data-url");
+    let line = nodes[0].getAttribute("data-line");
     ok(line, "found source line");
 
     checkStyleEditorForSheetAndLine(href, line - 1).then(function() {
@@ -87,8 +87,8 @@ function onStyleEditorReady(panel) {
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       let toolbox = gDevTools.getToolbox(target);
 
-      href = nodes[1].getAttribute("title");
-      line = nodes[1].sourceLine;
+      href = nodes[1].getAttribute("data-url");
+      line = nodes[1].getAttribute("data-line");
       ok(line, "found source line");
 
       toolbox.selectTool("webconsole").then(function() {

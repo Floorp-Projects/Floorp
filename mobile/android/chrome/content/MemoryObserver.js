@@ -23,7 +23,7 @@ var MemoryObserver = {
     let tabs = BrowserApp.tabs;
     let selected = BrowserApp.selectedTab;
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i] != selected) {
+      if (tabs[i] != selected && !tabs[i].playingAudio) {
         this.zombify(tabs[i]);
       }
     }
@@ -42,6 +42,17 @@ var MemoryObserver = {
     let browser = tab.browser;
     let data = browser.__SS_data;
     let extra = browser.__SS_extdata;
+
+    // Destroying the tab will stop audio playback without invoking the
+    // normal events, therefore we need to explicitly tell the Java UI
+    // to stop displaying the audio playing indicator.
+    if (tab.playingAudio) {
+      Messaging.sendRequest({
+        type: "Tab:AudioPlayingChange",
+        tabID: tab.id,
+        isAudioPlaying: false
+      });
+    }
 
     // We need this data to correctly create and position the new browser
     // If this browser is already a zombie, fallback to the session data

@@ -384,6 +384,7 @@ add_task(function* test_recoveryEmailStatus() {
   let server = httpd_setup({
     "/recovery_email/status": function(request, response) {
       do_check_true(request.hasHeader("Authorization"));
+      do_check_eq("", request._queryString);
 
       if (tries === 0) {
         tries += 1;
@@ -411,6 +412,28 @@ add_task(function* test_recoveryEmailStatus() {
     do_check_eq(102, expectedError.errno);
   }
 
+  yield deferredStop(server);
+});
+
+add_task(function* test_recoveryEmailStatusWithReason() {
+  let emailStatus = JSON.stringify({verified: true});
+  let server = httpd_setup({
+    "/recovery_email/status": function(request, response) {
+      do_check_true(request.hasHeader("Authorization"));
+      // if there is a query string then it will have a reason
+      do_check_eq("reason=push", request._queryString);
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(emailStatus, emailStatus.length);
+      return;
+    },
+  });
+
+  let client = new FxAccountsClient(server.baseURI);
+  let result = yield client.recoveryEmailStatus(FAKE_SESSION_TOKEN, {
+    reason: "push",
+  });
+  do_check_eq(result.verified, true);
   yield deferredStop(server);
 });
 
@@ -803,8 +826,6 @@ add_task(function* test_getDeviceList() {
 });
 
 add_task(function* test_client_metrics() {
-  Services.telemetry.getKeyedHistogramById("FXA_HAWK_ERRORS").clear();
-
   function writeResp(response, msg) {
     if (typeof msg === "object") {
       msg = JSON.stringify(msg);
@@ -833,11 +854,6 @@ add_task(function* test_client_metrics() {
   }), function(err) {
     return err.errno == 111;
   });
-
-  let histogram = Services.telemetry.getKeyedHistogramById("FXA_HAWK_ERRORS");
-  let snapshot = histogram.snapshot("/session/destroy");
-  do_check_eq(snapshot.sum, 1, "Should report Hawk authentication errors");
-  histogram.clear();
 
   yield deferredStop(server);
 });

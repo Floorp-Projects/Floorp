@@ -216,12 +216,16 @@ private:
 
     void DoCallback()
     {
+        bool pacAvailable = true;
         if (mStatus == NS_ERROR_NOT_AVAILABLE && !mProxyInfo) {
             // If the PAC service is not avail (e.g. failed pac load
             // or shutdown) then we will be going direct. Make that
             // mapping now so that any filters are still applied.
             mPACString = NS_LITERAL_CSTRING("DIRECT;");
             mStatus = NS_OK;
+
+            LOG(("pac not available, use DIRECT\n"));
+            pacAvailable = false;
         }
 
         // Generate proxy info from the PAC string if appropriate
@@ -239,7 +243,10 @@ private:
             else
                 mProxyInfo = nullptr;
 
-            LOG(("pac thread callback %s\n", mPACString.get()));
+            if(pacAvailable) {
+                // if !pacAvailable, it was already logged above
+                LOG(("pac thread callback %s\n", mPACString.get()));
+            }
             if (NS_SUCCEEDED(mStatus))
                 mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
             mCallback->OnProxyAvailable(this, mChannel, mProxyInfo, mStatus);
@@ -1347,7 +1354,7 @@ nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
         rv = NS_NewChannel(getter_AddRefs(channel),
                            uri,
                            systemPrincipal,
-                           nsILoadInfo::SEC_NORMAL,
+                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                            nsIContentPolicy::TYPE_OTHER);
         NS_ENSURE_SUCCESS(rv, rv);
     }

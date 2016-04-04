@@ -24,6 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Abs;
+using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
@@ -301,6 +302,73 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
+{
+    MIRType mirType = ins->mir()->type();
+
+    Register cond = ToRegister(ins->condExpr());
+    Operand falseExpr = ToOperand(ins->falseExpr());
+
+    masm.test32(cond, cond);
+
+    if (mirType == MIRType_Int32) {
+        Register out = ToRegister(ins->output());
+        MOZ_ASSERT(ToRegister(ins->trueExpr()) == out, "true expr input is reused for output");
+        masm.cmovz(falseExpr, out);
+        return;
+    }
+
+    FloatRegister out = ToFloatRegister(ins->output());
+    MOZ_ASSERT(ToFloatRegister(ins->trueExpr()) == out, "true expr input is reused for output");
+
+    Label done;
+    masm.j(Assembler::NonZero, &done);
+
+    if (mirType == MIRType_Float32) {
+        if (falseExpr.kind() == Operand::FPREG)
+            masm.moveFloat32(ToFloatRegister(ins->falseExpr()), out);
+        else
+            masm.loadFloat32(falseExpr, out);
+    } else if (mirType == MIRType_Double) {
+        if (falseExpr.kind() == Operand::FPREG)
+            masm.moveDouble(ToFloatRegister(ins->falseExpr()), out);
+        else
+            masm.loadDouble(falseExpr, out);
+    } else {
+        MOZ_CRASH("unhandled type in visitAsmSelect!");
+    }
+
+    masm.bind(&done);
+    return;
+}
+
+void
+CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
+{
+    MOZ_ASSERT(gen->compilingAsmJS());
+    MAsmReinterpret* ins = lir->mir();
+
+    MIRType to = ins->type();
+    DebugOnly<MIRType> from = ins->input()->type();
+
+    switch (to) {
+      case MIRType_Int32:
+        MOZ_ASSERT(from == MIRType_Float32);
+        masm.vmovd(ToFloatRegister(lir->input()), ToRegister(lir->output()));
+        break;
+      case MIRType_Float32:
+        MOZ_ASSERT(from == MIRType_Int32);
+        masm.vmovd(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+        break;
+      case MIRType_Double:
+      case MIRType_Int64:
+        MOZ_CRASH("not handled by this LIR opcode");
+      default:
+        MOZ_CRASH("unexpected AsmReinterpret");
+    }
+}
+
+void
 CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool)
 {
     switch (ool->viewType()) {
@@ -414,7 +482,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir,
         return wasm::HeapAccess::NoLengthCheck;
 
     if (mir->isAtomicAccess())
-        return maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ins->ptr());
+        return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), nullptr);
 
     *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(ins->output()),
                                                            mir->accessType());
@@ -434,7 +502,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mi
         return wasm::HeapAccess::NoLengthCheck;
 
     if (mir->isAtomicAccess())
-        return maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ins->ptr());
+        return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), nullptr);
 
     *rejoin = alloc().lifoAlloc()->newInfallible<Label>();
     return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), *rejoin);
@@ -891,7 +959,7 @@ CodeGeneratorX86Shared::visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation
     LInstruction* ins = ool->ins();
     Register reg = ToRegister(ins->getDef(0));
 
-    mozilla::DebugOnly<LAllocation*> lhs = ins->getOperand(0);
+    DebugOnly<LAllocation*> lhs = ins->getOperand(0);
     LAllocation* rhs = ins->getOperand(1);
 
     MOZ_ASSERT(reg == ToRegister(lhs));
@@ -1175,7 +1243,7 @@ void
 CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
 {
     Register lhs = ToRegister(ins->numerator());
-    mozilla::DebugOnly<Register> output = ToRegister(ins->output());
+    DebugOnly<Register> output = ToRegister(ins->output());
 
     int32_t shift = ins->shift();
     bool negativeDivisor = ins->negativeDivisor();
@@ -1694,6 +1762,28 @@ CodeGeneratorX86Shared::visitUrshD(LUrshD* ins)
     }
 
     masm.convertUInt32ToDouble(lhs, out);
+}
+
+Operand
+CodeGeneratorX86Shared::ToOperand(const LAllocation& a)
+{
+    if (a.isGeneralReg())
+        return Operand(a.toGeneralReg()->reg());
+    if (a.isFloatReg())
+        return Operand(a.toFloatReg()->reg());
+    return Operand(masm.getStackPointer(), ToStackOffset(&a));
+}
+
+Operand
+CodeGeneratorX86Shared::ToOperand(const LAllocation* a)
+{
+    return ToOperand(*a);
+}
+
+Operand
+CodeGeneratorX86Shared::ToOperand(const LDefinition* def)
+{
+    return ToOperand(def->output());
 }
 
 MoveOperand

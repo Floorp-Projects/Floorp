@@ -13,12 +13,15 @@ const SHARED_STRINGS_URI = "chrome://devtools/locale/shared.properties";
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
 
 /**
  * Localization convenience methods.
  */
-var L10N = new ViewHelpers.L10N(SHARED_STRINGS_URI);
+var L10N = new LocalizationHelper(SHARED_STRINGS_URI);
 
 /**
  * A simple side menu, with the ability of grouping menu items.

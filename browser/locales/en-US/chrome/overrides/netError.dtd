@@ -24,7 +24,7 @@
   <li>Check the address for typing errors such as
     <strong>ww</strong>.example.com instead of
     <strong>www</strong>.example.com</li>
-  <li>If you are unable to load any pages, check your computer's network
+  <li>If you are unable to load any pages, check your computer’s network
     connection.</li>
   <li>If your computer or network is protected by a firewall or proxy, make sure
     that &brandShortName; is permitted to access the Web.</li>
@@ -42,15 +42,15 @@
 
 <!ENTITY generic.title "Oops.">
 <!ENTITY generic.longDesc "
-<p>&brandShortName; can't load this page for some reason.</p>
+<p>&brandShortName; can’t load this page for some reason.</p>
 ">
 
-<!ENTITY malformedURI.title "The address isn't valid">
+<!ENTITY malformedURI.title "The address isn’t valid">
 <!ENTITY malformedURI.longDesc "
 <ul>
   <li>Web addresses are usually written like
     <strong>http://www.example.com/</strong></li>
-  <li>Make sure that you're using forward slashes (i.e.
+  <li>Make sure that you’re using forward slashes (i.e.
     <strong>/</strong>).</li>
 </ul>
 ">
@@ -59,7 +59,7 @@
 <!ENTITY netInterrupt.longDesc "&sharedLongDesc;">
 
 <!ENTITY notCached.title "Document Expired">
-<!ENTITY notCached.longDesc "<p>The requested document is not available in &brandShortName;'s cache.</p><ul><li>As a security precaution, &brandShortName; does not automatically re-request sensitive documents.</li><li>Click Try Again to re-request the document from the website.</li></ul>">
+<!ENTITY notCached.longDesc "<p>The requested document is not available in &brandShortName;’s cache.</p><ul><li>As a security precaution, &brandShortName; does not automatically re-request sensitive documents.</li><li>Click Try Again to re-request the document from the website.</li></ul>">
 
 <!ENTITY netOffline.title "Offline mode">
 <!ENTITY netOffline.longDesc2 "
@@ -88,7 +88,7 @@
 <!ENTITY netTimeout.title "The connection has timed out">
 <!ENTITY netTimeout.longDesc "&sharedLongDesc;">
 
-<!ENTITY unknownProtocolFound.title "The address wasn't understood">
+<!ENTITY unknownProtocolFound.title "The address wasn’t understood">
 <!ENTITY unknownProtocolFound.longDesc "
 <ul>
   <li>You might need to install other software to open this address.</li>
@@ -114,7 +114,7 @@
 </ul>
 ">
 
-<!ENTITY redirectLoop.title "The page isn't redirecting properly">
+<!ENTITY redirectLoop.title "The page isn’t redirecting properly">
 <!ENTITY redirectLoop.longDesc "
 <ul>
   <li>This problem can sometimes be caused by disabling or refusing to accept
@@ -142,7 +142,7 @@
 <!ENTITY nssBadCert.title "Secure Connection Failed">
 <!ENTITY nssBadCert.longDesc2 "
 <ul>
-  <li>This could be a problem with the server's configuration, or it could be
+  <li>This could be a problem with the server’s configuration, or it could be
 someone trying to impersonate the server.</li>
   <li>If you have connected to this server successfully in the past, the error may
 be temporary, and you can try again later.</li>
@@ -153,7 +153,7 @@ be temporary, and you can try again later.</li>
 <ul>
   <li>The site could be temporarily unavailable or too busy. Try again in a few
     moments.</li>
-  <li>If you are unable to load any pages, check your computer's network
+  <li>If you are unable to load any pages, check your computer’s network
     connection.</li>
   <li>If your computer or network is protected by a firewall or proxy, make sure
     that &brandShortName; is permitted to access the Web.</li>

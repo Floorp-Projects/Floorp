@@ -109,6 +109,10 @@ DEFAULTS = dict(
             'http://127.0.0.1/trackingprotection/tour',
         'browser.safebrowsing.enabled': False,
         'browser.safebrowsing.malware.enabled': False,
+        'browser.safebrowsing.forbiddenURIs.enabled': False,
+        'browser.safebrowsing.blockedURIs.enabled': False,
+        'privacy.trackingprotection.enabled': False,
+        'privacy.trackingprotection.pbmode.enabled': False,
         'browser.search.isUS': True,
         'browser.search.countryCode': 'US',
         'browser.selfsupport.url':
@@ -410,10 +414,11 @@ def get_browser_config(config):
                 'extra_args', 'buildid', 'env', 'init_url', 'webserver')
     optional = {'bcontroller_config': '${talos}/bcontroller.json',
                 'branch_name': '',
-                'child_process': 'plugin-container',
+                'child_process': 'firefox-webcontent',
                 'develop': False,
                 'e10s': False,
                 'process': '',
+                'framework': 'talos',
                 'repository': None,
                 'sourcestamp': None,
                 'symbols_path': None,

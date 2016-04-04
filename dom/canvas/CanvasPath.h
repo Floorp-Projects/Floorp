@@ -51,6 +51,9 @@ public:
   void Arc(double x, double y, double radius,
            double startAngle, double endAngle, bool anticlockwise,
            ErrorResult& error);
+  void Ellipse(double x, double y, double radiusX, double radiusY,
+               double rotation, double startAngle, double endAngle,
+               bool anticlockwise, ErrorResult& error);
 
   void LineTo(const gfx::Point& aPoint);
   void BezierTo(const gfx::Point& aCP1,

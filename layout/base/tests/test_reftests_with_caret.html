@@ -155,6 +155,11 @@ var tests = [
     [ 'bug1123067-2.html' , 'bug1123067-ref.html'  ] ,
     [ 'bug1123067-3.html' , 'bug1123067-ref.html'  ] ,
     [ 'bug1132768-1.html' , 'bug1132768-1-ref.html'] ,
+    [ 'bug1237236-1.html' , 'bug1237236-1-ref.html' ] ,
+    [ 'bug1237236-2.html' , 'bug1237236-2-ref.html' ] ,
+    [ 'bug1258308-2.html' , 'bug1258308-2-ref.html' ] ,
+    [ 'bug1259949-1.html' , 'bug1259949-1-ref.html'] ,
+    [ 'bug1259949-2.html' , 'bug1259949-2-ref.html'] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled']]}, nextTest);} ,
 ];
 
@@ -168,8 +173,9 @@ if (navigator.appVersion.indexOf("Android") == -1 &&
   tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
   tests.push([ 'bug966992-3.html' , 'bug966992-3-ref.html' ]);
   tests.push(function() {SpecialPowers.pushPrefEnv({'clear': [['layout.css.overflow-clip-box.enabled']]}, nextTest);});
+  tests.push([ 'bug1258308-1.html' , 'bug1258308-1-ref.html' ]); // maybe VK_END doesn't work on Android?
 } else {
-  is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platrom or this if..else check removed");
+  is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platform or this if..else check removed");
 }
 
 if (navigator.platform.indexOf("Linux") >= 0 &&

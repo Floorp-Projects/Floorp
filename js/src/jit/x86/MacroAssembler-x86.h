@@ -150,6 +150,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void storeValue(ValueOperand val, BaseIndex dest) {
         storeValue(val, Operand(dest));
     }
+    void storeValue(const Address& src, const Address& dest, Register temp) {
+        MOZ_ASSERT(src.base != temp);
+        MOZ_ASSERT(dest.base != temp);
+
+        load32(ToType(src), temp);
+        store32(temp, ToType(dest));
+
+        load32(ToPayload(src), temp);
+        store32(temp, ToPayload(dest));
+    }
     void loadValue(Operand src, ValueOperand val) {
         Operand payload = ToPayload(src);
         Operand type = ToType(src);
@@ -158,6 +168,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         // Value in memory or the index.
         Register baseReg = Register::FromCode(src.base());
         Register indexReg = (src.kind() == Operand::MEM_SCALE) ? Register::FromCode(src.index()) : InvalidReg;
+
+        // If we have a BaseIndex that uses both result registers, first compute
+        // the address and then load the Value from there.
+        if ((baseReg == val.payloadReg() && indexReg == val.typeReg()) ||
+            (baseReg == val.typeReg() && indexReg == val.payloadReg()))
+        {
+            computeEffectiveAddress(src, val.scratchReg());
+            loadValue(Address(val.scratchReg(), 0), val);
+            return;
+        }
 
         if (baseReg == val.payloadReg() || indexReg == val.payloadReg()) {
             MOZ_ASSERT(baseReg != val.typeReg());

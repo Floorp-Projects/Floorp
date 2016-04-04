@@ -5,11 +5,11 @@ f = function() {
 }
 rv = f()
 for (a in rv) (function() {})
-x = Proxy.create((function() {
+x = new Proxy({}, (function() {
   return {
     defineProperty: gc
   }
-})(), x)
+})());
 with({
   d: (({
     x: Object.defineProperty(x, "", ({

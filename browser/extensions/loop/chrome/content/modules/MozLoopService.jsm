@@ -190,7 +190,6 @@ function getJSONPref(aName) {
 
 var gHawkClient = null;
 var gLocalizedStrings = new Map();
-var gFxAEnabled = true;
 var gFxAOAuthClientPromise = null;
 var gFxAOAuthClient = null;
 var gErrors = new Map();
@@ -1009,28 +1008,21 @@ var MozLoopServiceInternal = {
             }
           });
 
+          // Disable drag feature if needed
+          if (!MozLoopService.getLoopPref("conversationPopOut.enabled")) {
+            let document = chatbox.ownerDocument;
+            let titlebarNode = document.getAnonymousElementByAttribute(chatbox, "class",
+              "chat-titlebar");
+            titlebarNode.addEventListener("dragend", event => {
+              event.stopPropagation();
+              return false;
+            });
+          }
+
           // Handle window.close correctly on the chatbox.
           mm.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
           messageName = "Social:DOMWindowClose";
           mm.addMessageListener(messageName, listeners[messageName] = () => {
-            // Remove message listeners.
-            for (let name of Object.getOwnPropertyNames(listeners)) {
-              mm.removeMessageListener(name, listeners[name]);
-            }
-            listeners = {};
-
-            windowCloseCallback();
-
-            if (conversationWindowData.type == "room") {
-              // NOTE: if you add something here, please also consider if something
-              //       needs to be done on the content side as well (e.g.
-              //       activeRoomStore#windowUnload).
-              LoopAPI.sendMessageToHandler({
-                name: "HangupNow",
-                data: [conversationWindowData.roomToken, windowId]
-              });
-            }
-
             chatbox.close();
           });
 
@@ -1065,6 +1057,28 @@ var MozLoopServiceInternal = {
             }
           });
 
+          let closeListener = function() {
+            this.removeEventListener("ChatboxClosed", closeListener);
+
+            // Remove message listeners.
+            for (let name of Object.getOwnPropertyNames(listeners)) {
+              mm.removeMessageListener(name, listeners[name]);
+            }
+            listeners = {};
+
+            windowCloseCallback();
+
+            if (conversationWindowData.type == "room") {
+              // NOTE: if you add something here, please also consider if something
+              //       needs to be done on the content side as well (e.g.
+              //       activeRoomStore#windowUnload).
+              LoopAPI.sendMessageToHandler({
+                name: "HangupNow",
+                data: [conversationWindowData.roomToken, windowId]
+              });
+            }
+          };
+
           // When a chat window is attached or detached, the docShells hosting
           // about:loopconverstation is swapped to the newly created chat window.
           // (Be it inside a popup or back inside a chatbox element attached to the
@@ -1074,17 +1088,21 @@ var MozLoopServiceInternal = {
           // the new messageManager. This is not a bug in swapDocShells, merely
           // a design decision.
           chatbox.content.addEventListener("SwapDocShells", function swapped(ev) {
-            chatbox.content.removeEventListener("SwapDocShells", swapped);
+            this.removeEventListener("SwapDocShells", swapped);
+            this.removeEventListener("ChatboxClosed", closeListener);
 
             let otherBrowser = ev.detail;
             chatbox = otherBrowser.ownerDocument.getBindingParent(otherBrowser);
             mm = otherBrowser.messageManager;
             otherBrowser.addEventListener("SwapDocShells", swapped);
+            chatbox.addEventListener("ChatboxClosed", closeListener);
 
             for (let name of Object.getOwnPropertyNames(listeners)) {
               mm.addMessageListener(name, listeners[name]);
             }
           });
+
+          chatbox.addEventListener("ChatboxClosed", closeListener);
 
           UITour.notify("Loop:ChatWindowOpened");
           resolve(windowId);
@@ -1103,13 +1121,21 @@ var MozLoopServiceInternal = {
       }, callback);
       if (!chatboxInstance) {
         resolve(null);
-      // It's common for unit tests to overload Chat.open.
+      // It's common for unit tests to overload Chat.open, so check if we actually
+      // got a DOM node back.
       } else if (chatboxInstance.setAttribute) {
         // Set properties that influence visual appearance of the chatbox right
         // away to circumvent glitches.
         chatboxInstance.setAttribute("customSize", "loopDefault");
         chatboxInstance.parentNode.setAttribute("customSize", "loopDefault");
-        Chat.loadButtonSet(chatboxInstance, "minimize,swap," + kChatboxHangupButton.id);
+        let buttons = "minimize,";
+        if (MozLoopService.getLoopPref("conversationPopOut.enabled")) {
+          buttons += "swap,";
+        }
+        Chat.loadButtonSet(chatboxInstance, buttons + kChatboxHangupButton.id);
+      // Final fall-through in case a unit test overloaded Chat.open. Here we can
+      // immediately resolve the promise.
+      } else {
         resolve(windowId);
       }
     });
@@ -1329,13 +1355,6 @@ this.MozLoopService = {
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
       return Promise.reject(new Error("loop is not enabled"));
-    }
-
-    if (Services.prefs.getPrefType("loop.fxa.enabled") == Services.prefs.PREF_BOOL) {
-      gFxAEnabled = Services.prefs.getBoolPref("loop.fxa.enabled");
-      if (!gFxAEnabled) {
-        yield this.logOutFromFxA();
-      }
     }
 
     // The Loop toolbar button should change icon when the room participant count
@@ -1576,10 +1595,6 @@ this.MozLoopService = {
    */
   set doNotDisturb(aFlag) {
     MozLoopServiceInternal.doNotDisturb = aFlag;
-  },
-
-  get fxAEnabled() {
-    return gFxAEnabled;
   },
 
   /**

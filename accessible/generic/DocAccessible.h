@@ -187,6 +187,9 @@ public:
    */
   void FireDelayedEvent(AccEvent* aEvent);
   void FireDelayedEvent(uint32_t aEventType, Accessible* aTarget);
+  void FireEventsOnInsertion(Accessible* aContainer,
+                             AccReorderEvent* aReorderEvent,
+                             uint32_t aUpdateFlags);
 
   /**
    * Fire value change event on the given accessible if applicable.
@@ -276,6 +279,12 @@ public:
   }
 
   /**
+   * Return an accessible for the given node if any, or an immediate accessible
+   * container for it.
+   */
+  Accessible* AccessibleOrTrueContainer(nsINode* aNode) const;
+
+  /**
    * Return an accessible for the given node or its first accessible descendant.
    */
   Accessible* GetAccessibleOrDescendant(nsINode* aNode) const;
@@ -314,7 +323,8 @@ public:
    * @param  aRoleMapEntry  [in] the role map entry role the ARIA role or nullptr
    *                          if none
    */
-  void BindToDocument(Accessible* aAccessible, nsRoleMapEntry* aRoleMapEntry);
+  void BindToDocument(Accessible* aAccessible,
+                      const nsRoleMapEntry* aRoleMapEntry);
 
   /**
    * Remove from document and shutdown the given accessible.
@@ -487,11 +497,6 @@ protected:
   void ProcessInvalidationList();
 
   /**
-   * Update the tree on content insertion.
-   */
-  void UpdateTreeOnInsertion(Accessible* aContainer);
-
-  /**
    * Update the accessible tree for content removal.
    */
   void UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode);
@@ -525,21 +530,13 @@ protected:
   void DoARIAOwnsRelocation(Accessible* aOwner);
 
   /**
-   * Moves the child from old parent under new one.
-   */
-  bool SeizeChild(Accessible* aNewParent, Accessible* aChild,
-                  int32_t aIdxInParent);
-
-  /**
-   * Move the child under same parent.
-   */
-  void MoveChild(Accessible* aChild, int32_t aIdxInParent);
-
-  /**
    * Moves children back under their original parents.
    */
   void PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
                        uint32_t aStartIdx);
+
+  bool MoveChild(Accessible* aChild, Accessible* aNewParent,
+                 int32_t aIdxInParent);
 
   /**
    * Create accessible tree.

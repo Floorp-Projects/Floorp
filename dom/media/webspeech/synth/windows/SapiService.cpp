@@ -313,6 +313,8 @@ SapiService::RegisterVoices()
     mVoices.Put(uri, voiceToken);
   }
 
+  registry->NotifyVoicesChanged();
+
   return true;
 }
 
@@ -331,10 +333,21 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
   if (FAILED(mSapiClient->SetVoice(voiceToken))) {
     return NS_ERROR_FAILURE;
   }
+
   if (FAILED(mSapiClient->SetVolume(static_cast<USHORT>(aVolume * 100)))) {
     return NS_ERROR_FAILURE;
   }
-  if (FAILED(mSapiClient->SetRate(static_cast<long>(10 * log10(aRate))))) {
+
+  // The max supported rate in SAPI engines is 3x, and the min is 1/3x. It is
+  // expressed by an integer. 0 being normal rate, -10 is 1/3 and 10 is 3x.
+  // Values below and above that are allowed, but the engine may clip the rate
+  // to its maximum capable value.
+  // "Each increment between -10 and +10 is logarithmically distributed such
+  //  that incrementing or decrementing by 1 is multiplying or dividing the
+  //  rate by the 10th root of 3"
+  // https://msdn.microsoft.com/en-us/library/ee431826(v=vs.85).aspx
+  long rate = aRate != 0 ? static_cast<long>(10 * log10(aRate) / log10(3)) : 0;
+  if (FAILED(mSapiClient->SetRate(rate))) {
     return NS_ERROR_FAILURE;
   }
 

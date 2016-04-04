@@ -64,6 +64,7 @@ class nsHTMLEditRules : public nsTextEditRules, public nsIEditActionListener
 public:
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLEditRules, nsTextEditRules)
 
   nsHTMLEditRules();
 
@@ -253,6 +254,7 @@ protected:
   nsresult CheckForEmptyBlock(nsINode* aStartNode,
                               mozilla::dom::Element* aBodyNode,
                               mozilla::dom::Selection* aSelection,
+                              nsIEditor::EDirection aAction,
                               bool* aHandled);
   nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere,
                                nsCOMPtr<nsIDOMNode> *outBRNode, int32_t aOffset=0);

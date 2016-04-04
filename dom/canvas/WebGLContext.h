@@ -1287,7 +1287,8 @@ protected:
 
     bool ValidateCurFBForRead(const char* funcName,
                               const webgl::FormatUsageInfo** const out_format,
-                              uint32_t* const out_width, uint32_t* const out_height);
+                              uint32_t* const out_width, uint32_t* const out_height,
+                              GLenum* const out_mode);
 
     void Invalidate();
     void DestroyResourcesAndContext();

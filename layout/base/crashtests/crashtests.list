@@ -411,16 +411,7 @@ load 709536-1.xhtml
 load 722137.html
 load 725535.html
 load 727601.html
-# Bug 778067: This test fails when we try to create a popup window in
-# <browser remote>, because TabParent::AnswerOpenWindow() can't deal
-# with creating a popup window this early during page load.  However,
-# <iframe mobrowser> is set up to handle this, and <browser remote>
-# isn't shipping again in the foreseeable future, so disable for now.
-# (The parent process in this case is behaving "well" by crashing the
-# content process when it gets into an unexpected state, it's just
-# that the reftest harness can't handle restarting crashed content
-# processes so we time out.)
-skip-if(Android||B2G||browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271, for b2g bug 833371
+skip-if(Android||B2G) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271, for b2g bug 833371
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 load 736924-1.html
 load 749816-1.html
@@ -477,4 +468,5 @@ load 1140198.html
 pref(layout.css.grid.enabled,true) load 1156588.html
 load 1162813.xul
 load 1163583.html
+load 1234622-1.html
 load 1235467-1.html

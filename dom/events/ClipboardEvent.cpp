@@ -22,7 +22,7 @@ ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
     mEventIsInternal = false;
   } else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 }
 
@@ -54,7 +54,7 @@ ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
                                    DataTransfer* aClipboardData)
 {
   Event::InitEvent(aType, aCanBubble, aCancelable);
-  mEvent->AsClipboardEvent()->clipboardData = aClipboardData;
+  mEvent->AsClipboardEvent()->mClipboardData = aClipboardData;
 }
 
 already_AddRefed<ClipboardEvent>
@@ -98,19 +98,19 @@ ClipboardEvent::GetClipboardData()
 {
   InternalClipboardEvent* event = mEvent->AsClipboardEvent();
 
-  if (!event->clipboardData) {
+  if (!event->mClipboardData) {
     if (mEventIsInternal) {
-      event->clipboardData =
+      event->mClipboardData =
         new DataTransfer(ToSupports(this), eCopy, false, -1);
     } else {
-      event->clipboardData =
+      event->mClipboardData =
         new DataTransfer(ToSupports(this), event->mMessage,
                          event->mMessage == ePaste,
                          nsIClipboard::kGlobalClipboard);
     }
   }
 
-  return event->clipboardData;
+  return event->mClipboardData;
 }
 
 } // namespace dom

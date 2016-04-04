@@ -4,11 +4,9 @@
 
 "use strict";
 
-const Services = require("Services");
-
-const { createClass, createFactory, DOM: dom } =
+const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
-const Target = createFactory(require("./target"));
+const Services = require("Services");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -21,18 +19,16 @@ module.exports = createClass({
   displayName: "TargetList",
 
   render() {
-    let { client, debugDisabled } = this.props;
+    let { client, debugDisabled, targetClass } = this.props;
     let targets = this.props.targets.sort(LocaleCompare).map(target => {
-      return Target({ client, target, debugDisabled });
+      return targetClass({ client, target, debugDisabled });
     });
 
-    return (
-      dom.div({ id: this.props.id, className: "targets" },
-        dom.h4(null, this.props.name),
-        targets.length > 0 ?
-          targets :
-          dom.p(null, Strings.GetStringFromName("nothing"))
-      )
+    return dom.div({ id: this.props.id, className: "targets" },
+      dom.h4(null, this.props.name),
+      targets.length > 0 ?
+        targets :
+        dom.p(null, Strings.GetStringFromName("nothing"))
     );
   },
 });

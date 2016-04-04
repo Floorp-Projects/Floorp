@@ -4,9 +4,10 @@
 
 import urllib
 
-from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase, skip_if_b2g
 from marionette_driver.keys import Keys
 from marionette_driver.errors import ElementNotVisibleException
+from marionette_driver.by import By
 
 
 def inline(doc):
@@ -17,33 +18,33 @@ class TestTyping(MarionetteTestCase):
     def testShouldFireKeyPressEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("a")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         self.assertTrue("press:" in result.text)
 
     def testShouldFireKeyDownEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("I")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         self.assertTrue("down" in result.text)
 
     def testShouldFireKeyUpEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("a")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         self.assertTrue("up:" in result.text)
 
     def testShouldTypeLowerCaseLetters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("abc def")
         self.assertEqual(keyReporter.get_attribute("value"), "abc def")
 
@@ -51,7 +52,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("ABC DEF")
         self.assertEqual(keyReporter.get_attribute("value"), "ABC DEF")
 
@@ -66,7 +67,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         self.assertEqual(keyReporter.get_attribute("value"), "")
         keyReporter.send_keys("zyxwvutsr")
         self.assertEqual(keyReporter.get_attribute("value"), "zyxwvutsr")
@@ -77,7 +78,7 @@ class TestTyping(MarionetteTestCase):
         self.assertEqual(keyReporter.get_attribute("value"), "")
 
         self.marionette.set_context("chrome")
-        url_bar = self.marionette.find_element("id", "urlbar")
+        url_bar = self.marionette.find_element(By.ID, "urlbar")
 
         # Clear and paste.
         url_bar.send_keys(mod_key, 'a')
@@ -91,7 +92,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("\"")
         self.assertEqual(keyReporter.get_attribute("value"), "\"")
 
@@ -99,7 +100,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("@")
         self.assertEqual(keyReporter.get_attribute("value"), "@")
 
@@ -107,7 +108,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys("me@eXample.com")
         self.assertEqual(keyReporter.get_attribute("value"), "me@eXample.com")
 
@@ -115,7 +116,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        keyReporter = self.marionette.find_element("id", "keyReporter")
+        keyReporter = self.marionette.find_element(By.ID, "keyReporter")
         keyReporter.send_keys(Keys.ARROW_LEFT)
         self.assertEqual(keyReporter.get_attribute("value"), "")
 
@@ -123,18 +124,18 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyUp")
+        element = self.marionette.find_element(By.ID, "keyUp")
         element.send_keys("I like cheese")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         self.assertEqual(result.text, "I like cheese")
 
     def testWillSimulateAKeyDownWhenEnteringTextIntoInputElements(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyDown")
+        element = self.marionette.find_element(By.ID, "keyDown")
         element.send_keys("I like cheese")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         #  Because the key down gets the result before the input element is
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
@@ -143,9 +144,9 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyPress")
+        element = self.marionette.find_element(By.ID, "keyPress")
         element.send_keys("I like cheese")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         #  Because the key down gets the result before the input element is
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
@@ -154,18 +155,18 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyUpArea")
+        element = self.marionette.find_element(By.ID, "keyUpArea")
         element.send_keys("I like cheese")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         self.assertEqual(result.text, "I like cheese")
 
     def testWillSimulateAKeyDownWhenEnteringTextIntoTextAreas(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyDownArea")
+        element = self.marionette.find_element(By.ID, "keyDownArea")
         element.send_keys("I like cheese")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         #  Because the key down gets the result before the input element is
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
@@ -174,9 +175,9 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyPressArea")
+        element = self.marionette.find_element(By.ID, "keyPressArea")
         element.send_keys("I like cheese")
-        result = self.marionette.find_element("id", "result")
+        result = self.marionette.find_element(By.ID, "result")
         #  Because the key down gets the result before the input element is
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
@@ -185,8 +186,8 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        result = self.marionette.find_element("id", "result")
-        element = self.marionette.find_element("id", "keyReporter")
+        result = self.marionette.find_element(By.ID, "result")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys(Keys.ARROW_DOWN)
         self.assertTrue("down: 40" in result.text.strip())
         self.assertTrue("up: 40" in result.text.strip())
@@ -211,8 +212,8 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        result = self.marionette.find_element("id", "result")
-        element = self.marionette.find_element("id", "keyReporter")
+        result = self.marionette.find_element(By.ID, "result")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         numericShiftsEtc = "~!@#$%^&*()_+{}:i\"<>?|END~"
         element.send_keys(numericShiftsEtc)
         self.assertEqual(element.get_attribute("value"), numericShiftsEtc)
@@ -223,7 +224,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyReporter")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         lowerAlphas = "abcdefghijklmnopqrstuvwxyz"
         element.send_keys(lowerAlphas)
         self.assertEqual(element.get_attribute("value"), lowerAlphas)
@@ -233,8 +234,8 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        result = self.marionette.find_element("id", "result")
-        element = self.marionette.find_element("id", "keyReporter")
+        result = self.marionette.find_element(By.ID, "result")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         upperAlphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         element.send_keys(upperAlphas)
         self.assertEqual(element.get_attribute("value"), upperAlphas)
@@ -246,8 +247,8 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        result = self.marionette.find_element("id", "result")
-        element = self.marionette.find_element("id", "keyReporter")
+        result = self.marionette.find_element(By.ID, "result")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         allPrintable = "!\"#$%&'()*+,-./0123456789:<=>?@ ABCDEFGHIJKLMNOPQRSTUVWXYZ [\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         element.send_keys(allPrintable)
 
@@ -260,7 +261,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyReporter")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys("abcd" + Keys.SPACE + "fgh" + Keys.SPACE + "ij")
         self.assertEqual(element.get_attribute("value"), "abcd fgh ij")
     '''
@@ -269,7 +270,7 @@ class TestTyping(MarionetteTestCase):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "keyReporter")
+        element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys(1234)
         self.assertEqual(element.get_attribute("value"), "1234")
 
@@ -278,24 +279,24 @@ class TestTyping(MarionetteTestCase):
         self.marionette.navigate(test_html)
 
         # If we don't get an error below we are good
-        self.marionette.find_element('tag name', 'body').send_keys('foo')
+        self.marionette.find_element(By.TAG_NAME, 'body').send_keys('foo')
 
     def testShouldThrowElementNotVisibleWhenInputHidden(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        not_displayed = self.marionette.find_element('id', 'notDisplayed')
+        not_displayed = self.marionette.find_element(By.ID, 'notDisplayed')
         self.assertRaises(ElementNotVisibleException, not_displayed.send_keys, 'foo')
 
     def test_appends_to_input_text(self):
         self.marionette.navigate(inline("<input>"))
-        el = self.marionette.find_element("tag name", "input")
+        el = self.marionette.find_element(By.TAG_NAME, "input")
         el.send_keys("foo")
         el.send_keys("bar")
         self.assertEqual("foobar", el.get_attribute("value"))
 
     def test_appends_to_textarea(self):
         self.marionette.navigate(inline("<textarea></textarea>"))
-        textarea = self.marionette.find_element("tag name", "textarea")
+        textarea = self.marionette.find_element(By.TAG_NAME, "textarea")
         textarea.send_keys("foo")
         textarea.send_keys("bar")
         self.assertEqual("foobar", textarea.get_attribute("value"))

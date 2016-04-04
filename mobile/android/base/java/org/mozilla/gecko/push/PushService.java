@@ -14,9 +14,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -34,6 +36,7 @@ import java.util.Map;
  * <p/>
  * It's worth noting that we allow the DOM push API in restricted profiles.
  */
+@ReflectionTarget
 public class PushService implements BundleEventListener {
     private static final String LOG_TAG = "GeckoPushService";
 
@@ -58,12 +61,15 @@ public class PushService implements BundleEventListener {
         return sInstance;
     }
 
-    public static synchronized PushService createInstance(Context context) {
+    @ReflectionTarget
+    public static synchronized void onCreate(Context context) {
         if (sInstance != null) {
             throw new IllegalStateException("PushService already created!");
         }
         sInstance = new PushService(context);
-        return sInstance;
+
+        sInstance.registerGeckoEventListener();
+        sInstance.onStartup();
     }
 
     protected final PushManager pushManager;
@@ -141,6 +147,10 @@ public class PushService implements BundleEventListener {
                 return;
             }
 
+            // Let's look to the future, when we'll deliver messages without regard to whether
+            // Gecko is running or not.
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "dom-push-api");
+
             if (!GeckoThread.isRunning()) {
                 Log.w(LOG_TAG, "dom/push message received but no Gecko thread is running; ignoring message.");
                 return;
@@ -174,20 +184,20 @@ public class PushService implements BundleEventListener {
             }
 
             Log.i(LOG_TAG, "Delivering dom/push message to Gecko!");
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PushServiceAndroidGCM:ReceivedPushMessage", data.toString()));
+            GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage", data.toString());
         } else {
             Log.e(LOG_TAG, "Message directed to unknown service; dropping: " + subscription.service);
         }
     }
 
-    public static void registerGeckoEventListener() {
+    protected void registerGeckoEventListener() {
         Log.d(LOG_TAG, "Registered Gecko event listener.");
-        EventDispatcher.getInstance().registerBackgroundThreadListener(getInstance(), GECKO_EVENTS);
+        EventDispatcher.getInstance().registerBackgroundThreadListener(this, GECKO_EVENTS);
     }
 
-    public static void unregisterGeckoEventListener() {
+    protected void unregisterGeckoEventListener() {
         Log.d(LOG_TAG, "Unregistered Gecko event listener.");
-        EventDispatcher.getInstance().unregisterBackgroundThreadListener(getInstance(), GECKO_EVENTS);
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener(this, GECKO_EVENTS);
     }
 
     @Override
@@ -208,7 +218,7 @@ public class PushService implements BundleEventListener {
             if ("PushServiceAndroidGCM:Configure".equals(event)) {
                 final String endpoint = message.getString("endpoint");
                 if (endpoint == null) {
-                    Log.e(LOG_TAG, "endpoint must not be null in " + event);
+                    callback.sendError("endpoint must not be null in " + event);
                     return;
                 }
                 final boolean debug = message.getBoolean("debug", false);
@@ -217,6 +227,8 @@ public class PushService implements BundleEventListener {
                 return;
             }
             if ("PushServiceAndroidGCM:DumpRegistration".equals(event)) {
+                // In the future, this might be used to interrogate the Java Push Manager
+                // registration state from JavaScript.
                 callback.sendError("Not yet implemented!");
                 return;
             }
@@ -245,6 +257,10 @@ public class PushService implements BundleEventListener {
                 return;
             }
             if ("PushServiceAndroidGCM:UnregisterUserAgent".equals(event)) {
+                // In the future, this might be used to tell the Java Push Manager to unregister
+                // a User Agent entirely from JavaScript.  Right now, however, everything is
+                // subscription based; there's no concept of unregistering all subscriptions
+                // simultaneously.
                 callback.sendError("Not yet implemented!");
                 return;
             }
@@ -279,11 +295,27 @@ public class PushService implements BundleEventListener {
                     callback.sendError("Got exception handling message [" + event + "]: " + e.toString());
                     return;
                 }
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.SERVICE, "dom-push-api");
                 callback.sendSuccess(json);
                 return;
             }
             if ("PushServiceAndroidGCM:UnsubscribeChannel".equals(event)) {
-                callback.sendError("Not yet implemented!");
+                final String channelID = message.getString("channelID");
+                if (channelID == null) {
+                    callback.sendError("channelID must not be null in " + event);
+                    return;
+                }
+
+                // Fire and forget.  See comments in the function itself.
+                final PushSubscription pushSubscription = pushManager.unsubscribeChannel(channelID);
+                if (pushSubscription != null) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.SERVICE, "dom-push-api");
+                    callback.sendSuccess(null);
+                    return;
+                }
+
+                callback.sendError("Could not unsubscribe from channel: " + channelID);
                 return;
             }
         } catch (GcmTokenClient.NeedsGooglePlayServicesException e) {

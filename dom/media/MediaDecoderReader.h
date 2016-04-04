@@ -88,6 +88,8 @@ public:
   using WaitForDataPromise =
     MozPromise<MediaData::Type, WaitForDataRejectValue, IsExclusive>;
 
+  using BufferedUpdatePromise = MozPromise<bool, bool, IsExclusive>;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
   // The caller must ensure that Shutdown() is called before aDecoder is
@@ -232,6 +234,16 @@ public:
     UpdateBuffered();
   }
 
+  // Update the buffered ranges and upon doing so return a promise
+  // to indicate success. Overrides may need to do extra work to ensure
+  // buffered is up to date.
+  virtual RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise()
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    UpdateBuffered();
+    return BufferedUpdatePromise::CreateAndResolve(true, __func__);
+  }
+
   virtual MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   virtual MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
@@ -268,8 +280,6 @@ public:
   // Returns true if this decoder reader uses hardware accelerated video
   // decoding.
   virtual bool VideoIsHardwareAccelerated() const { return false; }
-
-  virtual void DisableHardwareAcceleration() {}
 
   TimedMetadataEventSource& TimedMetadataEvent()
   {

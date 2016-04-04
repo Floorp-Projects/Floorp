@@ -1,38 +1,45 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
- * Tests that the memory call tree views get rerendered when toggling `invert-call-tree`
+ * Tests that the memory call tree views get rerendered when toggling `invert-call-tree`.
  */
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
+
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { UI_ENABLE_ALLOCATIONS_PREF, UI_INVERT_CALL_TREE_PREF } = require("devtools/client/performance/test/helpers/prefs");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
+
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
   let { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
 
-  // Enable memory to test
-  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
-  Services.prefs.setBoolPref(INVERT_PREF, true);
+  // Enable allocations to test.
+  Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
+  Services.prefs.setBoolPref(UI_INVERT_CALL_TREE_PREF, true);
 
   yield startRecording(panel);
-  yield busyWait(100);
   yield stopRecording(panel);
 
-  let rendered = once(MemoryCallTreeView, EVENTS.MEMORY_CALL_TREE_RENDERED);
+  let rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   yield DetailsView.selectView("memory-calltree");
-  ok(DetailsView.isViewSelected(MemoryCallTreeView), "The call tree is now selected.");
   yield rendered;
 
-  rendered = once(MemoryCallTreeView, EVENTS.MEMORY_CALL_TREE_RENDERED);
-  Services.prefs.setBoolPref(INVERT_PREF, false);
+  rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
+  Services.prefs.setBoolPref(UI_INVERT_CALL_TREE_PREF, false);
   yield rendered;
-
   ok(true, "MemoryCallTreeView rerendered when toggling invert-call-tree.");
 
-  rendered = once(MemoryCallTreeView, EVENTS.MEMORY_CALL_TREE_RENDERED);
-  Services.prefs.setBoolPref(INVERT_PREF, true);
+  rendered = once(MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
+  Services.prefs.setBoolPref(UI_INVERT_CALL_TREE_PREF, true);
   yield rendered;
-
   ok(true, "MemoryCallTreeView rerendered when toggling back invert-call-tree.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});

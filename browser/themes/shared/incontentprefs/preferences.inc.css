@@ -380,8 +380,13 @@ description > html|a {
 #fxaProfileImage {
   max-width: 60px;
   border-radius: 50%;
-  list-style-image: url(chrome://browser/skin/fxa/default-avatar.png);
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
   margin-inline-end: 15px;
+  image-rendering: -moz-crisp-edges;
+}
+
+#fxaLoginStatus[hasName] #fxaProfileImage {
+  max-width: 80px;
 }
 
 #fxaProfileImage.actionable {
@@ -550,6 +555,10 @@ description > html|a {
   list-style-image: url(chrome://browser/skin/fxa/sync-illustration.png)
 }
 
+#fxaLoginStatus[hasName] #fxaEmailAddress1 {
+  font-size: 1.1rem;
+}
+
 #fxaEmailAddress1,
 #fxaEmailAddress2,
 #fxaEmailAddress3 {
@@ -612,8 +621,5 @@ description > html|a {
   }
   .fxaFirefoxLogo {
     list-style-image: url(chrome://browser/skin/fxa/logo@2x.png);
-  }
-  #fxaProfileImage {
-    list-style-image: url(chrome://browser/skin/fxa/default-avatar@2x.png);
   }
 }

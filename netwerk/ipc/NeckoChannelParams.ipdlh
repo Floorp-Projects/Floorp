@@ -33,6 +33,8 @@ struct LoadInfoArgs
   uint32_t         contentPolicyType;
   uint32_t         tainting;
   bool             upgradeInsecureRequests;
+  bool             verifySignedContent;
+  bool             enforceSRI;
   uint64_t         innerWindowID;
   uint64_t         outerWindowID;
   uint64_t         parentOuterWindowID;
@@ -118,6 +120,7 @@ struct HttpChannelOpenArgs
   bool                        blockAuthPrompt;
   bool                        suspendAfterSynthesizeResponse;
   bool                        allowStaleCacheContent;
+  nsCString                   contentTypeHint;
 };
 
 struct HttpChannelConnectArgs

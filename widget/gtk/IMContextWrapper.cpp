@@ -8,11 +8,13 @@
 #include "prtime.h"
 
 #include "IMContextWrapper.h"
+#include "nsGtkKeyUtils.h"
 #include "nsWindow.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "WritingModes.h"
 
@@ -177,6 +179,10 @@ const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
 IMContextWrapper* IMContextWrapper::sLastFocusedContext = nullptr;
 bool IMContextWrapper::sUseSimpleContext;
 
+NS_IMPL_ISUPPORTS(IMContextWrapper,
+                  TextEventDispatcherListener,
+                  nsISupportsWeakReference)
+
 IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
     : mOwnerWindow(aOwnerWindow)
     , mLastFocusedWindow(nullptr)
@@ -273,6 +279,70 @@ IMContextWrapper::~IMContextWrapper()
     }
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p ~IMContextWrapper()", this));
+}
+
+NS_IMETHODIMP
+IMContextWrapper::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                            const IMENotification& aNotification)
+{
+    switch (aNotification.mMessage) {
+        case REQUEST_TO_COMMIT_COMPOSITION:
+        case REQUEST_TO_CANCEL_COMPOSITION: {
+            nsWindow* window =
+                static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
+            return EndIMEComposition(window);
+        }
+        case NOTIFY_IME_OF_FOCUS:
+            OnFocusChangeInGecko(true);
+            return NS_OK;
+        case NOTIFY_IME_OF_BLUR:
+            OnFocusChangeInGecko(false);
+            return NS_OK;
+        case NOTIFY_IME_OF_POSITION_CHANGE:
+            OnLayoutChange();
+            return NS_OK;
+        case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+            OnUpdateComposition();
+            return NS_OK;
+        case NOTIFY_IME_OF_SELECTION_CHANGE: {
+            nsWindow* window =
+                static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
+            OnSelectionChange(window, aNotification);
+            return NS_OK;
+        }
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+}
+
+NS_IMETHODIMP_(void)
+IMContextWrapper::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
+{
+    // XXX When input transaction is being stolen by add-on, what should we do?
+}
+
+NS_IMETHODIMP_(void)
+IMContextWrapper::WillDispatchKeyboardEvent(
+                      TextEventDispatcher* aTextEventDispatcher,
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aIndexOfKeypress,
+                      void* aData)
+{
+    KeymapWrapper::WillDispatchKeyboardEvent(aKeyboardEvent,
+                                             static_cast<GdkEventKey*>(aData));
+}
+
+TextEventDispatcher*
+IMContextWrapper::GetTextEventDispatcher()
+{
+  if (NS_WARN_IF(!mLastFocusedWindow)) {
+    return nullptr;
+  }
+  TextEventDispatcher* dispatcher =
+    mLastFocusedWindow->GetTextEventDispatcher();
+  // nsIWidget::GetTextEventDispatcher() shouldn't return nullptr.
+  MOZ_RELEASE_ASSERT(dispatcher);
+  return dispatcher;
 }
 
 nsIMEUpdatePreference
@@ -1320,18 +1390,26 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
         }
     }
 
+    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+    nsresult rv = dispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   DispatchCompositionStart(), FAILED, "
+             "due to BeginNativeInputTransaction() failure",
+             this));
+        return false;
+    }
+
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
-        ("GTKIM: %p   DispatchCompositionStart(), FAILED, mCompositionStart=%u",
+        ("GTKIM: %p   DispatchCompositionStart(), dispatching "
+         "compositionstart... (mCompositionStart=%u)",
          this, mCompositionStart));
     mCompositionState = eCompositionState_CompositionStartDispatched;
-    WidgetCompositionEvent compEvent(true, eCompositionStart,
-                                     mLastFocusedWindow);
-    InitEvent(compEvent);
-    nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
     nsEventStatus status;
-    mLastFocusedWindow->DispatchEvent(&compEvent, status);
-    if (static_cast<nsWindow*>(kungFuDeathGrip.get())->IsDestroyed() ||
-        kungFuDeathGrip != mLastFocusedWindow) {
+    RefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
+    dispatcher->StartComposition(status);
+    if (lastFocusedWindow->IsDestroyed() ||
+        lastFocusedWindow != mLastFocusedWindow) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("GTKIM: %p   DispatchCompositionStart(), FAILED, the focused "
              "widget was destroyed/changed by compositionstart event",
@@ -1370,8 +1448,15 @@ IMContextWrapper::DispatchCompositionChangeEvent(
         }
     }
 
-    nsEventStatus status;
-    RefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
+    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+    nsresult rv = dispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   DispatchCompositionChangeEvent(), FAILED, "
+             "due to BeginNativeInputTransaction() failure",
+             this));
+        return false;
+    }
 
     // Store the selected string which will be removed by following
     // compositionchange event.
@@ -1385,30 +1470,39 @@ IMContextWrapper::DispatchCompositionChangeEvent(
         }
     }
 
-    WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
-                                                  mLastFocusedWindow);
-    InitEvent(compositionChangeEvent);
+    RefPtr<TextRangeArray> rangeArray =
+      CreateTextRangeArray(aContext, aCompositionString);
 
-    uint32_t targetOffset = mCompositionStart;
-
-    compositionChangeEvent.mData =
-      mDispatchedCompositionString = aCompositionString;
-
-    compositionChangeEvent.mRanges =
-      CreateTextRangeArray(aContext, mDispatchedCompositionString);
-    targetOffset += compositionChangeEvent.TargetClauseOffset();
+    rv = dispatcher->SetPendingComposition(aCompositionString, rangeArray);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   DispatchCompositionChangeEvent(), FAILED, "
+             "due to SetPendingComposition() failure",
+             this));
+        return false;
+    }
 
     mCompositionState = eCompositionState_CompositionChangeEventDispatched;
 
     // We cannot call SetCursorPosition for e10s-aware.
     // DispatchEvent is async on e10s, so composition rect isn't updated now
     // on tab parent.
+    mDispatchedCompositionString = aCompositionString;
     mLayoutChanged = false;
-    mCompositionTargetRange.mOffset = targetOffset;
-    mCompositionTargetRange.mLength =
-        compositionChangeEvent.TargetClauseLength();
+    mCompositionTargetRange.mOffset = rangeArray->TargetClauseOffset();
+    mCompositionTargetRange.mLength = rangeArray->TargetClauseLength();
 
-    mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
+    RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
+    nsEventStatus status;
+    rv = dispatcher->FlushPendingComposition(status);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   DispatchCompositionChangeEvent(), FAILED, "
+             "due to FlushPendingComposition() failure",
+             this));
+        return false;
+    }
+
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
@@ -1458,24 +1552,32 @@ IMContextWrapper::DispatchCompositionCommitEvent(
         }
     }
 
+    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+    nsresult rv = dispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   DispatchCompositionCommitEvent(), FAILED, "
+             "due to BeginNativeInputTransaction() failure",
+             this));
+        return false;
+    }
+
     RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
-    EventMessage message = aCommitString ? eCompositionCommit :
-                                           eCompositionCommitAsIs;
     mCompositionState = eCompositionState_NotComposing;
     mCompositionStart = UINT32_MAX;
     mCompositionTargetRange.Clear();
     mDispatchedCompositionString.Truncate();
 
-    WidgetCompositionEvent compositionCommitEvent(true, message,
-                                                  mLastFocusedWindow);
-    InitEvent(compositionCommitEvent);
-    if (message == eCompositionCommit) {
-        compositionCommitEvent.mData = *aCommitString;
+    nsEventStatus status;
+    rv = dispatcher->CommitComposition(status, aCommitString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+            ("GTKIM: %p   DispatchCompositionChangeEvent(), FAILED, "
+             "due to CommitComposition() failure",
+             this));
+        return false;
     }
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    mLastFocusedWindow->DispatchEvent(&compositionCommitEvent, status);
 
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
@@ -1508,10 +1610,12 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
     gtk_im_context_get_preedit_string(aContext, &preedit_string,
                                       &feedback_list, &cursor_pos_in_chars);
     if (!preedit_string || !*preedit_string) {
-        MOZ_LOG(gGtkIMLog, LogLevel::Error,
-            ("GTKIM: %p   CreateTextRangeArray(), FAILED, due to "
-             "preedit_string is null",
-             this));
+        if (!aCompositionString.IsEmpty()) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                ("GTKIM: %p   CreateTextRangeArray(), FAILED, due to "
+                 "preedit_string is null",
+                 this));
+        }
         pango_attr_list_unref(feedback_list);
         g_free(preedit_string);
         return textRangeArray.forget();
@@ -2145,7 +2249,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
 void
 IMContextWrapper::InitEvent(WidgetGUIEvent& aEvent)
 {
-    aEvent.time = PR_Now() / 1000;
+    aEvent.mTime = PR_Now() / 1000;
 }
 
 bool

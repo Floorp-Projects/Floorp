@@ -40,14 +40,14 @@ bool	opt_redzone = false;
 bool	opt_utrace = false;
 bool	opt_xmalloc = false;
 bool	opt_zero = false;
-size_t	opt_narenas = 0;
+unsigned	opt_narenas = 0;
 
 /* Initialized to true if the process is running inside Valgrind. */
 bool	in_valgrind;
 
 unsigned	ncpus;
 
-/* Protects arenas initialization (arenas, narenas_total). */
+/* Protects arenas initialization. */
 static malloc_mutex_t	arenas_lock;
 /*
  * Arenas that are used to service external requests.  Not all elements of the
@@ -57,8 +57,8 @@ static malloc_mutex_t	arenas_lock;
  * arenas.  arenas[narenas_auto..narenas_total) are only used if the application
  * takes some action to create them and allocate from them.
  */
-static arena_t		**arenas;
-static unsigned		narenas_total;
+arena_t			**arenas;
+static unsigned		narenas_total; /* Use narenas_total_*(). */
 static arena_t		*a0; /* arenas[0]; read-only after initialization. */
 static unsigned		narenas_auto; /* Read-only after initialization. */
 
@@ -311,14 +311,6 @@ malloc_init(void)
  * cannot tolerate TLS variable access.
  */
 
-arena_t *
-a0get(void)
-{
-
-	assert(a0 != NULL);
-	return (a0);
-}
-
 static void *
 a0ialloc(size_t size, bool zero, bool is_metadata)
 {
@@ -327,7 +319,7 @@ a0ialloc(size_t size, bool zero, bool is_metadata)
 		return (NULL);
 
 	return (iallocztm(NULL, size, size2index(size), zero, false,
-	    is_metadata, a0get(), true));
+	    is_metadata, arena_get(0, false), true));
 }
 
 static void
@@ -391,47 +383,59 @@ bootstrap_free(void *ptr)
 	a0idalloc(ptr, false);
 }
 
+static void
+arena_set(unsigned ind, arena_t *arena)
+{
+
+	atomic_write_p((void **)&arenas[ind], arena);
+}
+
+static void
+narenas_total_set(unsigned narenas)
+{
+
+	atomic_write_u(&narenas_total, narenas);
+}
+
+static void
+narenas_total_inc(void)
+{
+
+	atomic_add_u(&narenas_total, 1);
+}
+
+unsigned
+narenas_total_get(void)
+{
+
+	return (atomic_read_u(&narenas_total));
+}
+
 /* Create a new arena and insert it into the arenas array at index ind. */
 static arena_t *
 arena_init_locked(unsigned ind)
 {
 	arena_t *arena;
 
-	/* Expand arenas if necessary. */
-	assert(ind <= narenas_total);
+	assert(ind <= narenas_total_get());
 	if (ind > MALLOCX_ARENA_MAX)
 		return (NULL);
-	if (ind == narenas_total) {
-		unsigned narenas_new = narenas_total + 1;
-		arena_t **arenas_new =
-		    (arena_t **)a0malloc(CACHELINE_CEILING(narenas_new *
-		    sizeof(arena_t *)));
-		if (arenas_new == NULL)
-			return (NULL);
-		memcpy(arenas_new, arenas, narenas_total * sizeof(arena_t *));
-		arenas_new[ind] = NULL;
-		/*
-		 * Deallocate only if arenas came from a0malloc() (not
-		 * base_alloc()).
-		 */
-		if (narenas_total != narenas_auto)
-			a0dalloc(arenas);
-		arenas = arenas_new;
-		narenas_total = narenas_new;
-	}
+	if (ind == narenas_total_get())
+		narenas_total_inc();
 
 	/*
 	 * Another thread may have already initialized arenas[ind] if it's an
 	 * auto arena.
 	 */
-	arena = arenas[ind];
+	arena = arena_get(ind, false);
 	if (arena != NULL) {
 		assert(ind < narenas_auto);
 		return (arena);
 	}
 
 	/* Actually initialize the arena. */
-	arena = arenas[ind] = arena_new(ind);
+	arena = arena_new(ind);
+	arena_set(ind, arena);
 	return (arena);
 }
 
@@ -446,37 +450,16 @@ arena_init(unsigned ind)
 	return (arena);
 }
 
-unsigned
-narenas_total_get(void)
-{
-	unsigned narenas;
-
-	malloc_mutex_lock(&arenas_lock);
-	narenas = narenas_total;
-	malloc_mutex_unlock(&arenas_lock);
-
-	return (narenas);
-}
-
-static void
-arena_bind_locked(tsd_t *tsd, unsigned ind)
-{
-	arena_t *arena;
-
-	arena = arenas[ind];
-	arena->nthreads++;
-
-	if (tsd_nominal(tsd))
-		tsd_arena_set(tsd, arena);
-}
-
 static void
 arena_bind(tsd_t *tsd, unsigned ind)
 {
+	arena_t *arena;
 
-	malloc_mutex_lock(&arenas_lock);
-	arena_bind_locked(tsd, ind);
-	malloc_mutex_unlock(&arenas_lock);
+	arena = arena_get(ind, false);
+	arena_nthreads_inc(arena);
+
+	if (tsd_nominal(tsd))
+		tsd_arena_set(tsd, arena);
 }
 
 void
@@ -484,24 +467,11 @@ arena_migrate(tsd_t *tsd, unsigned oldind, unsigned newind)
 {
 	arena_t *oldarena, *newarena;
 
-	malloc_mutex_lock(&arenas_lock);
-	oldarena = arenas[oldind];
-	newarena = arenas[newind];
-	oldarena->nthreads--;
-	newarena->nthreads++;
-	malloc_mutex_unlock(&arenas_lock);
+	oldarena = arena_get(oldind, false);
+	newarena = arena_get(newind, false);
+	arena_nthreads_dec(oldarena);
+	arena_nthreads_inc(newarena);
 	tsd_arena_set(tsd, newarena);
-}
-
-unsigned
-arena_nbound(unsigned ind)
-{
-	unsigned nthreads;
-
-	malloc_mutex_lock(&arenas_lock);
-	nthreads = arenas[ind]->nthreads;
-	malloc_mutex_unlock(&arenas_lock);
-	return (nthreads);
 }
 
 static void
@@ -509,82 +479,85 @@ arena_unbind(tsd_t *tsd, unsigned ind)
 {
 	arena_t *arena;
 
-	malloc_mutex_lock(&arenas_lock);
-	arena = arenas[ind];
-	arena->nthreads--;
-	malloc_mutex_unlock(&arenas_lock);
+	arena = arena_get(ind, false);
+	arena_nthreads_dec(arena);
 	tsd_arena_set(tsd, NULL);
 }
 
-arena_t *
-arena_get_hard(tsd_t *tsd, unsigned ind, bool init_if_missing)
+arena_tdata_t *
+arena_tdata_get_hard(tsd_t *tsd, unsigned ind)
 {
-	arena_t *arena;
-	arena_t **arenas_cache = tsd_arenas_cache_get(tsd);
-	unsigned narenas_cache = tsd_narenas_cache_get(tsd);
+	arena_tdata_t *tdata, *arenas_tdata_old;
+	arena_tdata_t *arenas_tdata = tsd_arenas_tdata_get(tsd);
+	unsigned narenas_tdata_old, i;
+	unsigned narenas_tdata = tsd_narenas_tdata_get(tsd);
 	unsigned narenas_actual = narenas_total_get();
 
-	/* Deallocate old cache if it's too small. */
-	if (arenas_cache != NULL && narenas_cache < narenas_actual) {
-		a0dalloc(arenas_cache);
-		arenas_cache = NULL;
-		narenas_cache = 0;
-		tsd_arenas_cache_set(tsd, arenas_cache);
-		tsd_narenas_cache_set(tsd, narenas_cache);
+	/*
+	 * Dissociate old tdata array (and set up for deallocation upon return)
+	 * if it's too small.
+	 */
+	if (arenas_tdata != NULL && narenas_tdata < narenas_actual) {
+		arenas_tdata_old = arenas_tdata;
+		narenas_tdata_old = narenas_tdata;
+		arenas_tdata = NULL;
+		narenas_tdata = 0;
+		tsd_arenas_tdata_set(tsd, arenas_tdata);
+		tsd_narenas_tdata_set(tsd, narenas_tdata);
+	} else {
+		arenas_tdata_old = NULL;
+		narenas_tdata_old = 0;
 	}
 
-	/* Allocate cache if it's missing. */
-	if (arenas_cache == NULL) {
-		bool *arenas_cache_bypassp = tsd_arenas_cache_bypassp_get(tsd);
-		assert(ind < narenas_actual || !init_if_missing);
-		narenas_cache = (ind < narenas_actual) ? narenas_actual : ind+1;
+	/* Allocate tdata array if it's missing. */
+	if (arenas_tdata == NULL) {
+		bool *arenas_tdata_bypassp = tsd_arenas_tdata_bypassp_get(tsd);
+		narenas_tdata = (ind < narenas_actual) ? narenas_actual : ind+1;
 
-		if (tsd_nominal(tsd) && !*arenas_cache_bypassp) {
-			*arenas_cache_bypassp = true;
-			arenas_cache = (arena_t **)a0malloc(sizeof(arena_t *) *
-			    narenas_cache);
-			*arenas_cache_bypassp = false;
+		if (tsd_nominal(tsd) && !*arenas_tdata_bypassp) {
+			*arenas_tdata_bypassp = true;
+			arenas_tdata = (arena_tdata_t *)a0malloc(
+			    sizeof(arena_tdata_t) * narenas_tdata);
+			*arenas_tdata_bypassp = false;
 		}
-		if (arenas_cache == NULL) {
-			/*
-			 * This function must always tell the truth, even if
-			 * it's slow, so don't let OOM, thread cleanup (note
-			 * tsd_nominal check), nor recursive allocation
-			 * avoidance (note arenas_cache_bypass check) get in the
-			 * way.
-			 */
-			if (ind >= narenas_actual)
-				return (NULL);
-			malloc_mutex_lock(&arenas_lock);
-			arena = arenas[ind];
-			malloc_mutex_unlock(&arenas_lock);
-			return (arena);
+		if (arenas_tdata == NULL) {
+			tdata = NULL;
+			goto label_return;
 		}
-		assert(tsd_nominal(tsd) && !*arenas_cache_bypassp);
-		tsd_arenas_cache_set(tsd, arenas_cache);
-		tsd_narenas_cache_set(tsd, narenas_cache);
+		assert(tsd_nominal(tsd) && !*arenas_tdata_bypassp);
+		tsd_arenas_tdata_set(tsd, arenas_tdata);
+		tsd_narenas_tdata_set(tsd, narenas_tdata);
 	}
 
 	/*
-	 * Copy to cache.  It's possible that the actual number of arenas has
-	 * increased since narenas_total_get() was called above, but that causes
-	 * no correctness issues unless two threads concurrently execute the
-	 * arenas.extend mallctl, which we trust mallctl synchronization to
+	 * Copy to tdata array.  It's possible that the actual number of arenas
+	 * has increased since narenas_total_get() was called above, but that
+	 * causes no correctness issues unless two threads concurrently execute
+	 * the arenas.extend mallctl, which we trust mallctl synchronization to
 	 * prevent.
 	 */
-	malloc_mutex_lock(&arenas_lock);
-	memcpy(arenas_cache, arenas, sizeof(arena_t *) * narenas_actual);
-	malloc_mutex_unlock(&arenas_lock);
-	if (narenas_cache > narenas_actual) {
-		memset(&arenas_cache[narenas_actual], 0, sizeof(arena_t *) *
-		    (narenas_cache - narenas_actual));
+
+	/* Copy/initialize tickers. */
+	for (i = 0; i < narenas_actual; i++) {
+		if (i < narenas_tdata_old) {
+			ticker_copy(&arenas_tdata[i].decay_ticker,
+			    &arenas_tdata_old[i].decay_ticker);
+		} else {
+			ticker_init(&arenas_tdata[i].decay_ticker,
+			    DECAY_NTICKS_PER_UPDATE);
+		}
+	}
+	if (narenas_tdata > narenas_actual) {
+		memset(&arenas_tdata[narenas_actual], 0, sizeof(arena_tdata_t)
+		    * (narenas_tdata - narenas_actual));
 	}
 
-	/* Read the refreshed cache, and init the arena if necessary. */
-	arena = arenas_cache[ind];
-	if (init_if_missing && arena == NULL)
-		arena = arenas_cache[ind] = arena_init(ind);
-	return (arena);
+	/* Read the refreshed tdata array. */
+	tdata = &arenas_tdata[ind];
+label_return:
+	if (arenas_tdata_old != NULL)
+		a0dalloc(arenas_tdata_old);
+	return (tdata);
 }
 
 /* Slow path, called only by arena_choose(). */
@@ -599,15 +572,16 @@ arena_choose_hard(tsd_t *tsd)
 		choose = 0;
 		first_null = narenas_auto;
 		malloc_mutex_lock(&arenas_lock);
-		assert(a0get() != NULL);
+		assert(arena_get(0, false) != NULL);
 		for (i = 1; i < narenas_auto; i++) {
-			if (arenas[i] != NULL) {
+			if (arena_get(i, false) != NULL) {
 				/*
 				 * Choose the first arena that has the lowest
 				 * number of threads assigned to it.
 				 */
-				if (arenas[i]->nthreads <
-				    arenas[choose]->nthreads)
+				if (arena_nthreads_get(arena_get(i, false)) <
+				    arena_nthreads_get(arena_get(choose,
+				    false)))
 					choose = i;
 			} else if (first_null == narenas_auto) {
 				/*
@@ -623,13 +597,13 @@ arena_choose_hard(tsd_t *tsd)
 			}
 		}
 
-		if (arenas[choose]->nthreads == 0
+		if (arena_nthreads_get(arena_get(choose, false)) == 0
 		    || first_null == narenas_auto) {
 			/*
 			 * Use an unloaded arena, or the least loaded arena if
 			 * all arenas are already initialized.
 			 */
-			ret = arenas[choose];
+			ret = arena_get(choose, false);
 		} else {
 			/* Initialize a new arena. */
 			choose = first_null;
@@ -639,10 +613,10 @@ arena_choose_hard(tsd_t *tsd)
 				return (NULL);
 			}
 		}
-		arena_bind_locked(tsd, choose);
+		arena_bind(tsd, choose);
 		malloc_mutex_unlock(&arenas_lock);
 	} else {
-		ret = a0get();
+		ret = arena_get(0, false);
 		arena_bind(tsd, 0);
 	}
 
@@ -674,26 +648,29 @@ arena_cleanup(tsd_t *tsd)
 }
 
 void
-arenas_cache_cleanup(tsd_t *tsd)
+arenas_tdata_cleanup(tsd_t *tsd)
 {
-	arena_t **arenas_cache;
+	arena_tdata_t *arenas_tdata;
 
-	arenas_cache = tsd_arenas_cache_get(tsd);
-	if (arenas_cache != NULL) {
-		tsd_arenas_cache_set(tsd, NULL);
-		a0dalloc(arenas_cache);
+	/* Prevent tsd->arenas_tdata from being (re)created. */
+	*tsd_arenas_tdata_bypassp_get(tsd) = true;
+
+	arenas_tdata = tsd_arenas_tdata_get(tsd);
+	if (arenas_tdata != NULL) {
+		tsd_arenas_tdata_set(tsd, NULL);
+		a0dalloc(arenas_tdata);
 	}
 }
 
 void
-narenas_cache_cleanup(tsd_t *tsd)
+narenas_tdata_cleanup(tsd_t *tsd)
 {
 
 	/* Do nothing. */
 }
 
 void
-arenas_cache_bypass_cleanup(tsd_t *tsd)
+arenas_tdata_bypass_cleanup(tsd_t *tsd)
 {
 
 	/* Do nothing. */
@@ -714,7 +691,7 @@ stats_print_atexit(void)
 		 * continue to allocate.
 		 */
 		for (i = 0, narenas = narenas_total_get(); i < narenas; i++) {
-			arena_t *arena = arenas[i];
+			arena_t *arena = arena_get(i, false);
 			if (arena != NULL) {
 				tcache_t *tcache;
 
@@ -902,10 +879,13 @@ malloc_conf_init(void)
 			opt_tcache = false;
 	}
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		/* Get runtime configuration. */
 		switch (i) {
 		case 0:
+			opts = config_malloc_conf;
+			break;
+		case 1:
 			if (je_malloc_conf != NULL) {
 				/*
 				 * Use options that were compiled into the
@@ -918,8 +898,8 @@ malloc_conf_init(void)
 				opts = buf;
 			}
 			break;
-		case 1: {
-			int linklen = 0;
+		case 2: {
+			ssize_t linklen = 0;
 #ifndef _WIN32
 			int saved_errno = errno;
 			const char *linkname =
@@ -945,7 +925,7 @@ malloc_conf_init(void)
 			buf[linklen] = '\0';
 			opts = buf;
 			break;
-		} case 2: {
+		} case 3: {
 			const char *envname =
 #ifdef JEMALLOC_PREFIX
 			    JEMALLOC_CPREFIX"MALLOC_CONF"
@@ -992,7 +972,7 @@ malloc_conf_init(void)
 				if (cont)				\
 					continue;			\
 			}
-#define	CONF_HANDLE_SIZE_T(o, n, min, max, clip)			\
+#define	CONF_HANDLE_T_U(t, o, n, min, max, clip)			\
 			if (CONF_MATCH(n)) {				\
 				uintmax_t um;				\
 				char *end;				\
@@ -1006,11 +986,11 @@ malloc_conf_init(void)
 					    k, klen, v, vlen);		\
 				} else if (clip) {			\
 					if ((min) != 0 && um < (min))	\
-						o = (min);		\
+						o = (t)(min);		\
 					else if (um > (max))		\
-						o = (max);		\
+						o = (t)(max);		\
 					else				\
-						o = um;			\
+						o = (t)um;		\
 				} else {				\
 					if (((min) != 0 && um < (min))	\
 					    || um > (max)) {		\
@@ -1019,10 +999,14 @@ malloc_conf_init(void)
 						    "conf value",	\
 						    k, klen, v, vlen);	\
 					} else				\
-						o = um;			\
+						o = (t)um;		\
 				}					\
 				continue;				\
 			}
+#define	CONF_HANDLE_UNSIGNED(o, n, min, max, clip)			\
+			CONF_HANDLE_T_U(unsigned, o, n, min, max, clip)
+#define	CONF_HANDLE_SIZE_T(o, n, min, max, clip)			\
+			CONF_HANDLE_T_U(size_t, o, n, min, max, clip)
 #define	CONF_HANDLE_SSIZE_T(o, n, min, max)				\
 			if (CONF_MATCH(n)) {				\
 				long l;					\
@@ -1090,10 +1074,29 @@ malloc_conf_init(void)
 				}
 				continue;
 			}
-			CONF_HANDLE_SIZE_T(opt_narenas, "narenas", 1,
-			    SIZE_T_MAX, false)
+			CONF_HANDLE_UNSIGNED(opt_narenas, "narenas", 1,
+			    UINT_MAX, false)
+			if (strncmp("purge", k, klen) == 0) {
+				int i;
+				bool match = false;
+				for (i = 0; i < purge_mode_limit; i++) {
+					if (strncmp(purge_mode_names[i], v,
+					    vlen) == 0) {
+						opt_purge = (purge_mode_t)i;
+						match = true;
+						break;
+					}
+				}
+				if (!match) {
+					malloc_conf_error("Invalid conf value",
+					    k, klen, v, vlen);
+				}
+				continue;
+			}
 			CONF_HANDLE_SSIZE_T(opt_lg_dirty_mult, "lg_dirty_mult",
 			    -1, (sizeof(size_t) << 3) - 1)
+			CONF_HANDLE_SSIZE_T(opt_decay_time, "decay_time", -1,
+			    NSTIME_SEC_MAX);
 			CONF_HANDLE_BOOL(opt_stats_print, "stats_print", true)
 			if (config_fill) {
 				if (CONF_MATCH("junk")) {
@@ -1247,7 +1250,8 @@ malloc_init_hard_a0_locked(void)
 	 * Create enough scaffolding to allow recursive allocation in
 	 * malloc_ncpus().
 	 */
-	narenas_total = narenas_auto = 1;
+	narenas_auto = 1;
+	narenas_total_set(narenas_auto);
 	arenas = &a0;
 	memset(arenas, 0, sizeof(arena_t *) * narenas_auto);
 	/*
@@ -1276,26 +1280,37 @@ malloc_init_hard_a0(void)
  *
  * init_lock must be held.
  */
-static void
+static bool
 malloc_init_hard_recursible(void)
 {
+	bool ret = false;
 
 	malloc_init_state = malloc_init_recursible;
 	malloc_mutex_unlock(&init_lock);
+
+	/* LinuxThreads' pthread_setspecific() allocates. */
+	if (malloc_tsd_boot0()) {
+		ret = true;
+		goto label_return;
+	}
 
 	ncpus = malloc_ncpus();
 
 #if (!defined(JEMALLOC_MUTEX_INIT_CB) && !defined(JEMALLOC_ZONE) \
     && !defined(_WIN32) && !defined(__native_client__))
-	/* LinuxThreads's pthread_atfork() allocates. */
+	/* LinuxThreads' pthread_atfork() allocates. */
 	if (pthread_atfork(jemalloc_prefork, jemalloc_postfork_parent,
 	    jemalloc_postfork_child) != 0) {
+		ret = true;
 		malloc_write("<jemalloc>: Error in pthread_atfork()\n");
 		if (opt_abort)
 			abort();
 	}
 #endif
+
+label_return:
 	malloc_mutex_lock(&init_lock);
+	return (ret);
 }
 
 /* init_lock must be held. */
@@ -1318,28 +1333,22 @@ malloc_init_hard_finish(void)
 	}
 	narenas_auto = opt_narenas;
 	/*
-	 * Make sure that the arenas array can be allocated.  In practice, this
-	 * limit is enough to allow the allocator to function, but the ctl
-	 * machinery will fail to allocate memory at far lower limits.
+	 * Limit the number of arenas to the indexing range of MALLOCX_ARENA().
 	 */
-	if (narenas_auto > chunksize / sizeof(arena_t *)) {
-		narenas_auto = chunksize / sizeof(arena_t *);
+	if (narenas_auto > MALLOCX_ARENA_MAX) {
+		narenas_auto = MALLOCX_ARENA_MAX;
 		malloc_printf("<jemalloc>: Reducing narenas to limit (%d)\n",
 		    narenas_auto);
 	}
-	narenas_total = narenas_auto;
+	narenas_total_set(narenas_auto);
 
 	/* Allocate and initialize arenas. */
-	arenas = (arena_t **)base_alloc(sizeof(arena_t *) * narenas_total);
+	arenas = (arena_t **)base_alloc(sizeof(arena_t *) *
+	    (MALLOCX_ARENA_MAX+1));
 	if (arenas == NULL)
 		return (true);
-	/*
-	 * Zero the array.  In practice, this should always be pre-zeroed,
-	 * since it was just mmap()ed, but let's be sure.
-	 */
-	memset(arenas, 0, sizeof(arena_t *) * narenas_total);
 	/* Copy the pointer to the one arena that was already initialized. */
-	arenas[0] = a0;
+	arena_set(0, a0);
 
 	malloc_init_state = malloc_init_initialized;
 	malloc_slow_flag_init();
@@ -1365,16 +1374,16 @@ malloc_init_hard(void)
 		malloc_mutex_unlock(&init_lock);
 		return (true);
 	}
-	if (malloc_tsd_boot0()) {
-		malloc_mutex_unlock(&init_lock);
-		return (true);
-	}
-	if (config_prof && prof_boot2()) {
+
+	if (malloc_init_hard_recursible()) {
 		malloc_mutex_unlock(&init_lock);
 		return (true);
 	}
 
-	malloc_init_hard_recursible();
+	if (config_prof && prof_boot2()) {
+		malloc_mutex_unlock(&init_lock);
+		return (true);
+	}
 
 	if (malloc_init_hard_finish()) {
 		malloc_mutex_unlock(&init_lock);
@@ -1443,18 +1452,17 @@ imalloc_body(size_t size, tsd_t **tsd, size_t *usize, bool slow_path)
 		return (NULL);
 	*tsd = tsd_fetch();
 	ind = size2index(size);
+	if (unlikely(ind >= NSIZES))
+		return (NULL);
 
-	if (config_stats ||
-	    (config_prof && opt_prof) ||
-	    (slow_path && config_valgrind && unlikely(in_valgrind))) {
+	if (config_stats || (config_prof && opt_prof) || (slow_path &&
+	    config_valgrind && unlikely(in_valgrind))) {
 		*usize = index2size(ind);
+		assert(*usize > 0 && *usize <= HUGE_MAXCLASS);
 	}
 
-	if (config_prof && opt_prof) {
-		if (unlikely(*usize == 0))
-			return (NULL);
+	if (config_prof && opt_prof)
 		return (imalloc_prof(*tsd, *usize, ind, slow_path));
-	}
 
 	return (imalloc(*tsd, size, ind, slow_path));
 }
@@ -1578,7 +1586,7 @@ imemalign(void **memptr, size_t alignment, size_t size, size_t min_alignment)
 	}
 
 	usize = sa2u(size, alignment);
-	if (unlikely(usize == 0)) {
+	if (unlikely(usize == 0 || usize > HUGE_MAXCLASS)) {
 		result = NULL;
 		goto label_oom;
 	}
@@ -1716,12 +1724,12 @@ je_calloc(size_t num, size_t size)
 	}
 
 	ind = size2index(num_size);
+	if (unlikely(ind >= NSIZES)) {
+		ret = NULL;
+		goto label_return;
+	}
 	if (config_prof && opt_prof) {
 		usize = index2size(ind);
-		if (unlikely(usize == 0)) {
-			ret = NULL;
-			goto label_return;
-		}
 		ret = icalloc_prof(tsd, usize, ind);
 	} else {
 		if (config_stats || (config_valgrind && unlikely(in_valgrind)))
@@ -1868,8 +1876,8 @@ je_realloc(void *ptr, size_t size)
 
 		if (config_prof && opt_prof) {
 			usize = s2u(size);
-			ret = unlikely(usize == 0) ? NULL : irealloc_prof(tsd,
-			    ptr, old_usize, usize);
+			ret = unlikely(usize == 0 || usize > HUGE_MAXCLASS) ?
+			    NULL : irealloc_prof(tsd, ptr, old_usize, usize);
 		} else {
 			if (config_stats || (config_valgrind &&
 			    unlikely(in_valgrind)))
@@ -2000,7 +2008,8 @@ imallocx_flags_decode_hard(tsd_t *tsd, size_t size, int flags, size_t *usize,
 		*alignment = MALLOCX_ALIGN_GET_SPECIFIED(flags);
 		*usize = sa2u(size, *alignment);
 	}
-	assert(*usize != 0);
+	if (unlikely(*usize == 0 || *usize > HUGE_MAXCLASS))
+		return (true);
 	*zero = MALLOCX_ZERO_GET(flags);
 	if ((flags & MALLOCX_TCACHE_MASK) != 0) {
 		if ((flags & MALLOCX_TCACHE_MASK) == MALLOCX_TCACHE_NONE)
@@ -2011,7 +2020,7 @@ imallocx_flags_decode_hard(tsd_t *tsd, size_t size, int flags, size_t *usize,
 		*tcache = tcache_get(tsd, true);
 	if ((flags & MALLOCX_ARENA_MASK) != 0) {
 		unsigned arena_ind = MALLOCX_ARENA_GET(flags);
-		*arena = arena_get(tsd, arena_ind, true, true);
+		*arena = arena_get(arena_ind, true);
 		if (unlikely(*arena == NULL))
 			return (true);
 	} else
@@ -2026,7 +2035,8 @@ imallocx_flags_decode(tsd_t *tsd, size_t size, int flags, size_t *usize,
 
 	if (likely(flags == 0)) {
 		*usize = s2u(size);
-		assert(*usize != 0);
+		if (unlikely(*usize == 0 || *usize > HUGE_MAXCLASS))
+			return (true);
 		*alignment = 0;
 		*zero = false;
 		*tcache = tcache_get(tsd, true);
@@ -2044,9 +2054,10 @@ imallocx_flags(tsd_t *tsd, size_t usize, size_t alignment, bool zero,
 {
 	szind_t ind;
 
-	ind = size2index(usize);
 	if (unlikely(alignment != 0))
 		return (ipalloct(tsd, usize, alignment, zero, tcache, arena));
+	ind = size2index(usize);
+	assert(ind < NSIZES);
 	if (unlikely(zero))
 		return (icalloct(tsd, usize, ind, tcache, arena));
 	return (imalloct(tsd, usize, ind, tcache, arena));
@@ -2114,8 +2125,13 @@ imallocx_no_prof(tsd_t *tsd, size_t size, int flags, size_t *usize)
 
 	if (likely(flags == 0)) {
 		szind_t ind = size2index(size);
-		if (config_stats || (config_valgrind && unlikely(in_valgrind)))
+		if (unlikely(ind >= NSIZES))
+			return (NULL);
+		if (config_stats || (config_valgrind &&
+		    unlikely(in_valgrind))) {
 			*usize = index2size(ind);
+			assert(*usize > 0 && *usize <= HUGE_MAXCLASS);
+		}
 		return (imalloc(tsd, size, ind, true));
 	}
 
@@ -2252,7 +2268,7 @@ je_rallocx(void *ptr, size_t size, int flags)
 
 	if (unlikely((flags & MALLOCX_ARENA_MASK) != 0)) {
 		unsigned arena_ind = MALLOCX_ARENA_GET(flags);
-		arena = arena_get(tsd, arena_ind, true, true);
+		arena = arena_get(arena_ind, true);
 		if (unlikely(arena == NULL))
 			goto label_oom;
 	} else
@@ -2272,7 +2288,8 @@ je_rallocx(void *ptr, size_t size, int flags)
 
 	if (config_prof && opt_prof) {
 		usize = (alignment == 0) ? s2u(size) : sa2u(size, alignment);
-		assert(usize != 0);
+		if (unlikely(usize == 0 || usize > HUGE_MAXCLASS))
+			goto label_oom;
 		p = irallocx_prof(tsd, ptr, old_usize, size, alignment, &usize,
 		    zero, tcache, arena);
 		if (unlikely(p == NULL))
@@ -2305,12 +2322,12 @@ label_oom:
 }
 
 JEMALLOC_ALWAYS_INLINE_C size_t
-ixallocx_helper(void *ptr, size_t old_usize, size_t size, size_t extra,
-    size_t alignment, bool zero)
+ixallocx_helper(tsd_t *tsd, void *ptr, size_t old_usize, size_t size,
+    size_t extra, size_t alignment, bool zero)
 {
 	size_t usize;
 
-	if (ixalloc(ptr, old_usize, size, extra, alignment, zero))
+	if (ixalloc(tsd, ptr, old_usize, size, extra, alignment, zero))
 		return (old_usize);
 	usize = isalloc(ptr, config_prof);
 
@@ -2318,14 +2335,15 @@ ixallocx_helper(void *ptr, size_t old_usize, size_t size, size_t extra,
 }
 
 static size_t
-ixallocx_prof_sample(void *ptr, size_t old_usize, size_t size, size_t extra,
-    size_t alignment, bool zero, prof_tctx_t *tctx)
+ixallocx_prof_sample(tsd_t *tsd, void *ptr, size_t old_usize, size_t size,
+    size_t extra, size_t alignment, bool zero, prof_tctx_t *tctx)
 {
 	size_t usize;
 
 	if (tctx == NULL)
 		return (old_usize);
-	usize = ixallocx_helper(ptr, old_usize, size, extra, alignment, zero);
+	usize = ixallocx_helper(tsd, ptr, old_usize, size, extra, alignment,
+	    zero);
 
 	return (usize);
 }
@@ -2346,16 +2364,29 @@ ixallocx_prof(tsd_t *tsd, void *ptr, size_t old_usize, size_t size,
 	 * prof_alloc_prep() to decide whether to capture a backtrace.
 	 * prof_realloc() will use the actual usize to decide whether to sample.
 	 */
-	usize_max = (alignment == 0) ? s2u(size+extra) : sa2u(size+extra,
-	    alignment);
-	assert(usize_max != 0);
+	if (alignment == 0) {
+		usize_max = s2u(size+extra);
+		assert(usize_max > 0 && usize_max <= HUGE_MAXCLASS);
+	} else {
+		usize_max = sa2u(size+extra, alignment);
+		if (unlikely(usize_max == 0 || usize_max > HUGE_MAXCLASS)) {
+			/*
+			 * usize_max is out of range, and chances are that
+			 * allocation will fail, but use the maximum possible
+			 * value and carry on with prof_alloc_prep(), just in
+			 * case allocation succeeds.
+			 */
+			usize_max = HUGE_MAXCLASS;
+		}
+	}
 	tctx = prof_alloc_prep(tsd, usize_max, prof_active, false);
+
 	if (unlikely((uintptr_t)tctx != (uintptr_t)1U)) {
-		usize = ixallocx_prof_sample(ptr, old_usize, size, extra,
+		usize = ixallocx_prof_sample(tsd, ptr, old_usize, size, extra,
 		    alignment, zero, tctx);
 	} else {
-		usize = ixallocx_helper(ptr, old_usize, size, extra, alignment,
-		    zero);
+		usize = ixallocx_helper(tsd, ptr, old_usize, size, extra,
+		    alignment, zero);
 	}
 	if (usize == old_usize) {
 		prof_alloc_rollback(tsd, tctx, false);
@@ -2385,15 +2416,21 @@ je_xallocx(void *ptr, size_t size, size_t extra, int flags)
 
 	old_usize = isalloc(ptr, config_prof);
 
-	/* Clamp extra if necessary to avoid (size + extra) overflow. */
-	if (unlikely(size + extra > HUGE_MAXCLASS)) {
-		/* Check for size overflow. */
-		if (unlikely(size > HUGE_MAXCLASS)) {
-			usize = old_usize;
-			goto label_not_resized;
-		}
-		extra = HUGE_MAXCLASS - size;
+	/*
+	 * The API explicitly absolves itself of protecting against (size +
+	 * extra) numerical overflow, but we may need to clamp extra to avoid
+	 * exceeding HUGE_MAXCLASS.
+	 *
+	 * Ordinarily, size limit checking is handled deeper down, but here we
+	 * have to check as part of (size + extra) clamping, since we need the
+	 * clamped value in the above helper functions.
+	 */
+	if (unlikely(size > HUGE_MAXCLASS)) {
+		usize = old_usize;
+		goto label_not_resized;
 	}
+	if (unlikely(HUGE_MAXCLASS - size < extra))
+		extra = HUGE_MAXCLASS - size;
 
 	if (config_valgrind && unlikely(in_valgrind))
 		old_rzsize = u2rz(old_usize);
@@ -2402,8 +2439,8 @@ je_xallocx(void *ptr, size_t size, size_t extra, int flags)
 		usize = ixallocx_prof(tsd, ptr, old_usize, size, extra,
 		    alignment, zero);
 	} else {
-		usize = ixallocx_helper(ptr, old_usize, size, extra, alignment,
-		    zero);
+		usize = ixallocx_helper(tsd, ptr, old_usize, size, extra,
+		    alignment, zero);
 	}
 	if (unlikely(usize == old_usize))
 		goto label_not_resized;
@@ -2467,7 +2504,6 @@ inallocx(size_t size, int flags)
 		usize = s2u(size);
 	else
 		usize = sa2u(size, MALLOCX_ALIGN_GET_SPECIFIED(flags));
-	assert(usize != 0);
 	return (usize);
 }
 
@@ -2500,13 +2536,18 @@ JEMALLOC_EXPORT size_t JEMALLOC_NOTHROW
 JEMALLOC_ATTR(pure)
 je_nallocx(size_t size, int flags)
 {
+	size_t usize;
 
 	assert(size != 0);
 
 	if (unlikely(malloc_init()))
 		return (0);
 
-	return (inallocx(size, flags));
+	usize = inallocx(size, flags);
+	if (unlikely(usize > HUGE_MAXCLASS))
+		return (0);
+
+	return (usize);
 }
 
 JEMALLOC_EXPORT int JEMALLOC_NOTHROW
@@ -2603,7 +2644,7 @@ JEMALLOC_EXPORT void
 _malloc_prefork(void)
 #endif
 {
-	unsigned i;
+	unsigned i, narenas;
 
 #ifdef JEMALLOC_MUTEX_INIT_CB
 	if (!malloc_initialized())
@@ -2615,9 +2656,11 @@ _malloc_prefork(void)
 	ctl_prefork();
 	prof_prefork();
 	malloc_mutex_prefork(&arenas_lock);
-	for (i = 0; i < narenas_total; i++) {
-		if (arenas[i] != NULL)
-			arena_prefork(arenas[i]);
+	for (i = 0, narenas = narenas_total_get(); i < narenas; i++) {
+		arena_t *arena;
+
+		if ((arena = arena_get(i, false)) != NULL)
+			arena_prefork(arena);
 	}
 	chunk_prefork();
 	base_prefork();
@@ -2631,7 +2674,7 @@ JEMALLOC_EXPORT void
 _malloc_postfork(void)
 #endif
 {
-	unsigned i;
+	unsigned i, narenas;
 
 #ifdef JEMALLOC_MUTEX_INIT_CB
 	if (!malloc_initialized())
@@ -2642,9 +2685,11 @@ _malloc_postfork(void)
 	/* Release all mutexes, now that fork() has completed. */
 	base_postfork_parent();
 	chunk_postfork_parent();
-	for (i = 0; i < narenas_total; i++) {
-		if (arenas[i] != NULL)
-			arena_postfork_parent(arenas[i]);
+	for (i = 0, narenas = narenas_total_get(); i < narenas; i++) {
+		arena_t *arena;
+
+		if ((arena = arena_get(i, false)) != NULL)
+			arena_postfork_parent(arena);
 	}
 	malloc_mutex_postfork_parent(&arenas_lock);
 	prof_postfork_parent();
@@ -2654,16 +2699,18 @@ _malloc_postfork(void)
 void
 jemalloc_postfork_child(void)
 {
-	unsigned i;
+	unsigned i, narenas;
 
 	assert(malloc_initialized());
 
 	/* Release all mutexes, now that fork() has completed. */
 	base_postfork_child();
 	chunk_postfork_child();
-	for (i = 0; i < narenas_total; i++) {
-		if (arenas[i] != NULL)
-			arena_postfork_child(arenas[i]);
+	for (i = 0, narenas = narenas_total_get(); i < narenas; i++) {
+		arena_t *arena;
+
+		if ((arena = arena_get(i, false)) != NULL)
+			arena_postfork_child(arena);
 	}
 	malloc_mutex_postfork_child(&arenas_lock);
 	prof_postfork_child();

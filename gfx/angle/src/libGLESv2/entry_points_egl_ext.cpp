@@ -163,6 +163,7 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
         bool minorVersionSpecified   = false;
         bool enableAutoTrimSpecified = false;
         bool deviceTypeSpecified     = false;
+        bool presentPathSpecified    = false;
 
         if (attrib_list)
         {
@@ -228,6 +229,29 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                     enableAutoTrimSpecified = true;
                     break;
 
+                    case EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE:
+                        if (!clientExtensions.experimentalPresentPath)
+                        {
+                            SetGlobalError(
+                                Error(EGL_BAD_ATTRIBUTE,
+                                      "EGL_ANGLE_experimental_present_path extension not active"));
+                            return EGL_NO_DISPLAY;
+                        }
+
+                        switch (curAttrib[1])
+                        {
+                            case EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE:
+                            case EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE:
+                                break;
+                            default:
+                                SetGlobalError(
+                                    Error(EGL_BAD_ATTRIBUTE,
+                                          "Invalid value for EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE"));
+                                return EGL_NO_DISPLAY;
+                        }
+                        presentPathSpecified = true;
+                        break;
+
                     case EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE:
                         switch (curAttrib[1])
                         {
@@ -279,6 +303,14 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                 Error(EGL_BAD_ATTRIBUTE,
                       "EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE requires a device type of "
                       "EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE."));
+            return EGL_NO_DISPLAY;
+        }
+
+        if (presentPathSpecified && platformType != EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+        {
+            SetGlobalError(Error(EGL_BAD_ATTRIBUTE,
+                                 "EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE requires a device type of "
+                                 "EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE."));
             return EGL_NO_DISPLAY;
         }
 

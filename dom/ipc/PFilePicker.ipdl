@@ -12,14 +12,20 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace dom {
 
-struct InputFiles
+struct InputBlobs
 {
   PBlob[] blobs;
 };
 
-union MaybeInputFiles
+struct InputDirectory
 {
-  InputFiles;
+  nsString directoryPath;
+};
+
+union MaybeInputData
+{
+  InputBlobs;
+  InputDirectory;
   void_t;
 };
 
@@ -33,7 +39,7 @@ parent:
                nsString displayDirectory);
 
 child:
-    async __delete__(MaybeInputFiles files, int16_t result);
+    async __delete__(MaybeInputData data, int16_t result);
 };
 
 } // namespace dom

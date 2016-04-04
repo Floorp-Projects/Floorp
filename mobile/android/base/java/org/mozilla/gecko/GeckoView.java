@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import org.json.JSONException;
@@ -16,21 +13,16 @@ import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.GLController;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.TypedArray;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -180,20 +172,15 @@ public class GeckoView extends LayerView
 
     public GeckoView(Context context) {
         super(context);
-        init(context, null, true);
+        init(context);
     }
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GeckoView);
-        String url = a.getString(R.styleable.GeckoView_url);
-        boolean doInit = a.getBoolean(R.styleable.GeckoView_doinit, true);
-        a.recycle();
-        init(context, url, doInit);
+        init(context);
     }
 
-    private void init(Context context, String url, boolean doInit) {
-
+    private void init(Context context) {
         if (GeckoAppShell.getApplicationContext() == null) {
             GeckoAppShell.setApplicationContext(context.getApplicationContext());
         }
@@ -209,64 +196,6 @@ public class GeckoView extends LayerView
         GeckoAppShell.setLayerView(this);
 
         initializeView(EventDispatcher.getInstance());
-
-        // TODO: Fennec currently takes care of its own initialization, so this
-        // flag is a hack used in Fennec to prevent GeckoView initialization.
-        // This should go away once Fennec also uses GeckoView for
-        // initialization.
-        if (!doInit)
-            return;
-
-        // If running outside of a GeckoActivity (eg, from a library project),
-        // load the native code and disable content providers
-        boolean isGeckoActivity = false;
-        try {
-            isGeckoActivity = context instanceof GeckoActivity;
-        } catch (NoClassDefFoundError ex) {}
-
-        if (!isGeckoActivity) {
-            Clipboard.init(context);
-            HardwareUtils.init(context);
-
-            // If you want to use GeckoNetworkManager, start it.
-
-            final GeckoProfile profile = GeckoProfile.get(context);
-         }
-
-        GeckoThread.ensureInit(null, null);
-        if (url != null) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(url));
-        }
-
-        if (context instanceof Activity) {
-            Tabs tabs = Tabs.getInstance();
-            tabs.attachToContext(context);
-        }
-
-        EventDispatcher.getInstance().registerGeckoThreadListener(mGeckoEventListener,
-            "Gecko:Ready",
-            "Accessibility:Event",
-            "Content:StateChange",
-            "Content:LoadError",
-            "Content:PageShow",
-            "DOMTitleChanged",
-            "Link:Favicon",
-            "Prompt:Show",
-            "Prompt:ShowTop");
-
-        EventDispatcher.getInstance().registerGeckoThreadListener(mNativeEventListener,
-            "Accessibility:Ready",
-            "GeckoView:Message");
-
-        if (GeckoThread.launch()) {
-            // This is the first launch, so finish initialization and go.
-            GeckoProfile profile = GeckoProfile.get(context).forceCreate();
-
-        } else if (GeckoThread.isRunning()) {
-            // If Gecko is already running, that means the Activity was
-            // destroyed, so we need to re-attach Gecko to this GeckoView.
-            connectToGecko();
-        }
     }
 
     @Override
@@ -429,68 +358,9 @@ public class GeckoView extends LayerView
                 mInputConnectionListener.isIMEEnabled();
     }
 
-    /**
-    * Add a Browser to the GeckoView container.
-    * @param url The URL resource to load into the new Browser.
-    */
-    public Browser addBrowser(String url) {
-        Tab tab = Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NEW_TAB);
-        if (tab != null) {
-            return new Browser(tab.getId());
-        }
-        return null;
-    }
-
-    /**
-    * Remove a Browser from the GeckoView container.
-    * @param browser The Browser to remove.
-    */
-    public void removeBrowser(Browser browser) {
-        Tab tab = Tabs.getInstance().getTab(browser.getId());
-        if (tab != null) {
-            Tabs.getInstance().closeTab(tab);
-        }
-    }
-
-    /**
-    * Set the active/visible Browser.
-    * @param browser The Browser to make selected.
-    */
-    public void setCurrentBrowser(Browser browser) {
-        Tab tab = Tabs.getInstance().getTab(browser.getId());
-        if (tab != null) {
-            Tabs.getInstance().selectTab(tab.getId());
-        }
-    }
-
-    /**
-    * Get the active/visible Browser.
-    * @return The current selected Browser.
-    */
-    public Browser getCurrentBrowser() {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab != null) {
-            return new Browser(tab.getId());
-        }
-        return null;
-    }
-
-    /**
-    * Get the list of current Browsers in the GeckoView container.
-    * @return An unmodifiable List of Browser objects.
-    */
-    public List<Browser> getBrowsers() {
-        ArrayList<Browser> browsers = new ArrayList<Browser>();
-        Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
-        for (Tab tab : tabs) {
-            browsers.add(new Browser(tab.getId()));
-        }
-        return Collections.unmodifiableList(browsers);
-    }
-
     public void importScript(final String url) {
         if (url.startsWith("resource://android/assets/")) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("GeckoView:ImportScript", url));
+            GeckoAppShell.notifyObservers("GeckoView:ImportScript", url);
             return;
         }
 
@@ -498,13 +368,7 @@ public class GeckoView extends LayerView
     }
 
     private void connectToGecko() {
-        Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab != null) {
-            Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
-        }
-
-        GeckoAppShell.sendEventToGecko(
-                GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+        GeckoAppShell.notifyObservers("Viewport:Flush", null);
     }
 
     private void handleReady(final JSONObject message) {
@@ -657,76 +521,7 @@ public class GeckoView extends LayerView
             } catch (Exception e) {
                 Log.w(LOGTAG, "Error building JSON arguments for loadUrl.", e);
             }
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
-        }
-
-        /**
-        * Reload the current URL resource into the Browser. The URL is force loaded from the
-        * network and is not pulled from cache.
-        */
-        public void reload() {
-            Tab tab = Tabs.getInstance().getTab(mId);
-            if (tab != null) {
-                tab.doReload(true);
-            }
-        }
-
-        /**
-        * Stop the current loading operation.
-        */
-        public void stop() {
-            Tab tab = Tabs.getInstance().getTab(mId);
-            if (tab != null) {
-                tab.doStop();
-            }
-        }
-
-        /**
-        * Check to see if the Browser has session history and can go back to a
-        * previous page.
-        * @return A boolean flag indicating if previous session exists.
-        * This method will likely be removed and replaced by a callback in GeckoViewContent
-        */
-        public boolean canGoBack() {
-            Tab tab = Tabs.getInstance().getTab(mId);
-            if (tab != null) {
-                return tab.canDoBack();
-            }
-            return false;
-        }
-
-        /**
-        * Move backward in the session history, if that's possible.
-        */
-        public void goBack() {
-            Tab tab = Tabs.getInstance().getTab(mId);
-            if (tab != null) {
-                tab.doBack();
-            }
-        }
-
-        /**
-        * Check to see if the Browser has session history and can go forward to a
-        * new page.
-        * @return A boolean flag indicating if forward session exists.
-        * This method will likely be removed and replaced by a callback in GeckoViewContent
-        */
-        public boolean canGoForward() {
-            Tab tab = Tabs.getInstance().getTab(mId);
-            if (tab != null) {
-                return tab.canDoForward();
-            }
-            return false;
-        }
-
-        /**
-        * Move forward in the session history, if that's possible.
-        */
-        public void goForward() {
-            Tab tab = Tabs.getInstance().getTab(mId);
-            if (tab != null) {
-                tab.doForward();
-            }
+            GeckoAppShell.notifyObservers("Tab:Load", args.toString());
         }
     }
 

@@ -10,14 +10,11 @@ var msgId = 0;
 
 var PromiseMessage = {
   send(messageManager, name, data = {}) {
-    let id = msgId++;
+    const id = `${name}_${msgId++}`;
 
-    // Make a copy of data so that the caller doesn't see us setting 'id'.
-    let dataCopy = {};
-    for (let prop in data) {
-      dataCopy[prop] = data[prop];
-    }
-    dataCopy.id = id;
+    // Make a copy of data so that the caller doesn't see us setting 'id':
+    // To a new object, assign data's props, and then override the id.
+    const dataCopy = Object.assign({}, data, {id});
 
     // Send the message.
     messageManager.sendAsyncMessage(name, dataCopy);

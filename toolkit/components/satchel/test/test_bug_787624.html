@@ -3,7 +3,7 @@
 <head>
   <title>Test for Layout of Form History Autocomplete: Bug 787624</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style>
@@ -36,13 +36,8 @@ Form History Layout test: form field autocomplete: Bug 787624
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
-<div id="content" style="direction: rtl;">
-  <!-- unused -->
-  <form id="unused" onsubmit="return false;">
-    <input  type="text" name="field1" value="unused">
-  </form>
-
-  <!-- normal, basic form -->
+<div id="content">
+  <!-- in this form, the input field is partially hidden and can scroll -->
   <div class="container">
     <div class="subcontainer">
       <form id="form1" onsubmit="return false;">
@@ -58,126 +53,35 @@ Form History Layout test: form field autocomplete: Bug 787624
 
 /** Test for Form History autocomplete Layout: Bug 787624 **/
 
-var autocompletePopup = NonE10SgetAutocompletePopup();
-autocompletePopup.style.direction = "ltr";
+var resolvePopupShownListener;
+registerPopupShownListener(() => resolvePopupShownListener());
 
-var input = $_(1, "field1");
-var rect = input.getBoundingClientRect();
+function waitForNextPopup() {
+  return new Promise(resolve => { resolvePopupShownListener = resolve; });
+}
 
-// Get the form history service
-function setupFormHistory() {
-  updateFormHistory([
+add_task(function* test_popup_not_move_input() {
+  var input = $_(1, "field1");
+  var rect = input.getBoundingClientRect();
+
+  yield new Promise(resolve => updateFormHistory([
     { op : "remove" },
     { op : "add", fieldname : "field1", value : "value1" },
     { op : "add", fieldname : "field1", value : "value2" },
-  ], () => runTest(1));
-}
+  ], resolve));
 
-function checkForm(expectedValue) {
-  var formID = input.parentNode.id;
-  if (input.value != expectedValue)
-    return false;
+  let popupShown = waitForNextPopup();
+  input.focus();
+  doKey("down");
+  yield popupShown;
 
-  is(input.value, expectedValue, "Checking " + formID + " input");
-  return true;
-}
+  var newRect = input.getBoundingClientRect();
+  is(newRect.left, rect.left,
+    "autocomplete popup does not disturb the input position");
+  is(newRect.top, rect.top,
+    "autocomplete popup does not disturb the input position");
+});
 
-function checkPopupOpen(isOpen, expectedIndex) {
-  var actuallyOpen = autocompletePopup.popupOpen;
-  var actualIndex = autocompletePopup.selectedIndex;
-  if (actuallyOpen != isOpen)
-    return false;
-
-  is(actuallyOpen, isOpen, "popup should be " + (isOpen ? "open" : "closed"));
-  if (isOpen) {
-    if (actualIndex != expectedIndex)
-      return false;
-    is(actualIndex, expectedIndex, "checking selected index");
-  }
-  return true;
-}
-
-function runTest(testNum) {
-  ok(true, "Starting test #" + testNum);
-  var retry = false;
-  var formOK, popupOK;
-
-  switch(testNum) {
-    //
-    // Check initial state
-    //
-    case 1:
-      input.value = "";
-      formOK = checkForm("");
-      if (!formOK) {
-        retry = true;
-        break;
-      }
-      is(autocompletePopup.popupOpen, false, "popup should be initially closed");
-      break;
-
-    // try a focus()
-    case 2:
-      input.focus();
-      break;
-    case 3:
-      popupOK = checkPopupOpen(false);
-      formOK = checkForm("");
-      if (!formOK || !popupOK)
-        retry = true;
-      break;
-    // try a click()
-    case 4:
-      input.click();
-      break;
-    case 5:
-      popupOK = checkPopupOpen(false);
-      formOK = checkForm("");
-      if (!formOK || !popupOK)
-        retry = true;
-      break;
-    case 6:
-      // We're privileged for this test, so open the popup.
-      popupOK = checkPopupOpen(false);
-      formOK = checkForm("");
-      if (!formOK || !popupOK)
-        retry = true;
-      doKey("down");
-      break;
-    case 7:
-      popupOK = checkPopupOpen(true, -1);
-      formOK = checkForm("");
-      if (!formOK || !popupOK)
-        retry = true;
-      break;
-    case 8:
-      var newRect = input.getBoundingClientRect();
-      is(newRect.left, rect.left,
-        "autocomplete popup does not disturb the input position");
-      is(newRect.top, rect.top,
-        "autocomplete popup does not disturb the input position");
-      SimpleTest.finish();
-      return;
-
-    default:
-      ok(false, "Unexpected invocation of test #" + testNum);
-      SimpleTest.finish();
-      return;
-  }
-
-  if (!retry)
-    testNum++;
-
-  setTimeout(runTest, 0, testNum);
-}
-
-function startTest() {
-  setupFormHistory();
-}
-
-window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

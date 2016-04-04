@@ -10,6 +10,7 @@
 #include "jsgc.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include "gc/GCTrace.h"
 #include "gc/Zone.h"
@@ -189,25 +190,18 @@ class ZoneCellIterImpl
 {
     ArenaIter arenaIter;
     ArenaCellIterImpl cellIter;
-    mozilla::DebugOnly<bool> initialized;
 
-  protected:
-    ZoneCellIterImpl() : initialized(false) {}
-
-    ZoneCellIterImpl(JS::Zone* zone, AllocKind kind) : initialized(false) { init(zone, kind); }
-
-    void init(JS::Zone* zone, AllocKind kind) {
-        MOZ_ASSERT(!initialized);
+  public:
+    ZoneCellIterImpl(JS::Zone* zone, AllocKind kind) {
         MOZ_ASSERT(zone);
-        initialized = true;
+        MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
+
         arenaIter.init(zone, kind);
         if (!arenaIter.done())
             cellIter.init(arenaIter.get());
     }
 
-  public:
     bool done() const {
-        MOZ_ASSERT(initialized);
         return arenaIter.done();
     }
 
@@ -236,40 +230,46 @@ class ZoneCellIterImpl
 class ZoneCellIterUnderGC : public ZoneCellIterImpl
 {
   public:
-    ZoneCellIterUnderGC(JS::Zone* zone, AllocKind kind) : ZoneCellIterImpl(zone, kind) {
-        MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
+    ZoneCellIterUnderGC(JS::Zone* zone, AllocKind kind)
+      : ZoneCellIterImpl(zone, kind)
+    {
         MOZ_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
     }
 };
 
-class ZoneCellIter : public ZoneCellIterImpl
+class ZoneCellIter
 {
+    mozilla::Maybe<ZoneCellIterImpl> impl;
     JS::AutoAssertNoAlloc noAlloc;
 
   public:
     ZoneCellIter(JS::Zone* zone, AllocKind kind) {
+        // If called from outside a GC, ensure that the heap is in a state
+        // that allows us to iterate.
         JSRuntime* rt = zone->runtimeFromMainThread();
+        if (!rt->isHeapBusy()) {
+            // We have a single-threaded runtime, so there's no need to protect
+            // against other threads iterating or allocating. However, we do
+            // have background finalization; we have to wait for this to finish
+            // if it's currently active.
+            if (IsBackgroundFinalized(kind) && zone->arenas.needBackgroundFinalizeWait(kind))
+                rt->gc.waitBackgroundSweepEnd();
 
-        /*
-         * We have a single-threaded runtime, so there's no need to protect
-         * against other threads iterating or allocating. However, we do have
-         * background finalization; we have to wait for this to finish if it's
-         * currently active.
-         */
-        if (IsBackgroundFinalized(kind) &&
-            zone->arenas.needBackgroundFinalizeWait(kind))
-        {
-            rt->gc.waitBackgroundSweepEnd();
+            // Evict the nursery before iterating so we can see all things.
+            rt->gc.evictNursery();
+
+            // Assert that no GCs can occur while a ZoneCellIter is live.
+            noAlloc.disallowAlloc(rt);
         }
 
-        /* Evict the nursery before iterating so we can see all things. */
-        rt->gc.evictNursery();
-
-        /* Assert that no GCs can occur while a ZoneCellIter is live. */
-        noAlloc.disallowAlloc(rt);
-
-        init(zone, kind);
+        impl.emplace(zone, kind);
     }
+
+    bool done() const { return impl->done(); }
+    template<typename T>
+    T* get() const { return impl->get<T>(); }
+    Cell* getCell() const { return impl->getCell(); }
+    void next() { impl->next(); }
 };
 
 class GCZonesIter
@@ -331,6 +331,20 @@ class GCZoneGroupIter {
 };
 
 typedef CompartmentsIterT<GCZoneGroupIter> GCCompartmentGroupIter;
+
+inline void
+RelocationOverlay::forwardTo(Cell* cell)
+{
+    MOZ_ASSERT(!isForwarded());
+    // The location of magic_ is important because it must never be valid to see
+    // the value Relocated there in a GC thing that has not been moved.
+    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSObject, group_) &&
+                  offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) &&
+                  offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.flags),
+                  "RelocationOverlay::magic_ is in the wrong location");
+    newLocation_ = cell;
+    magic_ = Relocated;
+}
 
 } /* namespace gc */
 } /* namespace js */

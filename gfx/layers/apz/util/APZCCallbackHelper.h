@@ -15,6 +15,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIPresShell;
+class nsIScrollableFrame;
 class nsIWidget;
 template<class T> struct already_AddRefed;
 template<class T> class nsCOMPtr;
@@ -22,7 +23,7 @@ template<class T> class nsCOMPtr;
 namespace mozilla {
 namespace layers {
 
-typedef Function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
+typedef function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
         SetAllowedTouchBehaviorCallback;
 
 /* This class contains some helper methods that facilitate implementing the
@@ -65,14 +66,6 @@ public:
        given presShell. */
     static void InitializeRootDisplayport(nsIPresShell* aPresShell);
 
-    /* Tell layout to perform scroll snapping for the scrollable frame with the
-     * given scroll id. aDestination specifies the expected landing position of
-     * a current fling or scrolling animation that should be used to select
-     * the scroll snap point.
-     */
-    static void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                                 const mozilla::CSSPoint& aDestination);
-
     /* Tell layout that we received the scroll offset update for the given view ID, so
        that it accepts future scroll offset updates from APZ. */
     static void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
@@ -99,9 +92,9 @@ public:
                            const ScrollableLayerGuid& aGuid,
                            const CSSToLayoutDeviceScale& aScale);
 
-    /* Convenience function for applying a callback transform to all touch
-     * points of a touch event. */
-    static void ApplyCallbackTransform(WidgetTouchEvent& aEvent,
+    /* Convenience function for applying a callback transform to all refpoints
+     * in the input event. */
+    static void ApplyCallbackTransform(WidgetEvent& aEvent,
                                        const ScrollableLayerGuid& aGuid,
                                        const CSSToLayoutDeviceScale& aScale);
 
@@ -163,10 +156,27 @@ public:
     /* Notify content that the repaint flush is complete. */
     static void NotifyFlushComplete(nsIPresShell* aShell);
 
-    /* Temporarily ignore the Displayport for better paint performance. */
-    static void SuppressDisplayport(const bool& aEnabled);
+    /* Temporarily ignore the Displayport for better paint performance. If at
+     * all possible, pass in a presShell if you have one at the call site, we
+     * use it to trigger a repaint once suppression is disabled. Without that
+     * the displayport may get left at the suppressed size for an extended
+     * period of time and result in unnecessary checkerboarding (see bug
+     * 1255054). */
+    static void SuppressDisplayport(const bool& aEnabled,
+                                    const nsCOMPtr<nsIPresShell>& aShell);
     static bool IsDisplayportSuppressed();
 
+    static void
+    AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
+                                    const CSSPoint& aActualScrollOffset);
+
+    /*
+     * Check if the scrollable frame is currently in the middle of an async
+     * or smooth scroll. We want to discard certain scroll input if this is
+     * true to prevent clobbering higher priority origins.
+     */
+    static bool
+    IsScrollInProgress(nsIScrollableFrame* aFrame);
 private:
   static uint64_t sLastTargetAPZCNotificationInputBlock;
 };

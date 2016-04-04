@@ -62,7 +62,8 @@ var AnimationsPanel = {
     let hUtils = gToolbox.highlighterUtils;
     this.togglePicker = hUtils.togglePicker.bind(hUtils);
 
-    this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
+    this.animationsTimelineComponent = new AnimationsTimeline(gInspector,
+      AnimationsController.traits);
     this.animationsTimelineComponent.init(this.playersEl);
 
     if (AnimationsController.traits.hasSetPlaybackRate) {
@@ -183,9 +184,8 @@ var AnimationsPanel = {
     } else {
       document.body.setAttribute("empty", "true");
       document.body.removeAttribute("timeline");
-      $("#error-type").textContent = gInspector.selection.isPseudoElementNode()
-        ? L10N.getStr("panel.pseudoElementSelected")
-        : L10N.getStr("panel.invalidElementSelected");
+      $("#error-type").textContent =
+        L10N.getStr("panel.invalidElementSelected");
     }
   },
 

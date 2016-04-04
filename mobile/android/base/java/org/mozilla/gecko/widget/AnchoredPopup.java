@@ -101,19 +101,6 @@ public abstract class AnchoredPopup extends PopupWindow {
         int offsetY = mContext.getResources().getDimensionPixelOffset(R.dimen.doorhanger_offsetY);
         final View decorView = ((Activity) mContext).getWindow().getDecorView();
 
-        // Hack for Gingerbread: showAtLocation ignores window layout parameters so we have to use
-        // showAsDropDown() instead.
-        // Height and width are always set to 0 dp.
-        if (Versions.preHC) {
-            setWidth(decorView.getWidth());
-            offsetY = mContext.getResources().getDimensionPixelOffset(R.dimen.doorhanger_GB_offsetY);
-            if (mAnchor == null) {
-              mAnchor = decorView;
-            }
-            showAsDropDown(mAnchor, 0, -offsetY);
-            return;
-        }
-
         final boolean validAnchor = (mAnchor != null) && (anchorLocation[1] > 0);
         if (HardwareUtils.isTablet()) {
             if (validAnchor) {

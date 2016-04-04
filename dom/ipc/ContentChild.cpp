@@ -45,9 +45,8 @@
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
-#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
@@ -147,6 +146,7 @@
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
+#include "mozilla/widget/AudioSession.h"
 #endif
 
 #ifdef MOZ_X11
@@ -598,9 +598,6 @@ ReinitTaskTracer(void* /*aUnused*/)
 
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
-#ifdef ANDROID
- , mScreenSize(0, 0)
-#endif
  , mCanOverrideProcessName(true)
  , mIsAlive(true)
 {
@@ -877,8 +874,14 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     auto* opener = nsPIDOMWindowOuter::From(aParent);
     nsIDocShell* openerShell;
     RefPtr<nsDocShell> openerDocShell;
+    float fullZoom = 1.0f;
     if (opener && (openerShell = opener->GetDocShell())) {
       openerDocShell = static_cast<nsDocShell*>(openerShell);
+      nsCOMPtr<nsIContentViewer> cv;
+      openerDocShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv) {
+        cv->GetFullZoom(&fullZoom);
+      }
     }
 
     nsresult rv;
@@ -890,6 +893,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                           openerDocShell
                             ? openerDocShell->GetOriginAttributes()
                             : DocShellOriginAttributes(),
+                          fullZoom,
                           &rv,
                           aWindowIsNew,
                           &frameScripts,
@@ -1286,11 +1290,11 @@ ContentChild::DeallocPAPZChild(PAPZChild* aActor)
   return true;
 }
 
-PCompositorChild*
-ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
-                                    base::ProcessId aOtherProcess)
+PCompositorBridgeChild*
+ContentChild::AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
+                                          base::ProcessId aOtherProcess)
 {
-  return CompositorChild::Create(aTransport, aOtherProcess);
+  return CompositorBridgeChild::Create(aTransport, aOtherProcess);
 }
 
 PSharedBufferManagerChild*
@@ -2488,6 +2492,10 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
   nsAutoCString originNoSuffix;
   PrincipalOriginAttributes attrs;
   attrs.PopulateFromOrigin(permission.origin, originNoSuffix);
+  // we're doing this because we currently don't support isolating permissions
+  // by userContextId.
+  MOZ_ASSERT(attrs.mUserContextId == nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID,
+      "permission user context should be set to default!");
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
@@ -2509,17 +2517,6 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
                                  nsPermissionManager::eNoDBOperation);
 #endif
 
-  return true;
-}
-
-bool
-ContentChild::RecvScreenSizeChanged(const gfx::IntSize& size)
-{
-#ifdef ANDROID
-  mScreenSize = size;
-#else
-  NS_RUNTIMEABORT("Message currently only expected on android");
-#endif
   return true;
 }
 
@@ -2579,8 +2576,8 @@ OnFinishNuwaPreparation()
 {
   // We want to ensure that the PBackground actor gets cloned in the Nuwa
   // process before we freeze. Also, we have to do this to avoid deadlock.
-  // Protocols that are "opened" (e.g. PBackground, PCompositor) block the
-  // main thread to wait for the IPC thread during the open operation.
+  // Protocols that are "opened" (e.g. PBackground, PCompositorBridge) block
+  // the main thread to wait for the IPC thread during the open operation.
   // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
   // the Nuwa process is forked. Unless we ensure that the two cannot happen
   // at the same time then we risk deadlock. Spinning the event loop here
@@ -3043,6 +3040,10 @@ ContentChild::RecvShutdown()
                           "content-child-shutdown", nullptr);
   }
 
+#if defined(XP_WIN)
+    mozilla::widget::StopAudioSession();
+#endif
+
   GetIPCChannel()->SetAbortOnError(false);
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -3161,6 +3162,26 @@ ContentChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
   return true;
 }
 
+bool
+ContentChild::RecvSetAudioSessionData(const nsID& aId,
+                                      const nsString& aDisplayName,
+                                      const nsString& aIconPath)
+{
+#if defined(XP_WIN)
+    if (NS_FAILED(mozilla::widget::RecvAudioSessionData(aId, aDisplayName,
+                                                        aIconPath))) {
+      return true;
+    }
+
+    // Ignore failures here; we can't really do anything about them
+    mozilla::widget::StartAudioSession();
+    return true;
+#else
+    NS_RUNTIMEABORT("Not Reached!");
+    return false;
+#endif
+}
+
 // This code goes here rather than nsGlobalWindow.cpp because nsGlobalWindow.cpp
 // can't include ContentChild.h since it includes windows.h.
 
@@ -3256,7 +3277,8 @@ ContentChild::RecvEndDragSession(const bool& aDoneDrag,
 
 bool
 ContentChild::RecvPush(const nsCString& aScope,
-                       const IPC::Principal& aPrincipal)
+                       const IPC::Principal& aPrincipal,
+                       const nsString& aMessageId)
 {
 #ifndef MOZ_SIMPLEPUSH
   nsCOMPtr<nsIPushNotifier> pushNotifierIface =
@@ -3266,7 +3288,8 @@ ContentChild::RecvPush(const nsCString& aScope,
   }
   PushNotifier* pushNotifier =
     static_cast<PushNotifier*>(pushNotifierIface.get());
-  nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal, Nothing());
+  nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal,
+                                                aMessageId, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(rv));
 #endif
   return true;
@@ -3275,6 +3298,7 @@ ContentChild::RecvPush(const nsCString& aScope,
 bool
 ContentChild::RecvPushWithData(const nsCString& aScope,
                                const IPC::Principal& aPrincipal,
+                               const nsString& aMessageId,
                                InfallibleTArray<uint8_t>&& aData)
 {
 #ifndef MOZ_SIMPLEPUSH
@@ -3286,7 +3310,7 @@ ContentChild::RecvPushWithData(const nsCString& aScope,
   PushNotifier* pushNotifier =
     static_cast<PushNotifier*>(pushNotifierIface.get());
   nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal,
-                                                Some(aData));
+                                                aMessageId, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(rv));
 #endif
   return true;
@@ -3307,6 +3331,23 @@ ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
   nsresult rv = pushNotifier->NotifySubscriptionChangeWorkers(aScope,
                                                               aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
+}
+
+bool
+ContentChild::RecvPushError(const nsCString& aScope, const nsString& aMessage,
+                            const uint32_t& aFlags)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+  pushNotifier->NotifyErrorWorkers(aScope, aMessage, aFlags);
 #endif
   return true;
 }

@@ -15,6 +15,10 @@ from mozbuild.base import (
     MachCommandConditions as conditions,
 )
 
+from mozbuild.shellutil import (
+    split as shell_split,
+)
+
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -63,6 +67,8 @@ class MachCommands(MachCommandBase):
         # $JAVA_HOME/bin/java into $JAVA_HOME.
         java_home = os.path.dirname(os.path.dirname(self.substs['JAVA']))
 
+        gradle_flags = shell_split(self.substs.get('GRADLE_FLAGS', ''))
+
         # We force the Gradle JVM to run with the UTF-8 encoding, since we
         # filter strings.xml, which is really UTF-8; the ellipsis character is
         # replaced with ??? in some encodings (including ASCII).  It's not yet
@@ -72,7 +78,7 @@ class MachCommands(MachCommandBase):
         # Android tools expect UTF-8: see
         # http://tools.android.com/knownissues/encoding.  See
         # http://stackoverflow.com/a/21267635 for discussion of this approach.
-        return self.run_process([self.substs['GRADLE']] + args,
+        return self.run_process([self.substs['GRADLE']] + gradle_flags + args,
             append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,
@@ -164,4 +170,47 @@ class AndroidEmulatorCommands(MachCommandBase):
             else:
                 self.log(logging.WARN, "emulator", {},
                          "Unable to retrieve Android emulator return code.")
+        return 0
+
+
+@CommandProvider
+class AutophoneCommands(MachCommandBase):
+    """
+       Run autophone, https://wiki.mozilla.org/Auto-tools/Projects/Autophone.
+
+       If necessary, autophone is cloned from github, installed, and configured.
+    """
+    @Command('autophone', category='devenv',
+        conditions=[],
+        description='Run autophone.')
+    @CommandArgument('--clean', action='store_true',
+        help='Delete an existing autophone installation.')
+    @CommandArgument('--verbose', action='store_true',
+        help='Log informative status messages.')
+    def autophone(self, clean=False, verbose=False):
+        import platform
+        from mozrunner.devices.autophone import AutophoneRunner
+
+        if platform.system() == "Windows":
+            # Autophone is normally run on Linux or OSX.
+            self.log(logging.ERROR, "autophone", {},
+                "This mach command is not supported on Windows!")
+            return -1
+
+        runner = AutophoneRunner(self, verbose)
+        runner.load_config()
+        if clean:
+            runner.reset_to_clean()
+            return 0
+        if not runner.setup_directory():
+            return 1
+        if not runner.install_requirements():
+            runner.save_config()
+            return 2
+        if not runner.configure():
+            runner.save_config()
+            return 3
+        runner.save_config()
+        runner.launch_autophone()
+        runner.command_prompts()
         return 0

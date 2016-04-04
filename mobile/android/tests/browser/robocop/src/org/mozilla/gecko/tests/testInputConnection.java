@@ -17,7 +17,7 @@ import org.mozilla.gecko.tests.components.GeckoViewComponent.InputConnectionTest
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
@@ -43,20 +43,48 @@ public class testInputConnection extends JavascriptBridgeTest {
             .waitForInputConnection()
             .testInputConnection(new BasicInputConnectionTest());
 
+        // Then switch focus to the text area and rerun tests.
+        getJS().syncCall("focus_text_area", INITIAL_TEXT);
+        mGeckoView.mTextInput
+            .waitForInputConnection()
+            .testInputConnection(new BasicInputConnectionTest());
+
+        // Then switch focus to the content editable and rerun tests.
+        getJS().syncCall("focus_content_editable", INITIAL_TEXT);
+        mGeckoView.mTextInput
+            .waitForInputConnection()
+            .testInputConnection(new BasicInputConnectionTest());
+
+        // Then switch focus to the design mode document and rerun tests.
+        getJS().syncCall("focus_design_mode", INITIAL_TEXT);
+        mGeckoView.mTextInput
+            .waitForInputConnection()
+            .testInputConnection(new BasicInputConnectionTest());
+
         // Then switch focus to the resetting input field, and run tests there.
         getJS().syncCall("focus_resetting_input", "");
         mGeckoView.mTextInput
             .waitForInputConnection()
             .testInputConnection(new ResettingInputConnectionTest());
 
+        // Then switch focus to the hiding input field, and run tests there.
+        getJS().syncCall("focus_hiding_input", "");
+        mGeckoView.mTextInput
+            .waitForInputConnection()
+            .testInputConnection(new HidingInputConnectionTest());
+
         getJS().syncCall("finish_test");
     }
 
     private class BasicInputConnectionTest extends InputConnectionTest {
         @Override
-        public void test(InputConnection ic, EditorInfo info) {
-            // Test initial text provided by the hash in the test page URL
-            assertText("Initial text matches URL hash", ic, INITIAL_TEXT);
+        public void test(final InputConnection ic, EditorInfo info) {
+            waitFor("focus change", new Condition() {
+                @Override
+                public boolean isSatisfied() {
+                    return INITIAL_TEXT.equals(getText(ic));
+                }
+            });
 
             // Test setSelection
             ic.setSelection(0, 3);
@@ -252,6 +280,40 @@ public class testInputConnection extends JavascriptBridgeTest {
 
             ic.deleteSurroundingText(3, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
+            // Make sure we don't leave behind stale events for the following test.
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
+        }
+    }
+
+    /**
+     * HidingInputConnectionTest performs tests on the hiding input in
+     * robocop_input.html. Any test that uses the normal input should be put in
+     * BasicInputConnectionTest.
+     */
+    private class HidingInputConnectionTest extends InputConnectionTest {
+        @Override
+        public void test(final InputConnection ic, EditorInfo info) {
+            waitFor("focus change", new Condition() {
+                @Override
+                public boolean isSatisfied() {
+                    return "".equals(getText(ic));
+                }
+            });
+
+            // Bug 1254629, crash when hiding input during input.
+            ic.commitText("foo", 1);
+            assertTextAndSelectionAt("Can commit text (hiding)", ic, "foo", 3);
+
+            ic.commitText("!", 1);
+            // The '!' key causes the input to hide in robocop_input.html,
+            // and there won't be a text/selection update as a result.
+            assertTextAndSelectionAt("Can handle hiding input", ic, "foo", 3);
+
+            // Make sure we don't leave behind stale events for the following test.
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
         }
     }
 }

@@ -2,11 +2,8 @@
   <head>
     <meta charset="utf-8">
     <script>
-      var shareData;
       addEventListener("OpenGraphData", function(e) {
-        shareData = JSON.parse(e.detail);
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "share-data-message", result: shareData});
+        // frame scripts handle test data
         // share windows self-close
         history.back(); // bug 1042991, ensure history is available
         window.close();

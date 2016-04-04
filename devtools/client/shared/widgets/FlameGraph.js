@@ -6,6 +6,7 @@
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const { setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
@@ -15,7 +16,7 @@ loader.lazyRequireGetter(this, "getColor",
   "devtools/client/shared/theme", true);
 
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/client/performance/modules/global", true);
+  "devtools/client/performance/modules/categories", true);
 loader.lazyRequireGetter(this, "FrameUtils",
   "devtools/client/performance/modules/logic/frame-utils");
 loader.lazyRequireGetter(this, "demangle",
@@ -31,7 +32,7 @@ loader.lazyRequireGetter(this, "GraphAreaDragger",
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";
 
-const L10N = new ViewHelpers.L10N();
+const L10N = new LocalizationHelper();
 
 const GRAPH_RESIZE_EVENTS_DRAIN = 100; // ms
 

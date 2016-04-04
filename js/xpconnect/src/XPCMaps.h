@@ -390,9 +390,7 @@ public:
         XPCNativeSet* key_value;
 
         static bool
-        Match(PLDHashTable* table,
-              const PLDHashEntryHdr* entry,
-              const void* key);
+        Match(const PLDHashEntryHdr* entry, const void* key);
 
         static const struct PLDHashTableOps sOps;
     };
@@ -459,9 +457,7 @@ public:
         nsCOMPtr<nsIXPCFunctionThisTranslator> value;
 
         static bool
-        Match(PLDHashTable* table,
-              const PLDHashEntryHdr* entry,
-              const void* key);
+        Match(const PLDHashEntryHdr* entry, const void* key);
 
         static void
         Clear(PLDHashTable* table, PLDHashEntryHdr* entry);
@@ -513,12 +509,10 @@ public:
         XPCNativeScriptableShared* key;
 
         static PLDHashNumber
-        Hash(PLDHashTable* table, const void* key);
+        Hash(const void* key);
 
         static bool
-        Match(PLDHashTable* table,
-              const PLDHashEntryHdr* entry,
-              const void* key);
+        Match(const PLDHashEntryHdr* entry, const void* key);
 
         static const struct PLDHashTableOps sOps;
     };

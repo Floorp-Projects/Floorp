@@ -7,12 +7,13 @@
 const {Cu, Ci} = require("chrome");
 
 const promise = require("promise");
+
+loader.lazyGetter(this, "system", () => require("devtools/shared/system"));
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/client/shared/autocomplete-popup").AutocompletePopup);
 
 // Maximum number of selector suggestions shown in the panel.
 const MAX_SUGGESTIONS = 15;
-
 
 /**
  * Converts any input field into a document search box.
@@ -107,8 +108,12 @@ InspectorSearch.prototype = {
       this.searchBox.setAttribute("filled", true);
     }
     if (event.keyCode === event.DOM_VK_RETURN) {
-      this._onSearch();
-    } if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_G && event.metaKey) {
+      this._onSearch(event.shiftKey);
+    }
+
+    const modifierKey = system.constants.platform === "macosx" ? event.metaKey :
+event.ctrlKey;
+    if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_G && modifierKey) {
       this._onSearch(event.shiftKey);
       event.preventDefault();
     }

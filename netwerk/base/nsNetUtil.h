@@ -998,6 +998,12 @@ nsresult NS_ShouldSecureUpgrade(nsIURI* aURI,
                                 bool aAllowSTS,
                                 bool& aShouldUpgrade);
 
+/**
+ * Returns an https URI for channels that need to go through secure upgrades.
+ */
+nsresult NS_GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI);
+
+
 namespace mozilla {
 namespace net {
 

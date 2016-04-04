@@ -191,27 +191,7 @@ function endCustomizing(aWindow=window) {
   aWindow.gNavToolbox.addEventListener("aftercustomization", onCustomizationEnds);
   aWindow.gCustomizeMode.exit();
 
-  return deferredEndCustomizing.promise.then(function() {
-    let deferredLoadNewTab = Promise.defer();
-
-    //XXXgijs so some tests depend on this tab being about:blank. Make it so.
-    let newTabBrowser = aWindow.gBrowser.selectedBrowser;
-    newTabBrowser.stop();
-
-    // If we stop early enough, this might actually be about:blank.
-    if (newTabBrowser.currentURI.spec == "about:blank") {
-      return null;
-    }
-
-    // Otherwise, make it be about:blank, and wait for that to be done.
-    function onNewTabLoaded(e) {
-      newTabBrowser.removeEventListener("load", onNewTabLoaded, true);
-      deferredLoadNewTab.resolve();
-    }
-    newTabBrowser.addEventListener("load", onNewTabLoaded, true);
-    newTabBrowser.loadURI("about:blank");
-    return deferredLoadNewTab.promise;
-  });
+  return deferredEndCustomizing.promise;
 }
 
 function startCustomizing(aWindow=window) {

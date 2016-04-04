@@ -390,8 +390,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case VIEWPORT:
-        case BROADCAST: {
+        case VIEWPORT: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);
             break;
@@ -608,11 +607,11 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         return event;
     }
 
-    event.modifiers = DOMModifiers();
-    event.time = Time();
+    event.mModifiers = DOMModifiers();
+    event.mTime = Time();
 
     const LayoutDeviceIntPoint& offset = widget->WidgetToScreenOffset();
-    event.touches.SetCapacity(endIndex - startIndex);
+    event.mTouches.SetCapacity(endIndex - startIndex);
     for (int i = startIndex; i < endIndex; i++) {
         // In this code branch, we are dispatching this event directly
         // into Gecko (as opposed to going through the AsyncPanZoomController),
@@ -630,7 +629,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
                                     radius,
                                     Orientations()[i],
                                     Pressures()[i]);
-        event.touches.AppendElement(t);
+        event.mTouches.AppendElement(t);
     }
 
     return event;
@@ -728,8 +727,8 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
     if (msg != eMouseMove) {
         event.clickCount = 1;
     }
-    event.modifiers = DOMModifiers();
-    event.time = Time();
+    event.mModifiers = DOMModifiers();
+    event.mTime = Time();
 
     // We are dispatching this event directly into Gecko (as opposed to going
     // through the AsyncPanZoomController), and the Points() array has points

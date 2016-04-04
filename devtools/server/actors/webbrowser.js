@@ -9,7 +9,9 @@
 var { Ci, Cu } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
-var { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
+var {
+  ActorPool, createExtraActors, appendExtraActors, GeneratedLocation
+} = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
@@ -359,15 +361,9 @@ BrowserTabList.prototype._getActorForBrowser = function(browser) {
 
 BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
   if (typeof(outerWindowID) == "number") {
-    // Tabs in parent process
     for (let browser of this._getBrowsers()) {
-      if (browser.contentWindow) {
-        let windowUtils = browser.contentWindow
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils);
-        if (windowUtils.outerWindowID === outerWindowID) {
-          return this._getActorForBrowser(browser);
-        }
+      if (browser.outerWindowID == outerWindowID) {
+        return this._getActorForBrowser(browser);
       }
     }
     return promise.reject({
@@ -1903,6 +1899,43 @@ TabActor.prototype = {
       delete this._extraActors[aName];
     }
   },
+
+  /**
+   * Takes a packet containing a url, line and column and returns
+   * the updated url, line and column based on the current source mapping
+   * (source mapped files, pretty prints).
+   *
+   * @param {String} request.url
+   * @param {Number} request.line
+   * @param {Number?} request.column
+   * @return {Promise<Object>}
+   */
+  onResolveLocation: function (request) {
+    let { url, line } = request;
+    let column = request.column || 0;
+    let actor;
+
+    if (actor = this.sources.getSourceActorByURL(url)) {
+      // Get the generated source actor if this is source mapped
+      let generatedActor = actor.generatedSource ?
+                           this.sources.createNonSourceMappedActor(actor.generatedSource) :
+                           actor;
+      let generatedLocation = new GeneratedLocation(generatedActor, line, column);
+
+      return this.sources.getOriginalLocation(generatedLocation).then(loc => {
+        // If no map found, return this packet
+        if (loc.originalLine == null) {
+          return { from: this.actorID, type: "resolveLocation", error: "MAP_NOT_FOUND" };
+        }
+
+        loc = loc.toJSON();
+        return { from: this.actorID, url: loc.source.url, column: loc.column, line: loc.line };
+      });
+    }
+
+    // Fall back to this packet when source is not found
+    return promise.resolve({ from: this.actorID, type: "resolveLocation", error: "SOURCE_NOT_FOUND" });
+  },
 };
 
 /**
@@ -1917,7 +1950,8 @@ TabActor.prototype.requestTypes = {
   "reconfigure": TabActor.prototype.onReconfigure,
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
   "listFrames": TabActor.prototype.onListFrames,
-  "listWorkers": TabActor.prototype.onListWorkers
+  "listWorkers": TabActor.prototype.onListWorkers,
+  "resolveLocation": TabActor.prototype.onResolveLocation
 };
 
 exports.TabActor = TabActor;

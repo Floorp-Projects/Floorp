@@ -116,7 +116,7 @@ public:
                         bool* aAllowRetaining = nullptr);
     virtual void DestroyCompositor();
 
-    virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
+    virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);

@@ -91,6 +91,10 @@ html, body, #app, #memory-tool {
   margin-inline-end: 5px;
 }
 
+.devtools-toolbar > .toolbar-group > label.label-by > span {
+  margin-inline-end: 5px;
+}
+
 .devtools-toolbar > label {
   margin-inline-end: 5px;
 }
@@ -100,7 +104,7 @@ html, body, #app, #memory-tool {
 }
 
 #take-snapshot::before {
-  background-image: url(images/command-screenshot.png);
+  background-image: url(images/command-screenshot.svg);
 }
 
 #clear-snapshots::before {
@@ -109,12 +113,6 @@ html, body, #app, #memory-tool {
 
 #diff-snapshots::before {
   background-image: url(chrome://devtools/skin/images/diff.svg);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #take-snapshot::before {
-    background-image: url(images/command-screenshot@2x.png);
-  }
 }
 
 /**
@@ -261,7 +259,7 @@ html, body, #app, #memory-tool {
    * is the sidebar. @see #memory-tool-container.
    */
   flex: 1;
-  background-color: var(--theme-toolbar-background);
+  background-color: var(--theme-body-background);
 
   /**
    * By default, flex items have min-width: auto;
@@ -294,6 +292,7 @@ html, body, #app, #memory-tool {
 
 #heap-view > .heap-view-panel > .snapshot-status,
 #heap-view > .heap-view-panel > .take-snapshot,
+#heap-view .empty,
 #shortest-paths-select-node-msg {
   margin: auto;
   margin-top: 65px;
@@ -465,7 +464,6 @@ html, body, #app, #memory-tool {
 .heap-tree-percent,
 .heap-tree-item-name {
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .heap-tree-number {
@@ -494,6 +492,19 @@ html, body, #app, #memory-tool {
 .heap-tree-item.focused .heap-tree-number,
 .heap-tree-item.focused .heap-tree-percent {
   color: inherit;
+}
+
+/**
+ * Tree map
+ */
+
+.tree-map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  margin-top: -1em;
+  padding-bottom: 1em;
 }
 
 /**

@@ -21526,6 +21526,926 @@ function test_2d_clearRect_testdoubleprecision() {
 }
 </script>
 
+<!-- [[[ test_2d.path.ellipse.angle.1.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.angle.1</p>
+<!-- Testing: ellipse() draws pi/2 .. -pi anticlockwise correctly -->
+<canvas id="c690" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_angle_1() {
+
+var canvas = document.getElementById('c690');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.fillStyle = '#f00';
+ctx.beginPath();
+ctx.moveTo(100, 0);
+ctx.ellipse(100, 0, 150, 100, 0, Math.PI/2, -Math.PI, true);
+ctx.fill();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.angle.2.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.angle.2</p>
+<!-- Testing: ellipse() draws -3pi/2 .. -pi anticlockwise correctly -->
+<canvas id="c691" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_angle_2() {
+
+var canvas = document.getElementById('c691');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.fillStyle = '#f00';
+ctx.beginPath();
+ctx.moveTo(100, 0);
+ctx.ellipse(100, 0, 150, 100, 0, -3*Math.PI/2, -Math.PI, true);
+ctx.fill();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.angle.3.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.angle.3</p>
+<!-- Testing: ellipse() wraps angles mod 2pi when anticlockwise and end > start+2pi -->
+<canvas id="c692" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_angle_3() {
+
+var canvas = document.getElementById('c692');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.fillStyle = '#f00';
+ctx.beginPath();
+ctx.moveTo(100, 0);
+ctx.ellipse(100, 0, 150, 100, 0, (512+1/2)*Math.PI, (1024-1)*Math.PI, true);
+ctx.fill();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.angle.4.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.angle.4</p>
+<!-- Testing: ellipse() draws a full circle when clockwise and end > start+2pi -->
+<canvas id="c693" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_angle_4() {
+
+var canvas = document.getElementById('c693');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.fillStyle = '#0f0';
+ctx.beginPath();
+ctx.moveTo(50, 25);
+ctx.ellipse(50, 25, 60, 50, 0, (512+1/2)*Math.PI, (1024-1)*Math.PI, false);
+ctx.fill();
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.angle.5.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.angle.5</p>
+<!-- Testing: ellipse() wraps angles mod 2pi when clockwise and start > end+2pi -->
+<canvas id="c694" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_angle_5() {
+
+var canvas = document.getElementById('c694');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.fillStyle = '#f00';
+ctx.beginPath();
+ctx.moveTo(100, 0);
+ctx.ellipse(100, 0, 150, 100, 0, (1024-1)*Math.PI, (512+1/2)*Math.PI, false);
+ctx.fill();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.angle.6.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.angle.6</p>
+<!-- Testing: ellipse() draws a full circle when anticlockwise and start > end+2pi -->
+<canvas id="c695" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_angle_6() {
+
+var canvas = document.getElementById('c695');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.fillStyle = '#0f0';
+ctx.beginPath();
+ctx.moveTo(50, 25);
+ctx.ellipse(50, 25, 60, 50, 0, (1024-1)*Math.PI, (512+1/2)*Math.PI, true);
+ctx.fill();
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.empty.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.empty</p>
+<!-- Testing: ellipse() with an empty path does not draw a straight line to the start point -->
+<canvas id="c696" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_empty() {
+
+var canvas = document.getElementById('c696');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 50;
+ctx.strokeStyle = '#f00';
+ctx.beginPath();
+ctx.ellipse(200, 25, 5, 5, 0, 0, 2*Math.PI, true);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.end.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.end</p>
+<!-- Testing: ellipse() adds the end point of the ellipse to the subpath -->
+<canvas id="c697" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_end() {
+
+var canvas = document.getElementById('c697');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 50;
+ctx.strokeStyle = '#0f0';
+ctx.beginPath();
+ctx.moveTo(-100, 0);
+ctx.ellipse(-100, 0, 25, 25, 0, -Math.PI/2, Math.PI/2, true);
+ctx.lineTo(100, 25);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.negative.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.negative</p>
+<!-- Testing: ellipse() with negative radius throws INDEX_SIZE_ERR -->
+<canvas id="c698" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_negative() {
+
+var canvas = document.getElementById('c698');
+var ctx = canvas.getContext('2d');
+
+var _thrown = undefined;
+try {
+  ctx.ellipse(0, 0, -1, 0, 0, -Math.PI/2, Math.PI/2, true);
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+
+try {
+  ctx.ellipse(0, 0, 0, -1, 0, -Math.PI/2, Math.PI/2, true);
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.nonempty.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.nonempty</p>
+<!-- Testing: ellipse() with a non-empty path does draw a straight line to the start point -->
+<canvas id="c699" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_nonempty() {
+
+var canvas = document.getElementById('c699');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 50;
+ctx.strokeStyle = '#0f0';
+ctx.beginPath();
+ctx.moveTo(0, 25);
+ctx.ellipse(200, 25, 5, 2, 0, 0, 2*Math.PI, true);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.bezierCurveTo.nonfinite.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.nonfinite</p>
+<!-- Testing: bezierCurveTo() with Infinity/NaN is ignored -->
+<canvas id="c700" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_nonfinite() {
+
+var canvas = document.getElementById('c700');
+var ctx = canvas.getContext('2d');
+
+var _thrown_outer = false;
+try {
+
+ctx.moveTo(0, 0);
+ctx.lineTo(100, 0);
+ctx.ellipse(Infinity, 25, 0, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(-Infinity, 25, 0, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(NaN, 25, 0, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, -Infinity, 0, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, NaN, 50, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, -Infinity, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, NaN, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, -Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, NaN, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, -Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, NaN, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, 0, -Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, 0, NaN, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, 0, 0, Infinity, false);
+ctx.ellipse(50, 25, 0, 0, 0, 0, -Infinity, false);
+ctx.ellipse(50, 25, 0, 0, 0, 0, NaN, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 50, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, 50, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, 50, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, 25, Infinity, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, Infinity, 0, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(50, Infinity, 0, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(50, 25, Infinity, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, 0, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(50, 25, Infinity, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, 0, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, 0, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, 25, Infinity, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(50, 25, 50, Infinity, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, Infinity, 0, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, Infinity, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, Infinity, 0, 0, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, 0, 0, Infinity, false);
+ctx.ellipse(50, Infinity, Infinity, 0, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(50, Infinity, 0, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(50, 25, Infinity, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, 0, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(50, Infinity, 0, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(50, 25, Infinity, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(50, 25, 0, Infinity, Infinity, 0, Infinity, false);
+ctx.ellipse(Infinity, 25, 0, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(50, Infinity, 0, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(50, 25, Infinity, 0, 0, Infinity, Infinity, false);
+ctx.ellipse(50, 25, 0, Infinity, 0, Infinity, Infinity, false);
+ctx.ellipse(50, 25, 0, 0, Infinity, Infinity, Infinity, false);
+ctx.ellipse(Infinity, 25, Infinity, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, Infinity, 0, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, Infinity, 0, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, 0, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, Infinity, Infinity, 0, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, Infinity, 0, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, Infinity, 0, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, Infinity, 0, Infinity, 2 * Math.PI, false);
+ctx.ellipse(50, 25, 0, 0, Infinity, Infinity, 2 * Math.PI, false);
+ctx.ellipse(Infinity, 25, 0, 0, 0, 0, Infinity, false);
+ctx.ellipse(50, Infinity, 0, 0, 0, 0, Infinity, false);
+ctx.ellipse(50, 25, Infinity, 0, 0, 0, Infinity, false);
+ctx.ellipse(50, 25, 0, Infinity, 0, 0, Infinity, false);
+ctx.ellipse(50, 25, 0, 0, Infinity, 0, Infinity, false);
+ctx.ellipse(50, 25, 0, 0, 0, Infinity, Infinity, false);
+ctx.lineTo(100, 50);
+ctx.lineTo(0, 50);
+ctx.fillStyle = '#0f0';
+ctx.fill();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 90,45, 0,255,0,255, 0);
+
+} catch (e) {
+    _thrown_outer = true;
+}
+ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
+
+
+}
+</script>
+
+
+<!-- [[[ test_2d.path.ellipse.scale.1.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.scale.1</p>
+<!-- Testing: Non-uniformly scaled ellipse are the right shape -->
+<canvas id="c701" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_scale_1() {
+
+var canvas = document.getElementById('c701');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.scale(2, 0.5);
+ctx.fillStyle = '#0f0';
+ctx.beginPath();
+var hypothenuse = Math.sqrt(50 * 50 + 25 * 25);
+var tolerance = 0.5;
+var radius = hypothenuse + tolerance;
+ctx.ellipse(25, 50, radius, radius, 0, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.fillStyle = '#f00';
+ctx.beginPath();
+ctx.moveTo(-25, 50);
+ctx.ellipse(-25, 50, 24, 34, 0, 0, 2 * Math.PI, false);
+ctx.moveTo(75, 50);
+ctx.ellipse(75, 50, 24, 34, 0, 0, 2 * Math.PI, false);
+ctx.moveTo(25, -25);
+ctx.ellipse(25, -25, 34, 24, 0, 0, 2 * Math.PI, false);
+ctx.moveTo(25, 125);
+ctx.ellipse(25, -25, 34, 24, 0, 0, 2 * Math.PI, false);
+ctx.fill();
+
+isPixel(ctx, 0,0, 0,255,0,255, 0);
+isPixel(ctx, 50,0, 0,255,0,255, 0);
+isPixel(ctx, 99,0, 0,255,0,255, 0);
+isPixel(ctx, 0,25, 0,255,0,255, 0);
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 99,25, 0,255,0,255, 0);
+isPixel(ctx, 0,49, 0,255,0,255, 0);
+isPixel(ctx, 50,49, 0,255,0,255, 0);
+isPixel(ctx, 99,49, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.scale.2.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.scale.2</p>
+<!-- Testing: Highly scaled ellipse are the right shape -->
+<canvas id="c702" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_scale_2() {
+
+var canvas = document.getElementById('c702');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.scale(100, 100);
+ctx.strokeStyle = '#0f0';
+ctx.lineWidth = 1.2;
+ctx.beginPath();
+ctx.ellipse(0, 0, 0.6, 1, 0, 0, Math.PI/2, false);
+ctx.ellipse(0, 0, 1, 0.6, 0, 0, Math.PI/2, false);
+ctx.stroke();
+
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 50,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,25, 0,255,0,255, 0);
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 98,25, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 50,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.selfintersect.1.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.selfintersect.1</p>
+<!-- Testing: ellipse() with lineWidth > 2*radius is drawn sensibly -->
+<canvas id="c703" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_selfintersect_1() {
+
+var canvas = document.getElementById('c703');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 200;
+ctx.strokeStyle = '#f00';
+ctx.beginPath();
+ctx.ellipse(100, 50, 35, 25, 0, 0, -Math.PI/2, true);
+ctx.stroke();
+ctx.beginPath();
+ctx.ellipse(0, 0, 35, 25, 0, 0, -Math.PI/2, true);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.selfintersect.2.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.selfintersect.2</p>
+<!-- Testing: ellipse() with lineWidth > 2*radius is drawn sensibly -->
+<canvas id="c704" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_selfintersect_2() {
+
+var canvas = document.getElementById('c704');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 180;
+ctx.strokeStyle = '#0f0';
+ctx.beginPath();
+ctx.ellipse(-50, 50, 25, 25, 0, 0, -Math.PI/2, true);
+ctx.stroke();
+ctx.beginPath();
+ctx.ellipse(100, 0, 25, 25, 0, 0, -Math.PI/2, true);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 90,10, 0,255,0,255, 0);
+isPixel(ctx, 97,1, 0,255,0,255, 0);
+isPixel(ctx, 97,2, 0,255,0,255, 0);
+isPixel(ctx, 97,3, 0,255,0,255, 0);
+isPixel(ctx, 2,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.shape.1.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.shape.1</p>
+<!-- Testing: ellipse() from 0 to pi does not draw anything in the wrong half -->
+<canvas id="c705" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_shape_1() {
+
+var canvas = document.getElementById('c705');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 50;
+ctx.strokeStyle = '#f00';
+ctx.beginPath();
+ctx.ellipse(50, 50, 40, 60, 0, 0, Math.PI, false);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 20,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.shape.2.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.shape.2</p>
+<!-- Testing: ellipse() from 0 to pi draws stuff in the right half -->
+<canvas id="c706" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_shape_2() {
+
+var canvas = document.getElementById('c706');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 100;
+ctx.strokeStyle = '#0f0';
+ctx.beginPath();
+ctx.ellipse(50, 50, 30, 15, 0, 0, Math.PI, true);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 20,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.shape.3.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.shape.3</p>
+<!-- Testing: ellipse() from 0 to -pi/2 draws stuff in the right quadrant -->
+<canvas id="c707" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_shape_3() {
+
+var canvas = document.getElementById('c707');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 150;
+ctx.strokeStyle = '#0f0';
+ctx.beginPath();
+ctx.ellipse(-50, 50, 100, 200, 0, 0, -Math.PI/2, true);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.shape.4.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.shape.4</p>
+<!-- Testing: ellipse() from 0 to 5pi does not draw crazy things -->
+<canvas id="c708" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_shape_4() {
+
+var canvas = document.getElementById('c708');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 200;
+ctx.strokeStyle = '#f00';
+ctx.beginPath();
+ctx.ellipse(300, 0, 100, 200, 0, 0, 5*Math.PI, false);
+ctx.stroke();
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.twopie.1.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.twopie.1</p>
+<!-- Testing: ellipse() draws nothing when end = start + 2pi-e and anticlockwise -->
+<canvas id="c709" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_twopie_1() {
+
+var canvas = document.getElementById('c709');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.strokeStyle = '#f00';
+ctx.lineWidth = 100;
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 60, 0, 0, 2*Math.PI - 1e-4, true);
+ctx.stroke();
+isPixel(ctx, 50,20, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.twopie.2.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.twopie.2</p>
+<!-- Testing: ellipse() draws a full ellipse when end = start + 2pi-e and clockwise -->
+<canvas id="c710" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_twopie_2() {
+
+var canvas = document.getElementById('c710');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.strokeStyle = '#0f0';
+ctx.lineWidth = 100;
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 30, 0, 0, 2*Math.PI - 1e-4, false);
+ctx.stroke();
+isPixel(ctx, 50,20, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.twopie.3.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.twopie.3</p>
+<!-- Testing: ellipse() draws a full circle when end = start + 2pi+e and anticlockwise -->
+<canvas id="c711" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_twopie_3() {
+
+var canvas = document.getElementById('c711');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.strokeStyle = '#0f0';
+ctx.lineWidth = 100;
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 25, 0, 0, 2*Math.PI + 1e-4, true);
+ctx.stroke();
+isPixel(ctx, 50,20, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.twopie.4.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.twopie.4</p>
+<!-- Testing: ellipse() draws nothing when end = start + 2pi+e and clockwise -->
+<canvas id="c712" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_twopie_4() {
+
+var canvas = document.getElementById('c712');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.strokeStyle = '#0f0';
+ctx.lineWidth = 100;
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 25, 0, 0, 2*Math.PI + 1e-4, false);
+ctx.stroke();
+isPixel(ctx, 50,20, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.zero.1.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.zero.1</p>
+<!-- Testing: ellipse() draws nothing when startAngle = endAngle and anticlockwise -->
+<canvas id="c713" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_zero_1() {
+
+var canvas = document.getElementById('c713');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.strokeStyle = '#f00';
+ctx.lineWidth = 100;
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 25, 0, 0, 0, true);
+ctx.stroke();
+isPixel(ctx, 50,20, 0,255,0,255, 0);
+
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.zero.2.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.zero.2</p>
+<!-- Testing: ellipse() draws nothing when startAngle = endAngle and clockwise -->
+<canvas id="c714" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_path_ellipse_zero_2() {
+
+var canvas = document.getElementById('c714');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.strokeStyle = '#f00';
+ctx.lineWidth = 100;
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 25, 0, 0, 0, true);
+ctx.stroke();
+isPixel(ctx, 50,20, 0,255,0,255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.zeroradius.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.zeroradius</p>
+<!-- Testing: ellipse() with zero radius draws a line to the start point -->
+<canvas id="c715" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_zeroradius() {
+
+var canvas = document.getElementById('c715');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00'
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 50;
+ctx.strokeStyle = '#0f0';
+ctx.beginPath();
+ctx.moveTo(0, 25);
+ctx.ellipse(200, 25, 0, 0, 0, 0, Math.PI, true);
+ctx.stroke();
+
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
+
+
+}
+</script>
+
+<!-- [[[ test_2d.path.ellipse.rotate.html ]]] -->
+
+<p>Canvas test: 2d.path.ellipse.rotate</p>
+<!-- Testing: ellipse() with a rotation angle works -->
+<canvas id="c716" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_path_ellipse_rotate() {
+
+var canvas = document.getElementById('c716');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+ctx.lineWidth = 5;
+ctx.strokeStyle = '#f00';
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 25, Math.PI/4, 0, 2 * Math.PI, false);
+ctx.stroke();
+ctx.beginPath();
+ctx.ellipse(50, 25, 50, 25, -Math.PI/4, 0, 2 * Math.PI, false);
+ctx.stroke();
+isPixel(ctx, 50, 25, 0,255,0,255, 0);
+isPixel(ctx, 48,1, 0,255,0,255, 0);
+isPixel(ctx, 98,24, 0,255,0,255, 0);
+isPixel(ctx, 48,48, 0,255,0,255, 0);
+isPixel(ctx, 24,48, 0,255,0,255, 0);
+}
+</script>
+
 <script>
 
 function asyncTestsDone() {
@@ -24818,6 +25738,141 @@ try {
   test_2d_transformation_reset_transform();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_transformation_reset_transform");
+ }
+ try {
+  test_2d_path_ellipse_angle_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_angle_1");
+ }
+ try {
+  test_2d_path_ellipse_angle_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_angle_2");
+ }
+ try {
+  test_2d_path_ellipse_angle_3();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_angle_3");
+ }
+ try {
+  test_2d_path_ellipse_angle_4();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_angle_4");
+ }
+ try {
+  test_2d_path_ellipse_angle_5();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_angle_5");
+ }
+ try {
+  test_2d_path_ellipse_angle_6();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_angle_6");
+ }
+ try {
+  test_2d_path_ellipse_empty();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_empty");
+ }
+ try {
+  test_2d_path_ellipse_end();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_end");
+ }
+ try {
+  test_2d_path_ellipse_negative();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_negative");
+ }
+ try {
+  test_2d_path_ellipse_nonempty();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_nonempty");
+ }
+ try {
+  test_2d_path_ellipse_nonfinite();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_nonfinite");
+ }
+ try {
+  test_2d_path_ellipse_scale_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_scale_1");
+ }
+ try {
+  test_2d_path_ellipse_scale_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_scale_2");
+ }
+ try {
+  test_2d_path_ellipse_selfintersect_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_selfintersect_1");
+ }
+ try {
+  test_2d_path_ellipse_selfintersect_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_selfintersect_2");
+ }
+ try {
+  test_2d_path_ellipse_shape_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_shape_1");
+ }
+ try {
+  test_2d_path_ellipse_shape_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_shape_2");
+ }
+ try {
+  test_2d_path_ellipse_shape_3();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_shape_3");
+ }
+ try {
+  test_2d_path_ellipse_shape_4();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_shape_4");
+ }
+ try {
+  test_2d_path_ellipse_twopie_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_twopie_1");
+ }
+ try {
+  test_2d_path_ellipse_twopie_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_twopie_2");
+ }
+ try {
+  test_2d_path_ellipse_twopie_3();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_twopie_3");
+ }
+ try {
+  test_2d_path_ellipse_twopie_4();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_twopie_4");
+ }
+ try {
+  test_2d_path_ellipse_zero_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_zero_1");
+ }
+ try {
+  test_2d_path_ellipse_zero_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_zero_2");
+ }
+ try {
+  test_2d_path_ellipse_zeroradius();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_zeroradius");
+ }
+ try {
+  test_2d_path_ellipse_rotate();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_path_ellipse_rotate");
  }
  try {
   // run this test last since it replaces the getContext method

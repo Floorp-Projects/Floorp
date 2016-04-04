@@ -22,6 +22,7 @@
 #include "nsIFileURL.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "nsITabChild.h"
 #include "private/pprio.h"
@@ -48,7 +49,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 //
 // set NSPR_LOG_MODULES=nsJarProtocol:5
 //
-static PRLogModuleInfo *gJarProtocolLog = nullptr;
+static LazyLogModule gJarProtocolLog("nsJarProtocol");
 
 #define LOG(args)     MOZ_LOG(gJarProtocolLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gJarProtocolLog, mozilla::LogLevel::Debug)
@@ -203,9 +204,6 @@ nsJARChannel::nsJARChannel()
     , mOpeningRemote(false)
     , mBlockRemoteFiles(false)
 {
-    if (!gJarProtocolLog)
-        gJarProtocolLog = PR_NewLogModule("nsJarProtocol");
-
     mBlockRemoteFiles = Preferences::GetBool("network.jar.block-remote-files", false);
 
     // hold an owning reference to the jar handler
@@ -895,6 +893,12 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
         if (mBlockRemoteFiles) {
             mIsUnsafe = true;
             return NS_ERROR_UNSAFE_CONTENT_TYPE;
+        }
+
+        static bool reportedRemoteJAR = false;
+        if (!reportedRemoteJAR) {
+            reportedRemoteJAR = true;
+            Telemetry::Accumulate(Telemetry::REMOTE_JAR_PROTOCOL_USED, 1);
         }
 
         // kick off an async download of the base URI...

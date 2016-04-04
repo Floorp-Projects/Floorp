@@ -346,6 +346,9 @@ public:
   void Rect(double aX, double aY, double aW, double aH);
   void Arc(double aX, double aY, double aRadius, double aStartAngle,
            double aEndAngle, bool aAnticlockwise, mozilla::ErrorResult& aError);
+  void Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
+               double aRotation, double aStartAngle, double aEndAngle,
+               bool aAnticlockwise, ErrorResult& aError);
 
   void GetMozCurrentTransform(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aResult,
@@ -566,16 +569,6 @@ protected:
     * 0, we free the premultiply and unpremultiply tables, if they exist.
     */
   static uint32_t sNumLivingContexts;
-
-  /**
-    * Lookup table used to speed up GetImageData().
-    */
-  static uint8_t (*sUnpremultiplyTable)[256];
-
-  /**
-    * Lookup table used to speed up PutImageData().
-    */
-  static uint8_t (*sPremultiplyTable)[256];
 
   static mozilla::gfx::DrawTarget* sErrorTarget;
 

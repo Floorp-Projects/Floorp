@@ -155,6 +155,10 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   void mozSetFileArray(sequence<File> files);
 
+  // This method is meant to use for testing only.
+  [ChromeOnly, Throws]
+  void mozSetDirectory(DOMString directoryPath);
+
   // Number controls (<input type=number>) have an anonymous text control
   // (<input type=text>) in the anonymous shadow tree that they contain. On
   // such an anonymous text control this property provides access to the

@@ -27,6 +27,12 @@ protected:
     : SVGFEImageFrameBase(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
+
+    // This frame isn't actually displayed, but it contains an image and we want
+    // to use the nsImageLoadingContent machinery for managing images, which
+    // requires visibility tracking, so we enable visibility tracking and
+    // forcibly mark it visible below.
+    EnableVisibilityTracking();
   }
 
 public:
@@ -60,6 +66,9 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t  aModType) override;
 
+  void OnVisibilityChange(Visibility aNewVisibility,
+                          Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
+
   virtual bool UpdateOverflow() override {
     // We don't maintain a visual overflow rect
     return false;
@@ -77,13 +86,12 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 /* virtual */ void
 SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
+  DecApproximateVisibleCount();
+
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
     do_QueryInterface(SVGFEImageFrameBase::mContent);
-
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
-    imageLoader
-      ->DecrementVisibleCount(nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
   }
 
   SVGFEImageFrameBase::DestroyFrom(aDestructRoot);
@@ -99,14 +107,13 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
                "content element that doesn't support the right interfaces");
 
   SVGFEImageFrameBase::Init(aContent, aParent, aPrevInFlow);
+
+  // We assume that feImage's are always visible.
+  IncApproximateVisibleCount();
+
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
     do_QueryInterface(SVGFEImageFrameBase::mContent);
-
   if (imageLoader) {
-    // We assume that feImage's are always visible.
-    // Increment the visible count before calling FrameCreated so that
-    // FrameCreated will actually track the image correctly.
-    imageLoader->IncrementVisibleCount();
     imageLoader->FrameCreated(this);
   }
 }
@@ -139,4 +146,20 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   return SVGFEImageFrameBase::AttributeChanged(aNameSpaceID,
                                                aAttribute, aModType);
+}
+
+void
+SVGFEImageFrame::OnVisibilityChange(Visibility aNewVisibility,
+                                    Maybe<OnNonvisible> aNonvisibleAction)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader =
+    do_QueryInterface(SVGFEImageFrameBase::mContent);
+  if (!imageLoader) {
+    MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
+    return;
+  }
+
+  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+
+  SVGFEImageFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }

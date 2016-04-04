@@ -65,6 +65,34 @@ if (getBuildConfiguration().x64) {
     testConversion('i64', 'extend_u', 'i32', 0x7fffffff, "0x000000007fffffff");
     testConversion('i64', 'extend_u', 'i32', 0x80000000, "0x0000000080000000");
 
+    testConversion('f32', 'convert_s', 'i64', 1, 1.0);
+    testConversion('f32', 'convert_s', 'i64', -1, -1.0);
+    testConversion('f32', 'convert_s', 'i64', 0, 0.0);
+    testConversion('f32', 'convert_s', 'i64', "9223372036854775807", 9223372036854775807.0);
+    testConversion('f32', 'convert_s', 'i64', "-9223372036854775808", -9223372036854775808.0);
+    testConversion('f32', 'convert_s', 'i64', "314159265358979", 314159275180032.0);
+
+    testConversion('f64', 'convert_s', 'i64', 1, 1.0);
+    testConversion('f64', 'convert_s', 'i64', -1, -1.0);
+    testConversion('f64', 'convert_s', 'i64', 0, 0.0);
+    testConversion('f64', 'convert_s', 'i64', "9223372036854775807", 9223372036854775807.0);
+    testConversion('f64', 'convert_s', 'i64', "-9223372036854775808", -9223372036854775808.0);
+    testConversion('f64', 'convert_s', 'i64', "4669201609102990", 4669201609102990);
+
+    testConversion('f32', 'convert_u', 'i64', 1, 1.0);
+    testConversion('f32', 'convert_u', 'i64', 0, 0.0);
+    testConversion('f32', 'convert_u', 'i64', "9223372036854775807", 9223372036854775807.0);
+    testConversion('f32', 'convert_u', 'i64', "-9223372036854775808", 9223372036854775808.0);
+    testConversion('f32', 'convert_u', 'i64', -1, 18446744073709551616.0);
+    testConversion('f32', 'convert_u', 'i64', "0xffff0000ffff0000", 18446462598732840000.0);
+
+    testConversion('f64', 'convert_u', 'i64', 1, 1.0);
+    testConversion('f64', 'convert_u', 'i64', 0, 0.0);
+    testConversion('f64', 'convert_u', 'i64', "9223372036854775807", 9223372036854775807.0);
+    testConversion('f64', 'convert_u', 'i64', "-9223372036854775808", 9223372036854775808.0);
+    testConversion('f64', 'convert_u', 'i64', -1, 18446744073709551616.0);
+    testConversion('f64', 'convert_u', 'i64', "0xffff0000ffff0000", 18446462603027743000.0);
+
     testConversion('i64', 'trunc_s', 'f64', 0.0, 0);
     testConversion('i64', 'trunc_s', 'f64', "-0.0", 0);
     testConversion('i64', 'trunc_s', 'f64', 1.0, 1);
@@ -150,6 +178,9 @@ if (getBuildConfiguration().x64) {
     testConversion('i64', 'trunc_u', 'f32', "nan", "0x8000000000000000");
     testConversion('i64', 'trunc_u', 'f32', "infinity", "0x8000000000000000");
     testConversion('i64', 'trunc_u', 'f32', "-infinity", "0x8000000000000000");
+
+    testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, 4630840390592548000);
+    testConversion('f64', 'reinterpret', 'i64', 4630840390592548000, 40.09999999999968);
 } else {
     // Sleeper test: once i64 works on more platforms, remove this if-else.
     try {
@@ -164,24 +195,13 @@ testConversion('i32', 'trunc_s', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_s', 'f64', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f64', 40.1, 40);
-//testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622); // TODO: NYI
-
-//testConversion('i64', 'trunc_s', 'f32', 40.1, 40); // TODO: NYI
-//testConversion('i64', 'trunc_u', 'f32', 40.1, 40); // TODO: NYI
-//testConversion('i64', 'trunc_s', 'f64', 40.1, 40); // TODO: NYI
-//testConversion('i64', 'trunc_u', 'f64', 40.1, 40); // TODO: NYI
-//testConversion('i64', 'reinterpret', 'f64', 40.1, 1109419622); // TODO: NYI
+testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622);
 
 testConversion('f32', 'convert_s', 'i32', 40, 40);
 testConversion('f32', 'convert_u', 'i32', 40, 40);
-//testConversion('f32', 'convert_s', 'i64', 40, 40); // TODO: NYI
-//testConversion('f32', 'convert_u', 'i64', 40, 40); // TODO: NYI
 testConversion('f32', 'demote', 'f64', 40.1, 40.099998474121094);
-//testConversion('f32', 'reinterpret', 'i32', 40, 5.605193857299268e-44); // TODO: NYI
+testConversion('f32', 'reinterpret', 'i32', 40, 5.605193857299268e-44);
 
 testConversion('f64', 'convert_s', 'i32', 40, 40);
 testConversion('f64', 'convert_u', 'i32', 40, 40);
-//testConversion('f64', 'convert_s', 'i64', 40, 40); // TODO: NYI
-//testConversion('f64', 'convert_u', 'i64', 40, 40); // TODO: NYI
 testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
-//testConversion('f64', 'reinterpret', 'i64', 40.1, 4630840390592548045); // TODO: NYI

@@ -74,13 +74,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_DEVICES:
-#ifdef MOZ_DEVICES
-  true,
-#else
-  false,
-#endif
-
   MOZ_SAFE_BROWSING:
 #ifdef MOZ_SAFE_BROWSING
   true,
@@ -227,13 +220,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_B2GDROID:
-#ifdef MOZ_B2GDROID
-  true,
-#else
-  false,
-#endif
-
   MOZ_GRAPHENE:
 #ifdef MOZ_GRAPHENE
   true,
@@ -241,8 +227,8 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_NATIVE_NSS:
-#ifdef MOZ_NATIVE_NSS
+  MOZ_SYSTEM_NSS:
+#ifdef MOZ_SYSTEM_NSS
   true,
 #else
   false,

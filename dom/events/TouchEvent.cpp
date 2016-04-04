@@ -69,13 +69,13 @@ TouchEvent::TouchEvent(EventTarget* aOwner,
   if (aEvent) {
     mEventIsInternal = false;
 
-    for (uint32_t i = 0; i < aEvent->touches.Length(); ++i) {
-      Touch* touch = aEvent->touches[i];
+    for (uint32_t i = 0; i < aEvent->mTouches.Length(); ++i) {
+      Touch* touch = aEvent->mTouches[i];
       touch->InitializePoints(mPresContext, aEvent);
     }
   } else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 }
 
@@ -118,9 +118,9 @@ TouchEvent::Touches()
   if (!mTouches) {
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     if (mEvent->mMessage == eTouchEnd || mEvent->mMessage == eTouchCancel) {
-      // for touchend events, remove any changed touches from the touches array
+      // for touchend events, remove any changed touches from mTouches
       WidgetTouchEvent::AutoTouchArray unchangedTouches;
-      const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
+      const WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
       for (uint32_t i = 0; i < touches.Length(); ++i) {
         if (!touches[i]->mChanged) {
           unchangedTouches.AppendElement(touches[i]);
@@ -128,7 +128,7 @@ TouchEvent::Touches()
       }
       mTouches = new TouchList(ToSupports(this), unchangedTouches);
     } else {
-      mTouches = new TouchList(ToSupports(this), touchEvent->touches);
+      mTouches = new TouchList(ToSupports(this), touchEvent->mTouches);
     }
   }
   return mTouches;
@@ -140,7 +140,7 @@ TouchEvent::TargetTouches()
   if (!mTargetTouches) {
     WidgetTouchEvent::AutoTouchArray targetTouches;
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
-    const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
+    const WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       // for touchend/cancel events, don't append to the target list if this is a
       // touch that is ending
@@ -162,7 +162,7 @@ TouchEvent::ChangedTouches()
   if (!mChangedTouches) {
     WidgetTouchEvent::AutoTouchArray changedTouches;
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
-    const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
+    const WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       if (touches[i]->mChanged) {
         changedTouches.AppendElement(touches[i]);

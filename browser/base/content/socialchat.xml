@@ -152,6 +152,8 @@
         <setter>
           this.content.docShellIsActive = !!val;
 
+          // Bug 1256431 to remove socialFrameShow/Hide from hello, keep this
+          // until that is complete.
           // let the chat frame know if it is being shown or hidden
           this.content.messageManager.sendAsyncMessage("Social:CustomEvent", {
             name: val ? "socialFrameShow" : "socialFrameHide"
@@ -250,6 +252,9 @@
           this.chatbar.remove(this);
         else
           window.close();
+
+        if (!this.swappingWindows)
+          this.dispatchEvent(new CustomEvent("ChatboxClosed"));
         ]]></body>
       </method>
 
@@ -285,6 +290,7 @@
               this.swapDocShells(cb);
 
               chatbar.focus();
+              this.swappingWindows = true;
               this.close();
 
               // chatboxForURL is a map of URL -> chatbox used to avoid opening
@@ -796,13 +802,26 @@
             aChatbox.setDecorationAttributes(otherChatbox);
             aChatbox.swapDocShells(otherChatbox);
 
+            aChatbox.swappingWindows = true;
             aChatbox.close();
-            chatbar.chatboxForURL.set(aChatbox.src, Cu.getWeakReference(otherChatbox));
+            let url = aChatbox.src;
+            chatbar.chatboxForURL.set(url, Cu.getWeakReference(otherChatbox));
 
             // All processing is done, now we can fire the event.
             otherChatbox.content.messageManager.sendAsyncMessage("Social:CustomEvent", {
               name: "socialFrameDetached"
             });
+
+            Services.obs.addObserver(function onDOMWindowClosed(subject) {
+              if (subject !== otherWin)
+                return;
+
+              Services.obs.removeObserver(onDOMWindowClosed, "domwindowclosed");
+              chatbar.chatboxForURL.delete(url);
+
+              if (!otherChatbox.swappingWindows)
+                otherChatbox.dispatchEvent(new CustomEvent("ChatboxClosed"));
+            }, "domwindowclosed", false);
 
             deferred.resolve(otherChatbox);
           }, true);

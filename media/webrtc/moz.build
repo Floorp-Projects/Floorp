@@ -93,6 +93,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/sdp/sipcc/sdp_utils.c',
     ]
 
+    GYP_DIRS['signaling'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
     GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
@@ -112,4 +113,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             moz_webrtc_mediacodec=0,
             build_for_standalone=0
         )
+        GYP_DIRS['signalingtest'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources

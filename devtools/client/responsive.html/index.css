@@ -7,14 +7,18 @@
 
 .theme-light {
   --box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
-  --viewport-dimension-color: var(--theme-splitter-color);
-  --viewport-dimension-editing-color: var(--theme-body-color);
+  --viewport-active-color: var(--theme-body-color);
+  --viewport-selection-arrow: url("./images/select-arrow.svg#light");
+  --viewport-selection-arrow-selected:
+    url("./images/select-arrow.svg#light-selected");
 }
 
 .theme-dark {
   --box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
-  --viewport-dimension-color: var(--theme-body-color);
-  --viewport-dimension-editing-color: var(--theme-selection-color);
+  --viewport-active-color: var(--theme-selection-color);
+  --viewport-selection-arrow: url("./images/select-arrow.svg#dark");
+  --viewport-selection-arrow-selected:
+    url("./images/select-arrow.svg#dark-selected");
 }
 
 * {
@@ -42,27 +46,26 @@ body {
 }
 
 /**
- * Common style for toolbar buttons
+ * Common style for toolbars and toolbar buttons
  */
 
+.toolbar {
+  background-color: var(--theme-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
+}
+
 .toolbar-button {
-  border: none;
-  display: block;
   margin: 1px 3px;
-  padding: 0;
   width: 16px;
   height: 16px;
-  opacity: 0.8;
-  background-color: var(--theme-body-color);
+  /* Reset styles from .devtools-button */
+  min-width: initial;
+  min-height: initial;
+  align-self: center;
 }
 
-.toolbar-button:hover {
-  opacity: 1;
-}
-
-.toolbar-button:active {
-  background-color: var(--theme-selection-background);
-  opacity: 1;
+.toolbar-button:active::before {
+  filter: url("chrome://devtools/skin/images/filters.svg#checked-icon-state");
 }
 
 /**
@@ -70,13 +73,11 @@ body {
  */
 
 #global-toolbar {
-  background-color: var(--theme-toolbar-background);
-  border: 1px solid var(--theme-splitter-color);
-  border-radius: 2px;
   color: var(--theme-body-color-alt);
+  border-radius: 2px;
   box-shadow: var(--box-shadow);
   margin: 30px 0;
-  padding: 4px 8px;
+  padding: 4px 5px;
   display: inline-flex;
   -moz-user-select: none;
 }
@@ -87,11 +88,18 @@ body {
 }
 
 #global-toolbar .toolbar-button {
-  margin: 0 0 0 4px;
+  margin: 0 0 0 5px;
 }
 
-#global-exit-button {
-  mask: url("./images/close.svg");
+#global-exit-button,
+#global-exit-button::before {
+  width: 12px;
+  height: 12px;
+}
+
+#global-exit-button::before {
+  background-image: url("./images/close.svg");
+  margin: -6px 0 0 -6px;
 }
 
 #viewports {
@@ -129,17 +137,56 @@ body {
  */
 
 .viewport-toolbar {
-  background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  color: var(--theme-body-color);
+  border-width: 0;
+  border-bottom-width: 1px;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: center;
   height: 18px;
 }
 
+.viewport-device-selector {
+  -moz-appearance: none;
+  background-color: var(--theme-toolbar-background);
+  background-image: var(--viewport-selection-arrow);
+  background-position: 136px;
+  background-repeat: no-repeat;
+  background-size: 7px;
+  border: none;
+  color: var(--theme-body-color-inactive);
+  height: 100%;
+  padding: 0 16px;
+  text-align: center;
+  text-overflow: ellipsis;
+  width: 150px;
+}
+
+.viewport-device-selector.selected {
+  background-image: var(--viewport-selection-arrow-selected);
+  color: var(--viewport-active-color);
+}
+
+.viewport-device-selector:focus {
+  background-image: var(--viewport-selection-arrow-selected);
+  /* Remove the outline from the select box */
+  color: transparent;
+  text-shadow: 0 0 0 var(--viewport-active-color);
+}
+
+.viewport-device-selector > option {
+  background-color: var(--theme-toolbar-background);
+  color: var(--viewport-active-color);
+  text-align: left;
+  padding: 5px;
+}
+
 .viewport-rotate-button {
-  mask: url("./images/rotate-viewport.svg");
+  position: absolute;
+  right: 0;
+}
+
+.viewport-rotate-button::before {
+  background-image: url("./images/rotate-viewport.svg");
 }
 
 /**
@@ -208,13 +255,13 @@ body {
 
 .viewport-dimension-editable,
 .viewport-dimension-input {
-  color: var(--viewport-dimension-color);
+  color: var(--theme-body-color-inactive);
   transition: all 0.25s ease;
 }
 
 .viewport-dimension-editable.editing,
 .viewport-dimension-input.editing {
-  color: var(--viewport-dimension-editing-color);
+  color: var(--viewport-active-color);
 }
 
 .viewport-dimension-editable.editing {

@@ -74,7 +74,7 @@ class WorkerFeature
 public:
   virtual ~WorkerFeature() { }
 
-  virtual bool Notify(JSContext* aCx, Status aStatus) = 0;
+  virtual bool Notify(Status aStatus) = 0;
 };
 
 END_WORKERS_NAMESPACE

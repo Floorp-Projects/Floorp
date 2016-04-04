@@ -122,7 +122,11 @@ public:
     bool shouldAppend = false;
     bool addTimestamp = false;
     bool isSync = false;
-    const char* modules = PR_GetEnv("NSPR_LOG_MODULES");
+    const char* modules = PR_GetEnv("MOZ_LOG_MODULES");
+    if (!modules || !modules[0]) {
+      modules = PR_GetEnv("NSPR_LOG_MODULES");
+    }
+
     NSPRLogModulesParser(modules,
         [&shouldAppend, &addTimestamp, &isSync]
             (const char* aName, LogLevel aLevel) mutable {
@@ -140,7 +144,11 @@ public:
     mAddTimestamp = addTimestamp;
     mIsSync = isSync;
 
-    const char* logFile = PR_GetEnv("NSPR_LOG_FILE");
+    const char* logFile = PR_GetEnv("MOZ_LOG_FILE");
+    if (!logFile || !logFile[0]) {
+      logFile = PR_GetEnv("NSPR_LOG_FILE");
+    }
+
     if (logFile && logFile[0]) {
       static const char kPIDToken[] = "%PID";
       const char* pidTokenPtr = strstr(logFile, kPIDToken);

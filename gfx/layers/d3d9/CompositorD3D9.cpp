@@ -13,18 +13,17 @@
 #include "nsWindowsHelpers.h"
 #include "Nv3DVUtils.h"
 #include "gfxFailure.h"
-#include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
 
-CompositorD3D9::CompositorD3D9(CompositorParent* aParent, nsIWidget *aWidget)
+CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, nsIWidget *aWidget)
   : Compositor(aParent)
   , mWidget(aWidget)
   , mDeviceResetCount(0)
@@ -266,7 +265,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
   d3d9Device->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
 
   IntPoint origin = mCurrentRT->GetOrigin();
-  float renderTargetOffset[] = { origin.x, origin.y, 0, 0 };
+  float renderTargetOffset[] = { float(origin.x), float(origin.y), 0, 0 };
   d3d9Device->SetVertexShaderConstantF(CBvRenderTargetOffset,
                                        renderTargetOffset,
                                        1);
@@ -292,11 +291,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
   MaskType maskType = MaskType::MaskNone;
 
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
-    if (aTransform.Is2D()) {
-      maskType = MaskType::Mask2d;
-    } else {
-      maskType = MaskType::Mask3d;
-    }
+    maskType = MaskType::Mask;
   }
 
   gfx::Rect backdropDest;
@@ -675,7 +670,9 @@ CompositorD3D9::FailedToResetDevice() {
   // 10 is a totally arbitrary number that we may want to increase or decrease
   // depending on how things behave in the wild.
   if (mFailedResetAttempts > 10) {
-    MOZ_CRASH("GFX: Unable to get a working D3D9 Compositor");
+    mFailedResetAttempts = 0;
+    gfxWindowsPlatform::GetPlatform()->D3D9DeviceReset();
+    gfxWarning() << "[D3D9] Unable to get a working D3D9 Compositor";
   }
 }
 

@@ -31,7 +31,7 @@ nsWindowBase::DispatchPluginEvent(const MSG& aMsg)
   npEvent.wParam = aMsg.wParam;
   npEvent.lParam = aMsg.lParam;
   pluginEvent.mPluginEvent.Copy(npEvent);
-  pluginEvent.retargetToFocusedDocument = true;
+  pluginEvent.mRetargetToFocusedDocument = true;
   return DispatchWindowEvent(&pluginEvent);
 }
 
@@ -112,6 +112,7 @@ void nsWindowBase::ChangedDPI()
     if (presShell) {
       presShell->BackingScaleFactorChanged();
     }
+    mWidgetListener->UIResolutionChanged();
   }
 }
 

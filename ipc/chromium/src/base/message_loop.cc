@@ -89,7 +89,7 @@ MessageLoop* MessageLoop::current() {
 
 static mozilla::Atomic<int32_t> message_loop_id_seq(0);
 
-MessageLoop::MessageLoop(Type type)
+MessageLoop::MessageLoop(Type type, nsIThread* aThread)
     : type_(type),
       id_(++message_loop_id_seq),
       nestable_tasks_allowed_(true),
@@ -106,10 +106,12 @@ MessageLoop::MessageLoop(Type type)
   get_tls_ptr().Set(this);
 
   switch (type_) {
-  case TYPE_MOZILLA_UI:
-    pump_ = new mozilla::ipc::MessagePump();
+  case TYPE_MOZILLA_PARENT:
+    MOZ_RELEASE_ASSERT(!aThread);
+    pump_ = new mozilla::ipc::MessagePump(aThread);
     return;
   case TYPE_MOZILLA_CHILD:
+    MOZ_RELEASE_ASSERT(!aThread);
     pump_ = new mozilla::ipc::MessagePumpForChildProcess();
     // There is a MessageLoop Run call from XRE_InitChildProcess
     // and another one from MessagePumpForChildProcess. The one
@@ -119,11 +121,11 @@ MessageLoop::MessageLoop(Type type)
     run_depth_base_ = 2;
     return;
   case TYPE_MOZILLA_NONMAINTHREAD:
-    pump_ = new mozilla::ipc::MessagePumpForNonMainThreads();
+    pump_ = new mozilla::ipc::MessagePumpForNonMainThreads(aThread);
     return;
 #if defined(OS_WIN)
   case TYPE_MOZILLA_NONMAINUITHREAD:
-    pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads();
+    pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads(aThread);
     return;
 #endif
   default:
@@ -201,12 +203,6 @@ void MessageLoop::Run() {
   RunHandler();
 }
 
-void MessageLoop::RunAllPending() {
-  AutoRunState save_state(this);
-  state_->quit_received = true;  // Means run until we would otherwise block.
-  RunHandler();
-}
-
 // Runs the loop in two different SEH modes:
 // enable_SEH_restoration_ = false : any unhandled exception goes to the last
 // one that calls SetUnhandledExceptionFilter().
@@ -264,22 +260,12 @@ void MessageLoop::Quit() {
 
 void MessageLoop::PostTask(
     const tracked_objects::Location& from_here, Task* task) {
-  PostTask_Helper(from_here, task, 0, true);
+  PostTask_Helper(from_here, task, 0);
 }
 
 void MessageLoop::PostDelayedTask(
     const tracked_objects::Location& from_here, Task* task, int delay_ms) {
-  PostTask_Helper(from_here, task, delay_ms, true);
-}
-
-void MessageLoop::PostNonNestableTask(
-    const tracked_objects::Location& from_here, Task* task) {
-  PostTask_Helper(from_here, task, 0, false);
-}
-
-void MessageLoop::PostNonNestableDelayedTask(
-    const tracked_objects::Location& from_here, Task* task, int delay_ms) {
-  PostTask_Helper(from_here, task, delay_ms, false);
+  PostTask_Helper(from_here, task, delay_ms);
 }
 
 void MessageLoop::PostIdleTask(
@@ -298,8 +284,7 @@ void MessageLoop::PostIdleTask(
 
 // Possibly called on a background thread!
 void MessageLoop::PostTask_Helper(
-    const tracked_objects::Location& from_here, Task* task, int delay_ms,
-    bool nestable) {
+    const tracked_objects::Location& from_here, Task* task, int delay_ms) {
 
 #ifdef MOZ_TASK_TRACER
   task = mozilla::tasktracer::CreateTracedTask(task);
@@ -308,7 +293,7 @@ void MessageLoop::PostTask_Helper(
 
   task->SetBirthPlace(from_here);
 
-  PendingTask pending_task(task, nestable);
+  PendingTask pending_task(task, true);
 
   if (delay_ms > 0) {
     pending_task.delayed_run_time =

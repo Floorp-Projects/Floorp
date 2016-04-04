@@ -18,9 +18,11 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+#if (MOZ_WIDGET_GTK == 2)
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif
 
 /*** type definitions ***/
 typedef struct {
@@ -466,8 +468,10 @@ gboolean moz_gtk_images_in_buttons(void);
  */
 gboolean moz_gtk_has_scrollbar_buttons(void);
 
+#if (MOZ_WIDGET_GTK == 2)
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+#endif
 
 #endif

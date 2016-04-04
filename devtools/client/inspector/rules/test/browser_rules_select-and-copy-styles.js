@@ -44,6 +44,7 @@ add_task(function*() {
   yield selectNode("div", inspector);
   yield checkCopySelection(view);
   yield checkSelectAll(view);
+  yield checkCopyEditorValue(view);
 });
 
 function* checkCopySelection(view) {
@@ -75,7 +76,7 @@ function* checkCopySelection(view) {
   yield onPopup;
 
   ok(!view._contextmenu.menuitemCopy.hidden,
-    "Copy menu item is not hidden as expected");
+    "Copy menu item is displayed as expected");
 
   try {
     yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
@@ -113,7 +114,7 @@ function* checkSelectAll(view) {
   yield onPopup;
 
   ok(!view._contextmenu.menuitemCopy.hidden,
-    "Copy menu item is not hidden as expected");
+    "Copy menu item is displayed as expected");
 
   try {
     yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
@@ -123,6 +124,44 @@ function* checkSelectAll(view) {
   }
 
   view._contextmenu._menupopup.hidePopup();
+}
+
+function* checkCopyEditorValue(view) {
+  info("Testing CSS property editor value copy");
+
+  let win = view.styleWindow;
+  let ruleEditor = getRuleViewRuleEditor(view, 0);
+  let propEditor = ruleEditor.rule.textProps[0].editor;
+
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
+
+  info("Checking that copying a css property value editor returns the correct" +
+    " clipboard value");
+
+  let expectedPattern = "10em";
+
+  let onPopup = once(view._contextmenu._menupopup, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(editor.input,
+    {button: 2, type: "contextmenu"}, win);
+  yield onPopup;
+
+  ok(!view._contextmenu.menuitemCopy.hidden,
+    "Copy menu item is displayed as expected");
+
+  try {
+    yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
+      () => checkClipboardData(expectedPattern));
+  } catch (e) {
+    failedClipboard(expectedPattern);
+  }
+
+  view._contextmenu._menupopup.hidePopup();
+
+  // The value field is still focused. Blur it now and wait for the
+  // ruleview-changed event to avoid pending requests.
+  let onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  yield onRuleViewChanged;
 }
 
 function checkClipboardData(expectedPattern) {

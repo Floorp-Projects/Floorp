@@ -8,7 +8,7 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["VoiceSelect"];
 
-function VoiceSelect(win, label, options = []) {
+function VoiceSelect(win, label) {
   this._winRef = Cu.getWeakReference(win);
 
   let element = win.document.createElement("div");
@@ -34,12 +34,6 @@ function VoiceSelect(win, label, options = []) {
   win.addEventListener("resize", () => {
     this._updateDropdownHeight();
   });
-
-  for (let option of options) {
-    this.add(option.label, option.value);
-  }
-
-  this.selectedIndex = 0;
 }
 
 VoiceSelect.prototype = {
@@ -51,6 +45,19 @@ VoiceSelect.prototype = {
     option.setAttribute("role", "option");
     option.textContent = label;
     this.listbox.appendChild(option);
+  },
+
+  addOptions: function(options, value) {
+    for (let option of options) {
+      this.add(option.label, option.value);
+    }
+
+    let option = value ? this._getOptionFromValue(value) : this.options[0];
+    this._select(option, true);
+  },
+
+  clear: function() {
+    this.listbox.innerHTML = "";
   },
 
   toggleList: function(force, focus = true) {
@@ -113,7 +120,7 @@ VoiceSelect.prototype = {
 
       case "focus":
         this._win.console.log(evt);
-        if (!evt.target.closest('.options')) {
+        if (!evt.target.closest(".options")) {
           this.toggleList(false, false);
         }
         break;
@@ -201,7 +208,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _select: function(option) {
+  _select: function(option, suppressEvent = false) {
     let oldSelected = this.selected;
     if (oldSelected) {
       oldSelected.removeAttribute("aria-selected");
@@ -215,9 +222,11 @@ VoiceSelect.prototype = {
         option.textContent;
     }
 
-    let evt = this.element.ownerDocument.createEvent("Event");
-    evt.initEvent("change", true, true);
-    this.element.dispatchEvent(evt);
+    if (!suppressEvent) {
+      let evt = this.element.ownerDocument.createEvent("Event");
+      evt.initEvent("change", true, true);
+      this.element.dispatchEvent(evt);
+    }
   },
 
   _updateDropdownHeight: function(now) {
@@ -237,6 +246,10 @@ VoiceSelect.prototype = {
         delete this._pendingDropdownUpdate;
       });
     }
+  },
+
+  _getOptionFromValue: function(value) {
+    return Array.from(this.options).find(o => o.dataset.value === value);
   },
 
   get element() {
@@ -271,17 +284,8 @@ VoiceSelect.prototype = {
     return this.element.querySelectorAll(".options > .option");
   },
 
-  set selectedIndex(index) {
-    this._select(this.options[index]);
-  },
-
-  get selectedIndex() {
-    return Array.from(this.options).indexOf(this.selected);
-  },
-
   set value(value) {
-    let option = Array.from(this.options).find(o => o.dataset.value === value);
-    this._select(option);
+    this._select(this._getOptionFromValue(value));
   },
 
   get value() {

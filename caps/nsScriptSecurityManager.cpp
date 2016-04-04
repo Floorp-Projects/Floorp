@@ -304,7 +304,12 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
     // The app could contain a cross-origin iframe - make sure that the content
     // is actually same-origin with the app.
     MOZ_ASSERT(inIsolatedMozBrowser == false, "Checked this above");
-    PrincipalOriginAttributes attrs(appId, false);
+    nsAutoCString suffix;
+    PrincipalOriginAttributes attrs;
+    NS_ENSURE_TRUE(attrs.PopulateFromOrigin(NS_ConvertUTF16toUTF8(appOrigin), suffix),
+                   nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+    attrs.mAppId = appId;
+    attrs.mInIsolatedMozBrowser = false;
     nsCOMPtr<nsIPrincipal> appPrin = BasePrincipal::CreateCodebasePrincipal(appURI, attrs);
     NS_ENSURE_TRUE(appPrin, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
     return aPrin->Equals(appPrin) ? status
@@ -502,7 +507,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
         unsigned lineNum = 0;
         NS_NAMED_LITERAL_STRING(scriptSample, "call to eval() or related function blocked by CSP");
 
-        JS::UniqueChars scriptFilename;
+        JS::AutoFilename scriptFilename;
         if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNum)) {
             if (const char *file = scriptFilename.get()) {
                 CopyUTF8toUTF16(nsDependentCString(file), fileName);

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(function* test_user_defined_commands() {
   // Create a window before the extension is loaded.
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
   yield BrowserTestUtils.loadURI(win1.gBrowser.selectedBrowser, "about:robots");
@@ -10,7 +10,6 @@ add_task(function* () {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "name": "Commands Extension",
       "commands": {
         "toggle-feature-using-alt-shift-3": {
           "suggested_key": {
@@ -21,16 +20,25 @@ add_task(function* () {
           "suggested_key": {
             "default": "Alt+Shift+Comma",
           },
+          "unrecognized_property": "with-a-random-value",
         },
       },
     },
 
     background: function() {
-      browser.commands.onCommand.addListener((message) => {
-        browser.test.sendMessage("oncommand", message);
+      browser.commands.onCommand.addListener((commandName) => {
+        browser.test.sendMessage("oncommand", commandName);
       });
       browser.test.sendMessage("ready");
     },
+  });
+
+
+  SimpleTest.waitForExplicitFinish();
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{
+      message: /Reading manifest: Error processing commands.*.unrecognized_property: An unexpected property was found/,
+    }]);
   });
 
   yield extension.startup();
@@ -44,10 +52,12 @@ add_task(function* () {
   // Confirm the keysets have been added to both windows.
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
-  is(keyset.childNodes.length, 2, "Expected keyset to exist and have 2 children");
+  ok(keyset != null, "Expected keyset to exist");
+  is(keyset.childNodes.length, 2, "Expected keyset to have 2 children");
 
   keyset = win2.document.getElementById(keysetID);
-  is(keyset.childNodes.length, 2, "Expected keyset to exist and have 2 children");
+  ok(keyset != null, "Expected keyset to exist");
+  is(keyset.childNodes.length, 2, "Expected keyset to have 2 children");
 
   // Confirm that the commands are registered to both windows.
   yield focusWindow(win1);
@@ -71,4 +81,9 @@ add_task(function* () {
 
   yield BrowserTestUtils.closeWindow(win1);
   yield BrowserTestUtils.closeWindow(win2);
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
 });
+
+

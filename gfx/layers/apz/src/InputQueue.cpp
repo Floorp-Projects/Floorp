@@ -185,7 +185,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
 
   // On a new mouse down we can have a new target so we must force a new block
   // with a new target.
-  bool newBlock = aEvent.mType == MouseInput::MOUSE_DOWN && aEvent.IsLeftButton();
+  bool newBlock = DragTracker::StartsDrag(aEvent);
 
   DragBlockState* block = nullptr;
   if (!newBlock && !mInputBlockQueue.IsEmpty()) {
@@ -196,8 +196,20 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
     block = nullptr;
   }
 
+  if (!block && mDragTracker.InDrag()) {
+    // If there's no current drag block, but we're getting a move with a button
+    // down, we need to start a new drag block because we're obviously already
+    // in the middle of a drag (it probably got interrupted by something else).
+    INPQ_LOG("got a drag event outside a drag block, need to create a block to hold it\n");
+    newBlock = true;
+  }
+
+  mDragTracker.Update(aEvent);
+
   if (!newBlock && !block) {
-    return nsEventStatus_eConsumeDoDefault;
+    // This input event is not in a drag block, so we're not doing anything
+    // with it, return eIgnore.
+    return nsEventStatus_eIgnore;
   }
 
   if (!block) {
@@ -218,7 +230,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
 
     block->AddEvent(aEvent.AsMouseInput());
 
-    // The first event will confirm the block or not.
+    // This input event created a new drag block, so return DoDefault.
     return nsEventStatus_eConsumeDoDefault;
   }
 
@@ -230,13 +242,12 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
     block->AddEvent(aEvent.AsMouseInput());
   }
 
-  bool mouseUp = aEvent.mType == MouseInput::MOUSE_UP && aEvent.IsLeftButton();
-  if (mouseUp) {
+  if (DragTracker::EndsDrag(aEvent)) {
     block->MarkMouseUpReceived();
   }
 
-  // If we're not the first event then we need to wait for the confirmation of
-  // the block.
+  // The event was added to the drag block and could potentially cause
+  // scrolling, so return DoDefault.
   return nsEventStatus_eConsumeDoDefault;
 }
 
@@ -538,6 +549,19 @@ InputQueue::AllowScrollHandoff() const
     return CurrentBlock()->AsPanGestureBlock()->AllowScrollHandoff();
   }
   return true;
+}
+
+bool
+InputQueue::IsDragOnScrollbar(bool aHitScrollbar)
+{
+  if (!mDragTracker.InDrag()) {
+    return false;
+  }
+  // Now that we know we are in a drag, get the info from the drag tracker.
+  // We keep it in the tracker rather than the block because the block can get
+  // interrupted by something else (like a wheel event) and then a new block
+  // will get created without the info we want. The tracker will persist though.
+  return mDragTracker.IsOnScrollbar(aHitScrollbar);
 }
 
 void

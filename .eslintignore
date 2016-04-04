@@ -90,9 +90,10 @@ devtools/client/inspector/fonts/**
 devtools/client/inspector/shared/test/**
 devtools/client/inspector/test/**
 devtools/client/inspector/*.js
-devtools/client/jsonview/**
+devtools/client/jsonview/lib/**
 devtools/client/memory/**
-devtools/client/netmonitor/**
+devtools/client/netmonitor/test/**
+devtools/client/netmonitor/har/test/**
 devtools/client/performance/**
 devtools/client/projecteditor/**
 devtools/client/promisedebugger/**
@@ -105,7 +106,25 @@ devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
 devtools/client/webide/**
 devtools/server/**
-devtools/shared/**
+devtools/shared/*.js
+devtools/shared/*.jsm
+devtools/shared/apps/**
+devtools/shared/client/**
+devtools/shared/discovery/**
+devtools/shared/gcli/**
+devtools/shared/heapsnapshot/**
+devtools/shared/inspector/**
+devtools/shared/layout/**
+devtools/shared/locales/**
+devtools/shared/performance/**
+devtools/shared/qrcode/**
+devtools/shared/security/**
+devtools/shared/shims/**
+devtools/shared/tests/**
+devtools/shared/touch/**
+devtools/shared/transport/**
+devtools/shared/webconsole/test/**
+devtools/shared/worker/**
 
 # Ignore devtools pre-processed files
 devtools/client/framework/toolbox-process-window.js
@@ -190,3 +209,6 @@ toolkit/mozapps/downloads/nsHelperAppDlg.js
 toolkit/mozapps/extensions/internal/AddonConstants.jsm
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
 toolkit/webapps/**
+
+# Third party
+toolkit/modules/third_party/**

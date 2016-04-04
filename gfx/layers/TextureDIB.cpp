@@ -24,7 +24,7 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
@@ -33,7 +33,7 @@ public:
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override
+  virtual void Deallocate(ClientIPCAllocator* aAllocator) override
   {
     mSurface = nullptr;
   }
@@ -61,7 +61,7 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
@@ -69,7 +69,7 @@ public:
 
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                         ISurfaceAllocator* aAllocator);
+                         ClientIPCAllocator* aAllocator);
 
   void DeallocateData()
   {
@@ -84,7 +84,7 @@ public:
     }
   }
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override
+  virtual void Deallocate(ClientIPCAllocator* aAllocator) override
   {
     DeallocateData();
   }
@@ -125,7 +125,7 @@ DIBTextureData::BorrowDrawTarget()
 
 DIBTextureData*
 DIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       ISurfaceAllocator* aAllocator)
+                       ClientIPCAllocator* aAllocator)
 {
   if (!aAllocator) {
     return nullptr;
@@ -141,7 +141,7 @@ DIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 TextureData*
-MemoryDIBTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+MemoryDIBTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                     TextureFlags aFlags,
                                     TextureAllocationFlags aAllocFlags) const
 {
@@ -204,7 +204,7 @@ MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 }
 
 TextureData*
-ShmemDIBTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+ShmemDIBTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                    TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags) const
 {
@@ -268,9 +268,9 @@ ShmemDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 
 DIBTextureData*
 ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                            ISurfaceAllocator* aAllocator)
+                            ClientIPCAllocator* aAllocator)
 {
-  MOZ_ASSERT(aAllocator->ParentPid() != base::ProcessId());
+  MOZ_ASSERT(aAllocator->AsLayerForwarder()->GetParentPid() != base::ProcessId());
 
   DWORD mapSize = aSize.width * aSize.height * BytesPerPixel(aFormat);
   HANDLE fileMapping = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, mapSize, NULL);
@@ -332,7 +332,7 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
   HANDLE hostHandle = NULL;
 
-  if (!ipc::DuplicateHandle(fileMapping, aAllocator->ParentPid(),
+  if (!ipc::DuplicateHandle(fileMapping, aAllocator->AsLayerForwarder()->GetParentPid(),
                             &hostHandle, 0, DUPLICATE_SAME_ACCESS)) {
     gfxCriticalError() << "Failed to duplicate handle to parent process for surface.";
     ::DeleteObject(bitmap);

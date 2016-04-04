@@ -4,13 +4,13 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["modal"];
 
-var isFirefox = () => Services.appinfo.name == "Firefox";
+const isFirefox = () => Services.appinfo.name == "Firefox";
 
 this.modal = {};
 modal = {
@@ -77,24 +77,24 @@ modal.removeHandler = function(toRemove) {
  * Represents the current modal dialogue.
  *
  * @param {function(): BrowserObj} curBrowserFn
- *     Function that returns the current BrowserObj.
- * @param {?nsIWeakReference} winRef
- *     A weak reference to the current ChromeWindow.
+ *     Function that returns the current |BrowserObj|.
+ * @param {nsIWeakReference=} winRef
+ *     A weak reference to the current |ChromeWindow|.
  */
-modal.Dialog = function(curBrowserFn, winRef=null) {
-  Object.defineProperty(this, "curBrowser", {
-    get() { return curBrowserFn(); }
-  });
-  this.win_ = winRef;
-};
+modal.Dialog = class {
+  constructor(curBrowserFn, winRef = undefined) {
+    this.curBrowserFn_ = curBrowserFn;
+    this.win_ = winRef;
+  }
 
-/**
- * Returns the ChromeWindow associated with an open dialog window if it
- * is currently attached to the DOM.
- */
-Object.defineProperty(modal.Dialog.prototype, "window", {
-  get() {
-    if (this.win_ !== null) {
+  get curBrowser_() { return this.curBrowserFn_(); }
+
+  /**
+   * Returns the ChromeWindow associated with an open dialog window if
+   * it is currently attached to the DOM.
+   */
+  get window() {
+    if (this.win_) {
       let win = this.win_.get();
       if (win && win.parent) {
         return win;
@@ -102,14 +102,12 @@ Object.defineProperty(modal.Dialog.prototype, "window", {
     }
     return null;
   }
-});
 
-Object.defineProperty(modal.Dialog.prototype, "ui", {
-  get() {
+  get ui() {
     let win = this.window;
     if (win) {
       return win.Dialog.ui;
     }
-    return this.curBrowser.getTabModalUI();
+    return this.curBrowser_.getTabModalUI();
   }
-});
+};

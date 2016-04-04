@@ -2,18 +2,19 @@
 <html>
 <head>
   <title>Test the devtool AudioParam API</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  Components.utils.import('resource://gre/modules/Services.jsm');
-
   function checkIdAndName(node, name) {
-    is(node.id, node[name].parentNodeId, "The parent id should be correct");
-    is(node[name].name, name, "The name of the AudioParam should be correct.");
+    is(SpecialPowers.getPrivilegedProps(node, "id"),
+       SpecialPowers.getPrivilegedProps(node[name], "parentNodeId"),
+       "The parent id should be correct");
+    is(SpecialPowers.getPrivilegedProps(node[name], "name"), name,
+       "The name of the AudioParam should be correct.");
   }
 
   var ac = new AudioContext(),

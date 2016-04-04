@@ -98,8 +98,29 @@ config = {
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--screenshot-on-fail",
-                "--total-chunks=4",
+                "--total-chunks=10",
                 "--subsuite=webgl",
+            ],
+        },
+        "mochitest-media": {
+            "run_filename": "runtestsremote.py",
+            "testsdir": "mochitest",
+            "options": [
+                "--dm_trans=adb",
+                "--app=%(app)s",
+                "--remote-webserver=%(remote_webserver)s",
+                "--xre-path=%(xre_path)s",
+                "--utility-path=%(utility_path)s",
+                "--http-port=%(http_port)s",
+                "--ssl-port=%(ssl_port)s",
+                "--certificate-path=%(certs_path)s",
+                "--symbols-path=%(symbols_path)s",
+                "--quiet",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
+                "--screenshot-on-fail",
+                "--total-chunks=2",
+                "--subsuite=media",
             ],
         },
         "robocop": {
@@ -130,7 +151,6 @@ config = {
                 "--app=%(app)s",
                 "--ignore-window-size",
                 "--dm_trans=adb",
-                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -153,7 +173,6 @@ config = {
                 "--app=%(app)s",
                 "--ignore-window-size",
                 "--dm_trans=adb",
-                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -173,7 +192,6 @@ config = {
                 "--app=%(app)s",
                 "--ignore-window-size",
                 "--dm_trans=adb",
-                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -182,7 +200,7 @@ config = {
                 "--httpd-path",
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
-                "--total-chunks=2",
+                "--total-chunks=4",
                 "--suite=crashtest",
             ],
             "tests": ["tests/testing/crashtest/crashtests.list",],
@@ -194,7 +212,6 @@ config = {
                 "--app=%(app)s",
                 "--ignore-window-size",
                 "--dm_trans=adb",
-                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -203,7 +220,7 @@ config = {
                 "--httpd-path",
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
-                "--total-chunks=4",
+                "--total-chunks=10",
                 "tests/testing/crashtest/crashtests.list",
             ],
         },
@@ -214,7 +231,6 @@ config = {
                 "--app=%(app)s",
                 "--ignore-window-size",
                 "--dm_trans=adb",
-                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s", "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s", "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s", "--httpd-path", "%(modules_dir)s",
@@ -232,7 +248,6 @@ config = {
                 "--app=%(app)s",
                 "--ignore-window-size",
                 "--dm_trans=adb",
-                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s", "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s", "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s", "--httpd-path", "%(modules_dir)s",
@@ -445,6 +460,14 @@ config = {
             "category": "mochitest",
             "extra_args": ["--chrome"],
         },
+        "mochitest-media-1": {
+            "category": "mochitest-media",
+            "extra_args": ["--this-chunk=1"],
+        },
+        "mochitest-media-2": {
+            "category": "mochitest-media",
+            "extra_args": ["--this-chunk=2"],
+        },
         "mochitest-gl-1": {
             "category": "mochitest-gl",
             "extra_args": ["--this-chunk=1"],
@@ -460,6 +483,30 @@ config = {
         "mochitest-gl-4": {
             "category": "mochitest-gl",
             "extra_args": ["--this-chunk=4"],
+        },
+        "mochitest-gl-5": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=5"],
+        },
+        "mochitest-gl-6": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=6"],
+        },
+        "mochitest-gl-7": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=7"],
+        },
+        "mochitest-gl-8": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=8"],
+        },
+        "mochitest-gl-9": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=9"],
+        },
+        "mochitest-gl-10": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=10"],
         },
         "reftest-1": {
             "category": "reftest",
@@ -725,6 +772,14 @@ config = {
             "category": "crashtest",
             "extra_args": ["--this-chunk=2"],
         },
+        "crashtest-3": {
+            "category": "crashtest",
+            "extra_args": ["--this-chunk=3"],
+        },
+        "crashtest-4": {
+            "category": "crashtest",
+            "extra_args": ["--this-chunk=4"],
+        },
         "crashtest-debug-1": {
             "category": "crashtest-debug",
             "extra_args": ["--this-chunk=1"],
@@ -740,6 +795,30 @@ config = {
         "crashtest-debug-4": {
             "category": "crashtest-debug",
             "extra_args": ["--this-chunk=4"],
+        },
+        "crashtest-debug-5": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=5"],
+        },
+        "crashtest-debug-6": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=6"],
+        },
+        "crashtest-debug-7": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=7"],
+        },
+        "crashtest-debug-8": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=8"],
+        },
+        "crashtest-debug-9": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=9"],
+        },
+        "crashtest-debug-10": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=10"],
         },
         "xpcshell-1": {
             "category": "xpcshell",

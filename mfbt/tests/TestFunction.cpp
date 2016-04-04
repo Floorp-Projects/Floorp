@@ -7,7 +7,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Function.h"
 
-using mozilla::Function;
+using mozilla::function;
 
 #define CHECK(c) \
   do { \
@@ -36,21 +36,21 @@ struct Incrementor {
 static void
 TestNonmemberFunction()
 {
-  Function<int(int)> f = &increment;
+  function<int(int)> f = &increment;
   CHECK(f(42) == 43);
 }
 
 static void
 TestStaticMemberFunction()
 {
-  Function<int(int)> f = &S::increment;
+  function<int(int)> f = &S::increment;
   CHECK(f(42) == 43);
 }
 
 static void
 TestFunctionObject()
 {
-  Function<int(int)> f = Incrementor();
+  function<int(int)> f = Incrementor();
   CHECK(f(42) == 43);
 }
 
@@ -58,19 +58,19 @@ static void
 TestLambda()
 {
   // Test non-capturing lambda
-  Function<int(int)> f = [](int arg){ return arg + 1; };
+  function<int(int)> f = [](int arg){ return arg + 1; };
   CHECK(f(42) == 43);
 
   // Test capturing lambda
   int one = 1;
-  Function<int(int)> g = [one](int arg){ return arg + one; };
+  function<int(int)> g = [one](int arg){ return arg + one; };
   CHECK(g(42) == 43);
 }
 
 static void
 TestDefaultConstructionAndAssignmentLater()
 {
-  Function<int(int)> f;  // allowed
+  function<int(int)> f;  // allowed
   // Would get an assertion if we tried calling f now.
   f = &increment;
   CHECK(f(42) == 43);
@@ -79,7 +79,7 @@ TestDefaultConstructionAndAssignmentLater()
 static void
 TestReassignment()
 {
-  Function<int(int)> f = &increment;
+  function<int(int)> f = &increment;
   CHECK(f(42) == 43);
   f = [](int arg){ return arg + 2; };
   CHECK(f(42) == 44);
@@ -88,7 +88,7 @@ TestReassignment()
 static void
 TestMemberFunction()
 {
-  Function<int(S&, int)> f = &S::decrement;
+  function<int(S&, int)> f = &S::decrement;
   S s;
   CHECK((f(s, 1) == 0));
 }
@@ -96,7 +96,7 @@ TestMemberFunction()
 static void
 TestConstMemberFunction()
 {
-  Function<int(const S*, int, int)> f = &S::sum;
+  function<int(const S*, int, int)> f = &S::sum;
   const S s;
   CHECK((f(&s, 1, 1) == 2));
 }

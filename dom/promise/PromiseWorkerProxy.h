@@ -185,7 +185,7 @@ protected:
   virtual void RejectedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override;
 
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override;
+  virtual bool Notify(workers::Status aStatus) override;
 
 private:
   PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,

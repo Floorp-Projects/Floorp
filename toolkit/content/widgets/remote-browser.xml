@@ -77,7 +77,7 @@
                 return null;
 
               let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
-              let { RemoteWebProgressManager } = Cu.import(jsm, {});
+              let { RemoteWebProgressManager } = Components.utils.import(jsm, {});
               this._remoteWebProgressManager = new RemoteWebProgressManager(this);
               this._remoteWebProgress = this._remoteWebProgressManager.topLevelWebProgress;
             }
@@ -97,7 +97,7 @@
               return null;
 
             let jsm = "resource://gre/modules/RemoteFinder.jsm";
-            let { RemoteFinder } = Cu.import(jsm, {});
+            let { RemoteFinder } = Components.utils.import(jsm, {});
             this._remoteFinder = new RemoteFinder(this);
           }
           return this._remoteFinder;
@@ -259,6 +259,11 @@
         ]]></body>
       </method>
 
+      <field name="_manifestURI"/>
+      <property name="manifestURI"
+                onget="return this._manifestURI"
+                readonly="true"/>
+
       <field name="mDestroyed">false</field>
 
       <field name="_permitUnloadId">0</field>
@@ -363,6 +368,7 @@
           this.messageManager.addMessageListener("ZoomChangeUsingMouseWheel", this);
           this.messageManager.addMessageListener("DOMFullscreen:RequestExit", this);
           this.messageManager.addMessageListener("DOMFullscreen:RequestRollback", this);
+          this.messageManager.addMessageListener("MozApplicationManifest", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
           if (this.hasAttribute("selectmenulist")) {
@@ -424,10 +430,9 @@
           switch (aMessage.name) {
             case "Browser:Init":
               this._outerWindowID = data.outerWindowID;
-              let result = {};
-              result.useGlobalHistory = !this.hasAttribute("disableglobalhistory");
-              result.initPopup = this.autoCompletePopup != null;
-              return result;
+              this.messageManager.sendAsyncMessage("Browser:InitReceived", {
+                initPopup: this.autoCompletePopup != null,
+              });
               break;
             case "DOMTitleChanged":
               this._contentTitle = data.title;
@@ -496,6 +501,10 @@
               windowUtils.remoteFrameFullscreenReverted();
               break;
             }
+
+            case "MozApplicationManifest":
+              this._manifestURI = aMessage.data.manifest;
+              break;
 
             default:
               // Delegate to browser.xml.

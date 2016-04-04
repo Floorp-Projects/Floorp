@@ -13,6 +13,7 @@
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsIXULRuntime.h"
@@ -1367,6 +1368,19 @@ TSFTextStore::Init(nsWindowBase* aWidget)
     return false;
   }
   mWidget = aWidget;
+  if (NS_WARN_IF(!mWidget)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSF: 0x%p   TSFTextStore::Init() FAILED "
+       "due to aWidget is nullptr ", this));
+    return false;
+  }
+  mDispatcher = mWidget->GetTextEventDispatcher();
+  if (NS_WARN_IF(!mDispatcher)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSF: 0x%p   TSFTextStore::Init() FAILED "
+       "due to aWidget->GetTextEventDispatcher() failure", this));
+    return false;
+  }
 
   // Create context and add it to document manager
   hr = mDocumentMgr->CreateContext(sClientId, 0,
@@ -1442,6 +1456,7 @@ TSFTextStore::Destroy()
   }
   mSink = nullptr;
   mWidget = nullptr;
+  mDispatcher = nullptr;
 
   if (!mMouseTrackers.IsEmpty()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -1703,6 +1718,13 @@ TSFTextStore::FlushPendingActions()
   }
 
   RefPtr<nsWindowBase> kungFuDeathGrip(mWidget);
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+       "FAILED due to BeginNativeInputTransaction() failure", this));
+    return;
+  }
   for (uint32_t i = 0; i < mPendingActions.Length(); i++) {
     PendingAction& action = mPendingActions[i];
     switch (action.mType) {
@@ -1728,17 +1750,24 @@ TSFTextStore::FlushPendingActions()
             break;
           }
         }
-        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-               ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-                "dispatching compositionstart event...", this));
-        WidgetCompositionEvent compositionStart(true, eCompositionStart,
-                                                mWidget);
-        mWidget->InitEvent(compositionStart);
+
         // eCompositionStart always causes NOTIFY_IME_OF_COMPOSITION_UPDATE.
         // Therefore, we should wait to clear the locked content until it's
         // notified.
         mDeferClearingLockedContent = true;
-        DispatchEvent(compositionStart);
+
+        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+               ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+                "dispatching compositionstart event...", this));
+        WidgetEventTime eventTime = mWidget->CurrentMessageWidgetEventTime();
+        nsEventStatus status;
+        rv = mDispatcher->StartComposition(status, &eventTime);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Error,
+            ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+             "FAILED to dispatch compositionstart event.", this));
+          mDeferClearingLockedContent = false;
+        }
         if (!mWidget || mWidget->Destroyed()) {
           break;
         }
@@ -1752,64 +1781,34 @@ TSFTextStore::FlushPendingActions()
                 this, NS_ConvertUTF16toUTF8(action.mData).get(), action.mRanges.get(),
                 action.mRanges ? action.mRanges->Length() : 0));
 
-        if (!action.mRanges) {
-          NS_WARNING("How does this case occur?");
-          action.mRanges = new TextRangeArray();
-        }
+        // eCompositionChange causes a DOM text event, the IME will be notified
+        // of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In this case, we should not
+        // clear the locked content until we notify the IME of the composition
+        // update.
+        mDeferClearingLockedContent = true;
 
-        // Adjust offsets in the ranges for XP linefeed character (only \n).
-        // XXX Following code is the safest approach.  However, it wastes
-        //     a little performance.  For ensuring the clauses do not
-        //     overlap each other, we should redesign TextRange later.
-        for (uint32_t i = 0; i < action.mRanges->Length(); ++i) {
-          TextRange& range = action.mRanges->ElementAt(i);
-          TextRange nativeRange = range;
-          if (nativeRange.mStartOffset > 0) {
-            nsAutoString preText(
-              Substring(action.mData, 0, nativeRange.mStartOffset));
-            preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                     NS_LITERAL_STRING("\n"));
-            range.mStartOffset = preText.Length();
+        rv = mDispatcher->SetPendingComposition(action.mData,
+                                                action.mRanges);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Error,
+            ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+             "FAILED to setting pending composition...", this));
+          mDeferClearingLockedContent = false;
+        } else {
+          MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+            ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+             "dispatching compositionchange event...", this));
+          WidgetEventTime eventTime = mWidget->CurrentMessageWidgetEventTime();
+          nsEventStatus status;
+          rv = mDispatcher->FlushPendingComposition(status, &eventTime);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            MOZ_LOG(sTextStoreLog, LogLevel::Error,
+              ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+               "FAILED to dispatch compositionchange event.", this));
+            mDeferClearingLockedContent = false;
           }
-          if (nativeRange.Length() == 0) {
-            range.mEndOffset = range.mStartOffset;
-          } else {
-            nsAutoString clause(
-              Substring(action.mData,
-                        nativeRange.mStartOffset, nativeRange.Length()));
-            clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                    NS_LITERAL_STRING("\n"));
-            range.mEndOffset = range.mStartOffset + clause.Length();
-          }
+          // Be aware, the mWidget might already have been destroyed.
         }
-
-        action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                      NS_LITERAL_STRING("\n"));
-
-        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-               ("TSF: 0x%p   TSFTextStore::FlushPendingActions(), "
-                "dispatching compositionchange event...", this));
-        WidgetCompositionEvent compositionChange(true, eCompositionChange,
-                                                 mWidget);
-        mWidget->InitEvent(compositionChange);
-        compositionChange.mData = action.mData;
-        if (action.mRanges->IsEmpty()) {
-          TextRange wholeRange;
-          wholeRange.mStartOffset = 0;
-          wholeRange.mEndOffset = compositionChange.mData.Length();
-          wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
-          action.mRanges->AppendElement(wholeRange);
-        }
-        compositionChange.mRanges = action.mRanges;
-        // When the eCompositionChange causes a DOM text event,
-        // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In
-        // such case, we should not clear the locked content until we notify
-        // the IME of the composition update.
-        if (compositionChange.CausesDOMTextEvent()) {
-          mDeferClearingLockedContent = true;
-        }
-        DispatchEvent(compositionChange);
-        // Be aware, the mWidget might already have been destroyed.
         break;
       }
       case PendingAction::COMPOSITION_END: {
@@ -1818,26 +1817,23 @@ TSFTextStore::FlushPendingActions()
                 "flushing COMPOSITION_END={ mData=\"%s\" }",
                 this, NS_ConvertUTF16toUTF8(action.mData).get()));
 
-        action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                      NS_LITERAL_STRING("\n"));
+        // Dispatching eCompositionCommit causes a DOM text event, then,
+        // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In
+        // this case, we should not clear the locked content until we notify
+        // the IME of the composition update.
+        mDeferClearingLockedContent = true;
 
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions(), "
                 "dispatching compositioncommit event...", this));
-        WidgetCompositionEvent compositionCommit(true, eCompositionCommit,
-                                                 mWidget);
-        mWidget->InitEvent(compositionCommit);
-        compositionCommit.mData = action.mData;
-        // When the eCompositionCommit causes a DOM text event,
-        // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In
-        // such case, we should not clear the locked content until we notify
-        // the IME of the composition update.
-        if (compositionCommit.CausesDOMTextEvent()) {
-          mDeferClearingLockedContent = true;
-        }
-        DispatchEvent(compositionCommit);
-        if (!mWidget || mWidget->Destroyed()) {
-          break;
+        WidgetEventTime eventTime = mWidget->CurrentMessageWidgetEventTime();
+        nsEventStatus status;
+        rv = mDispatcher->CommitComposition(status, &action.mData, &eventTime);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Error,
+            ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
+             "FAILED to dispatch compositioncommit event.", this));
+          mDeferClearingLockedContent = false;
         }
         break;
       }
@@ -2908,7 +2904,7 @@ TSFTextStore::GetText(LONG acpStart,
           "*pacpNext=%ld)",
           this, pcchPlainOut, prgRunInfo ? prgRunInfo->uCount : 0,
           prgRunInfo ? GetTextRunTypeName(prgRunInfo->type) : "N/A",
-          pulRunInfoOut ? pulRunInfoOut : 0, pacpNext ? pacpNext : 0));
+          pulRunInfoOut ? *pulRunInfoOut : 0, pacpNext ? *pacpNext : 0));
   return S_OK;
 }
 

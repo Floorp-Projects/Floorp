@@ -35,6 +35,15 @@ addEventListener("DOMTitleChanged", function(e) {
 });
 var gHookedWindowCloseForPanelClose = false;
 
+addEventListener("Social:Notification", function(event) {
+  let frame = docShell.chromeEventHandler;
+  let origin = frame.getAttribute("origin");
+  sendAsyncMessage("Social:Notification", {
+    "origin": origin,
+    "detail": JSON.parse(event.detail)
+  });
+});
+
 // Error handling class used to listen for network errors in the social frames
 // and replace them with a social-specific error page
 SocialErrorListener = {
@@ -209,6 +218,8 @@ SocialErrorListener = {
 
   onStateChange(aWebProgress, aRequest, aState, aStatus) {
     let failure = false;
+    if ((aState & Ci.nsIWebProgressListener.STATE_IS_REQUEST))
+      return;
     if ((aState & Ci.nsIWebProgressListener.STATE_STOP)) {
       if (aRequest instanceof Ci.nsIHttpChannel) {
         try {

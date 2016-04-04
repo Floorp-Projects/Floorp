@@ -205,7 +205,14 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .find-status-icon[status="pending"] {
   display: block;
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 2dppx) {
+  .find-status-icon[status="pending"] {
+    width: 16px;
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
 }
 
 .findbar-find-status,

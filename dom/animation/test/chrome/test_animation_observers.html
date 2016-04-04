@@ -3,6 +3,7 @@
 <title>Test chrome-only MutationObserver animation notifications</title>
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="../testcommon.js"></script>
 <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 <style>
 @keyframes anim {
@@ -13,6 +14,10 @@
   height: 100px;
   background-color: yellow;
   line-height: 16px;
+}
+.init::before {
+  content: "";
+  animation: anim 100s;
 }
 </style>
 <div id=container><div id=target></div></div>
@@ -27,6 +32,10 @@ var gObserver = new MutationObserver(function(newRecords) {
   gRecordPromiseResolvers = [];
   resolvers.forEach(fn => fn());
 });
+// Get the pseudo element target.
+div.classList.add("init");
+var pseudoTarget = document.getAnimations()[0].effect.target;
+div.classList.remove("init");
 
 // Asynchronous testing framework based on layout/style/test/animation_utils.js.
 
@@ -161,8 +170,8 @@ function assert_records(expected, desc) {
 
 // -- Tests ------------------------------------------------------------------
 
-// We run all tests first targetting the div and observing the div, then again
-// targetting the div and observing its parent while using the subtree:true
+// We run all tests first targeting the div and observing the div, then again
+// targeting the div and observing its parent while using the subtree:true
 // MutationObserver option.
 
 [
@@ -320,7 +329,7 @@ function assert_records(expected, desc) {
     // Wait for the Animation to be playing, then seek well into
     // the transition.
     yield firstAnimation.ready;
-    firstAnimation.currentTime = 50000;
+    firstAnimation.currentTime = 50 * MS_PER_SEC;
 
     // Reverse the transition by setting the background-color back to its
     // original value.
@@ -380,7 +389,7 @@ function assert_records(expected, desc) {
        "number of running Animations");
 
     // Seek well into each animation.
-    animations.forEach(p => p.currentTime = 50000);
+    animations.forEach(p => p.currentTime = 50 * MS_PER_SEC);
 
     // Prepare the set of expected change MutationRecords, one for each
     // animation that was seeked.
@@ -503,7 +512,7 @@ function assert_records(expected, desc) {
                    "records after animation start");
 
     // Advance the animation by a second.
-    animations[0].currentTime += 1000;
+    animations[0].currentTime += 1 * MS_PER_SEC;
 
     // Cancel the animation by setting animation-duration to a value less
     // than a second.
@@ -609,7 +618,7 @@ function assert_records(expected, desc) {
                    "records after animation start");
 
     // Advance the animation until we are past the first iteration.
-    animations[0].currentTime += 1000;
+    animations[0].currentTime += 1 * MS_PER_SEC;
 
     // The only MutationRecord at this point should be the change from
     // seeking the Animation.
@@ -716,8 +725,8 @@ function assert_records(expected, desc) {
   // notification.
   [
     { prop: "playbackRate", val: 0.5 },
-    { prop: "startTime",    val: 50000 },
-    { prop: "currentTime",  val: 50000 },
+    { prop: "startTime",    val: 50 * MS_PER_SEC },
+    { prop: "currentTime",  val: 50 * MS_PER_SEC },
   ].forEach(function(aChangeTest) {
     addAsyncAnimTest(`single_animation_api_change_${aChangeTest.prop}`,
                      aOptions, function*() {
@@ -879,7 +888,7 @@ function assert_records(expected, desc) {
                     "records after animation start");
 
     // Seek to the middle and set playbackRate to zero.
-    animations[0].currentTime = 50000;
+    animations[0].currentTime = 50 * MS_PER_SEC;
     animations[0].playbackRate = 0;
 
     // Wait for the MutationRecords, one for each change, to be delivered.
@@ -1391,12 +1400,24 @@ function assert_records(expected, desc) {
 });
 
 addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
+  // Add style for pseudo elements
+  var extraStyle = document.createElement('style');
+  document.head.appendChild(extraStyle);
+  var sheet = extraStyle.sheet;
+  var rules = { ".before::before": "animation: anim 100s;",
+                ".after::after"  : "animation: anim 100s, anim 100s;" };
+  for (var selector in rules) {
+    sheet.insertRule(selector + '{' + rules[selector] + '}',
+                     sheet.cssRules.length);
+  }
 
   // Create a tree with two children:
   //
-  //         div
-  //        /  \
-  //   childA  childB
+  //          div
+  //       (::before)
+  //       (::after)
+  //        /     \
+  //   childA      childB(::before)
   var childA = document.createElement("div");
   var childB = document.createElement("div");
 
@@ -1411,9 +1432,26 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   div.style    = "animation: anim 100s, anim 100s, anim 100s";
   childA.style = "animation: anim 100s, anim 100s";
 
+  // Start animations targeting to pseudo element of div and childB.
+  childB.classList.add("before");
+  div.classList.add("after");
+  div.classList.add("before");
+
+  // Check all animations we have in this document
+  var docAnims = document.getAnimations();
+  is(docAnims.length, 10, "total animations");
+
   var divAnimations = div.getAnimations();
   var childAAnimations = childA.getAnimations();
   var childBAnimations = childB.getAnimations();
+  var divBeforeAnimations =
+    [ for (x of docAnims) if (x.effect.target.parentElement == div &&
+                              x.effect.target.type == "::before") x ];
+  var divAfterAnimations =
+    [ for (x of docAnims) if (x.effect.target.parentElement == div &&
+                              x.effect.target.type == "::after") x ];
+  var childBPseudoAnimations =
+    [ for (x of docAnims) if (x.effect.target.parentElement == childB) x ];
 
   // The order in which we get the corresponding records is currently
   // based on the order we visit these nodes when updating styles.
@@ -1423,11 +1461,15 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // future but for now all we are interested in testing here is that the order
   // these records are dispatched is consistent between runs.
   //
-  // We currently expect to get records in order childA, childB, div
+  // We currently expect to get records in order div::after, childA, childB,
+  // childB::before, div, div::before
   yield await_frame();
-  assert_records([{ added: childAAnimations, changed: [], removed: [] },
+  assert_records([{ added: divAfterAnimations, changed: [], removed: [] },
+                  { added: childAAnimations, changed: [], removed: [] },
                   { added: childBAnimations, changed: [], removed: [] },
-                  { added: divAnimations, changed: [], removed: [] }],
+                  { added: childBPseudoAnimations, changed: [], removed: [] },
+                  { added: divAnimations, changed: [], removed: [] },
+                  { added: divBeforeAnimations, changed: [], removed: [] }],
                  "records after simultaneous animation start");
 
   // The one case where we *do* currently perform document-level (or actually
@@ -1435,14 +1477,15 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // driver tick. In particular, this means that when animations finish
   // naturally the removed records should be dispatched according to the
   // position of the elements in the tree.
-  //
 
-  // First, flatten the set of animations.
-  var animations = [ divAnimations,
-                     childAAnimations,
-                     childBAnimations ].reduce(
-    (a, b) => a.concat(b), []
-  );
+  // First, flatten the set of animations. we put the animations targeting to
+  // pseudo elements last. (Actually, we don't care the order in the list.)
+  var animations = [ ...divAnimations,
+                     ...childAAnimations,
+                     ...childBAnimations,
+                     ...divBeforeAnimations,
+                     ...divAfterAnimations,
+                     ...childBPseudoAnimations ];
 
   // Fast-forward to *just* before the end of the animation.
   animations.forEach(animation => animation.currentTime = 99999);
@@ -1457,7 +1500,13 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 
   // After the changed notifications, which will be dispatched in the order that
   // the animations were seeked, we should get removal MutationRecords in order
-  // div, childA, childB
+  // (div, div::before, div::after), childA, (childB, childB::before).
+  // Note: The animations targeting to the pseudo element are appended after
+  //       the animations of its parent element.
+  divAnimations = [ ...divAnimations,
+                    ...divBeforeAnimations,
+                    ...divAfterAnimations ];
+  childBAnimations = [ ...childBAnimations, ...childBPseudoAnimations ];
   assert_records(seekRecords.concat(
                    { added: [], changed: [], removed: divAnimations },
                    { added: [], changed: [], removed: childAAnimations },
@@ -1465,74 +1514,79 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
                  "records after finishing");
 
   // Clean up
+  div.classList.remove("before");
+  div.classList.remove("after");
   div.style = "";
   childA.remove();
   childB.remove();
+  extraStyle.remove();
 });
 
+[ div, pseudoTarget ].forEach(function(target) {
+  addAsyncAnimTest("change_duration_and_currenttime",
+                   { observe: div, subtree: true }, function*() {
+    var anim = target.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
-addAsyncAnimTest("change_duration_and_currenttime",
-                 { observe: div, subtree: true }, function*() {
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 100000);
-  yield await_frame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation is added");
+    yield await_frame();
+    assert_records([{ added: [anim], changed: [], removed: [] }],
+                   "records after animation is added");
 
-  anim.effect.timing.duration = 10000;
-  yield await_frame();
+    anim.effect.timing.duration = 100 * MS_PER_SEC;
+    yield await_frame();
+    assert_records([{ added: [], changed: [anim], removed: [] }],
+                   "records after duration is changed");
 
-  assert_records([{ added: [], changed: [anim], removed: [] }],
-                 "records after duration is changed");
+    anim.effect.timing.duration = 100 * MS_PER_SEC;
+    yield await_frame();
+    assert_records([], "records after assigning same value");
 
-  anim.effect.timing.duration = 10000;
-  yield await_frame();
-  assert_records([], "records after assigning same value");
+    anim.currentTime = 500 * MS_PER_SEC;
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: [anim] }],
+                   "records after animation end");
 
-  anim.currentTime = 50000;
-  yield await_frame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after animation end");
+    anim.effect.timing.duration = 1000 * MS_PER_SEC;
+    yield await_frame();
+    assert_records([{ added: [anim], changed: [], removed: [] }],
+                   "records after animation restarted");
 
-  anim.effect.timing.duration = 100000;
-  yield await_frame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation restarted");
+    anim.effect.timing.duration = "auto";
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: [anim] }],
+                   "records after duration set \"auto\"");
 
-  anim.effect.timing.duration = "auto";
-  yield await_frame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after duration set \"auto\"");
+    anim.effect.timing.duration = "auto";
+    yield await_frame();
+    assert_records([], "records after assigning same value \"auto\"");
 
-  anim.effect.timing.duration = "auto";
-  yield await_frame();
-  assert_records([], "records after assigning same value \"auto\"");
-
-  anim.cancel();
-  yield await_frame();
+    anim.cancel();
+    yield await_frame();
+  });
 });
 
 addAsyncAnimTest("change_enddelay_and_currenttime",
                  { observe: div, subtree: true }, function*() {
-  var anim = div.animate({ opacity: [ 0, 1 ] }, { duration: 100000 });
+  var anim = div.animate({ opacity: [ 0, 1 ] }, { duration: 100 * MS_PER_SEC });
+
   yield await_frame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
-  anim.effect.timing.endDelay = 10000;
+  anim.effect.timing.endDelay = 10 * MS_PER_SEC;
   yield await_frame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after endDelay is changed");
 
-  anim.effect.timing.endDelay = 10000;
+  anim.effect.timing.endDelay = 10 * MS_PER_SEC;
   yield await_frame();
   assert_records([], "records after assigning same value");
 
-  anim.currentTime = 109000;
+  anim.currentTime = 109 * MS_PER_SEC;
   yield await_frame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after currentTime during endDelay");
 
-  anim.effect.timing.endDelay = -110000;
+  anim.effect.timing.endDelay = -110 * MS_PER_SEC;
   yield await_frame();
   assert_records([], "records after assigning negative value");
 
@@ -1543,9 +1597,102 @@ addAsyncAnimTest("change_enddelay_and_currenttime",
 addAsyncAnimTest("change_enddelay_and_currenttime",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] },
-                         { duration: 100, endDelay: -100 });
+                         { duration: 100 * MS_PER_SEC,
+                           endDelay: -100 * MS_PER_SEC });
   yield await_frame();
   assert_records([], "records after animation is added");
+});
+
+addAsyncAnimTest("change_iterations",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect.timing.iterations = 2;
+  yield await_frame();
+  assert_records([{ added: [], changed: [anim], removed: [] }],
+                 "records after iterations is changed");
+
+  anim.effect.timing.iterations = 2;
+  yield await_frame();
+  assert_records([], "records after assigning same value");
+
+  anim.effect.timing.iterations = 0;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+
+  anim.effect.timing.iterations = Infinity;
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation restarted");
+
+  anim.cancel();
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+});
+
+addAsyncAnimTest("change_delay",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] }, 100000);
+
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect.timing.delay = 100;
+  yield await_frame();
+  assert_records([{ added: [], changed: [anim], removed: [] }],
+                 "records after delay is changed");
+
+  anim.effect.timing.delay = 100;
+  yield await_frame();
+  assert_records([], "records after assigning same value");
+
+  anim.effect.timing.delay = -100000;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+
+  anim.effect.timing.delay = 0;
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation restarted");
+
+  anim.cancel();
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+});
+
+addAsyncAnimTest("negative_delay_in_constructor",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] },
+                         { duration: 100, delay: -100 });
+  yield await_frame();
+  assert_records([], "records after assigning negative value");
+});
+
+addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
+                 { observe: div, subtree: false }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] },
+                         { duration: 100 * MS_PER_SEC });
+  var pAnim = pseudoTarget.animate({ opacity: [ 0, 1 ] },
+                                   { duration: 100 * MS_PER_SEC });
+
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.finish();
+  pAnim.finish();
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation is finished");
 });
 
 // Run the tests.

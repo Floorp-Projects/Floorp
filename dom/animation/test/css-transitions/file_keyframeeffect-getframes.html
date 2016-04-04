@@ -31,10 +31,8 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
-      left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
-      left: "100px" },
+    { offset: 0, computedOffset: 0, easing: "ease", left: "0px" },
+    { offset: 1, computedOffset: 1, easing: "linear", left: "100px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -56,10 +54,8 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "steps(2, end)", composite: "replace",
-      left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
-      left: "100px" },
+    { offset: 0, computedOffset: 0, easing: "steps(2, end)", left: "0px" },
+    { offset: 1, computedOffset: 1, easing: "linear", left: "100px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {

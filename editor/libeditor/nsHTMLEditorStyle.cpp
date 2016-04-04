@@ -262,7 +262,7 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
 
   // Now look for things like <font>
   if (aAttribute && !aAttribute->IsEmpty()) {
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(*aAttribute);
+    nsCOMPtr<nsIAtom> atom = NS_Atomize(*aAttribute);
     MOZ_ASSERT(atom);
 
     nsString attrValue;
@@ -373,7 +373,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
                                           const nsAString* aAttribute,
                                           const nsAString& aValue)
 {
-  nsCOMPtr<nsIAtom> attrAtom = aAttribute ? do_GetAtom(*aAttribute) : nullptr;
+  nsCOMPtr<nsIAtom> attrAtom = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
 
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
@@ -797,7 +797,7 @@ nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
       NS_ENSURE_SUCCESS(res, res);
     } else {
       // otherwise we just want to eliminate the attribute
-      nsCOMPtr<nsIAtom> attribute = do_GetAtom(*aAttribute);
+      nsCOMPtr<nsIAtom> attribute = NS_Atomize(*aAttribute);
       if (aNode.HasAttr(kNameSpaceID_None, attribute)) {
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
@@ -900,7 +900,7 @@ bool nsHTMLEditor::HasAttr(nsIDOMNode* aNode,
   nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(element, false);
 
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(*aAttribute);
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(*aAttribute);
   NS_ENSURE_TRUE(atom, false);
 
   return element->HasAttr(kNameSpaceID_None, atom);
