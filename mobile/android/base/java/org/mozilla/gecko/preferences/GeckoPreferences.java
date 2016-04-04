@@ -963,25 +963,6 @@ OnSharedPreferenceChangeListener
         context.sendBroadcast(intent, GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION);
     }
 
-    /**
-     * Broadcast an intent with <code>pref</code>, <code>branch</code>, and
-     * <code>enabled</code> extras. This is intended to represent the
-     * notification of a preference value to observers.
-     *
-     * The broadcast will be sent only to receivers registered with the
-     * (Fennec-specific) per-Android package permission.
-     */
-    public static void broadcastPrefAction(final Context context,
-                                           final String action,
-                                           final String pref,
-                                           final boolean value) {
-        final Intent intent = new Intent(action)
-                .putExtra("pref", pref)
-                .putExtra("branch", GeckoSharedPrefs.APP_PREFS_NAME)
-                .putExtra("enabled", value);
-        broadcastAction(context, intent);
-    }
-
     private static void fillIntentWithProfileInfo(final Context context, final Intent intent) {
         // There is a race here, but GeckoProfile returns the default profile
         // when Gecko is not explicitly running for a different profile.  In a
