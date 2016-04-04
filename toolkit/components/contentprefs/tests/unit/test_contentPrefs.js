@@ -284,9 +284,13 @@ function run_test() {
     },
 
     numTimesRemovedCalled: 0,
-    onContentPrefRemoved: function genericObserver_onContentPrefRemoved(group, name) {
+    onContentPrefRemoved: function genericObserver_onContentPrefRemoved(group, name, isPrivate) {
       ++this.numTimesRemovedCalled;
       do_check_eq(group, "www.example.com");
+      if (name == "test.observer.private")
+        do_check_true(isPrivate);
+      else if (name == "test.observer.normal")
+        do_check_false(isPrivate);
       if (name != "test.observer.1" && name != "test.observer.2" &&
           name != "test.observer.normal" && name != "test.observer.private") {
         do_throw("genericObserver.onContentPrefSet: " +

@@ -34,8 +34,12 @@ interface nsIContentPrefObserver : nsISupports
    * @param    aGroup      the group to which the pref belongs, or null
    *                       if it's a global pref (applies to all sites)
    * @param    aName       the name of the pref that was removed
+   * @param    aIsPrivate  an optional flag determining whether the
+   *                       original context is private or not
    */
-  void onContentPrefRemoved(in AString aGroup, in AString aName);
+  void onContentPrefRemoved(in AString aGroup,
+                            in AString aName,
+                            [optional] in boolean aIsPrivate);
 };
 
 [scriptable, function, uuid(c1b3d6df-5373-4606-8494-8bcf14a7fc62)]
