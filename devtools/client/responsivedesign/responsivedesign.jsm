@@ -17,6 +17,8 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {ViewHelpers} = require("devtools/client/shared/widgets/ViewHelpers.jsm");
+var { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 loader.lazyImporter(this, "SystemAppProxy",
                     "resource://gre/modules/SystemAppProxy.jsm");
 loader.lazyRequireGetter(this, "DebuggerClient",
@@ -37,7 +39,7 @@ const ROUND_RATIO = 10;
 
 const INPUT_PARSER = /(\d+)[^\d]+(\d+)/;
 
-const SHARED_L10N = new ViewHelpers.L10N("chrome://devtools/locale/shared.properties");
+const SHARED_L10N = new LocalizationHelper("chrome://devtools/locale/shared.properties");
 
 function debug(msg) {
   // dump(`RDM UI: ${msg}\n`);
@@ -440,14 +442,14 @@ ResponsiveUI.prototype = {
    * Check the menu items.
    */
    checkMenus: function RUI_checkMenus() {
-     this.chromeDoc.getElementById("Tools:ResponsiveUI").setAttribute("checked", "true");
+     this.chromeDoc.getElementById("menu_responsiveUI").setAttribute("checked", "true");
    },
 
   /**
    * Uncheck the menu items.
    */
    unCheckMenus: function RUI_unCheckMenus() {
-     this.chromeDoc.getElementById("Tools:ResponsiveUI").setAttribute("checked", "false");
+     this.chromeDoc.getElementById("menu_responsiveUI").setAttribute("checked", "false");
    },
 
   /**
@@ -458,7 +460,7 @@ ResponsiveUI.prototype = {
    *    <menulist class="devtools-responsiveui-menulist"/> // presets
    *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="rotate"/> // rotate
    *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="screenshot"/> // screenshot
-   *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="Leave Responsive Design View"/> // close
+   *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="Leave Responsive Design Mode"/> // close
    *  </toolbar>
    *  <stack class="browserStack"> From tabbrowser.xml
    *    <browser/>
@@ -523,7 +525,7 @@ ResponsiveUI.prototype = {
     this.closebutton = this.chromeDoc.createElement("toolbarbutton");
     this.closebutton.setAttribute("tabindex", "0");
     this.closebutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-close";
-    this.closebutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.close"));
+    this.closebutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.close1"));
     this.closebutton.addEventListener("command", this.bound_close, true);
 
     this.toolbar.appendChild(this.closebutton);
@@ -760,7 +762,7 @@ ResponsiveUI.prototype = {
     let h = this.customPreset.height;
     let newName = {};
 
-    let title = this.strings.GetStringFromName("responsiveUI.customNamePromptTitle");
+    let title = this.strings.GetStringFromName("responsiveUI.customNamePromptTitle1");
     let message = this.strings.formatStringFromName("responsiveUI.customNamePromptMsg", [w, h], 2);
     let promptOk = Services.prompt.prompt(null, title, message, newName, null, {});
 

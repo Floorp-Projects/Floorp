@@ -43,13 +43,19 @@ Keyframes.prototype = {
     this.propertyName = propertyName;
     this.animation = animation;
 
+    let iterationStartOffset =
+      animation.state.iterationStart % 1 == 0
+      ? 0
+      : 1 - animation.state.iterationStart % 1;
+
     this.keyframesEl.classList.add(animation.state.type);
     for (let frame of this.keyframes) {
+      let offset = frame.offset + iterationStartOffset;
       createNode({
         parent: this.keyframesEl,
         attributes: {
           "class": "frame",
-          "style": `left:${frame.offset * 100}%;`,
+          "style": `left:${offset * 100}%;`,
           "data-offset": frame.offset,
           "data-property": propertyName,
           "title": frame.value

@@ -13,7 +13,10 @@
 #include "mozilla/dom/ServiceWorkerMessageEvent.h"
 #include "mozilla/dom/ServiceWorkerMessageEventBinding.h"
 #include "nsGlobalWindow.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIDocument.h"
+#include "ServiceWorker.h"
+#include "ServiceWorkerPrivate.h"
 #include "WorkerPrivate.h"
 
 using namespace mozilla;
@@ -123,6 +126,9 @@ private:
   {
     AssertIsOnMainThread();
 
+    MOZ_ASSERT(aTargetContainer->GetParentObject(),
+               "How come we don't have a window here?!");
+
     JS::Rooted<JS::Value> messageData(aCx);
     ErrorResult rv;
     Read(aTargetContainer->GetParentObject(), aCx, &messageData, rv);
@@ -133,8 +139,24 @@ private:
 
     RootedDictionary<ServiceWorkerMessageEventInit> init(aCx);
 
+    nsCOMPtr<nsIPrincipal> principal = aTargetContainer->GetParentObject()->PrincipalOrNull();
+    NS_WARN_IF_FALSE(principal, "Why is the principal null here?");
+
+    bool isNullPrincipal = false;
+    bool isSystemPrincipal = false;
+    if (principal) {
+      principal->GetIsNullPrincipal(&isNullPrincipal);
+      MOZ_ASSERT(!isNullPrincipal);
+      principal->GetIsSystemPrincipal(&isSystemPrincipal);
+      MOZ_ASSERT(!isSystemPrincipal);
+    }
+
     init.mData = messageData;
-    init.mOrigin.Construct(EmptyString());
+    nsAutoCString origin;
+    if (principal && !isNullPrincipal && !isSystemPrincipal) {
+      principal->GetOrigin(origin);
+    }
+    init.mOrigin.Construct(NS_ConvertUTF8toUTF16(origin));
     init.mLastEventId.Construct(EmptyString());
     init.mPorts.Construct();
     init.mPorts.Value().SetNull();

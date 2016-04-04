@@ -6,6 +6,7 @@
 
 #include "GonkSensorsPollInterface.h"
 #include "HalLog.h"
+#include <mozilla/UniquePtr.h>
 
 namespace mozilla {
 namespace hal {
@@ -124,18 +125,18 @@ GonkSensorsPollModule::EnableSensorCmd(int32_t aId, GonkSensorsPollResultHandler
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_ENABLE_SENSOR, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_ENABLE_SENSOR, 0);
 
   nsresult rv = PackPDU(aId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -144,18 +145,18 @@ GonkSensorsPollModule::DisableSensorCmd(int32_t aId, GonkSensorsPollResultHandle
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_DISABLE_SENSOR, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_DISABLE_SENSOR, 0);
 
   nsresult rv = PackPDU(aId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -165,8 +166,8 @@ GonkSensorsPollModule::SetPeriodCmd(int32_t aId, uint64_t aPeriod,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SET_PERIOD, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SET_PERIOD, 0);
 
   nsresult rv = PackPDU(aId, *pdu);
   if (NS_FAILED(rv)) {
@@ -176,11 +177,11 @@ GonkSensorsPollModule::SetPeriodCmd(int32_t aId, uint64_t aPeriod,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 

@@ -19,8 +19,10 @@
 #include "nsIThreadRetargetableRequest.h"
 
 #include "nsIPrincipal.h"
+#include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
+#include "ServiceWorkerManager.h"
 #include "Workers.h"
 #include "nsStringStream.h"
 

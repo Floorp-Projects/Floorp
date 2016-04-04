@@ -15,8 +15,14 @@ namespace mozilla {
 class ComputedTimingFunction
 {
 public:
+  // BeforeFlag is used in step timing function.
+  // https://w3c.github.io/web-animations/#before-flag
+  enum class BeforeFlag {
+    Unset,
+    Set
+  };
   void Init(const nsTimingFunction &aFunction);
-  double GetValue(double aPortion) const;
+  double GetValue(double aPortion, BeforeFlag aBeforeFlag) const;
   const nsSMILKeySpline* GetFunction() const
   {
     NS_ASSERTION(HasSpline(), "Type mismatch");
@@ -42,9 +48,10 @@ public:
   void AppendToString(nsAString& aResult) const;
 
   static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
-                           double aPortion)
+                           double aPortion,
+                           BeforeFlag aBeforeFlag)
   {
-    return aFunction.isSome() ? aFunction->GetValue(aPortion) : aPortion;
+    return aFunction ? aFunction->GetValue(aPortion, aBeforeFlag) : aPortion;
   }
   static int32_t Compare(const Maybe<ComputedTimingFunction>& aLhs,
                          const Maybe<ComputedTimingFunction>& aRhs);

@@ -31,7 +31,7 @@ http://creativecommons.org/licenses/publicdomain/
 
   var registration;
   add_task(function* start() {
-    yield setupPrefs();
+    yield setupPrefsAndMockSocket(new MockWebSocket());
     yield setPushPermission(false);
 
     var url = "worker.js" + "?" + Math.random();

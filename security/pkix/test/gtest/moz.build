@@ -54,4 +54,8 @@ elif CONFIG['_MSC_VER']:
     '-wd4625', # copy constructor could not be generated.
     '-wd4626', # assugment operator could not be generated.
     '-wd4640', # construction of local static object is not thread safe.
+
+    # This is intended as a temporary hack to support building with VS2015.
+    # declaration of '*' hides class member
+    '-wd4458',
   ]

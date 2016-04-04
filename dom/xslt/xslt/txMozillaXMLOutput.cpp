@@ -132,10 +132,10 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
     if (mOpenedElementIsHTML && aNsID == kNameSpaceID_None) {
         nsAutoString lnameStr;
         nsContentUtils::ASCIIToLower(aLocalName, lnameStr);
-        lname = do_GetAtom(lnameStr);
+        lname = NS_Atomize(lnameStr);
     }
     else {
-        lname = do_GetAtom(aLocalName);
+        lname = NS_Atomize(aLocalName);
     }
 
     NS_ENSURE_TRUE(lname, NS_ERROR_OUT_OF_MEMORY);
@@ -462,10 +462,10 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
 
         nsAutoString lnameStr;
         nsContentUtils::ASCIIToLower(aLocalName, lnameStr);
-        lname = do_GetAtom(lnameStr);
+        lname = NS_Atomize(lnameStr);
     }
     else {
-        lname = do_GetAtom(aLocalName);
+        lname = NS_Atomize(aLocalName);
     }
 
     // No biggie if we lose the prefix due to OOM
@@ -756,7 +756,7 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
             aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
             if (!value.IsEmpty()) {
                 nsContentUtils::ASCIIToLower(httpEquiv);
-                nsCOMPtr<nsIAtom> header = do_GetAtom(httpEquiv);
+                nsCOMPtr<nsIAtom> header = NS_Atomize(httpEquiv);
                 processHTTPEquiv(header, value);
             }
         }
@@ -888,7 +888,7 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, int32_t aNsID
 
         nsresult rv = nsContentUtils::CheckQName(qName);
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIAtom> doctypeName = do_GetAtom(qName);
+            nsCOMPtr<nsIAtom> doctypeName = NS_Atomize(qName);
             if (!doctypeName) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }

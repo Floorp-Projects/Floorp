@@ -36,6 +36,8 @@
 #include "jit/x86-shared/Encoding-x86-shared.h"
 #include "jit/x86-shared/Patching-x86-shared.h"
 
+extern volatile uintptr_t* blackbox;
+
 namespace js {
 namespace jit {
 
@@ -1771,6 +1773,22 @@ public:
         m_formatter.oneByteOp(OP_XCHG_GvEv, offset, base, index, scale, src);
     }
 
+    void cmovz_rr(RegisterID src, RegisterID dst)
+    {
+        spew("cmovz     %s, %s", GPReg16Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_CMOVZ_GvqpEvqp, src, dst);
+    }
+    void cmovz_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("cmovz     " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_CMOVZ_GvqpEvqp, offset, base, dst);
+    }
+    void cmovz_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("cmovz     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_CMOVZ_GvqpEvqp, offset, base, index, scale, dst);
+    }
+
     void movl_rr(RegisterID src, RegisterID dst)
     {
         spew("movl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
@@ -3385,7 +3403,26 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         if (offset == -1)
             return false;
 
-        MOZ_RELEASE_ASSERT(size_t(offset) < size());
+        if (MOZ_UNLIKELY(size_t(offset) >= size())) {
+#ifdef NIGHTLY_BUILD
+            // Stash some data on the stack so we can retrieve it from minidumps,
+            // see bug 1124397.
+            volatile uintptr_t dump[10];
+            blackbox = dump;
+            blackbox[0] = uintptr_t(0xABCD1234);
+            blackbox[1] = uintptr_t(offset);
+            blackbox[2] = uintptr_t(size());
+            blackbox[3] = uintptr_t(from.offset());
+            blackbox[4] = uintptr_t(code[from.offset() - 5]);
+            blackbox[5] = uintptr_t(code[from.offset() - 4]);
+            blackbox[6] = uintptr_t(code[from.offset() - 3]);
+            blackbox[7] = uintptr_t(code[from.offset() - 2]);
+            blackbox[8] = uintptr_t(code[from.offset() - 1]);
+            blackbox[9] = uintptr_t(0xFFFF7777);
+#endif
+            MOZ_CRASH("nextJump bogus offset");
+        }
+
         *next = JmpSrc(offset);
         return true;
     }

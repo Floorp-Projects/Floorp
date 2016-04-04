@@ -35,6 +35,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGTitleElement.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMFileList.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -48,6 +49,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
+#include "nsIStringBundle.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIDOMWindowCollection.h"
@@ -68,6 +70,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/File.h" // for input type=file
+#include "mozilla/dom/FileList.h" // for input type=file
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1071,9 +1075,7 @@ public:
 protected:
   ~DefaultTooltipTextProvider() {}
 
-  nsCOMPtr<nsIAtom> mTag_dialog;
-  nsCOMPtr<nsIAtom> mTag_dialogheader;
-  nsCOMPtr<nsIAtom> mTag_window;
+  nsCOMPtr<nsIAtom> mTag_dialogHeader;
 };
 
 NS_IMPL_ISUPPORTS(DefaultTooltipTextProvider, nsITooltipTextProvider)
@@ -1082,9 +1084,7 @@ DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 {
   // There are certain element types which we don't want to use
   // as tool tip text.
-  mTag_dialog = do_GetAtom("dialog");
-  mTag_dialogheader = do_GetAtom("dialogheader");
-  mTag_window = do_GetAtom("window");
+  mTag_dialogHeader = NS_Atomize("dialogheader");
 }
 
 // A helper routine that determines whether we're still interested in SVG
@@ -1121,13 +1121,13 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode* aNode, char16_t** aText,
   nsCOMPtr<nsIConstraintValidation> cvElement = do_QueryInterface(current);
   if (cvElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(cvElement);
-    nsCOMPtr<nsIAtom> titleAtom = do_GetAtom("title");
+    nsCOMPtr<nsIAtom> titleAtom = NS_Atomize("title");
 
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(content);
     bool formHasNoValidate = false;
     mozilla::dom::Element* form = formControl->GetFormElement();
     if (form) {
-      nsCOMPtr<nsIAtom> noValidateAtom = do_GetAtom("novalidate");
+      nsCOMPtr<nsIAtom> noValidateAtom = NS_Atomize("novalidate");
       formHasNoValidate = form->HasAttr(kNameSpaceID_None, noValidateAtom);
     }
 
@@ -1142,13 +1142,66 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode* aNode, char16_t** aText,
     if (currElement) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(currElement));
       if (content) {
-        if (!content->IsAnyOfXULElements(mTag_dialog,
-                                         mTag_dialogheader,
-                                         mTag_window)) {
+        if (!content->IsAnyOfXULElements(nsGkAtoms::dialog,
+                                         mTag_dialogHeader,
+                                         nsGkAtoms::window)) {
           // first try the normal title attribute...
           if (!content->IsSVGElement()) {
-            currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
-            if (outText.Length()) {
+            // If the element is an <input type="file"> without a title,
+            // we should show the current file selection.
+            if (content->IsHTMLElement(nsGkAtoms::input) &&
+                content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                     NS_LITERAL_STRING("file"), eIgnoreCase) &&
+                !content->HasAttr(kNameSpaceID_None, nsGkAtoms::title)) {
+              found = true;
+              nsCOMPtr<nsIDOMFileList> fileList;
+              nsCOMPtr<nsIDOMHTMLInputElement> currInputElement(do_QueryInterface(currElement));
+              nsresult rv = currInputElement->GetFiles(getter_AddRefs(fileList));
+              NS_ENSURE_SUCCESS(rv, rv);
+              if (!fileList) {
+                return NS_ERROR_FAILURE;
+              }
+
+              nsCOMPtr<nsIStringBundleService> bundleService =
+                mozilla::services::GetStringBundleService();
+              if (!bundleService) {
+                return NS_ERROR_FAILURE;
+              }
+
+              nsCOMPtr<nsIStringBundle> bundle;
+              rv = bundleService->CreateBundle("chrome://global/locale/layout/HtmlForm.properties",
+                                                        getter_AddRefs(bundle));
+              NS_ENSURE_SUCCESS(rv, rv);
+              uint32_t listLength = 0;
+              rv = fileList->GetLength(&listLength);
+              NS_ENSURE_SUCCESS(rv, rv);
+              if (listLength == 0) {
+                if (content->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+                  rv = bundle->GetStringFromName(MOZ_UTF16("NoFilesSelected"),
+                                                 getter_Copies(outText));
+                } else {
+                  rv = bundle->GetStringFromName(MOZ_UTF16("NoFileSelected"),
+                                                 getter_Copies(outText));
+                }
+                NS_ENSURE_SUCCESS(rv, rv);
+              } else {
+                FileList* fl = static_cast<FileList*>(fileList.get());
+                fl->UnsafeItem(0).GetAsFile()->GetName(outText);
+
+                // For UX and performance (jank) reasons we cap the number of
+                // files that we list in the tooltip to 20 plus a "and xxx more"
+                // line, or to 21 if exactly 21 files were picked.
+                const uint32_t TRUNCATED_FILE_COUNT = 20;
+                uint32_t count = std::min(listLength, TRUNCATED_FILE_COUNT);
+                for (uint32_t i = 1; i < count; ++i) {
+                  nsString fileName;
+                  fl->UnsafeItem(i).GetAsFile()->GetName(fileName);
+                  outText.Append(NS_LITERAL_STRING("\n"));
+                  outText.Append(fileName);
+                }
+              }
+            } else if (NS_SUCCEEDED(currElement->GetAttribute(NS_LITERAL_STRING("title"), outText)) &&
+                       outText.Length()) {
               found = true;
             }
           }

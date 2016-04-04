@@ -29,9 +29,24 @@ http://creativecommons.org/licenses/publicdomain/
   //  console.log(str + "\n");
   }
 
+  var mockSocket = new MockWebSocket();
+
+  var channelID = null;
+
+  mockSocket.onRegister = function(request) {
+    channelID = request.channelID;
+    this.serverSendMsg(JSON.stringify({
+      messageType: "register",
+      uaid: "c69e2014-9e15-438d-b253-d79cc2df60a8",
+      channelID,
+      status: 200,
+      pushEndpoint: "https://example.com/endpoint/1"
+    }));
+  };
+
   var registration;
   add_task(function* start() {
-    yield setupPrefs();
+    yield setupPrefsAndMockSocket(mockSocket);
     yield setPushPermission(true);
 
     var url = "worker.js" + "?" + (Math.random());
@@ -64,17 +79,16 @@ http://creativecommons.org/licenses/publicdomain/
   });
 
   add_task(function* waitForPushNotification() {
-    yield Promise.all([
-      controlledFrame.waitOnWorkerMessage("finished"),
-      fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
-        method: "PUT",
-        headers: {
-          "X-Push-Method": "POST",
-          "X-Push-Server": pushSubscription.endpoint,
-          "TTL": "120",
-        },
-      }),
-    ]);
+    var finishedPromise = controlledFrame.waitOnWorkerMessage("finished");
+
+    // Send a blank message.
+    mockSocket.serverSendMsg(JSON.stringify({
+      messageType: "notification",
+      version: "vDummy",
+      channelID: channelID
+    }));
+
+    yield finishedPromise;
   });
 
   add_task(function* unsubscribe() {

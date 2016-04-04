@@ -119,10 +119,7 @@ public:
   ExperimentalFeaturesEnabled();
 
   static bool
-  ExperimentalFeaturesEnabled(JSContext* /* aCx */, JSObject* /* aGlobal */)
-  {
-    return ExperimentalFeaturesEnabled();
-  }
+  ExperimentalFeaturesEnabled(JSContext* aCx, JSObject* aGlobal);
 
   static bool
   IsFileHandleEnabled();
@@ -189,6 +186,9 @@ public:
 
   static nsresult
   CommonPostHandleEvent(EventChainPostVisitor& aVisitor, IDBFactory* aFactory);
+
+  static bool
+  ResolveSandboxBinding(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
   static bool
   DefineIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal);

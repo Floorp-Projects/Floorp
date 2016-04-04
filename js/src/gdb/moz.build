@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
     'tests/test-jsval.cpp',
     'tests/test-prettyprinters.cpp',
     'tests/test-Root.cpp',
+    'tests/test-unwind.cpp',
     'tests/typedef-printers.cpp',
 ]
 
@@ -33,3 +34,11 @@ USE_LIBS += [
 ]
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+
+# This is intended as a temporary workaround to enable VS2015.
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd4312']
+
+DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
+FINAL_TARGET_PP_FILES += ['gdb-tests-gdb.py.in']
+OBJDIR_FILES.js.src.gdb += ['!/dist/bin/gdb-tests-gdb.py']

@@ -23,11 +23,15 @@ EXPORTS.mozilla += [
     'AnimationPerformanceWarning.h',
     'AnimationUtils.h',
     'AnimValuesStyleRule.h',
+    'ComputedTiming.h',
     'ComputedTimingFunction.h',
     'EffectCompositor.h',
     'EffectSet.h',
+    'KeyframeUtils.h',
+    'NonOwningAnimationTarget.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
+    'TimingParams.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -45,7 +49,9 @@ UNIFIED_SOURCES += [
     'EffectCompositor.cpp',
     'EffectSet.cpp',
     'KeyframeEffect.cpp',
+    'KeyframeUtils.cpp',
     'PendingAnimationTracker.cpp',
+    'TimingParams.cpp',
 ]
 
 LOCAL_INCLUDES += [

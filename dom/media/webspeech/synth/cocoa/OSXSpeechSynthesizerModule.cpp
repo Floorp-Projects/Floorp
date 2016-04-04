@@ -20,7 +20,7 @@ using namespace mozilla::dom;
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(OSXSpeechSynthesizerService,
                                          OSXSpeechSynthesizerService::GetInstanceForService)
 
-// Defines kSAPISERVICE_CID
+// Defines kOSXSERVICE_CID
 NS_DEFINE_NAMED_CID(OSXSPEECHSYNTHESIZERSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
@@ -34,7 +34,7 @@ static const mozilla::Module::ContractIDEntry kContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "profile-after-change", "Sapi Speech Synth", OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID },
+  { "speech-synth-started", "OSX Speech Synth", OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID },
   { nullptr }
 };
 

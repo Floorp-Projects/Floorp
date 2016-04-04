@@ -29,15 +29,18 @@ using mozilla::CeilingLog2Size;
 using mozilla::PodArrayZero;
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
-/* For JS_OOM_POSSIBLY_FAIL in jsutil.h. */
-JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations = UINT32_MAX;
-JS_PUBLIC_DATA(uint32_t) OOM_counter = 0;
-JS_PUBLIC_DATA(bool) OOM_failAlways = true;
+/* For OOM testing functionality in Utility.h. */
 namespace js {
+
+mozilla::Atomic<AutoEnterOOMUnsafeRegion*> AutoEnterOOMUnsafeRegion::owner_;
+
 namespace oom {
 
 JS_PUBLIC_DATA(uint32_t) targetThread = 0;
 JS_PUBLIC_DATA(MOZ_THREAD_LOCAL(uint32_t)) threadType;
+JS_PUBLIC_DATA(uint64_t) maxAllocations = UINT64_MAX;
+JS_PUBLIC_DATA(uint64_t) counter = 0;
+JS_PUBLIC_DATA(bool) failAlways = true;
 
 bool
 InitThreadType(void) {

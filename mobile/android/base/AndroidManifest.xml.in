@@ -141,6 +141,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Bug 1256615: We published a .App alias and we need to maintain it
+             forever.  If we don't, dock icons (e.g., Samsung Touchwiz icons)
+             will disappear because the intent filter details change. -->
+        <activity-alias android:name=".App"
+                        android:label="@MOZ_APP_DISPLAYNAME@"
+                        android:targetActivity="@MOZ_ANDROID_BROWSER_INTENT_CLASS@">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
         <service android:name="org.mozilla.gecko.GeckoService" />
 
         <activity android:name="org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt"
@@ -340,6 +352,23 @@
             android:exported="false"
             android:name="org.mozilla.gecko.dlc.DownloadContentService">
         </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.feeds.FeedService">
+        </service>
+
+        <receiver
+            android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name="org.mozilla.gecko.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
 
         <service
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"

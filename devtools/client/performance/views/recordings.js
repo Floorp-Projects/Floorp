@@ -26,7 +26,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
     this.emptyText = L10N.getStr("noRecordingsText");
 
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
-    PerformanceController.on(EVENTS.NEW_RECORDING, this._onNewRecording);
+    PerformanceController.on(EVENTS.RECORDING_ADDED, this._onNewRecording);
     PerformanceController.on(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
     PerformanceController.on(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
     this.widget.addEventListener("select", this._onSelect, false);
@@ -37,7 +37,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
    */
   destroy: function() {
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
-    PerformanceController.off(EVENTS.NEW_RECORDING, this._onNewRecording);
+    PerformanceController.off(EVENTS.RECORDING_ADDED, this._onNewRecording);
     PerformanceController.off(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
     PerformanceController.off(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
     this.widget.removeEventListener("select", this._onSelect, false);
@@ -52,6 +52,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
   addEmptyRecording: function (recording) {
     let titleNode = document.createElement("label");
     titleNode.className = "plain recording-item-title";
+    titleNode.setAttribute("crop", "end");
     titleNode.setAttribute("value", recording.getLabel() ||
       L10N.getFormatStr("recordingsList.itemLabel", this.itemCount + 1));
 
@@ -182,7 +183,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
     }
 
     let model = recordingItem.attachment;
-    this.emit(EVENTS.RECORDING_SELECTED, model);
+    this.emit(EVENTS.UI_RECORDING_SELECTED, model);
   }),
 
   /**

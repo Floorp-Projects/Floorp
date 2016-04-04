@@ -26,6 +26,7 @@ interface nsIContentViewer;
 interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
 interface nsIEditor;
+interface nsIEditingSession;
 interface nsISimpleEnumerator;
 interface nsIInputStream;
 interface nsIRequest;
@@ -40,6 +41,8 @@ interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;
 interface nsITabParent;
+interface nsITabChild;
+native TabChildRef(already_AddRefed<nsITabChild>);
 
 typedef unsigned long nsLoadFlags;
 
@@ -809,7 +812,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * until the hierarchy ends).  Return true iff the docshell we stopped on has
    * isIsolatedMozBrowserElement == true.
    */
-  [infallible] attribute boolean isInIsolatedMozBrowserElement;
+  [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
   /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser> or
@@ -1029,7 +1032,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * If deviceSizeIsPageSize is set to true, device-width/height media queries
    * will be calculated from the page size, not the device size.
    *
-   * Used by the Responsive Design View and B2G Simulator.
+   * Used by the Responsive Design Mode and B2G Simulator.
    *
    * Default is False.
    * Default value can be overriden with
@@ -1056,7 +1059,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                                                                   in wstring fileName,
                                                                   in unsigned long lineNumber,
                                                                   in jsval asyncStack,
-                                                                  in jsval asyncCause);
+                                                                  in string asyncCause);
   [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
 
   /**
@@ -1091,4 +1094,15 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   [implicit_jscontext]
   void setOriginAttributes(in jsval aAttrs);
+
+  /**
+   * The editing session for this docshell.
+   */
+  readonly attribute nsIEditingSession editingSession;
+
+  /**
+   * The tab child for this docshell.
+   */
+  [binaryname(ScriptableTabChild)] readonly attribute nsITabChild tabChild;
+  [noscript,notxpcom,nostdcall] TabChildRef GetTabChild();
 };

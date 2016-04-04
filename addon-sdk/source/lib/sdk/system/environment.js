@@ -12,53 +12,22 @@ const { Cc, Ci } = require('chrome');
 const { get, set, exists } = Cc['@mozilla.org/process/environment;1'].
                              getService(Ci.nsIEnvironment);
 
-exports.env = Proxy.create({
-  // XPCOM does not provides a way to enumerate environment variables, so we
-  // just don't support enumeration.
-  getPropertyNames: () => [],
-  getOwnPropertyNames: () => [],
-  enumerate: () => [],
-  keys: () => [],
-  // We do not support freezing, cause it would make it impossible to set new
-  // environment variables.
-  fix: () => undefined,
-  // We present all environment variables as own properties of this object,
-  // so we just delegate this call to `getOwnPropertyDescriptor`.
-  getPropertyDescriptor: function(name) {
-    return this.getOwnPropertyDescriptor(name);
-  },
-  // If environment variable with this name is defined, we generate proprety
-  // descriptor for it, otherwise fall back to `undefined` so that for consumer
-  // this property does not exists.
-  getOwnPropertyDescriptor: function(name) {
-    return !exists(name) ? undefined : {
-      value: get(name),
-      enumerable: false,    // Non-enumerable as we don't support enumeration.
-      configurable: true,   // Configurable as it may be deleted.
-      writable: true        // Writable as we do support set.
-    }
-  },
-
-  // New environment variables can be defined just by defining properties
-  // on this object.
-  defineProperty: (name, { value }) => set(name, value),
-  delete: function(name) {
-    set(name, null);
+exports.env = new Proxy({}, {
+  deleteProperty(target, property) {
+    set(property, null);
     return true;
   },
 
-  // We present all properties as own, there for we just delegate to `hasOwn`.
-  has: function(name) {
-    return this.hasOwn(name);
+  get(target, property, receiver) {
+    return get(property) || undefined;
   },
-  // We do support checks for existence of an environment variable, via `in`
-  // operator on this object.
-  hasOwn: name => exists(name),
 
-  // On property get / set we do read / write appropriate environment variables,
-  // please note though, that variables with names of standard object properties
-  // intentionally (so that this behaves as normal object) can not be
-  // read / set.
-  get: (proxy, name) => Object.prototype[name] || get(name) || undefined,
-  set: (proxy, name, value) => Object.prototype[name] || set(name, value)
+  has(target, property) {
+    return exists(property);
+  },
+
+  set(target, property, value, receiver) {
+    set(property, value);
+    return true;
+  }
 });

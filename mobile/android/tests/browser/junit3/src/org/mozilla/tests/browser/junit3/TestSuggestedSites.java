@@ -324,24 +324,6 @@ public class TestSuggestedSites extends InstrumentationTestCase {
         c.close();
     }
 
-    public void testDisabledState() {
-        resources.setSuggestedSitesResource(generateSites(3));
-
-        Cursor c = new SuggestedSites(context).get(DEFAULT_LIMIT);
-        assertEquals(3, c.getCount());
-        c.close();
-
-        // Disable suggested sites
-        GeckoSharedPrefs.forApp(context).edit()
-                                        .putBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, false)
-                                        .commit();
-
-        c = new SuggestedSites(context).get(DEFAULT_LIMIT);
-        assertNotNull(c);
-        assertEquals(0, c.getCount());
-        c.close();
-    }
-
     public void testImageUrlAndBgColor() {
         final int count = 3;
         resources.setSuggestedSitesResource(generateSites(count));

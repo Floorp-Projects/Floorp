@@ -12,6 +12,7 @@
 #include "mozilla/layers/APZThreadUtils.h"              // for AssertOnCompositorThread
 #include "mozilla/layers/APZUtils.h"                    // for CompleteAsyncTransform
 #include "mozilla/layers/AsyncCompositionManager.h"     // for ViewTransform::operator Matrix4x4()
+#include "mozilla/layers/AsyncDragMetrics.h"            // for AsyncDragMetrics
 #include "nsPrintfCString.h"                            // for nsPrintfCString
 #include "UnitTransforms.h"                             // for ViewAs
 
@@ -112,6 +113,12 @@ int32_t
 HitTestingTreeNode::GetScrollSize() const
 {
   return mScrollSize;
+}
+
+bool
+HitTestingTreeNode::IsScrollbarNode() const
+{
+  return (mScrollDir != Layer::NONE);
 }
 
 void
@@ -234,7 +241,7 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
   LayerToParentLayerMatrix4x4 transform = mTransform *
       CompleteAsyncTransform(
         mApzc
-      ? mApzc->GetCurrentAsyncTransformWithOverscroll()
+      ? mApzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL)
       : AsyncTransformComponentMatrix());
   return UntransformBy(transform.Inverse(), aPoint);
 }

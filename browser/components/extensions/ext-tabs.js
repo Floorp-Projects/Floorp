@@ -542,17 +542,13 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         return Promise.resolve(tab);
       },
 
-      getAllInWindow: function(windowId) {
-        if (windowId === null) {
-          windowId = WindowManager.topWindow.windowId;
-        }
-
-        return self.tabs.query({windowId});
-      },
-
       query: function(queryInfo) {
         let pattern = null;
         if (queryInfo.url !== null) {
+          if (!extension.hasPermission("tabs")) {
+            return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" parameter'});
+          }
+
           pattern = new MatchPattern(queryInfo.url);
         }
 

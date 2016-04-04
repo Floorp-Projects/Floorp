@@ -369,7 +369,7 @@ tests.push({
     do_check_eq(bs.getItemTitle(bs.tagsFolder),
                 PlacesUtils.getString("TagsFolderTitle"));
     do_check_eq(bs.getItemTitle(bs.unfiledBookmarksFolder),
-                PlacesUtils.getString("UnsortedBookmarksFolderTitle"));
+                PlacesUtils.getString("OtherBookmarksFolderTitle"));
     do_check_eq(bs.getItemTitle(bs.toolbarFolder),
                 PlacesUtils.getString("BookmarksToolbarFolderTitle"));
   }

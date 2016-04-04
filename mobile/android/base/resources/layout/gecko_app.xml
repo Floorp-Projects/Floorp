@@ -27,7 +27,6 @@
                         android:layout_above="@+id/find_in_page">
 
             <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
-                                         gecko:doinit="false"
                                          android:layout_width="match_parent"
                                          android:layout_height="match_parent"
                                          android:scrollbars="none"/>
@@ -128,7 +127,7 @@
                       android:layout_height="@dimen/tablet_tab_strip_height"
                       android:visibility="gone"/>
 
-            <org.mozilla.gecko.widget.GeckoViewFlipper
+            <ViewFlipper
                 android:id="@+id/browser_actionbar"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/browser_toolbar_height_flipper"
@@ -149,7 +148,7 @@
                                                         android:layout_width="match_parent"
                                                         style="@style/GeckoActionBar"/>
 
-            </org.mozilla.gecko.widget.GeckoViewFlipper>
+            </ViewFlipper>
 
         </LinearLayout>
 

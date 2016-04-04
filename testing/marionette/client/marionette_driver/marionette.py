@@ -196,8 +196,8 @@ class Actions(object):
         # navigate to the file
         marionette.navigate(testAction)
         # find element1 and element2
-        element1 = marionette.find_element("id", "element1")
-        element2 = marionette.find_element("id", "element2")
+        element1 = marionette.find_element(By.ID, "element1")
+        element2 = marionette.find_element(By.ID, "element2")
         # create action object
         action = Actions(marionette)
         # add actions (press, wait, move, release) into the object
@@ -540,10 +540,10 @@ class Marionette(object):
                  profile=None, addons=None, emulator=None, sdcard=None, emulator_img=None,
                  emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
                  gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
-                 busybox=None, symbols_path=None, timeout=None, socket_timeout=None,
-                 device_serial=None, adb_path=None, process_args=None,
-                 adb_host=None, adb_port=None, prefs=None, startup_timeout=None,
-                 workspace=None, verbose=0):
+                 busybox=None, symbols_path=None, timeout=None,
+                 socket_timeout=DEFAULT_SOCKET_TIMEOUT, device_serial=None, adb_path=None,
+                 process_args=None, adb_host=None, adb_port=None, prefs=None,
+                 startup_timeout=None, workspace=None, verbose=0):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -561,7 +561,7 @@ class Marionette(object):
         self.no_window = no_window
         self._test_name = None
         self.timeout = timeout
-        self.socket_timeout = socket_timeout or self.DEFAULT_SOCKET_TIMEOUT
+        self.socket_timeout = socket_timeout
         self.device_serial = device_serial
         self.adb_host = adb_host
         self.adb_port = adb_port
@@ -1626,7 +1626,7 @@ class Marionette(object):
             result = marionette.execute_script("return arguments[0] + arguments[1];",
                                                script_args=[2, 3])
             assert result == 5
-            some_element = marionette.find_element("id", "someElement")
+            some_element = marionette.find_element(By.ID, "someElement")
             sid = marionette.execute_script("return arguments[0].id;", script_args=[some_element])
             assert some_element.get_attribute("id") == sid
 

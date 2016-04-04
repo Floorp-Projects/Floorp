@@ -1,6 +1,4 @@
-/*
- * $_
- *
+/**
  * Returns the element with the specified |name| attribute.
  */
 function $_(formNum, name) {
@@ -30,10 +28,7 @@ function $_(formNum, name) {
   return element;
 }
 
-
-/*
- * checkForm
- *
+/**
  * Check a form for expected values. If an argument is null, a field's
  * expected value will be the default value.
  *
@@ -41,226 +36,230 @@ function $_(formNum, name) {
  * checkForm(#, "foo");
  */
 function checkForm(formNum, val1, val2, val3) {
-    var e, form = document.getElementById("form" + formNum);
-    ok(form, "Locating form " + formNum);
+  var e, form = document.getElementById("form" + formNum);
+  ok(form, "Locating form " + formNum);
 
-    var numToCheck = arguments.length - 1;
+  var numToCheck = arguments.length - 1;
 
-    if (!numToCheck--)
-        return;
-    e = form.elements[0];
-    if (val1 == null)
-        is(e.value, e.defaultValue, "Test default value of field " + e.name +
-            " in form " + formNum);
-    else
-        is(e.value, val1, "Test value of field " + e.name +
-            " in form " + formNum);
-
-
-    if (!numToCheck--)
-        return;
-    e = form.elements[1];
-    if (val2 == null)
-        is(e.value, e.defaultValue, "Test default value of field " + e.name +
-            " in form " + formNum);
-    else
-        is(e.value, val2, "Test value of field " + e.name +
-            " in form " + formNum);
+  if (!numToCheck--)
+    return;
+  e = form.elements[0];
+  if (val1 == null)
+    is(e.value, e.defaultValue, "Test default value of field " + e.name +
+       " in form " + formNum);
+  else
+    is(e.value, val1, "Test value of field " + e.name +
+       " in form " + formNum);
 
 
-    if (!numToCheck--)
-        return;
-    e = form.elements[2];
-    if (val3 == null)
-        is(e.value, e.defaultValue, "Test default value of field " + e.name +
-            " in form " + formNum);
-    else
-        is(e.value, val3, "Test value of field " + e.name +
-            " in form " + formNum);
+  if (!numToCheck--)
+    return;
+  e = form.elements[1];
+  if (val2 == null)
+    is(e.value, e.defaultValue, "Test default value of field " + e.name +
+       " in form " + formNum);
+  else
+    is(e.value, val2, "Test value of field " + e.name +
+       " in form " + formNum);
 
+
+  if (!numToCheck--)
+    return;
+  e = form.elements[2];
+  if (val3 == null)
+    is(e.value, e.defaultValue, "Test default value of field " + e.name +
+       " in form " + formNum);
+  else
+    is(e.value, val3, "Test value of field " + e.name +
+       " in form " + formNum);
 }
 
-
-/*
- * checkUnmodifiedForm
- *
+/**
  * Check a form for unmodified values from when page was loaded.
  *
  * <form id="form#">
  * checkUnmodifiedForm(#);
  */
 function checkUnmodifiedForm(formNum) {
-    var form = document.getElementById("form" + formNum);
-    ok(form, "Locating form " + formNum);
+  var form = document.getElementById("form" + formNum);
+  ok(form, "Locating form " + formNum);
 
-    for (var i = 0; i < form.elements.length; i++) {
-        var ele = form.elements[i];
+  for (var i = 0; i < form.elements.length; i++) {
+    var ele = form.elements[i];
 
-        // No point in checking form submit/reset buttons.
-        if (ele.type == "submit" || ele.type == "reset")
-            continue;
+    // No point in checking form submit/reset buttons.
+    if (ele.type == "submit" || ele.type == "reset")
+      continue;
 
-        is(ele.value, ele.defaultValue, "Test to default value of field " +
-            ele.name + " in form " + formNum);
-    }
+    is(ele.value, ele.defaultValue, "Test to default value of field " +
+       ele.name + " in form " + formNum);
+  }
 }
 
-
-// Mochitest gives us a sendKey(), but it's targeted to a specific element.
-// This basically sends an untargeted key event, to whatever's focused.
+/**
+ * Mochitest gives us a sendKey(), but it's targeted to a specific element.
+ * This basically sends an untargeted key event, to whatever's focused.
+ */
 function doKey(aKey, modifier) {
-    var keyName = "DOM_VK_" + aKey.toUpperCase();
-    var key = KeyEvent[keyName];
+  var keyName = "DOM_VK_" + aKey.toUpperCase();
+  var key = KeyEvent[keyName];
 
-    // undefined --> null
-    if (!modifier)
-        modifier = null;
+  // undefined --> null
+  if (!modifier)
+    modifier = null;
 
-    // Window utils for sending fake sey events.
-    var wutils = SpecialPowers.wrap(window).
-                          QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-                          getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  // Window utils for sending fake sey events.
+  var wutils = SpecialPowers.wrap(window).
+               QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+               getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
 
-    if (wutils.sendKeyEvent("keydown",  key, 0, modifier)) {
-      wutils.sendKeyEvent("keypress", key, 0, modifier);
-    }
-    wutils.sendKeyEvent("keyup",    key, 0, modifier);
+  if (wutils.sendKeyEvent("keydown",  key, 0, modifier)) {
+    wutils.sendKeyEvent("keypress", key, 0, modifier);
+  }
+  wutils.sendKeyEvent("keyup",    key, 0, modifier);
 }
 
-// Init with a common login
-// If selfFilling is true or non-undefined, fires an event at the page so that
-// the test can start checking filled-in values. Tests that check observer
-// notifications might be confused by this.
+/**
+ * Init with a common login
+ * If selfFilling is true or non-undefined, fires an event at the page so that
+ * the test can start checking filled-in values. Tests that check observer
+ * notifications might be confused by this.
+ */
 function commonInit(selfFilling) {
-    var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"].
-                getService(SpecialPowers.Ci.nsILoginManager);
-    ok(pwmgr != null, "Access LoginManager");
+  var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"].
+              getService(SpecialPowers.Ci.nsILoginManager);
+  ok(pwmgr != null, "Access LoginManager");
 
+  // Check that initial state has no logins
+  var logins = pwmgr.getAllLogins();
+  is(logins.length, 0, "Not expecting logins to be present");
+  var disabledHosts = pwmgr.getAllDisabledHosts();
+  if (disabledHosts.length) {
+    ok(false, "Warning: wasn't expecting disabled hosts to be present.");
+    for (var host of disabledHosts)
+      pwmgr.setLoginSavingEnabled(host, true);
+  }
 
-    // Check that initial state has no logins
-    var logins = pwmgr.getAllLogins();
-    if (logins.length) {
-        //todo(false, "Warning: wasn't expecting logins to be present.");
-        pwmgr.removeAllLogins();
-    }
-    var disabledHosts = pwmgr.getAllDisabledHosts();
-    if (disabledHosts.length) {
-        //todo(false, "Warning: wasn't expecting disabled hosts to be present.");
-        for (var host of disabledHosts)
-            pwmgr.setLoginSavingEnabled(host, true);
-    }
+  // Add a login that's used in multiple tests
+  var login = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"].
+              createInstance(SpecialPowers.Ci.nsILoginInfo);
+  login.init("http://mochi.test:8888", "http://mochi.test:8888", null,
+             "testuser", "testpass", "uname", "pword");
+  pwmgr.addLogin(login);
 
-    // Add a login that's used in multiple tests
-    var login = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"].
-                createInstance(SpecialPowers.Ci.nsILoginInfo);
-    login.init("http://mochi.test:8888", "http://mochi.test:8888", null,
-               "testuser", "testpass", "uname", "pword");
-    pwmgr.addLogin(login);
+  // Last sanity check
+  logins = pwmgr.getAllLogins();
+  is(logins.length, 1, "Checking for successful init login");
+  disabledHosts = pwmgr.getAllDisabledHosts();
+  is(disabledHosts.length, 0, "Checking for no disabled hosts");
 
-    // Last sanity check
-    logins = pwmgr.getAllLogins();
-    is(logins.length, 1, "Checking for successful init login");
-    disabledHosts = pwmgr.getAllDisabledHosts();
-    is(disabledHosts.length, 0, "Checking for no disabled hosts");
+  if (selfFilling)
+    return;
 
-    if (selfFilling)
+  if (this.sendAsyncMessage) {
+    sendAsyncMessage("registerRunTests");
+  } else {
+    registerRunTests();
+  }
+}
+
+function registerRunTests() {
+  // We provide a general mechanism for our tests to know when they can
+  // safely run: we add a final form that we know will be filled in, wait
+  // for the login manager to tell us that it's filled in and then continue
+  // with the rest of the tests.
+  window.addEventListener("DOMContentLoaded", (event) => {
+    var form = document.createElement('form');
+    form.id = 'observerforcer';
+    var username = document.createElement('input');
+    username.name = 'testuser';
+    form.appendChild(username);
+    var password = document.createElement('input');
+    password.name = 'testpass';
+    password.type = 'password';
+    form.appendChild(password);
+
+    var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+      var formLikeRoot = subject.QueryInterface(SpecialPowers.Ci.nsIDOMNode);
+      if (formLikeRoot.id !== 'observerforcer')
         return;
-
-    // We provide a general mechanism for our tests to know when they can
-    // safely run: we add a final form that we know will be filled in, wait
-    // for the login manager to tell us that it's filled in and then continue
-    // with the rest of the tests.
-    window.addEventListener("DOMContentLoaded", (event) => {
-        var form = document.createElement('form');
-        form.id = 'observerforcer';
-        var username = document.createElement('input');
-        username.name = 'testuser';
-        form.appendChild(username);
-        var password = document.createElement('input');
-        password.name = 'testpass';
-        password.type = 'password';
-        form.appendChild(password);
-
-        var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-            var formLikeRoot = subject.QueryInterface(SpecialPowers.Ci.nsIDOMNode);
-            if (formLikeRoot.id !== 'observerforcer')
-                return;
-            SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
-            formLikeRoot.remove();
-            SimpleTest.executeSoon(() => {
-                var event = new Event("runTests");
-                window.dispatchEvent(event);
-            });
-        });
-        SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
-
-        document.body.appendChild(form);
+      SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
+      formLikeRoot.remove();
+      SimpleTest.executeSoon(() => {
+        var event = new Event("runTests");
+        window.dispatchEvent(event);
+      });
     });
+    SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
+
+    document.body.appendChild(form);
+  });
 }
 
 const masterPassword = "omgsecret!";
 
 function enableMasterPassword() {
-    setMasterPassword(true);
+  setMasterPassword(true);
 }
 
 function disableMasterPassword() {
-    setMasterPassword(false);
+  setMasterPassword(false);
 }
 
 function setMasterPassword(enable) {
-    var oldPW, newPW;
-    if (enable) {
-        oldPW = "";
-        newPW = masterPassword;
-    } else {
-        oldPW = masterPassword;
-        newPW = "";
-    }
-    // Set master password. Note that this does not log you in, so the next
-    // invocation of pwmgr can trigger a MP prompt.
+  var oldPW, newPW;
+  if (enable) {
+    oldPW = "";
+    newPW = masterPassword;
+  } else {
+    oldPW = masterPassword;
+    newPW = "";
+  }
+  // Set master password. Note that this does not log you in, so the next
+  // invocation of pwmgr can trigger a MP prompt.
 
-    var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].
-                 getService(Ci.nsIPK11TokenDB)
-    var token = pk11db.findTokenByName("");
-    ok(true, "change from " + oldPW + " to " + newPW);
-    token.changePassword(oldPW, newPW);
+  var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+  var token = pk11db.findTokenByName("");
+  ok(true, "change from " + oldPW + " to " + newPW);
+  token.changePassword(oldPW, newPW);
 }
 
 function logoutMasterPassword() {
-    var sdr = Cc["@mozilla.org/security/sdr;1"].
-            getService(Ci.nsISecretDecoderRing);
-    sdr.logoutAndTeardown();
+  var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
+  sdr.logoutAndTeardown();
 }
 
 function dumpLogins(pwmgr) {
-    var logins = pwmgr.getAllLogins();
-    ok(true, "----- dumpLogins: have " + logins.length + " logins. -----");
-    for (var i = 0; i < logins.length; i++)
-        dumpLogin("login #" + i + " --- ", logins[i]);
+  var logins = pwmgr.getAllLogins();
+  ok(true, "----- dumpLogins: have " + logins.length + " logins. -----");
+  for (var i = 0; i < logins.length; i++)
+    dumpLogin("login #" + i + " --- ", logins[i]);
 }
 
 function dumpLogin(label, login) {
-    loginText = "";
-    loginText += "host: ";
-    loginText += login.hostname;
-    loginText += " / formURL: ";
-    loginText += login.formSubmitURL;
-    loginText += " / realm: ";
-    loginText += login.httpRealm;
-    loginText += " / user: ";
-    loginText += login.username;
-    loginText += " / pass: ";
-    loginText += login.password;
-    loginText += " / ufield: ";
-    loginText += login.usernameField;
-    loginText += " / pfield: ";
-    loginText += login.passwordField;
-    ok(true, label + loginText);
+  var loginText = "";
+  loginText += "host: ";
+  loginText += login.hostname;
+  loginText += " / formURL: ";
+  loginText += login.formSubmitURL;
+  loginText += " / realm: ";
+  loginText += login.httpRealm;
+  loginText += " / user: ";
+  loginText += login.username;
+  loginText += " / pass: ";
+  loginText += login.password;
+  loginText += " / ufield: ";
+  loginText += login.usernameField;
+  loginText += " / pfield: ";
+  loginText += login.passwordField;
+  ok(true, label + loginText);
 }
 
 function getRecipeParent() {
   var { LoginManagerParent } = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
+  if (!LoginManagerParent.recipeParentPromise) {
+    return null;
+  }
   return LoginManagerParent.recipeParentPromise.then((recipeParent) => {
     return SpecialPowers.wrap(recipeParent);
   });
@@ -283,6 +282,36 @@ function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
+/**
+ * Run a function synchronously in the parent process and destroy it in the test cleanup function.
+ * @param {Function|String} aFunctionOrURL - either a function that will be stringified and run
+ *                                           or the URL to a JS file.
+ * @return {Object} - the return value of loadChromeScript providing message-related methods.
+ *                    @see loadChromeScript in specialpowersAPI.js
+ */
+function runInParent(aFunctionOrURL) {
+  let chromeScript = SpecialPowers.loadChromeScript(aFunctionOrURL);
+  SimpleTest.registerCleanupFunction(() => {
+    chromeScript.destroy();
+  });
+  return chromeScript;
+}
+
+/**
+ * Run commonInit synchronously in the parent then run the test function after the runTests event.
+ *
+ * @param {Function} aFunction The test function to run
+ */
+function runChecksAfterCommonInit(aFunction = null) {
+  SimpleTest.waitForExplicitFinish();
+  let pwmgrCommonScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+  if (aFunction) {
+    window.addEventListener("runTests", aFunction);
+    pwmgrCommonScript.addMessageListener("registerRunTests", () => registerRunTests());
+  }
+  pwmgrCommonScript.sendSyncMessage("setupParent");
+}
+
 // Code to run when loaded as a chrome script in tests via loadChromeScript
 if (this.addMessageListener) {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
@@ -293,8 +322,8 @@ if (this.addMessageListener) {
 
   Cu.import("resource://gre/modules/Task.jsm");
 
-  addMessageListener("setupParent", () => {
-    commonInit(true);
+  addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
+    commonInit(selfFilling);
     sendAsyncMessage("doneSetup");
   });
 
@@ -312,6 +341,24 @@ if (this.addMessageListener) {
 } else {
   // Code to only run in the mochitest pages (not in the chrome script).
   SimpleTest.registerCleanupFunction(() => {
-    getRecipeParent().then(recipeParent => recipeParent.reset());
+    runInParent(function cleanupParent() {
+      const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+      Cu.import("resource://gre/modules/Services.jsm");
+      Cu.import("resource://gre/modules/LoginManagerParent.jsm");
+
+      // Remove all logins and disabled hosts
+      Services.logins.removeAllLogins();
+
+      let disabledHosts = Services.logins.getAllDisabledHosts();
+      disabledHosts.forEach(host => Services.logins.setLoginSavingEnabled(host, true));
+
+      let authMgr = Cc["@mozilla.org/network/http-auth-manager;1"].
+                    getService(Ci.nsIHttpAuthManager);
+      authMgr.clearAll();
+
+      if (LoginManagerParent._recipeManager) {
+        LoginManagerParent._recipeManager.reset();
+      }
+    });
   });
 }

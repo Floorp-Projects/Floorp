@@ -8,7 +8,7 @@
 #include "MainThreadUtils.h"    // for NS_IsMainThread()
 #include "base/message_loop.h"  // for MessageLoop
 #include "mozilla/dom/Element.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZCTreeManager.h"
@@ -66,13 +66,6 @@ void
 ChromeProcessController::PostDelayedTask(Task* aTask, int aDelayMs)
 {
   MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
-}
-
-void
-ChromeProcessController::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                                          const mozilla::CSSPoint& aDestination)
-{
-  APZCCallbackHelper::RequestFlingSnap(aScrollId, aDestination);
 }
 
 void

@@ -196,6 +196,7 @@ ResponsiveUI.prototype = {
     tabBrowser.loadURI(TOOL_URL);
     yield tabLoaded(this.tab);
     let toolWindow = this.toolWindow = tabBrowser.contentWindow;
+    yield waitForMessage(toolWindow, "init");
     toolWindow.addInitialViewport(contentURI);
     toolWindow.addEventListener("message", this);
   }),
@@ -225,6 +226,21 @@ ResponsiveUI.prototype = {
     }
   },
 };
+
+function waitForMessage(win, type) {
+  let deferred = promise.defer();
+
+  let onMessage = event => {
+    if (event.data.type !== type) {
+      return;
+    }
+    win.removeEventListener("message", onMessage);
+    deferred.resolve();
+  };
+  win.addEventListener("message", onMessage);
+
+  return deferred.promise;
+}
 
 function tabLoaded(tab) {
   let deferred = promise.defer();

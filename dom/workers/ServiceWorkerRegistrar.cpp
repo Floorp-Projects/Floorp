@@ -24,6 +24,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -179,19 +180,7 @@ ServiceWorkerRegistrar::RegisterServiceWorker(
   {
     MonitorAutoLock lock(mMonitor);
     MOZ_ASSERT(mDataLoaded);
-
-    bool found = false;
-    for (uint32_t i = 0, len = mData.Length(); i < len; ++i) {
-      if (Equivalent(aData, mData[i])) {
-        mData[i] = aData;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      mData.AppendElement(aData);
-    }
+    RegisterServiceWorkerInternal(aData);
   }
 
   ScheduleSaveData();
@@ -512,6 +501,23 @@ ServiceWorkerRegistrar::DeleteData()
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
+  }
+}
+
+void
+ServiceWorkerRegistrar::RegisterServiceWorkerInternal(const ServiceWorkerRegistrationData& aData)
+{
+  bool found = false;
+  for (uint32_t i = 0, len = mData.Length(); i < len; ++i) {
+    if (Equivalent(aData, mData[i])) {
+      mData[i] = aData;
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    mData.AppendElement(aData);
   }
 }
 

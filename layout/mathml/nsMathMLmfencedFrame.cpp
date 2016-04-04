@@ -223,9 +223,8 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   int32_t i;
   const nsStyleFont* font = StyleFont();
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        fontSizeInflation);
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(this, fontSizeInflation);
   nscoord axisHeight, em;
   GetAxisHeight(aReflowState.rendContext->GetDrawTarget(), fm, axisHeight);
   GetEmHeight(fm, em);
@@ -612,9 +611,8 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingCon
   nsPresContext* presContext = PresContext();
   const nsStyleFont* font = StyleFont();
   float fontSizeInflation = nsLayoutUtils:: FontSizeInflationFor(this);
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        fontSizeInflation);
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(this, fontSizeInflation);
   nscoord em;
   GetEmHeight(fm, em);
 

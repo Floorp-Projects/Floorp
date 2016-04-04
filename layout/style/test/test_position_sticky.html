@@ -8,33 +8,80 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=886646
   <title>Test for Bug 886646</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    #scroller {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      border: 10px solid black;
+      margin: 10px;
+      overflow: hidden;
+    }
+    #container {
+      width: 50px;
+      height: 50px;
+    }
+    #sticky {
+      position: sticky;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=886646">Mozilla Bug 886646</a>
 <div id="display">
-  <iframe id="iframe" style="height: 200px; width: 200px"></iframe>
+  <div id="scroller">
+    <div id="container">
+      <div id="sticky"></div>
+    </div>
+  </div>
 </div>
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 886646 - sticky positioning offsets **/
 
-/*
- * This mochitest runs in an iframe so that we can selectively turn on the
- * sticky about:config pref before its document is instantiated.
- *
- * See the iframe's source ("file_position_sticky.html") for the actual
- * test code and for more documentation.
- */
+/** Test for Bug 886646 - Offsets for sticky positioning, when accessed through
+  * getComputedStyle(), should be accurately computed. In particular,
+  * percentage offsets should be computed in terms of the scroll container's
+  * content box. */
 
-SimpleTest.waitForExplicitFinish();
+// Test that percentage sticky offsets are computed in terms of the
+// scroll container's content box
+var offsets = {
+  "top":    10,
+  "left":   20,
+  "bottom": 30,
+  "right":  40,
+};
 
-SpecialPowers.pushPrefEnv({"set":[["layout.css.sticky.enabled", true]]}, function() {
-  document.getElementById("iframe").src = "file_position_sticky.html";
-});
+var scroller = document.getElementById("scroller");
+var container = document.getElementById("container");
+var sticky = document.getElementById("sticky");
+var cs = getComputedStyle(sticky, "");
 
-function finish() {
-  SimpleTest.finish();
+for (var prop in offsets) {
+  sticky.style[prop] = offsets[prop] + "%";
+  is(cs[prop], offsets[prop] + "px");
+}
+
+// ... even in the presence of scrollbars
+scroller.style.overflow = "scroll";
+container.style.width = "100%";
+container.style.height = "100%";
+
+var ccs = getComputedStyle(container, "");
+
+function isApproximatelyEqual(a, b) {
+  return Math.abs(a - b) < 0.001;
+}
+
+for (var prop in offsets) {
+  sticky.style[prop] = offsets[prop] + "%";
+  var basis = parseFloat(ccs[prop == "left" || prop == "right" ?
+                             "width" : "height"]) / 100;
+  ok(isApproximatelyEqual(parseFloat(cs[prop]), offsets[prop] * basis));
 }
 </script>
 </pre>

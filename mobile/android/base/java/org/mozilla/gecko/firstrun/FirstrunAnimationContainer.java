@@ -11,13 +11,12 @@ import android.util.AttributeSet;
 
 import android.view.View;
 import android.widget.LinearLayout;
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.AnimatorListenerAdapter;
-import com.nineoldandroids.animation.ObjectAnimator;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.util.Experiments;
 
 /**
@@ -79,8 +78,6 @@ public class FirstrunAnimationContainer extends LinearLayout {
                 FirstrunAnimationContainer.this.setVisibility(View.GONE);
             }
         });
-
-        TransitionsTracker.track(alphaAnimator);
 
         alphaAnimator.start();
     }

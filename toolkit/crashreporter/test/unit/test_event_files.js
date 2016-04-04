@@ -26,6 +26,10 @@ add_task(function* test_main_process_crash() {
   let deferred = Promise.defer();
   do_crash(
     function() {
+      // TelemetrySession setup will trigger the session annotation
+      let scope = {};
+      Components.utils.import("resource://gre/modules/TelemetrySession.jsm", scope);
+      scope.TelemetrySession.setup();
       crashType = CrashTestUtils.CRASH_RUNTIMEABORT;
       crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
     },
@@ -44,4 +48,9 @@ add_task(function* test_main_process_crash() {
   Assert.ok(crash.isOfType(cm.PROCESS_TYPE_MAIN, cm.CRASH_TYPE_CRASH));
   Assert.equal(crash.id + ".dmp", basename, "ID recorded properly");
   Assert.equal(crash.metadata.ShutdownProgress, "event-test");
+  Assert.ok("TelemetrySessionId" in crash.metadata);
+  Assert.ok("UptimeTS" in crash.metadata);
+  Assert.ok(/^[0-9a-f]{8}\-([0-9a-f]{4}\-){3}[0-9a-f]{12}$/.test(crash.metadata.TelemetrySessionId));
+  Assert.ok("CrashTime" in crash.metadata);
+  Assert.ok(/^\d+$/.test(crash.metadata.CrashTime));
 });

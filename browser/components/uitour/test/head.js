@@ -272,14 +272,57 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
       let UITourHandler = {
         get(target, prop, receiver) {
           return (...args) => {
+            let browser = gTestTab.linkedBrowser;
+            const proxyFunctionName = "UITourHandler:proxiedfunction-";
+            // We need to proxy any callback functions using messages:
+            let callbackMap = new Map();
+            let fnIndices = [];
+            args = args.map((arg, index) => {
+              // Replace function arguments with "", and add them to the list of
+              // forwarded functions. We'll construct a function on the content-side
+              // that forwards all its arguments to a message, and we'll listen for
+              // those messages on our side and call the corresponding function with
+              // the arguments we got from the content side.
+              if (typeof arg == "function") {
+                callbackMap.set(index, arg);
+                fnIndices.push(index);
+                let handler = function(msg) {
+                  browser.messageManager.removeMessageListener(proxyFunctionName + index, handler);
+                  callbackMap.get(index).apply(null, msg.data);
+                };
+                browser.messageManager.addMessageListener(proxyFunctionName + index, handler);
+                return "";
+              }
+              return arg;
+            });
             let taskArgs = {
               methodName: prop,
               args,
+              fnIndices,
             };
-            return ContentTask.spawn(gTestTab.linkedBrowser, taskArgs, args => {
+            return ContentTask.spawn(browser, taskArgs, function*(args) {
               let contentWin = Components.utils.waiveXrays(content);
-              return contentWin.Mozilla.UITour[args.methodName].apply(contentWin.Mozilla.UITour,
-                                                                      args.args);
+              let callbacksCalled = 0;
+              let resolveCallbackPromise;
+              let allCallbacksCalledPromise = new Promise(resolve => resolveCallbackPromise = resolve);
+              let argumentsWithFunctions = args.args.map((arg, index) => {
+                if (arg === "" && args.fnIndices.includes(index)) {
+                  return function() {
+                    callbacksCalled++;
+                    sendAsyncMessage("UITourHandler:proxiedfunction-" + index, Array.from(arguments));
+                    if (callbacksCalled >= args.fnIndices.length) {
+                      resolveCallbackPromise();
+                    }
+                  };
+                }
+                return arg;
+              });
+              let rv = contentWin.Mozilla.UITour[args.methodName].apply(contentWin.Mozilla.UITour,
+                                                                        argumentsWithFunctions);
+              if (args.fnIndices.length) {
+                yield allCallbacksCalledPromise;
+              }
+              return rv;
             });
           };
         },

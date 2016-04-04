@@ -23,11 +23,13 @@
 #include "jsprf.h"
 
 #include "asmjs/WasmGenerator.h"
-#include "asmjs/WasmText.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/Debugger.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+
+#include "vm/Debugger-inl.h"
 
 using namespace js;
 using namespace js::wasm;
@@ -105,6 +107,13 @@ class FunctionDecoder
     bool fail(const char* str) {
         return Fail(cx_, d_, str);
     }
+    bool checkI64Support() {
+#ifdef JS_CPU_X64
+        return true;
+#else
+        return fail("i64 NYI on this platform");
+#endif
+    }
 
     MOZ_WARN_UNUSED_RESULT bool pushBlock() {
         return blocks_.append(AnyType);
@@ -162,7 +171,7 @@ CheckValType(JSContext* cx, Decoder& d, ValType type)
         break;
     }
 
-    return Fail(cx, d, "bad value type");
+    return Fail(cx, d, "bad type");
 }
 
 static bool
@@ -179,6 +188,13 @@ static bool
 DecodeNop(FunctionDecoder& f, ExprType* type)
 {
     *type = ExprType::Void;
+    return true;
+}
+
+static bool
+DecodeUnreachable(FunctionDecoder& f, ExprType* type)
+{
+    *type = AnyType;
     return true;
 }
 
@@ -434,6 +450,31 @@ DecodeConversionOperator(FunctionDecoder& f, ValType to, ValType argType, ExprTy
 }
 
 static bool
+DecodeSelect(FunctionDecoder& f, ExprType* type)
+{
+    ExprType trueType;
+    if (!DecodeExpr(f, &trueType))
+        return false;
+
+    if (trueType == ExprType::I64 && !f.checkI64Support())
+        return false;
+
+    ExprType falseType;
+    if (!DecodeExpr(f, &falseType))
+        return false;
+
+    ExprType condType;
+    if (!DecodeExpr(f, &condType))
+        return false;
+
+    if (!CheckType(f, condType, ValType::I32))
+        return false;
+
+    *type = Unify(trueType, falseType);
+    return true;
+}
+
+static bool
 DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType* type)
 {
     ExprType condType;
@@ -518,15 +559,12 @@ DecodeBranch(FunctionDecoder& f, Expr expr, ExprType* type)
     if (!f.d().readVarU32(&relativeDepth))
         return f.fail("expected relative depth");
 
-    if (!f.branchWithType(relativeDepth, ExprType::Void))
-        return f.fail("branch depth exceeds current nesting level");
-
-    Expr value;
-    if (!f.d().readExpr(&value))
+    ExprType brType;
+    if (!DecodeExpr(f, &brType))
         return f.fail("expected branch value");
 
-    if (value != Expr::Nop)
-        return f.fail("NYI: branch values");
+    if (!f.branchWithType(relativeDepth, brType))
+        return f.fail("branch depth exceeds current nesting level");
 
     if (expr == Expr::BrIf) {
         ExprType actual;
@@ -600,6 +638,8 @@ DecodeReturn(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeExpr(FunctionDecoder& f, ExprType* type)
 {
+    JS_CHECK_RECURSION(f.cx(), return false);
+
     Expr expr;
     if (!f.d().readExpr(&expr))
         return f.fail("unable to read expression");
@@ -616,7 +656,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I32Const:
         return DecodeConstI32(f, type);
       case Expr::I64Const:
-        return DecodeConstI64(f, type);
+        return f.checkI64Support() && DecodeConstI64(f, type);
       case Expr::F32Const:
         return DecodeConstF32(f, type);
       case Expr::F64Const:
@@ -625,6 +665,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeGetLocal(f, type);
       case Expr::SetLocal:
         return DecodeSetLocal(f, type);
+      case Expr::Select:
+        return DecodeSelect(f, type);
       case Expr::Block:
         return DecodeBlock(f, /* isLoop */ false, type);
       case Expr::Loop:
@@ -636,10 +678,12 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
+      case Expr::I32Eqz:
         return DecodeUnaryOperator(f, ValType::I32, type);
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
+      case Expr::I64Eqz:
         return f.fail("NYI: i64") &&
                DecodeUnaryOperator(f, ValType::I64, type);
       case Expr::F32Abs:
@@ -676,6 +720,9 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I32ShrS:
       case Expr::I32ShrU:
         return DecodeBinaryOperator(f, ValType::I32, type);
+      case Expr::I32Rotl:
+      case Expr::I32Rotr:
+        return f.fail("NYI: rotate");
       case Expr::I64Add:
       case Expr::I64Sub:
       case Expr::I64Mul:
@@ -689,7 +736,10 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64Shl:
       case Expr::I64ShrS:
       case Expr::I64ShrU:
-        return DecodeBinaryOperator(f, ValType::I64, type);
+        return f.checkI64Support() && DecodeBinaryOperator(f, ValType::I64, type);
+      case Expr::I64Rotl:
+      case Expr::I64Rotr:
+        return f.fail("NYI: rotate");
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:
@@ -729,7 +779,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64GtU:
       case Expr::I64GeS:
       case Expr::I64GeU:
-        return DecodeComparisonOperator(f, ValType::I64, type);
+        return f.checkI64Support() && DecodeComparisonOperator(f, ValType::I64, type);
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
@@ -745,34 +795,35 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::F64Ge:
         return DecodeComparisonOperator(f, ValType::F64, type);
       case Expr::I32WrapI64:
-        return DecodeConversionOperator(f, ValType::I32, ValType::I64, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I32, ValType::I64, type);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
-        return DecodeConversionOperator(f, ValType::I32, ValType::F32, type);
       case Expr::I32ReinterpretF32:
-        return f.fail("NYI: reinterpret");
+        return DecodeConversionOperator(f, ValType::I32, ValType::F32, type);
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
         return DecodeConversionOperator(f, ValType::I32, ValType::F64, type);
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
-        return DecodeConversionOperator(f, ValType::I64, ValType::I32, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I64, ValType::I32, type);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return DecodeConversionOperator(f, ValType::I64, ValType::F32, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I64, ValType::F32, type);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
-        return DecodeConversionOperator(f, ValType::I64, ValType::F64, type);
       case Expr::I64ReinterpretF64:
-        return f.fail("NYI: i64");
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I64, ValType::F64, type);
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
-        return DecodeConversionOperator(f, ValType::F32, ValType::I32, type);
       case Expr::F32ReinterpretI32:
-        return f.fail("NYI: reinterpret");
+        return DecodeConversionOperator(f, ValType::F32, ValType::I32, type);
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return f.fail("NYI: i64") &&
+        return f.checkI64Support() &&
                DecodeConversionOperator(f, ValType::F32, ValType::I64, type);
       case Expr::F32DemoteF64:
         return DecodeConversionOperator(f, ValType::F32, ValType::F64, type);
@@ -782,7 +833,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
       case Expr::F64ReinterpretI64:
-        return f.fail("NYI: i64") &&
+        return f.checkI64Support() &&
                DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, ValType::F64, ValType::F32, type);
@@ -831,6 +882,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeBrTable(f, type);
       case Expr::Return:
         return DecodeReturn(f, type);
+      case Expr::Unreachable:
+        return DecodeUnreachable(f, type);
       default:
         // Note: it's important not to remove this default since readExpr()
         // can return Expr values for which there is no enumerator.
@@ -1023,10 +1076,14 @@ CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
     for (ValType argType : sig.args()) {
         if (argType == ValType::I64)
             return Fail(cx, d, "cannot import/export i64 argument");
+        if (IsSimdType(argType))
+            return Fail(cx, d, "cannot import/export SIMD argument");
     }
 
     if (sig.ret() == ExprType::I64)
         return Fail(cx, d, "cannot import/export i64 return type");
+    if (IsSimdType(sig.ret()))
+        return Fail(cx, d, "cannot import/export SIMD return type");
 
     return true;
 }
@@ -1049,7 +1106,7 @@ typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
 static bool
 DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
-    const DeclaredSig* sig;
+    const DeclaredSig* sig = nullptr;
     if (!DecodeSignatureIndex(cx, d, *init, &sig))
         return false;
 
@@ -1560,8 +1617,12 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         bytes = copy.begin();
     }
 
-    UniqueChars file;
-    if (!DescribeScriptedCaller(cx, &file))
+    JS::AutoFilename filename;
+    if (!DescribeScriptedCaller(cx, &filename))
+        return false;
+
+    UniqueChars file = DuplicateString(filename.get());
+    if (!file)
         return false;
 
     ImportNameVector importNames;
@@ -1579,11 +1640,24 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
+    Module& module = moduleObj->module();
+
     RootedObject exportObj(cx);
-    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
         return false;
 
-    return CreateInstance(cx, exportObj, instance);
+    if (!CreateInstance(cx, exportObj, instance))
+        return false;
+
+    if (cx->compartment()->debuggerObservesAsmJS()) {
+        Bytes source;
+        if (!source.append(bytes, length))
+            return false;
+        module.setSource(Move(source));
+    }
+
+    Debugger::onNewWasmModule(cx, moduleObj);
+    return true;
 }
 
 static bool

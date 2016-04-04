@@ -88,7 +88,8 @@ static const char* CSPStrDirectives[] = {
   "referrer",                  // REFERRER_DIRECTIVE
   "manifest-src",              // MANIFEST_SRC_DIRECTIVE
   "upgrade-insecure-requests", // UPGRADE_IF_INSECURE_DIRECTIVE
-  "child-src"                  // CHILD_SRC_DIRECTIVE
+  "child-src",                 // CHILD_SRC_DIRECTIVE
+  "block-all-mixed-content"    // BLOCK_ALL_MIXED_CONTENT
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
@@ -341,6 +342,29 @@ class nsCSPChildSrcDirective : public nsCSPDirective {
 
   private:
     bool mHandleFrameSrc;
+};
+
+/* =============== nsBlockAllMixedContentDirective === */
+
+class nsBlockAllMixedContentDirective : public nsCSPDirective {
+  public:
+    explicit nsBlockAllMixedContentDirective(CSPDirective aDirective);
+    ~nsBlockAllMixedContentDirective();
+
+    bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                 bool aReportOnly, bool aUpgradeInsecure) const
+      { return false; }
+
+    bool permits(nsIURI* aUri) const
+      { return false; }
+
+    bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+      { return false; }
+
+    void toString(nsAString& outStr) const;
+
+    void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs)
+      {  MOZ_ASSERT(false, "block-all-mixed-content does not hold any srcs"); }
 };
 
 /* =============== nsUpgradeInsecureDirective === */

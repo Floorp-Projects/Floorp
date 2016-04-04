@@ -9,7 +9,12 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'categories.js',
+    'constants.js',
     'global.js',
     'io.js',
+    'marker-blueprint-utils.js',
+    'marker-dom-utils.js',
+    'marker-formatters.js',
     'markers.js',
 )

@@ -83,9 +83,11 @@ CompositorOGL::BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop, GLenum
   aProgram->SetBackdropTextureUnit(aTexUnit - LOCAL_GL_TEXTURE0);
 }
 
-CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
+CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
+                             nsIWidget *aWidget, int aSurfaceWidth,
                              int aSurfaceHeight, bool aUseExternalSurfaceSize)
-  : mWidget(aWidget)
+  : Compositor(aParent)
+  , mWidget(aWidget)
   , mWidgetSize(-1, -1)
   , mSurfaceSize(aSurfaceWidth, aSurfaceHeight)
   , mHasBGRA(0)
@@ -879,8 +881,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
   }
   }
   config.SetColorMatrix(aColorMatrix);
-  config.SetMask2D(aMask == MaskType::Mask2d);
-  config.SetMask3D(aMask == MaskType::Mask3d);
+  config.SetMask(aMask == MaskType::Mask);
   config.SetDEAA(aDEAAEnabled);
   config.SetCompositionOp(aOp);
   return config;
@@ -1070,9 +1071,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     maskQuadTransform._41 = float(-bounds.x)/bounds.width;
     maskQuadTransform._42 = float(-bounds.y)/bounds.height;
 
-    maskType = effectMask->mIs3D
-                 ? MaskType::Mask3d
-                 : MaskType::Mask2d;
+    maskType = MaskType::Mask;
   } else {
     maskType = MaskType::MaskNone;
   }

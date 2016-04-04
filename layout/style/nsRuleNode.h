@@ -12,6 +12,7 @@
 #define nsRuleNode_h___
 
 #include "mozilla/ArenaObjectID.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedArray.h"
 #include "mozilla/RuleNodeCacheConditions.h"
@@ -346,11 +347,11 @@ struct nsCachedStyleData
  * indexed by style rules (implementations of nsIStyleRule).
  *
  * The rule tree is owned by the nsStyleSet and is destroyed when the
- * presentation of the document goes away.  It is garbage-collected
- * (using mark-and-sweep garbage collection) during the lifetime of the
- * document (when dynamic changes cause the destruction of enough style
- * contexts).  Rule nodes are marked if they are pointed to by a style
- * context or one of their descendants is.
+ * presentation of the document goes away. Its entries are reference-
+ * counted, with strong references held by child nodes, style structs
+ * and (for the root), the style set. Rule nodes are not immediately
+ * destroyed when their reference-count drops to zero, but are instead
+ * destroyed during a GC sweep.
  *
  * An nsStyleContext, which represents the computed style data for an
  * element, points to an nsRuleNode.  The path from the root of the rule
@@ -389,7 +390,10 @@ enum nsFontSizeType {
   eFontSize_CSS = 2
 };
 
-class nsRuleNode {
+// Note: This LinkedListElement is used for storing unused nodes in the
+// linked list on nsStyleSet. We use mNextSibling for the singly-linked
+// sibling list.
+class nsRuleNode : public mozilla::LinkedListElement<nsRuleNode> {
 public:
   enum RuleDetail {
     eRuleNone, // No props have been specified at all.
@@ -415,12 +419,13 @@ public:
 private:
   nsPresContext* const mPresContext; // Our pres context.
 
-  nsRuleNode* const mParent; // A pointer to the parent node in the tree.
-                             // This enables us to walk backwards from the
-                             // most specific rule matched to the least
-                             // specific rule (which is the optimal order to
-                             // use for lookups of style properties.
-  nsIStyleRule* const mRule; // [STRONG] A pointer to our specific rule.
+  const RefPtr<nsRuleNode> mParent; // A pointer to the parent node in the tree.
+                                    // This enables us to walk backwards from the
+                                    // most specific rule matched to the least
+                                    // specific rule (which is the optimal order to
+                                    // use for lookups of style properties.
+
+  const nsCOMPtr<nsIStyleRule> mRule; // A pointer to our specific rule.
 
   nsRuleNode* mNextSibling; // This value should be used only by the
                             // parent, since the parent may store
@@ -451,15 +456,10 @@ private:
   };
 
   static PLDHashNumber
-  ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey);
+  ChildrenHashHashKey(const void *aKey);
 
   static bool
-  ChildrenHashMatchEntry(PLDHashTable *aTable,
-                         const PLDHashEntryHdr *aHdr,
-                         const void *aKey);
-
-  void SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue);
-  bool DestroyIfNotMarked();
+  ChildrenHashMatchEntry(const PLDHashEntryHdr *aHdr, const void *aKey);
 
   static const PLDHashTableOps ChildrenHashOps;
 
@@ -516,6 +516,8 @@ private:
   }
   void ConvertChildrenToHash(int32_t aNumKids);
 
+  void RemoveChild(nsRuleNode* aNode);
+
   nsCachedStyleData mStyleData;   // Any data we cached on the rule node.
 
   uint32_t mDependentBits; // Used to cache the fact that we can look up
@@ -539,22 +541,17 @@ private:
                       // Compute*Data functions don't initialize from
                       // inherited data.
 
-  // Reference count.  This just counts the style contexts that reference this
-  // rulenode.  And children the rulenode has had.  When this goes to 0 or
-  // stops being 0, we notify the style set.
-  // Note, in particular, that when a child is removed mRefCnt is NOT
-  // decremented.  This is on purpose; the notifications to the style set are
-  // only used to determine when it's worth running GC on the ruletree, and
-  // this setup makes it so we only count unused ruletree leaves for purposes
-  // of deciding when to GC.  We could more accurately count unused rulenodes
-  // by releasing/addrefing our parent when our refcount transitions to or from
-  // 0, but it doesn't seem worth it to do that.
+  // Reference count. Style contexts hold strong references to their rule node,
+  // and rule nodes hold strong references to their parent.
+  //
+  // When the refcount drops to zero, we don't necessarily free the node.
+  // Instead, we notify the style set, which performs periodic sweeps.
   uint32_t mRefCnt;
 
 public:
   // Infallible overloaded new operator that allocates from a presShell arena.
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
-  void Destroy() { DestroyInternal(nullptr); }
+  void Destroy();
 
   // Implemented in nsStyleSet.h, since it needs to know about nsStyleSet.
   inline void AddRef();
@@ -563,7 +560,6 @@ public:
   inline void Release();
 
 protected:
-  void DestroyInternal(nsRuleNode ***aDestroyQueueTail);
   void PropagateDependentBit(nsStyleStructID aSID, nsRuleNode* aHighestNode,
                              void* aStruct);
   void PropagateNoneBit(uint32_t aBit, nsRuleNode* aHighestNode);
@@ -810,7 +806,7 @@ private:
 
 public:
   // This is infallible; it will never return nullptr.
-  static nsRuleNode* CreateRootNode(nsPresContext* aPresContext);
+  static already_AddRefed<nsRuleNode> CreateRootNode(nsPresContext* aPresContext);
 
   static void EnsureBlockDisplay(uint8_t& display,
                                  bool aConvertListItem = false);
@@ -960,17 +956,6 @@ public:
 
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
-
-  /*
-   * Garbage collection.  Mark walks up the tree, marking any unmarked
-   * ancestors until it reaches a marked one.  Sweep recursively sweeps
-   * the children, destroys any that are unmarked, and clears marks,
-   * returning true if the node on which it was called was destroyed.
-   * If children are hashed, the mNextSibling field on the children is
-   * temporarily used internally by Sweep.
-   */
-  void Mark();
-  bool Sweep();
 
   static bool
     HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,

@@ -331,6 +331,23 @@ function installPackagedProfile(packageName)
   zipReader.close();
 }
 
+function getView(size)
+{
+  let buffer = new ArrayBuffer(size);
+  let view = new Uint8Array(buffer);
+  is(buffer.byteLength, size, "Correct byte length");
+  return view;
+}
+
+function getRandomView(size)
+{
+  let view = getView(size);
+  for (let i = 0; i < size; i++) {
+    view[i] = parseInt(Math.random() * 255)
+  }
+  return view;
+}
+
 function getBlob(str)
 {
   return new Blob([str], {type: "type/text"});
@@ -416,6 +433,28 @@ function verifyMutableFile(mutableFile1, file2)
   executeSoon(function() {
     testGenerator.next();
   });
+}
+
+function setTemporaryStorageLimit(limit)
+{
+  const pref = "dom.quotaManager.temporaryStorage.fixedLimit";
+  if (limit) {
+    info("Setting temporary storage limit to " + limit);
+    SpecialPowers.setIntPref(pref, limit);
+  } else {
+    info("Removing temporary storage limit");
+    SpecialPowers.clearUserPref(pref);
+  }
+}
+
+function getPrincipal(url)
+{
+  let uri = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService)
+              .newURI(url, null, null);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  return ssm.createCodebasePrincipal(uri, {});
 }
 
 var SpecialPowers = {

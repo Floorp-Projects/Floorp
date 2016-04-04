@@ -73,6 +73,25 @@ function waitUntilSnapshotState (store, expected) {
   return waitUntilState(store, predicate);
 }
 
+function waitUntilCensusState (store, getCensus, expected) {
+  let predicate = () => {
+    let snapshots = store.getState().snapshots;
+
+    do_print('Current census state:' +
+             snapshots.map(x => getCensus(x) ? getCensus(x).state : null ));
+
+    return snapshots.length === expected.length &&
+           expected.every((state, i) => {
+             let census = getCensus(snapshots[i]);
+             return (state === "*") ||
+                    (!census && !state) ||
+                    (census && census.state === state);
+           });
+  };
+  do_print(`Waiting for snapshots' censuses to be of state: ${expected}`);
+  return waitUntilState(store, predicate);
+}
+
 function *createTempFile () {
   let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);

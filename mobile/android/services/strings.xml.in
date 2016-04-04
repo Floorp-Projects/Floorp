@@ -2,9 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- Used for setup success. -->
-<string name="brand_short_name">&brandShortName;</string>
-
 <!-- Configure Engines -->
 <string name="sync_configure_engines_title_passwords">&sync.configure.engines.title.passwords2;</string>
 <string name="sync_configure_engines_title_history">&sync.configure.engines.title.history;</string>
@@ -15,102 +12,31 @@
 <string name="bookmarks_folder_places">&bookmarks.folder.places.label;</string>
 <string name="bookmarks_folder_tags">&bookmarks.folder.tags.label;</string>
 <string name="bookmarks_folder_toolbar">&bookmarks.folder.toolbar.label;</string>
-<string name="bookmarks_folder_unfiled">&bookmarks.folder.unfiled.label;</string>
+<string name="bookmarks_folder_unfiled">&bookmarks.folder.other.label;</string>
 <string name="bookmarks_folder_desktop">&bookmarks.folder.desktop.label;</string>
 <string name="bookmarks_folder_mobile">&bookmarks.folder.mobile.label;</string>
-<string name="bookmarks_folder_reading_list">&bookmarks.folder.readinglist.label;</string>
 <string name="bookmarks_folder_pinned">&bookmarks.folder.pinned.label;</string>
 
 <!-- Send tab to device. -->
-<string name="sync_title_redirect_to_set_up_sync">&sync.title.redirect.to.set.up.sync.label;</string>
-<string name="sync_text_redirect_to_set_up_sync">&sync.text.redirect.to.set.up.sync.label;</string>
-<string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
-<string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>
 <string name="sync_default_client_name">&sync.default.client.name;</string>
 
-<!-- Firefox Account strings. -->
-
-<string name="fxaccount_full_label">&fxaccount_full_label;</string>
-
 <!-- Firefox Account links. -->
-<!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/old-sync -->
-<string name="fxaccount_link_old_firefox">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/old-sync</string>
-<string name="fxaccount_link_create_not_allowed">http://www.consumer.ftc.gov/articles/0031-protecting-your-childs-privacy-online</string>
 <string name="fxaccount_link_tos">https://accounts.firefox.com/legal/terms</string>
 <string name="fxaccount_link_pn">https://accounts.firefox.com/legal/privacy</string>
-<string name="fxaccount_link_forgot_password">https://accounts.firefox.com/reset_password</string>
-
-<!-- Per Bug 974627, decorative images should not have non-empty
-     contentDescription text, and it should not be translated. -->
-<string name="fxaccount_empty_contentDescription"></string>
-
-<string name="fxaccount_custom_server_account_title">&fxaccount_custom_server_account_title;</string>
-<string name="fxaccount_custom_server_sync_title">&fxaccount_custom_server_sync_title;</string>
-
-<string name="fxaccount_email_hint">&fxaccount_email_hint;</string>
-<string name="fxaccount_password_hint">&fxaccount_password_hint;</string>
-<string name="fxaccount_password_hide">&fxaccount_password_hide;</string>
-<string name="fxaccount_password_show">&fxaccount_password_show;</string>
-
-<string name="fxaccount_back_to_browsing">&fxaccount_back_to_browsing;</string>
-
-<string name="fxaccount_policy_linktos">&fxaccount_policy_linktos;</string>
-<string name="fxaccount_policy_linkprivacy">&fxaccount_policy_linkprivacy;</string>
 
 <string name="fxaccount_getting_started_welcome_to_sync">&fxaccount_getting_started_welcome_to_sync;</string>
 <string name="fxaccount_getting_started_description">&fxaccount_getting_started_description2;</string>
 <string name="fxaccount_getting_started_get_started">&fxaccount_getting_started_get_started;</string>
-<string name="fxaccount_getting_started_old_firefox">&fxaccount_getting_started_old_firefox;</string>
-
-<string name="fxaccount_create_account_header">&fxaccount_create_account_header2;</string>
-<string name="fxaccount_create_account_password_length_restriction">&fxaccount_create_account_password_length_restriction;</string>
-<string name="fxaccount_create_account_day_of_birth">&fxaccount_create_account_day_of_birth;</string>
-<string name="fxaccount_create_account_month_of_birth">&fxaccount_create_account_month_of_birth;</string>
-<string name="fxaccount_create_account_year_of_birth">&fxaccount_create_account_year_of_birth;</string>
-
-<string name="fxaccount_create_account_policy_text">&fxaccount_create_account_policy_text2;</string>
-<string name="fxaccount_create_account_button">&fxaccount_create_account_button;</string>
-<string name="fxaccount_create_account_choose_what_to_sync">&fxaccount_create_account_choose_what_to_sync;</string>
-<string name="fxaccount_create_account_sign_in_instead">&fxaccount_create_account_sign_in_instead;</string>
-<string name="fxaccount_create_account_1990_or_earlier">&fxaccount_create_account_1990_or_earlier;</string>
-<string name="fxaccount_create_account_unknown_error">&fxaccount_create_account_unknown_error;</string>
-
-<string name="fxaccount_account_create_not_allowed">&fxaccount_account_create_not_allowed;</string>
-<string name="fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements">&fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements;</string>
-<string name="fxaccount_account_create_not_allowed_learn_more">&fxaccount_account_create_not_allowed_learn_more;</string>
 
 <string name="fxaccount_confirm_account_header">&fxaccount_confirm_account_header;</string>
-<string name="fxaccount_confirm_account_verification_link">&fxaccount_confirm_account_verification_link;</string>
 <string name="fxaccount_confirm_account_resend_email">&fxaccount_confirm_account_resend_email;</string>
-<string name="fxaccount_confirm_account_change_email">&fxaccount_confirm_account_change_email;</string>
-<string name="fxaccount_confirm_account_verification_link_sent">&fxaccount_confirm_account_verification_link_sent2;</string>
-<string name="fxaccount_confirm_account_verification_link_not_sent">&fxaccount_confirm_account_verification_link_not_sent2;</string>
-<string name="fxaccount_resend_unlock_code_button_label">&fxaccount_resend_unlock_code_button_label;</string>
-<string name="fxaccount_unlock_code_sent">&fxaccount_unlock_code_sent;</string>
-<string name="fxaccount_unlock_code_not_sent">&fxaccount_unlock_code_not_sent;</string>
 
-<string name="fxaccount_sign_in_sub_header">&fxaccount_sign_in_sub_header;</string>
 <string name="fxaccount_sign_in_button_label">&fxaccount_sign_in_button_label;</string>
-<string name="fxaccount_sign_in_forgot_password">&fxaccount_sign_in_forgot_password;</string>
-<string name="fxaccount_sign_in_create_account_instead">&fxaccount_sign_in_create_account_instead;</string>
-<string name="fxaccount_sign_in_unknown_error">&fxaccount_sign_in_unknown_error;</string>
-
-<string name="fxaccount_account_verified_sub_header">&fxaccount_account_verified_sub_header;</string>
-<string name="fxaccount_account_verified_description">&fxaccount_account_verified_description2;</string>
-
-<string name="fxaccount_migration_finished_header">&fxaccount_migration_finished_header;</string>
-<string name="fxaccount_migration_finished_description">&fxaccount_account_verified_description2;</string>
-
-<string name="fxaccount_update_credentials_header">&fxaccount_update_credentials_header;</string>
-<string name="fxaccount_update_credentials_button_label">&fxaccount_update_credentials_button_label;</string>
-<string name="fxaccount_update_credentials_unknown_error">&fxaccount_update_credentials_unknown_error;</string>
 
 <string name="fxaccount_finish_migrating_header">&fxaccount_finish_migrating_header;</string>
 <string name="fxaccount_finish_migrating_button_label">&fxaccount_finish_migrating_button_label;</string>
-<string name="fxaccount_finish_migrating_description">&fxaccount_finish_migrating_description;</string>
 
 <string name="fxaccount_status_activity_label">&syncBrand.shortName.label;</string>
-<string name="fxaccount_status_header">&fxaccount_status_header2;</string>
 <string name="fxaccount_status_signed_in_as">&fxaccount_status_signed_in_as;</string>
 <string name="fxaccount_status_manage_account">&fxaccount_status_manage_account;</string>
 <string name="fxaccount_status_auth_server">&fxaccount_status_auth_server;</string>
@@ -132,10 +58,9 @@
 <string name="fxaccount_status_history">&fxaccount_status_history;</string>
 <string name="fxaccount_status_passwords">&fxaccount_status_passwords2;</string>
 <string name="fxaccount_status_tabs">&fxaccount_status_tabs;</string>
-<string name="fxaccount_status_reading_list">&reading_list_title;</string>
 <string name="fxaccount_status_legal">&fxaccount_status_legal;</string>
-<string name="fxaccount_status_linktos">&fxaccount_status_linktos;</string>
-<string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy;</string>
+<string name="fxaccount_status_linktos">&fxaccount_status_linktos2;</string>
+<string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy2;</string>
 <string name="fxaccount_status_more">&fxaccount_status_more;</string>
 <string name="fxaccount_remove_account">&fxaccount_remove_account;</string>
 
@@ -152,7 +77,6 @@
 <string name="fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS">&fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS;</string>
 <string name="fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD">&fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;</string>
 <string name="fxaccount_remote_error_UNKNOWN_ERROR">&fxaccount_remote_error_UNKNOWN_ERROR;</string>
-<string name="fxaccount_remote_error_COULD_NOT_CONNECT">&fxaccount_remote_error_COULD_NOT_CONNECT;</string>
 <string name="fxaccount_remote_error_ACCOUNT_LOCKED">&fxaccount_remote_error_ACCOUNT_LOCKED;</string>
 
 <string name="fxaccount_sync_sign_in_error_notification_title">&fxaccount_sync_sign_in_error_notification_title2;</string>
@@ -168,7 +92,3 @@
 
 <!-- Log Personal information -->
 <string name="fxaccount_enable_debug_mode">&fxaccount_enable_debug_mode;</string>
-
-<!-- Old Sync Account deprecated notification. -->
-<string name="old_sync_deprecated_notification_title">&old_sync_deprecated_notification_title;</string>
-<string name="old_sync_deprecated_notification_content">&old_sync_deprecated_notification_content;</string>

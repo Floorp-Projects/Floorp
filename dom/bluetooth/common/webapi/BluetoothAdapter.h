@@ -90,9 +90,10 @@ public:
   IMPL_EVENT_HANDLER(devicepaired);
   IMPL_EVENT_HANDLER(deviceunpaired);
   IMPL_EVENT_HANDLER(pairingaborted);
-  // HFP/A2DP/AVRCP
+  // HFP/A2DP/AVRCP/HID
   IMPL_EVENT_HANDLER(a2dpstatuschanged);
   IMPL_EVENT_HANDLER(hfpstatuschanged);
+  IMPL_EVENT_HANDLER(hidstatuschanged);
   IMPL_EVENT_HANDLER(scostatuschanged);
   IMPL_EVENT_HANDLER(requestmediaplaystatus);
   // PBAP

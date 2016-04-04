@@ -1036,7 +1036,7 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
   devinfo = calloc(1, sizeof(cubeb_device_info));
 
   devinfo->device_id = strdup(info->name);
-  devinfo->devid = (cubeb_devid)devinfo->device_id;
+  devinfo->devid = devinfo->device_id;
   devinfo->friendly_name = strdup(info->description);
   prop = WRAP(pa_proplist_gets)(info->proplist, "sysfs.path");
   if (prop)
@@ -1096,7 +1096,7 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
   devinfo = calloc(1, sizeof(cubeb_device_info));
 
   devinfo->device_id = strdup(info->name);
-  devinfo->devid = (cubeb_devid)devinfo->device_id;
+  devinfo->devid = devinfo->device_id;
   devinfo->friendly_name = strdup(info->description);
   prop = WRAP(pa_proplist_gets)(info->proplist, "sysfs.path");
   if (prop)

@@ -95,7 +95,7 @@
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
         <toolbarbutton id="requests-menu-clear-button"
                        class="devtools-toolbarbutton devtools-clear-icon"
-                       tooltip="&netmonitorUI.footer.clear;"/>
+                       tooltiptext="&netmonitorUI.footer.clear;"/>
         <hbox id="requests-menu-filter-buttons">
           <button id="requests-menu-filter-all-button"
                   class="requests-menu-filter-button"
@@ -142,6 +142,11 @@
                   class="requests-menu-filter-button"
                   data-key="flash"
                   label="&netmonitorUI.footer.filterFlash;">
+          </button>
+          <button id="requests-menu-filter-ws-button"
+                  class="requests-menu-filter-button"
+                  data-key="ws"
+                  label="&netmonitorUI.footer.filterWS;">
           </button>
           <button id="requests-menu-filter-other-button"
                   class="requests-menu-filter-button"

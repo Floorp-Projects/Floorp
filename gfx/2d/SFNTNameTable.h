@@ -18,7 +18,7 @@ namespace gfx {
 struct NameHeader;
 struct NameRecord;
 
-typedef Vector<Function<bool(const NameRecord*)>> NameRecordMatchers;
+typedef Vector<function<bool(const NameRecord*)>> NameRecordMatchers;
 
 class SFNTNameTable final
 {

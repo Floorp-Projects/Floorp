@@ -14,7 +14,13 @@
 }
 
 .statusIcon[status="active"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .statusIcon[status="active"] {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
 }
 
 .statusIcon[status="error"] {

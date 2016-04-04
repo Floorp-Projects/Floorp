@@ -9,7 +9,6 @@ include(libevent_path_prefix + '/libeventcommon.mozbuild')
 
 UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
-    'src/base/base_switches.cc',
     'src/base/command_line.cc',
     'src/base/file_path.cc',
     'src/base/file_util.cc',
@@ -25,7 +24,6 @@ UNIFIED_SOURCES += [
     'src/base/string_piece.cc',
     'src/base/string_util.cc',
     'src/base/thread.cc',
-    'src/base/thread_collision_warner.cc',
     'src/base/time.cc',
     'src/base/timer.cc',
     'src/base/tracked.cc',
@@ -35,13 +33,8 @@ UNIFIED_SOURCES += [
     'src/chrome/common/child_process_info.cc',
     'src/chrome/common/child_thread.cc',
     'src/chrome/common/chrome_switches.cc',
-    'src/chrome/common/env_vars.cc',
     'src/chrome/common/ipc_channel.cc',
-    'src/chrome/common/ipc_channel_proxy.cc',
     'src/chrome/common/ipc_message.cc',
-    'src/chrome/common/ipc_sync_channel.cc',
-    'src/chrome/common/ipc_sync_message.cc',
-    'src/chrome/common/message_router.cc',
     'src/chrome/common/notification_service.cc',
 ]
 
@@ -50,7 +43,6 @@ if os_win:
         'src/base/condition_variable_win.cc',
         'src/base/cpu.cc',
         'src/base/file_util_win.cc',
-        'src/base/idle_timer.cc',
         'src/base/lock_impl_win.cc',
         'src/base/message_pump_win.cc',
         'src/base/object_watcher.cc',
@@ -59,7 +51,6 @@ if os_win:
         'src/base/process_util_win.cc',
         'src/base/process_win.cc',
         'src/base/rand_util_win.cc',
-        'src/base/registry.cc',
         'src/base/shared_memory_win.cc',
         'src/base/sys_info_win.cc',
         'src/base/sys_string_conversions_win.cc',
@@ -73,7 +64,7 @@ if os_win:
         'src/chrome/common/process_watcher_win.cc',
         'src/chrome/common/transport_dib_win.cc',
     ]
-elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
+elif not CONFIG['MOZ_SYSTEM_LIBEVENT']:
     DIRS += ['src/third_party']
 
 if os_posix:
@@ -104,7 +95,6 @@ if os_macosx:
     UNIFIED_SOURCES += [
         'src/base/chrome_application_mac.mm',
         'src/base/file_util_mac.mm',
-        'src/base/idle_timer.cc',
         'src/base/mac_util.mm',
         'src/base/message_pump_mac.mm',
         'src/base/process_util_mac.mm',
@@ -139,7 +129,6 @@ if os_bsd:
 if os_linux:
     SOURCES += [
         'src/base/atomicops_internals_x86_gcc.cc',
-        'src/base/idle_timer_none.cc',
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
     ]
@@ -151,7 +140,7 @@ if os_linux:
         DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
 
 if os_bsd or os_linux:
-    if CONFIG['MOZ_WIDGET_GTK']:
+    if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         SOURCES += [
             'src/base/message_pump_glib.cc',
         ]
@@ -172,3 +161,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DIRS += [
+    'atomics',
+]

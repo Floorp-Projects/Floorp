@@ -8,27 +8,34 @@
 
 // A GCPolicy controls how the GC interacts with both direct pointers to GC
 // things (e.g. JSObject* or JSString*), tagged and/or optional pointers to GC
-// things (e.g.  Value or jsid), and C++ aggregate types (e.g.
+// things (e.g.  Value or jsid), and C++ container types (e.g.
 // JSPropertyDescriptor or GCHashMap).
 //
 // The GCPolicy provides at a minimum:
 //
 //   static T initial()
-//       - Tells the GC how to construct an empty T.
+//       - Construct and return an empty T.
 //
 //   static void trace(JSTracer, T* tp, const char* name)
-//       - Tells the GC how to traverse the edge. In the case of an aggregate,
-//         describe how to trace the children.
+//       - Trace the edge |*tp|, calling the edge |name|. Containers like
+//         GCHashMap and GCHashSet use this method to trace their children.
 //
 //   static bool needsSweep(T* tp)
-//       - Tells the GC how to determine if an edge is about to be finalized,
-//         and potentially updates the edge for moving GC if not. For
-//         aggregates, it determines the weakness semantics of storing the
-//         aggregate inside a weak container of some sort. For example, you
-//         might specialize a weak table's key type GCPolicy to describe
-//         when an entry should be kept during sweeping. This is the primary
-//         reason that GC-supporting weak containers can override the [sweep?]
-//         policy on a per-container basis.
+//       - Return true if |*tp| is about to be finalized. Otherwise, update the
+//         edge for moving GC, and return false. Containers like GCHashMap and
+//         GCHashSet use this method to decide when to remove an entry: if this
+//         function returns true on a key/value/member/etc, its entry is dropped
+//         from the container. Specializing this method is the standard way to
+//         get custom weak behavior from a container type.
+//
+// The default GCPolicy<T> assumes that T has a default constructor and |trace|
+// and |needsSweep| methods, and forwards to them. GCPolicy has appropriate
+// specializations for pointers to GC things and pointer-like types like
+// JS::Heap<T> and mozilla::UniquePtr<T>.
+//
+// There are some stock structs your specializations can inherit from.
+// IgnoreGCPolicy<T> does nothing. StructGCPolicy<T> forwards the methods to the
+// referent type T.
 
 #ifndef GCPolicyAPI_h
 #define GCPolicyAPI_h
@@ -49,8 +56,8 @@ class Symbol;
 
 namespace js {
 
-// Defines a policy for aggregate types with non-GC, i.e. C storage. This
-// policy dispatches to the underlying aggregate for GC interactions.
+// Defines a policy for container types with non-GC, i.e. C storage. This
+// policy dispatches to the underlying struct for GC interactions.
 template <typename T>
 struct StructGCPolicy
 {
@@ -91,7 +98,7 @@ struct GCPointerPolicy
         if (*vp)
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
     }
-    static void needsSweep(T* vp) {
+    static bool needsSweep(T* vp) {
         return js::gc::EdgeNeedsSweep(vp);
     }
 };

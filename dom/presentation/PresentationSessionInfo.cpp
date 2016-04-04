@@ -22,6 +22,7 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "PresentationLog.h"
 #include "PresentationService.h"
 #include "PresentationSessionInfo.h"
 
@@ -37,13 +38,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::services;
-
-
-static LazyLogModule gPresentationSessionInfoLog("PresentationSessionInfo");
-
-#undef LOG
-#define LOG(...) MOZ_LOG(gPresentationSessionInfoLog, mozilla::LogLevel::Error, (__VA_ARGS__))
-
 
 /*
  * Implementation of PresentationChannelDescription
@@ -105,7 +99,7 @@ PresentationNetworkHelper::GetWifiIPAddress()
 NS_IMETHODIMP
 PresentationNetworkHelper::OnError(const nsACString & aReason)
 {
-  LOG("PresentationNetworkHelper::OnError: %s",
+  PRES_ERROR("PresentationNetworkHelper::OnError: %s",
     nsPromiseFlatCString(aReason).get());
   return NS_OK;
 }
@@ -460,6 +454,12 @@ PresentationControllingInfo::Init(nsIPresentationControlChannel* aControlChannel
     return rv;
   }
 
+  int32_t port;
+  rv = mServerSocket->GetPort(&port);
+  if (!NS_WARN_IF(NS_FAILED(rv))) {
+    PRES_DEBUG("%s:ServerSocket created.port[%d]\n",__func__, port);
+  }
+
   return NS_OK;
 }
 
@@ -529,6 +529,14 @@ PresentationControllingInfo::GetAddress()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+#elif defined(MOZ_MULET)
+  // In simulator,we need to use the "127.0.0.1" as target address.
+  NS_DispatchToMainThread(
+    NS_NewRunnableMethodWithArg<nsCString>(
+      this,
+      &PresentationControllingInfo::OnGetAddress,
+      "127.0.0.1"));
 
 #else
   // TODO Get host IP via other platforms.
@@ -628,6 +636,12 @@ NS_IMETHODIMP
 PresentationControllingInfo::OnSocketAccepted(nsIServerSocket* aServerSocket,
                                             nsISocketTransport* aTransport)
 {
+  int32_t port;
+  nsresult rv = aTransport->GetPort(&port);
+  if (!NS_WARN_IF(NS_FAILED(rv))) {
+    PRES_DEBUG("%s:receive from port[%d]\n",__func__, port);
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
 
   // Initialize |mTransport| and use |this| as the callback.
@@ -636,7 +650,7 @@ PresentationControllingInfo::OnSocketAccepted(nsIServerSocket* aServerSocket,
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
-  nsresult rv = mTransport->InitWithSocketTransport(aTransport, this);
+  rv = mTransport->InitWithSocketTransport(aTransport, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

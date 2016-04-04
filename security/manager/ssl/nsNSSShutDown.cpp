@@ -7,15 +7,14 @@
 
 using namespace mozilla;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern LazyLogModule gPIPNSSLog;
 
 struct ObjectHashEntry : PLDHashEntryHdr {
   nsNSSShutDownObject *obj;
 };
 
 static bool
-ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-                         const void *key)
+ObjectSetMatchEntry(const PLDHashEntryHdr *hdr, const void *key)
 {
   const ObjectHashEntry *entry = static_cast<const ObjectHashEntry*>(hdr);
   return entry->obj == static_cast<const nsNSSShutDownObject*>(key);

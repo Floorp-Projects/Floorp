@@ -10,6 +10,8 @@
 #include "jsapi.h"
 #include "NamespaceImports.h"
 
+#include "vm/Stack.h"
+
 class JSAtom;
 
 namespace js {
@@ -30,6 +32,12 @@ ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args);
 /* Get the compile options used when compiling self hosted code. */
 void
 FillSelfHostingCompileOptions(JS::CompileOptions& options);
+
+bool
+CallSelfHostedFunction(JSContext* cx, char const* name, InvokeArgs& args);
+
+bool
+CallSelfHostedFunction(JSContext* cx, HandlePropertyName name, InvokeArgs& args);
 
 } /* namespace js */
 

@@ -160,6 +160,8 @@ static_assert(((nsresult)0) < ((nsresult)-1),
 static_assert(sizeof(nsresult) == sizeof(uint32_t),
               "nsresult must be 32 bits");
 
+#define MOZ_ALWAYS_SUCCEEDS(expr) MOZ_ALWAYS_TRUE(NS_SUCCEEDED(expr))
+
 /**
  * @name Standard Error Generating Macros
  */

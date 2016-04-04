@@ -4,7 +4,6 @@
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runtest()">
@@ -53,20 +52,32 @@ function runtest()
     todo(false, "Test is run with tab modal prompts disabled.");
   else
     ok(true, "Test is run with tab modal prompts enabled.");
-  startCallbackTimer();
+
+  selectionTest = isTabModal;
+
+  let url = SimpleTest.getTestFileURL("chromeScript.js");
+  let chrome = SpecialPowers.loadChromeScript(url);
+  chrome.sendAsyncMessage("cancelPrompt");
 
   var button = $("button");
   dispatchMouseEvent(button, "mousedown");
   dispatchMouseEvent(button, "mouseup");
 
-  selectionTest = isTabModal;
+  // alert appears at this point, to be closed by the chrome script.
 
-  startCallbackTimer();
+  checkSelection();
+
+  chrome.sendAsyncMessage("cancelPrompt");
 
   var text = $("text");
   dispatchMouseEvent(text, "mousedown");
   dispatchMouseEvent(text, "mouseup");
 
+  // alert appears at this point, to be closed by the chrome script.
+
+  checkSelection();
+
+  chrome.destroy();
   SimpleTest.finish();
 }
 
@@ -81,7 +92,7 @@ function dispatchMouseEvent(target, type)
   ok(true, type + " sent to " + target.id);
 }
 
-function handleDialog(ui, testNum)
+function checkSelection()
 {
   if (!selectionTest) {
     todo(false, "Selection test is disabled when tab modal prompts are not enabled.");
@@ -89,9 +100,6 @@ function handleDialog(ui, testNum)
     synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
     is(window.getSelection().toString(), "", "selection not made");
   }
-
-  ok(true, "handleDialog sending mouseclick to dialog...");
-  synthesizeMouse(ui.button0, 5, 5, { }, SpecialPowers.unwrap(ui.button0.ownerDocument.defaultView));
 }
 </script>
 

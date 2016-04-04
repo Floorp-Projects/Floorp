@@ -2,8 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase, skip_if_b2g
 from marionette_driver.errors import MarionetteException, TimeoutException
+from marionette_driver.by import By
+
 
 class TestNavigate(MarionetteTestCase):
     def setUp(self):
@@ -32,7 +34,7 @@ class TestNavigate(MarionetteTestCase):
     def test_get_current_url_returns_top_level_browsing_context_url(self):
         self.marionette.navigate(self.iframe_doc)
         self.assertEqual(self.iframe_doc, self.location_href)
-        frame = self.marionette.find_element("css selector", "#test_iframe")
+        frame = self.marionette.find_element(By.CSS_SELECTOR, "#test_iframe")
         self.marionette.switch_to_frame(frame)
         self.assertEqual(self.iframe_doc, self.marionette.get_url())
 
@@ -113,13 +115,13 @@ class TestNavigate(MarionetteTestCase):
         self.marionette.navigate(self.test_doc)
         state = self.marionette.execute_script("return window.document.readyState")
         self.assertEqual("complete", state)
-        self.assertTrue(self.marionette.find_element("id", "mozLink"))
+        self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
 
     def test_should_throw_a_timeoutexception_when_loading_page(self):
         try:
             self.marionette.timeouts("page load", 0)
             self.marionette.navigate(self.test_doc)
-            self.assertTrue(self.marionette.find_element("id", "mozLink"))
+            self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
             self.fail("Should have thrown a MarionetteException")
         except TimeoutException as e:
             self.assertTrue("Error loading page, timed out" in str(e))
@@ -131,7 +133,7 @@ class TestNavigate(MarionetteTestCase):
     def test_navigate_iframe(self):
         self.marionette.navigate(self.iframe_doc)
         self.assertTrue('test_iframe.html' in self.marionette.get_url())
-        self.assertTrue(self.marionette.find_element("id", "test_iframe"))
+        self.assertTrue(self.marionette.find_element(By.ID, "test_iframe"))
 
     @property
     def location_href(self):

@@ -534,23 +534,6 @@ MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label*
     branch32(cond, scratch32.asUnsized(), rhs, label);
 }
 
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
-{
-    // since rhs is an operand, do the compare backwards
-    Cmp(ARMRegister(rhs, 32), lhs);
-    B(label, Assembler::InvertCmpCondition(cond));
-}
-
-void
-MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
-{
-    ARMRegister l = lhs.reg();
-    Cmp(l, Operand(rhs.value));
-    B(label, cond);
-}
-
 void
 MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
 {
@@ -560,6 +543,27 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, L
     branch32(cond, Address(scratch, 0), rhs, label);
 }
 
+void
+MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs, ImmWord(val.value), label);
+}
+
+void
+MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
+                         Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+    MOZ_ASSERT(lhs.base != scratch);
+    MOZ_ASSERT(rhs.base != scratch);
+
+    loadPtr(rhs, scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
 void
 MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {
@@ -1261,6 +1265,14 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
 {
     Condition c = testMagic(cond, t);
     B(label, c);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    uint64_t magic = MagicValue(why).asRawBits();
+    cmpPtr(valaddr, ImmWord(magic));
+    B(label, cond);
 }
 
 //}}} check_macroassembler_style

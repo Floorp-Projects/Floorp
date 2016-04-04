@@ -337,6 +337,22 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean upgradeInsecureRequests;
 
   /**
+   * If true, the content of the channel is queued up and checked
+   * if it matches a content signature. Note, setting this flag
+   * to true will negatively impact performance since the preloader
+   * can not start until all of the content is fetched from the
+   * netwerk.
+   *
+   * Only use that in combination with TYPE_DOCUMENT.
+   */
+  [infallible] attribute boolean verifySignedContent;
+
+  /**
+   * If true, this load will fail if it has no SRI integrity
+   */
+  [infallible] attribute boolean enforceSRI;
+
+  /**
    * Typically these are the window IDs of the window in which the element being
    * loaded lives. However, if the element being loaded is <frame
    * src="foo.html"> (or, more generally, if the element QIs to
@@ -518,14 +534,14 @@ interface nsILoadInfo : nsISupports
   mozilla::LoadTainting GetTainting()
   {
     uint32_t tainting = TAINTING_BASIC;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(GetTainting(&tainting)));
+    MOZ_ALWAYS_SUCCEEDS(GetTainting(&tainting));
     return static_cast<mozilla::LoadTainting>(tainting);
   }
 
   void MaybeIncreaseTainting(mozilla::LoadTainting aTainting)
   {
     uint32_t tainting = static_cast<uint32_t>(aTainting);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(MaybeIncreaseTainting(tainting)));
+    MOZ_ALWAYS_SUCCEEDS(MaybeIncreaseTainting(tainting));
   }
 %}
 };

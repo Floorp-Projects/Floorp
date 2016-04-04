@@ -538,14 +538,14 @@ Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
 void
 Layer::SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller)
 {
-  MOZ_ASSERT(aIndex < GetFrameMetricsCount());
+  MOZ_ASSERT(aIndex < GetScrollMetadataCount());
   mApzcs[aIndex] = controller;
 }
 
 AsyncPanZoomController*
 Layer::GetAsyncPanZoomController(uint32_t aIndex) const
 {
-  MOZ_ASSERT(aIndex < GetFrameMetricsCount());
+  MOZ_ASSERT(aIndex < GetScrollMetadataCount());
 #ifdef DEBUG
   if (mApzcs[aIndex]) {
     MOZ_ASSERT(GetFrameMetrics(aIndex).IsScrollable());
@@ -555,9 +555,9 @@ Layer::GetAsyncPanZoomController(uint32_t aIndex) const
 }
 
 void
-Layer::FrameMetricsChanged()
+Layer::ScrollMetadataChanged()
 {
-  mApzcs.SetLength(GetFrameMetricsCount());
+  mApzcs.SetLength(GetScrollMetadataCount());
 }
 
 void
@@ -846,17 +846,23 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   return currentClip.Intersect(scissor);
 }
 
+const ScrollMetadata&
+Layer::GetScrollMetadata(uint32_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < GetScrollMetadataCount());
+  return mScrollMetadata[aIndex];
+}
+
 const FrameMetrics&
 Layer::GetFrameMetrics(uint32_t aIndex) const
 {
-  MOZ_ASSERT(aIndex < GetFrameMetricsCount());
-  return mFrameMetrics[aIndex];
+  return GetScrollMetadata(aIndex).GetMetrics();
 }
 
 bool
 Layer::HasScrollableFrameMetrics() const
 {
-  for (uint32_t i = 0; i < GetFrameMetricsCount(); i++) {
+  for (uint32_t i = 0; i < GetScrollMetadataCount(); i++) {
     if (GetFrameMetrics(i).IsScrollable()) {
       return true;
     }
@@ -1055,7 +1061,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
       gfx::Matrix siblingMatrix;
       if (!sibling->GetLocalTransform().Is2D(&siblingMatrix) ||
           !siblingMatrix.IsTranslation()) {
-        return false;
+        continue;
       }
 
       // Retreive the translation from sibling to |layer|. The accumulated
@@ -1088,12 +1094,12 @@ Layer::GetCombinedClipRect() const
 {
   Maybe<ParentLayerIntRect> clip = GetClipRect();
 
-  for (size_t i = 0; i < mFrameMetrics.Length(); i++) {
-    if (!mFrameMetrics[i].HasClipRect()) {
+  for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
+    if (!mScrollMetadata[i].HasClipRect()) {
       continue;
     }
 
-    const ParentLayerIntRect& other = mFrameMetrics[i].ClipRect();
+    const ParentLayerIntRect& other = mScrollMetadata[i].ClipRect();
     if (clip) {
       clip = Some(clip.value().Intersect(other));
     } else {
@@ -1387,10 +1393,17 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     useIntermediateSurface = true;
 #endif
   } else {
+    /* Don't use an intermediate surface for opacity when it's within a 3d
+     * context, since we'd rather keep the 3d effects. This matches the
+     * WebKit/blink behaviour, but is changing in the latest spec.
+     */
     float opacity = GetEffectiveOpacity();
     CompositionOp blendMode = GetEffectiveMixBlendMode();
-    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && (HasMultipleChildren() || Creates3DContextWithExtendingChildren())) ||
-        (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren())) {
+    if ((HasMultipleChildren() || Creates3DContextWithExtendingChildren()) &&
+        ((opacity != 1.0f && !Extend3DContext()) ||
+         (blendMode != CompositionOp::OP_OVER))) {
+      useIntermediateSurface = true;
+    } else if (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren()) {
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
@@ -1459,11 +1472,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     ComputeEffectiveTransformsForChildren(idealTransform);
   }
 
-  if (idealTransform.CanDraw2D()) {
-    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
-  } else {
-    ComputeEffectiveTransformForMaskLayers(Matrix4x4());
-  }
+  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 }
 
 void
@@ -1703,7 +1712,8 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)
 #endif
 
 void
-Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
+Layer::Dump(std::stringstream& aStream, const char* aPrefix,
+            bool aDumpHtml, bool aSorted)
 {
 #ifdef MOZ_DUMP_PAINTING
   bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() && AsLayerComposite() &&
@@ -1770,13 +1780,25 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
   }
 #endif
 
-  if (Layer* kid = GetFirstChild()) {
+  if (ContainerLayer* container = AsContainerLayer()) {
+    AutoTArray<Layer*, 12> children;
+    if (aSorted) {
+      container->SortChildrenBy3DZOrder(children);
+    } else {
+      for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
+        children.AppendElement(l);
+      }
+    }
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     if (aDumpHtml) {
       aStream << "<ul>";
     }
-    kid->Dump(aStream, pfx.get(), aDumpHtml);
+
+    for (Layer* child : children) {
+      child->Dump(aStream, pfx.get(), aDumpHtml, aSorted);
+    }
+
     if (aDumpHtml) {
       aStream << "</ul>";
     }
@@ -1785,8 +1807,6 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
   if (aDumpHtml) {
     aStream << "</li>";
   }
-  if (Layer* next = GetNextSibling())
-    next->Dump(aStream, aPrefix, aDumpHtml);
 }
 
 void
@@ -1920,6 +1940,15 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (GetContentFlags() & CONTENT_BACKFACE_HIDDEN) {
     aStream << " [backfaceHidden]";
   }
+  if (Extend3DContext()) {
+    aStream << " [extend3DContext]";
+  }
+  if (Combines3DTransformWithAncestors()) {
+    aStream << " [combines3DTransformWithAncestors]";
+  }
+  if (Is3DContextLeaf()) {
+    aStream << " [is3DContextLeaf]";
+  }
   if (GetScrollbarDirection() == VERTICAL) {
     aStream << nsPrintfCString(" [vscrollbar=%lld]", GetScrollbarTargetContainerId()).get();
   }
@@ -1945,10 +1974,10 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mMaskLayer) {
     aStream << nsPrintfCString(" [mMaskLayer=%p]", mMaskLayer.get()).get();
   }
-  for (uint32_t i = 0; i < mFrameMetrics.Length(); i++) {
-    if (!mFrameMetrics[i].IsDefault()) {
+  for (uint32_t i = 0; i < mScrollMetadata.Length(); i++) {
+    if (!mScrollMetadata[i].IsDefault()) {
       aStream << nsPrintfCString(" [metrics%d=", i).get();
-      AppendToString(aStream, mFrameMetrics[i], "", "]");
+      AppendToString(aStream, mScrollMetadata[i], "", "]");
     }
   }
 }
@@ -2310,14 +2339,15 @@ ReadbackLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent
 // LayerManager
 
 void
-LayerManager::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
+LayerManager::Dump(std::stringstream& aStream, const char* aPrefix,
+                   bool aDumpHtml, bool aSorted)
 {
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
     aStream << "<ul><li>";
   }
 #endif
-  DumpSelf(aStream, aPrefix);
+  DumpSelf(aStream, aPrefix, aSorted);
 
   nsAutoCString pfx(aPrefix);
   pfx += "  ";
@@ -2340,17 +2370,18 @@ LayerManager::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHt
 }
 
 void
-LayerManager::DumpSelf(std::stringstream& aStream, const char* aPrefix)
+LayerManager::DumpSelf(std::stringstream& aStream, const char* aPrefix, bool aSorted)
 {
   PrintInfo(aStream, aPrefix);
+  aStream << " --- in " << (aSorted ? "3D-sorted rendering order" : "content order");
   aStream << "\n";
 }
 
 void
-LayerManager::Dump()
+LayerManager::Dump(bool aSorted)
 {
   std::stringstream ss;
-  Dump(ss);
+  Dump(ss, "", false, aSorted);
   print_stderr(ss);
 }
 

@@ -5,7 +5,7 @@
 
 let { exportSnapshot } = require("devtools/client/memory/actions/io");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-let { snapshotState: states, actions } = require("devtools/client/memory/constants");
+let { snapshotState: states, actions, treeMapState } = require("devtools/client/memory/constants");
 
 function run_test() {
   run_next_test();
@@ -20,7 +20,8 @@ add_task(function *() {
 
   let destPath = yield createTempFile();
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+                             [treeMapState.SAVED]);
 
   let exportEvents = Promise.all([
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_START),

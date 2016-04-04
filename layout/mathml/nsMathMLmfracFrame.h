@@ -70,6 +70,11 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
+  virtual nsresult
+  AttributeChanged(int32_t  aNameSpaceID,
+                   nsIAtom* aAttribute,
+                   int32_t  aModType) override;
+
   NS_IMETHOD
   TransmitAutomaticData() override;
 

@@ -18,29 +18,29 @@ import ConfigParser
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('paths', nargs='*', help='Paths to search for tests to run on try.')
-    parser.add_argument('-b', dest='builds', default='do',
+    parser.add_argument('-b', '--build', dest='builds', default='do',
                         help='Build types to run (d for debug, o for optimized).')
-    parser.add_argument('-p', dest='platforms', action="append",
+    parser.add_argument('-p', '--platform', dest='platforms', action='append',
                         help='Platforms to run (required if not found in the environment as AUTOTRY_PLATFORM_HINT).')
-    parser.add_argument('-u', dest='tests', action="append",
+    parser.add_argument('-u', '--unittests', dest='tests', action='append',
                         help='Test suites to run in their entirety.')
-    parser.add_argument('-t', dest="talos", action="append",
+    parser.add_argument('-t', '--talos', dest='talos', action='append',
                         help='Talos suites to run.')
     parser.add_argument('--tag', dest='tags', action='append',
                         help='Restrict tests to the given tag (may be specified multiple times).')
-    parser.add_argument('--and', action='store_true', dest="intersection",
+    parser.add_argument('--and', action='store_true', dest='intersection',
                         help='When -u and paths are supplied run only the intersection of the tests specified by the two arguments.')
     parser.add_argument('--no-push', dest='push', action='store_false',
                         help='Do not push to try as a result of running this command (if '
                         'specified this command will only print calculated try '
                         'syntax and selection info).')
-    parser.add_argument('--save', dest="save", action='store',
-                        help="Save the command line arguments for future use with --preset.")
-    parser.add_argument('--preset', dest="load", action='store',
-                        help="Load a saved set of arguments. Additional arguments will override saved ones.")
+    parser.add_argument('--save', dest='save', action='store',
+                        help='Save the command line arguments for future use with --preset.')
+    parser.add_argument('--preset', dest='load', action='store',
+                        help='Load a saved set of arguments. Additional arguments will override saved ones.')
     parser.add_argument('--list', action='store_true',
-                        help="List all saved try strings")
-    parser.add_argument('-v', "--verbose", dest='verbose', action='store_true', default=False,
+                        help='List all saved try strings')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', default=False,
                         help='Print detailed information about the resulting test selection '
                         'and commands performed.')
     for arg, opts in AutoTry.pass_through_arguments.items():
@@ -153,8 +153,8 @@ class AutoTry(object):
         'chrome': ['mochitest-o'],
         'browser-chrome': ['mochitest-browser-chrome-1',
                            'mochitest-e10s-browser-chrome-1'],
-        'devtools-chrome': ['mochitest-dt',
-                            'mochitest-e10s-devtools-chrome'],
+        'devtools-chrome': ['mochitest-devtools-chrome-1',
+                            'mochitest-e10s-devtools-chrome-1'],
         'crashtest': ['crashtest', 'crashtest-e10s'],
         'reftest': ['reftest', 'reftest-e10s'],
         'web-platform-tests': ['web-platform-tests-1'],
@@ -205,6 +205,26 @@ class AutoTry(object):
             'dest': 'setenv',
             'help': 'Set the corresponding variable in the test environment for'
                     'applicable harnesses.',
+        },
+        '-f': {
+            'action': 'store_true',
+            'dest': 'failure_emails',
+            'help': 'Request failure emails only',
+        },
+        '--failure-emails': {
+            'action': 'store_true',
+            'dest': 'failure_emails',
+            'help': 'Request failure emails only',
+        },
+        '-e': {
+            'action': 'store_true',
+            'dest': 'all_emails',
+            'help': 'Request all emails',
+        },
+        '--all-emails': {
+            'action': 'store_true',
+            'dest': 'all_emails',
+            'help': 'Request all emails',
         }
     }
 

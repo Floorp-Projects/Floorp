@@ -92,6 +92,7 @@
   height: 16px;
   margin-top: -8px;
   margin-inline-start: -15px;
+  margin-inline-end: -1px;
   position: relative;
 }
 
@@ -130,7 +131,7 @@
 }
 
 .tab-throbber[progress] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
 }
 
 .tab-label {

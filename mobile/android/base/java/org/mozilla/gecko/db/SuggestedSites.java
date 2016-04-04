@@ -40,8 +40,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.Restrictions;
-import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -408,11 +407,6 @@ public class SuggestedSites {
         editor.apply();
     }
 
-    private boolean isEnabled() {
-        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
-        return prefs.getBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, true);
-    }
-
     private synchronized Site getSiteForUrl(String url) {
         if (cachedSites == null) {
             return null;
@@ -459,13 +453,6 @@ public class SuggestedSites {
      */
     public synchronized Cursor get(int limit, Locale locale, List<String> excludeUrls) {
         final MatrixCursor cursor = new MatrixCursor(COLUMNS);
-
-        // Return an empty cursor if suggested sites have been
-        // disabled by the user.
-        if (!isEnabled()) {
-            return cursor;
-        }
-
         final boolean isNewLocale = isNewLocale(context, locale);
 
         // Force the suggested sites file in profile dir to be re-generated

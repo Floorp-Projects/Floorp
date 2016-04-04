@@ -1,46 +1,48 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that the toolbox tab for performance is highlighted when recording,
  * whether already loaded, or via console.profile with an unloaded performance tools.
  */
 
-function* spawnTest() {
-  let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
-  let front = toolbox.performance;
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
+
+add_task(function*() {
+  let { target, toolbox, console } = yield initConsoleInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
   let tab = toolbox.doc.getElementById("toolbox-tab-performance");
 
-  let profileStart = once(front, "recording-started");
-  console.profile("rust");
-  yield profileStart;
-
+  yield console.profile("rust");
   yield waitUntil(() => tab.hasAttribute("highlighted"));
 
   ok(tab.hasAttribute("highlighted"),
-    "performance tab is highlighted during recording from console.profile when unloaded");
+    "Performance tab is highlighted during recording from console.profile when unloaded.");
 
-  let profileEnd = once(front, "recording-stopped");
-  console.profileEnd("rust");
-  yield profileEnd;
+  yield console.profileEnd("rust");
+  yield waitUntil(() => !tab.hasAttribute("highlighted"));
 
   ok(!tab.hasAttribute("highlighted"),
-    "performance tab is no longer highlighted when console.profile recording finishes");
+    "Performance tab is no longer highlighted when console.profile recording finishes.");
 
-  yield gDevTools.showToolbox(target, "performance");
-  let panel = yield toolbox.getCurrentPanel().open();
-  let { panelWin: { PerformanceController, RecordingsView }} = panel;
+  let { panel } = yield initPerformanceInTab({ tab: target.tab });
 
   yield startRecording(panel);
 
   ok(tab.hasAttribute("highlighted"),
-    "performance tab is highlighted during recording while in performance tool");
+    "Performance tab is highlighted during recording while in performance tool.");
 
   yield stopRecording(panel);
 
   ok(!tab.hasAttribute("highlighted"),
-    "performance tab is no longer highlighted when recording finishes");
+    "Performance tab is no longer highlighted when recording finishes.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});

@@ -393,4 +393,9 @@ InterfaceBlock &InterfaceBlock::operator=(const InterfaceBlock &other)
     return *this;
 }
 
+std::string InterfaceBlock::fieldPrefix() const
+{
+    return instanceName.empty() ? "" : name;
 }
+
+}  // namespace sh

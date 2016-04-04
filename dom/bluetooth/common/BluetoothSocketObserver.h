@@ -9,6 +9,7 @@
 
 #include "BluetoothCommon.h"
 #include "mozilla/ipc/SocketBase.h"
+#include "mozilla/UniquePtr.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -19,7 +20,7 @@ class BluetoothSocketObserver
 public:
   virtual void ReceiveSocketData(
     BluetoothSocket* aSocket,
-    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) = 0;
+    UniquePtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) = 0;
 
    /**
     * A callback function which would be called when a socket connection
@@ -45,7 +46,7 @@ public:
 #define BT_DECL_SOCKET_OBSERVER                                             \
 public:                                                                     \
   virtual void ReceiveSocketData(BluetoothSocket* aSocket,                  \
-    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aMessage) override;          \
+    UniquePtr<mozilla::ipc::UnixSocketBuffer>& aMessage) override;          \
   virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) override;   \
   virtual void OnSocketConnectError(BluetoothSocket* aSocket) override;     \
   virtual void OnSocketDisconnect(BluetoothSocket* aSocket) override;

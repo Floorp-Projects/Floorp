@@ -5,13 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ServoStyleSheet.h"
+#include "mozilla/StyleBackendType.h"
 
 namespace mozilla {
 
 ServoStyleSheet::ServoStyleSheet(CORSMode aCORSMode,
                                  net::ReferrerPolicy aReferrerPolicy,
                                  const dom::SRIMetadata& aIntegrity)
-  : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
+  : StyleSheet(StyleBackendType::Servo)
+  , StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
 }
 
@@ -24,17 +26,6 @@ bool
 ServoStyleSheet::IsApplicable() const
 {
   return !mDisabled && mComplete;
-}
-
-void
-ServoStyleSheet::SetComplete()
-{
-  MOZ_ASSERT(!mComplete);
-
-  mComplete = true;
-
-  NS_ERROR("stylo: ServoStyleSheet::SetComplete should do the things "
-           "CSSStyleSheet::SetComplete does");
 }
 
 bool

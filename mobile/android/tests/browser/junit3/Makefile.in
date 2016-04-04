@@ -6,13 +6,6 @@ ANDROID_EXTRA_JARS += \
 	browser-junit3.jar \
   $(NULL)
 
-PP_TARGETS += manifest
-manifest := AndroidManifest.xml.in
-manifest_FLAGS += \
-  -DANDROID_BROWSER_TARGET_PACKAGE_NAME='$(ANDROID_PACKAGE_NAME)' \
-  -DANDROID_BROWSER_APP_DISPLAYNAME='$(MOZ_APP_DISPLAYNAME) Browser Tests' \
-  -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
-  $(NULL)
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
 include $(topsrcdir)/config/rules.mk

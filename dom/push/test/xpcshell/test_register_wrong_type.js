@@ -58,7 +58,6 @@ add_task(function* test_register_wrong_type() {
     'Expected error for non-string channel ID'
   );
 
-  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
-    'Reconnect after sending non-string channel ID timed out');
+  yield helloPromise;
   equal(registers, 1, 'Wrong register count');
 });

@@ -107,7 +107,7 @@ public:
     RefPtr<BluetoothDiscoveryHandle> discoveryHandle =
       BluetoothDiscoveryHandle::Create(mAdapter->GetParentObject());
     if (!ToJSValue(cx, discoveryHandle, aValue)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return false;
     }
 
@@ -161,7 +161,7 @@ public:
                                        mServiceUuids, v.get_BluetoothUuid());
 
     if (!ToJSValue(cx, discoveryHandle, aValue)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return false;
     }
 
@@ -539,6 +539,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     HandleDeviceUnpaired(aData.value());
   } else if (aData.name().EqualsLiteral(HFP_STATUS_CHANGED_ID) ||
              aData.name().EqualsLiteral(SCO_STATUS_CHANGED_ID) ||
+             aData.name().EqualsLiteral(HID_STATUS_CHANGED_ID) ||
              aData.name().EqualsLiteral(A2DP_STATUS_CHANGED_ID)) {
     MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
     const InfallibleTArray<BluetoothNamedValue>& arr =

@@ -10,9 +10,9 @@ const TEST_JSON_URL = URL_ROOT + "array_json.json";
 add_task(function* () {
   info("Test valid JSON started");
 
-  let tab = yield addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
-  let count = yield getElementCount(".jsonPanelBox .domTable .memberRow");
+  let count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   is(count, 3, "There must be three rows");
 
   // XXX use proper shortcut to focus the filter box
@@ -22,6 +22,7 @@ add_task(function* () {
   // The filtering is done asynchronously so, we need to wait.
   yield waitForFilter();
 
-  let hiddenCount = yield getElementCount(".jsonPanelBox .domTable .memberRow.hidden");
+  let hiddenCount = yield getElementCount(
+    ".jsonPanelBox .treeTable .treeRow.hidden");
   is(hiddenCount, 2, "There must be two hidden rows");
 });

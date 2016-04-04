@@ -303,7 +303,7 @@ var PopupBlocking = {
     }
 
     let obj = {
-      popupWindowURI: ev.popupWindowURI.spec,
+      popupWindowURI: ev.popupWindowURI ? ev.popupWindowURI.spec : "about:blank",
       popupWindowFeatures: ev.popupWindowFeatures,
       popupWindowName: ev.popupWindowName
     };
@@ -1130,3 +1130,15 @@ var ViewSelectionSource = {
 };
 
 ViewSelectionSource.init();
+
+addEventListener("MozApplicationManifest", function(e) {
+  let doc = e.target;
+  let info = {
+    uri: doc.documentURI,
+    characterSet: doc.characterSet,
+    manifest: doc.documentElement.getAttribute("manifest"),
+    principal: doc.nodePrincipal,
+  };
+  sendAsyncMessage("MozApplicationManifest", info);
+}, false);
+

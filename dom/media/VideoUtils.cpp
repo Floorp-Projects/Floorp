@@ -475,7 +475,8 @@ IsAACCodecString(const nsAString& aCodec)
   return
     aCodec.EqualsLiteral("mp4a.40.2") || // MPEG4 AAC-LC
     aCodec.EqualsLiteral("mp4a.40.5") || // MPEG4 HE-AAC
-    aCodec.EqualsLiteral("mp4a.67"); // MPEG2 AAC-LC}
+    aCodec.EqualsLiteral("mp4a.67")   || // MPEG2 AAC-LC
+    aCodec.EqualsLiteral("mp4a.40.29");  // MPEG4 HE-AACv2
 }
 
 bool
@@ -498,8 +499,8 @@ ParseCodecsString(const nsAString& aCodecs, nsTArray<nsString>& aOutCodecs)
 
 static bool
 CheckContentType(const nsAString& aContentType,
-                 mozilla::Function<bool(const nsAString&)> aSubtypeFilter,
-                 mozilla::Function<bool(const nsAString&)> aCodecFilter)
+                 mozilla::function<bool(const nsAString&)> aSubtypeFilter,
+                 mozilla::function<bool(const nsAString&)> aCodecFilter)
 {
   nsContentTypeParser parser(aContentType);
   nsAutoString mimeType;

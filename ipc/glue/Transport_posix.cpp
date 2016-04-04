@@ -15,6 +15,7 @@
 
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "ProtocolUtils.h"
 
 using namespace std;
 
@@ -70,6 +71,9 @@ DuplicateDescriptor(const TransportDescriptor& aTd)
 {
   TransportDescriptor result = aTd;
   result.mFd.fd = dup(aTd.mFd.fd);
+  if (result.mFd.fd == -1) {
+    AnnotateSystemError();
+  }
   MOZ_RELEASE_ASSERT(result.mFd.fd != -1, "DuplicateDescriptor failed");
   return result;
 }

@@ -16,6 +16,7 @@
 
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
+#include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 #include "vm/TraceLoggingGraph.h"
@@ -82,24 +83,6 @@ rdtsc(void)
 }
 
 #endif // defined(MOZ_HAVE_RDTSC)
-
-class AutoTraceLoggerThreadStateLock
-{
-  TraceLoggerThreadState* logging;
-
-  public:
-    explicit AutoTraceLoggerThreadStateLock(TraceLoggerThreadState* logging MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : logging(logging)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        PR_Lock(logging->lock);
-    }
-    ~AutoTraceLoggerThreadStateLock() {
-        PR_Unlock(logging->lock);
-    }
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 static bool
 EnsureTraceLoggerState()
@@ -552,14 +535,37 @@ TraceLoggerThread::log(uint32_t id)
         return;
 
     MOZ_ASSERT(traceLoggerState);
-    if (!events.ensureSpaceBeforeAdd()) {
+    if (!events.hasSpaceForAdd()) {
         uint64_t start = rdtsc() - traceLoggerState->startupTime;
 
-        if (graph.get())
-            graph->log(events);
+        if (!events.ensureSpaceBeforeAdd()) {
+            if (graph.get())
+                graph->log(events);
 
-        iteration_++;
-        events.clear();
+            iteration_++;
+            events.clear();
+
+            // Remove the item in the pointerMap for which the payloads
+            // have no uses anymore
+            for (PointerHashMap::Enum e(pointerMap); !e.empty(); e.popFront()) {
+                if (e.front().value()->uses() != 0)
+                    continue;
+
+                TextIdHashMap::Ptr p = textIdPayloads.lookup(e.front().value()->textId());
+                MOZ_ASSERT(p);
+                textIdPayloads.remove(p);
+
+                e.removeFront();
+            }
+
+            // Free all payloads that have no uses anymore.
+            for (TextIdHashMap::Enum e(textIdPayloads); !e.empty(); e.popFront()) {
+                if (e.front().value()->uses() == 0) {
+                    js_delete(e.front().value());
+                    e.removeFront();
+                }
+            }
+        }
 
         // Log the time it took to flush the events as being from the
         // Tracelogger.
@@ -574,26 +580,6 @@ TraceLoggerThread::log(uint32_t id)
             entryStop.textId = TraceLogger_Stop;
         }
 
-        // Remove the item in the pointerMap for which the payloads
-        // have no uses anymore
-        for (PointerHashMap::Enum e(pointerMap); !e.empty(); e.popFront()) {
-            if (e.front().value()->uses() != 0)
-                continue;
-
-            TextIdHashMap::Ptr p = textIdPayloads.lookup(e.front().value()->textId());
-            MOZ_ASSERT(p);
-            textIdPayloads.remove(p);
-
-            e.removeFront();
-        }
-
-        // Free all payloads that have no uses anymore.
-        for (TextIdHashMap::Enum e(textIdPayloads); !e.empty(); e.popFront()) {
-            if (e.front().value()->uses() == 0) {
-                js_delete(e.front().value());
-                e.removeFront();
-            }
-        }
     }
 
     uint64_t time = rdtsc() - traceLoggerState->startupTime;
@@ -617,11 +603,6 @@ TraceLoggerThreadState::~TraceLoggerThreadState()
         threadLoggers.finish();
     }
 
-    if (lock) {
-        PR_DestroyLock(lock);
-        lock = nullptr;
-    }
-
 #ifdef DEBUG
     initialized = false;
 #endif
@@ -643,10 +624,6 @@ ContainsFlag(const char* str, const char* flag)
 bool
 TraceLoggerThreadState::init()
 {
-    lock = PR_NewLock();
-    if (!lock)
-        return false;
-
     if (!threadLoggers.init())
         return false;
 
@@ -872,7 +849,7 @@ TraceLoggerThreadState::forMainThread(PerThreadData* mainThread)
 {
     MOZ_ASSERT(initialized);
     if (!mainThread->traceLogger) {
-        AutoTraceLoggerThreadStateLock lock(this);
+        LockGuard<Mutex> guard(lock);
 
         TraceLoggerThread* logger = create();
         if (!logger)
@@ -909,7 +886,7 @@ TraceLoggerThreadState::forThread(PRThread* thread)
 {
     MOZ_ASSERT(initialized);
 
-    AutoTraceLoggerThreadStateLock lock(this);
+    LockGuard<Mutex> guard(lock);
 
     ThreadLoggerHashMap::AddPtr p = threadLoggers.lookupForAdd(thread);
     if (p)

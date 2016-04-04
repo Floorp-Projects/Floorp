@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_cookies_expiry() {
+  function background() {
+    let expectedEvents = [];
+
+    browser.cookies.onChanged.addListener(event => {
+      expectedEvents.push(`${event.removed}:${event.cause}`);
+      if (expectedEvents.length === 1) {
+        browser.test.assertEq("true:expired", expectedEvents[0], "expired cookie removed");
+        browser.test.assertEq("first", event.cookie.name, "expired cookie has the expected name");
+        browser.test.assertEq("one", event.cookie.value, "expired cookie has the expected value");
+      } else {
+        browser.test.assertEq("false:explicit", expectedEvents[1], "new cookie added");
+        browser.test.assertEq("first", event.cookie.name, "new cookie has the expected name");
+        browser.test.assertEq("one-again", event.cookie.value, "new cookie has the expected value");
+        browser.test.notifyPass("cookie-expiry");
+      }
+    });
+
+    setTimeout(() => {
+      browser.test.sendMessage("change-cookies");
+    }, 1000);
+  }
+
+  let domain = ".example.com";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["http://example.com/", "cookies"],
+    },
+    background: `(${background})()`,
+  });
+
+  let cookieSvc = SpecialPowers.Services.cookies;
+
+  let cookie = {
+    host: domain,
+    name: "first",
+    path: "/",
+  };
+
+  do {
+    cookieSvc.add(cookie.host, cookie.path, cookie.name, "one", false, false, false, Date.now() / 1000 + 1);
+  } while (!cookieSvc.cookieExists(cookie));
+
+  yield extension.startup();
+  yield extension.awaitMessage("change-cookies");
+
+  cookieSvc.add(cookie.host, cookie.path, cookie.name, "one-again", false, false, false, Date.now() / 1000 + 10);
+
+  yield extension.awaitFinish("cookie-expiry");
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>

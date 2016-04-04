@@ -6,11 +6,11 @@ package org.mozilla.gecko;
 
 
 
+import android.support.v4.content.ContextCompat;
 import android.text.format.DateUtils;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
 import org.mozilla.gecko.home.TwoLinePageRow;
-import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -162,14 +162,14 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
 
         // Now update the UI.
         holder.nameView.setText(client.name);
-        holder.nameView.setTextColor(ColorUtils.getColor(context, textColorResId));
+        holder.nameView.setTextColor(ContextCompat.getColor(context, textColorResId));
 
         final long now = System.currentTimeMillis();
 
         // It's OK to access the DB on the main thread here, as we're just
         // getting a string.
         final GeckoProfile profile = GeckoProfile.get(context);
-        holder.lastModifiedView.setText(this.getLastSyncedString(context, now, client.lastModified));
+        holder.lastModifiedView.setText(getLastSyncedString(context, now, client.lastModified));
 
         // These views exists only in some of our group views: they are present
         // for the home panel groups and not for the tabs panel groups.
@@ -236,7 +236,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
      * @param time to format string for.
      * @return string describing time span
      */
-    public String getLastSyncedString(Context context, long now, long time) {
+    public static String getLastSyncedString(Context context, long now, long time) {
         if (new Date(time).before(EARLIEST_VALID_SYNCED_DATE)) {
             return context.getString(R.string.remote_tabs_never_synced);
         }

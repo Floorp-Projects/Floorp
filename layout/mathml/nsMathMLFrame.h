@@ -198,9 +198,8 @@ public:
                       nscoord&        aSubDrop,
                       float           aFontSizeInflation) 
   {
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(aChild, getter_AddRefs(fm),
-                                          aFontSizeInflation);
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetFontMetricsForFrame(aChild, aFontSizeInflation);
     GetSubDrop(fm, aSubDrop);
   }
 
@@ -209,9 +208,8 @@ public:
                       nscoord&        aSupDrop,
                       float           aFontSizeInflation) 
   {
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(aChild, getter_AddRefs(fm),
-                                          aFontSizeInflation);
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetFontMetricsForFrame(aChild, aFontSizeInflation);
     GetSupDrop(fm, aSupDrop);
   }
 
@@ -353,10 +351,10 @@ public:
 
 protected:
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
-  nsresult DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
-                                  nsIFrame* aFrame, const nsPoint& aPt,
-                                  const nsBoundingMetrics& aMetrics,
-                                  const nsDisplayListSet& aLists);
+  void DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame, const nsPoint& aPt,
+                              const nsBoundingMetrics& aMetrics,
+                              const nsDisplayListSet& aLists);
 #endif
 
   /**

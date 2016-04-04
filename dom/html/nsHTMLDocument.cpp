@@ -934,23 +934,22 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
     return;
   }
 
-  nsAutoCString newURIString;
-  if (NS_FAILED(uri->GetScheme(newURIString))) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  nsAutoCString path;
-  if (NS_FAILED(uri->GetPath(path))) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  newURIString.AppendLiteral("://");
-  AppendUTF16toUTF8(aDomain, newURIString);
-  newURIString.Append(path);
-
   nsCOMPtr<nsIURI> newURI;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString))) {
-    rv.Throw(NS_ERROR_FAILURE);
+  nsresult rv2 = uri->Clone(getter_AddRefs(newURI));
+  if (NS_FAILED(rv2)) {
+    rv.Throw(rv2);
+    return;
+  }
+
+  rv2 = newURI->SetUserPass(EmptyCString());
+  if (NS_FAILED(rv2)) {
+    rv.Throw(rv2);
+    return;
+  }
+
+  rv2 = newURI->SetHostPort(NS_ConvertUTF16toUTF8(aDomain));
+  if (NS_FAILED(rv2)) {
+    rv.Throw(rv2);
     return;
   }
 
@@ -989,6 +988,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
     return;
   }
 
+  NS_TryToSetImmutable(newURI);
   rv = NodePrincipal()->SetDomain(newURI);
 }
 
@@ -1223,9 +1223,11 @@ nsHTMLDocument::CreateDummyChannelForCookies(nsIURI* aCodebaseURI)
   // FOR ANY OTHER PURPOSE.
   MOZ_ASSERT(!mChannel);
 
+  // The following channel is never openend, so it does not matter what
+  // securityFlags we pass; let's follow the principle of least privilege.
   nsCOMPtr<nsIChannel> channel;
   NS_NewChannel(getter_AddRefs(channel), aCodebaseURI, this,
-                nsILoadInfo::SEC_NORMAL,
+                nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                 nsIContentPolicy::TYPE_INVALID);
   nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel =
     do_QueryInterface(channel);
@@ -2029,7 +2031,7 @@ static void* CreateTokens(nsINode* aRootNode, const nsString* types)
       ++iter;
     } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
 
-    tokens->AppendElement(do_GetAtom(Substring(start, iter)));
+    tokens->AppendElement(NS_Atomize(Substring(start, iter)));
 
     // skip whitespace
     while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
@@ -2671,8 +2673,8 @@ nsHTMLDocument::TurnEditingOff()
   if (!docshell)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  nsCOMPtr<nsIEditingSession> editSession;
+  nsresult rv = docshell->GetEditingSession(getter_AddRefs(editSession));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // turn editing off
@@ -2742,8 +2744,8 @@ nsHTMLDocument::EditingStateChanged()
   if (!docshell)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  nsCOMPtr<nsIEditingSession> editSession;
+  nsresult rv = docshell->GetEditingSession(getter_AddRefs(editSession));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIEditor> existingEditor;

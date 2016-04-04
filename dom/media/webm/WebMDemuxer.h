@@ -98,6 +98,8 @@ public:
 
   bool IsSeekable() const override;
 
+  bool IsSeekableOnlyInBufferedRanges() const override;
+
   UniquePtr<EncryptionInfo> GetCrypto() override;
 
   bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset);
@@ -199,6 +201,12 @@ private:
   // as nestegg only performs 1-byte read at a time.
   int64_t mLastWebMBlockOffset;
   const bool mIsMediaSource;
+
+  Maybe<uint32_t> mLastSeenFrameWidth;
+  Maybe<uint32_t> mLastSeenFrameHeight;
+  // This will be populated only if a resolution change occurs, otherwise it
+  // will be left as null so the original metadata is used
+  RefPtr<SharedTrackInfo> mSharedVideoTrackInfo;
 };
 
 class WebMTrackDemuxer : public MediaTrackDemuxer

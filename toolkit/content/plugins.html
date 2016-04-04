@@ -141,7 +141,7 @@
         state.setAttribute("label", "state");
         state.appendChild(document.createTextNode(pluginsbundle.GetStringFromName("state_label") + " "));
         stateDd.appendChild(state);
-        status = plugin.isActive ? pluginsbundle.GetStringFromName("state_enabled") : pluginsbundle.GetStringFromName("state_disabled");
+        var status = plugin.isActive ? pluginsbundle.GetStringFromName("state_enabled") : pluginsbundle.GetStringFromName("state_disabled");
         if (plugin.blocklistState in stateNames) {
           status += " (" + stateNames[plugin.blocklistState] + ")";
         }

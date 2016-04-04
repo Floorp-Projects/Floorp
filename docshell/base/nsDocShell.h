@@ -381,7 +381,9 @@ protected:
                          nsIURILoader* aURILoader,
                          bool aBypassClassifier);
 
-  nsresult ScrollToAnchor(nsACString& aCurHash, nsACString& aNewHash,
+  nsresult ScrollToAnchor(bool aCurHasRef,
+                          bool aNewHasRef,
+                          nsACString& aNewHash,
                           uint32_t aLoadType);
 
   // Returns true if would have called FireOnLocationChange,
@@ -728,6 +730,9 @@ protected:
                              nsIDocShellLoadInfo* aLoadInfo,
                              bool aFirstParty);
 
+  // Check if aURI is about:newtab.
+  bool IsAboutNewtab(nsIURI* aURI);
+
 protected:
   nsresult GetCurScrollPos(int32_t aScrollOrientation, int32_t* aCurPos);
   nsresult SetCurScrollPosEx(int32_t aCurHorizontalPos,
@@ -999,9 +1004,6 @@ protected:
 
   // Are we a regular frame, a browser frame, or an app frame?
   uint32_t mFrameType;
-
-  // Whether we are in an isolated mozbrowser frame.
-  bool mIsInIsolatedMozBrowser;
 
   nsString mPaymentRequestId;
 

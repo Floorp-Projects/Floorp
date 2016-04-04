@@ -17,7 +17,13 @@
 #include "nsThreadUtils.h"
 #include "prlink.h"
 
-#define URI_PREFIX "urn:moz-tts:sapi:"
+#include <math.h>
+#include <stdlib.h>
+
+#define URI_PREFIX "urn:moz-tts:speechd:"
+
+#define MAX_RATE static_cast<float>(2.5)
+#define MIN_RATE static_cast<float>(0.5)
 
 // Some structures for libspeechd
 typedef enum {
@@ -416,7 +422,7 @@ SpeechDispatcherService::Setup()
 void
 SpeechDispatcherService::RegisterVoices()
 {
-  nsSynthVoiceRegistry* registry = nsSynthVoiceRegistry::GetInstance();
+  RefPtr<nsSynthVoiceRegistry> registry = nsSynthVoiceRegistry::GetInstance();
   for (auto iter = mVoices.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<SpeechDispatcherVoice>& voice = iter.Data();
 
@@ -434,6 +440,8 @@ SpeechDispatcherService::RegisterVoices()
   mInitThread = nullptr;
 
   mInitialized = true;
+
+  registry->NotifyVoicesChanged();
 }
 
 // nsIObserver
@@ -473,17 +481,18 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
   // We provide a volume of 0.0 to 1.0, speech-dispatcher expects 0 - 100.
   spd_set_volume(mSpeechdClient, static_cast<int>(aVolume * 100));
 
-  // We provide a rate of 0.1 to 10 with 1 being default.
-  // speech-dispatcher expects -100 to 100 with 0 being default.
-  int rate = 0;
-
+  // aRate is a value of 0.1 (0.1x) to 10 (10x) with 1 (1x) being normal rate.
+  // speechd expects -100 to 100 with 0 being normal rate.
+  float rate = 0;
   if (aRate > 1) {
-    rate = static_cast<int>((aRate - 1) * 10);
-  } else if (aRate <= 1) {
-    rate = static_cast<int>((aRate - 1) * (100/0.9));
+    // Each step to 100 is logarithmically distributed up to 2.5x.
+    rate = log10(std::min(aRate, MAX_RATE)) / log10(MAX_RATE) * 100;
+  } else if (aRate < 1) {
+    // Each step to -100 is logarithmically distributed down to 0.5x.
+    rate = log10(std::max(aRate, MIN_RATE)) / log10(MIN_RATE) * -100;
   }
 
-  spd_set_voice_rate(mSpeechdClient, rate);
+  spd_set_voice_rate(mSpeechdClient, static_cast<int>(rate));
 
   // We provide a pitch of 0 to 2 with 1 being the default.
   // speech-dispatcher expects -100 to 100 with 0 being default.

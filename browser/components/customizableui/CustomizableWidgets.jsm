@@ -414,7 +414,7 @@ const CustomizableWidgets = [
 
         this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
         this._clearTabList();
-        this._sortFilterClientsAndTabs(clients);
+        SyncedTabs.sortTabClientsByLastUsed(clients, 50 /* maxTabs */);
         let fragment = doc.createDocumentFragment();
 
         for (let client of clients) {
@@ -487,29 +487,6 @@ const CustomizableWidgets = [
         CustomizableUI.hidePanelForNode(item);
       });
       return item;
-    },
-    _sortFilterClientsAndTabs(clients) {
-      // First sort and filter the list of tabs for each client. Note that the
-      // SyncedTabs module promises that the objects it returns are never
-      // shared, so we are free to mutate those objects directly.
-      const maxTabs = 50;
-      for (let client of clients) {
-        let tabs = client.tabs;
-        tabs.sort((a, b) => b.lastUsed - a.lastUsed);
-        client.tabs = tabs.slice(0, maxTabs);
-      }
-      // Now sort the clients - the clients are sorted in the order of the
-      // most recent tab for that client (ie, it is important the tabs for
-      // each client are already sorted.)
-      clients.sort((a, b) => {
-        if (a.tabs.length == 0) {
-          return 1; // b comes first.
-        }
-        if (b.tabs.length == 0) {
-          return -1; // a comes first.
-        }
-        return b.tabs[0].lastUsed - a.tabs[0].lastUsed;
-      });
     },
   }, {
     id: "privatebrowsing-button",
@@ -1235,18 +1212,9 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
 }
 
 if (AppConstants.E10S_TESTING_ONLY) {
-  var e10sDisabled = false;
-
-  if (AppConstants.platform == "macosx") {
-    // On OS X, "Disable Hardware Acceleration" also disables OMTC and forces
-    // a fallback to Basic Layers. This is incompatible with e10s.
-    e10sDisabled |= Services.prefs.getBoolPref("layers.acceleration.disabled");
-  }
-
   if (Services.appinfo.browserTabsRemoteAutostart) {
     CustomizableWidgets.push({
       id: "e10s-button",
-      disabled: e10sDisabled,
       defaultArea: CustomizableUI.AREA_PANEL,
       onBuild: function(aDocument) {
           node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));

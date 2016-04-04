@@ -29,7 +29,7 @@
 
 #include "mozilla/Logging.h"
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern mozilla::LazyLogModule gPIPNSSLog;
 
 namespace mozilla { namespace psm {
 
@@ -153,7 +153,7 @@ PSMContentStreamListener::OnStopRequest(nsIRequest* request,
   // do it here. Do it off the event loop instead.
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableMethod(this, &PSMContentStreamListener::ImportCertificate);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return NS_OK;
 }

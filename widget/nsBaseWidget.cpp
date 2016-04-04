@@ -6,9 +6,10 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/TextEventDispatcherListener.h"
 
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
@@ -269,12 +270,12 @@ nsBaseWidget::Shutdown()
 
 void nsBaseWidget::DestroyCompositor()
 {
-  if (mCompositorChild) {
-    // XXX CompositorChild and CompositorParent might be re-created in
+  if (mCompositorBridgeChild) {
+    // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
     // ClientLayerManager destructor. See bug 1133426.
-    RefPtr<CompositorChild> compositorChild = mCompositorChild;
-    RefPtr<CompositorParent> compositorParent = mCompositorParent;
-    mCompositorChild->Destroy();
+    RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
+    RefPtr<CompositorBridgeParent> compositorParent = mCompositorBridgeParent;
+    mCompositorBridgeChild->Destroy();
   }
 
   // Can have base widgets that are things like tooltips
@@ -296,7 +297,7 @@ void nsBaseWidget::DestroyLayerManager()
 void
 nsBaseWidget::OnRenderingDeviceReset()
 {
-  if (!mLayerManager || !mCompositorParent) {
+  if (!mLayerManager || !mCompositorBridgeParent) {
     return;
   }
 
@@ -318,7 +319,7 @@ nsBaseWidget::OnRenderingDeviceReset()
 
   // Recreate the compositor.
   TextureFactoryIdentifier identifier;
-  if (!mCompositorParent->ResetCompositor(backendHints, &identifier)) {
+  if (!mCompositorBridgeParent->ResetCompositor(backendHints, &identifier)) {
     // No action was taken, so we don't have to do anything.
     return;
   }
@@ -591,15 +592,15 @@ double nsIWidget::DefaultScaleOverride()
 //-------------------------------------------------------------------------
 void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
-  NS_PRECONDITION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
-                  "aChild not properly removed from its old child list");
+  MOZ_RELEASE_ASSERT(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
+                     "aChild not properly removed from its old child list");
 
   if (!mFirstChild) {
     mFirstChild = mLastChild = aChild;
   } else {
     // append to the list
-    NS_ASSERTION(mLastChild, "Bogus state");
-    NS_ASSERTION(!mLastChild->GetNextSibling(), "Bogus state");
+    MOZ_RELEASE_ASSERT(mLastChild);
+    MOZ_RELEASE_ASSERT(!mLastChild->GetNextSibling());
     mLastChild->SetNextSibling(aChild);
     aChild->SetPrevSibling(mLastChild);
     mLastChild = aChild;
@@ -621,7 +622,7 @@ void nsBaseWidget::RemoveChild(nsIWidget* aChild)
   nsIWidget* parent = aChild->GetParent();
   NS_ASSERTION(!parent || parent == this, "Not one of our kids!");
 #else
-  NS_ASSERTION(aChild->GetParent() == this, "Not one of our kids!");
+  MOZ_RELEASE_ASSERT(aChild->GetParent() == this, "Not one of our kids!");
 #endif
 #endif
 
@@ -930,10 +931,10 @@ nsBaseWidget::ComputeShouldAccelerate()
   return gfxPlatform::GetPlatform()->ShouldUseLayersAcceleration();
 }
 
-CompositorParent* nsBaseWidget::NewCompositorParent(int aSurfaceWidth,
+CompositorBridgeParent* nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
                                                     int aSurfaceHeight)
 {
-  return new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
+  return new CompositorBridgeParent(this, false, aSurfaceWidth, aSurfaceHeight);
 }
 
 void nsBaseWidget::CreateCompositor()
@@ -983,8 +984,8 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
 
   RefPtr<GeckoContentController> controller = CreateRootContentController();
   if (controller) {
-    uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
-    CompositorParent::SetControllerForLayerTree(rootLayerTreeId, controller);
+    uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
+    CompositorBridgeParent::SetControllerForLayerTree(rootLayerTreeId, controller);
   }
 
   // When APZ is enabled, we can actually enable raw touch events because we
@@ -1018,7 +1019,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
                                     const FrameMetrics::ViewID& aViewId,
                                     const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (!mCompositorParent || !mAPZC) {
+  if (!mCompositorBridgeParent || !mAPZC) {
     if (mInitialZoomConstraints) {
       MOZ_ASSERT(mInitialZoomConstraints->mPresShellID == aPresShellId);
       MOZ_ASSERT(mInitialZoomConstraints->mViewID == aViewId);
@@ -1034,7 +1035,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
     }
     return;
   }
-  uint64_t layersId = mCompositorParent->RootLayerTreeId();
+  uint64_t layersId = mCompositorBridgeParent->RootLayerTreeId();
   mAPZC->UpdateZoomConstraints(ScrollableLayerGuid(layersId, aPresShellId, aViewId),
                                aConstraints);
 }
@@ -1054,14 +1055,13 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   MOZ_ASSERT(NS_IsMainThread());
   InputAPZContext context(aGuid, aInputBlockId, aApzResponse);
 
-  // If this is a touch event and APZ has targeted it to an APZC in the root
+  // If this is an event that the APZ has targeted to an APZC in the root
   // process, apply that APZC's callback-transform before dispatching the
   // event. If the event is instead targeted to an APZC in the child process,
   // the transform will be applied in the child process before dispatching
   // the event there (see e.g. TabChild::RecvRealTouchEvent()).
-  // TODO: Do other types of events (than touch) need this?
-  if (aEvent->AsTouchEvent() && aGuid.mLayersId == mCompositorParent->RootLayerTreeId()) {
-    APZCCallbackHelper::ApplyCallbackTransform(*aEvent->AsTouchEvent(), aGuid,
+  if (aGuid.mLayersId == mCompositorBridgeParent->RootLayerTreeId()) {
+    APZCCallbackHelper::ApplyCallbackTransform(*aEvent, aGuid,
         GetDefaultScale());
   }
 
@@ -1072,7 +1072,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   UniquePtr<WidgetEvent> original(aEvent->Duplicate());
   DispatchEvent(aEvent, status);
 
-  if (mAPZC && !context.WasRoutedToChildProcess()) {
+  if (mAPZC && !context.WasRoutedToChildProcess() && aInputBlockId) {
     // EventStateManager did not route the event into the child process.
     // It's safe to communicate to APZ that the event has been processed.
     // TODO: Eventually we'll be able to move the SendSetTargetAPZCNotification
@@ -1103,21 +1103,6 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
     }
   }
 
-  return status;
-}
-
-nsEventStatus
-nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
-{
-  if (mAPZC) {
-    nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, nullptr, nullptr);
-    if (result == nsEventStatus_eConsumeNoDefault) {
-      return result;
-    }
-  }
-
-  nsEventStatus status;
-  DispatchEvent(aEvent, status);
   return status;
 }
 
@@ -1188,7 +1173,7 @@ private:
 };
 
 nsEventStatus
-nsBaseWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
+nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
@@ -1251,11 +1236,11 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
              "This function assumes OMTC");
 
-  MOZ_ASSERT(!mCompositorParent && !mCompositorChild,
+  MOZ_ASSERT(!mCompositorBridgeParent && !mCompositorBridgeChild,
     "Should have properly cleaned up the previous PCompositor pair beforehand");
 
-  if (mCompositorChild) {
-    mCompositorChild->Destroy();
+  if (mCompositorBridgeChild) {
+    mCompositorBridgeChild->Destroy();
   }
 
   // Recreating this is tricky, as we may still have an old and we need
@@ -1268,16 +1253,16 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   CreateCompositorVsyncDispatcher();
-  mCompositorParent = NewCompositorParent(aWidth, aHeight);
+  mCompositorBridgeParent = NewCompositorBridgeParent(aWidth, aHeight);
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
-  mCompositorChild = new CompositorChild(lm);
-  mCompositorChild->OpenSameProcess(mCompositorParent);
+  mCompositorBridgeChild = new CompositorBridgeChild(lm);
+  mCompositorBridgeChild->OpenSameProcess(mCompositorBridgeParent);
 
   // Make sure the parent knows it is same process.
-  mCompositorParent->SetOtherProcessId(base::GetCurrentProcId());
+  mCompositorBridgeParent->SetOtherProcessId(base::GetCurrentProcId());
 
-  uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
-  mAPZC = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
+  uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
+  mAPZC = CompositorBridgeParent::GetAPZCTreeManager(rootLayerTreeId);
   if (mAPZC) {
     ConfigureAPZCTreeManager();
   }
@@ -1297,7 +1282,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   bool success = false;
   if (!backendHints.IsEmpty()) {
-    shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
+    shadowManager = mCompositorBridgeChild->SendPLayerTransactionConstructor(
       backendHints, 0, &textureFactoryIdentifier, &success);
   }
 
@@ -1307,8 +1292,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     NS_WARNING("Failed to create an OMT compositor.");
     DestroyCompositor();
     mLayerManager = nullptr;
-    mCompositorChild = nullptr;
-    mCompositorParent = nullptr;
+    mCompositorBridgeChild = nullptr;
+    mCompositorBridgeParent = nullptr;
     mCompositorVsyncDispatcher = nullptr;
     return;
   }
@@ -1365,14 +1350,50 @@ LayerManager* nsBaseWidget::CreateBasicLayerManager()
   return new BasicLayerManager(this);
 }
 
-CompositorChild* nsBaseWidget::GetRemoteRenderer()
+CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer()
 {
-  return mCompositorChild;
+  return mCompositorBridgeChild;
 }
 
-already_AddRefed<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
+already_AddRefed<mozilla::gfx::DrawTarget>
+nsBaseWidget::StartRemoteDrawing()
 {
   return nullptr;
+}
+
+void
+nsBaseWidget::CleanupRemoteDrawing()
+{
+  mLastBackBuffer = nullptr;
+}
+
+already_AddRefed<mozilla::gfx::DrawTarget>
+nsBaseWidget::CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
+                                         const LayoutDeviceIntRect& aRect,
+                                         const bool aInitModeClear)
+{
+  MOZ_ASSERT(aScreenTarget);
+  gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+  gfx::IntSize size = aRect.ToUnknownRect().Size();
+  gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
+
+  RefPtr<gfx::DrawTarget> target;
+  // Re-use back buffer if possible
+  if (mLastBackBuffer &&
+      mLastBackBuffer->GetBackendType() == aScreenTarget->GetBackendType() &&
+      mLastBackBuffer->GetFormat() == format &&
+      size <= mLastBackBuffer->GetSize() &&
+      mLastBackBuffer->GetSize() <= clientSize) {
+    target = mLastBackBuffer;
+    target->SetTransform(gfx::Matrix());
+    if (aInitModeClear) {
+      target->ClearRect(gfx::Rect(0, 0, size.width, size.height));
+    }
+  } else {
+    target = aScreenTarget->CreateSimilarDrawTarget(size, format);
+    mLastBackBuffer = target;
+  }
+  return target.forget();
 }
 
 //-------------------------------------------------------------------------
@@ -1766,37 +1787,59 @@ nsBaseWidget::NotifyIME(const IMENotification& aIMENotification)
       }
       // Otherwise, it should be handled by native IME.
       return NotifyIMEInternal(aIMENotification);
-    case NOTIFY_IME_OF_FOCUS:
-      mIMEHasFocus = true;
-      // We should notify TextEventDispatcher of focus notification, first.
-      // After that, notify native IME too.
-      if (mTextEventDispatcher) {
-        mTextEventDispatcher->NotifyIME(aIMENotification);
+    default: {
+      if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
+        mIMEHasFocus = true;
       }
-      return NotifyIMEInternal(aIMENotification);
-    case NOTIFY_IME_OF_BLUR: {
-      // We should notify TextEventDispatcher of blur notification, first.
-      // After that, notify native IME too.
-      if (mTextEventDispatcher) {
-        mTextEventDispatcher->NotifyIME(aIMENotification);
+      EnsureTextEventDispatcher();
+      // If the platform specific widget uses TextEventDispatcher for handling
+      // native IME and keyboard events, IME event handler should be notified
+      // of the notification via TextEventDispatcher.  Otherwise, on the other
+      // platforms which have not used TextEventDispatcher yet, IME event
+      // handler should be notified by the old path (NotifyIMEInternal).
+      nsresult rv = mTextEventDispatcher->NotifyIME(aIMENotification);
+      nsresult rv2 = NotifyIMEInternal(aIMENotification);
+      if (aIMENotification.mMessage == NOTIFY_IME_OF_BLUR) {
+        mIMEHasFocus = false;
       }
-      nsresult rv = NotifyIMEInternal(aIMENotification);
-      mIMEHasFocus = false;
-      return rv;
+      return rv2 == NS_ERROR_NOT_IMPLEMENTED ? rv : rv2;
     }
-    default:
-      // Otherwise, notify only native IME for now.
-      return NotifyIMEInternal(aIMENotification);
   }
+}
+
+void
+nsBaseWidget::EnsureTextEventDispatcher()
+{
+  if (mTextEventDispatcher) {
+    return;
+  }
+  mTextEventDispatcher = new TextEventDispatcher(this);
 }
 
 NS_IMETHODIMP_(nsIWidget::TextEventDispatcher*)
 nsBaseWidget::GetTextEventDispatcher()
 {
-  if (!mTextEventDispatcher) {
-    mTextEventDispatcher = new TextEventDispatcher(this);
-  }
+  EnsureTextEventDispatcher();
   return mTextEventDispatcher;
+}
+
+void*
+nsBaseWidget::GetPseudoIMEContext()
+{
+  TextEventDispatcher* dispatcher = GetTextEventDispatcher();
+  if (!dispatcher) {
+    return nullptr;
+  }
+  return dispatcher->GetPseudoIMEContext();
+}
+
+NS_IMETHODIMP_(TextEventDispatcherListener*)
+nsBaseWidget::GetNativeTextEventDispatcherListener()
+{
+  // TODO: If all platforms supported use of TextEventDispatcher for handling
+  //       native IME and keyboard events, this method should be removed since
+  //       in such case, this is overridden by all the subclasses.
+  return nullptr;
 }
 
 void
@@ -1805,10 +1848,10 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
                          const CSSRect& aRect,
                          const uint32_t& aFlags)
 {
-  if (!mCompositorParent || !mAPZC) {
+  if (!mCompositorBridgeParent || !mAPZC) {
     return;
   }
-  uint64_t layerId = mCompositorParent->RootLayerTreeId();
+  uint64_t layerId = mCompositorBridgeParent->RootLayerTreeId();
   mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags);
 }
 
@@ -1850,9 +1893,9 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
     return;
   }
 
-  MOZ_ASSERT(XRE_IsParentProcess() && mCompositorParent);
+  MOZ_ASSERT(XRE_IsParentProcess() && mCompositorBridgeParent);
 
-  int layersId = mCompositorParent->RootLayerTreeId();;
+  int layersId = mCompositorBridgeParent->RootLayerTreeId();;
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId, aDragMetrics.mViewId);
 
   APZThreadUtils::RunOnControllerThread(
@@ -2077,7 +2120,7 @@ nsIWidget::SnapshotWidgetOnScreen()
     return nullptr;
   }
 
-  CompositorChild* cc = lm->GetRemoteRenderer();
+  CompositorBridgeChild* cc = lm->GetRemoteRenderer();
   if (!cc) {
     return nullptr;
   }
@@ -2104,7 +2147,7 @@ nsIWidget::SnapshotWidgetOnScreen()
   RefPtr<gfx::DrawTarget> dt =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(size, gfx::SurfaceFormat::B8G8R8A8);
   if (!snapshot || !dt) {
-    forwarder->DestroySharedSurface(&surface);
+    forwarder->DestroySurfaceDescriptor(&surface);
     return nullptr;
   }
 
@@ -2113,7 +2156,7 @@ nsIWidget::SnapshotWidgetOnScreen()
                   gfx::Rect(gfx::Point(), gfx::Size(size)),
                   gfx::DrawSurfaceOptions(gfx::Filter::POINT));
 
-  forwarder->DestroySharedSurface(&surface);
+  forwarder->DestroySurfaceDescriptor(&surface);
   return dt->Snapshot();
 }
 

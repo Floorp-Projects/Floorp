@@ -11,7 +11,7 @@ function run_test() {
   do_get_profile();
   setPrefs({
     userAgentID: userAgentID,
-    pingInterval: 10000,
+    pingInterval: 2000,
     retryBaseInterval: 25,
   });
   run_next_test();
@@ -30,9 +30,17 @@ add_task(function* test_ws_retry() {
     quota: Infinity,
   });
 
-  let alarmDelays = [];
-  PushServiceWebSocket._reconnectTestCallback = function(delay) {
-    alarmDelays.push(delay);
+  // Use a mock timer to avoid waiting for the backoff interval.
+  let reconnects = 0;
+  PushServiceWebSocket._backoffTimer = {
+    init(observer, delay, type) {
+      reconnects++;
+      ok(delay >= 5 && delay <= 2000, `Backoff delay ${
+        delay} out of range for attempt ${reconnects}`);
+      observer.observe(this, "timer-callback", null);
+    },
+
+    cancel() {},
   };
 
   let handshakeDone;
@@ -43,7 +51,7 @@ add_task(function* test_ws_retry() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          if (alarmDelays.length == 10) {
+          if (reconnects == 10) {
             this.serverSendMsg(JSON.stringify({
               messageType: 'hello',
               status: 200,
@@ -58,13 +66,5 @@ add_task(function* test_ws_retry() {
     },
   });
 
-  yield waitForPromise(
-    handshakePromise,
-    45000,
-    'Timed out waiting for successful handshake'
-  );
-  [25, 50, 100, 200, 400, 800, 1600, 3200, 6400, 10000].forEach(function(minDelay, index) {
-    ok(alarmDelays[index] >= minDelay, `Should wait at least ${
-      minDelay}ms before attempt ${index + 1}`);
-  });
+  yield handshakePromise;
 });

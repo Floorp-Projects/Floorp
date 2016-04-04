@@ -8,6 +8,7 @@
 #define js_Utility_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
@@ -103,15 +104,6 @@ inline uint32_t GetThreadType(void) { return 0; }
 
 # if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
-/*
- * In order to test OOM conditions, when the testing function
- * oomAfterAllocations COUNT is passed, we fail continuously after the NUM'th
- * allocation from now.
- */
-extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set in builtin/TestingFunctions.cpp */
-extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
-extern JS_PUBLIC_DATA(bool) OOM_failAlways;
-
 #ifdef JS_OOM_BREAKPOINT
 static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
 #define JS_OOM_CALL_BP_FUNC() js_failedAllocBreakpoint()
@@ -122,7 +114,31 @@ static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
 namespace js {
 namespace oom {
 
+/*
+ * Out of memory testing support.  We provide various testing functions to
+ * simulate OOM conditions and so we can test that they are handled correctly.
+ */
+
 extern JS_PUBLIC_DATA(uint32_t) targetThread;
+extern JS_PUBLIC_DATA(uint64_t) maxAllocations;
+extern JS_PUBLIC_DATA(uint64_t) counter;
+extern JS_PUBLIC_DATA(bool) failAlways;
+
+static inline void
+SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
+    MOZ_ASSERT(counter + allocations > counter);
+    MOZ_ASSERT(thread > js::oom::THREAD_TYPE_NONE && thread < js::oom::THREAD_TYPE_MAX);
+    targetThread = thread;
+    maxAllocations = counter + allocations;
+    failAlways = always;
+}
+
+static inline void
+ResetSimulatedOOM() {
+    targetThread = THREAD_TYPE_NONE;
+    maxAllocations = UINT64_MAX;
+    failAlways = false;
+}
 
 static inline bool
 IsThreadSimulatingOOM()
@@ -133,8 +149,8 @@ IsThreadSimulatingOOM()
 static inline bool
 IsSimulatedOOMAllocation()
 {
-    return IsThreadSimulatingOOM() && (OOM_counter == OOM_maxAllocations ||
-           (OOM_counter > OOM_maxAllocations && OOM_failAlways));
+    return IsThreadSimulatingOOM() &&
+           (counter == maxAllocations || (counter > maxAllocations && failAlways));
 }
 
 static inline bool
@@ -143,12 +159,17 @@ ShouldFailWithOOM()
     if (!IsThreadSimulatingOOM())
         return false;
 
-    OOM_counter++;
+    counter++;
     if (IsSimulatedOOMAllocation()) {
         JS_OOM_CALL_BP_FUNC();
         return true;
     }
     return false;
+}
+
+static inline bool
+HadSimulatedOOM() {
+    return counter >= maxAllocations;
 }
 
 } /* namespace oom */
@@ -188,26 +209,31 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     AutoEnterOOMUnsafeRegion()
-      : oomEnabled_(oom::IsThreadSimulatingOOM() && OOM_maxAllocations != UINT32_MAX),
+      : oomEnabled_(oom::IsThreadSimulatingOOM() && oom::maxAllocations != UINT64_MAX),
         oomAfter_(0)
     {
         if (oomEnabled_) {
-            oomAfter_ = int64_t(OOM_maxAllocations) - OOM_counter;
-            OOM_maxAllocations = UINT32_MAX;
+            MOZ_ALWAYS_TRUE(owner_.compareExchange(nullptr, this));
+            oomAfter_ = int64_t(oom::maxAllocations) - int64_t(oom::counter);
+            oom::maxAllocations = UINT64_MAX;
         }
     }
 
     ~AutoEnterOOMUnsafeRegion() {
         if (oomEnabled_) {
-            MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
-            int64_t maxAllocations = OOM_counter + oomAfter_;
-            MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX,
+            MOZ_ASSERT(oom::maxAllocations == UINT64_MAX);
+            int64_t maxAllocations = int64_t(oom::counter) + oomAfter_;
+            MOZ_ASSERT(maxAllocations >= 0,
                        "alloc count + oom limit exceeds range, your oom limit is probably too large");
-            OOM_maxAllocations = uint32_t(maxAllocations);
+            oom::maxAllocations = uint64_t(maxAllocations);
+            MOZ_ALWAYS_TRUE(owner_.compareExchange(this, nullptr));
         }
     }
 
   private:
+    // Used to catch concurrent use from other threads.
+    static mozilla::Atomic<AutoEnterOOMUnsafeRegion*> owner_;
+
     bool oomEnabled_;
     int64_t oomAfter_;
 #endif

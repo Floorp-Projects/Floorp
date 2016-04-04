@@ -26,7 +26,7 @@ const PropertyInfo gLonghandProperties[] = {
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_LIST_EXCLUDE_LOGICAL
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 

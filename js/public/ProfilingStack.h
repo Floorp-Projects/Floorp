@@ -75,7 +75,7 @@ class ProfileEntry
         CATEGORY_MASK = ~ALL
     };
 
-    // Keep these in sync with devtools/client/performance/modules/global.js
+    // Keep these in sync with devtools/client/performance/modules/categories.js
     enum class Category : uint32_t {
         OTHER    = 0x10,
         CSS      = 0x20,

@@ -45,7 +45,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Screenshot",
                                   "resource://gre/modules/Screenshot.jsm");
 
 Cu.import('resource://gre/modules/Webapps.jsm');
-DOMApplicationRegistry.allAppsLaunchable = true;
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -263,11 +262,6 @@ var shell = {
   },
 
   bootstrap: function() {
-    if (AppConstants.MOZ_B2GDROID) {
-      Cc["@mozilla.org/b2g/b2gdroid-setup;1"]
-        .getService(Ci.nsIObserver).observe(window, "shell-startup", null);
-    }
-
     window.performance.mark('gecko-shell-bootstrap');
 
     // Before anything, check if we want to start in safe mode.
@@ -740,7 +734,7 @@ var shell = {
 
   handleCmdLine: function() {
     // This isn't supported on devices.
-    if (!isGonk && !AppConstants.MOZ_B2GDROID) {
+    if (!isGonk) {
       let b2gcmds = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"]
                       .getService(Ci.nsISupports);
       let args = b2gcmds.wrappedJSObject.cmdLine;

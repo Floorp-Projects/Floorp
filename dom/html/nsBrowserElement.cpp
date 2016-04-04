@@ -265,8 +265,9 @@ nsBrowserElement::Download(const nsAString& aUrl,
   jsapi.Init(wrappedObj->GetJSObject());
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> options(cx);
+  aRv.MightThrowJSException();
   if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.StealExceptionFromJSContext(cx);
     return nullptr;
   }
   nsresult rv = mBrowserElementAPI->Download(aUrl, options, getter_AddRefs(req));
@@ -764,8 +765,9 @@ nsBrowserElement::ExecuteScript(const nsAString& aScript,
   jsapi.Init(wrappedObj->GetJSObject());
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> options(cx);
+  aRv.MightThrowJSException();
   if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv.StealExceptionFromJSContext(cx);
     return nullptr;
   }
 

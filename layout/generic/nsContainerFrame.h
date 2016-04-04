@@ -34,7 +34,10 @@ class FramePropertyTable;
 // dependency on nsDeviceContext.h.  It doesn't matter if it's a
 // little off.
 #ifdef DEBUG
-#define CRAZY_COORD (1000000*60)
+// 10 million pixels, converted to app units. Note that this a bit larger
+// than 1/4 of nscoord_MAX. So, if any content gets to be this large, we're
+// definitely in danger of grazing up against nscoord_MAX; hence, it's CRAZY.
+#define CRAZY_COORD (10000000*60)
 #define CRAZY_SIZE(_x) (((_x) < -CRAZY_COORD) || ((_x) > CRAZY_COORD))
 #endif
 
@@ -350,6 +353,15 @@ public:
 
   friend class nsOverflowContinuationTracker;
 
+  typedef void (*ChildFrameMerger)(nsFrameList& aDest, nsFrameList& aSrc,
+                                   nsContainerFrame* aParent);
+  static inline void DefaultChildFrameMerge(nsFrameList& aDest,
+                                            nsFrameList& aSrc,
+                                            nsContainerFrame* aParent)
+  {
+    aDest.AppendFrames(nullptr, aSrc);
+  }
+
   /**
    * Reflow overflow container children. They are invisible to normal reflow
    * (i.e. don't affect sizing or placement of other children) and inherit
@@ -372,19 +384,32 @@ public:
    * making sure they are stored properly in the overflow container lists.
    * The nsOverflowContinuationTracker helper class should be used for this.
    *
-   * (aFlags just gets passed through to ReflowChild)
+   * @param aFlags is passed through to ReflowChild
+   * @param aMergeFunc is passed to DrainExcessOverflowContainersList
    */
   void ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
                                        const nsHTMLReflowState& aReflowState,
                                        nsOverflowAreas&         aOverflowRects,
                                        uint32_t                 aFlags,
-                                       nsReflowStatus&          aStatus);
+                                       nsReflowStatus&          aStatus,
+                                       ChildFrameMerger aMergeFunc =
+                                         DefaultChildFrameMerge);
 
   /**
    * Move any frames on our overflow list to the end of our principal list.
    * @return true if there were any overflow frames
    */
   virtual bool DrainSelfOverflowList() override;
+
+  
+  /**
+   * Move all frames on our prev-in-flow's and our own ExcessOverflowContainers
+   * lists to our OverflowContainers list.  If there are frames on multiple
+   * lists they are merged using aMergeFunc.
+   * @return a pointer to our OverflowContainers list, if any
+   */
+  nsFrameList* DrainExcessOverflowContainersList(ChildFrameMerger aMergeFunc =
+                                                   DefaultChildFrameMerge);
 
   /**
    * Removes aChild without destroying it and without requesting reflow.

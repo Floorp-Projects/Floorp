@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/b2g-build:0.2.9
+FROM          quay.io/mozilla/b2g-build:0.2.10
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 ENV VERSION 1.2

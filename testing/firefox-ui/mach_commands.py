@@ -13,27 +13,61 @@ from mozbuild.base import (
 )
 
 from mach.decorators import (
-    CommandProvider,
     Command,
+    CommandProvider,
 )
 
 
-def setup_argument_parser():
+def setup_argument_parser_functional():
     from firefox_ui_harness.arguments.base import FirefoxUIArguments
     return FirefoxUIArguments()
 
 
-def run_firefox_ui_test(tests, testtype=None, topsrcdir=None, **kwargs):
+def setup_argument_parser_update():
+    from firefox_ui_harness.arguments.update import UpdateArguments
+    return UpdateArguments()
+
+
+def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
-    from firefox_ui_harness import cli_functional
-    from firefox_ui_harness.arguments import FirefoxUIArguments
+    import firefox_ui_harness
 
-    parser = FirefoxUIArguments()
-    commandline.add_logging_group(parser)
+    if testtype == 'functional':
+        parser = setup_argument_parser_functional()
+    else:
+        parser = setup_argument_parser_update()
 
-    if not tests:
-        tests = [os.path.join(topsrcdir,
-                 'testing/firefox-ui/tests/firefox_ui_tests/manifest.ini')]
+    test_types = {
+        'functional': {
+            'default_tests': [
+                os.path.join('puppeteer', 'manifest.ini'),
+                os.path.join('functional', 'manifest.ini'),
+            ],
+            'cli_module': firefox_ui_harness.cli_functional,
+        },
+        'update': {
+            'default_tests': [
+                os.path.join('update', 'manifest.ini'),
+            ],
+            'cli_module': firefox_ui_harness.cli_update,
+        }
+    }
+
+    fxui_dir = os.path.join(topsrcdir, 'testing', 'firefox-ui')
+
+    # Set the resources path which is used to serve test data via wptserve
+    if not kwargs['server_root']:
+        kwargs['server_root'] = os.path.join(fxui_dir, 'resources')
+
+    # If no tests have been selected, set default ones
+    if kwargs.get('tests'):
+        tests = kwargs.get('tests')
+    else:
+        tests = [os.path.join(fxui_dir, 'tests', test)
+                           for test in test_types[testtype]['default_tests']]
+
+    kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
+                                                 {"mach": sys.stdout})
 
     args = parser.parse_args(args=tests)
 
@@ -42,10 +76,8 @@ def run_firefox_ui_test(tests, testtype=None, topsrcdir=None, **kwargs):
 
     parser.verify_usage(args)
 
-    args.logger = commandline.setup_logging("Firefox UI - Functional Tests",
-                                            args,
-                                            {"mach": sys.stdout})
-    failed = cli_functional.mn_cli(cli_functional.FirefoxUITestRunner, args=args)
+    failed = test_types[testtype]['cli_module'].cli(args=vars(args))
+
     if failed > 0:
         return 1
     else:
@@ -54,11 +86,24 @@ def run_firefox_ui_test(tests, testtype=None, topsrcdir=None, **kwargs):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('firefox-ui-test', category='testing',
-             description='Run Firefox UI functional tests.',
+    """Mach command provider for Firefox ui tests."""
+
+    @Command('firefox-ui-functional', category='testing',
              conditions=[conditions.is_firefox],
-             parser=setup_argument_parser,
+             description='Run the functional test suite of Firefox UI tests.',
+             parser=setup_argument_parser_functional,
              )
-    def run_firefox_ui_test(self, tests, **kwargs):
+    def run_firefox_ui_functional(self, **kwargs):
         kwargs['binary'] = kwargs['binary'] or self.get_binary_path('app')
-        return run_firefox_ui_test(tests, topsrcdir=self.topsrcdir, **kwargs)
+        return run_firefox_ui_test(testtype='functional',
+                                   topsrcdir=self.topsrcdir, **kwargs)
+
+    @Command('firefox-ui-update', category='testing',
+             conditions=[conditions.is_firefox],
+             description='Run the update test suite of Firefox UI tests.',
+             parser=setup_argument_parser_update,
+             )
+    def run_firefox_ui_update(self, **kwargs):
+        kwargs['binary'] = kwargs['binary'] or self.get_binary_path('app')
+        return run_firefox_ui_test(testtype='update',
+                                   topsrcdir=self.topsrcdir, **kwargs)

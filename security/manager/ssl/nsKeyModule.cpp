@@ -54,7 +54,7 @@ nsKeyObject::InitKey(int16_t aAlgorithm, PK11SymKey* aKey)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mSymKey = aKey;
+  mSymKey.reset(aKey);
   return NS_OK;
 }
 
@@ -76,7 +76,7 @@ nsKeyObject::GetKeyObj(PK11SymKey** _retval)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  *_retval = mSymKey;
+  *_retval = mSymKey.get();
   return NS_OK;
 }
 
@@ -142,14 +142,14 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
     return NS_ERROR_FAILURE;
   }
 
-  ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, cipherMech,
+  UniquePK11SymKey symKey(PK11_ImportSymKey(slot.get(), cipherMech,
                                             PK11_OriginUnwrap, cipherOperation,
                                             &keyItem, nullptr));
   if (!symKey) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = key->InitKey(aAlgorithm, symKey.forget());
+  rv = key->InitKey(aAlgorithm, symKey.release());
   if (NS_FAILED(rv)) {
     return rv;
   }

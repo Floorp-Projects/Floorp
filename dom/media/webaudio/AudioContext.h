@@ -200,8 +200,7 @@ public:
   already_AddRefed<AudioBufferSourceNode> CreateBufferSource(ErrorResult& aRv);
 
   already_AddRefed<AudioBuffer>
-  CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
-               uint32_t aLength, float aSampleRate,
+  CreateBuffer(uint32_t aNumberOfChannels, uint32_t aLength, float aSampleRate,
                ErrorResult& aRv);
 
   already_AddRefed<MediaStreamAudioDestinationNode>
@@ -312,6 +311,7 @@ public:
   IMPL_EVENT_HANDLER(mozinterruptend)
 
 private:
+  void DisconnectFromWindow();
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
   void ShutdownDecoder();
 

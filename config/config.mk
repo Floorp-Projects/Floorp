@@ -119,24 +119,6 @@ endif
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(MOZILLA_DIR)/build/autoconf
 
-#
-# Strip off the excessively long version numbers on these platforms,
-# but save the version to allow multiple versions of the same base
-# platform to be built in the same tree.
-#
-ifneq (,$(filter FreeBSD HP-UX Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
-OS_RELEASE	:= $(basename $(OS_RELEASE))
-
-# Allow the user to ignore the OS_VERSION, which is usually irrelevant.
-ifdef WANT_MOZILLA_CONFIG_OS_VERSION
-OS_VERS		:= $(suffix $(OS_RELEASE))
-OS_VERSION	:= $(shell echo $(OS_VERS) | sed 's/-.*//')
-endif
-
-endif
-
-OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
-
 ifdef _MSC_VER
 CC_WRAPPER ?= $(call py_action,cl)
 CXX_WRAPPER ?= $(call py_action,cl)
@@ -156,7 +138,7 @@ _DEBUG_CFLAGS :=
 _DEBUG_LDFLAGS :=
 
 ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
-  ifeq ($(AS),yasm)
+  ifeq ($(AS),$(YASM))
     ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
       _DEBUG_ASFLAGS += -g cv8
     else
@@ -171,14 +153,7 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 endif
 
-ifeq ($(YASM),$(AS))
-# yasm doesn't like the GNU as flags we may already have in ASFLAGS, so reset.
-ASFLAGS := $(_DEBUG_ASFLAGS)
-# yasm doesn't like -c
-AS_DASH_C_FLAG=
-else
 ASFLAGS += $(_DEBUG_ASFLAGS)
-endif
 OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
@@ -370,10 +345,6 @@ HOST_CXXFLAGS += $(HOST_DEFINES) $(MOZBUILD_HOST_CXXFLAGS)
 # Name of the binary code directories
 #
 # Override defaults
-
-# Default location of include files
-IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser
-IDL_PARSER_CACHE_DIR = $(DEPTH)/xpcom/idl-parser
 
 SDK_LIB_DIR = $(DIST)/sdk/lib
 SDK_BIN_DIR = $(DIST)/sdk/bin

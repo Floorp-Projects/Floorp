@@ -1,0 +1,18 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o complete-empty-live-actual.txt complete-empty-live.json
+
+Invocation {
+  $DMD = '--mode=live --stacks=full'
+  Mode = 'live'
+}
+
+#-----------------------------------------------------------------
+
+# no live heap blocks
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 0 bytes in 0 blocks
+}
+

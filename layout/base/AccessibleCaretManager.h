@@ -174,9 +174,10 @@ protected:
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
 
-  // Get the bounding rectangle for aFrame where the caret under cursor mode can
-  // be positioned. The rectangle is relative to the root frame.
-  nsRect GetContentBoundaryForFrame(nsIFrame* aFrame) const;
+  // Get the union of all the child frame scrollable overflow rects for aFrame,
+  // which is used as a helper function to restrict the area where the caret can
+  // be dragged. Returns the rect relative to aFrame.
+  nsRect GetAllChildFrameRectsUnion(nsIFrame* aFrame) const;
 
   // If we're dragging the first caret, we do not want to drag it over the
   // previous character of the second caret. Same as the second caret. So we

@@ -72,7 +72,7 @@
 
 // Defines kKeyMapping and GetKeyNameIndex()
 #include "GonkKeyMapping.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "GeckoTouchDispatcher.h"
 
 #undef LOG
@@ -313,9 +313,9 @@ KeyEventDispatcher::DispatchKeyEventInternal(EventMessage aEventMessage)
         event.mKeyValue = mDOMPrintableKeyValue;
     }
     event.mCodeNameIndex = mDOMCodeNameIndex;
-    event.modifiers = getDOMModifiers(mData.metaState);
+    event.mModifiers = getDOMModifiers(mData.metaState);
     event.location = mDOMKeyLocation;
-    event.time = mData.timeMs;
+    event.mTime = mData.timeMs;
     return nsWindow::DispatchKeyInput(event);
 }
 

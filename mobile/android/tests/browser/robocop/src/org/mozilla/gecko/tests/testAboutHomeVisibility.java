@@ -50,8 +50,8 @@ public class testAboutHomeVisibility extends UITest {
         mAboutHome.navigateToBuiltinPanelType(PanelType.BOOKMARKS)
                   .assertVisible()
                   .assertCurrentPanel(PanelType.BOOKMARKS);
-        mAboutHome.navigateToBuiltinPanelType(PanelType.HISTORY)
+        mAboutHome.navigateToBuiltinPanelType(PanelType.COMBINED_HISTORY)
                   .assertVisible()
-                  .assertCurrentPanel(PanelType.HISTORY);
+                  .assertCurrentPanel(PanelType.COMBINED_HISTORY);
     }
 }

@@ -144,8 +144,6 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (func (result i32) (return)) 
 // TODO: Reenable when syntactic arities are added for returns
 //assertThrowsInstanceOf(() => wasmEvalText('(module (func (return (i32.const 1))) (export "" 0))'), TypeError);
 
-// TODO: convert these to wasmEval and assert some results once they are implemented
-
 // ----------------------------------------------------------------------------
 // br / br_if
 
@@ -268,6 +266,116 @@ var isNonZero = wasmEvalText(`(module (func (result i32) (param i32)
 assertEq(isNonZero(0), 0);
 assertEq(isNonZero(1), 1);
 assertEq(isNonZero(-1), 1);
+
+// branches with values
+// br/br_if and block
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br 0))))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br 0 (f32.const 42)))))'), TypeError, mismatchError("f32", "i32"));
+
+assertErrorMessage(() => wasmEvalText(`(module (func (result i32) (param i32) (block (if (get_local 0) (br 0 (i32.const 42))))) (export "" 0))`), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText(`(module (func (result i32) (param i32) (block (if (get_local 0) (br 0 (i32.const 42))) (br 0 (f32.const 42)))) (export "" 0))`), TypeError, mismatchError("void", "i32"));
+
+assertEq(wasmEvalText('(module (func (result i32) (block (br 0 (i32.const 42)) (i32.const 13))) (export "" 0))')(), 42);
+
+assertEq(wasmEvalText('(module (func) (func (block (br 0 (call 0)) (i32.const 13))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func) (func (block (br_if 0 (call 0) (i32.const 1)) (i32.const 13))) (export "" 0))')(), undefined);
+
+var f = wasmEvalText(`(module (func (result i32) (param i32) (block (if (get_local 0) (br 0 (i32.const 42))) (i32.const 43))) (export "" 0))`);
+assertEq(f(0), 43);
+assertEq(f(1), 42);
+
+var f = wasmEvalText(`(module (func (result i32) (param i32) (block (br_if 0 (i32.const 42) (get_local 0)) (i32.const 43))) (export "" 0))`);
+assertEq(f(0), 43);
+assertEq(f(1), 42);
+
+var f = wasmEvalText(`(module (func (result i32) (param i32) (block (if (get_local 0) (br 0 (i32.const 42))) (br 0 (i32.const 43)))) (export "" 0))`);
+assertEq(f(0), 43);
+assertEq(f(1), 42);
+
+var f = wasmEvalText(`(module (func (result i32) (param i32) (block (br_if 0 (i32.const 42) (get_local 0)) (br 0 (i32.const 43)))) (export "" 0))`);
+assertEq(f(0), 43);
+assertEq(f(1), 42);
+
+var f = wasmEvalText(`(module (func (param i32) (result i32) (i32.add (i32.const 1) (block (if (get_local 0) (br 0 (i32.const 99))) (i32.const -1)))) (export "" 0))`);
+assertEq(f(0), 0);
+assertEq(f(1), 100);
+
+var f = wasmEvalText(`(module (func (param i32) (result i32) (i32.add (i32.const 1) (block (br_if 0 (i32.const 99) (get_local 0)) (i32.const -1)))) (export "" 0))`);
+assertEq(f(0), 0);
+assertEq(f(1), 100);
+
+assertEq(wasmEvalText(`(module (func (result i32) (block (br 0 (return (i32.const 42))) (i32.const 0))) (export "" 0))`)(), 42);
+assertEq(wasmEvalText(`(module (func (result i32) (block (return (br 0 (i32.const 42))))) (export "" 0))`)(), 42);
+assertEq(wasmEvalText(`(module (func (result i32) (block (return (br 0 (i32.const 42))) (i32.const 0))) (export "" 0))`)(), 42);
+
+assertEq(wasmEvalText(`(module (func (result f32) (block (br 0 (i32.const 0))) (block (br 0 (f32.const 42)))) (export "" 0))`)(), 42);
+
+var called = 0;
+var imports = {
+    sideEffects: {
+        ifTrue(x) {assertEq(x, 13); called++;},
+        ifFalse(x) {assertEq(x, 37); called--;}
+    }
+}
+var f = wasmEvalText(`(module
+ (import "sideEffects" "ifTrue" (param i32))
+ (import "sideEffects" "ifFalse" (param i32))
+ (func
+  (param i32) (result i32)
+  (block $outer
+   (if
+    (get_local 0)
+    (br $outer (call_import 0 (i32.const 13)))
+   )
+   (if
+    (i32.eqz (get_local 0))
+    (br $outer (call_import 1 (i32.const 37)))
+   )
+  )
+  (i32.const 42)
+ )
+(export "" 0))`, imports);
+assertEq(f(0), 42);
+assertEq(called, -1);
+assertEq(f(1), 42);
+assertEq(called, 0);
+
+// br/br_if and loop
+assertEq(wasmEvalText(`(module (func (param i32) (result i32) (loop $out $in (br $out (get_local 0)))) (export "" 0))`)(1), 1);
+
+assertEq(wasmEvalText(`(module (func (param i32) (result i32)
+  (loop $out $in
+   (if (get_local 0) (br $in (i32.const 1)))
+   (if (get_local 0) (br $in (f32.const 2)))
+   (if (get_local 0) (br $in (f64.const 3)))
+   (if (get_local 0) (br $in))
+   (i32.const 7)
+  )
+ ) (export "" 0))`)(0), 7);
+
+assertEq(wasmEvalText(`(module
+ (func
+  (result i32)
+  (local i32)
+  (loop $out $in
+   (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+   (if (i32.ge_s (get_local 0) (i32.const 7)) (br $out (get_local 0)))
+   (br $in)
+  )
+ )
+(export "" 0))`)(), 7);
+
+assertEq(wasmEvalText(`(module
+ (func
+  (result i32)
+  (local i32)
+  (loop $out $in
+   (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+   (br_if $out (get_local 0) (i32.ge_s (get_local 0) (i32.const 7)))
+   (br $in)
+  )
+ )
+(export "" 0))`)(), 7);
 
 // ----------------------------------------------------------------------------
 // loop
@@ -406,3 +514,12 @@ assertEq(f(1), 0);
 assertEq(f(2), 2);
 assertEq(f(3), -1);
 
+// ----------------------------------------------------------------------------
+// unreachable
+
+const UNREACHABLE = /unreachable/;
+assertErrorMessage(wasmEvalText(`(module (func (trap)) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (if (trap) (i32.const 0))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (block (br_if 0 (trap)))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (block (br_table 0 (trap)))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.add (i32.const 0) (trap))) (export "" 0))`), Error, UNREACHABLE);

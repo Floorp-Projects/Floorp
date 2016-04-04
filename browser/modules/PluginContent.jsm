@@ -422,8 +422,13 @@ PluginContent.prototype = {
         break;
 
       case "PluginInstantiated":
-        Services.telemetry.getKeyedHistogramById('PLUGIN_ACTIVATION_COUNT').add(this._getPluginInfo(plugin).pluginTag.niceName);
+        let key = this._getPluginInfo(plugin).pluginTag.niceName;
+        Services.telemetry.getKeyedHistogramById('PLUGIN_ACTIVATION_COUNT').add(key);
         shouldShowNotification = true;
+        let pluginRect = plugin.getBoundingClientRect();
+        if (pluginRect.width <= 5 && pluginRect.height <= 5) {
+          Services.telemetry.getKeyedHistogramById('PLUGIN_TINY_CONTENT').add(key);
+        }
         break;
     }
 
@@ -956,6 +961,13 @@ PluginContent.prototype = {
       // enough to serve as in-content notification.
       this.hideNotificationBar("plugin-crashed");
       doc.mozNoPluginCrashedNotification = true;
+
+      // Notify others that the crash reporter UI is now ready.
+      // Currently, this event is only used by tests.
+      let winUtils = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
+      let event = new this.content.CustomEvent("PluginCrashReporterDisplayed", {bubbles: true});
+      winUtils.dispatchEventToChromeOnly(plugin, event);
     } else {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.

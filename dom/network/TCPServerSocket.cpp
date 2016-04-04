@@ -122,9 +122,6 @@ TCPServerSocket::Close()
 void
 TCPServerSocket::FireEvent(const nsAString& aType, TCPSocket* aSocket)
 {
-  AutoJSAPI api;
-  api.Init(GetOwnerGlobal());
-
   TCPServerSocketEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;

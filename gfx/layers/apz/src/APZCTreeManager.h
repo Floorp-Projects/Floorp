@@ -51,7 +51,7 @@ enum ZoomToRectBehavior : uint32_t {
 class Layer;
 class AsyncDragMetrics;
 class AsyncPanZoomController;
-class CompositorParent;
+class CompositorBridgeParent;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
 struct FlingHandoffState;
@@ -78,7 +78,7 @@ class HitTestingTreeNode;
 
 /**
  * This class manages the tree of AsyncPanZoomController instances. There is one
- * instance of this class owned by each CompositorParent, and it contains as
+ * instance of this class owned by each CompositorBridgeParent, and it contains as
  * many AsyncPanZoomController instances as there are scrollable container layers.
  * This class generally lives on the compositor thread, although some functions
  * may be called from other threads as noted; thread safety is ensured internally.
@@ -137,7 +137,7 @@ public:
    *                             process' layer subtree has its own sequence
    *                             numbers.
    */
-  void UpdateHitTestingTree(CompositorParent* aCompositor,
+  void UpdateHitTestingTree(CompositorBridgeParent* aCompositor,
                             Layer* aRoot,
                             bool aIsFirstPaint,
                             uint64_t aOriginatingLayersId,
@@ -438,7 +438,8 @@ public:
   */
   RefPtr<HitTestingTreeNode> GetRootNode() const;
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
-                                                         HitTestResult* aOutHitResult);
+                                                         HitTestResult* aOutHitResult,
+                                                         bool* aOutHitScrollbar = nullptr);
   ScreenToParentLayerMatrix4x4 GetScreenToApzcTransform(const AsyncPanZoomController *aApzc) const;
   ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) const;
 private:
@@ -456,7 +457,8 @@ private:
                                      GuidComparator aComparator);
   AsyncPanZoomController* GetAPZCAtPoint(HitTestingTreeNode* aNode,
                                          const ParentLayerPoint& aHitTestPoint,
-                                         HitTestResult* aOutHitResult);
+                                         HitTestResult* aOutHitResult,
+                                         bool* aOutHitScrollbar);
   AsyncPanZoomController* FindRootApzcForLayersId(uint64_t aLayersId) const;
   AsyncPanZoomController* FindRootContentApzcForLayersId(uint64_t aLayersId) const;
   AsyncPanZoomController* FindRootContentOrRootApzc() const;

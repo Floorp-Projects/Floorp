@@ -10,6 +10,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/fallible.h"
+#include <algorithm>
 
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
@@ -24,16 +25,16 @@ public:
   static MemoryTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                    gfx::BackendType aMoz2DBackend,TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags,
-                                   ISurfaceAllocator* aAllocator);
+                                   ClientIPCAllocator* aAllocator);
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ISurfaceAllocator*) override;
+  virtual void Deallocate(ClientIPCAllocator*) override;
 
   MemoryTextureData(const BufferDescriptor& aDesc,
                     gfx::BackendType aMoz2DBackend,
@@ -61,16 +62,16 @@ public:
   static ShmemTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                   gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags,
-                                  ISurfaceAllocator* aAllocator);
+                                  ClientIPCAllocator* aAllocator);
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
+  virtual void Deallocate(ClientIPCAllocator* aAllocator) override;
 
   ShmemTextureData(const BufferDescriptor& aDesc,
                    gfx::BackendType aMoz2DBackend, mozilla::ipc::Shmem aShmem)
@@ -110,19 +111,20 @@ BufferTextureData*
 BufferTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                           gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                           TextureAllocationFlags aAllocFlags,
-                          ISurfaceAllocator* aAllocator)
+                          ClientIPCAllocator* aAllocator)
 {
   if (!aAllocator || aAllocator->IsSameProcess()) {
     return MemoryTextureData::Create(aSize, aFormat, aMoz2DBackend, aFlags,
                                      aAllocFlags, aAllocator);
-  } else {
+  } else if (aAllocator->AsShmemAllocator()) {
     return ShmemTextureData::Create(aSize, aFormat, aMoz2DBackend, aFlags,
                                     aAllocFlags, aAllocator);
   }
+  return nullptr;
 }
 
 BufferTextureData*
-BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
+BufferTextureData::CreateInternal(ClientIPCAllocator* aAllocator,
                                   const BufferDescriptor& aDesc,
                                   gfx::BackendType aMoz2DBackend,
                                   int32_t aBufferSize,
@@ -137,18 +139,19 @@ BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
     GfxMemoryImageReporter::DidAlloc(buffer);
 
     return new MemoryTextureData(aDesc, aMoz2DBackend, buffer, aBufferSize);
-  } else {
+  } else if (aAllocator->AsShmemAllocator()) {
     ipc::Shmem shm;
-    if (!aAllocator->AllocUnsafeShmem(aBufferSize, OptimalShmemType(), &shm)) {
+    if (!aAllocator->AsShmemAllocator()->AllocUnsafeShmem(aBufferSize, OptimalShmemType(), &shm)) {
       return nullptr;
     }
 
     return new ShmemTextureData(aDesc, aMoz2DBackend, shm);
   }
+  return nullptr;
 }
 
 BufferTextureData*
-BufferTextureData::CreateForYCbCrWithBufferSize(ISurfaceAllocator* aAllocator,
+BufferTextureData::CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
                                                 gfx::SurfaceFormat aFormat,
                                                 int32_t aBufferSize,
                                                 TextureFlags aTextureFlags)
@@ -167,7 +170,7 @@ BufferTextureData::CreateForYCbCrWithBufferSize(ISurfaceAllocator* aAllocator,
 }
 
 BufferTextureData*
-BufferTextureData::CreateForYCbCr(ISurfaceAllocator* aAllocator,
+BufferTextureData::CreateForYCbCr(ClientIPCAllocator* aAllocator,
                                   gfx::IntSize aYSize,
                                   gfx::IntSize aCbCrSize,
                                   StereoMode aStereoMode,
@@ -245,7 +248,7 @@ BufferTextureData::BorrowDrawTarget()
   uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
   mDrawTarget = gfx::Factory::CreateDrawTargetForData(mMoz2DBackend,
                                                       GetBuffer(), rgb.size(),
-                                                      stride, rgb.format());
+                                                      stride, rgb.format(), true);
 
   if (mDrawTarget) {
     RefPtr<gfx::DrawTarget> dt = mDrawTarget;
@@ -257,7 +260,7 @@ BufferTextureData::BorrowDrawTarget()
   if (mMoz2DBackend != gfx::BackendType::CAIRO) {
     mDrawTarget = gfx::Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
                                                         GetBuffer(), rgb.size(),
-                                                        stride, rgb.format());
+                                                        stride, rgb.format(), true);
   }
 
   if (!mDrawTarget) {
@@ -397,7 +400,10 @@ MemoryTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-static bool InitBuffer(uint8_t* buf, size_t bufSize, TextureAllocationFlags aAllocFlags)
+static bool
+InitBuffer(uint8_t* buf, size_t bufSize,
+           gfx::SurfaceFormat aFormat, TextureAllocationFlags aAllocFlags,
+           bool aAlreadyZero)
 {
   if (!buf) {
     gfxDebug() << "BufferTextureData: Failed to allocate " << bufSize << " bytes";
@@ -406,7 +412,13 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, TextureAllocationFlags aAll
 
   if ((aAllocFlags & ALLOC_CLEAR_BUFFER) ||
       (aAllocFlags & ALLOC_CLEAR_BUFFER_BLACK)) {
-    memset(buf, 0, bufSize);
+    if (aFormat == gfx::SurfaceFormat::B8G8R8X8) {
+      // Even though BGRX was requested, XRGB_UINT32 is what is meant,
+      // so use 0xFF000000 to put alpha in the right place.
+      std::fill_n(reinterpret_cast<uint32_t*>(buf), bufSize / sizeof(uint32_t), 0xFF000000);
+    } else if (!aAlreadyZero) {
+      memset(buf, 0, bufSize);
+    }
   }
 
   if (aAllocFlags & ALLOC_CLEAR_BUFFER_WHITE) {
@@ -420,7 +432,7 @@ MemoryTextureData*
 MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                           gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                           TextureAllocationFlags aAllocFlags,
-                          ISurfaceAllocator* aAllocator)
+                          ClientIPCAllocator* aAllocator)
 {
   // Should have used CreateForYCbCr.
   MOZ_ASSERT(aFormat != gfx::SurfaceFormat::YUV);
@@ -436,7 +448,7 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* buf = new (fallible) uint8_t[bufSize];
-  if (!InitBuffer(buf, bufSize, aAllocFlags)) {
+  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags, false)) {
     return nullptr;
   }
 
@@ -453,7 +465,7 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 void
-MemoryTextureData::Deallocate(ISurfaceAllocator*)
+MemoryTextureData::Deallocate(ClientIPCAllocator*)
 {
   MOZ_ASSERT(mBuffer);
   GfxMemoryImageReporter::WillFree(mBuffer);
@@ -462,7 +474,7 @@ MemoryTextureData::Deallocate(ISurfaceAllocator*)
 }
 
 TextureData*
-MemoryTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+MemoryTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                  TextureFlags aFlags,
                                  TextureAllocationFlags aAllocFlags) const
 {
@@ -487,13 +499,13 @@ ShmemTextureData*
 ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                          gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                          TextureAllocationFlags aAllocFlags,
-                         ISurfaceAllocator* aAllocator)
+                         ClientIPCAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
   // Should have used CreateForYCbCr.
   MOZ_ASSERT(aFormat != gfx::SurfaceFormat::YUV);
 
-  if (!aAllocator) {
+  if (!aAllocator || !aAllocator->AsShmemAllocator()) {
     return nullptr;
   }
 
@@ -508,12 +520,12 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   mozilla::ipc::Shmem shm;
-  if (!aAllocator->AllocUnsafeShmem(bufSize, OptimalShmemType(), &shm)) {
+  if (!aAllocator->AsShmemAllocator()->AllocUnsafeShmem(bufSize, OptimalShmemType(), &shm)) {
     return nullptr;
   }
 
   uint8_t* buf = shm.get<uint8_t>();
-  if (!InitBuffer(buf, bufSize, aAllocFlags)) {
+  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags, true)) {
     return nullptr;
   }
 
@@ -530,7 +542,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 TextureData*
-ShmemTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+ShmemTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                 TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
@@ -539,9 +551,9 @@ ShmemTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
 }
 
 void
-ShmemTextureData::Deallocate(ISurfaceAllocator* aAllocator)
+ShmemTextureData::Deallocate(ClientIPCAllocator* aAllocator)
 {
-  aAllocator->DeallocShmem(mShmem);
+  aAllocator->AsShmemAllocator()->DeallocShmem(mShmem);
 }
 
 } // namespace

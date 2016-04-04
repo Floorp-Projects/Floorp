@@ -149,29 +149,15 @@ ApplicationAccessible::NativeState()
   return 0;
 }
 
-void
-ApplicationAccessible::InvalidateChildren()
-{
-  // Do nothing because application children are kept updated by AppendChild()
-  // and RemoveChild() method calls.
-}
-
 KeyBinding
 ApplicationAccessible::AccessKey() const
 {
   return KeyBinding();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Accessible protected methods
-
 void
-ApplicationAccessible::CacheChildren()
+ApplicationAccessible::Init()
 {
-  // CacheChildren is called only once for application accessible when its
-  // children are requested because empty InvalidateChldren() prevents its
-  // repeated calls.
-
   // Basically children are kept updated by Append/RemoveChild method calls.
   // However if there are open windows before accessibility was started
   // then we need to make sure root accessibles for open windows are created so

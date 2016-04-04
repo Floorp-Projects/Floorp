@@ -30,13 +30,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/fxaccount_getting_started_get_started" />
-
-        <TextView
-            android:id="@+id/remote_tabs_setup_old_sync_link"
-            style="@style/RemoteTabsPanelItem.TextAppearance.Linkified"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/fxaccount_getting_started_old_firefox" />
     </LinearLayout>
 
 </ScrollView>

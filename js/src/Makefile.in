@@ -41,16 +41,6 @@ symverscript: symverscript.in
 EXTRA_DEPS += symverscript
 endif
 
-export_files = js-config.h
-ifdef HAVE_DTRACE
-export_files += $(CURDIR)/javascript-trace.h
-endif
-
-INSTALL_TARGETS += jsconfig
-jsconfig_FILES = $(export_files)
-jsconfig_DEST = $(DIST)/include
-jsconfig_TARGET := export
-
 include $(topsrcdir)/config/rules.mk
 
 # check_vanilla_allocations.py is tailored to Linux, so only run it there.
@@ -173,7 +163,6 @@ endif
 endif
 
 SCRIPTS = $(JS_CONFIG_NAME)
-SDK_BINARY = $(JS_CONFIG_NAME)
 
 $(LIBRARY_NAME).pc: js.pc
 	cp $^ $@
@@ -254,7 +243,7 @@ install:: ETWProvider.mof ETWProvider.man
 endif
 
 ifdef HAVE_DTRACE
-$(CURDIR)/javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
+javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
 	dtrace -x nolibs -h -s $(srcdir)/devtools/javascript-trace.d -o javascript-trace.h.in
 	sed -e 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    -e '/const/!s/char \*/const char */g' \

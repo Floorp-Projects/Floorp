@@ -118,7 +118,7 @@ ShaderOutput(gl::GLContext* gl)
         }
     }
 
-    return SH_GLSL_OUTPUT;
+    return SH_GLSL_COMPATIBILITY_OUTPUT;
 }
 
 webgl::ShaderValidator*
@@ -129,7 +129,7 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
 
     ShShaderSpec spec = IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC;
     ShShaderOutput outputLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT
-                                                 : SH_GLSL_OUTPUT;
+                                                 : SH_GLSL_COMPATIBILITY_OUTPUT;
 
     // If we're using WebGL2 we want a more specific version of GLSL
     if (IsWebGL2())
@@ -397,6 +397,21 @@ ShaderValidator::FindAttribUserNameByMappedName(const std::string& mappedName,
 }
 
 bool
+ShaderValidator::FindActiveOutputMappedNameByUserName(const std::string& userName,
+                                                      const std::string** const out_mappedName) const
+{
+    const std::vector<sh::OutputVariable>& varibles = *ShGetOutputVariables(mHandle);
+    for (auto itr = varibles.begin(); itr != varibles.end(); ++itr) {
+        if (itr->name == userName) {
+            *out_mappedName = &(itr->mappedName);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
 ShaderValidator::FindAttribMappedNameByUserName(const std::string& userName,
                                                 const std::string** const out_mappedName) const
 {
@@ -459,13 +474,43 @@ ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
         return true;
     }
 
+    const size_t dotPos = mappedName.find(".");
+
     const std::vector<sh::InterfaceBlock>& interfaces = *ShGetInterfaceBlocks(mHandle);
     for (const auto& interface : interfaces) {
+
+        std::string mappedFieldName;
+        const bool hasInstanceName = !interface.instanceName.empty();
+
+        // If the InterfaceBlock has an instanceName, all variables defined
+        // within the block are qualified with the block name, as opposed
+        // to being placed in the global scope.
+        if (hasInstanceName) {
+
+            // If mappedName has no block name prefix, skip
+            if (std::string::npos == dotPos)
+                continue;
+
+            // If mappedName has a block name prefix that doesn't match, skip
+            const std::string mappedInterfaceBlockName = mappedName.substr(0, dotPos);
+            if (interface.mappedName != mappedInterfaceBlockName)
+                continue;
+
+            mappedFieldName = mappedName.substr(dotPos + 1);
+        } else {
+            mappedFieldName = mappedName;
+        }
+
         for (const auto& field : interface.fields) {
             const sh::ShaderVariable* found;
 
-            if (!field.findInfoByMappedName(mappedName, &found, out_userName))
+            if (!field.findInfoByMappedName(mappedFieldName, &found, out_userName))
                 continue;
+
+            if (hasInstanceName) {
+                // Prepend the user name of the interface that matched
+                *out_userName = interface.name + "." + *out_userName;
+            }
 
             *out_isArray = found->isArray();
             return true;

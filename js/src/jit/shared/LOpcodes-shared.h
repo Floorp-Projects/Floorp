@@ -315,6 +315,7 @@
     _(IteratorEnd)                  \
     _(ArrayLength)                  \
     _(SetArrayLength)               \
+    _(GetNextMapEntryForIterator)   \
     _(TypedArrayLength)             \
     _(TypedArrayElements)           \
     _(SetDisjointTypedElements)     \
@@ -344,6 +345,10 @@
     _(CallInstanceOf)               \
     _(InterruptCheck)               \
     _(AsmJSInterruptCheck)          \
+    _(AsmThrowUnreachable)          \
+    _(AsmReinterpret)               \
+    _(AsmReinterpretToI64)          \
+    _(AsmReinterpretFromI64)        \
     _(GetDOMProperty)               \
     _(GetDOMMemberV)                \
     _(GetDOMMemberT)                \
@@ -353,6 +358,8 @@
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
+    _(AsmSelect)                    \
+    _(AsmSelectI64)                 \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSLoadFuncPtr)             \

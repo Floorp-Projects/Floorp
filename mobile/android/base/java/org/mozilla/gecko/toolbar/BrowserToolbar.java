@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -29,7 +30,6 @@ import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
@@ -162,8 +162,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         final BrowserToolbar toolbar;
         if (HardwareUtils.isTablet()) {
             toolbar = new BrowserToolbarTablet(context, attrs);
-        } else if (Versions.preHC) {
-            toolbar = new BrowserToolbarPreHC(context, attrs);
         } else {
             toolbar = new BrowserToolbarPhone(context, attrs);
         }
@@ -202,8 +200,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         shadowSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_shadow_size);
 
         shadowPaint = new Paint();
-        shadowColor = ColorUtils.getColor(context, R.color.url_bar_shadow);
-        shadowPrivateColor = ColorUtils.getColor(context, R.color.url_bar_shadow_private);
+        shadowColor = ContextCompat.getColor(context, R.color.url_bar_shadow);
+        shadowPrivateColor = ContextCompat.getColor(context, R.color.url_bar_shadow_private);
         shadowPaint.setColor(shadowColor);
         shadowPaint.setStrokeWidth(0.0f);
 
@@ -902,7 +900,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public static LightweightThemeDrawable getLightweightThemeDrawable(final View view,
             final LightweightTheme theme, final int colorResID) {
-        final int color = ColorUtils.getColor(view.getContext(), colorResID);
+        final int color = ContextCompat.getColor(view.getContext(), colorResID);
 
         final LightweightThemeDrawable drawable = theme.getColorDrawable(view, color);
         if (drawable != null) {

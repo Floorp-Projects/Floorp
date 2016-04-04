@@ -289,7 +289,7 @@ WinLaunchChild(const wchar_t *exePath,
                   (LPTSTR) &lpMsgBuf,
                   0,
                   nullptr);
-    wprintf(L"Error restarting: %s\n", lpMsgBuf ? lpMsgBuf : L"(null)");
+    wprintf(L"Error restarting: %s\n", lpMsgBuf ? static_cast<const wchar_t*>(lpMsgBuf) : L"(null)");
     if (lpMsgBuf)
       LocalFree(lpMsgBuf);
   }

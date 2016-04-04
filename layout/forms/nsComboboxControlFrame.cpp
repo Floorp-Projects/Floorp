@@ -19,6 +19,7 @@
 #include "nsIListControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
+#include "nsPresState.h"
 #include "nsContentList.h"
 #include "nsView.h"
 #include "nsViewManager.h"
@@ -316,14 +317,15 @@ nsComboboxControlFrame::ShowPopup(bool aShowPopup)
     viewManager->ResizeView(view, emptyRect);
   }
 
-  // fire a popup dom event
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, aShowPopup ? eXULPopupShowing : eXULPopupHiding,
-                         nullptr, WidgetMouseEvent::eReal);
-
+  // fire a popup dom event if it is safe to do so
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
-  if (shell)
+  if (shell && nsContentUtils::IsSafeToRunScript()) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    WidgetMouseEvent event(true, aShowPopup ? eXULPopupShowing : eXULPopupHiding,
+                           nullptr, WidgetMouseEvent::eReal);
+
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
+  }
 }
 
 bool
@@ -447,7 +449,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
                                          forcedISize));
 
   // ensure we start off hidden
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (!mDroppedDown && GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     nsView* view = mDropdownFrame->GetView();
     nsViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -958,6 +960,10 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 {
   mDropdownFrame = aDropDownFrame;
   mListControlFrame = do_QueryFrame(mDropdownFrame);
+  if (!sFocused && nsContentUtils::IsFocusedContent(GetContent())) {
+    sFocused = this;
+    nsListControlFrame::ComboboxFocusSet();
+  }
 }
 
 nsIFrame*
@@ -1198,7 +1204,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // isn't possible to set the display type in CSS2 to create a button frame.
 
     // create content used for display
-  //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
+  //nsIAtom* tag = NS_Atomize("mozcombodisplay");
 
   // Add a child text content node for the label
 
@@ -1387,6 +1393,10 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
 void
 nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
+  if (sFocused == this) {
+    sFocused = nullptr;
+  }
+
   // Revoke any pending RedisplayTextEvent
   mRedisplayTextEvent.Revoke();
 
@@ -1652,24 +1662,37 @@ nsComboboxControlFrame::OnContentReset()
 NS_IMETHODIMP
 nsComboboxControlFrame::SaveState(nsPresState** aState)
 {
-  if (!mListControlFrame)
-    return NS_ERROR_FAILURE;
-
-  nsIStatefulFrame* stateful = do_QueryFrame(mListControlFrame);
-  return stateful->SaveState(aState);
+  MOZ_ASSERT(!(*aState));
+  (*aState) = new nsPresState();
+  (*aState)->SetDroppedDown(mDroppedDown);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RestoreState(nsPresState* aState)
 {
-  if (!mListControlFrame)
+  if (!aState) {
     return NS_ERROR_FAILURE;
-
-  nsIStatefulFrame* stateful = do_QueryFrame(mListControlFrame);
-  NS_ASSERTION(stateful, "Must implement nsIStatefulFrame");
-  return stateful->RestoreState(aState);
+  }
+  ShowList(aState->GetDroppedDown()); // might destroy us
+  return NS_OK;
 }
 
+// Append a suffix so that the state key for the combobox is different
+// from the state key the list control uses to sometimes save the scroll
+// position for the same Element
+NS_IMETHODIMP
+nsComboboxControlFrame::GenerateStateKey(nsIContent* aContent,
+                                        nsIDocument* aDocument,
+                                        nsACString& aKey)
+{
+  nsresult rv = nsContentUtils::GenerateStateKey(aContent, aDocument, aKey);
+  if (NS_FAILED(rv) || aKey.IsEmpty()) {
+    return rv;
+  }
+  aKey.Append("CCF");
+  return NS_OK;
+}
 
 // Fennec uses a custom combobox built-in widget.
 //

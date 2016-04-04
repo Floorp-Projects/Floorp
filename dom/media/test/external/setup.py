@@ -2,17 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '1.0'
+PACKAGE_VERSION = '2.0'
 
-deps = [
-    'marionette-client == 2.2.0',
-    'marionette-driver == 1.3.0',
-    'mozlog == 3.1',
-    'manifestparser == 1.1',
-    'firefox-puppeteer >= 3.2.0, <4.0.0',
-]
+THIS_DIR = os.path.dirname(os.path.realpath(__name__))
+
+
+def read(*parts):
+    with open(os.path.join(THIS_DIR, *parts)) as f:
+        return f.read()
 
 setup(name='external-media-tests',
       version=PACKAGE_VERSION,
@@ -34,7 +34,7 @@ setup(name='external-media-tests',
       license='MPL 2.0',
       packages=find_packages(),
       zip_safe=False,
-      install_requires=deps,
+      install_requires=read('requirements.txt').splitlines(),
       include_package_data=True,
       entry_points="""
         [console_scripts]

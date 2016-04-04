@@ -554,6 +554,9 @@ auto GeckoAppShell::MoveTaskToBack() -> void
     return mozilla::jni::Method<MoveTaskToBack_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::NotifyObservers_t::name[];
+constexpr char GeckoAppShell::NotifyObservers_t::signature[];
+
 constexpr char GeckoAppShell::NetworkLinkType_t::name[];
 constexpr char GeckoAppShell::NetworkLinkType_t::signature[];
 
@@ -705,6 +708,9 @@ auto GeckoAppShell::StopMonitoringGamepad() -> void
 {
     return mozilla::jni::Method<StopMonitoringGamepad_t>::Call(GeckoAppShell::Context(), nullptr);
 }
+
+constexpr char GeckoAppShell::SyncNotifyObservers_t::name[];
+constexpr char GeckoAppShell::SyncNotifyObservers_t::signature[];
 
 constexpr char GeckoAppShell::UnlockProfile_t::name[];
 constexpr char GeckoAppShell::UnlockProfile_t::signature[];
@@ -1183,25 +1189,6 @@ auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool 
     return mozilla::jni::Method<OnPrefChange_t>::Call(PrefsHelper::Context(), nullptr, a0, a1, a2, a3, a4);
 }
 
-template<> const char mozilla::jni::Context<Restrictions, jobject>::name[] =
-        "org/mozilla/gecko/Restrictions";
-
-constexpr char Restrictions::IsAllowed_t::name[];
-constexpr char Restrictions::IsAllowed_t::signature[];
-
-auto Restrictions::IsAllowed(int32_t a0, mozilla::jni::String::Param a1) -> bool
-{
-    return mozilla::jni::Method<IsAllowed_t>::Call(Restrictions::Context(), nullptr, a0, a1);
-}
-
-constexpr char Restrictions::IsUserRestricted_t::name[];
-constexpr char Restrictions::IsUserRestricted_t::signature[];
-
-auto Restrictions::IsUserRestricted() -> bool
-{
-    return mozilla::jni::Method<IsUserRestricted_t>::Call(Restrictions::Context(), nullptr);
-}
-
 template<> const char mozilla::jni::Context<SurfaceBits, jobject>::name[] =
         "org/mozilla/gecko/SurfaceBits";
 
@@ -1541,6 +1528,9 @@ constexpr char NativePanZoomController::DisposeNative_t::signature[];
 constexpr char NativePanZoomController::HandleMotionEvent_t::name[];
 constexpr char NativePanZoomController::HandleMotionEvent_t::signature[];
 
+constexpr char NativePanZoomController::HandleMouseEvent_t::name[];
+constexpr char NativePanZoomController::HandleMouseEvent_t::signature[];
+
 constexpr char NativePanZoomController::HandleScrollEvent_t::name[];
 constexpr char NativePanZoomController::HandleScrollEvent_t::signature[];
 
@@ -1550,12 +1540,28 @@ constexpr char NativePanZoomController::AbortAnimation_t::signature[];
 constexpr char NativePanZoomController::SetIsLongpressEnabled_t::name[];
 constexpr char NativePanZoomController::SetIsLongpressEnabled_t::signature[];
 
+constexpr char NativePanZoomController::OnSelectionDragState_t::name[];
+constexpr char NativePanZoomController::OnSelectionDragState_t::signature[];
+
+auto NativePanZoomController::OnSelectionDragState(bool a0) const -> void
+{
+    return mozilla::jni::Method<OnSelectionDragState_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
+}
+
 constexpr char NativePanZoomController::RequestContentRepaintWrapper_t::name[];
 constexpr char NativePanZoomController::RequestContentRepaintWrapper_t::signature[];
 
 auto NativePanZoomController::RequestContentRepaintWrapper(float a0, float a1, float a2, float a3, float a4) const -> void
 {
     return mozilla::jni::Method<RequestContentRepaintWrapper_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4);
+}
+
+constexpr char NativePanZoomController::SetScrollingRootContent_t::name[];
+constexpr char NativePanZoomController::SetScrollingRootContent_t::signature[];
+
+auto NativePanZoomController::SetScrollingRootContent(bool a0) const -> void
+{
+    return mozilla::jni::Method<SetScrollingRootContent_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
 }
 
 constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];
@@ -1771,6 +1777,25 @@ auto ViewTransform::Y() const -> float
 auto ViewTransform::Y(float a0) const -> void
 {
     return mozilla::jni::Field<Y_t>::Set(ViewTransform::mCtx, nullptr, a0);
+}
+
+template<> const char mozilla::jni::Context<Restrictions, jobject>::name[] =
+        "org/mozilla/gecko/restrictions/Restrictions";
+
+constexpr char Restrictions::IsAllowed_t::name[];
+constexpr char Restrictions::IsAllowed_t::signature[];
+
+auto Restrictions::IsAllowed(int32_t a0, mozilla::jni::String::Param a1) -> bool
+{
+    return mozilla::jni::Method<IsAllowed_t>::Call(Restrictions::Context(), nullptr, a0, a1);
+}
+
+constexpr char Restrictions::IsUserRestricted_t::name[];
+constexpr char Restrictions::IsUserRestricted_t::signature[];
+
+auto Restrictions::IsUserRestricted() -> bool
+{
+    return mozilla::jni::Method<IsUserRestricted_t>::Call(Restrictions::Context(), nullptr);
 }
 
 template<> const char mozilla::jni::Context<MatrixBlobCursor, jobject>::name[] =

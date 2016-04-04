@@ -24,15 +24,44 @@ ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
 }
 
 static inline double
-StepEnd(uint32_t aSteps, double aPortion)
+StepTiming(uint32_t aSteps,
+           double aPortion,
+           ComputedTimingFunction::BeforeFlag aBeforeFlag,
+           nsTimingFunction::Type aType)
 {
   MOZ_ASSERT(0.0 <= aPortion && aPortion <= 1.0, "out of range");
+  MOZ_ASSERT(aType != nsTimingFunction::Type::StepStart ||
+             aType != nsTimingFunction::Type::StepEnd, "invalid type");
+
+  if (aPortion == 1.0) {
+    return 1.0;
+  }
+
+  // Calculate current step using step-end behavior
   uint32_t step = uint32_t(aPortion * aSteps); // floor
+
+  // step-start is one step ahead
+  if (aType == nsTimingFunction::Type::StepStart) {
+    step++;
+  }
+
+  // If the "before flag" is set and we are at a transition point,
+  // drop back a step (but only if we are not already at the zero point--
+  // we do this clamping here since |step| is an unsigned integer)
+  if (step != 0 &&
+      aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
+      fmod(aPortion * aSteps, 1) == 0) {
+    step--;
+  }
+
+  // Convert to a progress value
   return double(step) / double(aSteps);
 }
 
 double
-ComputedTimingFunction::GetValue(double aPortion) const
+ComputedTimingFunction::GetValue(
+    double aPortion,
+    ComputedTimingFunction::BeforeFlag aBeforeFlag) const
 {
   if (HasSpline()) {
     // Check for a linear curve.
@@ -84,17 +113,7 @@ ComputedTimingFunction::GetValue(double aPortion) const
   // Clamp in case of steps(end) and steps(start) for values greater than 1.
   aPortion = clamped(aPortion, 0.0, 1.0);
 
-  if (mType == nsTimingFunction::Type::StepStart) {
-    // There are diagrams in the spec that seem to suggest this check
-    // and the bounds point should not be symmetric with StepEnd, but
-    // should actually step up at rather than immediately after the
-    // fraction points.  However, we rely on rounding negative values
-    // up to zero, so we can't do that.  And it's not clear the spec
-    // really meant it.
-    return 1.0 - StepEnd(mSteps, 1.0 - aPortion);
-  }
-  MOZ_ASSERT(mType == nsTimingFunction::Type::StepEnd, "bad type");
-  return StepEnd(mSteps, aPortion);
+  return StepTiming(mSteps, aPortion, aBeforeFlag, mType);
 }
 
 int32_t

@@ -70,9 +70,17 @@ AndroidContentController::HandleSingleTap(const CSSPoint& aPoint,
         }
 
         CSSIntPoint rounded = RoundedToInt(point);
-        nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", rounded.x, rounded.y);
-        nsAppShell::PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
-                NS_LITERAL_CSTRING("Gesture:SingleTap"), data));
+        nsAppShell::PostEvent([rounded] {
+            nsCOMPtr<nsIObserverService> obsServ =
+                mozilla::services::GetObserverService();
+            if (!obsServ) {
+                return;
+            }
+
+            nsPrintfCString data("{\"x\":%d,\"y\":%d}", rounded.x, rounded.y);
+            obsServ->NotifyObservers(nullptr, "Gesture:SingleTap",
+                                     NS_ConvertASCIItoUTF16(data).get());
+        });
     }
 
     ChromeProcessController::HandleSingleTap(aPoint, aModifiers, aGuid);
@@ -92,10 +100,18 @@ AndroidContentController::UpdateOverscrollVelocity(const float aX, const float a
 }
 
 void
-AndroidContentController::UpdateOverscrollOffset(const float aX,const  float aY)
+AndroidContentController::UpdateOverscrollOffset(const float aX, const float aY)
 {
   if (mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollOffset(aX, aY);
+  }
+}
+
+void
+AndroidContentController::SetScrollingRootContent(const bool isRootContent)
+{
+  if (mAndroidWindow) {
+    mAndroidWindow->SetScrollingRootContent(isRootContent);
   }
 }
 

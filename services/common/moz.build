@@ -15,6 +15,7 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES['services-common'] += [
     'async.js',
+    'kinto-updater.js',
     'KintoCertificateBlocklist.js',
     'logmanager.js',
     'moz-kinto-client.js',
@@ -24,7 +25,7 @@ EXTRA_JS_MODULES['services-common'] += [
     'utils.js',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['MOZ_B2GDROID']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     EXTRA_JS_MODULES['services-common'] += [
         'hawkclient.js',
         'hawkrequest.js',

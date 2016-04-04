@@ -10,13 +10,14 @@ const {Cc, Ci, Cu} = require("chrome");
 const {InplaceEditor, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ReflowFront} = require("devtools/server/actors/layout");
+const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 const STRINGS_URI = "chrome://devtools/locale/shared.properties";
-const SHARED_L10N = new ViewHelpers.L10N(STRINGS_URI);
+const SHARED_L10N = new LocalizationHelper(STRINGS_URI);
 const NUMERIC = /^-?[\d\.]+$/;
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
@@ -139,6 +140,7 @@ function LayoutView(inspector, win) {
   this.doc = win.document;
   this.sizeLabel = this.doc.querySelector(".layout-size > span");
   this.sizeHeadingLabel = this.doc.getElementById("layout-element-size");
+  this._geometryEditorHighlighter = null;
 
   this.init();
 }
@@ -155,6 +157,11 @@ LayoutView.prototype = {
 
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.inspector.sidebar.on("select", this.onSidebarSelect);
+
+    this.onPickerStarted = this.onPickerStarted.bind(this);
+    this.onMarkupViewLeave = this.onMarkupViewLeave.bind(this);
+    this.onMarkupViewNodeHover = this.onMarkupViewNodeHover.bind(this);
+    this.onWillNavigate = this.onWillNavigate.bind(this);
 
     this.initBoxModelHighlighter();
 
@@ -252,6 +259,11 @@ LayoutView.prototype = {
     let dir = chromeReg.isLocaleRTL("global");
     let container = this.doc.getElementById("layout-container");
     container.setAttribute("dir", dir ? "rtl" : "ltr");
+
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+
+    this.onGeometryButtonClick = this.onGeometryButtonClick.bind(this);
+    nodeGeometry.addEventListener("click", this.onGeometryButtonClick);
   },
 
   initBoxModelHighlighter: function() {
@@ -306,7 +318,10 @@ LayoutView.prototype = {
     let editor = new InplaceEditor({
       element: element,
       initial: initialValue,
-
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+      property: {
+        name: dimension.property
+      },
       start: self => {
         self.elt.parentNode.classList.add("layout-editing");
       },
@@ -372,9 +387,23 @@ LayoutView.prototype = {
       element.removeEventListener("mouseout", this.onHighlightMouseOut, true);
     }
 
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    nodeGeometry.removeEventListener("click", this.onGeometryButtonClick);
+
+    this.inspector.off("picker-started", this.onPickerStarted);
+
+    // Inspector Panel will destroy `markup` object on "will-navigate" event,
+    // therefore we have to check if it's still available in case LayoutView
+    // is destroyed immediately after.
+    if (this.inspector.markup) {
+      this.inspector.markup.off("leave", this.onMarkupViewLeave);
+      this.inspector.markup.off("node-hover", this.onMarkupViewNodeHover);
+    }
+
     this.inspector.sidebar.off("layoutview-selected", this.onNewNode);
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
+    this.inspector._target.off("will-navigate", this.onWillNavigate);
 
     this.sizeHeadingLabel = null;
     this.sizeLabel = null;
@@ -397,10 +426,12 @@ LayoutView.prototype = {
    */
   onNewSelection: function() {
     let done = this.inspector.updating("layoutview");
-    this.onNewNode().then(done, err => {
-      console.error(err);
-      done();
-    });
+    this.onNewNode()
+      .then(() => this.hideGeometryEditor())
+      .then(done, (err) => {
+        console.error(err);
+        done();
+      }).catch(console.error);
   },
 
   /**
@@ -426,6 +457,33 @@ LayoutView.prototype = {
 
   onHighlightMouseOut: function() {
     this.hideBoxModel();
+  },
+
+  onGeometryButtonClick: function({target}) {
+    if (target.hasAttribute("checked")) {
+      target.removeAttribute("checked");
+      this.hideGeometryEditor();
+    } else {
+      target.setAttribute("checked", "true");
+      this.showGeometryEditor();
+    }
+  },
+
+  onPickerStarted: function() {
+    this.hideGeometryEditor();
+  },
+
+  onMarkupViewLeave: function() {
+    this.showGeometryEditor(true);
+  },
+
+  onMarkupViewNodeHover: function() {
+    this.hideGeometryEditor(false);
+  },
+
+  onWillNavigate: function() {
+    this._geometryEditorHighlighter.release().catch(console.error);
+    this._geometryEditorHighlighter = null;
   },
 
   /**
@@ -455,7 +513,7 @@ LayoutView.prototype = {
    * @return a promise that will be resolved when complete.
    */
   update: function() {
-    let lastRequest = Task.spawn((function*() {
+    let lastRequest = Task.spawn((function* () {
       if (!this.isViewVisibleAndNodeValid()) {
         return null;
       }
@@ -465,6 +523,8 @@ LayoutView.prototype = {
         autoMargins: this.isActive
       });
       let styleEntries = yield this.inspector.pageStyle.getApplied(node, {});
+
+      yield this.updateGeometryButton();
 
       // If a subsequent request has been made, wait for that one instead.
       if (this._lastRequest != lastRequest) {
@@ -544,7 +604,7 @@ LayoutView.prototype = {
       this.elementRules = styleEntries.map(e => e.rule);
 
       this.inspector.emit("layoutview-updated");
-    }).bind(this)).then(null, console.error);
+    }).bind(this)).catch(console.error);
 
     this._lastRequest = lastRequest;
     return this._lastRequest;
@@ -603,6 +663,77 @@ LayoutView.prototype = {
 
     toolbox.highlighterUtils.unhighlight();
   },
+
+  /**
+   * Show the geometry editor highlighter on the currently selected element
+   * @param {Boolean} [showOnlyIfActive=false]
+   *   Indicates if the Geometry Editor should be shown only if it's active but
+   *   hidden.
+   */
+  showGeometryEditor: function(showOnlyIfActive = false) {
+    let toolbox = this.inspector.toolbox;
+    let nodeFront = this.inspector.selection.nodeFront;
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    let isActive = nodeGeometry.hasAttribute("checked");
+
+    if (showOnlyIfActive && !isActive) {
+      return;
+    }
+
+    if (this._geometryEditorHighlighter) {
+      this._geometryEditorHighlighter.show(nodeFront).catch(console.error);
+      return;
+    }
+
+    // instantiate Geometry Editor highlighter
+    toolbox.highlighterUtils
+      .getHighlighterByType("GeometryEditorHighlighter").then(highlighter => {
+        highlighter.show(nodeFront).catch(console.error);
+        this._geometryEditorHighlighter = highlighter;
+
+        // Hide completely the geometry editor if the picker is clicked
+        toolbox.on("picker-started", this.onPickerStarted);
+
+        // Temporary hide the geometry editor
+        this.inspector.markup.on("leave", this.onMarkupViewLeave);
+        this.inspector.markup.on("node-hover", this.onMarkupViewNodeHover);
+
+        // Release the actor on will-navigate event
+        this.inspector._target.once("will-navigate", this.onWillNavigate);
+      });
+  },
+
+  /**
+   * Hide the geometry editor highlighter on the currently selected element
+   * @param {Boolean} [updateButton=true]
+   *   Indicates if the Geometry Editor's button needs to be unchecked too
+   */
+  hideGeometryEditor: function(updateButton = true) {
+    if (this._geometryEditorHighlighter) {
+      this._geometryEditorHighlighter.hide().catch(console.error);
+    }
+
+    if (updateButton) {
+      let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+      nodeGeometry.removeAttribute("checked");
+    }
+  },
+
+  /**
+   * Update the visibility and the state of the geometry editor button,
+   * based on the selected node.
+   */
+  updateGeometryButton: Task.async(function* () {
+    let node = this.inspector.selection.nodeFront;
+    let isEditable = false;
+
+    if (node) {
+      isEditable = yield this.inspector.pageStyle.isPositionEditable(node);
+    }
+
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    nodeGeometry.style.visibility = isEditable ? "visible" : "hidden";
+  }),
 
   manageOverflowingText: function(span) {
     let classList = span.parentNode.classList;

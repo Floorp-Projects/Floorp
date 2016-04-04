@@ -21,22 +21,20 @@ using namespace mozilla;
 // the pointer to the nsID.
 
 static PLDHashNumber
-HashIIDPtrKey(PLDHashTable* table, const void* key)
+HashIIDPtrKey(const void* key)
 {
     return *((js::HashNumber*)key);
 }
 
 static bool
-MatchIIDPtrKey(PLDHashTable* table,
-               const PLDHashEntryHdr* entry,
-               const void* key)
+MatchIIDPtrKey(const PLDHashEntryHdr* entry, const void* key)
 {
     return ((const nsID*)key)->
                 Equals(*((const nsID*)((PLDHashEntryStub*)entry)->key));
 }
 
 static PLDHashNumber
-HashNativeKey(PLDHashTable* table, const void* key)
+HashNativeKey(const void* key)
 {
     XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
 
@@ -319,9 +317,7 @@ ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallo
 // implement NativeSetMap...
 
 bool
-NativeSetMap::Entry::Match(PLDHashTable* table,
-                           const PLDHashEntryHdr* entry,
-                           const void* key)
+NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key)
 {
     XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
 
@@ -431,8 +427,7 @@ NativeSetMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 // implement IID2ThisTranslatorMap...
 
 bool
-IID2ThisTranslatorMap::Entry::Match(PLDHashTable* table,
-                                    const PLDHashEntryHdr* entry,
+IID2ThisTranslatorMap::Entry::Match(const PLDHashEntryHdr* entry,
                                     const void* key)
 {
     return ((const nsID*)key)->Equals(((Entry*)entry)->key);
@@ -473,7 +468,7 @@ IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
 /***************************************************************************/
 
 PLDHashNumber
-XPCNativeScriptableSharedMap::Entry::Hash(PLDHashTable* table, const void* key)
+XPCNativeScriptableSharedMap::Entry::Hash(const void* key)
 {
     PLDHashNumber h;
     const unsigned char* s;
@@ -492,8 +487,7 @@ XPCNativeScriptableSharedMap::Entry::Hash(PLDHashTable* table, const void* key)
 }
 
 bool
-XPCNativeScriptableSharedMap::Entry::Match(PLDHashTable* table,
-                                           const PLDHashEntryHdr* entry,
+XPCNativeScriptableSharedMap::Entry::Match(const PLDHashEntryHdr* entry,
                                            const void* key)
 {
     XPCNativeScriptableShared* obj1 =
@@ -549,7 +543,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
     NS_PRECONDITION(name,"bad param");
     NS_PRECONDITION(si,"bad param");
 
-    XPCNativeScriptableShared key(flags, name);
+    XPCNativeScriptableShared key(flags, name, /* populate = */ false);
     auto entry = static_cast<Entry*>(mTable->Add(&key, fallible));
     if (!entry)
         return false;
@@ -558,10 +552,8 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
 
     if (!shared) {
         entry->key = shared =
-            new XPCNativeScriptableShared(flags, key.TransferNameOwnership());
-        if (!shared)
-            return false;
-        shared->PopulateJSClass();
+            new XPCNativeScriptableShared(flags, key.TransferNameOwnership(),
+                                          /* populate = */ true);
     }
     si->SetScriptableShared(shared);
     return true;

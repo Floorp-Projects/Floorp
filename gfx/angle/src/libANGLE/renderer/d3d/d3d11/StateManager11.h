@@ -9,10 +9,13 @@
 #ifndef LIBANGLE_RENDERER_D3D11_STATEMANAGER11_H_
 #define LIBANGLE_RENDERER_D3D11_STATEMANAGER11_H_
 
+#include <array>
+
 #include "libANGLE/angletypes.h"
 #include "libANGLE/Data.h"
 #include "libANGLE/State.h"
 #include "libANGLE/renderer/d3d/d3d11/RenderStateCache.h"
+#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
 
 namespace rx
@@ -21,16 +24,29 @@ namespace rx
 struct RenderTargetDesc;
 struct Renderer11DeviceCaps;
 
+struct dx_VertexConstants11
+{
+    float depthRange[4];
+    float viewAdjust[4];
+    float viewCoords[4];
+    float viewScale[4];
+};
+
+struct dx_PixelConstants11
+{
+    float depthRange[4];
+    float viewCoords[4];
+    float depthFront[4];
+    float viewScale[4];
+};
+
 class StateManager11 final : angle::NonCopyable
 {
   public:
-    StateManager11();
+    StateManager11(Renderer11 *renderer);
     ~StateManager11();
 
-    void initialize(ID3D11DeviceContext *deviceContext,
-                    RenderStateCache *stateCache,
-                    Renderer11DeviceCaps *renderer11DeviceCaps);
-
+    void initialize(const gl::Caps &caps);
     void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits);
 
     gl::Error setBlendState(const gl::Framebuffer *framebuffer,
@@ -46,19 +62,36 @@ class StateManager11 final : angle::NonCopyable
 
     void setViewport(const gl::Caps *caps, const gl::Rectangle &viewport, float zNear, float zFar);
 
-    void forceSetBlendState() { mBlendStateIsDirty = true; }
-    void forceSetDepthStencilState() { mDepthStencilStateIsDirty = true; }
-    void forceSetRasterState() { mRasterizerStateIsDirty = true; }
-    void forceSetScissorState() { mScissorStateIsDirty = true; }
-    void forceSetViewportState() { mViewportStateIsDirty = true; }
-    void setViewportBounds(const int width, const int height);
+    void updatePresentPath(bool presentPathFastActive,
+                           const gl::FramebufferAttachment *framebufferAttachment);
 
-    const dx_VertexConstants &getVertexConstants() const { return mVertexConstants; }
-    const dx_PixelConstants &getPixelConstants() const { return mPixelConstants; }
+    const dx_VertexConstants11 &getVertexConstants() const { return mVertexConstants; }
+    const dx_PixelConstants11 &getPixelConstants() const { return mPixelConstants; }
 
     void updateStencilSizeIfChanged(bool depthStencilInitialized, unsigned int stencilSize);
 
+    void setShaderResource(gl::SamplerType shaderType,
+                           UINT resourceSlot,
+                           ID3D11ShaderResourceView *srv);
+    gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd);
+
+    gl::Error syncFramebuffer(const gl::Framebuffer *framebuffer);
+
+    void invalidateRenderTarget();
+    void invalidateEverything();
+    bool setRenderTargets(const RenderTargetArray &renderTargets,
+                          ID3D11DepthStencilView *depthStencil);
+    void setRenderTarget(ID3D11RenderTargetView *renderTarget,
+                         ID3D11DepthStencilView *depthStencil);
+
   private:
+    void unsetConflictingSRVs(gl::SamplerType shaderType,
+                              uintptr_t resource,
+                              const gl::ImageIndex &index);
+    void setViewportBounds(const int width, const int height);
+
+    Renderer11 *mRenderer;
+
     // Blend State
     bool mBlendStateIsDirty;
     // TODO(dianx) temporary representation of a dirty bit. once we move enough states in,
@@ -76,7 +109,7 @@ class StateManager11 final : angle::NonCopyable
     Optional<bool> mCurDisableDepth;
     Optional<bool> mCurDisableStencil;
 
-    // Currenly applied rasterizer state
+    // Currently applied rasterizer state
     bool mRasterizerStateIsDirty;
     gl::RasterizerState mCurRasterState;
 
@@ -92,15 +125,56 @@ class StateManager11 final : angle::NonCopyable
     float mCurFar;
 
     // Things needed in viewport state
-    dx_VertexConstants mVertexConstants;
-    dx_PixelConstants mPixelConstants;
+    dx_VertexConstants11 mVertexConstants;
+    dx_PixelConstants11 mPixelConstants;
 
     // Render target variables
     gl::Extents mViewportBounds;
 
-    Renderer11DeviceCaps *mRenderer11DeviceCaps;
-    ID3D11DeviceContext *mDeviceContext;
-    RenderStateCache *mStateCache;
+    // EGL_ANGLE_experimental_present_path variables
+    bool mCurPresentPathFastEnabled;
+    int mCurPresentPathFastColorBufferHeight;
+
+    // Current RenderTarget state
+    std::array<uintptr_t, gl::IMPLEMENTATION_MAX_DRAW_BUFFERS> mAppliedRTVs;
+    uintptr_t mAppliedDSV;
+
+    // Currently applied textures
+    struct SRVRecord
+    {
+        uintptr_t srv;
+        uintptr_t resource;
+        D3D11_SHADER_RESOURCE_VIEW_DESC desc;
+    };
+
+    // A cache of current SRVs that also tracks the highest 'used' (non-NULL) SRV
+    // We might want to investigate a more robust approach that is also fast when there's
+    // a large gap between used SRVs (e.g. if SRV 0 and 7 are non-NULL, this approach will
+    // waste time on SRVs 1-6.)
+    class SRVCache : angle::NonCopyable
+    {
+      public:
+        SRVCache() : mHighestUsedSRV(0) {}
+
+        void initialize(size_t size) { mCurrentSRVs.resize(size); }
+
+        size_t size() const { return mCurrentSRVs.size(); }
+        size_t highestUsed() const { return mHighestUsedSRV; }
+
+        const SRVRecord &operator[](size_t index) const { return mCurrentSRVs[index]; }
+        void clear();
+        void update(size_t resourceIndex, ID3D11ShaderResourceView *srv);
+
+      private:
+        std::vector<SRVRecord> mCurrentSRVs;
+        size_t mHighestUsedSRV;
+    };
+
+    SRVCache mCurVertexSRVs;
+    SRVCache mCurPixelSRVs;
+
+    // A block of NULL pointers, cached so we don't re-allocate every draw call
+    std::vector<ID3D11ShaderResourceView *> mNullSRVs;
 };
 
 }  // namespace rx

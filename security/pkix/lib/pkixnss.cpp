@@ -79,7 +79,7 @@ VerifySignedDigest(const SignedDigest& sd,
   return Success;
 }
 
-} // unnamed namespace
+} // namespace
 
 Result
 VerifyRSAPKCS1SignedDigestNSS(const SignedDigest& sd,

@@ -15,6 +15,7 @@
 #include "jsgc.h"
 #include "jsprf.h"
 
+#include "asmjs/WasmModule.h"
 #include "builtin/ModuleObject.h"
 #include "gc/GCInternals.h"
 #include "gc/Policy.h"
@@ -398,6 +399,14 @@ js::TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 }
 
 template <typename T>
+void
+js::TraceNullableEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
+{
+    if (InternalBarrierMethods<T>::isMarkable(thingp->get()))
+        DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
+}
+
+template <typename T>
 JS_PUBLIC_API(void)
 JS::TraceEdge(JSTracer* trc, JS::Heap<T>* thingp, const char* name)
 {
@@ -509,6 +518,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
 // Instantiate a copy of the Tracing templates for each derived type.
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
     template void js::TraceEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
+    template void js::TraceNullableEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
     template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
     template void js::TraceWeakEdge<type>(JSTracer*, WeakRef<type>*, const char*); \
     template void js::TraceRoot<type>(JSTracer*, type*, const char*); \

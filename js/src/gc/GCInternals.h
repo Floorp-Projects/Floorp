@@ -8,6 +8,7 @@
 #define gc_GCInternals_h
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
@@ -19,10 +20,7 @@
 namespace js {
 namespace gc {
 
-struct MOZ_RAII AutoFinishGC
-{
-    explicit AutoFinishGC(JSRuntime* rt);
-};
+void FinishGC(JSRuntime* rt);
 
 /*
  * This class should be used by any code that needs to exclusive access to the
@@ -48,8 +46,7 @@ class MOZ_RAII AutoTraceSession
 
 struct MOZ_RAII AutoPrepareForTracing
 {
-    AutoFinishGC finish;
-    AutoTraceSession session;
+    mozilla::Maybe<AutoTraceSession> session;
 
     AutoPrepareForTracing(JSRuntime* rt, ZoneSelector selector);
 };
@@ -127,6 +124,8 @@ struct MovingTracer : JS::CallbackTracer
     explicit MovingTracer(JSRuntime* rt) : CallbackTracer(rt, TraceWeakMapKeysValues) {}
 
     void onObjectEdge(JSObject** objp) override;
+    void onShapeEdge(Shape** shapep) override;
+    void onStringEdge(JSString** stringp) override;
     void onChild(const JS::GCCellPtr& thing) override {
         MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing.asCell()));
     }

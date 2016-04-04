@@ -209,8 +209,8 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  line-height: 1.1;
-  max-height: 2.2em;
+  line-height: 1.2;
+  max-height: 2.4em;
 }
 
 .panelUI-grid .toolbarbutton-1:not([auto-hyphens="off"]) > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
@@ -221,7 +221,7 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-multiline-text {
   position: absolute;
-  clip: rect(auto, auto, 2.3em, auto);
+  clip: rect(-0.1em, auto, 2.6em, auto);
 }
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
@@ -253,6 +253,14 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 /* Give WebExtension stand-alone panels extra width for Chrome compatibility */
 .cui-widget-panel[viewId^=PanelUI-webext-] .panel-mainview {
   max-width: 800px;
+}
+
+.cui-widget-panel[viewId^=PanelUI-webext-] > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: 3.5px;
 }
 
 panelview:not([mainview]) .toolbarbutton-text,
@@ -817,7 +825,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-fxa[fxaprofileimage="enabled"] > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
-  list-style-image: url(chrome://browser/skin/fxa/default-avatar.png)
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
 }
 
 #PanelUI-customize:hover,
@@ -1608,10 +1616,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   #PanelUI-update-status {
     list-style-image: url(chrome://branding/content/icon32.png);
-  }
-
-  #PanelUI-footer-fxa[fxaprofileimage="enabled"] > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
-    list-style-image: url(chrome://browser/skin/fxa/default-avatar@2x.png)
   }
 
   #PanelUI-fxa-label,

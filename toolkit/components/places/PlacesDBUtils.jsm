@@ -398,7 +398,7 @@ this.PlacesDBUtils = {
     let fixUnsortedBookmarksTitle = DBConn.createAsyncStatement(updateRootTitleSql);
     fixUnsortedBookmarksTitle.params["root_id"] = PlacesUtils.unfiledBookmarksFolderId;
     fixUnsortedBookmarksTitle.params["title"] =
-      PlacesUtils.getString("UnsortedBookmarksFolderTitle");
+      PlacesUtils.getString("OtherBookmarksFolderTitle");
     cleanupStatements.push(fixUnsortedBookmarksTitle);
     // tags
     let fixTagsRootTitle = DBConn.createAsyncStatement(updateRootTitleSql);

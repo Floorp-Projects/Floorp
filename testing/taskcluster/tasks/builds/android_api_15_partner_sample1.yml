@@ -36,6 +36,7 @@ task:
           builds/releng_base_android_64_builds.py
           disable_signing.py
           platform_supports_post_upload_to_latest.py
+      MOZHARNESS_ACTIONS: 'get-secrets build multi-l10n update'
       MH_CUSTOM_BUILD_VARIANT_CFG: api-15-partner-sample1
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
@@ -48,7 +49,7 @@ task:
 
       PARTNER_BASE_REPOSITORY: 'https://github.com/mozilla/fennec-distribution-sample'
       PARTNER_HEAD_REPOSITORY: 'https://github.com/mozilla/fennec-distribution-sample'
-      PARTNER_HEAD_REV: 756f0378d4cac87e5e6c405249ede5effe082da2
+      PARTNER_HEAD_REV: master
       PARTNER_DEST_DIR: '/home/worker/workspace/build/partner'
 
     maxRunTime: 36000

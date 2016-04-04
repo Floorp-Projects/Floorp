@@ -219,6 +219,20 @@ function toLocalTimeISOString(date) {
 }
 
 /**
+ * Annotate the current session ID with the crash reporter to map potential
+ * crash pings with the related main ping.
+ */
+function annotateCrashReport(sessionId) {
+  try {
+    const cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
+            .getService(Ci.nsICrashReporter);
+    cr.setTelemetrySessionId(sessionId);
+  } catch (e) {
+    // Ignore errors when crash reporting is disabled
+  }
+}
+
+/**
  * Read current process I/O counters.
  */
 var processInfo = {
@@ -703,6 +717,7 @@ var Impl = {
   _childrenToHearFrom: null,
   // monotonically-increasing id for USS reports
   _nextTotalMemoryId: 1,
+  _testing: false,
 
 
   get _log() {
@@ -830,8 +845,6 @@ var Impl = {
    * Returns an object:
    * { range: [min, max], bucket_count: <number of buckets>,
    *   histogram_type: <histogram_type>, sum: <sum>,
-   *   sum_squares_lo: <sum_squares_lo>,
-   *   sum_squares_hi: <sum_squares_hi>,
    *   values: { bucket1: count1, bucket2: count2, ... } }
    */
   packHistogram: function packHistogram(hgram) {
@@ -844,11 +857,6 @@ var Impl = {
       values: {},
       sum: hgram.sum
     };
-
-    if (hgram.histogram_type != Telemetry.HISTOGRAM_EXPONENTIAL) {
-      retgram.sum_squares_lo = hgram.sum_squares_lo;
-      retgram.sum_squares_hi = hgram.sum_squares_hi;
-    }
 
     let first = true;
     let last = 0;
@@ -894,7 +902,12 @@ var Impl = {
     for (let name of registered) {
       for (let n of [name, "STARTUP_" + name]) {
         if (n in hls) {
-          ret[n] = this.packHistogram(hls[n]);
+          // Omit telemetry test histograms outside of tests.
+          if (n.startsWith('TELEMETRY_TEST_') && this._testing == false) {
+            this._log.trace("getHistograms - Skipping test histogram: " + n);
+          } else {
+            ret[n] = this.packHistogram(hls[n]);
+          }
         }
       }
     }
@@ -929,6 +942,11 @@ var Impl = {
     let ret = {};
 
     for (let id of registered) {
+      // Omit telemetry test histograms outside of tests.
+      if (id.startsWith('TELEMETRY_TEST_') && this._testing == false) {
+        this._log.trace("getKeyedHistograms - Skipping test histogram: " + id);
+        continue;
+      }
       ret[id] = {};
       let keyed = Telemetry.getKeyedHistogramById(id);
       let snapshot = null;
@@ -1347,6 +1365,7 @@ var Impl = {
   setupChromeProcess: function setupChromeProcess(testing) {
     this._initStarted = true;
     this._log.trace("setupChromeProcess");
+    this._testing = testing;
 
     if (this._delayedInitTask) {
       this._log.error("setupChromeProcess - init task already running");
@@ -1370,6 +1389,8 @@ var Impl = {
     // startNewSubsession sets |_subsessionStartDate| to the current date/time. Use
     // the very same value for |_sessionStartDate|.
     this._sessionStartDate = this._subsessionStartDate;
+
+    annotateCrashReport(this._sessionId);
 
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
@@ -1457,6 +1478,7 @@ var Impl = {
    */
   setupContentProcess: function setupContentProcess(testing) {
     this._log.trace("setupContentProcess");
+    this._testing = testing;
 
     if (!Telemetry.canRecordBase) {
       this._log.trace("setupContentProcess - base recording is disabled, not initializing");

@@ -39,7 +39,7 @@ var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
   let opened = once(manager, "on");
   let resized = once(manager, "contentResize");
   if (method == "menu") {
-    document.getElementById("Tools:ResponsiveUI").doCommand();
+    document.getElementById("menu_responsiveUI").doCommand();
   } else {
     synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
   }

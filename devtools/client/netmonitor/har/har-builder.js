@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu, Ci, Cc } = require("chrome");
-const { defer, all, resolve } = require("promise");
-const Services = require("Services");
+const { Ci, Cc } = require("chrome");
+const { defer, all } = require("promise");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 loader.lazyImporter(this, "ViewHelpers", "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyRequireGetter(this, "NetworkHelper", "devtools/shared/webconsole/network-helper");
@@ -15,7 +15,7 @@ loader.lazyGetter(this, "appInfo", () => {
 });
 
 loader.lazyGetter(this, "L10N", () => {
-  return new ViewHelpers.L10N("chrome://devtools/locale/har.properties");
+  return new LocalizationHelper("chrome://devtools/locale/har.properties");
 });
 
 const HAR_VERSION = "1.1";
@@ -42,7 +42,7 @@ const HAR_VERSION = "1.1";
 var HarBuilder = function(options) {
   this._options = options;
   this._pageMap = [];
-}
+};
 
 HarBuilder.prototype = {
   // Public API
@@ -63,7 +63,7 @@ HarBuilder.prototype = {
 
     // Build entries.
     let items = this._options.items;
-    for (let i=0; i<items.length; i++) {
+    for (let i = 0; i < items.length; i++) {
       let file = items[i].attachment;
       log.entries.push(this.buildEntry(log, file));
     }
@@ -91,7 +91,7 @@ HarBuilder.prototype = {
       },
       pages: [],
       entries: [],
-    }
+    };
   },
 
   buildPage: function(file) {
@@ -228,7 +228,7 @@ HarBuilder.prototype = {
           value: value
         });
       });
-    })
+    });
 
     return result;
   },
@@ -281,7 +281,7 @@ HarBuilder.prototype = {
 
     // Arbitrary value if it's aborted to make sure status has a number
     if (file.status) {
-      response.status = parseInt(file.status);
+      response.status = parseInt(file.status, 10);
     }
 
     let responseHeaders = file.responseHeaders;
@@ -336,7 +336,7 @@ HarBuilder.prototype = {
 
     if (responseContent) {
       let text = responseContent.content.text;
-      let promise = this.fetchData(text).then(value => {
+      this.fetchData(text).then(value => {
         content.text = value;
       });
     }
@@ -404,7 +404,7 @@ HarBuilder.prototype = {
 
     return promise;
   }
-}
+};
 
 // Helpers
 
@@ -412,7 +412,7 @@ HarBuilder.prototype = {
  * Returns true if specified request body is URL encoded.
  */
 function isURLEncodedFile(file, text) {
-  let contentType = "content-type: application/x-www-form-urlencoded"
+  let contentType = "content-type: application/x-www-form-urlencoded";
   if (text && text.toLowerCase().indexOf(contentType) != -1) {
     return true;
   }
@@ -469,12 +469,12 @@ function dateToJSON(date) {
     return s;
   }
 
-  let result = date.getFullYear() + '-' +
-    f(date.getMonth() + 1) + '-' +
-    f(date.getDate()) + 'T' +
-    f(date.getHours()) + ':' +
-    f(date.getMinutes()) + ':' +
-    f(date.getSeconds()) + '.' +
+  let result = date.getFullYear() + "-" +
+    f(date.getMonth() + 1) + "-" +
+    f(date.getDate()) + "T" +
+    f(date.getHours()) + ":" +
+    f(date.getMinutes()) + ":" +
+    f(date.getSeconds()) + "." +
     f(date.getMilliseconds(), 3);
 
   let offset = date.getTimezoneOffset();

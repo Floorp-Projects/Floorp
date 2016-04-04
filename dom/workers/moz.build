@@ -6,12 +6,15 @@
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'FileReaderSync.h',
     'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerEvents.h',
     'ServiceWorkerMessageEvent.h',
     'ServiceWorkerRegistrar.h',
     'ServiceWorkerRegistration.h',
+    'WorkerLocation.h',
+    'WorkerNavigator.h',
     'WorkerPrefs.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',
@@ -19,6 +22,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.dom.workers += [
+    'RuntimeService.h',
     'ServiceWorkerManager.h',
     'WorkerDebuggerManager.h',
     'Workers.h',
@@ -28,9 +32,6 @@ EXPORTS.mozilla.dom.workers += [
 EXPORTS.mozilla.dom.workers.bindings += [
     'DataStore.h',
     'DataStoreCursor.h',
-    'FileReaderSync.h',
-    'Location.h',
-    'Navigator.h',
     'Performance.h',
     'ServiceWorker.h',
     'ServiceWorkerClient.h',
@@ -55,8 +56,6 @@ UNIFIED_SOURCES += [
     'DataStore.cpp',
     'DataStoreCursor.cpp',
     'FileReaderSync.cpp',
-    'Location.cpp',
-    'Navigator.cpp',
     'Performance.cpp',
     'Principal.cpp',
     'RegisterBindings.cpp',
@@ -80,6 +79,8 @@ UNIFIED_SOURCES += [
     'SharedWorker.cpp',
     'URL.cpp',
     'WorkerDebuggerManager.cpp',
+    'WorkerLocation.cpp',
+    'WorkerNavigator.cpp',
     'WorkerPrivate.cpp',
     'WorkerRunnable.cpp',
     'WorkerScope.cpp',

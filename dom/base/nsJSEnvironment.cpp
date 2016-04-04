@@ -227,12 +227,13 @@ ProcessNameForCollectorLog()
 
 namespace xpc {
 
-// This handles JS Exceptions (via ExceptionStackOrNull), as well as DOM and XPC Exceptions.
+// This handles JS Exceptions (via ExceptionStackOrNull), as well as DOM and XPC
+// Exceptions.
 //
-// Note that the returned object is _not_ wrapped into the compartment of cx.
+// Note that the returned object is _not_ wrapped into the compartment of
+// exceptionValue.
 JSObject*
-FindExceptionStackForConsoleReport(JSContext* cx,
-                                   nsPIDOMWindowInner* win,
+FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
                                    JS::HandleValue exceptionValue)
 {
   if (!exceptionValue.isObject()) {
@@ -245,9 +246,9 @@ FindExceptionStackForConsoleReport(JSContext* cx,
     return nullptr;
   }
 
+  JSContext* cx = nsContentUtils::RootingCxForThread();
   JS::RootedObject exceptionObject(cx, &exceptionValue.toObject());
-  JSAutoCompartment ac(cx, exceptionObject);
-  JS::RootedObject stackObject(cx, ExceptionStackOrNull(cx, exceptionObject));
+  JSObject* stackObject = ExceptionStackOrNull(exceptionObject);
   if (stackObject) {
     return stackObject;
   }
@@ -270,9 +271,9 @@ FindExceptionStackForConsoleReport(JSContext* cx,
   JS::RootedValue value(cx);
   stack->GetNativeSavedFrame(&value);
   if (value.isObject()) {
-    stackObject = &value.toObject();
+    return &value.toObject();
   }
-  return stackObject;
+  return nullptr;
 }
 
 } /* namespace xpc */
@@ -435,8 +436,10 @@ public:
     nsEventStatus status = nsEventStatus_eIgnore;
     nsPIDOMWindowInner* win = mWindow;
     MOZ_ASSERT(win);
+    MOZ_ASSERT(NS_IsMainThread());
     // First, notify the DOM that we have a script error, but only if
     // our window is still the current inner.
+    JSContext* rootingCx = nsContentUtils::RootingCx();
     if (win->IsCurrentInnerWindow() && win->GetDocShell() && !sHandlingScriptError) {
       AutoRestore<bool> recursionGuard(sHandlingScriptError);
       sHandlingScriptError = true;
@@ -444,8 +447,7 @@ public:
       RefPtr<nsPresContext> presContext;
       win->GetDocShell()->GetPresContext(getter_AddRefs(presContext));
 
-      ThreadsafeAutoJSContext cx;
-      RootedDictionary<ErrorEventInit> init(cx);
+      RootedDictionary<ErrorEventInit> init(rootingCx);
       init.mCancelable = true;
       init.mFilename = mReport->mFileName;
       init.mBubbles = true;
@@ -472,21 +474,9 @@ public:
     }
 
     if (status != nsEventStatus_eConsumeNoDefault) {
-      if (mError.isObject()) {
-        AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.Init(mError.toObjectOrNull()))) {
-          mReport->LogToConsole();
-          return NS_OK;
-        }
-        JSContext* cx = jsapi.cx();
-        JS::Rooted<JS::Value> exn(cx, mError);
-        JS::RootedObject stack(cx,
-          xpc::FindExceptionStackForConsoleReport(cx, win, exn));
-        mReport->LogToConsoleWithStack(stack);
-      } else {
-        mReport->LogToConsole();
-      }
-
+      JS::Rooted<JSObject*> stack(rootingCx,
+        xpc::FindExceptionStackForConsoleReport(win, mError));
+      mReport->LogToConsoleWithStack(stack);
     }
 
     return NS_OK;
@@ -505,76 +495,6 @@ bool ScriptErrorEvent::sHandlingScriptError = false;
 // This temporarily lives here to avoid code churn. It will go away entirely
 // soon.
 namespace xpc {
-
-void
-SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
-{
-  JS::Rooted<JS::Value> exception(cx);
-  ::JS_GetPendingException(cx, &exception);
-
-  // Note: we must do this before running any more code on cx.
-  ::JS_ClearPendingException(cx);
-
-  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
-  nsCOMPtr<nsIGlobalObject> globalObject;
-
-  // The eventual plan is for error reporting to happen in the AutoJSAPI
-  // destructor using the global with which the AutoJSAPI was initialized. We
-  // can't _quite_ do that yet, so we take a sloppy stab at those semantics. If
-  // we have an nsIScriptContext, we'll get the right answer modulo
-  // non-current-inners.
-  //
-  // Otherwise, we just use the privileged junk scope. This has the effect of
-  // causing us to report the error as "chrome javascript" rather than "content
-  // javascript", and not invoking any error reporters. This is exactly what we
-  // want here.
-  if (nsIScriptContext* scx = GetScriptContextFromJSContext(cx)) {
-    nsCOMPtr<nsPIDOMWindowOuter> outer = do_QueryInterface(scx->GetGlobalObject());
-    if (outer) {
-      globalObject = nsGlobalWindow::Cast(outer->GetCurrentInnerWindow());
-    }
-  }
-
-  // We run addons in a separate privileged compartment, but they still expect
-  // to trigger the onerror handler of their associated DOMWindow.
-  //
-  // Note that the way we do this right now is sloppy. Error reporters can
-  // theoretically be triggered at arbitrary times (not just immediately before
-  // an AutoJSAPI comes off the stack), so we don't really have a way of knowing
-  // that the global of the current compartment is the correct global with which
-  // to report the error. But in practice this is probably fine for the time
-  // being, and will get cleaned up soon when we fix bug 981187.
-  if (!globalObject && JS::CurrentGlobalOrNull(cx)) {
-    globalObject = xpc::AddonWindowOrNull(JS::CurrentGlobalOrNull(cx));
-  }
-
-  if (!globalObject) {
-    globalObject = xpc::NativeGlobal(xpc::PrivilegedJunkScope());
-  }
-
-  if (globalObject) {
-    RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-    bool isChrome = nsContentUtils::IsSystemPrincipal(globalObject->PrincipalOrNull());
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(globalObject);
-    xpcReport->Init(report, message, isChrome, win ? win->WindowID() : 0);
-
-    // If we can't dispatch an event to a window, report it to the console
-    // directly. This includes the case where the error was an OOM, because
-    // triggering a scripted event handler is likely to generate further OOMs.
-    if (!win || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
-        report->errorNumber == JSMSG_OUT_OF_MEMORY)
-    {
-      JS::Rooted<JSObject*> stack(cx,
-        xpc::FindExceptionStackForConsoleReport(cx, win, exception));
-      xpcReport->LogToConsoleWithStack(stack);
-      return;
-    }
-
-    // Otherwise, we need to asynchronously invoke onerror before we can decide
-    // whether or not to report the error to the console.
-    DispatchScriptErrorEvent(win, JS_GetRuntime(cx), xpcReport, exception);
-  }
-}
 
 void
 DispatchScriptErrorEvent(nsPIDOMWindowInner *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
@@ -849,15 +769,14 @@ nsresult
 nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aArgs)
 {
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetGlobalObject()))) {
+  if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(jsapi.cx() == mContext,
-             "AutoJSAPI should have found our own JSContext*");
+  JSContext* cx = jsapi.cx();
 
-  JS::AutoValueVector args(mContext);
+  JS::AutoValueVector args(cx);
 
-  JS::Rooted<JSObject*> global(mContext, GetWindowProxy());
+  JS::Rooted<JSObject*> global(cx, GetWindowProxy());
   nsresult rv =
     ConvertSupportsTojsvals(aArgs, global, args);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -865,17 +784,17 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
   // got the arguments, now attach them.
 
   for (uint32_t i = 0; i < args.length(); ++i) {
-    if (!JS_WrapValue(mContext, args[i])) {
+    if (!JS_WrapValue(cx, args[i])) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  JS::Rooted<JSObject*> array(mContext, ::JS_NewArrayObject(mContext, args));
+  JS::Rooted<JSObject*> array(cx, ::JS_NewArrayObject(cx, args));
   if (!array) {
     return NS_ERROR_FAILURE;
   }
 
-  return JS_DefineProperty(mContext, aTarget, aPropName, array, 0) ? NS_OK : NS_ERROR_FAILURE;
+  return JS_DefineProperty(cx, aTarget, aPropName, array, 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2545,6 +2464,14 @@ SetMemoryGCDynamicMarkSlicePrefChangedCallback(const char* aPrefName, void* aClo
 }
 
 static void
+SetMemoryGCRefreshFrameSlicesEnabledPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  bool pref = Preferences::GetBool(aPrefName);
+  JS_SetGCParameter(sRuntime, JSGC_REFRESH_FRAME_SLICES_ENABLED, pref);
+}
+
+
+static void
 SetIncrementalCCPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
@@ -2611,8 +2538,7 @@ nsJSContext::EnsureStatics()
     AsmJSCacheOpenEntryForRead,
     asmjscache::CloseEntryForRead,
     AsmJSCacheOpenEntryForWrite,
-    asmjscache::CloseEntryForWrite,
-    asmjscache::GetBuildId
+    asmjscache::CloseEntryForWrite
   };
   JS::SetAsmJSCacheOps(sRuntime, &asmJSCacheOps);
 
@@ -2644,6 +2570,9 @@ nsJSContext::EnsureStatics()
 
   Preferences::RegisterCallbackAndCall(SetMemoryGCDynamicMarkSlicePrefChangedCallback,
                                        "javascript.options.mem.gc_dynamic_mark_slice");
+
+  Preferences::RegisterCallbackAndCall(SetMemoryGCRefreshFrameSlicesEnabledPrefChangedCallback,
+                                       "javascript.options.mem.gc_refresh_frame_slices_enabled");
 
   Preferences::RegisterCallbackAndCall(SetMemoryGCDynamicHeapGrowthPrefChangedCallback,
                                        "javascript.options.mem.gc_dynamic_heap_growth");

@@ -7,32 +7,31 @@
 /*
  * Dialog services for PIP.
  */
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "mozIDOMWindow.h"
-#include "nsIDialogParamBlock.h"
+#include "nsArray.h"
+#include "nsCOMPtr.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsEmbedCID.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsIStringBundle.h"
+#include "nsIDateTimeFormat.h"
+#include "nsIDialogParamBlock.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
-#include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
-#include "nsPromiseFlatString.h"
-
-#include "nsNSSDialogs.h"
 #include "nsIKeygenThread.h"
-#include "nsIProtectedAuthThread.h"
-#include "nsNSSDialogHelper.h"
-#include "nsIWindowWatcher.h"
-#include "nsIX509CertValidity.h"
-
-#include "nsEmbedCID.h"
 #include "nsIPromptService.h"
+#include "nsIProtectedAuthThread.h"
+#include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
+#include "nsIWindowWatcher.h"
+#include "nsIX509CertDB.h"
+#include "nsIX509Cert.h"
+#include "nsIX509CertValidity.h"
+#include "nsNSSDialogHelper.h"
+#include "nsNSSDialogs.h"
+#include "nsPromiseFlatString.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
@@ -109,7 +108,7 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIMutableArray> dlgArray(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  nsCOMPtr<nsIMutableArray> dlgArray = nsArrayBase::Create();
   if (!dlgArray) {
     return NS_ERROR_FAILURE;
   }
@@ -158,36 +157,13 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
-NS_IMETHODIMP 
-nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIPromptService> promptSvc(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-  if (!promptSvc)
-    return NS_ERROR_FAILURE;
-
-  // Get the parent window for the dialog
-  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
-
-  nsAutoString title;
-  rv = mPIPStringBundle->GetStringFromName(MOZ_UTF16("caCertExistsTitle"),
-                                           getter_Copies(title));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString msg;
-  rv = mPIPStringBundle->GetStringFromName(MOZ_UTF16("caCertExistsMessage"),
-                                           getter_Copies(msg));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = promptSvc->Alert(parent, title.get(), msg.get());
-
-  return rv;
-}
-
-
 NS_IMETHODIMP
-nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const char16_t *cn, const char16_t *organization, const char16_t *issuer, const char16_t **certNickList, const char16_t **certDetailsList, uint32_t count, int32_t *selectedIndex, bool *canceled) 
+nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx, const char16_t* cn,
+                                const char16_t* organization,
+                                const char16_t* issuer,
+                                const char16_t** certNickList,
+                                const char16_t** certDetailsList, uint32_t count,
+                                int32_t* selectedIndex, bool* canceled)
 {
   nsresult rv;
   uint32_t i;
@@ -383,7 +359,7 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
 NS_IMETHODIMP 
 nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
 {
-  nsCOMPtr<nsIMutableArray> dlgArray(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  nsCOMPtr<nsIMutableArray> dlgArray = nsArrayBase::Create();
   if (!dlgArray) {
     return NS_ERROR_FAILURE;
   }

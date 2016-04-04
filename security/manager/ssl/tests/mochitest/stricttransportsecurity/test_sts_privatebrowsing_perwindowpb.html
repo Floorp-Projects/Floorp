@@ -7,9 +7,12 @@
 <head>
   <title>opens additional content that should be converted to https</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 
   <script class="testbody" type="text/javascript">
+  "use strict";
+
   SimpleTest.waitForExplicitFinish();
 
   const Cc = Components.classes;

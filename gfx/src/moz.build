@@ -37,10 +37,13 @@ EXPORTS += [
     'nsSize.h',
     'nsThemeConstants.h',
     'nsTransform2D.h',
+    'PingPongRegion.h',
+    'RegionBuilder.h',
 ]
 
 EXPORTS.mozilla += [
     'AppUnits.h',
+    'ArrayView.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -81,7 +84,7 @@ FINAL_LIBRARY = 'xul'
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':

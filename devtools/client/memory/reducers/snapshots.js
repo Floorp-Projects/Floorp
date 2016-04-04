@@ -3,10 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Immutable = require("devtools/client/shared/vendor/immutable");
 const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
 const {
   actions,
   snapshotState: states,
+  censusState,
+  treeMapState,
   dominatorTreeState,
   viewState,
 } = require("../constants");
@@ -57,11 +60,12 @@ handlers[actions.TAKE_CENSUS_START] = function (snapshots, { id, display, filter
     report: null,
     display,
     filter,
+    state: censusState.SAVING
   };
 
   return snapshots.map(snapshot => {
     return snapshot.id === id
-      ? immutableUpdate(snapshot, { state: states.SAVING_CENSUS, census })
+      ? immutableUpdate(snapshot, { census })
       : snapshot;
   });
 };
@@ -74,15 +78,79 @@ handlers[actions.TAKE_CENSUS_END] = function (snapshots, { id,
   const census = {
     report,
     parentMap,
-    expanded: new Set(),
+    expanded: Immutable.Set(),
     display,
     filter,
+    state: censusState.SAVED
   };
 
   return snapshots.map(snapshot => {
     return snapshot.id === id
-      ? immutableUpdate(snapshot, { state: states.SAVED_CENSUS, census })
+      ? immutableUpdate(snapshot, { census })
       : snapshot;
+  });
+};
+
+handlers[actions.TAKE_CENSUS_ERROR] = function (snapshots, { id, error }) {
+  assert(error, "actions with TAKE_CENSUS_ERROR should have an error");
+
+  return snapshots.map(snapshot => {
+    if (snapshot.id !== id) {
+      return snapshot;
+    }
+
+    const census = Object.freeze({
+      state: censusState.ERROR,
+      error,
+    });
+
+    return immutableUpdate(snapshot, { census });
+  });
+};
+
+handlers[actions.TAKE_TREE_MAP_START] = function (snapshots, { id, display }) {
+  const treeMap = {
+    report: null,
+    display,
+    state: treeMapState.SAVING
+  };
+
+  return snapshots.map(snapshot => {
+    return snapshot.id === id
+      ? immutableUpdate(snapshot, { treeMap })
+      : snapshot;
+  });
+};
+
+handlers[actions.TAKE_TREE_MAP_END] = function (snapshots, action) {
+  const { id, report, display } = action;
+  const treeMap = {
+    report,
+    display,
+    state: treeMapState.SAVED
+  };
+
+  return snapshots.map(snapshot => {
+    return snapshot.id === id
+      ? immutableUpdate(snapshot, { treeMap })
+      : snapshot;
+  });
+};
+
+handlers[actions.TAKE_TREE_MAP_ERROR] = function (snapshots, { id, error }) {
+  assert(error, "actions with TAKE_TREE_MAP_ERROR should have an error");
+
+  return snapshots.map(snapshot => {
+    if (snapshot.id !== id) {
+      return snapshot;
+    }
+
+    const treeMap = Object.freeze({
+      state: treeMapState.ERROR,
+      error,
+    });
+
+    return immutableUpdate(snapshot, { treeMap });
   });
 };
 
@@ -96,11 +164,7 @@ handlers[actions.EXPAND_CENSUS_NODE] = function (snapshots, { id, node }) {
     assert(snapshot.census.report, "Should have a census report");
     assert(snapshot.census.expanded, "Should have a census's expanded set");
 
-    // Warning: mutable operations couched in an immutable update ahead :'( This
-    // at least lets us use referential equality on the census model itself,
-    // even though the expanded set is mutated in place.
-    const expanded = snapshot.census.expanded;
-    expanded.add(node.id);
+    const expanded = snapshot.census.expanded.add(node.id);
     const census = immutableUpdate(snapshot.census, { expanded });
     return immutableUpdate(snapshot, { census });
   });
@@ -116,10 +180,7 @@ handlers[actions.COLLAPSE_CENSUS_NODE] = function (snapshots, { id, node }) {
     assert(snapshot.census.report, "Should have a census report");
     assert(snapshot.census.expanded, "Should have a census's expanded set");
 
-    // Warning: mutable operations couched in an immutable update ahead :'( See
-    // above comment in the EXPAND_CENSUS_NODE handler.
-    const expanded = snapshot.census.expanded;
-    expanded.delete(node.id);
+    const expanded = snapshot.census.expanded.delete(node.id);
     const census = immutableUpdate(snapshot.census, { expanded });
     return immutableUpdate(snapshot, { census });
   });
@@ -224,7 +285,7 @@ handlers[actions.FETCH_DOMINATOR_TREE_END] = function (snapshots, { id, root }) 
     const dominatorTree = immutableUpdate(snapshot.dominatorTree, {
       state: dominatorTreeState.LOADED,
       root,
-      expanded: new Set(),
+      expanded: Immutable.Set(),
     });
 
     return immutableUpdate(snapshot, { dominatorTree });
@@ -241,11 +302,7 @@ handlers[actions.EXPAND_DOMINATOR_TREE_NODE] = function (snapshots, { id, node }
     assert(snapshot.dominatorTree.expanded,
            "Should have the dominator tree's expanded set");
 
-    // Warning: mutable operations couched in an immutable update ahead :'( This
-    // at least lets us use referential equality on the dominatorTree model itself,
-    // even though the expanded set is mutated in place.
-    const expanded = snapshot.dominatorTree.expanded;
-    expanded.add(node.nodeId);
+    const expanded = snapshot.dominatorTree.expanded.add(node.nodeId);
     const dominatorTree = immutableUpdate(snapshot.dominatorTree, { expanded });
     return immutableUpdate(snapshot, { dominatorTree });
   });
@@ -261,10 +318,7 @@ handlers[actions.COLLAPSE_DOMINATOR_TREE_NODE] = function (snapshots, { id, node
     assert(snapshot.dominatorTree.expanded,
            "Should have the dominator tree's expanded set");
 
-    // Warning: mutable operations couched in an immutable update ahead :'( See
-    // above comment in the EXPAND_DOMINATOR_TREE_NODE handler.
-    const expanded = snapshot.dominatorTree.expanded;
-    expanded.delete(node.nodeId);
+    const expanded = snapshot.dominatorTree.expanded.delete(node.nodeId);
     const dominatorTree = immutableUpdate(snapshot.dominatorTree, { expanded });
     return immutableUpdate(snapshot, { dominatorTree });
   });

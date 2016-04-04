@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.dlc.catalog;
 
+import android.support.v4.util.ArrayMap;
 import android.support.v4.util.AtomicFile;
 
 import org.junit.Assert;
@@ -18,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -70,7 +72,7 @@ public class TestDownloadContentCatalog {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(file));
         catalog.loadFromDisk();
 
-        Assert.assertTrue("Catalog is not empty", catalog.getContentWithoutState().size() > 0);
+        Assert.assertTrue("Catalog is not empty", catalog.getContentToStudy().size() > 0);
     }
 
     /**
@@ -82,8 +84,8 @@ public class TestDownloadContentCatalog {
     @Test
     public void testCatalogHasChangedWhenDownloadIsScheduled() throws Exception {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(mock(AtomicFile.class)));
-        DownloadContent content = new DownloadContent.Builder().build();
-        catalog.onCatalogLoaded(Collections.singletonList(content));
+        DownloadContent content = new DownloadContentBuilder().build();
+        catalog.onCatalogLoaded(createMapOfContent(content));
 
         Assert.assertFalse("Catalog has not changed", catalog.hasCatalogChanged());
 
@@ -101,8 +103,8 @@ public class TestDownloadContentCatalog {
     @Test
     public void testCatalogHasChangedWhenContentIsDownloaded() throws Exception {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(mock(AtomicFile.class)));
-        DownloadContent content = new DownloadContent.Builder().build();
-        catalog.onCatalogLoaded(Collections.singletonList(content));
+        DownloadContent content = new DownloadContentBuilder().build();
+        catalog.onCatalogLoaded(createMapOfContent(content));
 
         Assert.assertFalse("Catalog has not changed", catalog.hasCatalogChanged());
 
@@ -120,8 +122,8 @@ public class TestDownloadContentCatalog {
     @Test
     public void testCatalogHasChangedIfDownloadHasFailedPermanently() throws Exception {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(mock(AtomicFile.class)));
-        DownloadContent content = new DownloadContent.Builder().build();
-        catalog.onCatalogLoaded(Collections.singletonList(content));
+        DownloadContent content = new DownloadContentBuilder().build();
+        catalog.onCatalogLoaded(createMapOfContent(content));
 
         Assert.assertFalse("Catalog has not changed", catalog.hasCatalogChanged());
 
@@ -139,8 +141,8 @@ public class TestDownloadContentCatalog {
     @Test
     public void testCatalogHasChangedIfContentIsIgnored() throws Exception {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(mock(AtomicFile.class)));
-        DownloadContent content = new DownloadContent.Builder().build();
-        catalog.onCatalogLoaded(Collections.singletonList(content));
+        DownloadContent content = new DownloadContentBuilder().build();
+        catalog.onCatalogLoaded(createMapOfContent(content));
 
         Assert.assertFalse("Catalog has not changed", catalog.hasCatalogChanged());
 
@@ -162,8 +164,8 @@ public class TestDownloadContentCatalog {
         doReturn(mock(FileOutputStream.class)).when(file).startWrite();
 
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(file));
-        DownloadContent content = new DownloadContent.Builder().build();
-        catalog.onCatalogLoaded(Collections.singletonList(content));
+        DownloadContent content = new DownloadContentBuilder().build();
+        catalog.onCatalogLoaded(createMapOfContent(content));
 
         catalog.scheduleDownload(content);
 
@@ -185,32 +187,41 @@ public class TestDownloadContentCatalog {
     public void testContentClassification() {
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(mock(AtomicFile.class)));
 
-        DownloadContent content1 = new DownloadContent.Builder().setState(DownloadContent.STATE_NONE).build();
-        DownloadContent content2 = new DownloadContent.Builder().setState(DownloadContent.STATE_NONE).build();
-        DownloadContent content3 = new DownloadContent.Builder().setState(DownloadContent.STATE_SCHEDULED).build();
-        DownloadContent content4 = new DownloadContent.Builder().setState(DownloadContent.STATE_SCHEDULED).build();
-        DownloadContent content5 = new DownloadContent.Builder().setState(DownloadContent.STATE_SCHEDULED).build();
-        DownloadContent content6 = new DownloadContent.Builder().setState(DownloadContent.STATE_DOWNLOADED).build();
-        DownloadContent content7 = new DownloadContent.Builder().setState(DownloadContent.STATE_FAILED).build();
-        DownloadContent content8 = new DownloadContent.Builder().setState(DownloadContent.STATE_IGNORED).build();
-        DownloadContent content9 = new DownloadContent.Builder().setState(DownloadContent.STATE_IGNORED).build();
+        DownloadContent content1 = new DownloadContentBuilder().setId("A").setState(DownloadContent.STATE_NONE).build();
+        DownloadContent content2 = new DownloadContentBuilder().setId("B").setState(DownloadContent.STATE_NONE).build();
+        DownloadContent content3 = new DownloadContentBuilder().setId("C").setState(DownloadContent.STATE_SCHEDULED).build();
+        DownloadContent content4 = new DownloadContentBuilder().setId("D").setState(DownloadContent.STATE_SCHEDULED).build();
+        DownloadContent content5 = new DownloadContentBuilder().setId("E").setState(DownloadContent.STATE_SCHEDULED).build();
+        DownloadContent content6 = new DownloadContentBuilder().setId("F").setState(DownloadContent.STATE_DOWNLOADED).build();
+        DownloadContent content7 = new DownloadContentBuilder().setId("G").setState(DownloadContent.STATE_FAILED).build();
+        DownloadContent content8 = new DownloadContentBuilder().setId("H").setState(DownloadContent.STATE_IGNORED).build();
+        DownloadContent content9 = new DownloadContentBuilder().setId("I").setState(DownloadContent.STATE_IGNORED).build();
+        DownloadContent content10 = new DownloadContentBuilder().setId("J").setState(DownloadContent.STATE_UPDATED).build();
+        DownloadContent content11 = new DownloadContentBuilder().setId("K").setState(DownloadContent.STATE_DELETED).build();
+        DownloadContent content12 = new DownloadContentBuilder().setId("L").setState(DownloadContent.STATE_DELETED).build();
 
+        catalog.onCatalogLoaded(createMapOfContent(content1, content2, content3, content4, content5, content6,
+                content7, content8, content9, content10, content11, content12));
 
-        catalog.onCatalogLoaded(Arrays.asList(content1, content2, content3, content4, content5, content6,
-                                              content7, content8, content9));
+        Assert.assertTrue(catalog.hasScheduledDownloads());
 
-        Assert.assertEquals(2, catalog.getContentWithoutState().size());
+        Assert.assertEquals(3, catalog.getContentToStudy().size());
         Assert.assertEquals(1, catalog.getDownloadedContent().size());
         Assert.assertEquals(3, catalog.getScheduledDownloads().size());
+        Assert.assertEquals(2, catalog.getContentToDelete().size());
 
-        Assert.assertTrue(catalog.getContentWithoutState().contains(content1));
-        Assert.assertTrue(catalog.getContentWithoutState().contains(content2));
+        Assert.assertTrue(catalog.getContentToStudy().contains(content1));
+        Assert.assertTrue(catalog.getContentToStudy().contains(content2));
+        Assert.assertTrue(catalog.getContentToStudy().contains(content10));
 
         Assert.assertTrue(catalog.getDownloadedContent().contains(content6));
 
         Assert.assertTrue(catalog.getScheduledDownloads().contains(content3));
         Assert.assertTrue(catalog.getScheduledDownloads().contains(content4));
         Assert.assertTrue(catalog.getScheduledDownloads().contains(content5));
+
+        Assert.assertTrue(catalog.getContentToDelete().contains(content11));
+        Assert.assertTrue(catalog.getContentToDelete().contains(content12));
     }
 
     /**
@@ -221,7 +232,7 @@ public class TestDownloadContentCatalog {
         DownloadContentCatalog catalog = new DownloadContentCatalog(mock(AtomicFile.class));
         Assert.assertFalse(catalog.hasCatalogChanged());
 
-        DownloadContent content = new DownloadContent.Builder().build();
+        DownloadContent content = new DownloadContentBuilder().build();
         Assert.assertEquals(0, content.getFailures());
 
         catalog.rememberFailure(content, 42);
@@ -250,7 +261,7 @@ public class TestDownloadContentCatalog {
     public void testContentWillBeMarkedAsPermanentlyFailedAfterMultipleFailures() {
         DownloadContentCatalog catalog = new DownloadContentCatalog(mock(AtomicFile.class));
 
-        DownloadContent content = new DownloadContent.Builder().build();
+        DownloadContent content = new DownloadContentBuilder().build();
         Assert.assertEquals(DownloadContent.STATE_NONE, content.getState());
 
         for (int i = 0; i < 10; i++) {
@@ -263,5 +274,13 @@ public class TestDownloadContentCatalog {
         catalog.rememberFailure(content, 42);
         Assert.assertEquals(10, content.getFailures());
         Assert.assertEquals(DownloadContent.STATE_FAILED, content.getState());
+    }
+
+    private ArrayMap<String, DownloadContent> createMapOfContent(DownloadContent... content) {
+        ArrayMap<String, DownloadContent> map = new ArrayMap<>();
+        for (DownloadContent currentContent : content) {
+            map.put(currentContent.getId(), currentContent);
+        }
+        return map;
     }
 }

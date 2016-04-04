@@ -37,14 +37,6 @@ public:
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
 
   /**
-   * Requests handling of a scroll snapping at the end of a fling gesture for
-   * the scrollable frame with the given scroll id. aDestination specifies the
-   * expected landing position of the fling if no snapping were to be performed.
-   */
-  virtual void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                                const mozilla::CSSPoint& aDestination) = 0;
-
-  /**
    * Acknowledges the recipt of a scroll offset update for the scrollable
    * frame with the given scroll id. This is used to maintain consistency
    * between APZ and other sources of scroll changes.
@@ -152,7 +144,8 @@ public:
   virtual void NotifyFlushComplete() = 0;
 
   virtual void UpdateOverscrollVelocity(const float aX, const float aY) {}
-  virtual void UpdateOverscrollOffset(const float aX,const  float aY) {}
+  virtual void UpdateOverscrollOffset(const float aX, const float aY) {}
+  virtual void SetScrollingRootContent(const bool isRootContent) {}
 
   GeckoContentController() {}
   virtual void ChildAdopted() {}

@@ -4,7 +4,6 @@
 Invocation {
   $DMD = '--mode=live'
   Mode = 'live'
-  Sample-below size = 1
 }
 
 #-----------------------------------------------------------------

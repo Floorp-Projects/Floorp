@@ -303,11 +303,9 @@ public:
 protected:
   PLDHashTable mTable;
 
-  static const void* s_GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+  static PLDHashNumber s_HashKey(const void* aKey);
 
-  static PLDHashNumber s_HashKey(PLDHashTable* aTable, const void* aKey);
-
-  static bool s_MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry,
+  static bool s_MatchEntry(const PLDHashEntryHdr* aEntry,
                            const void* aKey);
 
   static void s_CopyEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom,
@@ -370,15 +368,14 @@ nsTHashtable<EntryType>::Ops()
 
 template<class EntryType>
 PLDHashNumber
-nsTHashtable<EntryType>::s_HashKey(PLDHashTable* aTable, const void* aKey)
+nsTHashtable<EntryType>::s_HashKey(const void* aKey)
 {
   return EntryType::HashKey(static_cast<const KeyTypePointer>(aKey));
 }
 
 template<class EntryType>
 bool
-nsTHashtable<EntryType>::s_MatchEntry(PLDHashTable* aTable,
-                                      const PLDHashEntryHdr* aEntry,
+nsTHashtable<EntryType>::s_MatchEntry(const PLDHashEntryHdr* aEntry,
                                       const void* aKey)
 {
   return ((const EntryType*)aEntry)->KeyEquals(

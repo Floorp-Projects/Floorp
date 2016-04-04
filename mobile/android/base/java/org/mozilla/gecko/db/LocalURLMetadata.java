@@ -25,8 +25,8 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.v4.util.LruCache;
 import android.util.Log;
+import android.util.LruCache;
 
 // Holds metadata info about URLs. Supports some helper functions for getting back a HashMap of key value data.
 public class LocalURLMetadata implements URLMetadata {

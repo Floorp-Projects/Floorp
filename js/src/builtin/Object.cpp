@@ -383,10 +383,6 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject setPrototypeOf(cx, &args.callee());
-    if (!GlobalObject::warnOnceAboutPrototypeMutation(cx, setPrototypeOf))
-        return false;
-
     if (args.length() < 2) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "Object.setPrototypeOf", "1", "");
@@ -1054,13 +1050,6 @@ ProtoSetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Do this here, rather than after the this-check so even likely-buggy
-    // use of the __proto__ setter on unacceptable values, where no subsequent
-    // use occurs on an acceptable value, will trigger a warning.
-    RootedObject callee(cx, &args.callee());
-    if (!GlobalObject::warnOnceAboutPrototypeMutation(cx, callee))
-       return false;
-
     HandleValue thisv = args.thisv();
     if (thisv.isNullOrUndefined()) {
         ReportIncompatible(cx, args);
@@ -1222,6 +1211,16 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
     return true;
 }
 
+static const ClassSpec PlainObjectClassSpec = {
+    CreateObjectConstructor,
+    CreateObjectPrototype,
+    object_static_methods,
+    nullptr,
+    object_methods,
+    object_properties,
+    FinishObjectClassInit
+};
+
 const Class PlainObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -1237,15 +1236,7 @@ const Class PlainObject::class_ = {
     nullptr,  /* hasInstance */
     nullptr,  /* construct */
     nullptr,  /* trace */
-    {
-        CreateObjectConstructor,
-        CreateObjectPrototype,
-        object_static_methods,
-        nullptr,
-        object_methods,
-        object_properties,
-        FinishObjectClassInit
-    }
+    &PlainObjectClassSpec
 };
 
 const Class* const js::ObjectClassPtr = &PlainObject::class_;

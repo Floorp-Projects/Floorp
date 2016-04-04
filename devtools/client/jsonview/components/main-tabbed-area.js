@@ -7,62 +7,82 @@
 "use strict";
 
 define(function(require, exports, module) {
+  const { createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+  const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+  const { JsonPanel } = createFactories(require("./json-panel"));
+  const { TextPanel } = createFactories(require("./text-panel"));
+  const { HeadersPanel } = createFactories(require("./headers-panel"));
+  const { Tabs, TabPanel } = createFactories(require("./reps/tabs"));
 
-const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
-const { JsonPanel } = createFactories(require("./json-panel"));
-const { TextPanel } = createFactories(require("./text-panel"));
-const { HeadersPanel } = createFactories(require("./headers-panel"));
-const { Tabs, TabPanel } = createFactories(require("./reps/tabs"));
+  /**
+   * This object represents the root application template
+   * responsible for rendering the basic tab layout.
+   */
+  let MainTabbedArea = createClass({
+    propTypes: {
+      jsonText: PropTypes.string,
+      tabActive: PropTypes.number,
+      actions: PropTypes.object,
+      headers: PropTypes.object,
+      searchFilter: PropTypes.string,
+      json: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+        PropTypes.array
+      ])
+    },
 
-/**
- * This object represents the root application template
- * responsible for rendering the basic tab layout.
- */
-var MainTabbedArea = React.createClass({
-  displayName: "MainTabbedArea",
+    displayName: "MainTabbedArea",
 
-  getInitialState: function() {
-    return {
-      json: {},
-      headers: {},
-      jsonText: this.props.jsonText,
-      tabActive: this.props.tabActive
-   };
-  },
+    getInitialState: function() {
+      return {
+        json: {},
+        headers: {},
+        jsonText: this.props.jsonText,
+        tabActive: this.props.tabActive
+      };
+    },
 
-  onTabChanged: function(index) {
-    this.setState({tabActive: index});
-  },
+    onTabChanged: function(index) {
+      this.setState({tabActive: index});
+    },
 
-  render: function() {
-    return (
-      Tabs({tabActive: this.state.tabActive, onAfterChange: this.onTabChanged},
-        TabPanel({className: "json", title: Locale.$STR("jsonViewer.tab.JSON")},
-          JsonPanel({
-            data: this.props.json,
-            actions: this.props.actions,
-            searchFilter: this.state.searchFilter
-          })
-        ),
-        TabPanel({className: "rawdata", title: Locale.$STR("jsonViewer.tab.RawData")},
-          TextPanel({
-            data: this.state.jsonText,
-            actions: this.props.actions
-          })
-        ),
-        TabPanel({className: "headers", title: Locale.$STR("jsonViewer.tab.Headers")},
-          HeadersPanel({
-            data: this.props.headers,
-            actions: this.props.actions,
-            searchFilter: this.props.searchFilter
-          })
+    render: function() {
+      return (
+        Tabs({
+          tabActive: this.state.tabActive,
+          onAfterChange: this.onTabChanged},
+          TabPanel({
+            className: "json",
+            title: Locale.$STR("jsonViewer.tab.JSON")},
+            JsonPanel({
+              data: this.props.json,
+              actions: this.props.actions,
+              searchFilter: this.state.searchFilter
+            })
+          ),
+          TabPanel({
+            className: "rawdata",
+            title: Locale.$STR("jsonViewer.tab.RawData")},
+            TextPanel({
+              data: this.state.jsonText,
+              actions: this.props.actions
+            })
+          ),
+          TabPanel({
+            className: "headers",
+            title: Locale.$STR("jsonViewer.tab.Headers")},
+            HeadersPanel({
+              data: this.props.headers,
+              actions: this.props.actions,
+              searchFilter: this.props.searchFilter
+            })
+          )
         )
-      )
-    )
-  }
-});
+      );
+    }
+  });
 
-// Exports from this module
-exports.MainTabbedArea = MainTabbedArea;
+  // Exports from this module
+  exports.MainTabbedArea = MainTabbedArea;
 });

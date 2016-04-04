@@ -73,7 +73,7 @@ function* testCookies(options) {
           changed.splice(evicted, 1);
         }
 
-        browser.test.assertEq("x:explicit,x:overwrite,x:explicit,foo:overwrite,bar:explicit,deleted:explicit",
+        browser.test.assertEq("x:explicit,x:overwrite,x:explicit,x:explicit,foo:overwrite,foo:explicit,bar:explicit,deleted:explicit",
                               changed.join(","), "expected changes");
       } else {
         browser.test.assertEq("", changed.join(","), "expected no changes");
@@ -297,6 +297,26 @@ add_task(function* test_bad_cookie_permissions() {
     url: "https://example.com/",
     domain: "example.com",
     secure: true,
+    shouldPass: false,
+    shouldWrite: false,
+  });
+
+  info("Test non-matching domain");
+  yield testCookies({
+    permissions: ["http://example.com/", "cookies"],
+    url: "http://example.com/",
+    domain: "example.net",
+    secure: false,
+    shouldPass: false,
+    shouldWrite: false,
+  });
+
+  info("Test invalid scheme");
+  yield testCookies({
+    permissions: ["ftp://example.com/", "cookies"],
+    url: "ftp://example.com/",
+    domain: "example.com",
+    secure: false,
     shouldPass: false,
     shouldWrite: false,
   });

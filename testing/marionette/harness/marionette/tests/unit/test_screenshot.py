@@ -10,6 +10,7 @@ import urllib
 from unittest import skip
 
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
 
 
 def inline(doc, mime="text/html;charset=utf-8"):
@@ -145,7 +146,7 @@ class Content(ScreenCaptureTestCase):
     def test_viewport_after_scroll(self):
         self.marionette.navigate(long)
         before = self.marionette.screenshot()
-        el = self.marionette.find_element("tag name", "p")
+        el = self.marionette.find_element(By.TAG_NAME, "p")
         self.marionette.execute_script(
             "arguments[0].scrollIntoView()", script_args=[el])
         after = self.marionette.screenshot(full=False)
@@ -154,7 +155,7 @@ class Content(ScreenCaptureTestCase):
 
     def test_element(self):
         self.marionette.navigate(box)
-        el = self.marionette.find_element("tag name", "div")
+        el = self.marionette.find_element(By.TAG_NAME, "div")
         string = self.marionette.screenshot(element=el)
         self.assert_png(string)
         self.assertEqual(
@@ -164,7 +165,7 @@ class Content(ScreenCaptureTestCase):
     @skip("https://bugzilla.mozilla.org/show_bug.cgi?id=1213875")
     def test_element_scrolled_into_view(self):
         self.marionette.navigate(long)
-        el = self.marionette.find_element("tag name", "p")
+        el = self.marionette.find_element(By.TAG_NAME, "p")
         string = self.marionette.screenshot(element=el)
         self.assert_png(string)
         self.assertEqual(
@@ -173,7 +174,7 @@ class Content(ScreenCaptureTestCase):
 
     def test_element_with_highlight(self):
         self.marionette.navigate(box)
-        el = self.marionette.find_element("tag name", "div")
+        el = self.marionette.find_element(By.TAG_NAME, "div")
         string = self.marionette.screenshot(element=el, highlights=[el])
         self.assert_png(string)
         self.assertEqual(
@@ -182,7 +183,7 @@ class Content(ScreenCaptureTestCase):
 
     def test_binary_element(self):
         self.marionette.navigate(box)
-        el = self.marionette.find_element("tag name", "div")
+        el = self.marionette.find_element(By.TAG_NAME, "div")
         bin = self.marionette.screenshot(element=el, format="binary")
         enc = base64.b64encode(bin)
         self.assertEqual(ELEMENT, enc)

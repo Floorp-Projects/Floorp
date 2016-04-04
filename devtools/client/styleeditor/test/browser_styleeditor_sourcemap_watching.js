@@ -53,7 +53,7 @@ add_task(function*() {
 
   yield editor.getSourceEditor();
 
-  let color = yield getComputedStyleProperty("div", null, "color");
+  let color = yield getComputedStyleProperty({selector: "div", name: "color"});
   is(color, "rgb(255, 0, 102)", "div is red before saving file");
 
   // let styleApplied = promise.defer();
@@ -73,7 +73,7 @@ add_task(function*() {
 
   yield styleApplied;
 
-  color = yield getComputedStyleProperty("div", null, "color");
+  color = yield getComputedStyleProperty({selector: "div", name: "color"});
   is(color, "rgb(0, 0, 255)", "div is blue after saving file");
 });
 

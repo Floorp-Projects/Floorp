@@ -280,11 +280,8 @@ HttpChannelChild::RecvAssociateApplicationCache(const nsCString &groupID,
                                                 const nsCString &clientID)
 {
   LOG(("HttpChannelChild::RecvAssociateApplicationCache [this=%p]\n", this));
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new AssociateApplicationCacheEvent(this, groupID, clientID));
-  } else {
-    AssociateApplicationCache(groupID, clientID);
-  }
+  mEventQ->RunOrEnqueue(new AssociateApplicationCacheEvent(this, groupID,
+                                                           clientID));
   return true;
 }
 
@@ -384,19 +381,13 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
 
   mRedirectCount = redirectCount;
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new StartRequestEvent(this, channelStatus, responseHead,
-                                           useResponseHead, requestHeaders,
-                                           isFromCache, cacheEntryAvailable,
-                                           cacheExpirationTime, cachedCharset,
-                                           securityInfoSerialization, selfAddr,
-                                           peerAddr, cacheKey));
-  } else {
-    OnStartRequest(channelStatus, responseHead, useResponseHead, requestHeaders,
-                   isFromCache, cacheEntryAvailable, cacheExpirationTime,
-                   cachedCharset, securityInfoSerialization, selfAddr,
-                   peerAddr, cacheKey);
-  }
+  mEventQ->RunOrEnqueue(new StartRequestEvent(this, channelStatus, responseHead,
+                                              useResponseHead, requestHeaders,
+                                              isFromCache, cacheEntryAvailable,
+                                              cacheExpirationTime,
+                                              cachedCharset,
+                                              securityInfoSerialization,
+                                              selfAddr, peerAddr, cacheKey));
   return true;
 }
 
@@ -616,18 +607,11 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new TransportAndDataEvent(this, channelStatus,
-                                               transportStatus, progress,
-                                               progressMax, data, offset,
-                                               count));
-  } else {
-    MOZ_RELEASE_ASSERT(!mDivertingToParent,
-                       "ShouldEnqueue when diverting to parent!");
-
-    OnTransportAndData(channelStatus, transportStatus, progress, progressMax,
-                       data, offset, count);
-  }
+  mEventQ->RunOrEnqueue(new TransportAndDataEvent(this, channelStatus,
+                                                  transportStatus, progress,
+                                                  progressMax, data, offset,
+                                                  count),
+                        mDivertingToParent);
   return true;
 }
 
@@ -826,13 +810,8 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& channelStatus,
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
     "Should not be receiving any more callbacks from parent!");
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new StopRequestEvent(this, channelStatus, timing));
-  } else {
-    MOZ_ASSERT(!mDivertingToParent, "ShouldEnqueue when diverting to parent!");
-
-    OnStopRequest(channelStatus, timing);
-  }
+  mEventQ->RunOrEnqueue(new StopRequestEvent(this, channelStatus, timing),
+                        mDivertingToParent);
   return true;
 }
 
@@ -992,11 +971,7 @@ bool
 HttpChannelChild::RecvOnProgress(const int64_t& progress,
                                  const int64_t& progressMax)
 {
-  if (mEventQ->ShouldEnqueue())  {
-    mEventQ->Enqueue(new ProgressEvent(this, progress, progressMax));
-  } else {
-    OnProgress(progress, progressMax);
-  }
+  mEventQ->RunOrEnqueue(new ProgressEvent(this, progress, progressMax));
   return true;
 }
 
@@ -1045,11 +1020,7 @@ class StatusEvent : public ChannelEvent
 bool
 HttpChannelChild::RecvOnStatus(const nsresult& status)
 {
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new StatusEvent(this, status));
-  } else {
-    OnStatus(status);
-  }
+  mEventQ->RunOrEnqueue(new StatusEvent(this, status));
   return true;
 }
 
@@ -1096,11 +1067,7 @@ bool
 HttpChannelChild::RecvFailedAsyncOpen(const nsresult& status)
 {
   LOG(("HttpChannelChild::RecvFailedAsyncOpen [this=%p]\n", this));
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FailedAsyncOpenEvent(this, status));
-  } else {
-    FailedAsyncOpen(status);
-  }
+  mEventQ->RunOrEnqueue(new FailedAsyncOpenEvent(this, status));
   return true;
 }
 
@@ -1128,11 +1095,14 @@ void
 HttpChannelChild::DoNotifyListenerCleanup()
 {
   LOG(("HttpChannelChild::DoNotifyListenerCleanup [this=%p]\n", this));
-  if (mIPCOpen)
-    PHttpChannelChild::Send__delete__(this);
+
   if (mInterceptListener) {
     mInterceptListener->Cleanup();
     mInterceptListener = nullptr;
+  }
+
+  if (mIPCOpen) {
+    PHttpChannelChild::Send__delete__(this);
   }
 }
 
@@ -1149,11 +1119,7 @@ bool
 HttpChannelChild::RecvDeleteSelf()
 {
   LOG(("HttpChannelChild::RecvDeleteSelf [this=%p]\n", this));
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new DeleteSelfEvent(this));
-  } else {
-    DeleteSelf();
-  }
+  mEventQ->RunOrEnqueue(new DeleteSelfEvent(this));
   return true;
 }
 
@@ -1210,14 +1176,9 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& newChannelId,
 {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new Redirect1Event(this, newChannelId, newUri,
-                                       redirectFlags, responseHead,
-                                       securityInfoSerialization));
-  } else {
-    Redirect1Begin(newChannelId, newUri, redirectFlags, responseHead,
-                   securityInfoSerialization);
-  }
+  mEventQ->RunOrEnqueue(new Redirect1Event(this, newChannelId, newUri,
+                                           redirectFlags, responseHead,
+                                           securityInfoSerialization));
   return true;
 }
 
@@ -1355,11 +1316,7 @@ bool
 HttpChannelChild::RecvRedirect3Complete()
 {
   LOG(("HttpChannelChild::RecvRedirect3Complete [this=%p]\n", this));
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new Redirect3Event(this));
-  } else {
-    Redirect3Complete();
-  }
+  mEventQ->RunOrEnqueue(new Redirect3Event(this));
   return true;
 }
 
@@ -1385,9 +1342,8 @@ HttpChannelChild::RecvFlushedForDiversion()
 {
   LOG(("HttpChannelChild::RecvFlushedForDiversion [this=%p]\n", this));
   MOZ_RELEASE_ASSERT(mDivertingToParent);
-  MOZ_RELEASE_ASSERT(mEventQ->ShouldEnqueue());
 
-  mEventQ->Enqueue(new HttpFlushedForDiversionEvent(this));
+  mEventQ->RunOrEnqueue(new HttpFlushedForDiversionEvent(this), true);
 
   return true;
 }
@@ -1973,6 +1929,8 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.blockAuthPrompt() = mBlockAuthPrompt;
 
   openArgs.allowStaleCacheContent() = mAllowStaleCacheContent;
+
+  openArgs.contentTypeHint() = mContentTypeHint;
 
   nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2663,7 +2621,7 @@ HttpChannelChild::ShouldInterceptURI(nsIURI* aURI,
 
   nsCOMPtr<nsIURI> upgradedURI;
   if (aShouldUpgrade) {
-    rv = GetSecureUpgradedURI(aURI, getter_AddRefs(upgradedURI));
+    rv = NS_GetSecureUpgradedURI(aURI, getter_AddRefs(upgradedURI));
     NS_ENSURE_SUCCESS(rv, false);
   }
 

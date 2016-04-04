@@ -7,46 +7,49 @@
 "use strict";
 
 define(function(require, exports, module) {
+  const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
-const React = require("devtools/client/shared/vendor/react");
+  const { input } = dom;
 
-const DOM = React.DOM;
+  // For smooth incremental searching (in case the user is typing quickly).
+  const searchDelay = 250;
 
-// For smooth incremental searching (in case the user is typing quickly).
-const searchDelay = 250;
+  /**
+   * This object represents a search box located at the
+   * top right corner of the application.
+   */
+  let SearchBox = createClass({
+    propTypes: {
+      actions: PropTypes.object,
+    },
 
-/**
- * This object represents a search box located at the
- * top right corner of the application.
- */
-var SearchBox = React.createClass({
-  displayName: "SearchBox",
+    displayName: "SearchBox",
 
-  render: function() {
-    return (
-      DOM.input({className: "searchBox",
-        placeholder: Locale.$STR("jsonViewer.filterJSON"),
-        onChange: this.onSearch})
-    )
-  },
+    onSearch: function(event) {
+      let searchBox = event.target;
+      let win = searchBox.ownerDocument.defaultView;
 
-  onSearch: function(event) {
-    var searchBox = event.target;
-    var win = searchBox.ownerDocument.defaultView;
+      if (this.searchTimeout) {
+        win.clearTimeout(this.searchTimeout);
+      }
 
-    if (this.searchTimeout) {
-      win.clearTimeout(this.searchTimeout);
-    }
+      let callback = this.doSearch.bind(this, searchBox);
+      this.searchTimeout = win.setTimeout(callback, searchDelay);
+    },
 
-    var callback = this.doSearch.bind(this, searchBox);
-    this.searchTimeout = win.setTimeout(callback, searchDelay);
-  },
+    doSearch: function(searchBox) {
+      this.props.actions.onSearch(searchBox.value);
+    },
 
-  doSearch: function(searchBox) {
-    this.props.actions.onSearch(searchBox.value);
-  }
-});
+    render: function() {
+      return (
+        input({className: "searchBox",
+          placeholder: Locale.$STR("jsonViewer.filterJSON"),
+          onChange: this.onSearch})
+      );
+    },
+  });
 
-// Exports from this module
-exports.SearchBox = SearchBox;
+  // Exports from this module
+  exports.SearchBox = SearchBox;
 });

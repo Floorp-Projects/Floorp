@@ -51,6 +51,7 @@ void SetUserAppDataDirectory(nsIFile* aDir);
 void SetProfileDirectory(nsIFile* aDir);
 void UpdateCrashEventsDir();
 void SetMemoryReportFile(nsIFile* aFile);
+void SetTelemetrySessionId(const nsACString& id);
 
 /**
  * Get the path where crash event files should be written.
@@ -236,6 +237,7 @@ void UnregisterInjectorCallback(DWORD processID);
 
 // Child-side API
 bool SetRemoteExceptionHandler(const nsACString& crashPipe);
+void InitChildProcessTmpDir();
 
 #  elif defined(XP_LINUX)
 // Parent-side API for children

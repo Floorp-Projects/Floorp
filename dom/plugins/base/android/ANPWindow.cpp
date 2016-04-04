@@ -140,17 +140,6 @@ void InitWindowInterface(ANPWindowInterfaceV0 *i) {
   ASSIGN(i, requestCenterFitZoom);
 }
 
-void InitWindowInterfaceV1(ANPWindowInterfaceV1 *i) {
-  _assert(i->inSize == sizeof(*i));
-  ASSIGN(i, setVisibleRects);
-  ASSIGN(i, clearVisibleRects);
-  ASSIGN(i, showKeyboard);
-  ASSIGN(i, requestFullScreen);
-  ASSIGN(i, exitFullScreen);
-  ASSIGN(i, requestCenterFitZoom);
-  ASSIGN(i, visibleRect);
-}
-
 void InitWindowInterfaceV2(ANPWindowInterfaceV2 *i) {
   _assert(i->inSize == sizeof(*i));
   ASSIGN(i, setVisibleRects);
@@ -162,4 +151,3 @@ void InitWindowInterfaceV2(ANPWindowInterfaceV2 *i) {
   ASSIGN(i, visibleRect);
   ASSIGN(i, requestFullScreenOrientation);
 }
-

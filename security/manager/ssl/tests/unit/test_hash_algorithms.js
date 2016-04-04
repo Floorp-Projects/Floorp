@@ -1,3 +1,5 @@
+"use strict";
+
 var ScriptableUnicodeConverter =
   Components.Constructor("@mozilla.org/intl/scriptableunicodeconverter",
                          "nsIScriptableUnicodeConverter");
@@ -77,7 +79,7 @@ function doHashStream(algo, value, cmp) {
 }
 
 function run_test() {
-  for (algo in hashes) {
+  for (let algo in hashes) {
     hashes[algo].forEach(
       function(e, i) {
         doHash(algo, messages[i], e);

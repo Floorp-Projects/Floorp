@@ -15,6 +15,7 @@
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "LayerState.h"
+#include "Layers.h"
 #include "LayerUserData.h"
 
 class nsDisplayListBuilder;
@@ -62,6 +63,7 @@ struct ContainerLayerParameters {
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mInLowPrecisionDisplayPort(false)
     , mForEventsOnly(false)
+    , mLayerCreationHint(layers::LayerManager::NONE)
   {}
   ContainerLayerParameters(float aXScale, float aYScale)
     : mXScale(aXScale)
@@ -75,6 +77,7 @@ struct ContainerLayerParameters {
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mInLowPrecisionDisplayPort(false)
     , mForEventsOnly(false)
+    , mLayerCreationHint(layers::LayerManager::NONE)
   {}
   ContainerLayerParameters(float aXScale, float aYScale,
                            const nsIntPoint& aOffset,
@@ -91,6 +94,7 @@ struct ContainerLayerParameters {
     , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
     , mInLowPrecisionDisplayPort(aParent.mInLowPrecisionDisplayPort)
     , mForEventsOnly(aParent.mForEventsOnly)
+    , mLayerCreationHint(aParent.mLayerCreationHint)
   {}
 
   float mXScale, mYScale;
@@ -125,6 +129,8 @@ struct ContainerLayerParameters {
   bool mDisableSubpixelAntialiasingInDescendants;
   bool mInLowPrecisionDisplayPort;
   bool mForEventsOnly;
+  layers::LayerManager::PaintedLayerCreationHint mLayerCreationHint;
+
   /**
    * When this is false, PaintedLayer coordinates are drawn to with an integer
    * translation and the scale in mXScale/mYScale.

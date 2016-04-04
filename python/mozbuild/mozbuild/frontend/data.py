@@ -36,6 +36,9 @@ class TreeMetadata(object):
     """Base class for all data being captured."""
     __slots__ = ()
 
+    def to_dict(self):
+        return {k.lower(): getattr(self, k) for k in self.DICT_ATTRS}
+
 
 class ContextDerived(TreeMetadata):
     """Build object derived from a single Context instance.
@@ -203,22 +206,6 @@ class Defines(BaseDefines):
 class HostDefines(BaseDefines):
     pass
 
-class TestHarnessFiles(ContextDerived):
-    """Sandbox container object for TEST_HARNESS_FILES,
-    which is a HierarchicalStringList.
-
-    We need an object derived from ContextDerived for use in the backend, so
-    this object fills that role. It just has a reference to the underlying
-    HierarchicalStringList, which is created when parsing TEST_HARNESS_FILES.
-    """
-    __slots__ = ('srcdir_files', 'srcdir_pattern_files', 'objdir_files')
-
-    def __init__(self, context, srcdir_files, srcdir_pattern_files, objdir_files):
-        ContextDerived.__init__(self, context)
-        self.srcdir_files = srcdir_files
-        self.srcdir_pattern_files = srcdir_pattern_files
-        self.objdir_files = objdir_files
-
 class IPDLFile(ContextDerived):
     """Describes an individual .ipdl source file."""
 
@@ -373,6 +360,13 @@ class BaseProgram(Linkable):
     """
     __slots__ = ('program')
 
+    DICT_ATTRS = {
+        'install_target',
+        'KIND',
+        'program',
+        'relobjdir',
+    }
+
     def __init__(self, context, program, is_unit_test=False):
         Linkable.__init__(self, context)
 
@@ -381,6 +375,9 @@ class BaseProgram(Linkable):
             program += bin_suffix
         self.program = program
         self.is_unit_test = is_unit_test
+
+    def __repr__(self):
+        return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.program)
 
 
 class Program(BaseProgram):
@@ -431,6 +428,9 @@ class BaseLibrary(Linkable):
 
         self.refs = []
 
+    def __repr__(self):
+        return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.lib_name)
+
 
 class Library(BaseLibrary):
     """Context derived container object for a library"""
@@ -466,6 +466,15 @@ class SharedLibrary(Library):
         'variant',
         'symbols_file',
     )
+
+    DICT_ATTRS = {
+        'basename',
+        'import_name',
+        'install_target',
+        'lib_name',
+        'relobjdir',
+        'soname',
+    }
 
     FRAMEWORK = 1
     COMPONENT = 2
@@ -814,7 +823,40 @@ class FinalTargetPreprocessedFiles(ContextDerived):
         self.files = files
 
 
-class TestingFiles(FinalTargetFiles):
+class ObjdirFiles(ContextDerived):
+    """Sandbox container object for OBJDIR_FILES, which is a
+    HierarchicalStringList.
+    """
+    __slots__ = ('files')
+
+    def __init__(self, sandbox, files):
+        ContextDerived.__init__(self, sandbox)
+        self.files = files
+
+    @property
+    def install_target(self):
+        return ''
+
+
+class ObjdirPreprocessedFiles(ContextDerived):
+    """Sandbox container object for OBJDIR_PP_FILES, which is a
+    HierarchicalStringList.
+    """
+    __slots__ = ('files')
+
+    def __init__(self, sandbox, files):
+        ContextDerived.__init__(self, sandbox)
+        self.files = files
+
+    @property
+    def install_target(self):
+        return ''
+
+
+class TestHarnessFiles(FinalTargetFiles):
+    """Sandbox container object for TEST_HARNESS_FILES,
+    which is a HierarchicalStringList.
+    """
     @property
     def install_target(self):
         return '_tests'
@@ -844,6 +886,19 @@ class BrandingFiles(FinalTargetFiles):
     @property
     def install_target(self):
         return 'dist/branding'
+
+
+class SdkFiles(FinalTargetFiles):
+    """Sandbox container object for SDK_FILES, which is a
+    HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing SDK_FILES.
+    """
+    @property
+    def install_target(self):
+        return 'dist/sdk'
 
 
 class GeneratedFile(ContextDerived):

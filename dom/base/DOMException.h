@@ -78,7 +78,7 @@ public:
   // The XPCOM GetFilename does the right thing.  It might throw, but we want to
   // return an empty filename in that case anyway, instead of throwing.
 
-  uint32_t LineNumber() const;
+  uint32_t LineNumber(JSContext* aCx) const;
 
   uint32_t ColumnNumber() const;
 
@@ -86,9 +86,9 @@ public:
 
   already_AddRefed<nsISupports> GetData() const;
 
-  void GetStack(nsAString& aStack, ErrorResult& aRv) const;
+  void GetStack(JSContext* aCx, nsAString& aStack, ErrorResult& aRv) const;
 
-  void Stringify(nsString& retval);
+  void Stringify(JSContext* aCx, nsString& retval);
 
   // XPCOM factory ctor.
   Exception();
@@ -131,7 +131,7 @@ public:
   NS_DECL_NSIDOMDOMEXCEPTION
 
   // nsIException overrides
-  NS_IMETHOD ToString(nsACString& aReturn) override;
+  NS_IMETHOD ToString(JSContext* aCx, nsACString& aReturn) override;
 
   // nsWrapperCache overrides
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)

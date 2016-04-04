@@ -10,7 +10,7 @@ include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCellBroadcast;
-include protocol PCompositor;
+include protocol PCompositorBridge;
 include protocol PContentBridge;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
@@ -289,6 +289,7 @@ struct FileSystemGetDirectoryListingParams
 {
   nsString filesystem;
   nsString realPath;
+  bool isRoot;
   // 'filters' could be an array rather than a semicolon separated string
   // (we'd then use InfallibleTArray<nsString> internally), but that is
   // wasteful.  E10s requires us to pass the filters over as a string anyway,
@@ -305,6 +306,7 @@ struct FileSystemGetFileOrDirectoryParams
 {
   nsString filesystem;
   nsString realPath;
+  bool isRoot;
 };
 
 union FileSystemPathOrFileValue
@@ -459,7 +461,7 @@ prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
 
-    parent opens PCompositor;
+    parent opens PCompositorBridge;
     parent opens PProcessHangMonitor;
     parent opens PSharedBufferManager;
     parent opens PImageBridge;
@@ -608,8 +610,6 @@ child:
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
 
-    async ScreenSizeChanged(IntSize size);
-
     async Volumes(VolumeInfo[] volumes);
 
     async FlushMemory(nsString reason);
@@ -730,18 +730,31 @@ child:
     /**
      * Send a `push` event without data to a service worker in the child.
      */
-    async Push(nsCString scope, Principal principal);
+    async Push(nsCString scope, Principal principal, nsString messageId);
 
     /**
      * Send a `push` event with data to a service worker in the child.
      */
-    async PushWithData(nsCString scope, Principal principal, uint8_t[] data);
+    async PushWithData(nsCString scope, Principal principal,
+                       nsString messageId, uint8_t[] data);
 
     /**
      * Send a `pushsubscriptionchange` event to a service worker in the child.
      */
     async PushSubscriptionChange(nsCString scope, Principal principal);
 
+    /**
+     * Send a Push error message to all service worker clients in the child.
+     */
+    async PushError(nsCString scope, nsString message, uint32_t flags);
+
+    /**
+     * Windows specific: associate this content process with the browsers
+     * audio session.
+     */
+    async SetAudioSessionData(nsID aID,
+                              nsString aDisplayName,
+                              nsString aIconPath);
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
@@ -1168,7 +1181,8 @@ parent:
                       nsString aName,
                       nsCString aFeatures,
                       nsCString aBaseURI,
-                      DocShellOriginAttributes aOpenerOriginAttributes)
+                      DocShellOriginAttributes aOpenerOriginAttributes,
+                      float aFullZoom)
       returns (nsresult rv,
                bool windowOpened,
                FrameScriptInfo[] frameScripts,
@@ -1192,6 +1206,13 @@ parent:
     sync UngrabPointer(uint32_t time);
 
     sync RemovePermission(Principal principal, nsCString permissionType) returns (nsresult rv);
+
+    /**
+     * Tell the parent that a decoder's' benchmark has been completed.
+     * The result can then be stored in permanent storage.
+     */
+    async NotifyBenchmarkResult(nsString aCodecName, uint32_t aDecodeFPS);
+
 both:
      async AsyncMessage(nsString aMessage, ClonedMessageData aData,
                         CpowEntry[] aCpows, Principal aPrincipal);

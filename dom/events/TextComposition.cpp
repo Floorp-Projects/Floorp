@@ -118,10 +118,10 @@ TextComposition::CloneAndDispatchAs(
   MOZ_ASSERT(IsValidStateForComposition(aCompositionEvent->widget),
              "Should be called only when it's safe to dispatch an event");
 
-  WidgetCompositionEvent compositionEvent(aCompositionEvent->mFlags.mIsTrusted,
+  WidgetCompositionEvent compositionEvent(aCompositionEvent->IsTrusted(),
                                           aMessage, aCompositionEvent->widget);
-  compositionEvent.time = aCompositionEvent->time;
-  compositionEvent.timeStamp = aCompositionEvent->timeStamp;
+  compositionEvent.mTime = aCompositionEvent->mTime;
+  compositionEvent.mTimeStamp = aCompositionEvent->mTimeStamp;
   compositionEvent.mData = aCompositionEvent->mData;
   compositionEvent.mNativeIMEContext = aCompositionEvent->mNativeIMEContext;
   compositionEvent.mOriginalMessage = aCompositionEvent->mMessage;
@@ -159,7 +159,7 @@ TextComposition::OnCompositionEventDiscarded(
   // Note that this method is never called for synthesized events for emulating
   // commit or cancel composition.
 
-  MOZ_ASSERT(aCompositionEvent->mFlags.mIsTrusted,
+  MOZ_ASSERT(aCompositionEvent->IsTrusted(),
              "Shouldn't be called with untrusted event");
 
   if (mTabParent) {
@@ -243,7 +243,7 @@ TextComposition::DispatchCompositionEvent(
   // remote process.
   if (mTabParent) {
     Unused << mTabParent->SendCompositionEvent(*aCompositionEvent);
-    aCompositionEvent->mFlags.mPropagationStopped = true;
+    aCompositionEvent->StopPropagation();
     if (aCompositionEvent->CausesDOMTextEvent()) {
       mLastData = aCompositionEvent->mData;
       mLastRanges = aCompositionEvent->mRanges;
@@ -411,7 +411,7 @@ TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
   // remote process.
   if (aTabParent) {
     Unused << aTabParent->SendSelectionEvent(*aSelectionEvent);
-    aSelectionEvent->mFlags.mPropagationStopped = true;
+    aSelectionEvent->StopPropagation();
     return;
   }
 

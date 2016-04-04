@@ -149,6 +149,7 @@ LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
   , mPendingTransaction(0)
+  , mPendingCompositorUpdates(0)
   , mDestroyed(false)
   , mIPCOpen(false)
 {
@@ -366,7 +367,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         layer->SetMaskLayer(nullptr);
       }
       layer->SetAnimations(common.animations());
-      layer->SetFrameMetrics(common.metrics());
+      layer->SetScrollMetadata(common.scrollMetadata());
       layer->SetDisplayListLog(common.displayListLog().get());
 
       // The updated invalid region is added to the existing one, since we can
@@ -586,6 +587,11 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
       CompositableHost* host = CompositableHost::FromIPDLActor(op.compositableParent());
+      if (mPendingCompositorUpdates) {
+        // Do not attach compositables from old layer trees. Return true since
+        // content cannot handle errors.
+        return true;
+      }
       if (!Attach(cast(op.layerParent()), host, false)) {
         return false;
       }
@@ -598,6 +604,11 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!compositableParent) {
         NS_ERROR("CompositableParent not found in the map");
         return false;
+      }
+      if (mPendingCompositorUpdates) {
+        // Do not attach compositables from old layer trees. Return true since
+        // content cannot handle errors.
+        return true;
       }
       CompositableHost* host = CompositableHost::FromIPDLActor(compositableParent);
       if (!Attach(cast(op.layerParent()), host, true)) {
@@ -712,7 +723,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 
   // Make sure we apply the latest animation style or else we can end up with
   // a race between when we temporarily clear the animation transform (in
-  // CompositorParent::SetShadowProperties) and when animation recalculates
+  // CompositorBridgeParent::SetShadowProperties) and when animation recalculates
   // the value.
   mShadowLayersManager->ApplyAsyncProperties(this);
 
@@ -781,7 +792,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 static AsyncPanZoomController*
 GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
 {
-  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+  for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
     if (aLayer->GetFrameMetrics(i).GetScrollId() == aScrollID) {
       return aLayer->GetAsyncPanZoomController(i);
     }
@@ -796,6 +807,25 @@ GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
     }
   }
   return nullptr;
+}
+
+bool
+LayerTransactionParent::RecvUpdateScrollOffset(
+    const FrameMetrics::ViewID& aScrollID,
+    const uint32_t& aScrollGeneration,
+    const CSSPoint& aScrollOffset)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
+  if (!controller) {
+    return false;
+  }
+  controller->NotifyScrollUpdated(aScrollGeneration, aScrollOffset);
+  mShadowLayersManager->ForceComposite(this);
+  return true;
 }
 
 bool
@@ -949,8 +979,20 @@ LayerTransactionParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData
                                             const LayersBackend& aLayersBackend,
                                             const TextureFlags& aFlags)
 {
-  MOZ_ASSERT(aLayersBackend == mLayerManager->GetCompositor()->GetBackendType());
-  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags);
+  TextureFlags flags = aFlags;
+
+  if (mPendingCompositorUpdates) {
+    // The compositor was recreated, and we're receiving layers updates for a
+    // a layer manager that will soon be discarded or invalidated. We can't
+    // return null because this will mess up deserialization later and we'll
+    // kill the content process. Instead, we signal that the underlying
+    // TextureHost should not attempt to access the compositor.
+    flags |= TextureFlags::INVALID_COMPOSITOR;
+  } else if (aLayersBackend != mLayerManager->GetCompositor()->GetBackendType()) {
+    gfxDevCrash(gfx::LogReason::PAllocTextureBackendMismatch) << "Texture backend is wrong";
+  }
+
+  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, flags);
 }
 
 bool
@@ -968,8 +1010,16 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
     const AsyncChildMessageData& message = aMessages[i];
 
     switch (message.type()) {
-      case AsyncChildMessageData::TOpRemoveTextureAsync: {
-        const OpRemoveTextureAsync& op = message.get_OpRemoveTextureAsync();
+      case AsyncChildMessageData::TCompositableOperation: {
+
+        const CompositableOperation& compositable_op =
+          message.get_CompositableOperation();
+        MOZ_ASSERT(compositable_op.detail().type() ==
+          CompositableOperationDetail::TOpRemoveTextureAsync);
+
+        const OpRemoveTextureAsync& op =
+          compositable_op.detail().get_OpRemoveTextureAsync();
+
         CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
         RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 

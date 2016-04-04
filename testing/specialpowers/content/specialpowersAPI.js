@@ -7,6 +7,8 @@
 
 "use strict";
 
+var global = this;
+
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
@@ -17,6 +19,7 @@ Cu.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // We're loaded with "this" not set to the global in some cases, so we
 // have to play some games to get at the global object here.  Normally
@@ -453,15 +456,24 @@ SpecialPowersAPI.prototype = {
     return MockPermissionPrompt;
   },
 
-  loadChromeScript: function (url) {
+  loadChromeScript: function (urlOrFunction) {
     // Create a unique id for this chrome script
     let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                           .getService(Ci.nsIUUIDGenerator);
     let id = uuidGenerator.generateUUID().toString();
 
     // Tells chrome code to evaluate this chrome script
+    let scriptArgs = { id };
+    if (typeof(urlOrFunction) == "function") {
+      scriptArgs.function = {
+        body: "(" + urlOrFunction.toString() + ")();",
+        name: urlOrFunction.name,
+      };
+    } else {
+      scriptArgs.url = urlOrFunction;
+    }
     this._sendSyncMessage("SPLoadChromeScript",
-                          { url: url, id: id });
+                          scriptArgs);
 
     // Returns a MessageManager like API in order to be
     // able to communicate with this chrome script
@@ -514,7 +526,7 @@ SpecialPowersAPI.prototype = {
 
     let assert = json => {
       // An assertion has been done in a mochitest chrome script
-      let {url, err, message, stack} = json;
+      let {name, err, message, stack} = json;
 
       // Try to fetch a test runner from the mochitest
       // in order to properly log these assertions and notify
@@ -540,10 +552,10 @@ SpecialPowersAPI.prototype = {
           ", expected " + repr(err.expected) +
           " (operator " + err.operator + ")";
       }
-      var msg = [resultString, url, diagnostic].join(" | ");
+      var msg = [resultString, name, diagnostic].join(" | ");
       if (parentRunner) {
         if (err) {
-          parentRunner.addFailedTest(url);
+          parentRunner.addFailedTest(name);
           parentRunner.error(msg);
         } else {
           parentRunner.log(msg);
@@ -1121,15 +1133,6 @@ SpecialPowersAPI.prototype = {
     this.pushPrefEnv({set: [['dom.mozApps.auto_confirm_uninstall', true]]}, cb);
   },
 
-  // Allow tests to disable the per platform app validity checks so we can
-  // test higher level WebApp functionality without full platform support.
-  setAllAppsLaunchable: function(launchable) {
-    this._sendSyncMessage("SPWebAppService", {
-      op: "set-launchable",
-      launchable: launchable
-    });
-  },
-
   // Allow tests to install addons without signing the package, for convenience.
   allowUnsignedAddons: function() {
     this._sendSyncMessage("SPWebAppService", {
@@ -1142,14 +1145,6 @@ SpecialPowersAPI.prototype = {
     this._sendSyncMessage("SPWebAppService", {
       op: "debug-customizations",
       value: value
-    });
-  },
-
-  // Restore the launchable property to its default value.
-  flushAllAppsLaunchable: function() {
-    this._sendSyncMessage("SPWebAppService", {
-      op: "set-launchable",
-      launchable: false
     });
   },
 
@@ -1175,6 +1170,9 @@ SpecialPowersAPI.prototype = {
       let uri = aMessage.json.uri;
       Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
     },
+    "specialpowers-browser-fullZoom:zoomReset": function() {
+      Services.obs.notifyObservers(null, "specialpowers-browser-fullZoom:zoomReset", null);
+    },
   },
 
   _addObserverProxy: function(notification) {
@@ -1182,7 +1180,6 @@ SpecialPowersAPI.prototype = {
       this._addMessageListener(notification, this._proxiedObservers[notification]);
     }
   },
-
   _removeObserverProxy: function(notification) {
     if (notification in this._proxiedObservers) {
       this._removeMessageListener(notification, this._proxiedObservers[notification]);
@@ -1630,7 +1627,19 @@ SpecialPowersAPI.prototype = {
     // With aWindow, it is called in SimpleTest.waitForFocus to allow popup window opener focus switching
     if (aWindow)
       aWindow.focus();
-    sendAsyncMessage("SpecialPowers.Focus", {});
+    var mm = global;
+    if (aWindow) {
+      try {
+        mm = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIDocShell)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIContentFrameMessageManager);
+      } catch (ex) {
+        /* Ignore exceptions for e.g. XUL chrome windows from mochitest-chrome
+         * which won't have a message manager */
+      }
+    }
+    mm.sendAsyncMessage("SpecialPowers.Focus", {});
   },
 
   getClipboardData: function(flavor, whichClipboard) {
@@ -1942,6 +1951,99 @@ SpecialPowersAPI.prototype = {
 
   invalidateExtensionStorageCache: function() {
     this.notifyObserversInParentProcess(null, "extension-invalidate-storage-cache", "");
+  },
+
+  allowMedia: function(window, enable) {
+    this._getDocShell(window).allowMedia = enable;
+  },
+
+  createChromeCache: function(name, url) {
+    let principal = this._getPrincipalFromArg(url);
+    return wrapIfUnwrapped(new content.window.CacheStorage(name, principal));
+  },
+
+  loadChannelAndReturnStatus: function(url, loadUsingSystemPrincipal) {
+    const BinaryInputStream =
+        Components.Constructor("@mozilla.org/binaryinputstream;1",
+                               "nsIBinaryInputStream",
+                               "setInputStream");
+
+    return new Promise(function(resolve) {
+      let listener = {
+        httpStatus : 0,
+
+        onStartRequest: function(request, context) {
+          request.QueryInterface(Ci.nsIHttpChannel);
+          this.httpStatus = request.responseStatus;
+        },
+
+        onDataAvailable: function(request, context, stream, offset, count) {
+          new BinaryInputStream(stream).readByteArray(count);
+        },
+
+        onStopRequest: function(request, context, status) {
+         /* testing here that the redirect was not followed. If it was followed
+            we would see a http status of 200 and status of NS_OK */
+
+          let httpStatus = this.httpStatus;
+          resolve({status, httpStatus});
+        }
+      };
+      let uri = NetUtil.newURI(url);
+      let channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal});
+
+      channel.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+      channel.QueryInterface(Ci.nsIHttpChannelInternal);
+      channel.documentURI = uri;
+      channel.asyncOpen2(listener);
+    });
+  },
+
+  _pu: null,
+
+  get ParserUtils() {
+    if (this._pu != null)
+      return this._pu;
+
+    let pu = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
+    // We need to create and return our own wrapper.
+    this._pu = {
+      sanitize: function(src, flags) {
+        return pu.sanitize(src, flags);
+      },
+      convertToPlainText: function(src, flags, wrapCol) {
+        return pu.convertToPlainText(src, flags, wrapCol);
+      },
+      parseFragment: function(fragment, flags, isXML, baseURL, element) {
+        let baseURI = baseURL ? NetUtil.newURI(baseURL) : null;
+        return pu.parseFragment(unwrapIfWrapped(fragment),
+                                flags, isXML, baseURI,
+                                unwrapIfWrapped(element));
+      },
+    };
+    return this._pu;
+  },
+
+  createDOMWalker: function(node, showAnonymousContent) {
+    node = unwrapIfWrapped(node);
+    let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
+                 createInstance(Ci.inIDeepTreeWalker);
+    walker.showAnonymousContent = showAnonymousContent;
+    walker.init(node.ownerDocument, Ci.nsIDOMNodeFilter.SHOW_ALL);
+    walker.currentNode = node;
+    return {
+      get firstChild() {
+        return wrapIfUnwrapped(walker.firstChild());
+      },
+      get lastChild() {
+        return wrapIfUnwrapped(walker.lastChild());
+      },
+    };
+  },
+
+  observeMutationEvents: function(mo, node, nativeAnonymousChildList, subtree) {
+    unwrapIfWrapped(mo).observe(unwrapIfWrapped(node),
+                                {nativeAnonymousChildList, subtree});
   },
 };
 

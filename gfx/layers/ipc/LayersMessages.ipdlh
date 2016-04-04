@@ -7,7 +7,7 @@
 
 include LayersSurfaces;
 include protocol PCompositable;
-include protocol PCompositor;
+include protocol PCompositorBridge;
 include protocol PLayer;
 include protocol PImageContainer;
 include protocol PRenderFrame;
@@ -41,7 +41,7 @@ using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
-using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
@@ -237,7 +237,7 @@ struct CommonLayerAttributes {
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
   nsIntRegion invalidRegion;
-  FrameMetrics[] metrics;
+  ScrollMetadata[] scrollMetadata;
   nsCString displayListLog;
 };
 
@@ -350,18 +350,15 @@ struct SurfaceDescriptorTiles {
 };
 
 struct OpUseTiledLayerBuffer {
-  PCompositable compositable;
   SurfaceDescriptorTiles tileLayerDescriptor;
 };
 
 struct OpUseOverlaySource {
-  PCompositable compositable;
   OverlaySource overlay;
   IntRect picture;
 };
 
 struct OpPaintTextureRegion {
-  PCompositable compositable;
   ThebesBufferData bufferData;
   nsIntRegion updatedRegion;
 };
@@ -370,7 +367,6 @@ struct OpPaintTextureRegion {
  * Tells the CompositableHost to remove the corresponding TextureHost
  */
 struct OpRemoveTexture {
-  PCompositable compositable;
   PTexture texture;
 };
 
@@ -412,12 +408,10 @@ struct TimedTexture {
  * The list must not be empty.
  */
 struct OpUseTexture {
-  PCompositable compositable;
   TimedTexture[] textures;
 };
 
 struct OpUseComponentAlphaTextures {
-  PCompositable compositable;
   PTexture textureOnBlack;
   PTexture textureOnWhite;
 };
@@ -438,7 +432,7 @@ struct OpDeliverFenceToTracker {
   FenceHandle fence;
 };
 
-union CompositableOperation {
+union CompositableOperationDetail {
   OpPaintTextureRegion;
 
   OpUseTiledLayerBuffer;
@@ -449,6 +443,11 @@ union CompositableOperation {
   OpUseTexture;
   OpUseComponentAlphaTextures;
   OpUseOverlaySource;
+};
+
+struct CompositableOperation {
+  PCompositable compositable;
+  CompositableOperationDetail detail;
 };
 
 // A unit of a changeset; a set of these comprise a changeset
@@ -516,7 +515,7 @@ union AsyncParentMessageData {
 };
 
 union AsyncChildMessageData {
-  OpRemoveTextureAsync;
+  CompositableOperation;
 };
 
 } // namespace

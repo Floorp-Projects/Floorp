@@ -12,6 +12,7 @@ if not CONFIG['MOZ_NO_SMART_CARDS']:
 TEST_DIRS += [
     'bad_certs',
     'ocsp_certs',
+    'test_baseline_requirements',
     'test_cert_eku',
     'test_cert_embedded_null',
     'test_cert_keyUsage',
@@ -19,6 +20,7 @@ TEST_DIRS += [
     'test_cert_signatures',
     'test_cert_trust',
     'test_cert_version',
+    'test_certDB_import',
     'test_ev_certs',
     'test_getchain',
     'test_intermediate_basic_usage_constraints',

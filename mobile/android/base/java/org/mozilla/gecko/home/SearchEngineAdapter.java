@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ColorUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -103,7 +102,7 @@ public class SearchEngineAdapter
                         .inflate(R.layout.search_engine_bar_label, parent, false);
         final Drawable icon = DrawableCompat.wrap(
                 ContextCompat.getDrawable(mContext, R.drawable.search_icon_active).mutate());
-        DrawableCompat.setTint(icon, ColorUtils.getColor(mContext, R.color.disabled_grey));
+        DrawableCompat.setTint(icon, ContextCompat.getColor(mContext, R.color.disabled_grey));
 
         final ImageView iconView = (ImageView) view.findViewById(R.id.search_engine_label);
         iconView.setImageDrawable(icon);

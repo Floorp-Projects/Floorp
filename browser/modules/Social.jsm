@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
   "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
@@ -95,7 +93,7 @@ this.Social = {
       // Retrieve the current set of providers, and set the current provider.
       SocialService.getOrderedProviderList(function (providers) {
         Social._updateProviderCache(providers);
-        Social._updateWorkerState(SocialService.enabled);
+        Social._updateEnabledState(SocialService.enabled);
         deferred.resolve(false);
       });
     } else {
@@ -113,15 +111,14 @@ this.Social = {
       }
       if (topic == "provider-enabled") {
         Social._updateProviderCache(providers);
-        Social._updateWorkerState(true);
+        Social._updateEnabledState(true);
         Services.obs.notifyObservers(null, "social:" + topic, origin);
         return;
       }
       if (topic == "provider-disabled") {
-        // a provider was removed from the list of providers, that does not
-        // affect worker state for other providers
+        // a provider was removed from the list of providers, update states
         Social._updateProviderCache(providers);
-        Social._updateWorkerState(providers.length > 0);
+        Social._updateEnabledState(providers.length > 0);
         Services.obs.notifyObservers(null, "social:" + topic, origin);
         return;
       }
@@ -136,7 +133,7 @@ this.Social = {
     return deferred.promise;
   },
 
-  _updateWorkerState: function(enable) {
+  _updateEnabledState: function(enable) {
     for (let p of Social.providers) {
       p.enabled = enable;
     }
@@ -274,9 +271,6 @@ function CreateSocialStatusWidget(aId, aProvider) {
       node.setAttribute("tooltiptext", aProvider.name);
       node.setAttribute("oncommand", "SocialStatus.showPopup(this);");
       node.setAttribute("constrain-size", "true");
-
-      if (PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView))
-        node.setAttribute("disabled", "true");
 
       return node;
     }

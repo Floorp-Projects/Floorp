@@ -36,6 +36,7 @@ task:
           builds/releng_base_android_64_builds.py
           disable_signing.py
           platform_supports_post_upload_to_latest.py
+      MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
       MH_CUSTOM_BUILD_VARIANT_CFG: api-15-frontend
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
@@ -50,18 +51,6 @@ task:
         type: directory
         path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests'
         expires: '{{#from_now}}1 year{{/from_now}}'
-      'public/android/lint/lint-results-automationDebug.html':
-        type: file
-        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.html'
-        expires: '{{#from_now}}1 year{{/from_now}}'
-      'public/android/lint/lint-results-automationDebug.xml':
-        type: file
-        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.xml'
-        expires: '{{#from_now}}1 year{{/from_now}}'
-      'public/android/lint/lint-results-automationDebug_files':
-        type: directory
-        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug_files'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherderEnv:
@@ -73,7 +62,7 @@ task:
         platform: android-4-0-armv7-api15
       groupSymbol: tc
       groupName: Submitted by taskcluster
-      symbol: Unit
+      symbol: test
       tier: 2
     # Rather then enforcing particular conventions we require that all build
     # tasks provide the "build" extra field to specify where the build and tests

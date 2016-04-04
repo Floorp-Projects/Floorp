@@ -32,6 +32,7 @@ public:
                           RefPtr<MediaData>& aOutput) override;
 
   void ProcessFlush() override;
+  virtual void ResetEOS() override;
 
   const char* GetDescriptionName() const override
   {

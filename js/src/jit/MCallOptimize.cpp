@@ -93,8 +93,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineAtomicsLoad(callInfo);
       case InlinableNative::AtomicsStore:
         return inlineAtomicsStore(callInfo);
-      case InlinableNative::AtomicsFence:
-        return inlineAtomicsFence(callInfo);
       case InlinableNative::AtomicsAdd:
       case InlinableNative::AtomicsSub:
       case InlinableNative::AtomicsAnd:
@@ -259,6 +257,10 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineHasClass(callInfo, &ListIteratorObject::class_);
       case InlinableNative::IntrinsicDefineDataProperty:
         return inlineDefineDataProperty(callInfo);
+
+      // Map intrinsics.
+      case InlinableNative::IntrinsicGetNextMapEntryForIterator:
+        return inlineGetNextMapEntryForIterator(callInfo);
 
       // TypedArray intrinsics.
       case InlinableNative::IntrinsicIsTypedArray:
@@ -2191,6 +2193,46 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineGetNextMapEntryForIterator(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* iterArg = callInfo.getArg(0);
+    MDefinition* resultArg = callInfo.getArg(1);
+
+    if (iterArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* iterTypes = iterArg->resultTypeSet();
+    const Class* iterClasp = iterTypes ? iterTypes->getKnownClass(constraints()) : nullptr;
+    if (iterClasp != &MapIteratorObject::class_)
+        return InliningStatus_NotInlined;
+
+    if (resultArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* resultTypes = resultArg->resultTypeSet();
+    const Class* resultClasp = resultTypes ? resultTypes->getKnownClass(constraints()) : nullptr;
+    if (resultClasp != &ArrayObject::class_)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* next = MGetNextMapEntryForIterator::New(alloc(), iterArg,
+                                                          resultArg);
+    current->add(next);
+    current->push(next);
+
+    if (!resumeAfter(next))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineIsTypedArrayHelper(CallInfo& callInfo, WrappingBehavior wrappingBehavior)
 {
     MOZ_ASSERT(!callInfo.constructing());
@@ -2866,30 +2908,6 @@ IonBuilder::inlineAtomicsStore(CallInfo& callInfo)
     current->push(value);
 
     if (!resumeAfter(store))
-        return InliningStatus_Error;
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineAtomicsFence(CallInfo& callInfo)
-{
-    if (callInfo.argc() != 0 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
-
-    if (!JitSupportsAtomics())
-        return InliningStatus_NotInlined;
-
-    callInfo.setImplicitlyUsedUnchecked();
-
-    MMemoryBarrier* fence = MMemoryBarrier::New(alloc());
-    current->add(fence);
-    pushConstant(UndefinedValue());
-
-    // Fences are considered effectful (they execute a memory barrier).
-    if (!resumeAfter(fence))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;

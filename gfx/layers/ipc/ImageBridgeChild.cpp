@@ -25,7 +25,7 @@
 #include "mozilla/media/MediaSystemResourceManager.h" // for MediaSystemResourceManager
 #include "mozilla/media/MediaSystemResourceManagerChild.h" // for MediaSystemResourceManagerChild
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
-#include "mozilla/layers/CompositorParent.h" // for CompositorParent
+#include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "mozilla/layers/LayersMessages.h"  // for CompositableOperation
@@ -193,8 +193,8 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID, t.mInputFrameID));
   }
-  mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                                   textures));
+  mTxn->AddNoSwapEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
+                                            OpUseTexture(textures)));
 }
 
 void
@@ -209,9 +209,13 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
   MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
-  mTxn->AddNoSwapEdit(OpUseComponentAlphaTextures(nullptr, aCompositable->GetIPDLActor(),
-                                                  nullptr, aTextureOnBlack->GetIPDLActor(),
-                                                  nullptr, aTextureOnWhite->GetIPDLActor()));
+  mTxn->AddNoSwapEdit(
+    CompositableOperation(
+      nullptr,
+      aCompositable->GetIPDLActor(),
+      OpUseComponentAlphaTextures(
+        nullptr ,aTextureOnBlack->GetIPDLActor(),
+        nullptr, aTextureOnWhite->GetIPDLActor())));
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -222,8 +226,13 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->IsConnected());
-  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(),
-      aOverlay, aPictureRect));
+
+  CompositableOperation op(
+    nullptr,
+    aCompositable->GetIPDLActor(),
+    OpUseOverlaySource(aOverlay, aPictureRect));
+
+  mTxn->AddEdit(op);
 }
 #endif
 
@@ -808,7 +817,7 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
     sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorParent::CompositorLoop(), nullptr, base::GetCurrentProcId());
+      CompositorBridgeParent::CompositorLoop(), nullptr, base::GetCurrentProcId());
     sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
       FROM_HERE,
@@ -941,7 +950,8 @@ ImageBridgeChild::AllocShmem(size_t aSize,
 {
   MOZ_ASSERT(!mShuttingDown);
   if (InImageBridgeChildThread()) {
-    return PImageBridgeChild::AllocShmem(aSize, aType, aShmem);
+    return PImageBridgeChild::AllocShmem(aSize, aType,
+                                         aShmem);
   } else {
     return DispatchAllocShmemInternal(aSize, aType, aShmem, false); // false: unsafe
   }
@@ -966,14 +976,15 @@ static void ProxyAllocShmemNow(AllocShmemParams* aParams,
   MOZ_ASSERT(aDone);
   MOZ_ASSERT(aBarrier);
 
+  auto shmAllocator = aParams->mAllocator->AsShmemAllocator();
   if (aParams->mUnsafe) {
-    aParams->mSuccess = aParams->mAllocator->AllocUnsafeShmem(aParams->mSize,
-                                                              aParams->mType,
-                                                              aParams->mShmem);
+    aParams->mSuccess = shmAllocator->AllocUnsafeShmem(aParams->mSize,
+                                                       aParams->mType,
+                                                       aParams->mShmem);
   } else {
-    aParams->mSuccess = aParams->mAllocator->AllocShmem(aParams->mSize,
-                                                        aParams->mType,
-                                                        aParams->mShmem);
+    aParams->mSuccess = shmAllocator->AllocShmem(aParams->mSize,
+                                                 aParams->mType,
+                                                 aParams->mShmem);
   }
 
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
@@ -1015,7 +1026,7 @@ static void ProxyDeallocShmemNow(ISurfaceAllocator* aAllocator,
   MOZ_ASSERT(aDone);
   MOZ_ASSERT(aBarrier);
 
-  aAllocator->DeallocShmem(*aShmem);
+  aAllocator->AsShmemAllocator()->DeallocShmem(*aShmem);
 
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
   *aDone = true;
@@ -1189,12 +1200,15 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
   if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
     return;
   }
+
+  CompositableOperation op(
+    nullptr, aCompositable->GetIPDLActor(),
+    OpRemoveTexture(nullptr, aTexture->GetIPDLActor()));
+
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
-    mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                                  nullptr, aTexture->GetIPDLActor()));
+    mTxn->AddEdit(op);
   } else {
-    mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                                        nullptr, aTexture->GetIPDLActor()));
+    mTxn->AddNoSwapEdit(op);
   }
 }
 
@@ -1210,10 +1224,16 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
   if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
     return;
   }
-  mTxn->AddNoSwapEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
-                                           aAsyncTransactionTracker->GetId(),
-                                           nullptr, aCompositable->GetIPDLActor(),
-                                           nullptr, aTexture->GetIPDLActor()));
+
+  CompositableOperation op(
+    nullptr, aCompositable->GetIPDLActor(),
+    OpRemoveTextureAsync(
+      CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
+      aAsyncTransactionTracker->GetId(),
+      nullptr, aCompositable->GetIPDLActor(),
+      nullptr, aTexture->GetIPDLActor()));
+
+  mTxn->AddNoSwapEdit(op);
   // Hold AsyncTransactionTracker until receving reply
   CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
                                         aAsyncTransactionTracker);

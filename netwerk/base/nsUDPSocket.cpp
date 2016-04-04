@@ -786,13 +786,13 @@ nsUDPSocket::CloseSocket()
     } else {
 
       PRIntervalTime closeStarted = 0;
-      if (gSocketTransportService->IsTelemetryEnabled()) {
+      if (gSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
         closeStarted = PR_IntervalNow();
       }
 
       PR_Close(mFD);
 
-      if (gSocketTransportService->IsTelemetryEnabled()) {
+      if (gSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
         PRIntervalTime now = PR_IntervalNow();
         if (gIOService->IsNetTearingDown()) {
           Telemetry::Accumulate(Telemetry::PRCLOSE_UDP_BLOCKING_TIME_SHUTDOWN,

@@ -111,7 +111,7 @@ class TestExtract(unittest.TestCase):
         try:
             dest = tempfile.mkdtemp()
             mozfile.extract(filename, dest)
-        except Exception, exception:
+        except Exception as exception:
             pass
         finally:
             os.remove(filename)

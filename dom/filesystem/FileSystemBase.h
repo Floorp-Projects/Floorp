@@ -9,14 +9,12 @@
 
 #include "nsAutoPtr.h"
 #include "nsString.h"
-
-class nsPIDOMWindowInner;
+#include "Directory.h"
 
 namespace mozilla {
 namespace dom {
 
 class BlobImpl;
-class Directory;
 
 class FileSystemBase
 {
@@ -25,28 +23,22 @@ public:
 
   // Create file system object from its string representation.
   static already_AddRefed<FileSystemBase>
-  FromString(const nsAString& aString);
+  DeserializeDOMPath(const nsAString& aString);
 
   FileSystemBase();
 
   virtual void
   Shutdown();
 
-  // Get the string representation of the file system.
-  const nsString&
-  ToString() const
-  {
-    return mString;
-  }
+  // SerializeDOMPath the FileSystem to string.
+  virtual void
+  SerializeDOMPath(nsAString& aOutput) const = 0;
 
-  virtual nsPIDOMWindowInner*
-  GetWindow() const;
+  virtual already_AddRefed<FileSystemBase>
+  Clone() = 0;
 
-  /**
-   * Create nsIFile object from the given real path (absolute DOM path).
-   */
-  already_AddRefed<nsIFile>
-  GetLocalFile(const nsAString& aRealPath) const;
+  virtual nsISupports*
+  GetParentObject() const;
 
   /*
    * Get the virtual name of the root directory. This name will be exposed to
@@ -55,10 +47,20 @@ public:
   virtual void
   GetRootName(nsAString& aRetval) const = 0;
 
+  void
+  GetDOMPath(nsIFile* aFile, Directory::DirectoryType aType,
+             nsAString& aRetval, ErrorResult& aRv) const;
+
+  /*
+   * Return the local root path of the FileSystem implementation.
+   * For OSFileSystem, this is equal to the path of the root Directory;
+   * For DeviceStorageFileSystem, this is the path of the SDCard, parent
+   * directory of the exposed root Directory (per type).
+   */
   const nsAString&
-  GetLocalRootPath() const
+  LocalOrDeviceStorageRootPath() const
   {
-    return mLocalRootPath;
+    return mLocalOrDeviceStorageRootPath;
   }
 
   bool
@@ -73,13 +75,8 @@ public:
   virtual bool
   IsSafeDirectory(Directory* aDir) const;
 
-  /*
-   * Get the real path (absolute DOM path) of the DOM file in the file system.
-   * If succeeded, returns true. Otherwise, returns false and set aRealPath to
-   * empty string.
-   */
   bool
-  GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const;
+  GetRealPath(BlobImpl* aFile, nsIFile** aPath) const;
 
   /*
    * Get the permission name required to access this file system.
@@ -103,20 +100,19 @@ public:
 protected:
   virtual ~FileSystemBase();
 
-  bool
-  LocalPathToRealPath(const nsAString& aLocalPath, nsAString& aRealPath) const;
-
   // The local path of the root (i.e. the OS path, with OS path separators, of
   // the OS directory that acts as the root of this OSFileSystem).
-  // Only available in the parent process.
-  // In the child process, we don't use it and its value should be empty.
-  nsString mLocalRootPath;
-
-  // The same, but with path separators normalized to "/".
-  nsString mNormalizedLocalRootPath;
-
-  // The string representation of the file system.
-  nsString mString;
+  // This path must be set by the FileSystem implementation immediately
+  // because it will be used for the validation of any FileSystemTaskBase.
+  // The concept of this path is that, any task will never go out of it and this
+  // must be considered the OS 'root' of the current FileSystem. Different
+  // Directory object can have different OS 'root' path.
+  // To be more clear, any path managed by this FileSystem implementation must
+  // be discendant of this local root path.
+  // The reason why it's not just called 'localRootPath' is because for
+  // DeviceStorage this contains the path of the device storage SDCard, that is
+  // the parent directory of the exposed root path.
+  nsString mLocalOrDeviceStorageRootPath;
 
   bool mShutdown;
 

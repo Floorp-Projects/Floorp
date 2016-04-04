@@ -84,6 +84,7 @@ IsJSXraySupported(JSProtoKey key)
       case JSProto_TypedArray:
       case JSProto_SavedFrame:
       case JSProto_RegExp:
+      case JSProto_Promise:
         return true;
       default:
         return false;
@@ -203,7 +204,7 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
         return false;
     if (!propertyName.init(cx, str))
         return false;
-    UniqueChars filename;
+    AutoFilename filename;
     unsigned line = 0, column = 0;
     DescribeScriptedCaller(cx, &filename, &line, &column);
 
@@ -572,11 +573,11 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 
                     if (ShouldResolveStaticProperties(standardConstructor)) {
                         const js::Class* clasp = js::ProtoKeyToClass(standardConstructor);
-                        MOZ_ASSERT(clasp->spec.defined());
+                        MOZ_ASSERT(clasp->specDefined());
 
                         if (!TryResolvePropertyFromSpecs(cx, id, holder,
-                               clasp->spec.constructorFunctions(),
-                               clasp->spec.constructorProperties(), desc)) {
+                               clasp->specConstructorFunctions(),
+                               clasp->specConstructorProperties(), desc)) {
                             return false;
                         }
 
@@ -655,13 +656,13 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
     const js::Class* clasp = js::GetObjectClass(target);
-    MOZ_ASSERT(clasp->spec.defined());
+    MOZ_ASSERT(clasp->specDefined());
 
     // Indexed array properties are handled above, so we can just work with the
     // class spec here.
     if (!TryResolvePropertyFromSpecs(cx, id, holder,
-                                     clasp->spec.prototypeFunctions(),
-                                     clasp->spec.prototypeProperties(),
+                                     clasp->specPrototypeFunctions(),
+                                     clasp->specPrototypeProperties(),
                                      desc)) {
         return false;
     }
@@ -863,11 +864,11 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
 
                 if (ShouldResolveStaticProperties(standardConstructor)) {
                     const js::Class* clasp = js::ProtoKeyToClass(standardConstructor);
-                    MOZ_ASSERT(clasp->spec.defined());
+                    MOZ_ASSERT(clasp->specDefined());
 
                     if (!AppendNamesFromFunctionAndPropertySpecs(
-                           cx, clasp->spec.constructorFunctions(),
-                           clasp->spec.constructorProperties(), flags, props)) {
+                           cx, clasp->specConstructorFunctions(),
+                           clasp->specConstructorProperties(), flags, props)) {
                         return false;
                     }
                 }
@@ -904,11 +905,53 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
 
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
     const js::Class* clasp = js::GetObjectClass(target);
-    MOZ_ASSERT(clasp->spec.defined());
+    MOZ_ASSERT(clasp->specDefined());
 
     return AppendNamesFromFunctionAndPropertySpecs(
-        cx, clasp->spec.prototypeFunctions(),
-        clasp->spec.prototypeProperties(), flags, props);
+        cx, clasp->specPrototypeFunctions(),
+        clasp->specPrototypeProperties(), flags, props);
+}
+
+bool
+JSXrayTraits::construct(JSContext* cx, HandleObject wrapper,
+                        const JS::CallArgs& args, const js::Wrapper& baseInstance)
+{
+    JSXrayTraits& self = JSXrayTraits::singleton;
+    JS::RootedObject holder(cx, self.ensureHolder(cx, wrapper));
+    if (self.getProtoKey(holder) == JSProto_Function) {
+        JSProtoKey standardConstructor = constructorFor(holder);
+        if (standardConstructor == JSProto_Null)
+            return baseInstance.construct(cx, wrapper, args);
+
+        const js::Class* clasp = js::ProtoKeyToClass(standardConstructor);
+        MOZ_ASSERT(clasp);
+        if (!(clasp->flags & JSCLASS_HAS_XRAYED_CONSTRUCTOR))
+            return baseInstance.construct(cx, wrapper, args);
+
+        // If the JSCLASS_HAS_XRAYED_CONSTRUCTOR flag is set on the Class,
+        // we don't use the constructor at hand. Instead, we retrieve the
+        // equivalent standard constructor in the xray compartment and run
+        // it in that compartment. The newTarget isn't unwrapped, and the
+        // constructor has to be able to detect and handle this situation.
+        // See the comments in js/public/Class.h and PromiseConstructor for
+        // details and an example.
+        RootedObject ctor(cx);
+        if (!JS_GetClassObject(cx, standardConstructor, &ctor))
+            return false;
+
+        RootedValue ctorVal(cx, ObjectValue(*ctor));
+        HandleValueArray vals(args);
+        RootedObject result(cx);
+        if (!JS::Construct(cx, ctorVal, wrapper, vals, &result))
+            return false;
+        AssertSameCompartment(cx, result);
+        args.rval().setObject(*result);
+        return true;
+    }
+
+    JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
+    js::ReportIsNotFunction(cx, v);
+    return false;
 }
 
 JSObject*
@@ -2175,8 +2218,14 @@ bool
 XrayWrapper<Base, Traits>::has(JSContext* cx, HandleObject wrapper,
                                HandleId id, bool* bp) const
 {
-    // Skip our Base if it isn't already ProxyHandler.
-    return js::BaseProxyHandler::has(cx, wrapper, id, bp);
+    // This uses getPropertyDescriptor for backward compatibility with
+    // the old BaseProxyHandler::has implementation.
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!getPropertyDescriptor(cx, wrapper, id, &desc))
+        return false;
+
+    *bp = !!desc.object();
+    return true;
 }
 
 template <typename Base, typename Traits>

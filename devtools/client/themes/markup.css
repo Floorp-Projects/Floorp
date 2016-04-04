@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --markup-outline: var(--theme-splitter-color);
+}
+
+.theme-dark:root {
+  --markup-outline: var(--theme-highlight-pink);
+}
+
 * {
   padding: 0;
   margin: 0;
@@ -21,6 +29,11 @@ body {
 #root {
   float: left;
   min-width: 100%;
+}
+
+/* Don't display a parent-child outline for the root elements */
+#root > ul > li > .children {
+  background: none;
 }
 
 body.dragging .tag-line {
@@ -118,6 +131,21 @@ ul.children + .tag-line::before {
   min-height: 1.4em;
   line-height: 1.4em;
   position: relative;
+  cursor: default;
+  padding-left: 2px;
+}
+
+.tag-line[selected] + .children {
+  background-image: linear-gradient(to top, var(--markup-outline), var(--markup-outline));
+  background-repeat: no-repeat;
+  /* Shorten the outline height by 4px to account for the 2px top padding and
+   * allow for a 2px bottom padding */
+  background-size: 1.5px calc(100% - 4px);
+  /* Align the outline to under the expander arrow and provide 2px top
+   * padding */
+  background-position: -6px 2px;
+  border-left: 6px solid transparent;
+  margin-left: -6px;
 }
 
 .html-editor-container {
@@ -189,10 +217,6 @@ ul.children + .tag-line::before {
   transition: background .5s;
 }
 
-.tag-line {
-  cursor: default;
-}
-
 .markupview-events {
   display: none;
   cursor: pointer;
@@ -253,10 +277,6 @@ ul.children + .tag-line::before {
 .not-displayed .open,
 .not-displayed .close {
   opacity: .7;
-}
-
-.tag-line {
-  padding-left: 2px;
 }
 
 /* Events */

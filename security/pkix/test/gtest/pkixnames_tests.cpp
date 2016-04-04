@@ -902,6 +902,8 @@ class pkixnames_MatchPresentedDNSIDWithReferenceDNSID
   : public ::testing::Test
   , public ::testing::WithParamInterface<PresentedMatchesReference>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_MatchPresentedDNSIDWithReferenceDNSID,
@@ -937,6 +939,8 @@ class pkixnames_Turkish_I_Comparison
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_Turkish_I_Comparison, MatchPresentedDNSIDWithReferenceDNSID)
@@ -982,6 +986,8 @@ class pkixnames_IsValidReferenceDNSID
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_IsValidReferenceDNSID, IsValidReferenceDNSID)
@@ -1006,6 +1012,8 @@ class pkixnames_ParseIPv4Address
   : public ::testing::Test
   , public ::testing::WithParamInterface<IPAddressParams<4>>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_ParseIPv4Address, ParseIPv4Address)
@@ -1032,6 +1040,8 @@ class pkixnames_ParseIPv6Address
   : public ::testing::Test
   , public ::testing::WithParamInterface<IPAddressParams<16>>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_ParseIPv6Address, ParseIPv6Address)
@@ -1074,6 +1084,8 @@ class pkixnames_CheckCertHostname
   : public ::testing::Test
   , public ::testing::WithParamInterface<CheckCertHostnameParams>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 #define WITH_SAN(r, ps, psan, result) \
@@ -1532,7 +1544,8 @@ static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
 };
 
 ByteString
-CreateCert(const ByteString& subject, const ByteString& subjectAltName)
+CreateCert(const ByteString& subject, const ByteString& subjectAltName,
+           EndEntityOrCA endEntityOrCA = EndEntityOrCA::MustBeEndEntity)
 {
   ByteString serialNumber(CreateEncodedSerialNumber(1));
   EXPECT_FALSE(ENCODING_FAILED(serialNumber));
@@ -1543,6 +1556,17 @@ CreateCert(const ByteString& subject, const ByteString& subjectAltName)
   ByteString extensions[2];
   if (subjectAltName != NO_SAN) {
     extensions[0] = CreateEncodedSubjectAltName(subjectAltName);
+    EXPECT_FALSE(ENCODING_FAILED(extensions[0]));
+  }
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    // Currently, these tests assume that if we're creating a CA certificate, it
+    // will not have a subjectAlternativeName extension. If that assumption
+    // changes, this code will have to be updated. Ideally this would be
+    // ASSERT_EQ, but that inserts a 'return;', which doesn't match this
+    // function's return type.
+    EXPECT_EQ(subjectAltName, NO_SAN);
+    extensions[0] = CreateEncodedBasicConstraints(true, nullptr,
+                                                  Critical::Yes);
     EXPECT_FALSE(ENCODING_FAILED(extensions[0]));
   }
 
@@ -1566,7 +1590,8 @@ TEST_P(pkixnames_CheckCertHostname, CheckCertHostname)
   ASSERT_EQ(Success, hostnameInput.Init(param.hostname.data(),
                                         param.hostname.length()));
 
-  ASSERT_EQ(param.result, CheckCertHostname(certInput, hostnameInput));
+  ASSERT_EQ(param.result, CheckCertHostname(certInput, hostnameInput,
+                                            mNameMatchingPolicy));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname,
@@ -1598,13 +1623,15 @@ TEST_F(pkixnames_CheckCertHostname, SANWithoutSequence)
 
   static const uint8_t a[] = { 'a' };
   ASSERT_EQ(Result::ERROR_EXTENSION_VALUE_INVALID,
-            CheckCertHostname(certInput, Input(a)));
+            CheckCertHostname(certInput, Input(a), mNameMatchingPolicy));
 }
 
 class pkixnames_CheckCertHostname_PresentedMatchesReference
   : public ::testing::Test
   , public ::testing::WithParamInterface<PresentedMatchesReference>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference, CN_NoSAN)
@@ -1624,7 +1651,7 @@ TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference, CN_NoSAN)
                                         param.referenceDNSID.length()));
 
   ASSERT_EQ(param.expectedMatches ? Success : Result::ERROR_BAD_CERT_DOMAIN,
-            CheckCertHostname(certInput, hostnameInput));
+            CheckCertHostname(certInput, hostnameInput, mNameMatchingPolicy));
 }
 
 TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference,
@@ -1648,7 +1675,8 @@ TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference,
     = param.expectedResult != Success ? param.expectedResult
     : param.expectedMatches ? Success
     : Result::ERROR_BAD_CERT_DOMAIN;
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput,
+                                              mNameMatchingPolicy));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_DNSID_MATCH_PARAMS,
@@ -1677,8 +1705,10 @@ TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_CN_NoSAN)
                         ? Success
                         : Result::ERROR_BAD_CERT_DOMAIN;
 
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I));
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I,
+                                              mNameMatchingPolicy));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I,
+                                              mNameMatchingPolicy));
 }
 
 TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_SAN)
@@ -1704,14 +1734,18 @@ TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_SAN)
        InputsAreEqual(UPPERCASE_I, input)) ? Success
     : Result::ERROR_BAD_CERT_DOMAIN;
 
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I));
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I,
+                                              mNameMatchingPolicy));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I,
+                                              mNameMatchingPolicy));
 }
 
 class pkixnames_CheckCertHostname_IPV4_Addresses
   : public ::testing::Test
   , public ::testing::WithParamInterface<IPAddressParams<4>>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
@@ -1733,7 +1767,7 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
                                         param.input.length()));
 
   ASSERT_EQ(param.isValid ? Success : Result::ERROR_BAD_CERT_DOMAIN,
-            CheckCertHostname(certInput, hostnameInput));
+            CheckCertHostname(certInput, hostnameInput, mNameMatchingPolicy));
 }
 
 TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
@@ -1760,7 +1794,8 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
                         ? Success
                         : Result::ERROR_BAD_CERT_DOMAIN;
 
-  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput));
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput,
+                                              mNameMatchingPolicy));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_IPV4_ADDRESSES,
@@ -2504,19 +2539,71 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
                                               RDN(CN("example.com"))))),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
+  // Some additional tests for completeness:
+  // Ensure that wildcards are handled:
+  { RDN(CN("*.example.com")), NO_SAN, GeneralSubtree(DNSName("example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("*.example.com"),
+    GeneralSubtree(DNSName("example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("www.example.com"),
+    GeneralSubtree(DNSName("*.example.com")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  // Handle multiple name constraint entries:
+  { RDN(CN("example.com")), NO_SAN,
+    GeneralSubtree(DNSName("example.org")) +
+      GeneralSubtree(DNSName("example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName("example.org")) +
+      GeneralSubtree(DNSName("example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  // Handle multiple names in subject alternative name extension:
+  { ByteString(), DNSName("example.com") + DNSName("example.org"),
+    GeneralSubtree(DNSName("example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  // Handle a mix of DNSName and DirectoryName:
+  { RDN(OU("Example Organization")), DNSName("example.com"),
+    GeneralSubtree(DirectoryName(Name(RDN(OU("Example Organization"))))) +
+      GeneralSubtree(DNSName("example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { RDN(OU("Other Example Organization")), DNSName("example.com"),
+    GeneralSubtree(DirectoryName(Name(RDN(OU("Example Organization"))))) +
+      GeneralSubtree(DNSName("example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { RDN(OU("Example Organization")), DNSName("example.org"),
+    GeneralSubtree(DirectoryName(Name(RDN(OU("Example Organization"))))) +
+      GeneralSubtree(DNSName("example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  // Handle a certificate with no DirectoryName:
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DirectoryName(Name(RDN(OU("Example Organization"))))),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
 };
 
 class pkixnames_CheckNameConstraints
   : public ::testing::Test
   , public ::testing::WithParamInterface<NameConstraintParams>
 {
+public:
+  DefaultNameMatchingPolicy mNameMatchingPolicy;
 };
 
 TEST_P(pkixnames_CheckNameConstraints,
        NameConstraintsEnforcedForDirectlyIssuedEndEntity)
 {
   // Test that name constraints are enforced on a certificate directly issued by
-  // this certificate.
+  // a certificate with the given name constraints.
 
   const NameConstraintParams& param(GetParam());
 
@@ -2569,3 +2656,156 @@ TEST_P(pkixnames_CheckNameConstraints,
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckNameConstraints,
                         pkixnames_CheckNameConstraints,
                         testing::ValuesIn(NAME_CONSTRAINT_PARAMS));
+
+// The |subjectAltName| param is not used for these test cases (hence the use of
+// "NO_SAN").
+static const NameConstraintParams NO_FALLBACK_NAME_CONSTRAINT_PARAMS[] =
+{
+  // The only difference between end-entities being verified for serverAuth and
+  // intermediates or end-entities being verified for other uses is that for
+  // the latter cases, there is no fallback matching of DNSName entries to the
+  // subject common name.
+  { RDN(CN("Not a DNSName")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { RDN(CN("a.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { RDN(CN("b.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  // Sanity-check that name constraints are in fact enforced in these cases.
+  { RDN(CN("Example Name")), NO_SAN,
+    GeneralSubtree(DirectoryName(Name(RDN(CN("Example Name"))))),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  // (In this implementation, if a DirectoryName is in excludedSubtrees, nothing
+  // is considered to be in the name space.)
+  { RDN(CN("Other Example Name")), NO_SAN,
+    GeneralSubtree(DirectoryName(Name(RDN(CN("Example Name"))))),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+};
+
+class pkixnames_CheckNameConstraintsOnIntermediate
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<NameConstraintParams>
+{
+};
+
+TEST_P(pkixnames_CheckNameConstraintsOnIntermediate,
+       NameConstraintsEnforcedOnIntermediate)
+{
+  // Test that name constraints are enforced on an intermediate certificate
+  // directly issued by a certificate with the given name constraints.
+
+  const NameConstraintParams& param(GetParam());
+
+  ByteString certDER(CreateCert(param.subject, NO_SAN,
+                                EndEntityOrCA::MustBeCA));
+  ASSERT_FALSE(ENCODING_FAILED(certDER));
+  Input certInput;
+  ASSERT_EQ(Success, certInput.Init(certDER.data(), certDER.length()));
+  BackCert cert(certInput, EndEntityOrCA::MustBeCA, nullptr);
+  ASSERT_EQ(Success, cert.Init());
+
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedPermittedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedExcludedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees) +
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedExcludedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_CheckNameConstraintsOnIntermediate,
+                        pkixnames_CheckNameConstraintsOnIntermediate,
+                        testing::ValuesIn(NO_FALLBACK_NAME_CONSTRAINT_PARAMS));
+
+class pkixnames_CheckNameConstraintsForNonServerAuthUsage
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<NameConstraintParams>
+{
+};
+
+TEST_P(pkixnames_CheckNameConstraintsForNonServerAuthUsage,
+       NameConstraintsEnforcedForNonServerAuthUsage)
+{
+  // Test that for key purposes other than serverAuth, fallback to the subject
+  // common name does not occur.
+
+  const NameConstraintParams& param(GetParam());
+
+  ByteString certDER(CreateCert(param.subject, NO_SAN));
+  ASSERT_FALSE(ENCODING_FAILED(certDER));
+  Input certInput;
+  ASSERT_EQ(Success, certInput.Init(certDER.data(), certDER.length()));
+  BackCert cert(certInput, EndEntityOrCA::MustBeEndEntity, nullptr);
+  ASSERT_EQ(Success, cert.Init());
+
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedPermittedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_clientAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedExcludedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_clientAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees) +
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedExcludedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_clientAuth));
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_CheckNameConstraintsForNonServerAuthUsage,
+                        pkixnames_CheckNameConstraintsForNonServerAuthUsage,
+                        testing::ValuesIn(NO_FALLBACK_NAME_CONSTRAINT_PARAMS));

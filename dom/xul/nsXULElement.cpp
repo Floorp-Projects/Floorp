@@ -111,6 +111,7 @@
 
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/BoxObject.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -437,7 +438,7 @@ already_AddRefed<nsINodeList>
 nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                                      const nsAString& aValue)
 {
-    nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
+    nsCOMPtr<nsIAtom> attrAtom(NS_Atomize(aAttribute));
     void* attrValue = new nsString(aValue);
     RefPtr<nsContentList> list =
         new nsContentList(this,
@@ -468,7 +469,7 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                        const nsAString& aValue,
                                        ErrorResult& rv)
 {
-    nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
+    nsCOMPtr<nsIAtom> attrAtom(NS_Atomize(aAttribute));
 
     int32_t nameSpaceId = kNameSpaceID_Wildcard;
     if (!aNamespaceURI.EqualsLiteral("*")) {
@@ -1332,7 +1333,7 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
                 WidgetInputEvent* orig = aVisitor.mEvent->AsInputEvent();
                 nsContentUtils::DispatchXULCommand(
                   commandContent,
-                  aVisitor.mEvent->mFlags.mIsTrusted,
+                  aVisitor.mEvent->IsTrusted(),
                   aVisitor.mDOMEvent,
                   nullptr,
                   orig->IsControl(),
@@ -1636,41 +1637,51 @@ nsXULElement::SetIsPrerendered()
                  NS_LITERAL_STRING("true"), true);
 }
 
-nsresult
-nsXULElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
-{
-    nsCOMPtr<nsIContent> otherContent(do_QueryInterface(aOtherOwner));
-    NS_ENSURE_TRUE(otherContent, NS_ERROR_NOT_IMPLEMENTED);
-
-    nsXULElement* otherEl = FromContent(otherContent);
-    NS_ENSURE_TRUE(otherEl, NS_ERROR_NOT_IMPLEMENTED);
-
-    ErrorResult rv;
-    SwapFrameLoaders(*otherEl, rv);
-    return rv.StealNSResult();
-}
-
 void
-nsXULElement::SwapFrameLoaders(nsXULElement& aOtherElement, ErrorResult& rv)
+nsXULElement::SwapFrameLoaders(HTMLIFrameElement& aOtherLoaderOwner,
+                               ErrorResult& rv)
 {
-    if (&aOtherElement == this) {
-        // nothing to do
-        return;
-    }
-
     nsXULSlots *ourSlots = static_cast<nsXULSlots*>(GetExistingDOMSlots());
-    nsXULSlots *otherSlots =
-        static_cast<nsXULSlots*>(aOtherElement.GetExistingDOMSlots());
-    if (!ourSlots || !ourSlots->mFrameLoader ||
-        !otherSlots || !otherSlots->mFrameLoader) {
-        // Can't handle swapping when there is nothing to swap... yet.
+    if (!ourSlots) {
         rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
         return;
     }
 
-    rv = ourSlots->mFrameLoader->SwapWithOtherLoader(otherSlots->mFrameLoader,
+    aOtherLoaderOwner.SwapFrameLoaders(ourSlots->mFrameLoader, rv);
+}
+
+void
+nsXULElement::SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
+                               ErrorResult& rv)
+{
+    if (&aOtherLoaderOwner == this) {
+        // nothing to do
+        return;
+    }
+
+    nsXULSlots *otherSlots =
+        static_cast<nsXULSlots*>(aOtherLoaderOwner.GetExistingDOMSlots());
+    if (!otherSlots) {
+        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+        return;
+    }
+
+    SwapFrameLoaders(otherSlots->mFrameLoader, rv);
+}
+
+void
+nsXULElement::SwapFrameLoaders(RefPtr<nsFrameLoader>& aOtherLoader,
+                               mozilla::ErrorResult& rv)
+{
+    nsXULSlots *ourSlots = static_cast<nsXULSlots*>(GetExistingDOMSlots());
+    if (!ourSlots || !ourSlots->mFrameLoader || !aOtherLoader) {
+        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+        return;
+    }
+
+    rv = ourSlots->mFrameLoader->SwapWithOtherLoader(aOtherLoader,
                                                      ourSlots->mFrameLoader,
-                                                     otherSlots->mFrameLoader);
+                                                     aOtherLoader);
 }
 
 NS_IMETHODIMP
@@ -2526,10 +2537,11 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     NS_ENSURE_TRUE(aProtoDoc, NS_ERROR_UNEXPECTED);
-    AutoSafeJSContext cx;
-    JS::Rooted<JSObject*> global(cx, xpc::CompilationScope());
-    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
-    JSAutoCompartment ac(cx, global);
+
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::CompilationScope())) {
+        return NS_ERROR_UNEXPECTED;
+    }
 
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
                  !mScriptObject,
@@ -2549,6 +2561,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     // been set.
     JS::Handle<JSScript*> script =
         JS::Handle<JSScript*>::fromMarkedLocation(mScriptObject.address());
+    JSContext* cx = jsapi.cx();
     MOZ_ASSERT(xpc::CompilationScope() == JS::CurrentGlobalOrNull(cx));
     return nsContentUtils::XPConnect()->WriteScript(aStream, cx,
                                                     xpc_UnmarkGrayScript(script));
@@ -2618,10 +2631,11 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     rv = aStream->Read32(&mLangVersion);
     if (NS_FAILED(rv)) return rv;
 
-    AutoSafeJSContext cx;
-    JS::Rooted<JSObject*> global(cx, xpc::CompilationScope());
-    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
-    JSAutoCompartment ac(cx, global);
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::CompilationScope())) {
+        return NS_ERROR_UNEXPECTED;
+    }
+    JSContext* cx = jsapi.cx();
 
     JS::Rooted<JSScript*> newScriptObject(cx);
     rv = nsContentUtils::XPConnect()->ReadScript(aStream, cx,
@@ -2746,13 +2760,15 @@ NotifyOffThreadScriptCompletedRunnable::Run()
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    // Note: this unroots mScript so that it is available to be collected by the
-    // JS GC. The receiver needs to root the script before performing a call that
-    // could GC.
-    JSScript *script;
+    JS::Rooted<JSScript*> script(nsContentUtils::RootingCx());
     {
-        AutoSafeJSContext cx;
-        JSAutoCompartment ac(cx, xpc::CompilationScope());
+        AutoJSAPI jsapi;
+        if (!jsapi.Init(xpc::CompilationScope())) {
+            // Now what?  I guess we just leak... this should probably never
+            // happen.
+            return NS_ERROR_UNEXPECTED;
+        }
+        JSContext* cx = jsapi.cx();
         script = JS::FinishOffThreadScript(cx, JS_GetRuntime(cx), mToken);
     }
 
@@ -2787,8 +2803,11 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
     // We'll compile the script in the compilation scope.
-    AutoSafeJSContext cx;
-    JSAutoCompartment ac(cx, xpc::CompilationScope());
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::CompilationScope())) {
+        return NS_ERROR_UNEXPECTED;
+    }
+    JSContext* cx = jsapi.cx();
 
     nsAutoCString urlspec;
     nsContentUtils::GetWrapperSafeScriptFilename(aDocument, aURI, urlspec);

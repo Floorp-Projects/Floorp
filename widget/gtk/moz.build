@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_ENABLE_GTK3']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     DIRS += ['mozgtk']
 
 EXPORTS += [
@@ -73,13 +73,16 @@ if CONFIG['ACCESSIBILITY']:
         'maiRedundantObjectFactory.c',
     ]
 
-if CONFIG['MOZ_ENABLE_GTK2']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
     UNIFIED_SOURCES += [
         'gtk2drawing.c',
     ]
 else:
+    # Ignore GTK3 deprecation warnings while much of the code is still used
+    # with GTK2.
+    DEFINES['GDK_DISABLE_DEPRECATION_WARNINGS'] = True;
     UNIFIED_SOURCES += [
-        'gtk3drawing.c',
+        'gtk3drawing.cpp',
         'nsApplicationChooser.cpp',
     ]
 
@@ -112,7 +115,7 @@ CFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
 # use only system Cairo symbols that GTK3 uses. This allows that
 # any Cairo objects created can be freely passed back and forth
 # between the widget code and GTK3.
-if not (CONFIG['MOZ_ENABLE_GTK3'] and CONFIG['MOZ_TREE_CAIRO']):
+if not (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3' and CONFIG['MOZ_TREE_CAIRO']):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
 CXXFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']

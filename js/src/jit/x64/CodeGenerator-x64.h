@@ -56,8 +56,10 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir);
     void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);
     void visitTruncateToInt64(LTruncateToInt64* lir);
+    void visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir);
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
+    void visitAsmSelectI64(LAsmSelectI64* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
@@ -71,6 +73,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
     void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
+    void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
+    void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;

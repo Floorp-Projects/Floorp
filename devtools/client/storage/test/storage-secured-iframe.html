@@ -13,10 +13,6 @@ document.cookie = "sc1=foobar;";
 localStorage.setItem("iframe-s-ls1", "foobar");
 sessionStorage.setItem("iframe-s-ss1", "foobar-2");
 
-function success(event) {
-  setupIDB.next(event);
-}
-
 let idbGenerator = function*() {
   let request = indexedDB.open("idb-s1", 1);
   request.onerror = function() {
@@ -84,16 +80,10 @@ window.setup = function*() {
 };
 
 window.clear = function*() {
-  document.cookie = "sc1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-  localStorage.clear();
-  sessionStorage.clear();
-
   yield deleteDB("idb-s1");
   yield deleteDB("idb-s2");
 
-  dump("removed cookies, localStorage, sessionStorage and indexedDB data " +
-       "from " + document.location + "\n");
+  dump("removed indexedDB data from " + document.location + "\n");
 };
 </script>
 </body>

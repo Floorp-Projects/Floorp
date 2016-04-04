@@ -1373,8 +1373,8 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     // We are going to run script via JS_SetProperty, so we need a script entry
     // point, but as this is XUL related it does not appear in the HTML spec.
-    AutoEntryScript entryScript(innerWin, "nsXULTemplateBuilder creation", true);
-    JSContext* jscontext = entryScript.cx();
+    AutoEntryScript aes(innerWin, "nsXULTemplateBuilder creation", true);
+    JSContext* jscontext = aes.cx();
 
     JS::Rooted<JS::Value> v(jscontext);
     rv = nsContentUtils::WrapNative(jscontext, mRoot, mRoot, &v);
@@ -1590,7 +1590,7 @@ nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
     }
     else {
         // Got a variable; get the value it's assigned to
-        nsCOMPtr<nsIAtom> var = do_GetAtom(aVariable);
+        nsCOMPtr<nsIAtom> var = NS_Atomize(aVariable);
         c->result->GetBindingFor(var, replacementText);
     }
 
@@ -1727,9 +1727,9 @@ nsXULTemplateBuilder::CompileQueries()
     tmpl->GetAttr(kNameSpaceID_None, nsGkAtoms::container, containervar);
 
     if (containervar.IsEmpty())
-        mRefVariable = do_GetAtom("?uri");
+        mRefVariable = NS_Atomize("?uri");
     else
-        mRefVariable = do_GetAtom(containervar);
+        mRefVariable = NS_Atomize(containervar);
 
     nsAutoString membervar;
     tmpl->GetAttr(kNameSpaceID_None, nsGkAtoms::member, membervar);
@@ -1737,7 +1737,7 @@ nsXULTemplateBuilder::CompileQueries()
     if (membervar.IsEmpty())
         mMemberVariable = nullptr;
     else
-        mMemberVariable = do_GetAtom(membervar);
+        mMemberVariable = NS_Atomize(membervar);
 
     nsTemplateQuerySet* queryset = new nsTemplateQuerySet(0);
     if (!mQuerySets.AppendElement(queryset)) {
@@ -2050,7 +2050,7 @@ nsXULTemplateBuilder::DetermineMemberVariable(nsIContent* aElement)
         nsAutoString uri;
         child->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
         if (!uri.IsEmpty() && uri[0] == char16_t('?')) {
-            return NS_NewAtom(uri);
+            return NS_Atomize(uri);
         }
 
         nsCOMPtr<nsIAtom> result = DetermineMemberVariable(child);
@@ -2085,13 +2085,13 @@ nsXULTemplateBuilder::DetermineRDFQueryRef(nsIContent* aQueryElement, nsIAtom** 
         content->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
 
         if (!uri.IsEmpty())
-            mRefVariable = do_GetAtom(uri);
+            mRefVariable = NS_Atomize(uri);
 
         nsAutoString tag;
         content->GetAttr(kNameSpaceID_None, nsGkAtoms::tag, tag);
 
         if (!tag.IsEmpty())
-            *aTag = NS_NewAtom(tag).take();
+            *aTag = NS_Atomize(tag).take();
     }
 }
 
@@ -2108,7 +2108,7 @@ nsXULTemplateBuilder::CompileSimpleQuery(nsIContent* aRuleElement,
     if (mMemberVariable)
         memberVariable = mMemberVariable;
     else
-        memberVariable = do_GetAtom("rdf:*");
+        memberVariable = NS_Atomize("rdf:*");
 
     // since there is no <query> node for a simple query, the query node will
     // be either the <rule> node if multiple rules are used, or the <template> node.
@@ -2134,7 +2134,7 @@ nsXULTemplateBuilder::CompileSimpleQuery(nsIContent* aRuleElement,
     aRuleElement->GetAttr(kNameSpaceID_None, nsGkAtoms::parent, tag);
 
     if (!tag.IsEmpty()) {
-        nsCOMPtr<nsIAtom> tagatom = do_GetAtom(tag);
+        nsCOMPtr<nsIAtom> tagatom = NS_Atomize(tag);
         aQuerySet->SetTag(tagatom);
     }
 
@@ -2151,7 +2151,7 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::parent, tag);
 
     if (!tag.IsEmpty()) {
-        nsCOMPtr<nsIAtom> tagatom = do_GetAtom(tag);
+        nsCOMPtr<nsIAtom> tagatom = NS_Atomize(tag);
         aRule->SetTag(tagatom);
     }
 
@@ -2200,7 +2200,7 @@ nsXULTemplateBuilder::CompileWhereCondition(nsTemplateRule* aRule,
 
     nsCOMPtr<nsIAtom> svar;
     if (subject[0] == char16_t('?'))
-        svar = do_GetAtom(subject);
+        svar = NS_Atomize(subject);
 
     nsAutoString relstring;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relstring);
@@ -2224,7 +2224,7 @@ nsXULTemplateBuilder::CompileWhereCondition(nsTemplateRule* aRule,
 
     nsCOMPtr<nsIAtom> vvar;
     if (!shouldMultiple && (value[0] == char16_t('?'))) {
-        vvar = do_GetAtom(value);
+        vvar = NS_Atomize(value);
     }
 
     // ignorecase
@@ -2315,7 +2315,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
 
     nsCOMPtr<nsIAtom> svar;
     if (subject[0] == char16_t('?')) {
-        svar = do_GetAtom(subject);
+        svar = NS_Atomize(subject);
     }
     else {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BINDING_BAD_SUBJECT);
@@ -2341,7 +2341,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
 
     nsCOMPtr<nsIAtom> ovar;
     if (object[0] == char16_t('?')) {
-        ovar = do_GetAtom(object);
+        ovar = NS_Atomize(object);
     }
     else {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BINDING_BAD_OBJECT);
@@ -2414,7 +2414,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 
     nsTemplateRule* rule = static_cast<nsTemplateRule*>(aClosure);
 
-    nsCOMPtr<nsIAtom> var = do_GetAtom(aVariable);
+    nsCOMPtr<nsIAtom> var = NS_Atomize(aVariable);
 
     // Strip it down to the raw RDF property by clobbering the "rdf:"
     // prefix

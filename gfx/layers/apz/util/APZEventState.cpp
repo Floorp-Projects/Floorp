@@ -260,8 +260,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                  nsEventStatus aApzResponse,
                                  nsEventStatus aContentResponse)
 {
-  if (aEvent.mMessage == eTouchStart && aEvent.touches.Length() > 0) {
-    mActiveElementManager->SetTargetElement(aEvent.touches[0]->GetTarget());
+  if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() > 0) {
+    mActiveElementManager->SetTargetElement(aEvent.mTouches[0]->GetTarget());
   }
 
   bool isTouchPrevented = aContentResponse == nsEventStatus_eConsumeNoDefault;
@@ -322,8 +322,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     WidgetTouchEvent cancelEvent(aEvent);
     cancelEvent.mMessage = eTouchCancel;
     cancelEvent.mFlags.mCancelable = false; // mMessage != eTouchCancel;
-    for (uint32_t i = 0; i < cancelEvent.touches.Length(); ++i) {
-      if (mozilla::dom::Touch* touch = cancelEvent.touches[i]) {
+    for (uint32_t i = 0; i < cancelEvent.mTouches.Length(); ++i) {
+      if (mozilla::dom::Touch* touch = cancelEvent.mTouches[i]) {
         touch->convertToPointer = true;
       }
     }
@@ -339,8 +339,7 @@ APZEventState::ProcessWheelEvent(const WidgetWheelEvent& aEvent,
 {
   // If this event starts a swipe, indicate that it shouldn't result in a
   // scroll by setting defaultPrevented to true.
-  bool defaultPrevented =
-    aEvent.mFlags.mDefaultPrevented || aEvent.TriggersSwipe();
+  bool defaultPrevented = aEvent.DefaultPrevented() || aEvent.TriggersSwipe();
   mContentReceivedInputBlockCallback(aGuid, aInputBlockId, defaultPrevented);
 }
 

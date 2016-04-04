@@ -17,15 +17,15 @@
 //    expect ruleview-changed
 //  ]
 var testData = [
-  ["d", {}, "direction", 0, 3, false],
-  ["VK_DOWN", {}, "display", 1, 3, false],
+  ["d", {}, "display", 1, 3, false],
   ["VK_TAB", {}, "", -1, 10, true],
   ["VK_DOWN", {}, "-moz-box", 0, 10, true],
   ["n", {}, "none", -1, 0, true],
   ["VK_TAB", {shiftKey: true}, "display", -1, 0, true],
   ["VK_BACK_SPACE", {}, "", -1, 0, false],
-  ["c", {}, "caption-side", 0, 10, false],
-  ["o", {}, "color", 0, 7, false],
+  ["o", {}, "opacity", 6, 10, false],
+  ["u", {}, "outline", 0, 5, false],
+  ["VK_DOWN", {}, "outline-color", 1, 5, false],
   ["VK_TAB", {}, "none", -1, 0, true],
   ["r", {}, "rebeccapurple", 0, 6, true],
   ["VK_DOWN", {}, "red", 1, 6, true],

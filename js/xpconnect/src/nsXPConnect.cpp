@@ -31,6 +31,8 @@
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
 
+#include "jsfriendapi.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace xpc;
@@ -178,7 +180,6 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     mWindowID = aWindowID;
 
     ErrorReportToMessageString(aReport, mErrorMsg);
-
     if (mErrorMsg.IsEmpty() && aFallbackMessage) {
         mErrorMsg.AssignWithConversion(aFallbackMessage);
     }
@@ -189,7 +190,14 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
         mFileName.AssignWithConversion(aReport->filename);
     }
 
-    mSourceLine = static_cast<const char16_t*>(aReport->uclinebuf);
+    mSourceLine.Assign(aReport->linebuf(), aReport->linebufLength());
+    const JSErrorFormatString* efs = js::GetErrorMessage(nullptr, aReport->errorNumber);
+
+    if (efs == nullptr) {
+        mErrorMsgName.AssignASCII("");
+    } else {
+        mErrorMsgName.AssignASCII(efs->name);
+    }
 
     mLineNumber = aReport->lineno;
     mColumn = aReport->column;
@@ -197,7 +205,7 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     mIsMuted = aReport->isMuted;
 }
 
-static PRLogModuleInfo* gJSDiagnostics;
+static LazyLogModule gJSDiagnostics("JSDiagnostics");
 
 void
 xpc::ErrorReport::LogToConsole()
@@ -227,15 +235,10 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
         fflush(stderr);
     }
 
-    // Log to the PR Log Module.
-    if (!gJSDiagnostics)
-        gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
-    if (gJSDiagnostics) {
-        MOZ_LOG(gJSDiagnostics,
-                JSREPORT_IS_WARNING(mFlags) ? LogLevel::Warning : LogLevel::Error,
-                ("file %s, line %u\n%s", NS_LossyConvertUTF16toASCII(mFileName).get(),
-                 mLineNumber, NS_LossyConvertUTF16toASCII(mErrorMsg).get()));
-    }
+    MOZ_LOG(gJSDiagnostics,
+            JSREPORT_IS_WARNING(mFlags) ? LogLevel::Warning : LogLevel::Error,
+            ("file %s, line %u\n%s", NS_LossyConvertUTF16toASCII(mFileName).get(),
+             mLineNumber, NS_LossyConvertUTF16toASCII(mErrorMsg).get()));
 
     // Log to the console. We do this last so that we can simply return if
     // there's no console service without affecting the other reporting
@@ -253,6 +256,7 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
     } else {
       errorObject = new nsScriptError();
     }
+    errorObject->SetErrorMessageName(mErrorMsgName);
     NS_ENSURE_TRUE_VOID(consoleService && errorObject);
 
     nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,

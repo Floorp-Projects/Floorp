@@ -189,9 +189,16 @@ ShHandle ShConstructCompiler(sh::GLenum type, ShShaderSpec spec,
                              const ShBuiltInResources* resources)
 {
     TShHandleBase* base = static_cast<TShHandleBase*>(ConstructCompiler(type, spec, output));
-    TCompiler* compiler = base->getAsCompiler();
-    if (compiler == 0)
+    if (base == nullptr)
+    {
         return 0;
+    }
+
+    TCompiler* compiler = base->getAsCompiler();
+    if (compiler == nullptr)
+    {
+        return 0;
+    }
 
     // Generate built-in symbol table.
     if (!compiler->Init(*resources)) {

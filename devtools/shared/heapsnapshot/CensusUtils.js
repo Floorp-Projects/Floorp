@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+const { flatten } = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
 
 /*** Visitor ****************************************************************/
 
@@ -62,6 +65,10 @@ Visitor.prototype.count = function (breakdown, report, edge) { }
 const EDGES = Object.create(null);
 
 EDGES.count = function (breakdown, report) {
+  return [];
+};
+
+EDGES.bucket = function (breakdown, report) {
   return [];
 };
 
@@ -156,7 +163,7 @@ function recursiveWalk(breakdown, edge, report, visitor) {
  */
 function walk(breakdown, report, visitor) {
   recursiveWalk(breakdown, null, report, visitor);
-};
+}
 exports.walk = walk;
 
 /*** diff *******************************************************************/
@@ -381,4 +388,102 @@ const createParentMap = exports.createParentMap = function (node,
   }
 
   return aggregator;
+};
+
+const BUCKET = Object.freeze({ by: "bucket" });
+
+/**
+ * Convert a breakdown whose leaves are { by: "count" } to an identical
+ * breakdown, except with { by: "bucket" } leaves.
+ *
+ * @param {Object} breakdown
+ * @returns {Object}
+ */
+exports.countToBucketBreakdown = function(breakdown) {
+  if (typeof breakdown !== "object" || !breakdown) {
+    return breakdown;
+  }
+
+  if (breakdown.by === "count") {
+    return BUCKET;
+  }
+
+  const keys = Object.keys(breakdown);
+  const vals = keys.reduce((vs, k) => {
+    vs.push(exports.countToBucketBreakdown(breakdown[k]));
+    return vs;
+  }, []);
+
+  const result = {};
+  for (let i = 0, length = keys.length; i < length; i++) {
+    result[keys[i]] = vals[i];
+  }
+
+  return Object.freeze(result);
+};
+
+/**
+ * A Visitor for finding report leaves by their DFS index.
+ */
+function GetLeavesVisitor(targetIndices) {
+  this._index = -1;
+  this._targetIndices = targetIndices;
+  this._leaves = [];
+}
+
+GetLeavesVisitor.prototype = Object.create(Visitor.prototype);
+
+/**
+ * @overrides Visitor.prototype.enter
+ */
+GetLeavesVisitor.prototype.enter = function(breakdown, report, edge) {
+  this._index++;
+  if (this._targetIndices.has(this._index)) {
+    this._leaves.push(report);
+  }
+};
+
+/**
+ * Get the accumulated report leaves after traversal.
+ */
+GetLeavesVisitor.prototype.leaves = function() {
+  if (this._index === -1) {
+    throw new Error("Attempt to call `leaves` before traversing report!");
+  }
+  return this._leaves;
+};
+
+/**
+ * Given a set of indices of leaves in a pre-order depth-first traversal of the
+ * given census report, return the leaves.
+ *
+ * @param {Set<Number>} indices
+ * @param {Object} breakdown
+ * @param {Object} report
+ *
+ * @returns {Array<Object>}
+ */
+exports.getReportLeaves = function(indices, breakdown, report) {
+  const visitor = new GetLeavesVisitor(indices);
+  walk(breakdown, report, visitor);
+  return visitor.leaves();
+};
+
+/**
+ * Get a list of the individual node IDs that belong to the census report leaves
+ * of the given indices.
+ *
+ * @param {Set<Number>} indices
+ * @param {Object} breakdown
+ * @param {HeapSnapshot} snapshot
+ *
+ * @returns {Array<NodeId>}
+ */
+exports.getCensusIndividuals = function(indices, countBreakdown, snapshot) {
+  const bucketBreakdown = exports.countToBucketBreakdown(countBreakdown);
+  const bucketReport = snapshot.takeCensus({ breakdown: bucketBreakdown });
+  const buckets = exports.getReportLeaves(indices,
+                                          bucketBreakdown,
+                                          bucketReport);
+  return flatten(buckets);
 };

@@ -7,7 +7,7 @@
 
 // Creating a test page with many elements to test the --showall option
 var TEST_PAGE = "data:text/html;charset=utf-8,<body><ul>";
-for (let i = 0; i < 200; i ++) {
+for (let i = 0; i < 101; i ++) {
   TEST_PAGE += "<li class='item'>" + i + "</li>";
 }
 TEST_PAGE += "</ul></body>";
@@ -58,18 +58,6 @@ function* spawnTest() {
       }
     },
     {
-      setup: 'highlight body --hide',
-      check: {
-        input:  'highlight body --hide',
-        hints:                       'guides [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Too many arguments'
-      }
-    },
-    {
       setup: 'highlight body --hideguides',
       check: {
         input:  'highlight body --hideguides',
@@ -79,18 +67,6 @@ function* spawnTest() {
       },
       exec: {
         output: '1 node highlighted'
-      }
-    },
-    {
-      setup: 'highlight body --show',
-      check: {
-        input:  'highlight body --show',
-        hints:                       'infobar [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Too many arguments'
       }
     },
     {
@@ -106,18 +82,6 @@ function* spawnTest() {
       }
     },
     {
-      setup: 'highlight body --showa',
-      check: {
-        input:  'highlight body --showa',
-        hints:                        'll [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Too many arguments'
-      }
-    },
-    {
       setup: 'highlight body --showall',
       check: {
         input:  'highlight body --showall',
@@ -127,66 +91,6 @@ function* spawnTest() {
       },
       exec: {
         output: '1 node highlighted'
-      }
-    },
-    {
-      setup: 'highlight body --r',
-      check: {
-        input:  'highlight body --r',
-        hints:                    'egion [options]',
-        markup: 'VVVVVVVVVVVVVVVIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Too many arguments'
-      }
-    },
-    {
-      setup: 'highlight body --region',
-      check: {
-        input:  'highlight body --region',
-        hints:                         ' <selection> [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Value required for \'region\'.'
-      }
-    },
-    {
-      setup: 'highlight body --fi',
-      check: {
-        input:  'highlight body --fi',
-        hints:                     'll [options]',
-        markup: 'VVVVVVVVVVVVVVVIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Too many arguments'
-      }
-    },
-    {
-      setup: 'highlight body --fill',
-      check: {
-        input:  'highlight body --fill',
-        hints:                       ' <string> [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Value required for \'fill\'.'
-      }
-    },
-    {
-      setup: 'highlight body --ke',
-      check: {
-        input:  'highlight body --ke',
-        hints:                     'ep [options]',
-        markup: 'VVVVVVVVVVVVVVVIIII',
-        status: 'ERROR'
-      },
-      exec: {
-        output: 'Error: Too many arguments'
       }
     },
     {
@@ -225,8 +129,8 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '200 nodes matched, but only 100 nodes highlighted. Use ' +
-          '\'--showall\' to show all'
+        output: '101 nodes matched, but only 100 nodes highlighted. Use ' +
+          '\u2018--showall\u2019 to show all'
       }
     },
     {
@@ -238,16 +142,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '200 nodes highlighted'
-      }
-    },
-    {
-      setup: 'unhighlight',
-      check: {
-        input:  'unhighlight',
-        hints:  '',
-        markup: 'VVVVVVVVVVV',
-        status: 'VALID'
+        output: '101 nodes highlighted'
       }
     }
   ]);

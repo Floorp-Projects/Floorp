@@ -188,6 +188,11 @@ LOCAL_INCLUDES += [
     '/view',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    LOCAL_INCLUDES += [
+        '/widget/android',
+    ]
+
 FINAL_LIBRARY = 'xul'
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
@@ -196,3 +201,8 @@ MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary hack to support building with VS2015.
+    # 'type cast': conversion from 'unsigned int' to 'void *' of greater size
+    CXXFLAGS += ['-wd4312']

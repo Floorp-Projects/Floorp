@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_is_allowed_incognito_access() {
+  function backgroundScript() {
+    browser.extension.isAllowedIncognitoAccess().then(isAllowedIncognitoAccess => {
+      browser.test.assertEq(true, isAllowedIncognitoAccess, "isAllowedIncognitoAccess is true");
+      browser.test.notifyPass("isAllowedIncognitoAccess");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {},
+  });
+
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("isAllowedIncognitoAccess");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+</script>
+
+</body>
+</html>

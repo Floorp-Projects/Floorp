@@ -86,6 +86,8 @@ public:
                            SourceSurface *aMask,
                            Point aOffset,
                            const DrawOptions &aOptions = DrawOptions()) override;
+  virtual bool Draw3DTransformedSurface(SourceSurface* aSurface,
+                                        const Matrix4x4& aMatrix) override;
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect& aRect) override;
   virtual void PopClip() override;
@@ -111,7 +113,7 @@ public:
   virtual void *GetNativeSurface(NativeSurfaceType aType) override;
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
-  void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
+  void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
 
 #ifdef USE_SKIA_GPU
   bool InitWithGrContext(GrContext* aGrContext,

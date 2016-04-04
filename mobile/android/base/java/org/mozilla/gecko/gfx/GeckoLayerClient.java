@@ -302,7 +302,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         } catch (Exception e) {
             Log.e(LOGTAG, "Unable to convert point to JSON", e);
         }
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", json));
+        GeckoAppShell.notifyObservers("Window:Resize", json);
     }
 
     /** Sets the current page rect. You must hold the monitor while calling this. */
@@ -1084,6 +1084,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 ((viewPoint.y + origin.y) / zoom) - (geckoOrigin.y / geckoZoom));
 
         return layerPoint;
+    }
+
+    @Override
+    public void setScrollingRootContent(boolean isRootContent) {
+        mToolbarAnimator.setScrollingRootContent(isRootContent);
     }
 
     public void addDrawListener(DrawListener listener) {

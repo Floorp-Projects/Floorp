@@ -49,7 +49,7 @@ nsXULTemplateResultSetStorage::nsXULTemplateResultSetStorage(mozIStorageStatemen
         nsAutoCString name;
         rv = aStatement->GetColumnName(c, name);
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIAtom> columnName = do_GetAtom(NS_LITERAL_CSTRING("?") + name);
+            nsCOMPtr<nsIAtom> columnName = NS_Atomize(NS_LITERAL_CSTRING("?") + name);
             mColumnNames.AppendObject(columnName);
         }
     }
@@ -210,10 +210,12 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
         nsCOMPtr<nsIChannel> channel;
         nsCOMPtr<nsINode> node = do_QueryInterface(aRootNode);
 
+        // The following channel is never openend, so it does not matter what
+        // securityFlags we pass; let's follow the principle of least privilege.
         rv = NS_NewChannel(getter_AddRefs(channel),
                            uri,
                            node,
-                           nsILoadInfo::SEC_NORMAL,
+                           nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                            nsIContentPolicy::TYPE_OTHER);
         NS_ENSURE_SUCCESS(rv, rv);
 

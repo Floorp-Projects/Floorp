@@ -18,9 +18,10 @@ let expectedPageErrors = [];
 
 function doPageErrors()
 {
-  expectedPageErrors = [
-    {
+  expectedPageErrors = {
+    "document.body.style.color = 'fooColor';": {
       errorMessage: /fooColor/,
+      errorMessageName: undefined,
       sourceName: /test_page_errors/,
       category: "CSS Parser",
       timeStamp: /^\d+$/,
@@ -29,8 +30,9 @@ function doPageErrors()
       exception: false,
       strict: false,
     },
-    {
+   "document.doTheImpossible();": {
       errorMessage: /doTheImpossible/,
+      errorMessageName: undefined,
       sourceName: /test_page_errors/,
       category: "chrome javascript",
       timeStamp: /^\d+$/,
@@ -39,19 +41,101 @@ function doPageErrors()
       exception: true,
       strict: false,
     },
-  ];
+    "(42).toString(0);": {
+      errorMessage: /radix/,
+      errorMessageName: "JSMSG_BAD_RADIX",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+      strict: false,
+    },
+     "'use strict'; (Object.freeze({name: 'Elsa', score: 157})).score = 0;": {
+      errorMessage: /read.only/,
+      errorMessageName: "JSMSG_READ_ONLY",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+     "([]).length = -1": {
+      errorMessage: /array length/,
+      errorMessageName: "JSMSG_BAD_ARRAY_LENGTH",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+     "'abc'.repeat(-1);": {
+      errorMessage: /repeat count.*non-negative/,
+      errorMessageName: "JSMSG_NEGATIVE_REPETITION_COUNT",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+    "'a'.repeat(2**28);": {
+      errorMessage: /repeat count.*less than infinity/,
+      errorMessageName: "JSMSG_RESULTING_STRING_TOO_LARGE",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+    "77.1234.toExponential(-1);": {
+      errorMessage: /out of range/,
+      errorMessageName: "JSMSG_PRECISION_RANGE",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+    "var f = Function('x y', 'return x + y;');": {
+      errorMessage: /malformed formal/,
+      errorMessageName: "JSMSG_BAD_FORMAL",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+    },
+    "function a() { return; 1 + 1; }": {
+      errorMessage: /unreachable code/,
+      errorMessageName: "JSMSG_STMT_AFTER_RETURN",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: true,
+      exception: false,
+    },
+  };
 
   let container = document.createElement("script");
-  document.body.appendChild(container);
-  container.textContent = "document.body.style.color = 'fooColor';";
-  document.body.removeChild(container);
-
-  SimpleTest.expectUncaughtException();
-
-  container = document.createElement("script");
-  document.body.appendChild(container);
-  container.textContent = "document.doTheImpossible();";
-  document.body.removeChild(container);
+  for (let stmt of Object.keys(expectedPageErrors)) {
+      if (expectedPageErrors[stmt].exception) {
+          SimpleTest.expectUncaughtException();
+      }
+      info("starting stmt: " + stmt);
+      container = document.createElement("script");
+      document.body.appendChild(container);
+      container.textContent = stmt;
+      document.body.removeChild(container);
+      info("ending stmt: " + stmt);
+  }
 }
 
 function startTest()
@@ -80,15 +164,15 @@ function onPageError(aState, aType, aPacket)
   is(aPacket.from, aState.actor, "page error actor");
 
   pageErrors.push(aPacket.pageError);
-  if (pageErrors.length != expectedPageErrors.length) {
+  if (pageErrors.length != Object.keys(expectedPageErrors).length) {
     return;
   }
 
   aState.dbgClient.removeListener("pageError", onPageError);
 
-  expectedPageErrors.forEach(function(aMessage, aIndex) {
+  Object.values(expectedPageErrors).forEach(function(aMessage, aIndex) {
     info("checking received page error #" + aIndex);
-    checkObject(pageErrors[aIndex], expectedPageErrors[aIndex]);
+    checkObject(pageErrors[aIndex], Object.values(expectedPageErrors)[aIndex]);
   });
 
   closeDebugger(aState, function() {

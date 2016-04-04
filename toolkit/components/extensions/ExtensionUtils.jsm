@@ -202,6 +202,26 @@ class BaseContext {
   }
 
   /**
+   * Normalizes the given error object for use by the target scope. If
+   * the target is an error object which belongs to that scope, it is
+   * returned as-is. If it is an ordinary object with a `message`
+   * property, it is converted into an error belonging to the target
+   * scope. If it is an Error object which does *not* belong to the
+   * clone scope, it is reported, and converted to an unexpected
+   * exception error.
+   */
+  normalizeError(error) {
+    if (error instanceof this.cloneScope.Error) {
+      return error;
+    }
+    if (!instanceOf(error, "Object")) {
+      Cu.reportError(error);
+      error = {message: "An unexpected error occurred"};
+    }
+    return new this.cloneScope.Error(error.message);
+  }
+
+  /**
    * Sets the value of `.lastError` to `error`, calls the given
    * callback, and reports an error if the value has not been checked
    * when the callback returns.
@@ -212,15 +232,12 @@ class BaseContext {
    * @returns {*} The return value of callback.
    */
   withLastError(error, callback) {
-    if (!(error instanceof this.cloneScope.Error)) {
-      error = new this.cloneScope.Error(error.message);
-    }
-    this.lastError = error;
+    this.lastError = this.normalizeError(error);
     try {
       return callback();
     } finally {
       if (!this.checkedLastError) {
-        Cu.reportError(`Unchecked lastError value: ${error}`);
+        Cu.reportError(`Unchecked lastError value: ${this.lastError}`);
       }
       this.lastError = null;
     }
@@ -278,10 +295,7 @@ class BaseContext {
         promise.then(
           value => { runSafe(resolve, value); },
           value => {
-            if (!(value instanceof this.cloneScope.Error)) {
-              value = new this.cloneScope.Error(value.message);
-            }
-            runSafeSyncWithoutClone(reject, value);
+            runSafeSyncWithoutClone(reject, this.normalizeError(value));
           });
       });
     }
@@ -866,7 +880,7 @@ Messenger.prototype = {
           // Note: We intentionally do not use runSafe here so that any
           // errors are propagated to the message sender.
           let result = callback(message, sender, sendResponse);
-          if (result instanceof Promise) {
+          if (result instanceof this.context.cloneScope.Promise) {
             return result;
           } else if (result === true) {
             return promise;

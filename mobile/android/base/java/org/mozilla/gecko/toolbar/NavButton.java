@@ -4,8 +4,8 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -28,8 +28,8 @@ abstract class NavButton extends ShapedButton {
         super(context, attrs);
 
         final Resources res = getResources();
-        mBorderColor = ColorUtils.getColor(context, R.color.disabled_grey);
-        mBorderColorPrivate = ColorUtils.getColor(context, R.color.toolbar_icon_grey);
+        mBorderColor = ContextCompat.getColor(context, R.color.disabled_grey);
+        mBorderColorPrivate = ContextCompat.getColor(context, R.color.toolbar_icon_grey);
         mBorderWidth = res.getDimension(R.dimen.nav_button_border_width);
 
         // Paint to draw the border.

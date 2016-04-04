@@ -221,6 +221,136 @@
             "$ref": "extensionTypes.Date"
           }
         ]
+      },
+      {
+        "id": "DownloadQuery",
+        "description": "Parameters that combine to specify a predicate that can be used to select a set of downloads.  Used for example in search() and erase()",
+        "type": "object",
+        "properties": {
+          "query": {
+            "description": "This array of search terms limits results to <a href='#type-DownloadItem'>DownloadItems</a> whose <code>filename</code> or <code>url</code> contain all of the search terms that do not begin with a dash '-' and none of the search terms that do begin with a dash.",
+            "optional": true,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "startedBefore": {
+            "description": "Limits results to downloads that started before the given ms since the epoch.",
+            "optional": true,
+            "$ref": "DownloadTime"
+          },
+          "startedAfter": {
+            "description": "Limits results to downloads that started after the given ms since the epoch.",
+            "optional": true,
+            "$ref": "DownloadTime"
+          },
+          "endedBefore": {
+            "description": "Limits results to downloads that ended before the given ms since the epoch.",
+            "optional": true,
+            "$ref": "DownloadTime"
+          },
+          "endedAfter": {
+            "description": "Limits results to downloads that ended after the given ms since the epoch.",
+            "optional": true,
+            "$ref": "DownloadTime"
+          },
+          "totalBytesGreater": {
+            "description": "Limits results to downloads whose totalBytes is greater than the given integer.",
+            "optional": true,
+            "type": "number"
+          },
+          "totalBytesLess": {
+            "description": "Limits results to downloads whose totalBytes is less than the given integer.",
+            "optional": true,
+            "type": "number"
+          },
+          "filenameRegex": {
+            "description": "Limits results to <a href='#type-DownloadItem'>DownloadItems</a> whose <code>filename</code> matches the given regular expression.",
+            "optional": true,
+            "type": "string"
+          },
+          "urlRegex": {
+            "description": "Limits results to <a href='#type-DownloadItem'>DownloadItems</a> whose <code>url</code> matches the given regular expression.",
+            "optional": true,
+            "type": "string"
+          },
+          "limit": {
+            "description": "Setting this integer limits the number of results. Otherwise, all matching <a href='#type-DownloadItem'>DownloadItems</a> will be returned.",
+            "optional": true,
+            "type": "integer"
+          },
+          "orderBy": {
+            "description": "Setting elements of this array to <a href='#type-DownloadItem'>DownloadItem</a> properties in order to sort the search results. For example, setting <code>orderBy='startTime'</code> sorts the <a href='#type-DownloadItem'>DownloadItems</a> by their start time in ascending order. To specify descending order, prefix <code>orderBy</code> with a hyphen: '-startTime'.",
+            "optional": true,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "id": {
+            "type": "integer",
+            "optional": true
+          },
+          "url": {
+            "description": "Absolute URL.",
+            "optional": true,
+            "type": "string"
+          },
+          "filename": {
+            "description": "Absolute local path.",
+            "optional": true,
+            "type": "string"
+          },
+          "danger": {
+            "$ref": "DangerType",
+            "description": "Indication of whether this download is thought to be safe or known to be suspicious.",
+            "optional": true
+          },
+          "mime": {
+            "description": "The file's MIME type.",
+            "optional": true,
+            "type": "string"
+          },
+          "startTime": {
+            "optional": true,
+            "type": "string"
+          },
+          "endTime": {
+            "optional": true,
+            "type": "string"
+          },
+          "state": {
+            "$ref": "State",
+            "description": "Indicates whether the download is progressing, interrupted, or complete.",
+            "optional": true
+          },
+          "paused": {
+            "description": "True if the download has stopped reading data from the host, but kept the connection open.",
+            "optional": true,
+            "type": "boolean"
+          },
+          "error": {
+            "description": "Why a download was interrupted.",
+            "optional": true,
+            "$ref": "InterruptReason"
+          },
+          "bytesReceived": {
+            "description": "Number of bytes received so far from the host, without considering file compression.",
+            "optional": true,
+            "type": "number"
+          },
+          "totalBytes": {
+            "description": "Number of bytes in the whole file, without considering file compression, or -1 if unknown.",
+            "optional": true,
+            "type": "number"
+          },
+          "fileSize": {
+            "description": "Number of bytes in the whole file post-decompression, or -1 if unknown.",
+            "optional": true,
+            "type": "number"
+          },
+          "exists": {
+            "type": "boolean",
+            "optional": true
+          }
+        }
       }
     ],
     "functions": [
@@ -313,132 +443,7 @@
         "parameters": [
           {
             "name": "query",
-            "type": "object",
-            "properties": {
-              "query": {
-                "description": "This array of search terms limits results to <a href='#type-DownloadItem'>DownloadItems</a> whose <code>filename</code> or <code>url</code> contain all of the search terms that do not begin with a dash '-' and none of the search terms that do begin with a dash.",
-                "optional": true,
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "startedBefore": {
-                "description": "Limits results to downloads that started before the given ms since the epoch.",
-                "optional": true,
-                "$ref": "DownloadTime"
-              },
-              "startedAfter": {
-                "description": "Limits results to downloads that started after the given ms since the epoch.",
-                "optional": true,
-                "$ref": "DownloadTime"
-              },
-              "endedBefore": {
-                "description": "Limits results to downloads that ended before the given ms since the epoch.",
-                "optional": true,
-                "$ref": "DownloadTime"
-              },
-              "endedAfter": {
-                "description": "Limits results to downloads that ended after the given ms since the epoch.",
-                "optional": true,
-                "$ref": "DownloadTime"
-              },
-              "totalBytesGreater": {
-                "description": "Limits results to downloads whose totalBytes is greater than the given integer.",
-                "optional": true,
-                "type": "number"
-              },
-              "totalBytesLess": {
-                "description": "Limits results to downloads whose totalBytes is less than the given integer.",
-                "optional": true,
-                "type": "number"
-              },
-              "filenameRegex": {
-                "description": "Limits results to <a href='#type-DownloadItem'>DownloadItems</a> whose <code>filename</code> matches the given regular expression.",
-                "optional": true,
-                "type": "string"
-              },
-              "urlRegex": {
-                "description": "Limits results to <a href='#type-DownloadItem'>DownloadItems</a> whose <code>url</code> matches the given regular expression.",
-                "optional": true,
-                "type": "string"
-              },
-              "limit": {
-                "description": "Setting this integer limits the number of results. Otherwise, all matching <a href='#type-DownloadItem'>DownloadItems</a> will be returned.",
-                "optional": true,
-                "type": "integer"
-              },
-              "orderBy": {
-                "description": "Setting elements of this array to <a href='#type-DownloadItem'>DownloadItem</a> properties in order to sort the search results. For example, setting <code>orderBy='startTime'</code> sorts the <a href='#type-DownloadItem'>DownloadItems</a> by their start time in ascending order. To specify descending order, prefix <code>orderBy</code> with a hyphen: '-startTime'.",
-                "optional": true,
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "id": {
-                "type": "integer",
-                "optional": true
-              },
-              "url": {
-                "description": "Absolute URL.",
-                "optional": true,
-                "type": "string"
-              },
-              "filename": {
-                "description": "Absolute local path.",
-                "optional": true,
-                "type": "string"
-              },
-              "danger": {
-                "$ref": "DangerType",
-                "description": "Indication of whether this download is thought to be safe or known to be suspicious.",
-                "optional": true
-              },
-              "mime": {
-                "description": "The file's MIME type.",
-                "optional": true,
-                "type": "string"
-              },
-              "startTime": {
-                "optional": true,
-                "type": "string"
-              },
-              "endTime": {
-                "optional": true,
-                "type": "string"
-              },
-              "state": {
-                "$ref": "State",
-                "description": "Indicates whether the download is progressing, interrupted, or complete.",
-                "optional": true
-              },
-              "paused": {
-                "description": "True if the download has stopped reading data from the host, but kept the connection open.",
-                "optional": true,
-                "type": "boolean"
-              },
-              "error": {
-                "description": "Why a download was interrupted.",
-                "optional": true,
-                "$ref": "InterruptReason"
-              },
-              "bytesReceived": {
-                "description": "Number of bytes received so far from the host, without considering file compression.",
-                "optional": true,
-                "type": "number"
-              },
-              "totalBytes": {
-                "description": "Number of bytes in the whole file, without considering file compression, or -1 if unknown.",
-                "optional": true,
-                "type": "number"
-              },
-              "fileSize": {
-                "description": "Number of bytes in the whole file post-decompression, or -1 if unknown.",
-                "optional": true,
-                "type": "number"
-              },
-              "exists": {
-                "type": "boolean",
-                "optional": true
-              }
-            }
+            "$ref": "DownloadQuery"
           },
           {
             "name": "callback",
@@ -458,7 +463,7 @@
       {
         "name": "pause",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Pause the download. If the request was successful the download is in a paused state. Otherwise <a href='extension.html#property-lastError'>chrome.extension.lastError</a> contains an error message. The request will fail if the download is not active.",
         "parameters": [
           {
@@ -477,7 +482,7 @@
       {
         "name": "resume",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Resume a paused download. If the request was successful the download is in progress and unpaused. Otherwise <a href='extension.html#property-lastError'>chrome.extension.lastError</a> contains an error message. The request will fail if the download is not active.",
         "parameters": [
           {
@@ -496,7 +501,7 @@
       {
         "name": "cancel",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Cancel a download. When <code>callback</code> is run, the download is cancelled, completed, interrupted or doesn't exist anymore.",
         "parameters": [
           {
@@ -551,48 +556,58 @@
       {
         "name": "open",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Open the downloaded file.",
         "parameters": [
           {
             "name": "downloadId",
             "type": "integer"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": []
           }
         ]
       },
       {
         "name": "show",
         "type": "function",
-        "unsupported": true,
         "description": "Show the downloaded file in its folder in a file manager.",
+        "async": "callback",
         "parameters": [
           {
             "name": "downloadId",
             "type": "integer"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "success",
+                "type": "boolean"
+              }
+            ]
           }
         ]
       },
       {
         "name": "showDefaultFolder",
         "type": "function",
-        "unsupported": true,
         "parameters": []
       },
       {
         "name": "erase",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Erase matching <a href='#type-DownloadItem'>DownloadItems</a> from history",
         "parameters": [
           {
             "name": "query",
-            "type": "object",
-            "properties": {
-              "TODO": {
-                "type": "string",
-                "description": "complete me..."
-              }
-            }
+            "$ref": "DownloadQuery"
           },
           {
             "name": "callback",
@@ -612,8 +627,8 @@
       },
       {
         "name": "removeFile",
+        "async": "callback",
         "type": "function",
-        "unsupported": true,
         "parameters": [
           {
             "name": "downloadId",
@@ -673,7 +688,6 @@
       {
         "description": "This event fires with the <a href='#type-DownloadItem'>DownloadItem</a> object when a download begins.",
         "name": "onCreated",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "DownloadItem",
@@ -685,7 +699,6 @@
       {
         "description": "Fires with the <code>downloadId</code> when a download is erased from history.",
         "name": "onErased",
-        "unsupported": true,
         "parameters": [
           {
             "name": "downloadId",

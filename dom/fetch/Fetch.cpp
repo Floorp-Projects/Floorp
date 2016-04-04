@@ -221,7 +221,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     }
 
     RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(resolver, r);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(run)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(run));
   }
 
   return p.forget();
@@ -740,7 +740,7 @@ public:
   ~FetchBodyFeature()
   { }
 
-  bool Notify(JSContext* aCx, workers::Status aStatus) override
+  bool Notify(workers::Status aStatus) override
   {
     MOZ_ASSERT(aStatus > workers::Running);
     if (!mWasNotified) {

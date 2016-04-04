@@ -25,7 +25,8 @@ class WindowSurfaceWGL : public SurfaceGL
                      EGLNativeWindowType window,
                      int pixelFormat,
                      HGLRC wglContext,
-                     const FunctionsWGL *functions);
+                     const FunctionsWGL *functions,
+                     EGLint orientation);
     ~WindowSurfaceWGL() override;
 
     egl::Error initialize() override;

@@ -40,6 +40,26 @@ waitForExplicitFinish();
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
+/**
+ * Watch console messages for failed propType definitions in React components.
+ */
+const ConsoleObserver = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  observe: function(subject, topic, data) {
+    var message = subject.wrappedJSObject.arguments[0];
+
+    if (/Failed propType/.test(message)) {
+      ok(false, message);
+    }
+  }
+};
+
+Services.obs.addObserver(ConsoleObserver, "console-api-log-event", false);
+registerCleanupFunction(() => {
+  Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
+});
+
 function getFrameScript() {
   let mm = gBrowser.selectedBrowser.messageManager;
   let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
@@ -198,6 +218,7 @@ var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
 
   let toolbox;
   let target = TargetFactory.forTab(tab);
+  yield target.makeRemote();
 
   // Check if the toolbox is already loaded.
   toolbox = gDevTools.getToolbox(target);
@@ -241,5 +262,47 @@ var openNewTabAndToolbox = Task.async(function*(url, toolId, hostType) {
 function closeToolboxAndTab(toolbox) {
   return toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
+  });
+}
+
+/**
+ * Waits until a predicate returns true.
+ *
+ * @param function predicate
+ *        Invoked once in a while until it returns true.
+ * @param number interval [optional]
+ *        How often the predicate is invoked, in milliseconds.
+ */
+function waitUntil(predicate, interval = 10) {
+  if (predicate()) {
+    return Promise.resolve(true);
+  }
+  return new Promise(resolve => {
+    setTimeout(function() {
+      waitUntil(predicate, interval).then(() => resolve(true));
+    }, interval);
+  });
+}
+
+/**
+ * Takes a string `script` and evaluates it directly in the content
+ * in potentially a different process.
+ */
+let MM_INC_ID = 0;
+function evalInDebuggee (mm, script) {
+  return new Promise(function (resolve, reject) {
+    let id = MM_INC_ID++;
+    mm.sendAsyncMessage("devtools:test:eval", { script, id });
+    mm.addMessageListener("devtools:test:eval:response", handler);
+
+    function handler ({ data }) {
+      if (id !== data.id) {
+        return;
+      }
+
+      info(`Successfully evaled in debuggee: ${script}`);
+      mm.removeMessageListener("devtools:test:eval:response", handler);
+      resolve(data.value);
+    }
   });
 }

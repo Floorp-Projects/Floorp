@@ -41,9 +41,10 @@ NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsVideoFrame)
 
-nsVideoFrame::nsVideoFrame(nsStyleContext* aContext) :
-  nsContainerFrame(aContext)
+nsVideoFrame::nsVideoFrame(nsStyleContext* aContext)
+  : nsVideoFrameBase(aContext)
 {
+  EnableVisibilityTracking();
 }
 
 nsVideoFrame::~nsVideoFrame()
@@ -53,7 +54,7 @@ nsVideoFrame::~nsVideoFrame()
 NS_QUERYFRAME_HEAD(nsVideoFrame)
   NS_QUERYFRAME_ENTRY(nsVideoFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsVideoFrameBase)
 
 nsresult
 nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
@@ -144,7 +145,7 @@ nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContentUtils::DestroyAnonymousContent(&mCaptionDiv);
   nsContentUtils::DestroyAnonymousContent(&mVideoControls);
   nsContentUtils::DestroyAnonymousContent(&mPosterImage);
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  nsVideoFrameBase::DestroyFrom(aDestructRoot);
 }
 
 bool
@@ -611,9 +612,23 @@ nsVideoFrame::AttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::poster && HasVideoElement()) {
     UpdatePosterSource(true);
   }
-  return nsContainerFrame::AttributeChanged(aNameSpaceID,
+  return nsVideoFrameBase::AttributeChanged(aNameSpaceID,
                                             aAttribute,
                                             aModType);
+}
+
+void
+nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
+                                 Maybe<OnNonvisible> aNonvisibleAction)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mPosterImage);
+  if (!imageLoader) {
+    return;
+  }
+
+  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+
+  nsVideoFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 bool nsVideoFrame::HasVideoElement() {

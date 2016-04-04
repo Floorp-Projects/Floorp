@@ -548,6 +548,24 @@ public:
     _33 = 1.0f;
     _43 = 0.0f;
     _34 = 0.0f;
+    // Some matrices, such as those derived from perspective transforms,
+    // can modify _44 from 1, while leaving the rest of the fourth column
+    // (_14, _24) at 0. In this case, after resetting the third row and
+    // third column above, the value of _44 functions only to scale the
+    // coordinate transform divide by W. The matrix can be converted to
+    // a true 2D matrix by normalizing out the scaling effect of _44 on
+    // the remaining components ahead of time.
+    if (_14 == 0.0f && _24 == 0.0f &&
+        _44 != 1.0f && _44 != 0.0f) {
+      Float scale = 1.0f / _44;
+      _11 *= scale;
+      _12 *= scale;
+      _21 *= scale;
+      _22 *= scale;
+      _41 *= scale;
+      _42 *= scale;
+      _44 = 1.0f;
+    }
     return *this;
   }
 
@@ -1248,24 +1266,6 @@ public:
     NudgeToInteger(&_42, error);
     NudgeToInteger(&_43, error);
     NudgeToInteger(&_44, error);
-    return *this;
-  }
-
-  // Nudge the 3D components to integer so that this matrix will become 2D if
-  // it's very close to already being 2D.
-  // This doesn't change the _41 and _42 components.
-  Matrix4x4Typed &NudgeTo2D()
-  {
-    NudgeToInteger(&_13);
-    NudgeToInteger(&_14);
-    NudgeToInteger(&_23);
-    NudgeToInteger(&_24);
-    NudgeToInteger(&_31);
-    NudgeToInteger(&_32);
-    NudgeToInteger(&_33);
-    NudgeToInteger(&_34);
-    NudgeToInteger(&_43);
-    NudgeToInteger(&_44);
     return *this;
   }
 

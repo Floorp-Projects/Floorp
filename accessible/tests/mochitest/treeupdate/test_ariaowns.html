@@ -74,8 +74,8 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
-        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
       ];
@@ -194,8 +194,8 @@
         // newly inserted child.
         var tree =
           { SECTION: [
-              { CHECKBUTTON: [ ] },
-              { RADIOBUTTON: [ ] },
+              { CHECKBUTTON: [ ] }, // existing explicit, t1_checkbox
+              { RADIOBUTTON: [ ] }, // new explicit, t1_child3
               { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
               { SECTION: [ ] }, // ARIA owned, t1_subdiv
               { GROUPING: [ ] } // ARIA owned, t1_group
@@ -228,8 +228,8 @@
         // subdiv should go away
         var tree =
           { SECTION: [
-              { CHECKBUTTON: [ ] },
-              { RADIOBUTTON: [ ] },
+              { CHECKBUTTON: [ ] }, // explicit, t1_checkbox
+              { RADIOBUTTON: [ ] }, // explicit, t1_child3
               { PUSHBUTTON: [ ] }, // ARIA owned, t1_button
               { GROUPING: [ ] } // ARIA owned, t1_group
           ] };
@@ -472,6 +472,43 @@
       }
     }
 
+    function removeNotARIAOwnedEl(aContainer, aChild)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer)
+      ];
+
+      this.invoke = function removeNotARIAOwnedEl_invoke()
+      {
+        dumpTree(aContainer, "before");
+        var tree = {
+          SECTION: [
+            { TEXT_LEAF: [ ] },
+            { GROUPING: [ ] }
+          ]
+        };
+        testAccessibleTree(aContainer, tree);
+
+        getNode(aContainer).removeChild(getNode(aChild));
+      }
+
+      this.finalCheck = function removeNotARIAOwnedEl_finalCheck()
+      {
+        dumpTree(aContainer, "after");
+        var tree = {
+          SECTION: [
+            { GROUPING: [ ] }
+          ]
+        };
+        testAccessibleTree(aContainer, tree);
+      }
+
+      this.getID = function removeNotARIAOwnedEl_getID()
+      {
+        return `remove not ARIA owned child`;
+      }
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Test
@@ -515,6 +552,8 @@
         "t5_container", "t5_radio t5_button t5_checkbox",
         [ "t5_radio", "t5_button" ],
         [ "RADIOBUTTON", "PUSHBUTTON", "CHECKBUTTON" ]));
+
+      gQueue.push(new removeNotARIAOwnedEl("t6_container", "t6_span"));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -563,6 +602,11 @@
     <div role="checkbox" id="t5_checkbox"></div>
     <div role="radio" id="t5_radio"></div>
   </div>
+
+  <div id="t6_container" aria-owns="t6_fake">
+    <span id="t6_span">hey</span>
+  </div>
+  <div id="t6_fake" role="group"></div>
 </body>
 
 </html>

@@ -37,7 +37,7 @@ RE_CLANG_WARNING = re.compile(r"""
 RE_MSVC_WARNING = re.compile(r"""
     (?P<file>.*)
     \((?P<line>\d+)\)
-    \s:\swarning\s
+    \s?:\swarning\s
     (?P<flag>[^:]+)
     :\s
     (?P<message>.*)

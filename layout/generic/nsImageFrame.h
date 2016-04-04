@@ -63,6 +63,10 @@ typedef nsAtomicContainerFrame ImageFrameSuper;
 class nsImageFrame : public ImageFrameSuper,
                      public nsIReflowCallback {
 public:
+  template <typename T> using Maybe = mozilla::Maybe<T>;
+  using Nothing = mozilla::Nothing;
+  using Visibility = mozilla::Visibility;
+
   typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::ImageLayer ImageLayer;
@@ -103,6 +107,9 @@ public:
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
+
+  void OnVisibilityChange(Visibility aNewVisibility,
+                          Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;

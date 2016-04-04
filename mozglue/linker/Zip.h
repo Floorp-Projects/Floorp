@@ -72,13 +72,14 @@ private:
   public:
     ZStreamBuf() : inUse(false) { }
 
-    char *get()
+    bool get(char*& out)
     {
       if (!inUse) {
         inUse = true;
-        return buf;
+        out = buf;
+        return true;
       } else {
-        MOZ_CRASH("ZStreamBuf already in use");
+        return false;
       }
     }
 
@@ -106,10 +107,18 @@ public:
   public:
     void *Alloc(uInt items, uInt size)
     {
-      if (items == 1 && size <= stateBuf.size) {
-        return stateBuf.get();
-      } else if (items * size == windowBuf.size) {
-        return windowBuf.get();
+      if (items == 1 && size <= stateBuf1.size) {
+        char* res = nullptr;
+        if (stateBuf1.get(res) || stateBuf2.get(res)) {
+          return res;
+        }
+        MOZ_CRASH("ZStreamBuf already in use");
+      } else if (items * size == windowBuf1.size) {
+        char* res = nullptr;
+        if (windowBuf1.get(res) || windowBuf2.get(res)) {
+          return res;
+        }
+        MOZ_CRASH("ZStreamBuf already in use");
       } else {
         MOZ_CRASH("No ZStreamBuf for allocation");
       }
@@ -117,17 +126,22 @@ public:
 
     void Free(void *ptr)
     {
-      if (stateBuf.Equals(ptr)) {
-        stateBuf.Release();
-      } else if (windowBuf.Equals(ptr)) {
-        windowBuf.Release();
+      if (stateBuf1.Equals(ptr)) {
+        stateBuf1.Release();
+      } else if (stateBuf2.Equals(ptr)) {
+        stateBuf2.Release();
+      }else if (windowBuf1.Equals(ptr)) {
+        windowBuf1.Release();
+      } else if (windowBuf2.Equals(ptr)) {
+        windowBuf2.Release();
       } else {
         MOZ_CRASH("Pointer doesn't match a ZStreamBuf");
       }
     }
 
-    ZStreamBuf<0x3000> stateBuf; // 0x3000 is an arbitrary size above 10K.
-    ZStreamBuf<1 << MAX_WBITS> windowBuf;
+    // 0x3000 is an arbitrary size above 10K.
+    ZStreamBuf<0x3000> stateBuf1, stateBuf2;
+    ZStreamBuf<1 << MAX_WBITS> windowBuf1, windowBuf2;
   };
 
 private:
@@ -335,7 +349,7 @@ private:
       return reinterpret_cast<const char *>(this) + sizeof(*this)
              + filenameSize + extraFieldSize;
     }
-    
+
     le_uint16 minVersion;
     le_uint16 generalFlag;
     le_uint16 compression;

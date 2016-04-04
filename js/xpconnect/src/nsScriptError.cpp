@@ -21,6 +21,7 @@
 
 nsScriptErrorBase::nsScriptErrorBase()
     :  mMessage(),
+       mMessageName(),
        mSourceName(),
        mLineNumber(0),
        mSourceLine(),
@@ -149,6 +150,18 @@ nsScriptErrorBase::GetStack(JS::MutableHandleValue aStack) {
 
 NS_IMETHODIMP
 nsScriptErrorBase::SetStack(JS::HandleValue aStack) {
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::GetErrorMessageName(nsAString& aErrorMessageName) {
+    aErrorMessageName = mMessageName;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::SetErrorMessageName(const nsAString& aErrorMessageName) {
+    mMessageName = aErrorMessageName;
     return NS_OK;
 }
 

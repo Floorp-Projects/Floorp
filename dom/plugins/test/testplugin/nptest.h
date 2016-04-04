@@ -158,6 +158,7 @@ typedef struct InstanceData {
   NPAsyncSurface *backBuffer;
   std::string lastComposition;
   void* placeholderWnd;
+  double cssZoomFactor;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

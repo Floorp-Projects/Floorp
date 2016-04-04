@@ -1551,16 +1551,9 @@ nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
 nscoord
 nsListControlFrame::CalcFallbackRowBSize(float aFontSizeInflation)
 {
-  nscoord rowBSize = 0;
-
-  RefPtr<nsFontMetrics> fontMet;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet),
-                                        aFontSizeInflation);
-  if (fontMet) {
-    rowBSize = fontMet->MaxHeight();
-  }
-
-  return rowBSize;
+  RefPtr<nsFontMetrics> fontMet =
+    nsLayoutUtils::GetFontMetricsForFrame(this, aFontSizeInflation);
+  return fontMet->MaxHeight();
 }
 
 nscoord
@@ -2258,7 +2251,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // XXX Not I18N compliant
 
   // Don't do incremental search if the key event has already consumed.
-  if (keyEvent->mFlags.mDefaultPrevented) {
+  if (keyEvent->DefaultPrevented()) {
     return NS_OK;
   }
 
@@ -2310,7 +2303,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // string we will use to find options and start searching at the current
   // keystroke.  Otherwise, Truncate the string if it's been a long time
   // since our last keypress.
-  if (keyEvent->time - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
+  if (keyEvent->mTime - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
     // If this is ' ' and we are at the beginning of the string, treat it as
     // "select this option" (bug 191543)
     if (keyEvent->charCode == ' ') {
@@ -2325,7 +2318,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     GetIncrementalString().Truncate();
   }
 
-  gLastKeyTime = keyEvent->time;
+  gLastKeyTime = keyEvent->mTime;
 
   // Append this keystroke to the search string. 
   char16_t uniChar = ToLowerCase(static_cast<char16_t>(keyEvent->charCode));

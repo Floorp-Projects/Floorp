@@ -1144,6 +1144,21 @@ public:
 
     static auto MoveTaskToBack() -> void;
 
+    struct NotifyObservers_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "nativeNotifyObservers";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct NetworkLinkType_t {
         typedef GeckoAppShell Owner;
         typedef int32_t ReturnType;
@@ -1460,6 +1475,21 @@ public:
 
     static auto StopMonitoringGamepad() -> void;
 
+    struct SyncNotifyObservers_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "syncNotifyObservers";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct UnlockProfile_t {
         typedef GeckoAppShell Owner;
         typedef bool ReturnType;
@@ -1541,6 +1571,7 @@ public:
 
     static const bool isMultithreaded = true;
 
+    template<class Impl> class Natives;
 };
 
 class GeckoEditable : public mozilla::jni::ObjectBase<GeckoEditable, jobject>
@@ -2792,47 +2823,6 @@ public:
     template<class Impl> class Natives;
 };
 
-class Restrictions : public mozilla::jni::ObjectBase<Restrictions, jobject>
-{
-public:
-    explicit Restrictions(const Context& ctx) : ObjectBase<Restrictions, jobject>(ctx) {}
-
-    struct IsAllowed_t {
-        typedef Restrictions Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "isAllowed";
-        static constexpr char signature[] =
-                "(ILjava/lang/String;)Z";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto IsAllowed(int32_t, mozilla::jni::String::Param) -> bool;
-
-    struct IsUserRestricted_t {
-        typedef Restrictions Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "isUserRestricted";
-        static constexpr char signature[] =
-                "()Z";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto IsUserRestricted() -> bool;
-
-    static const bool isMultithreaded = false;
-
-};
-
 class SurfaceBits : public mozilla::jni::ObjectBase<SurfaceBits, jobject>
 {
 public:
@@ -3649,6 +3639,25 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
+    struct HandleMouseEvent_t {
+        typedef NativePanZoomController Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int64_t,
+                int32_t,
+                float,
+                float,
+                int32_t> Args;
+        static constexpr char name[] = "handleMouseEvent";
+        static constexpr char signature[] =
+                "(IJIFFI)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct HandleScrollEvent_t {
         typedef NativePanZoomController Owner;
         typedef bool ReturnType;
@@ -3695,6 +3704,22 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
+    struct OnSelectionDragState_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "onSelectionDragState";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto OnSelectionDragState(bool) const -> void;
+
     struct RequestContentRepaintWrapper_t {
         typedef NativePanZoomController Owner;
         typedef void ReturnType;
@@ -3714,6 +3739,22 @@ public:
     };
 
     auto RequestContentRepaintWrapper(float, float, float, float, float) const -> void;
+
+    struct SetScrollingRootContent_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "setScrollingRootContent";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto SetScrollingRootContent(bool) const -> void;
 
     struct UpdateOverscrollOffset_t {
         typedef NativePanZoomController Owner;
@@ -4039,6 +4080,47 @@ public:
     auto Y(float) const -> void;
 
     static const bool isMultithreaded = true;
+
+};
+
+class Restrictions : public mozilla::jni::ObjectBase<Restrictions, jobject>
+{
+public:
+    explicit Restrictions(const Context& ctx) : ObjectBase<Restrictions, jobject>(ctx) {}
+
+    struct IsAllowed_t {
+        typedef Restrictions Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "isAllowed";
+        static constexpr char signature[] =
+                "(ILjava/lang/String;)Z";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto IsAllowed(int32_t, mozilla::jni::String::Param) -> bool;
+
+    struct IsUserRestricted_t {
+        typedef Restrictions Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "isUserRestricted";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto IsUserRestricted() -> bool;
+
+    static const bool isMultithreaded = false;
 
 };
 

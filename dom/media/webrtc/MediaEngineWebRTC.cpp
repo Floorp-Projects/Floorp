@@ -49,6 +49,7 @@ nsTArray<int>* AudioInputCubeb::mDeviceIndexes;
 nsTArray<nsCString>* AudioInputCubeb::mDeviceNames;
 cubeb_device_collection* AudioInputCubeb::mDevices = nullptr;
 bool AudioInputCubeb::mAnyInUse = false;
+StaticMutex AudioInputCubeb::sMutex;
 
 // AudioDeviceID is an annoying opaque value that's really a string
 // pointer, and is freed when the cubeb_device_collection is destroyed
@@ -91,6 +92,7 @@ void AudioInputCubeb::UpdateDeviceList()
       }
     }
   }
+  StaticMutexAutoLock lock(sMutex);
   // swap state
   if (mDevices) {
     cubeb_device_collection_destroy(mDevices);
@@ -220,9 +222,6 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
   num = mozilla::camera::GetChildAndCall(
     &mozilla::camera::CamerasChild::NumberOfCaptureDevices,
     capEngine);
-  if (num <= 0) {
-    return;
-  }
 
   for (int i = 0; i < num; i++) {
     char deviceName[MediaEngineSource::kMaxDeviceNameLength];

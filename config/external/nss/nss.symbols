@@ -330,6 +330,7 @@ PK11_ExportDERPrivateKeyInfo
 PK11_ExportEncryptedPrivKeyInfo
 PK11_ExtractKeyValue
 PK11_FindCertFromNickname
+PK11_FindCertInSlot
 PK11_FindCertsFromEmailAddress
 PK11_FindCertsFromNickname
 PK11_FindKeyByAnyCert
@@ -548,6 +549,7 @@ SECMOD_DeleteInternalModule
 SECMOD_DeleteModule
 SECMOD_DestroyModule
 SECMOD_FindModule
+SECMOD_FindSlot
 SECMOD_GetDeadModuleList
 SECMOD_GetDefaultModuleList
 SECMOD_GetDefaultModuleListLock

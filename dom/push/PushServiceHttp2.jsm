@@ -155,6 +155,7 @@ PushChannelListener.prototype = {
         encryption_key: getHeaderField(aRequest, "Encryption-Key"),
         crypto_key: getHeaderField(aRequest, "Crypto-Key"),
         encryption: getHeaderField(aRequest, "Encryption"),
+        encoding: getHeaderField(aRequest, "Content-Encoding"),
       };
       let cryptoParams = getCryptoParams(headers);
       let msg = concatArray(this._message);
@@ -219,6 +220,7 @@ var SubscriptionListener = function(aSubInfo, aResolve, aReject,
   this._serverURI = aServerURI;
   this._service = aPushServiceHttp2;
   this._ctime = Date.now();
+  this._retryTimeoutID = null;
 };
 
 SubscriptionListener.prototype = {
@@ -261,12 +263,17 @@ SubscriptionListener.prototype = {
       if (this._subInfo.retries < prefs.get("http2.maxRetries")) {
         this._subInfo.retries++;
         var retryAfter = retryAfterParser(aRequest);
-        setTimeout(_ => this._reject(
+        this._retryTimeoutID = setTimeout(_ =>
           {
-            retry: true,
-            subInfo: this._subInfo
-          }),
-          retryAfter);
+            this._reject(
+              {
+                retry: true,
+                subInfo: this._subInfo
+              });
+            this._service.removeListenerPendingRetry(this);
+            this._retryTimeoutID = null;
+          }, retryAfter);
+        this._service.addListenerPendingRetry(this);
       } else {
         this._reject(new Error("Unexpected server response: " + statusCode));
       }
@@ -328,6 +335,15 @@ SubscriptionListener.prototype = {
 
     Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_HTTP2_TIME").add(Date.now() - this._ctime);
     this._resolve(reply);
+  },
+
+  abortRetry: function() {
+    if (this._retryTimeoutID != null) {
+      clearTimeout(this._retryTimeoutID);
+      this._retryTimeoutID = null;
+    } else {
+      console.debug("SubscriptionListener.abortRetry: aborting non-existent retry?");
+    }
   },
 };
 
@@ -402,6 +418,9 @@ this.PushServiceHttp2 = {
   _conns: {},
   _started: false,
 
+  // Set of SubscriptionListeners that are pending a subscription retry attempt.
+  _listenersPendingRetry: new Set(),
+
   newPushDB: function() {
     return new PushDB(kPUSHHTTP2DB_DB_NAME,
                       kPUSHHTTP2DB_DB_VERSION,
@@ -447,7 +466,7 @@ this.PushServiceHttp2 = {
   /**
    * Subscribe new resource.
    */
-  _subscribeResource: function(aRecord) {
+  register: function(aRecord) {
     console.debug("subscribeResource()");
 
     return this._subscribeResourceInternal({
@@ -678,21 +697,19 @@ this.PushServiceHttp2 = {
 
   uninit: function() {
     console.debug("uninit()");
+    this._abortPendingSubscriptionRetries();
     this._shutdownConnections(true);
     this._mainPushService = null;
   },
 
+  _abortPendingSubscriptionRetries: function() {
+    this._listenersPendingRetry.forEach((listener) => listener.abortRetry());
+    this._listenersPendingRetry.clear();
+  },
 
-  request: function(action, aRecord) {
-    switch (action) {
-      case "register":
-        return this._subscribeResource(aRecord);
-     case "unregister":
-        this._shutdownSubscription(aRecord.subscriptionUri);
-        return this._unsubscribeResource(aRecord.subscriptionUri);
-      default:
-        return Promise.reject(new Error("Unknown request type: " + action));
-    }
+  unregister: function(aRecord) {
+    this._shutdownSubscription(aRecord.subscriptionUri);
+    return this._unsubscribeResource(aRecord.subscriptionUri);
   },
 
   /** Push server has deleted subscription.
@@ -703,7 +720,7 @@ this.PushServiceHttp2 = {
    */
   _resubscribe: function(aSubscriptionUri) {
     this._mainPushService.getByKeyID(aSubscriptionUri)
-      .then(record => this._subscribeResource(record)
+      .then(record => this.register(record)
         .then(recordNew => {
           if (this._mainPushService) {
             this._mainPushService
@@ -752,11 +769,21 @@ this.PushServiceHttp2 = {
     }
   },
 
+  addListenerPendingRetry: function(aListener) {
+    this._listenersPendingRetry.add(aListener);
+  },
+
+  removeListenerPendingRetry: function(aListener) {
+    if (!this._listenersPendingRetry.remove(aListener)) {
+      console.debug("removeListenerPendingRetry: listener not in list?");
+    }
+  },
+
   _pushChannelOnStop: function(aUri, aAckUri, aMessage, cryptoParams) {
     console.debug("pushChannelOnStop()");
 
     this._mainPushService.receivedPushMessage(
-      aUri, aMessage, cryptoParams, record => {
+      aUri, "", aMessage, cryptoParams, record => {
         // Always update the stored record.
         return record;
       }

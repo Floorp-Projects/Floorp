@@ -15,7 +15,7 @@
 #include "nsStringGlue.h" // for nsDependentCString
 %}
 
-[scriptable, uuid(18bdefde-e57b-11e4-832a-000c29a57fff)]
+[scriptable, uuid(361be358-76f0-47aa-b37b-6ad833599e8d)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -67,6 +67,13 @@ interface nsIScriptError : nsIConsoleMessage
     readonly attribute boolean isFromPrivateWindow;
 
     attribute jsval stack;
+
+    /**
+     * The name of a template string, as found in js.msg, associated with the
+     * error message.
+     */
+    attribute AString errorMessageName;
+
 
     void init(in AString message,
               in AString sourceName,

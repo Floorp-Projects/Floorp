@@ -85,12 +85,15 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
+const zoomResetTopic = "browser-fullZoom:zoomReset";
+SpecialPowers.registerObservers(zoomResetTopic);
+
 function onZoomReset(aCallback) {
-  var topic = "browser-fullZoom:zoomReset";
+  var specialPowersTopic = "specialpowers-" + zoomResetTopic;
   SpecialPowers.addObserver(function observe() {
-    SpecialPowers.removeObserver(observe, topic);
+    SpecialPowers.removeObserver(observe, specialPowersTopic);
     SimpleTest.executeSoon(aCallback);
-  }, topic, false);
+  }, specialPowersTopic, false);
 }
 
 function setDeltaMultiplierSettings(aSettings, aCallback)
@@ -917,7 +920,7 @@ function doTestScroll(aSettings, aCallback)
         winUtils.advanceTimeAndRefresh(100);
         doNextTest();
       }
-    }, 10);
+    });
   }
   doNextTest();
 }
@@ -1158,7 +1161,7 @@ function doTestZoom(aSettings, aCallback)
       onZoomReset(function () {
         hitEventLoop(doNextTest, 20);
       });
-    }, 20);
+    });
   }
   doNextTest();
 }
@@ -1249,9 +1252,9 @@ function doTestZoomedScroll(aCallback)
 
             synthesizeKey("0", { accelKey: true });
             onZoomReset(prepareTestZoomedLineScroll);
-          }, 20);
+          });
         }, 20);
-      }, 20);
+      });
     }, 20);
   }
 
@@ -1334,9 +1337,9 @@ function doTestZoomedScroll(aCallback)
 
             synthesizeKey("0", { accelKey: true });
             onZoomReset(aCallback);
-          }, 20);
+          });
         }, 20);
-      }, 20);
+      });
     }, 20);
   }
 
@@ -1597,7 +1600,7 @@ function doTestWholeScroll2(aCallback)
       } else {
         doIt();
       }
-    }, 20);
+    });
   }
   doIt();
 }
@@ -1762,7 +1765,7 @@ function doTestActionOverride(aCallback)
       } else {
         doIt();
       }
-    }, 20);
+    });
   }
   doIt();
 }
@@ -1770,6 +1773,7 @@ function doTestActionOverride(aCallback)
 function runTests()
 {
   SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", true],
     ["general.smoothScroll", false],
     ["mousewheel.default.action", 1],      // scroll
     ["mousewheel.default.action.override_x", -1],
@@ -1833,8 +1837,6 @@ function runTests2()
 
 function finishTests()
 {
-  SpecialPowers.clearUserPref("mousewheel.default.action");
-
   winUtils.restoreNormalRefresh();
 
   window.opener.finish();

@@ -9,7 +9,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -138,7 +137,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
     "browserVersion": Services.appinfo.version,
     "platformName": Services.sysinfo.getProperty("name"),
     "platformVersion": Services.sysinfo.getProperty("version"),
-    "specificationLevel": "1",
+    "specificationLevel": 0,
 
     // supported features
     "raisesAccessibilityExceptions": false,
@@ -157,8 +156,6 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
     "device": device,
     "version": Services.appinfo.version,
   };
-
-  this.interactions = new Interactions(() => this.sessionCapabilities);
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
@@ -266,19 +263,6 @@ GeckoDriver.prototype.getCurrentWindow = function() {
   } else {
     return this.curFrame;
   }
-};
-
-/**
- * Gets the the window enumerator.
- *
- * @return {nsISimpleEnumerator}
- */
-GeckoDriver.prototype.getWinEnumerator = function() {
-  let typ = null;
-  if (this.appName != "B2G" && this.context == Context.CONTENT) {
-    typ = "navigator:browser";
-  }
-  return Services.wm.getEnumerator(typ);
 };
 
 GeckoDriver.prototype.addFrameCloseListener = function(action) {
@@ -396,19 +380,6 @@ GeckoDriver.prototype.getVisibleText = function(el, lines) {
 };
 
 /**
-  * Given a file name, this will delete the file from the temp directory
-  * if it exists.
-  *
-  * @param {string} filename
-  */
-GeckoDriver.prototype.deleteFile = function(filename) {
-  let file = FileUtils.getFile("TmpD", [filename.toString()]);
-  if (file.exists()) {
-    file.remove(true);
-  }
-};
-
-/**
  * Handles registration of new content listener browsers.  Depending on
  * their type they are either accepted or ignored.
  */
@@ -453,19 +424,14 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
 
   this.curBrowser.elementManager.seenItems[reg.id] =
       Cu.getWeakReference(listenerWindow);
-  let flags = {
-    B2G: (this.appName == "B2G"),
-    raisesAccessibilityExceptions:
-      this.sessionCapabilities.raisesAccessibilityExceptions
-  };
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync("newSession", flags, this.newSessionCommandId);
+    this.sendAsync("newSession", this.sessionCapabilities, this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
       this.newSessionCommandId = null;
     }
   }
 
-  return [reg, mainContent, flags];
+  return [reg, mainContent, this.sessionCapabilities];
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -629,6 +595,7 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
         case "desiredCapabilities":
           to = copy(from[key], to);
           break;
+
         case "requiredCapabilities":
           if (from[key].proxy) {
               this.setUpProxy(from[key].proxy);
@@ -638,16 +605,17 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
           for (let caps in from[key]) {
             if (from[key][caps] !== this.sessionCapabilities[caps]) {
               errors.push(from[key][caps] + " does not equal " +
-                  this.sessionCapabilities[caps])   ;
+                  this.sessionCapabilities[caps]);
             }
           }
           break;
+
         default:
           to[key] = from[key];
       }
     }
 
-    if (Object.keys(errors).length === 0) {
+    if (Object.keys(errors).length == 0) {
       return to;
     }
 
@@ -1399,7 +1367,7 @@ GeckoDriver.prototype.getIdForBrowser = function getIdForBrowser(browser) {
  */
 GeckoDriver.prototype.getWindowHandles = function(cmd, resp) {
   let hs = [];
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
     if (win.gBrowser && this.appName != "B2G") {
@@ -1451,7 +1419,7 @@ GeckoDriver.prototype.getChromeWindowHandle = function(cmd, resp) {
  */
 GeckoDriver.prototype.getChromeWindowHandles = function(cmd, resp) {
   let hs = [];
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let foundWin = winEn.getNext();
     let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1526,7 +1494,7 @@ GeckoDriver.prototype.switchToWindow = function*(cmd, resp) {
         switchTo == outerId;
   };
 
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
     let outerId = getOuterWindowId(win);
@@ -1966,8 +1934,9 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      yield this.interactions.clickElement({ frame: win },
-        this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
+      yield interaction.clickElement(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2065,8 +2034,10 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.interactions.isElementDisplayed(
-        {frame: win}, this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      resp.body.value = yield interaction.isElementDisplayed(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2113,8 +2084,10 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.interactions.isElementEnabled(
-        {frame: win}, this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      resp.body.value = yield interaction.isElementEnabled(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2136,8 +2109,10 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.interactions.isElementSelected(
-        { frame: win }, this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      resp.body.value = yield interaction.isElementSelected(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2186,8 +2161,10 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      yield this.interactions.sendKeysToElement(
-        { frame: win }, this.curBrowser.elementManager, id, value, true);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      yield interaction.sendKeysToElement(
+          el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2347,7 +2324,7 @@ GeckoDriver.prototype.close = function(cmd, resp) {
   }
 
   let nwins = 0;
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
 
@@ -2394,7 +2371,7 @@ GeckoDriver.prototype.closeChromeWindow = function(cmd, resp) {
 
   // Get the total number of windows
   let nwins = 0;
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     nwins++;
     winEn.getNext();
@@ -2445,7 +2422,7 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
       }
     }
 
-    let winEn = this.getWinEnumerator();
+    let winEn = Services.wm.getEnumerator(null);
     while (winEn.hasMoreElements()) {
       winEn.getNext().messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
     }
@@ -2463,8 +2440,6 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
   }
 
   this.sessionId = null;
-  this.deleteFile("marionetteChromeScripts");
-  this.deleteFile("marionetteContentScripts");
 
   if (this.observing !== null) {
     for (let topic in this.observing) {
@@ -2595,6 +2570,9 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
  * landscape-secondary.
  */
 GeckoDriver.prototype.getScreenOrientation = function(cmd, resp) {
+  if (this.appName == "Firefox") {
+    throw new UnsupportedOperationError();
+  }
   resp.body.value = this.getCurrentWindow().screen.mozOrientation;
 };
 
@@ -2610,6 +2588,10 @@ GeckoDriver.prototype.getScreenOrientation = function(cmd, resp) {
  * and "portrait-secondary" as well as "landscape-secondary".
  */
 GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
+  if (this.appName == "Firefox") {
+    throw new UnsupportedOperationError();
+  }
+
   const ors = [
     "portrait", "landscape",
     "portrait-primary", "landscape-primary",
@@ -2652,8 +2634,8 @@ GeckoDriver.prototype.getWindowSize = function(cmd, resp) {
  * in the window being in the maximized state.
  */
 GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
-  if (this.appName !== "Firefox") {
-    throw new UnsupportedOperationError("Not supported on mobile");
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
   }
 
   let width = parseInt(cmd.parameters.width);
@@ -2675,7 +2657,7 @@ GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
  */
 GeckoDriver.prototype.maximizeWindow = function(cmd, resp) {
   if (this.appName != "Firefox") {
-    throw new UnsupportedOperationError("Not supported for mobile");
+    throw new UnsupportedOperationError();
   }
 
   let win = this.getCurrentWindow();
@@ -2891,12 +2873,7 @@ GeckoDriver.prototype.receiveMessage = function(message) {
         // If remoteness gets updated we need to call newSession. In the case
         // of desktop this just sets up a small amount of state that doesn't
         // change over the course of a session.
-        let newSessionValues = {
-          B2G: (this.appName == "B2G"),
-          raisesAccessibilityExceptions:
-              this.sessionCapabilities.raisesAccessibilityExceptions
-        };
-        this.sendAsync("newSession", newSessionValues);
+        this.sendAsync("newSession", this.sessionCapabilities);
         this.curBrowser.flushPendingCommands();
       }
       break;

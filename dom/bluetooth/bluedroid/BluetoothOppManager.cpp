@@ -10,7 +10,7 @@
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 #include "ObexBase.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
@@ -20,7 +20,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -1227,12 +1226,12 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
 // Virtual function of class SocketConsumer
 void
 BluetoothOppManager::ReceiveSocketData(BluetoothSocket* aSocket,
-                                       nsAutoPtr<UnixSocketBuffer>& aBuffer)
+                                       UniquePtr<UnixSocketBuffer>& aBuffer)
 {
   if (mIsServer) {
-    ServerDataHandler(aBuffer);
+    ServerDataHandler(aBuffer.get());
   } else {
-    ClientDataHandler(aBuffer);
+    ClientDataHandler(aBuffer.get());
   }
 }
 

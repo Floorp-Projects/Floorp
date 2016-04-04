@@ -156,7 +156,7 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   ];
 
   const APPLICATION_TEST_DATA = {
-    buildId: "2007010101",
+    buildId: gAppInfo.appBuildID,
     name: APP_NAME,
     version: APP_VERSION,
     vendor: "Mozilla",
@@ -307,9 +307,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     bucket_count: 3,
     histogram_type: 3,
     values: {0:1, 1:0},
-    sum: 0,
-    sum_squares_lo: 0,
-    sum_squares_hi: 0
+    sum: 0
   };
   let flag = payload.histograms[TELEMETRY_TEST_FLAG];
   Assert.equal(uneval(flag), uneval(expected_flag));
@@ -321,8 +319,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     histogram_type: 4,
     values: {0:1, 1:0},
     sum: 1,
-    sum_squares_lo: 1,
-    sum_squares_hi: 0,
   };
   let count = payload.histograms[TELEMETRY_TEST_COUNT];
   Assert.equal(uneval(count), uneval(expected_count));
@@ -334,9 +330,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
       bucket_count: 3,
       histogram_type: 2,
       values: {0:2, 1:successfulPings, 2:0},
-      sum: successfulPings,
-      sum_squares_lo: successfulPings,
-      sum_squares_hi: 0
+      sum: successfulPings
     };
     let tc = payload.histograms[TELEMETRY_SUCCESS];
     Assert.equal(uneval(tc), uneval(expected_tc));
@@ -383,8 +377,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
       histogram_type: 4,
       values: {0:2, 1:0},
       sum: 2,
-      sum_squares_lo: 2,
-      sum_squares_hi: 0,
     },
     "b": {
       range: [1, 2],
@@ -392,8 +384,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
       histogram_type: 4,
       values: {0:1, 1:0},
       sum: 1,
-      sum_squares_lo: 1,
-      sum_squares_hi: 0,
     },
   };
   Assert.deepEqual(expected_keyed_count, keyedHistograms[TELEMETRY_TEST_KEYED_COUNT]);

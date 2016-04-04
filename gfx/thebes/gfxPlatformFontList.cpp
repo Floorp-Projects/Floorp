@@ -228,6 +228,8 @@ gfxPlatformFontList::InitFontList()
         fontCache->FlushShapedWordCaches();
     }
 
+    gfxPlatform::PurgeSkiaFontCache();
+
     mFontFamilies.Clear();
     mOtherFamilyNames.Clear();
     mOtherFamilyNamesInitialized = false;

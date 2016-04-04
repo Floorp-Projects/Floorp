@@ -107,15 +107,19 @@ def get_debugger_info(debugger, debuggerArgs = None, debuggerInteractive = False
 
         debuggerPath = find_executable(debugger)
 
-    # windbg is not installed with the standard set of tools, and it's
-    # entirely possible that the user hasn't added the install location to
-    # PATH, so we have to be a little more clever than normal to locate it.
-    # Just try to look for it in the standard installed location(s).
-    if not debuggerPath and debugger == 'windbg.exe':
-        for candidate in _windbg_installation_paths():
-            if os.path.exists(candidate):
-                debuggerPath = candidate
-                break
+    if not debuggerPath:
+        # windbg is not installed with the standard set of tools, and it's
+        # entirely possible that the user hasn't added the install location to
+        # PATH, so we have to be a little more clever than normal to locate it.
+        # Just try to look for it in the standard installed location(s).
+        if debugger == 'windbg.exe':
+            for candidate in _windbg_installation_paths():
+                if os.path.exists(candidate):
+                    debuggerPath = candidate
+                    break
+        else:
+            if os.path.exists(debugger):
+                debuggerPath = debugger
 
     if not debuggerPath:
         print 'Error: Could not find debugger %s.' % debugger

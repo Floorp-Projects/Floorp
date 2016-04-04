@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.home;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.CropImageView;
 
 import android.content.Context;
@@ -28,7 +28,7 @@ public class TopSitesThumbnailView extends CropImageView {
     private static final int COLOR_FILTER = 0x46FFFFFF;
 
     // Default filter color for "Add a bookmark" views.
-    private final int mDefaultColor = ColorUtils.getColor(getContext(), R.color.top_site_default);
+    private final int mDefaultColor = ContextCompat.getColor(getContext(), R.color.top_site_default);
 
     // Stroke width for the border.
     private final float mStrokeWidth = getResources().getDisplayMetrics().density * 2;
@@ -53,7 +53,7 @@ public class TopSitesThumbnailView extends CropImageView {
         // Initialize the border paint.
         final Resources res = getResources();
         mBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mBorderPaint.setColor(ColorUtils.getColor(context, R.color.top_site_border));
+        mBorderPaint.setColor(ContextCompat.getColor(context, R.color.top_site_border));
         mBorderPaint.setStyle(Paint.Style.STROKE);
     }
 

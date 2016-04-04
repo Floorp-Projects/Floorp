@@ -2274,7 +2274,7 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 nsresult
 nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->mFlags.mIsTrusted) {
+  if (aVisitor.mEvent->IsTrusted()) {
     switch (aVisitor.mEvent->mMessage) {
       case eFocus: {
         // Check to see if focus has bubbled up from a form control's
@@ -2426,7 +2426,7 @@ nsGenericHTMLFormElement::AddFormIdObserver()
   GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
   NS_ASSERTION(!formId.IsEmpty(),
                "@form value should not be the empty string!");
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(formId);
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(formId);
 
   return doc->AddIDTargetObserver(atom, FormIdUpdated, this, false);
 }
@@ -2455,7 +2455,7 @@ nsGenericHTMLFormElement::RemoveFormIdObserver()
   GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
   NS_ASSERTION(!formId.IsEmpty(),
                "@form value should not be the empty string!");
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(formId);
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(formId);
 
   doc->RemoveIDTargetObserver(atom, FormIdUpdated, this, false);
 }
@@ -2722,11 +2722,12 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
   }
 
   int32_t tabIndex = TabIndex();
+  bool disabled = false;
+  bool disallowOverridingFocusability = true;
 
-  bool override, disabled = false;
   if (IsEditableRoot()) {
     // Editable roots should always be focusable.
-    override = true;
+    disallowOverridingFocusability = true;
 
     // Ignore the disabled attribute in editable contentEditable/designMode
     // roots.
@@ -2737,7 +2738,7 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
     }
   }
   else {
-    override = false;
+    disallowOverridingFocusability = false;
 
     // Just check for disabled attribute on form controls
     disabled = IsDisabled();
@@ -2751,10 +2752,10 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
   }
 
   // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
-  *aIsFocusable = 
+  *aIsFocusable =
     (tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)));
 
-  return override;
+  return disallowOverridingFocusability;
 }
 
 void
@@ -2804,18 +2805,23 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
 
   if (aKeyCausesActivation) {
     // Click on it if the users prefs indicate to do so.
-    WidgetMouseEvent event(aIsTrustedEvent, eMouseClick, nullptr,
-                           WidgetMouseEvent::eReal);
-    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
-
-    EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                              presContext, &event);
+    DispatchSimulatedClick(this, aIsTrustedEvent, presContext);
   }
 
   return focused;
+}
+
+nsresult
+nsGenericHTMLElement::DispatchSimulatedClick(nsGenericHTMLElement* aElement,
+                                             bool aIsTrusted,
+                                             nsPresContext* aPresContext)
+{
+  WidgetMouseEvent event(aIsTrusted, eMouseClick, nullptr,
+                         WidgetMouseEvent::eReal);
+  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
+  return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
 }
 
 const nsAttrName*

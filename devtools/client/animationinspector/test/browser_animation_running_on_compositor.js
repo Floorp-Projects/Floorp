@@ -9,16 +9,18 @@ requestLongerTimeout(2);
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
 
   info("Select a test node we know has an animation running on the compositor");
-  yield selectNode(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   let animationEl = timeline.animationsEl.querySelector(".animation");
   ok(animationEl.classList.contains("fast-track"),
@@ -27,7 +29,7 @@ add_task(function*() {
      "The animation element has the right tooltip content");
 
   info("Select a node we know doesn't have an animation on the compositor");
-  yield selectNode(".no-compositor", inspector);
+  yield selectNodeAndWaitForAnimations(".no-compositor", inspector);
 
   animationEl = timeline.animationsEl.querySelector(".animation");
   ok(!animationEl.classList.contains("fast-track"),

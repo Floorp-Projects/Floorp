@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=657791
+-->
+<head>
+  <title>Test for Bug 657791</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=657791">Mozilla Bug 657791</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+// Subset of seek tests for cueless WebMs. When random seeking (rather than just
+// in buffered ranges) is implemented for WebM, these tests can be removed and
+// the cueless WebM(s) references can be moved to the general test_seek test
+// array.
+// Test array is defined in manifest.js
+
+var manager = new MediaTestManager;
+
+// Exercise functionality as in test_seek-1
+function testWebM1(e) {
+  var v = e.target;
+  v.removeEventListener('loadeddata', testWebM1);
+
+  var startPassed = false;
+  var endPassed = false;
+  var seekFlagStart = false;
+  var seekFlagEnd = false;
+  var readonly = true;
+  var completed = false;
+
+  ok(v.buffered.length >= 1, "Should have a buffered range");
+  var halfBuffered = v.buffered.end(0) / 2;
+
+  function startTest() {
+    is(v.seekable.start(0), v.buffered.start(0), "Seekable start should be buffered start");
+    is(v.seekable.end(0), v.buffered.end(0), "Seekable end should be buffered end");
+    ok(!completed, "Should not be completed yet");
+    ok(!v.seeking, "seeking should default to false");
+    try {
+      v.seeking = true;
+      readonly = v.seeking === false;
+    }
+    catch(e) {
+      readonly = "threw exception: " + e;
+    }
+    is(readonly, true, "seeking should be readonly");
+
+    v.currentTime = halfBuffered;
+    seekFlagStart = v.seeking;
+  }
+
+  function seekStarted() {
+    ok(!completed, "should not be completed yet");
+    startPassed = true;
+  }
+
+  function seekEnded() {
+    ok(!completed, "should not be completed yet");
+    ok(Math.abs(v.currentTime - halfBuffered) < 0.1,
+       "Video currentTime should be around " + halfBuffered + ": " + v.currentTime + " (seeked)");
+    endPassed = true;
+    seekFlagEnd = v.seeking;
+    v.play();
+  }
+
+  function playbackEnded() {
+    ok(!completed, "should not be completed yet");
+
+    completed = true;
+    ok(startPassed, "seeking event");
+    ok(endPassed, "seeked event");
+    ok(seekFlagStart, "seeking flag on start should be true");
+    ok(!seekFlagEnd, "seeking flag on end should be false");
+    removeNodeAndSource(v);
+    manager.finished(v._token);
+  }
+
+  once(v, "ended", playbackEnded);
+  once(v, "seeking", seekStarted);
+  once(v, "seeked", seekEnded);
+
+  startTest();
+}
+
+// Fetch the media resource using XHR so we can be sure the entire
+// resource is loaded before we test buffered ranges. This ensures
+// we have deterministic behaviour.
+function fetch(url, fetched_callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.responseType = "blob";
+
+  var loaded = function (event) {
+    if (xhr.status == 200 || xhr.status == 206) {
+      // Request fulfilled. Note sometimes we get 206... Presumably because either
+      // httpd.js or Necko cached the result.
+      fetched_callback(window.URL.createObjectURL(xhr.response));
+    } else {
+      ok(false, "Fetch failed headers=" + xhr.getAllResponseHeaders());
+    }
+  };
+
+  xhr.addEventListener("load", loaded, false);
+  xhr.send();
+}
+
+function startTest(test, token) {
+  var onfetched = function(uri) {
+    var v = document.createElement('video');
+    v._token = token;
+    v.src = uri;
+    v.addEventListener("loadeddata", testWebM1, false);
+    document.body.appendChild(v);
+  }
+  manager.started(token);
+  fetch(test.name, onfetched);
+}
+
+SimpleTest.waitForExplicitFinish();
+manager.runTests(gCuelessWebMTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

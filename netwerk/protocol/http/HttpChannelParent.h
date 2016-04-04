@@ -82,6 +82,8 @@ public:
   // ADivertableParentChannel functions.
   void DivertTo(nsIStreamListener *aListener) override;
   nsresult SuspendForDiversion() override;
+  nsresult SuspendMessageDiversion() override;
+  nsresult ResumeMessageDiversion() override;
 
   // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
   // that it should divert OnDataAvailable and OnStopRequest calls to this
@@ -139,7 +141,8 @@ protected:
                    const uint32_t&            aInitialRwin,
                    const bool&                aBlockAuthPrompt,
                    const bool&                aSuspendAfterSynthesizeResponse,
-                   const bool&                aAllowStaleCacheContent);
+                   const bool&                aAllowStaleCacheContent,
+                   const nsCString&           aContentTypeHint);
 
   virtual bool RecvSetPriority(const uint16_t& priority) override;
   virtual bool RecvSetClassOfService(const uint32_t& cos) override;

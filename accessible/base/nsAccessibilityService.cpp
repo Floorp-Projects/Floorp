@@ -142,7 +142,7 @@ New_HTMLLink(nsIContent* aContent, Accessible* aContext)
 {
   // Only some roles truly enjoy life as HTMLLinkAccessibles, for details
   // see closed bug 494807.
-  nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aContent->AsElement());
+  const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aContent->AsElement());
   if (roleMapEntry && roleMapEntry->role != roles::NOTHING &&
       roleMapEntry->role != roles::LINK) {
     return new HyperTextAccessibleWrap(aContent, aContext->Document());
@@ -1132,7 +1132,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     return newAcc;
   }
 
-  nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(content->AsElement());
+  const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(content->AsElement());
 
   // If the element is focusable or global ARIA attribute is applied to it or
   // it is referenced by ARIA relationship then treat role="presentation" on
@@ -1184,7 +1184,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     // expose their native roles.
     if (!roleMapEntry && newAcc && aContext->HasStrongARIARole()) {
       if (frame->AccessibleType() == eHTMLTableRowType) {
-        nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
+        const nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
         if (!contextRoleMap->IsOfType(eTable))
           roleMapEntry = &aria::gEmptyRoleMap;
 
@@ -1196,7 +1196,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
                                               nsGkAtoms::li,
                                               nsGkAtoms::dd) ||
                  frame->AccessibleType() == eHTMLLiType) {
-        nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
+        const nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
         if (!contextRoleMap->IsOfType(eList))
           roleMapEntry = &aria::gEmptyRoleMap;
       }
@@ -1327,12 +1327,15 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
+  gAccessibilityService = this;
+
   if (XRE_IsParentProcess())
     gApplicationAccessible = new ApplicationAccessibleWrap();
   else
     gApplicationAccessible = new ApplicationAccessible();
 
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()
+  gApplicationAccessible->Init();
 
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::
@@ -1828,9 +1831,7 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 
   statistics::A11yInitialized();
 
-  nsAccessibilityService::gAccessibilityService = service;
   NS_ADDREF(*aResult = service);
-
   return NS_OK;
 }
 

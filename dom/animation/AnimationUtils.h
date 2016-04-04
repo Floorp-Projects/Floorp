@@ -12,20 +12,18 @@
 #include "nsStringFwd.h"
 
 class nsIContent;
+class nsIDocument;
+struct JSContext;
 
 namespace mozilla {
 
 class ComputedTimingFunction;
 
-namespace dom {
-class Element;
-}
-
 class AnimationUtils
 {
 public:
   static dom::Nullable<double>
-    TimeDurationToDouble(const dom::Nullable<TimeDuration>& aTime)
+  TimeDurationToDouble(const dom::Nullable<TimeDuration>& aTime)
   {
     dom::Nullable<double> result;
 
@@ -37,7 +35,7 @@ public:
   }
 
   static dom::Nullable<TimeDuration>
-    DoubleToTimeDuration(const dom::Nullable<double>& aTime)
+  DoubleToTimeDuration(const dom::Nullable<double>& aTime)
   {
     dom::Nullable<TimeDuration> result;
 
@@ -57,7 +55,13 @@ public:
    * be returned.
    */
   static Maybe<ComputedTimingFunction>
-    ParseEasing(const dom::Element* aTarget, const nsAString& aEasing);
+  ParseEasing(const nsAString& aEasing, nsIDocument* aDocument);
+
+  /**
+   * Get the document from the JS context to use when parsing CSS properties.
+   */
+  static nsIDocument*
+  GetCurrentRealmDocument(JSContext* aCx);
 };
 
 } // namespace mozilla

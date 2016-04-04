@@ -1092,6 +1092,8 @@ MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2,
 {
     MOZ_ASSERT((rt.code() & 1) == 0);
     MOZ_ASSERT(rt2.value.code() == rt.code() + 1);
+    MOZ_ASSERT(addr.maybeOffsetRegister() != rt); // Undefined behavior if rm == rt/rt2.
+    MOZ_ASSERT(addr.maybeOffsetRegister() != rt2);
     as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
 
@@ -2363,19 +2365,6 @@ MacroAssemblerARMCompat::cmp32(Register lhs, Imm32 rhs)
 }
 
 void
-MacroAssemblerARMCompat::cmp32(const Operand& lhs, Register rhs)
-{
-    ma_cmp(lhs.toReg(), rhs);
-}
-
-void
-MacroAssemblerARMCompat::cmp32(const Operand& lhs, Imm32 rhs)
-{
-    MOZ_ASSERT(lhs.toReg() != ScratchRegister);
-    ma_cmp(lhs.toReg(), rhs);
-}
-
-void
 MacroAssemblerARMCompat::cmp32(Register lhs, Register rhs)
 {
     ma_cmp(lhs, rhs);
@@ -3170,7 +3159,15 @@ MacroAssemblerARMCompat::loadValue(const BaseIndex& addr, ValueOperand val)
         Register tmpIdx;
         if (addr.offset == 0) {
             if (addr.scale == TimesOne) {
-                tmpIdx = addr.index;
+                // If the offset register is the same as one of the destination
+                // registers, LDRD's behavior is undefined. Use the scratch
+                // register to avoid this.
+                if (val.aliases(addr.index)) {
+                    ma_mov(addr.index, scratch);
+                    tmpIdx = scratch;
+                } else {
+                    tmpIdx = addr.index;
+                }
             } else {
                 ma_lsl(Imm32(addr.scale), addr.index, scratch);
                 tmpIdx = scratch;
@@ -4853,6 +4850,12 @@ MacroAssembler::pushReturnAddress()
     push(lr);
 }
 
+void
+MacroAssembler::popReturnAddress()
+{
+    pop(lr);
+}
+
 // ===============================================================
 // ABI function calls.
 
@@ -5014,6 +5017,21 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
     as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
     branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
              scratch2, Imm32(nursery.numChunks()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, address, cond == Assembler::Equal ? &done : label);
+    loadPtr(address, temp);
+    branchPtrInNurseryRange(cond, temp, InvalidReg, label);
+
+    bind(&done);
 }
 
 void

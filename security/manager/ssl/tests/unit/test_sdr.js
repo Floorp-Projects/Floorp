@@ -29,11 +29,7 @@ function run_test() {
   // In particular, failing to do so will cause the Encrypt() implementation to
   // pop up a dialog asking for a password to be set. This won't work in the
   // xpcshell environment and will lead to an assertion.
-  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                  .getService(Ci.nsIPK11TokenDB);
-  let token = tokenDB.getInternalKeyToken();
-  token.initPassword("");
-  token.login(/*force*/ false);
+  loginToDBWithDefaultPassword();
 
   let sdr = Cc["@mozilla.org/security/sdr;1"]
               .getService(Ci.nsISecretDecoderRing);

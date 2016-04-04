@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for considering form action</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: Bug 360493
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  <!-- The tests in this page exercise things that shouldn't work. -->
+
+  <!-- Change port # of action URL from 8888 to 7777 -->
+  <form id="form1" action="http://localhost:7777/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- No port # in action URL -->
+  <form id="form2" action="http://localhost/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Change protocol from http:// to ftp://, include the expected 8888 port # -->
+  <form id="form3" action="ftp://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Change protocol from http:// to ftp://, no port # specified -->
+  <form id="form4" action="ftp://localhost/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Try a weird URL. -->
+  <form id="form5" action="about:blank">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Try a weird URL. (If the normal embedded action URL doesn't work, that should mean other URLs won't either) -->
+  <form id="form6" action="view-source:http://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Try a weird URL. -->
+  <form id="form7" action="view-source:formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Action URL points to a different host (this is the archetypical exploit) -->
+  <form id="form8" action="http://www.cnn.com/">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Action URL points to a different host, user field prefilled -->
+  <form id="form9" action="http://www.cnn.com/">
+    <input  type="text"       name="uname" value="testuser">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Try wrapping a evil form around a good form, to see if we can confuse the parser. -->
+  <form id="form10-A" action="http://www.cnn.com/">
+   <form id="form10-B" action="formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit (inner)</button>
+    <button type="reset"> Reset  (inner)</button>
+   </form>
+   <button type="submit" id="neutered_submit10">Submit (outer)</button>
+   <button type="reset">Reset (outer)</button>
+  </form>
+
+  <!-- Try wrapping a good form around an evil form, to see if we can confuse the parser. -->
+  <form id="form11-A" action="formtest.js">
+   <form id="form11-B" action="http://www.cnn.com/">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit (inner)</button>
+    <button type="reset"> Reset  (inner)</button>
+   </form>
+   <button type="submit" id="neutered_submit11">Submit (outer)</button>
+   <button type="reset">Reset (outer)</button>
+  </form>
+
+<!-- TODO: probably should have some accounts which have no port # in the action url. JS too. And different host/proto. -->
+<!-- TODO: www.site.com vs. site.com? -->
+<!-- TODO: foo.site.com vs. bar.site.com? -->
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: 360493 (Cross-Site Forms + Password Manager = Security Failure) **/
+
+function startTest() {
+  for (var i = 1; i <= 8; i++) {
+    // Check form i
+    is($_(i, "uname").value, "", "Checking for unfilled username " + i);
+    is($_(i, "pword").value, "", "Checking for unfilled password " + i);
+  }
+
+  is($_(9, "uname").value, "testuser", "Checking for unmodified username 9");
+  is($_(9, "pword").value, "",         "Checking for unfilled password 9");
+
+  is($_("10-A", "uname").value, "", "Checking for unfilled username 10A");
+  is($_("10-A", "pword").value, "", "Checking for unfilled password 10A");
+  //is($_("10-B", "uname").value, "", "Checking for unfilled username 10B");
+  //is($_("10-B", "pword").value, "", "Checking for unfilled password 10B");
+
+  // The DOM indicates this form could be filled, as the evil inner form
+  // is discarded. And yet pwmgr seems not to fill it. Not sure why.
+  todo(false, "Mangled form combo not being filled when maybe it could be?");
+  is($_("11-A", "uname").value, "testuser", "Checking filled username 11A");
+  is($_("11-A", "pword").value, "testpass", "Checking filled password 11A");
+  //is($_("11-B", "uname").value, "", "Checking for unfilled username 11B");
+  //is($_("11-B", "pword").value, "", "Checking for unfilled password 11B");
+
+  // Verify this by making sure there are no extra forms in the document, and
+  // that the submit button for the neutered forms don't do anything.
+  // If the test finds extra forms the submit() causes the test to timeout, then
+  // there may be a security issue.
+  is(document.forms.length,  11,  "Checking for unexpected forms");
+  $("neutered_submit10").click();
+  $("neutered_submit11").click();
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+

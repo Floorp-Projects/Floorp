@@ -34,12 +34,11 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.AnimatorSet;
-import com.nineoldandroids.animation.ObjectAnimator;
-import com.nineoldandroids.animation.PropertyValuesHolder;
-import com.nineoldandroids.animation.ValueAnimator;
-import com.nineoldandroids.view.ViewHelper;
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -190,7 +189,7 @@ class TabsGridLayout extends GridView
         lastSelectedTabId = Tabs.getInstance().getSelectedTab().getId();
         setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(this);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel", ""));
+        GeckoAppShell.notifyObservers("Tab:Screenshot:Cancel", "");
         tabsAdapter.clear();
     }
 
@@ -316,9 +315,9 @@ class TabsGridLayout extends GridView
     }
 
     private void resetTransforms(View view) {
-        ViewHelper.setAlpha(view, 1);
-        ViewHelper.setTranslationX(view, 0);
-        ViewHelper.setTranslationY(view, 0);
+        view.setAlpha(1);
+        view.setTranslationX(0);
+        view.setTranslationY(0);
 
         ((TabsLayoutItemView) view).setCloseVisible(true);
     }
@@ -591,7 +590,7 @@ class TabsGridLayout extends GridView
 
                     boolean dismiss = false;
 
-                    float deltaX = ViewHelper.getTranslationX(mSwipeView);
+                    float deltaX = mSwipeView.getTranslationX();
 
                     if (Math.abs(deltaX) > mTabWidth / 2) {
                         dismiss = true;
@@ -645,10 +644,9 @@ class TabsGridLayout extends GridView
                     }
 
                     if (mSwiping) {
-                        ViewHelper.setTranslationX(mSwipeView, delta);
+                        mSwipeView.setTranslationX(delta);
 
-                        ViewHelper.setAlpha(mSwipeView, Math.min(1f,
-                                1f - 2f * Math.abs(delta) / mTabWidth));
+                        mSwipeView.setAlpha(Math.min(1f, 1f - 2f * Math.abs(delta) / mTabWidth));
 
                         return true;
                     }

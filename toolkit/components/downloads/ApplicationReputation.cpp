@@ -78,7 +78,7 @@ using safe_browsing::ClientDownloadRequest_SignatureInfo;
 #define PREF_BLOCK_UNCOMMON             "browser.safebrowsing.downloads.remote.block_uncommon"
 
 // NSPR_LOG_MODULES=ApplicationReputation:5
-PRLogModuleInfo *ApplicationReputationService::prlog = nullptr;
+mozilla::LazyLogModule ApplicationReputationService::prlog("ApplicationReputation");
 #define LOG(args) MOZ_LOG(ApplicationReputationService::prlog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(ApplicationReputationService::prlog, mozilla::LogLevel::Debug)
 
@@ -165,14 +165,16 @@ private:
 
   // Clean up and call the callback. PendingLookup must not be used after this
   // function is called.
-  nsresult OnComplete(bool shouldBlock, nsresult rv);
+  nsresult OnComplete(bool shouldBlock, nsresult rv,
+    uint32_t verdict = nsIApplicationReputationService::VERDICT_SAFE);
 
   // Wrapper function for nsIStreamListener.onStopRequest to make it easy to
   // guarantee calling the callback
   nsresult OnStopRequestInternal(nsIRequest *aRequest,
                                  nsISupports *aContext,
                                  nsresult aResult,
-                                 bool* aShouldBlock);
+                                 bool* aShouldBlock,
+                                 uint32_t* aVerdict);
 
   // Strip url parameters, fragments, and user@pass fields from the URI spec
   // using nsIURL. If aURI is not an nsIURL, returns the original nsIURI.spec.
@@ -344,7 +346,8 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
     mPendingLookup->mBlocklistCount++;
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
     LOG(("Found principal %s on blocklist [this = %p]", mSpec.get(), this));
-    return mPendingLookup->OnComplete(true, NS_OK);
+    return mPendingLookup->OnComplete(true, NS_OK,
+      nsIApplicationReputationService::VERDICT_DANGEROUS);
   }
 
   nsAutoCString allowList;
@@ -447,7 +450,8 @@ PendingLookup::LookupNext()
   // Look up all of the URLs that could allow or block this download.
   // Blocklist first.
   if (mBlocklistCount > 0) {
-    return OnComplete(true, NS_OK);
+    return OnComplete(true, NS_OK,
+                      nsIApplicationReputationService::VERDICT_DANGEROUS);
   }
   int index = mAnylistSpecs.Length() - 1;
   nsCString spec;
@@ -460,7 +464,8 @@ PendingLookup::LookupNext()
   }
   // If any of mAnylistSpecs matched the blocklist, go ahead and block.
   if (mBlocklistCount > 0) {
-    return OnComplete(true, NS_OK);
+    return OnComplete(true, NS_OK,
+                      nsIApplicationReputationService::VERDICT_DANGEROUS);
   }
   // If any of mAnylistSpecs matched the allowlist, go ahead and pass.
   if (mAllowlistCount > 0) {
@@ -759,8 +764,11 @@ PendingLookup::DoLookupInternal()
 }
 
 nsresult
-PendingLookup::OnComplete(bool shouldBlock, nsresult rv)
+PendingLookup::OnComplete(bool shouldBlock, nsresult rv, uint32_t verdict)
 {
+  MOZ_ASSERT(!shouldBlock ||
+             verdict != nsIApplicationReputationService::VERDICT_SAFE);
+
   if (NS_FAILED(rv)) {
     nsAutoCString errorName;
     mozilla::GetErrorName(rv, errorName);
@@ -776,13 +784,15 @@ PendingLookup::OnComplete(bool shouldBlock, nsresult rv)
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
     shouldBlock);
   double t = (TimeStamp::Now() - mStartTime).ToMilliseconds();
+  LOG(("Application Reputation verdict is %lu, obtained in %f ms [this = %p]",
+       verdict, t, this));
   if (shouldBlock) {
-    LOG(("Application Reputation check failed, blocking bad binary in %f ms "
-         "[this = %p]", t, this));
+    LOG(("Application Reputation check failed, blocking bad binary [this = %p]",
+        this));
   } else {
-    LOG(("Application Reputation check passed in %f ms [this = %p]", t, this));
+    LOG(("Application Reputation check passed [this = %p]", this));
   }
-  nsresult res = mCallback->OnComplete(shouldBlock, rv);
+  nsresult res = mCallback->OnComplete(shouldBlock, rv, verdict);
   return res;
 }
 
@@ -1055,9 +1065,10 @@ PendingLookup::OnStopRequest(nsIRequest *aRequest,
   NS_ENSURE_STATE(mCallback);
 
   bool shouldBlock = false;
+  uint32_t verdict = nsIApplicationReputationService::VERDICT_SAFE;
   nsresult rv = OnStopRequestInternal(aRequest, aContext, aResult,
-                                      &shouldBlock);
-  OnComplete(shouldBlock, rv);
+                                      &shouldBlock, &verdict);
+  OnComplete(shouldBlock, rv, verdict);
   return rv;
 }
 
@@ -1065,7 +1076,8 @@ nsresult
 PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
                                      nsISupports *aContext,
                                      nsresult aResult,
-                                     bool* aShouldBlock) {
+                                     bool* aShouldBlock,
+                                     uint32_t* aVerdict) {
   if (NS_FAILED(aResult)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
       SERVER_RESPONSE_FAILED);
@@ -1073,6 +1085,7 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   }
 
   *aShouldBlock = false;
+  *aVerdict = nsIApplicationReputationService::VERDICT_SAFE;
   nsresult rv;
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
   if (NS_FAILED(rv)) {
@@ -1112,15 +1125,19 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   switch(response.verdict()) {
     case safe_browsing::ClientDownloadResponse::DANGEROUS:
       *aShouldBlock = Preferences::GetBool(PREF_BLOCK_DANGEROUS, true);
+      *aVerdict = nsIApplicationReputationService::VERDICT_DANGEROUS;
       break;
     case safe_browsing::ClientDownloadResponse::DANGEROUS_HOST:
       *aShouldBlock = Preferences::GetBool(PREF_BLOCK_DANGEROUS_HOST, true);
+      *aVerdict = nsIApplicationReputationService::VERDICT_DANGEROUS_HOST;
       break;
     case safe_browsing::ClientDownloadResponse::POTENTIALLY_UNWANTED:
       *aShouldBlock = Preferences::GetBool(PREF_BLOCK_POTENTIALLY_UNWANTED, false);
+      *aVerdict = nsIApplicationReputationService::VERDICT_POTENTIALLY_UNWANTED;
       break;
     case safe_browsing::ClientDownloadResponse::UNCOMMON:
       *aShouldBlock = Preferences::GetBool(PREF_BLOCK_UNCOMMON, false);
+      *aVerdict = nsIApplicationReputationService::VERDICT_UNCOMMON;
       break;
     default:
       // Treat everything else as safe
@@ -1155,9 +1172,6 @@ ApplicationReputationService::GetSingleton()
 
 ApplicationReputationService::ApplicationReputationService()
 {
-  if (!prlog) {
-    prlog = PR_NewLogModule("ApplicationReputation");
-  }
   LOG(("Application reputation service started up"));
 }
 
@@ -1178,7 +1192,8 @@ ApplicationReputationService::QueryReputation(
   if (NS_FAILED(rv)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
       false);
-    aCallback->OnComplete(false, rv);
+    aCallback->OnComplete(false, rv,
+                          nsIApplicationReputationService::VERDICT_SAFE);
   }
   return NS_OK;
 }

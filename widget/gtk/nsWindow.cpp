@@ -9,6 +9,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
@@ -43,12 +44,6 @@
 #include <X11/extensions/shape.h>
 #if (MOZ_WIDGET_GTK == 3)
 #include <gdk/gdkkeysyms-compat.h>
-#endif
-
-#ifdef AIX
-#include <X11/keysym.h>
-#else
-#include <X11/XF86keysym.h>
 #endif
 
 #if (MOZ_WIDGET_GTK == 2)
@@ -115,7 +110,7 @@ using namespace mozilla::widget;
 #include "Layers.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
@@ -752,7 +747,7 @@ nsWindow::Destroy(void)
     if (gPluginFocusWindow == this) {
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
-#endif /* MOZ_X11 && MOZ_WIDGET_GTK2 */
+#endif /* MOZ_X11 && MOZ_WIDGET_GTK == 2 && defined(MOZ_X11) */
 
     GtkWidget *owningWidget = GetMozContainerWidget();
     if (mShell) {
@@ -1740,15 +1735,18 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
     case NS_NATIVE_PLUGIN_OBJECT_PTR:
         return (void *) mPluginNativeWindow;
-    case NS_RAW_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT: {
+        void* pseudoIMEContext = GetPseudoIMEContext();
+        if (pseudoIMEContext) {
+            return pseudoIMEContext;
+        }
         // If IME context isn't available on this widget, we should set |this|
-        // instead of nullptr since if we return nullptr, IMEStateManager
-        // cannot manage composition with TextComposition instance.  Although,
-        // this case shouldn't occur.
-        if (NS_WARN_IF(!mIMContext)) {
+        // instead of nullptr.
+        if (!mIMContext) {
             return this;
         }
         return mIMContext.get();
+    }
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nullptr;
@@ -2145,7 +2143,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         ? static_cast<ClientLayerManager*>(GetLayerManager())
         : nullptr;
 
-    if (clientLayers && mCompositorParent) {
+    if (clientLayers && mCompositorBridgeParent) {
         // We need to paint to the screen even if nothing changed, since if we
         // don't have a compositing window manager, our pixels could be stale.
         clientLayers->SetNeedsComposite(true);
@@ -2170,8 +2168,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             return FALSE;
     }
 
-    if (clientLayers && mCompositorParent && clientLayers->NeedsComposite()) {
-        mCompositorParent->ScheduleRenderOnCompositorThread();
+    if (clientLayers && mCompositorBridgeParent && clientLayers->NeedsComposite()) {
+        mCompositorBridgeParent->ScheduleRenderOnCompositorThread();
         clientLayers->SetNeedsComposite(false);
     }
 
@@ -2504,8 +2502,7 @@ nsWindow::OnEnterNotifyEvent(GdkEventCrossing *aEvent)
                            WidgetMouseEvent::eReal);
 
     event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-    event.time = aEvent->time;
-    event.timeStamp = GetEventTimeStamp(aEvent->time);
+    event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
     LOG(("OnEnterNotify: %p\n", (void *)this));
 
@@ -2545,8 +2542,7 @@ nsWindow::OnLeaveNotifyEvent(GdkEventCrossing *aEvent)
                            WidgetMouseEvent::eReal);
 
     event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-    event.time = aEvent->time;
-    event.timeStamp = GetEventTimeStamp(aEvent->time);
+    event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
     event.exit = is_top_level_mouse_exit(mGdkWindow, aEvent)
         ? WidgetMouseEvent::eTopLevel : WidgetMouseEvent::eChild;
@@ -2598,7 +2594,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
             RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
             gPluginFocusWindow->LoseNonXEmbedPluginFocus();
         }
-#endif /* MOZ_WIDGET_GTK2 */
+#endif /* MOZ_WIDGET_GTK == 2 */
     }
 #endif /* MOZ_X11 */
 
@@ -2620,23 +2616,20 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
 
         modifierState = xevent.xmotion.state;
 
-        event.time = xevent.xmotion.time;
-        event.timeStamp = GetEventTimeStamp(xevent.xmotion.time);
+        event.AssignEventTime(GetWidgetEventTime(xevent.xmotion.time));
 #else
         event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
 
         modifierState = aEvent->state;
 
-        event.time = aEvent->time;
-        event.timeStamp = GetEventTimeStamp(aEvent->time);
+        event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 #endif /* MOZ_X11 */
     } else {
         event.refPoint = GetRefPoint(this, aEvent);
 
         modifierState = aEvent->state;
 
-        event.time = aEvent->time;
-        event.timeStamp = GetEventTimeStamp(aEvent->time);
+        event.AssignEventTime(GetWidgetEventTime(aEvent->time));
     }
 
     KeymapWrapper::InitInputEvent(event, modifierState);
@@ -2691,7 +2684,7 @@ nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
             WidgetMouseEvent synthEvent(true, eMouseUp, this,
                                         WidgetMouseEvent::eSynthesized);
             synthEvent.button = buttonType;
-            DispatchAPZAwareEvent(&synthEvent);
+            DispatchInputEvent(&synthEvent);
         }
     }
 }
@@ -2726,8 +2719,7 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
 
     KeymapWrapper::InitInputEvent(aEvent, modifierState);
 
-    aEvent.time = aGdkEvent->time;
-    aEvent.timeStamp = GetEventTimeStamp(aGdkEvent->time);
+    aEvent.AssignEventTime(GetWidgetEventTime(aGdkEvent->time));
 
     switch (aGdkEvent->type) {
     case GDK_2BUTTON_PRESS:
@@ -2813,7 +2805,7 @@ nsWindow::OnButtonPressEvent(GdkEventButton *aEvent)
     InitButtonEvent(event, aEvent);
     event.pressure = mLastMotionPressure;
 
-    DispatchAPZAwareEvent(&event);
+    DispatchInputEvent(&event);
 
     // right menu click on linux should also pop up a context menu
     if (domButton == WidgetMouseEvent::eRightButton &&
@@ -2856,7 +2848,7 @@ nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
     gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
     event.pressure = pressure ? pressure : mLastMotionPressure;
 
-    DispatchAPZAwareEvent(&event);
+    DispatchInputEvent(&event);
     mLastMotionPressure = pressure;
 }
 
@@ -2926,7 +2918,7 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
         RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
-#endif /* MOZ_X11 && MOZ_WIDGET_GTK2 */
+#endif /* MOZ_X11 && MOZ_WIDGET_GTK == 2 */
 
     if (gFocusWindow) {
         RefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
@@ -2978,12 +2970,26 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
         return false;
     }
 
-    // send the key down event
-    WidgetKeyboardEvent downEvent(true, eKeyDown, this);
-    KeymapWrapper::InitKeyEvent(downEvent, aEvent);
-    nsEventStatus status = DispatchInputEvent(&downEvent);
+    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+    nsresult rv = dispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return FALSE;
+    }
+
+    WidgetKeyboardEvent keydownEvent(true, eKeyDown, this);
+    KeymapWrapper::InitKeyEvent(keydownEvent, aEvent);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    bool dispatched =
+        dispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent,
+                                          status, aEvent);
     *aCancelled = (status == nsEventStatus_eConsumeNoDefault);
-    return true;
+    return dispatched ? TRUE : FALSE;
+}
+
+WidgetEventTime
+nsWindow::GetWidgetEventTime(guint32 aEventTime)
+{
+  return WidgetEventTime(aEventTime, GetEventTimeStamp(aEventTime));
 }
 
 TimeStamp
@@ -3022,6 +3028,9 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 
     // if we are in the middle of composing text, XIM gets to see it
     // before mozilla does.
+    // FYI: Don't dispatch keydown event before notifying IME of the event
+    //      because IME may send a key event synchronously and consume the
+    //      original event.
     bool IMEWasEnabled = false;
     if (mIMContext) {
         IMEWasEnabled = mIMContext->IsEnabled();
@@ -3029,8 +3038,6 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             return TRUE;
         }
     }
-
-    nsEventStatus status;
 
     // work around for annoying things.
     if (IsCtrlAltTab(aEvent)) {
@@ -3062,39 +3069,29 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         }
     }
 
-    // Don't pass modifiers as eKeyPress events.
-    // TODO: Instead of selectively excluding some keys from eKeyPress events,
-    //       we should instead selectively include (as per MSDN spec; no official
-    //       spec covers KeyPress events).
-    if (!KeymapWrapper::IsKeyPressEventNecessary(aEvent)) {
-        return TRUE;
-    }
-
-#ifdef MOZ_X11
-#if ! defined AIX // no XFree86 on AIX 5L
     // Look for specialized app-command keys
     switch (aEvent->keyval) {
-        case XF86XK_Back:
+        case GDK_Back:
             return DispatchCommandEvent(nsGkAtoms::Back);
-        case XF86XK_Forward:
+        case GDK_Forward:
             return DispatchCommandEvent(nsGkAtoms::Forward);
-        case XF86XK_Refresh:
+        case GDK_Refresh:
             return DispatchCommandEvent(nsGkAtoms::Reload);
-        case XF86XK_Stop:
+        case GDK_Stop:
             return DispatchCommandEvent(nsGkAtoms::Stop);
-        case XF86XK_Search:
+        case GDK_Search:
             return DispatchCommandEvent(nsGkAtoms::Search);
-        case XF86XK_Favorites:
+        case GDK_Favorites:
             return DispatchCommandEvent(nsGkAtoms::Bookmarks);
-        case XF86XK_HomePage:
+        case GDK_HomePage:
             return DispatchCommandEvent(nsGkAtoms::Home);
-        case XF86XK_Copy:
+        case GDK_Copy:
         case GDK_F16:  // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
             return DispatchContentCommandEvent(eContentCommandCopy);
-        case XF86XK_Cut:
+        case GDK_Cut:
         case GDK_F20:
             return DispatchContentCommandEvent(eContentCommandCut);
-        case XF86XK_Paste:
+        case GDK_Paste:
         case GDK_F18:
             return DispatchContentCommandEvent(eContentCommandPaste);
         case GDK_Redo:
@@ -3103,44 +3100,43 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         case GDK_F14:
             return DispatchContentCommandEvent(eContentCommandUndo);
     }
-#endif /* ! AIX */
-#endif /* MOZ_X11 */
 
-    WidgetKeyboardEvent event(true, eKeyPress, this);
-    KeymapWrapper::InitKeyEvent(event, aEvent);
+    WidgetKeyboardEvent keypressEvent(true, eKeyPress, this);
+    KeymapWrapper::InitKeyEvent(keypressEvent, aEvent);
 
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
-    if (is_context_menu_key(event)) {
+    if (is_context_menu_key(keypressEvent)) {
         WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
                                           WidgetMouseEvent::eReal,
                                           WidgetMouseEvent::eContextMenuKey);
 
         contextMenuEvent.refPoint = LayoutDeviceIntPoint(0, 0);
-        contextMenuEvent.time = aEvent->time;
-        contextMenuEvent.timeStamp = GetEventTimeStamp(aEvent->time);
+        contextMenuEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
         contextMenuEvent.clickCount = 1;
         KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
-        status = DispatchInputEvent(&contextMenuEvent);
-    }
-    else {
+        DispatchInputEvent(&contextMenuEvent);
+    } else {
+        RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+        nsresult rv = dispatcher->BeginNativeInputTransaction();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return TRUE;
+        }
+
         // If the character code is in the BMP, send the key press event.
         // Otherwise, send a compositionchange event with the equivalent UTF-16
         // string.
-        if (IS_IN_BMP(event.charCode)) {
-            status = DispatchInputEvent(&event);
-        }
-        else {
-            WidgetCompositionEvent compositionChangeEvent(
-                                     true, eCompositionChange, this);
-            char16_t textString[3];
-            textString[0] = H_SURROGATE(event.charCode);
-            textString[1] = L_SURROGATE(event.charCode);
-            textString[2] = 0;
-            compositionChangeEvent.mData = textString;
-            compositionChangeEvent.time = event.time;
-            compositionChangeEvent.timeStamp = GetEventTimeStamp(aEvent->time);
-            DispatchEvent(&compositionChangeEvent, status);
+        // TODO: Investigate other browser's behavior in this case because
+        //       this hack is odd for UI Events.
+        nsEventStatus status = nsEventStatus_eIgnore;
+        if (keypressEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
+            keypressEvent.mKeyValue.Length() == 1) {
+            dispatcher->MaybeDispatchKeypressEvents(keypressEvent,
+                                                    status, aEvent);
+        } else {
+            WidgetEventTime eventTime = GetWidgetEventTime(aEvent->time);
+            dispatcher->CommitComposition(status, &keypressEvent.mKeyValue,
+                                          &eventTime);
         }
     }
 
@@ -3156,11 +3152,16 @@ nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
         return TRUE;
     }
 
-    // send the key event as a key up event
-    WidgetKeyboardEvent event(true, eKeyUp, this);
-    KeymapWrapper::InitKeyEvent(event, aEvent);
+    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+    nsresult rv = dispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+    }
 
-    (void)DispatchInputEvent(&event);
+    WidgetKeyboardEvent keyupEvent(true, eKeyUp, this);
+    KeymapWrapper::InitKeyEvent(keyupEvent, aEvent);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    dispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status, aEvent);
 
     return TRUE;
 }
@@ -3178,7 +3179,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         return; 
 #endif
     WidgetWheelEvent wheelEvent(true, eWheel, this);
-    wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+    wheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
     switch (aEvent->direction) {
 #if GTK_CHECK_VERSION(3,4,0)
     case GDK_SCROLL_SMOOTH:
@@ -3188,8 +3189,8 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         mLastScrollEventTime = aEvent->time;
         // TODO - use a more appropriate scrolling unit than lines.
         // Multiply event deltas by 3 to emulate legacy behaviour.
-        wheelEvent.deltaX = aEvent->delta_x * 3;
-        wheelEvent.deltaY = aEvent->delta_y * 3;
+        wheelEvent.mDeltaX = aEvent->delta_x * 3;
+        wheelEvent.mDeltaY = aEvent->delta_y * 3;
         wheelEvent.mIsNoLineOrPageDelta = true;
         // This next step manually unsets smooth scrolling for touch devices 
         // that trigger GDK_SCROLL_SMOOTH. We use the slave device, which 
@@ -3198,22 +3199,22 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         GdkInputSource source = gdk_device_get_source(device);
         if (source == GDK_SOURCE_TOUCHSCREEN ||
             source == GDK_SOURCE_TOUCHPAD) {
-            wheelEvent.scrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
+            wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
         }
         break;
     }
 #endif
     case GDK_SCROLL_UP:
-        wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = -3;
+        wheelEvent.mDeltaY = wheelEvent.mLineOrPageDeltaY = -3;
         break;
     case GDK_SCROLL_DOWN:
-        wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = 3;
+        wheelEvent.mDeltaY = wheelEvent.mLineOrPageDeltaY = 3;
         break;
     case GDK_SCROLL_LEFT:
-        wheelEvent.deltaX = wheelEvent.lineOrPageDeltaX = -1;
+        wheelEvent.mDeltaX = wheelEvent.mLineOrPageDeltaX = -1;
         break;
     case GDK_SCROLL_RIGHT:
-        wheelEvent.deltaX = wheelEvent.lineOrPageDeltaX = 1;
+        wheelEvent.mDeltaX = wheelEvent.mLineOrPageDeltaX = 1;
         break;
     }
 
@@ -3221,10 +3222,9 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
 
     KeymapWrapper::InitInputEvent(wheelEvent, aEvent->state);
 
-    wheelEvent.time = aEvent->time;
-    wheelEvent.timeStamp = GetEventTimeStamp(aEvent->time);
+    wheelEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
-    DispatchAPZAwareEvent(&wheelEvent);
+    DispatchInputEvent(&wheelEvent);
 }
 
 void
@@ -3377,8 +3377,7 @@ nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefP
     }
 
     event.refPoint = aRefPoint;
-    event.time = aTime;
-    event.timeStamp = GetEventTimeStamp(aTime);
+    event.AssignEventTime(GetWidgetEventTime(aTime));
 
     DispatchInputEvent(&event);
 }
@@ -3441,20 +3440,20 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
 
     WidgetTouchEvent event(true, msg, this);
     KeymapWrapper::InitInputEvent(event, aEvent->state);
-    event.time = aEvent->time;
+    event.mTime = aEvent->time;
 
     if (aEvent->type == GDK_TOUCH_BEGIN || aEvent->type == GDK_TOUCH_UPDATE) {
         mTouches.Put(aEvent->sequence, touch.forget());
         // add all touch points to event object
         for (auto iter = mTouches.Iter(); !iter.Done(); iter.Next()) {
-            event.touches.AppendElement(new dom::Touch(*iter.UserData()));
+            event.mTouches.AppendElement(new dom::Touch(*iter.UserData()));
         }
     } else if (aEvent->type == GDK_TOUCH_END ||
                aEvent->type == GDK_TOUCH_CANCEL) {
-        *event.touches.AppendElement() = touch.forget();
+        *event.mTouches.AppendElement() = touch.forget();
     }
 
-    DispatchAPZAwareEvent(&event);
+    DispatchInputEvent(&event);
     return TRUE;
 }
 #endif
@@ -4511,7 +4510,7 @@ nsWindow::ApplyTransparencyBitmap()
     gtk_widget_shape_combine_region(mShell, maskRegion);
     cairo_region_destroy(maskRegion);
     cairo_surface_destroy(maskBitmap);
-#endif // MOZ_WIDGET_GTK2
+#endif // MOZ_WIDGET_GTK == 2
 #endif // MOZ_X11
 }
 
@@ -5502,7 +5501,7 @@ expose_event_cb(GtkWidget *widget, cairo_t *cr)
 
     return FALSE;
 }
-#endif //MOZ_WIDGET_GTK2
+#endif //MOZ_WIDGET_GTK == 2
 
 static gboolean
 configure_event_cb(GtkWidget *widget,
@@ -6304,36 +6303,6 @@ nsChildWindow::~nsChildWindow()
 {
 }
 
-nsresult
-nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-    if (MOZ_UNLIKELY(!mIMContext)) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-    switch (aIMENotification.mMessage) {
-        case REQUEST_TO_COMMIT_COMPOSITION:
-        case REQUEST_TO_CANCEL_COMPOSITION:
-            return mIMContext->EndIMEComposition(this);
-        case NOTIFY_IME_OF_FOCUS:
-            mIMContext->OnFocusChangeInGecko(true);
-            return NS_OK;
-        case NOTIFY_IME_OF_BLUR:
-            mIMContext->OnFocusChangeInGecko(false);
-            return NS_OK;
-        case NOTIFY_IME_OF_POSITION_CHANGE:
-            mIMContext->OnLayoutChange();
-            return NS_OK;
-        case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-            mIMContext->OnUpdateComposition();
-            return NS_OK;
-        case NOTIFY_IME_OF_SELECTION_CHANGE:
-            mIMContext->OnSelectionChange(this, aIMENotification);
-            return NS_OK;
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-}
-
 NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
@@ -6364,6 +6333,15 @@ nsWindow::GetIMEUpdatePreference()
         return nsIMEUpdatePreference();
     }
     return mIMContext->GetIMEUpdatePreference();
+}
+
+NS_IMETHODIMP_(TextEventDispatcherListener*)
+nsWindow::GetNativeTextEventDispatcherListener()
+{
+    if (NS_WARN_IF(!mIMContext)) {
+        return nullptr;
+    }
+    return mIMContext;
 }
 
 bool
@@ -6611,7 +6589,7 @@ nsWindow::BeginMoveDrag(WidgetMouseEvent* aEvent)
     screenX = DevicePixelsToGdkCoordRoundDown(screenX);
     screenY = DevicePixelsToGdkCoordRoundDown(screenY);
     gdk_window_begin_move_drag(gdk_window, button, screenX, screenY,
-                               aEvent->time);
+                               aEvent->mTime);
 
     return NS_OK;
 }
@@ -6665,7 +6643,7 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
 
     // tell the window manager to start the resize
     gdk_window_begin_resize_drag(gdk_window, window_edge, button,
-                                 screenX, screenY, aEvent->time);
+                                 screenX, screenY, aEvent->mTime);
 
     return NS_OK;
 }
@@ -6823,7 +6801,8 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     // aNativeMessage != GDK_BUTTON_RELEASE we'll synthesize a motion event
     // that will be emitted by gdk_display_warp_pointer().
     GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
-    gdk_display_warp_pointer(display, screen, aPoint.x, aPoint.y);
+    GdkPoint point = DevicePixelsToGdkPointRoundDown(aPoint);
+    gdk_display_warp_pointer(display, screen, point.x, point.y);
   }
 
   return NS_OK;

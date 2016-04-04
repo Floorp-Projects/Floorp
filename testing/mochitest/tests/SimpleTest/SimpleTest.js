@@ -217,6 +217,7 @@ if (typeof(computedStyle) == 'undefined') {
 SimpleTest._tests = [];
 SimpleTest._stopOnLoad = true;
 SimpleTest._cleanupFunctions = [];
+SimpleTest._timeoutFunctions = [];
 SimpleTest.expected = 'pass';
 SimpleTest.num_failed = 0;
 SimpleTest._inChaosMode = false;
@@ -792,7 +793,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
       if (isChildProcess) {
           /* This message is used when an inner child frame must be focused. */
           addMessageListener("WaitForFocus:FocusChild", function focusChild(msg) {
-              removeMessageListener("WaitForFocus:ChildFocused", focusChild);
+              removeMessageListener("WaitForFocus:FocusChild", focusChild);
               finished = false;
               waitForLoadAndFocusOnWindow(msg.objects.child);
           });
@@ -849,6 +850,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
             }
             else {
                 browser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
+                SimpleTest._pendingWaitForFocusCount--;
                 setTimeout(callback, 0, browser ? browser.contentWindowAsCPOW : targetWindow);
             }
         });
@@ -987,6 +989,10 @@ SimpleTest.registerCleanupFunction = function(aFunc) {
     SimpleTest._cleanupFunctions.push(aFunc);
 };
 
+SimpleTest.registerTimeoutFunction = function(aFunc) {
+    SimpleTest._timeoutFunctions.push(aFunc);
+};
+
 SimpleTest.testInChaosMode = function() {
     if (SimpleTest._inChaosMode) {
       // It's already enabled for this test, don't enter twice
@@ -995,6 +1001,13 @@ SimpleTest.testInChaosMode = function() {
     SpecialPowers.DOMWindowUtils.enterChaosMode();
     SimpleTest._inChaosMode = true;
 };
+
+SimpleTest.timeout = function() {
+    for (let func of SimpleTest._timeoutFunctions) {
+        func();
+    }
+    SimpleTest._timeoutFunctions = [];
+}
 
 /**
  * Finishes the tests. This is automatically called, except when
@@ -1019,6 +1032,8 @@ SimpleTest.finish = function() {
         SimpleTest._logResult(test, successInfo, failureInfo);
         SimpleTest._tests.push(test);
     }
+
+    SimpleTest._timeoutFunctions = [];
 
     SimpleTest.testsLength = SimpleTest._tests.length;
 
@@ -1070,7 +1085,6 @@ SimpleTest.finish = function() {
         }
 
         if (!parentRunner || parentRunner.showTestReport) {
-            SpecialPowers.flushAllAppsLaunchable();
             SpecialPowers.flushPermissions(function () {
               SpecialPowers.flushPrefEnv(function() {
                 SimpleTest.showReport();
@@ -1526,7 +1540,8 @@ var isDeeply = SimpleTest.isDeeply;
 var info = SimpleTest.info;
 
 var gOldOnError = window.onerror;
-window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
+window.onerror = function simpletestOnerror(errorMsg, url, lineNumber,
+                                            columnNumber, originalException) {
     // Log the message.
     // XXX Chrome mochitests sometimes trigger this window.onerror handler,
     // but there are a number of uncaught JS exceptions from those tests.
@@ -1535,7 +1550,13 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
     // a test failure.  See bug 652494.
     var isExpected = !!SimpleTest._expectingUncaughtException;
     var message = (isExpected ? "expected " : "") + "uncaught exception";
-    var error = errorMsg + " at " + url + ":" + lineNumber;
+    var error = errorMsg + " at ";
+    try {
+        error += originalException.stack;
+    } catch (e) {
+        // At least use the url+line+column we were given
+        error += url + ":" + lineNumber + ":" + columnNumber;
+    }
     if (!SimpleTest._ignoringAllUncaughtExceptions) {
         // Don't log if SimpleTest.finish() is already called, it would cause failures
         if (!SimpleTest._alreadyFinished)

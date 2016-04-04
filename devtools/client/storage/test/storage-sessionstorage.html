@@ -1,0 +1,23 @@
+﻿<!doctype html>
+<html>
+  <!--
+  Bug 1231179 - Storage inspector front end - tests
+  -->
+  <head>
+    <meta charset="utf-8" />
+    <title>Storage inspector sessionStorage test</title>
+    <script type="application/javascript;version=1.7">
+      "use strict";
+
+      function setup() {
+        sessionStorage.setItem("TestSS1", "ValueSS1");
+        sessionStorage.setItem("TestSS2", "ValueSS2");
+        sessionStorage.setItem("TestSS3", "ValueSS3");
+        sessionStorage.setItem("TestSS4", "ValueSS4");
+        sessionStorage.setItem("TestSS5", "ValueSS5");
+      }
+    </script>
+  </head>
+  <body onload="setup()">
+  </body>
+</html>

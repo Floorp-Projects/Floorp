@@ -254,11 +254,14 @@ class MouseInput : public InputData
 public:
   enum MouseType
   {
+    MOUSE_NONE,
     MOUSE_MOVE,
     MOUSE_DOWN,
     MOUSE_UP,
     MOUSE_DRAG_START,
     MOUSE_DRAG_END,
+    MOUSE_WIDGET_ENTER,
+    MOUSE_WIDGET_EXIT,
   };
 
   enum ButtonType
@@ -269,15 +272,22 @@ public:
     NONE
   };
 
-  MouseInput(MouseType aType, ButtonType aButtonType, uint32_t aTime,
-             TimeStamp aTimeStamp, Modifiers aModifiers)
+  MouseInput(MouseType aType, ButtonType aButtonType, uint16_t aInputSource, int16_t aButtons, const ScreenPoint& aPoint,
+             uint32_t aTime, TimeStamp aTimeStamp, Modifiers aModifiers)
     : InputData(MOUSE_INPUT, aTime, aTimeStamp, aModifiers)
     , mType(aType)
     , mButtonType(aButtonType)
+    , mInputSource(aInputSource)
+    , mButtons(aButtons)
+    , mOrigin(aPoint)
   {}
 
   MouseInput()
     : InputData(MOUSE_INPUT)
+    , mType(MOUSE_NONE)
+    , mButtonType(NONE)
+    , mInputSource(0)
+    , mButtons(0)
   {}
 
   explicit MouseInput(const WidgetMouseEventBase& aMouseEvent);
@@ -285,9 +295,12 @@ public:
   bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
+  WidgetMouseEvent ToWidgetMouseEvent(nsIWidget* aWidget) const;
 
   MouseType mType;
   ButtonType mButtonType;
+  uint16_t mInputSource;
+  int16_t mButtons;
   ScreenPoint mOrigin;
   ParentLayerPoint mLocalOrigin;
 };
@@ -358,6 +371,7 @@ public:
       mLineOrPageDeltaX(0),
       mLineOrPageDeltaY(0),
       mHandledByAPZ(false),
+      mFollowedByMomentum(false),
       mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
   {
   }
@@ -384,6 +398,10 @@ public:
   int32_t mLineOrPageDeltaY;
 
   bool mHandledByAPZ;
+
+  // true if this is a PANGESTURE_END event that will be followed by a
+  // PANGESTURE_MOMENTUMSTART event.
+  bool mFollowedByMomentum;
 
   // If this is true, and this event started a new input block that couldn't
   // find a scrollable target which is scrollable in the horizontal component

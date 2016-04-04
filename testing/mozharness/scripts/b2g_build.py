@@ -391,7 +391,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             config_dir = os.path.join(dirs['gecko_src'], 'b2g', 'config',
                                       self.config.get('b2g_config_dir', self.config['target']))
             manifest = os.path.abspath(os.path.join(config_dir, gecko_config['tooltool_manifest']))
-            self.tooltool_fetch(manifest=manifest, output_dir=dirs['work_dir'])
+            self.tooltool_fetch(manifest=manifest, output_dir=dirs['gecko_src'])
 
     def unpack_blobs(self):
         dirs = self.query_abs_dirs()
@@ -402,7 +402,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             extra_tarballs.extend(gecko_config['additional_source_tarballs'])
 
         for tarball in extra_tarballs:
-            self.run_command(tar + ["xf", tarball], cwd=dirs['work_dir'],
+            self.run_command(tar + ["xf", tarball], cwd=dirs['gecko_src'],
                              halt_on_failure=True, fatal_exit_code=3)
 
     def checkout_gaia_l10n(self):

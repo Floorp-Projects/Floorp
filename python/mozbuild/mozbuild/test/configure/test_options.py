@@ -159,16 +159,7 @@ class TestOption(unittest.TestCase):
 
     def test_option_choices(self):
         with self.assertRaises(InvalidOptionError):
-            Option('--option', nargs=0, choices=('a', 'b'))
-
-        with self.assertRaises(InvalidOptionError):
             Option('--option', nargs=3, choices=('a', 'b'))
-
-        with self.assertRaises(InvalidOptionError):
-            Option('--option', nargs='?', choices=('a', 'b'))
-
-        with self.assertRaises(InvalidOptionError):
-            Option('--option', nargs='*', choices=('a', 'b'))
 
         with self.assertRaises(InvalidOptionError):
             Option('--without-option', nargs=1, choices=('a', 'b'))

@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/InlineSpellChecker.jsm");
 Cu.import("resource://gre/modules/InlineSpellCheckerContent.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
@@ -49,7 +51,9 @@ var global = this;
 var formSubmitObserver = new FormSubmitObserver(content, this);
 
 addMessageListener("ContextMenu:DoCustomCommand", function(message) {
-  PageMenuChild.executeMenu(message.data);
+  E10SUtils.wrapHandlingUserInput(
+    content, message.data.handlingUserInput,
+    () => PageMenuChild.executeMenu(message.data.generatedItemId));
 });
 
 addMessageListener("RemoteLogins:fillForm", function(message) {
@@ -1318,3 +1322,110 @@ var PageInfoListener = {
   }
 };
 PageInfoListener.init();
+
+let OfflineApps = {
+  _docId: 0,
+  _docIdMap: new Map(),
+
+  _docManifestSet: new Set(),
+
+  _observerAdded: false,
+  registerWindow(aWindow) {
+    if (!this._observerAdded) {
+      this._observerAdded = true;
+      Services.obs.addObserver(this, "offline-cache-update-completed", true);
+    }
+    let manifestURI = this._getManifestURI(aWindow);
+    this._docManifestSet.add(manifestURI.spec);
+  },
+
+  handleEvent(event) {
+    if (event.type == "MozApplicationManifest") {
+      this.offlineAppRequested(event.originalTarget.defaultView);
+    }
+  },
+
+  _getManifestURI(aWindow) {
+    if (!aWindow.document.documentElement)
+      return null;
+
+    var attr = aWindow.document.documentElement.getAttribute("manifest");
+    if (!attr)
+      return null;
+
+    try {
+      var contentURI = BrowserUtils.makeURI(aWindow.location.href, null, null);
+      return BrowserUtils.makeURI(attr, aWindow.document.characterSet, contentURI);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  offlineAppRequested(aContentWindow) {
+    this.registerWindow(aContentWindow);
+    if (!Services.prefs.getBoolPref("browser.offline-apps.notify")) {
+      return;
+    }
+
+    let currentURI = aContentWindow.document.documentURIObject;
+    // don't bother showing UI if the user has already made a decision
+    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
+      return;
+
+    try {
+      if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
+        // all pages can use offline capabilities, no need to ask the user
+        return;
+      }
+    } catch(e) {
+      // this pref isn't set by default, ignore failures
+    }
+    let docId = ++this._docId;
+    this._docIdMap.set(docId, Cu.getWeakReference(aContentWindow.document));
+    sendAsyncMessage("OfflineApps:RequestPermission", {
+      uri: currentURI.spec,
+      docId,
+    });
+  },
+
+  _startFetching(aDocument) {
+    if (!aDocument.documentElement)
+      return;
+
+    let manifestURI = this._getManifestURI(aDocument.defaultView);
+    if (!manifestURI)
+      return;
+
+    var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
+                        getService(Ci.nsIOfflineCacheUpdateService);
+    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject,
+                                 aDocument.nodePrincipal, aDocument.defaultView);
+  },
+
+  receiveMessage(aMessage) {
+    if (aMessage.name == "OfflineApps:StartFetching") {
+      let doc = this._docIdMap.get(aMessage.data.docId);
+      doc = doc && doc.get();
+      if (doc) {
+        this._startFetching(doc);
+      }
+      this._docIdMap.delete(aMessage.data.docId);
+    }
+  },
+
+  observe(aSubject, aTopic, aState) {
+    if (aTopic == "offline-cache-update-completed") {
+      let cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
+      let uri = cacheUpdate.manifestURI;
+      if (uri && this._docManifestSet.has(uri.spec)) {
+        sendAsyncMessage("OfflineApps:CheckUsage", {uri: uri.spec});
+      }
+    }
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+};
+
+addEventListener("MozApplicationManifest", OfflineApps, false);
+addMessageListener("OfflineApps:StartFetching", OfflineApps);
+

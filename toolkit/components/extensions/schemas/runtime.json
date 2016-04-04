@@ -134,7 +134,6 @@
       },
       {
         "name": "openOptionsPage",
-        "unsupported": true,
         "type": "function",
         "description": "<p>Open your Extension's options page, if possible.</p><p>The precise behavior may depend on your manifest's <code>$(topic:optionsV2)[options_ui]</code> or <code>$(topic:options)[options_page]</code> key, or what the browser happens to support at the time.</p><p>If your Extension does not declare an options page, or the browser failed to create one for some other reason, the callback will set $(ref:lastError).</p>",
         "async": "callback",

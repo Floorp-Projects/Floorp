@@ -68,7 +68,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mInitDone(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
-  , mHardwareAccelerationDisabled(false)
   , mDemuxOnly(false)
   , mVideoFrameContainer(aVideoFrameContainer)
 {
@@ -337,6 +336,8 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   }
 
   mInfo.mMediaSeekable = mDemuxer->IsSeekable();
+  mInfo.mMediaSeekableOnlyInBufferedRanges =
+    mDemuxer->IsSeekableOnlyInBufferedRanges();
 
   if (!videoActive && !audioActive) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
@@ -404,7 +405,6 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
                                    mInfo.mVideo,
                                  decoder.mTaskQueue,
                                  decoder.mCallback,
-                                 mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
                                  mLayersBackendType,
                                  GetImageContainer());
       break;
@@ -467,23 +467,6 @@ MediaFormatReader::GetDecoderData(TrackType aTrack)
     return mAudio;
   }
   return mVideo;
-}
-
-void
-MediaFormatReader::DisableHardwareAcceleration()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  if (HasVideo() && !mHardwareAccelerationDisabled) {
-    mHardwareAccelerationDisabled = true;
-    Flush(TrackInfo::kVideoTrack);
-    mVideo.ShutdownDecoder();
-    if (!EnsureDecoderCreated(TrackType::kVideoTrack)) {
-      LOG("Unable to re-create decoder, aborting");
-      NotifyError(TrackInfo::kVideoTrack);
-      return;
-    }
-    ScheduleUpdate(TrackInfo::kVideoTrack);
-  }
 }
 
 bool
@@ -1428,7 +1411,7 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
   MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
   MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
 
-  if (!mInfo.mMediaSeekable) {
+  if (!mInfo.mMediaSeekable && !mInfo.mMediaSeekableOnlyInBufferedRanges) {
     LOG("Seek() END (Unseekable)");
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -1617,6 +1600,20 @@ MediaFormatReader::GetBuffered()
     return intervals;
   }
   return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
+}
+
+// For the MediaFormatReader override we need to force an update to the
+// buffered ranges, so we call NotifyDataArrive
+RefPtr<MediaDecoderReader::BufferedUpdatePromise>
+MediaFormatReader::UpdateBufferedWithPromise() {
+  MOZ_ASSERT(OnTaskQueue());
+  // Call NotifyDataArrive to force a recalculation of the buffered
+  // ranges. UpdateBuffered alone will not force a recalculation, so we
+  // use NotifyDataArrived which sets flags to force this recalculation.
+  // See MediaFormatReader::UpdateReceivedNewData for an example of where
+  // the new data flag is used.
+  NotifyDataArrived();
+  return BufferedUpdatePromise::CreateAndResolve(true, __func__);
 }
 
 void MediaFormatReader::ReleaseMediaResources()

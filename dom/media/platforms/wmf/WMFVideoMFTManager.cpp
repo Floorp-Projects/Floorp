@@ -23,6 +23,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "MediaTelemetryConstants.h"
 
 extern mozilla::LogModule* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -156,13 +157,23 @@ public:
 
   NS_IMETHOD Run() {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
+    nsACString* failureReason = &mFailureReason;
+    nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
         Preferences::GetBool("media.windows-media-foundation.allow-d3d11-dxva", true) &&
         IsWin8OrLater()) {
-      mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(mFailureReason);
-    } else {
-      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(mFailureReason);
+      mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
+      if (mDXVA2Manager) {
+        return NS_OK;
+      }
+      // Try again with d3d9, but record the failure reason
+      // into a new var to avoid overwriting the d3d11 failure.
+      failureReason = &secondFailureReason;
+      mFailureReason.Append(NS_LITERAL_CSTRING("; "));
     }
+    mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(*failureReason);
+    // Make sure we include the messages from both attempts (if applicable).
+    mFailureReason.Append(secondFailureReason);
     return NS_OK;
   }
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
@@ -206,14 +217,14 @@ WMFVideoMFTManager::Init()
 {
   bool success = InitInternal(/* aForceD3D9 = */ false);
 
-  // If initialization failed with d3d11 DXVA then try falling back
-  // to d3d9.
-  if (!success && mDXVA2Manager && mDXVA2Manager->IsD3D11()) {
-    mDXVA2Manager = nullptr;
-    nsCString d3d11Failure = mDXVAFailureReason;
-    success = InitInternal(true);
-    mDXVAFailureReason.Append(NS_LITERAL_CSTRING("; "));
-    mDXVAFailureReason.Append(d3d11Failure);
+  if (success && mDXVA2Manager) {
+    // If we had some failures but eventually made it work,
+    // make sure we preserve the messages.
+    if (mDXVA2Manager->IsD3D11()) {
+      mDXVAFailureReason.Append(NS_LITERAL_CSTRING("Using D3D11 API"));
+    } else {
+      mDXVAFailureReason.Append(NS_LITERAL_CSTRING("Using D3D9 API"));
+    }
   }
 
   return success;
@@ -264,6 +275,11 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
     else {
       mDXVAFailureReason.AssignLiteral("Decoder returned false for MF_SA_D3D_AWARE");
     }
+  }
+
+  if (!mUseHwAccel) {
+    Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
+                          uint32_t(media::MediaDecoderBackend::WMFSoftware));
   }
 
   mDecoder = decoder;

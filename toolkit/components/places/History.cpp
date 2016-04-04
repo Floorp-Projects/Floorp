@@ -650,7 +650,7 @@ public:
     }
 
     nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mPlace.spec)));
+    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlace.spec));
     if (!uri) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -714,7 +714,7 @@ public:
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
     nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mSpec)));
+    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mSpec));
     if (!uri) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -755,12 +755,12 @@ public:
     bool hasValidURIs = true;
     nsCOMPtr<nsIURI> referrerURI;
     if (!mPlace.referrerSpec.IsEmpty()) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec)));
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec));
       hasValidURIs = !!referrerURI;
     }
 
     nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mPlace.spec)));
+    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlace.spec));
     hasValidURIs = hasValidURIs && !!uri;
 
     nsCOMPtr<mozIPlaceInfo> place;
@@ -1636,7 +1636,7 @@ public:
       PlaceHashKey* entry = iter.Get();
       const nsTArray<VisitData>& visits = entry->mVisits;
       nsCOMPtr<nsIURI> uri;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), visits[0].spec)));
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), visits[0].spec));
       // Notify an expiration only if we have a valid uri, otherwise
       // the observer couldn't gather any useful data from the notification.
       // This should be false only if there's a bug in the code preceding us.
@@ -1939,7 +1939,7 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
 
   nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aPlace.spec)));
+  MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aPlace.spec));
 
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
   if (!navHistory || !uri) {

@@ -16,13 +16,16 @@ const {Keyframes} = require("devtools/client/animationinspector/components/keyfr
  * animation.
  * This includes information about timing, easing, keyframes, animated
  * properties.
+ *
+ * @param {Object} serverTraits The list of server-side capabilities.
  */
-function AnimationDetails() {
+function AnimationDetails(serverTraits) {
   EventEmitter.decorate(this);
 
   this.onFrameSelected = this.onFrameSelected.bind(this);
 
   this.keyframeComponents = [];
+  this.serverTraits = serverTraits;
 }
 
 exports.AnimationDetails = AnimationDetails;
@@ -39,6 +42,7 @@ AnimationDetails.prototype = {
   destroy: function() {
     this.unrender();
     this.containerEl = null;
+    this.serverTraits = null;
   },
 
   unrender: function() {
@@ -54,31 +58,61 @@ AnimationDetails.prototype = {
   },
 
   /**
-   * Convert a list of frames into a list of tracks, one per animated property,
-   * each with a list of frames.
+   * Get a list of the tracks of the animation actor
+   * @return {Object} A list of tracks, one per animated property, each
+   * with a list of keyframes
    */
-  getTracksFromFrames: function(frames) {
+  getTracks: Task.async(function*() {
     let tracks = {};
 
-    for (let frame of frames) {
-      for (let name in frame) {
-        if (this.NON_PROPERTIES.indexOf(name) != -1) {
-          continue;
-        }
+    /*
+     * getFrames is a AnimationPlayorActor method that returns data about the
+     * keyframes of the animation.
+     * In FF48, the data it returns change, and will hold only longhand
+     * properties ( e.g. borderLeftWidth ), which does not match what we
+     * want to display in the animation detail.
+     * A new AnimationPlayerActor function, getProperties, is introduced,
+     * that returns the animated css properties of the animation and their
+     * keyframes values.
+     * If the animation actor has the getProperties function, we use it, and if
+     * not, we fall back to getFrames, which then returns values we used to
+     * handle.
+     */
+    if (this.serverTraits.hasGetProperties) {
+      let properties = yield this.animation.getProperties();
+      for (let propertyObject of properties) {
+        let name = propertyObject.property;
 
         if (!tracks[name]) {
           tracks[name] = [];
         }
 
-        tracks[name].push({
-          value: frame[name],
-          offset: frame.computedOffset
-        });
+        for (let {value, offset} of propertyObject.values) {
+          tracks[name].push({value, offset});
+        }
+      }
+    } else {
+      let frames = yield this.animation.getFrames();
+      for (let frame of frames) {
+        for (let name in frame) {
+          if (this.NON_PROPERTIES.indexOf(name) != -1) {
+            continue;
+          }
+
+          if (!tracks[name]) {
+            tracks[name] = [];
+          }
+
+          tracks[name].push({
+            value: frame[name],
+            offset: frame.computedOffset
+          });
+        }
       }
     }
 
     return tracks;
-  },
+  }),
 
   render: Task.async(function*(animation) {
     this.unrender();
@@ -88,18 +122,18 @@ AnimationDetails.prototype = {
     }
     this.animation = animation;
 
-    let frames = yield animation.getFrames();
-
     // We might have been destroyed in the meantime, or the component might
     // have been re-rendered.
     if (!this.containerEl || this.animation !== animation) {
       return;
     }
+
+    // Build an element for each animated property track.
+    this.tracks = yield this.getTracks(animation, this.serverTraits);
+
     // Useful for tests to know when the keyframes have been retrieved.
     this.emit("keyframes-retrieved");
 
-    // Build an element for each animated property track.
-    this.tracks = this.getTracksFromFrames(frames);
     for (let propertyName in this.tracks) {
       let line = createNode({
         parent: this.containerEl,

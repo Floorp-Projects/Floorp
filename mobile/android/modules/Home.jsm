@@ -381,7 +381,7 @@ var HomePanels = (function () {
       }
     }
 
-    if (options.position && typeof options.position === "number") {
+    if (options.position >= 0) {
       this.position = options.position;
     }
   }

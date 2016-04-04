@@ -35,20 +35,11 @@ UnboxedLayout::trace(JSTracer* trc)
     if (newScript())
         newScript()->trace(trc);
 
-    if (nativeGroup_)
-        TraceEdge(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
-
-    if (nativeShape_)
-        TraceEdge(trc, &nativeShape_, "unboxed_layout_nativeShape");
-
-    if (allocationScript_)
-        TraceEdge(trc, &allocationScript_, "unboxed_layout_allocationScript");
-
-    if (replacementGroup_)
-        TraceEdge(trc, &replacementGroup_, "unboxed_layout_replacementGroup");
-
-    if (constructorCode_)
-        TraceEdge(trc, &constructorCode_, "unboxed_layout_constructorCode");
+    TraceNullableEdge(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
+    TraceNullableEdge(trc, &nativeShape_, "unboxed_layout_nativeShape");
+    TraceNullableEdge(trc, &allocationScript_, "unboxed_layout_allocationScript");
+    TraceNullableEdge(trc, &replacementGroup_, "unboxed_layout_replacementGroup");
+    TraceNullableEdge(trc, &constructorCode_, "unboxed_layout_constructorCode");
 }
 
 size_t
@@ -327,8 +318,7 @@ UnboxedPlainObject::trace(JSTracer* trc, JSObject* obj)
     list++;
     while (*list != -1) {
         HeapPtrObject* heap = reinterpret_cast<HeapPtrObject*>(data + *list);
-        if (*heap)
-            TraceEdge(trc, heap, "unboxed_object");
+        TraceNullableEdge(trc, heap, "unboxed_object");
         list++;
     }
 
@@ -915,6 +905,21 @@ const Class UnboxedExpandoObject::class_ = {
     0
 };
 
+static const ObjectOps UnboxedPlainObjectObjectOps = {
+    UnboxedPlainObject::obj_lookupProperty,
+    UnboxedPlainObject::obj_defineProperty,
+    UnboxedPlainObject::obj_hasProperty,
+    UnboxedPlainObject::obj_getProperty,
+    UnboxedPlainObject::obj_setProperty,
+    UnboxedPlainObject::obj_getOwnPropertyDescriptor,
+    UnboxedPlainObject::obj_deleteProperty,
+    UnboxedPlainObject::obj_watch,
+    nullptr,   /* No unwatch needed, as watch() converts the object to native */
+    nullptr,   /* getElements */
+    UnboxedPlainObject::obj_enumerate,
+    nullptr    /* funToString */
+};
+
 const Class UnboxedPlainObject::class_ = {
     js_Object_str,
     Class::NON_NATIVE |
@@ -934,19 +939,7 @@ const Class UnboxedPlainObject::class_ = {
     UnboxedPlainObject::trace,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    {
-        UnboxedPlainObject::obj_lookupProperty,
-        UnboxedPlainObject::obj_defineProperty,
-        UnboxedPlainObject::obj_hasProperty,
-        UnboxedPlainObject::obj_getProperty,
-        UnboxedPlainObject::obj_setProperty,
-        UnboxedPlainObject::obj_getOwnPropertyDescriptor,
-        UnboxedPlainObject::obj_deleteProperty,
-        UnboxedPlainObject::obj_watch,
-        nullptr,   /* No unwatch needed, as watch() converts the object to native */
-        nullptr,   /* getElements */
-        UnboxedPlainObject::obj_enumerate,
-    }
+    &UnboxedPlainObjectObjectOps
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -1146,8 +1139,7 @@ UnboxedArrayObject::trace(JSTracer* trc, JSObject* obj)
       case JSVAL_TYPE_OBJECT:
         for (size_t i = 0; i < initlen; i++) {
             HeapPtrObject* heap = reinterpret_cast<HeapPtrObject*>(elements + i);
-            if (*heap)
-                TraceEdge(trc, heap, "unboxed_object");
+            TraceNullableEdge(trc, heap, "unboxed_object");
         }
         break;
 
@@ -1599,6 +1591,21 @@ UnboxedArrayObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector&
     return true;
 }
 
+static const ObjectOps UnboxedArrayObjectObjectOps = {
+    UnboxedArrayObject::obj_lookupProperty,
+    UnboxedArrayObject::obj_defineProperty,
+    UnboxedArrayObject::obj_hasProperty,
+    UnboxedArrayObject::obj_getProperty,
+    UnboxedArrayObject::obj_setProperty,
+    UnboxedArrayObject::obj_getOwnPropertyDescriptor,
+    UnboxedArrayObject::obj_deleteProperty,
+    UnboxedArrayObject::obj_watch,
+    nullptr,   /* No unwatch needed, as watch() converts the object to native */
+    nullptr,   /* getElements */
+    UnboxedArrayObject::obj_enumerate,
+    nullptr    /* funToString */
+};
+
 const Class UnboxedArrayObject::class_ = {
     "Array",
     Class::NON_NATIVE |
@@ -1622,19 +1629,7 @@ const Class UnboxedArrayObject::class_ = {
         nullptr,    /* weakmapKeyDelegateOp */
         UnboxedArrayObject::objectMoved
     },
-    {
-        UnboxedArrayObject::obj_lookupProperty,
-        UnboxedArrayObject::obj_defineProperty,
-        UnboxedArrayObject::obj_hasProperty,
-        UnboxedArrayObject::obj_getProperty,
-        UnboxedArrayObject::obj_setProperty,
-        UnboxedArrayObject::obj_getOwnPropertyDescriptor,
-        UnboxedArrayObject::obj_deleteProperty,
-        UnboxedArrayObject::obj_watch,
-        nullptr,   /* No unwatch needed, as watch() converts the object to native */
-        nullptr,   /* getElements */
-        UnboxedArrayObject::obj_enumerate,
-    }
+    &UnboxedArrayObjectObjectOps
 };
 
 /////////////////////////////////////////////////////////////////////

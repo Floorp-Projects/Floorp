@@ -10,6 +10,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -20,6 +21,7 @@ import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.InputDevice;
 
 class NativePanZoomController extends JNIObject implements PanZoomController {
     private final PanZoomTarget mTarget;
@@ -44,7 +46,12 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
             float x, float y,
             float hScroll, float vScroll);
 
-    private boolean handleMotionEvent(MotionEvent event, boolean keepInViewCoordinates) {
+    @WrapForJNI
+    private native boolean handleMouseEvent(
+            int action, long time, int metaState,
+            float x, float y, int buttons);
+
+    private boolean handleMotionEvent(MotionEvent event) {
         if (mDestroyed) {
             return false;
         }
@@ -67,30 +74,20 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         final float[] toolMinor = new float[count];
 
         final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
-        final PointF point = !keepInViewCoordinates ? new PointF() : null;
-        final float zoom = !keepInViewCoordinates ? mView.getViewportMetrics().zoomFactor : 1.0f;
 
         for (int i = 0; i < count; i++) {
             pointerId[i] = event.getPointerId(i);
             event.getPointerCoords(i, coords);
 
-            if (keepInViewCoordinates) {
-                x[i] = coords.x;
-                y[i] = coords.y;
-            } else {
-                point.x = coords.x;
-                point.y = coords.y;
-                final PointF newPoint = mView.convertViewPointToLayerPoint(point);
-                x[i] = newPoint.x;
-                y[i] = newPoint.y;
-            }
+            x[i] = coords.x;
+            y[i] = coords.y;
 
             orientation[i] = coords.orientation;
             pressure[i] = coords.pressure;
 
             // If we are converting to CSS pixels, we should adjust the radii as well.
-            toolMajor[i] = coords.toolMajor / zoom;
-            toolMinor[i] = coords.toolMinor / zoom;
+            toolMajor[i] = coords.toolMajor;
+            toolMinor[i] = coords.toolMinor;
         }
 
         return handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
@@ -121,6 +118,25 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         return handleScrollEvent(event.getEventTime(), event.getMetaState(), x, y, hScroll, vScroll);
     }
 
+    private boolean handleMouseEvent(MotionEvent event) {
+        if (mDestroyed) {
+            return false;
+        }
+
+        final int count = event.getPointerCount();
+
+        if (count <= 0) {
+            return false;
+        }
+
+        final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+        event.getPointerCoords(0, coords);
+        final float x = coords.x;
+        final float y = coords.y;
+
+        return handleMouseEvent(event.getActionMasked(), event.getEventTime(), event.getMetaState(), x, y, event.getButtonState());
+    }
+
 
     NativePanZoomController(PanZoomTarget target, View view) {
         mTarget = target;
@@ -146,18 +162,30 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return handleMotionEvent(event, /* keepInViewCoordinates */ true);
+        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
+            return handleMouseEvent(event);
+        } else {
+            return handleMotionEvent(event);
+        }
     }
 
     @Override
     public boolean onMotionEvent(MotionEvent event) {
         final int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_SCROLL && event.getDownTime() >= mLastDownTime) {
-            mLastDownTime = event.getDownTime();
+        if (action == MotionEvent.ACTION_SCROLL) {
+            if (event.getDownTime() >= mLastDownTime) {
+                mLastDownTime = event.getDownTime();
+            } else if ((InputDevice.getDevice(event.getDeviceId()).getSources() & InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
+                return false;
+            }
             return handleScrollEvent(event);
+        } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
+                   (action == MotionEvent.ACTION_HOVER_ENTER) ||
+                   (action == MotionEvent.ACTION_HOVER_EXIT)) {
+            return handleMouseEvent(event);
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     @Override
@@ -294,5 +322,19 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
                 });
             }
         }
+    }
+
+    @WrapForJNI
+    private void setScrollingRootContent(final boolean isRootContent) {
+        mTarget.setScrollingRootContent(isRootContent);
+    }
+
+    /**
+     * Active SelectionCaretDrag requires DynamicToolbarAnimator to be pinned
+     * to avoid unwanted scroll interactions.
+     */
+    @WrapForJNI
+    private void onSelectionDragState(boolean state) {
+        mView.getDynamicToolbarAnimator().setPinned(state, PinReason.CARET_DRAG);
     }
 }

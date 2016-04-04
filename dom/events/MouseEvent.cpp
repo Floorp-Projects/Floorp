@@ -31,7 +31,7 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
   }
   else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
     mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
@@ -155,7 +155,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case eDragEventClass:
     case ePointerEventClass:
     case eSimpleGestureEventClass:
-      mEvent->AsInputEvent()->modifiers = modifiers;
+      mEvent->AsInputEvent()->mModifiers = modifiers;
       return;
     default:
       MOZ_CRASH("There is no space to store the modifiers");

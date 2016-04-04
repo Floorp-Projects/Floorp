@@ -14,7 +14,15 @@ this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray',
                          'base64UrlDecode'];
 
 var UTF8 = new TextEncoder('utf-8');
-var ENCRYPT_INFO = UTF8.encode('Content-Encoding: aesgcm128');
+
+// Legacy encryption scheme (draft-thomson-http-encryption-02).
+var AESGCM128_ENCODING = 'aesgcm128';
+var AESGCM128_ENCRYPT_INFO = UTF8.encode('Content-Encoding: aesgcm128');
+
+// New encryption scheme (draft-ietf-httpbis-encryption-encoding-01).
+var AESGCM_ENCODING = 'aesgcm';
+var AESGCM_ENCRYPT_INFO = UTF8.encode('Content-Encoding: aesgcm');
+
 var NONCE_INFO = UTF8.encode('Content-Encoding: nonce');
 var AUTH_INFO = UTF8.encode('Content-Encoding: auth\0'); // note nul-terminus
 var P256DH_INFO = UTF8.encode('P-256\0');
@@ -52,15 +60,24 @@ this.getCryptoParams = function(headers) {
     return null;
   }
 
-  var requiresAuthenticationSecret = true;
-  var keymap = getEncryptionKeyParams(headers.crypto_key);
-  if (!keymap) {
-    requiresAuthenticationSecret = false;
+  var keymap;
+  var padSize;
+  if (headers.encoding == AESGCM_ENCODING) {
+    // aesgcm uses the Crypto-Key header, 2 bytes for the pad length, and an
+    // authentication secret.
+    // https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01
+    keymap = getEncryptionKeyParams(headers.crypto_key);
+    padSize = 2;
+  } else if (headers.encoding == AESGCM128_ENCODING) {
+    // aesgcm128 uses Encryption-Key, 1 byte for the pad length, and no secret.
+    // https://tools.ietf.org/html/draft-thomson-http-encryption-02
     keymap = getEncryptionKeyParams(headers.encryption_key);
-    if (!keymap) {
-      return null;
-    }
+    padSize = 1;
   }
+  if (!keymap) {
+    return null;
+  }
+
   var enc = getEncryptionParams(headers.encryption);
   if (!enc) {
     return null;
@@ -69,10 +86,10 @@ this.getCryptoParams = function(headers) {
   var salt = enc.salt;
   var rs = (enc.rs)? parseInt(enc.rs, 10) : 4096;
 
-  if (!dh || !salt || isNaN(rs) || (rs <= 1)) {
+  if (!dh || !salt || isNaN(rs) || (rs <= padSize)) {
     return null;
   }
-  return {dh, salt, rs, auth: requiresAuthenticationSecret};
+  return {dh, salt, rs, padSize};
 }
 
 var parseHeaderFieldParams = (m, v) => {
@@ -183,7 +200,7 @@ function generateNonce(base, index) {
 this.PushCrypto = {
 
   generateAuthenticationSecret() {
-    return crypto.getRandomValues(new Uint8Array(12));
+    return crypto.getRandomValues(new Uint8Array(16));
   },
 
   generateKeys() {
@@ -195,8 +212,8 @@ this.PushCrypto = {
          ]));
   },
 
-  decodeMsg(aData, aPrivateKey, aPublicKey, aSenderPublicKey,
-            aSalt, aRs, aAuthenticationSecret) {
+  decodeMsg(aData, aPrivateKey, aPublicKey, aSenderPublicKey, aSalt, aRs,
+            aAuthenticationSecret, aPadSize) {
 
     if (aData.byteLength === 0) {
       // Zero length messages will be passed as null.
@@ -219,7 +236,8 @@ this.PushCrypto = {
     .then(([appServerKey, subscriptionPrivateKey]) =>
           crypto.subtle.deriveBits({ name: 'ECDH', public: appServerKey },
                                    subscriptionPrivateKey, 256))
-    .then(ikm => this._deriveKeyAndNonce(new Uint8Array(ikm),
+    .then(ikm => this._deriveKeyAndNonce(aPadSize,
+                                         new Uint8Array(ikm),
                                          base64UrlDecode(aSalt),
                                          aPublicKey,
                                          senderKey,
@@ -227,45 +245,46 @@ this.PushCrypto = {
     .then(r =>
       // AEAD_AES_128_GCM expands ciphertext to be 16 octets longer.
       Promise.all(chunkArray(aData, aRs + 16).map((slice, index) =>
-        this._decodeChunk(slice, index, r[1], r[0]))))
+        this._decodeChunk(aPadSize, slice, index, r[1], r[0]))))
     .then(r => concatArray(r));
   },
 
-  _deriveKeyAndNonce(ikm, salt, receiverKey, senderKey, authenticationSecret) {
+  _deriveKeyAndNonce(padSize, ikm, salt, receiverKey, senderKey,
+                     authenticationSecret) {
     var kdfPromise;
     var context;
-    // The authenticationSecret, when present, is mixed with the ikm using HKDF.
-    // This is its primary purpose.  However, since the authentication secret
-    // was added at the same time that the info string was changed, we also use
-    // its presence to change how the final info string is calculated:
+    var encryptInfo;
+    // The size of the padding determines which key derivation we use.
     //
-    // 1. When there is no authenticationSecret, the context string is simply
-    // "Content-Encoding: <blah>". This corresponds to old, deprecated versions
-    // of the content encoding.  This should eventually be removed: bug 1230038.
+    // 1. If the pad size is 1, we assume "aesgcm128". This scheme ignores the
+    // authenticationSecret, and uses "Content-Encoding: <blah>" for the
+    // context string. It should eventually be removed: bug 1230038.
     //
-    // 2. When there is an authenticationSecret, the context string is:
+    // 2. If the pad size is 2, we assume "aesgcm", and mix the
+    // authenticationSecret with the ikm using HKDF. The context string is:
     // "Content-Encoding: <blah>\0P-256\0" then the length and value of both the
     // receiver key and sender key.
-    if (authenticationSecret) {
+    if (padSize == 2) {
       // Since we are using an authentication secret, we need to run an extra
       // round of HKDF with the authentication secret as salt.
       var authKdf = new hkdf(authenticationSecret, ikm);
       kdfPromise = authKdf.extract(AUTH_INFO, 32)
         .then(ikm2 => new hkdf(salt, ikm2));
 
-      // We also use the presence of the authentication secret to indicate that
-      // we have extra context to add to the info parameter.
+      // aesgcm requires extra context for the info parameter.
       context = concatArray([
         new Uint8Array([0]), P256DH_INFO,
         this._encodeLength(receiverKey), receiverKey,
         this._encodeLength(senderKey), senderKey
       ]);
+      encryptInfo = AESGCM_ENCRYPT_INFO;
     } else {
       kdfPromise = Promise.resolve(new hkdf(salt, ikm));
       context = new Uint8Array(0);
+      encryptInfo = AESGCM128_ENCRYPT_INFO;
     }
     return kdfPromise.then(kdf => Promise.all([
-      kdf.extract(concatArray([ENCRYPT_INFO, context]), 16)
+      kdf.extract(concatArray([encryptInfo, context]), 16)
         .then(gcmBits => crypto.subtle.importKey('raw', gcmBits, 'AES-GCM', false,
                                                  ['decrypt'])),
       kdf.extract(concatArray([NONCE_INFO, context]), 12)
@@ -276,27 +295,44 @@ this.PushCrypto = {
     return new Uint8Array([0, buffer.byteLength]);
   },
 
-  _decodeChunk(aSlice, aIndex, aNonce, aKey) {
+  _decodeChunk(aPadSize, aSlice, aIndex, aNonce, aKey) {
     let params = {
       name: 'AES-GCM',
       iv: generateNonce(aNonce, aIndex)
     };
     return crypto.subtle.decrypt(params, aKey, aSlice)
-      .then(decoded => {
-        decoded = new Uint8Array(decoded);
-        if (decoded.length == 0) {
-          return Promise.reject(new Error('Decoded array is too short!'));
-        } else if (decoded[0] > decoded.length) {
-          return Promise.reject(new Error ('Padding is wrong!'));
-        } else {
-          // All padded bytes must be zero except the first one.
-          for (var i = 1; i <= decoded[0]; i++) {
-            if (decoded[i] != 0) {
-              return Promise.reject(new Error('Padding is wrong!'));
-            }
-          }
-          return decoded.slice(decoded[0] + 1);
-        }
-      });
-  }
+      .then(decoded => this._unpadChunk(aPadSize, new Uint8Array(decoded)));
+  },
+
+  /**
+   * Removes padding from a decrypted chunk.
+   *
+   * @param {Number} padSize The size of the padding length prepended to each
+   *  chunk. For aesgcm, the padding length is expressed as a 16-bit unsigned
+   *  big endian integer. For aesgcm128, the padding is an 8-bit integer.
+   * @param {Uint8Array} decoded The decrypted, padded chunk.
+   * @returns {Uint8Array} The chunk with padding removed.
+   */
+  _unpadChunk(padSize, decoded) {
+    if (padSize < 1 || padSize > 2) {
+      throw new Error('Unsupported pad size');
+    }
+    if (decoded.length < padSize) {
+      throw new Error('Decoded array is too short!');
+    }
+    var pad = decoded[0];
+    if (padSize == 2) {
+      pad = (pad << 8) | decoded[1];
+    }
+    if (pad > decoded.length) {
+      throw new Error ('Padding is wrong!');
+    }
+    // All padded bytes must be zero except the first one.
+    for (var i = padSize; i <= pad; i++) {
+      if (decoded[i] !== 0) {
+        throw new Error('Padding is wrong!');
+      }
+    }
+    return decoded.slice(pad + padSize);
+  },
 };

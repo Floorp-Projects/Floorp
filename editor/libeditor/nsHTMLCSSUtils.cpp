@@ -509,8 +509,8 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
     NS_ENSURE_STATE(cssDecl);
 
     // from these declarations, get the one we want and that one only
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      cssDecl->GetPropertyValue(nsDependentAtomString(aProperty), aValue)));
+    MOZ_ALWAYS_SUCCEEDS(
+      cssDecl->GetPropertyValue(nsDependentAtomString(aProperty), aValue));
 
     return NS_OK;
   }
@@ -622,7 +622,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString& aString, float* aValue,
 {
   if (aString.IsEmpty()) {
     *aValue = 0;
-    *aUnit = NS_NewAtom(aString).take();
+    *aUnit = NS_Atomize(aString).take();
     return;
   }
 
@@ -661,7 +661,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString& aString, float* aValue,
     i++;
   }
   *aValue = value * sign;
-  *aUnit = NS_NewAtom(StringTail(aString, j-i)).take();
+  *aUnit = NS_Atomize(StringTail(aString, j-i)).take();
 }
 
 void

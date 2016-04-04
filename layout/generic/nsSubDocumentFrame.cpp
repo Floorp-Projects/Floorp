@@ -135,6 +135,7 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
     nsCOMPtr<nsIDocument> oldContainerDoc;
     nsView* detachedViews =
       frameloader->GetDetachedSubdocView(getter_AddRefs(oldContainerDoc));
+    frameloader->SetDetachedSubdocView(nullptr, nullptr);
     if (detachedViews) {
       if (oldContainerDoc == aContent->OwnerDoc()) {
         // Restore stashed presentation.
@@ -145,7 +146,6 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
         frameloader->Hide();
       }
     }
-    frameloader->SetDetachedSubdocView(nullptr, nullptr);
   }
 
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
@@ -571,9 +571,9 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     childItems.AppendToTop(layerItem);
   }
 
-  if (aBuilder->IsForImageVisibility()) {
+  if (aBuilder->IsForFrameVisibility()) {
     // We don't add the childItems to the return list as we're dealing with them here.
-    presShell->RebuildImageVisibilityDisplayList(childItems);
+    presShell->RebuildApproximateFrameVisibilityDisplayList(childItems);
     childItems.DeleteAll();
   } else {
     aLists.Content()->AppendToTop(&childItems);
@@ -945,13 +945,16 @@ public:
     if (!mPresShell->IsDestroying()) {
       mPresShell->FlushPendingNotifications(Flush_Frames);
     }
+
+    // Either the frame has been constructed by now, or it never will be,
+    // either way we want to clear the stashed views.
+    mFrameLoader->SetDetachedSubdocView(nullptr, nullptr);
+
     nsSubDocumentFrame* frame = do_QueryFrame(mFrameElement->GetPrimaryFrame());
     if ((!frame && mHideViewerIfFrameless) ||
         mPresShell->IsDestroying()) {
       // Either the frame element has no nsIFrame or the presshell is being
-      // destroyed. Hide the nsFrameLoader, which destroys the presentation,
-      // and clear our references to the stashed presentation.
-      mFrameLoader->SetDetachedSubdocView(nullptr, nullptr);
+      // destroyed. Hide the nsFrameLoader, which destroys the presentation.
       mFrameLoader->Hide();
     }
     return NS_OK;
@@ -977,7 +980,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // Detach the subdocument's views and stash them in the frame loader.
   // We can then reattach them if we're being reframed (for example if
   // the frame has been made position:fixed).
-  nsFrameLoader* frameloader = FrameLoader();
+  RefPtr<nsFrameLoader> frameloader = FrameLoader();
   if (frameloader) {
     nsView* detachedViews = ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
     frameloader->SetDetachedSubdocView(detachedViews, mContent->OwnerDoc());
@@ -986,7 +989,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // safely determine whether the frame is being reframed or destroyed.
     nsContentUtils::AddScriptRunner(
       new nsHideViewer(mContent,
-                       mFrameLoader,
+                       frameloader,
                        PresContext()->PresShell(),
                        (mDidCreateDoc || mCallingShow)));
   }

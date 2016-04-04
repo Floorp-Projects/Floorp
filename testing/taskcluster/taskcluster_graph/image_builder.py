@@ -1,10 +1,12 @@
 import hashlib
 import json
 import os
+import subprocess
 import tarfile
 import urllib2
 
 import taskcluster_graph.transform.routes as routes_transform
+import taskcluster_graph.transform.treeherder as treeherder_transform
 from slugid import nice as slugid
 from taskcluster_graph.templates import Templates
 
@@ -32,7 +34,7 @@ def docker_image(name):
 
     return '{}/{}:{}'.format(repository, name, version)
 
-def task_id_for_image(seen_images, project, name):
+def task_id_for_image(seen_images, project, name, create=True):
     if name in seen_images:
         return seen_images[name]['taskId']
 
@@ -43,6 +45,9 @@ def task_id_for_image(seen_images, project, name):
     if task_id:
         seen_images[name] = {'taskId': task_id}
         return task_id
+
+    if not create:
+        return None
 
     task_id = slugid()
     seen_images[name] = {
@@ -110,6 +115,7 @@ def generate_context_hash(image_path):
             files.append(os.path.join(dirpath, filename))
 
     for filename in sorted(files):
+        relative_filename = filename.replace(GECKO, '')
         with open(filename, 'rb') as f:
             file_hash = hashlib.sha256()
             while True:
@@ -117,7 +123,7 @@ def generate_context_hash(image_path):
                 if not data:
                     break
                 file_hash.update(data)
-            context_hash.update(file_hash.hexdigest() + '\t' + filename + '\n')
+            context_hash.update(file_hash.hexdigest() + '\t' + relative_filename + '\n')
 
     return context_hash.hexdigest()
 
@@ -202,6 +208,11 @@ def normalize_image_details(graph, task, seen_images, params, decision_task_id):
     templates = Templates(TASKCLUSTER_ROOT)
     image_task = templates.load(IMAGE_BUILD_TASK, image_parameters)
     if params['revision_hash']:
+        treeherder_transform.add_treeherder_revision_info(
+            image_task['task'],
+            params['head_rev'],
+            params['revision_hash']
+        )
         routes_transform.decorate_task_treeherder_routes(
             image_task['task'],
             "{}.{}".format(params['project'], params['revision_hash'])
@@ -223,3 +234,36 @@ def normalize_image_details(graph, task, seen_images, params, decision_task_id):
     graph['scopes'] |= set(route_scopes)
 
     details['required'] = True
+
+def docker_load_from_url(url):
+    """Get a docker image from a `docker save` tarball at the given URL,
+    loading it into the running daemon and returning the image name."""
+
+    # because we need to read this file twice (and one read is not all the way
+    # through), it is difficult to stream it.  So we downlaod to disk and then
+    # read it back.
+    filename = 'temp-docker-image.tar'
+
+    print("Downloading {}".format(url))
+    subprocess.check_call(['curl', '-#', '-L', '-o', filename, url])
+
+    print("Determining image name")
+    tf = tarfile.open(filename)
+    repositories = json.load(tf.extractfile('repositories'))
+    name = repositories.keys()[0]
+    tag = repositories[name].keys()[0]
+    name = '{}:{}'.format(name, tag)
+    print("Image name: {}".format(name))
+
+    print("Loading image into docker")
+    try:
+        subprocess.check_call(['docker', 'load', '-i', filename])
+    except subprocess.CalledProcessError:
+        print("*** `docker load` failed.  You may avoid re-downloading that tarball by fixing the")
+        print("*** problem and running `docker load < {}`.".format(filename))
+        raise
+
+    print("Deleting temporary file")
+    os.unlink(filename)
+
+    return name

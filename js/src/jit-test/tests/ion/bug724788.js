@@ -1,6 +1,6 @@
 // |jit-test| error: ReferenceError
 o0 = TypeError.prototype.__proto__
-o1 = Proxy.create({})
+o1 = new Proxy({}, {})
 o13 = {}.__proto__
 var o15 = Object.prototype
 o31 = (new Uint32Array(100)).buffer

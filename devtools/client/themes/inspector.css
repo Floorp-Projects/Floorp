@@ -16,26 +16,10 @@
   overflow: hidden;
 }
 
-#inspector-searchbox {
-  transition-property: max-width, -moz-padding-end, -moz-padding-start;
-  transition-duration: 250ms;
-  transition-timing-function: ease;
-}
-
-#inspector-searchbox:not([focused]):not([filled]) > .textbox-input-box {
-  overflow: hidden;
-}
-
-#inspector-searchbox:not([focused]):not([filled]) {
-  max-width: 20px !important;
-  -moz-padding-end: 5px;
-  -moz-padding-start: 22px;
-  background-position: 8px center, top left, top left;
-}
-
-#inspector-searchbox[focused],
-#inspector-searchbox[filled] {
-  max-width: 200px !important;
+#inspector-breadcrumbs-toolbar {
+  padding: 0px;
+  border-bottom-width: 0px;
+  border-top-width: 1px;
 }
 
 /* Expand/collapse panel toolbar button */

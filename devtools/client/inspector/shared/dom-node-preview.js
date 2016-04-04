@@ -7,9 +7,10 @@ const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {createNode} = require("devtools/client/animationinspector/utils");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 const STRINGS_URI = "chrome://devtools/locale/inspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 /**
  * UI component responsible for displaying a preview of a dom node.
@@ -71,6 +72,15 @@ DomNodePreview.prototype = {
     if (!this.options.compact) {
       this.previewEl.appendChild(document.createTextNode("<"));
     }
+
+    // Only used for ::before and ::after pseudo-elements.
+    this.pseudoEl = createNode({
+      parent: this.previewEl,
+      nodeType: "span",
+      attributes: {
+        "class": "pseudo-element theme-fg-color5"
+      }
+    });
 
     // Tag name.
     this.tagNameEl = createNode({
@@ -192,7 +202,7 @@ DomNodePreview.prototype = {
     this.stopListeners();
 
     this.el.remove();
-    this.el = this.tagNameEl = this.idEl = this.classEl = null;
+    this.el = this.tagNameEl = this.idEl = this.classEl = this.pseudoEl = null;
     this.highlightNodeEl = this.previewEl = null;
     this.nodeFront = this.inspector = null;
   },
@@ -270,7 +280,17 @@ DomNodePreview.prototype = {
     this.nodeFront = nodeFront;
     let {tagName, attributes} = nodeFront;
 
-    this.tagNameEl.textContent = tagName.toLowerCase();
+    if (nodeFront.isPseudoElement) {
+      this.pseudoEl.textContent = nodeFront.isBeforePseudoElement
+                                   ? "::before"
+                                   : "::after";
+      this.pseudoEl.style.display = "inline";
+      this.tagNameEl.style.display = "none";
+    } else {
+      this.tagNameEl.textContent = tagName.toLowerCase();
+      this.pseudoEl.style.display = "none";
+      this.tagNameEl.style.display = "inline";
+    }
 
     let idIndex = attributes.findIndex(({name}) => name === "id");
     if (idIndex > -1 && attributes[idIndex].value) {

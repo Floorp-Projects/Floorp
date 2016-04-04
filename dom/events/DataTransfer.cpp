@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DataTransfer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DataTransfer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFiles)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mItems)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDragTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDragImage)
@@ -57,7 +57,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DataTransfer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DataTransfer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFiles)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mItems)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDragTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDragImage)
@@ -162,7 +162,7 @@ DataTransfer::Constructor(const GlobalObject& aGlobal,
 {
   nsAutoCString onEventType("on");
   AppendUTF16toUTF8(aEventType, onEventType);
-  nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(onEventType);
+  nsCOMPtr<nsIAtom> eventTypeAtom = NS_Atomize(onEventType);
   if (!eventTypeAtom) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
@@ -281,11 +281,12 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
 FileList*
 DataTransfer::GetFiles(ErrorResult& aRv)
 {
-  return GetFilesInternal(aRv, nsContentUtils::SubjectPrincipal());
+  return GetFileListInternal(aRv, nsContentUtils::SubjectPrincipal());
 }
 
 FileList*
-DataTransfer::GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal)
+DataTransfer::GetFileListInternal(ErrorResult& aRv,
+                                  nsIPrincipal* aSubjectPrincipal)
 {
   if (mEventMessage != eDrop &&
       mEventMessage != eLegacyDragDrop &&
@@ -293,14 +294,15 @@ DataTransfer::GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal
     return nullptr;
   }
 
-  if (!mFiles) {
-    mFiles = new FileList(static_cast<nsIDOMDataTransfer*>(this));
+  if (!mFileList) {
+    mFileList = new FileList(static_cast<nsIDOMDataTransfer*>(this));
 
     uint32_t count = mItems.Length();
 
     for (uint32_t i = 0; i < count; i++) {
       nsCOMPtr<nsIVariant> variant;
-      aRv = GetDataAtInternal(NS_ConvertUTF8toUTF16(kFileMime), i, aSubjectPrincipal, getter_AddRefs(variant));
+      aRv = GetDataAtInternal(NS_ConvertUTF8toUTF16(kFileMime), i,
+                              aSubjectPrincipal, getter_AddRefs(variant));
       if (aRv.Failed()) {
         return nullptr;
       }
@@ -318,13 +320,19 @@ DataTransfer::GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal
 
       RefPtr<File> domFile;
       if (file) {
-#ifdef DEBUG
-        if (XRE_GetProcessType() == GeckoProcessType_Default) {
-          bool isDir;
-          file->IsDirectory(&isDir);
-          MOZ_ASSERT(!isDir, "How did we get here?");
+        MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
+                   "nsIFile objects are not expected on the content process");
+
+        bool isDir;
+        aRv = file->IsDirectory(&isDir);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
         }
-#endif
+
+        if (isDir) {
+          continue;
+        }
+
         domFile = File::CreateFromFile(GetParentObject(), file);
       } else {
         nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports);
@@ -338,21 +346,18 @@ DataTransfer::GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal
         MOZ_ASSERT(domFile);
       }
 
-      if (!mFiles->Append(domFile)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return nullptr;
-      }
+      mFileList->Append(domFile);
     }
   }
 
-  return mFiles;
+  return mFileList;
 }
 
 NS_IMETHODIMP
 DataTransfer::GetFiles(nsIDOMFileList** aFileList)
 {
   ErrorResult rv;
-  NS_IF_ADDREF(*aFileList = GetFilesInternal(rv, nsContentUtils::GetSystemPrincipal()));
+  NS_IF_ADDREF(*aFileList = GetFileListInternal(rv, nsContentUtils::GetSystemPrincipal()));
   return rv.StealNSResult();
 }
 
@@ -854,7 +859,7 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
     return nullptr;
   }
 
-  if (!mFiles) {
+  if (!mFileList) {
     GetFiles(aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -862,40 +867,9 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
-
-  if (mFiles && mFiles->Length()) {
-    if (!filesAndDirsSeq.SetLength(mFiles->Length(), mozilla::fallible_t())) {
-      p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-      return p.forget();
-    }
-
-    for (uint32_t i = 0; i < mFiles->Length(); ++i) {
-      if (mFiles->Item(i)->Impl()->IsDirectory()) {
-#if defined(ANDROID) || defined(MOZ_B2G)
-        MOZ_ASSERT(false,
-                   "Directory picking should have been redirected to normal "
-                   "file picking for platforms that don't have a directory "
-                   "picker");
-#endif
-        nsAutoString path;
-        mFiles->Item(i)->GetMozFullPathInternal(path, aRv);
-        if (aRv.Failed()) {
-          return nullptr;
-        }
-        int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
-        nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
-        nsDependentSubstring basename = Substring(path, leafSeparatorIndex);
-
-        RefPtr<OSFileSystem> fs = new OSFileSystem(dirname);
-        fs->Init(parentNode->OwnerDoc()->GetInnerWindow());
-
-        RefPtr<Directory> directory = new Directory(fs, basename);
-        directory->SetContentFilters(NS_LITERAL_STRING("filter-out-sensitive"));
-        filesAndDirsSeq[i].SetAsDirectory() = directory;
-      } else {
-        filesAndDirsSeq[i].SetAsFile() = mFiles->Item(i);
-      }
-    }
+  mFileList->ToSequence(filesAndDirsSeq, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
 
   p->MaybeResolve(filesAndDirsSeq);
@@ -952,7 +926,7 @@ DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
   if (!dragNode) {
     return nullptr;
   }
-    
+
   nsIDocument* doc = dragNode->GetCurrentDoc();
   if (!doc) {
     return nullptr;
@@ -1064,7 +1038,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
     nsCOMPtr<nsISupports> data;
     if (NS_FAILED(aVariant->GetAsISupports(getter_AddRefs(data))))
        return false;
- 
+
     nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
     if (fdp) {
       // for flavour data providers, use kFlavorHasDataProvider (which has the

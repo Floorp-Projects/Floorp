@@ -14,6 +14,7 @@
 
 #include "common/angleutils.h"
 #include "libANGLE/Constants.h"
+#include "libANGLE/Debug.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/RefCountObject.h"
@@ -44,7 +45,7 @@ struct Extensions;
 struct ImageIndex;
 struct Rectangle;
 
-class Framebuffer
+class Framebuffer final : public LabeledObject
 {
   public:
 
@@ -55,6 +56,8 @@ class Framebuffer
         explicit Data(const Caps &caps);
         ~Data();
 
+        const std::string &getLabel();
+
         const FramebufferAttachment *getReadAttachment() const;
         const FramebufferAttachment *getFirstColorAttachment() const;
         const FramebufferAttachment *getDepthOrStencilAttachment() const;
@@ -64,12 +67,15 @@ class Framebuffer
         const FramebufferAttachment *getDepthStencilAttachment() const;
 
         const std::vector<GLenum> &getDrawBufferStates() const { return mDrawBufferStates; }
+        GLenum getReadBufferState() const { return mReadBufferState; }
         const std::vector<FramebufferAttachment> &getColorAttachments() const { return mColorAttachments; }
 
         bool attachmentsHaveSameDimensions() const;
 
       private:
         friend class Framebuffer;
+
+        std::string mLabel;
 
         std::vector<FramebufferAttachment> mColorAttachments;
         FramebufferAttachment mDepthAttachment;
@@ -82,6 +88,9 @@ class Framebuffer
     Framebuffer(const Caps &caps, rx::ImplFactory *factory, GLuint id);
     Framebuffer(rx::SurfaceImpl *surface);
     virtual ~Framebuffer();
+
+    void setLabel(const std::string &label) override;
+    const std::string &getLabel() const override;
 
     const rx::FramebufferImpl *getImplementation() const { return mImpl; }
     rx::FramebufferImpl *getImplementation() { return mImpl; }
@@ -108,14 +117,15 @@ class Framebuffer
 
     const FramebufferAttachment *getAttachment(GLenum attachment) const;
 
-    GLenum getDrawBufferState(unsigned int colorAttachment) const;
+    size_t getDrawbufferStateCount() const;
+    GLenum getDrawBufferState(size_t drawBuffer) const;
     void setDrawBuffers(size_t count, const GLenum *buffers);
+    const FramebufferAttachment *getDrawBuffer(size_t drawBuffer) const;
+    bool hasEnabledDrawBuffer() const;
 
     GLenum getReadBufferState() const;
     void setReadBuffer(GLenum buffer);
 
-    bool isEnabledColorAttachment(size_t colorAttachment) const;
-    bool hasEnabledColorAttachment() const;
     size_t getNumColorBuffers() const;
     bool hasDepth() const;
     bool hasStencil() const;
@@ -129,11 +139,17 @@ class Framebuffer
     Error invalidate(size_t count, const GLenum *attachments);
     Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area);
 
-    Error clear(Context *context, GLbitfield mask);
-    Error clearBufferfv(Context *context, GLenum buffer, GLint drawbuffer, const GLfloat *values);
-    Error clearBufferuiv(Context *context, GLenum buffer, GLint drawbuffer, const GLuint *values);
-    Error clearBufferiv(Context *context, GLenum buffer, GLint drawbuffer, const GLint *values);
-    Error clearBufferfi(Context *context,
+    Error clear(const gl::Data &data, GLbitfield mask);
+    Error clearBufferfv(const gl::Data &data,
+                        GLenum buffer,
+                        GLint drawbuffer,
+                        const GLfloat *values);
+    Error clearBufferuiv(const gl::Data &data,
+                         GLenum buffer,
+                         GLint drawbuffer,
+                         const GLuint *values);
+    Error clearBufferiv(const gl::Data &data, GLenum buffer, GLint drawbuffer, const GLint *values);
+    Error clearBufferfi(const gl::Data &data,
                         GLenum buffer,
                         GLint drawbuffer,
                         GLfloat depth,
@@ -141,18 +157,36 @@ class Framebuffer
 
     GLenum getImplementationColorReadFormat() const;
     GLenum getImplementationColorReadType() const;
-    Error readPixels(Context *context,
+    Error readPixels(const gl::State &state,
                      const gl::Rectangle &area,
                      GLenum format,
                      GLenum type,
                      GLvoid *pixels) const;
 
-    Error blit(Context *context,
-               const gl::Rectangle &sourceArea,
-               const gl::Rectangle &destArea,
+    Error blit(const State &state,
+               const Rectangle &sourceArea,
+               const Rectangle &destArea,
                GLbitfield mask,
                GLenum filter,
-               const gl::Framebuffer *sourceFramebuffer);
+               const Framebuffer *sourceFramebuffer);
+
+    enum DirtyBitType
+    {
+        DIRTY_BIT_COLOR_ATTACHMENT_0,
+        DIRTY_BIT_COLOR_ATTACHMENT_MAX =
+            DIRTY_BIT_COLOR_ATTACHMENT_0 + gl::IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS,
+        DIRTY_BIT_DEPTH_ATTACHMENT = DIRTY_BIT_COLOR_ATTACHMENT_MAX,
+        DIRTY_BIT_STENCIL_ATTACHMENT,
+        DIRTY_BIT_DRAW_BUFFERS,
+        DIRTY_BIT_READ_BUFFER,
+        DIRTY_BIT_UNKNOWN,
+        DIRTY_BIT_MAX = DIRTY_BIT_UNKNOWN,
+    };
+
+    typedef std::bitset<DIRTY_BIT_MAX> DirtyBits;
+    bool hasAnyDirtyBit() const { return mDirtyBits.any(); }
+
+    void syncState() const;
 
   protected:
     void detachResourceById(GLenum resourceType, GLuint resourceId);
@@ -160,6 +194,9 @@ class Framebuffer
     Data mData;
     rx::FramebufferImpl *mImpl;
     GLuint mId;
+
+    // TODO(jmadill): See if we can make this non-mutable.
+    mutable DirtyBits mDirtyBits;
 };
 
 }

@@ -43,7 +43,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     dnl failure here is benign, so we can ignore it if it happens.
     dnl Use tr instead of xargs in order to avoid problems with path separators on Windows.
     LLVM_LDFLAGS=`$LLVMCONFIG --system-libs | tr '\n' ' '`
-    LLVM_LDFLAGS="$LLVM_LDFLAGS `$LLVMCONFIG --ldflags --libs core mc analysis asmparser mcparser bitreader option | tr '\n' ' '`"
+    LLVM_LDFLAGS="$LLVM_LDFLAGS `$LLVMCONFIG --ldflags --libs core mc analysis asmparser mcparser bitreader option profiledata | tr '\n' ' '`"
 
     if test "${HOST_OS_ARCH}" = "Darwin"; then
         CLANG_LDFLAGS="-lclangFrontend -lclangDriver -lclangSerialization"

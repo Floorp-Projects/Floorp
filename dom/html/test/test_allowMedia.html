@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=759964
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 759964</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
   /** Test for Bug 759964 **/
@@ -35,7 +35,7 @@ var tests = [
   // doesn't load its source.
   function basic() {
     var iframe = insertIframe();
-    docshellForWindow(iframe.contentWindow).allowMedia = false;
+    SpecialPowers.allowMedia(iframe.contentWindow, false);
     loadIframe(iframe, TEST_PAGE, function () {
       verifyPass();
       iframe.remove();
@@ -46,14 +46,13 @@ var tests = [
   // Set allowMedia = false on parent docshell, load a page with <audio> in a
   // child iframe, verify the <audio> doesn't load its source.
   function inherit() {
-    var docshell = docshellForWindow(window);
-    docshell.allowMedia = false;
+    SpecialPowers.allowMedia(window, false);
 
     var iframe = insertIframe();
     loadIframe(iframe, TEST_PAGE, function () {
       verifyPass();
       iframe.remove();
-      docshell.allowMedia = true;
+      SpecialPowers.allowMedia(window, true);
       runNextTest();
     });
   },
@@ -63,7 +62,7 @@ var tests = [
   function displayNone() {
     var iframe = insertIframe();
     iframe.style.display = "none";
-    docshellForWindow(iframe.contentWindow).allowMedia = false;
+    SpecialPowers.allowMedia(iframe.contentWindow, false);
     loadIframe(iframe, TEST_PAGE, function () {
       verifyPass();
       iframe.remove();
@@ -71,13 +70,6 @@ var tests = [
     });
   },
 ];
-
-function docshellForWindow(win) {
-  return win.
-         QueryInterface(Ci.nsIInterfaceRequestor).
-         getInterface(Ci.nsIWebNavigation).
-         QueryInterface(Ci.nsIDocShell);
-}
 
 function insertIframe() {
   var iframe = document.createElement("iframe");

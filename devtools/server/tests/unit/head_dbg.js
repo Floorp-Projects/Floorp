@@ -368,10 +368,13 @@ function attachTestThread(aClient, aTitle, aCallback) {
 // thread, and then resume it. Pass |aCallback| the thread's response to
 // the 'resume' packet, a TabClient for the tab, and a ThreadClient for the
 // thread.
-function attachTestTabAndResume(aClient, aTitle, aCallback) {
-  attachTestThread(aClient, aTitle, function(aResponse, aTabClient, aThreadClient) {
-    aThreadClient.resume(function (aResponse) {
-      aCallback(aResponse, aTabClient, aThreadClient);
+function attachTestTabAndResume(aClient, aTitle, aCallback = () => {}) {
+  return new Promise((resolve, reject) => {
+    attachTestThread(aClient, aTitle, function(aResponse, aTabClient, aThreadClient) {
+      aThreadClient.resume(function (aResponse) {
+        aCallback(aResponse, aTabClient, aThreadClient);
+        resolve([aResponse, aTabClient, aThreadClient]);
+      });
     });
   });
 }
@@ -718,6 +721,20 @@ function stepIn(client, threadClient) {
   const paused = waitForPause(client);
   return threadClient.stepIn()
     .then(() => paused);
+}
+
+/**
+ * Resume JS execution for a step over and wait for the pause after the step
+ * has been taken.
+ *
+ * @param DebuggerClient client
+ * @param ThreadClient threadClient
+ * @returns Promise
+ */
+function stepOver(client, threadClient) {
+  dumpn("Stepping over.");
+  return threadClient.stepOver()
+    .then(() => waitForPause(client));
 }
 
 /**

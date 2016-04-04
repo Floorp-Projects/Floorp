@@ -12,17 +12,22 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var index = GamepadService.addGamepad("test gamepad", // id
-                                      SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-                                      4, // buttons
-                                      2);// axes
+var index;
+addGamepad("test gamepad 1", // id
+           SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+           4, // buttons
+           2).then(function(i) {
+             index = i;
+             // Press a button to make the gamepad visible to the page.
+             GamepadService.newButtonEvent(index, 0, true);
+             GamepadService.newButtonEvent(index, 0, true);
+           });
 
 var timea=0;
 window.addEventListener("gamepadbuttondown", buttonpresshandler);
 
 var firstPress = true;
-GamepadService.newButtonEvent(index, 0, true);
-GamepadService.newButtonEvent(index, 0, true);
+var testOver = false;
 
 function cleanup(){
   SpecialPowers.executeSoon(function() {
@@ -32,17 +37,19 @@ function cleanup(){
 }
 
 function buttonpresshandler(e) {
-  if(timea == 0){
-    timea = e.gamepad.timestamp;
+  if (testOver) {
+    return;
   }
-  else{
-    ok(timea <= e.gamepad.timestamp);
+  if (timea == 0){
+    timea = e.gamepad.timestamp;
+  } else {
+    ok(timea <= e.gamepad.timestamp, "Timestamp less than last timestamp");
   }
   GamepadService.newButtonEvent(index, 0, false);
   if (!firstPress) {
+    testOver = true;
     SpecialPowers.executeSoon(cleanup);
-  }
-  else {
+  } else {
     firstPress = false;
   }
 }

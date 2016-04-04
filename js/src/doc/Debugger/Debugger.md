@@ -117,7 +117,9 @@ compartment.
 
 <code>onNewPromise(<i>promise</i>)</code>
 :   A new Promise object, referenced by the [`Debugger.Object`][object] instance
-    *promise*, has been allocated in the scope of the debuggees.
+    *promise*, has been allocated in the scope of the debuggees. The Promise's
+    allocation stack can be obtained using the *promiseAllocationStack*
+    accessor property of the [`Debugger.Object`][object] instance *promise*.
 
     This handler method should return a [resumption value][rv] specifying how
     the debuggee's execution should proceed. However, note that a <code>{
@@ -127,9 +129,10 @@ compartment.
 <code>onPromiseSettled(<i>promise</i>)</code>
 :   A Promise object, referenced by the [`Debugger.Object`][object] instance
     *promise* that was allocated within a debuggee scope, has settled (either
-    fulfilled or rejected). The Promise's state and fulfillment or rejection
-    value can be obtained via the
-    [PromiseDebugging webidl interface][promise-debugging].
+    fulfilled or rejected). The Promise's state, fulfillment or rejection
+    value, and the allocation and resolution stacks can be obtained using the
+    Promise-related accessor properties of the [`Debugger.Object`][object]
+    instance *promise*.
 
     This handler method should return a [resumption value][rv] specifying how
     the debuggee's execution should proceed. However, note that a <code>{
@@ -253,45 +256,6 @@ compartment.
     within the JavaScript system (the "JSRuntime", in SpiderMonkey terms),
     thereby escaping the capability-based limits. For this reason,
     `onNewGlobalObject` is only available to privileged code.
-
-<code>onIonCompilation(<i>graph</i>)</code>
-:   A new IonMonkey compilation result is attached to a script instance of
-    the Debuggee, the <i>graph</i> contains the internal intermediate
-    representations of the compiler.
-
-    The value <i>graph</i> is an object composed of the following properties:
-
-    `json`
-    :   String containing a JSON of the intermediate representation used by
-        the compiler. This JSON string content is composed of 2 intermediate
-        representation of the graph, a `mir` (Middle-level IR), and a
-        `lir` (Low-level IR).
-
-        Both have a property `blocks`, which is an array of basic
-        blocks in [SSA form][ssa-form] which are used to construct the
-        control flow graph. All elements of these arrays are objects which
-        have a `number`, and an `instructions` properties.
-
-        The MIR blocks have additional properties such as the
-        `predecessors` and `successors` of each block, which can
-        be used to reconstruct the control flow graph, with the
-        `number` properties of the blocks.
-
-        The `instructions` properties are array of objects which have
-        an `id` and an `opcode`. The `id` corresponds to the
-        [SSA form][ssa-form] identifier (number) of each instruction, and the
-        `opcode` is a string which represents the instruction.
-
-        This JSON string contains even more detailed internal information
-        which remains undocummented, as it is potentially subject to
-        frequent modifications.
-
-    `scripts`
-    :   Array of [`Debugger.Script`][script] instances. For a block at
-        `mir.blocks[i]` or `lir.blocks[i]` in the JSON, `scripts[i]` is the
-        [`Debugger.Script`][script] containing that block's code.
-
-    This method's return value is ignored.
 
 
 
@@ -535,6 +499,16 @@ other kinds of objects.
     debuggee. If <i>global</i> does not designate a global object, throw a
     `TypeError`. Determine which global is designated by <i>global</i>
     using the same rules as [`Debugger.prototype.addDebuggee`][add].
+
+<code>adoptDebuggeeValue(<i>value</i>)</code>
+:    Given a debuggee value `value` owned by an arbitrary `Debugger`, return an
+     equivalent debuggee value owned by this `Debugger`.
+
+     If `value` is a primitive value, return it unchanged. If `value` is a
+     `Debugger.Object` owned by an arbitrary `Debugger`, return an equivalent
+     `Debugger.Object` owned by this `Debugger`. Otherwise, if `value` is some
+     other kind of object, and hence not a proper debuggee value, throw a
+     TypeError instead.
 
 ## Static methods of the Debugger Object
 

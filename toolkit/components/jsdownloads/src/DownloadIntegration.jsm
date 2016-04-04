@@ -125,6 +125,20 @@ const kObserverTopics = [
   "xpcom-will-shutdown",
 ];
 
+/**
+ * Maps nsIApplicationReputationService verdicts with the DownloadError ones.
+ */
+const kVerdictMap = {
+  [Ci.nsIApplicationReputationService.VERDICT_DANGEROUS]:
+                Downloads.Error.BLOCK_VERDICT_MALWARE,
+  [Ci.nsIApplicationReputationService.VERDICT_UNCOMMON]:
+                Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+  [Ci.nsIApplicationReputationService.VERDICT_POTENTIALLY_UNWANTED]:
+                Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
+  [Ci.nsIApplicationReputationService.VERDICT_DANGEROUS_HOST]:
+                Downloads.Error.BLOCK_VERDICT_MALWARE,
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadIntegration
 
@@ -148,6 +162,7 @@ this.DownloadIntegration = {
   dontCheckApplicationReputation: true,
 #endif
   shouldBlockInTestForApplicationReputation: false,
+  verdictInTestForApplicationReputation: "",
   shouldKeepBlockedDataInTest: false,
   dontOpenFileAndFolder: false,
   downloadDoneCalled: false,
@@ -334,21 +349,25 @@ this.DownloadIntegration = {
    */
   shouldPersistDownload: function (aDownload)
   {
-    // In the default implementation, we save all the downloads currently in
-    // progress, as well as stopped downloads for which we retained partially
-    // downloaded data.  Stopped downloads for which we don't need to track the
-    // presence of a ".part" file are only retained in the browser history.
-    // On b2g, we keep a few days of history. On Android we store all history.
+    // On all platforms, we save all the downloads currently in progress, as
+    // well as stopped downloads for which we retained partially downloaded
+    // data or we have blocked data.
+    if (!aDownload.stopped || aDownload.hasPartialData ||
+        aDownload.hasBlockedData) {
+      return true;
+    }
 #ifdef MOZ_B2G
+    // On B2G we keep a few days of history.
     let maxTime = Date.now() -
       Services.prefs.getIntPref("dom.downloads.max_retention_days") * 24 * 60 * 60 * 1000;
-    return (aDownload.startTime > maxTime) ||
-           aDownload.hasPartialData ||
-           !aDownload.stopped;
+    return aDownload.startTime > maxTime;
 #elif defined(MOZ_WIDGET_ANDROID)
+    // On Android we store all history.
     return true;
 #else
-    return aDownload.hasPartialData || !aDownload.stopped;
+    // On Desktop, stopped downloads for which we don't need to track the
+    // presence of a ".part" file are only retained in the browser history.
+    return false;
 #endif
   },
 
@@ -531,11 +550,20 @@ this.DownloadIntegration = {
    *        The download object.
    *
    * @return {Promise}
-   * @resolves The boolean indicates to block downloads or not.
+   * @resolves Object with the following properties:
+   *           {
+   *             shouldBlock: Whether the download should be blocked.
+   *             verdict: Detailed reason for the block, according to the
+   *                      "Downloads.Error.BLOCK_VERDICT_" constants, or empty
+   *                      string if the reason is unknown.
+   *           }
    */
   shouldBlockForReputationCheck: function (aDownload) {
     if (this.dontCheckApplicationReputation) {
-      return Promise.resolve(this.shouldBlockInTestForApplicationReputation);
+      return Promise.resolve({
+        shouldBlock: this.shouldBlockInTestForApplicationReputation,
+        verdict: this.verdictInTestForApplicationReputation,
+      });
     }
     let hash;
     let sigInfo;
@@ -546,10 +574,16 @@ this.DownloadIntegration = {
       channelRedirects = aDownload.saver.getRedirects();
     } catch (ex) {
       // Bail if DownloadSaver doesn't have a hash or signature info.
-      return Promise.resolve(false);
+      return Promise.resolve({
+        shouldBlock: false,
+        verdict: "",
+      });
     }
     if (!hash || !sigInfo) {
-      return Promise.resolve(false);
+      return Promise.resolve({
+        shouldBlock: false,
+        verdict: "",
+      });
     }
     let deferred = Promise.defer();
     let aReferrer = null;
@@ -564,8 +598,11 @@ this.DownloadIntegration = {
       suggestedFileName: OS.Path.basename(aDownload.target.path),
       signatureInfo: sigInfo,
       redirects: channelRedirects },
-      function onComplete(aShouldBlock, aRv) {
-        deferred.resolve(aShouldBlock);
+      function onComplete(aShouldBlock, aRv, aVerdict) {
+        deferred.resolve({
+          shouldBlock: aShouldBlock,
+          verdict: (aShouldBlock && kVerdictMap[aVerdict]) || "",
+        });
       });
     return deferred.promise;
   },

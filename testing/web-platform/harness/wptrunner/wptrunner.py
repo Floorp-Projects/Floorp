@@ -102,6 +102,8 @@ def list_disabled(test_paths, product, **kwargs):
 def get_pause_after_test(test_loader, **kwargs):
     total_tests = sum(len(item) for item in test_loader.tests.itervalues())
     if kwargs["pause_after_test"] is None:
+        if kwargs["repeat_until_unexpected"]:
+            return False
         if kwargs["repeat"] == 1 and total_tests == 1:
             return True
         return False
@@ -160,10 +162,15 @@ def run_tests(config, test_paths, product, **kwargs):
             browser_kwargs = get_browser_kwargs(ssl_env=ssl_env, **kwargs)
 
             repeat = kwargs["repeat"]
-            for repeat_count in xrange(repeat):
-                if repeat > 1:
-                    logger.info("Repetition %i / %i" % (repeat_count + 1, repeat))
+            repeat_count = 0
+            repeat_until_unexpected = kwargs["repeat_until_unexpected"]
 
+            while repeat_count < repeat or repeat_until_unexpected:
+                repeat_count += 1
+                if repeat_until_unexpected:
+                    logger.info("Repetition %i" % (repeat_count))
+                elif repeat > 1:
+                    logger.info("Repetition %i / %i" % (repeat_count, repeat))
 
                 unexpected_count = 0
                 logger.suite_start(test_loader.test_ids, run_info)
@@ -208,6 +215,8 @@ def run_tests(config, test_paths, product, **kwargs):
 
                 unexpected_total += unexpected_count
                 logger.info("Got %i unexpected results" % unexpected_count)
+                if repeat_until_unexpected and unexpected_total > 0:
+                    break
                 logger.suite_end()
 
     return unexpected_total == 0
@@ -215,9 +224,9 @@ def run_tests(config, test_paths, product, **kwargs):
 
 def main():
     """Main entry point when calling from the command line"""
-    try:
-        kwargs = wptcommandline.parse_args()
+    kwargs = wptcommandline.parse_args()
 
+    try:
         if kwargs["prefs_root"] is None:
             kwargs["prefs_root"] = os.path.abspath(os.path.join(here, "prefs"))
 
@@ -230,6 +239,9 @@ def main():
         else:
             return not run_tests(**kwargs)
     except Exception:
-        import pdb, traceback
-        print traceback.format_exc()
-        pdb.post_mortem()
+        if kwargs["pdb"]:
+            import pdb, traceback
+            print traceback.format_exc()
+            pdb.post_mortem()
+        else:
+            raise

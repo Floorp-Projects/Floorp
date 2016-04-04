@@ -119,6 +119,7 @@ TestRunner._checkForHangs = function() {
 
   function killTest(win) {
     if ("SimpleTest" in win) {
+      win.SimpleTest.timeout();
       win.SimpleTest.finish();
     } else if ("W3CTest" in win) {
       win.W3CTest.timeout();
@@ -449,10 +450,13 @@ TestRunner.runNextTest = function() {
 
         SpecialPowers.unregisterProcessCrashObservers();
 
+        let e10sMode = SpecialPowers.isMainProcess() ? "non-e10s" : "e10s";
+
         TestRunner.structuredLogger.info("TEST-START | Shutdown");
         TestRunner.structuredLogger.info("Passed:  " + passCount);
         TestRunner.structuredLogger.info("Failed:  " + failCount);
         TestRunner.structuredLogger.info("Todo:    " + todoCount);
+        TestRunner.structuredLogger.info("Mode:    " + e10sMode);
         TestRunner.structuredLogger.info("Slowest: " + TestRunner.slowestTestTime + 'ms - ' + TestRunner.slowestTestURL);
 
         // If we are looping, don't send this cause it closes the log file
@@ -596,7 +600,6 @@ TestRunner.testFinished = function(tests) {
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
         cleanUpCrashDumpFiles();
-        SpecialPowers.flushAllAppsLaunchable();
         SpecialPowers.flushPermissions(function () { SpecialPowers.flushPrefEnv(runNextTest); });
     });
 };

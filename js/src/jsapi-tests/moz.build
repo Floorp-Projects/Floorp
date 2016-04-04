@@ -83,6 +83,7 @@ UNIFIED_SOURCES += [
     'testStructuredClone.cpp',
     'testSymbol.cpp',
     'testThreadingExclusiveData.cpp',
+    'testThreadingMutex.cpp',
     'testToIntWidth.cpp',
     'testTypedArrays.cpp',
     'testUbiNode.cpp',
@@ -111,6 +112,11 @@ if CONFIG['ENABLE_ION']:
         'testJitRValueAlloc.cpp',
     ]
 
+if CONFIG['SPIDERMONKEY_PROMISE']:
+    UNIFIED_SOURCES += [
+        'testPromise.cpp',
+    ]
+
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [
@@ -123,3 +129,10 @@ USE_LIBS += [
 ]
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+
+# This is intended as a temporary workaround to enable VS2015.
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd4312']
+
+DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
+OBJDIR_PP_FILES.js.src['jsapi-tests'] += ['jsapi-tests-gdb.py.in']

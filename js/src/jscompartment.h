@@ -7,6 +7,7 @@
 #ifndef jscompartment_h
 #define jscompartment_h
 
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Variant.h"
@@ -29,6 +30,10 @@ class JitCompartment;
 namespace gc {
 template<class Node> class ComponentFinder;
 } // namespace gc
+
+namespace wasm {
+class Module;
+} // namespace wasm
 
 struct NativeIterator;
 class ClonedBlockObject;
@@ -58,6 +63,10 @@ class DtoaCache {
         this->d = d;
         this->s = s;
     }
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkCacheAfterMovingGC() { MOZ_ASSERT(!s || !IsForwarded(s)); }
+#endif
 };
 
 struct CrossCompartmentKey
@@ -68,7 +77,9 @@ struct CrossCompartmentKey
         DebuggerScript,
         DebuggerSource,
         DebuggerObject,
-        DebuggerEnvironment
+        DebuggerEnvironment,
+        DebuggerWasmScript,
+        DebuggerWasmSource
     };
 
     Kind kind;
@@ -289,7 +300,6 @@ struct JSCompartment
     bool                         marked;
     bool                         warnedAboutFlagsArgument;
     bool                         warnedAboutExprClosure;
-    bool                         warnedAboutRegExpMultiline;
 
 #ifdef DEBUG
     bool                         firedOnNewGlobalObject;
@@ -464,6 +474,11 @@ struct JSCompartment
 
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
+
+    // All wasm modules in the compartment. Weakly held.
+    //
+    // The caller needs to call wasm::Module::readBarrier() manually!
+    mozilla::LinkedList<js::wasm::Module> wasmModuleWeakList;
 
   private:
     // All non-syntactic lexical scopes in the compartment. These are kept in

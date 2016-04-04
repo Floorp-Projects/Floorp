@@ -5,3 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEFINES['ANDROID_SDK'] = CONFIG['ANDROID_SDK']
+DEFINES['ANDROID_SDK_ROOT'] = CONFIG['ANDROID_SDK_ROOT']
+
+OBJDIR_FILES.mobile.android.geckoview_library += [
+    '.classpath',
+    '.project',
+    'build.xml',
+]
+
+OBJDIR_PP_FILES.mobile.android.geckoview_library += [
+    'AndroidManifest.xml.in',
+    'local.properties.in',
+    'project.properties.in',
+]

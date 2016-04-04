@@ -8,7 +8,8 @@ function checkConstruct(thing) {
         new thing();
         assertEq(0, 1, "not reached " + thing);
     } catch (e) {
-        assertEq(String(e.message).indexOf(" is not a constructor") === -1, false);
+        assertEq(e.message.includes(" is not a constructor") ||
+                 e.message === "Function.prototype.toString called on incompatible object", true);
     }
 }
 
@@ -21,24 +22,11 @@ checkConstruct(boundFunctionPrototype);
 var boundBuiltin = Math.sin.bind();
 checkConstruct(boundBuiltin);
 
-/* We set the proxies construct trap to undefined,
- * so the call trap is used as constructor.
- */
-
-var handler = {
-    getPropertyDescriptor(name) {
-        /* toSource may be called to generate error message. */
-        assertEq(name, "toSource");
-        return { value: () => "foo" };
-    }
-};
-
-var proxiedFunctionPrototype = Proxy.create(handler, Function.prototype, undefined);
+var proxiedFunctionPrototype = new Proxy(Function.prototype, {});
 checkConstruct(proxiedFunctionPrototype);
 
-var proxiedBuiltin = Proxy.create(handler, parseInt, undefined);
+var proxiedBuiltin = new Proxy(parseInt, {});
 checkConstruct(proxiedBuiltin);
-
 
 if (typeof reportCompare == 'function')
     reportCompare(0, 0, "ok");

@@ -1,0 +1,205 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include LayersMessages;
+include protocol PBrowser;
+include protocol PLayer;
+include protocol PLayerTransaction;
+include "mozilla/GfxMessageUtils.h";
+
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
+using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
+using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
+using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+using mozilla::CSSIntRegion from "Units.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDeviceIntRegion from "Units.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
+
+namespace mozilla {
+namespace layers {
+
+
+/**
+ * The PCompositorBridge protocol is used to manage communication between
+ * the main thread and the compositor thread context. It's primary
+ * purpose is to manage the PLayerTransaction sub protocol.
+ */
+sync protocol PCompositorBridge
+{
+  // A Compositor manages a single Layer Manager (PLayerTransaction)
+  manages PLayerTransaction;
+
+child:
+  // The child should invalidate retained layers. This is used for local
+  // compositor device resets, such as in CompositorD3D9, and ensures that
+  // TextureSources are recreated.
+  async InvalidateLayers(uint64_t layersId);
+
+  // The compositor type or device has changed, and a new texture factory
+  // identifier is available. Layers must be invalidated and the new identifier
+  // must be propagated.
+  async CompositorUpdated(uint64_t layersId, TextureFactoryIdentifier newIdentifier);
+
+  // The compositor completed a layers transaction. id is the layers id
+  // of the child layer tree that was composited (or 0 when notifying
+  // the root layer tree).
+  // transactionId is the id of the transaction before this composite, or 0
+  // if there was no transaction since the last composite.
+  async DidComposite(uint64_t id, uint64_t transactionId,
+                     TimeStamp compositeStart, TimeStamp compositeEnd);
+
+  // The parent sends the child the requested fill ratio numbers.
+  async Overfill(uint32_t aOverfill);
+
+  /**
+   * Parent informs the child that the graphics objects are ready for
+   * compositing.  This usually means that the graphics objects (textures
+   * and the like) are available on the GPU.  This is used for chrome UI.
+   * @see RequestNotifyAfterRemotePaint
+   * @see PBrowser
+   */
+  async RemotePaintIsReady();
+
+  /**
+   * Bounce plugin widget configurations over to the main thread for
+   * application on the widgets. Used on Windows and Linux in managing
+   * plugin widgets.
+   */
+  async UpdatePluginConfigurations(LayoutDeviceIntPoint aContentOffset,
+                                   LayoutDeviceIntRegion aVisibleRegion,
+                                   PluginWindowData[] aPlugins);
+
+  /**
+   * Hides all registered plugin widgets associated with a particular chrome
+   * widget.
+   */
+  async HideAllPlugins(uintptr_t aParentWidget);
+
+  /**
+   * Drop any buffers that might be retained on the child compositor
+   * side.
+   */
+  async ClearCachedResources(uint64_t id);
+
+parent:
+  /**
+   * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
+   */
+  async RemotePluginsReady();
+
+  // Confirmation that the child has invalidated all its layers, and will not
+  // request layers against an old compositor.
+  async AcknowledgeCompositorUpdate(uint64_t id);
+
+  // Child sends the parent a request for fill ratio numbers.
+  async RequestOverfill();
+
+  // Child requests frame uniformity measurements
+  sync GetFrameUniformity() returns (FrameUniformityData data);
+
+  // The child is about to be destroyed, so perform any necessary cleanup.
+  sync WillStop();
+
+  // Clean up in preparation for own destruction.
+  sync Stop();
+
+  // Pause/resume the compositor. These are intended to be used on mobile, when
+  // the compositor needs to pause/resume in lockstep with the application.
+  sync Pause();
+  sync Resume();
+
+  // The child layer tree is hidden. id is the layers id of the child
+  // layer tree.
+  async NotifyHidden(uint64_t id);
+
+  // The child layer tree is visible. id is the layers id of the child
+  // layer tree.
+  async NotifyVisible(uint64_t id);
+
+  async NotifyChildCreated(uint64_t id);
+  async AdoptChild(uint64_t id);
+
+  // Make a snapshot of the content that would have been drawn to our
+  // render target at the time this message is received.  If the size
+  // or format of |inSnapshot| doesn't match our render target,
+  // results are undefined.
+  //
+  // NB: this message will result in animations, transforms, effects,
+  // and so forth being interpolated.  That's what we want to happen.
+  sync MakeSnapshot(SurfaceDescriptor inSnapshot, IntRect dirtyRect);
+
+  // Same as Makesnapshot(), except the snapshot is read from the underlying
+  // operating system desktop rather than the compositor's backbuffer. This
+  // is intended for testing whether hardware acceleration works.
+  //
+  // This call is part of IPDL, even though it simply wraps an nsIWidget
+  // call, to make sure it does not occur in the middle of a composite.
+  sync MakeWidgetSnapshot(SurfaceDescriptor inSnapshot);
+
+  // Make sure any pending composites are started immediately and
+  // block until they are completed.
+  sync FlushRendering();
+
+  // Force an additional frame presentation to be executed. This is used to
+  // work around a windows presentation bug (See Bug 1232042)
+  async ForcePresent();
+
+  // Get the size of the tiles. This number should not change at runtime.
+  sync GetTileSize()
+    returns (int32_t tileWidth, int32_t tileHeight);
+
+  sync StartFrameTimeRecording(int32_t bufferSize)
+    returns (uint32_t startIndex);
+
+  sync StopFrameTimeRecording(uint32_t startIndex)
+    returns (float[] intervals);
+
+  // layersBackendHints is an ordered list of preffered backends where
+  // layersBackendHints[0] is the best backend. If any hints are LayersBackend::LAYERS_NONE
+  // that hint is ignored.
+  sync PLayerTransaction(LayersBackend[] layersBackendHints, uint64_t id)
+    returns (TextureFactoryIdentifier textureFactoryIdentifier, bool success);
+
+  // Notify the compositor that a region of the screen has been invalidated.
+  async NotifyRegionInvalidated(nsIntRegion region);
+
+  /**
+   * The child (content/chrome thread) requests that the parent inform it when
+   * the graphics objects are ready to display.
+   * @see PBrowser
+   * @see RemotePaintIsReady
+   */
+  async RequestNotifyAfterRemotePaint();
+
+  // The child clears the 'approximately visible' regions associated with the
+  // provided layers ID and pres shell ID (i.e., the regions for all view IDs
+  // associated with those IDs).
+  async ClearApproximatelyVisibleRegions(uint64_t layersId, uint32_t presShellId);
+
+  // The child sends a region containing rects associated with the provided
+  // scrollable layer GUID that the child considers 'approximately visible'.
+  // We visualize this information in the APZ minimap.
+  async NotifyApproximatelyVisibleRegion(ScrollableLayerGuid guid, CSSIntRegion region);
+
+child:
+  // Send back Compositor Frame Metrics from APZCs so tiled layers can
+  // update progressively.
+  async SharedCompositorFrameMetrics(Handle metrics, CrossProcessMutexHandle mutex, uint64_t aLayersId, uint32_t aAPZCId);
+  async ReleaseSharedCompositorFrameMetrics(ViewID aId, uint32_t aAPZCId);
+};
+
+} // layers
+} // mozilla

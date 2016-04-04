@@ -118,6 +118,8 @@ static MessageChannel* gParentProcessBlocker;
 namespace mozilla {
 namespace ipc {
 
+static const int kMinTelemetryMessageSize = 8192;
+
 const int32_t MessageChannel::kNoTimeout = INT32_MIN;
 
 // static
@@ -749,6 +751,10 @@ MessageChannel::Echo(Message* aMsg)
 bool
 MessageChannel::Send(Message* aMsg)
 {
+    if (aMsg->size() >= kMinTelemetryMessageSize) {
+        Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE, nsCString(aMsg->name()), aMsg->size());
+    }
+
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
 
     nsAutoPtr<Message> msg(aMsg);
@@ -976,6 +982,20 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 }
 
 void
+MessageChannel::PeekMessages(msgid_t aMsgId, mozilla::function<bool(const Message& aMsg)> aInvoke)
+{
+    MonitorAutoLock lock(*mMonitor);
+
+    for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
+        Message &msg = *it;
+
+        if (msg.type() == aMsgId && !aInvoke(msg)) {
+            break;
+        }
+    }
+}
+
+void
 MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 {
     IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d",
@@ -1031,6 +1051,10 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
+    if (aMsg->size() >= kMinTelemetryMessageSize) {
+        Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE, nsCString(aMsg->name()), aMsg->size());
+    }
+
     nsAutoPtr<Message> msg(aMsg);
 
     // Sanity checks.

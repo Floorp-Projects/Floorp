@@ -5,6 +5,7 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -54,6 +55,13 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
                 })
                 .setNegativeButton(R.string.button_no, null /* we do nothing if the user rejects */ );
         return builder.create();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        GeckoApplication.watchReference(getActivity(), this);
     }
 
     /**

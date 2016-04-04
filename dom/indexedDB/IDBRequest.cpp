@@ -112,14 +112,16 @@ IDBRequest::InitMembers()
 
 // static
 already_AddRefed<IDBRequest>
-IDBRequest::Create(IDBDatabase* aDatabase,
+IDBRequest::Create(JSContext* aCx,
+                   IDBDatabase* aDatabase,
                    IDBTransaction* aTransaction)
 {
+  MOZ_ASSERT(aCx);
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
 
   RefPtr<IDBRequest> request = new IDBRequest(aDatabase);
-  CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
+  CaptureCaller(aCx, request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->mTransaction = aTransaction;
   request->SetScriptOwner(aDatabase->GetScriptOwner());
@@ -129,14 +131,15 @@ IDBRequest::Create(IDBDatabase* aDatabase,
 
 // static
 already_AddRefed<IDBRequest>
-IDBRequest::Create(IDBObjectStore* aSourceAsObjectStore,
+IDBRequest::Create(JSContext* aCx,
+                   IDBObjectStore* aSourceAsObjectStore,
                    IDBDatabase* aDatabase,
                    IDBTransaction* aTransaction)
 {
   MOZ_ASSERT(aSourceAsObjectStore);
   aSourceAsObjectStore->AssertIsOnOwningThread();
 
-  RefPtr<IDBRequest> request = Create(aDatabase, aTransaction);
+  RefPtr<IDBRequest> request = Create(aCx, aDatabase, aTransaction);
 
   request->mSourceAsObjectStore = aSourceAsObjectStore;
 
@@ -145,14 +148,15 @@ IDBRequest::Create(IDBObjectStore* aSourceAsObjectStore,
 
 // static
 already_AddRefed<IDBRequest>
-IDBRequest::Create(IDBIndex* aSourceAsIndex,
+IDBRequest::Create(JSContext* aCx,
+                   IDBIndex* aSourceAsIndex,
                    IDBDatabase* aDatabase,
                    IDBTransaction* aTransaction)
 {
   MOZ_ASSERT(aSourceAsIndex);
   aSourceAsIndex->AssertIsOnOwningThread();
 
-  RefPtr<IDBRequest> request = Create(aDatabase, aTransaction);
+  RefPtr<IDBRequest> request = Create(aCx, aDatabase, aTransaction);
 
   request->mSourceAsIndex = aSourceAsIndex;
 
@@ -183,15 +187,14 @@ IDBRequest::SetLoggingSerialNumber(uint64_t aLoggingSerialNumber)
 }
 
 void
-IDBRequest::CaptureCaller(nsAString& aFilename, uint32_t* aLineNo,
-                          uint32_t* aColumn)
+IDBRequest::CaptureCaller(JSContext* aCx, nsAString& aFilename,
+                          uint32_t* aLineNo, uint32_t* aColumn)
 {
   MOZ_ASSERT(aFilename.IsEmpty());
   MOZ_ASSERT(aLineNo);
   MOZ_ASSERT(aColumn);
 
-  ThreadsafeAutoJSContext cx;
-  nsJSUtils::GetCallingLocation(cx, aFilename, aLineNo, aColumn);
+  nsJSUtils::GetCallingLocation(aCx, aFilename, aLineNo, aColumn);
 }
 
 void
@@ -368,7 +371,7 @@ IDBRequest::SetResultCallback(ResultCallback* aCallback)
   } else {
     // Otherwise our owner is a window and we use that to initialize.
     MOZ_ASSERT(GetOwner());
-    if (!autoJS.InitWithLegacyErrorReporting(GetOwner())) {
+    if (!autoJS.Init(GetOwner())) {
       IDB_WARNING("Failed to initialize AutoJSAPI!");
       SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return;
@@ -506,7 +509,7 @@ public:
 
 private:
   virtual bool
-  Notify(JSContext* aCx, Status aStatus) override;
+  Notify(Status aStatus) override;
 };
 
 IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory,
@@ -529,7 +532,8 @@ IDBOpenDBRequest::~IDBOpenDBRequest()
 
 // static
 already_AddRefed<IDBOpenDBRequest>
-IDBOpenDBRequest::CreateForWindow(IDBFactory* aFactory,
+IDBOpenDBRequest::CreateForWindow(JSContext* aCx,
+                                  IDBFactory* aFactory,
                                   nsPIDOMWindowInner* aOwner,
                                   JS::Handle<JSObject*> aScriptOwner)
 {
@@ -542,7 +546,7 @@ IDBOpenDBRequest::CreateForWindow(IDBFactory* aFactory,
 
   RefPtr<IDBOpenDBRequest> request =
     new IDBOpenDBRequest(aFactory, aOwner, fileHandleDisabled);
-  CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
+  CaptureCaller(aCx, request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->SetScriptOwner(aScriptOwner);
 
@@ -551,7 +555,8 @@ IDBOpenDBRequest::CreateForWindow(IDBFactory* aFactory,
 
 // static
 already_AddRefed<IDBOpenDBRequest>
-IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
+IDBOpenDBRequest::CreateForJS(JSContext* aCx,
+                              IDBFactory* aFactory,
                               JS::Handle<JSObject*> aScriptOwner)
 {
   MOZ_ASSERT(aFactory);
@@ -562,7 +567,7 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
 
   RefPtr<IDBOpenDBRequest> request =
     new IDBOpenDBRequest(aFactory, nullptr, fileHandleDisabled);
-  CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
+  CaptureCaller(aCx, request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->SetScriptOwner(aScriptOwner);
 
@@ -645,7 +650,7 @@ IDBOpenDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 bool
 IDBOpenDBRequest::
-WorkerFeature::Notify(JSContext* aCx, Status aStatus)
+WorkerFeature::Notify(Status aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

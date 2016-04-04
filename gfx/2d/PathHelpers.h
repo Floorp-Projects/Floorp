@@ -31,21 +31,17 @@ inline Float ComputeKappaFactor(Float aAngle)
  */
 template <typename T>
 inline void PartialArcToBezier(T* aSink,
-                               const Size& aRadius,
-                               const Point& aStartPoint, const Point& aEndPoint,
                                const Point& aStartOffset, const Point& aEndOffset,
+                               const Matrix& aTransform,
                                Float aKappaFactor = kKappaFactor)
 {
-  Float kappaX = aKappaFactor * aRadius.width;
-  Float kappaY = aKappaFactor * aRadius.height;
-
   Point cp1 =
-    aStartPoint + Point(-aStartOffset.y * kappaX, aStartOffset.x * kappaY);
+    aStartOffset + Point(-aStartOffset.y, aStartOffset.x) * aKappaFactor;
 
   Point cp2 =
-    aEndPoint + Point(aEndOffset.y * kappaX, -aEndOffset.x * kappaY);
+    aEndOffset + Point(aEndOffset.y, -aEndOffset.x) * aKappaFactor;
 
-  aSink->BezierTo(cp1, cp2, aEndPoint);
+  aSink->BezierTo(aTransform * cp1, aTransform * cp2, aTransform * aEndOffset);
 }
 
 /**
@@ -60,16 +56,13 @@ inline void AcuteArcToBezier(T* aSink,
 {
   aSink->LineTo(aStartPoint);
   if (!aRadius.IsEmpty()) {
+    Float kappaX = aKappaFactor * aRadius.width / aRadius.height;
+    Float kappaY = aKappaFactor * aRadius.height / aRadius.width;
     Point startOffset = aStartPoint - aOrigin;
-    startOffset.x /= aRadius.width;
-    startOffset.y /= aRadius.height;
     Point endOffset = aEndPoint - aOrigin;
-    endOffset.x /= aRadius.width;
-    endOffset.y /= aRadius.height;
-    PartialArcToBezier(aSink, aRadius,
-                       aStartPoint, aEndPoint,
-                       startOffset, endOffset,
-                       aKappaFactor);
+    aSink->BezierTo(aStartPoint + Point(-startOffset.y * kappaX, startOffset.x * kappaY),
+                    aEndPoint + Point(endOffset.y * kappaX, -endOffset.x * kappaY),
+                    aEndPoint);
   } else if (aEndPoint != aStartPoint) {
     aSink->LineTo(aEndPoint);
   }
@@ -90,7 +83,8 @@ inline void AcuteArcToBezier(T* aSink,
 
 template <typename T>
 void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
-                 float aStartAngle, float aEndAngle, bool aAntiClockwise)
+                 float aStartAngle, float aEndAngle, bool aAntiClockwise,
+                 float aRotation = 0.0f)
 {
   Float sweepDirection = aAntiClockwise ? -1.0f : 1.0f;
 
@@ -111,22 +105,19 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 
   Float currentStartAngle = aStartAngle;
   Point currentStartOffset(cosf(aStartAngle), sinf(aStartAngle));
-  Point currentStartPoint(aOrigin.x + currentStartOffset.x * aRadius.width,
-                          aOrigin.y + currentStartOffset.y * aRadius.height);
-
-  aSink->LineTo(currentStartPoint);
+  Matrix transform = Matrix::Scaling(aRadius.width, aRadius.height);
+  if (aRotation != 0.0f) {
+    transform *= Matrix::Rotation(aRotation);
+  }
+  transform.PostTranslate(aOrigin);
+  aSink->LineTo(transform * currentStartOffset);
 
   while (arcSweepLeft > 0) {
     Float currentEndAngle =
       currentStartAngle + std::min(arcSweepLeft, Float(M_PI / 2.0f)) * sweepDirection;
-
     Point currentEndOffset(cosf(currentEndAngle), sinf(currentEndAngle));
-    Point currentEndPoint(aOrigin.x + currentEndOffset.x * aRadius.width,
-                          aOrigin.y + currentEndOffset.y * aRadius.height);
 
-    PartialArcToBezier(aSink, aRadius,
-                       currentStartPoint, currentEndPoint,
-                       currentStartOffset, currentEndOffset,
+    PartialArcToBezier(aSink, currentStartOffset, currentEndOffset, transform,
                        ComputeKappaFactor(currentEndAngle - currentStartAngle));
 
     // We guarantee here the current point is the start point of the next
@@ -134,7 +125,6 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
     arcSweepLeft -= Float(M_PI / 2.0f);
     currentStartAngle = currentEndAngle;
     currentStartOffset = currentEndOffset;
-    currentStartPoint = currentEndPoint;
   }
 }
 
@@ -144,26 +134,21 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 template <typename T>
 void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
 {
+  Matrix transform(aRadius.width, 0, 0, aRadius.height, aOrigin.x, aOrigin.y);
   Point currentStartOffset(1, 0);
-  Point currentStartPoint(aOrigin.x + aRadius.width, aOrigin.y);
 
-  aSink->LineTo(currentStartPoint);
+  aSink->LineTo(transform * currentStartOffset);
 
   for (int i = 0; i < 4; i++) {
     // cos(x+pi/2) == -sin(x)
     // sin(x+pi/2) == cos(x)
     Point currentEndOffset(-currentStartOffset.y, currentStartOffset.x);
-    Point currentEndPoint(aOrigin.x + currentEndOffset.x * aRadius.width,
-                          aOrigin.y + currentEndOffset.y * aRadius.height);
 
-    PartialArcToBezier(aSink, aRadius,
-                       currentStartPoint, currentEndPoint,
-                       currentStartOffset, currentEndOffset);
+    PartialArcToBezier(aSink, currentStartOffset, currentEndOffset, transform);
 
     // We guarantee here the current point is the start point of the next
     // curve segment.
     currentStartOffset = currentEndOffset;
-    currentStartPoint = currentEndPoint;
   }
 }
 

@@ -1,0 +1,18 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o complete-empty-cumulative-actual.txt complete-empty-cumulative.json
+
+Invocation {
+  $DMD = '--mode=cumulative --stacks=full'
+  Mode = 'cumulative'
+}
+
+#-----------------------------------------------------------------
+
+# no cumulative heap blocks
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 0 bytes in 0 blocks
+}
+

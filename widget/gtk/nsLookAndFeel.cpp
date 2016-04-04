@@ -29,6 +29,10 @@
 
 #include "mozilla/gfx/2D.h"
 
+#if MOZ_WIDGET_GTK != 2
+#include <cairo-gobject.h>
+#endif
+
 using mozilla::LookAndFeel;
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -60,6 +64,123 @@ nsLookAndFeel::~nsLookAndFeel()
     g_object_unref(mButtonStyle);
 #endif
 }
+
+#if MOZ_WIDGET_GTK != 2
+static void
+GetLightAndDarkness(const GdkRGBA& aColor,
+                    double* aLightness, double* aDarkness)
+{
+    double sum = aColor.red + aColor.green + aColor.blue;
+    *aLightness = sum * aColor.alpha;
+    *aDarkness = (3.0 - sum) * aColor.alpha;
+}
+
+static bool
+GetGradientColors(const GValue* aValue,
+                  GdkRGBA* aLightColor, GdkRGBA* aDarkColor)
+{
+    if (!G_TYPE_CHECK_VALUE_TYPE(aValue, CAIRO_GOBJECT_TYPE_PATTERN))
+        return false;
+
+    auto pattern = static_cast<cairo_pattern_t*>(g_value_get_boxed(aValue));
+    if (!pattern)
+        return false;
+
+    // Just picking the lightest and darkest colors as simple samples rather
+    // than trying to blend, which could get messy if there are many stops.
+    if (CAIRO_STATUS_SUCCESS !=
+        cairo_pattern_get_color_stop_rgba(pattern, 0, nullptr, &aDarkColor->red,
+                                          &aDarkColor->green, &aDarkColor->blue,
+                                          &aDarkColor->alpha))
+        return false;
+
+    double maxLightness, maxDarkness;
+    GetLightAndDarkness(*aDarkColor, &maxLightness, &maxDarkness);
+    *aLightColor = *aDarkColor;
+
+    GdkRGBA stop;
+    for (int index = 1;
+         CAIRO_STATUS_SUCCESS ==
+             cairo_pattern_get_color_stop_rgba(pattern, index, nullptr,
+                                               &stop.red, &stop.green,
+                                               &stop.blue, &stop.alpha);
+         ++index) {
+        double lightness, darkness;
+        GetLightAndDarkness(stop, &lightness, &darkness);
+        if (lightness > maxLightness) {
+            maxLightness = lightness;
+            *aLightColor = stop;
+        }
+        if (darkness > maxDarkness) {
+            maxDarkness = darkness;
+            *aDarkColor = stop;
+        }
+    }
+
+    return true;
+}
+
+static bool
+GetUnicoBorderGradientColors(GtkStyleContext* aContext,
+                             GdkRGBA* aLightColor, GdkRGBA* aDarkColor)
+{
+    // Ubuntu 12.04 has GTK engine Unico-1.0.2, which overrides render_frame,
+    // providing its own border code.  Ubuntu 14.04 has
+    // Unico-1.0.3+14.04.20140109, which does not override render_frame, and
+    // so does not need special attention.  The earlier Unico can be detected
+    // by the -unico-border-gradient style property it registers.
+    // gtk_style_properties_lookup_property() is checked first to avoid the
+    // warning from gtk_style_context_get_property() when the property does
+    // not exist.  (gtk_render_frame() of GTK+ 3.16 no longer uses the
+    // engine.)
+    const char* propertyName = "-unico-border-gradient";
+    if (!gtk_style_properties_lookup_property(propertyName, nullptr, nullptr))
+        return false;
+
+    // -unico-border-gradient is used only when the CSS node's engine is Unico.
+    GtkThemingEngine* engine;
+    GtkStateFlags state = gtk_style_context_get_state(aContext);
+    gtk_style_context_get(aContext, state, "engine", &engine, nullptr);
+    if (strcmp(g_type_name(G_TYPE_FROM_INSTANCE(engine)), "UnicoEngine") != 0)
+        return false;
+
+    // draw_border() of Unico engine uses -unico-border-gradient
+    // in preference to border-color.
+    GValue value = G_VALUE_INIT;
+    gtk_style_context_get_property(aContext, propertyName, state, &value);
+
+    bool result = GetGradientColors(&value, aLightColor, aDarkColor);
+
+    g_value_unset(&value);
+    return result;
+}
+
+
+static void
+GetBorderColors(GtkStyleContext* aContext,
+                GdkRGBA* aLightColor, GdkRGBA* aDarkColor)
+{
+    if (GetUnicoBorderGradientColors(aContext, aLightColor, aDarkColor))
+        return;
+
+    GtkStateFlags state = gtk_style_context_get_state(aContext);
+    gtk_style_context_get_border_color(aContext, state, aDarkColor);
+    // TODO GTK3 - update aLightColor
+    // for GTK_BORDER_STYLE_INSET/OUTSET/GROVE/RIDGE border styles.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=978172#c25
+    *aLightColor = *aDarkColor;
+}
+
+static void
+GetBorderColors(GtkStyleContext* aContext,
+                nscolor* aLightColor, nscolor* aDarkColor)
+{
+    GdkRGBA lightColor, darkColor;
+    GetBorderColors(aContext, &lightColor, &darkColor);
+    *aLightColor = GDK_RGBA_TO_NS_RGBA(lightColor);
+    *aDarkColor = GDK_RGBA_TO_NS_RGBA(darkColor);
+}
+#endif
 
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
@@ -1201,12 +1322,8 @@ nsLookAndFeel::Init()
 
     GtkWidget *frame = gtk_frame_new(nullptr);
     gtk_container_add(GTK_CONTAINER(parent), frame);
-
-    // TODO GTK3 - update sFrameOuterLightBorder 
-    // for GTK_BORDER_STYLE_INSET/OUTSET/GROVE/RIDGE border styles (Bug 978172).
     style = gtk_widget_get_style_context(frame);
-    gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
-    sFrameInnerDarkBorder = sFrameOuterLightBorder = GDK_RGBA_TO_NS_RGBA(color);
+    GetBorderColors(style, &sFrameOuterLightBorder, &sFrameInnerDarkBorder);
 
     gtk_widget_path_free(path);
 

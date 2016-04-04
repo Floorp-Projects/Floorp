@@ -10,13 +10,13 @@ dnl our copy of ICU or the system provided library.
 AC_DEFUN([MOZ_CONFIG_ICU], [
 
 ICU_LIB_NAMES=
-MOZ_NATIVE_ICU=
+MOZ_SYSTEM_ICU=
 MOZ_ARG_WITH_BOOL(system-icu,
 [  --with-system-icu
                           Use system ICU (located with pkgconfig)],
-    MOZ_NATIVE_ICU=1)
+    MOZ_SYSTEM_ICU=1)
 
-if test -n "$MOZ_NATIVE_ICU"; then
+if test -n "$MOZ_SYSTEM_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
     MOZ_SHARED_ICU=1
 else
@@ -24,7 +24,7 @@ else
 fi
 
 AC_SUBST_LIST(MOZ_ICU_INCLUDES)
-AC_SUBST(MOZ_NATIVE_ICU)
+AC_SUBST(MOZ_SYSTEM_ICU)
 
 MOZ_ARG_WITH_STRING(intl-api,
 [  --with-intl-api, --with-intl-api=build, --without-intl-api
@@ -83,14 +83,14 @@ if test -n "$USE_ICU"; then
         MOZ_SHARED_ICU=1
     fi
 
-    if test -z "${JS_STANDALONE}" -a -n "${JS_SHARED_LIBRARY}${MOZ_NATIVE_ICU}"; then
+    if test -z "${JS_STANDALONE}" -a -n "${JS_SHARED_LIBRARY}${MOZ_SYSTEM_ICU}"; then
         MOZ_SHARED_ICU=1
     fi
 
     AC_SUBST(MOZ_ICU_VERSION)
     AC_SUBST(MOZ_SHARED_ICU)
 
-    if test -z "$MOZ_NATIVE_ICU"; then
+    if test -z "$MOZ_SYSTEM_ICU"; then
         case "$OS_TARGET" in
             WINNT)
                 ICU_LIB_NAMES="icuin icuuc icudt"
@@ -113,7 +113,7 @@ AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(USE_ICU)
 AC_SUBST_LIST(ICU_LIB_NAMES)
 
-if test -n "$USE_ICU" -a -z "$MOZ_NATIVE_ICU"; then
+if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
     dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
     if test -z "$MOZ_SHARED_ICU"; then
         AC_DEFINE(U_STATIC_IMPLEMENTATION)
@@ -128,9 +128,9 @@ fi
 
 AC_DEFUN([MOZ_SUBCONFIGURE_ICU], [
 
-if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
+if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
 
-    if test -n "$USE_ICU" -a -z "$MOZ_NATIVE_ICU"; then
+    if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
         # Set ICU compile options
         ICU_CPPFLAGS=""
         # don't use icu namespace automatically in client code

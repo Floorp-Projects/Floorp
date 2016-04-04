@@ -396,13 +396,6 @@ DeviceManagerD3D9::Init()
     gfxCriticalError() << failCreateShaderMsg << "LayerQuadVSMask: " << gfx::hexa(hr);
     return false;
   }
-  hr = mDevice->CreateVertexShader((DWORD*)LayerQuadVSMask3D,
-                                   getter_AddRefs(mLayerVSMask3D));
-
-  if (FAILED(hr)) {
-    gfxCriticalError() << failCreateShaderMsg << "LayerQuadVSMask3D: " << gfx::hexa(hr);
-    return false;
-  }
 
   hr = mDevice->CreatePixelShader((DWORD*)RGBShaderPSMask,
                                   getter_AddRefs(mRGBPSMask));
@@ -417,14 +410,6 @@ DeviceManagerD3D9::Init()
 
   if (FAILED(hr)) {
     gfxCriticalError() << failCreateShaderMsg << "RGBAShaderPSMask: " << gfx::hexa(hr);
-    return false;
-  }
-
-  hr = mDevice->CreatePixelShader((DWORD*)RGBAShaderPSMask3D,
-                                  getter_AddRefs(mRGBAPSMask3D));
-
-  if (FAILED(hr)) {
-    gfxCriticalError() << failCreateShaderMsg << "RGBAShaderPSMask3D: " << gfx::hexa(hr);
     return false;
   }
 
@@ -597,13 +582,8 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, MaskType aMaskType)
       maskTexRegister = 1;
       break;
     case RGBALAYER:
-      if (aMaskType == MaskType::Mask2d) {
-        mDevice->SetVertexShader(mLayerVSMask);
-        mDevice->SetPixelShader(mRGBAPSMask);
-      } else {
-        mDevice->SetVertexShader(mLayerVSMask3D);
-        mDevice->SetPixelShader(mRGBAPSMask3D);
-      }
+      mDevice->SetVertexShader(mLayerVSMask);
+      mDevice->SetPixelShader(mRGBAPSMask);
       maskTexRegister = 1;
       break;
     case COMPONENTLAYERPASS1:

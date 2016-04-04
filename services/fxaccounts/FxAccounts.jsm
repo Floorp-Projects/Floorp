@@ -56,6 +56,7 @@ var publicProperties = [
   "resendVerificationEmail",
   "setSignedInUser",
   "signOut",
+  "updateUserAccountData",
   "updateDeviceRegistration",
   "whenVerified"
 ];
@@ -415,8 +416,8 @@ FxAccountsInternal.prototype = {
   /**
    * Ask the server whether the user's email has been verified
    */
-  checkEmailStatus: function checkEmailStatus(sessionToken) {
-    return this.fxAccountsClient.recoveryEmailStatus(sessionToken);
+  checkEmailStatus: function checkEmailStatus(sessionToken, options = {}) {
+    return this.fxAccountsClient.recoveryEmailStatus(sessionToken, options);
   },
 
   /**
@@ -522,6 +523,34 @@ FxAccountsInternal.prototype = {
     })
   },
 
+  /**
+   * Update account data for the currently signed in user.
+   *
+   * @param credentials
+   *        The credentials object containing the fields to be updated.
+   *        This object must contain |email| and |uid| fields and they must
+   *        match the currently signed in user.
+   */
+  updateUserAccountData(credentials) {
+    log.debug("updateUserAccountData called with fields", Object.keys(credentials));
+    if (logPII) {
+      log.debug("updateUserAccountData called with data", credentials);
+    }
+    let currentAccountState = this.currentAccountState;
+    return currentAccountState.promiseInitialized.then(() => {
+      return currentAccountState.getUserAccountData(["email", "uid"]);
+    }).then(existing => {
+      if (existing.email != credentials.email || existing.uid != credentials.uid) {
+        throw new Error("The specified credentials aren't for the current user");
+      }
+      // We need to nuke email and uid as storage will complain if we try and
+      // update them (even when the value is the same)
+      credentials = Cu.cloneInto(credentials, {}); // clone it first
+      delete credentials.email;
+      delete credentials.uid;
+      return currentAccountState.updateUserAccountData(credentials);
+    });
+  },
 
   /**
    * returns a promise that fires with the assertion.  If there is no verified
@@ -635,7 +664,7 @@ FxAccountsInternal.prototype = {
 
       if (!this.isUserEmailVerified(data)) {
         log.trace("checkVerificationStatus - forcing verification status check");
-        this.pollEmailStatus(currentState, data.sessionToken, "start");
+        this.pollEmailStatus(currentState, data.sessionToken, "push");
       }
     });
   },
@@ -1032,7 +1061,7 @@ FxAccountsInternal.prototype = {
   // XXX - pollEmailStatus should maybe be on the AccountState object?
   pollEmailStatus: function pollEmailStatus(currentState, sessionToken, why) {
     log.debug("entering pollEmailStatus: " + why);
-    if (why == "start") {
+    if (why == "start" || why == "push") {
       if (this.currentTimer) {
         log.debug("pollEmailStatus starting while existing timer is running");
         clearTimeout(this.currentTimer);
@@ -1055,7 +1084,7 @@ FxAccountsInternal.prototype = {
       }
     }
 
-    this.checkEmailStatus(sessionToken)
+    this.checkEmailStatus(sessionToken, { reason: why })
       .then((response) => {
         log.debug("checkEmailStatus -> " + JSON.stringify(response));
         if (response && response.verified) {

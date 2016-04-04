@@ -52,7 +52,18 @@ class nsPresShellEventCB;
 class nsAutoCauseReflowNotifier;
 
 namespace mozilla {
+
 class EventDispatchingCallback;
+
+// A set type for tracking visible frames, for use by the visibility code in
+// PresShell. The set contains nsIFrame* pointers.
+typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
+
+// A hash table type for tracking visible regions, for use by the visibility
+// code in PresShell. The mapping is from view IDs to regions in the
+// coordinate system of that view's scrolled frame.
+typedef nsClassHashtable<nsUint64HashKey, mozilla::CSSIntRegion> VisibleRegions;
+
 } // namespace mozilla
 
 // 250ms.  This is actually pref-controlled, but we use this value if we fail
@@ -65,6 +76,12 @@ class PresShell final : public nsIPresShell,
                         public nsIObserver,
                         public nsSupportsWeakReference
 {
+  template <typename T> using Maybe = mozilla::Maybe<T>;
+  using Nothing = mozilla::Nothing;
+  using OnNonvisible = mozilla::OnNonvisible;
+  using VisibleFrames = mozilla::VisibleFrames;
+  using VisibleRegions = mozilla::VisibleRegions;
+
 public:
   PresShell();
 
@@ -77,6 +94,8 @@ public:
 
   // BeforeAfterKeyboardEvent preference
   static bool BeforeAfterKeyboardEventEnabled();
+
+  static bool IsTargetIframe(nsINode* aTarget);
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, mozilla::StyleSetHandle aStyleSet);
@@ -372,23 +391,32 @@ public:
     uint32_t   mContentToScrollToFlags;
   };
 
-  virtual void ScheduleImageVisibilityUpdate() override;
 
-  virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) override;
-  virtual void RebuildImageVisibility(nsRect* aRect = nullptr,
-                                      bool aRemoveOnly = false) override;
+  //////////////////////////////////////////////////////////////////////////////
+  // Approximate frame visibility tracking public API.
+  //////////////////////////////////////////////////////////////////////////////
 
-  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) override;
+  void ScheduleApproximateFrameVisibilityUpdateSoon() override;
+  void ScheduleApproximateFrameVisibilityUpdateNow() override;
 
-  virtual void RemoveImageFromVisibleList(nsIImageLoadingContent* aImage) override;
+  void RebuildApproximateFrameVisibilityDisplayList(const nsDisplayList& aList) override;
+  void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
+                                         bool aRemoveOnly = false) override;
 
-  virtual bool AssumeAllImagesVisible() override;
+  void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame) override;
+  void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) override;
+
+  bool AssumeAllFramesVisible() override;
+
 
   virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) override;
 
   virtual void DispatchAfterKeyboardEvent(nsINode* aTarget,
                                           const mozilla::WidgetKeyboardEvent& aEvent,
                                           bool aEmbeddedCancelled) override;
+
+  virtual bool CanDispatchEvent(
+      const mozilla::WidgetGUIEvent* aEvent = nullptr) const override;
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
@@ -464,7 +492,7 @@ protected:
       : mResolution(aPresShell->mResolution)
       , mRenderFlags(aPresShell->mRenderFlags)
     { }
-    mozilla::Maybe<float> mResolution;
+    Maybe<float> mResolution;
     RenderFlags mRenderFlags;
   };
 
@@ -728,19 +756,42 @@ protected:
   virtual void PausePainting() override;
   virtual void ResumePainting() override;
 
-  void UpdateImageVisibility();
-  void DoUpdateImageVisibility(bool aRemoveOnly);
   void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
 
-  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
 
-  void ClearVisibleImagesList(uint32_t aNonvisibleAction);
-  static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
-  static void MarkImagesInListVisible(const nsDisplayList& aList);
-  void MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect,
-                                  bool aRemoveOnly = false);
+  //////////////////////////////////////////////////////////////////////////////
+  // Approximate frame visibility tracking implementation.
+  //////////////////////////////////////////////////////////////////////////////
 
+  void UpdateApproximateFrameVisibility();
+  void DoUpdateApproximateFrameVisibility(bool aRemoveOnly);
+
+  void ClearApproximatelyVisibleFramesList(Maybe<mozilla::OnNonvisible> aNonvisibleAction
+                                             = Nothing());
+  static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
+  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
+                                                   Maybe<VisibleRegions>& aVisibleRegions);
+  void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
+                                               const nsRect& aRect,
+                                               Maybe<VisibleRegions>& aVisibleRegions,
+                                               bool aRemoveOnly = false);
+
+  void DecApproximateVisibleCount(VisibleFrames& aFrames,
+                                  Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  void ReportBadStateDuringVisibilityUpdate();
+  void SetInFrameVisibilityUpdate(bool aState);
+
+  nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
+
+  // A set of frames that were visible or could be visible soon at the time
+  // that we last did an approximate frame visibility update.
+  VisibleFrames mApproximatelyVisibleFrames;
+
+
+  //////////////////////////////////////////////////////////////////////////////
   // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
+  //////////////////////////////////////////////////////////////////////////////
+
   void HandleKeyboardEvent(nsINode* aTarget,
                            mozilla::WidgetKeyboardEvent& aEvent,
                            bool aEmbeddedCancelled,
@@ -756,10 +807,25 @@ protected:
          const mozilla::WidgetKeyboardEvent& aEvent,
          bool aEmbeddedCancelled,
          size_t aChainIndex = 0);
-  bool CanDispatchEvent(const mozilla::WidgetGUIEvent* aEvent = nullptr) const;
 
-  // A list of images that are visible or almost visible.
-  nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > mVisibleImages;
+#ifdef MOZ_B2G
+  // This method is used to forward the keyboard event to the input-method-app
+  // before the event is dispatched to its event target.
+  // Return true if it's successfully forwarded. Otherwise, return false.
+  bool ForwardKeyToInputMethodApp(nsINode* aTarget,
+                                  mozilla::WidgetKeyboardEvent& aEvent,
+                                  nsEventStatus* aStatus);
+#endif // MOZ_B2G
+
+  // This method tries forwarding key events to the input-method-editor(IME).
+  // If the event isn't be forwarded, then it will be dispathed to its target.
+  // Return true when event is successfully forwarded to the input-method-editor.
+  // Otherwise, return false.
+  bool ForwardKeyToInputMethodAppOrDispatch(bool aIsTargetRemote,
+                                            nsINode* aTarget,
+                                            mozilla::WidgetKeyboardEvent& aEvent,
+                                            nsEventStatus* aStatus,
+                                            mozilla::EventDispatchingCallback* aEventCB);
 
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution);
 
@@ -783,6 +849,10 @@ protected:
   // over our window or there is no last observed mouse location for some
   // reason.
   nsPoint                   mMouseLocation;
+  // This is an APZ state variable that tracks the target guid for the last
+  // mouse event that was processed (corresponding to mMouseLocation). This is
+  // needed for the synthetic mouse events.
+  mozilla::layers::ScrollableLayerGuid mMouseEventTargetGuid;
 
   // mStyleSet owns it but we maintain a ref, may be null
   mozilla::StyleSheetHandle::RefPtr mPrefStyleSheet;
@@ -866,7 +936,7 @@ protected:
   bool                      mAsyncResizeTimerIsActive : 1;
   bool                      mInResize : 1;
 
-  bool                      mImageVisibilityVisited : 1;
+  bool                      mApproximateFrameVisibilityVisited : 1;
 
   bool                      mNextPaintCompressed : 1;
 
@@ -882,6 +952,8 @@ protected:
 
   // Whether the widget has received a paint message yet.
   bool                      mHasReceivedPaintMessage : 1;
+
+  bool                      mInFrameVisibilityUpdate : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

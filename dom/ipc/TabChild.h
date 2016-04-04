@@ -313,9 +313,6 @@ public:
                            const BrowserConfiguration& aConfiguration,
                            const ShowInfo& aInfo) override;
 
-  virtual bool RecvOpenURI(const URIParams& aURI,
-                           const uint32_t& aFlags) override;
-
   virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                        const FileDescriptor& aFileDescriptor)
                                        override;
@@ -515,7 +512,11 @@ public:
   static inline TabChild*
   GetFrom(nsIDocShell* aDocShell)
   {
-    nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
+    if (!aDocShell) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsITabChild> tc = aDocShell->GetTabChild();
     return static_cast<TabChild*>(tc.get());
   }
 
@@ -537,6 +538,8 @@ public:
 
   static TabChild* GetFrom(nsIPresShell* aPresShell);
   static TabChild* GetFrom(uint64_t aLayersId);
+
+  uint64_t LayersId() { return mLayersId; }
 
   void DidComposite(uint64_t aTransactionId,
                     const TimeStamp& aCompositeStart,
@@ -569,6 +572,8 @@ public:
   virtual bool RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
                                                   const float& aVolume,
                                                   const bool& aMuted) override;
+
+  virtual bool RecvSetUseGlobalHistory(const bool& aUse) override;
 
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
@@ -746,6 +751,7 @@ private:
   bool mAsyncPanZoomEnabled;
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;
+  bool mDidLoadURLInit;
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 

@@ -42,19 +42,18 @@ class VideoPuppeteer(object):
     together, so the video stream that is currently playing might be the main
     video or it might be something else, like an ad, for example.
 
-    Inputs:
-        marionette - The marionette instance this runs in.
-        url - the URL of the page containing the video element.
-        video_selector - the selector of the element that we want to
-            watch. This is set by default to 'video', which is what most
-            sites use, but others should work.
-        interval - The polling interval that is used to check progress.
-        set_duration - When set to >0, the polling and checking will stop
-            at the number of seconds specified. Otherwise, this will stop
-            at the end of the video.
-        stall_wait_time - The amount of time to wait to see if a stall has
-            cleared. If 0, do not check for stalls.
-        timeout - The amount of time to wait until the video starts.
+    :param marionette: The marionette instance this runs in.
+    :param url: the URL of the page containing the video element.
+    :param video_selector: the selector of the element that we want to watch.
+     This is set by default to 'video', which is what most sites use, but
+     others should work.
+    :param interval: The polling interval that is used to check progress.
+    :param set_duration: When set to >0, the polling and checking will stop at
+     the number of seconds specified. Otherwise, this will stop at the end
+     of the video.
+    :param stall_wait_time: The amount of time to wait to see if a stall has
+     cleared. If 0, do not check for stalls.
+    :param timeout: The amount of time to wait until the video starts.
     """
     def __init__(self, marionette, url, video_selector='video', interval=1,
                  set_duration=0, stall_wait_time=0, timeout=60):
@@ -120,20 +119,31 @@ class VideoPuppeteer(object):
             self.expected_duration = video_duration
 
     def get_debug_lines(self):
+        """
+        Get Firefox internal debugging for the video element.
+
+        :return: A text string that has Firefox-internal debugging information.
+        """
         with self.marionette.using_context('chrome'):
             debug_lines = self.marionette.execute_script(debug_script)
         return debug_lines
 
     def play(self):
+        """
+        Tell the video element to Play.
+        """
         self.execute_video_script('arguments[0].wrappedJSObject.play();')
 
     def pause(self):
+        """
+        Tell the video element to Pause.
+        """
         self.execute_video_script('arguments[0].wrappedJSObject.pause();')
 
     @property
     def duration(self):
         """
-        Return duration in seconds of whatever stream is playing right now.
+        :return: Duration in seconds of whatever stream is playing right now.
         """
         return self.execute_video_script('return arguments[0].'
                                          'wrappedJSObject.duration;') or 0
@@ -141,46 +151,75 @@ class VideoPuppeteer(object):
     @property
     def current_time(self):
         """
-        Return current time of whatever stream is playing right now.
+        :return: Current time of whatever stream is playing right now.
         """
+        # Note that self.current_time could temporarily refer to a
+        # spliced-in ad.
+
         return self.execute_video_script(
             'return arguments[0].wrappedJSObject.currentTime;') or 0
 
     @property
     def remaining_time(self):
-        # Note that self.current_time could temporarily refer to a
-        # spliced-in ad
+        """
+        :return: How much time is remaining given the duration of the video
+            and the duration that has been set.
+        """
         return self.expected_duration - self.current_time
 
     @property
     def video_src(self):
+        """
+        :return: The url of the actual video file, as opposed to the url
+            of the page with the video element.
+        """
         with self.marionette.using_context('content'):
             return self.video.get_attribute('src')
 
     @property
     def total_frames(self):
+        """
+        :return: Number of video frames created and dropped since the creation
+            of this video element.
+        """
         return self.execute_video_script("""
             return arguments[0].getVideoPlaybackQuality()["totalVideoFrames"];
             """)
 
     @property
     def dropped_frames(self):
+        """
+        :return: Number of video frames created and dropped since the creation
+            of this video element.
+        """
         return self.execute_video_script("""return
             arguments[0].getVideoPlaybackQuality()["droppedVideoFrames"];
             """) or 0
 
     @property
     def corrupted_frames(self):
+        """
+        :return: Number of video frames corrupted since the creation of this
+            video element. A corrupted frame may be created or dropped.
+        """
         return self.execute_video_script("""return
             arguments[0].getVideoPlaybackQuality()["corruptedVideoFrames"];
             """) or 0
 
     @property
     def video_url(self):
+        """
+        :return: The URL of the video that this element is playing.
+        """
         return self.execute_video_script('return arguments[0].baseURI;')
 
     @property
     def lag(self):
+        """
+        :return: The difference in time between where the video is currently
+            playing and where it should be playing given the time we started
+            the video.
+        """
         # Note that self.current_time could temporarily refer to a
         # spliced-in ad
         elapsed_current_time = self.current_time - self._start_time
@@ -193,9 +232,10 @@ class VideoPuppeteer(object):
         return self.current_time - initial
 
     def execute_video_script(self, script):
-        """ Execute JS script in 'content' context with access to video element.
+        """
+        Execute JS script in 'content' context with access to video element.
+
         :param script: script to be executed
-        `arguments[0]` in script refers to video element.
         :return: value returned by script
         """
         with self.marionette.using_context('content'):
@@ -225,10 +265,20 @@ class VideoPuppeteer(object):
 
 
 class VideoException(Exception):
+    """
+    Exception class to use for video-specific error processing.
+    """
     pass
 
 
 def playback_started(video):
+    """
+    Determine if video has started
+
+    :param video: The VideoPuppeteer instance that we are interested in.
+
+    :return: True if is playing; False otherwise
+    """
     try:
         return video.current_time > video._start_time
     except Exception as e:
@@ -237,9 +287,16 @@ def playback_started(video):
 
 
 def playback_done(video):
-    # If we are near the end and there is still a video element, then
-    # we are essentially done. If this happens to be last time we are polled
-    # before the video ends, we won't get another chance.
+    """
+    If we are near the end and there is still a video element, then
+    we are essentially done. If this happens to be last time we are polled
+    before the video ends, we won't get another chance.
+
+    :param video: The VideoPuppeteer instance that we are interested in.
+
+    :return: True if we are close enough to the end of playback; False
+        otherwise.
+    """
     remaining_time = video.remaining_time
     if abs(remaining_time) < video.interval:
         return True

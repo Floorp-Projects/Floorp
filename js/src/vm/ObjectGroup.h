@@ -540,7 +540,6 @@ class ObjectGroupCompartment
 
     struct NewEntry;
     using NewTable = js::GCHashSet<NewEntry, NewEntry, SystemAllocPolicy>;
-    class NewTableRef;
 
     // Set of default 'new' or lazy groups in the compartment.
     NewTable* defaultNewTable;
@@ -627,9 +626,6 @@ class ObjectGroupCompartment
 #endif
 
     void fixupNewTableAfterMovingGC(NewTable* table);
-
-    static void newTablePostBarrier(ExclusiveContext* cx, NewTable* table,
-                                    const Class* clasp, TaggedProto proto, JSObject* associated);
 };
 
 PlainObject*

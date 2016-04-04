@@ -5,19 +5,18 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
-const events  = require("devtools/shared/event-emitter");
+const events = require("devtools/shared/event-emitter");
 
 /**
  * Autocomplete popup UI implementation.
  *
  * @constructor
- * @param nsIDOMDocument aDocument
+ * @param {nsIDOMDocument} document
  *        The document you want the popup attached to.
- * @param Object aOptions
+ * @param {Object} options
  *        An object consiting any of the following options:
  *        - panelId {String} The id for the popup panel.
  *        - listBoxId {String} The id for the richlistbox inside the panel.
@@ -25,25 +24,24 @@ const events  = require("devtools/shared/event-emitter");
  *        - theme {String} String related to the theme of the popup.
  *        - autoSelect {Boolean} Boolean to allow the first entry of the popup
  *                     panel to be automatically selected when the popup shows.
- *        - direction {String} The direction of the text in the panel. rtl or ltr
+ *        - direction {String} The direction of the text in the panel. rtl / ltr
  *        - onSelect {String} The select event handler for the richlistbox
  *        - onClick {String} The click event handler for the richlistbox.
- *        - onKeypress {String} The keypress event handler for the richlistitems.
+ *        - onKeypress {String} The keypress event handler for richlistitems.
  */
-function AutocompletePopup(aDocument, aOptions = {})
-{
-  this._document = aDocument;
+function AutocompletePopup(document, options = {}) {
+  this._document = document;
 
-  this.autoSelect = aOptions.autoSelect || false;
-  this.position = aOptions.position || "after_start";
-  this.direction = aOptions.direction || "ltr";
+  this.autoSelect = options.autoSelect || false;
+  this.position = options.position || "after_start";
+  this.direction = options.direction || "ltr";
 
-  this.onSelect = aOptions.onSelect;
-  this.onClick = aOptions.onClick;
-  this.onKeypress = aOptions.onKeypress;
+  this.onSelect = options.onSelect;
+  this.onClick = options.onClick;
+  this.onKeypress = options.onKeypress;
 
-  let id = aOptions.panelId || "devtools_autoCompletePopup";
-  let theme = aOptions.theme || "dark";
+  let id = options.panelId || "devtools_autoCompletePopup";
+  let theme = options.theme || "dark";
   // If theme is auto, use the devtools.theme pref
   if (theme == "auto") {
     theme = Services.prefs.getCharPref("devtools.theme");
@@ -62,7 +60,7 @@ function AutocompletePopup(aDocument, aOptions = {})
 
     this._panel.setAttribute("noautofocus", "true");
     this._panel.setAttribute("level", "top");
-    if (!aOptions.onKeypress) {
+    if (!options.onKeypress) {
       this._panel.setAttribute("ignorekeys", "true");
     }
     // Stop this appearing as an alert to accessibility.
@@ -71,12 +69,10 @@ function AutocompletePopup(aDocument, aOptions = {})
     let mainPopupSet = this._document.getElementById("mainPopupSet");
     if (mainPopupSet) {
       mainPopupSet.appendChild(this._panel);
-    }
-    else {
+    } else {
       this._document.documentElement.appendChild(this._panel);
     }
-  }
-  else {
+  } else {
     this._list = this._panel.firstChild;
   }
 
@@ -92,8 +88,8 @@ function AutocompletePopup(aDocument, aOptions = {})
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("seltype", "single");
 
-  if (aOptions.listBoxId) {
-    this._list.setAttribute("id", aOptions.listBoxId);
+  if (options.listBoxId) {
+    this._list.setAttribute("id", options.listBoxId);
   }
   this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
 
@@ -128,33 +124,49 @@ AutocompletePopup.prototype = {
   /**
    * Open the autocomplete popup panel.
    *
-   * @param nsIDOMNode aAnchor
+   * @param {nsIDOMNode} anchor
    *        Optional node to anchor the panel to.
-   * @param Number aXOffset
+   * @param {Number} xOffset
    *        Horizontal offset in pixels from the left of the node to the left
    *        of the popup.
-   * @param Number aYOffset
+   * @param {Number} yOffset
    *        Vertical offset in pixels from the top of the node to the starting
    *        of the popup.
+   * @param {Number} index
+   *        The position of item to select.
    */
-  openPopup: function AP_openPopup(aAnchor, aXOffset = 0, aYOffset = 0)
-  {
+  openPopup: function(anchor, xOffset = 0, yOffset = 0, index) {
     this.__maxLabelLength = -1;
     this._updateSize();
-    this._panel.openPopup(aAnchor, this.position, aXOffset, aYOffset);
+    this._panel.openPopup(anchor, this.position, xOffset, yOffset);
 
     if (this.autoSelect) {
-      this.selectFirstItem();
+      this.selectItemAtIndex(index);
     }
 
     this.emit("popup-opened");
   },
 
   /**
+   * Select item at the provided index.
+   *
+   * @param {Number} index
+   *        The position of the item to select.
+   */
+  selectItemAtIndex: function(index) {
+    if (typeof index != "number") {
+      // If no index was provided, select the item closest to the input.
+      let isAboveInput = this.position.includes("before");
+      index = isAboveInput ? this.itemCount - 1 : 0;
+    }
+    this.selectedIndex = index;
+    this._list.ensureIndexIsVisible(this._list.selectedIndex);
+  },
+
+  /**
    * Hide the autocomplete popup panel.
    */
-  hidePopup: function AP_hidePopup()
-  {
+  hidePopup: function() {
     // Return accessibility focus to the input.
     this._document.activeElement.removeAttribute("aria-activedescendant");
     this._panel.hidePopup();
@@ -174,8 +186,7 @@ AutocompletePopup.prototype = {
    * same code. It is the responsability of the client code to perform DOM
    * cleanup.
    */
-  destroy: function AP_destroy()
-  {
+  destroy: function() {
     if (this.isOpen) {
       this.hidePopup();
     }
@@ -206,27 +217,25 @@ AutocompletePopup.prototype = {
   /**
    * Get the autocomplete items array.
    *
-   * @param Number aIndex The index of the item what is wanted.
+   * @param {Number} index
+   *        The index of the item what is wanted.
    *
-   * @return The autocomplete item at index aIndex.
+   * @return {Object} The autocomplete item at index index.
    */
-  getItemAtIndex: function AP_getItemAtIndex(aIndex)
-  {
-    return this._list.getItemAtIndex(aIndex)._autocompleteItem;
+  getItemAtIndex: function(index) {
+    return this._list.getItemAtIndex(index)._autocompleteItem;
   },
 
   /**
    * Get the autocomplete items array.
    *
-   * @return array
-   *         The array of autocomplete items.
+   * @return {Array} The array of autocomplete items.
    */
-  getItems: function AP_getItems()
-  {
+  getItems: function() {
     let items = [];
 
-    Array.forEach(this._list.childNodes, function(aItem) {
-      items.push(aItem._autocompleteItem);
+    Array.forEach(this._list.childNodes, function(item) {
+      items.push(item._autocompleteItem);
     });
 
     return items;
@@ -235,37 +244,22 @@ AutocompletePopup.prototype = {
   /**
    * Set the autocomplete items list, in one go.
    *
-   * @param array aItems
+   * @param {Array} items
    *        The list of items you want displayed in the popup list.
+   * @param {Number} index
+   *        The position of the item to select.
    */
-  setItems: function AP_setItems(aItems)
-  {
+  setItems: function(items, index) {
     this.clearItems();
-    aItems.forEach(this.appendItem, this);
+    items.forEach(this.appendItem, this);
 
     // Make sure that the new content is properly fitted by the XUL richlistbox.
     if (this.isOpen) {
       if (this.autoSelect) {
-        this.selectFirstItem();
+        this.selectItemAtIndex(index);
       }
       this._updateSize();
     }
-  },
-
-  /**
-   * Selects the first item of the richlistbox. Note that first item here is the
-   * item closes to the input element, which means that 0th index if position is
-   * below, and last index if position is above.
-   */
-  selectFirstItem: function AP_selectFirstItem()
-  {
-    if (this.position.includes("before")) {
-      this.selectedIndex = this.itemCount - 1;
-    }
-    else {
-      this.selectedIndex = 0;
-    }
-    this._list.ensureIndexIsVisible(this._list.selectedIndex);
   },
 
   __maxLabelLength: -1,
@@ -291,26 +285,20 @@ AutocompletePopup.prototype = {
 
   /**
    * Update the panel size to fit the content.
-   *
-   * @private
    */
-  _updateSize: function AP__updateSize()
-  {
+  _updateSize: function() {
     if (!this._panel) {
       return;
     }
 
-    this._list.style.width = (this._maxLabelLength + 3) +"ch";
+    this._list.style.width = (this._maxLabelLength + 3) + "ch";
     this._list.ensureIndexIsVisible(this._list.selectedIndex);
   },
 
   /**
    * Update accessibility appropriately when the selected item is changed.
-   *
-   * @private
    */
-  _updateAriaActiveDescendant: function AP__updateAriaActiveDescendant()
-  {
+  _updateAriaActiveDescendant: function() {
     if (!this._list.selectedItem) {
       // Return accessibility focus to the input.
       this._document.activeElement.removeAttribute("aria-activedescendant");
@@ -324,8 +312,7 @@ AutocompletePopup.prototype = {
   /**
    * Clear all the items from the autocomplete list.
    */
-  clearItems: function AP_clearItems()
-  {
+  clearItems: function() {
     // Reset the selectedIndex to -1 before clearing the list
     this.selectedIndex = -1;
 
@@ -349,7 +336,7 @@ AutocompletePopup.prototype = {
   /**
    * Getter for the index of the selected item.
    *
-   * @type number
+   * @type {Number}
    */
   get selectedIndex() {
     return this._list.selectedIndex;
@@ -358,11 +345,11 @@ AutocompletePopup.prototype = {
   /**
    * Setter for the selected index.
    *
-   * @param number aIndex
+   * @param {Number} index
    *        The number (index) of the item you want to select in the list.
    */
-  set selectedIndex(aIndex) {
-    this._list.selectedIndex = aIndex;
+  set selectedIndex(index) {
+    this._list.selectedIndex = index;
     if (this.isOpen && this._list.ensureIndexIsVisible) {
       this._list.ensureIndexIsVisible(this._list.selectedIndex);
     }
@@ -371,7 +358,7 @@ AutocompletePopup.prototype = {
 
   /**
    * Getter for the selected item.
-   * @type object
+   * @type Object
    */
   get selectedItem() {
     return this._list.selectedItem ?
@@ -381,11 +368,11 @@ AutocompletePopup.prototype = {
   /**
    * Setter for the selected item.
    *
-   * @param object aItem
+   * @param {Object} item
    *        The object you want selected in the list.
    */
-  set selectedItem(aItem) {
-    this._list.selectedItem = this._findListItem(aItem);
+  set selectedItem(item) {
+    this._list.selectedItem = this._findListItem(item);
     if (this.isOpen) {
       this._list.ensureIndexIsVisible(this._list.selectedIndex);
     }
@@ -395,7 +382,7 @@ AutocompletePopup.prototype = {
   /**
    * Append an item into the autocomplete list.
    *
-   * @param object aItem
+   * @param {Object} item
    *        The item you want appended to the list.
    *        The item object can have the following properties:
    *        - label {String} Property which is used as the displayed value.
@@ -408,8 +395,7 @@ AutocompletePopup.prototype = {
    *        - count {Number} [Optional] The number to represent the count of
    *                autocompleted label.
    */
-  appendItem: function AP_appendItem(aItem)
-  {
+  appendItem: function(item) {
     let listItem = this._document.createElementNS(XUL_NS, "richlistitem");
     // Items must have an id for accessibility.
     listItem.id = this._panel.id + "_item_" + this._itemIdCounter++;
@@ -417,24 +403,24 @@ AutocompletePopup.prototype = {
       listItem.setAttribute("dir", this.direction);
     }
     let label = this._document.createElementNS(XUL_NS, "label");
-    label.setAttribute("value", aItem.label);
+    label.setAttribute("value", item.label);
     label.setAttribute("class", "autocomplete-value");
-    if (aItem.preLabel) {
+    if (item.preLabel) {
       let preDesc = this._document.createElementNS(XUL_NS, "label");
-      preDesc.setAttribute("value", aItem.preLabel);
+      preDesc.setAttribute("value", item.preLabel);
       preDesc.setAttribute("class", "initial-value");
       listItem.appendChild(preDesc);
-      label.setAttribute("value", aItem.label.slice(aItem.preLabel.length));
+      label.setAttribute("value", item.label.slice(item.preLabel.length));
     }
     listItem.appendChild(label);
-    if (aItem.count && aItem.count > 1) {
+    if (item.count && item.count > 1) {
       let countDesc = this._document.createElementNS(XUL_NS, "label");
-      countDesc.setAttribute("value", aItem.count);
+      countDesc.setAttribute("value", item.count);
       countDesc.setAttribute("flex", "1");
       countDesc.setAttribute("class", "autocomplete-count");
       listItem.appendChild(countDesc);
     }
-    listItem._autocompleteItem = aItem;
+    listItem._autocompleteItem = item;
 
     this._list.appendChild(listItem);
   },
@@ -444,18 +430,16 @@ AutocompletePopup.prototype = {
    *
    * @private
    *
-   * @param object aItem
+   * @param {Object} item
    *        The object you want found in the list.
    *
-   * @return nsIDOMNode|null
-   *         The nsIDOMNode that belongs to the given item object. This node is
-   *         the richlistitem element.
+   * @return {nsIDOMNode} The nsIDOMNode that belongs to the given item object.
+   *         This node is the richlistitem element. Can be null.
    */
-  _findListItem: function AP__findListItem(aItem)
-  {
+  _findListItem: function(item) {
     for (let i = 0; i < this._list.childNodes.length; i++) {
       let child = this._list.childNodes[i];
-      if (child._autocompleteItem == aItem) {
+      if (child._autocompleteItem == item) {
         return child;
       }
     }
@@ -465,21 +449,20 @@ AutocompletePopup.prototype = {
   /**
    * Remove an item from the popup list.
    *
-   * @param object aItem
+   * @param {Object} item
    *        The item you want removed.
    */
-  removeItem: function AP_removeItem(aItem)
-  {
-    let item = this._findListItem(aItem);
-    if (!item) {
+  removeItem: function(item) {
+    let listItem = this._findListItem(item);
+    if (!listItem) {
       throw new Error("Item not found!");
     }
-    this._list.removeChild(item);
+    this._list.removeChild(listItem);
   },
 
   /**
    * Getter for the number of items in the popup.
-   * @type number
+   * @type {Number}
    */
   get itemCount() {
     return this._list.childNodes.length;
@@ -488,9 +471,7 @@ AutocompletePopup.prototype = {
   /**
    * Getter for the height of each item in the list.
    *
-   * @private
-   *
-   * @type number
+   * @type {Number}
    */
   get _itemHeight() {
     return this._list.selectedItem.clientHeight;
@@ -499,15 +480,13 @@ AutocompletePopup.prototype = {
   /**
    * Select the next item in the list.
    *
-   * @return object
+   * @return {Object}
    *         The newly selected item object.
    */
-  selectNextItem: function AP_selectNextItem()
-  {
+  selectNextItem: function() {
     if (this.selectedIndex < (this.itemCount - 1)) {
       this.selectedIndex++;
-    }
-    else {
+    } else {
       this.selectedIndex = 0;
     }
 
@@ -517,15 +496,13 @@ AutocompletePopup.prototype = {
   /**
    * Select the previous item in the list.
    *
-   * @return object
+   * @return {Object}
    *         The newly-selected item object.
    */
-  selectPreviousItem: function AP_selectPreviousItem()
-  {
+  selectPreviousItem: function() {
     if (this.selectedIndex > 0) {
       this.selectedIndex--;
-    }
-    else {
+    } else {
       this.selectedIndex = this.itemCount - 1;
     }
 
@@ -536,11 +513,10 @@ AutocompletePopup.prototype = {
    * Select the top-most item in the next page of items or
    * the last item in the list.
    *
-   * @return object
+   * @return {Object}
    *         The newly-selected item object.
    */
-  selectNextPageItem: function AP_selectNextPageItem()
-  {
+  selectNextPageItem: function() {
     let itemsPerPane = Math.floor(this._list.scrollHeight / this._itemHeight);
     let nextPageIndex = this.selectedIndex + itemsPerPane + 1;
     this.selectedIndex = nextPageIndex > this.itemCount - 1 ?
@@ -553,11 +529,10 @@ AutocompletePopup.prototype = {
    * Select the bottom-most item in the previous page of items,
    * or the first item in the list.
    *
-   * @return object
+   * @return {Object}
    *         The newly-selected item object.
    */
-  selectPreviousPageItem: function AP_selectPreviousPageItem()
-  {
+  selectPreviousPageItem: function() {
     let itemsPerPane = Math.floor(this._list.scrollHeight / this._itemHeight);
     let prevPageIndex = this.selectedIndex - itemsPerPane - 1;
     this.selectedIndex = prevPageIndex < 0 ? 0 : prevPageIndex;
@@ -568,8 +543,7 @@ AutocompletePopup.prototype = {
   /**
    * Focuses the richlistbox.
    */
-  focus: function AP_focus()
-  {
+  focus: function() {
     this._list.focus();
   },
 
@@ -578,22 +552,21 @@ AutocompletePopup.prototype = {
    *
    * @private
    *
-   * @param String aEvent
+   * @param {String} event
    *        The name of the event. In this case, "pref-changed".
-   * @param Object aData
+   * @param {Object} data
    *        An object passed by the emitter of the event. In this case, the
    *        object consists of three properties:
    *        - pref {String} The name of the preference that was modified.
    *        - newValue {Object} The new value of the preference.
    *        - oldValue {Object} The old value of the preference.
    */
-  _handleThemeChange: function AP__handleThemeChange(aEvent, aData)
-  {
-    if (aData.pref == "devtools.theme") {
-      this._panel.classList.toggle(aData.oldValue + "-theme", false);
-      this._panel.classList.toggle(aData.newValue + "-theme", true);
-      this._list.classList.toggle(aData.oldValue + "-theme", false);
-      this._list.classList.toggle(aData.newValue + "-theme", true);
+  _handleThemeChange: function(event, data) {
+    if (data.pref == "devtools.theme") {
+      this._panel.classList.toggle(data.oldValue + "-theme", false);
+      this._panel.classList.toggle(data.newValue + "-theme", true);
+      this._list.classList.toggle(data.oldValue + "-theme", false);
+      this._list.classList.toggle(data.newValue + "-theme", true);
     }
   },
 };

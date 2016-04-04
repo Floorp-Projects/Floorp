@@ -6,3 +6,17 @@
 #       with module. E.g.:
 #         css3-multicol/block-clip-001.xht
 
+# Bug 435426
+css-values-3/attr-color-invalid-cast.html
+css-values-3/attr-color-valid.html
+css-values-3/attr-length-invalid-cast.html
+css-values-3/attr-length-valid-zero-nofallback.html
+css-values-3/attr-length-valid-zero.html
+css-values-3/attr-length-valid.html
+css-values-3/attr-px-invalid-cast.html
+css-values-3/attr-px-valid.html
+# Bug 1256575
+css-values-3/calc-in-media-queries-001.html
+css-values-3/calc-in-media-queries-002.html
+# Bug 1256579
+css-values-3/vh-interpolate-pct.html

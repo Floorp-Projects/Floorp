@@ -28,12 +28,11 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUnixSocketConnector.h"
 #include "BluetoothUtils.h"
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 
 #include <cstdio>
 #include <dbus/dbus.h>
 
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsDebug.h"
 #include "nsDataHashtable.h"
@@ -1277,7 +1276,7 @@ public:
 
     nsAutoString errorStr;
     BluetoothValue v = true;
-    DBusMessage *msg;
+    DBusMessage *msg = nullptr;
 
     if (!sPairingReqTable->Get(mDeviceAddress, &msg) && mRunnable) {
       BT_WARNING("%s: Couldn't get original request message.", __FUNCTION__);
@@ -2111,7 +2110,7 @@ public:
       sPairingReqTable = new nsDataHashtable<BluetoothAddressHashKey, DBusMessage* >;
     }
 
-    sDBusConnection = mConnection.forget();
+    sDBusConnection = mConnection.release();
 
     RefPtr<nsRunnable> runnable =
       new BluetoothService::ToggleBtAck(true);
@@ -2140,7 +2139,7 @@ public:
   }
 
 private:
-  nsAutoPtr<RawDBusConnection> mConnection;
+  UniquePtr<RawDBusConnection> mConnection;
 };
 
 class StartBluetoothRunnable final : public nsRunnable

@@ -8,5 +8,5 @@ function f() {
         print(a)
     })()
 }
-__defineGetter__("x", gc)
+this.__defineGetter__("x", gc)
 f()

@@ -79,3 +79,10 @@ else:
     UNIFIED_SOURCES += [
         'nameprep.c',
     ]
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary hack to support building with VS2015.
+    # icu\source\common\unicode/ucasemap.h(93): warning C4577:
+    # 'noexcept' used with no exception handling mode specified;
+    # termination on exception is not guaranteed. Specify /EHsc from unified dns
+    CXXFLAGS += ['-wd4577']

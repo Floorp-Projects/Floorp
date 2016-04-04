@@ -464,13 +464,15 @@ enum nsRestyleHint {
 // infinite recursion.
 typedef decltype(nsRestyleHint(0) + nsRestyleHint(0)) nsRestyleHint_size_t;
 
-inline nsRestyleHint operator|(nsRestyleHint aLeft, nsRestyleHint aRight)
+inline MOZ_CONSTEXPR nsRestyleHint operator|(nsRestyleHint aLeft,
+                                             nsRestyleHint aRight)
 {
   return nsRestyleHint(nsRestyleHint_size_t(aLeft) |
                        nsRestyleHint_size_t(aRight));
 }
 
-inline nsRestyleHint operator&(nsRestyleHint aLeft, nsRestyleHint aRight)
+inline MOZ_CONSTEXPR nsRestyleHint operator&(nsRestyleHint aLeft,
+                                             nsRestyleHint aRight)
 {
   return nsRestyleHint(nsRestyleHint_size_t(aLeft) &
                        nsRestyleHint_size_t(aRight));
@@ -486,12 +488,13 @@ inline nsRestyleHint& operator&=(nsRestyleHint& aLeft, nsRestyleHint aRight)
   return aLeft = aLeft & aRight;
 }
 
-inline nsRestyleHint operator~(nsRestyleHint aArg)
+inline MOZ_CONSTEXPR nsRestyleHint operator~(nsRestyleHint aArg)
 {
   return nsRestyleHint(~nsRestyleHint_size_t(aArg));
 }
 
-inline nsRestyleHint operator^(nsRestyleHint aLeft, nsRestyleHint aRight)
+inline MOZ_CONSTEXPR nsRestyleHint operator^(nsRestyleHint aLeft,
+                                             nsRestyleHint aRight)
 {
   return nsRestyleHint(nsRestyleHint_size_t(aLeft) ^
                        nsRestyleHint_size_t(aRight));

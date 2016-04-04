@@ -11,6 +11,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
 #include "mozilla/Maybe.h" // For Maybe
+#include "mozilla/NonOwningAnimationTarget.h"
 #include "nsAnimationManager.h" // For CSSAnimation
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIDocument.h" // For nsIDocument
@@ -58,13 +59,14 @@ namespace {
     explicit AutoMutationBatchForAnimation(const Animation& aAnimation
                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      Element* targetElement = nsNodeUtils::GetTargetForAnimation(&aAnimation);
-      if (!targetElement) {
+      Maybe<NonOwningAnimationTarget> target =
+        nsNodeUtils::GetTargetForAnimation(&aAnimation);
+      if (!target) {
         return;
       }
 
       // For mutation observers, we use the OwnerDoc.
-      nsIDocument* doc = targetElement->OwnerDoc();
+      nsIDocument* doc = target->mElement->OwnerDoc();
       if (!doc) {
         return;
       }
@@ -1106,16 +1108,14 @@ Animation::PostUpdate()
     return;
   }
 
-  Element* targetElement;
-  CSSPseudoElementType targetPseudoType;
-  mEffect->GetTarget(targetElement, targetPseudoType);
-  if (!targetElement) {
+  Maybe<NonOwningAnimationTarget> target = mEffect->GetTarget();
+  if (!target) {
     return;
   }
 
   presContext->EffectCompositor()
-             ->RequestRestyle(targetElement,
-                              targetPseudoType,
+             ->RequestRestyle(target->mElement,
+                              target->mPseudoType,
                               EffectCompositor::RestyleType::Layer,
                               CascadeLevel());
 }
@@ -1230,12 +1230,14 @@ Animation::GetPresContext() const
 void
 Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag)
 {
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
   if (aSyncNotifyFlag == SyncNotifyFlag::Sync) {
     DoFinishNotificationImmediately();
   } else if (!mFinishNotificationTask.IsPending()) {
     RefPtr<nsRunnableMethod<Animation>> runnable =
       NS_NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
-    Promise::DispatchToMicroTask(runnable);
+    runtime->DispatchToMicroTask(runnable);
     mFinishNotificationTask = runnable;
   }
 }

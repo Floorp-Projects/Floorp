@@ -10,7 +10,7 @@ class DateTimeValue(object):
 
     ::
 
-        element = marionette.find_element("id", "date-test")
+        element = marionette.find_element(By.ID, "date-test")
         dt_value = DateTimeValue(element)
         dt_value.date = datetime(1998, 6, 2)
 

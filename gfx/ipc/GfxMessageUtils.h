@@ -7,25 +7,25 @@
 #ifndef __GFXMESSAGEUTILS_H__
 #define __GFXMESSAGEUTILS_H__
 
+#include "FilterSupport.h"
+#include "FrameMetrics.h"
+#include "ImageTypes.h"
+#include "RegionBuilder.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
-#include "ipc/IPCMessageUtils.h"
-
-#include <stdint.h>
-
-#include "mozilla/gfx/Matrix.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
+#include "gfxTypes.h"
+#include "ipc/IPCMessageUtils.h"
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/AsyncDragMetrics.h"
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "nsRect.h"
 #include "nsRegion.h"
-#include "gfxTypes.h"
-#include "mozilla/layers/AsyncDragMetrics.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/CompositorTypes.h"
-#include "ImageTypes.h"
-#include "FrameMetrics.h"
-#include "FilterSupport.h"
-#include "mozilla/layers/GeckoContentController.h"
+
+#include <stdint.h>
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -367,6 +367,7 @@ struct RegionParamTraits
 
   static void Write(Message* msg, const paramType& param)
   {
+
     for (auto iter = param.RectIter(); !iter.Done(); iter.Next()) {
       const Rect& r = iter.Get();
       MOZ_RELEASE_ASSERT(!r.IsEmpty());
@@ -379,12 +380,16 @@ struct RegionParamTraits
 
   static bool Read(const Message* msg, void** iter, paramType* result)
   {
+    RegionBuilder<Region> builder;
     Rect rect;
     while (ReadParam(msg, iter, &rect)) {
-      if (rect.IsEmpty())
+      if (rect.IsEmpty()) {
+        *result = builder.ToRegion();
         return true;
-      result->Or(*result, rect);
+      }
+      builder.Or(rect);
     }
+
     return false;
   }
 };
@@ -698,8 +703,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.GetContentDescription());
     WriteParam(aMsg, aParam.mLineScrollAmount);
     WriteParam(aMsg, aParam.mPageScrollAmount);
-    WriteParam(aMsg, aParam.mClipRect);
-    WriteParam(aMsg, aParam.mMaskLayerIndex);
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mHasScrollgrab);
@@ -710,6 +713,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mIsLayersIdRoot);
     WriteParam(aMsg, aParam.mUsesContainerScrolling);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
+    WriteParam(aMsg, aParam.mForceDisableApz);
   }
 
   static bool ReadContentDescription(const Message* aMsg, void** aIter, paramType* aResult)
@@ -760,8 +764,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadContentDescription(aMsg, aIter, aResult) &&
             ReadParam(aMsg, aIter, &aResult->mLineScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mPageScrollAmount) &&
-            ReadParam(aMsg, aIter, &aResult->mClipRect) &&
-            ReadParam(aMsg, aIter, &aResult->mMaskLayerIndex) &&
             ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetHasScrollgrab) &&
@@ -771,7 +773,56 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetAllowVerticalScrollWithWheel) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsLayersIdRoot) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUsesContainerScrolling) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer));
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetForceDisableApz));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::ScrollSnapInfo>
+{
+  typedef mozilla::layers::ScrollSnapInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mScrollSnapTypeX);
+    WriteParam(aMsg, aParam.mScrollSnapTypeY);
+    WriteParam(aMsg, aParam.mScrollSnapIntervalX);
+    WriteParam(aMsg, aParam.mScrollSnapIntervalY);
+    WriteParam(aMsg, aParam.mScrollSnapDestination);
+    WriteParam(aMsg, aParam.mScrollSnapCoordinates);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mScrollSnapTypeX) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapTypeY) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapIntervalX) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapIntervalY) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapDestination) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapCoordinates));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::ScrollMetadata>
+{
+  typedef mozilla::layers::ScrollMetadata paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mMetrics);
+    WriteParam(aMsg, aParam.mSnapInfo);
+    WriteParam(aMsg, aParam.mMaskLayerIndex);
+    WriteParam(aMsg, aParam.mClipRect);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mMetrics) &&
+            ReadParam(aMsg, aIter, &aResult->mSnapInfo) &&
+            ReadParam(aMsg, aIter, &aResult->mMaskLayerIndex) &&
+            ReadParam(aMsg, aIter, &aResult->mClipRect));
   }
 };
 

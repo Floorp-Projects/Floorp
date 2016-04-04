@@ -4,4 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../toolkit/moz.configure')
+option('--with-gonk', nargs=1, help='Path to the gonk base directory')
+
+@depends('--with-gonk')
+def gonkdir(value):
+    return value[0] if value else ''
+
+
+option('--with-gonk-toolchain-prefix', nargs=1,
+       help='Prefix to gonk toolchain commands')
+
+@depends_if('--with-gonk-toolchain-prefix')
+def gonk_toolchain_prefix(value):
+    return value
+
+imply_option('--with-toolchain-prefix', gonk_toolchain_prefix)
+
+
+include('common.configure')

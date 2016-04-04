@@ -1,0 +1,23 @@
+{
+  "data":[
+    {
+      "kind":"font",
+      "original": {
+        "mimetype":"application/x-font-ttf",
+        "filename":"CharisSILCompact-R.ttf",
+        "hash":"4ed509317f1bb441b185ea13bf1c9d19d1a0b396962efa3b5dc3190ad88f2067",
+        "size":1727656
+      },
+      "last_modified":1455710632607,
+      "attachment": {
+        "mimetype":"application/x-gzip",
+        "size":548720,
+        "hash":"960be4fc5a92c1dc488582b215d5d75429fd4ffbee463105d29992cd792a912e",
+        "location":"/attachments/0d28a72d-a51f-46f8-9e5a-f95c61de904e.gz",
+        "filename":"CharisSILCompact-R.ttf.gz"
+      },
+      "type":"asset-archive",
+      "id":"c906275c-3747-fe27-426f-6187526a6f06"
+    }
+  ]
+}

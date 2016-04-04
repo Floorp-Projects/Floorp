@@ -11,7 +11,7 @@
 #include <mozilla/Assertions.h>
 #include "mozilla/Types.h"
 
-#if defined(MOZ_NATIVE_JEMALLOC)
+#if defined(MOZ_SYSTEM_JEMALLOC)
 #include MALLOC_H
 #else
 #define DLLEXPORT

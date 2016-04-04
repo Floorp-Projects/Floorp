@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsIWidget.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "nsRect.h"
 #include "WritingModes.h"
 #include "npapi.h"
@@ -374,7 +375,6 @@ protected:
    */
   void DispatchCompositionChangeEvent(nsWindow* aWindow,
                                       const IMEContext& aContext);
-  already_AddRefed<mozilla::TextRangeArray> CreateTextRangeArray();
 
   nsresult EnsureClauseArray(int32_t aCount);
   nsresult EnsureAttributeArray(int32_t aCount);
@@ -414,7 +414,10 @@ protected:
     mPassedIMEChar.AppendElement(msg);
   }
 
+  TextEventDispatcher* GetTextEventDispatcherFor(nsWindow* aWindow);
+
   nsWindow* mComposingWindow;
+  RefPtr<TextEventDispatcher> mDispatcher;
   nsString  mCompositionString;
   InfallibleTArray<uint32_t> mClauseArray;
   InfallibleTArray<uint8_t> mAttributeArray;

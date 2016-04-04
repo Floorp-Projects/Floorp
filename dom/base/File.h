@@ -44,18 +44,6 @@ class BlobImpl;
 class File;
 class OwningArrayBufferOrArrayBufferViewOrBlobOrString;
 
-/**
- * Used to indicate when a Blob/BlobImpl that was created from an nsIFile
- * (when IsFile() will return true) was from an nsIFile for which
- * nsIFile::IsDirectory() returned true. This is a tri-state to enable us to
- * assert that the state is always set when callers request it.
- */
-enum BlobDirState : uint32_t {
-  eIsDir,
-  eIsNotDir,
-  eUnknownIfDir
-};
-
 class Blob : public nsIDOMBlob
            , public nsIXHRSendable
            , public nsIMutable
@@ -101,21 +89,12 @@ public:
 
   bool IsFile() const;
 
-  /**
-   * This may return true if the Blob was created from an nsIFile that is a
-   * directory.
-   */
-  bool IsDirectory() const;
-
   const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const;
 
   // This method returns null if this Blob is not a File; it returns
   // the same object in case this Blob already implements the File interface;
   // otherwise it returns a new File object with the same BlobImpl.
   already_AddRefed<File> ToFile();
-
-  // XXXjwatt Consider having a ToDirectory() method. The need for a FileSystem
-  // object complicates that though.
 
   // This method creates a new File object with the given name and the same
   // BlobImpl.
@@ -194,7 +173,7 @@ public:
   static already_AddRefed<File>
   Create(nsISupports* aParent, const nsAString& aName,
          const nsAString& aContentType, uint64_t aLength,
-         int64_t aLastModifiedDate, BlobDirState aDirState);
+         int64_t aLastModifiedDate);
 
   // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
   // freed by free so it must be allocated by malloc or something
@@ -204,6 +183,12 @@ public:
                    const nsAString& aName, const nsAString& aContentType,
                    int64_t aLastModifiedDate);
 
+  // This method creates a BlobFileImpl for the new File object. This is
+  // thread-safe, cross-process, cross-thread as any other BlobImpl, but, when
+  // GetType() is called, it must dispatch a runnable to the main-thread in
+  // order to use nsIMIMEService.
+  // Would be nice if we try to avoid to use this method outside the
+  // main-thread to avoid extra runnables.
   static already_AddRefed<File>
   CreateFromFile(nsISupports* aParent, nsIFile* aFile, bool aTemporary = false);
 
@@ -245,7 +230,7 @@ public:
               const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
-  void GetName(nsAString& aName);
+  void GetName(nsAString& aName) const;
 
   int64_t GetLastModified(ErrorResult& aRv);
 
@@ -277,7 +262,7 @@ public:
 
   BlobImpl() {}
 
-  virtual void GetName(nsAString& aName) = 0;
+  virtual void GetName(nsAString& aName) const = 0;
 
   virtual void GetPath(nsAString& aName, ErrorResult& aRv) = 0;
 
@@ -339,28 +324,6 @@ public:
 
   virtual bool IsFile() const = 0;
 
-  /**
-   * Called when this BlobImpl was created from an nsIFile in order to call
-   * nsIFile::IsDirectory() and cache the result so that when the BlobImpl is
-   * copied to another process that informaton is available.
-   * nsIFile::IsDirectory() does synchronous I/O, and BlobImpl objects may be
-   * created on the main thread or in a non-chrome process (where I/O is not
-   * allowed). Do not call this on a non-chrome process, and preferably do not
-   * call it on the main thread.
-   *
-   * Not all creators of BlobImplFile will call this method, in which case
-   * calling IsDirectory will MOZ_ASSERT.
-   */
-  virtual void LookupAndCacheIsDirectory() = 0;
-  virtual void SetIsDirectory(bool aIsDir) = 0;
-  virtual bool IsDirectory() const = 0;
-
-  /**
-   * Prefer IsDirectory(). This exists to help consumer code pass on state from
-   * one BlobImpl when creating another.
-   */
-  virtual BlobDirState GetDirState() const = 0;
-
   // True if this implementation can be sent to other threads.
   virtual bool MayBeClonedToOtherThreads() const
   {
@@ -377,11 +340,9 @@ class BlobImplBase : public BlobImpl
 {
 public:
   BlobImplBase(const nsAString& aName, const nsAString& aContentType,
-               uint64_t aLength, int64_t aLastModifiedDate,
-               BlobDirState aDirState = BlobDirState::eUnknownIfDir)
+               uint64_t aLength, int64_t aLastModifiedDate)
     : mIsFile(true)
     , mImmutable(false)
-    , mDirState(aDirState)
     , mContentType(aContentType)
     , mName(aName)
     , mStart(0)
@@ -397,7 +358,6 @@ public:
                uint64_t aLength)
     : mIsFile(true)
     , mImmutable(false)
-    , mDirState(BlobDirState::eUnknownIfDir)
     , mContentType(aContentType)
     , mName(aName)
     , mStart(0)
@@ -412,7 +372,6 @@ public:
   BlobImplBase(const nsAString& aContentType, uint64_t aLength)
     : mIsFile(false)
     , mImmutable(false)
-    , mDirState(BlobDirState::eUnknownIfDir)
     , mContentType(aContentType)
     , mStart(0)
     , mLength(aLength)
@@ -427,7 +386,6 @@ public:
                uint64_t aLength)
     : mIsFile(false)
     , mImmutable(false)
-    , mDirState(BlobDirState::eUnknownIfDir)
     , mContentType(aContentType)
     , mStart(aStart)
     , mLength(aLength)
@@ -440,7 +398,7 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  virtual void GetName(nsAString& aName) override;
+  virtual void GetName(nsAString& aName) const override;
 
   virtual void GetPath(nsAString& aName, ErrorResult& aRv) override;
 
@@ -518,36 +476,6 @@ public:
     return mIsFile;
   }
 
-  virtual void LookupAndCacheIsDirectory() override
-  {
-    MOZ_ASSERT(false, "Why is this being called on a non-BlobImplFile?");
-  }
-
-  virtual void SetIsDirectory(bool aIsDir) override
-  {
-    MOZ_ASSERT(mIsFile,
-               "This should only be called when this object has been created "
-               "from an nsIFile to note that the nsIFile is a directory");
-    mDirState = aIsDir ? BlobDirState::eIsDir : BlobDirState::eIsNotDir;
-  }
-
-  /**
-   * Returns true if the nsIFile that this object wraps is a directory.
-   */
-  virtual bool IsDirectory() const override
-  {
-    MOZ_ASSERT(mDirState != BlobDirState::eUnknownIfDir,
-               "Must only be used by callers for whom the code paths are "
-               "know to call LookupAndCacheIsDirectory() or "
-               "SetIsDirectory()");
-    return mDirState == BlobDirState::eIsDir;
-  }
-
-  virtual BlobDirState GetDirState() const override
-  {
-    return mDirState;
-  }
-
   virtual bool IsSizeUnknown() const override
   {
     return mLength == UINT64_MAX;
@@ -565,7 +493,6 @@ protected:
 
   bool mIsFile;
   bool mImmutable;
-  BlobDirState mDirState;
 
   nsString mContentType;
   nsString mName;
@@ -590,8 +517,7 @@ public:
 
   BlobImplMemory(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)
-    : BlobImplBase(aName, aContentType, aLength, aLastModifiedDate,
-                   BlobDirState::eIsNotDir)
+    : BlobImplBase(aName, aContentType, aLength, aLastModifiedDate)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
@@ -791,8 +717,6 @@ public:
                                  ErrorResult& aRv) override;
 
   void SetPath(const nsAString& aFullPath);
-
-  virtual void LookupAndCacheIsDirectory() override;
 
   // We always have size and date for this kind of blob.
   virtual bool IsSizeUnknown() const override { return false; }

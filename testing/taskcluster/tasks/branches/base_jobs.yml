@@ -52,24 +52,6 @@ builds:
         task: tasks/builds/b2g_emulator_ics_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_ics_debug.yml
-  aries:
-    platforms:
-      - b2g
-    types:
-      debug:
-        task: tasks/builds/b2g_aries_spark_debug.yml
-  aries-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_aries_eng.yml
-  nexus-5l-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_5l_eng.yml
   linux:
     platforms:
       - Linux
@@ -86,6 +68,12 @@ builds:
         task: tasks/builds/opt_linux64.yml
       debug:
         task: tasks/builds/dbg_linux64.yml
+  linux64-artifact:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_artifact.yml
   linux64-st-an:
     platforms:
       - Linux64 Static Analysis
@@ -112,12 +100,6 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_15_frontend.yml
-  android-b2gdroid:
-    platforms:
-      - Android
-    types:
-      opt:
-        task: tasks/builds/android_api_15_b2gdroid.yml
   linux64-mulet-haz:
     platforms:
       - Mulet Linux
@@ -240,10 +222,14 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_jetpack.yml
-  mochitest-push:
+  mochitest-media:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_mochitest_push.yml
+        task: tasks/tests/fx_linux64_mochitest_media.yml
+  mochitest-media-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_media_e10s.yml
   mochitest-webgl:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -305,3 +291,28 @@ tasks:
         - 'testing/eslint-plugin-mozilla/**'
         # Other misc lint related files.
         - 'tools/lint/**'
+  android-api-15-gradle-dependencies:
+    task: tasks/builds/android_api_15_gradle_dependencies.yml
+    root: true
+    when:
+      file_patterns:
+        - 'testing/docker/android-gradle-build/**'
+        - '**/*.gradle'
+  android-lint:
+    task: tasks/builds/android_lint.yml
+    root: true
+    when:
+      file_patterns:
+        - 'mobile/android/**/*.java'
+        - 'mobile/android/**/*.jpeg'
+        - 'mobile/android/**/*.jpg'
+        - 'mobile/android/**/*.png'
+        - 'mobile/android/**/*.svg'
+        - 'mobile/android/**/*.xml' # Manifest & android resources
+        - 'mobile/android/**/build.gradle'
+  mozharness:
+    task: tasks/tests/mozharness-gecko.yml
+    root: true
+    when:
+      file_patterns:
+        - 'testing/mozharness/**'

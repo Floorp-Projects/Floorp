@@ -2779,7 +2779,7 @@ Widgets.ObjectRenderers.add({
 
   _onClick: function () {
     let location = this.objectActor.location;
-    if (location) {
+    if (location && IGNORED_SOURCE_URLS.indexOf(location.url) === -1) {
       this.output.openLocationInDebugger(location);
     }
     else {
@@ -3667,8 +3667,7 @@ Widgets.Stacktrace.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     }
 
     let location = this.output.owner.createLocationNode({url: frame.filename,
-                                                        line: frame.lineNumber},
-                                                        "jsdebugger");
+                                                        line: frame.lineNumber});
 
     // .devtools-monospace sets font-size to 80%, however .body already has
     // .devtools-monospace. If we keep it here, the location would be rendered

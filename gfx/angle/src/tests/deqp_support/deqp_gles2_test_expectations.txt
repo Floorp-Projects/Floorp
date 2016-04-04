@@ -246,8 +246,6 @@
 1143 MAC : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_* = FAIL
 
 // Windows and Linux failures
-1015 WIN LINUX : dEQP-GLES2.functional.shaders.functions.invalid.local_function_prototype_vertex = FAIL
-1015 WIN LINUX : dEQP-GLES2.functional.shaders.functions.invalid.local_function_prototype_fragment = FAIL
 1020 WIN LINUX : dEQP-GLES2.functional.texture.mipmap.cube.projected.linear_linear = FAIL
 504 WIN LINUX : dEQP-GLES2.functional.uniform_api.value.assigned.by_value.render.nested_structs_arrays.sampler2D_samplerCube_* = FAIL
 
@@ -256,8 +254,6 @@
 989 WIN LINUX MAC : dEQP-GLES2.functional.shaders.preprocessor.extensions.after_non_preprocessing_tokens_fragment = FAIL
 1015 WIN LINUX MAC : dEQP-GLES2.functional.shaders.functions.invalid.return_array_in_struct_vertex = FAIL
 1015 WIN LINUX MAC : dEQP-GLES2.functional.shaders.functions.invalid.return_array_in_struct_fragment = FAIL
-996 WIN LINUX MAC : dEQP-GLES2.functional.shaders.functions.invalid.double_declare_vertex = FAIL
-996 WIN LINUX MAC : dEQP-GLES2.functional.shaders.functions.invalid.double_declare_fragment = FAIL
 1016 WIN LINUX MAC : dEQP-GLES2.functional.shaders.scoping.valid.local_variable_hides_function_parameter_vertex = FAIL
 1016 WIN LINUX MAC : dEQP-GLES2.functional.shaders.scoping.valid.local_variable_hides_function_parameter_fragment = FAIL
 1016 WIN LINUX MAC : dEQP-GLES2.functional.shaders.scoping.invalid.redeclare_function_vertex = FAIL
@@ -268,10 +264,6 @@
 1025 WIN LINUX MAC : dEQP-GLES2.functional.fragment_ops.interaction.basic_shader.* = FAIL
 1027 WIN LINUX MAC : dEQP-GLES2.functional.fbo.render.repeated_clear.tex2d_rgb = FAIL
 1027 WIN LINUX MAC : dEQP-GLES2.functional.fbo.render.repeated_clear.tex2d_rgba = FAIL
-1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.renderbuffer.color0.r16f = FAIL
-1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.renderbuffer.color0.rg16f = FAIL
-1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.renderbuffer.color0.rgba16f = FAIL
-1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.renderbuffer.color0.rgb16f = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.rgb_float = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.rgb_half_float_oes = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.rgba_float = FAIL

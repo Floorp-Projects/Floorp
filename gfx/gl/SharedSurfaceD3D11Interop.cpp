@@ -6,6 +6,7 @@
 #include "SharedSurfaceD3D11Interop.h"
 
 #include <d3d11.h>
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "WGLLibrary.h"
 
@@ -264,15 +265,9 @@ SharedSurface_D3D11Interop::Create(const RefPtr<DXGLDevice>& dxgl,
         return nullptr;
     }
 
-    GLuint fence = 0;
-    if (gl->IsExtensionSupported(GLContext::NV_fence)) {
-        gl->MakeCurrent();
-        gl->fGenFences(1, &fence);
-    }
-
     typedef SharedSurface_D3D11Interop ptrT;
     UniquePtr<ptrT> ret ( new ptrT(gl, size, hasAlpha, renderbufferGL, dxgl, objectWGL,
-                                   textureD3D, sharedHandle, keyedMutex, fence) );
+                                   textureD3D, sharedHandle, keyedMutex) );
     return Move(ret);
 }
 
@@ -284,8 +279,7 @@ SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(GLContext* gl,
                                                        HANDLE objectWGL,
                                                        const RefPtr<ID3D11Texture2D>& textureD3D,
                                                        HANDLE sharedHandle,
-                                                       const RefPtr<IDXGIKeyedMutex>& keyedMutex,
-                                                       GLuint fence)
+                                                       const RefPtr<IDXGIKeyedMutex>& keyedMutex)
     : SharedSurface(SharedSurfaceType::DXGLInterop2,
                     AttachmentType::GLRenderbuffer,
                     gl,
@@ -296,9 +290,9 @@ SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(GLContext* gl,
     , mDXGL(dxgl)
     , mObjectWGL(objectWGL)
     , mTextureD3D(textureD3D)
+    , mNeedsFinish(gfxPrefs::WebGLDXGLNeedsFinish())
     , mSharedHandle(sharedHandle)
     , mKeyedMutex(keyedMutex)
-    , mFence(fence)
     , mLockedForGL(false)
 { }
 
@@ -310,11 +304,6 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 
     if (!mDXGL->UnregisterObject(mObjectWGL)) {
         NS_WARNING("Failed to release a DXGL object, possibly leaking it.");
-    }
-
-    if (mFence) {
-        mGL->MakeCurrent();
-        mGL->fDeleteFences(1, &mFence);
     }
 
     // mDXGL is closed when it runs out of refs.
@@ -364,8 +353,9 @@ SharedSurface_D3D11Interop::ProducerReleaseImpl()
         mKeyedMutex->ReleaseSync(0);
     }
 
-    // TODO fence properly. This kills performance.
-    mGL->fFinish();
+    if (mNeedsFinish) {
+        mGL->fFinish();
+    }
 }
 
 bool
@@ -373,8 +363,8 @@ SharedSurface_D3D11Interop::ToSurfaceDescriptor(layers::SurfaceDescriptor* const
 {
     gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::B8G8R8A8
                                           : gfx::SurfaceFormat::B8G8R8X8;
-    *out_descriptor = layers::SurfaceDescriptorD3D10((WindowsHandle)GetSharedHandle(),
-                                                     format, mSize);
+    *out_descriptor = layers::SurfaceDescriptorD3D10(WindowsHandle(mSharedHandle), format,
+                                                     mSize);
     return true;
 }
 
@@ -383,7 +373,7 @@ SharedSurface_D3D11Interop::ToSurfaceDescriptor(layers::SurfaceDescriptor* const
 
 /*static*/ UniquePtr<SurfaceFactory_D3D11Interop>
 SurfaceFactory_D3D11Interop::Create(GLContext* gl, const SurfaceCaps& caps,
-                                    const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                    const RefPtr<layers::ClientIPCAllocator>& allocator,
                                     const layers::TextureFlags& flags)
 {
     WGLLibrary* wgl = &sWGLLib;
@@ -404,7 +394,7 @@ SurfaceFactory_D3D11Interop::Create(GLContext* gl, const SurfaceCaps& caps,
 
 SurfaceFactory_D3D11Interop::SurfaceFactory_D3D11Interop(GLContext* gl,
                                                          const SurfaceCaps& caps,
-                                                         const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                         const RefPtr<layers::ClientIPCAllocator>& allocator,
                                                          const layers::TextureFlags& flags,
                                                          const RefPtr<DXGLDevice>& dxgl)
     : SurfaceFactory(SharedSurfaceType::DXGLInterop2, gl, caps, allocator, flags)

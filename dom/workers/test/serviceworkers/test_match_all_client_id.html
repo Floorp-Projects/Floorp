@@ -34,6 +34,7 @@
     return new Promise(function(res, rej) {
       window.onmessage = function(e) {
         ok(e.data, "Same client id for multiple calls.");
+        is(e.origin, "http://mochi.test:8888", "Event should have the correct origin");
 
         if (!e.data) {
           rej();

@@ -1,0 +1,142 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Templates implementing some generic checks.
+# ==============================================================
+
+# Declare some exceptions. This is cumbersome, but since we shouldn't need a
+# lot of them, let's stack them all here. When adding a new one, put it in the
+# _declare_exceptions template, and add it to the return statement. Then
+# destructure in the assignment below the function declaration.
+@template
+@imports(_from='__builtin__', _import='Exception')
+@imports(_from='__builtin__', _import='__name__')
+def _declare_exceptions():
+    class FatalCheckError(Exception):
+        '''An exception to throw from a function decorated with @checking.
+        It will result in calling die() with the given message.
+        Debugging messages emitted from the decorated function will also be
+        printed out.'''
+    return (FatalCheckError,)
+
+(FatalCheckError,) = _declare_exceptions()
+
+del _declare_exceptions
+
+# Helper to display "checking" messages
+#   @checking('for foo')
+#   def foo():
+#       return 'foo'
+# is equivalent to:
+#   def foo():
+#       log.info('checking for foo... ')
+#       ret = foo
+#       log.info(ret)
+#       return ret
+# This can be combined with e.g. @depends:
+#   @depends(some_option)
+#   @checking('for something')
+#   def check(value):
+#       ...
+# An optional callback can be given, that will be used to format the returned
+# value when displaying it.
+@template
+def checking(what, callback=None):
+    def decorator(func):
+        def wrapped(*args, **kwargs):
+            log.info('checking %s... ', what)
+            with log.queue_debug():
+                error, ret = None, None
+                try:
+                    ret = func(*args, **kwargs)
+                except FatalCheckError as e:
+                    error = e.message
+                if callback:
+                    log.info(callback(ret))
+                elif ret is True:
+                    log.info('yes')
+                elif ret is False:
+                    log.info('no')
+                else:
+                    log.info(ret)
+                if error:
+                    die(error)
+            return ret
+        return wrapped
+    return decorator
+
+
+# Template to check for programs in $PATH.
+# - `var` is the name of the variable that will be set with `set_config` when
+#   the program is found.
+# - `progs` is a list (or tuple) of program names that will be searched for.
+#   It can also be a reference to a @depends function that returns such a
+#   list. If the list is empty and there is no input, the check is skipped.
+# - `what` is a human readable description of what is being looked for. It
+#   defaults to the lowercase version of `var`.
+# - `input` is a string reference to an existing option or a reference to a
+#   @depends function resolving to explicit input for the program check.
+#   The default is to create an option for the environment variable `var`.
+#   This argument allows to use a different kind of option (possibly using a
+#   configure flag), or doing some pre-processing with a @depends function.
+# - `allow_missing` indicates whether not finding the program is an error.
+#
+# The simplest form is:
+#   check_prog('PROG', ('a', 'b'))
+# This will look for 'a' or 'b' in $PATH, and set_config PROG to the one
+# it can find. If PROG is already set from the environment or command line,
+# use that value instead.
+@template
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.configure', _import='DependsFunction')
+def check_prog(var, progs, what=None, input=None, allow_missing=False):
+    if input:
+        # Wrap input with type checking and normalization.
+        @depends(input)
+        def input(value):
+            if not value:
+                return
+            if isinstance(value, str):
+                return (value,)
+            if isinstance(value, (tuple, list)) and len(value) == 1:
+                return value
+            configure_error('input must resolve to a tuple or a list with a '
+                            'single element, or a string')
+    else:
+        option(env=var, nargs=1,
+               help='Path to %s' % (what or 'the %s program' % var.lower()))
+        input = var
+    what = what or var.lower()
+
+    if not isinstance(progs, DependsFunction):
+        # Trick to make a @depends function out of an immediate value.
+        progs = depends('--help')(lambda h: progs)
+
+    @depends_if(input, progs)
+    @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
+    def check(value, progs):
+        if progs is None:
+            progs = ()
+
+        if not isinstance(progs, (tuple, list)):
+            configure_error('progs must resolve to a list or tuple!')
+
+        for prog in value or progs:
+            log.debug('%s: Trying %s', var.lower(), quote(prog))
+            result = find_program(prog)
+            if result:
+                return result
+
+        if not allow_missing or value:
+            raise FatalCheckError('Cannot find %s' % what)
+
+    @depends_if(check, progs)
+    def normalized_for_config(value, progs):
+        return ':' if value is None else value
+
+    set_config(var, normalized_for_config)
+
+    return check

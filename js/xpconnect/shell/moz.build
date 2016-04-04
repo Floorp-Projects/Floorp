@@ -6,6 +6,11 @@
 
 GeckoProgram('xpcshell', linkage='dependent')
 
+if CONFIG['COMPILE_ENVIRONMENT']:
+    SDK_FILES.bin += [
+        '!xpcshell%s' % CONFIG['BIN_SUFFIX'],
+    ]
+
 SOURCES += [
     'xpcshell.cpp',
 ]
@@ -14,9 +19,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
         'xpcshellMacUtils.mm',
     ]
-
-if CONFIG['MOZ_CALLGRIND']:
-    DEFINES['MOZ_CALLGRIND'] = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

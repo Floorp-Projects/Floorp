@@ -233,7 +233,7 @@ public final class SharedPreferencesHelper
                 // SharedPreferences instance.
                 msg.put("value", sharedPreferences.getAll().get(key));
 
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SharedPreferences:Changed", msg.toString()));
+                GeckoAppShell.notifyObservers("SharedPreferences:Changed", msg.toString());
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Got exception creating JSON object", e);
                 return;

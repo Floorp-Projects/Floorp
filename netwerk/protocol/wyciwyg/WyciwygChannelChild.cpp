@@ -108,7 +108,7 @@ WyciwygChannelChild::Init(nsIURI* uri)
                                            &requestingPrincipalInfo);
     mozilla::ipc::PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
                                            &triggeringPrincipalInfo);
-    securityFlags = nsILoadInfo::SEC_NORMAL;
+    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
     policyType = nsIContentPolicy::TYPE_OTHER;
   }
 
@@ -153,13 +153,9 @@ WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
                                         const nsCString& charset,
                                         const nsCString& securityInfo)
 {
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new WyciwygStartRequestEvent(this, statusCode,
-                                                 contentLength, source,
-                                                 charset, securityInfo));
-  } else {
-    OnStartRequest(statusCode, contentLength, source, charset, securityInfo);
-  }
+  mEventQ->RunOrEnqueue(new WyciwygStartRequestEvent(this, statusCode,
+                                                     contentLength, source,
+                                                     charset, securityInfo));
   return true;
 }
 
@@ -208,11 +204,7 @@ bool
 WyciwygChannelChild::RecvOnDataAvailable(const nsCString& data,
                                          const uint64_t& offset)
 {
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new WyciwygDataAvailableEvent(this, data, offset));
-  } else {
-    OnDataAvailable(data, offset);
-  }
+  mEventQ->RunOrEnqueue(new WyciwygDataAvailableEvent(this, data, offset));
   return true;
 }
 
@@ -270,11 +262,7 @@ private:
 bool
 WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new WyciwygStopRequestEvent(this, statusCode));
-  } else {
-    OnStopRequest(statusCode);
-  }
+  mEventQ->RunOrEnqueue(new WyciwygStopRequestEvent(this, statusCode));
   return true;
 }
 
@@ -327,11 +315,7 @@ class WyciwygCancelEvent : public ChannelEvent
 bool
 WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 {
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new WyciwygCancelEvent(this, statusCode));
-  } else {
-    CancelEarly(statusCode);
-  }
+  mEventQ->RunOrEnqueue(new WyciwygCancelEvent(this, statusCode));
   return true;
 }
 

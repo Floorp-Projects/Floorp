@@ -146,7 +146,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 
     // container-live, and container-live-role attributes
     if (live.IsEmpty()) {
-      nsRoleMapEntry* role = nullptr;
+      const nsRoleMapEntry* role = nullptr;
       if (ancestor->IsElement()) {
         role = aria::GetRoleMap(ancestor->AsElement());
       }

@@ -46,7 +46,7 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 # localized font family names should always match just as English names do
 == localized-family-names-001.html localized-family-names-001-ref.html
 skip-if(Mulet) == localized-family-names-002.html localized-family-names-002-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-== localized-family-names-003.html localized-family-names-003-ref.html
+fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&!d2d) == localized-family-names-003.html localized-family-names-003-ref.html # Bug 1258248
 == localized-family-names-004.html localized-family-names-004-ref.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
@@ -71,8 +71,8 @@ fuzzy-if(OSX==1010&&browserIsRemote,1,17) fuzzy-if(Android,4,8) HTTP(..) == stre
 fuzzy-if(OSX==1010,3,5) HTTP(..) == stretchmapping-137.html stretchmapping-137-ref.html
 
 # test for font-stretch using @font-face
-skip-if(B2G||Mulet) skip-if(Android&&AndroidVersion>15) HTTP(..) == font-stretch-1.html font-stretch-1-ref.html # bugs 773482, 927602 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) skip-if(Android&&AndroidVersion>15) HTTP(..) == font-shorthand-stretch-1.html font-stretch-1-ref.html # bugs 773482, 927602 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) skip-if(Android) HTTP(..) == font-stretch-1.html font-stretch-1-ref.html # bugs 773482, 927602 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) skip-if(Android) HTTP(..) == font-shorthand-stretch-1.html font-stretch-1-ref.html # bugs 773482, 927602 # Initial mulet triage: parity with B2G/B2G Desktop
 
 # bug 724231 - applying synthetic styles to a single @font-face font
 # should apply artificial obliquing, not switch to a true styled face

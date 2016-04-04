@@ -4,97 +4,108 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 define(function(require, exports, module) {
+  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
-const React = require("devtools/client/shared/vendor/react");
+  const { div, span, table, tbody, tr, td, code } = dom;
 
-// Constants
-const DOM = React.DOM;
+  /**
+   * This template is responsible for rendering basic layout
+   * of the 'Headers' panel. It displays HTTP headers groups such as
+   * received or response headers.
+   */
+  let Headers = createClass({
+    propTypes: {
+      data: PropTypes.object,
+    },
 
-/**
- * This template is responsible for rendering basic layout
- * of the 'Headers' panel. It displays HTTP headers groups such as
- * received or response headers.
- */
-var Headers = React.createClass({
-  displayName: "Headers",
+    displayName: "Headers",
 
-  getInitialState: function() {
-    return {};
-  },
+    getInitialState: function() {
+      return {};
+    },
 
-  render: function() {
-    var data = this.props.data;
+    render: function() {
+      let data = this.props.data;
 
-    return (
-      DOM.div({className: "netInfoHeadersTable"},
-        DOM.div({className: "netHeadersGroup"},
-          DOM.div({className: "netInfoHeadersGroup"},
-            DOM.span({className: "netHeader twisty"},
-              Locale.$STR("jsonViewer.responseHeaders")
+      return (
+        div({className: "netInfoHeadersTable"},
+          div({className: "netHeadersGroup"},
+            div({className: "netInfoHeadersGroup"},
+              span({className: "netHeader twisty"},
+                Locale.$STR("jsonViewer.responseHeaders")
+              )
+            ),
+            table({cellPadding: 0, cellSpacing: 0},
+              HeaderList({headers: data.response})
             )
           ),
-          DOM.table({cellPadding: 0, cellSpacing: 0},
-            HeaderList({headers: data.response})
-          )
-        ),
-        DOM.div({className: "netHeadersGroup"},
-          DOM.div({className: "netInfoHeadersGroup"},
-            DOM.span({className: "netHeader twisty"},
-              Locale.$STR("jsonViewer.requestHeaders")
+          div({className: "netHeadersGroup"},
+            div({className: "netInfoHeadersGroup"},
+              span({className: "netHeader twisty"},
+                Locale.$STR("jsonViewer.requestHeaders")
+              )
+            ),
+            table({cellPadding: 0, cellSpacing: 0},
+              HeaderList({headers: data.request})
             )
-          ),
-          DOM.table({cellPadding: 0, cellSpacing: 0},
-            HeaderList({headers: data.request})
           )
         )
-      )
-    );
-  }
-});
+      );
+    }
+  });
 
-/**
- * This template renders headers list,
- * name + value pairs.
- */
-var HeaderList = React.createFactory(React.createClass({
-  displayName: "HeaderList",
+  /**
+   * This template renders headers list,
+   * name + value pairs.
+   */
+  let HeaderList = createFactory(createClass({
+    propTypes: {
+      headers: PropTypes.arrayOf(PropTypes.shape({
+        name: PropTypes.string,
+        value: PropTypes.string
+      }))
+    },
 
-  getInitialState: function() {
-    return {
-      headers: []
-    };
-  },
+    displayName: "HeaderList",
 
-  render: function() {
-    var headers = this.props.headers;
+    getInitialState: function() {
+      return {
+        headers: []
+      };
+    },
 
-    headers.sort(function(a, b) {
-      return a.name > b.name ? 1 : -1;
-    });
+    render: function() {
+      let headers = this.props.headers;
 
-    var rows = [];
-    headers.forEach(header => {
-      rows.push(
-        DOM.tr({key: header.name},
-          DOM.td({className: "netInfoParamName"},
-            DOM.span({title: header.name}, header.name)
-          ),
-          DOM.td({className: "netInfoParamValue"},
-            DOM.code({}, header.value)
+      headers.sort(function(a, b) {
+        return a.name > b.name ? 1 : -1;
+      });
+
+      let rows = [];
+      headers.forEach(header => {
+        rows.push(
+          tr({key: header.name},
+            td({className: "netInfoParamName"},
+              span({title: header.name}, header.name)
+            ),
+            td({className: "netInfoParamValue"},
+              code({}, header.value)
+            )
           )
+        );
+      });
+
+      return (
+        tbody({},
+          rows
         )
-      )
-    });
+      );
+    }
+  }));
 
-    return (
-      DOM.tbody({},
-        rows
-      )
-    )
-  }
-}));
-
-// Exports from this module
-exports.Headers = Headers;
+  // Exports from this module
+  exports.Headers = Headers;
 });

@@ -624,6 +624,12 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum attachment, TexImageTarget texImag
         return;
 
     if (tex) {
+        if (!tex->HasEverBeenBound()) {
+            mContext->ErrorInvalidOperation("framebufferTexture2D: the texture"
+                                            " is not the name of a texture.");
+            return;
+        }
+
         bool isTexture2D = tex->Target() == LOCAL_GL_TEXTURE_2D;
         bool isTexTarget2D = texImageTarget == LOCAL_GL_TEXTURE_2D;
         if (isTexture2D != isTexTarget2D) {
@@ -1140,7 +1146,8 @@ WebGLFramebuffer::FinalizeAttachments() const
 bool
 WebGLFramebuffer::ValidateForRead(const char* funcName,
                                   const webgl::FormatUsageInfo** const out_format,
-                                  uint32_t* const out_width, uint32_t* const out_height)
+                                  uint32_t* const out_width, uint32_t* const out_height,
+                                  GLenum* const out_mode)
 {
     if (!ValidateAndInitAttachments(funcName))
         return false;
@@ -1158,6 +1165,7 @@ WebGLFramebuffer::ValidateForRead(const char* funcName,
         return false;
     }
 
+    *out_mode = mReadBufferMode;
     *out_format = attachPoint->Format();
     attachPoint->Size(out_width, out_height);
     return true;

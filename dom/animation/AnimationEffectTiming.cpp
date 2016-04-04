@@ -8,6 +8,8 @@
 
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingBinding.h"
+#include "mozilla/TimingParams.h"
+#include "nsAString.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,12 +20,24 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return AnimationEffectTimingBinding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AnimationEffectTiming::NotifyTimingUpdate()
+static inline void
+PostSpecifiedTimingUpdated(KeyframeEffect* aEffect)
 {
-  if (mEffect) {
-    mEffect->NotifySpecifiedTimingUpdated();
+  if (aEffect) {
+    aEffect->NotifySpecifiedTimingUpdated();
   }
+}
+
+void
+AnimationEffectTiming::SetDelay(double aDelay)
+{
+  TimeDuration delay = TimeDuration::FromMilliseconds(aDelay);
+  if (mTiming.mDelay == delay) {
+    return;
+  }
+  mTiming.mDelay = delay;
+
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 void
@@ -35,32 +49,85 @@ AnimationEffectTiming::SetEndDelay(double aEndDelay)
   }
   mTiming.mEndDelay = endDelay;
 
-  NotifyTimingUpdate();
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 void
-AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
+AnimationEffectTiming::SetFill(const FillMode& aFill)
 {
-  if (mTiming.mDuration.IsUnrestrictedDouble() &&
-      aDuration.IsUnrestrictedDouble() &&
-      mTiming.mDuration.GetAsUnrestrictedDouble() ==
-        aDuration.GetAsUnrestrictedDouble()) {
+  // TODO: Bug 1244637 - implement AnimationEffectTiming fill
+}
+
+void
+AnimationEffectTiming::SetIterationStart(double aIterationStart,
+                                         ErrorResult& aRv)
+{
+  if (mTiming.mIterationStart == aIterationStart) {
     return;
   }
 
-  if (mTiming.mDuration.IsString() && aDuration.IsString() &&
-      mTiming.mDuration.GetAsString() == aDuration.GetAsString()) {
+  TimingParams::ValidateIterationStart(aIterationStart, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
-  if (aDuration.IsUnrestrictedDouble()) {
-    mTiming.mDuration.SetAsUnrestrictedDouble() =
-      aDuration.GetAsUnrestrictedDouble();
-  } else {
-    mTiming.mDuration.SetAsString() = aDuration.GetAsString();
+  mTiming.mIterationStart = aIterationStart;
+
+  PostSpecifiedTimingUpdated(mEffect);
+}
+
+void
+AnimationEffectTiming::SetIterations(double aIterations, ErrorResult& aRv)
+{
+  if (mTiming.mIterations == aIterations) {
+    return;
   }
 
-  NotifyTimingUpdate();
+  TimingParams::ValidateIterations(aIterations, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  mTiming.mIterations = aIterations;
+
+  PostSpecifiedTimingUpdated(mEffect);
+}
+
+void
+AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration,
+                                   ErrorResult& aRv)
+{
+  Maybe<StickyTimeDuration> newDuration =
+    TimingParams::ParseDuration(aDuration, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (mTiming.mDuration == newDuration) {
+    return;
+  }
+
+  mTiming.mDuration = newDuration;
+
+  PostSpecifiedTimingUpdated(mEffect);
+}
+
+void
+AnimationEffectTiming::SetDirection(const PlaybackDirection& aDirection)
+{
+  if (mTiming.mDirection == aDirection) {
+    return;
+  }
+
+  mTiming.mDirection = aDirection;
+
+  PostSpecifiedTimingUpdated(mEffect);
+}
+
+void
+AnimationEffectTiming::SetEasing(const nsAString& aEasing, ErrorResult& aRv)
+{
+  // TODO: Bug 1244643 - implement AnimationEffectTiming easing
 }
 
 } // namespace dom

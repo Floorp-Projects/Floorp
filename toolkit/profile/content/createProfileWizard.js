@@ -13,7 +13,6 @@ var gProfileService;
 var gProfileManagerBundle;
 
 var gDefaultProfileParent;
-var gOldProfileName;
 
 // The directory where the profile will be created.
 var gProfileRoot;
@@ -30,8 +29,6 @@ function initWizard()
 
     var dirService = C["@mozilla.org/file/directory_service;1"].getService(I.nsIProperties);
     gDefaultProfileParent = dirService.get("DefProfRt", I.nsIFile);
-
-    gOldProfileName = document.getElementById("profileName").value;
 
     // Initialize the profile location display.
     gProfileDisplay = document.getElementById("profileDisplay").firstChild;
@@ -137,20 +134,16 @@ function checkCurrentInput(currentInput)
   finishButton.disabled = !canAdvance;
 
   updateProfileDisplay();
+
+  return canAdvance;
 }
 
-function updateProfileName(aNewName) {
-  checkCurrentInput(aNewName);
-
-  var re = new RegExp("^[a-z0-9]{8}\\." +
-                      gOldProfileName.replace(/[|^$()\[\]{}\\+?.*]/g, "\\$&")
-                      + '$');
-
-  if (re.test(gProfileRoot.leafName)) {
+function updateProfileName(aNewName)
+{
+  if (checkCurrentInput(aNewName)) {
     gProfileRoot.leafName = saltName(aNewName);
     updateProfileDisplay();
   }
-  gOldProfileName = aNewName;
 }
 
 // Checks whether the given string is a valid profile name.

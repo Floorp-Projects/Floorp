@@ -232,7 +232,7 @@ WebappsActor.prototype = {
   actorPrefix: "webapps",
 
   // For now, launch and close requests are only supported on B2G products
-  // like devices, mulet/simulators, graphene and b2gdroid.
+  // like devices, mulet/simulators, and graphene.
   // We set that attribute on the prototype in order to allow test
   // to enable this feature.
   supportsLaunch: require("devtools/shared/system").constants.MOZ_B2G,

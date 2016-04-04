@@ -253,12 +253,17 @@ public:
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsVisible) {}
 
-  // Set a flag indicating whether seeking is supported
+  // Set a flag indicating whether random seeking is supported
   void SetMediaSeekable(bool aMediaSeekable);
+  // Set a flag indicating whether seeking is supported only in buffered ranges
+  void SetMediaSeekableOnlyInBufferedRanges(bool aMediaSeekableOnlyInBufferedRanges);
 
-  // Returns true if this media supports seeking. False for example for WebM
-  // files without an index and chained ogg files.
+  // Returns true if this media supports random seeking. False for example with
+  // chained ogg files.
   bool IsMediaSeekable();
+  // Returns true if this media supports seeking only in buffered ranges. True
+  // for example in WebMs with no cues
+  bool IsMediaSeekableOnlyInBufferedRanges();
   // Returns true if seeking is supported on a transport level (e.g. the server
   // supports range requests, we are playing a file, etc.).
   bool IsTransportSeekable();
@@ -455,7 +460,7 @@ private:
 #endif
 
 #ifdef MOZ_ANDROID_OMX
-  static bool IsAndroidMediaEnabled();
+  static bool IsAndroidMediaPluginEnabled();
 #endif
 
 #ifdef MOZ_WMF
@@ -792,6 +797,9 @@ protected:
   // True if the media is seekable (i.e. supports random access).
   Canonical<bool> mMediaSeekable;
 
+  // True if the media is only seekable within its buffered ranges.
+  Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
+
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() {
@@ -832,6 +840,9 @@ public:
   }
   AbstractCanonical<bool>* CanonicalMediaSeekable() {
     return &mMediaSeekable;
+  }
+  AbstractCanonical<bool>* CanonicalMediaSeekableOnlyInBufferedRanges() {
+    return &mMediaSeekableOnlyInBufferedRanges;
   }
 
 private:

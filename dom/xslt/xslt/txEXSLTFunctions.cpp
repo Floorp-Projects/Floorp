@@ -168,8 +168,8 @@ struct txEXSLTFunctionDescriptor
     int8_t mMinParams;
     int8_t mMaxParams;
     Expr::ResultType mReturnType;
-    nsIAtom** mName;
     int32_t mNamespaceID;
+    nsIAtom** mName;
     const char* mNamespaceURI;
 };
 
@@ -183,22 +183,22 @@ static const char kEXSLTDatesAndTimesNS[] = "http://exslt.org/dates-and-times";
 // txEXSLTFunctionCall::eType enum
 static txEXSLTFunctionDescriptor descriptTable[] =
 {
-    { 1, 1, Expr::NODESET_RESULT, &nsGkAtoms::nodeSet, 0, kEXSLTCommonNS }, // NODE_SET
-    { 1, 1, Expr::STRING_RESULT,  &nsGkAtoms::objectType, 0, kEXSLTCommonNS }, // OBJECT_TYPE
-    { 2, 2, Expr::NODESET_RESULT, &nsGkAtoms::difference, 0, kEXSLTSetsNS }, // DIFFERENCE
-    { 1, 1, Expr::NODESET_RESULT, &nsGkAtoms::distinct, 0, kEXSLTSetsNS }, // DISTINCT
-    { 2, 2, Expr::BOOLEAN_RESULT, &nsGkAtoms::hasSameNode, 0, kEXSLTSetsNS }, // HAS_SAME_NODE
-    { 2, 2, Expr::NODESET_RESULT, &nsGkAtoms::intersection, 0, kEXSLTSetsNS }, // INTERSECTION
-    { 2, 2, Expr::NODESET_RESULT, &nsGkAtoms::leading, 0, kEXSLTSetsNS }, // LEADING
-    { 2, 2, Expr::NODESET_RESULT, &nsGkAtoms::trailing, 0, kEXSLTSetsNS }, // TRAILING
-    { 1, 1, Expr::STRING_RESULT,  &nsGkAtoms::concat, 0, kEXSLTStringsNS }, // CONCAT
-    { 1, 2, Expr::STRING_RESULT,  &nsGkAtoms::split, 0, kEXSLTStringsNS }, // SPLIT
-    { 1, 2, Expr::STRING_RESULT,  &nsGkAtoms::tokenize, 0, kEXSLTStringsNS }, // TOKENIZE
-    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::max, 0, kEXSLTMathNS }, // MAX
-    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::min, 0, kEXSLTMathNS }, // MIN
-    { 1, 1, Expr::NODESET_RESULT, &nsGkAtoms::highest, 0, kEXSLTMathNS }, // HIGHEST
-    { 1, 1, Expr::NODESET_RESULT, &nsGkAtoms::lowest, 0, kEXSLTMathNS }, // LOWEST
-    { 0, 0, Expr::STRING_RESULT,  &nsGkAtoms::dateTime, 0, kEXSLTDatesAndTimesNS }, // DATE_TIME
+    { 1, 1, Expr::NODESET_RESULT, 0, &nsGkAtoms::nodeSet, kEXSLTCommonNS }, // NODE_SET
+    { 1, 1, Expr::STRING_RESULT, 0, &nsGkAtoms::objectType, kEXSLTCommonNS }, // OBJECT_TYPE
+    { 2, 2, Expr::NODESET_RESULT, 0, &nsGkAtoms::difference, kEXSLTSetsNS }, // DIFFERENCE
+    { 1, 1, Expr::NODESET_RESULT, 0, &nsGkAtoms::distinct, kEXSLTSetsNS }, // DISTINCT
+    { 2, 2, Expr::BOOLEAN_RESULT, 0, &nsGkAtoms::hasSameNode, kEXSLTSetsNS }, // HAS_SAME_NODE
+    { 2, 2, Expr::NODESET_RESULT, 0, &nsGkAtoms::intersection, kEXSLTSetsNS }, // INTERSECTION
+    { 2, 2, Expr::NODESET_RESULT, 0, &nsGkAtoms::leading, kEXSLTSetsNS }, // LEADING
+    { 2, 2, Expr::NODESET_RESULT, 0, &nsGkAtoms::trailing, kEXSLTSetsNS }, // TRAILING
+    { 1, 1, Expr::STRING_RESULT, 0, &nsGkAtoms::concat, kEXSLTStringsNS }, // CONCAT
+    { 1, 2, Expr::STRING_RESULT, 0, &nsGkAtoms::split, kEXSLTStringsNS }, // SPLIT
+    { 1, 2, Expr::STRING_RESULT, 0, &nsGkAtoms::tokenize, kEXSLTStringsNS }, // TOKENIZE
+    { 1, 1, Expr::NUMBER_RESULT, 0, &nsGkAtoms::max, kEXSLTMathNS }, // MAX
+    { 1, 1, Expr::NUMBER_RESULT, 0, &nsGkAtoms::min, kEXSLTMathNS }, // MIN
+    { 1, 1, Expr::NODESET_RESULT, 0, &nsGkAtoms::highest, kEXSLTMathNS }, // HIGHEST
+    { 1, 1, Expr::NODESET_RESULT, 0, &nsGkAtoms::lowest, kEXSLTMathNS }, // LOWEST
+    { 0, 0, Expr::STRING_RESULT, 0, &nsGkAtoms::dateTime, kEXSLTDatesAndTimesNS }, // DATE_TIME
 
 };
 

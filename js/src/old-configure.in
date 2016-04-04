@@ -11,9 +11,6 @@ AC_PREREQ(2.13)
 AC_INIT(js/src/jsapi.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-TARGET_CPU="${target_cpu}"
-TARGET_VENDOR="${target_vendor}"
-TARGET_OS="${target_os}"
 
 dnl ========================================================
 dnl =
@@ -54,7 +51,6 @@ NSPR_MINVER=4.9.2
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-PERL_VERSION=5.006
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 
@@ -63,7 +59,6 @@ MSMANIFEST_TOOL=
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
-AC_PROG_AWK
 
 dnl Initialize the Pthread test variables early so they can be
 dnl  overridden by each platform.
@@ -80,61 +75,13 @@ MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
 MOZ_DEFAULT_COMPILER
 
-dnl Check for Perl first -- needed for win32 SDK checks
-MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
-if test -z "$PERL" -o "$PERL" = ":"; then
-    AC_MSG_ERROR([perl not found in \$PATH])
-fi
-
-MOZ_ARG_ENABLE_BOOL(shared-js,
-[  --disable-shared-js
-                          Do not create a shared library.],
-    DISABLE_SHARED_JS=0,
-    DISABLE_SHARED_JS=1)
-
-MOZ_ARG_DISABLE_BOOL(export-js,
-[  --disable-export-js
-                          Do not mark JS symbols as DLL exported/visible.],
-    DISABLE_EXPORT_JS=1,
-    DISABLE_EXPORT_JS=)
-
-if test "$DISABLE_SHARED_JS" = "1" ; then
-  if test "$DISABLE_EXPORT_JS" = "1"; then
-    AC_DEFINE(STATIC_JS_API)
-  else
-    AC_DEFINE(STATIC_EXPORTABLE_JS_API)
-  fi
-else
-  if test "$DISABLE_EXPORT_JS" = "1"; then
-    AC_MSG_ERROR([Must export JS symbols when building a shared library.])
-  fi
-  JS_SHARED_LIBRARY=1
-fi
-AC_SUBST(JS_SHARED_LIBRARY)
-
-if test "$JS_STANDALONE" = no; then
+if test -z "$JS_STANDALONE"; then
   autoconfmk=autoconf-js.mk
-  JS_STANDALONE=
   #DIST is exported from top-level configure
 else
-  JS_STANDALONE=1
-  AC_DEFINE(JS_STANDALONE)
   DIST="$MOZ_BUILD_ROOT/dist"
 fi
-AC_SUBST(JS_STANDALONE)
-BUILDING_JS=1
-AC_SUBST(BUILDING_JS)
 AC_SUBST(autoconfmk)
-
-MOZ_ARG_WITH_STRING(gonk,
-[  --with-gonk=DIR
-               location of gonk dir],
-    gonkdir=$withval)
-
-MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
-[  --with-gonk-toolchain-prefix=DIR
-                          prefix to gonk toolchain commands],
-    gonk_toolchain_prefix=$withval)
 
 if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
@@ -143,17 +90,6 @@ if test -n "$gonkdir" ; then
     if test -n "${PLATFORM_SDK_VERSION}"; then
         ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
     fi
-
-    dnl set up compilers
-    AS="$gonk_toolchain_prefix"as
-    CC="$gonk_toolchain_prefix"gcc
-    CXX="$gonk_toolchain_prefix"g++
-    CPP="$gonk_toolchain_prefix"cpp
-    LD="$gonk_toolchain_prefix"ld
-    AR="$gonk_toolchain_prefix"ar
-    RANLIB="$gonk_toolchain_prefix"ranlib
-    STRIP="$gonk_toolchain_prefix"strip
-    OBJCOPY="$gonk_toolchain_prefix"objcopy
 
     STLPORT_CPPFLAGS="-I$_topsrcdir/build/stlport/stlport -I$gonkdir/ndk/sources/cxx-stl/system/include"
     STLPORT_LIBS="-lstlport"
@@ -165,20 +101,6 @@ if test -n "$gonkdir" ; then
 
     dnl Add -llog by default, since we use it all over the place.
     LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ -llog $LDFLAGS"
-
-    dnl prevent cross compile section from using these flags as host flags
-    if test -z "$HOST_CPPFLAGS" ; then
-        HOST_CPPFLAGS=" "
-    fi
-    if test -z "$HOST_CFLAGS" ; then
-        HOST_CFLAGS=" "
-    fi
-    if test -z "$HOST_CXXFLAGS" ; then
-        HOST_CXXFLAGS=" "
-    fi
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
 
     AC_DEFINE(ANDROID)
     AC_DEFINE(GONK)
@@ -340,10 +262,11 @@ case "$target" in
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
-            # -Wv:18 disables all warnings introduced after VS2013
-            # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
-            CFLAGS="$CFLAGS -Wv:18"
-            CXXFLAGS="$CXXFLAGS -Wv:18"
+            # C5026: move constructor was implicitly defined as deleted
+            CXXFLAGS="$CXXFLAGS -wd5026"
+
+            # C5027: move assignment operator was implicitly defined as deleted
+            CXXFLAGS="$CXXFLAGS -wd5027"
 
             # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
             CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
@@ -488,46 +411,10 @@ AC_SUBST(INTEL_CXX)
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
-AC_PROG_INSTALL
-AC_PROG_LN_S
-
-AC_MSG_CHECKING([for tar archiver])
-AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
-if test -z "$TAR"; then
-    AC_MSG_WARN([no tar archiver found in \$PATH])
-fi
-AC_MSG_RESULT([$TAR])
-AC_SUBST(TAR)
-
-AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
-_perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
-_perl_res=$?
-AC_MSG_RESULT([$_perl_version])
-
-if test "$_perl_res" != 0; then
-    AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
-fi
-
-AC_MSG_CHECKING([for full perl installation])
-_perl_archlib=`$PERL -e 'use Config; if ( -d $Config{archlib} ) { exit(0); } else { exit(1); }' 2>&5`
-_perl_res=$?
-if test "$_perl_res" != 0; then
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required.])
-else
-    AC_MSG_RESULT([yes])
-fi
-
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
 fi
 AC_SUBST(NSINSTALL_BIN)
-
-MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(XARGS, xargs)
-if test -z "$XARGS" -o "$XARGS" = ":"; then
-    AC_MSG_ERROR([xargs not found in \$PATH .])
-fi
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -707,245 +594,11 @@ LIB_PREFIX=lib
 DLL_SUFFIX=.so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
-ASM_SUFFIX=s
 IMPORT_LIB_SUFFIX=
 DIRENT_INO=d_ino
 MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
-
-USE_DEPENDENT_LIBS=1
-
-_PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
-
-if test -n "$CROSS_COMPILE"; then
-    OS_TARGET="${target_os}"
-    OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
-    OS_RELEASE=
-    case "${target_os}" in
-        linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
-        kfreebsd*-gnu) OS_ARCH=GNU_kFreeBSD OS_TARGET=GNU/kFreeBSD ;;
-        gnu*)         OS_ARCH=GNU ;;
-        solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
-        mingw*)       OS_ARCH=WINNT OS_TARGET=WINNT ;;
-        darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
-        dragonfly*)   OS_ARCH=DragonFly OS_TARGET=DragonFly ;;
-        freebsd*)     OS_ARCH=FreeBSD OS_TARGET=FreeBSD ;;
-        netbsd*)      OS_ARCH=NetBSD OS_TARGET=NetBSD ;;
-        openbsd*)     OS_ARCH=OpenBSD OS_TARGET=OpenBSD ;;
-    esac
-    case "${target}" in
-        *-android*|*-linuxandroid*) OS_ARCH=Linux OS_TARGET=Android ;;
-    esac
-else
-    OS_TARGET=`uname -s`
-    OS_ARCH=`uname -s | sed -e 's|/|_|g'`
-    OS_RELEASE=`uname -r`
-fi
-
-# Before this used `uname -m` when not cross compiling
-# but that breaks when you have a 64 bit kernel with a 32 bit userland.
-OS_TEST="${target_cpu}"
-
-HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
-
-#######################################################################
-# Master "Core Components" macros for getting the OS target           #
-#######################################################################
-
-#
-# If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
-# cross-compilation.
-#
-
-#
-# Define and override various archtecture-specific variables, including
-# HOST_OS_ARCH
-# OS_ARCH
-# OS_TEST
-# OS_TARGET
-# OS_RELEASE
-# OS_MINOR_RELEASE
-#
-
-case "$HOST_OS_ARCH" in
-mingw*)
-    HOST_OS_ARCH=WINNT
-    ;;
-darwin*)
-    HOST_OS_ARCH=Darwin
-    ;;
-linux*)
-    HOST_OS_ARCH=Linux
-    ;;
-kfreebsd*-gnu)
-    HOST_OS_ARCH=GNU_kFreeBSD
-    ;;
-gnu*)
-    HOST_OS_ARCH=GNU
-    ;;
-dragonfly*)
-    HOST_OS_ARCH=DragonFly
-    ;;
-freebsd*)
-    HOST_OS_ARCH=FreeBSD
-    ;;
-netbsd*)
-    HOST_OS_ARCH=NetBSD
-    ;;
-openbsd*)
-    HOST_OS_ARCH=OpenBSD
-    ;;
-solaris*)
-    HOST_OS_ARCH=SunOS
-    SOLARIS_SUNPRO_CC=
-    SOLARIS_SUNPRO_CXX=
-    if test -z "$GNU_CC"; then
-        if test "`$CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
-            SOLARIS_SUNPRO_CC=1
-       fi
-    fi
-
-    if test -z "$GNU_CXX"; then
-       if test "`$CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
-           SOLARIS_SUNPRO_CXX=1
-       fi
-    fi
-    AC_SUBST(SOLARIS_SUNPRO_CC)
-    AC_SUBST(SOLARIS_SUNPRO_CXX)
-    ;;
-esac
-
-case "$OS_ARCH" in
-WINNT)
-    if test -z "$CROSS_COMPILE" ; then
-        OS_TEST=`uname -p`
-    fi
-    ;;
-Windows_NT)
-#
-# If uname -s returns "Windows_NT", we assume that we are using
-# the uname.exe in MKS toolkit.
-#
-# The -r option of MKS uname only returns the major version number.
-# So we need to use its -v option to get the minor version number.
-# Moreover, it doesn't have the -p option, so we need to use uname -m.
-#
-    OS_ARCH=WINNT
-    OS_TARGET=WINNT
-    OS_MINOR_RELEASE=`uname -v`
-    if test "$OS_MINOR_RELEASE" = "00"; then
-        OS_MINOR_RELEASE=0
-    fi
-    OS_RELEASE="${OS_RELEASE}.${OS_MINOR_RELEASE}"
-    ;;
-MINGW*_NT*)
-#
-# If uname -s returns MINGW32_NT-5.1, we assume that we are using
-# the uname.exe in the MSYS tools.
-#
-    OS_RELEASE=`expr $OS_ARCH : '.*NT-\(.*\)'`
-    OS_ARCH=WINNT
-    OS_TARGET=WINNT
-    ;;
-AIX)
-    OS_RELEASE=`uname -v`.`uname -r`
-    OS_TEST=${target_cpu}
-    if test -z "$GNU_CC"; then
-        if test "`$CC -qversion 2>&1 | egrep -c 'IBM XL'`" != "0"; then
-            AIX_IBM_XLC=1
-        fi
-    fi
-    ;;
-Darwin)
-    case "${target_cpu}" in
-    powerpc*)
-        OS_TEST=ppc
-        ;;
-    i*86*)
-        OS_TEST=i386
-        ;;
-    x86_64)
-        OS_TEST=x86_64
-        ;;
-    *)
-        if test -z "$CROSS_COMPILE" ; then
-            OS_TEST=`uname -p`
-        fi
-        ;;
-    esac
-    ;;
-esac
-
-# Only set CPU_ARCH if we recognize the value of OS_TEST
-
-case "$OS_TEST" in
-*86 | i86pc)
-    CPU_ARCH=x86
-    ;;
-
-powerpc64 | ppc64 | powerpc64le | ppc64le)
-    CPU_ARCH=ppc64
-    ;;
-
-powerpc | ppc | rs6000)
-    CPU_ARCH=ppc
-    ;;
-
-Alpha | alpha | ALPHA)
-    CPU_ARCH=Alpha
-    ;;
-
-s390)
-    CPU_ARCH=s390
-    ;;
-
-s390x)
-    CPU_ARCH=s390x
-    ;;
-
-hppa* | parisc)
-    CPU_ARCH=hppa
-    ;;
-
-sun4u | sparc*)
-    CPU_ARCH=sparc
-    ;;
-
-x86_64 | ia64)
-    CPU_ARCH="$OS_TEST"
-    ;;
-
-arm*)
-    CPU_ARCH=arm
-    ;;
-
-mips|mipsel)
-    CPU_ARCH="mips32"
-    ;;
-
-mips64|mips64el)
-    CPU_ARCH="mips64"
-    ;;
-
-aarch64*)
-    CPU_ARCH=aarch64
-    ;;
-
-esac
-
-if test -z "$OS_TARGET"; then
-    OS_TARGET=$OS_ARCH
-fi
-OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
-
-dnl Set INTEL_ARCHITECTURE if we're compiling for x86-32 or x86-64.
-dnl ===============================================================
-INTEL_ARCHITECTURE=
-case "$OS_TEST" in
-    x86_64|i?86)
-      INTEL_ARCHITECTURE=1
-esac
 
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
@@ -1139,15 +792,6 @@ if test "$GNU_CC"; then
     _DEFINES_CFLAGS='-include $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 
-elif test "$SOLARIS_SUNPRO_CC"; then
-    DSO_CFLAGS=''
-    if test "$CPU_ARCH" = "sparc"; then
-        # for Sun Studio on Solaris/SPARC
-        DSO_PIC_CFLAGS='-xcode=pic32'
-    else
-        DSO_PIC_CFLAGS='-KPIC'
-    fi
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
     MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
@@ -1193,14 +837,6 @@ AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl = Use profiling compile flags
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(profiling,
-[  --enable-profiling      Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
-    MOZ_PROFILING=1,
-    MOZ_PROFILING= )
-
-dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
@@ -1213,7 +849,7 @@ case "$host" in
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
 
@@ -1233,7 +869,7 @@ case "$host" in
     ;;
 
 *-darwin*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
@@ -1255,63 +891,7 @@ dnl System overrides of the defaults for target
 dnl ========================================================
 
 case "$target" in
-*-aix*)
-    AC_DEFINE(AIX)
-    if test ! "$GNU_CC"; then
-        if test ! "$HAVE_64BIT_BUILD"; then
-            # Compiling with Visual Age C++ object model compat is the
-            # default. To compile with object model ibm, add
-            # AIX_OBJMODEL=ibm to .mozconfig.
-            if test "$AIX_OBJMODEL" = "ibm"; then
-                CXXFLAGS="$CXXFLAGS -qobjmodel=ibm"
-            else
-                AIX_OBJMODEL=compat
-            fi
-        else
-            AIX_OBJMODEL=compat
-        fi
-        AC_SUBST(AIX_OBJMODEL)
-        DSO_LDOPTS='-qmkshrobj=1'
-        DSO_CFLAGS='-qflag=w:w'
-        DSO_PIC_CFLAGS=
-        LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
-        MOZ_FIX_LINK_PATHS=
-        MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
-        MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-        if test "$COMPILE_ENVIRONMENT"; then
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            AC_MSG_CHECKING([for IBM XLC/C++ compiler version >= 9.0.0.7])
-            AC_TRY_COMPILE([],
-                [#if (__IBMCPP__ < 900)
-                 #error "Bad compiler"
-                 #endif],
-                _BAD_COMPILER=,_BAD_COMPILER=1)
-            if test -n "$_BAD_COMPILER"; then
-                AC_MSG_RESULT([no])
-                AC_MSG_ERROR([IBM XLC/C++ 9.0.0.7 or higher is required to build.])
-            else
-                AC_MSG_RESULT([yes])
-            fi
-            AC_LANG_RESTORE
-            TARGET_COMPILER_ABI="ibmc"
-            CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
-            CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
-        fi
-    fi
-    case "${target_os}" in
-    aix4.1*)
-        DLL_SUFFIX='_shr.a'
-        ;;
-    esac
-    if test "$COMPILE_ENVIRONMENT"; then
-        MOZ_CHECK_HEADERS(sys/inttypes.h)
-    fi
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    ;;
-
 *-darwin*)
-    AC_DEFINE(XP_DARWIN)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-stack-protector"
@@ -1320,7 +900,6 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
     LDFLAGS="$LDFLAGS -lobjc"
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
@@ -1361,52 +940,12 @@ case "$target" in
     MOZ_FIX_LINK_PATHS="-Wl,-executable_path,${DIST}/bin"
     ;;
 
-ia64*-hpux*)
-    DLL_SUFFIX=".so"
-    if test ! "$GNU_CC"; then
-       DSO_LDOPTS='-b'
-       DSO_CFLAGS=""
-       DSO_PIC_CFLAGS=
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
-       CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
-    else
-       DSO_LDOPTS='-b -E'
-       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    fi
-    MOZ_FIX_LINK_PATHS=
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    AC_DEFINE(_LARGEFILE64_SOURCE)
-    ;;
-
-*-hpux*)
-    DLL_SUFFIX=".sl"
-    if test ! "$GNU_CC"; then
-    	DSO_LDOPTS='-b -Wl,+s'
-    	DSO_CFLAGS=""
-    	DSO_PIC_CFLAGS="+Z"
-    	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(DIST)/bin -o $@'
-    	MKCSHLIB='$(LD) -b +s -L$(DIST)/bin -o $@'
-        CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
-    else
-        DSO_LDOPTS='-b -E +s'
-        MKSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
-        MKCSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
-    fi
-    MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    ;;
-
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
-    no_x=yes
-    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
-
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_OPTIMIZE_FLAGS="-O3 -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-O3"
     if test -z "$CLANG_CC"; then
-       MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+       MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_FLAGS"
     fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
@@ -1486,9 +1025,6 @@ ia64*-hpux*)
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
-        XARGS=xargs
-        DOXYGEN=:
-        ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
@@ -1622,20 +1158,11 @@ ia64*-hpux*)
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(HAVE__MSIZE)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(XP_WIN)
-    AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    dnl set NO_X11 defines here as the general check is skipped on win32
-    no_x=yes
-    AC_DEFINE(NO_X11)
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
@@ -1704,134 +1231,11 @@ ia64*-hpux*)
     fi
     ;;
 
-*-solaris*)
-    AC_DEFINE(SOLARIS)
-    if test -z "$CROSS_COMPILE" && pkginfo -q SUNWpr && pkginfo -q SUNWprd; then
-       NO_NSPR_CONFIG_SYSTEM_LDFLAGS="-L/usr/lib/mps -R/usr/lib/mps -lnspr4"
-       NO_NSPR_CONFIG_SYSTEM_CFLAGS="-I/usr/include/mps"
-       NO_NSPR_CONFIG_SYSTEM_VERSION=["`pkgparam SUNWpr SUNW_PRODVERS | sed -e 's/^[1-9][0-9]*\.[0-9][0-9]*$/&.0/'`"]
-    fi
-    MOZ_FIX_LINK_PATHS=
-    # $ORIGIN/.. is for shared libraries under components/ to locate shared
-    # libraries one level up (e.g. libnspr4.so)
-    if test "$SOLARIS_SUNPRO_CC"; then
-       LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..' -z lazyload -z combreloc -z muldefs"
-       LIBS="-lCrun -lCstd -lc $LIBS"
-       AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-       CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all -D__FUNCTION__=__func__"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions,no%except -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
-       LDFLAGS="-xildoff $LDFLAGS"
-       if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
-           _SAVE_LDFLAGS=$LDFLAGS
-           LDFLAGS="-M /usr/lib/ld/map.noexstk $LDFLAGS"
-           AC_TRY_LINK([#include <stdio.h>],
-                       [printf("Hello World\n");],
-                       ,
-                       [LDFLAGS=$_SAVE_LDFLAGS])
-       fi
-       MOZ_OPTIMIZE_FLAGS="-xO4"
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
-       DSO_LDOPTS='-G'
-       AR_LIST="$AR t"
-       AR_EXTRACT="$AR x"
-       AR_DELETE="$AR d"
-       AR='$(CXX) -xar'
-       AR_FLAGS='-o $@'
-       AS='/usr/ccs/bin/as'
-       ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
-       AS_DASH_C_FLAG=''
-       TARGET_COMPILER_ABI="sunc"
-       CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-       CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-       AC_MSG_CHECKING([for Sun C++ compiler version >= 5.9])
-       AC_LANG_SAVE
-       AC_LANG_CPLUSPLUS
-       AC_TRY_COMPILE([],
-           [#if (__SUNPRO_CC < 0x590)
-           #error "Denied"
-           #endif],
-           _BAD_COMPILER=,_BAD_COMPILER=1)
-       if test -n "$_BAD_COMPILER"; then
-           _res="no"
-           AC_MSG_ERROR([Sun C++ 5.9 (Sun Studio 12) or higher is required to build. Your compiler version is $CXX_VERSION .])
-       else
-           _res="yes"
-       fi
-       AC_TRY_COMPILE([],
-           [#if (__SUNPRO_CC >= 0x5100)
-           #error "Sun C++ 5.10 or above"
-           #endif],
-           _ABOVE_SS12U1=,_ABOVE_SS12U1=1)
-       if test "$_ABOVE_SS12U1"; then
-           # disable xannotate
-           CXXFLAGS="$CXXFLAGS -xannotate=no"
-       fi
-       AC_MSG_RESULT([$_res])
-       AC_LANG_RESTORE
-    else
-       LDFLAGS="$LDFLAGS -Wl,-z,ignore -Wl,-R,'\$\$ORIGIN:\$\$ORIGIN/..' -Wl,-z,lazyload -Wl,-z,combreloc -Wl,-z,muldefs"
-       LIBS="-lc $LIBS"
-       ASFLAGS="$ASFLAGS -fPIC"
-       DSO_LDOPTS='-shared'
-       WARNINGS_AS_ERRORS='-Werror'
-       _WARNINGS_CFLAGS=''
-       _WARNINGS_CXXFLAGS=''
-       if test "$OS_RELEASE" = "5.3"; then
-           AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
-       fi
-    fi
-    if test "$OS_RELEASE" = "5.5.1"; then
-        AC_DEFINE(NEED_USLEEP_PROTOTYPE)
-    fi
-    ;;
-
-*-sunos*)
-    DSO_LDOPTS='-Bdynamic'
-    MKSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
-    AC_DEFINE(SUNOS4)
-    AC_DEFINE(SPRINTF_RETURNS_STRING)
-    case "$(target_os)" in
-    sunos4.1*)
-        DLL_SUFFIX='.so.1.0'
-        ;;
-    esac
-    ;;
-
 esac
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
 AC_DEFINE_UNQUOTED(D_INO,$DIRENT_INO)
-
-dnl ========================================================
-dnl = Flags to strip unused symbols from .so components
-dnl ========================================================
-case "$target" in
-    *-linux*|*-kfreebsd*-gnu|*-gnu*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        ;;
-    *-solaris*)
-        if test -z "$GNU_CC"; then
-         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
-        else
-         if test -z "$GCC_USE_GNU_LD"; then
-          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-M -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
-         else
-          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-         fi
-        fi
-        ;;
-    *-darwin*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
-        ;;
-    *-mingw*)
-        if test -n "$GNU_CC"; then
-           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        fi
-        ;;
-esac
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
@@ -1949,11 +1353,6 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
   esac
 fi         # GNU_CC
 
-# visibility hidden flag for Sun Studio on Solaris
-if test "$SOLARIS_SUNPRO_CC"; then
-VISIBILITY_FLAGS='-xldscope=hidden'
-fi         # Sun Studio on Solaris
-
 case "${OS_TARGET}" in
 WINNT|Darwin|Android)
   ;;
@@ -1997,25 +1396,13 @@ if test "x$enable_dtrace" = "xyes"; then
 fi
 AC_SUBST(HAVE_DTRACE)
 
-case $target in
-*-aix4.3*|*-aix5*)
-	;;
-*)
-    MOZ_CHECK_HEADERS(sys/cdefs.h)
-	;;
-esac
+MOZ_CHECK_HEADERS(sys/cdefs.h)
 
 MOZ_LINUX_PERF_EVENT
 
 dnl Checks for libraries.
 dnl ========================================================
-case $target in
-*-hpux11.*)
-	;;
-*)
-	AC_CHECK_LIB(c_r, gethostbyname_r)
-	;;
-esac
+AC_CHECK_LIB(c_r, gethostbyname_r)
 
 dnl We don't want to link with libdl even if it's present on OS X, since
 dnl it's not used and not part of the default installation. OS/2 has dlfcn
@@ -2034,15 +1421,7 @@ case $target in
 esac
 
 if test ! "$GNU_CXX"; then
-
-    case $target in
-    *-aix*)
-	AC_CHECK_LIB(C_r, demangle)
-	;;
-     *)
-	AC_CHECK_LIB(C, demangle)
-	;;
-     esac
+    AC_CHECK_LIB(C, demangle)
 fi
 
 AC_CHECK_LIB(socket, socket)
@@ -2155,21 +1534,6 @@ then
 			AC_DEFINE(_REENTRANT)
 			;;
 
-	    *-aix4.3*|*-aix5*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
-	    *-hpux11.*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
-	    *-*-solaris*)
-			AC_DEFINE(_REENTRANT)
-			if test "$SOLARIS_SUNPRO_CC"; then
-				CFLAGS="$CFLAGS -mt"
-				CXXFLAGS="$CXXFLAGS -mt"
-			fi
-			;;
 	esac
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 fi
@@ -2493,32 +1857,6 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 AC_SUBST(MOZ_UPDATE_CHANNEL)
 
-
-dnl set GRE_MILESTONE
-dnl ========================================================
-GRE_MILESTONE=`tail -n 1 "$_topsrcdir"/config/milestone.txt 2>/dev/null || tail -1 "$_topsrcdir"/config/milestone.txt`
-AC_SUBST(GRE_MILESTONE)
-
-dnl set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
-dnl The logic works like this:
-dnl - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
-dnl - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
-dnl - otherwise, we're building Release/Beta (define RELEASE_BUILD)
-case "$GRE_MILESTONE" in
-  *a1*)
-      NIGHTLY_BUILD=1
-      AC_DEFINE(NIGHTLY_BUILD)
-      ;;
-  *a*)
-      ;;
-  *)
-      RELEASE_BUILD=1
-      AC_DEFINE(RELEASE_BUILD)
-      ;;
-esac
-AC_SUBST(NIGHTLY_BUILD)
-AC_SUBST(RELEASE_BUILD)
-
 dnl ========================================================
 dnl =
 dnl = Check for external package dependencies
@@ -2737,11 +2075,9 @@ if test "$MOZ_MEMORY"; then
   *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *-solaris*)
-    AC_DEFINE(MOZ_MEMORY_SOLARIS)
-    ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    export MOZ_NO_DEBUG_RTL=1
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -2866,7 +2202,9 @@ elif test "$CPU_ARCH" = "x86_64"; then
 
     dnl Signal-handler OOM checking requires large mprotected guard regions, so
     dnl currently it is only implemented on x64.
+    AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS)
     AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+    ASMJS_MAY_USE_SIGNAL_HANDLERS=1
     ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB=1
 elif test "$CPU_ARCH" = "arm"; then
     AC_DEFINE(JS_CODEGEN_ARM)
@@ -2875,6 +2213,13 @@ elif test "$CPU_ARCH" = "arm"; then
         AC_DEFINE(JS_DISASM_ARM)
         JS_DISASM_ARM=1
     fi
+
+    dnl ARM platforms may trap on unalinged accesses; catch the signal and
+    dnl recover.
+    AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS)
+    AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
+    ASMJS_MAY_USE_SIGNAL_HANDLERS=1
+    ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED=1
 elif test "$CPU_ARCH" = "mips32"; then
     AC_DEFINE(JS_CODEGEN_MIPS32)
     JS_CODEGEN_MIPS32=1
@@ -2896,52 +2241,16 @@ AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)
 AC_SUBST(JS_CODEGEN_NONE)
 AC_SUBST(JS_DISASM_ARM)
+AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS)
 AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-
-dnl ========================================================
-dnl jprof
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jprof,
-[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
-    MOZ_JPROF=1,
-    MOZ_JPROF= )
-if test -n "$MOZ_JPROF"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_JPROF)
-fi
+AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
 
 dnl ========================================================
 dnl instruments
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(instruments,
-[  --enable-instruments    Enable instruments remote profiling. Implies --enable-profiling.],
-    MOZ_INSTRUMENTS=1,
-    MOZ_INSTRUMENTS= )
 if test -n "$MOZ_INSTRUMENTS"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_INSTRUMENTS)
     LIBS="$LIBS -framework CoreFoundation"
 fi
-
-dnl ========================================================
-dnl callgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind      Enable callgrind profiling. Implies --enable-profiling.],
-    MOZ_CALLGRIND=1,
-    MOZ_CALLGRIND= )
-if test -n "$MOZ_CALLGRIND"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_CALLGRIND)
-fi
-
-dnl ========================================================
-dnl vtune
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(vtune,
-[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
-    MOZ_VTUNE=1,
-    MOZ_VTUNE= )
 
 dnl ========================================================
 dnl JitSpew.  Enabled by default in debug builds.
@@ -2962,22 +2271,6 @@ dnl Debug (see Bug 939505)
 dnl ========================================================
 if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_DEBUG)
-fi
-
-dnl ========================================================
-dnl Profiling
-dnl ========================================================
-if test -n "$MOZ_PROFILING"; then
-    AC_DEFINE(MOZ_PROFILING)
-
-    case "$OS_TARGET" in
-        Linux) MOZ_VTUNE=1 ;;
-        WINNT) MOZ_VTUNE=1 ;;
-    esac
-fi
-
-if test -n "$MOZ_VTUNE"; then
-    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================
@@ -3083,14 +2376,6 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
     AC_LANG_RESTORE
 fi
 
-# Demangle only for debug or DMD builds
-MOZ_DEMANGLE_SYMBOLS=
-if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
-    MOZ_DEMANGLE_SYMBOLS=1
-    AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
-fi
-AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
-
 dnl ========================================================
 dnl JIT observers
 dnl ========================================================
@@ -3114,14 +2399,6 @@ dnl = Misc. Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
-
-dnl ========================================================
-dnl update xterm title
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xterm-updates,
-[  --enable-xterm-updates  Update XTERM titles with current command.],
-    MOZ_UPDATE_XTERM=1,
-    MOZ_UPDATE_XTERM= )
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
@@ -3174,14 +2451,6 @@ if test -n "$INTEL_CC"; then
   PROFILE_USE_LDFLAGS=
 fi
 
-dnl Sun Studio on Solaris
-if test "$SOLARIS_SUNPRO_CC"; then
-  PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
-  PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
-fi
-
 AC_SUBST(PROFILE_GEN_CFLAGS)
 AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
@@ -3217,9 +2486,6 @@ MOZ_ARG_HEADER(Build dependencies)
 
 if test "$GNU_CC" -a "$GNU_CXX"; then
   _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
-elif test "$SOLARIS_SUNPRO_CC"; then
-  _DEPEND_CFLAGS=
 else
   dnl Don't override this for MSVC
   if test -z "$_WIN32_MSVC"; then
@@ -3273,7 +2539,6 @@ MOZ_ARG_ENABLE_BOOL(readline,
 
 JS_BUNDLED_EDITLINE=
 EDITLINE_LIBS=
-JS_DISABLE_SHELL=
 
 case "$target" in
 *-mingw*)
@@ -3297,7 +2562,6 @@ if test -z "$SKIP_LIBRARY_CHECKS" -a -z "$NO_EDITLINE"; then
   AC_DEFINE(EDITLINE)
 fi
 AC_SUBST(JS_BUNDLED_EDITLINE)
-AC_SUBST(JS_DISABLE_SHELL)
 AC_SUBST_LIST(EDITLINE_LIBS)
 
 dnl ========================================================
@@ -3323,10 +2587,6 @@ if test "$JS_HAS_CTYPES"; then
     AC_MSG_ERROR([\"$AS\" is not a suitable assembler to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK. Or do not use --enable-ctypes.])
   fi
   AC_DEFINE(JS_HAS_CTYPES)
-fi
-
-if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
-    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
 
 dnl ========================================================
@@ -3370,11 +2630,6 @@ AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
-AC_SUBST(MOZ_JPROF)
-AC_SUBST(MOZ_INSTRUMENTS)
-AC_SUBST(MOZ_CALLGRIND)
-AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_PROFILING)
 AC_SUBST(LIBICONV)
 
 AC_SUBST(ENABLE_TESTS)
@@ -3382,11 +2637,8 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(INCREMENTAL_LINKER)
-AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-
-AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 
@@ -3422,7 +2674,7 @@ HOST_CXXFLAGS=`echo \
     $HOST_CXXFLAGS`
 
 AC_SUBST(_DEPEND_CFLAGS)
-AC_SUBST(MOZ_NATIVE_NSPR)
+AC_SUBST(MOZ_SYSTEM_NSPR)
 
 if test -n "$MOZ_NUWA_PROCESS"; then
     AC_DEFINE(MOZ_NUWA_PROCESS)
@@ -3442,11 +2694,11 @@ AC_SUBST(OS_COMPILE_CFLAGS)
 AC_SUBST(OS_COMPILE_CXXFLAGS)
 AC_SUBST(OS_LDFLAGS)
 AC_SUBST(OS_LIBS)
-AC_SUBST(CROSS_COMPILE)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
 AC_SUBST(HOST_CFLAGS)
+AC_SUBST(HOST_CPPFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
 AC_SUBST(HOST_LDFLAGS)
 AC_SUBST(HOST_OPTIMIZE_FLAGS)
@@ -3455,18 +2707,8 @@ AC_SUBST(HOST_AR_FLAGS)
 AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_BIN_SUFFIX)
-AC_SUBST(HOST_OS_ARCH)
 
-AC_SUBST(TARGET_CPU)
-AC_SUBST(TARGET_VENDOR)
-AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_XPCOM_ABI)
-AC_SUBST(OS_TARGET)
-AC_SUBST(OS_ARCH)
-AC_SUBST(OS_RELEASE)
-AC_SUBST(OS_TEST)
-AC_SUBST(CPU_ARCH)
-AC_SUBST(INTEL_ARCHITECTURE)
 
 AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
@@ -3481,7 +2723,6 @@ AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, "$DLL_SUFFIX")
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(BIN_SUFFIX)
-AC_SUBST(ASM_SUFFIX)
 AC_SUBST(IMPORT_LIB_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
@@ -3496,32 +2737,9 @@ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_ARCH" = "Darwin"; then
-  if test -n "$MOZ_IOS"; then
-    AC_DEFINE(XP_IOS)
-  else
-    AC_DEFINE(XP_MACOSX)
-  fi
-  AC_DEFINE(XP_DARWIN)
-  AC_DEFINE(XP_UNIX)
-elif test "$OS_ARCH" != "WINNT"; then
-  AC_DEFINE(XP_UNIX)
-fi
-
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
-fi
-
-if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
-    AC_DEFINE(MOZ_ACCESSIBILITY_ATK)
-    ATK_FULL_VERSION=`$PKG_CONFIG --modversion atk`
-    ATK_MAJOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-    ATK_MINOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
-    ATK_REV_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-    AC_DEFINE_UNQUOTED(ATK_MAJOR_VERSION, $ATK_MAJOR_VERSION)
-    AC_DEFINE_UNQUOTED(ATK_MINOR_VERSION, $ATK_MINOR_VERSION)
-    AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
 dnl ========================================================

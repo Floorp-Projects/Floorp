@@ -996,9 +996,10 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   }
 #ifdef USE_SKIA_GPU
   if (mVideoTexture) {
-    MOZ_ASSERT(gfxPlatform::GetPlatform()->GetSkiaGLGlue(), "null SkiaGLGlue");
-    gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->MakeCurrent();
-    gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
+    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+    MOZ_ASSERT(glue);
+    glue->GetGLContext()->MakeCurrent();
+    glue->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
   }
 #endif
 
@@ -1180,7 +1181,7 @@ CanvasRenderingContext2D::Redraw(const gfx::Rect& aR)
 void
 CanvasRenderingContext2D::DidRefresh()
 {
-  if (IsTargetValid() && SkiaGLTex()) {
+  if (IsTargetValid() && mIsSkiaGL) {
     SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
     MOZ_ASSERT(glue);
 
@@ -2467,12 +2468,12 @@ public:
 
   virtual float GetExLength() const override
   {
-    gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
-    RefPtr<nsFontMetrics> fontMetrics;
     nsDeviceContext* dc = mPresContext->DeviceContext();
-    dc->GetMetricsFor(mFont, mFontLanguage, mExplicitLanguage,
-                      gfxFont::eHorizontal, nullptr, tp,
-                      *getter_AddRefs(fontMetrics));
+    nsFontMetrics::Params params;
+    params.language = mFontLanguage;
+    params.explicitLanguage = mExplicitLanguage;
+    params.textPerf = mPresContext->GetTextPerfMetrics();
+    RefPtr<nsFontMetrics> fontMetrics = dc->GetMetricsFor(mFont, params);
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
                                    nsPresContext::AppUnitsPerCSSPixel());
   }
@@ -3045,6 +3046,22 @@ CanvasRenderingContext2D::Rect(double aX, double aY, double aW, double aH)
 }
 
 void
+CanvasRenderingContext2D::Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
+                                  double aRotation, double aStartAngle, double aEndAngle,
+                                  bool aAnticlockwise, ErrorResult& aError)
+{
+  if (aRadiusX < 0.0 || aRadiusY < 0.0) {
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  EnsureWritablePath();
+
+  ArcToBezier(this, Point(aX, aY), Size(aRadiusX, aRadiusY), aStartAngle, aEndAngle,
+              aAnticlockwise, aRotation);
+}
+
+void
 CanvasRenderingContext2D::EnsureWritablePath()
 {
   EnsureTarget();
@@ -3213,14 +3230,13 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   resizedFont.size =
     (fontStyle->mSize * c->AppUnitsPerDevPixel()) / c->AppUnitsPerCSSPixel();
 
-  RefPtr<nsFontMetrics> metrics;
-  c->DeviceContext()->GetMetricsFor(resizedFont,
-                                    fontStyle->mLanguage,
-                                    fontStyle->mExplicitLanguage,
-                                    gfxFont::eHorizontal,
-                                    c->GetUserFontSet(),
-                                    c->GetTextPerfMetrics(),
-                                    *getter_AddRefs(metrics));
+  nsFontMetrics::Params params;
+  params.language = fontStyle->mLanguage;
+  params.explicitLanguage = fontStyle->mExplicitLanguage;
+  params.userFontSet = c->GetUserFontSet();
+  params.textPerf = c->GetTextPerfMetrics();
+  RefPtr<nsFontMetrics> metrics =
+    c->DeviceContext()->GetMetricsFor(resizedFont, params);
 
   gfxFontGroup* newFontGroup = metrics->GetThebesFontGroup();
   CurrentState().fontGroup = newFontGroup;
@@ -4474,8 +4490,9 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       mIsSkiaGL &&
       !srcSurf &&
       aImage.IsHTMLVideoElement() &&
-      gfxPlatform::GetPlatform()->GetSkiaGLGlue()) {
+      gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
     mozilla::gl::GLContext* gl = gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext();
+    MOZ_ASSERT(gl);
 
     HTMLVideoElement* video = &aImage.GetAsHTMLVideoElement();
     if (!video) {
@@ -4944,6 +4961,10 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   EnsureTarget();
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
+    if (NS_WARN_IF(!snapshot)) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
 
     DataSourceSurface::MappedSurface rawData;
@@ -5356,7 +5377,7 @@ void
 CanvasRenderingContext2D::PutImageData(ImageData& aImageData, double aDx,
                                        double aDy, ErrorResult& aError)
 {
-  dom::Uint8ClampedArray arr;
+  RootedTypedArray<Uint8ClampedArray> arr(nsContentUtils::RootingCxForThread());
   DebugOnly<bool> inited = arr.Init(aImageData.GetDataObject());
   MOZ_ASSERT(inited);
 
@@ -5372,7 +5393,7 @@ CanvasRenderingContext2D::PutImageData(ImageData& aImageData, double aDx,
                                        double aDirtyHeight,
                                        ErrorResult& aError)
 {
-  dom::Uint8ClampedArray arr;
+  RootedTypedArray<Uint8ClampedArray> arr(nsContentUtils::RootingCxForThread());
   DebugOnly<bool> inited = arr.Init(aImageData.GetDataObject());
   MOZ_ASSERT(inited);
 
@@ -5645,19 +5666,18 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
     CanvasLayer::Data data;
 
-    GLuint skiaGLTex = SkiaGLTex();
-    if (skiaGLTex) {
-      SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-      MOZ_ASSERT(glue);
-
-      data.mGLContext = glue->GetGLContext();
-      data.mFrontbufferGLTex = skiaGLTex;
-      PersistentBufferProvider *provider = GetBufferProvider(aManager);
-      data.mBufferProvider = provider;
-    } else {
-      PersistentBufferProvider *provider = GetBufferProvider(aManager);
-      data.mBufferProvider = provider;
+    if (mIsSkiaGL) {
+      GLuint skiaGLTex = SkiaGLTex();
+      if (skiaGLTex) {
+        SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+        MOZ_ASSERT(glue);
+        data.mGLContext = glue->GetGLContext();
+        data.mFrontbufferGLTex = skiaGLTex;
+      }
     }
+
+    PersistentBufferProvider *provider = GetBufferProvider(aManager);
+    data.mBufferProvider = provider;
 
     if (userData &&
         userData->IsForContext(this) &&
@@ -5699,19 +5719,19 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   canvasLayer->SetPreTransactionCallback(
           CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
 
-  GLuint skiaGLTex = SkiaGLTex();
-  if (skiaGLTex) {
-    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-    MOZ_ASSERT(glue);
 
-    data.mGLContext = glue->GetGLContext();
-    data.mFrontbufferGLTex = skiaGLTex;
-    PersistentBufferProvider *provider = GetBufferProvider(aManager);
-    data.mBufferProvider = provider;
-  } else {
-    PersistentBufferProvider *provider = GetBufferProvider(aManager);
-    data.mBufferProvider = provider;
+  if (mIsSkiaGL) {
+      GLuint skiaGLTex = SkiaGLTex();
+      if (skiaGLTex) {
+        SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+        MOZ_ASSERT(glue);
+        data.mGLContext = glue->GetGLContext();
+        data.mFrontbufferGLTex = skiaGLTex;
+      }
   }
+
+  PersistentBufferProvider *provider = GetBufferProvider(aManager);
+  data.mBufferProvider = provider;
 
   canvasLayer->Initialize(data);
   uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
@@ -5937,6 +5957,22 @@ CanvasPath::Arc(double aX, double aY, double aRadius,
   EnsurePathBuilder();
 
   ArcToBezier(this, Point(aX, aY), Size(aRadius, aRadius), aStartAngle, aEndAngle, aAnticlockwise);
+}
+
+void
+CanvasPath::Ellipse(double x, double y, double radiusX, double radiusY,
+                    double rotation, double startAngle, double endAngle,
+                    bool anticlockwise, ErrorResult& error)
+{
+  if (radiusX < 0.0 || radiusY < 0.0) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  EnsurePathBuilder();
+
+  ArcToBezier(this, Point(x, y), Size(radiusX, radiusY), startAngle, endAngle,
+              anticlockwise, rotation);
 }
 
 void

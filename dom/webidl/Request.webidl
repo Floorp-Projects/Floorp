@@ -23,7 +23,6 @@ interface Request {
   readonly attribute ReferrerPolicy referrerPolicy;
   readonly attribute RequestMode mode;
   readonly attribute RequestCredentials credentials;
-  [Func="mozilla::dom::Request::RequestCacheEnabled"]
   readonly attribute RequestCache cache;
   readonly attribute RequestRedirect redirect;
 

@@ -74,6 +74,7 @@ class DynamicHLSL : angle::NonCopyable
     std::string generateGeometryShaderHLSL(gl::PrimitiveType primitiveType,
                                            const gl::Data &data,
                                            const gl::Program::Data &programData,
+                                           const bool useViewScale,
                                            const std::string &preambleString) const;
 
     void getPixelShaderOutputKey(const gl::Data &data,

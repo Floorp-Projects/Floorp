@@ -42,6 +42,11 @@
 # include <libgen.h>
 #endif
 
+using js::shell::RCFile;
+
+static RCFile** gErrFilePtr = nullptr;
+static RCFile** gOutFilePtr = nullptr;
+
 namespace js {
 namespace shell {
 
@@ -108,7 +113,7 @@ ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveM
         return filenameStr;
 
     /* Get the currently executing script's name. */
-    JS::UniqueChars scriptFilename;
+    JS::AutoFilename scriptFilename;
     if (!DescribeScriptedCaller(cx, &scriptFilename))
         return nullptr;
 
@@ -306,53 +311,218 @@ osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-Redirect(JSContext* cx, FILE* fp, HandleString relFilename)
+/* static */ RCFile*
+RCFile::create(JSContext* cx, const char* filename, const char* mode)
+{
+    FILE* fp = fopen(filename, mode);
+    if (!fp)
+        return nullptr;
+
+    RCFile* file = cx->new_<RCFile>(fp);
+    if (!file) {
+        fclose(fp);
+        return nullptr;
+    }
+
+    return file;
+}
+
+void
+RCFile::close()
+{
+    if (fp)
+        fclose(fp);
+    fp = nullptr;
+}
+
+bool
+RCFile::release()
+{
+    if (--numRefs)
+        return false;
+    this->close();
+    return true;
+}
+
+class FileObject : public JSObject {
+    enum : uint32_t {
+        FILE_SLOT = 0,
+        NUM_SLOTS
+    };
+
+  public:
+    static const js::Class class_;
+
+    static FileObject* create(JSContext* cx, RCFile* file) {
+        JSObject* obj = js::NewObjectWithClassProto(cx, &class_, nullptr);
+        if (!obj)
+            return nullptr;
+
+        FileObject* fileObj = &obj->as<FileObject>();
+        fileObj->setRCFile(file);
+        file->acquire();
+        return fileObj;
+    }
+
+    static void finalize(FreeOp* fop, JSObject* obj) {
+        FileObject* fileObj = &obj->as<FileObject>();
+        RCFile* file = fileObj->rcFile();
+        if (file->release()) {
+            fileObj->setRCFile(nullptr);
+            fop->delete_(file);
+        }
+    }
+
+    bool isOpen() {
+        RCFile* file = rcFile();
+        return file && file->isOpen();
+    }
+
+    void close() {
+        if (!isOpen())
+            return;
+        rcFile()->close();
+    }
+
+    RCFile* rcFile() {
+        return reinterpret_cast<RCFile*>(js::GetReservedSlot(this, FILE_SLOT).toPrivate());
+    }
+
+  private:
+
+    void setRCFile(RCFile* file) {
+        js::SetReservedSlot(this, FILE_SLOT, PrivateValue(file));
+    }
+};
+
+const js::Class FileObject::class_ = {
+    "File",
+    JSCLASS_HAS_RESERVED_SLOTS(FileObject::NUM_SLOTS),
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    nullptr,               /* getProperty */
+    nullptr,               /* setProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* mayResolve */
+    FileObject::finalize,  /* finalize */
+    nullptr,               /* call */
+    nullptr,               /* hasInstance */
+    nullptr,               /* construct */
+    nullptr                /* trace */
+};
+
+static FileObject*
+redirect(JSContext* cx, HandleString relFilename, RCFile** globalFile)
 {
     RootedString filename(cx, ResolvePath(cx, relFilename, RootRelative));
     if (!filename)
-        return false;
+        return nullptr;
     JSAutoByteString filenameABS(cx, filename);
     if (!filenameABS)
-        return false;
-    if (freopen(filenameABS.ptr(), "wb", fp) == nullptr) {
+        return nullptr;
+    RCFile* file = RCFile::create(cx, filenameABS.ptr(), "wb");
+    if (!file) {
         JS_ReportError(cx, "cannot redirect to %s: %s", filenameABS.ptr(), strerror(errno));
+        return nullptr;
+    }
+
+    // Grant the global gOutFile ownership of the new file, release ownership
+    // of its old file, and return a FileObject owning the old file.
+    file->acquire(); // Global owner of new file
+
+    FileObject* fileObj = FileObject::create(cx, *globalFile); // Newly created owner of old file
+    if (!fileObj) {
+        file->release();
+        return nullptr;
+    }
+
+    (*globalFile)->release(); // Release (global) ownership of old file.
+    *globalFile = file;
+
+    return fileObj;
+}
+
+static bool
+Redirect(JSContext* cx, const CallArgs& args, RCFile** outFile)
+{
+    if (args.length() > 1) {
+        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr,
+                             JSSMSG_INVALID_ARGS, "redirect");
         return false;
     }
+
+    RCFile* oldFile = *outFile;
+    RootedObject oldFileObj(cx, FileObject::create(cx, oldFile));
+    if (!oldFileObj)
+        return false;
+
+    if (args.get(0).isUndefined()) {
+        args.rval().setObject(*oldFileObj);
+        return true;
+    }
+
+    if (args[0].isObject()) {
+        RootedObject fileObj(cx, js::CheckedUnwrap(&args[0].toObject()));
+        if (!fileObj)
+            return false;
+
+        if (fileObj->is<FileObject>()) {
+            // Passed in a FileObject. Create a FileObject for the previous
+            // global file, and set the global file to the passed-in one.
+            *outFile = fileObj->as<FileObject>().rcFile();
+            (*outFile)->acquire();
+            oldFile->release();
+
+            args.rval().setObject(*oldFileObj);
+            return true;
+        }
+    }
+
+    RootedString filename(cx);
+    if (!args[0].isNull()) {
+        filename = JS::ToString(cx, args[0]);
+        if (!filename)
+            return false;
+    }
+
+    if (!redirect(cx, filename, outFile))
+        return false;
+
+    args.rval().setObject(*oldFileObj);
     return true;
 }
 
 static bool
-osfile_redirect(JSContext* cx, unsigned argc, Value* vp)
-{
+osfile_redirectOutput(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return Redirect(cx, args, gOutFilePtr);
+}
+
+static bool
+osfile_redirectError(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return Redirect(cx, args, gErrFilePtr);
+}
+
+static bool
+osfile_close(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "redirect");
+    Rooted<FileObject*> fileObj(cx);
+    if (args.get(0).isObject()) {
+        JSObject *obj = js::CheckedUnwrap(&args[0].toObject());
+        if (obj->is<FileObject>())
+            fileObj = &obj->as<FileObject>();
+    }
+
+    if (!fileObj) {
+        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr,
+                             JSSMSG_INVALID_ARGS, "close");
         return false;
     }
 
-    if (args[0].isString() || args[0].isNull()) {
-        RootedString stdoutPath(cx);
-        if (!args[0].isNull()) {
-            stdoutPath = args[0].toString();
-            if (!stdoutPath)
-                return false;
-        }
-        if (!Redirect(cx, stdout, stdoutPath))
-            return false;
-    }
-
-    if (args.length() > 1 && (args[1].isString() || args[1].isNull())) {
-        RootedString stderrPath(cx);
-        if (!args[1].isNull()) {
-            stderrPath = args[1].toString();
-            if (!stderrPath)
-                return false;
-        }
-        if (!Redirect(cx, stderr, stderrPath))
-            return false;
-    }
+    fileObj->close();
 
     args.rval().setUndefined();
     return true;
@@ -377,11 +547,19 @@ static const JSFunctionSpecWithHelp osfile_unsafe_functions[] = {
 "writeTypedArrayToFile(filename, data)",
 "  Write the contents of a typed array to the named file."),
 
-    JS_FN_HELP("redirect", osfile_redirect, 2, 0,
-"redirect(stdoutFilename[, stderrFilename])",
-"  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
-"   redirecting, or null to discard the output. Filenames are relative to the\n"
-"   current working directory."),
+    JS_FN_HELP("redirect", osfile_redirectOutput, 1, 0,
+"redirect([path-or-object])",
+"  Redirect print() output to the named file.\n"
+"   Return an opaque object representing the previous destination, which\n"
+"   may be passed into redirect() later to restore the output."),
+
+    JS_FN_HELP("redirectErr", osfile_redirectError, 1, 0,
+"redirectErr([path-or-object])",
+"  Same as redirect(), but for printErr"),
+
+    JS_FN_HELP("close", osfile_close, 1, 0,
+"close(object)",
+"  Close the file returned by an earlier redirect call."),
 
     JS_FS_HELP_END
 };
@@ -732,7 +910,9 @@ static const JSFunctionSpecWithHelp os_functions[] = {
 };
 
 bool
-DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe)
+DefineOS(JSContext* cx, HandleObject global,
+         bool fuzzingSafe,
+         RCFile** shellOut, RCFile** shellErr)
 {
     RootedObject obj(cx, JS_NewPlainObject(cx));
     if (!obj || !JS_DefineProperty(cx, global, "os", obj, 0))
@@ -771,6 +951,9 @@ DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe)
     if (!GenerateInterfaceHelp(cx, obj, "os"))
         return false;
 
+    gOutFilePtr = shellOut;
+    gErrFilePtr = shellErr;
+
     // For backwards compatibility, expose various os.file.* functions as
     // direct methods on the global.
     RootedValue val(cx);
@@ -782,7 +965,8 @@ DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe)
         { "readFile", "read" },
         { "readFile", "snarf" },
         { "readRelativeToScript", "readRelativeToScript" },
-        { "redirect", "redirect" }
+        { "redirect", "redirect" },
+        { "redirectErr", "redirectErr" }
     };
 
     for (auto pair : osfile_exports) {

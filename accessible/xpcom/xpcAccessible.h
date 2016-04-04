@@ -38,6 +38,7 @@ public:
   NS_IMETHOD GetIndexInParent(int32_t* aIndexInParent) final override;
 
   NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode) final override;
+  NS_IMETHOD GetId(nsAString& aID) final override;
   NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument) final override;
   NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument)
     final override;

@@ -13,7 +13,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Rect.h"           // for Rect, RectTyped
-#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
@@ -23,6 +23,10 @@
 
 namespace mozilla {
 namespace layers {
+
+using gfx::Rect;
+using gfx::IntRect;
+using gfx::IntSize;
 
 ClientTiledPaintedLayer::ClientTiledPaintedLayer(ClientLayerManager* const aManager,
                                                ClientLayerManager::PaintedLayerCreationHint aCreationHint)
@@ -214,9 +218,9 @@ ClientTiledPaintedLayer::BeginPaint()
 bool
 ClientTiledPaintedLayer::IsScrollingOnCompositor(const FrameMetrics& aParentMetrics)
 {
-  CompositorChild* compositor = nullptr;
+  CompositorBridgeChild* compositor = nullptr;
   if (Manager() && Manager()->AsClientLayerManager()) {
-    compositor = Manager()->AsClientLayerManager()->GetCompositorChild();
+    compositor = Manager()->AsClientLayerManager()->GetCompositorBridgeChild();
   }
 
   if (!compositor) {
@@ -294,14 +298,16 @@ ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
                                             LayerManager::DrawPaintedLayerCallback aCallback,
                                             void* aCallbackData)
 {
-  // If we have no high-precision stuff to draw, or we have started drawing low-precision
-  // already, then we shouldn't do anything there.
-  if (aInvalidRegion.IsEmpty() || mPaintData.mLowPrecisionPaintCount != 0) {
+  // If we have started drawing low-precision already, then we
+  // shouldn't do anything there.
+  if (mPaintData.mLowPrecisionPaintCount != 0) {
     return false;
   }
 
-  // Only draw progressively when the resolution is unchanged
-  if (UseProgressiveDraw() &&
+  // Only draw progressively when there is something to paint and the
+  // resolution is unchanged
+  if (!aInvalidRegion.IsEmpty() &&
+      UseProgressiveDraw() &&
       mContentClient->GetTiledBuffer()->GetFrameResolution() == mPaintData.mResolution) {
     // Store the old valid region, then clear it before painting.
     // We clip the old valid region to the visible region, as it only gets
@@ -318,7 +324,8 @@ ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
                       oldValidRegion, &mPaintData, aCallback, aCallbackData);
   }
 
-  // Otherwise do a non-progressive paint
+  // Otherwise do a non-progressive paint. We must do this even when
+  // the region to paint is empty as the valid region may have shrunk.
 
   mValidRegion = aVisibleRegion;
   if (mPaintData.mCriticalDisplayPort) {

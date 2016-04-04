@@ -41,6 +41,10 @@ class ErrorObject : public NativeObject
     static bool checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* fnName,
                                    MutableHandle<ErrorObject*> error);
 
+    static const ClassSpec errorClassSpec_;
+    static const ClassSpec subErrorClassSpec_;
+    static const ClassSpec debuggeeWouldRunClassSpec_;
+
   protected:
     static const uint32_t EXNTYPE_SLOT          = 0;
     static const uint32_t STACK_SLOT            = EXNTYPE_SLOT + 1;

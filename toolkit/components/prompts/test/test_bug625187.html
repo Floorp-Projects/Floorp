@@ -4,7 +4,6 @@
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
 <!--
    - Any copyright is dedicated to the Public Domain.
@@ -49,42 +48,48 @@ function runtest()
     return;
   }
 
-  startCallbackTimer();
+  let url = SimpleTest.getTestFileURL("chromeScript.js");
+  let chrome = SpecialPowers.loadChromeScript(url);
+
+  chrome.addMessageListener("promptCanceled", msg => {
+    checkSelection(msg.ui);
+  });
+
+  chrome.sendAsyncMessage("cancelPrompt");
 
   var button = document.querySelector("button");
   dispatchMouseEvent(button, "click");
 
-  startCallbackTimer();
+  chrome.sendAsyncMessage("cancelPrompt");
 
   var iframe = document.getElementById("iframe_diff_origin");
   button = SpecialPowers.wrap(iframe.contentWindow).document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
-  startCallbackTimer();
+  chrome.sendAsyncMessage("cancelPrompt");
 
   iframe = document.getElementById("iframe_same_origin");
   button = iframe.contentWindow.document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
-  startCallbackTimer();
+  chrome.sendAsyncMessage("cancelPrompt");
 
   button = iframe.contentWindow.document.getElementById("btn2");
   dispatchMouseEvent(button, "click");
 
+  chrome.destroy();
   SimpleTest.finish();
 }
 
-function handleDialog(ui)
+function checkSelection(ui)
 {
   dialogNum++;
   if (dialogNum == 1 || dialogNum == 3 || dialogNum == 4)
-    is(ui.infoTitle.getAttribute("hidden"), "true",
+    ok(ui.infoTitle.hidden,
        "dialog #" + dialogNum + ": the tabprompt infoTitle element is hidden");
   else if (dialogNum == 2)
-    ok(!ui.infoTitle.hasAttribute("hidden"),
+    ok(!ui.infoTitle.hidden,
        "dialog #" + dialogNum + ": the tabprompt infoTitle element is not hidden");
-
-  synthesizeMouse(ui.button0, 2, 2, {}, SpecialPowers.unwrap(ui.button0.ownerDocument.defaultView));
 }
 
 function dispatchMouseEvent(target, type)

@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonA2dpInterface.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -54,18 +55,19 @@ BluetoothDaemonA2dpModule::ConnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(SERVICE_ID,
-                                                     OPCODE_CONNECT,
-                                                     6)); // Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CONNECT,
+                                6); // Address
+
   nsresult rv = PackPDU(aRemoteAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -75,18 +77,19 @@ BluetoothDaemonA2dpModule::DisconnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(SERVICE_ID,
-                                                     OPCODE_DISCONNECT,
-                                                     6)); // Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_DISCONNECT,
+                                6); // Address
+
   nsresult rv = PackPDU(aRemoteAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 

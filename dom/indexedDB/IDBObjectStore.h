@@ -202,7 +202,7 @@ public:
   Get(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  Clear(ErrorResult& aRv);
+  Clear(JSContext* aCx, ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
   CreateIndex(const nsAString& aName,
@@ -259,6 +259,17 @@ public:
 
     return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
                               aRv);
+  }
+
+  already_AddRefed<IDBRequest>
+  OpenCursor(JSContext* aCx,
+             IDBCursorDirection aDirection,
+             ErrorResult& aRv)
+  {
+    AssertIsOnOwningThread();
+
+    return OpenCursorInternal(/* aKeysOnly */ false, aCx,
+                              JS::UndefinedHandleValue, aDirection, aRv);
   }
 
   already_AddRefed<IDBRequest>

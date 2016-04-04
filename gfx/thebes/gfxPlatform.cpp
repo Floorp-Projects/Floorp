@@ -4,11 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 
@@ -67,6 +68,7 @@
 #include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
+#include "FrameMetrics.h"
 #include "MainThreadUtils.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -113,6 +115,8 @@
 # ifdef __GNUC__
 #  pragma GCC diagnostic pop // -Wshadow
 # endif
+static const uint32_t kDefaultGlyphCacheSize = -1;
+
 #endif
 
 #if !defined(USE_SKIA) || !defined(USE_SKIA_GPU)
@@ -465,7 +469,8 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
     Factory::PurgeAllCaches();
     gfxGradientCache::PurgeAllCaches();
 
-    gfxPlatform::GetPlatform()->PurgeSkiaCache();
+    gfxPlatform::PurgeSkiaFontCache();
+    gfxPlatform::GetPlatform()->PurgeSkiaGPUCache();
     return NS_OK;
 }
 
@@ -544,6 +549,28 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
     Factory::SetGlobalEventRecorder(nullptr);
   }
 }
+
+#if defined(USE_SKIA)
+static uint32_t GetSkiaGlyphCacheSize()
+{
+    // Only increase font cache size on non-android to save memory.
+#if !defined(MOZ_WIDGET_ANDROID)
+    // 10mb as the default cache size on desktop due to talos perf tweaking.
+    // Chromium uses 20mb and skia default uses 2mb.
+    // We don't need to change the font cache count since we usually
+    // cache thrash due to asian character sets in talos.
+    // Only increase memory on the content proces
+    uint32_t cacheSize = 10 * 1024 * 1024;
+    if (mozilla::BrowserTabsRemoteAutostart()) {
+      return XRE_IsContentProcess() ? cacheSize : kDefaultGlyphCacheSize;
+    }
+
+    return cacheSize;
+#else
+    return kDefaultGlyphCacheSize;
+#endif // MOZ_WIDGET_ANDROID
+}
+#endif
 
 void
 gfxPlatform::Init()
@@ -725,6 +752,16 @@ gfxPlatform::Init()
         gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
       }
     }
+
+#ifdef USE_SKIA
+    uint32_t skiaCacheSize = GetSkiaGlyphCacheSize();
+    if (skiaCacheSize != kDefaultGlyphCacheSize) {
+      SkGraphics::SetFontCacheLimit(skiaCacheSize);
+    }
+#endif
+
+    ScrollMetadata::sNullMetadata = new ScrollMetadata();
+    ClearOnShutdown(&ScrollMetadata::sNullMetadata);
 }
 
 static bool sLayersIPCIsUp = false;
@@ -821,7 +858,7 @@ gfxPlatform::InitLayersIPC()
 
     if (XRE_IsParentProcess())
     {
-        mozilla::layers::CompositorParent::StartUp();
+        mozilla::layers::CompositorBridgeParent::StartUp();
 #ifdef MOZ_WIDGET_GONK
         SharedBufferManagerChild::StartUp();
 #endif
@@ -840,15 +877,15 @@ gfxPlatform::ShutdownLayersIPC()
 
     if (XRE_IsParentProcess())
     {
-        // This must happen after the shutdown of media and widgets, which
-        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
-        gfx::VRManagerChild::ShutDown();
-        layers::ImageBridgeChild::ShutDown();
+      // This must happen after the shutdown of media and widgets, which
+      // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
+      gfx::VRManagerChild::ShutDown();
+      layers::ImageBridgeChild::ShutDown();
 #ifdef MOZ_WIDGET_GONK
-        layers::SharedBufferManagerChild::ShutDown();
+      layers::SharedBufferManagerChild::ShutDown();
 #endif
 
-        layers::CompositorParent::ShutDown();
+      layers::CompositorBridgeParent::ShutDown();
 	} else if (XRE_GetProcessType() == GeckoProcessType_Content) {
 		gfx::VRManagerChild::ShutDown();
 	}
@@ -1239,7 +1276,10 @@ SkiaGLGlue*
 gfxPlatform::GetSkiaGLGlue()
 {
 #ifdef USE_SKIA_GPU
-  if (!UseAcceleratedCanvas()) {
+  // Check the accelerated Canvas is enabled for the first time,
+  // because the callers should check it before using.
+  if (!mSkiaGlue &&
+      !UseAcceleratedCanvas()) {
     gfxCriticalNote << "Accelerated Skia canvas is disabled";
     return nullptr;
   }
@@ -1267,7 +1307,17 @@ gfxPlatform::GetSkiaGLGlue()
 }
 
 void
-gfxPlatform::PurgeSkiaCache()
+gfxPlatform::PurgeSkiaFontCache()
+{
+#ifdef USE_SKIA
+  if (gfxPlatform::GetPlatform()->GetDefaultContentBackend() == BackendType::SKIA) {
+    SkGraphics::PurgeFontCache();
+  }
+#endif
+}
+
+void
+gfxPlatform::PurgeSkiaGPUCache()
 {
 #ifdef USE_SKIA_GPU
   if (!mSkiaGlue)
@@ -1378,13 +1428,26 @@ gfxPlatform::GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    gfxPlatformFontList::PlatformFontList()->GetFontList(aLangGroup,
+                                                         aGenericFamily,
+                                                         aListOfFonts);
+    return NS_OK;
 }
 
 nsresult
 gfxPlatform::UpdateFontList()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    gfxPlatformFontList::PlatformFontList()->UpdateFontList();
+    return NS_OK;
+}
+
+nsresult
+gfxPlatform::GetStandardFamilyName(const nsAString& aFontName,
+                                   nsAString& aFamilyName)
+{
+    gfxPlatformFontList::PlatformFontList()->GetStandardFamilyName(aFontName,
+                                                                   aFamilyName);
+    return NS_OK;
 }
 
 bool
@@ -1460,6 +1523,18 @@ gfxPlatform::UseGraphiteShaping()
 }
 
 gfxFontEntry*
+gfxPlatform::LookupLocalFont(const nsAString& aFontName,
+                             uint16_t aWeight,
+                             int16_t aStretch,
+                             uint8_t aStyle)
+{
+    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
+                                                                    aWeight,
+                                                                    aStretch,
+                                                                    aStyle);
+}
+
+gfxFontEntry*
 gfxPlatform::MakePlatformFont(const nsAString& aFontName,
                               uint16_t aWeight,
                               int16_t aStretch,
@@ -1467,15 +1542,12 @@ gfxPlatform::MakePlatformFont(const nsAString& aFontName,
                               const uint8_t* aFontData,
                               uint32_t aLength)
 {
-    // Default implementation does not handle activating downloaded fonts;
-    // just free the data and return.
-    // Platforms that support @font-face must override this,
-    // using the data to instantiate the font, and taking responsibility
-    // for freeing it when no longer required.
-    if (aFontData) {
-        free((void*)aFontData);
-    }
-    return nullptr;
+    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
+                                                                     aWeight,
+                                                                     aStretch,
+                                                                     aStyle,
+                                                                     aFontData,
+                                                                     aLength);
 }
 
 mozilla::layers::DiagnosticTypes
@@ -1858,6 +1930,8 @@ gfxPlatform::FlushFontAndWordCaches()
         fontCache->AgeAllGenerations();
         fontCache->FlushShapedWordCaches();
     }
+
+    gfxPlatform::PurgeSkiaFontCache();
 }
 
 void

@@ -10,9 +10,6 @@ Bug 1171903 - Storage Inspector endless scrolling
 <body>
 <script type="text/javascript;version=1.8">
 "use strict";
-window.clear = () => {
-  localStorage.clear();
-};
 
 for (let i = 0; i < 160; i++) {
   localStorage.setItem(`item-${i}`, `value-${i}`);

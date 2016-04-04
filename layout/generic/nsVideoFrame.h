@@ -26,9 +26,15 @@ class nsAString;
 class nsPresContext;
 class nsDisplayItem;
 
-class nsVideoFrame : public nsContainerFrame, public nsIAnonymousContentCreator
+typedef nsContainerFrame nsVideoFrameBase;
+
+class nsVideoFrame : public nsVideoFrameBase, public nsIAnonymousContentCreator
 {
 public:
+  template <typename T> using Maybe = mozilla::Maybe<T>;
+  using Nothing = mozilla::Nothing;
+  using Visibility = mozilla::Visibility;
+
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
@@ -46,6 +52,9 @@ public:
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
+
+  void OnVisibilityChange(Visibility aNewVisibility,
+                          Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
   /* get the size of the video's display */
   nsSize GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext);

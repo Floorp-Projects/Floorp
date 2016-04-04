@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation height:auto grid with first grid row at top-of-page and box-decoration-break:clone</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-017-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 30px 30px 30px;
+  grid-auto-rows: 50px;
+  grid-gap: 12px;
+  border:5px solid;
+  border-top-width:0;
+  border-bottom-width:10px;
+  box-decoration-break: clone;
+  align-content: start;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+
+</style>
+</head>
+<body>
+
+<div class="columns" style="height: 120px/*fragmentainer ends in the end border*/">
+<div style="background:grey">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 8px/*fragmentainer ends in the end border*/">
+<div style="background:grey">
+<div class="grid">
+</div></div></div>
+
+<div class="columns" style="height: 10px/*fragmentainer ends in the end border*/">
+<div style="background:grey">
+<div class="grid" style="height:2px/*creates a Class C break opportunity at the end*/">
+</div></div></div>
+
+<div class="columns" style="height: 90px/*fragmentainer ends in the last row*/">
+<div style="background:grey">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:60px"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 60px/*fragmentainer ends in the grid gap between the rows */">
+<div style="background:grey">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:60px"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 30px/*fragmentainer ends in the first row*/; margin-bottom:30px">
+<div style="background:grey">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:60px"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 0px/*zero height fragmentainer*/; margin-bottom:60px">
+<div style="background:grey">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:60px"><x></x></span>
+</div></div></div>
+
+</body>
+</html>

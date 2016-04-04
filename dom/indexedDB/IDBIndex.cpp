@@ -29,7 +29,7 @@ namespace dom {
 namespace {
 
 already_AddRefed<IDBRequest>
-GenerateRequest(IDBIndex* aIndex)
+GenerateRequest(JSContext* aCx, IDBIndex* aIndex)
 {
   MOZ_ASSERT(aIndex);
   aIndex->AssertIsOnOwningThread();
@@ -37,7 +37,7 @@ GenerateRequest(IDBIndex* aIndex)
   IDBTransaction* transaction = aIndex->ObjectStore()->Transaction();
 
   RefPtr<IDBRequest> request =
-    IDBRequest::Create(aIndex, transaction->Database(), transaction);
+    IDBRequest::Create(aCx, aIndex, transaction->Database(), transaction);
   MOZ_ASSERT(request);
 
   return request.forget();
@@ -299,7 +299,7 @@ IDBIndex::GetInternal(bool aKeyOnly,
     params = IndexGetParams(objectStoreId, indexId, serializedKeyRange);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (aKeyOnly) {
@@ -383,7 +383,7 @@ IDBIndex::GetAllInternal(bool aKeysOnly,
     params = IndexGetAllParams(objectStoreId, indexId, optionalKeyRange, limit);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -482,7 +482,7 @@ IDBIndex::OpenCursorInternal(bool aKeysOnly,
     params = Move(openParams);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -560,7 +560,7 @@ IDBIndex::Count(JSContext* aCx,
     params.optionalKeyRange() = void_t();
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "

@@ -10,7 +10,6 @@
 #include "BluetoothCommon.h"
 #include "BluetoothInterface.h"
 #include "BluetoothProfileManagerBase.h"
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
 #include "nsTObserverArray.h"

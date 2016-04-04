@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+    .first {
+        background-color: blue;
+    }
+    .second {
+        background-color: green;
+        top: 48px;
+    }
+    .leaf {
+        width: 100px;
+        height: 100px;
+        position:absolute;
+        opacity: 0.5;
+    }
+</style>
+</head><body>
+
+<canvas class="leaf second" width="100px" height="100px" id="canvas"></canvas>
+<div class="leaf first"></div>
+<script>
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "red";
+    ctx.fillRect(0, 0, 100, 100);
+</script>
+</body>
+</html>
+

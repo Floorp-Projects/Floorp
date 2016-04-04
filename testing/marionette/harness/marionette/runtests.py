@@ -53,23 +53,24 @@ class MarionetteHarness(object):
             args.logger_name, args, logger_defaults or {"tbpl": sys.stdout})
 
         args.logger = logger
-        return args
+        return vars(args)
 
     def process_args(self):
-        if self.args.pydebugger:
-            MarionetteTestCase.pydebugger = __import__(self.args.pydebugger)
+        if self.args.get('pydebugger'):
+            MarionetteTestCase.pydebugger = __import__(self.args['pydebugger'])
 
     def run(self):
         try:
             self.process_args()
-            args_dict = vars(self.args)
-            tests = args_dict.pop('tests')
-            runner = self._runner_class(**args_dict)
+            tests = self.args.pop('tests')
+            runner = self._runner_class(**self.args)
             runner.run_tests(tests)
             return runner.failed
         except Exception:
-            self.args.logger.error('Failure during test execution.',
-                                   exc_info=True)
+            logger = self.args.get('logger')
+            if logger:
+                logger.error('Failure during test execution.',
+                                       exc_info=True)
             raise
 
 

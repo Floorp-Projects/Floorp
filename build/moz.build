@@ -22,12 +22,6 @@ if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstl
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['annotationProcessors']
-    TEST_DIRS += [
-        'mobile/sutagent/android',
-        'mobile/sutagent/android/watcher',
-        'mobile/sutagent/android/ffxcp',
-        'mobile/sutagent/android/fencp',
-    ]
 
 for var in ('GRE_MILESTONE', 'MOZ_APP_VERSION', 'MOZ_APP_BASENAME',
             'MOZ_APP_VENDOR', 'MOZ_APP_ID', 'MAR_CHANNEL_ID',
@@ -77,3 +71,25 @@ if CONFIG['MOZ_APP_BASENAME']:
         FINAL_TARGET_PP_FILES += ['update-settings.ini']
 
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
+
+# NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
+OBJDIR_FILES += ['/.gdbinit']
+
+# Put a .lldbinit in the bin directory and the objdir, to be picked up
+# automatically by LLDB when we debug executables using either of those two
+# directories as the current working directory.  The .lldbinit file will
+# load $(topsrcdir)/.lldbinit, which is where the actual debugging commands are.
+DEFINES['topsrcdir'] = TOPSRCDIR
+FINAL_TARGET_PP_FILES += ['.lldbinit.in']
+OBJDIR_FILES += ['!/dist/bin/.lldbinit']
+
+# Put the .ycm_extra_conf.py file at the root of the objdir. It is used by
+# the vim plugin YouCompleteMe.
+OBJDIR_FILES += ['/.ycm_extra_conf.py']
+
+if CONFIG['MOZ_VALGRIND']:
+    OBJDIR_FILES._valgrind += [
+        'valgrind/cross-architecture.sup',
+        'valgrind/i386-redhat-linux-gnu.sup',
+        'valgrind/x86_64-redhat-linux-gnu.sup',
+    ]

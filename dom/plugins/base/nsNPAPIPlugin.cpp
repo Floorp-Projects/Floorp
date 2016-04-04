@@ -1357,7 +1357,6 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   nsAutoMicroTask mt;
   dom::AutoEntryScript aes(win, "NPAPI NPN_evaluate");
-  aes.TakeOwnershipOfErrorReporting();
   JSContext* cx = aes.cx();
 
   JS::Rooted<JSObject*> obj(cx, nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj));
@@ -2032,6 +2031,14 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 #endif
 
+  case NPNVCSSZoomFactor: {
+    nsNPAPIPluginInstance *inst =
+      (nsNPAPIPluginInstance *) (npp ? npp->ndata : nullptr);
+    double scaleFactor = inst ? inst->GetCSSZoomFactor() : 1.0;
+    *(double*)result = scaleFactor;
+    return NPERR_NO_ERROR;
+  }
+
 #ifdef MOZ_WIDGET_ANDROID
     case kLogInterfaceV0_ANPGetValue: {
       LOG("get log interface");
@@ -2042,23 +2049,17 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kBitmapInterfaceV0_ANPGetValue: {
       LOG("get bitmap interface");
-      ANPBitmapInterfaceV0 *i = (ANPBitmapInterfaceV0 *) result;
-      InitBitmapInterface(i);
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kMatrixInterfaceV0_ANPGetValue: {
       LOG("get matrix interface");
-      ANPMatrixInterfaceV0 *i = (ANPMatrixInterfaceV0 *) result;
-      InitMatrixInterface(i);
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kPathInterfaceV0_ANPGetValue: {
       LOG("get path interface");
-      ANPPathInterfaceV0 *i = (ANPPathInterfaceV0 *) result;
-      InitPathInterface(i);
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kTypefaceInterfaceV0_ANPGetValue: {
@@ -2105,9 +2106,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kSystemInterfaceV0_ANPGetValue: {
       LOG("get system interface");
-      ANPSystemInterfaceV0* i = reinterpret_cast<ANPSystemInterfaceV0*>(result);
-      InitSystemInterface(i);
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kSurfaceInterfaceV0_ANPGetValue: {
@@ -2119,12 +2118,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kSupportedDrawingModel_ANPGetValue: {
       LOG("get supported drawing model");
-      uint32_t* bits = reinterpret_cast<uint32_t*>(result);
-      *bits = kBitmap_ANPDrawingModel && kSurface_ANPDrawingModel;
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kJavaContext_ANPGetValue: {
+      LOG("get java context");
       auto ret = widget::GeckoAppShell::GetContext();
       if (!ret)
         return NPERR_GENERIC_ERROR;
@@ -2154,9 +2152,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kWindowInterfaceV1_ANPGetValue: {
       LOG("get Window interface V1");
-      ANPWindowInterfaceV1 *i = (ANPWindowInterfaceV1 *) result;
-      InitWindowInterfaceV1(i);
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kWindowInterfaceV2_ANPGetValue: {
@@ -2167,14 +2163,12 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     }
 
     case kVideoInterfaceV0_ANPGetValue: {
-      LOG("get video interface");
-      ANPVideoInterfaceV0 *i = (ANPVideoInterfaceV0*) result;
-      InitVideoInterfaceV0(i);
-      return NPERR_NO_ERROR;
+      LOG("get video interface V0");
+      return NPERR_GENERIC_ERROR;
     }
 
     case kVideoInterfaceV1_ANPGetValue: {
-      LOG("get video interface");
+      LOG("get video interface V1");
       ANPVideoInterfaceV1 *i = (ANPVideoInterfaceV1*) result;
       InitVideoInterfaceV1(i);
       return NPERR_NO_ERROR;

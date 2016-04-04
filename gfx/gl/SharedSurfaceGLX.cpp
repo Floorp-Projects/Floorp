@@ -120,7 +120,7 @@ SharedSurface_GLXDrawable::ReadbackBySharedHandle(gfx::DataSourceSurface* out_su
 UniquePtr<SurfaceFactory_GLXDrawable>
 SurfaceFactory_GLXDrawable::Create(GLContext* prodGL,
                                    const SurfaceCaps& caps,
-                                   const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                   const RefPtr<layers::ClientIPCAllocator>& allocator,
                                    const layers::TextureFlags& flags)
 {
     MOZ_ASSERT(caps.alpha, "GLX surfaces require an alpha channel!");

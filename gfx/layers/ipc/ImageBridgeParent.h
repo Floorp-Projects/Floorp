@@ -14,7 +14,7 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/PImageBridgeParent.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"
@@ -39,7 +39,8 @@ namespace layers {
  * interesting stuff is in ImageContainerParent.
  */
 class ImageBridgeParent final : public PImageBridgeParent,
-                                public CompositableParentManager
+                                public CompositableParentManager,
+                                public ShmemAllocator
 {
 public:
   typedef InfallibleTArray<CompositableOperation> EditArray;
@@ -49,6 +50,8 @@ public:
 
   ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport, ProcessId aChildProcessId);
   ~ImageBridgeParent();
+
+  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -70,8 +73,6 @@ public:
   virtual bool RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
                           EditReplyArray* aReply) override;
   virtual bool RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy) override;
-
-  virtual bool IsAsync() const override { return true; }
 
   PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo,
                                                 PImageContainerParent* aImageContainer,
@@ -96,10 +97,9 @@ public:
   // Shutdown step 2
   virtual bool RecvStop() override;
 
-  virtual MessageLoop* GetMessageLoop() const override;
+  MessageLoop* GetMessageLoop() const { return mMessageLoop; }
 
-
-  // ISurfaceAllocator
+  // ShmemAllocator
 
   virtual bool AllocShmem(size_t aSize,
                           ipc::SharedMemory::SharedMemoryType aType,
@@ -139,6 +139,10 @@ public:
   CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
                 base::ProcessHandle aPeerProcess,
                 mozilla::ipc::ProtocolCloneContext* aCtx) override;
+
+  virtual bool UsesImageBridge() const override { return true; }
+
+  virtual bool IPCOpen() const override { return !mStopped; }
 
 protected:
   void OnChannelConnected(int32_t pid) override;

@@ -31,41 +31,31 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SpeechSynthesis)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SpeechSynthesis)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechQueue)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mVoiceCache.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SpeechSynthesis)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechQueue)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   for (auto iter = tmp->mVoiceCache.Iter(); !iter.Done(); iter.Next()) {
     SpeechSynthesisVoice* voice = iter.UserData();
     cb.NoteXPCOMChild(voice);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(SpeechSynthesis)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechSynthesis)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SpeechSynthesis)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechSynthesis)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechSynthesis)
+NS_IMPL_ADDREF_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
 
 SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
+  : DOMEventTargetHelper(aParent)
   , mHoldQueue(false)
   , mInnerID(aParent->WindowID())
 {
@@ -75,6 +65,7 @@ SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(this, "inner-window-destroyed", true);
+    obs->AddObserver(this, "synth-voices-changed", true);
   }
 
 }
@@ -87,12 +78,6 @@ JSObject*
 SpeechSynthesis::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return SpeechSynthesisBinding::Wrap(aCx, this, aGivenProto);
-}
-
-nsPIDOMWindowInner*
-SpeechSynthesis::GetParentObject() const
-{
-  return mParent;
 }
 
 bool
@@ -135,6 +120,19 @@ SpeechSynthesis::HasEmptyQueue() const
   return mSpeechQueue.Length() == 0;
 }
 
+bool SpeechSynthesis::HasVoices() const
+{
+  uint32_t voiceCount = mVoiceCache.Count();
+  if (voiceCount == 0) {
+    nsresult rv = nsSynthVoiceRegistry::GetInstance()->GetVoiceCount(&voiceCount);
+    if(NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+  }
+
+  return voiceCount != 0;
+}
+
 void
 SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
 {
@@ -146,7 +144,9 @@ SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
   mSpeechQueue.AppendElement(&aUtterance);
   aUtterance.mState = SpeechSynthesisUtterance::STATE_PENDING;
 
-  if (mSpeechQueue.Length() == 1 && !mCurrentTask && !mHoldQueue) {
+  // If we only have one item in the queue, we aren't pre-paused, and
+  // we have voices available, speak it.
+  if (mSpeechQueue.Length() == 1 && !mCurrentTask && !mHoldQueue && HasVoices()) {
     AdvanceQueue();
   }
 }
@@ -164,7 +164,8 @@ SpeechSynthesis::AdvanceQueue()
   RefPtr<SpeechSynthesisUtterance> utterance = mSpeechQueue.ElementAt(0);
 
   nsAutoString docLang;
-  nsIDocument* doc = mParent->GetExtantDoc();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
 
   if (doc) {
     Element* elm = doc->GetHtmlElement();
@@ -299,25 +300,29 @@ SpeechSynthesis::Observe(nsISupports* aSubject, const char* aTopic,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (strcmp(aTopic, "inner-window-destroyed")) {
-    return NS_OK;
-  }
 
-  nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+  if (strcmp(aTopic, "inner-window-destroyed") == 0) {
+    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
 
-  uint64_t innerID;
-  nsresult rv = wrapper->GetData(&innerID);
-  NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t innerID;
+    nsresult rv = wrapper->GetData(&innerID);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  if (innerID == mInnerID) {
-    if (mCurrentTask) {
-      mCurrentTask->Cancel();
+    if (innerID == mInnerID) {
+      Cancel();
+
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      if (obs) {
+        obs->RemoveObserver(this, "inner-window-destroyed");
+      }
     }
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
+  } else if (strcmp(aTopic, "synth-voices-changed") == 0) {
+    LOG(LogLevel::Debug, ("SpeechSynthesis::onvoiceschanged"));
+    DispatchTrustedEvent(NS_LITERAL_STRING("voiceschanged"));
+    // If we have a pending item, and voices become available, speak it.
+    if (!mCurrentTask && !mHoldQueue && HasVoices()) {
+      AdvanceQueue();
     }
   }
 

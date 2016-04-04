@@ -4,10 +4,10 @@
 "use strict";
 
 const { Cu, Ci, Cc, CC } = require("chrome");
-const Services = require("Services");
 
 XPCOMUtils.defineLazyGetter(this, "dirService", function() {
-  return Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+  return Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties);
 });
 
 XPCOMUtils.defineLazyGetter(this, "ZipWriter", function() {
@@ -25,12 +25,12 @@ XPCOMUtils.defineLazyGetter(this, "getMostRecentBrowserWindow", function() {
 const nsIFilePicker = Ci.nsIFilePicker;
 
 const OPEN_FLAGS = {
-  RDONLY: parseInt("0x01"),
-  WRONLY: parseInt("0x02"),
-  CREATE_FILE: parseInt("0x08"),
-  APPEND: parseInt("0x10"),
-  TRUNCATE: parseInt("0x20"),
-  EXCL: parseInt("0x80")
+  RDONLY: parseInt("0x01", 16),
+  WRONLY: parseInt("0x02", 16),
+  CREATE_FILE: parseInt("0x08", 16),
+  APPEND: parseInt("0x10", 16),
+  TRUNCATE: parseInt("0x20", 16),
+  EXCL: parseInt("0x80", 16)
 };
 
 /**
@@ -46,7 +46,8 @@ var HarUtils = {
 
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(browser, null, nsIFilePicker.modeSave);
-    fp.appendFilter("HTTP Archive Files", "*.har; *.harp; *.json; *.jsonp; *.zip");
+    fp.appendFilter(
+      "HTTP Archive Files", "*.har; *.harp; *.json; *.jsonp; *.zip");
     fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText);
     fp.filterIndex = 1;
 
@@ -65,8 +66,8 @@ var HarUtils = {
 
     // Read more about toLocaleFormat & format string.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleFormat
-    var now = new Date();
-    var name = now.toLocaleFormat(defaultFileName);
+    let now = new Date();
+    let name = now.toLocaleFormat(defaultFileName);
     name = name.replace(/\:/gm, "-", "");
     name = name.replace(/\//gm, "_", "");
 
@@ -106,8 +107,8 @@ var HarUtils = {
 
       // The entire jsonString can be huge so, write the data in chunks.
       let chunkLength = 1024 * 1024;
-      for (let i=0; i<=jsonString.length; i++) {
-        let data = jsonString.substr(i, chunkLength+1);
+      for (let i = 0; i <= jsonString.length; i++) {
+        let data = jsonString.substr(i, chunkLength + 1);
         if (data) {
           convertor.writeString(data);
         }
@@ -136,8 +137,8 @@ var HarUtils = {
       file.moveTo(null, "temp" + (new Date()).getTime() + "temphar");
 
       // Create compressed file with the original file path name.
-      let zipFile = Cc["@mozilla.org/file/local;1"].
-        createInstance(Ci.nsILocalFile);
+      let zipFile = Cc["@mozilla.org/file/local;1"]
+        .createInstance(Ci.nsILocalFile);
       zipFile.initWithPath(originalFilePath);
 
       // The file within the zipped file doesn't use .zip extension.
@@ -179,7 +180,7 @@ var HarUtils = {
 
     return dir;
   },
-}
+};
 
 // Exports from this module
 exports.HarUtils = HarUtils;

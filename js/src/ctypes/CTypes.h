@@ -211,6 +211,7 @@ enum ErrorNum {
 enum ABICode {
   ABI_DEFAULT,
   ABI_STDCALL,
+  ABI_THISCALL,
   ABI_WINAPI,
   INVALID_ABI
 };
