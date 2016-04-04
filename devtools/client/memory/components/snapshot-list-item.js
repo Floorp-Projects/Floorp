@@ -9,9 +9,15 @@ const {
   getSnapshotTitle,
   getSnapshotTotals,
   getStatusText,
-  snapshotIsDiffable
+  snapshotIsDiffable,
+  getSavedCensus
 } = require("../utils");
-const { snapshotState: states, diffingState } = require("../constants");
+const {
+  snapshotState: states,
+  diffingState,
+  censusState,
+  treeMapState
+} = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 
 const SnapshotListItem = module.exports = createClass({
@@ -61,14 +67,21 @@ const SnapshotListItem = module.exports = createClass({
     }
 
     let details;
-    if (!selectedForDiffing && snapshot.state === states.SAVED_CENSUS) {
-      let { bytes } = getSnapshotTotals(snapshot.census);
-      let formatBytes = L10N.getFormatStr("aggregate.mb", L10N.numberWithDecimals(bytes / 1000000, 2));
+    if (!selectedForDiffing) {
+      // See if a tree map or census is in the read state.
+      let census = getSavedCensus(snapshot);
 
-      details = dom.span({ className: "snapshot-totals" },
-        dom.span({ className: "total-bytes" }, formatBytes)
-      );
-    } else {
+      // If there is census data, fill in the total bytes.
+      if (census) {
+        let { bytes } = getSnapshotTotals(census);
+        let formatBytes = L10N.getFormatStr("aggregate.mb", L10N.numberWithDecimals(bytes / 1000000, 2));
+
+        details = dom.span({ className: "snapshot-totals" },
+          dom.span({ className: "total-bytes" }, formatBytes)
+        );
+      }
+    }
+    if (!details) {
       details = dom.span({ className: "snapshot-state" }, statusText);
     }
 

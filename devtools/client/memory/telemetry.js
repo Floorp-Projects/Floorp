@@ -10,7 +10,7 @@
 
 const { telemetry } = require("Services");
 const { makeInfallible, immutableUpdate } = require("devtools/shared/DevToolsUtils");
-const { dominatorTreeDisplays, censusDisplays } = require("./constants");
+const { dominatorTreeDisplays, treeMapDisplays, censusDisplays } = require("./constants");
 
 exports.countTakeSnapshot = makeInfallible(function () {
   const histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_TAKE_SNAPSHOT_COUNT");

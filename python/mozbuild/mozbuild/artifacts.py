@@ -386,10 +386,9 @@ class WinArtifactJob(ArtifactJob):
 # https://tools.taskcluster.net/index/artifacts/#buildbot.branches.mozilla-central/buildbot.branches.mozilla-central.
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
-    # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-api-15': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-arm\.apk',
+    'android-api-15': (AndroidArtifactJob, ('public/build/fennec-(.*)-arm\.apk',
                                             None)),
-    'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-i386\.apk',
+    'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)-i386\.apk',
                                          None)),
     'linux': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
                                  'public/build/firefox-(.*)\.common\.tests\.zip')),

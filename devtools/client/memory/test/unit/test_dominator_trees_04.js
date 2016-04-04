@@ -27,7 +27,7 @@ add_task(function *() {
 
   for (let intermediateSnapshotState of [states.SAVING,
                                          states.READING,
-                                         states.SAVING_CENSUS]) {
+                                         states.READ]) {
     dumpn(`Testing switching to the DOMINATOR_TREE view in the middle of the ${intermediateSnapshotState} snapshot state`);
 
     let store = Store();

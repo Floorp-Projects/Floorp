@@ -5,8 +5,10 @@
  * Tests the async reducer responding to the action `takeCensus(heapWorker, snapshot)`
  */
 
-var { snapshotState: states, censusDisplays } = require("devtools/client/memory/constants");
+var { snapshotState: states, censusDisplays, censusState, censusState, viewState } = require("devtools/client/memory/constants");
 var actions = require("devtools/client/memory/actions/snapshot");
+var { changeView } = require("devtools/client/memory/actions/view");
+
 
 function run_test() {
   run_next_test();
@@ -17,6 +19,8 @@ add_task(function *() {
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();
   let store = Store();
+
+  store.dispatch(changeView(viewState.CENSUS));
 
   store.dispatch(actions.takeSnapshot(front));
   yield waitUntilState(store, () => {
@@ -37,12 +41,13 @@ add_task(function *() {
   yield waitUntilState(store, () => store.getState().snapshots[0].state === states.READ);
 
   store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
-  yield waitUntilState(store, () => store.getState().snapshots[0].state === states.SAVING_CENSUS);
-  yield waitUntilState(store, () => store.getState().snapshots[0].state === states.SAVED_CENSUS);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   snapshot = store.getState().snapshots[0];
   ok(snapshot.census, "Snapshot has census after saved census");
   ok(snapshot.census.report.children.length, "Census is in tree node form");
   equal(snapshot.census.display, censusDisplays.coarseType,
         "Snapshot stored correct display used for the census");
+
 });
