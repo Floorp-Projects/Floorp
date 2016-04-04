@@ -1201,9 +1201,11 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         constructorSender->IsForApp(),
         constructorSender->IsForBrowser());
 
-      RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
-      constructedTabParent->SetOwnerElement(aFrameElement);
-      return constructedTabParent;
+      if (browser) {
+        RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
+        constructedTabParent->SetOwnerElement(aFrameElement);
+        return constructedTabParent;
+      }
     }
     return nullptr;
   }
