@@ -35,6 +35,7 @@ echo "Applying patches..."
 patch -p4 < byteorder-mod.patch
 patch -p4 < mp4parse-mod.patch
 patch -p4 < mp4parse-thread.patch
+patch -p4 < mp4parse-codecs.patch
 
 echo "Cleaning up..."
 rm -rf _upstream
