@@ -215,11 +215,12 @@ class FilePickerResultHandler implements ActivityResultHandler {
                 }
 
                 // Now write the data to the temp file
+                FileOutputStream fos = null;
                 try {
                     cacheDir.mkdir();
 
                     File file = File.createTempFile(fileName, fileExt, cacheDir);
-                    FileOutputStream fos = new FileOutputStream(file);
+                    fos = new FileOutputStream(file);
                     InputStream is = cr.openInputStream(uri);
                     byte[] buf = new byte[4096];
                     int len = is.read(buf);
@@ -237,6 +238,12 @@ class FilePickerResultHandler implements ActivityResultHandler {
                     }
                 } catch(IOException ex) {
                     Log.i(LOGTAG, "Error writing file", ex);
+                } finally {
+                    if (fos != null) {
+                        try {
+                            fos.close();
+                        } catch (IOException e) { /* not much to do here */ }
+                    }
                 }
             } else {
                 sendResult("");
