@@ -100,6 +100,7 @@ interface nsITLSClientStatus : nsISupports
   const short TLS_VERSION_1   = 0x0301;
   const short TLS_VERSION_1_1 = 0x0302;
   const short TLS_VERSION_1_2 = 0x0303;
+  const short TLS_VERSION_1_3 = 0x0304;
   const short TLS_VERSION_UNKNOWN = -1;
 
   /**
