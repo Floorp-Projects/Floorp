@@ -533,7 +533,6 @@ LoginManagerStorage.prototype = {
       // next startup.
       if (!this._isLoggedIn) {
         log.info("not saving credentials to login manager - not logged in");
-        Services.telemetry.getHistogramById("FXA_SECURE_CREDENTIALS_SAVE_WITH_MP_LOCKED").add(1);
         throw new this.STORAGE_LOCKED();
       }
       // write the data to the login manager.
