@@ -57,6 +57,8 @@ const MAX_VISIBLE_STRING_SIZE = 100;
  *        - removableColumns: Whether columns are removeable. If set to false,
  *                            the context menu in the headers will not appear.
  *        - firstColumn: key of the first column that should appear.
+ *        - cellContextMenuId: ID of a <menupopup> element to be set as a
+ *                             context menu of every cell.
  */
 function TableWidget(node, options = {}) {
   EventEmitter.decorate(this);
@@ -66,12 +68,13 @@ function TableWidget(node, options = {}) {
   this._parent = node;
 
   let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
-       firstColumn} = options;
+       firstColumn, cellContextMenuId} = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
   this.firstColumn = firstColumn || "";
   this.highlightUpdated = highlightUpdated || false;
   this.removableColumns = removableColumns !== false;
+  this.cellContextMenuId = cellContextMenuId;
 
   this.tbody = this.document.createElementNS(XUL_NS, "hbox");
   this.tbody.className = "table-widget-body theme-body";
@@ -807,6 +810,7 @@ TableWidget.prototype = {
     }
     for (let column of this.columns.values()) {
       column.remove(item);
+      column.updateZebra();
     }
     if (this.items.size == 0) {
       this.tbody.setAttribute("empty", "empty");
@@ -1447,6 +1451,15 @@ function Cell(column, item, nextCell) {
     column.column.insertBefore(this.label, nextCell.label);
   } else {
     column.column.appendChild(this.label);
+  }
+
+  if (column.table.cellContextMenuId) {
+    this.label.setAttribute("context", column.table.cellContextMenuId);
+    this.label.addEventListener("contextmenu", (event) => {
+      // Make the ID of the clicked cell available as a property on the table.
+      // It's then available for the popupshowing or command handler.
+      column.table.contextMenuRowId = this.id;
+    }, false);
   }
 
   this.value = item[column.id];
