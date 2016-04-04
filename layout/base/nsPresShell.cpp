@@ -1168,9 +1168,17 @@ PresShell::Destroy()
 
   mSynthMouseMoveEvent.Revoke();
 
+  if (mInImageVisibility) {
+    gfxCriticalNoteOnce << "Destroy is re-entering on "
+                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
+  }
+  mInImageVisibility = true;
+
   mUpdateImageVisibilityEvent.Revoke();
 
   ClearVisibleImagesList(nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
+
+  mInImageVisibility = false;
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5586,9 +5594,7 @@ DecrementVisibleCount(nsTHashtable<nsRefPtrHashKey<nsIImageLoadingContent>>& aIm
       // help debug the crash (bug 1251150)
       aPresShell->ReportAnyBadState();
     }
-    aPresShell->SetInImageVisibility(true);
     iter.Get()->GetKey()->DecrementVisibleCount(aNonvisibleAction);
-    aPresShell->SetInImageVisibility(false);
   }
 }
 
@@ -5626,10 +5632,6 @@ PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
 void
 PresShell::ClearVisibleImagesList(uint32_t aNonvisibleAction)
 {
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "ClearVisibleImagesList is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
   DecrementVisibleCount(mVisibleImages, aNonvisibleAction, this);
   mVisibleImages.Clear();
 }
@@ -5735,11 +5737,6 @@ PresShell::RebuildImageVisibility(nsRect* aRect,
     return;
   }
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "RebuildImageVisibility is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-
   // Remove the entries of the mVisibleImages hashtable and put them in
   // oldVisibleImages.
   nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > oldVisibleImages;
@@ -5769,7 +5766,14 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
 
   mUpdateImageVisibilityEvent.Revoke();
 
+  if (mInImageVisibility) {
+    gfxCriticalNoteOnce << "DoUpdateImageVisibility is re-entering on "
+                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
+  }
+  mInImageVisibility = true;
+
   if (mHaveShutDown || mIsDestroying) {
+    mInImageVisibility = false;
     return;
   }
 
@@ -5778,11 +5782,14 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
   if (!rootFrame) {
     ClearVisibleImagesList(
       nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
+    mInImageVisibility = false;
     return;
   }
 
   RebuildImageVisibility(/* aRect = */ nullptr, aRemoveOnly);
   ClearImageVisibilityVisited(rootFrame->GetView(), true);
+
+  mInImageVisibility = false;
 
 #ifdef DEBUG_IMAGE_VISIBILITY_DISPLAY_LIST
   // This can be used to debug the frame walker by comparing beforeImageList and
@@ -5897,11 +5904,14 @@ PresShell::EnsureImageInVisibleList(nsIImageLoadingContent* aImage)
     gfxCriticalNoteOnce << "EnsureImageInVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
+  mInImageVisibility = true;
 
   if (!mVisibleImages.Contains(aImage)) {
     mVisibleImages.PutEntry(aImage);
     aImage->IncrementVisibleCount();
   }
+
+  mInImageVisibility = false;
 }
 
 void
@@ -5925,6 +5935,7 @@ PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
     gfxCriticalNoteOnce << "RemoveImageFromVisibleList is re-entering on "
                         << (NS_IsMainThread() ? "" : "non-") << "main thread";
   }
+  mInImageVisibility = true;
 
   uint32_t count = mVisibleImages.Count();
   mVisibleImages.RemoveEntry(aImage);
@@ -5933,6 +5944,8 @@ PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
     aImage->DecrementVisibleCount(
       nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
   }
+
+  mInImageVisibility = false;
 }
 
 class nsAutoNotifyDidPaint
@@ -10691,6 +10704,7 @@ PresShell::UpdateImageLockingState()
       gfxCriticalNoteOnce << "UpdateImageLockingState is re-entering on "
                           << (NS_IsMainThread() ? "" : "non-") << "main thread";
     }
+    mInImageVisibility = true;
 
     // Request decodes for visible images; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
@@ -10701,6 +10715,7 @@ PresShell::UpdateImageLockingState()
         imageFrame->MaybeDecodeForPredictedSize();
       }
     }
+    mInImageVisibility = false;
   }
 
   return rv;
