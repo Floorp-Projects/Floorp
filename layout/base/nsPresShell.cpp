@@ -6012,6 +6012,24 @@ PresShell::AssumeAllFramesVisible()
     return true;
   }
 
+  // If we're assuming all frames are visible in the top level content
+  // document, we need to in subdocuments as well. Otherwise we can get in a
+  // situation where things like animations won't work in subdocuments because
+  // their frames appear not to be visible, since we won't schedule an image
+  // visibility update if the top level content document is assuming all
+  // frames are visible.
+  //
+  // Note that it's not safe to call IsRootContentDocument() if we're
+  // currently being destroyed, so we have to check that first.
+  if (!mHaveShutDown && !mIsDestroying &&
+      !mPresContext->IsRootContentDocument()) {
+    nsPresContext* presContext =
+      mPresContext->GetToplevelContentDocumentPresContext();
+    if (presContext && presContext->PresShell()->AssumeAllFramesVisible()) {
+      return true;
+    }
+  }
+
   return false;
 }
 
