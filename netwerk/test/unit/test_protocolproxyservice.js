@@ -932,7 +932,7 @@ function run_isresolvable_test()
 
   var pac = 'data:text/plain,' +
             'function FindProxyForURL(url, host) {' +
-            ' if (isResolvable("nonexistant.lan"))' +
+            ' if (isResolvable("nonexistant.lan.onion"))' +
             '   return "DIRECT";' +
             ' return "PROXY 127.0.0.1:1234";' +
             '}';
