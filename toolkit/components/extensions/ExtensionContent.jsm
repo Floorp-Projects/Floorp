@@ -120,7 +120,7 @@ var api = context => {
 
     i18n: {
       getMessage: function(messageName, substitutions) {
-        return context.extension.localizeMessage(messageName, substitutions);
+        return context.extension.localizeMessage(messageName, substitutions, {cloneScope: context.cloneScope});
       },
 
       getAcceptLanguages: function(callback) {

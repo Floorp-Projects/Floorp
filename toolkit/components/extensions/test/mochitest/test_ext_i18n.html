@@ -28,10 +28,10 @@ add_task(function* test_i18n() {
 
     assertEq("(bar)", _("bar"), "Simple message fallback in default locale.");
 
-    assertEq("??", _("some-unknown-locale-string"), "Unknown locale string.");
+    assertEq("", _("some-unknown-locale-string"), "Unknown locale string.");
 
-    assertEq("??", _("@@unknown_builtin_string"), "Unknown built-in string.");
-    assertEq("??", _("@@bidi_unknown_builtin_string"), "Unknown built-in bidi string.");
+    assertEq("", _("@@unknown_builtin_string"), "Unknown built-in string.");
+    assertEq("", _("@@bidi_unknown_builtin_string"), "Unknown built-in bidi string.");
 
     assertEq("Føo.", _("Föo"), "Multi-byte message in selected locale.");
 
