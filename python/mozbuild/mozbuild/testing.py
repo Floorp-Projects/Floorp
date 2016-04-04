@@ -10,6 +10,9 @@ import sys
 
 import mozpack.path as mozpath
 
+from mozpack.copier import FileCopier
+from mozpack.manifests import InstallManifest
+
 from .base import MozbuildObject
 from .util import OrderedDefaultDict
 from collections import defaultdict
@@ -167,6 +170,12 @@ class TestResolver(MozbuildObject):
     def __init__(self, *args, **kwargs):
         MozbuildObject.__init__(self, *args, **kwargs)
 
+        # If installing tests is going to result in re-generating the build
+        # backend, we need to do this here, so that the updated contents of
+        # all-tests.json make it to the set of tests to run.
+        self._run_make(target='run-tests-deps', pass_thru=True,
+                       print_directory=False)
+
         self._tests = TestMetadata(filename=os.path.join(self.topobjdir,
             'all-tests.json'))
         self._test_rewrites = {
@@ -287,69 +296,184 @@ def all_test_flavors():
             list(WEB_PLATFORM_TESTS_FLAVORS) +
             ['python'])
 
-def convert_support_files(extras, test, install_root, manifest_dir, out_dir):
-    # Processes a "support-files" entry from a test object and returns
-    # the installs to perform for this test object.
-    #
-    # Arguments:
-    #  extras - Tuples used for the basis of memoization (the same support-files
-    #           in the same manifest always have the same effect).
-    #  test - The test object to process.
-    #  install_root - The directory under $objdir/_tests that will contain
-    #                 the tests for this harness (examples are "testing/mochitest",
-    #                 "xpcshell").
-    #  manifest_dir - Absoulute path to the (srcdir) directory containing the
-    #                 manifest that included this test
-    #  out_dir - The path relative to $objdir/_tests used as the destination for the
-    #            test, based on the relative path to the manifest in the srcdir,
-    #            the install_root, and 'install-to-subdir', if present in the manifest.
-    pattern_installs, installs, external = [], [], set()
-    for thing, seen in extras:
-        value = test.get(thing, '')
-        # We need to memoize on the basis of both the path and the output
-        # directory for the benefit of tests specifying 'install-to-subdir'.
-        if (value, out_dir) in seen:
+class TestInstallInfo(object):
+    def __init__(self):
+        self.pattern_installs = []
+        self.installs = []
+        self.external_installs = set()
+        self.deferred_installs = set()
+
+    def __ior__(self, other):
+        self.pattern_installs.extend(other.pattern_installs)
+        self.installs.extend(other.installs)
+        self.external_installs |= other.external_installs
+        self.deferred_installs |= other.deferred_installs
+        return self
+
+class SupportFilesConverter(object):
+    """Processes a "support-files" entry from a test object, either from
+    a parsed object from a test manifests or its representation in
+    moz.build and returns the installs to perform for this test object.
+
+    Processing the same support files multiple times will not have any further
+    effect, and the structure of the parsed objects from manifests will have a
+    lot of repeated entries, so this class takes care of memoizing.
+    """
+    def __init__(self):
+        self._fields = (('head', set()),
+                        ('tail', set()),
+                        ('support-files', set()),
+                        ('generated-files', set()))
+
+    def convert_support_files(self, test, install_root, manifest_dir, out_dir):
+        # Arguments:
+        #  test - The test object to process.
+        #  install_root - The directory under $objdir/_tests that will contain
+        #                 the tests for this harness (examples are "testing/mochitest",
+        #                 "xpcshell").
+        #  manifest_dir - Absoulute path to the (srcdir) directory containing the
+        #                 manifest that included this test
+        #  out_dir - The path relative to $objdir/_tests used as the destination for the
+        #            test, based on the relative path to the manifest in the srcdir,
+        #            the install_root, and 'install-to-subdir', if present in the manifest.
+        info = TestInstallInfo()
+        for thing, seen in self._fields:
+            value = test.get(thing, '')
+            # We need to memoize on the basis of both the path and the output
+            # directory for the benefit of tests specifying 'install-to-subdir'.
+            if (value, out_dir) in seen:
+                continue
+            seen.add((value, out_dir))
+            for pattern in value.split():
+                if thing == 'generated-files':
+                    info.external_installs.add(mozpath.normpath(mozpath.join(out_dir, pattern)))
+                # '!' indicates our syntax for inter-directory support file
+                # dependencies. These receive special handling in the backend.
+                elif pattern[0] == '!':
+                    info.deferred_installs.add(pattern)
+                # We only support globbing on support-files because
+                # the harness doesn't support * for head and tail.
+                elif '*' in pattern and thing == 'support-files':
+                    info.pattern_installs.append((manifest_dir, pattern, out_dir))
+                # "absolute" paths identify files that are to be
+                # placed in the install_root directory (no globs)
+                elif pattern[0] == '/':
+                    full = mozpath.normpath(mozpath.join(manifest_dir,
+                                                         mozpath.basename(pattern)))
+                    info.installs.append((full, mozpath.join(install_root, pattern[1:])))
+                else:
+                    full = mozpath.normpath(mozpath.join(manifest_dir, pattern))
+                    dest_path = mozpath.join(out_dir, pattern)
+
+                    # If the path resolves to a different directory
+                    # tree, we take special behavior depending on the
+                    # entry type.
+                    if not full.startswith(manifest_dir):
+                        # If it's a support file, we install the file
+                        # into the current destination directory.
+                        # This implementation makes installing things
+                        # with custom prefixes impossible. If this is
+                        # needed, we can add support for that via a
+                        # special syntax later.
+                        if thing == 'support-files':
+                            dest_path = mozpath.join(out_dir,
+                                                     os.path.basename(pattern))
+                        # If it's not a support file, we ignore it.
+                        # This preserves old behavior so things like
+                        # head files doesn't get installed multiple
+                        # times.
+                        else:
+                            continue
+                    info.installs.append((full, mozpath.normpath(dest_path)))
+        return info
+
+def _resolve_installs(paths, topobjdir, manifest):
+    """Using the given paths as keys, find any unresolved installs noted
+    by the build backend corresponding to those keys, and add them
+    to the given manifest.
+    """
+    filename = os.path.join(topobjdir, 'test-installs.json')
+    with open(filename, 'r') as fh:
+        resolved_installs = json.load(fh)
+
+    for path in paths:
+        path = path[2:]
+        if path not in resolved_installs:
+            raise Exception('A cross-directory support file path noted in a '
+                'test manifest does not appear in any other manifest.\n "%s" '
+                'must appear in another test manifest to specify an install '
+                'for "!/%s".' % (path, path))
+        installs = resolved_installs[path]
+        for install_info in installs:
+            try:
+                if len(install_info) == 3:
+                    manifest.add_pattern_symlink(*install_info)
+                if len(install_info) == 2:
+                    manifest.add_symlink(*install_info)
+            except ValueError:
+                # A duplicate value here is pretty likely when running
+                # multiple directories at once, and harmless.
+                pass
+
+def install_test_files(topsrcdir, topobjdir, tests_root, test_objs):
+    """Installs the requested test files to the objdir. This is invoked by
+    test runners to avoid installing tens of thousands of test files when
+    only a few tests need to be run.
+    """
+    flavor_info = {flavor: (root, prefix, install)
+                   for (flavor, root, prefix, install) in TEST_MANIFESTS.values()}
+    objdir_dest = mozpath.join(topobjdir, tests_root)
+
+    converter = SupportFilesConverter()
+    install_info = TestInstallInfo()
+    for o in test_objs:
+        flavor = o['flavor']
+        if flavor not in flavor_info:
+            # This is a test flavor that isn't installed by the build system.
             continue
-        seen.add((value, out_dir))
-        for pattern in value.split():
-            if thing == 'generated-files':
-                external.add(mozpath.join(out_dir, pattern))
-            # We only support globbing on support-files because
-            # the harness doesn't support * for head and tail.
-            elif '*' in pattern and thing == 'support-files':
-                pattern_installs.append((manifest_dir, pattern, out_dir))
-            # "absolute" paths identify files that are to be
-            # placed in the install_root directory (no globs)
-            elif pattern[0] == '/':
-                full = mozpath.normpath(mozpath.join(manifest_dir,
-                                                     mozpath.basename(pattern)))
-                installs.append((full, mozpath.join(install_root, pattern[1:])))
-            else:
-                full = mozpath.normpath(mozpath.join(manifest_dir, pattern))
-                dest_path = mozpath.join(out_dir, pattern)
+        root, prefix, install = flavor_info[flavor]
+        if not install:
+            # This flavor isn't installed to the objdir.
+            continue
 
-                # If the path resolves to a different directory
-                # tree, we take special behavior depending on the
-                # entry type.
-                if not full.startswith(manifest_dir):
-                    # If it's a support file, we install the file
-                    # into the current destination directory.
-                    # This implementation makes installing things
-                    # with custom prefixes impossible. If this is
-                    # needed, we can add support for that via a
-                    # special syntax later.
-                    if thing == 'support-files':
-                        dest_path = mozpath.join(out_dir,
-                                                 os.path.basename(pattern))
-                    # If it's not a support file, we ignore it.
-                    # This preserves old behavior so things like
-                    # head files doesn't get installed multiple
-                    # times.
-                    else:
-                        continue
-                installs.append((full, mozpath.normpath(dest_path)))
+        manifest_path = o['manifest']
+        manifest_dir = mozpath.dirname(manifest_path)
 
-    return pattern_installs, installs, external
+        out_dir = mozpath.join(root, prefix, manifest_dir[len(topsrcdir) + 1:])
+        file_relpath = o['file_relpath']
+        source = mozpath.join(topsrcdir, file_relpath)
+        dest = mozpath.join(root, prefix, file_relpath)
+        if 'install-to-subdir' in o:
+            out_dir = mozpath.join(out_dir, o['install-to-subdir'])
+            manifest_relpath = mozpath.relpath(source, mozpath.dirname(manifest_path))
+            dest = mozpath.join(out_dir, manifest_relpath)
+
+        install_info.installs.append((source, dest))
+        install_info |= converter.convert_support_files(o, root,
+                                                        manifest_dir,
+                                                        out_dir)
+
+    manifest = InstallManifest()
+
+    for source, dest in set(install_info.installs):
+        if dest in install_info.external_installs:
+            continue
+        manifest.add_symlink(source, dest)
+    for base, pattern, dest in install_info.pattern_installs:
+        manifest.add_pattern_symlink(base, pattern, dest)
+
+    _resolve_installs(install_info.deferred_installs, topobjdir, manifest)
+
+    # Harness files are treated as a monolith and installed each time we run tests.
+    # Fortunately there are not very many.
+    manifest |= InstallManifest(mozpath.join(topobjdir,
+                                             '_build_manifests',
+                                             'install', tests_root))
+    copier = FileCopier()
+    manifest.populate_registry(copier)
+    copier.copy(objdir_dest,
+                remove_unaccounted=False)
+
 
 # Convenience methods for test manifest reading.
 def read_manifestparser_manifest(context, manifest_path):

@@ -83,7 +83,7 @@ from ..testing import (
     TEST_MANIFESTS,
     REFTEST_FLAVORS,
     WEB_PLATFORM_TESTS_FLAVORS,
-    convert_support_files,
+    SupportFilesConverter,
 )
 
 from .context import (
@@ -140,6 +140,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         self._emitter_time = 0.0
         self._object_count = 0
+        self._test_files_converter = SupportFilesConverter()
 
     def summary(self):
         return ExecutionSummary(
@@ -1097,23 +1098,24 @@ class TreeMetadataEmitter(LoggingMixin):
                                                         defaults['install-to-subdir'],
                                                         mozpath.basename(path))
 
-            # Keep a set of already seen support file patterns, because
-            # repeatedly processing the patterns from the default section
-            # for every test is quite costly (see bug 922517).
-            extras = (('head', set()),
-                      ('tail', set()),
-                      ('support-files', set()),
-                      ('generated-files', set()))
             def process_support_files(test):
-                patterns, installs, external = convert_support_files(extras, test,
-                                                                     install_root,
-                                                                     manifest_dir,
-                                                                     out_dir)
+                install_info = self._test_files_converter.convert_support_files(
+                    test, install_root, manifest_dir, out_dir)
 
-                obj.pattern_installs.extend(patterns)
-                for source, dest in installs:
+                obj.pattern_installs.extend(install_info.pattern_installs)
+                for source, dest in install_info.installs:
                     obj.installs[source] = (dest, False)
-                obj.external_installs |= external
+                obj.external_installs |= install_info.external_installs
+                for install_path in install_info.deferred_installs:
+                    if all(['*' not in install_path,
+                            not os.path.isfile(mozpath.join(context.config.topsrcdir,
+                                                            install_path[2:])),
+                            install_path not in install_info.external_installs]):
+                        raise SandboxValidationError('Error processing test '
+                           'manifest %s: entry in support-files not present '
+                           'in the srcdir: %s' % (path, install_path), context)
+
+                obj.deferred_installs |= install_info.deferred_installs
 
             for test in filtered:
                 obj.tests.append(test)
