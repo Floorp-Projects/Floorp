@@ -118,7 +118,7 @@ const COMMENT_REGEXP = new RegExp(String.raw`
 
 var scriptScope = this;
 
-var ExtensionPage, GlobalManager;
+var ExtensionContext, GlobalManager;
 
 // This object loads the ext-*.js scripts that define the extension API.
 var Management = {
@@ -147,7 +147,7 @@ var Management = {
     for (let script of ExtensionManagement.getScripts()) {
       let scope = {extensions: this,
                    global: scriptScope,
-                   ExtensionPage: ExtensionPage,
+                   ExtensionContext: ExtensionContext,
                    GlobalManager: GlobalManager};
       Services.scriptloader.loadSubScript(script, scope, "UTF-8");
 
@@ -242,7 +242,7 @@ var Management = {
 // |uri| is the URI of the content (optional).
 // |docShell| is the docshell the content runs in (optional).
 // |incognito| is the content running in a private context (default: false).
-ExtensionPage = class extends BaseContext {
+ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
     super();
 
@@ -324,7 +324,7 @@ GlobalManager = {
   // Number of extensions currently enabled.
   count: 0,
 
-  // Map[docShell -> {extension, context}] where context is an ExtensionPage.
+  // Map[docShell -> {extension, context}] where context is an ExtensionContext.
   docShells: new Map(),
 
   // Map[extension ID -> Extension]. Determines which extension is
@@ -490,7 +490,7 @@ GlobalManager = {
       }
     }
 
-    let context = new ExtensionPage(extension, {type, contentWindow, uri, docShell, incognito});
+    let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
     inject(extension, context);
 
     let eventHandler = docShell.chromeEventHandler;
