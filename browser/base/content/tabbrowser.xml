@@ -2311,28 +2311,6 @@
 
             var browser = this.getBrowserForTab(aTab);
 
-            var closeWindow = false;
-            var newTab = false;
-            if (this.tabs.length - this._removingTabs.length == 1) {
-              closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
-                            !window.toolbar.visible ||
-                              Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
-
-              // Closing the tab and replacing it with a blank one is notably slower
-              // than closing the window right away. If the caller opts in, take
-              // the fast path.
-              if (closeWindow &&
-                  aCloseWindowFastpath &&
-                  this._removingTabs.length == 0) {
-                // This call actually closes the window, unless the user
-                // cancels the operation.  We are finished here in both cases.
-                this._windowIsClosing = window.closeWindow(true, window.warnAboutClosingWindow);
-                return null;
-              }
-
-              newTab = true;
-            }
-
             if (!aTab._pendingPermitUnload && !aAdoptedByTab && !aSkipPermitUnload) {
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
@@ -2348,6 +2326,35 @@
                 // true so we keep exiting early in case of multiple calls.
                 return false;
               }
+            }
+
+
+            var closeWindow = false;
+            var newTab = false;
+            if (this.tabs.length - this._removingTabs.length == 1) {
+              closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
+                            !window.toolbar.visible ||
+                              Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
+
+              if (closeWindow) {
+                // We've already called beforeunload on all the relevant tabs if we get here,
+                // so avoid calling it again:
+                window.skipNextCanClose = true;
+              }
+
+              // Closing the tab and replacing it with a blank one is notably slower
+              // than closing the window right away. If the caller opts in, take
+              // the fast path.
+              if (closeWindow &&
+                  aCloseWindowFastpath &&
+                  this._removingTabs.length == 0) {
+                // This call actually closes the window, unless the user
+                // cancels the operation.  We are finished here in both cases.
+                this._windowIsClosing = window.closeWindow(true, window.warnAboutClosingWindow);
+                return null;
+              }
+
+              newTab = true;
             }
 
             aTab.closing = true;
