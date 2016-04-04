@@ -396,7 +396,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         cmd += extra_old_configure_args
 
     # For debugging purpose, in case it's not what we'd expect.
-    log.debug('Running %s', ' '.join(quote(a) for a in cmd))
+    log.debug('Running %s', quote(*cmd))
 
     # Our logging goes to config.log, the same file old.configure uses.
     # We can't share the handle on the file, so close it. We assume nothing

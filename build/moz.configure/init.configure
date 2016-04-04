@@ -143,7 +143,7 @@ def add_old_configure_assignment(var, value_func):
             assignments.append('%s=' % var)
         else:
             if isinstance(value, (list, tuple)):
-                value = ' '.join(quote(v) for v in value)
+                value = quote(*value)
             assignments.append('%s=%s' % (var, quote(value)))
 
 @template
