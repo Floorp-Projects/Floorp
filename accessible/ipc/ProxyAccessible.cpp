@@ -1048,10 +1048,18 @@ ProxyAccessible::EmbeddedChildCount() const
 int32_t
 ProxyAccessible::IndexOfEmbeddedChild(const ProxyAccessible* aChild)
 {
-  uint64_t childID = aChild->mID;
-  uint32_t childIdx;
-  Unused << mDoc->SendIndexOfEmbeddedChild(mID, childID, &childIdx);
-  return childIdx;
+  size_t index = 0, kids = mChildren.Length();
+  for (size_t i = 0; i < kids; i++) {
+    if (mChildren[i]->IsEmbeddedObject()) {
+      if (mChildren[i] == aChild) {
+        return index;
+      }
+
+      index++;
+    }
+  }
+
+  return -1;
 }
 
 ProxyAccessible*
