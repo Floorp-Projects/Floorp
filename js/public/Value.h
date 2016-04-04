@@ -1721,6 +1721,9 @@ struct GCPolicy<JS::Value>
     static void trace(JSTracer* trc, Value* v, const char* name) {
         js::UnsafeTraceManuallyBarrieredEdge(trc, v, name);
     }
+    static bool isTenured(const Value& thing) {
+        return !thing.isGCThing() || !IsInsideNursery(thing.toGCThing());
+    }
 };
 
 } // namespace JS
