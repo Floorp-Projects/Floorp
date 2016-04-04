@@ -173,7 +173,7 @@ def split(cline):
     return _ClineSplitter(s).result
 
 
-def quote(s):
+def _quote(s):
     '''Given a string, returns a version that can be used literally on a shell
     command line, enclosing it with single quotes if necessary.
 
@@ -192,6 +192,18 @@ def quote(s):
     # be closed, an escaped single quote added, and reopened.
     t = type(s)
     return t("'%s'") % s.replace(t("'"), t("'\\''"))
+
+
+def quote(*strings):
+    '''Given one or more strings, returns a quoted string that can be used
+    literally on a shell command line.
+
+        >>> quote('a', 'b')
+        "a b"
+        >>> quote('a b', 'c')
+        "'a b' c"
+    '''
+    return ' '.join(_quote(s) for s in strings)
 
 
 __all__ = ['MetaCharacterException', 'split', 'quote']
