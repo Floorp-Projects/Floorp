@@ -94,15 +94,11 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
         let body_data = if requires_body {
             debug!("Got request body {}", body);
             match Json::from_str(body) {
-                Ok(x) => {
-                    match x {
-                        Json::Object(_) => x,
-                        _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                         "Body was not a json object"))
-                    }
-                },
+                Ok(x @ Json::Object(_)) => x,
+                Ok(_) => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                        "Body was not a json object")),
                 Err(_) => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                         &format!("Failed to decode request body as json: {}", body)[..]))
+                                                         format!("Failed to decode request body as json: {}", body)))
             }
         } else {
             Json::Null
@@ -316,7 +312,6 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
 
 impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
     fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
         let parameters = match self.command {
             WebDriverCommand::NewSession |
             WebDriverCommand::DeleteSession | WebDriverCommand::GetCurrentUrl |
@@ -353,8 +348,10 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
             WebDriverCommand::Extension(ref x) => x.parameters_json(),
         };
-        if parameters.is_some() {
-            data.insert("parameters".to_string(), parameters.unwrap());
+
+        let mut data = BTreeMap::new();
+        if let Some(parameters) = parameters {
+            data.insert("parameters".to_string(), parameters);
         }
         Json::Object(data)
     }
