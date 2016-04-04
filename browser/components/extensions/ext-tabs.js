@@ -453,39 +453,6 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
       create: function(createProperties) {
         return new Promise((resolve, reject) => {
-          function createInWindow(window) {
-            let url;
-
-            if (createProperties.url !== null) {
-              url = context.uri.resolve(createProperties.url);
-
-              if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-                reject({message: `URL not allowed: ${url}`});
-                return;
-              }
-            }
-
-            let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL);
-
-            let active = true;
-            if (createProperties.active !== null) {
-              active = createProperties.active;
-            }
-            if (active) {
-              window.gBrowser.selectedTab = tab;
-            }
-
-            if (createProperties.index !== null) {
-              window.gBrowser.moveTabTo(tab, createProperties.index);
-            }
-
-            if (createProperties.pinned) {
-              window.gBrowser.pinTab(tab);
-            }
-
-            resolve(TabManager.convert(extension, tab));
-          }
-
           let window = createProperties.windowId !== null ?
             WindowManager.getWindow(createProperties.windowId, context) :
             WindowManager.topWindow;
@@ -495,12 +462,66 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
                 return;
               }
               Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
-              createInWindow(window);
+              resolve(window);
             };
             Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
           } else {
-            createInWindow(window);
+            resolve(window);
           }
+        }).then(window => {
+          let url;
+
+          if (createProperties.url !== null) {
+            url = context.uri.resolve(createProperties.url);
+
+            if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+              return Promise.reject({message: `Illegal URL: ${url}`});
+            }
+          }
+
+          let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL);
+
+          // We can't wait for a location change event for about:newtab,
+          // since it may be pre-rendered, in which case its initial
+          // location change event has already fired.
+          let promise = Promise.resolve(tab);
+          if (createProperties.url) {
+            // Wait for the first location change event, so that operations
+            // like `executeScript` are dispatched to the inner window that
+            // contains the URL we're attempting to load.
+            promise = new Promise(resolve => {
+              let webProgress = tab.linkedBrowser.webProgress;
+              let listener = {
+                QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
+
+                onLocationChange() {
+                  webProgress.removeProgressListener(listener);
+                  resolve(tab);
+                },
+              };
+              webProgress.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_LOCATION);
+            });
+          }
+
+          let active = true;
+          if (createProperties.active !== null) {
+            active = createProperties.active;
+          }
+          if (active) {
+            window.gBrowser.selectedTab = tab;
+          }
+
+          if (createProperties.index !== null) {
+            window.gBrowser.moveTabTo(tab, createProperties.index);
+          }
+
+          if (createProperties.pinned) {
+            window.gBrowser.pinTab(tab);
+          }
+
+          return promise;
+        }).then(tab => {
+          return TabManager.convert(extension, tab);
         });
       },
 
@@ -530,7 +551,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           let url = context.uri.resolve(updateProperties.url);
 
           if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-            return Promise.reject({message: `URL not allowed: ${url}`});
+            return Promise.reject({message: `Illegal URL: ${url}`});
           }
 
           tab.linkedBrowser.loadURI(url);

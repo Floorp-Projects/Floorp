@@ -13,7 +13,7 @@ function* testTabsCreateInvalidURL(tabsCreateURL) {
       browser.test.onMessage.addListener((msg, tabsCreateURL) => {
         browser.tabs.create({url: tabsCreateURL}, (tab) => {
           browser.test.assertEq(undefined, tab, "on error tab should be undefined");
-          browser.test.assertTrue(/URL not allowed/.test(browser.runtime.lastError.message),
+          browser.test.assertTrue(/Illegal URL/.test(browser.runtime.lastError.message),
                                   "runtime.lastError should report the expected error message");
 
           // Remove the opened tab is any.
