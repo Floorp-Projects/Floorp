@@ -747,6 +747,14 @@ public:
       CSSPoint::ToAppUnits(ParentLayerPoint(1, 1) / aFrameMetrics.GetZoom());
     if (mXAxisModel.IsFinished(oneParentLayerPixel.x) &&
         mYAxisModel.IsFinished(oneParentLayerPixel.y)) {
+      // Set the scroll offset to the exact destination. If we allow the scroll
+      // offset to end up being a bit off from the destination, we can get
+      // artefacts like "scroll to the next snap point in this direction"
+      // scrolling to the snap point we're already supposed to be at.
+      aFrameMetrics.SetScrollOffset(
+          aFrameMetrics.CalculateScrollRange().ClampPoint(
+              CSSPoint::FromAppUnits(nsPoint(mXAxisModel.GetDestination(),
+                                             mYAxisModel.GetDestination()))));
       return false;
     }
 
