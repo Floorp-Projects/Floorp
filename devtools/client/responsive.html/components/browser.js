@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes, addons } =
+const { DOM: dom, createClass, addons } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
@@ -15,31 +15,28 @@ module.exports = createClass({
 
   mixins: [ addons.PureRenderMixin ],
 
+  /**
+   * This component is not allowed to depend directly on frequently changing
+   * data (width, height) due to the use of `dangerouslySetInnerHTML` below.
+   * Any changes in props will cause the <iframe> to be removed and added again,
+   * throwing away the current state of the page.
+   */
   propTypes: {
     location: Types.location.isRequired,
-    width: Types.viewport.width.isRequired,
-    height: Types.viewport.height.isRequired,
-    isResizing: PropTypes.bool.isRequired,
   },
 
   render() {
     let {
       location,
-      width,
-      height,
-      isResizing,
     } = this.props;
-
-    let className = "browser";
-    if (isResizing) {
-      className += " resizing";
-    }
 
     // innerHTML expects & to be an HTML entity
     location = location.replace(/&/g, "&amp;");
 
     return dom.div(
       {
+        className: "browser-container",
+
         /**
          * React uses a whitelist for attributes, so we need some way to set
          * attributes it does not know about, such as @mozbrowser.  If this were
@@ -49,9 +46,9 @@ module.exports = createClass({
          * are able to do with this approach.
          */
         dangerouslySetInnerHTML: {
-          __html: `<iframe class="${className}" mozbrowser="true" remote="true"
+          __html: `<iframe class="browser" mozbrowser="true" remote="true"
                            noisolation="true" src="${location}"
-                           width="${width}" height="${height}"></iframe>`
+                           width="100%" height="100%"></iframe>`
         }
       }
     );
