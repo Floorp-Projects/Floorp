@@ -31,6 +31,8 @@
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
 
+#include "jsfriendapi.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace xpc;
@@ -178,7 +180,6 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     mWindowID = aWindowID;
 
     ErrorReportToMessageString(aReport, mErrorMsg);
-
     if (mErrorMsg.IsEmpty() && aFallbackMessage) {
         mErrorMsg.AssignWithConversion(aFallbackMessage);
     }
@@ -190,6 +191,13 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     }
 
     mSourceLine.Assign(aReport->linebuf(), aReport->linebufLength());
+    const JSErrorFormatString* efs = js::GetErrorMessage(nullptr, aReport->errorNumber);
+
+    if (efs == nullptr) {
+        mErrorMsgName.AssignASCII("");
+    } else {
+        mErrorMsgName.AssignASCII(efs->name);
+    }
 
     mLineNumber = aReport->lineno;
     mColumn = aReport->column;
@@ -248,6 +256,7 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
     } else {
       errorObject = new nsScriptError();
     }
+    errorObject->SetErrorMessageName(mErrorMsgName);
     NS_ENSURE_TRUE_VOID(consoleService && errorObject);
 
     nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,

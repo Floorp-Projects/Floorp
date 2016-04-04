@@ -501,9 +501,9 @@ APZCCallbackHelper::ApplyCallbackTransform(WidgetEvent& aEvent,
 {
   if (aEvent.AsTouchEvent()) {
     WidgetTouchEvent& event = *(aEvent.AsTouchEvent());
-    for (size_t i = 0; i < event.touches.Length(); i++) {
-      event.touches[i]->mRefPoint = ApplyCallbackTransform(
-          event.touches[i]->mRefPoint, aGuid, aScale);
+    for (size_t i = 0; i < event.mTouches.Length(); i++) {
+      event.mTouches[i]->mRefPoint = ApplyCallbackTransform(
+          event.mTouches[i]->mRefPoint, aGuid, aScale);
     }
   } else {
     aEvent.refPoint = ApplyCallbackTransform(
@@ -806,9 +806,9 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
       nsTArray<ScrollableLayerGuid> targets;
 
       if (const WidgetTouchEvent* touchEvent = aEvent.AsTouchEvent()) {
-        for (size_t i = 0; i < touchEvent->touches.Length(); i++) {
+        for (size_t i = 0; i < touchEvent->mTouches.Length(); i++) {
           waitForRefresh |= PrepareForSetTargetAPZCNotification(aWidget, aGuid,
-              rootFrame, touchEvent->touches[i]->mRefPoint, &targets);
+              rootFrame, touchEvent->mTouches[i]->mRefPoint, &targets);
         }
       } else if (const WidgetWheelEvent* wheelEvent = aEvent.AsWheelEvent()) {
         waitForRefresh = PrepareForSetTargetAPZCNotification(aWidget, aGuid,
@@ -836,8 +836,10 @@ APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
         const SetAllowedTouchBehaviorCallback& aCallback)
 {
   nsTArray<TouchBehaviorFlags> flags;
-  for (uint32_t i = 0; i < aEvent.touches.Length(); i++) {
-    flags.AppendElement(widget::ContentHelper::GetAllowedTouchBehavior(aWidget, aEvent.touches[i]->mRefPoint));
+  for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
+    flags.AppendElement(
+      widget::ContentHelper::GetAllowedTouchBehavior(
+                               aWidget, aEvent.mTouches[i]->mRefPoint));
   }
   aCallback(aInputBlockId, flags);
 }

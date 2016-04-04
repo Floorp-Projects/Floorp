@@ -280,7 +280,6 @@ namespace jit {
     _(AsmReinterpret)                                                       \
     _(NewDerivedTypedObject)                                                \
     _(RecompileCheck)                                                       \
-    _(MemoryBarrier)                                                        \
     _(AsmJSCompareExchangeHeap)                                             \
     _(AsmJSAtomicExchangeHeap)                                              \
     _(AsmJSAtomicBinopHeap)                                                 \

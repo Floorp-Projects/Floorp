@@ -945,7 +945,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   if (!presContext) {
     return NS_ERROR_FAILURE;
   }
-  event.touches.SetCapacity(aCount);
+  event.mTouches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
     LayoutDeviceIntPoint pt =
       nsContentUtils::ToWidgetPoint(CSSPoint(aXs[i], aYs[i]), offset, presContext);
@@ -957,7 +957,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
     RefPtr<Touch> t =
       new Touch(aIdentifiers[i], pt, radius, aRotationAngles[i], aForces[i]);
 
-    event.touches.AppendElement(t);
+    event.mTouches.AppendElement(t);
   }
 
   nsEventStatus status;
