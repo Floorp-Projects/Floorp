@@ -8,6 +8,8 @@ const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
 const {
   actions,
   snapshotState: states,
+  censusState,
+  treeMapState,
   dominatorTreeState,
   viewState,
 } = require("../constants");
@@ -58,11 +60,12 @@ handlers[actions.TAKE_CENSUS_START] = function (snapshots, { id, display, filter
     report: null,
     display,
     filter,
+    state: censusState.SAVING
   };
 
   return snapshots.map(snapshot => {
     return snapshot.id === id
-      ? immutableUpdate(snapshot, { state: states.SAVING_CENSUS, census })
+      ? immutableUpdate(snapshot, { census })
       : snapshot;
   });
 };
@@ -78,12 +81,76 @@ handlers[actions.TAKE_CENSUS_END] = function (snapshots, { id,
     expanded: Immutable.Set(),
     display,
     filter,
+    state: censusState.SAVED
   };
 
   return snapshots.map(snapshot => {
     return snapshot.id === id
-      ? immutableUpdate(snapshot, { state: states.SAVED_CENSUS, census })
+      ? immutableUpdate(snapshot, { census })
       : snapshot;
+  });
+};
+
+handlers[actions.TAKE_CENSUS_ERROR] = function (snapshots, { id, error }) {
+  assert(error, "actions with TAKE_CENSUS_ERROR should have an error");
+
+  return snapshots.map(snapshot => {
+    if (snapshot.id !== id) {
+      return snapshot;
+    }
+
+    const census = Object.freeze({
+      state: censusState.ERROR,
+      error,
+    });
+
+    return immutableUpdate(snapshot, { census });
+  });
+};
+
+handlers[actions.TAKE_TREE_MAP_START] = function (snapshots, { id, display }) {
+  const treeMap = {
+    report: null,
+    display,
+    state: treeMapState.SAVING
+  };
+
+  return snapshots.map(snapshot => {
+    return snapshot.id === id
+      ? immutableUpdate(snapshot, { treeMap })
+      : snapshot;
+  });
+};
+
+handlers[actions.TAKE_TREE_MAP_END] = function (snapshots, action) {
+  const { id, report, display } = action;
+  const treeMap = {
+    report,
+    display,
+    state: treeMapState.SAVED
+  };
+
+  return snapshots.map(snapshot => {
+    return snapshot.id === id
+      ? immutableUpdate(snapshot, { treeMap })
+      : snapshot;
+  });
+};
+
+handlers[actions.TAKE_TREE_MAP_ERROR] = function (snapshots, { id, error }) {
+  assert(error, "actions with TAKE_TREE_MAP_ERROR should have an error");
+
+  return snapshots.map(snapshot => {
+    if (snapshot.id !== id) {
+      return snapshot;
+    }
+
+    const treeMap = Object.freeze({
+      state: treeMapState.ERROR,
+      error,
+    });
+
+    return immutableUpdate(snapshot, { treeMap });
   });
 };
 

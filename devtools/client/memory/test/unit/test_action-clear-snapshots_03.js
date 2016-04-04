@@ -4,7 +4,7 @@
 // Test clearSnapshots deletes snapshots with state ERROR
 
 let { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/actions/snapshot");
-let { snapshotState: states, actions } = require("devtools/client/memory/constants");
+let { snapshotState: states, treeMapState, actions } = require("devtools/client/memory/constants");
 
 function run_test() {
   run_next_test();
@@ -17,10 +17,13 @@ add_task(function *() {
   let store = Store();
   const { getState, dispatch } = store;
 
-  ok(true, "create a snapshot with SAVED_CENSUS state");
+  ok(true, "create a snapshot with a treeMap");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
-  ok(true, "snapshot created with SAVED_CENSUS state");
+  yield waitUntilSnapshotState(store, [states.SAVED]);
+  ok(true, "snapshot created with a SAVED state");
+  yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
+                             [treeMapState.SAVED]);
+  ok(true, "treeMap created with a SAVED state");
 
   ok(true, "set snapshot state to error");
   let id = getState().snapshots[0].id;
