@@ -4242,7 +4242,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
           CancelRangeThumbDrag();
         }
       } else {
-        if (aVisitor.mEvent->AsTouchEvent()->touches.Length() == 1) {
+        if (aVisitor.mEvent->AsTouchEvent()->mTouches.Length() == 1) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {
           CancelRangeThumbDrag();

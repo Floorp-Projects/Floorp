@@ -165,7 +165,7 @@ nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX, int32_t aY,
   RefPtr<dom::Touch> t = new dom::Touch(-1, LayoutDeviceIntPoint(aX, aY),
                                         LayoutDeviceIntPoint(1, 1), 0.0f, 1.0f);
   t->SetTarget(aContent);
-  event.touches.AppendElement(t);
+  event.mTouches.AppendElement(t);
   nsEventStatus status = nsEventStatus_eIgnore;
   aPresShell->HandleEventWithTarget(&event, aFrame, aContent, &status);
 }

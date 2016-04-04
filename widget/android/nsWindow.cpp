@@ -2007,14 +2007,14 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
 void
 nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
 {
-    if (aEvent.mMessage == eTouchStart && aEvent.touches.Length() == 1) {
+    if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() == 1) {
         // Since touch events don't get retargeted by PositionedEventTargeting.cpp
         // code on Fennec, we dispatch a dummy mouse event that *does* get
         // retargeted. The Fennec browser.js code can use this to activate the
         // highlight element in case the this touchstart is the start of a tap.
         WidgetMouseEvent hittest(true, eMouseHitTest, this,
                                  WidgetMouseEvent::eReal);
-        hittest.refPoint = aEvent.touches[0]->mRefPoint;
+        hittest.refPoint = aEvent.mTouches[0]->mRefPoint;
         hittest.ignoreRootScrollFrame = true;
         hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
         nsEventStatus status;

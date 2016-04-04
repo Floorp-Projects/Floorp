@@ -4,6 +4,7 @@
   <title>Test for D3E WheelEvent</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -39,7 +40,7 @@
   </div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -55,7 +56,12 @@ var gHorizontalLine = 0;
 var gPageHeight = 0;
 var gPageWidth  = 0;
 
-function prepareScrollUnits()
+function sendWheelAndWait(aX, aY, aEvent)
+{
+  sendWheelAndPaint(gScrollableElement, aX, aY, aEvent, continueTest);
+}
+
+function* prepareScrollUnits()
 {
   var result = -1;
   function handler(aEvent)
@@ -65,32 +71,32 @@ function prepareScrollUnits()
   }
   window.addEventListener("MozMousePixelScroll", handler, true);
 
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
   gLineHeight = result;
   ok(gLineHeight > 10 && gLineHeight < 25, "prepareScrollUnits: gLineHeight may be illegal value, got " + gLineHeight);
 
   result = -1;
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
   gHorizontalLine = result;
   ok(gHorizontalLine > 5 && gHorizontalLine < 16, "prepareScrollUnits: gHorizontalLine may be illegal value, got " + gHorizontalLine);
 
   result = -1;
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                    deltaY: 1.0, lineOrPageDeltaY: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
   gPageHeight = result;
   // XXX Cannot we know the actual scroll port size?
   ok(gPageHeight >= 150 && gPageHeight <= 200,
      "prepareScrollUnits: gPageHeight is strange value, got " + gPageHeight);
 
   result = -1;
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
   gPageWidth = result;
   ok(gPageWidth >= 150 && gPageWidth <= 200,
      "prepareScrollUnits: gPageWidth is strange value, got " + gPageWidth);
@@ -102,7 +108,7 @@ function prepareScrollUnits()
 // legacy mouse scroll events when its lineOrPageDelta value is not zero or
 // accumulated delta values of pixel scroll events of pixel only device
 // become over the line height.
-function testContinuousTrustedEvents()
+function* testContinuousTrustedEvents()
 {
   const kSynthesizedWheelEventTests = [
     { description: "Simple horizontal wheel event by pixels (16.0 - 1) #1",
@@ -2661,8 +2667,9 @@ function testContinuousTrustedEvents()
     // Tests for accumulation delta when delta_multiplier_is customized.
     { description: "lineOrPageDelta should be recomputed by ESM (pixel) #1",
       prepare: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 200);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 300);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
+                                           ["mousewheel.default.delta_multiplier_y", 300]]},
+                                  continueTest);
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: gHorizontalLine / 4, deltaY: gLineHeight / 8, deltaZ: 0,
@@ -2714,15 +2721,17 @@ function testContinuousTrustedEvents()
         horizontal: { expected: true,   preventDefault: false, detail: Math.floor((gHorizontalLine / 4 + 1) * 2) },
         vertical:   { expected: true,   preventDefault: false, detail: Math.floor((gLineHeight / 8 + 1) * 3) } },
       finished: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #1",
       prepare: function () {
-        SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 200);
-        SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 300);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_shift.delta_multiplier_x", 200],
+                                           ["mousewheel.with_shift.delta_multiplier_y", 300]]},
+                                  continueTest);
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -gHorizontalLine / 4, deltaY: -gLineHeight / 8, deltaZ: 0,
@@ -2774,15 +2783,17 @@ function testContinuousTrustedEvents()
         horizontal: { expected: true,   preventDefault: false, detail: Math.ceil(-(gHorizontalLine / 4 + 1) * 2) },
         vertical:   { expected: true,   preventDefault: false, detail: Math.ceil(-(gLineHeight / 8 + 1) * 3) } },
       finished: function () {
-        SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_shift.delta_multiplier_x", 100],
+                                           ["mousewheel.with_shift.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (line) #1",
       prepare: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 200);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
@@ -2834,15 +2845,17 @@ function testContinuousTrustedEvents()
         horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine * 0.6) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
       finished: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #1",
       prepare: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 200);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", -100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
+                                           ["mousewheel.default.delta_multiplier_y", -100]]},
+                                  continueTest);
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
@@ -2894,15 +2907,17 @@ function testContinuousTrustedEvents()
         horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gHorizontalLine * -0.6) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
       finished: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (page) #1",
       prepare: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 200);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 200]]},
+                                  continueTest);
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
@@ -2954,15 +2969,17 @@ function testContinuousTrustedEvents()
         horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth * 0.4) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight * 0.8) } },
       finished: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #1",
       prepare: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 200);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 200]]},
+                                  continueTest);
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
@@ -3014,8 +3031,9 @@ function testContinuousTrustedEvents()
         horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gPageWidth * -0.4) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(gPageHeight * -0.8) } },
       finished: function () {
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-        SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
+        SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                           ["mousewheel.default.delta_multiplier_y", 100]]},
+                                  continueTest);
       },
     },
   ];
@@ -3145,13 +3163,13 @@ function testContinuousTrustedEvents()
     currentWheelEventTest = kSynthesizedWheelEventTests[i];
 
     if (currentWheelEventTest.prepare) {
-      currentWheelEventTest.prepare();
+      yield currentWheelEventTest.prepare();
     }
 
-    synthesizeWheel(gScrollableElement, 10, 10, currentWheelEventTest.event);
+    yield sendWheelAndWait(10, 10, currentWheelEventTest.event);
 
     if (currentWheelEventTest.finished) {
-      currentWheelEventTest.finished();
+      yield currentWheelEventTest.finished();
     }
 
     var description = "testContinuousTrustedEvents, " +
@@ -3181,60 +3199,49 @@ function testContinuousTrustedEvents()
   window.removeEventListener("MozMousePixelScroll", legacyEventHandler, true);
 }
 
+var gTestContinuation = null;
+
+function continueTest()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function* testBody()
+{
+  yield* prepareScrollUnits();
+  yield* testContinuousTrustedEvents();
+}
+
 function runTests()
 {
-  SpecialPowers.setIntPref("mousewheel.transaction.timeout", 100000);
-
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", 100);
-
-  prepareScrollUnits();
-  testContinuousTrustedEvents();
-
-  clearPrefs();
-  SimpleTest.finish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["mousewheel.transaction.timeout", 100000],
+    ["mousewheel.default.delta_multiplier_x", 100],
+    ["mousewheel.default.delta_multiplier_y", 100],
+    ["mousewheel.default.delta_multiplier_z", 100],
+    ["mousewheel.with_alt.delta_multiplier_x", 100],
+    ["mousewheel.with_alt.delta_multiplier_y", 100],
+    ["mousewheel.with_alt.delta_multiplier_z", 100],
+    ["mousewheel.with_control.delta_multiplier_x", 100],
+    ["mousewheel.with_control.delta_multiplier_y", 100],
+    ["mousewheel.with_control.delta_multiplier_z", 100],
+    ["mousewheel.with_meta.delta_multiplier_x", 100],
+    ["mousewheel.with_meta.delta_multiplier_y", 100],
+    ["mousewheel.with_meta.delta_multiplier_z", 100],
+    ["mousewheel.with_shift.delta_multiplier_x", 100],
+    ["mousewheel.with_shift.delta_multiplier_y", 100],
+    ["mousewheel.with_shift.delta_multiplier_z", 100],
+    ["mousewheel.with_win.delta_multiplier_x", 100],
+    ["mousewheel.with_win.delta_multiplier_y", 100],
+    ["mousewheel.with_win.delta_multiplier_z", 100]
+  ]}, continueTest);
 }
-
-function clearPrefs()
-{
-  SpecialPowers.clearUserPref("mousewheel.transaction.timeout");
-
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
-}
-
 </script>
 </pre>
 </body>

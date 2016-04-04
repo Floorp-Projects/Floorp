@@ -567,6 +567,7 @@ pref("apz.content_response_timeout", 300);
 pref("apz.drag.enabled", false);
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
+pref("apz.disable_for_scroll_linked_effects", false);
 pref("apz.displayport_expiry_ms", 15000);
 pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fling_accel_base_mult", "1.0");
@@ -5267,3 +5268,6 @@ pref("plugins.rewrite_youtube_embeds", true);
 
 // Disable browser frames by default
 pref("dom.mozBrowserFramesEnabled", false);
+
+// Is support for 'color-adjust' CSS property enabled?
+pref("layout.css.color-adjust.enabled", true);

@@ -10007,7 +10007,10 @@ CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir)
     Register output = ToRegister(lir->output());
 
     // Keep this in sync with isLockfree() in jit/AtomicOperations.h.
-    MOZ_ASSERT(!AtomicOperations::isLockfree(8));
+    MOZ_ASSERT(AtomicOperations::isLockfree(1));  // Implementation artifact
+    MOZ_ASSERT(AtomicOperations::isLockfree(2));  // Implementation artifact
+    MOZ_ASSERT(AtomicOperations::isLockfree(4));  // Spec requirement
+    MOZ_ASSERT(!AtomicOperations::isLockfree(8)); // Implementation invariant, for now
 
     Label Ldone, Lfailed;
     masm.move32(Imm32(1), output);

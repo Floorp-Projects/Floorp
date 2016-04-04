@@ -577,7 +577,7 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
   }
 
   var onwheel = function() {
-    window.removeEventListener("wheel", onwheel);
+    SpecialPowers.removeSystemEventListener(window, "wheel", onwheel);
 
     // Wait one frame since the wheel event has not caused a refresh observer
     // to be added yet.
@@ -604,7 +604,9 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
     }, 0);
   };
 
-  aWindow.addEventListener("wheel", onwheel);
+  // Listen for the system wheel event, because it happens after all of
+  // the other wheel events, including legacy events.
+  SpecialPowers.addSystemEventListener(aWindow, "wheel", onwheel);
   synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
 }
 

@@ -6461,6 +6461,12 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
     MOZ_ASSERT(orientation->GetUnit() == eCSSUnit_Null, "Should be null unit");
   }
 
+  SetDiscrete(*aRuleData->ValueForColorAdjust(), visibility->mColorAdjust,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentVisibility->mColorAdjust,
+              NS_STYLE_COLOR_ADJUST_ECONOMY, 0, 0, 0, 0);
+
   COMPUTE_END_INHERITED(Visibility, visibility)
 }
 

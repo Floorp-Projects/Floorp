@@ -1658,9 +1658,9 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   // that the added touches are part of the touchend/cancel, when actually
   // they're not.
   if (event.mMessage == eTouchEnd || event.mMessage == eTouchCancel) {
-    for (int i = event.touches.Length() - 1; i >= 0; i--) {
-      if (!event.touches[i]->mChanged) {
-        event.touches.RemoveElementAt(i);
+    for (int i = event.mTouches.Length() - 1; i >= 0; i--) {
+      if (!event.mTouches[i]->mChanged) {
+        event.mTouches.RemoveElementAt(i);
       }
     }
   }
@@ -1675,8 +1675,8 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   }
 
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
-  for (uint32_t i = 0; i < event.touches.Length(); i++) {
-    event.touches[i]->mRefPoint += offset;
+  for (uint32_t i = 0; i < event.mTouches.Length(); i++) {
+    event.mTouches[i]->mRefPoint += offset;
   }
 
   return (event.mMessage == eTouchMove) ?
@@ -2778,7 +2778,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
   }
   nsPresContext* presContext = doc->GetShell()->GetPresContext();
 
-  event.touches.SetCapacity(aCount);
+  event.mTouches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
     LayoutDeviceIntPoint pt =
       LayoutDeviceIntPoint::FromAppUnitsRounded(
@@ -2797,7 +2797,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
     // about the meaning of changedTouches for each event, see
     // https://developer.mozilla.org/docs/Web/API/TouchEvent.changedTouches
     t->mChanged = true;
-    event.touches.AppendElement(t);
+    event.mTouches.AppendElement(t);
   }
 
   SendRealTouchEvent(event);

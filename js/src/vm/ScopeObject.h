@@ -816,8 +816,9 @@ class ModuleEnvironmentObject : public LexicalScopeBase
 {
     static const uint32_t MODULE_SLOT = 1;
 
-  public:
     static const ObjectOps objectOps_;
+
+  public:
     static const Class class_;
 
     static const uint32_t RESERVED_SLOTS = 2;
@@ -912,7 +913,6 @@ class DynamicWithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 4;
-    static const ObjectOps objectOps_;
     static const Class class_;
 
     enum WithKind {
@@ -1075,7 +1075,6 @@ class RuntimeLexicalErrorObject : public ScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
-    static const ObjectOps objectOps_;
     static const Class class_;
 
     static RuntimeLexicalErrorObject* create(JSContext* cx, HandleObject enclosing,
