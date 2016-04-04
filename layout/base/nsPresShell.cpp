@@ -6003,13 +6003,12 @@ PresShell::AssumeAllFramesVisible()
     return true;
   }
 
-  // We assume all frames are visible in print, print preview, chrome, xul, and
+  // We assume all frames are visible in print, print preview, chrome, and
   // resource docs and don't keep track of them.
   if (mPresContext->Type() == nsPresContext::eContext_PrintPreview ||
       mPresContext->Type() == nsPresContext::eContext_Print ||
       mPresContext->IsChrome() ||
-      mDocument->IsResourceDoc() ||
-      mDocument->IsXULDocument()) {
+      mDocument->IsResourceDoc()) {
     return true;
   }
 
