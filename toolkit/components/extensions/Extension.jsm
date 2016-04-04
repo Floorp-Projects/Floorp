@@ -671,33 +671,15 @@ ExtensionData.prototype = {
     });
   },
 
-  // Reads the extension's |manifest.json| file and optional |mozilla.json|,
-  // and stores the parsed and merged contents in |this.manifest|.
+  // Reads the extension's |manifest.json| file, and stores its
+  // parsed contents in |this.manifest|.
   readManifest() {
     return Promise.all([
       this.readJSON("manifest.json"),
-      this.readJSON("mozilla.json").catch(err => null),
       Management.lazyInit(),
-    ]).then(([manifest, mozManifest]) => {
+    ]).then(([manifest]) => {
       this.manifest = manifest;
       this.rawManifest = manifest;
-
-      if (mozManifest) {
-        if (typeof mozManifest != "object") {
-          this.logger.warn(`Loading extension '${this.id}': mozilla.json has unexpected type ${typeof mozManifest}`);
-        } else {
-          Object.keys(mozManifest).forEach(key => {
-            if (key != "applications") {
-              throw new Error(`Illegal property "${key}" in mozilla.json`);
-            }
-            if (key in manifest) {
-              this.logger.warn(`Ignoring property "${key}" from mozilla.json`);
-            } else {
-              manifest[key] = mozManifest[key];
-            }
-          });
-        }
-      }
 
       if (manifest && manifest.default_locale) {
         return this.initLocale();

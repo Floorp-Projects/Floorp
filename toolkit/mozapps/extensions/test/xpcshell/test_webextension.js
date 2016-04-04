@@ -159,41 +159,6 @@ add_task(function*() {
   yield promiseRestartManager();
 });
 
-// applications.gecko.id may be in mozilla.json
-add_task(function* test_mozilla_json() {
-  writeWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-  }, profileDir, ID, {
-    applications: {
-      gecko: {
-        id: ID
-      }
-    }
-  });
-
-  yield promiseRestartManager();
-
-  let addon = yield promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Web Extension Name");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_false(addon.isSystem);
-  do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
-
-  let file = getFileForAddon(profileDir, ID);
-  do_check_true(file.exists());
-
-  addon.uninstall();
-
-  yield promiseRestartManager();
-});
-
 add_task(function* test_manifest_localization() {
   const ID = "webextension3@tests.mozilla.org";
 
