@@ -43,6 +43,7 @@ from mozharness.mozilla.buildbot import (
 )
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.mock import MockMixin
+from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.mock import ERROR_MSGS as MOCK_ERROR_MSGS
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
@@ -97,8 +98,6 @@ class MakeUploadOutputParser(OutputParser):
         ('symbolsUrl', "m.endswith('crashreporter-symbols.zip') or "
                        "m.endswith('crashreporter-symbols-full.zip')"),
         ('testsUrl', "m.endswith(('tests.tar.bz2', 'tests.zip'))"),
-        ('unsignedApkUrl', "m.endswith('apk') and "
-                           "'unsigned-unaligned' in m"),
         ('robocopApkUrl', "m.endswith('apk') and 'robocop' in m"),
         ('jsshellUrl', "'jsshell-' in m and m.endswith('.zip')"),
         ('partialMarUrl', "m.endswith('.mar') and '.partial.' in m"),
@@ -358,6 +357,7 @@ class BuildOptionParser(object):
         'api-9': 'builds/releng_sub_%s_configs/%s_api_9.py',
         'api-11': 'builds/releng_sub_%s_configs/%s_api_11.py',
         'api-15-frontend': 'builds/releng_sub_%s_configs/%s_api_15_frontend.py',
+        'api-15-gradle-dependencies': 'builds/releng_sub_%s_configs/%s_api_15_gradle_dependencies.py',
         'api-15': 'builds/releng_sub_%s_configs/%s_api_15.py',
         'api-9-debug': 'builds/releng_sub_%s_configs/%s_api_9_debug.py',
         'api-11-debug': 'builds/releng_sub_%s_configs/%s_api_11_debug.py',
@@ -365,8 +365,7 @@ class BuildOptionParser(object):
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
         'api-11-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_11_partner_sample1.py',
         'api-15-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_15_partner_sample1.py',
-        'api-11-b2gdroid': 'builds/releng_sub_%s_configs/%s_api_11_b2gdroid.py',
-        'api-15-b2gdroid': 'builds/releng_sub_%s_configs/%s_api_15_b2gdroid.py',
+        'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'
@@ -544,6 +543,14 @@ BUILD_BASE_CONFIG_OPTIONS = [
                 " %s for possibilites" % (
                     BuildOptionParser.branch_cfg_file,
                 )}],
+    [['--scm-level'], {
+        "action": "store",
+        "type": "int",
+        "dest": "scm_level",
+        "default": 1,
+        "help": "This sets the SCM level for the branch being built."
+                " See https://www.mozilla.org/en-US/about/"
+                "governance/policies/commit/access-policy/"}],
     [['--enable-pgo'], {
         "action": "store_true",
         "dest": "pgo_build",
@@ -577,7 +584,7 @@ def generate_build_UID():
 
 class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
                   SigningMixin, VirtualenvMixin, MercurialScript,
-                  InfluxRecordingMixin):
+                  InfluxRecordingMixin, SecretsMixin):
     def __init__(self, **kwargs):
         # objdir is referenced in _query_abs_dirs() so let's make sure we
         # have that attribute before calling BaseScript.__init__
@@ -1512,8 +1519,6 @@ or run without that action (ie: --no-{action})"
             ('symbolsUrl', lambda m: m.endswith('crashreporter-symbols.zip') or
                            m.endswith('crashreporter-symbols-full.zip')),
             ('testsUrl', lambda m: m.endswith(('tests.tar.bz2', 'tests.zip'))),
-            ('unsignedApkUrl', lambda m: m.endswith('apk') and
-                               'unsigned-unaligned' in m),
             ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
             ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
             # Temporarily use "TC" in MarUrl parameters. We don't want to
@@ -1536,71 +1541,6 @@ or run without that action (ie: --no-{action})"
 
         self._taskcluster_upload(files, templates,
                                  property_conditions=property_conditions)
-
-        # Report some important file sizes for display in treeherder
-        dirs = self.query_abs_dirs()
-        paths = [
-            (packageName, os.path.join(dirs['abs_obj_dir'], 'dist', packageName)),
-            ('omni.ja', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'assets', 'omni.ja')),
-            ('classes.dex', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'classes.dex'))
-        ]
-
-        # Find a stripped version of libxul if possible
-        def find_file(rootPath, fileName):
-            for root, dirs, files in os.walk(rootPath):
-                for file in files:
-                    if file == fileName:
-                        return (fileName, os.path.join(root, file))
-            return None
-
-        # Check in the firefox and fennec dist dirs
-        libxul = None
-        dist_root = os.path.join(dirs['abs_obj_dir'], 'dist')
-        for dist in ('firefox', 'fennec', 'b2g'):
-            libxul = find_file(os.path.join(dist_root, dist), 'libxul.so')
-            if libxul:
-                break
-
-        if libxul:
-            paths.append(libxul)
-        else:
-            paths.append( ('libxul.so', os.path.join(dirs['abs_obj_dir'], 'dist', 'bin', 'libxul.so')) )
-
-        size_measurements = []
-        installer_size = 0
-        for (name, path) in paths:
-            # FIXME: Remove the tinderboxprints when bug 1161249 is fixed and
-            # we're displaying perfherder data for each job automatically
-            if os.path.exists(path):
-                filesize = self.query_filesize(path)
-                self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (
-                    name, filesize))
-                if any(name.endswith(extension) for extension in ['apk',
-                                                                  'dmg',
-                                                                  'bz2',
-                                                                  'zip']):
-                    installer_size = filesize
-                else:
-                    size_measurements.append({'name': name, 'value': filesize})
-
-        perfherder_data = {
-            "framework": {
-                "name": "build_metrics"
-            },
-            "suites": [],
-        }
-        if installer_size or size_measurements:
-            perfherder_data["suites"].append({
-                "name": "installer size",
-                "value": installer_size,
-                "subtests": size_measurements
-            })
-        if (hasattr(self, "build_metrics_summary") and
-            self.build_metrics_summary):
-            perfherder_data["suites"].append(self.build_metrics_summary)
-
-        if perfherder_data["suites"]:
-            self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
 
     def _set_file_properties(self, file_name, find_dir, prop_type,
                              error_level=ERROR):
@@ -1927,8 +1867,89 @@ or run without that action (ie: --no-{action})"
                 self.info("counting ctors...")
                 self._count_ctors()
         else:
-            self.info("Nothing to do for this action since ctors "
-                      "counts are disabled for this build.")
+            self.info("ctors counts are disabled for this build.")
+
+        # Report some important file sizes for display in treeherder
+
+        dirs = self.query_abs_dirs()
+        packageName = self.query_buildbot_property('packageFilename')
+
+        # if packageName is not set because we are not running in Buildbot,
+        # then assume we are using MOZ_SIMPLE_PACKAGE_NAME, which means the
+        # package is named one of target.{tar.bz2,zip,dmg}.
+        if not packageName:
+            dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
+            for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
+                name = 'target.' + ext
+                if os.path.exists(os.path.join(dist_dir, name)):
+                    packageName = name
+                    break
+            else:
+                self.fatal("could not determine packageName")
+
+        paths = [
+            (packageName, os.path.join(dirs['abs_obj_dir'], 'dist', packageName)),
+            ('omni.ja', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'assets', 'omni.ja')),
+            ('classes.dex', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'classes.dex'))
+        ]
+
+        # Find a stripped version of libxul if possible
+        def find_file(rootPath, fileName):
+            for root, dirs, files in os.walk(rootPath):
+                for file in files:
+                    if file == fileName:
+                        return (fileName, os.path.join(root, file))
+            return None
+
+        # Check in the firefox and fennec dist dirs
+        libxul = None
+        dist_root = os.path.join(dirs['abs_obj_dir'], 'dist')
+        for dist in ('firefox', 'fennec', 'b2g'):
+            libxul = find_file(os.path.join(dist_root, dist), 'libxul.so')
+            if libxul:
+                break
+
+        if libxul:
+            paths.append(libxul)
+        else:
+            paths.append( ('libxul.so', os.path.join(dirs['abs_obj_dir'], 'dist', 'bin', 'libxul.so')) )
+
+        size_measurements = []
+        installer_size = 0
+        for (name, path) in paths:
+            # FIXME: Remove the tinderboxprints when bug 1161249 is fixed and
+            # we're displaying perfherder data for each job automatically
+            if os.path.exists(path):
+                filesize = self.query_filesize(path)
+                self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (
+                    name, filesize))
+                if any(name.endswith(extension) for extension in ['apk',
+                                                                  'dmg',
+                                                                  'bz2',
+                                                                  'zip']):
+                    installer_size = filesize
+                else:
+                    size_measurements.append({'name': name, 'value': filesize})
+
+        perfherder_data = {
+            "framework": {
+                "name": "build_metrics"
+            },
+            "suites": [],
+        }
+        if installer_size or size_measurements:
+            perfherder_data["suites"].append({
+                "name": "installer size",
+                "value": installer_size,
+                "subtests": size_measurements
+            })
+        if (hasattr(self, "build_metrics_summary") and
+            self.build_metrics_summary):
+            perfherder_data["suites"].append(self.build_metrics_summary)
+
+        if perfherder_data["suites"]:
+            self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
+
 
     def sendchange(self):
         if self.config.get('enable_talos_sendchange'):

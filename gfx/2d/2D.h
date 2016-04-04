@@ -956,6 +956,15 @@ public:
                            const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /**
+   * Draw aSurface using the 3D transform aMatrix. The DrawTarget's transform
+   * and clip are applied after the 3D transform.
+   *
+   * If the transform fails (i.e. because aMatrix is singular), false is returned and nothing is drawn.
+   */
+  virtual bool Draw3DTransformedSurface(SourceSurface* aSurface,
+                                        const Matrix4x4& aMatrix);
+
+  /**
    * Push a clip to the DrawTarget.
    *
    * @param aPath The path to clip to
@@ -1255,7 +1264,7 @@ public:
     CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);
 
   static already_AddRefed<DrawTarget>
-    CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
+    CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
 
   static already_AddRefed<ScaledFont>
     CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
@@ -1364,7 +1373,11 @@ public:
 #ifdef WIN32
   static already_AddRefed<DrawTarget> CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat);
 
-  static void SetDirect3D11Device(ID3D11Device *aDevice);
+  /*
+   * Attempts to create and install a D2D1 device from the supplied Direct3D11 device.
+   * Returns true on success, or false on failure and leaves the D2D1/Direct3D11 devices unset.
+   */
+  static bool SetDirect3D11Device(ID3D11Device *aDevice);
   static ID3D11Device *GetDirect3D11Device();
   static ID2D1Device *GetD2D1Device();
   static bool SupportsD2D1();

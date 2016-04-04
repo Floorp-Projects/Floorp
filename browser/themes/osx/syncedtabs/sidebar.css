@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%include ../shared.inc
 %include ../../shared/syncedtabs/sidebar.inc.css
 
 /* These styles are intended to mimic XUL trees and the XUL search box. */
@@ -13,36 +14,91 @@ html {
   color: -moz-DialogText;
 }
 
+.item-title-container {
+  box-sizing: border-box;
+  align-items: center;
+  height: 24px;
+  font-size: 12px;
+}
+
 .item.selected > .item-title-container {
   color: HighlightText;
   font-weight: bold;
 }
 
 .item.selected > .item-title-container {
-  background: linear-gradient(to bottom, rgba(156,172,204,1) 0%, rgba(116,135,172,1) 100%);
+  background: @sidebarItemBackground@;
+  border-top: @sidebarItemBorderTop@;
+  border-bottom: @sidebarItemBorderBottom@;
 }
 
 .item.selected:focus > .item-title-container {
-  background: linear-gradient(to bottom, rgba(95,144,209,1) 0%, rgba(39,90,173,1) 100%);
-}
-
-/* Using '-moz-appearance: twistytree[open];' seems to force the twisty to
-   be 20px high and max-height etc doesn't adjust it. So we set the max-height
-   on the container and a negative margin-top on the twisty itself to keep things
-   aligned.
-*/
-.item-title-container {
-  max-height: 16px;
+  background: @sidebarItemFocusedBackground@;
+  border-top: @sidebarItemFocusedBorderTop@;
+  border-bottom: @sidebarItemFocusedBorderBottom@;
 }
 
 .item.client .item-twisty-container {
-  margin-top: -2px;
-  -moz-appearance: treetwistyopen;
+  width: 16px;
+  height: 16px;
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
 }
 
 .item.client.closed .item-twisty-container {
-  -moz-appearance: treetwisty;
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed");
 }
+
+.item.client.selected:focus .item-twisty-container {
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+}
+
+.item.client.selected.closed:focus .item-twisty-container {
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
+}
+
+@media (-moz-mac-yosemite-theme) {
+  .item.selected > .item-title-container {
+    font-weight: 500;
+  }
+
+  .item.selected > .item-title-container {
+    background-image: none;
+    background-color: @sidebarItemBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .item.selected:focus > .item-title-container {
+    background-image: none;
+    background-color: @sidebarItemFocusedBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .item.selected:-moz-system-metric(mac-graphite-theme) > .item-title-container {
+    background-image: none;
+    background-color: @sidebarItemGraphiteBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .item.selected:focus:-moz-system-metric(mac-graphite-theme) > .item-title-container {
+    background-image: none;
+    background-color: @sidebarItemGraphiteFocusedBackgroundYosemite@;
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .item.selected > .item-title-container {
+    color: -moz-dialogtext;
+    font-weight: 500;
+  }
+
+  .item.selected:focus > .item-title-container {
+    color: #fff;
+  }
+}
+
 
 .sidebar-search-container {
   border-bottom: 1px solid #bdbdbd;

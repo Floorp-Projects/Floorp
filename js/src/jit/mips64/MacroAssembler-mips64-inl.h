@@ -208,6 +208,28 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs, ImmWord(val.value), label);
+}
+
+void
+MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
+                         Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+    MOZ_ASSERT(lhs.base != scratch);
+    MOZ_ASSERT(rhs.base != scratch);
+
+    loadPtr(rhs, scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
     if (rhs != ScratchRegister)
@@ -344,6 +366,15 @@ MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L lab
     SecondScratchRegisterScope scratch2(*this);
     splitTag(value, scratch2);
     ma_b(scratch2, ImmTag(JSVAL_TAG_MAGIC), label, cond);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    uint64_t magic = MagicValue(why).asRawBits();
+    ScratchRegisterScope scratch(*this);
+    loadPtr(valaddr, scratch);
+    ma_b(scratch, ImmWord(magic), label, cond);
 }
 
 //}}} check_macroassembler_style

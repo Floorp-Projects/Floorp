@@ -108,8 +108,10 @@ PocketAboutPage.prototype = {
            Ci.nsIAboutModule.MAKE_UNLINKABLE;
   },
 
-  newChannel: function(aURI) {
-    let channel = Services.io.newChannel(this.chromeURL, null, null);
+  newChannel: function(aURI, aLoadInfo) {
+    let newURI = Services.io.newURI(this.chromeURL, null, null);
+    let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
+                                                            aLoadInfo);
     channel.originalURI = aURI;
     return channel;
   },
@@ -222,7 +224,7 @@ var PocketContextMenu = {
     // iterate through all windows and add pocket to them
     for (let win of allBrowserWindows()) {
       let document = win.document;
-      for (let id in ["context-pocket", "context-savelinktopocket"]) {
+      for (let id of ["context-pocket", "context-savelinktopocket"]) {
         let element = document.getElementById(id);
         if (element)
           element.remove();
@@ -323,6 +325,8 @@ var PocketReader = {
     switch (message.name) {
       case "Reader:OnSetup": {
         // Tell the reader about our button.
+        if (this.hidden)
+          break;
         message.target.messageManager.
           sendAsyncMessage("Reader:AddButton", { id: "pocket-button",
                                                  title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
@@ -379,12 +383,8 @@ var PocketOverlay = {
     CreatePocketWidget(reason);
     PocketContextMenu.init();
 
-    if (reason != APP_STARTUP) {
-      for (let win of allBrowserWindows()) {
-        this.setWindowScripts(win);
-        this.addStyles(win);
-        this.updateWindow(win);
-      }
+    for (let win of allBrowserWindows()) {
+      this.onWindowOpened(win);
     }
   },
   shutdown: function(reason) {
@@ -410,6 +410,8 @@ var PocketOverlay = {
     PocketReader.shutdown();
   },
   onWindowOpened: function(window) {
+    if (window.hasOwnProperty("pktUI"))
+      return;
     this.setWindowScripts(window);
     this.addStyles(window);
     this.updateWindow(window);
@@ -426,6 +428,7 @@ var PocketOverlay = {
   updateWindow: function(window) {
     // insert our three menu items
     let document = window.document;
+    let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
 
     // add to bookmarksMenu
     let sib = document.getElementById("menu_bookmarkThisPage");
@@ -434,10 +437,12 @@ var PocketOverlay = {
         "id": "menu_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "menuitem-iconic", // OSX only
-        "oncommand": "openUILink(Pocket.listURL, event);"
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
       });
       let sep = createElementWithAttrs(document, "menuseparator", {
-        "id": "menu_pocketSeparator"
+        "id": "menu_pocketSeparator",
+        "hidden": hidden
       });
       sib.parentNode.insertBefore(menu, sib);
       sib.parentNode.insertBefore(sep, sib);
@@ -450,10 +455,12 @@ var PocketOverlay = {
         "id": "BMB_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "menuitem-iconic bookmark-item subviewbutton",
-        "oncommand": "openUILink(Pocket.listURL, event);"
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
       });
       let sep = createElementWithAttrs(document, "menuseparator", {
-        "id": "BMB_pocketSeparator"
+        "id": "BMB_pocketSeparator",
+        "hidden": hidden
       });
       sib.parentNode.insertBefore(menu, sib);
       sib.parentNode.insertBefore(sep, sib);
@@ -466,10 +473,12 @@ var PocketOverlay = {
         "id": "panelMenu_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "subviewbutton cui-withicon",
-        "oncommand": "openUILink(Pocket.listURL, event);"
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
       });
       let sep = createElementWithAttrs(document, "toolbarseparator", {
-        "id": "panelMenu_pocketSeparator"
+        "id": "panelMenu_pocketSeparator",
+        "hidden": hidden
       });
       // nextSibling is no-id toolbarseparator
       // insert separator first then button

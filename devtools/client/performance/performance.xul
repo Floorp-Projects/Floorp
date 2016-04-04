@@ -84,18 +84,18 @@
                class="devtools-toolbar">
         <hbox id="recordings-controls"
               class="devtools-toolbarbutton-group">
+          <toolbarbutton id="clear-button"
+                         class="devtools-toolbarbutton devtools-clear-icon"
+                         tooltiptext="&performanceUI.clearButton;"/>
           <toolbarbutton id="main-record-button"
                          class="devtools-toolbarbutton record-button"
                          tooltiptext="&performanceUI.recordButton.tooltip;"/>
           <toolbarbutton id="import-button"
                          class="devtools-toolbarbutton"
                          label="&performanceUI.importButton;"/>
-          <toolbarbutton id="clear-button"
-                         class="devtools-toolbarbutton"
-                         label="&performanceUI.clearButton;"/>
         </hbox>
       </toolbar>
-      <vbox id="recordings-list" flex="1"/>
+      <vbox id="recordings-list" class="theme-sidebar" flex="1"/>
     </vbox>
 
     <!-- Main panel content -->
@@ -176,8 +176,9 @@
                            label="&performanceUI.startRecording;"
                            standalone="true"/>
           </hbox>
-          <label class="tool-disabled-message"
-                 value="&performanceUI.unavailableNoticePB;"/>
+          <description class="tool-disabled-message">
+            &performanceUI.unavailableNoticePB;
+          </description>
         </vbox>
 
         <!-- "Empty" notice, shown when there's no recordings available -->

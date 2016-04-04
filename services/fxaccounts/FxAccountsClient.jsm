@@ -206,8 +206,13 @@ this.FxAccountsClient.prototype = {
    *        The current session token encoded in hex
    * @return Promise
    */
-  recoveryEmailStatus: function (sessionTokenHex) {
-    return this._request("/recovery_email/status", "GET",
+  recoveryEmailStatus: function (sessionTokenHex, options = {}) {
+    let path = "/recovery_email/status";
+    if (options.reason) {
+      path += "?reason=" + encodeURIComponent(options.reason);
+    }
+
+    return this._request(path, "GET",
       deriveHawkCredentials(sessionTokenHex, "sessionToken"));
   },
 
@@ -533,12 +538,6 @@ this.FxAccountsClient.prototype = {
             this,
             "fxaBackoffTimer"
            );
-        }
-        if (isInvalidTokenError(error)) {
-          // Use the endpoint path as the key, ignoring query params and
-          // fragments.
-          Services.telemetry.getKeyedHistogramById(
-            "FXA_HAWK_ERRORS").add(path.replace(/[?#].*/, ''));
         }
         deferred.reject(error);
       }

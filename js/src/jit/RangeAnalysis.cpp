@@ -2275,13 +2275,16 @@ RangeAnalysis::analyze()
 
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock* block = *iter;
-        MOZ_ASSERT(!block->unreachable());
+        // No blocks are supposed to be unreachable, except when we have an OSR
+        // block, in which case the Value Numbering phase add fixup blocks which
+        // are unreachable.
+        MOZ_ASSERT(!block->unreachable() || graph_.osrBlock());
 
         // If the block's immediate dominator is unreachable, the block is
         // unreachable. Iterating in RPO, we'll always see the immediate
         // dominator before the block.
         if (block->immediateDominator()->unreachable()) {
-            block->setUnreachable();
+            block->setUnreachableUnchecked();
             continue;
         }
 
@@ -2869,9 +2872,9 @@ CloneForDeadBranches(TempAllocator& alloc, MInstruction* candidate)
 static MDefinition::TruncateKind
 ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
 {
-    bool isCapturedResult = false;
-    bool isObservableResult = false;
-    bool isRecoverableResult = true;
+    bool isCapturedResult = false;   // Check if used by a recovered instruction or a resume point.
+    bool isObservableResult = false; // Check if it can be read from another frame.
+    bool isRecoverableResult = true; // Check if it can safely be reconstructed.
     bool hasUseRemoved = candidate->isUseRemoved();
 
     MDefinition::TruncateKind kind = MDefinition::Truncate;
@@ -2911,30 +2914,32 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
     // seeing truncated values.
     bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
 
+    // If the instruction is explicitly truncated (not indirectly) by all its
+    // uses and if it has no removed uses, then we can safely encode its
+    // truncated result as part of the resume point operands.  This is safe,
+    // because even if we resume with a truncated double, the next baseline
+    // instruction operating on this instruction is going to be a no-op.
+    //
+    // Note, that if the result can be observed from another frame, then this
+    // optimization is not safe.
+    bool safeToConvert = kind == MDefinition::Truncate && !hasUseRemoved && !isObservableResult;
+
     // If the candidate instruction appears as operand of a resume point or a
     // recover instruction, and we have to truncate its result, then we might
     // have to either recover the result during the bailout, or avoid the
     // truncation.
-    if (isCapturedResult && needsConversion) {
+    if (isCapturedResult && needsConversion && !safeToConvert) {
 
-        // These optimizations are pointless if there are no removed uses or any
-        // resume point observing the result.  Not having any means that we know
-        // everything about where this results flows into.
-        if ((hasUseRemoved || (isObservableResult && isRecoverableResult)) &&
-            candidate->canRecoverOnBailout())
-        {
-            // The cloned instruction is expected to be used as a recover
-            // instruction.
+        // If the result can be recovered from all the resume points (not needed
+        // for iterating over the inlined frames), and this instruction can be
+        // recovered on bailout, then we can clone it and use the cloned
+        // instruction to encode the recover instruction.  Otherwise, we should
+        // keep the original result and bailout if the value is not in the int32
+        // range.
+        if (isRecoverableResult && candidate->canRecoverOnBailout())
             *shouldClone = true;
-
-        } else if (hasUseRemoved || isObservableResult) {
-            // 1. If uses are removed and we cannot recover the result, then we
-            // need to keep the expected result for dead branches.
-            //
-            // 2. If the result is observable and not recoverable, then the
-            // result might be read while the frame is on the stack.
+        else
             kind = Min(kind, MDefinition::TruncateAfterBailouts);
-        }
     }
 
     return kind;
@@ -3429,6 +3434,15 @@ RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
 
         if (!block->unreachable())
             continue;
+
+        // Filter out unreachable fake entries.
+        if (block->numPredecessors() == 0) {
+            // Ignore fixup blocks added by the Value Numbering phase, in order
+            // to keep the dominator tree as-is when we have OSR Block which are
+            // no longer reachable from the main entry point of the graph.
+            MOZ_ASSERT(graph_.osrBlock());
+            continue;
+        }
 
         MControlInstruction* cond = block->getPredecessor(0)->lastIns();
         if (!cond->isTest())

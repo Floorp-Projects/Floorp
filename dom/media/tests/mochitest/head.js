@@ -268,10 +268,7 @@ function setupEnvironment() {
     return;
   }
 
-  // Running as a Mochitest.
-  SimpleTest.requestFlakyTimeout("WebRTC inherently depends on timeouts");
-  window.finish = () => SimpleTest.finish();
-  SpecialPowers.pushPrefEnv({
+  var defaultMochitestPrefs = {
     'set': [
       ['media.peerconnection.enabled', true],
       ['media.peerconnection.identity.enabled', true],
@@ -285,7 +282,22 @@ function setupEnvironment() {
       ['media.getusermedia.audiocapture.enabled', true],
       ['media.recorder.audio_node.enabled', true]
     ]
-  }, setTestOptions);
+  };
+
+  const isAndroid = !!navigator.userAgent.includes("Android");
+
+  if (isAndroid) {
+    defaultMochitestPrefs.set.push(
+      ["media.navigator.video.default_width", 320],
+      ["media.navigator.video.default_height", 240],
+      ["media.navigator.video.max_fr", 10]
+    );
+  }
+
+  // Running as a Mochitest.
+  SimpleTest.requestFlakyTimeout("WebRTC inherently depends on timeouts");
+  window.finish = () => SimpleTest.finish();
+  SpecialPowers.pushPrefEnv(defaultMochitestPrefs, setTestOptions);
 
   // We don't care about waiting for this to complete, we just want to ensure
   // that we don't build up a huge backlog of GC work.
@@ -407,6 +419,17 @@ var listenUntil = (target, eventName, onFire) => {
     }
   }, false));
 };
+
+/* Test that a function throws the right error */
+function mustThrowWith(msg, reason, f) {
+  try {
+    f();
+    ok(false, msg + " must throw");
+  } catch (e) {
+    is(e.name, reason, msg + " must throw: " + e.message);
+  }
+};
+
 
 /*** Test control flow methods */
 

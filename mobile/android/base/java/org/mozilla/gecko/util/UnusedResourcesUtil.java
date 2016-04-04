@@ -17,6 +17,18 @@ final class UnusedResourcesUtil {
             R.color.private_browsing_purple, // This will be used eventually, then this item removed.
     };
 
+    public static final int[] USED_IN_CRASH_REPORTER = {
+            R.string.crash_allow_contact2,
+            R.string.crash_close_label,
+            R.string.crash_comment,
+            R.string.crash_email,
+            R.string.crash_include_url2,
+            R.string.crash_message2,
+            R.string.crash_restart_label,
+            R.string.crash_send_report_message3,
+            R.string.crash_sorry,
+    };
+
     public static final int[] USED_IN_JS = {
             R.drawable.ab_search,
             R.drawable.alert_camera,
@@ -40,6 +52,7 @@ final class UnusedResourcesUtil {
 
     public static final int[] USED_IN_MANIFEST = {
             R.drawable.search_launcher,
+            R.string.crash_reporter_title,
             R.xml.fxaccount_authenticator,
             R.xml.fxaccount_syncadapter,
             R.xml.search_widget_info,
@@ -49,7 +62,10 @@ final class UnusedResourcesUtil {
     public static final int[] USED_IN_SUGGESTEDSITES = {
             R.drawable.suggestedsites_amazon,
             R.drawable.suggestedsites_facebook,
+            R.drawable.suggestedsites_restricted_fxsupport,
+            R.drawable.suggestedsites_restricted_mozilla,
             R.drawable.suggestedsites_twitter,
+            R.drawable.suggestedsites_webmaker,
             R.drawable.suggestedsites_wikipedia,
             R.drawable.suggestedsites_youtube,
     };
@@ -59,6 +75,10 @@ final class UnusedResourcesUtil {
             R.raw.bookmarkdefaults_favicon_support,
             R.raw.bookmarkdefaults_favicon_restricted_support,
             R.raw.bookmarkdefaults_favicon_restricted_webmaker,
+            R.string.bookmarkdefaults_title_restricted_support,
+            R.string.bookmarkdefaults_url_restricted_support,
+            R.string.bookmarkdefaults_title_restricted_webmaker,
+            R.string.bookmarkdefaults_url_restricted_webmaker,
     };
 
     public static final int[] USED_IN_PREFS = {
@@ -66,5 +86,6 @@ final class UnusedResourcesUtil {
             R.xml.preferences_accessibility,
             R.xml.preferences_home,
             R.xml.preferences_privacy,
+            R.xml.preferences_privacy_clear_tablet,
     };
 }

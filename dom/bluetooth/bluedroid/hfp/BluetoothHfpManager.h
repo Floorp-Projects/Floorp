@@ -227,7 +227,7 @@ private:
   nsString mOperatorName;
 
   nsTArray<Call> mCurrentCallArray;
-  nsAutoPtr<BluetoothRilListener> mListener;
+  UniquePtr<BluetoothRilListener> mListener;
   RefPtr<BluetoothProfileController> mController;
 
   // CDMA-specific variable

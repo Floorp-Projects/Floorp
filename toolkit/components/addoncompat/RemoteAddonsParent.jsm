@@ -863,7 +863,7 @@ function getSessionHistory(browser) {
     // We may not have any messages from this tab yet.
     return null;
   }
-  return remoteChromeGlobal.docShell.sessionHistory;
+  return remoteChromeGlobal.docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
 }
 
 RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {

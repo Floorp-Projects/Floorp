@@ -8,7 +8,7 @@
 // sets the current time in the timeline.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_keyframes.html");
+  yield addTab(URL_ROOT + "doc_keyframes.html");
   let {panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
   let {scrubberEl} = timeline;
@@ -22,7 +22,7 @@ add_task(function*() {
   yield clickOnAnimation(panel, 0);
 
   info("Click on the first keyframe of the first animated property");
-  yield clickKeyframe(panel, 0, "backgroundColor", 0);
+  yield clickKeyframe(panel, 0, "background-color", 0);
 
   info("Make sure the scrubber stopped moving and is at the right position");
   yield assertScrubberMoving(panel, false);

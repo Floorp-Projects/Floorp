@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PP_TARGETS += manifest
-manifest := $(srcdir)/AndroidManifest.xml.in
-manifest_TARGET := export
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
 ANDROID_EXTRA_JARS := javaaddons-test.jar

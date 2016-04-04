@@ -718,7 +718,7 @@ FileReader::DecreaseBusyCounter()
 }
 
 bool
-FileReader::Notify(JSContext* aCx, Status aStatus)
+FileReader::Notify(Status aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

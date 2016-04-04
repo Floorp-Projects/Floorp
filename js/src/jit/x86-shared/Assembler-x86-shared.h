@@ -173,6 +173,18 @@ class Operand
     }
 };
 
+inline Imm32
+Imm64::firstHalf() const
+{
+    return low();
+}
+
+inline Imm32
+Imm64::secondHalf() const
+{
+    return hi();
+}
+
 class CPUInfo
 {
   public:
@@ -444,6 +456,21 @@ class AssemblerX86Shared : public AssemblerShared
         // A CodeOffset only has one use, bake in the "end of list" value.
         masm.jumpTablePointer(LabelBase::INVALID_OFFSET);
         label->bind(masm.size());
+    }
+    void cmovz(const Operand& src, Register dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.cmovz_rr(src.reg(), dest.encoding());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.cmovz_mr(src.disp(), src.base(), dest.encoding());
+            break;
+          case Operand::MEM_SCALE:
+            masm.cmovz_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
     }
     void movl(Imm32 imm32, Register dest) {
         masm.movl_i32r(imm32.value, dest.encoding());

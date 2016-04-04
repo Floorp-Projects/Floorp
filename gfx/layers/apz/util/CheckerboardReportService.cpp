@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h" // for ClearOnShutdown
 #include "mozilla/dom/CheckerboardReportServiceBinding.h" // for dom::CheckerboardReports
 #include "nsContentUtils.h" // for nsContentUtils
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace layers {

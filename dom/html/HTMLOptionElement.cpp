@@ -144,8 +144,7 @@ HTMLOptionElement::Index()
   }
 
   int32_t index = defaultIndex;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    options->GetOptionIndex(this, 0, true, &index)));
+  MOZ_ALWAYS_SUCCEEDS(options->GetOptionIndex(this, 0, true, &index));
   return index;
 }
 

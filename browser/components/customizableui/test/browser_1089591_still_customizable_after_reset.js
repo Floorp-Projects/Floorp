@@ -8,8 +8,7 @@ add_task(function* () {
 
   ok(historyButton && devButton, "Draggable elements should exist");
   simulateItemDrag(historyButton, devButton);
-  gCustomizeMode.reset();
-  yield waitForCondition(() => !gCustomizeMode.resetting);
+  yield gCustomizeMode.reset();
   ok(CustomizableUI.inDefaultState, "Should be back in default state");
 
   historyButton = document.getElementById("wrapper-history-panelmenu");

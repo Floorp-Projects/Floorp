@@ -16,7 +16,7 @@
 #include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCOMPtr.h"
-#include "nsIMutableArray.h"
+#include "nsArray.h"
 #include "nsNSSCertValidity.h"
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
@@ -58,7 +58,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern LazyLogModule gPIPNSSLog;
 
 // This is being stored in an uint32_t that can otherwise
 // only take values from nsIX509Cert's list of cert types.
@@ -217,6 +217,22 @@ nsNSSCertificate::GetIsSelfSigned(bool* aIsSelfSigned)
     return NS_ERROR_NOT_AVAILABLE;
 
   *aIsSelfSigned = mCert->isRoot;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
+{
+  NS_ENSURE_ARG(aIsBuiltInRoot);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  Result rv = IsCertBuiltInRoot(mCert, *aIsBuiltInRoot);
+  if (rv != Success) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
@@ -497,7 +513,12 @@ nsNSSCertificate::GetDbKey(nsACString& aDbKey)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+  return GetDbKey(mCert, aDbKey);
+}
 
+nsresult
+nsNSSCertificate::GetDbKey(CERTCertificate* cert, nsACString& aDbKey)
+{
   static_assert(sizeof(uint64_t) == 8, "type size sanity check");
   static_assert(sizeof(uint32_t) == 4, "type size sanity check");
   // The format of the key is the base64 encoding of the following:
@@ -512,14 +533,14 @@ nsNSSCertificate::GetDbKey(nsACString& aDbKey)
   nsAutoCString buf;
   const char leadingZeroes[] = {0, 0, 0, 0, 0, 0, 0, 0};
   buf.Append(leadingZeroes, sizeof(leadingZeroes));
-  uint32_t serialNumberLen = htonl(mCert->serialNumber.len);
+  uint32_t serialNumberLen = htonl(cert->serialNumber.len);
   buf.Append(reinterpret_cast<const char*>(&serialNumberLen), sizeof(uint32_t));
-  uint32_t issuerLen = htonl(mCert->derIssuer.len);
+  uint32_t issuerLen = htonl(cert->derIssuer.len);
   buf.Append(reinterpret_cast<const char*>(&issuerLen), sizeof(uint32_t));
-  buf.Append(reinterpret_cast<const char*>(mCert->serialNumber.data),
-             mCert->serialNumber.len);
-  buf.Append(reinterpret_cast<const char*>(mCert->derIssuer.data),
-             mCert->derIssuer.len);
+  buf.Append(reinterpret_cast<const char*>(cert->serialNumber.data),
+             cert->serialNumber.len);
+  buf.Append(reinterpret_cast<const char*>(cert->derIssuer.data),
+             cert->derIssuer.len);
 
   return Base64Encode(buf, aDbKey);
 }
@@ -825,7 +846,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(_rvChain);
-  nsresult rv;
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting chain for \"%s\"\n", mCert->nickname));
 
   mozilla::pkix::Time now(mozilla::pkix::Now());
@@ -888,10 +908,9 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   }
 
   // enumerate the chain for scripting purposes
-  nsCOMPtr<nsIMutableArray> array =
-    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    goto done;
+  nsCOMPtr<nsIMutableArray> array = nsArrayBase::Create();
+  if (!array) {
+    return NS_ERROR_FAILURE;
   }
   CERTCertListNode* node;
   for (node = CERT_LIST_HEAD(nssChain.get());
@@ -904,9 +923,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   }
   *_rvChain = array;
   NS_IF_ADDREF(*_rvChain);
-  rv = NS_OK;
-done:
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1177,11 +1194,12 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
     if (issuerCert && issuerCert != mCert.get()) {
       bool includeRoot =
         (chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChainWithRoot);
-      ScopedCERTCertificateList certChain(
+      UniqueCERTCertificateList certChain(
           CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot));
       if (certChain) {
-        if (NSS_CMSSignedData_AddCertList(sigd.get(), certChain) == SECSuccess) {
-          certChain.forget();
+        if (NSS_CMSSignedData_AddCertList(sigd.get(), certChain.get())
+              == SECSuccess) {
+          Unused << certChain.release();
         }
         else {
           MOZ_LOG(gPIPNSSLog, LogLevel::Debug,

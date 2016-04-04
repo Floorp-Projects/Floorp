@@ -4,11 +4,12 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -36,7 +37,7 @@ public class ShapedButton extends ThemedImageButton
 
         final Paint paint = new Paint();
         paint.setAntiAlias(true);
-        paint.setColor(ColorUtils.getColor(context, R.color.canvas_delegate_paint));
+        paint.setColor(ContextCompat.getColor(context, R.color.canvas_delegate_paint));
         paint.setStrokeWidth(0.0f);
         mCanvasDelegate = new CanvasDelegate(this, Mode.DST_IN, paint);
 
@@ -44,6 +45,8 @@ public class ShapedButton extends ThemedImageButton
     }
 
     @Override
+    @SuppressLint("MissingSuperCall") // Super gets called from defaultDraw().
+                                      // It is intentionally not called in the other case.
     public void draw(Canvas canvas) {
         if (mCanvasDelegate != null)
             mCanvasDelegate.draw(canvas, mPath, getWidth(), getHeight());
@@ -59,7 +62,7 @@ public class ShapedButton extends ThemedImageButton
     // The drawable is constructed as per @drawable/shaped_button.
     @Override
     public void onLightweightThemeChanged() {
-        final int background = ColorUtils.getColor(getContext(), R.color.text_and_tabs_tray_grey);
+        final int background = ContextCompat.getColor(getContext(), R.color.text_and_tabs_tray_grey);
         final LightweightThemeDrawable lightWeight = getTheme().getColorDrawable(this, background);
 
         if (lightWeight == null)

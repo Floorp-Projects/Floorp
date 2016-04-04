@@ -26,7 +26,6 @@ const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-var gOldAppInfo = null;
 var gGlobalScope = this;
 
 const PingServer = {
@@ -158,14 +157,14 @@ function wrapWithExceptionHandler(f) {
   return wrapper;
 }
 
-function loadAddonManager(id, name, version, platformVersion) {
+function loadAddonManager(ID, name, version, platformVersion) {
   let ns = {};
   Cu.import("resource://gre/modules/Services.jsm", ns);
   let head = "../../../../mozapps/extensions/test/xpcshell/head_addons.js";
   let file = do_get_file(head);
   let uri = ns.Services.io.newFileURI(file);
   ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
-  createAppInfo(id, name, version, platformVersion);
+  createAppInfo(ID, name, version, platformVersion);
   // As we're not running in application, we need to setup the features directory
   // used by system add-ons.
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
@@ -173,58 +172,16 @@ function loadAddonManager(id, name, version, platformVersion) {
   startupManager();
 }
 
-function createAppInfo(id, name, version, platformVersion) {
-  const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-  const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
-  let gAppInfo;
-  if (!gOldAppInfo) {
-    gOldAppInfo = Cc[XULAPPINFO_CONTRACTID].getService(Ci.nsIXULRuntime);
-  }
+var gAppInfo = null;
 
-  gAppInfo = {
-    // nsIXULAppInfo
-    vendor: "Mozilla",
-    name: name,
-    ID: id,
-    version: version,
-    appBuildID: "2007010101",
-    platformVersion: platformVersion,
-    platformBuildID: "2007010101",
-
-    // nsIXULRuntime
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    invalidateCachesOnRestart: function invalidateCachesOnRestart() {
-      // Do nothing
-    },
-
-    // nsICrashReporter
-    annotations: {},
-
-    annotateCrashReport: function(key, data) {
-      this.annotations[key] = data;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo,
-                                           Ci.nsIXULRuntime,
-                                           Ci.nsICrashReporter,
-                                           Ci.nsISupports])
-  };
-
-  Object.setPrototypeOf(gAppInfo, gOldAppInfo);
-
-  var XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      return gAppInfo.QueryInterface(iid);
-    }
-  };
-  var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                            XULAPPINFO_CONTRACTID, XULAppInfoFactory);
+function createAppInfo(ID, name, version, platformVersion) {
+  let tmp = {};
+  Cu.import("resource://testing-common/AppInfo.jsm", tmp);
+  tmp.updateAppInfo({
+    ID, name, version, platformVersion,
+    crashReporter: true,
+  });
+  gAppInfo = tmp.getAppInfo();
 }
 
 // Fake the timeout functions for the TelemetryScheduler.

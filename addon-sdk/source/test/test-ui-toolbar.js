@@ -492,4 +492,20 @@ exports["test button are attached to toolbar"] = function*(assert) {
   yield cleanUI();
 };
 
+exports["test toolbar are not in private windows"] = function*(assert) {
+  const w = open(null, {features: {toolbar: true, private: true}});
+
+  yield ready(w);
+
+  const t = new Toolbar({title: "foo"});
+
+  yield wait(t, "attach");
+
+  assert.ok(!isAttached(t), "toolbar wasn't actually attached");
+
+  t.destroy();
+
+  yield cleanUI();
+}
+
 require("sdk/test").run(module.exports);

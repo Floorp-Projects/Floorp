@@ -5,12 +5,15 @@
 
 package org.mozilla.gecko;
 
+import android.content.ContentResolver;
 import android.widget.AdapterView;
 import android.widget.Button;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.FullScreenState;
 import org.mozilla.gecko.gfx.Layer;
@@ -29,6 +32,7 @@ import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.PromptService;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -43,7 +47,7 @@ import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.ButtonToast;
+
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -57,7 +61,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -90,7 +93,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.AbsoluteLayout;
@@ -111,6 +113,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -190,7 +193,7 @@ public abstract class GeckoApp
 
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
-    protected ButtonToast mToast;
+
 
     protected LayerView mLayerView;
     private AbsoluteLayout mPluginContainer;
@@ -439,7 +442,7 @@ public abstract class GeckoApp
     public boolean onMenuOpened(int featureId, Menu menu) {
         // exit full-screen mode whenever the menu is opened
         if (mLayerView != null && mLayerView.isFullScreen()) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
+            GeckoAppShell.notifyObservers("FullScreen:Exit", null);
         }
 
         if (featureId == Window.FEATURE_OPTIONS_PANEL) {
@@ -496,8 +499,7 @@ public abstract class GeckoApp
                 }
             }
 
-            GeckoAppShell.sendEventToGeckoSync(
-                    GeckoEvent.createBroadcastEvent("Browser:Quit", res.toString()));
+            GeckoAppShell.notifyObservers("Browser:Quit", res.toString());
             doShutdown();
             return true;
         }
@@ -635,7 +637,7 @@ public abstract class GeckoApp
             if (tab != null) {
                 title = tab.getDisplayTitle();
             }
-            GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
+            IntentHelper.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
 
             // Context: Sharing via chrome list (no explicit session is active)
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "text");
@@ -775,8 +777,7 @@ public abstract class GeckoApp
                     if (checkedItemPositions.get(i))
                         permissionsToClear.put(i);
 
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
-                    "Permissions:Clear", permissionsToClear.toString()));
+                GeckoAppShell.notifyObservers("Permissions:Clear", permissionsToClear.toString());
             }
         });
 
@@ -827,42 +828,7 @@ public abstract class GeckoApp
         });
     }
 
-    public ButtonToast getButtonToast() {
-        if (mToast != null) {
-            return mToast;
-        }
 
-        ViewStub toastStub = (ViewStub) findViewById(R.id.toast_stub);
-        mToast = new ButtonToast(toastStub.inflate());
-
-        return mToast;
-    }
-
-    void showButtonToast(final String message, final String duration,
-                         final String buttonText, final String buttonIcon,
-                         final String buttonId) {
-        BitmapUtils.getDrawable(GeckoApp.this, buttonIcon, new BitmapUtils.BitmapLoader() {
-            @Override
-            public void onBitmapFound(final Drawable d) {
-                final int toastDuration = duration.equals("long") ? ButtonToast.LENGTH_LONG : ButtonToast.LENGTH_SHORT;
-                getButtonToast().show(false, message, toastDuration ,buttonText, d, new ButtonToast.ToastListener() {
-                    @Override
-                    public void onButtonClicked() {
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Click", buttonId));
-                    }
-
-                    @Override
-                    public void onToastHidden(ButtonToast.ReasonHidden reason) {
-                        if (reason == ButtonToast.ReasonHidden.TIMEOUT ||
-                            reason == ButtonToast.ReasonHidden.TOUCH_OUTSIDE ||
-                            reason == ButtonToast.ReasonHidden.REPLACED) {
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Hidden", buttonId));
-                        }
-                    }
-                });
-            }
-        });
-    }
 
     private void addFullScreenPluginView(View view) {
         if (mFullScreenPluginView != null) {
@@ -1536,7 +1502,7 @@ public abstract class GeckoApp
                 }
             }
 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreMessage));
+            GeckoAppShell.notifyObservers("Session:Restore", restoreMessage);
         }
 
         // External URLs should always be loaded regardless of whether Gecko is
@@ -1633,8 +1599,7 @@ public abstract class GeckoApp
 
             if (GeckoThread.isRunning()) {
                 geckoConnected();
-                GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+                GeckoAppShell.notifyObservers("Viewport:Flush", null);
             }
         }
 
@@ -1786,7 +1751,7 @@ public abstract class GeckoApp
     }
 
     private String getSessionRestorePreference() {
-        return getSharedPreferences().getString(GeckoPreferences.PREFS_RESTORE_SESSION, "quit");
+        return getSharedPreferences().getString(GeckoPreferences.PREFS_RESTORE_SESSION, "always");
     }
 
     private boolean getRestartFromIntent() {
@@ -1854,6 +1819,66 @@ public abstract class GeckoApp
     public String getDefaultUAString() {
         return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
                                           AppConstants.USER_AGENT_FENNEC_MOBILE;
+    }
+
+    @Override
+    public void createShortcut(final String title, final String URI) {
+        ThreadUtils.assertOnBackgroundThread();
+        final BrowserDB db = GeckoProfile.get(getApplicationContext()).getDB();
+
+        final ContentResolver cr = getContext().getContentResolver();
+        final Map<String, Map<String, Object>> metadata = db.getURLMetadata().getForURLs(cr,
+                Collections.singletonList(URI),
+                Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN)
+        );
+
+        final Map<String, Object> row = metadata.get(URI);
+
+        String touchIconURL = null;
+
+        if (row != null) {
+            touchIconURL = (String) row.get(URLMetadataTable.TOUCH_ICON_COLUMN);
+        }
+
+        OnFaviconLoadedListener listener = new OnFaviconLoadedListener() {
+            @Override
+            public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
+                doCreateShortcut(title, url, favicon);
+            }
+        };
+
+        // Retrieve the icon while bypassing the cache. Homescreen icon creation is a one-off event, hence it isn't
+        // useful to cache these icons. (Android takes care of storing homescreen icons after a shortcut
+        // has been created.)
+        // The cache is also (currently) limited to 32dp, hence we explicitly need to avoid accessing those icons.
+        // If touchIconURL is null, then Favicons falls back to finding the best possible favicon for
+        // the site URI, hence we can use this call even when there is no touchIcon defined.
+        Favicons.getPreferredSizeFaviconForPage(getApplicationContext(), URI, touchIconURL, listener);
+    }
+
+    private void doCreateShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
+        // The intent to be launched by the shortcut.
+        Intent shortcutIntent = new Intent();
+        shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
+        shortcutIntent.setData(Uri.parse(aURI));
+        shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+
+        Intent intent = new Intent();
+        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, BitmapUtils.getLauncherIcon(getApplicationContext(), aIcon, GeckoAppShell.getPreferredIconSize()));
+
+        if (aTitle != null) {
+            intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
+        } else {
+            intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
+        }
+
+        // Do not allow duplicate items.
+        intent.putExtra("duplicate", false);
+
+        intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+        getApplicationContext().sendBroadcast(intent);
     }
 
     private void processAlertCallback(SafeIntent intent) {
@@ -2342,11 +2367,6 @@ public abstract class GeckoApp
     }
 
     @Override
-    public PromptService getPromptService() {
-        return mPromptService;
-    }
-
-    @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             super.onBackPressed();
@@ -2369,7 +2389,7 @@ public abstract class GeckoApp
         }
 
         if (mLayerView != null && mLayerView.isFullScreen()) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
+            GeckoAppShell.notifyObservers("FullScreen:Exit", null);
             return;
         }
 
@@ -2504,14 +2524,21 @@ public abstract class GeckoApp
 
     @Override
     public void notifyCheckUpdateResult(String result) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
+        GeckoAppShell.notifyObservers("Update:CheckResult", result);
     }
 
     private void geckoConnected() {
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 
+    @Override
     public void setAccessibilityEnabled(boolean enabled) {
+    }
+
+    @Override
+    public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
+        // Default to showing prompt in private browsing to be safe.
+        return IntentHelper.openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
     }
 
     public static class MainLayout extends RelativeLayout {
@@ -2738,5 +2765,53 @@ public abstract class GeckoApp
     protected StartupAction getStartupAction(final String passedURL, final String action) {
         // Default to NORMAL here. Subclasses can handle the other types.
         return StartupAction.NORMAL;
+    }
+
+    @Override
+    public void checkUriVisited(String uri) {
+        GlobalHistory.getInstance().checkUriVisited(uri);
+    }
+
+    @Override
+    public void markUriVisited(final String uri) {
+        final Context context = getApplicationContext();
+        final BrowserDB db = GeckoProfile.get(context).getDB();
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                GlobalHistory.getInstance().add(context, db, uri);
+            }
+        });
+    }
+
+    @Override
+    public void setUriTitle(final String uri, final String title) {
+        final Context context = getApplicationContext();
+        final BrowserDB db = GeckoProfile.get(context).getDB();
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
+            }
+        });
+    }
+
+    @Override
+    public String[] getHandlersForMimeType(String mimeType, String action) {
+        Intent intent = IntentHelper.getIntentForActionString(action);
+        if (mimeType != null && mimeType.length() > 0)
+            intent.setType(mimeType);
+        return IntentHelper.getHandlersForIntent(intent);
+    }
+
+    @Override
+    public String[] getHandlersForURL(String url, String action) {
+        // May contain the whole URL or just the protocol.
+        Uri uri = url.indexOf(':') >= 0 ? Uri.parse(url) : new Uri.Builder().scheme(url).build();
+
+        Intent intent = IntentHelper.getOpenURIIntent(getApplicationContext(), uri.toString(), "",
+                TextUtils.isEmpty(action) ? Intent.ACTION_VIEW : action, "");
+
+        return IntentHelper.getHandlersForIntent(intent);
     }
 }

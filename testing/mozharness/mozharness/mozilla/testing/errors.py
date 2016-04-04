@@ -28,6 +28,7 @@ _mochitest_summary = {
 TinderBoxPrintRe = {
     "mochitest_summary": _mochitest_summary,
     "mochitest-gl_summary": _mochitest_summary,
+    "mochitest-media_summary": _mochitest_summary,
     "reftest_summary": {
         'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),
         'pass_group': "Successful",

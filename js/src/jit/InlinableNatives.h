@@ -22,7 +22,6 @@
     _(AtomicsExchange)              \
     _(AtomicsLoad)                  \
     _(AtomicsStore)                 \
-    _(AtomicsFence)                 \
     _(AtomicsAdd)                   \
     _(AtomicsSub)                   \
     _(AtomicsAnd)                   \
@@ -108,6 +107,8 @@
     _(IntrinsicIsMapIterator)       \
     _(IntrinsicIsStringIterator)    \
     _(IntrinsicIsListIterator)      \
+                                    \
+    _(IntrinsicGetNextMapEntryForIterator) \
                                     \
     _(IntrinsicIsTypedArray)        \
     _(IntrinsicIsPossiblyWrappedTypedArray) \

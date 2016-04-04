@@ -177,6 +177,7 @@ nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength)
   , mColors(nullptr)
   , mBytesPerColor(0)
   , mPreGapLength(0)
+  , mPixelRowSize(0)
   , mCurrentRow(0)
   , mCurrentPos(0)
   , mAbsoluteModeNumPixels(0)
@@ -262,7 +263,7 @@ nsBMPDecoder::FinishInternal()
       MOZ_ASSERT(mMayHaveTransparency);
       PostFrameStop(Opacity::SOME_TRANSPARENCY);
     } else {
-      PostFrameStop(Opacity::OPAQUE);
+      PostFrameStop(Opacity::FULLY_OPAQUE);
     }
     PostDecodeDone();
   }

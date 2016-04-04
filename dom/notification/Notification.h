@@ -46,7 +46,7 @@ public:
   explicit NotificationFeature(Notification* aNotification);
 
   bool
-  Notify(JSContext* aCx, workers::Status aStatus) override;
+  Notify(workers::Status aStatus) override;
 };
 
 // Records telemetry probes at application startup, when a notification is
@@ -259,8 +259,13 @@ public:
 
   // Notification implementation of
   // ServiceWorkerRegistration.showNotification.
+  //
+  //
+  // Note that aCx may not be in the compartment of aGlobal, but aOptions will
+  // have its JS things in the compartment of aCx.
   static already_AddRefed<Promise>
-  ShowPersistentNotification(nsIGlobalObject* aGlobal,
+  ShowPersistentNotification(JSContext* aCx,
+                             nsIGlobalObject* aGlobal,
                              const nsAString& aScope,
                              const nsAString& aTitle,
                              const NotificationOptions& aOptions,
@@ -417,8 +422,12 @@ private:
   // Notification if result is NS_OK. The lifetime of this Notification is tied
   // to an underlying NotificationRef. Do not hold a non-stack raw pointer to
   // it. Be careful about thread safety if acquiring a strong reference.
+  //
+  // Note that aCx may not be in the compartment of aGlobal, but aOptions will
+  // have its JS things in the compartment of aCx.
   static already_AddRefed<Notification>
-  CreateAndShow(nsIGlobalObject* aGlobal,
+  CreateAndShow(JSContext* aCx,
+                nsIGlobalObject* aGlobal,
                 const nsAString& aTitle,
                 const NotificationOptions& aOptions,
                 const nsAString& aScope,

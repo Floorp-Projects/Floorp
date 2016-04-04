@@ -103,9 +103,17 @@ public:
   // window and document object sets it true.  Therefore, web applications
   // can handle the event if they add event listeners to the window or the
   // document.
+  // XXX This is an ancient and broken feature, don't use this for new bug
+  //     as far as possible.
   bool    mNoContentDispatch : 1;
   // If mOnlyChromeDispatch is true, the event is dispatched to only chrome.
   bool    mOnlyChromeDispatch : 1;
+  // If mOnlySystemGroupDispatchInContent is true, event listeners added to
+  // the default group for non-chrome EventTarget won't be called.
+  // Be aware, if this is true, EventDispatcher needs to check if each event
+  // listener is added to chrome node, so, don't set this to true for the
+  // events which are fired a lot of times like eMouseMove.
+  bool    mOnlySystemGroupDispatchInContent : 1;
   // If mWantReplyFromContentProcess is true, the event will be redispatched
   // in the parent process after the content process has handled it. Useful
   // for when the parent process need the know first how the event was used
@@ -120,6 +128,58 @@ public:
   inline bool InTargetPhase() const
   {
     return (mInBubblingPhase && mInCapturePhase);
+  }
+
+  /**
+   * Helper methods for methods of DOM Event.
+   */
+  inline void StopPropagation()
+  {
+    mPropagationStopped = true;
+  }
+  inline void StopImmediatePropagation()
+  {
+    StopPropagation();
+    mImmediatePropagationStopped = true;
+  }
+  inline void StopCrossProcessForwarding()
+  {
+    mNoCrossProcessBoundaryForwarding = true;
+  }
+  inline void PreventDefault(bool aCalledByDefaultHandler = true)
+  {
+    mDefaultPrevented = true;
+    // Note that even if preventDefault() has already been called by chrome,
+    // a call of preventDefault() by content needs to overwrite
+    // mDefaultPreventedByContent to true because in such case, defaultPrevented
+    // must be true when web apps check it after they call preventDefault().
+    if (aCalledByDefaultHandler) {
+      mDefaultPreventedByChrome = true;
+    } else {
+      mDefaultPreventedByContent = true;
+    }
+  }
+  // This should be used only before dispatching events into the DOM tree.
+  inline void PreventDefaultBeforeDispatch()
+  {
+    mDefaultPrevented = true;
+  }
+  inline bool DefaultPrevented() const
+  {
+    return mDefaultPrevented;
+  }
+  inline bool DefaultPreventedByContent() const
+  {
+    MOZ_ASSERT(!mDefaultPreventedByContent || DefaultPrevented());
+    return mDefaultPreventedByContent;
+  }
+  inline bool IsTrusted() const
+  {
+    return mIsTrusted;
+  }
+  inline bool PropagationStopped() const
+  {
+    return mPropagationStopped;
   }
 
   inline void Clear()
@@ -165,21 +225,54 @@ struct EventFlags : public BaseEventFlags
 };
 
 /******************************************************************************
+ * mozilla::WidgetEventTime
+ ******************************************************************************/
+
+class WidgetEventTime
+{
+public:
+  // Elapsed time, in milliseconds, from a platform-specific zero time
+  // to the time the message was created
+  uint64_t mTime;
+  // Timestamp when the message was created. Set in parallel to 'time' until we
+  // determine if it is safe to drop 'time' (see bug 77992).
+  TimeStamp mTimeStamp;
+
+  WidgetEventTime()
+    : mTime(0)
+    , mTimeStamp(TimeStamp::Now())
+  {
+  }
+
+  WidgetEventTime(uint64_t aTime,
+                  TimeStamp aTimeStamp)
+    : mTime(aTime)
+    , mTimeStamp(aTimeStamp)
+  {
+  }
+
+  void AssignEventTime(const WidgetEventTime& aOther)
+  {
+    mTime = aOther.mTime;
+    mTimeStamp = aOther.mTimeStamp;
+  }
+};
+
+/******************************************************************************
  * mozilla::WidgetEvent
  ******************************************************************************/
 
-class WidgetEvent
+class WidgetEvent : public WidgetEventTime
 {
 protected:
   WidgetEvent(bool aIsTrusted,
               EventMessage aMessage,
               EventClassID aEventClassID)
-    : mClass(aEventClassID)
+    : WidgetEventTime()
+    , mClass(aEventClassID)
     , mMessage(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
-    , time(0)
-    , timeStamp(TimeStamp::Now())
     , userType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
@@ -190,19 +283,18 @@ protected:
   }
 
   WidgetEvent()
-    : time(0)
+    : WidgetEventTime()
   {
     MOZ_COUNT_CTOR(WidgetEvent);
   }
 
 public:
   WidgetEvent(bool aIsTrusted, EventMessage aMessage)
-    : mClass(eBasicEventClass)
+    : WidgetEventTime()
+    , mClass(eBasicEventClass)
     , mMessage(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
-    , time(0)
-    , timeStamp(TimeStamp::Now())
     , userType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
@@ -240,12 +332,6 @@ public:
   LayoutDeviceIntPoint refPoint;
   // The previous refPoint, if known, used to calculate mouse movement deltas.
   LayoutDeviceIntPoint lastRefPoint;
-  // Elapsed time, in milliseconds, from a platform-specific zero time
-  // to the time the message was created
-  uint64_t time;
-  // Timestamp when the message was created. Set in parallel to 'time' until we
-  // determine if it is safe to drop 'time' (see bug 77992).
-  mozilla::TimeStamp timeStamp;
   // See BaseEventFlags definition for the detail.
   BaseEventFlags mFlags;
 
@@ -265,8 +351,7 @@ public:
     // mMessage should be initialized with the constructor.
     refPoint = aEvent.refPoint;
     // lastRefPoint doesn't need to be copied.
-    time = aEvent.time;
-    timeStamp = aEvent.timeStamp;
+    AssignEventTime(aEvent);
     // mFlags should be copied manually if it's necessary.
     userType = aEvent.userType;
     // typeString should be copied manually if it's necessary.
@@ -275,11 +360,24 @@ public:
     originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
   }
 
-  void PreventDefault()
+  /**
+   * Helper methods for methods of DOM Event.
+   */
+  void StopPropagation() { mFlags.StopPropagation(); }
+  void StopImmediatePropagation() { mFlags.StopImmediatePropagation(); }
+  void StopCrossProcessForwarding() { mFlags.StopCrossProcessForwarding(); }
+  void PreventDefault(bool aCalledByDefaultHandler = true)
   {
-    mFlags.mDefaultPrevented = true;
-    mFlags.mDefaultPreventedByChrome = true;
+    mFlags.PreventDefault(aCalledByDefaultHandler);
   }
+  void PreventDefaultBeforeDispatch() { mFlags.PreventDefaultBeforeDispatch(); }
+  bool DefaultPrevented() const { return mFlags.DefaultPrevented(); }
+  bool DefaultPreventedByContent() const
+  {
+    return mFlags.DefaultPreventedByContent();
+  }
+  bool IsTrusted() const { return mFlags.IsTrusted(); }
+  bool PropagationStopped() const { return mFlags.PropagationStopped(); }
 
   /**
    * Utils for checking event types
@@ -566,12 +664,12 @@ protected:
   WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , modifiers(0)
+    , mModifiers(0)
   {
   }
 
   WidgetInputEvent()
-    : modifiers(0)
+    : mModifiers(0)
   {
   }
 
@@ -580,7 +678,7 @@ public:
 
   WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eInputEventClass)
-    , modifiers(0)
+    , mModifiers(0)
   {
   }
 
@@ -610,81 +708,81 @@ public:
   // true indicates the accel key on the environment is down
   bool IsAccel() const
   {
-    return ((modifiers & AccelModifier()) != 0);
+    return ((mModifiers & AccelModifier()) != 0);
   }
 
   // true indicates the shift key is down
   bool IsShift() const
   {
-    return ((modifiers & MODIFIER_SHIFT) != 0);
+    return ((mModifiers & MODIFIER_SHIFT) != 0);
   }
   // true indicates the control key is down
   bool IsControl() const
   {
-    return ((modifiers & MODIFIER_CONTROL) != 0);
+    return ((mModifiers & MODIFIER_CONTROL) != 0);
   }
   // true indicates the alt key is down
   bool IsAlt() const
   {
-    return ((modifiers & MODIFIER_ALT) != 0);
+    return ((mModifiers & MODIFIER_ALT) != 0);
   }
   // true indicates the meta key is down (or, on Mac, the Command key)
   bool IsMeta() const
   {
-    return ((modifiers & MODIFIER_META) != 0);
+    return ((mModifiers & MODIFIER_META) != 0);
   }
   // true indicates the win key is down on Windows. Or the Super or Hyper key
   // is down on Linux.
   bool IsOS() const
   {
-    return ((modifiers & MODIFIER_OS) != 0);
+    return ((mModifiers & MODIFIER_OS) != 0);
   }
   // true indicates the alt graph key is down
   // NOTE: on Mac, the option key press causes both IsAlt() and IsAltGrpah()
   //       return true.
   bool IsAltGraph() const
   {
-    return ((modifiers & MODIFIER_ALTGRAPH) != 0);
+    return ((mModifiers & MODIFIER_ALTGRAPH) != 0);
   }
   // true indicates the CapLock LED is turn on.
   bool IsCapsLocked() const
   {
-    return ((modifiers & MODIFIER_CAPSLOCK) != 0);
+    return ((mModifiers & MODIFIER_CAPSLOCK) != 0);
   }
   // true indicates the NumLock LED is turn on.
   bool IsNumLocked() const
   {
-    return ((modifiers & MODIFIER_NUMLOCK) != 0);
+    return ((mModifiers & MODIFIER_NUMLOCK) != 0);
   }
   // true indicates the ScrollLock LED is turn on.
   bool IsScrollLocked() const
   {
-    return ((modifiers & MODIFIER_SCROLLLOCK) != 0);
+    return ((mModifiers & MODIFIER_SCROLLLOCK) != 0);
   }
 
   // true indicates the Fn key is down, but this is not supported by native
   // key event on any platform.
   bool IsFn() const
   {
-    return ((modifiers & MODIFIER_FN) != 0);
+    return ((mModifiers & MODIFIER_FN) != 0);
   }
   // true indicates the FnLock LED is turn on, but we don't know such
   // keyboards nor platforms.
   bool IsFnLocked() const
   {
-    return ((modifiers & MODIFIER_FNLOCK) != 0);
+    return ((mModifiers & MODIFIER_FNLOCK) != 0);
   }
   // true indicates the Symbol is down, but this is not supported by native
   // key event on any platforms.
   bool IsSymbol() const
   {
-    return ((modifiers & MODIFIER_SYMBOL) != 0);
+    return ((mModifiers & MODIFIER_SYMBOL) != 0);
   }
   // true indicates the SymbolLock LED is turn on, but we don't know such
   // keyboards nor platforms.
   bool IsSymbolLocked() const
   {
-    return ((modifiers & MODIFIER_SYMBOLLOCK) != 0);
+    return ((mModifiers & MODIFIER_SYMBOLLOCK) != 0);
   }
 
   void InitBasicModifiers(bool aCtrlKey,
@@ -692,28 +790,28 @@ public:
                           bool aShiftKey,
                           bool aMetaKey)
   {
-    modifiers = 0;
+    mModifiers = 0;
     if (aCtrlKey) {
-      modifiers |= MODIFIER_CONTROL;
+      mModifiers |= MODIFIER_CONTROL;
     }
     if (aAltKey) {
-      modifiers |= MODIFIER_ALT;
+      mModifiers |= MODIFIER_ALT;
     }
     if (aShiftKey) {
-      modifiers |= MODIFIER_SHIFT;
+      mModifiers |= MODIFIER_SHIFT;
     }
     if (aMetaKey) {
-      modifiers |= MODIFIER_META;
+      mModifiers |= MODIFIER_META;
     }
   }
 
-  Modifiers modifiers;
+  Modifiers mModifiers;
 
   void AssignInputEventData(const WidgetInputEvent& aEvent, bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    modifiers = aEvent.modifiers;
+    mModifiers = aEvent.mModifiers;
   }
 };
 
@@ -727,7 +825,7 @@ class InternalUIEvent : public WidgetGUIEvent
 {
 protected:
   InternalUIEvent()
-    : detail(0)
+    : mDetail(0)
     , mCausedByUntrustedEvent(false)
   {
   }
@@ -735,7 +833,7 @@ protected:
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , detail(0)
+    , mDetail(0)
     , mCausedByUntrustedEvent(false)
   {
   }
@@ -743,7 +841,7 @@ protected:
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aEventClassID)
-    , detail(0)
+    , mDetail(0)
     , mCausedByUntrustedEvent(false)
   {
   }
@@ -759,9 +857,9 @@ public:
   InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   const WidgetEvent* aEventCausesThisEvent)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
-    , detail(0)
+    , mDetail(0)
     , mCausedByUntrustedEvent(
-        aEventCausesThisEvent && !aEventCausesThisEvent->mFlags.mIsTrusted)
+        aEventCausesThisEvent && !aEventCausesThisEvent->IsTrusted())
   {
   }
 
@@ -775,7 +873,7 @@ public:
     return result;
   }
 
-  int32_t detail;
+  int32_t mDetail;
   // mCausedByUntrustedEvent is true if the event is caused by untrusted event.
   bool mCausedByUntrustedEvent;
 
@@ -783,14 +881,14 @@ public:
   // event, IsTrustable() returns what you expected.
   bool IsTrustable() const
   {
-    return mFlags.mIsTrusted && !mCausedByUntrustedEvent;
+    return IsTrusted() && !mCausedByUntrustedEvent;
   }
 
   void AssignUIEventData(const InternalUIEvent& aEvent, bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    detail = aEvent.detail;
+    mDetail = aEvent.mDetail;
     mCausedByUntrustedEvent = aEvent.mCausedByUntrustedEvent;
   }
 };

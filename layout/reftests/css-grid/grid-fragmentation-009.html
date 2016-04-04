@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation of definite height grid, not top-of-page, forced breaks</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-009-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: grid;
+  height: 90px;
+  grid-template-columns: 30px 30px 30px;
+  grid-auto-rows: 30px;
+  grid-gap: 12px;
+  border:5px solid;
+  align-content: start;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+m { display:block; padding-top:10px; }
+.break-before { page-break-before:always; break-before:always; }
+.break-after { page-break-after:always; break-after:always; }
+
+</style>
+</head>
+<body>
+
+<div class="columns" style="height: 100px/*two rows would fit in 1st column*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:35px; background:cyan"><x></x></span>
+<span><x></x></span>
+<span class="break-before" style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1"><x></x></span>
+<span><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height:30px">
+<div style="background:grey"><m></m>
+<div class="grid break-before">
+</div></div></div>
+
+<div class="columns" style="height: 60px/*everything would fit in 1st column*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span class="break-before"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 100px/*everything would fit in 1st column*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:35px; background:cyan"><x></x></span>
+<span class="break-before" style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:35px"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 100px/*everything would fit in 1st column*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span class="break-after" style="height:35px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:35px"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*everything would fit in 1st column*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:35px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span class="break-before" style="grid-row:1; height:35px"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 97px/*everything would fit in 1st column, except bottom border*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:35px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span class="break-before" style="grid-row:1; height:35px"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 80px/*one row fits in 1st column, two in 2nd column, but forced break there*/">
+<div style="padding-top:30px; background:grey">
+<div class="grid">
+<span style="grid-row:3"><x></x></span>
+<span class="break-after" style="grid-row:span 2; background:cyan"><x></x></span>
+<span class="break-before" style="grid-row:2; align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:35px"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 160px/*everything would fit in 1st column*/">
+<div style="padding-top:30px; background:grey">
+<div class="grid">
+<span class="break-after" style="grid-row: span 3"><x></x></span>
+<span class="break-after" style="grid-row: span 2"><x></x></span>
+</div>
+</div></div>
+
+<!-- TODO XXX bug 775628? (break-after on last row should propagate to container)
+<div class="columns" style="height: 135px/*everything would fit in 1st column*/">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:35px; background:cyan"><x></x></span>
+<span class="break-after" style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:35px"><x></x></span>
+</div>
+<div style="height:20px;background:yellow"></div>
+</div></div>
+-->
+
+</body>
+</html>

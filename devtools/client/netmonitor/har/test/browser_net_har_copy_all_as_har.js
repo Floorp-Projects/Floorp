@@ -1,22 +1,26 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Basic tests for exporting Network panel content into HAR format.
  */
 add_task(function*() {
-  let [ aTab, aDebuggee, aMonitor ] = yield initNetMonitor(SIMPLE_URL);
+  // The first 'tab' isn't necessary so, don't create a var for it
+  // to avoid eslint warning.
+  let [ , debuggee, monitor ] = yield initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");
 
-  let { NetMonitorView } = aMonitor.panelWin;
+  let { NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
 
-  aDebuggee.location.reload();
+  debuggee.location.reload();
 
-  yield waitForNetworkEvents(aMonitor, 1);
+  yield waitForNetworkEvents(monitor, 1);
   yield RequestsMenu.copyAllAsHar();
 
   let jsonString = SpecialPowers.getClipboardData("text/unicode");
@@ -32,13 +36,15 @@ add_task(function*() {
   let entry = har.log.entries[0];
   is(entry.request.method, "GET", "Check the method");
   is(entry.request.url, SIMPLE_URL, "Check the URL");
-  is(entry.request.headers.length, 8, "Check number of request headers");
+  is(entry.request.headers.length, 9, "Check number of request headers");
   is(entry.response.status, 200, "Check response status");
   is(entry.response.statusText, "OK", "Check response status text");
   is(entry.response.headers.length, 6, "Check number of response headers");
-  is(entry.response.content.mimeType, "text/html", "Check response content type");
-  isnot(entry.response.content.text, undefined, "Check response body");
+  is(entry.response.content.mimeType, // eslint-disable-line
+    "text/html", "Check response content type"); // eslint-disable-line
+  isnot(entry.response.content.text, undefined, // eslint-disable-line
+    "Check response body");
   isnot(entry.timings, undefined, "Check timings");
 
-  teardown(aMonitor).then(finish);
+  teardown(monitor).then(finish);
 });

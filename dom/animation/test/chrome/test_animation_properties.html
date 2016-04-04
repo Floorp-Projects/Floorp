@@ -1,0 +1,503 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1254419 - Test the values returned by
+       KeyframeEffectReadOnly.getProperties()</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1254419"
+  target="_blank">Mozilla Bug 1254419</a>
+<div id="log"></div>
+<style>
+div {
+  font-size: 10px; /* For calculating em-based units */
+}
+</style>
+<script>
+'use strict';
+
+function assert_properties_equal(actual, expected) {
+  assert_equals(actual.length, expected.length);
+
+  var compareProperties = (a, b) =>
+    a.property == b.property ? 0 : (a.property < b.property ? -1 : 1);
+
+  var sortedActual   = actual.sort(compareProperties);
+  var sortedExpected = expected.sort(compareProperties);
+
+  // We want to serialize the values in the following form:
+  //
+  //  { offset: 0, easing: linear, composite: replace, value: 5px }, ...
+  //
+  // So that we can just compare strings and, in the failure case,
+  // easily see where the differences lie.
+  var serializeMember = value => {
+    return typeof value === 'undefined' ? '<not set>' : value;
+  }
+  var serializeValues = values =>
+    values.map(value =>
+      '{ ' +
+        [ 'offset', 'value', 'easing', 'composite' ].map(
+          member => `${member}: ${serializeMember(value[member])}`
+        ).join(', ') +
+      ' }')
+    .join(', ');
+
+  for (var i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_equals(serializeValues(sortedActual[i].values),
+                  serializeValues(sortedExpected[i].values),
+                  `Values arrays do not match for `
+                  + `${sortedActual[i].property} property`);
+  }
+}
+
+// Shorthand for constructing a value object
+function value(offset, value, composite, easing) {
+  return { offset: offset, value: value, easing: easing, composite: composite };
+}
+
+var gTests = [
+
+  // ---------------------------------------------------------------------
+  //
+  // Tests for property-indexed specifications
+  //
+  // ---------------------------------------------------------------------
+
+  { desc:     'a one-property two-value property-indexed specification',
+    frames:   { left: ['10px', '20px'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] } ]
+  },
+  { desc:     'a one-shorthand-property two-value property-indexed'
+              + ' specification',
+    frames:   { margin: ['10px', '10px 20px 30px 40px'] },
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '10px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '40px', 'replace') ] } ]
+  },
+  { desc:     'a two-property (one shorthand and one of its longhand'
+              + ' components) two-value property-indexed specification',
+    frames:   { marginTop: ['50px', '60px'],
+                margin: ['10px', '10px 20px 30px 40px'] },
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '50px', 'replace', 'linear'),
+                            value(1, '60px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '40px', 'replace') ] } ]
+  },
+  { desc:     'a two-property property-indexed specification with different'
+              + ' numbers of values',
+    frames:   { left: ['10px', '20px', '30px'],
+                top: ['40px', '50px'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(0.5, '20px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'top',
+                  values: [ value(0, '40px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] } ]
+  },
+  { desc:     'a property-indexed specification with an invalid value',
+    frames:   { left: ['10px', '20px', '30px', '40px', '50px'],
+                top:  ['15px', '25px', 'invalid', '45px', '55px'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(0.25, '20px', 'replace', 'linear'),
+                            value(0.5, '30px', 'replace', 'linear'),
+                            value(0.75, '40px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] },
+                { property: 'top',
+                  values: [ value(0, '15px', 'replace', 'linear'),
+                            value(0.25, '25px', 'replace', 'linear'),
+                            value(0.75, '45px', 'replace', 'linear'),
+                            value(1, '55px', 'replace') ] } ]
+  },
+  { desc:     'a one-property two-value property-indexed specification that'
+              + ' needs to stringify its values',
+    frames:   { opacity: [0, 1] },
+    expected: [ { property: 'opacity',
+                  values: [ value(0, '0', 'replace', 'linear'),
+                            value(1, '1', 'replace') ] } ]
+  },
+  { desc:     'a property-indexed keyframe where a lesser shorthand precedes'
+              + ' a greater shorthand',
+    frames:   { borderLeft: [ '1px solid rgb(1, 2, 3)',
+                              '2px solid rgb(4, 5, 6)' ],
+                border:     [ '3px dotted rgb(7, 8, 9)',
+                              '4px dashed rgb(10, 11, 12)' ] },
+    expected: [ { property: 'border-bottom-color',
+                  values: [ value(0, 'rgb(7, 8, 9)', 'replace', 'linear'),
+                            value(1, 'rgb(10, 11, 12)', 'replace') ] },
+                { property: 'border-left-color',
+                  values: [ value(0, 'rgb(1, 2, 3)', 'replace', 'linear'),
+                            value(1, 'rgb(4, 5, 6)', 'replace') ] },
+                { property: 'border-right-color',
+                  values: [ value(0, 'rgb(7, 8, 9)', 'replace', 'linear'),
+                            value(1, 'rgb(10, 11, 12)', 'replace') ] },
+                { property: 'border-top-color',
+                  values: [ value(0, 'rgb(7, 8, 9)', 'replace', 'linear'),
+                            value(1, 'rgb(10, 11, 12)', 'replace') ] },
+                { property: 'border-bottom-width',
+                  values: [ value(0, '3px', 'replace', 'linear'),
+                            value(1, '4px', 'replace') ] },
+                { property: 'border-left-width',
+                  values: [ value(0, '1px', 'replace', 'linear'),
+                            value(1, '2px', 'replace') ] },
+                { property: 'border-right-width',
+                  values: [ value(0, '3px', 'replace', 'linear'),
+                            value(1, '4px', 'replace') ] },
+                { property: 'border-top-width',
+                  values: [ value(0, '3px', 'replace', 'linear'),
+                            value(1, '4px', 'replace') ] } ]
+  },
+  { desc:     'a property-indexed keyframe where a greater shorthand precedes'
+              + ' a lesser shorthand',
+    frames:   { border:     [ '3px dotted rgb(7, 8, 9)',
+                              '4px dashed rgb(10, 11, 12)' ],
+                borderLeft: [ '1px solid rgb(1, 2, 3)',
+                              '2px solid rgb(4, 5, 6)' ] },
+    expected: [ { property: 'border-bottom-color',
+                  values: [ value(0, 'rgb(7, 8, 9)', 'replace', 'linear'),
+                            value(1, 'rgb(10, 11, 12)', 'replace') ] },
+                { property: 'border-left-color',
+                  values: [ value(0, 'rgb(1, 2, 3)', 'replace', 'linear'),
+                            value(1, 'rgb(4, 5, 6)', 'replace') ] },
+                { property: 'border-right-color',
+                  values: [ value(0, 'rgb(7, 8, 9)', 'replace', 'linear'),
+                            value(1, 'rgb(10, 11, 12)', 'replace') ] },
+                { property: 'border-top-color',
+                  values: [ value(0, 'rgb(7, 8, 9)', 'replace', 'linear'),
+                            value(1, 'rgb(10, 11, 12)', 'replace') ] },
+                { property: 'border-bottom-width',
+                  values: [ value(0, '3px', 'replace', 'linear'),
+                            value(1, '4px', 'replace') ] },
+                { property: 'border-left-width',
+                  values: [ value(0, '1px', 'replace', 'linear'),
+                            value(1, '2px', 'replace') ] },
+                { property: 'border-right-width',
+                  values: [ value(0, '3px', 'replace', 'linear'),
+                            value(1, '4px', 'replace') ] },
+                { property: 'border-top-width',
+                  values: [ value(0, '3px', 'replace', 'linear'),
+                            value(1, '4px', 'replace') ] } ]
+  },
+
+  // ---------------------------------------------------------------------
+  //
+  // Tests for keyframe sequences
+  //
+  // ---------------------------------------------------------------------
+
+  { desc:     'a keyframe sequence specification with repeated values at'
+              + ' offset 0/1 with different easings',
+    frames:   [ { offset: 0.0, left: '100px', easing: 'ease' },
+                { offset: 0.0, left: '200px', easing: 'ease' },
+                { offset: 0.5, left: '300px', easing: 'linear' },
+                { offset: 1.0, left: '400px', easing: 'ease-out' },
+                { offset: 1.0, left: '500px', easing: 'step-end' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '100px', 'replace'),
+                            value(0, '200px', 'replace', 'ease'),
+                            value(0.5, '300px', 'replace', 'linear'),
+                            value(1, '400px', 'replace'),
+                            value(1, '500px', 'replace') ] } ]
+  },
+  { desc:     'a one-property two-keyframe sequence',
+    frames:   [ { offset: 0, left: '10px' },
+                { offset: 1, left: '20px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] } ]
+  },
+  { desc:     'a two-property two-keyframe sequence',
+    frames:   [ { offset: 0, left: '10px', top: '30px' },
+                { offset: 1, left: '20px', top: '40px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] },
+                { property: 'top',
+                  values: [ value(0, '30px', 'replace', 'linear'),
+                            value(1, '40px', 'replace') ] } ]
+  },
+  { desc:     'a one shorthand property two-keyframe sequence',
+    frames:   [ { offset: 0, margin: '10px' },
+                { offset: 1, margin: '20px 30px 40px 50px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '40px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] } ]
+  },
+  { desc:     'a two-property (a shorthand and one of its component longhands)'
+              + ' two-keyframe sequence',
+    frames:   [ { offset: 0, margin: '10px', marginTop: '20px' },
+                { offset: 1, marginTop: '70px',
+                             margin: '30px 40px 50px 60px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '20px', 'replace', 'linear'),
+                            value(1, '70px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '40px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '60px', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence with duplicate values for a given interior'
+              + ' offset',
+    frames:   [ { offset: 0.0, left: '10px' },
+                { offset: 0.5, left: '20px' },
+                { offset: 0.5, left: '30px' },
+                { offset: 0.5, left: '40px' },
+                { offset: 1.0, left: '50px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(0.5, '20px', 'replace'),
+                            value(0.5, '40px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence with duplicate values for offsets 0 and 1',
+    frames:   [ { offset: 0, left: '10px' },
+                { offset: 0, left: '20px' },
+                { offset: 0, left: '30px' },
+                { offset: 1, left: '40px' },
+                { offset: 1, left: '50px' },
+                { offset: 1, left: '60px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace'),
+                            value(0, '30px', 'replace', 'linear'),
+                            value(1, '40px', 'replace'),
+                            value(1, '60px', 'replace') ] } ]
+  },
+  { desc:     'a two-property four-keyframe sequence',
+    frames:   [ { offset: 0, left: '10px' },
+                { offset: 0, top: '20px' },
+                { offset: 1, top: '30px' },
+                { offset: 1, left: '40px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '40px', 'replace') ] },
+                { property: 'top',
+                  values: [ value(0, '20px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] } ]
+  },
+  { desc:     'a one-property keyframe sequence with some omitted offsets',
+    frames:   [ { offset: 0.00, left: '10px' },
+                { offset: 0.25, left: '20px' },
+                { left: '30px' },
+                { left: '40px' },
+                { offset: 1.00, left: '50px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(0.25, '20px', 'replace', 'linear'),
+                            value(0.5, '30px', 'replace', 'linear'),
+                            value(0.75, '40px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] } ]
+  },
+  { desc:     'a two-property keyframe sequence with some omitted offsets',
+    frames:   [ { offset: 0.00, left: '10px', top: '20px' },
+                { offset: 0.25, left: '30px' },
+                { left: '40px' },
+                { left: '50px', top: '60px' },
+                { offset: 1.00, left: '70px', top: '80px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(0.25, '30px', 'replace', 'linear'),
+                            value(0.5, '40px', 'replace', 'linear'),
+                            value(0.75, '50px', 'replace', 'linear'),
+                            value(1, '70px', 'replace') ] },
+                { property: 'top',
+                  values: [ value(0, '20px', 'replace', 'linear'),
+                            value(0.75, '60px', 'replace', 'linear'),
+                            value(1, '80px', 'replace') ] } ]
+  },
+  { desc:     'a one-property keyframe sequence with all omitted offsets',
+    frames:   [ { left: '10px' },
+                { left: '20px' },
+                { left: '30px' },
+                { left: '40px' },
+                { left: '50px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(0.25, '20px', 'replace', 'linear'),
+                            value(0.5, '30px', 'replace', 'linear'),
+                            value(0.75, '40px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence with different easing values, but the'
+              + ' same easing value for a given offset',
+    frames:   [ { offset: 0.0, easing: 'ease',     left: '10px'},
+                { offset: 0.0, easing: 'ease',     top: '20px'},
+                { offset: 0.5, easing: 'linear',   left: '30px' },
+                { offset: 0.5, easing: 'linear',   top: '40px' },
+                { offset: 1.0, easing: 'step-end', left: '50px' },
+                { offset: 1.0, easing: 'step-end', top: '60px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'ease'),
+                            value(0.5, '30px', 'replace', 'linear'),
+                            value(1, '50px', 'replace') ] },
+                { property: 'top',
+                  values: [ value(0, '20px', 'replace', 'ease'),
+                            value(0.5, '40px', 'replace', 'linear'),
+                            value(1, '60px', 'replace') ] } ]
+  },
+  { desc:     'a one-property two-keyframe sequence that needs to'
+              + ' stringify its values',
+    frames:   [ { offset: 0, opacity: 0 },
+                { offset: 1, opacity: 1 } ],
+    expected: [ { property: 'opacity',
+                  values: [ value(0, '0', 'replace', 'linear'),
+                            value(1, '1', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence where shorthand precedes longhand',
+    frames:   [ { offset: 0, margin: '10px', marginRight: '20px' },
+                { offset: 1, margin: '30px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '20px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence where longhand precedes shorthand',
+    frames:   [ { offset: 0, marginRight: '20px', margin: '10px' },
+                { offset: 1, margin: '30px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '20px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '30px', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence where lesser shorthand precedes greater'
+              + ' shorthand',
+    frames:   [ { offset: 0, borderLeft: '1px solid rgb(1, 2, 3)',
+                             border: '2px dotted rgb(4, 5, 6)' },
+                { offset: 1, border: '3px dashed rgb(7, 8, 9)' } ],
+    expected: [ { property: 'border-bottom-color',
+                  values: [ value(0, 'rgb(4, 5, 6)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-left-color',
+                  values: [ value(0, 'rgb(1, 2, 3)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-right-color',
+                  values: [ value(0, 'rgb(4, 5, 6)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-top-color',
+                  values: [ value(0, 'rgb(4, 5, 6)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-bottom-width',
+                  values: [ value(0, '2px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] },
+                { property: 'border-left-width',
+                  values: [ value(0, '1px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] },
+                { property: 'border-right-width',
+                  values: [ value(0, '2px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] },
+                { property: 'border-top-width',
+                  values: [ value(0, '2px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] } ]
+  },
+  { desc:     'a keyframe sequence where greater shorthand precedes' +
+              + ' lesser shorthand',
+    frames:   [ { offset: 0, border: '2px dotted rgb(4, 5, 6)',
+                             borderLeft: '1px solid rgb(1, 2, 3)' },
+                { offset: 1, border: '3px dashed rgb(7, 8, 9)' } ],
+    expected: [ { property: 'border-bottom-color',
+                  values: [ value(0, 'rgb(4, 5, 6)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-left-color',
+                  values: [ value(0, 'rgb(1, 2, 3)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-right-color',
+                  values: [ value(0, 'rgb(4, 5, 6)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-top-color',
+                  values: [ value(0, 'rgb(4, 5, 6)', 'replace', 'linear'),
+                            value(1, 'rgb(7, 8, 9)', 'replace') ] },
+                { property: 'border-bottom-width',
+                  values: [ value(0, '2px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] },
+                { property: 'border-left-width',
+                  values: [ value(0, '1px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] },
+                { property: 'border-right-width',
+                  values: [ value(0, '2px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] },
+                { property: 'border-top-width',
+                  values: [ value(0, '2px', 'replace', 'linear'),
+                            value(1, '3px', 'replace') ] } ]
+  },
+
+  // ---------------------------------------------------------------------
+  //
+  // Tests for unit conversion
+  //
+  // ---------------------------------------------------------------------
+
+  { desc:     'em units are resolved to px values',
+    frames:   { left: ['10em', '20em'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, '100px', 'replace', 'linear'),
+                            value(1, '200px', 'replace') ] } ]
+  }
+];
+
+gTests.forEach(function(subtest) {
+  test(function(t) {
+    var div = addDiv(t);
+    var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
+    assert_properties_equal(animation.effect.getProperties(),
+                            subtest.expected);
+  }, subtest.desc);
+});
+
+</script>
+</body>

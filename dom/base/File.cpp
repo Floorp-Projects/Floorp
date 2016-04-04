@@ -39,10 +39,13 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
+
+using namespace workers;
 
 // XXXkhuey the input stream that we pass out of a File
 // can outlive the actual File object.  Thus, we must
@@ -225,12 +228,6 @@ bool
 Blob::IsFile() const
 {
   return mImpl->IsFile();
-}
-
-bool
-Blob::IsDirectory() const
-{
-  return mImpl->IsDirectory();
 }
 
 const nsTArray<RefPtr<BlobImpl>>*
@@ -420,11 +417,10 @@ File::Create(nsISupports* aParent, BlobImpl* aImpl)
 /* static */ already_AddRefed<File>
 File::Create(nsISupports* aParent, const nsAString& aName,
              const nsAString& aContentType, uint64_t aLength,
-             int64_t aLastModifiedDate, BlobDirState aDirState)
+             int64_t aLastModifiedDate)
 {
   RefPtr<File> file = new File(aParent,
-    new BlobImplBase(aName, aContentType, aLength, aLastModifiedDate,
-                     aDirState));
+    new BlobImplBase(aName, aContentType, aLength, aLastModifiedDate));
   return file.forget();
 }
 
@@ -463,7 +459,7 @@ File::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-File::GetName(nsAString& aFileName)
+File::GetName(nsAString& aFileName) const
 {
   mImpl->GetName(aFileName);
 }
@@ -682,7 +678,7 @@ NS_IMPL_ISUPPORTS(BlobImpl, BlobImpl)
 NS_IMPL_ISUPPORTS_INHERITED0(BlobImplFile, BlobImpl)
 
 void
-BlobImplBase::GetName(nsAString& aName)
+BlobImplBase::GetName(nsAString& aName) const
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aName = mName;
@@ -710,8 +706,7 @@ BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv) const
     return;
   }
 
-  workers::WorkerPrivate* workerPrivate =
-    workers::GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   if (workerPrivate->UsesSystemPrincipal()) {
@@ -869,17 +864,82 @@ BlobImplFile::GetSize(ErrorResult& aRv)
   return mLength;
 }
 
+namespace {
+
+class GetTypeRunnable final : public nsRunnable
+{
+public:
+  GetTypeRunnable(WorkerPrivate* aWorkerPrivate,
+                  nsIEventTarget* aSyncLoopTarget,
+                  BlobImpl* aBlobImpl)
+    : mWorkerPrivate(aWorkerPrivate)
+    , mSyncLoopTarget(aSyncLoopTarget)
+    , mBlobImpl(aBlobImpl)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    MOZ_ASSERT(aSyncLoopTarget);
+    MOZ_ASSERT(aBlobImpl);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsAutoString type;
+    mBlobImpl->GetType(type);
+
+    RefPtr<MainThreadStopSyncLoopRunnable> runnable =
+      new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
+                                         mSyncLoopTarget.forget(), true);
+    NS_WARN_IF(!runnable->Dispatch());
+    return NS_OK;
+  }
+
+private:
+  ~GetTypeRunnable()
+  {}
+
+  WorkerPrivate* mWorkerPrivate;
+  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+  RefPtr<BlobImpl> mBlobImpl;
+};
+
+} // anonymous namespace
+
 void
 BlobImplFile::GetType(nsAString& aType)
 {
+  aType.Truncate();
+
   if (mContentType.IsVoid()) {
     NS_ASSERTION(mWholeFile,
                  "Should only use lazy ContentType when using the whole file");
+
+    if (!NS_IsMainThread()) {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      if (!workerPrivate) {
+        // I have no idea in which thread this method is called. We cannot
+        // return any valid value.
+        return;
+      }
+
+      AutoSyncLoopHolder syncLoop(workerPrivate);
+
+      RefPtr<GetTypeRunnable> runnable =
+        new GetTypeRunnable(workerPrivate, syncLoop.EventTarget(), this);
+      nsresult rv = NS_DispatchToMainThread(runnable);
+      NS_WARN_IF(NS_FAILED(rv));
+
+      NS_WARN_IF(!syncLoop.Run());
+      return;
+    }
+
     nsresult rv;
     nsCOMPtr<nsIMIMEService> mimeService =
       do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aType.Truncate();
       return;
     }
 
@@ -944,17 +1004,6 @@ BlobImplFile::SetPath(const nsAString& aPath)
              aPath[aPath.Length() - 1] == char16_t('/'),
              "Path must end with a path separator");
   mPath = aPath;
-}
-
-void
-BlobImplFile::LookupAndCacheIsDirectory()
-{
-  MOZ_ASSERT(mIsFile,
-             "This should only be called when this object has been created "
-             "from an nsIFile to note that the nsIFile is a directory");
-  bool isDir;
-  mFile->IsDirectory(&isDir);
-  mDirState = isDir ? BlobDirState::eIsDir : BlobDirState::eIsNotDir;
 }
 
 ////////////////////////////////////////////////////////////////////////////

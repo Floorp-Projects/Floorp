@@ -132,7 +132,8 @@
 
     function changeSelectValue(aID, aKey, aValue)
     {
-      this.eventSeq = [new invokerChecker(EVENT_TEXT_VALUE_CHANGE, aID)];
+      this.eventSeq =
+        [ new invokerChecker(EVENT_TEXT_VALUE_CHANGE, getAccessible(aID)) ];
 
       this.invoke = function changeSelectValue_invoke()
       {

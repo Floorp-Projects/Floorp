@@ -174,8 +174,6 @@ def GetUrlProperties(output, package):
         ('symbolsUrl', lambda m: m.endswith('crashreporter-symbols.zip') or
                        m.endswith('crashreporter-symbols-full.zip')),
         ('testsUrl', lambda m: m.endswith(('tests.tar.bz2', 'tests.zip'))),
-        ('unsignedApkUrl', lambda m: m.endswith('apk') and
-                           'unsigned-unaligned' in m),
         ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
         ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
         ('completeMarUrl', lambda m: m.endswith('.complete.mar')),

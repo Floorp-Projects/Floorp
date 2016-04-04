@@ -2336,30 +2336,25 @@ richlistitem[type~="action"][actiontype$="tab"][selected="true"] > .ac-url-box >
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
-#sidebar,
-sidebarheader {
-  -moz-appearance: -moz-mac-vibrancy-light;
-  background-color: #e2e7ed;
-}
-
-#sidebar:-moz-window-inactive,
-sidebarheader:-moz-window-inactive {
-  background-color: #e8e8e8;
-}
-
-sidebarheader {
-  padding: 2px;
-  text-shadow: none;
-}
-
 #sidebar-box {
-  -moz-appearance: dialog;
-  -moz-appearance: none;
+  background-color: hsl(212,19%,85%);
+  background-image: linear-gradient(hsl(213,26%,93%), hsl(212,19%,85%));
+  box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
+}
+
+#sidebar-box:-moz-window-inactive {
+  background-color: hsl(0,0%,92%);
+  background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,92%));
+}
+
+sidebarheader {
+  padding: 2px 2px 0;
+  text-shadow: 0 1px 0 hsla(0,0%,100%,.5);
 }
 
 .sidebar-splitter {
   -moz-border-start: none;
-  -moz-border-end: 1px solid #bdbdbd;
+  -moz-border-end: 1px solid #b4b4b4;
   min-width: 1px;
   width: 3px;
   background-image: none !important;
@@ -2377,14 +2372,51 @@ sidebarheader {
 
 .sidebar-title,
 #sidebar-title {
-  color: #535f6d;
+  color: #596c80;
   font-weight: bold;
+}
+
+.sidebar-title:-moz-window-inactive,
+#sidebar-title:-moz-window-inactive {
+  color: #868b92;
 }
 
 .sidebar-throbber[loading="true"],
 #sidebar-throbber[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
 }
+
+@media (min-resolution: 2dppx) {
+  .sidebar-throbber[loading="true"],
+  #sidebar-throbber[loading="true"] {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+    width: 16px;
+  }
+}
+
+@media (-moz-mac-yosemite-theme) {
+  #sidebar-box {
+    -moz-appearance: -moz-mac-vibrancy-light;
+    background-image: none;
+    box-shadow: none;
+  }
+
+  #sidebar-box:-moz-window-inactive {
+    background-image: none;
+  }
+
+  sidebarheader {
+    text-shadow: none;
+    font-weight: 500;
+  }
+
+  .sidebar-title,
+  #sidebar-title {
+    color: #636363;
+    font-weight: 500;
+  }
+}
+
 
 /* ----- CONTENT ----- */
 
@@ -2472,7 +2504,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 
   .tab-throbber[progress] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/loading@2x.png");
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
   }
 }
 
@@ -2869,14 +2901,18 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading.png") !important;
+}
+
 @media (min-resolution: 2dppx) {
   .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }
-}
 
-.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
+  .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png") !important;
+  }
 }
 
 .alltabs-item[tabIsVisible] {
@@ -3244,13 +3280,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
   color: hsl(210,11%,16%);
-}
-
-/* Developer Toolbar */
-
-#developer-toolbar-closebutton {
-  margin-left: 8px;
-  margin-right: 8px;
 }
 
 /* Error counter */

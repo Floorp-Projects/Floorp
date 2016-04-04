@@ -77,7 +77,6 @@ public class GeckoEvent {
         APP_FOREGROUNDING(10),
         LOAD_URI(12),
         NOOP(15),
-        BROADCAST(19),
         VIEWPORT(20),
         VISITED(21),
         NETWORK_CHANGED(22),
@@ -458,14 +457,6 @@ public class GeckoEvent {
     public static GeckoEvent createLocationEvent(Location l) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOCATION_EVENT);
         event.mLocation = l;
-        return event;
-    }
-
-    @RobocopTarget
-    public static GeckoEvent createBroadcastEvent(String subject, String data) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.BROADCAST);
-        event.mCharacters = subject;
-        event.mCharactersExtra = data;
         return event;
     }
 

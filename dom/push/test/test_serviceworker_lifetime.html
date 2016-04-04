@@ -23,6 +23,7 @@
 <head>
   <title>Test for Bug 1188545</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
@@ -71,14 +72,27 @@
     return p;
   }
 
+  var mockSocket = new MockWebSocket();
+  var endpoint = "https://example.com/endpoint/1";
+  var channelID = null;
+  mockSocket.onRegister = function(request) {
+    channelID = request.channelID;
+    this.serverSendMsg(JSON.stringify({
+      messageType: "register",
+      uaid: "fa8f2e4b-5ddc-4408-b1e3-5f25a02abff0",
+      channelID,
+      status: 200,
+      pushEndpoint: endpoint
+    }));
+  };
+
   function sendPushToPushServer(pushEndpoint) {
-    // Work around CORS for now.
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "http://mochi.test:8888/tests/dom/push/test/push-server.sjs", true);
-    xhr.setRequestHeader("X-Push-Method", "POST");
-    xhr.setRequestHeader("X-Push-Server", pushEndpoint);
-    xhr.setRequestHeader("TTL", "120");
-    xhr.send(null);
+    is(pushEndpoint, endpoint, "Got unexpected endpoint");
+    mockSocket.serverSendMsg(JSON.stringify({
+      messageType: "notification",
+      version: "vDummy",
+      channelID
+    }));
   }
 
   function unregisterPushNotification(ctx) {
@@ -321,13 +335,7 @@
       }).then(SimpleTest.finish);
   }
 
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.push.connection.enabled", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true],
-    ]}, runTest);
+  setupPrefsAndMockSocket(mockSocket).then(_ => runTest());
   SpecialPowers.addPermission('desktop-notification', true, document);
   SimpleTest.waitForExplicitFinish();
 </script>

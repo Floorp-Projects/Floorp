@@ -55,6 +55,11 @@ nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode)
 }
 
 void
+nsIWidgetListener::UIResolutionChanged()
+{
+}
+
+void
 nsIWidgetListener::FullscreenChanged(bool aInFullscreen)
 {
 }

@@ -1,0 +1,46 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(b58249f9-1a04-48cc-bc20-2c992d64c73e)]
+interface nsIPushErrorReporter : nsISupports
+{
+  /**
+   * Ack status codes, reported when the Push service acknowledges an incoming
+   * message.
+   *
+   * Acks are sent before the message is dispatched to the service worker,
+   * since the server delays new messages until all outstanding ones have been
+   * acked. |reportDeliveryError| will be called if an error occurs in the
+   * worker's `push` event handler after acking the message.
+  */
+  const uint16_t ACK_DELIVERED = 0;
+  const uint16_t ACK_DECRYPTION_ERROR = 1;
+  const uint16_t ACK_NOT_DELIVERED = 2;
+
+  /**
+   * Unsubscribe reasons, reported when the service drops a subscription.
+   */
+  const uint16_t UNSUBSCRIBE_MANUAL = 3;
+  const uint16_t UNSUBSCRIBE_QUOTA_EXCEEDED = 4;
+  const uint16_t UNSUBSCRIBE_PERMISSION_REVOKED = 5;
+
+  /**
+   * Delivery error reasons, reported when a service worker fails to handle
+   * an incoming push message in its `push` event handler.
+   */
+  const uint16_t DELIVERY_UNCAUGHT_EXCEPTION = 6;
+  const uint16_t DELIVERY_UNHANDLED_REJECTION = 7;
+  const uint16_t DELIVERY_INTERNAL_ERROR = 8;
+
+  /**
+   * Reports a `push` event handler error to the Push service. |messageId| is
+   * an opaque string passed to `nsIPushNotifier.notifyPush{WithData}`.
+   * |status| is a delivery error reason.
+   */
+  void reportDeliveryError(in DOMString messageId,
+                           [optional] in uint16_t reason);
+};

@@ -92,11 +92,11 @@ void
 TestEmpty(const char* aTestName, const char* aMode)
 {
   char filename[128];
-  sprintf(filename, "full-%s-%s.json", aTestName, aMode);
+  sprintf(filename, "complete-%s-%s.json", aTestName, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
 
   char options[128];
-  sprintf(options, "--mode=%s --sample-below=1", aMode);
+  sprintf(options, "--mode=%s --stacks=full", aMode);
   ResetEverything(options);
 
   // Zero for everything.
@@ -104,16 +104,16 @@ TestEmpty(const char* aTestName, const char* aMode)
 }
 
 void
-TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
+TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
 {
   char filename[128];
-  sprintf(filename, "full-%s%d-%s.json", aTestName, aNum, aMode);
+  sprintf(filename, "complete-%s%d-%s.json", aTestName, aNum, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
 
   // The --show-dump-stats=yes is there just to give that option some basic
   // testing, e.g. ensure it doesn't crash. It's hard to test much beyond that.
   char options[128];
-  sprintf(options, "--mode=%s --sample-below=1 --show-dump-stats=yes", aMode);
+  sprintf(options, "--mode=%s --stacks=full --show-dump-stats=yes", aMode);
   ResetEverything(options);
 
   // Analyze 1: 1 freed, 9 out of 10 unreported.
@@ -129,11 +129,11 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // A no-op.
   free(nullptr);
 
-  // Note: 8 bytes is the smallest requested size that gives consistent
+  // Note: 16 bytes is the smallest requested size that gives consistent
   // behaviour across all platforms with jemalloc.
   // Analyze 1: reported.
   // Analyze 2: thrice-reported.
-  char* a2 = (char*) malloc(8);
+  char* a2 = (char*) malloc(16);
   Report(a2);
 
   // Analyze 1: reported.
@@ -144,7 +144,7 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // ReportOnAlloc, then freed.
   // Analyze 1: freed, irrelevant.
   // Analyze 2: freed, irrelevant.
-  char* b2 = (char*) malloc(8);
+  char* b2 = (char*) malloc(16);
   ReportOnAlloc(b2);
   free(b2);
 
@@ -272,63 +272,46 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
 }
 
 void
-TestSampled(const char* aTestName, const char* aMode, int aSeven)
+TestPartial(const char* aTestName, const char* aMode, int aSeven)
 {
   char filename[128];
-  sprintf(filename, "full-%s-%s.json", aTestName, aMode);
+  sprintf(filename, "complete-%s-%s.json", aTestName, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
 
   char options[128];
-  sprintf(options, "--mode=%s --sample-below=128", aMode);
+  sprintf(options, "--mode=%s", aMode);
   ResetEverything(options);
 
+  int kTenThousand = aSeven + 9993;
   char* s;
 
-  // This equals the sample size, and so is reported exactly.  It should be
-  // listed before records of the same size that are sampled.
-  s = (char*) malloc(128);
-  UseItOrLoseIt(s, aSeven);
+  // The output of this function is deterministic but it relies on the
+  // probability and seeds given to the FastBernoulliTrial instance in
+  // ResetBernoulli(). If they change, the output will change too.
 
-  // This exceeds the sample size, and so is reported exactly.
-  s = (char*) malloc(160);
-  UseItOrLoseIt(s, aSeven);
-
-  // These together constitute exactly one sample.
-  for (int i = 0; i < aSeven + 9; i++) {
-    s = (char*) malloc(8);
+  // Expected fraction with stacks: (1 - (1 - 0.003) ** 16) = 0.0469.
+  // So we expect about 0.0469 * 10000 == 469.
+  // We actually get 511.
+  for (int i = 0; i < kTenThousand; i++) {
+    s = (char*) malloc(16);
     UseItOrLoseIt(s, aSeven);
   }
 
-  // These fall 8 bytes short of a full sample.
-  for (int i = 0; i < aSeven + 8; i++) {
-    s = (char*) malloc(8);
+  // Expected fraction with stacks: (1 - (1 - 0.003) ** 128) = 0.3193.
+  // So we expect about 0.3193 * 10000 == 3193.
+  // We actually get 3136.
+  for (int i = 0; i < kTenThousand; i++) {
+    s = (char*) malloc(128);
     UseItOrLoseIt(s, aSeven);
   }
 
-  // This exceeds the sample size, and so is recorded exactly.
-  s = (char*) malloc(256);
-  UseItOrLoseIt(s, aSeven);
-
-  // This gets more than to a full sample from the |i < aSeven + 8| loop above.
-  s = (char*) malloc(96);
-  UseItOrLoseIt(s, aSeven);
-
-  // This gets to another full sample.
-  for (int i = 0; i < aSeven - 2; i++) {
-    s = (char*) malloc(8);
+  // Expected fraction with stacks: (1 - (1 - 0.003) ** 1024) = 0.9539.
+  // So we expect about 0.9539 * 10000 == 9539.
+  // We actually get 9531.
+  for (int i = 0; i < kTenThousand; i++) {
+    s = (char*) malloc(1024);
     UseItOrLoseIt(s, aSeven);
   }
-
-  // This allocates 16, 32, ..., 128 bytes, which results in a heap block
-  // record that contains a mix of sample and non-sampled blocks, and so should
-  // be printed with '~' signs.
-  for (int i = 1; i <= aSeven + 1; i++) {
-    s = (char*) malloc(i * 16);
-    UseItOrLoseIt(s, aSeven);
-  }
-
-  // At the end we're 64 bytes into the current sample so we report ~1,424
-  // bytes of allocation overall, which is 64 less than the real value 1,488.
 
   Analyze(Move(f));
 }
@@ -377,13 +360,13 @@ RunTests()
   TestEmpty("empty", "dark-matter");
   TestEmpty("empty", "cumulative");
 
-  TestUnsampled("unsampled", 1, "live",        seven);
-  TestUnsampled("unsampled", 1, "dark-matter", seven);
+  TestFull("full", 1, "live",        seven);
+  TestFull("full", 1, "dark-matter", seven);
 
-  TestUnsampled("unsampled", 2, "dark-matter", seven);
-  TestUnsampled("unsampled", 2, "cumulative",  seven);
+  TestFull("full", 2, "dark-matter", seven);
+  TestFull("full", 2, "cumulative",  seven);
 
-  TestSampled("sampled", "live", seven);
+  TestPartial("partial", "live", seven);
 
   TestScan(seven);
 }

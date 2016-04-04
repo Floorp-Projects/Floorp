@@ -47,11 +47,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
   private:
     MBasicBlock(MIRGraph& graph, const CompileInfo& info, BytecodeSite* site, Kind kind);
-    bool init();
+    MOZ_WARN_UNUSED_RESULT bool init();
     void copySlots(MBasicBlock* from);
-    bool inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlock* pred,
-                 uint32_t popped, unsigned stackPhiCount = 0);
-    bool inheritResumePoint(MBasicBlock* pred);
+    MOZ_WARN_UNUSED_RESULT bool inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlock* pred,
+                                        uint32_t popped, unsigned stackPhiCount = 0);
+    MOZ_WARN_UNUSED_RESULT bool inheritResumePoint(MBasicBlock* pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
     // This block cannot be reached by any means.
@@ -116,7 +116,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     static MBasicBlock* NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
                                              MBasicBlock* pred, BytecodeSite* site,
                                              unsigned loopStateSlots);
-    static MBasicBlock* NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred);
+    static MBasicBlock* NewSplitEdge(MIRGraph& graph, const CompileInfo& info,
+                                     MBasicBlock* pred, size_t predEdgeIdx,
+                                     MBasicBlock* succ);
     static MBasicBlock* NewAsmJS(MIRGraph& graph, const CompileInfo& info,
                                  MBasicBlock* pred, Kind kind);
 
@@ -152,8 +154,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MDefinition* argumentsObject();
 
     // Increase the number of slots available
-    bool increaseSlots(size_t num);
-    bool ensureHasSlots(size_t num);
+    MOZ_WARN_UNUSED_RESULT bool increaseSlots(size_t num);
+    MOZ_WARN_UNUSED_RESULT bool ensureHasSlots(size_t num);
 
     // Initializes a slot value; must not be called for normal stack
     // operations, as it will not create new SSA names for copies.
@@ -164,7 +166,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // In an OSR block, set all MOsrValues to use the MResumePoint attached to
     // the MStart.
-    bool linkOsrValues(MStart* start);
+    MOZ_WARN_UNUSED_RESULT bool linkOsrValues(MStart* start);
 
     // Sets the instruction associated with various slot types. The
     // instruction must lie at the top of the stack.
@@ -218,17 +220,17 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Adds a predecessor. Every predecessor must have the same exit stack
     // depth as the entry state to this block. Adding a predecessor
     // automatically creates phi nodes and rewrites uses as needed.
-    bool addPredecessor(TempAllocator& alloc, MBasicBlock* pred);
-    bool addPredecessorPopN(TempAllocator& alloc, MBasicBlock* pred, uint32_t popped);
+    MOZ_WARN_UNUSED_RESULT bool addPredecessor(TempAllocator& alloc, MBasicBlock* pred);
+    MOZ_WARN_UNUSED_RESULT bool addPredecessorPopN(TempAllocator& alloc, MBasicBlock* pred, uint32_t popped);
 
     // Add a predecessor which won't introduce any new phis to this block.
     // This may be called after the contents of this block have been built.
     void addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existingPred);
 
     // Stranger utilities used for inlining.
-    bool addPredecessorWithoutPhis(MBasicBlock* pred);
+    MOZ_WARN_UNUSED_RESULT bool addPredecessorWithoutPhis(MBasicBlock* pred);
     void inheritSlots(MBasicBlock* parent);
-    bool initEntrySlots(TempAllocator& alloc);
+    MOZ_WARN_UNUSED_RESULT bool initEntrySlots(TempAllocator& alloc);
 
     // Replaces an edge for a given block with a new block. This is
     // used for critical edge splitting.
@@ -253,8 +255,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Sets a back edge. This places phi nodes and rewrites instructions within
     // the current loop as necessary. If the backedge introduces new types for
     // phis at the loop header, returns a disabling abort.
-    AbortReason setBackedge(MBasicBlock* block);
-    bool setBackedgeAsmJS(MBasicBlock* block);
+    MOZ_WARN_UNUSED_RESULT AbortReason setBackedge(MBasicBlock* block);
+    MOZ_WARN_UNUSED_RESULT bool setBackedgeAsmJS(MBasicBlock* block);
 
     // Resets a LOOP_HEADER block to a NORMAL block.  This is needed when
     // optimizations remove the backedge.
@@ -269,10 +271,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void inheritPhis(MBasicBlock* header);
 
     // Propagates backedge slots into phis operands of the loop header.
-    bool inheritPhisFromBackedge(MBasicBlock* backedge, bool* hadTypeChange);
+    MOZ_WARN_UNUSED_RESULT bool inheritPhisFromBackedge(MBasicBlock* backedge, bool* hadTypeChange);
 
     // Compute the types for phis in this block according to their inputs.
-    bool specializePhis();
+    MOZ_WARN_UNUSED_RESULT bool specializePhis();
 
     void insertBefore(MInstruction* at, MInstruction* ins);
     void insertAfter(MInstruction* at, MInstruction* ins);
@@ -429,7 +431,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool hasUniqueBackedge() const {
         MOZ_ASSERT(isLoopHeader());
         MOZ_ASSERT(numPredecessors() >= 2);
-        return numPredecessors() == 2;
+        if (numPredecessors() == 2)
+            return true;
+        if (numPredecessors() == 3) // fixup block added by ValueNumbering phase.
+            return getPredecessor(1)->numPredecessors() == 0;
+        return false;
     }
     MBasicBlock* backedge() const {
         MOZ_ASSERT(hasUniqueBackedge());
@@ -476,6 +482,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     }
     void unmark() {
         MOZ_ASSERT(mark_, "Unarking unmarked block");
+        unmarkUnchecked();
+    }
+    void unmarkUnchecked() {
         mark_ = false;
     }
 
@@ -764,7 +773,7 @@ class MIRGraph
         return returnAccumulator_;
     }
 
-    bool addReturn(MBasicBlock* returnBlock) {
+    MOZ_WARN_UNUSED_RESULT bool addReturn(MBasicBlock* returnBlock) {
         if (!returnAccumulator_)
             return true;
 

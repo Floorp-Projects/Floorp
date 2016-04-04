@@ -5,6 +5,7 @@
 from marionette import MarionetteTestCase
 from marionette_driver.errors import (ElementNotAccessibleException,
                                       ElementNotVisibleException)
+from marionette_driver.by import By
 
 
 class TestAccessibility(MarionetteTestCase):
@@ -74,7 +75,7 @@ class TestAccessibility(MarionetteTestCase):
 
     def run_element_test(self, ids, testFn):
         for id in ids:
-            element = self.marionette.find_element("id", id)
+            element = self.marionette.find_element(By.ID, id)
             testFn(element)
 
     def setup_accessibility(self, raisesAccessibilityExceptions=True, navigate=True):

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test very long clipPath chain - MAY CRASH</title>
+  <script><![CDATA[
+
+// This script creates a very long chain of clipPath elements to test whether
+// that causes a stack overflow that crashes the UA.  The first clipPath clips
+// to a 50x100 rect, the last to a 25x100 rect.  If a UA was to apply the
+// entire clipPath chain (unlikely) a rect 25x100 would be rendered.
+//
+// At the time of writing, Firefox would treat the entire chain of clipPaths as
+// invalid due to its excessive length, and refuse to render the referencing
+// element at all.  One alternative would be to ignore the clipPath reference
+// and render the referencing element without any clipping.  Another
+// alternative would be to break the chain and clip the referencing element,
+// but only using the first X clipPaths in the chain (in which case a 50x100
+// rect would be rendered).
+
+var chainLength = 100000;
+
+var SVG_NS = "http://www.w3.org/2000/svg";
+var template = document.createElementNS(SVG_NS, "clipPath");
+var templatesRect = document.createElementNS(SVG_NS, "rect");
+templatesRect.setAttribute("width", "100");
+templatesRect.setAttribute("height", "100");
+template.appendChild(templatesRect);
+
+function createClipPath(index) {
+  var cp = template.cloneNode(true);
+  cp.id = "c" + index;
+  cp.setAttribute("clip-path", "url(#c" + (index + 1) + ")");
+  return cp;
+}
+
+var de = document.documentElement;
+
+for (var i = chainLength; i > 0; --i) {
+  var cp = createClipPath(i);
+
+  if (i == chainLength) {
+    cp.firstChild.setAttribute("width", "25");
+  }
+  else if (i == 1) {
+    cp.firstChild.setAttribute("width", "50");
+  }
+
+  de.appendChild(cp);
+}
+
+  ]]></script>
+  <rect width="100%" height="100%" fill="lime"/>
+  <!-- We don't expect the following element to render at all -->
+  <rect width="500" height="500" clip-path="url(#c1)"/>
+</svg>

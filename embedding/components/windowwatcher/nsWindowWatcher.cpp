@@ -368,7 +368,8 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             /* calledFromJS = */ false, dialog,
-                            /* navigate = */ true, nullptr, argv, aResult);
+                            /* navigate = */ true, nullptr, argv,
+                            /* openerFullZoom = */ nullptr, aResult);
 }
 
 struct SizeSpec
@@ -426,6 +427,8 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              bool aNavigate,
                              nsITabParent* aOpeningTab,
                              nsISupports* aArguments,
+                             float aOpenerFullZoom,
+                             uint8_t aOptionalArgc,
                              mozIDOMWindowProxy** aResult)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -445,7 +448,9 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             aCalledFromScript, dialog,
-                            aNavigate, aOpeningTab, argv, aResult);
+                            aNavigate, aOpeningTab, argv,
+                            aOptionalArgc >= 1 ? &aOpenerFullZoom : nullptr,
+                            aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -488,6 +493,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     bool aNavigate,
                                     nsITabParent* aOpeningTab,
                                     nsIArray* aArgv,
+                                    float* aOpenerFullZoom,
                                     mozIDOMWindowProxy** aResult)
 {
   nsresult rv = NS_OK;
@@ -630,6 +636,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   bool isCallerChrome =
     nsContentUtils::LegacyIsCallerChromeOrNativeCode() && !openedFromRemoteTab;
 
+  // XXXbz Why is an AutoJSAPI good enough here?  Wouldn't AutoEntryScript (so
+  // we affect the entry global) make more sense?  Or do we just want to affect
+  // GetSubjectPrincipal()?
   dom::AutoJSAPI jsapiChromeGuard;
 
   bool windowTypeIsChrome =
@@ -1072,7 +1081,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   }
 
   if (isNewToplevelWindow) {
-    SizeOpenedDocShellItem(newDocShellItem, aParent, isCallerChrome, sizeSpec);
+    SizeOpenedDocShellItem(newDocShellItem, aParent, isCallerChrome, sizeSpec,
+                           aOpenerFullZoom);
   }
 
   // XXXbz isn't windowIsModal always true when windowIsModalContentDialog?
@@ -2052,7 +2062,8 @@ void
 nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
                                         mozIDOMWindowProxy* aParent,
                                         bool aIsCallerChrome,
-                                        const SizeSpec& aSizeSpec)
+                                        const SizeSpec& aSizeSpec,
+                                        float* aOpenerFullZoom)
 {
   // position and size of window
   int32_t left = 0, top = 0, width = 100, height = 100;
@@ -2069,8 +2080,8 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
     return;
   }
 
-  double openerZoom = 1.0;
-  if (aParent) {
+  double openerZoom = aOpenerFullZoom ? *aOpenerFullZoom : 1.0;
+  if (aParent && !aOpenerFullZoom) {
     nsCOMPtr<nsPIDOMWindowOuter> piWindow = nsPIDOMWindowOuter::From(aParent);
     if (nsIDocument* doc = piWindow->GetDoc()) {
       if (nsIPresShell* shell = doc->GetShell()) {
@@ -2226,8 +2237,30 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
   // size and position the window
 
   if (positionSpecified) {
-    treeOwnerAsWin->SetPosition(left * scale, top * scale);
-    // moving the window may have changed its scale factor
+    // Get the scale factor appropriate for the screen we're actually
+    // positioning on.
+    nsCOMPtr<nsIScreen> screen;
+    nsCOMPtr<nsIScreenManager> screenMgr(
+      do_GetService("@mozilla.org/gfx/screenmanager;1"));
+    if (screenMgr) {
+      screenMgr->ScreenForRect(left, top, 1, 1, getter_AddRefs(screen));
+    }
+    if (screen) {
+      screen->GetDefaultCSSScaleFactor(&scale);
+      int32_t screenLeft, screenTop, screenWd, screenHt;
+      screen->GetRectDisplayPix(&screenLeft, &screenTop, &screenWd, &screenHt);
+      // Adjust by desktop-pixel origin of the target screen to convert from
+      // per-screen CSS-px coordinates.
+      treeOwnerAsWin->SetPosition((left - screenLeft) * scale + screenLeft,
+                                  (top - screenTop) * scale + screenTop);
+    } else {
+      // Couldn't find screen? This shouldn't happen.
+      treeOwnerAsWin->SetPosition(left * scale, top * scale);
+    }
+    // This shouldn't be necessary, given the screen check above, but in case
+    // moving the window didn't put it where we expected (e.g. due to issues
+    // at the widget level, or whatever), let's re-fetch the scale factor for
+    // wherever it really ended up
     treeOwnerAsWin->GetUnscaledDevicePixelsPerCSSPixel(&scale);
   }
   if (aSizeSpec.SizeSpecified()) {

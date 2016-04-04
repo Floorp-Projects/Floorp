@@ -343,7 +343,9 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
              !(p1->peer_nominated || p1->nominated)) ||
             (p2->priority > p1->priority) ||
             ((p2->state == NR_ICE_PAIR_STATE_SUCCEEDED) &&
-             (p1->state != NR_ICE_PAIR_STATE_SUCCEEDED))
+             (p1->state != NR_ICE_PAIR_STATE_SUCCEEDED)) ||
+            ((p2->state != NR_ICE_PAIR_STATE_CANCELLED) &&
+             (p1->state == NR_ICE_PAIR_STATE_CANCELLED))
             ) {
           /* p2 is a better pair. */
           break;

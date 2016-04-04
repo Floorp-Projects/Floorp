@@ -202,6 +202,12 @@ LIRGeneratorARM64::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
+LIRGeneratorARM64::visitAsmSelect(MAsmSelect* ins)
+{
+    MOZ_CRASH("visitAsmSelect");
+}
+
+void
 LIRGeneratorARM64::lowerUDiv(MDiv* div)
 {
     MOZ_CRASH("lowerUDiv");
@@ -338,6 +344,12 @@ LIRGeneratorARM64::visitRandom(MRandom* ins)
 
 void
 LIRGeneratorARM64::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MOZ_CRASH("NY");
+}
+
+void
+LIRGeneratorARM64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MOZ_CRASH("NY");
 }

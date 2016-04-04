@@ -172,12 +172,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   mAsyncStack.emplace(cx, aCallback->GetCreationStack());
   if (*mAsyncStack) {
-    mAsyncCause.emplace(cx, JS_NewStringCopyZ(cx, aExecutionReason));
-    if (*mAsyncCause) {
-      mAsyncStackSetter.emplace(cx, *mAsyncStack, *mAsyncCause);
-    } else {
-      JS_ClearPendingException(cx);
-    }
+    mAsyncStackSetter.emplace(cx, *mAsyncStack, aExecutionReason);
   }
 
   // Enter the compartment of our callback, so we can actually work with it.
@@ -189,9 +184,6 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   // And now we're ready to go.
   mCx = cx;
-
-  // Make sure the JS engine doesn't report exceptions we want to re-throw.
-  mAutoEntryScript->TakeOwnershipOfErrorReporting();
 }
 
 bool
@@ -253,7 +245,6 @@ CallbackObject::CallSetup::~CallSetup()
     if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
         mExceptionHandling == eRethrowExceptions) {
       mErrorResult.MightThrowJSException();
-      MOZ_ASSERT(mAutoEntryScript->OwnsErrorReporting());
       if (needToDealWithException) {
         JS::Rooted<JS::Value> exn(mCx);
         if (mAutoEntryScript->PeekException(&exn) &&
@@ -269,36 +260,14 @@ CallbackObject::CallSetup::~CallSetup()
     if (needToDealWithException) {
       // Either we're supposed to report our exceptions, or we're supposed to
       // re-throw them but we failed to get the exception value.  Either way,
-      // just report the pending exception, if any.
-      //
-      // We don't use nsJSUtils::ReportPendingException here because all it
-      // does at this point is JS_SaveFrameChain and enter a compartment around
-      // a JS_ReportPendingException call.  But our mAutoEntryScript should
-      // already do a JS_SaveFrameChain and we are already in the compartment
-      // we want to be in, so all nsJSUtils::ReportPendingException would do is
-      // screw up our compartment, which is exactly what we do not want.
-      //
-      // XXXbz FIXME: bug 979525 means we don't always JS_SaveFrameChain here,
-      // so we need to go ahead and do that.  This is also the reason we don't
-      // just rely on ~AutoJSAPI reporting the exception for us.  I think if we
-      // didn't need to JS_SaveFrameChain here, we could just rely on that.
-      JS::Rooted<JSObject*> oldGlobal(mCx, JS::CurrentGlobalOrNull(mCx));
-      MOZ_ASSERT(oldGlobal, "How can we not have a global here??");
-      bool saved = JS_SaveFrameChain(mCx);
-      // Make sure the JSAutoCompartment goes out of scope before the
-      // JS_RestoreFrameChain call!
-      {
-        JSAutoCompartment ac(mCx, oldGlobal);
-        MOZ_ASSERT(!JS::DescribeScriptedCaller(mCx),
-                   "Our comment above about JS_SaveFrameChain having been "
-                   "called is a lie?");
-        // Note that we don't JS_ReportPendingException here because we want to
-        // go through our AutoEntryScript's reporting mechanism instead, since
-        // it currently owns error reporting.
-        mAutoEntryScript->ReportException();
-      }
-      if (saved) {
-        JS_RestoreFrameChain(mCx);
+      // we'll just report the pending exception, if any, once ~mAutoEntryScript
+      // runs.  Note that we've already run ~mAc, effectively, so we don't have
+      // to worry about ordering here.
+      if (mErrorResult.IsJSContextException()) {
+        // XXXkhuey bug 1117269.
+        // This won't be true anymore because we will report the exception on
+        // the JSContext ... so throw something else.
+        mErrorResult.Throw(NS_ERROR_UNEXPECTED);
       }
     }
   }
@@ -322,7 +291,11 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
     return nullptr;
   }
 
-  AutoSafeJSContext cx;
+  // We don't init the AutoJSAPI with our callback because we don't want it
+  // reporting errors to its global's onerror handlers.
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
 
   JS::Rooted<JSObject*> callback(cx, aCallback->Callback());
 

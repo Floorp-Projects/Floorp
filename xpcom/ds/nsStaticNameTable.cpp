@@ -50,8 +50,7 @@ struct NameTableEntry : public PLDHashEntryHdr
 };
 
 static bool
-matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
-                             const void* aVoidKey)
+matchNameKeysCaseInsensitive(const PLDHashEntryHdr* aHdr, const void* aVoidKey)
 {
   auto entry = static_cast<const NameTableEntry*>(aHdr);
   auto key = static_cast<const NameTableKey*>(aVoidKey);
@@ -71,7 +70,7 @@ matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
  * matter.
  */
 static PLDHashNumber
-caseInsensitiveStringHashKey(PLDHashTable* aTable, const void* aKey)
+caseInsensitiveStringHashKey(const void* aKey)
 {
   PLDHashNumber h = 0;
   const NameTableKey* tableKey = static_cast<const NameTableKey*>(aKey);

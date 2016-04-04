@@ -6,7 +6,6 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, components} = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 if (!isWorker) {
@@ -40,7 +39,7 @@ function hasArrayIndex(str) {
  * Analyses a given string to find the last statement that is interesting for
  * later completion.
  *
- * @param   string aStr
+ * @param   string str
  *          A string to analyse.
  *
  * @returns object
@@ -55,40 +54,34 @@ function hasArrayIndex(str) {
  *              startPos: index of where the last statement begins
  *            }
  */
-function findCompletionBeginning(aStr)
-{
+function findCompletionBeginning(str) {
   let bodyStack = [];
 
   let state = STATE_NORMAL;
   let start = 0;
   let c;
-  for (let i = 0; i < aStr.length; i++) {
-    c = aStr[i];
+  for (let i = 0; i < str.length; i++) {
+    c = str[i];
 
     switch (state) {
       // Normal JS state.
       case STATE_NORMAL:
         if (c == '"') {
           state = STATE_DQUOTE;
-        }
-        else if (c == "'") {
+        } else if (c == "'") {
           state = STATE_QUOTE;
-        }
-        else if (c == ";") {
+        } else if (c == ";") {
           start = i + 1;
-        }
-        else if (c == " ") {
+        } else if (c == " ") {
           start = i + 1;
-        }
-        else if (OPEN_BODY.indexOf(c) != -1) {
+        } else if (OPEN_BODY.indexOf(c) != -1) {
           bodyStack.push({
             token: c,
             start: start
           });
           start = i + 1;
-        }
-        else if (CLOSE_BODY.indexOf(c) != -1) {
-          var last = bodyStack.pop();
+        } else if (CLOSE_BODY.indexOf(c) != -1) {
+          let last = bodyStack.pop();
           if (!last || OPEN_CLOSE_BODY[last.token] != c) {
             return {
               err: "syntax error"
@@ -96,8 +89,7 @@ function findCompletionBeginning(aStr)
           }
           if (c == "}") {
             start = i + 1;
-          }
-          else {
+          } else {
             start = last.start;
           }
         }
@@ -107,13 +99,11 @@ function findCompletionBeginning(aStr)
       case STATE_DQUOTE:
         if (c == "\\") {
           i++;
-        }
-        else if (c == "\n") {
+        } else if (c == "\n") {
           return {
             err: "unterminated string literal"
           };
-        }
-        else if (c == '"') {
+        } else if (c == '"') {
           state = STATE_NORMAL;
         }
         break;
@@ -122,13 +112,11 @@ function findCompletionBeginning(aStr)
       case STATE_QUOTE:
         if (c == "\\") {
           i++;
-        }
-        else if (c == "\n") {
+        } else if (c == "\n") {
           return {
             err: "unterminated string literal"
           };
-        }
-        else if (c == "'") {
+        } else if (c == "'") {
           state = STATE_NORMAL;
         }
         break;
@@ -145,15 +133,17 @@ function findCompletionBeginning(aStr)
  * Provides a list of properties, that are possible matches based on the passed
  * Debugger.Environment/Debugger.Object and inputValue.
  *
- * @param object aDbgObject
- *        When the debugger is not paused this Debugger.Object wraps the scope for autocompletion.
+ * @param object dbgObject
+ *        When the debugger is not paused this Debugger.Object wraps
+ *        the scope for autocompletion.
  *        It is null if the debugger is paused.
  * @param object anEnvironment
- *        When the debugger is paused this Debugger.Environment is the scope for autocompletion.
+ *        When the debugger is paused this Debugger.Environment is the
+ *        scope for autocompletion.
  *        It is null if the debugger is not paused.
- * @param string aInputValue
+ * @param string inputValue
  *        Value that should be completed.
- * @param number [aCursor=aInputValue.length]
+ * @param number [cursor=inputValue.length]
  *        Optional offset in the input where the cursor is located. If this is
  *        omitted then the cursor is assumed to be at the end of the input
  *        value.
@@ -166,13 +156,12 @@ function findCompletionBeginning(aStr)
  *                         the matches-strings.
  *            }
  */
-function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
-{
-  if (aCursor === undefined) {
-    aCursor = aInputValue.length;
+function JSPropertyProvider(dbgObject, anEnvironment, inputValue, cursor) {
+  if (cursor === undefined) {
+    cursor = inputValue.length;
   }
 
-  let inputValue = aInputValue.substring(0, aCursor);
+  inputValue = inputValue.substring(0, cursor);
 
   // Analyse the inputValue and find the beginning of the last part that
   // should be completed.
@@ -225,7 +214,7 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
   // We are completing a variable / a property lookup.
   let properties = completionPart.split(".");
   let matchProp = properties.pop().trimLeft();
-  let obj = aDbgObject;
+  let obj = dbgObject;
 
   // The first property must be found in the environment of the paused debugger
   // or of the global lexical scope.
@@ -241,9 +230,10 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
     // No problem if it throws, we will just not autocomplete.
     try {
       obj = env.object;
-    } catch(e) { }
-  }
-  else if (hasArrayIndex(firstProp)) {
+    } catch (e) {
+      // Ignore.
+    }
+  } else if (hasArrayIndex(firstProp)) {
     obj = getArrayMemberProperty(null, env, firstProp);
   } else {
     obj = getVariableInEnvironment(env, firstProp);
@@ -253,8 +243,8 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
     return null;
   }
 
-  // We get the rest of the properties recursively starting from the Debugger.Object
-  // that wraps the first property
+  // We get the rest of the properties recursively starting from the
+  // Debugger.Object that wraps the first property
   for (let i = 0; i < properties.length; i++) {
     let prop = properties[i].trim();
     if (!prop) {
@@ -265,8 +255,7 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
       // The property to autocomplete is a member of array. For example
       // list[i][j]..[n]. Traverse the array to get the actual element.
       obj = getArrayMemberProperty(obj, null, prop);
-    }
-    else {
+    } else {
       obj = DevToolsUtils.getProperty(obj, prop);
     }
 
@@ -284,27 +273,25 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
 }
 
 /**
- * Get the array member of aObj for the given aProp. For example, given
- * aProp='list[0][1]' the element at [0][1] of aObj.list is returned.
+ * Get the array member of obj for the given prop. For example, given
+ * prop='list[0][1]' the element at [0][1] of obj.list is returned.
  *
- * @param object aObj
- *        The object to operate on. Should be null if aEnv is passed.
- * @param object aEnv
- *        The Environment to operate in. Should be null if aObj is passed.
- * @param string aProp
+ * @param object obj
+ *        The object to operate on. Should be null if env is passed.
+ * @param object env
+ *        The Environment to operate in. Should be null if obj is passed.
+ * @param string prop
  *        The property to return.
  * @return null or Object
  *         Returns null if the property couldn't be located. Otherwise the array
- *         member identified by aProp.
+ *         member identified by prop.
  */
-function getArrayMemberProperty(aObj, aEnv, aProp)
-{
+function getArrayMemberProperty(obj, env, prop) {
   // First get the array.
-  let obj = aObj;
-  let propWithoutIndices = aProp.substr(0, aProp.indexOf("["));
+  let propWithoutIndices = prop.substr(0, prop.indexOf("["));
 
-  if (aEnv) {
-    obj = getVariableInEnvironment(aEnv, propWithoutIndices);
+  if (env) {
+    obj = getVariableInEnvironment(env, propWithoutIndices);
   } else {
     obj = DevToolsUtils.getProperty(obj, propWithoutIndices);
   }
@@ -316,10 +303,10 @@ function getArrayMemberProperty(aObj, aEnv, aProp)
   // Then traverse the list of indices to get the actual element.
   let result;
   let arrayIndicesRegex = /\[[^\]]*\]/g;
-  while ((result = arrayIndicesRegex.exec(aProp)) !== null) {
+  while ((result = arrayIndicesRegex.exec(prop)) !== null) {
     let indexWithBrackets = result[0];
     let indexAsText = indexWithBrackets.substr(1, indexWithBrackets.length - 2);
-    let index = parseInt(indexAsText);
+    let index = parseInt(indexAsText, 10);
 
     if (isNaN(index)) {
       return null;
@@ -338,19 +325,18 @@ function getArrayMemberProperty(aObj, aEnv, aProp)
 /**
  * Check if the given Debugger.Object can be used for autocomplete.
  *
- * @param Debugger.Object aObject
+ * @param Debugger.Object object
  *        The Debugger.Object to check.
  * @return boolean
  *         True if further inspection into the object is possible, or false
  *         otherwise.
  */
-function isObjectUsable(aObject)
-{
-  if (aObject == null) {
+function isObjectUsable(object) {
+  if (object == null) {
     return false;
   }
 
-  if (typeof aObject == "object" && aObject.class == "DeadObject") {
+  if (typeof object == "object" && object.class == "DeadObject") {
     return false;
   }
 
@@ -358,59 +344,54 @@ function isObjectUsable(aObject)
 }
 
 /**
- * @see getExactMatch_impl()
+ * @see getExactMatchImpl()
  */
-function getVariableInEnvironment(anEnvironment, aName)
-{
-  return getExactMatch_impl(anEnvironment, aName, DebuggerEnvironmentSupport);
+function getVariableInEnvironment(anEnvironment, name) {
+  return getExactMatchImpl(anEnvironment, name, DebuggerEnvironmentSupport);
 }
 
 /**
- * @see getMatchedProps_impl()
+ * @see getMatchedPropsImpl()
  */
-function getMatchedPropsInEnvironment(anEnvironment, aMatch)
-{
-  return getMatchedProps_impl(anEnvironment, aMatch, DebuggerEnvironmentSupport);
+function getMatchedPropsInEnvironment(anEnvironment, match) {
+  return getMatchedPropsImpl(anEnvironment, match, DebuggerEnvironmentSupport);
 }
 
 /**
- * @see getMatchedProps_impl()
+ * @see getMatchedPropsImpl()
  */
-function getMatchedPropsInDbgObject(aDbgObject, aMatch)
-{
-  return getMatchedProps_impl(aDbgObject, aMatch, DebuggerObjectSupport);
+function getMatchedPropsInDbgObject(dbgObject, match) {
+  return getMatchedPropsImpl(dbgObject, match, DebuggerObjectSupport);
 }
 
 /**
- * @see getMatchedProps_impl()
+ * @see getMatchedPropsImpl()
  */
-function getMatchedProps(aObj, aMatch)
-{
-  if (typeof aObj != "object") {
-    aObj = aObj.constructor.prototype;
+function getMatchedProps(obj, match) {
+  if (typeof obj != "object") {
+    obj = obj.constructor.prototype;
   }
-  return getMatchedProps_impl(aObj, aMatch, JSObjectSupport);
+  return getMatchedPropsImpl(obj, match, JSObjectSupport);
 }
 
 /**
  * Get all properties in the given object (and its parent prototype chain) that
  * match a given prefix.
  *
- * @param mixed aObj
+ * @param mixed obj
  *        Object whose properties we want to filter.
- * @param string aMatch
+ * @param string match
  *        Filter for properties that match this string.
  * @return object
  *         Object that contains the matchProp and the list of names.
  */
-function getMatchedProps_impl(aObj, aMatch, {chainIterator, getProperties})
-{
+function getMatchedPropsImpl(obj, match, {chainIterator, getProperties}) {
   let matches = new Set();
   let numProps = 0;
 
   // We need to go up the prototype chain.
-  let iter = chainIterator(aObj);
-  for (let obj of iter) {
+  let iter = chainIterator(obj);
+  for (obj of iter) {
     let props = getProperties(obj);
     numProps += props.length;
 
@@ -424,10 +405,10 @@ function getMatchedProps_impl(aObj, aMatch, {chainIterator, getProperties})
 
     for (let i = 0; i < props.length; i++) {
       let prop = props[i];
-      if (prop.indexOf(aMatch) != 0) {
+      if (prop.indexOf(match) != 0) {
         continue;
       }
-      if (prop.indexOf('-') > -1) {
+      if (prop.indexOf("-") > -1) {
         continue;
       }
       // If it is an array index, we can't take it.
@@ -444,7 +425,7 @@ function getMatchedProps_impl(aObj, aMatch, {chainIterator, getProperties})
   }
 
   return {
-    matchProp: aMatch,
+    matchProp: match,
     matches: [...matches],
   };
 }
@@ -453,20 +434,19 @@ function getMatchedProps_impl(aObj, aMatch, {chainIterator, getProperties})
  * Returns a property value based on its name from the given object, by
  * recursively checking the object's prototype.
  *
- * @param object aObj
+ * @param object obj
  *        An object to look the property into.
- * @param string aName
+ * @param string name
  *        The property that is looked up.
  * @returns object|undefined
  *        A Debugger.Object if the property exists in the object's prototype
  *        chain, undefined otherwise.
  */
-function getExactMatch_impl(aObj, aName, {chainIterator, getProperty})
-{
+function getExactMatchImpl(obj, name, {chainIterator, getProperty}) {
   // We need to go up the prototype chain.
-  let iter = chainIterator(aObj);
-  for (let obj of iter) {
-    let prop = getProperty(obj, aName, aObj);
+  let iter = chainIterator(obj);
+  for (obj of iter) {
+    let prop = getProperty(obj, name, obj);
     if (prop) {
       return prop.value;
     }
@@ -474,66 +454,57 @@ function getExactMatch_impl(aObj, aName, {chainIterator, getProperty})
   return undefined;
 }
 
-
 var JSObjectSupport = {
-  chainIterator: function*(aObj)
-  {
-    while (aObj) {
-      yield aObj;
-      aObj = Object.getPrototypeOf(aObj);
+  chainIterator: function*(obj) {
+    while (obj) {
+      yield obj;
+      obj = Object.getPrototypeOf(obj);
     }
   },
 
-  getProperties: function(aObj)
-  {
-    return Object.getOwnPropertyNames(aObj);
+  getProperties: function(obj) {
+    return Object.getOwnPropertyNames(obj);
   },
 
-  getProperty: function()
-  {
+  getProperty: function() {
     // getProperty is unsafe with raw JS objects.
-    throw "Unimplemented!";
+    throw new Error("Unimplemented!");
   },
 };
 
 var DebuggerObjectSupport = {
-  chainIterator: function*(aObj)
-  {
-    while (aObj) {
-      yield aObj;
-      aObj = aObj.proto;
+  chainIterator: function*(obj) {
+    while (obj) {
+      yield obj;
+      obj = obj.proto;
     }
   },
 
-  getProperties: function(aObj)
-  {
-    return aObj.getOwnPropertyNames();
+  getProperties: function(obj) {
+    return obj.getOwnPropertyNames();
   },
 
-  getProperty: function(aObj, aName, aRootObj)
-  {
+  getProperty: function(obj, name, rootObj) {
     // This is left unimplemented in favor to DevToolsUtils.getProperty().
-    throw "Unimplemented!";
+    throw new Error("Unimplemented!");
   },
 };
 
 var DebuggerEnvironmentSupport = {
-  chainIterator: function*(aObj)
-  {
-    while (aObj) {
-      yield aObj;
-      aObj = aObj.parent;
+  chainIterator: function*(obj) {
+    while (obj) {
+      yield obj;
+      obj = obj.parent;
     }
   },
 
-  getProperties: function(aObj)
-  {
-    let names = aObj.names();
+  getProperties: function(obj) {
+    let names = obj.names();
 
     // Include 'this' in results (in sorted order)
     for (let i = 0; i < names.length; i++) {
-      if (i === names.length - 1 || names[i+1] > "this") {
-        names.splice(i+1, 0, "this");
+      if (i === names.length - 1 || names[i + 1] > "this") {
+        names.splice(i + 1, 0, "this");
         break;
       }
     }
@@ -541,24 +512,25 @@ var DebuggerEnvironmentSupport = {
     return names;
   },
 
-  getProperty: function(aObj, aName)
-  {
+  getProperty: function(obj, name) {
     let result;
-    // Try/catch since aName can be anything, and getVariable throws if
+    // Try/catch since name can be anything, and getVariable throws if
     // it's not a valid ECMAScript identifier name
     try {
       // TODO: we should use getVariableDescriptor() here - bug 725815.
-      result = aObj.getVariable(aName);
-    } catch(e) { }
+      result = obj.getVariable(name);
+    } catch (e) {
+      // Ignore.
+    }
 
     // FIXME: Need actual UI, bug 941287.
-    if (result === undefined || result.optimizedOut || result.missingArguments) {
+    if (result === undefined || result.optimizedOut ||
+        result.missingArguments) {
       return null;
     }
     return { value: result };
   },
 };
-
 
 exports.JSPropertyProvider = DevToolsUtils.makeInfallible(JSPropertyProvider);
 

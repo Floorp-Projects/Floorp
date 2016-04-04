@@ -47,7 +47,6 @@ var mgmtProps = {
   getEventHandler: "function",
   getAll: "function",
   getIcon: "function",
-  getNotInstalled: "function",
   uninstall: "function",
   oninstall: "object",
   onuninstall: "object",

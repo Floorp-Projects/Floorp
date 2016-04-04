@@ -700,8 +700,7 @@ JSFunction::trace(JSTracer* trc)
                    (HeapValue*)toExtended()->extendedSlots, "nativeReserved");
     }
 
-    if (atom_)
-        TraceEdge(trc, &atom_, "atom");
+    TraceNullableEdge(trc, &atom_, "atom");
 
     if (isInterpreted()) {
         // Functions can be be marked as interpreted despite having no script
@@ -835,6 +834,15 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     return functionProto;
 }
 
+static const ClassSpec JSFunctionClassSpec = {
+    CreateFunctionConstructor,
+    CreateFunctionPrototype,
+    nullptr,
+    nullptr,
+    function_methods,
+    function_properties
+};
+
 const Class JSFunction::class_ = {
     js_Function_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
@@ -850,14 +858,7 @@ const Class JSFunction::class_ = {
     fun_hasInstance,
     nullptr,                 /* construct   */
     fun_trace,
-    {
-        CreateFunctionConstructor,
-        CreateFunctionPrototype,
-        nullptr,
-        nullptr,
-        function_methods,
-        function_properties
-    }
+    &JSFunctionClassSpec
 };
 
 const Class* const js::FunctionClassPtr = &JSFunction::class_;
@@ -987,8 +988,6 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
         if (!src)
             return nullptr;
 
-        bool exprBody = fun->isExprBody();
-
         // The source data for functions created by calling the Function
         // constructor is only the function's body.  This depends on the fact,
         // asserted below, that in Function("function f() {}"), the inner
@@ -1001,15 +1000,9 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
         // Functions created with the constructor can't be arrow functions or
         // expression closures.
         MOZ_ASSERT_IF(funCon, !fun->isArrow());
-        MOZ_ASSERT_IF(funCon, !exprBody);
+        MOZ_ASSERT_IF(funCon, !fun->isExprBody());
         MOZ_ASSERT_IF(!funCon && !fun->isArrow(),
                       src->length() > 0 && src->latin1OrTwoByteChar(0) == '(');
-
-        // If a function inherits strict mode by having scopes above it that
-        // have "use strict", we insert "use strict" into the body of the
-        // function. This ensures that if the result of toString is evaled, the
-        // resulting function will have the same semantics.
-        bool addUseStrict = script->strict() && !script->explicitUseStrict() && !fun->isArrow();
 
         bool buildBody = funCon;
         if (buildBody) {
@@ -1036,44 +1029,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
             if (!out.append(") {\n"))
                 return nullptr;
         }
-        if (addUseStrict) {
-            // We need to get at the body either because we're only supposed to
-            // return the body or we need to insert "use strict" into the body.
-            size_t bodyStart = 0, bodyEnd;
-
-            // If the function is defined in the Function constructor, we
-            // already have a body.
-            if (!funCon) {
-                MOZ_ASSERT(!buildBody);
-                if (!FindBody(cx, fun, src, &bodyStart, &bodyEnd))
-                    return nullptr;
-            } else {
-                bodyEnd = src->length();
-            }
-
-            if (addUseStrict) {
-                // Output source up to beginning of body.
-                if (!out.appendSubstring(src, 0, bodyStart))
-                    return nullptr;
-                if (exprBody) {
-                    // We can't insert a statement into a function with an
-                    // expression body. Do what the decompiler did, and insert a
-                    // comment.
-                    if (!out.append("/* use strict */ "))
-                        return nullptr;
-                } else {
-                    if (!out.append("\n\"use strict\";\n"))
-                        return nullptr;
-                }
-            }
-
-            // Output the body and possibly closing braces (for addUseStrict).
-            if (!out.appendSubstring(src, bodyStart, src->length() - bodyStart))
-                return nullptr;
-        } else {
-            if (!out.append(src))
-                return nullptr;
-        }
+        if (!out.append(src))
+            return nullptr;
         if (buildBody) {
             if (!out.append("\n}"))
                 return nullptr;
@@ -1121,7 +1078,7 @@ JSString*
 fun_toStringHelper(JSContext* cx, HandleObject obj, unsigned indent)
 {
     if (!obj->is<JSFunction>()) {
-        if (JSFunToStringOp op = obj->getOps()->funToString)
+        if (JSFunToStringOp op = obj->getOpsFunToString())
             return op(cx, obj, indent);
 
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
@@ -1394,11 +1351,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         // Trigger a pre barrier on the lazy script being overwritten.
         if (cx->zone()->needsIncrementalBarrier())
             LazyScript::writeBarrierPre(lazy);
-
-        // Suppress GC for now although we should be able to remove this by
-        // making 'lazy' a Rooted<LazyScript*> (which requires adding a
-        // THING_ROOT_LAZY_SCRIPT).
-        AutoSuppressGC suppressGC(cx);
 
         RootedScript script(cx, lazy->maybeScript());
 

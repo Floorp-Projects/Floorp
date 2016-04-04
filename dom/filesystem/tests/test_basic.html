@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Directory API</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="fileList" type="file"></input>
+<script type="application/javascript;version=1.7">
+
+var directory;
+
+function create_fileList(aPath) {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+
+    // Just a simple test
+    is(fileList.files.length, 1, "Filelist has 1 element");
+    ok(fileList.files[0] instanceof Directory, "We have a directory.");
+
+    directory = fileList.files[0];
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: aPath });
+}
+
+function test_basic() {
+  ok(directory, "Directory exists.");
+  ok(directory instanceof Directory, "We have a directory.");
+  is(directory.name, '/', "directory.name must be '/'");
+  is(directory.path, '/', "directory.path must be '/'");
+  next();
+}
+
+function checkSubDir(dir) {
+  return dir.getFilesAndDirectories().then(
+    function(data) {
+      for (var i = 0; i < data.length; ++i) {
+        ok (data[i] instanceof File || data[i] instanceof Directory, "Just Files or Directories");
+        if (data[i] instanceof Directory) {
+          isnot(data[i].name, '/', "Subdirectory should be called with the leafname: " + data[i].name);
+          isnot(data[i].path, '/', "Subdirectory path should be called with the leafname:" + data[i].path);
+          isnot(data[i].path, dir.path, "Subdirectory path should contain the parent path.");
+          is(data[i].path,dir.path + '/' + data[i].name, "Subdirectory path should be called parentdir.path + '/' + leafname");
+        }
+      }
+    }
+  );
+}
+
+function getFilesAndDirectories(aRecursive) {
+  directory.getFilesAndDirectories().then(
+    function(data) {
+      ok(data.length, "We should have some data.");
+      var promises = [];
+      for (var i = 0; i < data.length; ++i) {
+        ok (data[i] instanceof File || data[i] instanceof Directory, "Just Files or Directories");
+        if (data[i] instanceof Directory) {
+          isnot(data[i].name, '/', "Subdirectory should be called with the leafname");
+          is(data[i].path, '/' + data[i].name, "Subdirectory path should be called '/' + leafname");
+
+          if (aRecursive) {
+            promises.push(checkSubDir(data[i]));
+          }
+        }
+      }
+
+      return Promise.all(promises);
+    },
+    function() {
+      ok(false, "Something when wrong");
+    }
+  ).then(next);
+}
+
+var tests = [
+  function() { create_fileList('ProfD') },
+  test_basic,
+  function() { getFilesAndDirectories(true) },
+
+  function() { create_fileList('root') },
+  test_basic,
+  function() { getFilesAndDirectories(false) },
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <SwitchPreference android:key="android.not_a_preference.notifications.content"
+        android:title="@string/pref_content_notifications"
+        android:summary="@string/pref_content_notifications_summary"
+        android:defaultValue="true" />
+    <SwitchPreference android:key="android.not_a_preference.notifications.whats_new"
+        android:title="@string/pref_whats_new_notification"
+        android:summary="@string/pref_whats_new_notification_summary"
+        android:defaultValue="true" />
+</PreferenceScreen>

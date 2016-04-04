@@ -27,7 +27,6 @@
 
 #include "RuntimeService.h"
 
-USING_WORKERS_NAMESPACE
 using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::dom::Optional;
@@ -47,7 +46,7 @@ FileReaderSync::WrapObject(JSContext* aCx,
                            JS::Handle<JSObject*> aGivenProto,
                            JS::MutableHandle<JSObject*> aReflector)
 {
-  return FileReaderSyncBinding_workers::Wrap(aCx, this, aGivenProto, aReflector);
+  return FileReaderSyncBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 void

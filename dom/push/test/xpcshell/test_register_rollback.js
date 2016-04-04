@@ -59,6 +59,7 @@ add_task(function* test_register_rollback() {
         },
         onUnregister(request) {
           equal(request.channelID, channelID, 'Unregister: wrong channel ID');
+          equal(request.code, 200, 'Expected manual unregister reason');
           this.serverSendMsg(JSON.stringify({
             messageType: 'unregister',
             status: 200,
@@ -81,8 +82,7 @@ add_task(function* test_register_rollback() {
   );
 
   // Should send an out-of-band unregister request.
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Unregister request timed out');
+  yield unregisterPromise;
   equal(handshakes, 1, 'Wrong handshake count');
   equal(registers, 1, 'Wrong register count');
 });

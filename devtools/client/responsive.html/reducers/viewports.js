@@ -6,6 +6,7 @@
 
 const {
   ADD_VIEWPORT,
+  CHANGE_DEVICE,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
 } = require("../actions/index");
@@ -15,6 +16,7 @@ let nextViewportId = 0;
 const INITIAL_VIEWPORTS = [];
 const INITIAL_VIEWPORT = {
   id: nextViewportId++,
+  device: "",
   width: 320,
   height: 480,
 };
@@ -27,6 +29,18 @@ let reducers = {
       return viewports;
     }
     return [...viewports, Object.assign({}, INITIAL_VIEWPORT)];
+  },
+
+  [CHANGE_DEVICE](viewports, { id, device }) {
+    return viewports.map(viewport => {
+      if (viewport.id !== id) {
+        return viewport;
+      }
+
+      return Object.assign({}, viewport, {
+        device,
+      });
+    });
   },
 
   [RESIZE_VIEWPORT](viewports, { id, width, height }) {

@@ -12,6 +12,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsChildView.h"
@@ -752,6 +753,129 @@ TISInputSourceWrapper::Clear()
   mOverrideKeyboard = false;
 }
 
+bool
+TISInputSourceWrapper::IsPrintableKeyEvent(NSEvent* aNativeKeyEvent) const
+{
+  UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
+
+  bool isPrintableKey = !TextInputHandler::IsSpecialGeckoKey(nativeKeyCode);
+  if (isPrintableKey &&
+      [aNativeKeyEvent type] != NSKeyDown &&
+      [aNativeKeyEvent type] != NSKeyUp) {
+    NS_WARNING("Why the printable key doesn't cause NSKeyDown or NSKeyUp?");
+    isPrintableKey = false;
+  }
+  return isPrintableKey;
+}
+
+UInt32
+TISInputSourceWrapper::GetKbdType() const
+{
+  // If a keyboard layout override is set, we also need to force the keyboard
+  // type to something ANSI to avoid test failures on machines with JIS
+  // keyboards (since the pair of keyboard layout and physical keyboard type
+  // form the actual key layout).  This assumes that the test setting the
+  // override was written assuming an ANSI keyboard.
+  return mOverrideKeyboard ? eKbdType_ANSI : ::LMGetKbdType();
+}
+
+void
+TISInputSourceWrapper::ComputeInsertStringForCharCode(
+                         NSEvent* aNativeKeyEvent,
+                         const WidgetKeyboardEvent& aKeyEvent,
+                         const nsAString* aInsertString,
+                         nsAString& aResult)
+{
+  if (aInsertString) {
+    // If the caller expects that the aInsertString will be input, we shouldn't
+    // change it.
+    aResult = *aInsertString;
+  } else if (IsPrintableKeyEvent(aNativeKeyEvent)) {
+    // If IME is open, [aNativeKeyEvent characters] may be a character
+    // which will be appended to the composition string.  However, especially,
+    // while IME is disabled, most users and developers expect the key event
+    // works as IME closed.  So, we should compute the aResult with
+    // the ASCII capable keyboard layout.
+    // NOTE: Such keyboard layouts typically change the layout to its ASCII
+    //       capable layout when Command key is pressed.  And we don't worry
+    //       when Control key is pressed too because it causes inputting
+    //       control characters.
+    // Additionally, if the key event doesn't input any text, the event may be
+    // dead key event.  In this case, the charCode value should be the dead
+    // character.
+    UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
+    if ((!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) ||
+        ![[aNativeKeyEvent characters] length]) {
+      UInt32 state =
+        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
+      uint32_t ch = TranslateToChar(nativeKeyCode, state, GetKbdType());
+      if (ch) {
+        aResult = ch;
+      }
+    } else {
+      // If the caller isn't sure what string will be input, let's use
+      // characters of NSEvent.
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], aResult);
+    }
+
+    // If control key is pressed and the eventChars is a non-printable control
+    // character, we should convert it to ASCII alphabet.
+    if (aKeyEvent.IsControl() &&
+        !aResult.IsEmpty() && aResult[0] <= char16_t(26)) {
+      aResult = (aKeyEvent.IsShift() ^ aKeyEvent.IsCapsLocked()) ?
+        static_cast<char16_t>(aResult[0] + ('A' - 1)) :
+        static_cast<char16_t>(aResult[0] + ('a' - 1));
+    }
+    // If Meta key is pressed, it may cause to switch the keyboard layout like
+    // Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
+    else if (aKeyEvent.IsMeta() &&
+             !(aKeyEvent.IsControl() || aKeyEvent.IsAlt())) {
+      UInt32 kbType = GetKbdType();
+      UInt32 numLockState =
+        aKeyEvent.IsNumLocked() ? kEventKeyModifierNumLockMask : 0;
+      UInt32 capsLockState = aKeyEvent.IsCapsLocked() ? alphaLock : 0;
+      UInt32 shiftState = aKeyEvent.IsShift() ? shiftKey : 0;
+      uint32_t uncmdedChar =
+        TranslateToChar(nativeKeyCode, numLockState, kbType);
+      uint32_t cmdedChar =
+        TranslateToChar(nativeKeyCode, cmdKey | numLockState, kbType);
+      // If we can make a good guess at the characters that the user would
+      // expect this key combination to produce (with and without Shift) then
+      // use those characters.  This also corrects for CapsLock.
+      uint32_t ch = 0;
+      if (uncmdedChar == cmdedChar) {
+        // The characters produced with Command seem similar to those without
+        // Command.
+        ch = TranslateToChar(nativeKeyCode,
+                             shiftState | capsLockState | numLockState, kbType);
+      } else {
+        TISInputSourceWrapper USLayout("com.apple.keylayout.US");
+        uint32_t uncmdedUSChar =
+          USLayout.TranslateToChar(nativeKeyCode, numLockState, kbType);
+        // If it looks like characters from US keyboard layout when Command key
+        // is pressed, we should compute a character in the layout.
+        if (uncmdedUSChar == cmdedChar) {
+          ch = USLayout.TranslateToChar(nativeKeyCode,
+                          shiftState | capsLockState | numLockState, kbType);
+        }
+      }
+
+      // If there is a more preferred character for the commanded key event,
+      // we should use it.
+      if (ch) {
+        aResult = ch;
+      }
+    }
+  }
+
+  // Remove control characters which shouldn't be inputted on editor.
+  // XXX Currently, we don't find any cases inserting control characters with
+  //     printable character.  So, just checking first character is enough.
+  if (!aResult.IsEmpty() && IsControlChar(aResult[0])) {
+    aResult.Truncate();
+  }
+}
+
 void
 TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
                                     WidgetKeyboardEvent& aKeyEvent,
@@ -790,109 +914,10 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   }
 
   aKeyEvent.refPoint = LayoutDeviceIntPoint(0, 0);
+  aKeyEvent.isChar = false; // XXX not used in XP level
 
-  // If a keyboard layout override is set, we also need to force the keyboard
-  // type to something ANSI to avoid test failures on machines with JIS
-  // keyboards (since the pair of keyboard layout and physical keyboard type
-  // form the actual key layout).  This assumes that the test setting the
-  // override was written assuming an ANSI keyboard.
-  UInt32 kbType = mOverrideKeyboard ? eKbdType_ANSI : ::LMGetKbdType();
-
+  UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
-
-  bool isPrintableKey = !TextInputHandler::IsSpecialGeckoKey(nativeKeyCode);
-  if (isPrintableKey &&
-      [aNativeKeyEvent type] != NSKeyDown &&
-      [aNativeKeyEvent type] != NSKeyUp) {
-    NS_WARNING("Why the printable key doesn't cause NSKeyDown or NSKeyUp?");
-    isPrintableKey = false;
-  }
-
-  // Decide what string will be input.
-  nsAutoString insertString;
-  if (aInsertString) {
-    // If the caller expects that the aInsertString will be input, we shouldn't
-    // change it.
-    insertString = *aInsertString;
-  } else if (isPrintableKey) {
-    // If IME is open, [aNativeKeyEvent characters] may be a character
-    // which will be appended to the composition string.  However, especially,
-    // while IME is disabled, most users and developers expect the key event
-    // works as IME closed.  So, we should compute the insertString with
-    // the ASCII capable keyboard layout.
-    // NOTE: Such keyboard layouts typically change the layout to its ASCII
-    //       capable layout when Command key is pressed.  And we don't worry
-    //       when Control key is pressed too because it causes inputting
-    //       control characters.
-    if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
-      UInt32 state =
-        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
-      uint32_t ch = TranslateToChar(nativeKeyCode, state, kbType);
-      if (ch) {
-        insertString = ch;
-      }
-    } else {
-      // If the caller isn't sure what string will be input, let's use
-      // characters of NSEvent.
-      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                         insertString);
-    }
-
-    // If control key is pressed and the eventChars is a non-printable control
-    // character, we should convert it to ASCII alphabet.
-    if (aKeyEvent.IsControl() &&
-        !insertString.IsEmpty() && insertString[0] <= char16_t(26)) {
-      insertString = (aKeyEvent.IsShift() ^ aKeyEvent.IsCapsLocked()) ?
-        static_cast<char16_t>(insertString[0] + ('A' - 1)) :
-        static_cast<char16_t>(insertString[0] + ('a' - 1));
-    }
-    // If Meta key is pressed, it may cause to switch the keyboard layout like
-    // Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
-    else if (aKeyEvent.IsMeta() &&
-             !(aKeyEvent.IsControl() || aKeyEvent.IsAlt())) {
-      UInt32 numLockState =
-        aKeyEvent.IsNumLocked() ? kEventKeyModifierNumLockMask : 0;
-      UInt32 capsLockState = aKeyEvent.IsCapsLocked() ? alphaLock : 0;
-      UInt32 shiftState = aKeyEvent.IsShift() ? shiftKey : 0;
-      uint32_t uncmdedChar =
-        TranslateToChar(nativeKeyCode, numLockState, kbType);
-      uint32_t cmdedChar =
-        TranslateToChar(nativeKeyCode, cmdKey | numLockState, kbType);
-      // If we can make a good guess at the characters that the user would
-      // expect this key combination to produce (with and without Shift) then
-      // use those characters.  This also corrects for CapsLock.
-      uint32_t ch = 0;
-      if (uncmdedChar == cmdedChar) {
-        // The characters produced with Command seem similar to those without
-        // Command.
-        ch = TranslateToChar(nativeKeyCode,
-                             shiftState | capsLockState | numLockState, kbType);
-      } else {
-        TISInputSourceWrapper USLayout("com.apple.keylayout.US");
-        uint32_t uncmdedUSChar =
-          USLayout.TranslateToChar(nativeKeyCode, numLockState, kbType);
-        // If it looks like characters from US keyboard layout when Command key
-        // is pressed, we should compute a character in the layout.
-        if (uncmdedUSChar == cmdedChar) {
-          ch = USLayout.TranslateToChar(nativeKeyCode,
-                          shiftState | capsLockState | numLockState, kbType);
-        }
-      }
-
-      // If there is a more preferred character for the commanded key event,
-      // we should use it.
-      if (ch) {
-        insertString = ch;
-      }
-    }
-  }
-
-  // Remove control characters which shouldn't be inputted on editor.
-  // XXX Currently, we don't find any cases inserting control characters with
-  //     printable character.  So, just checking first character is enough.
-  if (!insertString.IsEmpty() && IsControlChar(insertString[0])) {
-    insertString.Truncate();
-  }
 
   aKeyEvent.keyCode =
     ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
@@ -948,23 +973,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
      this, OnOrOff(aKeyEvent.IsShift()), OnOrOff(aKeyEvent.IsControl()),
      OnOrOff(aKeyEvent.IsAlt()), OnOrOff(aKeyEvent.IsMeta())));
 
-  if (aKeyEvent.mMessage == eKeyPress &&
-      (isPrintableKey || !insertString.IsEmpty())) {
-    InitKeyPressEvent(aNativeKeyEvent,
-                      insertString.IsEmpty() ? 0 : insertString[0],
-                      aKeyEvent, kbType);
-    MOZ_ASSERT(!aKeyEvent.charCode || !IsControlChar(aKeyEvent.charCode),
-               "charCode must not be a control character");
-  } else {
-    aKeyEvent.charCode = 0;
-    aKeyEvent.isChar = false; // XXX not used in XP level
-
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p TISInputSourceWrapper::InitKeyEvent, keyCode=0x%X charCode=0x0",
-       this, aKeyEvent.keyCode));
-  }
-
-  if (isPrintableKey) {
+  if (IsPrintableKeyEvent(aNativeKeyEvent)) {
     aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
     // If insertText calls this method, let's use the string.
     if (aInsertString && !aInsertString->IsEmpty() &&
@@ -1005,12 +1014,23 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     } else {
       nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
                                          aKeyEvent.mKeyValue);
+      // If the key value is empty, the event may be a dead key event.
+      // If TranslateToChar() returns non-zero value, that means that
+      // the key may input a character with different dead key state.
+      if (aKeyEvent.mKeyValue.IsEmpty()) {
+        NSUInteger cocoaState = [aNativeKeyEvent modifierFlags];
+        UInt32 carbonState = nsCocoaUtils::ConvertToCarbonModifier(cocoaState);
+        if (TranslateToChar(nativeKeyCode, carbonState, kbType)) {
+          aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_Dead;
+        }
+      }
     }
 
     // Last resort.  If .key value becomes empty string, we should use
     // charactersIgnoringModifiers, if it's available.
-    if (aKeyEvent.mKeyValue.IsEmpty() ||
-        IsControlChar(aKeyEvent.mKeyValue[0])) {
+    if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
+        (aKeyEvent.mKeyValue.IsEmpty() ||
+         IsControlChar(aKeyEvent.mKeyValue[0]))) {
       nsCocoaUtils::GetStringForNSString(
         [aNativeKeyEvent charactersIgnoringModifiers], aKeyEvent.mKeyValue);
       // But don't expose it if it's a control character.
@@ -1031,45 +1051,57 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 }
 
 void
-TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
-                                         char16_t aInsertChar,
-                                         WidgetKeyboardEvent& aKeyEvent,
-                                         UInt32 aKbType)
+TISInputSourceWrapper::WillDispatchKeyboardEvent(
+                         NSEvent* aNativeKeyEvent,
+                         const nsAString* aInsertString,
+                         WidgetKeyboardEvent& aKeyEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ASSERTION(aKeyEvent.mMessage == eKeyPress,
-               "aKeyEvent must be eKeyPress event");
+  // Nothing to do here if the native key event is neither NSKeyDown nor
+  // NSKeyUp because accessing [aNativeKeyEvent characters] causes throwing
+  // an exception.
+  if ([aNativeKeyEvent type] != NSKeyDown &&
+      [aNativeKeyEvent type] != NSKeyUp) {
+    return;
+  }
+
+  UInt32 kbType = GetKbdType();
 
   if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
     nsAutoString chars;
     nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
     NS_ConvertUTF16toUTF8 utf8Chars(chars);
-    char16_t expectedChar = static_cast<char16_t>(aInsertChar);
-    NS_ConvertUTF16toUTF8 utf8ExpectedChar(&expectedChar, 1);
+    char16_t uniChar = static_cast<char16_t>(aKeyEvent.charCode);
     MOZ_LOG(gLog, LogLevel::Info,
-      ("%p TISInputSourceWrapper::InitKeyPressEvent, aNativeKeyEvent=%p, "
-       "[aNativeKeyEvent characters]=\"%s\", aInsertChar=0x%X(%s), "
-       "aKeyEvent.mMessage=%s, aKbType=0x%X, IsOpenedIMEMode()=%s",
-       this, aNativeKeyEvent, utf8Chars.get(), aInsertChar,
-       utf8ExpectedChar.get(), GetGeckoKeyEventType(aKeyEvent), aKbType,
-       TrueOrFalse(IsOpenedIMEMode())));
+      ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
+       "aNativeKeyEvent=%p, [aNativeKeyEvent characters]=\"%s\", "
+       "aKeyEvent={ mMessage=%s, charCode=0x%X(%s) }, kbType=0x%X, "
+       "IsOpenedIMEMode()=%s",
+       this, aNativeKeyEvent, utf8Chars.get(),
+       GetGeckoKeyEventType(aKeyEvent), aKeyEvent.charCode,
+       uniChar ? NS_ConvertUTF16toUTF8(&uniChar, 1).get() : "",
+       kbType, TrueOrFalse(IsOpenedIMEMode())));
   }
 
-  aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
-  aKeyEvent.charCode = aInsertChar;
-  if (aKeyEvent.charCode != 0) {
-    aKeyEvent.keyCode = 0;
-  }
+  nsAutoString insertStringForCharCode;
+  ComputeInsertStringForCharCode(aNativeKeyEvent, aKeyEvent, aInsertString,
+                                 insertStringForCharCode);
+
+  // The charCode was set from mKeyValue. However, for example, when Ctrl key
+  // is pressed, its value should indicate an ASCII character for backward
+  // compatibility rather than inputting character without the modifiers.
+  // Therefore, we need to modify charCode value here.
+  uint32_t charCode =
+    insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
+  aKeyEvent.SetCharCode(charCode);
+  // this is not a special key  XXX not used in XP
+  aKeyEvent.isChar = (aKeyEvent.mMessage == eKeyPress);
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "aKeyEvent.keyCode=0x%X, aKeyEvent.charCode=0x%X",
      this, aKeyEvent.keyCode, aKeyEvent.charCode));
-
-  if (!aKeyEvent.IsControl() && !aKeyEvent.IsMeta() && !aKeyEvent.IsAlt()) {
-    return;
-  }
 
   TISInputSourceWrapper USLayout("com.apple.keylayout.US");
   bool isRomanKeyboardLayout = IsASCIICapable();
@@ -1086,30 +1118,30 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   }
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "isRomanKeyboardLayout=%s, key=0x%X",
-     this, TrueOrFalse(isRomanKeyboardLayout), aKbType, key));
+     this, TrueOrFalse(isRomanKeyboardLayout), kbType, key));
 
   nsString str;
 
   // normal chars
-  uint32_t unshiftedChar = TranslateToChar(key, lockState, aKbType);
+  uint32_t unshiftedChar = TranslateToChar(key, lockState, kbType);
   UInt32 shiftLockMod = shiftKey | lockState;
-  uint32_t shiftedChar = TranslateToChar(key, shiftLockMod, aKbType);
+  uint32_t shiftedChar = TranslateToChar(key, shiftLockMod, kbType);
 
   // characters generated with Cmd key
   // XXX we should remove CapsLock state, which changes characters from
   //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
   //     is pressed.
   UInt32 numState = (lockState & ~alphaLock); // only num lock state
-  uint32_t uncmdedChar = TranslateToChar(key, numState, aKbType);
+  uint32_t uncmdedChar = TranslateToChar(key, numState, kbType);
   UInt32 shiftNumMod = numState | shiftKey;
-  uint32_t uncmdedShiftChar = TranslateToChar(key, shiftNumMod, aKbType);
-  uint32_t uncmdedUSChar = USLayout.TranslateToChar(key, numState, aKbType);
+  uint32_t uncmdedShiftChar = TranslateToChar(key, shiftNumMod, kbType);
+  uint32_t uncmdedUSChar = USLayout.TranslateToChar(key, numState, kbType);
   UInt32 cmdNumMod = cmdKey | numState;
-  uint32_t cmdedChar = TranslateToChar(key, cmdNumMod, aKbType);
+  uint32_t cmdedChar = TranslateToChar(key, cmdNumMod, kbType);
   UInt32 cmdShiftNumMod = shiftKey | cmdNumMod;
-  uint32_t cmdedShiftChar = TranslateToChar(key, cmdShiftNumMod, aKbType);
+  uint32_t cmdedShiftChar = TranslateToChar(key, cmdShiftNumMod, kbType);
 
   // Is the keyboard layout changed by Cmd key?
   // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
@@ -1128,7 +1160,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "aKeyEvent.isMeta=%s, isDvorakQWERTY=%s, "
      "unshiftedChar=U+%X, shiftedChar=U+%X",
      this, OnOrOff(aKeyEvent.IsMeta()), TrueOrFalse(isDvorakQWERTY),
@@ -1168,11 +1200,11 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   } else if (uncmdedUSChar == cmdedChar) {
     // It looks like characters from a US layout are provided when Command
     // is down.
-    uint32_t ch = USLayout.TranslateToChar(key, lockState, aKbType);
+    uint32_t ch = USLayout.TranslateToChar(key, lockState, kbType);
     if (ch) {
       cmdedChar = ch;
     }
-    ch = USLayout.TranslateToChar(key, shiftLockMod, aKbType);
+    ch = USLayout.TranslateToChar(key, shiftLockMod, kbType);
     if (ch) {
       cmdedShiftChar = ch;
     }
@@ -1190,7 +1222,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "hasCmdShiftOnlyChar=%s, isCmdSwitchLayout=%s, isDvorakQWERTY=%s, "
      "cmdedChar=U+%X, cmdedShiftChar=U+%X",
      this, TrueOrFalse(hasCmdShiftOnlyChar), TrueOrFalse(isDvorakQWERTY),
@@ -1202,7 +1234,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "hasCmdShiftOnlyChar=%s, originalCmdedShiftChar=U+%X",
      this, TrueOrFalse(hasCmdShiftOnlyChar), originalCmdedShiftChar));
 
@@ -1521,58 +1553,76 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     nsAutoString committed;
     ctiPanel->InterpretKeyEvent(aNativeEvent, committed);
     if (!committed.IsEmpty()) {
+      nsresult rv = mDispatcher->BeginNativeInputTransaction();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::HandleKeyDownEvent, "
+           "FAILED, due to BeginNativeInputTransaction() failure "
+           "at dispatching keydown for ComplexTextInputPanel", this));
+        return false;
+      }
+
       WidgetKeyboardEvent imeEvent(true, eKeyDown, mWidget);
       InitKeyEvent(aNativeEvent, imeEvent);
       imeEvent.mPluginTextEventString.Assign(committed);
-      DispatchEvent(imeEvent);
+      nsEventStatus status = nsEventStatus_eIgnore;
+      mDispatcher->DispatchKeyboardEvent(eKeyDown, imeEvent, status,
+                                         currentKeyEvent);
     }
     return true;
   }
 
-  if (mWidget->IsPluginFocused() || !IsIMEComposing()) {
-    NSResponder* firstResponder = [[mView window] firstResponder];
+  NSResponder* firstResponder = [[mView window] firstResponder];
 
-    WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
-    InitKeyEvent(aNativeEvent, keydownEvent);
-
-    currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
-    if (Destroyed()) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "widget was destroyed by keydown event", this));
-      return currentKeyEvent->IsDefaultPrevented();
-    }
-
-    // The key down event may have shifted the focus, in which
-    // case we should not fire the key press.
-    // XXX This is a special code only on Cocoa widget, why is this needed?
-    if (firstResponder != [[mView window] firstResponder]) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "view lost focus by keydown event", this));
-      return currentKeyEvent->IsDefaultPrevented();
-    }
-
-    if (currentKeyEvent->IsDefaultPrevented()) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "keydown event's default is prevented", this));
-      return true;
-    }
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyDownEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure "
+         "at dispatching keydown for ordinal cases", this));
+    return false;
   }
 
-  // None of what follows is needed for plugin keyboard input.  In fact it
-  // may cause trouble -- for example the call to [mView interpretKeyEvents:]
-  // can, in e10s mode, cause each key typed to appear twice in an IME
-  // composition.
-  if (mWidget->IsPluginFocused()) {
+  WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
+  InitKeyEvent(aNativeEvent, keydownEvent);
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
+                                     currentKeyEvent);
+  currentKeyEvent->mKeyDownHandled =
+    (status == nsEventStatus_eConsumeNoDefault);
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "widget was destroyed by keydown event", this));
+    return currentKeyEvent->IsDefaultPrevented();
+  }
+
+  // The key down event may have shifted the focus, in which
+  // case we should not fire the key press.
+  // XXX This is a special code only on Cocoa widget, why is this needed?
+  if (firstResponder != [[mView window] firstResponder]) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "view lost focus by keydown event", this));
+    return currentKeyEvent->IsDefaultPrevented();
+  }
+
+  if (currentKeyEvent->IsDefaultPrevented()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "keydown event's default is prevented", this));
     return true;
   }
 
   // Let Cocoa interpret the key events, caching IsIMEComposing first.
   bool wasComposing = IsIMEComposing();
   bool interpretKeyEventsCalled = false;
-  if (IsIMEEnabled() || IsASCIICapableOnly()) {
+  // Don't call interpretKeyEvents when a plugin has focus.  If we call it,
+  // for example, a character is inputted twice during a composition in e10s
+  // mode.
+  if (!mWidget->IsPluginFocused() && (IsIMEEnabled() || IsASCIICapableOnly())) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TextInputHandler::HandleKeyDownEvent, calling interpretKeyEvents",
        this));
@@ -1597,6 +1647,15 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   if (currentKeyEvent->CanDispatchKeyPressEvent() &&
       !wasComposing && !IsIMEComposing()) {
+    rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::HandleKeyDownEvent, "
+           "FAILED, due to BeginNativeInputTransaction() failure "
+           "at dispatching keypress", this));
+      return false;
+    }
+
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
 
@@ -1613,7 +1672,11 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     //    our default action for this key.
     if (!(interpretKeyEventsCalled &&
           IsNormalCharInputtingEvent(keypressEvent))) {
-      currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
+      currentKeyEvent->mKeyPressDispatched =
+        mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                                 currentKeyEvent);
+      currentKeyEvent->mKeyPressHandled =
+        (status == nsEventStatus_eConsumeNoDefault);
       currentKeyEvent->mKeyPressDispatched = true;
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p TextInputHandler::HandleKeyDownEvent, keypress event dispatched",
@@ -1657,15 +1720,21 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
     return;
   }
 
-  // if we don't have any characters we can't generate a keyUp event
-  if (IsIMEComposing()) {
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyUpEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
     return;
   }
 
   WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
   InitKeyEvent(aNativeEvent, keyupEvent);
 
-  DispatchEvent(keyupEvent);
+  KeyEventState currentKeyEvent(aNativeEvent);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status,
+                                     &currentKeyEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2006,6 +2075,14 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
     return;
   }
 
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::DispatchKeyEventForFlagsChanged, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return;
+  }
+
   EventMessage message = aDispatchKeyDown ? eKeyDown : eKeyUp;
 
   // Fire a key event.
@@ -2022,7 +2099,10 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   cocoaEvent.type = NPCocoaEventFlagsChanged;
   keyEvent.mPluginEvent.Copy(cocoaEvent);
 
-  DispatchEvent(keyEvent);
+  KeyEventState currentKeyEvent(aNativeEvent);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(message, keyEvent, status,
+                                     &currentKeyEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2068,6 +2148,12 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   nsAutoString str;
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
+
+  AutoInsertStringClearer clearer(currentKeyEvent);
+  if (currentKeyEvent) {
+    currentKeyEvent->mInsertString = &str;
+  }
+
   if (!IsIMEComposing() && str.IsEmpty()) {
     // nothing to do if there is no content which can be removed.
     if (!isEditable) {
@@ -2128,6 +2214,14 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
   }
 
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyUpEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return;
+  }
+
   // Dispatch keypress event with char instead of compositionchange event
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
   keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
@@ -2153,20 +2247,24 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   // Remove basic modifiers from keypress event because if they are included,
   // nsPlaintextEditor ignores the event.
-  keypressEvent.modifiers &= ~(MODIFIER_CONTROL |
-                               MODIFIER_ALT |
-                               MODIFIER_META);
+  keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                MODIFIER_ALT |
+                                MODIFIER_META);
 
   // TODO:
-  // If mCurrentKeyEvent.mKeyEvent is null and when we implement textInput
-  // event of DOM3 Events, we should dispatch it instead of keypress event.
-  bool keyPressHandled = DispatchEvent(keypressEvent);
+  // If mCurrentKeyEvent.mKeyEvent is null, the text should be inputted as
+  // composition events.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  bool keyPressDispatched =
+    mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                             currentKeyEvent);
+  bool keyPressHandled = (status == nsEventStatus_eConsumeNoDefault);
 
   // Note: mWidget might have become null here. Don't count on it from here on.
 
   if (currentKeyEvent) {
     currentKeyEvent->mKeyPressHandled = keyPressHandled;
-    currentKeyEvent->mKeyPressDispatched = true;
+    currentKeyEvent->mKeyPressDispatched = keyPressDispatched;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2192,10 +2290,24 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
        TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
   if (currentKeyEvent && currentKeyEvent->CanDispatchKeyPressEvent()) {
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::DoCommandBySelector, "
+           "FAILED, due to BeginNativeInputTransaction() failure "
+           "at dispatching keypress", this));
+      return false;
+    }
+
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
-    currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
-    currentKeyEvent->mKeyPressDispatched = true;
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    currentKeyEvent->mKeyPressDispatched =
+      mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                               currentKeyEvent);
+    currentKeyEvent->mKeyPressHandled =
+      (status == nsEventStatus_eConsumeNoDefault);
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TextInputHandler::DoCommandBySelector, keypress event "
        "dispatched, Destroyed()=%s, keypressHandled=%s",
@@ -2397,6 +2509,71 @@ IMEInputHandler::GetCurrentTSMDocumentID()
  *    by ExecutePendingMethods via FlushPendingMethods.
  *
  ******************************************************************************/
+
+NS_IMETHODIMP
+IMEInputHandler::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                           const IMENotification& aNotification)
+{
+  switch (aNotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      CommitIMEComposition();
+      return NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      CancelIMEComposition();
+      return NS_OK;
+    case NOTIFY_IME_OF_FOCUS:
+      if (IsFocused()) {
+        nsIWidget* widget = aTextEventDispatcher->GetWidget();
+        if (widget && widget->GetInputContext().IsPasswordEditor()) {
+          EnableSecureEventInput();
+        } else {
+          EnsureSecureEventInputDisabled();
+        }
+      }
+      OnFocusChangeInGecko(true);
+      return NS_OK;
+    case NOTIFY_IME_OF_BLUR:
+      OnFocusChangeInGecko(false);
+      return NS_OK;
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      OnSelectionChange(aNotification);
+      return NS_OK;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
+NS_IMETHODIMP_(void)
+IMEInputHandler::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
+{
+  // XXX When input transaction is being stolen by add-on, what should we do?
+}
+
+NS_IMETHODIMP_(void)
+IMEInputHandler::WillDispatchKeyboardEvent(
+                   TextEventDispatcher* aTextEventDispatcher,
+                   WidgetKeyboardEvent& aKeyboardEvent,
+                   uint32_t aIndexOfKeypress,
+                   void* aData)
+{
+  // If the keyboard event is not caused by a native key event, we can do
+  // nothing here.
+  if (!aData) {
+    return;
+  }
+
+  KeyEventState* currentKeyEvent = static_cast<KeyEventState*>(aData);
+  NSEvent* nativeEvent = currentKeyEvent->mKeyEvent;
+  nsAString* insertString = currentKeyEvent->mInsertString;
+  if (KeyboardLayoutOverrideRef().mOverrideEnabled) {
+    TISInputSourceWrapper tis;
+    tis.InitByLayoutID(KeyboardLayoutOverrideRef().mKeyboardLayout, true);
+    tis.WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
+    return;
+  }
+  TISInputSourceWrapper::CurrentInputSource().
+    WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
+}
 
 void
 IMEInputHandler::NotifyIMEOfFocusChangeInGecko()
@@ -2706,14 +2883,27 @@ IMEInputHandler::DispatchCompositionStartEvent()
      TrueOrFalse(Destroyed()), mView, mWidget,
      mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
-  WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
-                                               mWidget);
-  InitCompositionEvent(compositionStartEvent);
+  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+       "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return false;
+  }
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
   mIsIMEComposing = true;
 
-  DispatchEvent(compositionStartEvent);
+  nsEventStatus status;
+  rv = mDispatcher->StartComposition(status);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+       "FAILED, due to StartComposition() failure", this));
+    return false;
+  }
 
   if (Destroyed()) {
     MOZ_LOG(gLog, LogLevel::Info,
@@ -2757,12 +2947,24 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
 
   RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
-                                                mWidget);
-  compositionChangeEvent.time = PR_IntervalNow();
-  compositionChangeEvent.mData = aText;
-  compositionChangeEvent.mRanges =
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return false;
+  }
+
+  RefPtr<TextRangeArray> rangeArray =
     CreateTextRangeArray(aAttrString, aSelectedRange);
+
+  rv = mDispatcher->SetPendingComposition(aText, rangeArray);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "FAILED, due to SetPendingComposition() failure", this));
+    return false;
+  }
 
   mSelectedRange.location = mIMECompositionStart + aSelectedRange.location;
   mSelectedRange.length = aSelectedRange.length;
@@ -2772,7 +2974,14 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
   }
   mIMECompositionString = [[aAttrString string] retain];
 
-  DispatchEvent(compositionChangeEvent);
+  nsEventStatus status;
+  rv = mDispatcher->FlushPendingComposition(status);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "FAILED, due to FlushPendingComposition() failure", this));
+    return false;
+  }
 
   if (Destroyed()) {
     MOZ_LOG(gLog, LogLevel::Info,
@@ -2806,20 +3015,12 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
   RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   if (!Destroyed()) {
-    EventMessage message =
-      aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
-    WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
-    compositionCommitEvent.time = PR_IntervalNow();
-    if (aCommitString) {
-      compositionCommitEvent.mData = *aCommitString;
-    }
-
     // IME may query selection immediately after this, however, in e10s mode,
     // OnSelectionChange() will be called asynchronously.  Until then, we
     // should emulate expected selection range if the webapp does nothing.
     mSelectedRange.location = mIMECompositionStart;
-    if (message == eCompositionCommit) {
-      mSelectedRange.location += compositionCommitEvent.mData.Length();
+    if (aCommitString) {
+      mSelectedRange.location += aCommitString->Length();
     } else if (mIMECompositionString) {
       nsAutoString commitString;
       nsCocoaUtils::GetStringForNSString(mIMECompositionString, commitString);
@@ -2827,7 +3028,20 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
     }
     mSelectedRange.length = 0;
 
-    DispatchEvent(compositionCommitEvent);
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
+    } else {
+      nsEventStatus status;
+      rv = mDispatcher->CommitComposition(status, aCommitString);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
+           "FAILED, due to BeginNativeInputTransaction() failure", this));
+      }
+    }
   }
 
   mIsIMEComposing = false;
@@ -2847,12 +3061,6 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
   return true;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
-}
-
-void
-IMEInputHandler::InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent)
-{
-  aCompositionEvent.time = PR_IntervalNow();
 }
 
 void
@@ -3770,9 +3978,14 @@ IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification)
 
 int32_t TextInputHandlerBase::sSecureEventInputCount = 0;
 
+NS_IMPL_ISUPPORTS(TextInputHandlerBase,
+                  TextEventDispatcherListener,
+                  nsISupportsWeakReference)
+
 TextInputHandlerBase::TextInputHandlerBase(nsChildView* aWidget,
-                                           NSView<mozView> *aNativeView) :
-  mWidget(aWidget)
+                                           NSView<mozView> *aNativeView)
+  : mWidget(aWidget)
+  , mDispatcher(aWidget->GetTextEventDispatcher())
 {
   gHandlerInstanceCount++;
   mView = [aNativeView retain];
@@ -3799,6 +4012,7 @@ TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
   }
 
   mWidget = nullptr;
+  mDispatcher = nullptr;
   return true;
 }
 
@@ -3937,14 +4151,14 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
 
   // Don't try to replace a native event if one already exists.
   // OS X doesn't have an OS modifier, can't make a native event.
-  if (aKeyEvent.mNativeKeyEvent || aKeyEvent.modifiers & MODIFIER_OS) {
+  if (aKeyEvent.mNativeKeyEvent || aKeyEvent.mModifiers & MODIFIER_OS) {
     return NS_OK;
   }
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandlerBase::AttachNativeKeyEvent, key=0x%X, char=0x%X, "
      "mod=0x%X", this, aKeyEvent.keyCode, aKeyEvent.charCode,
-     aKeyEvent.modifiers));
+     aKeyEvent.mModifiers));
 
   NSEventType eventType;
   if (aKeyEvent.mMessage == eKeyUp) {
@@ -3965,7 +4179,7 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
 
   NSUInteger modifierFlags = 0;
   for (uint32_t i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
-    if (aKeyEvent.modifiers & sModifierFlagMap[i][0]) {
+    if (aKeyEvent.mModifiers & sModifierFlagMap[i][0]) {
       modifierFlags |= sModifierFlagMap[i][1];
     }
   }
@@ -4094,16 +4308,11 @@ TextInputHandlerBase::IsNormalCharInputtingEvent(
                         const WidgetKeyboardEvent& aKeyEvent)
 {
   // this is not character inputting event, simply.
-  if (!aKeyEvent.isChar || !aKeyEvent.charCode || aKeyEvent.IsMeta()) {
+  if (aKeyEvent.mNativeCharacters.IsEmpty() ||
+      aKeyEvent.IsMeta()) {
     return false;
   }
-  // if this is unicode char inputting event, we don't need to check
-  // ctrl/alt/command keys
-  if (aKeyEvent.charCode > 0x7F) {
-    return true;
-  }
-  // ASCII chars should be inputted without ctrl/alt/command keys
-  return !aKeyEvent.IsControl() && !aKeyEvent.IsAlt();
+  return !IsControlChar(aKeyEvent.mNativeCharacters[0]);
 }
 
 /* static */ bool

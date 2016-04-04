@@ -99,6 +99,8 @@ class MacroAssemblerMIPSShared : public Assembler
     void ma_xor(Register rd, Imm32 imm);
     void ma_xor(Register rd, Register rs, Imm32 imm);
 
+    void ma_ctz(Register rd, Register rs);
+
     // load
     void ma_load(Register dest, const BaseIndex& src, LoadStoreSize size = SizeWord,
                  LoadStoreExtension extension = SignExtend);

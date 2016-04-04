@@ -45,6 +45,7 @@ interface Console {
 dictionary ConsoleEvent {
   (unsigned long long or DOMString) ID;
   (unsigned long long or DOMString) innerID;
+  any originAttributes = null;
   DOMString level = "";
   DOMString filename = "";
   unsigned long lineNumber = 0;

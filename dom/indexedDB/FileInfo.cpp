@@ -130,7 +130,8 @@ FileInfo::GetReferences(int32_t* aRefCnt,
 
 void
 FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
-                           int32_t aDelta)
+                           int32_t aDelta,
+                           CustomCleanupCallback* aCustomCleanupCallback)
 {
   // XXX This can go away once DOM objects no longer hold FileInfo objects...
   //     Looking at you, BlobImplBase...
@@ -169,7 +170,14 @@ FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
   }
 
   if (needsCleanup) {
-    Cleanup();
+    if (aCustomCleanupCallback) {
+      nsresult rv = aCustomCleanupCallback->Cleanup(mFileManager, Id());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Custom cleanup failed!");
+      }
+    } else {
+      Cleanup();
+    }
   }
 
   delete this;
@@ -208,7 +216,7 @@ FileInfo::Cleanup()
     RefPtr<CleanupFileRunnable> cleaner =
       new CleanupFileRunnable(mFileManager, id);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(cleaner)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(cleaner));
     return;
   }
 

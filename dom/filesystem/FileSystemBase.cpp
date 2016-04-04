@@ -15,7 +15,7 @@ namespace dom {
 
 // static
 already_AddRefed<FileSystemBase>
-FileSystemBase::FromString(const nsAString& aString)
+FileSystemBase::DeserializeDOMPath(const nsAString& aString)
 {
   if (StringBeginsWith(aString, NS_LITERAL_STRING("devicestorage-"))) {
     // The string representation of devicestorage file system is of the format:
@@ -38,6 +38,7 @@ FileSystemBase::FromString(const nsAString& aString)
       new DeviceStorageFileSystem(storageType, storageName);
     return f.forget();
   }
+
   return RefPtr<OSFileSystem>(new OSFileSystem(aString)).forget();
 }
 
@@ -57,36 +58,18 @@ FileSystemBase::Shutdown()
   mShutdown = true;
 }
 
-nsPIDOMWindowInner*
-FileSystemBase::GetWindow() const
+nsISupports*
+FileSystemBase::GetParentObject() const
 {
   return nullptr;
 }
 
-already_AddRefed<nsIFile>
-FileSystemBase::GetLocalFile(const nsAString& aRealPath) const
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Should be on parent process!");
-  nsAutoString localPath;
-  FileSystemUtils::NormalizedPathToLocalPath(aRealPath, localPath);
-  localPath = mLocalRootPath + localPath;
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(localPath, false, getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-  return file.forget();
-}
-
 bool
-FileSystemBase::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
+FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
   MOZ_ASSERT(aFile, "aFile Should not be null.");
-
-  aRealPath.Truncate();
 
   nsAutoString filePath;
   ErrorResult rv;
@@ -95,7 +78,13 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
     return false;
   }
 
-  return LocalPathToRealPath(filePath, aRealPath);
+  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(filePath),
+                             true, aPath);
+  if (NS_WARN_IF(rv.Failed())) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -110,18 +99,77 @@ FileSystemBase::IsSafeDirectory(Directory* aDir) const
   return false;
 }
 
-bool
-FileSystemBase::LocalPathToRealPath(const nsAString& aLocalPath,
-                                    nsAString& aRealPath) const
+void
+FileSystemBase::GetDOMPath(nsIFile* aFile,
+                           Directory::DirectoryType aType,
+                           nsAString& aRetval,
+                           ErrorResult& aRv) const
 {
-  nsAutoString path;
-  FileSystemUtils::LocalPathToNormalizedPath(aLocalPath, path);
-  if (!FileSystemUtils::IsDescendantPath(mNormalizedLocalRootPath, path)) {
-    aRealPath.Truncate();
-    return false;
+  MOZ_ASSERT(aFile);
+
+  if (aType == Directory::eDOMRootDirectory) {
+    aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    return;
   }
-  aRealPath = Substring(path, mNormalizedLocalRootPath.Length());
-  return true;
+
+  nsCOMPtr<nsIFile> fileSystemPath;
+  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(LocalOrDeviceStorageRootPath()),
+                              true, getter_AddRefs(fileSystemPath));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  MOZ_ASSERT(FileSystemUtils::IsDescendantPath(fileSystemPath, aFile));
+
+  nsCOMPtr<nsIFile> path;
+  aRv = aFile->Clone(getter_AddRefs(path));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsTArray<nsString> parts;
+
+  while (true) {
+    bool equal = false;
+    aRv = fileSystemPath->Equals(path, &equal);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    if (equal) {
+      break;
+    }
+
+    nsAutoString leafName;
+    aRv = path->GetLeafName(leafName);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    parts.AppendElement(leafName);
+
+    nsCOMPtr<nsIFile> parentPath;
+    aRv = path->GetParent(getter_AddRefs(parentPath));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    MOZ_ASSERT(parentPath);
+
+    aRv = parentPath->Clone(getter_AddRefs(path));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  MOZ_ASSERT(!parts.IsEmpty());
+
+  aRetval.Truncate();
+
+  for (int32_t i = parts.Length() - 1; i >= 0; --i) {
+    aRetval.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    aRetval.Append(parts[i]);
+  }
 }
 
 } // namespace dom

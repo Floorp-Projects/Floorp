@@ -19,7 +19,6 @@
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h"
-#include "nsCSSPseudoElements.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
@@ -83,11 +82,11 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   // Those cases are probably not important but just to be safe, let's make
   // sure the cascade is up to date since if it *is* up to date, this is
   // basically a no-op.
-  Maybe<Pair<dom::Element*, CSSPseudoElementType>> pseudoElement =
+  Maybe<NonOwningAnimationTarget> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (pseudoElement) {
-    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->first(),
-                                                pseudoElement->second(),
+    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
+                                                pseudoElement->mPseudoType,
                                                 aFrame->StyleContext());
   }
 
@@ -111,13 +110,15 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     }
 
     AnimationPerformanceWarning::Type warningType;
-    if (effect->ShouldBlockCompositorAnimations(aFrame,
-                                                warningType)) {
+    if (aProperty == eCSSProperty_transform &&
+        effect->ShouldBlockAsyncTransformAnimations(aFrame,
+                                                    warningType)) {
       if (aMatches) {
         aMatches->Clear();
       }
-      effect->SetPerformanceWarning(
-        aProperty, AnimationPerformanceWarning(warningType));
+      EffectCompositor::SetPerformanceWarning(
+        aFrame, aProperty,
+        AnimationPerformanceWarning(warningType));
       return false;
     }
 
@@ -148,7 +149,7 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
   }
 
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
-  PseudoElementHashKey key = { aElement, aPseudoType };
+  PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
   if (aRestyleType == RestyleType::Throttled) {
     if (!elementsToRestyle.Contains(key)) {
@@ -230,7 +231,7 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
   MaybeUpdateCascadeResults(aElement, aPseudoType);
 
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
-  PseudoElementHashKey key = { aElement, aPseudoType };
+  PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
   if (!mPresContext || !elementsToRestyle.Contains(key)) {
     return;
@@ -276,7 +277,7 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
 #ifdef DEBUG
   {
     auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
-    PseudoElementHashKey key = { aElement, aPseudoType };
+    PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
     MOZ_ASSERT(!elementsToRestyle.Contains(key),
                "Element should no longer require a restyle after its "
                "animation rule has been updated");
@@ -362,7 +363,8 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
     // it will only mutate the bool value associated with each element in the
     // set but even doing that will cause assertions in PLDHashTable to fail
     // if we are iterating over the hashtable at the same time.
-    nsTArray<PseudoElementHashKey> elementsToRestyle(elementSet.Count());
+    nsTArray<PseudoElementHashEntry::KeyType> elementsToRestyle(
+      elementSet.Count());
     for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
       elementsToRestyle.AppendElement(iter.Key());
     }
@@ -495,11 +497,11 @@ EffectCompositor::UpdateCascadeResults(Element* aElement,
   UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
 }
 
-/* static */ Maybe<Pair<Element*, CSSPseudoElementType>>
+/* static */ Maybe<NonOwningAnimationTarget>
 EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 {
   // Always return the same object to benefit from return-value optimization.
-  Maybe<Pair<Element*, CSSPseudoElementType>> result;
+  Maybe<NonOwningAnimationTarget> result;
 
   nsIContent* content = aFrame->GetContent();
   if (!content) {
@@ -536,7 +538,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
     return result;
   }
 
-  result = Some(MakePair(content->AsElement(), pseudoType));
+  result.emplace(content->AsElement(), pseudoType);
 
   return result;
 }

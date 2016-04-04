@@ -6,6 +6,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
  // The amount of people to be part of e10s, in %
@@ -55,12 +56,16 @@ function defineCohort() {
 
   let userOptedOut = optedOut();
   let userOptedIn = optedIn();
+  let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0) ||
+                     isThereAnActiveExperiment();
   let testGroup = (getUserSample() < TEST_THRESHOLD[updateChannel]);
 
   if (userOptedOut) {
     setCohort("optedOut");
   } else if (userOptedIn) {
     setCohort("optedIn");
+  } else if (disqualified) {
+    setCohort("disqualified");
   } else if (testGroup) {
     setCohort("test");
     Preferences.set(PREF_TOGGLE_E10S, true);
@@ -89,6 +94,9 @@ function getUserSample() {
 
 function setCohort(cohortName) {
   Preferences.set(PREF_COHORT_NAME, cohortName);
+  try {
+    Services.appinfo.QueryInterface(Ci.nsICrashReporter).annotateCrashReport("E10SCohort", cohortName);
+  } catch (e) {}
 }
 
 function optedIn() {
@@ -105,3 +113,7 @@ function optedOut() {
           Preferences.get(PREF_TOGGLE_E10S) == false);
 }
 
+function isThereAnActiveExperiment() {
+  let { Experiments } = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
+  return (Experiments.instance().getActiveExperimentID() !== null);
+}

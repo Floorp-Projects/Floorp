@@ -65,12 +65,9 @@ TEST_DIRS += [
     'gtest',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
     'tests/mochitest/identity/mochitest.ini',
-    'tests/mochitest/ipc/mochitest.ini',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
@@ -217,6 +214,7 @@ UNIFIED_SOURCES += [
     'MediaData.cpp',
     'MediaDecoder.cpp',
     'MediaDecoderReader.cpp',
+    'MediaDecoderReaderWrapper.cpp',
     'MediaDecoderStateMachine.cpp',
     'MediaDeviceInfo.cpp',
     'MediaDevices.cpp',
@@ -326,5 +324,10 @@ include('/ipc/chromium/chromium-config.mozbuild')
 #    defined, which complains about an important MOZ_EXPORT for android::AString
 if CONFIG['GNU_CC']:
   CXXFLAGS += ['-Wno-error=attributes']
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary workaround to unblock compilation
+    # on VS2015 in warnings as errors mode.
+    CXXFLAGS += ['-wd4312']
 
 FINAL_LIBRARY = 'xul'

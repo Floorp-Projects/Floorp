@@ -43,6 +43,40 @@ window.__defineGetter__('_EU_Cu', function() {
   return c.value && !c.writable ? Components.utils : SpecialPowers.Cu;
 });
 
+window.__defineGetter__("_EU_OS", function() {
+  delete this._EU_OS;
+  try {
+    this._EU_OS = this._EU_Cu.import("resource://gre/modules/AppConstants.jsm", {}).platform;
+  } catch (ex) {
+    this._EU_OS = null;
+  }
+  return this._EU_OS;
+});
+
+function _EU_isMac(aWindow = window) {
+  if (window._EU_OS) {
+    return window._EU_OS == "macosx";
+  }
+  if (aWindow) {
+    try {
+      return aWindow.navigator.platform.indexOf("Mac") > -1;
+    } catch (ex) {}
+  }
+  return navigator.platform.indexOf("Mac") > -1;
+}
+
+function _EU_isWin(aWindow = window) {
+  if (window._EU_OS) {
+    return window._EU_OS == "win";
+  }
+  if (aWindow) {
+    try {
+      return aWindow.navigator.platform.indexOf("Win") > -1;
+    } catch (ex) {}
+  }
+  return navigator.platform.indexOf("Win") > -1;
+}
+
 /**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -237,7 +271,7 @@ function _parseModifiers(aEvent, aWindow = window)
     mval |= nsIDOMWindowUtils.MODIFIER_META;
   }
   if (aEvent.accelKey) {
-    mval |= (navigator.platform.indexOf("Mac") >= 0) ?
+    mval |= _EU_isMac(aWindow) ?
       nsIDOMWindowUtils.MODIFIER_META : nsIDOMWindowUtils.MODIFIER_CONTROL;
   }
   if (aEvent.altGrKey) {
@@ -543,7 +577,7 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
   }
 
   var onwheel = function() {
-    window.removeEventListener("wheel", onwheel);
+    SpecialPowers.removeSystemEventListener(window, "wheel", onwheel);
 
     // Wait one frame since the wheel event has not caused a refresh observer
     // to be added yet.
@@ -570,7 +604,9 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
     }, 0);
   };
 
-  aWindow.addEventListener("wheel", onwheel);
+  // Listen for the system wheel event, because it happens after all of
+  // the other wheel events, including legacy events.
+  SpecialPowers.addSystemEventListener(aWindow, "wheel", onwheel);
   synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
 }
 
@@ -789,16 +825,13 @@ function _parseNativeModifiers(aModifiers, aWindow = window)
   }
 
   if (aModifiers.accelKey) {
-    modifiers |=
-      (navigator.platform.indexOf("Mac") == 0) ? 0x00004000 : 0x00000400;
+    modifiers |= _EU_isMac(aWindow) ? 0x00004000 : 0x00000400;
   }
   if (aModifiers.accelRightKey) {
-    modifiers |=
-      (navigator.platform.indexOf("Mac") == 0) ? 0x00008000 : 0x00000800;
+    modifiers |= _EU_isMac(aWindow) ? 0x00008000 : 0x00000800;
   }
   if (aModifiers.altGrKey) {
-    modifiers |=
-      (navigator.platform.indexOf("Win") == 0) ? 0x00002800 : 0x00001000;
+    modifiers |= _EU_isWin(aWindow) ? 0x00002800 : 0x00001000;
   }
   return modifiers;
 }
@@ -873,9 +906,9 @@ function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
   }
   var navigator = _getNavigator(aWindow);
   var nativeKeyboardLayout = null;
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (_EU_isMac(aWindow)) {
     nativeKeyboardLayout = aKeyboardLayout.Mac;
-  } else if (navigator.platform.indexOf("Win") == 0) {
+  } else if (_EU_isWin(aWindow)) {
     nativeKeyboardLayout = aKeyboardLayout.Win;
   }
   if (nativeKeyboardLayout === null) {
@@ -1063,7 +1096,15 @@ function _getTIP(aWindow, aCallback)
 function _getKeyboardEvent(aWindow = window)
 {
   if (typeof KeyboardEvent != "undefined") {
-    return KeyboardEvent;
+    try {
+      // See if the object can be instantiated; sometimes this yields
+      // 'TypeError: can't access dead object' or 'KeyboardEvent is not a constructor'.
+      new KeyboardEvent("", {});
+      return KeyboardEvent;
+    } catch (ex) {}
+  }
+  if (typeof content != "undefined" && ("KeyboardEvent" in content)) {
+    return content.KeyboardEvent;
   }
   return aWindow.KeyboardEvent;
 }
@@ -1282,7 +1323,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
       { key: "OS",         attr: "osKey" },
       { key: "Shift",      attr: "shiftKey" },
       { key: "Symbol",     attr: "symbolKey" },
-      { key: (navigator.platform.indexOf("Mac") >= 0) ? "Meta" : "Control",
+      { key: _EU_isMac(aWindow) ? "Meta" : "Control",
                            attr: "accelKey" },
     ],
     lockable: [
@@ -1677,4 +1718,75 @@ function synthesizeNativeOSXClick(x, y)
 
   CoreFoundation.close();
   CoreGraphics.close();
+}
+
+/**
+ * Emulate a dragstart event.
+ *  element - element to fire the dragstart event on
+ *  expectedDragData - the data you expect the data transfer to contain afterwards
+ *                      This data is in the format:
+ *                         [ [ {type: value, data: value, test: function}, ... ], ... ]
+ *                     can be null
+ *  aWindow - optional; defaults to the current window object.
+ *  x - optional; initial x coordinate
+ *  y - optional; initial y coordinate
+ * Returns null if data matches.
+ * Returns the event.dataTransfer if data does not match
+ *
+ * eqTest is an optional function if comparison can't be done with x == y;
+ *   function (actualData, expectedData) {return boolean}
+ *   @param actualData from dataTransfer
+ *   @param expectedData from expectedDragData
+ * see bug 462172 for example of use
+ *
+ */
+function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
+{
+  if (!aWindow)
+    aWindow = window;
+  x = x || 2;
+  y = y || 2;
+  const step = 9;
+
+  var result = "trapDrag was not called";
+  var trapDrag = function(event) {
+    try {
+      var dataTransfer = event.dataTransfer;
+      result = null;
+      if (!dataTransfer)
+        throw "no dataTransfer";
+      if (expectedDragData == null ||
+          dataTransfer.mozItemCount != expectedDragData.length)
+        throw dataTransfer;
+      for (var i = 0; i < dataTransfer.mozItemCount; i++) {
+        var dtTypes = dataTransfer.mozTypesAt(i);
+        if (dtTypes.length != expectedDragData[i].length)
+          throw dataTransfer;
+        for (var j = 0; j < dtTypes.length; j++) {
+          if (dtTypes[j] != expectedDragData[i][j].type)
+            throw dataTransfer;
+          var dtData = dataTransfer.mozGetDataAt(dtTypes[j],i);
+          if (expectedDragData[i][j].eqTest) {
+            if (!expectedDragData[i][j].eqTest(dtData, expectedDragData[i][j].data))
+              throw dataTransfer;
+          }
+          else if (expectedDragData[i][j].data != dtData)
+            throw dataTransfer;
+        }
+      }
+    } catch(ex) {
+      result = ex;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  aWindow.addEventListener("dragstart", trapDrag, false);
+  synthesizeMouse(element, x, y, { type: "mousedown" }, aWindow);
+  x += step; y += step;
+  synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
+  x += step; y += step;
+  synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
+  aWindow.removeEventListener("dragstart", trapDrag, false);
+  synthesizeMouse(element, x, y, { type: "mouseup" }, aWindow);
+  return result;
 }

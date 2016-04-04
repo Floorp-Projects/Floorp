@@ -24,14 +24,10 @@ public:
 
   static TextEncoder*
   Constructor(const GlobalObject& aGlobal,
-              const nsAString& aEncoding,
               ErrorResult& aRv)
   {
     nsAutoPtr<TextEncoder> txtEncoder(new TextEncoder());
-    txtEncoder->Init(aEncoding, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
+    txtEncoder->Init();
     return txtEncoder.forget();
   }
 
@@ -50,16 +46,7 @@ public:
 
 protected:
 
-  /**
-   * Validates provided encoding and throws an exception if invalid encoding.
-   * If no encoding is provided then mEncoding is default initialised to "utf-8".
-   *
-   * @param aEncoding    Optional encoding (case insensitive) provided.
-   *                     (valid values are "utf-8", "utf-16", "utf-16be")
-   *                     Default value is "utf-8" if no encoding is provided.
-   * @return aRv         EncodingError exception else null.
-   */
-  void Init(const nsAString& aEncoding, ErrorResult& aRv);
+  void Init();
 
 public:
   /**
@@ -70,7 +57,7 @@ public:
   void GetEncoding(nsAString& aEncoding);
 
   /**
-   * Encodes incoming utf-16 code units/ DOM string to the requested encoding.
+   * Encodes incoming utf-16 code units/ DOM string to utf-8.
    *
    * @param aCx        Javascript context.
    * @param aObj       the wrapper of the TextEncoder
@@ -84,7 +71,6 @@ public:
               JS::MutableHandle<JSObject*> aRetval,
               ErrorResult& aRv);
 private:
-  nsCString mEncoding;
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
 };
 

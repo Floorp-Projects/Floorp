@@ -113,10 +113,10 @@ HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported
 == wordbreak-1.html wordbreak-1-ref.html
 == wordbreak-2.html wordbreak-2-ref.html
 == wordbreak-3.html wordbreak-3-ref.html
-skip-if((Android&&AndroidVersion!=15)||(B2G&&browserIsRemote)) == wordbreak-4a.html wordbreak-4a-ref.html
+skip-if((Android)||(B2G&&browserIsRemote)) == wordbreak-4a.html wordbreak-4a-ref.html
 == wordbreak-4b.html wordbreak-4b-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
-== wordbreak-6.html wordbreak-6-ref.html
+fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
 skip-if(B2G||Mulet) HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html

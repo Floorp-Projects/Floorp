@@ -351,8 +351,6 @@ nsSpeechTask::DispatchStart()
 nsresult
 nsSpeechTask::DispatchStartInner()
 {
-  CreateAudioChannelAgent();
-
   nsSynthVoiceRegistry::GetInstance()->SetIsSpeaking(true);
   return DispatchStartImpl();
 }
@@ -372,6 +370,8 @@ nsSpeechTask::DispatchStartImpl(const nsAString& aUri)
   if(NS_WARN_IF(!(mUtterance->mState == SpeechSynthesisUtterance::STATE_PENDING))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  CreateAudioChannelAgent();
 
   mUtterance->mState = SpeechSynthesisUtterance::STATE_SPEAKING;
   mUtterance->mChosenVoiceURI = aUri;
@@ -395,8 +395,6 @@ nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex)
 nsresult
 nsSpeechTask::DispatchEndInner(float aElapsedTime, uint32_t aCharIndex)
 {
-  DestroyAudioChannelAgent();
-
   if (!mPreCanceled) {
     nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }
@@ -408,6 +406,8 @@ nsresult
 nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
 {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchEnd\n"));
+
+  DestroyAudioChannelAgent();
 
   MOZ_ASSERT(mUtterance);
   if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {

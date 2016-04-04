@@ -31,7 +31,7 @@
 }
 
 #social-sidebar-button[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
 }
 
 #social-sidebar-favico {

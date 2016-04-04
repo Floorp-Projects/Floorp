@@ -176,7 +176,8 @@ protected:
    * @param filesystem The string representation of the file system.
    */
   virtual FileSystemParams
-  GetRequestParams(const nsString& aFileSystem) const = 0;
+  GetRequestParams(const nsString& aSerializedDOMPath,
+                   ErrorResult& aRv) const = 0;
 
   /*
    * Wrap the task success result to FileSystemResponseValue for sending it
@@ -185,7 +186,7 @@ protected:
    * send the task success result back to the child process.
    */
   virtual FileSystemResponseValue
-  GetSuccessRequestResult() const = 0;
+  GetSuccessRequestResult(ErrorResult& aRv) const = 0;
 
   /*
    * Unwrap the IPC message to get the task success result.
@@ -194,7 +195,8 @@ protected:
    * success result.
    */
   virtual void
-  SetSuccessRequestResult(const FileSystemResponseValue& aValue) = 0;
+  SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                          ErrorResult& aRv) = 0;
 
   bool
   HasError() const { return mErrorValue != NS_OK; }

@@ -61,6 +61,7 @@ EXPORTS += [
     'nsNSSHelper.h',
     'nsNSSShutDown.h',
     'nsRandomGenerator.h',
+    'nsSecurityHeaderParser.h',
     'NSSErrorsService.h',
     'ScopedNSSTypes.h',
     'SharedCertVerifier.h',

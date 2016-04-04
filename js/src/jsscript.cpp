@@ -131,7 +131,10 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
     // any time, such accesses are mediated by DebugScopeProxy (see
     // DebugScopeProxy::handleUnaliasedAccess).
     uint32_t nslots = CallObject::RESERVED_SLOTS;
-    uint32_t aliasedBodyLevelLexicalBegin = UINT16_MAX;
+
+    // Unless there are aliased body-level lexical bindings at all, set the
+    // begin index to an impossible slot number.
+    uint32_t aliasedBodyLevelLexicalBegin = LOCALNO_LIMIT;
     for (BindingIter bi(self); bi; bi++) {
         if (bi->aliased()) {
             // Per ES6, lexical bindings cannot be accessed until
@@ -343,8 +346,7 @@ Binding::trace(JSTracer* trc)
 void
 Bindings::trace(JSTracer* trc)
 {
-    if (callObjShape_)
-        TraceEdge(trc, &callObjShape_, "callObjShape");
+    TraceNullableEdge(trc, &callObjShape_, "callObjShape");
 
     /*
      * As the comment in Bindings explains, bindingsArray may point into freed
@@ -2214,6 +2216,7 @@ ScriptSource::~ScriptSource()
         }
     };
 
+    MOZ_ASSERT(refs == 0);
     MOZ_ASSERT_IF(inCompressedSourceSet, data.is<Compressed>());
 
     DestroyMatcher dm(*this);
@@ -3963,10 +3966,8 @@ JSScript::traceChildren(JSTracer* trc)
                   zone()->isCollecting());
 
     if (atoms) {
-        for (uint32_t i = 0; i < natoms(); ++i) {
-            if (atoms[i])
-                TraceEdge(trc, &atoms[i], "atom");
-        }
+        for (uint32_t i = 0; i < natoms(); ++i)
+            TraceNullableEdge(trc, &atoms[i], "atom");
     }
 
     if (hasObjects()) {
@@ -3979,19 +3980,13 @@ JSScript::traceChildren(JSTracer* trc)
         TraceRange(trc, constarray->length, constarray->vector, "consts");
     }
 
-    if (sourceObject()) {
-        MOZ_ASSERT(MaybeForwarded(sourceObject())->compartment() == compartment());
-        TraceEdge(trc, &sourceObject_, "sourceObject");
-    }
+    MOZ_ASSERT_IF(sourceObject(), MaybeForwarded(sourceObject())->compartment() == compartment());
+    TraceNullableEdge(trc, &sourceObject_, "sourceObject");
 
-    if (functionNonDelazifying())
-        TraceEdge(trc, &function_, "function");
+    TraceNullableEdge(trc, &function_, "function");
+    TraceNullableEdge(trc, &module_, "module");
 
-    if (module_)
-        TraceEdge(trc, &module_, "module");
-
-    if (enclosingStaticScope_)
-        TraceEdge(trc, &enclosingStaticScope_, "enclosingStaticScope");
+    TraceNullableEdge(trc, &enclosingStaticScope_, "enclosingStaticScope");
 
     if (maybeLazyScript())
         TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
@@ -4281,11 +4276,14 @@ LazyScript::resetScript()
 }
 
 void
-LazyScript::setParent(JSObject* enclosingScope, ScriptSourceObject* sourceObject)
+LazyScript::setEnclosingScopeAndSource(JSObject* enclosingScope, ScriptSourceObject* sourceObject)
 {
-    MOZ_ASSERT(!sourceObject_ && !enclosingScope_);
     MOZ_ASSERT_IF(enclosingScope, function_->compartment() == enclosingScope->compartment());
     MOZ_ASSERT(function_->compartment() == sourceObject->compartment());
+    // This method may be called to update the enclosing scope. See comment
+    // above the callsite in BytecodeEmitter::emitFunction.
+    MOZ_ASSERT_IF(sourceObject_, sourceObject_ == sourceObject && enclosingScope_);
+    MOZ_ASSERT_IF(!sourceObject_, !enclosingScope_);
 
     enclosingScope_ = enclosingScope;
     sourceObject_ = sourceObject;
@@ -4355,7 +4353,7 @@ LazyScript::CreateRaw(ExclusiveContext* cx, HandleFunction fun,
     p.bindingsAccessedDynamically = false;
     p.hasDebuggerStatement = false;
     p.hasDirectEval = false;
-    p.usesArgumentsApplyAndThis = false;
+    p.isLikelyConstructorWrapper = false;
     p.isDerivedClassConstructor = false;
     p.needsHomeObject = false;
 
@@ -4396,7 +4394,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     // Set the enclosing scope of the lazy function, this would later be
     // used to define the environment when the function would be used.
     MOZ_ASSERT(!res->sourceObject());
-    res->setParent(enclosingScope, &sourceObjectScript->scriptSourceUnwrap());
+    res->setEnclosingScopeAndSource(enclosingScope, &sourceObjectScript->scriptSourceUnwrap());
 
     MOZ_ASSERT(!res->hasScript());
     if (script)

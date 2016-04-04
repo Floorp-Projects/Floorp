@@ -92,11 +92,6 @@ NSSDialogs.prototype = {
     }
   },
 
-  notifyCACertExists: function(aCtx) {
-    let p = this.getPrompt(this.getString("caCertExists.title"), this.getString("caCertExists.message"));
-    this.showPrompt(p);
-  },
-
   setPKCS12FilePassword: function(aCtx, aPassword) {
     // this dialog is never shown in Fennec; in Desktop it is shown while backing up a personal
     // certificate to a file via Preferences->Advanced->Encryption->View Certificates->Your Certificates

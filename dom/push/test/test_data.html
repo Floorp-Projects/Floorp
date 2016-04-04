@@ -25,10 +25,24 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  var userAgentID = "ac44402c-85fc-41e4-a0d0-483316d15351";
+  var channelID = null;
+
+  var mockSocket = new MockWebSocket();
+  mockSocket.onRegister = function(request) {
+    channelID = request.channelID;
+    this.serverSendMsg(JSON.stringify({
+      messageType: "register",
+      uaid: userAgentID,
+      channelID,
+      status: 200,
+      pushEndpoint: "https://example.com/endpoint/1"
+    }));
+  };
 
   var registration;
   add_task(function* start() {
-    yield setupPrefs();
+    yield setupPrefsAndMockSocket(mockSocket);
     yield setPushPermission(true);
 
     var url = "worker.js" + "?" + (Math.random());
@@ -89,14 +103,14 @@ http://creativecommons.org/licenses/publicdomain/
   add_task(function* comparePublicKey() {
     var data = yield sendRequestToWorker({ type: "publicKey" });
     var p256dhKey = new Uint8Array(pushSubscription.getKey("p256dh"));
-    ok(p256dhKey.length > 0, "Missing key share");
+    is(p256dhKey.length, 65, "Key share should be 65 octets");
     isDeeply(
       p256dhKey,
       new Uint8Array(data.p256dh),
       "Mismatched key share"
     );
     var authSecret = new Uint8Array(pushSubscription.getKey("auth"));
-    ok(authSecret.length > 0, "Missing auth secret");
+    ok(authSecret.length, 16, "Auth secret should be 16 octets");
     isDeeply(
       authSecret,
       new Uint8Array(data.auth),
@@ -104,10 +118,28 @@ http://creativecommons.org/licenses/publicdomain/
     );
   });
 
+  var version = 0;
+  function sendEncryptedMsg(pushSubscription, message) {
+    return webPushEncrypt(pushSubscription, message)
+      .then((encryptedData) => {
+        mockSocket.serverSendMsg(JSON.stringify({
+          messageType: 'notification',
+          version: version++,
+          channelID: channelID,
+          data: encryptedData.data,
+          headers: {
+            encryption: encryptedData.encryption,
+            encryption_key: encryptedData.encryption_key,
+            encoding: encryptedData.encoding
+          }
+        }));
+      });
+  }
+
   function waitForMessage(pushSubscription, message) {
     return Promise.all([
       controlledFrame.waitOnWorkerMessage("finished"),
-      webpush(pushSubscription, message, 120),
+      sendEncryptedMsg(pushSubscription, message),
     ]).then(([message]) => message);
   }
 
@@ -159,18 +191,15 @@ http://creativecommons.org/licenses/publicdomain/
     });
     is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
 
+    var finishedPromise = controlledFrame.waitOnWorkerMessage("finished");
     // Send a blank message.
-    var [message] = yield Promise.all([
-      controlledFrame.waitOnWorkerMessage("finished"),
-      fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
-        method: "PUT",
-        headers: {
-          "X-Push-Method": "POST",
-          "X-Push-Server": pushSubscription.endpoint,
-          "TTL": "120",
-        },
-      }),
-    ]);
+    mockSocket.serverSendMsg(JSON.stringify({
+      messageType: "notification",
+      version: "vDummy",
+      channelID: channelID
+    }));
+
+    var message = yield finishedPromise;
     ok(!message.data, "Should exclude data for blank messages");
   });
 

@@ -285,12 +285,13 @@
       <handler event="popupshowing"><![CDATA[
         // Capture the previous focus before has a chance to get set inside the panel
         try {
-          this._prevFocus = document.commandDispatcher.focusedElement;
-          if (this._prevFocus)
+          this._prevFocus = Components.utils
+                            .getWeakReference(document.commandDispatcher.focusedElement);
+          if (this._prevFocus.get())
             return;
         } catch (ex) { }
 
-        this._prevFocus = document.activeElement;
+        this._prevFocus = Components.utils.getWeakReference(document.activeElement);
       ]]></handler>
       <handler event="popupshown"><![CDATA[
         // Fire event for accessibility APIs
@@ -307,7 +308,7 @@
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
         var currentFocus = this._currentFocus;
-        var prevFocus = this._prevFocus;
+        var prevFocus = this._prevFocus ? this._prevFocus.get() : null;
         this._currentFocus = null;
         this._prevFocus = null;
         if (prevFocus && currentFocus && this.getAttribute("norestorefocus") != "true") {
@@ -537,8 +538,9 @@
         <parameter name="tipElement"/>
         <body>
         <![CDATA[
-          // Don't show the tooltip if the tooltip node is a document or disconnected.
+          // Don't show the tooltip if the tooltip node is a document, browser, or disconnected.
           if (!tipElement || !tipElement.ownerDocument ||
+              tipElement.localName == "browser" ||
               (tipElement.ownerDocument.compareDocumentPosition(tipElement) & document.DOCUMENT_POSITION_DISCONNECTED)) {
             return false;
           }

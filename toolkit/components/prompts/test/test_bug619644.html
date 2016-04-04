@@ -31,16 +31,22 @@ SimpleTest.waitForExplicitFinish();
 const expectedFinalDoc =
 "<head><\/head><body><p>Original content<\/p>\n<script>\n    window.opener.postMessage(\"\", \"*\");\n    confirm (\"Message\");\n    document.write (\"Extra content\");\n    window.opener.postMessage(document.documentElement.innerHTML, \"*\");\n<\/script>Extra content<\/body>";
 
+let gChromeMessageManager;
+
 function runtest(e)
 {
   window.removeEventListener("message", runtest, false);
   window.addEventListener("message", checktest, false);
-  synthesizeKey("VK_ESCAPE", {}, e.source);
+
+  let url = SimpleTest.getTestFileURL("chromeScript.js");
+  gChromeMessageManager = SpecialPowers.loadChromeScript(url);
+  gChromeMessageManager.sendAsyncMessage("cancelPrompt");
 }
 
 function checktest(e) {
   is(e.data, expectedFinalDoc, "ESC press should not abort document load");
   e.source.close();
+  gChromeMessageManager.destroy();
   SimpleTest.finish();
 }
 

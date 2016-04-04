@@ -173,6 +173,11 @@
  * Barriers designed to be used externally are provided in js/RootingAPI.h.
  * These external barriers call into the same post-barrier implementations at
  * InternalBarrierMethods<T>::post via an indirect call to Heap(.+)Barrier.
+ *
+ * These clases are designed to be used to wrap GC thing pointers or values that
+ * act like them (i.e. JS::Value and jsid).  It is possible to use them for
+ * other types by supplying the necessary barrier implementations but this
+ * is not usually necessary and should be done with caution.
  */
 
 class JSAtom;
@@ -322,11 +327,7 @@ class BarrieredBase : public BarrieredBaseMixins<T>
 {
   protected:
     // BarrieredBase is not directly instantiable.
-    explicit BarrieredBase(T v) : value(v) {
-#ifdef DEBUG
-        assertTypeConstraints();
-#endif
-    }
+    explicit BarrieredBase(T v) : value(v) {}
 
     // Storage for all barrier classes. |value| must be a GC thing reference
     // type: either a direct pointer to a GC thing or a supported tagged
@@ -339,13 +340,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
     // Friending to the generic template leads to a number of unintended consequences, including
     // template resolution ambiguity and a circular dependency with Tracing.h.
     T* unsafeUnbarrieredForTracing() { return &value; }
-
-  private:
-#ifdef DEBUG
-    // Static type assertions about T must be moved out of line to avoid
-    // circular dependencies between Barrier classes and GC memory definitions.
-    void assertTypeConstraints() const;
-#endif
 };
 
 // Base class for barriered pointer types that intercept only writes.
@@ -452,6 +446,10 @@ class HeapPtr : public WriteBarrieredBase<T>
 
     DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
 
+    T unbarrieredGet() const {
+        return this->value;
+    }
+
   private:
     void set(const T& v) {
         this->pre();
@@ -472,11 +470,25 @@ class HeapPtr : public WriteBarrieredBase<T>
 };
 
 /*
- * A pre- and post-barriered heap pointer, for use inside the JS engine.
+ * A pre- and post-barriered heap pointer, for use inside the JS engine. These
+ * heap pointers can be stored in C++ containers like GCVector and GCHashMap.
  *
- * Unlike HeapPtr<T>, it can be used in memory that is not managed by the GC,
- * i.e. in C++ containers.  It is, however, somewhat slower, so should only be
- * used in contexts where this ability is necessary.
+ * The GC sometimes keeps pointers to pointers to GC things --- for example, to
+ * track references into the nursery. However, C++ containers like GCVector and
+ * GCHashMap usually reserve the right to relocate their elements any time
+ * they're modified, invalidating all pointers to the elements. RelocatablePtr
+ * has a move constructor which knows how to keep the GC up to date if it is
+ * moved to a new location.
+ *
+ * However, because of this additional communication with the GC, RelocatablePtr
+ * is somewhat slower, so it should only be used in contexts where this ability
+ * is necessary.
+ *
+ * Obviously, JSObjects, JSStrings, and the like get tenured and compacted, so
+ * whatever pointers they contain get relocated, in the sense used here.
+ * However, since the GC itself is moving those values, it takes care of its
+ * internal pointers to those pointers itself. RelocatablePtr is only necessary
+ * when the relocation would otherwise occur without the GC's knowledge.
  */
 template <class T>
 class RelocatablePtr : public WriteBarrieredBase<T>

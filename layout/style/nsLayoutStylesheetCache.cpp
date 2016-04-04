@@ -134,6 +134,11 @@ nsLayoutStylesheetCache::UASheet()
 StyleSheetHandle
 nsLayoutStylesheetCache::HTMLSheet()
 {
+  if (!mHTMLSheet) {
+    LoadSheetURL("resource://gre-resources/html.css",
+                 mHTMLSheet, eAgentSheetFeatures);
+  }
+
   return mHTMLSheet;
 }
 
@@ -319,8 +324,6 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache(StyleBackendType aType)
   // per-profile, since they're profile-invariant.
   LoadSheetURL("resource://gre-resources/counterstyles.css",
                mCounterStylesSheet, eAgentSheetFeatures);
-  LoadSheetURL("resource://gre-resources/html.css",
-               mHTMLSheet, eAgentSheetFeatures);
   LoadSheetURL("chrome://global/content/minimal-xul.css",
                mMinimalXULSheet, eAgentSheetFeatures);
   LoadSheetURL("resource://gre-resources/quirk.css",
@@ -375,6 +378,8 @@ nsLayoutStylesheetCache::For(StyleBackendType aType)
     //                               "layout.css.example-pref.enabled");
     Preferences::RegisterCallback(&DependentPrefChanged,
                                   "layout.css.grid.enabled");
+    Preferences::RegisterCallback(&DependentPrefChanged,
+                                  "dom.details_element.enabled");
   }
 
   return cache;
@@ -818,6 +823,7 @@ nsLayoutStylesheetCache::DependentPrefChanged(const char* aPref, void* aData)
                   gStyleCache_Servo ? &gStyleCache_Servo->sheet_ : nullptr);
 
   INVALIDATE(mUASheet);  // for layout.css.grid.enabled
+  INVALIDATE(mHTMLSheet); // for dom.details_element.enabled
 
 #undef INVALIDATE
 }
@@ -853,7 +859,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr& aSheet,
   MOZ_ASSERT(uri, "URI creation shouldn't fail");
 
   aSheet->SetURIs(uri, uri, uri);
-  aSheet->SetComplete();
+  aSheet->AsStyleSheet()->SetComplete();
 
   static const uint32_t kPreallocSize = 1024;
 

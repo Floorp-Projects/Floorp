@@ -41,7 +41,7 @@ enum class DisposalMethod : int8_t {
 };
 
 enum class Opacity : uint8_t {
-  OPAQUE,
+  FULLY_OPAQUE,
   SOME_TRANSPARENCY
 };
 
@@ -210,9 +210,14 @@ public:
   void Abort();
 
   /**
+   * Returns true if this imgFrame has been aborted.
+   */
+  bool IsAborted() const;
+
+  /**
    * Returns true if this imgFrame is completely decoded.
    */
-  bool IsImageComplete() const;
+  bool IsFinished() const;
 
   /**
    * Blocks until this imgFrame is either completely decoded, or is marked as
@@ -222,7 +227,7 @@ public:
    * careful in your use of this method to avoid excessive main thread jank or
    * deadlock.
    */
-  void WaitUntilComplete() const;
+  void WaitUntilFinished() const;
 
   /**
    * Returns the number of bytes per pixel this imgFrame requires.  This is a
@@ -278,7 +283,7 @@ private: // methods
 
   void AssertImageDataLocked() const;
 
-  bool IsImageCompleteInternal() const;
+  bool AreAllPixelsWritten() const;
   nsresult ImageUpdatedInternal(const nsIntRect& aUpdateRect);
   void GetImageDataInternal(uint8_t** aData, uint32_t* length) const;
   uint32_t GetImageBytesPerRow() const;
@@ -342,6 +347,7 @@ private: // data
 
   bool mHasNoAlpha;
   bool mAborted;
+  bool mFinished;
   bool mOptimizable;
 
 

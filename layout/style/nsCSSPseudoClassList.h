@@ -123,7 +123,8 @@ CSS_PSEUDO_CLASS(mozWindowInactive, ":-moz-window-inactive", 0, "")
 CSS_PSEUDO_CLASS(mozTableBorderNonzero, ":-moz-table-border-nonzero", 0, "")
 
 // Matches HTML frame/iframe elements which are mozbrowser.
-CSS_PSEUDO_CLASS(mozBrowserFrame, ":-moz-browser-frame", 0, "")
+CSS_PSEUDO_CLASS(mozBrowserFrame, ":-moz-browser-frame",
+                 CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "")
 
 // Matches whatever the contextual reference elements are for the
 // matching operation.
@@ -172,26 +173,37 @@ CSS_STATE_PSEUDO_CLASS(mozFocusRing, ":-moz-focusring", 0, "", NS_EVENT_STATE_FO
 
 // Image, object, etc state pseudo-classes
 CSS_STATE_PSEUDO_CLASS(mozBroken, ":-moz-broken", 0, "", NS_EVENT_STATE_BROKEN)
-CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled", 0, "",
-                       NS_EVENT_STATE_USERDISABLED)
-CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed", 0, "",
-                       NS_EVENT_STATE_SUPPRESSED)
 CSS_STATE_PSEUDO_CLASS(mozLoading, ":-moz-loading", 0, "", NS_EVENT_STATE_LOADING)
-CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported", 0, "",
+
+CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       NS_EVENT_STATE_USERDISABLED)
+CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       NS_EVENT_STATE_SUPPRESSED)
+CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_UNSUPPORTED)
-CSS_STATE_PSEUDO_CLASS(mozTypeUnsupportedPlatform, ":-moz-type-unsupported-platform", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozTypeUnsupportedPlatform, ":-moz-type-unsupported-platform",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_UNSUPPORTED_PLATFORM)
-CSS_STATE_PSEUDO_CLASS(mozHandlerClickToPlay, ":-moz-handler-clicktoplay", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozHandlerClickToPlay, ":-moz-handler-clicktoplay",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_CLICK_TO_PLAY)
-CSS_STATE_PSEUDO_CLASS(mozHandlerVulnerableUpdatable, ":-moz-handler-vulnerable-updatable", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozHandlerVulnerableUpdatable, ":-moz-handler-vulnerable-updatable",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_VULNERABLE_UPDATABLE)
-CSS_STATE_PSEUDO_CLASS(mozHandlerVulnerableNoUpdate, ":-moz-handler-vulnerable-no-update", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozHandlerVulnerableNoUpdate, ":-moz-handler-vulnerable-no-update",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_VULNERABLE_NO_UPDATE)
-CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_HANDLER_DISABLED)
-CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_HANDLER_BLOCKED)
-CSS_STATE_PSEUDO_CLASS(mozHandlerCrashed, ":-moz-handler-crashed", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozHandlerCrashed, ":-moz-handler-crashed",
+                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
                        NS_EVENT_STATE_HANDLER_CRASHED)
 
 CSS_STATE_PSEUDO_CLASS(mozMathIncrementScriptLevel,

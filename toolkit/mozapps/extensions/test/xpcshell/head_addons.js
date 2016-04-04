@@ -4,9 +4,8 @@
 
 var AM_Cc = Components.classes;
 var AM_Ci = Components.interfaces;
+var AM_Cu = Components.utils;
 
-const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
 
@@ -261,62 +260,30 @@ function isNightlyChannel() {
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }
 
-function createAppInfo(id, name, version, platformVersion) {
-  gAppInfo = {
-    // nsIXULAppInfo
-    vendor: "Mozilla",
-    name: name,
-    ID: id,
-    version: version,
-    appBuildID: "2007010101",
-    platformVersion: platformVersion ? platformVersion : "1.0",
-    platformBuildID: "2007010101",
-
-    // nsIXULRuntime
-    browserTabsRemoteAutostart: false,
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    invalidateCachesOnRestart: function invalidateCachesOnRestart() {
-      // Do nothing
+function createAppInfo(ID, name, version, platformVersion="1.0") {
+  let tmp = {};
+  AM_Cu.import("resource://testing-common/AppInfo.jsm", tmp);
+  tmp.updateAppInfo({
+    ID, name, version, platformVersion,
+    crashReporter: true,
+    extraProps: {
+      browserTabsRemoteAutostart: false,
     },
-
-    // nsICrashReporter
-    annotations: {},
-
-    annotateCrashReport: function(key, data) {
-      this.annotations[key] = data;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIXULAppInfo,
-                                           AM_Ci.nsIXULRuntime,
-                                           AM_Ci.nsICrashReporter,
-                                           AM_Ci.nsISupports])
-  };
-
-  var XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return gAppInfo.QueryInterface(iid);
-    }
-  };
-  var registrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
-  registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                            XULAPPINFO_CONTRACTID, XULAppInfoFactory);
+  });
+  gAppInfo = tmp.getAppInfo();
 }
 
-function getManifestURIForBundle(file) {
+function getManifestURIForBundle(file, manifest="manifest.json") {
   if (file.isDirectory()) {
-    file.append("install.rdf");
-    if (file.exists()) {
-      return NetUtil.newURI(file);
+    let path = file.clone();
+    path.append("install.rdf");
+    if (path.exists()) {
+      return NetUtil.newURI(path);
     }
 
-    file.leafName = "manifest.json";
-    if (file.exists()) {
-      return NetUtil.newURI(file);
+    path.leafName = manifest;
+    if (path.exists()) {
+      return NetUtil.newURI(path);
     }
 
     throw new Error("No manifest file present");
@@ -332,8 +299,8 @@ function getManifestURIForBundle(file) {
       return NetUtil.newURI("jar:" + uri.spec + "!/" + "install.rdf");
     }
 
-    if (zip.hasEntry("manifest.json")) {
-      return NetUtil.newURI("jar:" + uri.spec + "!/" + "manifest.json");
+    if (zip.hasEntry(manifest)) {
+      return NetUtil.newURI("jar:" + uri.spec + "!/" + manifest);
     }
 
     throw new Error("No manifest file present");
@@ -375,8 +342,12 @@ let getIDForManifest = Task.async(function*(manifestURI) {
     return rdfID.QueryInterface(AM_Ci.nsIRDFLiteral).Value;
   }
   else {
-    let manifest = JSON.parse(data);
-    return manifest.applications.gecko.id;
+    try {
+      let manifest = JSON.parse(data);
+      return manifest.applications.gecko.id;
+    } catch (err) {
+      return null;
+    }
   }
 });
 
@@ -413,6 +384,15 @@ function overrideCertDB(handler) {
       let manifestURI = getManifestURIForBundle(file);
 
       let id = yield getIDForManifest(manifestURI);
+
+      if (!id) {
+        manifestURI = getManifestURIForBundle(file, "mozilla.json");
+        id = yield getIDForManifest(manifestURI);
+      }
+
+      if (!id) {
+        throw new Error("Cannot find addon ID");
+      }
 
       // Make sure to close the open zip file or it will be locked.
       if (file.isFile()) {
@@ -1146,7 +1126,7 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
  *          An optional string to override the default installation aId
  * @return  A file pointing to where the extension was installed
  */
-function writeWebManifestForExtension(aData, aDir, aId = undefined) {
+function writeWebManifestForExtension(aData, aDir, aId = undefined, aMozData = undefined) {
   if (!aId)
     aId = aData.applications.gecko.id;
 
@@ -1156,19 +1136,26 @@ function writeWebManifestForExtension(aData, aDir, aId = undefined) {
     if (!dir.exists())
       dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
-    let file = dir.clone();
-    file.append("manifest.json");
-    if (file.exists())
-      file.remove(true);
+    function writeOne(filename, raw) {
+      let file = dir.clone();
+      file.append(filename);
+      if (file.exists())
+        file.remove(true);
 
-    let data = JSON.stringify(aData);
-    let fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-              createInstance(AM_Ci.nsIFileOutputStream);
-    fos.init(file,
-             FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
-             FileUtils.PERMS_FILE, 0);
-    fos.write(data, data.length);
-    fos.close();
+      let data = JSON.stringify(raw);
+      let fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
+          createInstance(AM_Ci.nsIFileOutputStream);
+      fos.init(file,
+               FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
+               FileUtils.PERMS_FILE, 0);
+      fos.write(data, data.length);
+      fos.close();
+    }
+
+    writeOne("manifest.json", aData);
+    if (aMozData) {
+      writeOne("mozilla.json", aMozData);
+    }
 
     return dir;
   }
@@ -1184,6 +1171,13 @@ function writeWebManifestForExtension(aData, aDir, aId = undefined) {
     zipW.open(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
     zipW.addEntryStream("manifest.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
                         stream, false);
+    if (aMozData) {
+      let mozStream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+                      createInstance(AM_Ci.nsIStringInputStream);
+      mozStream.setData(JSON.stringify(aMozData), -1);
+      zipW.addEntryStream("mozilla.json", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
+                          mozStream, false);
+    }
     zipW.close();
 
     return file;
@@ -1776,7 +1770,6 @@ function promiseInstallAllFiles(aFiles, aIgnoreIncompatible) {
   let deferred = Promise.defer();
   installAllFiles(aFiles, deferred.resolve, aIgnoreIncompatible);
   return deferred.promise;
-
 }
 
 if ("nsIWindowsRegKey" in AM_Ci) {
@@ -1907,6 +1900,8 @@ Services.prefs.setBoolPref("extensions.showMismatchUI", false);
 Services.prefs.setCharPref("extensions.update.url", "http://127.0.0.1/updateURL");
 Services.prefs.setCharPref("extensions.update.background.url", "http://127.0.0.1/updateBackgroundURL");
 Services.prefs.setCharPref("extensions.blocklist.url", "http://127.0.0.1/blocklistURL");
+Services.prefs.setCharPref("services.kinto.base",
+                           "http://localhost/dummy-kinto/v1");
 
 // By default ignore bundled add-ons
 Services.prefs.setBoolPref("extensions.installDistroAddons", false);

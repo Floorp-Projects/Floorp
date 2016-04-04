@@ -15,7 +15,7 @@
 
 using namespace mozilla;
 
-static const char* kLangGroups[][3] = {
+static const char* const kLangGroups[][3] = {
 #include "langGroups.properties.h"
 };
 
@@ -32,7 +32,7 @@ nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage,
   nsAutoCString lowered(aLanguage);
   ToLowerCase(lowered);
 
-  nsCOMPtr<nsIAtom> lang = do_GetAtom(lowered);
+  nsCOMPtr<nsIAtom> lang = NS_Atomize(lowered);
   return GetLanguageGroup(lang, aError);
 }
 
@@ -41,7 +41,7 @@ nsLanguageAtomService::LookupCharSet(const nsACString& aCharSet)
 {
   nsAutoCString group;
   mozilla::dom::EncodingUtils::LangGroupForEncoding(aCharSet, group);
-  return do_GetAtom(group);
+  return NS_Atomize(group);
 }
 
 nsIAtom*
@@ -69,7 +69,7 @@ nsLanguageAtomService::GetLocaleLanguage(nsresult *aError)
         break;
 
       ToLowerCase(loc); // use lowercase for all language atoms
-      mLocaleLanguage = do_GetAtom(loc);
+      mLocaleLanguage = NS_Atomize(loc);
     }
   } while (0);
 
@@ -108,7 +108,7 @@ nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage,
                                                        langStr, langGroupStr);
     }
 
-    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(langGroupStr);
+    nsCOMPtr<nsIAtom> langGroup = NS_Atomize(langGroupStr);
 
     // The hashtable will keep an owning reference to the atom
     mLangToGroup.Put(aLanguage, langGroup);

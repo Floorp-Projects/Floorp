@@ -5,9 +5,10 @@
 "use strict";
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-const { getSourceNames } = require("devtools/client/shared/source-utils");
-const { L10N } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm").ViewHelpers;
-const l10n = new L10N("chrome://devtools/locale/components.properties");
+const { getSourceNames, parseURL, isScratchpadScheme } = require("devtools/client/shared/source-utils");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
+const l10n = new LocalizationHelper("chrome://devtools/locale/components.properties");
 
 module.exports = createClass({
   propTypes: {
@@ -15,8 +16,8 @@ module.exports = createClass({
     frame: PropTypes.shape({
       functionDisplayName: PropTypes.string,
       source: PropTypes.string.isRequired,
-      line: PropTypes.number,
-      column: PropTypes.number,
+      line: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
+      column: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
     }).isRequired,
     // Clicking on the frame link -- probably should link to the debugger.
     onClick: PropTypes.func.isRequired,
@@ -37,60 +38,84 @@ module.exports = createClass({
 
   render() {
     let { onClick, frame, showFunctionName, showHost } = this.props;
-    const { short, long, host } = getSourceNames(frame.source);
+    let source = frame.source ? String(frame.source) : "";
+    let line = frame.line != void 0 ? Number(frame.line) : null;
+    let column = frame.column != void 0 ? Number(frame.column) : null;
+
+    const { short, long, host } = getSourceNames(source);
+    // Reparse the URL to determine if we should link this; `getSourceNames`
+    // has already cached this indirectly. We don't want to attempt to
+    // link to "self-hosted" and "(unknown)". However, we do want to link
+    // to Scratchpad URIs.
+    const isLinkable = !!(isScratchpadScheme(source) || parseURL(source));
+    const elements = [];
+    const sourceElements = [];
+    let sourceEl;
 
     let tooltip = long;
     // Exclude all falsy values, including `0`, as even
     // a number 0 for line doesn't make sense, and should not be displayed.
-    if (frame.line) {
-      tooltip += `:${frame.line}`;
+    // If source isn't linkable, don't attempt to append line and column
+    // info, as this probably doesn't make sense.
+    if (isLinkable && line) {
+      tooltip += `:${line}`;
       // Intentionally exclude 0
-      if (frame.column) {
-        tooltip += `:${frame.column}`;
+      if (column) {
+        tooltip += `:${column}`;
       }
     }
 
-    let onClickTooltipString = l10n.getFormatStr("frame.viewsourceindebugger", tooltip);
     let attributes = {
       "data-url": long,
       className: "frame-link",
-      title: tooltip,
     };
 
-    let fields = [
-      dom.a({
-        className: "frame-link-filename",
-        onClick,
-        title: onClickTooltipString
-      }, short)
-    ];
-
-    // Intentionally exclude 0
-    if (frame.line) {
-      fields.push(dom.span({ className: "frame-link-colon" }, ":"));
-      fields.push(dom.span({ className: "frame-link-line" }, frame.line));
-      // Intentionally exclude 0
-      if (frame.column) {
-        fields.push(dom.span({ className: "frame-link-colon" }, ":"));
-        fields.push(dom.span({ className: "frame-link-column" }, frame.column));
-        // Add `data-column` attribute for testing
-        attributes["data-column"] = frame.column;
-      }
-
-      // Add `data-line` attribute for testing
-      attributes["data-line"] = frame.line;
-    }
-
     if (showFunctionName && frame.functionDisplayName) {
-      fields.unshift(
+      elements.push(
         dom.span({ className: "frame-link-function-display-name" }, frame.functionDisplayName)
       );
     }
 
-    if (showHost && host) {
-      fields.push(dom.span({ className: "frame-link-host" }, host));
+    sourceElements.push(dom.span({
+      className: "frame-link-filename",
+    }, short));
+
+    // If source is linkable, and we have a line number > 0
+    if (isLinkable && line) {
+      sourceElements.push(dom.span({ className: "frame-link-colon" }, ":"));
+      sourceElements.push(dom.span({ className: "frame-link-line" }, line));
+      // Intentionally exclude 0
+      if (column) {
+        sourceElements.push(dom.span({ className: "frame-link-colon" }, ":"));
+        sourceElements.push(dom.span({ className: "frame-link-column" }, column));
+        // Add `data-column` attribute for testing
+        attributes["data-column"] = column;
+      }
+
+      // Add `data-line` attribute for testing
+      attributes["data-line"] = line;
     }
 
-    return dom.span(attributes, ...fields);
+    // If source is not a URL (self-hosted, eval, etc.), don't make
+    // it an anchor link, as we can't link to it.
+    if (isLinkable) {
+      sourceEl = dom.a({
+        onClick,
+        className: "frame-link-source",
+        title: l10n.getFormatStr("frame.viewsourceindebugger", tooltip)
+      }, sourceElements);
+    } else {
+      sourceEl = dom.span({
+        className: "frame-link-source",
+        title: tooltip,
+      }, sourceElements);
+    }
+    elements.push(sourceEl);
+
+    if (showHost && host) {
+      elements.push(dom.span({ className: "frame-link-host" }, host));
+    }
+
+    return dom.span(attributes, ...elements);
   }
 });

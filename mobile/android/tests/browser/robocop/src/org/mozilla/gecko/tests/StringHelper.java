@@ -27,15 +27,8 @@ public class StringHelper {
     // About pages
     public final String ABOUT_BLANK_URL = "about:blank";
     public final String ABOUT_FIREFOX_URL;
-    public final String ABOUT_RIGHTS_URL = "about:rights";
-    public final String ABOUT_BUILDCONFIG_URL = "about:buildconfig";
-    public final String ABOUT_FEEDBACK_URL = "about:feedback";
-    public final String ABOUT_HEALTHREPORT_URL = "about:healthreport";
-    public final String ABOUT_DOWNLOADS_URL = "about:downloads";
     public final String ABOUT_HOME_URL = "about:home";
     public final String ABOUT_ADDONS_URL = "about:addons";
-    public static final String ABOUT_LOGINS_URL = "about:logins";
-    public final String ABOUT_ABOUT_URL = "about:about";
     public final String ABOUT_SCHEME = "about:";
 
     // About pages' titles
@@ -94,6 +87,9 @@ public class StringHelper {
     public final String ROBOCOP_LINK_TO_SLOW_LOADING = "/robocop/robocop_link_to_slow_loading.html";
 
     private final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
+
+    // Robocop page images
+    public final String ROBOCOP_PICTURE_URL = "/robocop/Firefox.jpg";
 
     // Robocop page titles
     public final String ROBOCOP_BIG_LINK_TITLE = "Big Link";

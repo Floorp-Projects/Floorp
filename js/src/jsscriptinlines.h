@@ -87,9 +87,10 @@ SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 inline JSFunction*
 LazyScript::functionDelazifying(JSContext* cx) const
 {
-    if (function_ && !function_->getOrCreateScript(cx))
+    Rooted<const LazyScript*> self(cx, this);
+    if (self->function_ && !self->function_->getOrCreateScript(cx))
         return nullptr;
-    return function_;
+    return self->function_;
 }
 
 } // namespace js

@@ -687,8 +687,13 @@ function isUsableAddon(aAddon) {
       aAddon.signedState != AddonManager.SIGNEDSTATE_SYSTEM) {
     return false;
   }
-  // temporary and system add-ons do not require signing
-  if ((aAddon._installLocation.name != KEY_APP_SYSTEM_DEFAULTS &&
+  // Temporary and system add-ons do not require signing.
+  // On UNIX platforms except OSX, an additional location for system add-ons
+  // exists in /usr/{lib,share}/mozilla/extensions. Add-ons installed there
+  // do not require signing either.
+  if (((aAddon._installLocation.scope != AddonManager.SCOPE_SYSTEM ||
+        Services.appinfo.OS == "Darwin") &&
+       aAddon._installLocation.name != KEY_APP_SYSTEM_DEFAULTS &&
        aAddon._installLocation.name != KEY_APP_TEMPORARY) &&
        mustSign(aAddon.type)) {
     if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
@@ -889,6 +894,14 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.optionsURL = null;
   addon.optionsType = null;
   addon.aboutURL = null;
+
+  if (manifest.options_ui) {
+    addon.optionsURL = extension.getURL(manifest.options_ui.page);
+    if (manifest.options_ui.open_in_tab)
+      addon.optionsType = AddonManager.OPTIONS_TYPE_TAB;
+    else
+      addon.optionsType = AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
+  }
 
   // WebExtensions don't use iconURLs
   addon.iconURL = null;
@@ -3810,8 +3823,9 @@ this.XPIProvider = {
    * @param aFile
    *        An nsIFile for the unpacked add-on directory or XPI file.
    *
-   * @return a Promise that rejects if the add-on is not a valid restartless
-   *         add-on or if the same ID is already temporarily installed
+   * @return a Promise that resolves to an Addon object on success, or rejects
+   *         if the add-on is not a valid restartless add-on or if the
+   *         same ID is already temporarily installed
    */
   installTemporaryAddon: Task.async(function*(aFile) {
     let addon = yield loadManifestFromFile(aFile, TemporaryInstallLocation);
@@ -6919,6 +6933,7 @@ AddonWrapper.prototype = {
         return hasOptionsURL ? addon.optionsType : null;
       case AddonManager.OPTIONS_TYPE_INLINE:
       case AddonManager.OPTIONS_TYPE_INLINE_INFO:
+      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
         return (hasOptionsXUL || hasOptionsURL) ? addon.optionsType : null;
       }
       return null;

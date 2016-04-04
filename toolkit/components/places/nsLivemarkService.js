@@ -528,9 +528,14 @@ Livemark.prototype = {
       // cancel the channel.
       let loadgroup = Cc["@mozilla.org/network/load-group;1"].
                       createInstance(Ci.nsILoadGroup);
+      // Creating a CodeBasePrincipal and using it as the loadingPrincipal
+      // is *not* desired and is only tolerated within this file.
+      // TODO: Find the right OriginAttributes and pass something other
+      // than {} to .createCodeBasePrincipal().
       let channel = NetUtil.newChannel({
-        uri: this.feedURI.spec,
+        uri: this.feedURI,
         loadingPrincipal: Services.scriptSecurityManager.createCodebasePrincipal(this.feedURI, {}),
+        securityFlags: Ci.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST
       }).QueryInterface(Ci.nsIHttpChannel);
       channel.loadGroup = loadgroup;
@@ -542,7 +547,7 @@ Livemark.prototype = {
       // Stream the result to the feed parser with this listener
       let listener = new LivemarkLoadListener(this);
       channel.notificationCallbacks = listener;
-      channel.asyncOpen(listener, null);
+      channel.asyncOpen2(listener);
 
       this.loadGroup = loadgroup;
     }

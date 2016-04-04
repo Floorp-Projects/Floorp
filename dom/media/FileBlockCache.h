@@ -14,6 +14,7 @@
 #include "MediaCache.h"
 #include "nsDeque.h"
 #include "nsThreadUtils.h"
+#include <deque>
 
 struct PRFileDesc;
 
@@ -124,38 +125,6 @@ public:
     }
   };
 
-  class Int32Queue : private nsDeque {
-  public:
-    int32_t PopFront() {
-      int32_t front = ObjectAt(0);
-      nsDeque::PopFront();
-      return front;
-    }
-
-    void PushBack(int32_t aValue) {
-      nsDeque::Push(reinterpret_cast<void*>(aValue));
-    }
-
-    bool Contains(int32_t aValue) {
-      for (size_t i = 0; i < GetSize(); ++i) {
-        if (ObjectAt(i) == aValue) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    bool IsEmpty() {
-      return nsDeque::GetSize() == 0;
-    }
-
-  private:
-    int32_t ObjectAt(size_t aIndex) {
-      void* v = nsDeque::ObjectAt(aIndex);
-      return reinterpret_cast<uintptr_t>(v);
-    }
-  };
-
 private:
   int64_t BlockIndexToOffset(int32_t aBlockIndex) {
     return static_cast<int64_t>(aBlockIndex) * BLOCK_SIZE;
@@ -202,8 +171,7 @@ private:
   // main thread).
   nsCOMPtr<nsIThread> mThread;
   // Queue of pending block indexes that need to be written or moved.
-  //AutoTArray<int32_t, 8> mChangeIndexList;
-  Int32Queue mChangeIndexList;
+  std::deque<int32_t> mChangeIndexList;
   // True if we've dispatched an event to commit all pending block changes
   // to file on mThread.
   bool mIsWriteScheduled;

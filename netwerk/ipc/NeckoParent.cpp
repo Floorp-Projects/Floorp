@@ -94,6 +94,7 @@ NeckoParent::NeckoParent()
 
 NeckoParent::~NeckoParent()
 {
+  gNeckoParent = nullptr;
   if (mObserver) {
     mObserver->RemoveObserver();
   }
@@ -1004,6 +1005,17 @@ NeckoParent::OfflineNotification(nsISupports *aSubject)
       }
     }
 
+  }
+
+  // XPCShells don't have any TabParents
+  // Just send the ipdl message to the child process.
+  if (!UsingNeckoIPCSecurity()) {
+    bool offline = false;
+    gIOService->IsAppOffline(targetAppId, &offline);
+    if (!SendAppOfflineStatus(targetAppId, offline)) {
+      printf_stderr("NeckoParent: "
+                    "SendAppOfflineStatus failed for targetAppId: %u\n", targetAppId);
+    }
   }
 
   return NS_OK;

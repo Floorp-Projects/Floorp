@@ -293,9 +293,9 @@ private:
         ~nsConnectionEntry();
 
         RefPtr<nsHttpConnectionInfo> mConnInfo;
-        nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
-        nsTArray<nsHttpConnection*>  mActiveConns; // active connections
-        nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
+        nsTArray<RefPtr<nsHttpTransaction> > mPendingQ;    // pending transaction queue
+        nsTArray<RefPtr<nsHttpConnection> >  mActiveConns; // active connections
+        nsTArray<RefPtr<nsHttpConnection> >  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
 
         bool AvailableForDispatchNow();

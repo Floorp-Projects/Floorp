@@ -55,8 +55,6 @@ class COMPILER_EXPORT BlockLayoutEncoder
     BlockMemberInfo encodeType(GLenum type, unsigned int arraySize, bool isRowMajorMatrix);
 
     size_t getBlockSize() const { return mCurrentOffset * BytesPerComponent; }
-    size_t getCurrentRegister() const { return mCurrentOffset / ComponentsPerRegister; }
-    size_t getCurrentElement() const { return mCurrentOffset % ComponentsPerRegister; }
 
     virtual void enterAggregateType() = 0;
     virtual void exitAggregateType() = 0;

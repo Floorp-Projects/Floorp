@@ -78,7 +78,7 @@ var MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
       }
     });
 
-    this.emit(EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
+    this.emit(EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   },
 
   /**

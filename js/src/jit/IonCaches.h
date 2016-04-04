@@ -819,6 +819,9 @@ class NameIC : public IonCache
 IONCACHE_KIND_LIST(CACHE_CASTS)
 #undef OPCODE_CASTS
 
+bool IsCacheableProtoChainForIonOrCacheIR(JSObject* obj, JSObject* holder);
+bool IsCacheableGetPropReadSlotForIonOrCacheIR(JSObject* obj, JSObject* holder, Shape* shape);
+
 } // namespace jit
 } // namespace js
 

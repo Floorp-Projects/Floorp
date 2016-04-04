@@ -137,6 +137,7 @@ enum class Expr
     I32Clz                               = 0x57,
     I32Ctz                               = 0x58,
     I32Popcnt                            = 0x59,
+    I32Eqz                               = 0x5a,
 
     // i64 operators
     I64Add                               = 0x5b,
@@ -237,6 +238,15 @@ enum class Expr
     I32ReinterpretF32                    = 0xb4,
     I64ReinterpretF64                    = 0xb5,
 
+    // Bitwise rotates.
+    I32Rotr                              = 0xb6,
+    I32Rotl                              = 0xb7,
+    I64Rotr                              = 0xb8,
+    I64Rotl                              = 0xb9,
+
+    // i64.eqz.
+    I64Eqz                               = 0xba,
+
     // ------------------------------------------------------------------------
     // The rest of these operators are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
@@ -247,7 +257,6 @@ enum class Expr
     StoreGlobal,
     I32Min,
     I32Max,
-    I32Not,
     I32Neg,
     I32BitNot,
     I32Abs,
@@ -266,7 +275,6 @@ enum class Expr
     F64Atan2,
 
     // Atomics
-    AtomicsFence,
     I32AtomicsCompareExchange,
     I32AtomicsExchange,
     I32AtomicsLoad,
@@ -367,13 +375,6 @@ class Encoder
         return true;
     }
 
-    template <class T>
-    MOZ_WARN_UNUSED_RESULT bool writeEnum(T v) {
-        static_assert(uint32_t(T::Limit) <= UINT32_MAX, "fits");
-        MOZ_ASSERT(uint32_t(v) < uint32_t(T::Limit));
-        return writeVarU32(uint32_t(v));
-    }
-
     void patchVarU32(size_t offset, uint32_t patchBits, uint32_t assertBits) {
         do {
             uint8_t assertByte = assertBits & 0x7f;
@@ -397,17 +398,7 @@ class Encoder
         return offset - start + 1;
     }
 
-    template <class T>
-    MOZ_WARN_UNUSED_RESULT bool writePatchableEnum(size_t* offset) {
-        *offset = bytes_.length();
-        return writeVarU32(uint32_t(T::Limit));
-    }
-
-    template <class T>
-    void patchEnum(size_t offset, T v) {
-        MOZ_ASSERT(uint32_t(v) < uint32_t(T::Limit));
-        return patchVarU32(offset, uint32_t(v), uint32_t(T::Limit));
-    }
+    static const size_t ExprLimit = 2 * UINT8_MAX - 1;
 
   public:
     explicit Encoder(Bytes& bytes)
@@ -422,6 +413,9 @@ class Encoder
     // Fixed-size encoding operations simply copy the literal bytes (without
     // attempting to align).
 
+    MOZ_WARN_UNUSED_RESULT bool writeFixedU8(uint8_t i) {
+        return write<uint8_t>(i);
+    }
     MOZ_WARN_UNUSED_RESULT bool writeFixedU32(uint32_t i) {
         return write<uint32_t>(i);
     }
@@ -452,17 +446,32 @@ class Encoder
     MOZ_WARN_UNUSED_RESULT bool writeVarS64(int64_t i) {
         return writeVarS<int64_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeExpr(Expr expr) {
-        return writeEnum(expr);
-    }
     MOZ_WARN_UNUSED_RESULT bool writeValType(ValType type) {
-        return writeEnum(type);
+        static_assert(size_t(ValType::Limit) <= INT8_MAX, "fits");
+        return writeFixedU8(size_t(type));
     }
     MOZ_WARN_UNUSED_RESULT bool writeExprType(ExprType type) {
-        return writeEnum(type);
+        static_assert(size_t(ExprType::Limit) <= INT8_MAX, "fits");
+        return writeFixedU8(uint8_t(type));
+    }
+    MOZ_WARN_UNUSED_RESULT bool writeExpr(Expr expr) {
+        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
+        if (size_t(expr) < UINT8_MAX)
+            return writeFixedU8(uint8_t(expr));
+        return writeFixedU8(UINT8_MAX) &&
+               writeFixedU8(size_t(expr) - UINT8_MAX);
     }
 
     // Variable-length encodings that allow back-patching.
+
+    MOZ_WARN_UNUSED_RESULT bool writePatchableFixedU8(size_t* offset) {
+        *offset = bytes_.length();
+        return bytes_.append(0xff);
+    }
+    void patchFixedU8(size_t offset, uint8_t i) {
+        MOZ_ASSERT(bytes_[offset] == 0xff);
+        bytes_[offset] = i;
+    }
 
     MOZ_WARN_UNUSED_RESULT bool writePatchableVarU32(size_t* offset) {
         *offset = bytes_.length();
@@ -472,20 +481,14 @@ class Encoder
         return patchVarU32(offset, patchBits, UINT32_MAX);
     }
 
-    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU8(size_t* offset) {
+    MOZ_WARN_UNUSED_RESULT bool writePatchableOneByteExpr(size_t* offset) {
         *offset = bytes_.length();
-        return writeU8(UINT8_MAX);
+        return writeFixedU8(0xff);
     }
-    void patchVarU8(size_t offset, uint8_t patchBits) {
-        MOZ_ASSERT(patchBits < 0x80);
-        return patchU8(offset, patchBits);
-    }
-
-    MOZ_WARN_UNUSED_RESULT bool writePatchableExpr(size_t* offset) {
-        return writePatchableEnum<Expr>(offset);
-    }
-    void patchExpr(size_t offset, Expr expr) {
-        patchEnum(offset, expr);
+    void patchOneByteExpr(size_t offset, Expr expr) {
+        MOZ_ASSERT(size_t(expr) < UINT8_MAX);
+        MOZ_ASSERT(bytes_[offset] == 0xff);
+        bytes_[offset] = uint8_t(expr);
     }
 
     // Byte ranges start with an LEB128 length followed by an arbitrary sequence
@@ -513,21 +516,6 @@ class Encoder
     void finishSection(size_t offset) {
         return patchVarU32(offset, bytes_.length() - offset - varU32ByteLength(offset));
     }
-
-    // Temporary encoding forms which should be removed as part of the
-    // conversion to wasm:
-
-    MOZ_WARN_UNUSED_RESULT bool writeU8(uint8_t i) {
-        return write<uint8_t>(i);
-    }
-    MOZ_WARN_UNUSED_RESULT bool writePatchableU8(size_t* offset) {
-        *offset = bytes_.length();
-        return bytes_.append(0xff);
-    }
-    void patchU8(size_t offset, uint8_t i) {
-        MOZ_ASSERT(bytes_[offset] == 0xff);
-        bytes_[offset] = i;
-    }
 };
 
 // The Decoder class decodes the bytes in the range it is given during
@@ -550,28 +538,12 @@ class Decoder
     }
 
     template <class T>
-    MOZ_WARN_UNUSED_RESULT bool readEnum(T* out) {
-        static_assert(uint32_t(T::Limit) <= UINT32_MAX, "fits");
-        uint32_t u32;
-        if (!readVarU32(&u32) || u32 >= uint32_t(T::Limit))
-            return false;
-        *out = T(u32);
-        return true;
-    }
-
-    template <class T>
     T uncheckedRead() {
         MOZ_ASSERT(bytesRemain() >= sizeof(T));
         T ret;
         memcpy(&ret, cur_, sizeof(T));
         cur_ += sizeof(T);
         return ret;
-    }
-
-    template <class T>
-    T uncheckedReadEnum() {
-        static_assert(uint32_t(T::Limit) <= UINT32_MAX, "fits");
-        return (T)uncheckedReadVarU32();
     }
 
     template <typename UInt>
@@ -627,6 +599,8 @@ class Decoder
         return true;
     }
 
+    static const size_t ExprLimit = 2 * UINT8_MAX - 1;
+
   public:
     Decoder(const uint8_t* begin, const uint8_t* end)
       : beg_(begin),
@@ -660,6 +634,9 @@ class Decoder
     // Fixed-size encoding operations simply copy the literal bytes (without
     // attempting to align).
 
+    MOZ_WARN_UNUSED_RESULT bool readFixedU8(uint8_t* i) {
+        return read<uint8_t>(i);
+    }
     MOZ_WARN_UNUSED_RESULT bool readFixedU32(uint32_t* u) {
         return read<uint32_t>(u);
     }
@@ -690,14 +667,37 @@ class Decoder
     MOZ_WARN_UNUSED_RESULT bool readVarS64(int64_t* out) {
         return readVarS<int64_t>(out);
     }
-    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {
-        return readEnum(expr);
-    }
     MOZ_WARN_UNUSED_RESULT bool readValType(ValType* type) {
-        return readEnum(type);
+        static_assert(uint8_t(ValType::Limit) <= INT8_MAX, "fits");
+        uint8_t u8;
+        if (!readFixedU8(&u8))
+            return false;
+        *type = (ValType)u8;
+        return true;
     }
     MOZ_WARN_UNUSED_RESULT bool readExprType(ExprType* type) {
-        return readEnum(type);
+        static_assert(uint8_t(ExprType::Limit) <= INT8_MAX, "fits");
+        uint8_t u8;
+        if (!readFixedU8(&u8))
+            return false;
+        *type = (ExprType)u8;
+        return true;
+    }
+    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {
+        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
+        uint8_t u8;
+        if (!readFixedU8(&u8))
+            return false;
+        if (u8 != UINT8_MAX) {
+            *expr = Expr(u8);
+            return true;
+        }
+        if (!readFixedU8(&u8))
+            return false;
+        if (u8 == UINT8_MAX)
+            return false;
+        *expr = Expr(u8 + UINT8_MAX);
+        return true;
     }
 
     // See writeBytes comment.
@@ -778,6 +778,9 @@ class Decoder
     // sure that the bytes are well-formed (by construction or due to previous
     // validation).
 
+    uint8_t uncheckedReadFixedU8() {
+        return uncheckedRead<uint8_t>();
+    }
     uint32_t uncheckedReadFixedU32() {
         return uncheckedRead<uint32_t>();
     }
@@ -821,27 +824,22 @@ class Decoder
         MOZ_ALWAYS_TRUE(readVarS64(&i64));
         return i64;
     }
+    ValType uncheckedReadValType() {
+        return (ValType)uncheckedReadFixedU8();
+    }
     Expr uncheckedReadExpr() {
-        return uncheckedReadEnum<Expr>();
+        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
+        uint8_t u8 = uncheckedReadFixedU8();
+        return u8 != UINT8_MAX
+               ? Expr(u8)
+               : Expr(uncheckedReadFixedU8() + UINT8_MAX);
     }
     Expr uncheckedPeekExpr() {
-        const uint8_t* before = cur_;
-        Expr ret = uncheckedReadEnum<Expr>();
-        cur_ = before;
-        return ret;
-    }
-    ValType uncheckedReadValType() {
-        return uncheckedReadEnum<ValType>();
-    }
-
-    // Temporary encoding forms which should be removed as part of the
-    // conversion to wasm:
-
-    MOZ_WARN_UNUSED_RESULT bool readFixedU8(uint8_t* i) {
-        return read<uint8_t>(i);
-    }
-    uint8_t uncheckedReadFixedU8() {
-        return uncheckedRead<uint8_t>();
+        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
+        uint8_t u8 = cur_[0];
+        return u8 != UINT8_MAX
+               ? Expr(u8)
+               : Expr(cur_[1] + UINT8_MAX);
     }
 };
 

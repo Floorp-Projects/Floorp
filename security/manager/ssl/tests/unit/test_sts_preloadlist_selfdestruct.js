@@ -1,5 +1,6 @@
 // This test uses bugzilla.mozilla.org given that it is likely to remain
 // on the preload list for a long time.
+"use strict";
 
 function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"]

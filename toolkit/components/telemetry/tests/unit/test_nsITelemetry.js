@@ -36,14 +36,6 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   var s = h.snapshot();
   // verify properties
   do_check_eq(sum, s.sum);
-  if (histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
-    do_check_false("sum_squares_lo" in s);
-    do_check_false("sum_squares_hi" in s);
-  } else {
-    // Doing the math to verify sum_squares was reflected correctly is
-    // tedious in JavaScript.  Just make sure we have something.
-    do_check_neq(s.sum_squares_lo + s.sum_squares_hi, 0);
-  }
 
   // there should be exactly one element per bucket
   for (let i of s.counts) {
@@ -70,10 +62,6 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
     do_check_eq(i, 0);
   }
   do_check_eq(s.sum, 0);
-  if (histogram_type != Telemetry.HISTOGRAM_EXPONENTIAL) {
-    do_check_eq(s.sum_squares_lo, 0);
-    do_check_eq(s.sum_squares_hi, 0);
-  }
 
   h.add(0);
   h.add(1);
@@ -191,10 +179,6 @@ function compareHistograms(h1, h2) {
   do_check_eq(s1.min, s2.min);
   do_check_eq(s1.max, s2.max);
   do_check_eq(s1.sum, s2.sum);
-  if (s1.histogram_type != Telemetry.HISTOGRAM_EXPONENTIAL) {
-    do_check_eq(s1.sum_squares_lo, s2.sum_squares_lo);
-    do_check_eq(s1.sum_squares_hi, s2.sum_squares_hi);
-  }
 
   do_check_eq(s1.counts.length, s2.counts.length);
   for (let i = 0; i < s1.counts.length; i++)
@@ -420,8 +404,6 @@ function test_keyed_boolean_histogram()
     "max": 2,
     "histogram_type": 2,
     "sum": 1,
-    "sum_squares_lo": 1,
-    "sum_squares_hi": 0,
     "ranges": [0, 1, 2],
     "counts": [0, 1, 0]
   };
@@ -449,7 +431,6 @@ function test_keyed_boolean_histogram()
   testKeys.push(key);
   testSnapShot[key] = testHistograms[2];
   testSnapShot[key].sum = 0;
-  testSnapShot[key].sum_squares_lo = 0;
   testSnapShot[key].counts = [1, 0, 0];
   Assert.deepEqual(h.keys().sort(), testKeys);
   Assert.deepEqual(h.snapshot(), testSnapShot);
@@ -471,8 +452,6 @@ function test_keyed_count_histogram()
     "max": 2,
     "histogram_type": 4,
     "sum": 0,
-    "sum_squares_lo": 0,
-    "sum_squares_hi": 0,
     "ranges": [0, 1, 2],
     "counts": [1, 0, 0]
   };
@@ -490,7 +469,6 @@ function test_keyed_count_histogram()
     }
     testHistograms[i].counts[0] = value;
     testHistograms[i].sum = value;
-    testHistograms[i].sum_squares_lo = value;
     testSnapShot[key] = testHistograms[i];
     testKeys.push(key);
 
@@ -508,7 +486,6 @@ function test_keyed_count_histogram()
   testKeys.push(key);
   testHistograms[4].counts[0] = 1;
   testHistograms[4].sum = 1;
-  testHistograms[4].sum_squares_lo = 1;
   testSnapShot[key] = testHistograms[4];
 
   Assert.deepEqual(h.keys().sort(), testKeys);
@@ -536,8 +513,6 @@ function test_keyed_flag_histogram()
     "max": 2,
     "histogram_type": 3,
     "sum": 1,
-    "sum_squares_lo": 1,
-    "sum_squares_hi": 0,
     "ranges": [0, 1, 2],
     "counts": [0, 1, 0]
   };

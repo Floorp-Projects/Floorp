@@ -58,12 +58,6 @@ using mozilla::dom::UDPSocketParent;
 namespace {
 
 void
-AssertIsInMainProcess()
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-}
-
-void
 AssertIsOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -554,8 +548,7 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
 
   RefPtr<CheckPrincipalRunnable> runnable =
     new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
   return true;
 }
@@ -752,6 +745,6 @@ BackgroundParentImpl::DeallocPQuotaParent(PQuotaParent* aActor)
 void
 TestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 }

@@ -22,7 +22,6 @@ namespace dom {
 
 class Promise;
 class PushManager;
-class WorkerPushManager;
 class WorkerListener;
 
 namespace workers {
@@ -35,21 +34,6 @@ ServiceWorkerRegistrationVisible(JSContext* aCx, JSObject* aObj);
 
 bool
 ServiceWorkerNotificationAPIVisible(JSContext* aCx, JSObject* aObj);
-
-// This class exists solely so that we can satisfy some WebIDL Func= attribute
-// constraints. Func= converts the function name to a header file to include, in
-// this case "ServiceWorkerRegistration.h".
-class ServiceWorkerRegistration final
-{
-public:
-  // Something that we can feed into the Func webidl property to ensure that
-  // SetScope is never exposed to the user.
-  static bool
-  WebPushMethodHider(JSContext* unusedContext, JSObject* unusedObject) {
-    return false;
-  }
-
-};
 
 // Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
 // updatefound event and invalidating ServiceWorker instances.
@@ -139,7 +123,7 @@ public:
   GetActive() override;
 
   already_AddRefed<PushManager>
-  GetPushManager(ErrorResult& aRv);
+  GetPushManager(JSContext* aCx, ErrorResult& aRv);
 
   // DOMEventTargethelper
   void DisconnectFromOwner() override
@@ -239,9 +223,9 @@ public:
   }
 
   bool
-  Notify(JSContext* aCx, workers::Status aStatus) override;
+  Notify(workers::Status aStatus) override;
 
-  already_AddRefed<WorkerPushManager>
+  already_AddRefed<PushManager>
   GetPushManager(ErrorResult& aRv);
 
 private:
@@ -263,7 +247,7 @@ private:
   RefPtr<WorkerListener> mListener;
 
 #ifndef MOZ_SIMPLEPUSH
-  RefPtr<WorkerPushManager> mPushManager;
+  RefPtr<PushManager> mPushManager;
 #endif
 };
 

@@ -430,8 +430,13 @@
   /* To avoid having content overlapping the arrow image. */
   padding-inline-end: 8px;
   /* To compensate for the .side-menu-widget-item-contents padding. */
-  margin-inline-start: -20px;
+  margin-inline-start: -4px;
   margin-inline-end: -8px;
+}
+
+.side-menu-widget-group-title + .side-menu-widget-group-list .side-menu-widget-item-other {
+  /* To compensate for the .side-menu-widget-item-contents padding. */
+  margin-inline-start: -20px;
 }
 
 .side-menu-widget-item.selected .side-menu-widget-item-other:not(.selected) {
@@ -468,6 +473,7 @@
 
 .side-menu-widget-empty-text {
   padding: 4px 8px;
+  background-color: var(--theme-sidebar-background);
 }
 
 /* VariablesView */
@@ -1177,6 +1183,14 @@
 
 .table-widget-column-header[sorted=descending] {
   background-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
+}
+
+.theme-dark .table-widget-column[readonly] {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.theme-light .table-widget-column[readonly] {
+  background-color: rgba(0,0,0,0.1);
 }
 
 /* Cells */

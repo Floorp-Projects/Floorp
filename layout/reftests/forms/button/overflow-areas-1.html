@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<!-- For buttons whose painting gets clipped to their border-box area,
+     we should *also* clip their overflow area (as exposed via 'outline').
+     This test exposes these areas so they can be visualized, and checks that
+     they match when we expect them to. -->
+<head>
+  <title>Testcase for bug 1261284</title>
+  <style>
+    input, button {
+      border: 0;             /* Combined, these mean the gray area is the */
+      background: lightgray; /* border-box size. */
+
+      outline: 2px solid black; /* The outlined area is the overflow area. */
+      width: 1px;   /* (To attempt to trigger overflow) */
+
+      display: block;     /* Put each button on its own line, w/ some margin, */
+      margin-bottom: 5px; /* so that any overflow doesn't get stomped on.     */
+
+      font: 8px serif; /* (This just lets the testcase fit better on mobile.) */
+    }
+
+    .oh { overflow: hidden }
+    .oa { overflow: auto }
+    .os { overflow: scroll }
+  </style>
+</head>
+<body>
+  <input type="reset">
+  <input type="submit">
+  <input type="button" value="InputTypeButton">
+  <button>ActualButton</button>
+
+  <input  class="oh" type="reset">
+  <input  class="oh" type="submit">
+  <input  class="oh" type="button" value="InputTypeButton">
+  <button class="oh">ActualButton</button>
+
+  <input  class="oa" type="reset">
+  <input  class="oa" type="submit">
+  <input  class="oa" type="button" value="InputTypeButton">
+  <button class="oa">ActualButton</button>
+
+  <input  class="os" type="reset">
+  <input  class="os" type="submit">
+  <input  class="os" type="button" value="InputTypeButton">
+  <button class="os">ActualButton</button>
+</body>
+</html>

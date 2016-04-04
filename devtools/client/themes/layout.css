@@ -336,3 +336,16 @@
 #layout-container.inactive > #layout-main > p {
    visibility: hidden;
 }
+
+#layout-position-group {
+  display: flex;
+  align-items: center;
+}
+
+#layout-geometry-editor {
+  visibility: hidden;
+}
+
+#layout-geometry-editor::before {
+  background: url(images/geometry-editor.svg) no-repeat center center / 16px 16px;
+}

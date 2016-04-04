@@ -693,7 +693,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
                     *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                 return false;
             }
-            nsCOMPtr<nsIAtom> atom = NS_NewAtom(autoStr);
+            nsCOMPtr<nsIAtom> atom = NS_Atomize(autoStr);
             atom.forget((nsISupports**)d);
             return true;
         }
@@ -1083,10 +1083,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
         if (!unwrapped)
             return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-        XPCWrappedNative* wrapper = IS_WN_REFLECTOR(unwrapped) ? XPCWrappedNative::Get(unwrapped)
-                                                               : nullptr;
-        if (wrapper) {
-            nsISupports* supports = wrapper->GetIdentityObject();
+        if (nsISupports* supports = UnwrapReflectorToISupports(unwrapped)) {
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
             if (iface) {
                 // just pass through the exception (with extra ref and all)
@@ -1113,29 +1110,6 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
                 return JSErrorToXPCException(message.ptr(), ifaceName,
                                              methodName, report, exceptn);
             }
-
-
-            bool found;
-
-            // heuristic to see if it might be usable as an xpcexception
-            if (!JS_HasProperty(cx, obj, "message", &found))
-                return NS_ERROR_FAILURE;
-
-            if (found && !JS_HasProperty(cx, obj, "result", &found))
-                return NS_ERROR_FAILURE;
-
-            if (found) {
-                // lets try to build a wrapper around the JSObject
-                nsXPCWrappedJS* jswrapper;
-                nsresult rv =
-                    nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsIException), &jswrapper);
-                if (NS_FAILED(rv))
-                    return rv;
-
-                *exceptn = static_cast<nsIException*>(jswrapper->GetXPTCStub());
-                return NS_OK;
-            }
-
 
             // XXX we should do a check against 'js_ErrorClass' here and
             // do the right thing - even though it has no JSErrorReport,
@@ -1249,16 +1223,15 @@ XPCConvert::JSErrorToXPCException(const char* message,
             bestMessage.AssignLiteral("JavaScript Error");
         }
 
-        const char16_t* uclinebuf =
-            static_cast<const char16_t*>(report->uclinebuf);
+        const char16_t* linebuf = report->linebuf();
 
         data = new nsScriptError();
         data->InitWithWindowID(
             bestMessage,
             NS_ConvertASCIItoUTF16(report->filename),
-            uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+            linebuf ? nsDependentString(linebuf, report->linebufLength()) : EmptyString(),
             report->lineno,
-            report->uctokenptr - report->uclinebuf, report->flags,
+            report->tokenOffset(), report->flags,
             NS_LITERAL_CSTRING("XPConnect JavaScript"),
             nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
     }

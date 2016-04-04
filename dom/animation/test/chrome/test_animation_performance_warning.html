@@ -1,0 +1,735 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1196114 - Test metadata related to which animation properties
+       are running on the compositor</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+<style>
+.compositable {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+@keyframes fade {
+  from { opacity: 1 }
+  to   { opacity: 0 }
+}
+</style>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1196114"
+  target="_blank">Mozilla Bug 1196114</a>
+<div id="log"></div>
+<script>
+'use strict';
+
+// This is used for obtaining localized strings.
+var gStringBundle;
+
+SpecialPowers.pushPrefEnv({ "set": [["general.useragent.locale", "en-US"]] },
+                          start);
+
+function compare_property_state(a, b) {
+  if (a.property > b.property) {
+    return -1;
+  } else if (a.property < b.property) {
+    return 1;
+  }
+  if (a.runningOnCompositor != b.runningOnCompositor) {
+    return a.runningOnCompositor ? 1 : -1;
+  }
+  return a.warning > b.warning ? -1 : 1;
+}
+
+function assert_animation_property_state_equals(actual, expected) {
+  assert_equals(actual.length, expected.length, 'Number of properties');
+
+  var sortedActual = actual.sort(compare_property_state);
+  var sortedExpected = expected.sort(compare_property_state);
+
+  for (var i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_equals(sortedActual[i].runningOnCompositor,
+                  sortedExpected[i].runningOnCompositor,
+                  'runningOnCompositor property should match');
+    if (sortedExpected[i].warning instanceof RegExp) {
+      assert_regexp_match(sortedActual[i].warning,
+                          sortedExpected[i].warning,
+                          'warning message should match');
+    } else if (sortedExpected[i].warning) {
+      assert_equals(sortedActual[i].warning,
+                    gStringBundle.GetStringFromName(sortedExpected[i].warning),
+                    'warning message should match');
+    }
+  }
+}
+
+// Check that the animation is running on compositor and
+// warning property is not set for the CSS property regardless
+// expected values.
+function assert_property_state_on_compositor(actual, expected) {
+  assert_equals(actual.length, expected.length);
+
+  var sortedActual = actual.sort(compare_property_state);
+  var sortedExpected = expected.sort(compare_property_state);
+
+  for (var i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_true(sortedActual[i].runningOnCompositor,
+                'runningOnCompositor property should be true on ' +
+                sortedActual[i].property);
+    assert_not_exists(sortedActual[i], 'warning',
+                      'warning property should not be set');
+  }
+}
+
+var gAnimationsTests = [
+  {
+    desc: 'animations on compositor',
+    frames: {
+      opacity: [0, 1]
+    },
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
+    desc: 'animations on main thread',
+    frames: {
+      backgroundColor: ['white', 'red']
+    },
+    expected: [
+      {
+        property: 'background-color',
+        runningOnCompositor: false
+      }
+    ]
+  },
+  {
+    desc: 'animations on both threads',
+    frames: {
+      backgroundColor: ['white', 'red'],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'background-color',
+        runningOnCompositor: false
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
+    desc: 'two animation properties on compositor thread',
+    frames: {
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
+    desc: 'opacity on compositor with animation of geometric properties',
+    frames: {
+      width: ['100px', '200px'],
+      opacity: [0, 1]
+    },
+    expected: [
+      {
+        property: 'width',
+        runningOnCompositor: false
+      },
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
+    // FIXME: Once we have KeyframeEffect.setFrames, we should rewrite
+    // this test case to check that runningOnCompositor is restored to true
+    // after 'width' keyframe is removed from the keyframes.
+    desc: 'transform on compositor with animation of geometric properties',
+    frames: {
+      width: ['100px', '200px'],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'width',
+        runningOnCompositor: false
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformWithGeometricProperties'
+      }
+    ]
+  },
+  {
+    desc: 'opacity and transform on compositor with animation of geometric ' +
+          'properties',
+    frames: {
+      width: ['100px', '200px'],
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'width',
+        runningOnCompositor: false
+      },
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformWithGeometricProperties'
+      }
+    ]
+  },
+];
+
+gAnimationsTests.forEach(function(subtest) {
+  promise_test(function(t) {
+    var animation = addDivAndAnimate(t,
+                                     { class: 'compositable' },
+                                     subtest.frames, 100 * MS_PER_SEC);
+    return animation.ready.then(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        subtest.expected);
+    });
+  }, subtest.desc);
+});
+
+var gPerformanceWarningTests = [
+  {
+    desc: 'preserve-3d transform',
+    frames: {
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'transform-style: preserve-3d',
+    expected: [
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformPreserve3D'
+      }
+    ]
+  },
+  {
+    desc: 'transform with backface-visibility:hidden',
+    frames: {
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'backface-visibility: hidden;',
+    expected: [
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+      }
+    ]
+  },
+  {
+    desc: 'opacity and transform with preserve-3d',
+    frames: {
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'transform-style: preserve-3d',
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformPreserve3D'
+      }
+    ]
+  },
+  {
+    desc: 'opacity and transform with backface-visibility:hidden',
+    frames: {
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'backface-visibility: hidden;',
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+      }
+    ]
+  },
+];
+
+var gMultipleAsyncAnimationsTests = [
+  {
+    desc: 'opacity and transform with preserve-3d',
+    style: 'transform-style: preserve-3d',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformPreserve3D'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+  {
+    desc: 'opacity and transform with backface-visibility:hidden',
+    style: 'backface-visibility: hidden;',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+];
+
+// FIXME: Once we have KeyframeEffect.setFrames, we should rewrite
+// these test cases to check that runningOnCompositor is restored to true
+// after 'width' keyframe is removed from the keyframes.
+var gMultipleAsyncAnimationsWithGeometricKeyframeTests = [
+  {
+    desc: 'transform and opacity with animation of geometric properties',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+      {
+        frames: {
+          width: ['100px', '200px'],
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'width',
+            runningOnCompositor: false,
+          },
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+  {
+    desc: 'opacity and transform with animation of geometric properties',
+    animations: [
+      {
+        frames: {
+          width: ['100px', '200px'],
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'width',
+            runningOnCompositor: false,
+          },
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+];
+
+// Test cases that check results of adding/removing 'width' animation on the
+// same element which has async animations.
+var gMultipleAsyncAnimationsWithGeometricAnimationTests = [
+  {
+    desc: 'transform',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+    ]
+  },
+  {
+    desc: 'opacity',
+    animations: [
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true
+          }
+        ]
+      },
+    ]
+  },
+  {
+    desc: 'opacity and transform',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+];
+
+function start() {
+  var bundleService = SpecialPowers.Cc['@mozilla.org/intl/stringbundle;1']
+    .getService(SpecialPowers.Ci.nsIStringBundleService);
+  gStringBundle = bundleService
+    .createBundle("chrome://global/locale/layout_errors.properties");
+
+  gAnimationsTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var animation = addDivAndAnimate(t,
+                                       { class: 'compositable' },
+                                       subtest.frames, 100 * MS_PER_SEC);
+      return animation.ready.then(function() {
+        assert_animation_property_state_equals(
+          animation.effect.getProperties(),
+          subtest.expected);
+      });
+    }, subtest.desc);
+  });
+
+  gPerformanceWarningTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var animation = addDivAndAnimate(t,
+                                       { class: 'compositable' },
+                                       subtest.frames, 100 * MS_PER_SEC);
+      return animation.ready.then(function() {
+        assert_property_state_on_compositor(
+          animation.effect.getProperties(),
+          subtest.expected);
+        animation.effect.target.style = subtest.style;
+        return waitForFrame();
+      }).then(function() {
+        assert_animation_property_state_equals(
+          animation.effect.getProperties(),
+          subtest.expected);
+        animation.effect.target.style = '';
+        return waitForFrame();
+      }).then(function() {
+        assert_property_state_on_compositor(
+          animation.effect.getProperties(),
+          subtest.expected);
+      });
+    }, subtest.desc);
+  });
+
+  gMultipleAsyncAnimationsTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var div = addDiv(t, { class: 'compositable' });
+      var animations = subtest.animations.map(function(anim) {
+        var animation = div.animate(anim.frames, 100 * MS_PER_SEC);
+
+        // Bind expected values to animation object.
+        animation.expected = anim.expected;
+        return animation;
+      });
+      return waitForAllAnimations(animations).then(function() {
+        animations.forEach(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+        div.style = subtest.style;
+        return waitForFrame();
+      }).then(function() {
+        animations.forEach(function(anim) {
+          assert_animation_property_state_equals(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+        div.style = '';
+        return waitForFrame();
+      }).then(function() {
+        animations.forEach(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+      });
+    }, 'Multiple animations: ' + subtest.desc);
+  });
+
+  gMultipleAsyncAnimationsWithGeometricKeyframeTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var div = addDiv(t, { class: 'compositable' });
+      var animations = subtest.animations.map(function(anim) {
+        var animation = div.animate(anim.frames, 100 * MS_PER_SEC);
+
+        // Bind expected values to animation object.
+        animation.expected = anim.expected;
+        return animation;
+      });
+      return waitForAllAnimations(animations).then(function() {
+        animations.forEach(function(anim) {
+          assert_animation_property_state_equals(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+      });
+    }, 'Multiple animations with geometric property: ' + subtest.desc);
+  });
+
+  gMultipleAsyncAnimationsWithGeometricAnimationTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var div = addDiv(t, { class: 'compositable' });
+      var animations = subtest.animations.map(function(anim) {
+        var animation = div.animate(anim.frames, 100 * MS_PER_SEC);
+
+        // Bind expected values to animation object.
+        animation.expected = anim.expected;
+        return animation;
+      });
+
+      var widthAnimation;
+
+      return waitForAllAnimations(animations).then(function() {
+        animations.forEach(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+      }).then(function() {
+        // Append 'width' animation on the same element.
+        widthAnimation = div.animate({ width: ['100px', '200px'] },
+                                     100 * MS_PER_SEC);
+        return waitForFrame();
+      }).then(function() {
+        // Now transform animations are not running on compositor because of
+        // the 'width' animation.
+        animations.forEach(function(anim) {
+          assert_animation_property_state_equals(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+        // Remove the 'width' animation.
+        widthAnimation.cancel();
+        return waitForFrame();
+      }).then(function() {
+        // Now all animations are running on compositor.
+        animations.forEach(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getProperties(),
+            anim.expected);
+        });
+      });
+    }, 'Multiple async animations and geometric animation: ' + subtest.desc);
+  });
+
+  promise_test(function(t) {
+    var animation = addDivAndAnimate(t,
+                                     { class: 'compositable' },
+                                     { transform: [ 'translate(0px)',
+                                                    'translate(100px)'] },
+                                     100 * MS_PER_SEC);
+    return animation.ready.then(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ { property: 'transform', runningOnCompositor: true } ]);
+      animation.effect.target.style = 'width: 10000px; height: 10000px';
+      return waitForFrame();
+    }).then(function() {
+      // viewport depends on test environment.
+      var expectedWarning = new RegExp(
+        "Async animation disabled because frame size \\(10000, 10000\\) is " +
+        "bigger than the viewport \\(\\d+, \\d+\\) or the visual rectangle " +
+        "\\(10000, 10000\\) is larger than the max allowed value \\(\\d+\\)");
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ {
+          property: 'transform',
+          runningOnCompositor: false,
+          warning: expectedWarning
+        } ]);
+      animation.effect.target.style = 'width: 100px; height: 100px';
+      return waitForFrame();
+    }).then(function() {
+      // FIXME: Bug 1253164: the animation should get back on compositor.
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ { property: 'transform', runningOnCompositor: false } ]);
+    });
+  }, 'transform on too big element');
+
+  promise_test(function(t) {
+    var svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '100');
+    svg.setAttribute('height', '100');
+    var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('width', '100');
+    rect.setAttribute('height', '100');
+    rect.setAttribute('fill', 'red');
+    svg.appendChild(rect);
+    document.body.appendChild(svg);
+    t.add_cleanup(function() {
+      svg.remove();
+    });
+
+    var animation = svg.animate(
+      { transform: ['translate(0px)', 'translate(100px)'] }, 100 * MS_PER_SEC);
+    return animation.ready.then(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ { property: 'transform', runningOnCompositor: true } ]);
+      svg.setAttribute('transform', 'translate(10, 20)');
+      return waitForFrame();
+    }).then(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ {
+          property: 'transform',
+          runningOnCompositor: false,
+          warning: 'AnimationWarningTransformSVG'
+        } ]);
+      svg.removeAttribute('transform');
+      return waitForFrame();
+    }).then(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ { property: 'transform', runningOnCompositor: true } ]);
+    });
+  }, 'transform of nsIFrame with SVG transform');
+
+  promise_test(function(t) {
+    var div = addDiv(t, { class: 'compositable',
+                          style: 'animation: fade 100s' });
+    var cssAnimation = div.getAnimations()[0];
+    var scriptAnimation = div.animate({ opacity: [ 1, 0 ] }, 100 * MS_PER_SEC);
+    return scriptAnimation.ready.then(function() {
+      assert_animation_property_state_equals(
+        cssAnimation.effect.getProperties(),
+        [ { property: 'opacity', runningOnCompositor: false } ]);
+      assert_animation_property_state_equals(
+        scriptAnimation.effect.getProperties(),
+        [ { property: 'opacity', runningOnCompositor: true } ]);
+    });
+  }, 'overridden animation');
+}
+
+</script>
+
+</body>

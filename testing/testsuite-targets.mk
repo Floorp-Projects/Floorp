@@ -26,6 +26,10 @@ ifneq (browser,$(MOZ_BUILD_APP))
 BUILD_GTEST=
 endif
 
+ifndef COMPILE_ENVIRONMENT
+BUILD_GTEST=
+endif
+
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
   @errors=`grep 'TEST-UNEXPECTED-' $@.log` ;\
@@ -179,12 +183,15 @@ stage-all: \
   stage-jstests \
   stage-jetpack \
   stage-marionette \
-  stage-cppunittests \
   stage-luciddream \
   test-packages-manifest \
   $(NULL)
 ifdef MOZ_WEBRTC
 stage-all: stage-steeplechase
+endif
+
+ifdef COMPILE_ENVIRONMENT
+stage-all: stage-cppunittests
 endif
 
 TEST_PKGS := \
@@ -232,10 +239,6 @@ stage-all: stage-android
 stage-all: stage-instrumentation-tests
 endif
 
-ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
-stage-all: stage-android
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 stage-all: stage-b2g
 endif
@@ -266,7 +269,6 @@ stage-mach: make-stage-dir
 stage-mochitest: make-stage-dir
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
-	$(NSINSTALL) $(DEPTH)/mobile/android/base/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
 
 stage-jstests: make-stage-dir
@@ -287,10 +289,6 @@ ifdef MOZ_ENABLE_SZIP
 # Tinderbox scripts are not unzipping everything, so the file needs to be in a directory it unzips
 	$(NSINSTALL) $(DIST)/host/bin/szip $(PKG_STAGE)/bin/host
 endif
-	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/sutAgentAndroid.apk $(PKG_STAGE)/bin
-	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/watcher/Watcher.apk $(PKG_STAGE)/bin
-	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/fencp/FenCP.apk $(PKG_STAGE)/bin
-	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/ffxcp/FfxCP.apk $(PKG_STAGE)/bin
 	$(NSINSTALL) $(topsrcdir)/mobile/android/fonts $(DEPTH)/_tests/reftest
 	$(NSINSTALL) $(topsrcdir)/mobile/android/fonts $(DEPTH)/_tests/testing/mochitest
 

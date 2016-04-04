@@ -347,7 +347,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
       mRefVariable = aRefVariable;
 
     if (!aMemberVariable)
-        query->mMemberVariable = do_GetAtom("?");
+        query->mMemberVariable = NS_Atomize("?");
     else
         query->mMemberVariable = aMemberVariable;
 
@@ -440,7 +440,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
 
         if (! results) {
             if (! query->mRefVariable)
-                query->mRefVariable = do_GetAtom("?uri");
+                query->mRefVariable = NS_Atomize("?uri");
 
             nsCOMPtr<nsIRDFResource> refResource;
             aRef->GetResource(getter_AddRefs(refResource));
@@ -1187,7 +1187,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
 
             nsCOMPtr<nsIAtom> tag;
             if (! tagstr.IsEmpty()) {
-                tag = do_GetAtom(tagstr);
+                tag = NS_Atomize(tagstr);
             }
 
             nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(condition->GetComposedDoc());
@@ -1302,7 +1302,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
     if (subject[0] == char16_t('?'))
-        svar = do_GetAtom(subject);
+        svar = NS_Atomize(subject);
     else
         gRDFService->GetUnicodeResource(subject, getter_AddRefs(sres));
 
@@ -1329,7 +1329,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     }
 
     if (object[0] == char16_t('?')) {
-        ovar = do_GetAtom(object);
+        ovar = NS_Atomize(object);
     }
     else if (object.FindChar(':') != -1) { // XXXwaterson evil.
         // treat as resource
@@ -1398,7 +1398,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> containervar = do_GetAtom(container);
+    nsCOMPtr<nsIAtom> containervar = NS_Atomize(container);
 
     // child
     nsAutoString child;
@@ -1409,7 +1409,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> childvar = do_GetAtom(child);
+    nsCOMPtr<nsIAtom> childvar = NS_Atomize(child);
 
     TestNode* testnode =
         new nsRDFConMemberTestNode(aParentNode,

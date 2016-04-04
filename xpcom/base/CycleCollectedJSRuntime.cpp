@@ -85,6 +85,7 @@
 #endif
 
 #include "nsIException.h"
+#include "nsIPlatformInfo.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
@@ -409,6 +410,29 @@ void JSObjectsTenuredCb(JSRuntime* aRuntime, void* aData)
   static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured();
 }
 
+bool
+mozilla::GetBuildId(JS::BuildIdCharVector* aBuildID)
+{
+  nsCOMPtr<nsIPlatformInfo> info = do_GetService("@mozilla.org/xre/app-info;1");
+  if (!info) {
+    return false;
+  }
+
+  nsCString buildID;
+  nsresult rv = info->GetPlatformBuildID(buildID);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!aBuildID->resize(buildID.Length())) {
+    return false;
+  }
+
+  for (size_t i = 0; i < buildID.Length(); i++) {
+    (*aBuildID)[i] = buildID[i];
+  }
+
+  return true;
+}
+
 CycleCollectedJSRuntime::CycleCollectedJSRuntime()
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal)
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
@@ -503,8 +527,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   JS_SetContextCallback(mJSRuntime, ContextCallback, this);
   JS_SetDestroyZoneCallback(mJSRuntime, XPCStringConvert::FreeZoneCache);
   JS_SetSweepZoneCallback(mJSRuntime, XPCStringConvert::ClearZoneCache);
-  // XPCJSRuntime currently overrides this because we don't
-  // TakeOwnershipOfErrorReporting everwhere on the main thread yet.
+  JS::SetBuildIdOp(mJSRuntime, GetBuildId);
   JS_SetErrorReporter(mJSRuntime, MozCrashErrorReporter);
 
   static js::DOMCallbacks DOMcallbacks = {
@@ -908,7 +931,10 @@ protected:
   NS_IMETHOD
   Run() override
   {
-    mCallback->Call();
+    nsIGlobalObject* global = xpc::NativeGlobal(mCallback->CallbackPreserveColor());
+    if (global && !global->IsDying()) {
+      mCallback->Call("promise callback");
+    }
     return NS_OK;
   }
 
@@ -927,7 +953,7 @@ CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
   MOZ_ASSERT(Get() == self);
 
   nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aCx, aJob);
-  self->GetPromiseMicroTaskQueue().push(runnable);
+  self->DispatchToMicroTask(runnable);
   return true;
 }
 
@@ -1110,6 +1136,13 @@ CycleCollectedJSRuntime::GetPromiseMicroTaskQueue()
 {
   MOZ_ASSERT(mJSRuntime);
   return mPromiseMicroTaskQueue;
+}
+
+std::queue<nsCOMPtr<nsIRunnable>>&
+CycleCollectedJSRuntime::GetDebuggerPromiseMicroTaskQueue()
+{
+  MOZ_ASSERT(mJSRuntime);
+  return mDebuggerPromiseMicroTaskQueue;
 }
 
 nsCycleCollectionParticipant*
@@ -1343,9 +1376,10 @@ CycleCollectedJSRuntime::AfterProcessTask(uint32_t aRecursionDepth)
   // Step 4.1: Execute microtasks.
   if (NS_IsMainThread()) {
     nsContentUtils::PerformMainThreadMicroTaskCheckpoint();
+    Promise::PerformMicroTaskCheckpoint();
+  } else {
+    Promise::PerformWorkerMicroTaskCheckpoint();
   }
-
-  Promise::PerformMicroTaskCheckpoint();
 
   // Step 4.2 Execute any events that were waiting for a stable state.
   ProcessStableStateQueue();
@@ -1625,6 +1659,15 @@ CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
 }
 
 void
+CycleCollectedJSRuntime::DispatchToMicroTask(nsIRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  mPromiseMicroTaskQueue.push(aRunnable);
+}
+
+void
 CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject scope,
                                                      js::ScriptEnvironmentPreparer::Closure& closure)
 {
@@ -1637,7 +1680,6 @@ CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject scope,
   JSContext* cx =
     mainThread ? nullptr : nsContentUtils::GetDefaultJSContextForThread();
   AutoEntryScript aes(global, "JS-engine-initiated execution", mainThread, cx);
-  aes.TakeOwnershipOfErrorReporting();
 
   MOZ_ASSERT(!JS_IsExceptionPending(aes.cx()));
 

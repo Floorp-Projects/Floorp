@@ -715,7 +715,7 @@ var DEFAULT_VIEW_HISTORY_CACHE_SIZE = 20;
  *                recently opened files.
  *
  * The way that the view parameters are stored depends on how PDF.js is built,
- * for 'node make <flag>' the following cases exist:
+ * for 'gulp <flag>' the following cases exist:
  *  - FIREFOX or MOZCENTRAL - uses sessionStorage.
  *  - GENERIC or CHROME     - uses localStorage, if it is available.
  */
@@ -3911,7 +3911,6 @@ var PDFPageView = (function PDFPageViewClosure() {
 
       // The rendered size of the canvas, relative to the size of canvasWrapper.
       canvas.style.width = (PRINT_OUTPUT_SCALE * 100) + '%';
-      canvas.style.height = (PRINT_OUTPUT_SCALE * 100) + '%';
 
       var cssScale = 'scale(' + (1 / PRINT_OUTPUT_SCALE) + ', ' +
                                 (1 / PRINT_OUTPUT_SCALE) + ')';
@@ -3920,8 +3919,6 @@ var PDFPageView = (function PDFPageViewClosure() {
 
       var printContainer = document.getElementById('printContainer');
       var canvasWrapper = document.createElement('div');
-      canvasWrapper.style.width = viewport.width + 'pt';
-      canvasWrapper.style.height = viewport.height + 'pt';
       canvasWrapper.appendChild(canvas);
       printContainer.appendChild(canvasWrapper);
 
@@ -5180,6 +5177,9 @@ var THUMBNAIL_CANVAS_BORDER_WIDTH = 1; // px
  * @property {PageViewport} defaultViewport - The page viewport.
  * @property {IPDFLinkService} linkService - The navigation/linking service.
  * @property {PDFRenderingQueue} renderingQueue - The rendering queue object.
+ * @property {boolean} disableCanvasToImageConversion - (optional) Don't convert
+ *   the canvas thumbnails to images. This prevents `toDataURL` calls,
+ *   but increases the overall memory usage. The default value is false.
  */
 
 /**
@@ -5197,7 +5197,7 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     tempCanvas.height = height;
 
     // Since this is a temporary canvas, we need to fill the canvas with a white
-    // background ourselves. |_getPageDrawContext| uses CSS rules for this.
+    // background ourselves. `_getPageDrawContext` uses CSS rules for this.
     tempCanvas.mozOpaque = true;
     var ctx = tempCanvas.getContext('2d', {alpha: false});
     ctx.save();
@@ -5217,6 +5217,8 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     var defaultViewport = options.defaultViewport;
     var linkService = options.linkService;
     var renderingQueue = options.renderingQueue;
+    var disableCanvasToImageConversion =
+      options.disableCanvasToImageConversion || false;
 
     this.id = id;
     this.renderingId = 'thumbnail' + id;
@@ -5231,6 +5233,7 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
 
     this.resume = null;
     this.renderingState = RenderingStates.INITIAL;
+    this.disableCanvasToImageConversion = disableCanvasToImageConversion;
 
     this.pageWidth = this.viewport.width;
     this.pageHeight = this.viewport.height;
@@ -5335,6 +5338,8 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     _getPageDrawContext:
         function PDFThumbnailView_getPageDrawContext(noCtxScale) {
       var canvas = document.createElement('canvas');
+      // Keep the no-thumbnail outline visible, i.e. `data-loaded === false`,
+      // until rendering/image conversion is complete, to avoid display issues.
       this.canvas = canvas;
 
       canvas.mozOpaque = true;
@@ -5349,18 +5354,6 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
       if (!noCtxScale && outputScale.scaled) {
         ctx.scale(outputScale.sx, outputScale.sy);
       }
-
-      var image = document.createElement('img');
-      this.image = image;
-
-      image.id = this.renderingId;
-      image.className = 'thumbnailImage';
-      image.setAttribute('aria-label', mozL10n.get('thumb_page_canvas',
-        { page: this.id }, 'Thumbnail of Page {{page}}'));
-
-      image.style.width = canvas.style.width;
-      image.style.height = canvas.style.height;
-
       return ctx;
     },
 
@@ -5371,10 +5364,36 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
       if (!this.canvas) {
         return;
       }
-      this.image.src = this.canvas.toDataURL();
+      if (this.renderingState !== RenderingStates.FINISHED) {
+        return;
+      }
+      var id = this.renderingId;
+      var className = 'thumbnailImage';
+      var ariaLabel = mozL10n.get('thumb_page_canvas', { page: this.id },
+                                  'Thumbnail of Page {{page}}');
+
+      if (this.disableCanvasToImageConversion) {
+        this.canvas.id = id;
+        this.canvas.className = className;
+        this.canvas.setAttribute('aria-label', ariaLabel);
+
+        this.div.setAttribute('data-loaded', true);
+        this.ring.appendChild(this.canvas);
+        return;
+      }
+      var image = document.createElement('img');
+      image.id = id;
+      image.className = className;
+      image.setAttribute('aria-label', ariaLabel);
+
+      image.style.width = this.canvasWidth + 'px';
+      image.style.height = this.canvasHeight + 'px';
+
+      image.src = this.canvas.toDataURL();
+      this.image = image;
 
       this.div.setAttribute('data-loaded', true);
-      this.ring.appendChild(this.image);
+      this.ring.appendChild(image);
 
       // Zeroing the width and height causes Firefox to release graphics
       // resources immediately, which can greatly reduce memory consumption.
@@ -5633,7 +5652,8 @@ var PDFThumbnailViewer = (function PDFThumbnailViewerClosure() {
             id: pageNum,
             defaultViewport: viewport.clone(),
             linkService: this.linkService,
-            renderingQueue: this.renderingQueue
+            renderingQueue: this.renderingQueue,
+            disableCanvasToImageConversion: false,
           });
           this.thumbnails.push(thumbnail);
         }
@@ -7308,10 +7328,6 @@ var PDFViewerApplication = {
       // Firefox incorrectly reports support for the other value.
       '@supports ((size:A4) and (size:1pt 1pt)) {' +
       '@page { size: ' + pageSize.width + 'pt ' + pageSize.height + 'pt;}' +
-      // The canvas and each ancestor node must have a height of 100% to make
-      // sure that each canvas is printed on exactly one page.
-      '#printContainer {height:100%}' +
-      '#printContainer > div {width:100% !important;height:100% !important;}' +
       '}';
     body.appendChild(this.pageStyleSheet);
 

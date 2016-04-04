@@ -1,0 +1,752 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {
+  interfaces: Ci,
+  utils: Cu,
+} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Downloads.jsm");
+
+const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
+const TXT_FILE = "file_download.txt";
+const TXT_URL = BASE + "/" + TXT_FILE;
+const INTERRUPTIBLE_URL = BASE + "/interruptible.sjs";
+// Keep these in sync with code in interruptible.sjs
+const INT_PARTIAL_LEN = 15;
+const INT_TOTAL_LEN = 31;
+
+function backgroundScript() {
+  let events = new Set();
+  let eventWaiter = null;
+
+  browser.downloads.onCreated.addListener(data => {
+    events.add({type: "onCreated", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
+  browser.downloads.onChanged.addListener(data => {
+    events.add({type: "onChanged", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
+  browser.downloads.onErased.addListener(data => {
+    events.add({type: "onErased", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
+  // Returns a promise that will resolve when the given list of expected
+  // events have all been seen.  By default, succeeds only if the exact list
+  // of expected events is seen in the given order.  options.exact can be
+  // set to false to allow other events and options.inorder can be set to
+  // false to allow the events to arrive in any order.
+  function waitForEvents(expected, options = {}) {
+    function compare(received, expected) {
+      if (typeof expected == "object" && expected != null) {
+        if (typeof received != "object") {
+          return false;
+        }
+        return Object.keys(expected).every(fld => compare(received[fld], expected[fld]));
+      }
+      return (received == expected);
+    }
+
+    const exact = ("exact" in options) ? options.exact : true;
+    const inorder = ("inorder" in options) ? options.inorder : true;
+    return new Promise((resolve, reject) => {
+      function check() {
+        function fail(msg) {
+          browser.test.fail(msg);
+          reject(new Error(msg));
+        }
+        if (events.size < expected.length) {
+          return;
+        }
+        if (exact && expected.length < events.size) {
+          fail(`Got ${events.size} events but only expected ${expected.length}`);
+          return;
+        }
+
+        let remaining = new Set(events);
+        if (inorder) {
+          for (let event of events) {
+            if (compare(event, expected[0])) {
+              expected.shift();
+              remaining.delete(event);
+            }
+          }
+        } else {
+          expected = expected.filter(val => {
+            for (let remainingEvent of remaining) {
+              if (compare(remainingEvent, val)) {
+                remaining.delete(remainingEvent);
+                return false;
+              }
+            }
+            return true;
+          });
+        }
+
+        // Events that did occur have been removed from expected so if
+        // expected is empty, we're done.  If we didn't see all the
+        // expected events and we're not looking for an exact match,
+        // then we just may not have seen the event yet, so return without
+        // failing and check() will be called again when a new event arrives.
+        if (expected.length == 0) {
+          events = remaining;
+          eventWaiter = null;
+          resolve();
+        } else if (exact) {
+          fail(`Mismatched event: expecting ${JSON.stringify(expected[0])} but got ${JSON.stringify(Array.from(remaining)[0])}`);
+        }
+      }
+      eventWaiter = check;
+      check();
+    });
+  }
+
+  browser.test.onMessage.addListener(function(msg, ...args) {
+    let match = msg.match(/(\w+).request$/);
+    if (!match) {
+      return;
+    }
+    let what = match[1];
+    if (what == "waitForEvents") {
+      waitForEvents(...args).then(() => {
+        browser.test.sendMessage("waitForEvents.done", {status: "success"});
+      }).catch(error => {
+        browser.test.sendMessage("waitForEvents.done", {status: "error", errmsg: error.message});
+      });
+    } else if (what == "clearEvents") {
+      events = new Set();
+      browser.test.sendMessage("clearEvents.done", {status: "success"});
+    } else {
+      // extension functions throw on bad arguments, we can remove the extra
+      // promise when bug 1250223 is fixed.
+      Promise.resolve().then(() => {
+        return browser.downloads[what](...args);
+      }).then(result => {
+        browser.test.sendMessage(`${what}.done`, {status: "success", result});
+      }).catch(error => {
+        browser.test.sendMessage(`${what}.done`, {status: "error", errmsg: error.message});
+      });
+    }
+  });
+
+  browser.test.sendMessage("ready");
+}
+
+let downloadDir;
+let extension;
+
+function clearDownloads(callback) {
+  return Downloads.getList(Downloads.ALL).then(list => {
+    return list.getAll().then(downloads => {
+      return Promise.all(downloads.map(download => list.remove(download)))
+                    .then(() => downloads);
+    });
+  });
+}
+
+function runInExtension(what, ...args) {
+  extension.sendMessage(`${what}.request`, ...args);
+  return extension.awaitMessage(`${what}.done`);
+}
+
+// This is pretty simplistic, it looks for a progress update for a
+// download of the given url in which the total bytes are exactly equal
+// to the given value.  Unless you know exactly how data will arrive from
+// the server (eg see interruptible.sjs), it probably isn't very useful.
+function waitForProgress(url, bytes) {
+  return Downloads.getList(Downloads.ALL)
+                  .then(list => new Promise(resolve => {
+                    const view = {
+                      onDownloadChanged(download) {
+                        if (download.source.url == url && download.currentBytes == bytes) {
+                          list.removeView(view);
+                          resolve();
+                        }
+                      },
+                    };
+                    list.addView(view);
+                  }));
+}
+
+add_task(function* setup() {
+  const nsIFile = Ci.nsIFile;
+  downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
+  downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  info(`downloadDir ${downloadDir.path}`);
+
+  Services.prefs.setIntPref("browser.download.folderList", 2);
+  Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
+
+  SimpleTest.registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.download.folderList");
+    Services.prefs.clearUserPref("browser.download.dir");
+    downloadDir.remove(true);
+    return clearDownloads();
+  });
+
+  yield clearDownloads().then(downloads => {
+    info(`removed ${downloads.length} pre-existing downloads from history`);
+  });
+
+  extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {
+      permissions: ["downloads"],
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+  info("extension started");
+});
+
+add_task(function* test_events() {
+  let msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id, url: TXT_URL}},
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onCreated and onChanged events");
+});
+
+add_task(function* test_cancel() {
+  let msg = yield runInExtension("download", {url: INTERRUPTIBLE_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  let progressPromise = waitForProgress(INTERRUPTIBLE_URL, INT_PARTIAL_LEN);
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id}},
+  ]);
+  is(msg.status, "success", "got created and changed events");
+
+  yield progressPromise;
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
+
+  msg = yield runInExtension("cancel", id);
+  is(msg.status, "success", "cancel() succeeded");
+
+  // This sequence of events is bogus (bug 1256243)
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        state: {
+          previous: "in_progress",
+          current: "interrupted",
+        },
+        paused: {
+          previous: false,
+          current: true,
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        paused: {
+          previous: true,
+          current: false,
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onChanged events corresponding to cancel()");
+
+  msg = yield runInExtension("search", {error: "USER_CANCELED"});
+  is(msg.status, "success", "search() succeeded");
+  is(msg.result.length, 1, "search() found 1 download");
+  is(msg.result[0].id, id, "download.id is correct");
+  is(msg.result[0].state, "interrupted", "download.state is correct");
+  is(msg.result[0].paused, false, "download.paused is correct");
+  is(msg.result[0].canResume, false, "download.canResume is correct");
+  is(msg.result[0].error, "USER_CANCELED", "download.error is correct");
+  is(msg.result[0].totalBytes, INT_TOTAL_LEN, "download.totalBytes is correct");
+  is(msg.result[0].exists, false, "download.exists is correct");
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "error", "cannot pause a canceled download");
+
+  msg = yield runInExtension("resume", id);
+  is(msg.status, "error", "cannot resume a canceled download");
+});
+
+add_task(function* test_pauseresume() {
+  let msg = yield runInExtension("download", {url: INTERRUPTIBLE_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  let progressPromise = waitForProgress(INTERRUPTIBLE_URL, INT_PARTIAL_LEN);
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id}},
+  ]);
+  is(msg.status, "success", "got created and changed events");
+
+  yield progressPromise;
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "success", "pause() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "interrupted",
+        },
+        paused: {
+          previous: false,
+          current: true,
+        },
+        canResume: {
+          previous: false,
+          current: true,
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
+        },
+      },
+    }]);
+  is(msg.status, "success", "got onChanged event corresponding to pause");
+
+  msg = yield runInExtension("search", {paused: true});
+  is(msg.status, "success", "search() succeeded");
+  is(msg.result.length, 1, "search() found 1 download");
+  is(msg.result[0].id, id, "download.id is correct");
+  is(msg.result[0].state, "interrupted", "download.state is correct");
+  is(msg.result[0].paused, true, "download.paused is correct");
+  is(msg.result[0].canResume, true, "download.canResume is correct");
+  is(msg.result[0].error, "USER_CANCELED", "download.error is correct");
+  is(msg.result[0].bytesReceived, INT_PARTIAL_LEN, "download.bytesReceived is correct");
+  is(msg.result[0].totalBytes, INT_TOTAL_LEN, "download.totalBytes is correct");
+  is(msg.result[0].exists, false, "download.exists is correct");
+
+  msg = yield runInExtension("search", {error: "USER_CANCELED"});
+  is(msg.status, "success", "search() succeeded");
+  let found = msg.result.filter(item => item.id == id);
+  is(found.length, 1, "search() by error found the paused download");
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "error", "cannot pause an already paused download");
+
+  msg = yield runInExtension("resume", id);
+  is(msg.status, "success", "resume() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "interrupted",
+          current: "in_progress",
+        },
+        paused: {
+          previous: true,
+          current: false,
+        },
+        canResume: {
+          previous: true,
+          current: false,
+        },
+        error: {
+          previous: "USER_CANCELED",
+          current: null,
+        },
+      },
+    },
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onChanged events for resume and complete");
+
+  msg = yield runInExtension("search", {id});
+  is(msg.status, "success", "search() succeeded");
+  is(msg.result.length, 1, "search() found 1 download");
+  is(msg.result[0].state, "complete", "download.state is correct");
+  is(msg.result[0].paused, false, "download.paused is correct");
+  is(msg.result[0].canResume, false, "download.canResume is correct");
+  is(msg.result[0].error, null, "download.error is correct");
+  is(msg.result[0].bytesReceived, INT_TOTAL_LEN, "download.bytesReceived is correct");
+  is(msg.result[0].totalBytes, INT_TOTAL_LEN, "download.totalBytes is correct");
+  is(msg.result[0].exists, true, "download.exists is correct");
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "error", "cannot pause a completed download");
+
+  msg = yield runInExtension("resume", id);
+  is(msg.status, "error", "cannot resume a completed download");
+});
+
+add_task(function* test_pausecancel() {
+  let msg = yield runInExtension("download", {url: INTERRUPTIBLE_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  let progressPromise = waitForProgress(INTERRUPTIBLE_URL, INT_PARTIAL_LEN);
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id}},
+  ]);
+  is(msg.status, "success", "got created and changed events");
+
+  yield progressPromise;
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "success", "pause() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "interrupted",
+        },
+        paused: {
+          previous: false,
+          current: true,
+        },
+        canResume: {
+          previous: false,
+          current: true,
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
+        },
+      },
+    }]);
+  is(msg.status, "success", "got onChanged event corresponding to pause");
+
+  msg = yield runInExtension("search", {paused: true});
+  is(msg.status, "success", "search() succeeded");
+  is(msg.result.length, 1, "search() found 1 download");
+  is(msg.result[0].id, id, "download.id is correct");
+  is(msg.result[0].state, "interrupted", "download.state is correct");
+  is(msg.result[0].paused, true, "download.paused is correct");
+  is(msg.result[0].canResume, true, "download.canResume is correct");
+  is(msg.result[0].error, "USER_CANCELED", "download.error is correct");
+  is(msg.result[0].bytesReceived, INT_PARTIAL_LEN, "download.bytesReceived is correct");
+  is(msg.result[0].totalBytes, INT_TOTAL_LEN, "download.totalBytes is correct");
+  is(msg.result[0].exists, false, "download.exists is correct");
+
+  msg = yield runInExtension("search", {error: "USER_CANCELED"});
+  is(msg.status, "success", "search() succeeded");
+  let found = msg.result.filter(item => item.id == id);
+  is(found.length, 1, "search() by error found the paused download");
+
+  msg = yield runInExtension("cancel", id);
+  is(msg.status, "success", "cancel() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        paused: {
+          previous: true,
+          current: false,
+        },
+        canResume: {
+          previous: true,
+          current: false,
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onChanged event for cancel");
+
+  msg = yield runInExtension("search", {id});
+  is(msg.status, "success", "search() succeeded");
+  is(msg.result.length, 1, "search() found 1 download");
+  is(msg.result[0].state, "interrupted", "download.state is correct");
+  is(msg.result[0].paused, false, "download.paused is correct");
+  is(msg.result[0].canResume, false, "download.canResume is correct");
+  is(msg.result[0].error, "USER_CANCELED", "download.error is correct");
+  is(msg.result[0].totalBytes, INT_TOTAL_LEN, "download.totalBytes is correct");
+  is(msg.result[0].exists, false, "download.exists is correct");
+});
+
+add_task(function* test_pause_resume_cancel_badargs() {
+  let BAD_ID = 1000;
+
+  let msg = yield runInExtension("pause", BAD_ID);
+  info(JSON.stringify(msg));
+  is(msg.status, "error", "pause() failed with a bad download id");
+  ok(/Invalid download id/.test(msg.errmsg), "error message is descriptive");
+
+  msg = yield runInExtension("resume", BAD_ID);
+  is(msg.status, "error", "resume() failed with a bad download id");
+  ok(/Invalid download id/.test(msg.errmsg), "error message is descriptive");
+
+  msg = yield runInExtension("cancel", BAD_ID);
+  is(msg.status, "error", "cancel() failed with a bad download id");
+  ok(/Invalid download id/.test(msg.errmsg), "error message is descriptive");
+});
+
+add_task(function* test_file_removal() {
+  let msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id, url: TXT_URL}},
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+
+  is(msg.status, "success", "got onCreated and onChanged events");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "success", "removeFile() succeeded");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "error", "removeFile() fails since the file was already removed.");
+  ok(/file doesn't exist/.test(msg.errmsg), "removeFile() failed on removed file.");
+
+  msg = yield runInExtension("removeFile", 1000);
+  ok(/Invalid download id/.test(msg.errmsg), "removeFile() failed due to non-existent id");
+});
+
+add_task(function* test_removal_of_incomplete_download() {
+  let msg = yield runInExtension("download", {url: INTERRUPTIBLE_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  let progressPromise = waitForProgress(INTERRUPTIBLE_URL, INT_PARTIAL_LEN);
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id}},
+  ]);
+  is(msg.status, "success", "got created and changed events");
+
+  yield progressPromise;
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "success", "pause() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "interrupted",
+        },
+        paused: {
+          previous: false,
+          current: true,
+        },
+        canResume: {
+          previous: false,
+          current: true,
+        },
+      },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
+        },
+      },
+    }]);
+  is(msg.status, "success", "got onChanged event corresponding to pause");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "error", "removeFile() on paused download failed");
+
+  ok(/Cannot remove incomplete download/.test(msg.errmsg), "removeFile() failed due to download being incomplete");
+
+  msg = yield runInExtension("resume", id);
+  is(msg.status, "success", "resume() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "interrupted",
+          current: "in_progress",
+        },
+        paused: {
+          previous: true,
+          current: false,
+        },
+        canResume: {
+          previous: true,
+          current: false,
+        },
+        error: {
+          previous: "USER_CANCELED",
+          current: null,
+        },
+      },
+    },
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onChanged events for resume and complete");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "success", "removeFile() succeeded following completion of resumed download.");
+});
+
+// Test erase().  We don't do elaborate testing of the query handling
+// since it uses the exact same engine as search() which is tested
+// more thoroughly in test_chrome_ext_downloads_search.html
+add_task(function* test_erase() {
+  yield clearDownloads();
+
+  yield runInExtension("clearEvents");
+
+  function* download() {
+    let msg = yield runInExtension("download", {url: TXT_URL});
+    is(msg.status, "success", "download succeeded");
+    let id = msg.result;
+
+    msg = yield runInExtension("waitForEvents", [{
+      type: "onChanged", data: {id, state: {current: "complete"}},
+    }], {exact: false});
+    is(msg.status, "success", "download finished");
+
+    return id;
+  }
+
+  let ids = {};
+  ids.dl1 = yield download();
+  ids.dl2 = yield download();
+  ids.dl3 = yield download();
+
+  let msg = yield runInExtension("search", {});
+  is(msg.status, "success", "search succeded");
+  is(msg.result.length, 3, "search found 3 downloads");
+
+  msg = yield runInExtension("clearEvents");
+
+  msg = yield runInExtension("erase", {id: ids.dl1});
+  is(msg.status, "success", "erase by id succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onErased", data: ids.dl1},
+  ]);
+  is(msg.status, "success", "received onErased event");
+
+  msg = yield runInExtension("search", {});
+  is(msg.status, "success", "search succeded");
+  is(msg.result.length, 2, "search found 2 downloads");
+
+  msg = yield runInExtension("erase", {});
+  is(msg.status, "success", "erase everything succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onErased", data: ids.dl2},
+    {type: "onErased", data: ids.dl3},
+  ], {inorder: false});
+  is(msg.status, "success", "received 2 onErased events");
+
+  msg = yield runInExtension("search", {});
+  is(msg.status, "success", "search succeded");
+  is(msg.result.length, 0, "search found 0 downloads");
+});
+
+add_task(function* cleanup() {
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>

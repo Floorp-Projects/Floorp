@@ -351,6 +351,12 @@ MTest::New(TempAllocator& alloc, MDefinition* ins, MBasicBlock* ifTrue, MBasicBl
     return new(alloc) MTest(ins, ifTrue, ifFalse);
 }
 
+MTest*
+MTest::NewAsm(TempAllocator& alloc, MDefinition* ins, MBasicBlock* ifFalse)
+{
+    return new(alloc) MTest(ins, nullptr, ifFalse);
+}
+
 void
 MTest::cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints)
 {
@@ -1387,8 +1393,12 @@ void
 MControlInstruction::printOpcode(GenericPrinter& out) const
 {
     MDefinition::printOpcode(out);
-    for (size_t j = 0; j < numSuccessors(); j++)
-        out.printf(" block%u", getSuccessor(j)->id());
+    for (size_t j = 0; j < numSuccessors(); j++) {
+        if (getSuccessor(j))
+            out.printf(" block%u", getSuccessor(j)->id());
+        else
+            out.printf(" (null-to-be-patched)");
+    }
 }
 
 void
@@ -1831,6 +1841,12 @@ MGoto::New(TempAllocator& alloc, MBasicBlock* target)
 {
     MOZ_ASSERT(target);
     return new(alloc) MGoto(target);
+}
+
+MGoto*
+MGoto::NewAsm(TempAllocator& alloc)
+{
+    return new(alloc) MGoto(nullptr);
 }
 
 void
@@ -3207,6 +3223,7 @@ MustBeUInt32(MDefinition* def, MDefinition** pwrapped)
         return defConst->type() == MIRType_Int32 && defConst->toInt32() >= 0;
     }
 
+    *pwrapped = nullptr;  // silence GCC warning
     return false;
 }
 
@@ -4690,6 +4707,9 @@ MLoadSlot::foldsTo(TempAllocator& alloc)
     if (store->slots() != slots())
         return this;
 
+    if (store->slot() != slot())
+        return this;
+
     return foldsToStoredValue(alloc, store->value());
 }
 
@@ -4716,6 +4736,31 @@ MLoadElement::foldsTo(TempAllocator& alloc)
         return this;
 
     if (store->index() != index())
+        return this;
+
+    return foldsToStoredValue(alloc, store->value());
+}
+
+MDefinition*
+MLoadUnboxedObjectOrNull::foldsTo(TempAllocator& alloc)
+{
+    if (!dependency() || !dependency()->isStoreUnboxedObjectOrNull())
+        return this;
+
+    MStoreUnboxedObjectOrNull* store = dependency()->toStoreUnboxedObjectOrNull();
+    if (!store->block()->dominates(block()))
+        return this;
+
+    if (store->elements() != elements())
+        return this;
+
+    if (store->index() != index())
+        return this;
+
+    if (store->value()->type() == MIRType_ObjectOrNull)
+        return this;
+
+    if (store->offsetAdjustment() != offsetAdjustment())
         return this;
 
     return foldsToStoredValue(alloc, store->value());

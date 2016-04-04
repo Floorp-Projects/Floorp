@@ -324,7 +324,7 @@ private:
   friend class mozilla::dom::PBrowserChild;
 protected:
   WidgetDragEvent()
-    : userCancelled(false)
+    : mUserCancelled(false)
     , mDefaultPreventedOnContent(false)
   {
   }
@@ -333,7 +333,7 @@ public:
 
   WidgetDragEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEvent(aIsTrusted, aMessage, aWidget, eDragEventClass, eReal)
-    , userCancelled(false)
+    , mUserCancelled(false)
     , mDefaultPreventedOnContent(false)
   {
     mFlags.mCancelable =
@@ -352,10 +352,10 @@ public:
   }
 
   // The dragging data.
-  nsCOMPtr<dom::DataTransfer> dataTransfer;
+  nsCOMPtr<dom::DataTransfer> mDataTransfer;
 
   // If this is true, user has cancelled the drag operation.
-  bool userCancelled;
+  bool mUserCancelled;
   // If this is true, the drag event's preventDefault() is called on content.
   bool mDefaultPreventedOnContent;
 
@@ -364,9 +364,9 @@ public:
   {
     AssignMouseEventData(aEvent, aCopyTargets);
 
-    dataTransfer = aEvent.dataTransfer;
-    // XXX userCancelled isn't copied, is this instentionally?
-    userCancelled = false;
+    mDataTransfer = aEvent.mDataTransfer;
+    // XXX mUserCancelled isn't copied, is this intentionally?
+    mUserCancelled = false;
     mDefaultPreventedOnContent = aEvent.mDefaultPreventedOnContent;
   }
 };
@@ -448,18 +448,18 @@ private:
   friend class mozilla::dom::PBrowserChild;
 
   WidgetWheelEvent()
-    : deltaX(0.0)
-    , deltaY(0.0)
-    , deltaZ(0.0)
-    , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
-    , customizedByUserPrefs(false)
-    , isMomentum(false)
+    : mDeltaX(0.0)
+    , mDeltaY(0.0)
+    , mDeltaZ(0.0)
+    , mOverflowDeltaX(0.0)
+    , mOverflowDeltaY(0.0)
+    , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    , mLineOrPageDeltaX(0)
+    , mLineOrPageDeltaY(0)
+    , mScrollType(SCROLL_DEFAULT)
+    , mCustomizedByUserPrefs(false)
+    , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
-    , lineOrPageDeltaX(0)
-    , lineOrPageDeltaY(0)
-    , scrollType(SCROLL_DEFAULT)
-    , overflowDeltaX(0.0)
-    , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(false)
@@ -471,19 +471,19 @@ public:
 
   WidgetWheelEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eWheelEventClass)
-    , deltaX(0.0)
-    , deltaY(0.0)
-    , deltaZ(0.0)
-    , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
-    , customizedByUserPrefs(false)
-    , mayHaveMomentum(false)
-    , isMomentum(false)
+    , mDeltaX(0.0)
+    , mDeltaY(0.0)
+    , mDeltaZ(0.0)
+    , mOverflowDeltaX(0.0)
+    , mOverflowDeltaY(0.0)
+    , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    , mLineOrPageDeltaX(0)
+    , mLineOrPageDeltaY(0)
+    , mScrollType(SCROLL_DEFAULT)
+    , mCustomizedByUserPrefs(false)
+    , mMayHaveMomentum(false)
+    , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
-    , lineOrPageDeltaX(0)
-    , lineOrPageDeltaY(0)
-    , scrollType(SCROLL_DEFAULT)
-    , overflowDeltaX(0.0)
-    , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(true)
@@ -508,88 +508,86 @@ public:
   bool TriggersSwipe() const
   {
     return mCanTriggerSwipe && mViewPortIsOverscrolled &&
-           this->overflowDeltaX != 0.0;
+           this->mOverflowDeltaX != 0.0;
   }
 
-  // NOTE: deltaX, deltaY and deltaZ may be customized by
+  // NOTE: mDeltaX, mDeltaY and mDeltaZ may be customized by
   //       mousewheel.*.delta_multiplier_* prefs which are applied by
   //       EventStateManager.  So, after widget dispatches this event,
   //       these delta values may have different values than before.
-  double deltaX;
-  double deltaY;
-  double deltaZ;
+  double mDeltaX;
+  double mDeltaY;
+  double mDeltaZ;
+
+  // overflowed delta values for scroll, these values are set by
+  // nsEventStateManger.  If the default action of the wheel event isn't scroll,
+  // these values always zero.  Otherwise, remaning delta values which are
+  // not used by scroll are set.
+  // NOTE: mDeltaX, mDeltaY and mDeltaZ may be modified by EventStateManager.
+  //       However, mOverflowDeltaX and mOverflowDeltaY indicate unused original
+  //       delta values which are not applied the delta_multiplier prefs.
+  //       So, if widget wanted to know the actual direction to be scrolled,
+  //       it would need to check the mDeltaX and mDeltaY.
+  double mOverflowDeltaX;
+  double mOverflowDeltaY;
 
   // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
-  uint32_t deltaMode;
+  uint32_t mDeltaMode;
 
-  // Following members are for internal use only, not for DOM event.
-
-  // If the delta values are computed from prefs, this value is true.
-  // Otherwise, i.e., they are computed from native events, false.
-  bool customizedByUserPrefs;
-
-  // true if the momentum events directly tied to this event may follow it.
-  bool mayHaveMomentum;
-  // true if the event is caused by momentum.
-  bool isMomentum;
-
-  // If device event handlers don't know when they should set lineOrPageDeltaX
-  // and lineOrPageDeltaY, this is true.  Otherwise, false.
-  // If mIsNoLineOrPageDelta is true, ESM will generate
-  // eLegacyMouseLineOrPageScroll events when accumulated delta values reach
-  // a line height.
-  bool mIsNoLineOrPageDelta;
-
-  // If widget sets lineOrPageDelta, EventStateManager will dispatch
+  // If widget sets mLineOrPageDelta, EventStateManager will dispatch
   // eLegacyMouseLineOrPageScroll event for compatibility.  Note that the delta
-  // value means pages if the deltaMode is DOM_DELTA_PAGE, otherwise, lines.
-  int32_t lineOrPageDeltaX;
-  int32_t lineOrPageDeltaY;
+  // value means pages if the mDeltaMode is DOM_DELTA_PAGE, otherwise, lines.
+  int32_t mLineOrPageDeltaX;
+  int32_t mLineOrPageDeltaY;
 
   // When the default action for an wheel event is moving history or zooming,
   // need to chose a delta value for doing it.
   int32_t GetPreferredIntDelta()
   {
-    if (!lineOrPageDeltaX && !lineOrPageDeltaY) {
+    if (!mLineOrPageDeltaX && !mLineOrPageDeltaY) {
       return 0;
     }
-    if (lineOrPageDeltaY && !lineOrPageDeltaX) {
-      return lineOrPageDeltaY;
+    if (mLineOrPageDeltaY && !mLineOrPageDeltaX) {
+      return mLineOrPageDeltaY;
     }
-    if (lineOrPageDeltaX && !lineOrPageDeltaY) {
-      return lineOrPageDeltaX;
+    if (mLineOrPageDeltaX && !mLineOrPageDeltaY) {
+      return mLineOrPageDeltaX;
     }
-    if ((lineOrPageDeltaX < 0 && lineOrPageDeltaY > 0) ||
-        (lineOrPageDeltaX > 0 && lineOrPageDeltaY < 0)) {
+    if ((mLineOrPageDeltaX < 0 && mLineOrPageDeltaY > 0) ||
+        (mLineOrPageDeltaX > 0 && mLineOrPageDeltaY < 0)) {
       return 0; // We cannot guess the answer in this case.
     }
-    return (Abs(lineOrPageDeltaX) > Abs(lineOrPageDeltaY)) ?
-             lineOrPageDeltaX : lineOrPageDeltaY;
+    return (Abs(mLineOrPageDeltaX) > Abs(mLineOrPageDeltaY)) ?
+             mLineOrPageDeltaX : mLineOrPageDeltaY;
   }
 
   // Scroll type
   // The default value is SCROLL_DEFAULT, which means EventStateManager will
   // select preferred scroll type automatically.
-  enum ScrollType
+  enum ScrollType : uint8_t
   {
     SCROLL_DEFAULT,
     SCROLL_SYNCHRONOUSLY,
     SCROLL_ASYNCHRONOUSELY,
     SCROLL_SMOOTHLY
   };
-  ScrollType scrollType;
+  ScrollType mScrollType;
 
-  // overflowed delta values for scroll, these values are set by
-  // nsEventStateManger.  If the default action of the wheel event isn't scroll,
-  // these values always zero.  Otherwise, remaning delta values which are
-  // not used by scroll are set.
-  // NOTE: deltaX, deltaY and deltaZ may be modified by EventStateManager.
-  //       However, overflowDeltaX and overflowDeltaY indicate unused original
-  //       delta values which are not applied the delta_multiplier prefs.
-  //       So, if widget wanted to know the actual direction to be scrolled,
-  //       it would need to check the deltaX and deltaY.
-  double overflowDeltaX;
-  double overflowDeltaY;
+  // If the delta values are computed from prefs, this value is true.
+  // Otherwise, i.e., they are computed from native events, false.
+  bool mCustomizedByUserPrefs;
+
+  // true if the momentum events directly tied to this event may follow it.
+  bool mMayHaveMomentum;
+  // true if the event is caused by momentum.
+  bool mIsMomentum;
+
+  // If device event handlers don't know when they should set mLineOrPageDeltaX
+  // and mLineOrPageDeltaY, this is true.  Otherwise, false.
+  // If mIsNoLineOrPageDelta is true, ESM will generate
+  // eLegacyMouseLineOrPageScroll events when accumulated delta values reach
+  // a line height.
+  bool mIsNoLineOrPageDelta;
 
   // Whether or not the parent of the currently overscrolled frame is the
   // ViewPort. This is false in situations when an element on the page is being
@@ -610,19 +608,19 @@ public:
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
 
-    deltaX = aEvent.deltaX;
-    deltaY = aEvent.deltaY;
-    deltaZ = aEvent.deltaZ;
-    deltaMode = aEvent.deltaMode;
-    customizedByUserPrefs = aEvent.customizedByUserPrefs;
-    mayHaveMomentum = aEvent.mayHaveMomentum;
-    isMomentum = aEvent.isMomentum;
+    mDeltaX = aEvent.mDeltaX;
+    mDeltaY = aEvent.mDeltaY;
+    mDeltaZ = aEvent.mDeltaZ;
+    mDeltaMode = aEvent.mDeltaMode;
+    mCustomizedByUserPrefs = aEvent.mCustomizedByUserPrefs;
+    mMayHaveMomentum = aEvent.mMayHaveMomentum;
+    mIsMomentum = aEvent.mIsMomentum;
     mIsNoLineOrPageDelta = aEvent.mIsNoLineOrPageDelta;
-    lineOrPageDeltaX = aEvent.lineOrPageDeltaX;
-    lineOrPageDeltaY = aEvent.lineOrPageDeltaY;
-    scrollType = aEvent.scrollType;
-    overflowDeltaX = aEvent.overflowDeltaX;
-    overflowDeltaY = aEvent.overflowDeltaY;
+    mLineOrPageDeltaX = aEvent.mLineOrPageDeltaX;
+    mLineOrPageDeltaY = aEvent.mLineOrPageDeltaY;
+    mScrollType = aEvent.mScrollType;
+    mOverflowDeltaX = aEvent.mOverflowDeltaX;
+    mOverflowDeltaY = aEvent.mOverflowDeltaY;
     mViewPortIsOverscrolled = aEvent.mViewPortIsOverscrolled;
     mCanTriggerSwipe = aEvent.mCanTriggerSwipe;
     mAllowToOverrideSystemScrollSpeed =

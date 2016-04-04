@@ -32,6 +32,26 @@ def which(name):
 
     return name
 
+def choose_item(jobs, max_items, display):
+    job_count = len(jobs)
+
+    # Don't present a choice if there are too many tests
+    if job_count > max_items:
+        raise Exception('Too many jobs.')
+
+    for i, job in enumerate(jobs, 1):
+        print("{}) {}".format(i, display(job)))
+
+    item = raw_input('Which one:\n')
+    try:
+        item = int(item)
+        if item > job_count or item < 1:
+            raise Exception('Input isn\'t between 1 and {}'.format(job_count))
+    except ValueError:
+        raise Exception('Unrecognized input')
+
+    return jobs[item - 1]
+
 def main(argv):
     # The [TESTS] optional arguments are paths of test files relative
     # to the jit-test/tests directory.
@@ -231,9 +251,12 @@ def main(argv):
         end = int(round(options.this_chunk * tests_per_chunk))
         test_list = test_list[start:end]
 
+    if not test_list:
+        print("No tests found matching command line arguments after filtering.",
+              file=sys.stderr)
+        sys.exit(0)
+
     # The full test list is ready. Now create copies for each JIT configuration.
-    job_list = []
-    test_flags = []
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few
         # interesting combinations.
@@ -243,8 +266,14 @@ def main(argv):
     else:
         test_flags = get_jitflags(options.jitflags)
 
-    job_list = [_ for test in test_list
-                for _ in test.copy_variants(test_flags)]
+    test_list = [_ for test in test_list for _ in test.copy_variants(test_flags)]
+
+    job_list = (test for test in test_list)
+    job_count = len(test_list)
+
+    if options.repeat:
+        job_list = (test for test in job_list for i in range(options.repeat))
+        job_count *= options.repeat
 
     if options.ignore_timeouts:
         read_all = False
@@ -270,14 +299,23 @@ def main(argv):
     os.mkdir(jittests.JS_CACHE_DIR)
 
     if options.debugger:
-        if len(job_list) > 1:
+        if job_count > 1:
             print('Multiple tests match command line'
                   ' arguments, debugger can only run one')
-            for tc in job_list:
-                print('    {}'.format(tc.path))
-            sys.exit(1)
+            jobs = list(job_list)
 
-        tc = job_list[0]
+            def display_job(job):
+                if len(job.jitflags) != 0:
+                    flags = "({})".format(' '.join(job.jitflags))
+                return '{} {}'.format(job.path, flags)
+
+            try:
+                tc = choose_item(jobs, max_items=50, display=display_job)
+            except Exception as e:
+                sys.exit(str(e))
+        else:
+            tc = job_list.next()
+
         if options.debugger == 'gdb':
             debug_cmd = ['gdb', '--args']
         elif options.debugger == 'lldb':
@@ -296,10 +334,10 @@ def main(argv):
     try:
         ok = None
         if options.remote:
-            ok = jittests.run_tests_remote(job_list, prefix, options)
+            ok = jittests.run_tests_remote(job_list, job_count, prefix, options)
         else:
             with change_env(test_environment):
-                ok = jittests.run_tests(job_list, prefix, options)
+                ok = jittests.run_tests(job_list, job_count, prefix, options)
         if not ok:
             sys.exit(2)
     except OSError:

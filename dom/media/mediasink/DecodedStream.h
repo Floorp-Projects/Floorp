@@ -66,9 +66,7 @@ protected:
   virtual ~DecodedStream();
 
 private:
-  void CreateData(PlaybackInfoInit&& aInit, MozPromiseHolder<GenericPromise>&& aPromise);
   void DestroyData(UniquePtr<DecodedStreamData> aData);
-  void OnDataCreated(UniquePtr<DecodedStreamData> aData);
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
   void SendVideo(bool aIsSameOrigin);

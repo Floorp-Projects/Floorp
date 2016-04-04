@@ -17,6 +17,7 @@
     "ExtensionManagement": true,
     "ExtensionPage": true,
     "GlobalManager": true,
+    "openOptionsPage": true,
     "runSafe": true,
     "runSafeSync": true,
     "runSafeSyncWithoutClone": true,
@@ -69,7 +70,7 @@
     "consistent-return": 0,
 
     // Require braces around blocks that start a new line
-    "curly": [2, "multi-line"],
+    "curly": [2, "all"],
 
     // Always require a trailing EOL
     "eol-last": 2,
@@ -230,7 +231,7 @@
 
     // Allow trailing commas for easy list extension.  Having them does not
     // impair readability, but also not required either.
-    "comma-dangle": [1, "always-multiline"],
+    "comma-dangle": [2, "always-multiline"],
 
     // Warn about cyclomatic complexity in functions.
     "complexity": 1,
@@ -244,7 +245,7 @@
     "default-case": 0,
 
     // Enforce dots on the next line with property name.
-    "dot-location": [1, "property"],
+    "dot-location": [2, "property"],
 
     // Encourage the use of dot notation whenever possible.
     "dot-notation": 2,
@@ -446,7 +447,7 @@
     "sort-vars": 0,
 
     // Require a space after keywords.
-    "space-after-keywords": [1, "always"],
+    "space-after-keywords": [2, "always"],
 
     // Require a space immediately following the // in a line comment.
     "spaced-comment": [2, "always"],

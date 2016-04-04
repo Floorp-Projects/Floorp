@@ -47,7 +47,7 @@ function run_test(tf, percent, value)
   display.removeChild(p);
 }
 
-run_test("step-start", 0, 0);
+run_test("step-start", 0, 1);
 run_test("step-start", 0.001, 1);
 run_test("step-start", 0.999, 1);
 run_test("step-start", 1, 1);
@@ -68,10 +68,10 @@ run_test("steps(2, end)", 0.50, 0.5);
 run_test("steps(2, end)", 0.99, 0.5);
 run_test("steps(2, end)", 1.00, 1.0);
 
-run_test("steps(2, start)", 0.00, 0.0);
-run_test("steps(2, start)", 0.01, 0.5);
-run_test("steps(2, start)", 0.50, 0.5);
-run_test("steps(2, start)", 0.51, 1.0);
+run_test("steps(2, start)", 0.00, 0.5);
+run_test("steps(2, start)", 0.49, 0.5);
+run_test("steps(2, start)", 0.50, 1.0);
+run_test("steps(2, start)", 0.99, 1.0);
 run_test("steps(2, start)", 1.00, 1.0);
 
 run_test("steps(8,end)", 0.00, 0.0);

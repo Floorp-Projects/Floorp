@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_bluetooth_BluetoothProfileController_h
 #define mozilla_dom_bluetooth_BluetoothProfileController_h
 
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
+#include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
 #include "nsITimer.h"
 
 BEGIN_BLUETOOTH_NAMESPACE

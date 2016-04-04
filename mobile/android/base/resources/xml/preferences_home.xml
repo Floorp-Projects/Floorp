@@ -21,12 +21,7 @@
     <org.mozilla.gecko.preferences.PanelsPreferenceCategory
         android:title="@string/pref_category_home_panels"/>
 
-    <PreferenceCategory android:title="@string/pref_category_home_content_settings">
-
-        <CheckBoxPreference android:key="android.not_a_preference.home_suggested_sites"
-                            android:title="@string/pref_home_suggested_sites"
-                            android:summary="@string/pref_home_suggested_sites_summary"
-                            android:defaultValue="true" />
+    <PreferenceCategory android:title="@string/pref_category_home_add_ons">
 
         <ListPreference android:key="home.sync.updateMode"
                         android:title="@string/pref_home_updates"

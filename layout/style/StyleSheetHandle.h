@@ -19,6 +19,7 @@ class SRIMetadata;
 } // namespace dom
 class CSSStyleSheet;
 class ServoStyleSheet;
+class StyleSheet;
 } // namespace mozilla
 class nsIDocument;
 class nsIPrincipal;
@@ -56,6 +57,9 @@ public:
       return false;
 #endif
     }
+
+    inline StyleSheet* AsStyleSheet();
+    inline const StyleSheet* AsStyleSheet() const;
 
     CSSStyleSheet* AsGecko()
     {
@@ -100,12 +104,12 @@ public:
     // CSSStyleSheet or ServoStyleSheet.  See corresponding comments in
     // CSSStyleSheet.h for descriptions of these methods.
 
+    inline bool IsInline() const;
     inline nsIURI* GetSheetURI() const;
     inline nsIURI* GetOriginalURI() const;
     inline nsIURI* GetBaseURI() const;
     inline void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
     inline bool IsApplicable() const;
-    inline void SetComplete();
     inline void SetParsingMode(css::SheetParsingMode aMode);
     inline bool HasRules() const;
     inline nsIDocument* GetOwningDocument() const;

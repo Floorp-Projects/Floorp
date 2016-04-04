@@ -62,23 +62,31 @@ JSSHELL_BINS  = \
   js$(BIN_SUFFIX) \
   $(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
   $(NULL)
-ifndef MOZ_NATIVE_NSPR
+
+ifndef MOZ_SYSTEM_NSPR
+  ifdef MOZ_FOLD_LIBS
+    JSSHELL_BINS += $(DLL_PREFIX)nss3$(DLL_SUFFIX)
+  else
+    JSSHELL_BINS += \
+      $(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
+      $(DLL_PREFIX)plds4$(DLL_SUFFIX) \
+      $(DLL_PREFIX)plc4$(DLL_SUFFIX) \
+      $(NULL)
+  endif # MOZ_FOLD_LIBS
+endif # MOZ_SYSTEM_NSPR
+
 ifdef MSVC_C_RUNTIME_DLL
-JSSHELL_BINS += $(MSVC_C_RUNTIME_DLL)
+  JSSHELL_BINS += $(MSVC_C_RUNTIME_DLL)
 endif
 ifdef MSVC_CXX_RUNTIME_DLL
-JSSHELL_BINS += $(MSVC_CXX_RUNTIME_DLL)
+  JSSHELL_BINS += $(MSVC_CXX_RUNTIME_DLL)
 endif
-ifdef MOZ_FOLD_LIBS
-JSSHELL_BINS += $(DLL_PREFIX)nss3$(DLL_SUFFIX)
-else
-JSSHELL_BINS += \
-  $(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
-  $(DLL_PREFIX)plds4$(DLL_SUFFIX) \
-  $(DLL_PREFIX)plc4$(DLL_SUFFIX) \
-  $(NULL)
-endif # MOZ_FOLD_LIBS
-endif # MOZ_NATIVE_NSPR
+
+ifdef WIN_UCRT_REDIST_DIR
+  JSSHELL_BINS += $(notdir $(wildcard $(DIST)/bin/api-ms-win-*.dll))
+  JSSHELL_BINS += ucrtbase.dll
+endif
+
 ifdef MOZ_SHARED_ICU
 ifeq ($(OS_TARGET), WINNT)
 JSSHELL_BINS += \

@@ -388,6 +388,7 @@ public:
   void HandleUnusedExprResult(const Stmt *stmt) {
     const Expr *E = dyn_cast_or_null<Expr>(stmt);
     if (E) {
+      E = E->IgnoreImplicit(); // Ignore ExprWithCleanup etc. implicit wrappers
       QualType T = E->getType();
       if (MustUse.hasEffectiveAnnotation(T) && !isIgnoredExprForMustUse(E)) {
         unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
@@ -545,7 +546,7 @@ bool isClassRefCounted(const CXXRecordDecl *D) {
 }
 
 bool isClassRefCounted(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+  while (const clang::ArrayType *arrTy = T->getAsArrayTypeUnsafe())
     T = arrTy->getElementType();
   CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
   return clazz ? isClassRefCounted(clazz) : false;
@@ -590,14 +591,14 @@ const FieldDecl *getBaseRefCntMember(const CXXRecordDecl *D) {
 }
 
 const FieldDecl *getBaseRefCntMember(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+  while (const clang::ArrayType *arrTy = T->getAsArrayTypeUnsafe())
     T = arrTy->getElementType();
   CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
   return clazz ? getBaseRefCntMember(clazz) : 0;
 }
 
 bool typeHasVTable(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+  while (const clang::ArrayType *arrTy = T->getAsArrayTypeUnsafe())
     T = arrTy->getElementType();
   CXXRecordDecl *offender = T->getAsCXXRecordDecl();
   return offender && offender->hasDefinition() && offender->isDynamicClass();
@@ -830,7 +831,7 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
   }
 
   // Check if we have a type which we can recurse into
-  if (const ArrayType *Array = T->getAsArrayTypeUnsafe()) {
+  if (const clang::ArrayType *Array = T->getAsArrayTypeUnsafe()) {
     if (hasEffectiveAnnotation(Array->getElementType())) {
       AnnotationReason Reason = {Array->getElementType(), RK_ArrayElement,
                                  nullptr};

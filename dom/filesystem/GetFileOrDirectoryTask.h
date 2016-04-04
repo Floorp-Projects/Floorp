@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_GetFileOrDirectory_h
 #define mozilla_dom_GetFileOrDirectory_h
 
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
@@ -16,18 +17,21 @@ namespace dom {
 
 class BlobImpl;
 
-class GetFileOrDirectoryTask final
-  : public FileSystemTaskBase
+class GetFileOrDirectoryTask final : public FileSystemTaskBase
 {
 public:
-  // If aDirectoryOnly is set, we should ensure that the target is a directory.
-  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
-                         const nsAString& aTargetPath,
-                         bool aDirectoryOnly,
-                         ErrorResult& aRv);
-  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
-                         const FileSystemGetFileOrDirectoryParams& aParam,
-                         FileSystemRequestParent* aParent);
+  static already_AddRefed<GetFileOrDirectoryTask>
+  Create(FileSystemBase* aFileSystem,
+         nsIFile* aTargetPath,
+         Directory::DirectoryType aType,
+         bool aDirectoryOnly,
+         ErrorResult& aRv);
+
+  static already_AddRefed<GetFileOrDirectoryTask>
+  Create(FileSystemBase* aFileSystem,
+         const FileSystemGetFileOrDirectoryParams& aParam,
+         FileSystemRequestParent* aParent,
+         ErrorResult& aRv);
 
   virtual
   ~GetFileOrDirectoryTask();
@@ -39,13 +43,15 @@ public:
   GetPermissionAccessType(nsCString& aAccess) const override;
 protected:
   virtual FileSystemParams
-  GetRequestParams(const nsString& aFileSystem) const override;
+  GetRequestParams(const nsString& aSerializedDOMPath,
+                   ErrorResult& aRv) const override;
 
   virtual FileSystemResponseValue
-  GetSuccessRequestResult() const override;
+  GetSuccessRequestResult(ErrorResult& aRv) const override;
 
   virtual void
-  SetSuccessRequestResult(const FileSystemResponseValue& aValue) override;
+  SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                          ErrorResult& aRv) override;
 
   virtual nsresult
   Work() override;
@@ -54,10 +60,22 @@ protected:
   HandlerCallback() override;
 
 private:
+  // If aDirectoryOnly is set, we should ensure that the target is a directory.
+  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
+                         nsIFile* aTargetPath,
+                         Directory::DirectoryType aType,
+                         bool aDirectoryOnly);
+
+  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
+                         const FileSystemGetFileOrDirectoryParams& aParam,
+                         FileSystemRequestParent* aParent);
+
   RefPtr<Promise> mPromise;
-  nsString mTargetRealPath;
+  nsCOMPtr<nsIFile> mTargetPath;
+
   // Whether we get a directory.
   bool mIsDirectory;
+  Directory::DirectoryType mType;
 
   // This cannot be a File bacause this object is created on a different
   // thread and File is not thread-safe. Let's use the BlobImpl instead.

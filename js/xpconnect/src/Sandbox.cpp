@@ -804,7 +804,14 @@ bool
 xpc::SandboxProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id, bool* bp) const
 {
-    return BaseProxyHandler::has(cx, proxy, id, bp);
+    // This uses getPropertyDescriptor for backward compatibility with
+    // the old BaseProxyHandler::has implementation.
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+        return false;
+
+    *bp = !!desc.object();
+    return true;
 }
 bool
 xpc::SandboxProxyHandler::hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy,
@@ -934,11 +941,12 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
 bool
 xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 {
+    // Properties will be exposed to System automatically but not to Sandboxes
+    // if |[Exposed=System]| is specified.
+    // This function holds common properties not exposed automatically but able
+    // to be requested either in |Cu.importGlobalProperties| or
+    // |wantGlobalProperties| of a sandbox.
     if (CSS && !dom::CSSBinding::GetConstructorObject(cx, obj))
-        return false;
-
-    if (indexedDB &&
-        !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
         return false;
 
     if (XMLHttpRequest &&
@@ -995,6 +1003,29 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
         return false;
 
     return true;
+}
+
+bool
+xpc::GlobalProperties::DefineInXPCComponents(JSContext* cx, JS::HandleObject obj)
+{
+    if (indexedDB &&
+        !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
+        return false;
+
+    return Define(cx, obj);
+}
+
+bool
+xpc::GlobalProperties::DefineInSandbox(JSContext* cx, JS::HandleObject obj)
+{
+    MOZ_ASSERT(IsSandbox(obj));
+
+    if (indexedDB &&
+        !(IndexedDatabaseManager::ResolveSandboxBinding(cx, obj) &&
+          IndexedDatabaseManager::DefineIndexedDB(cx, obj)))
+        return false;
+
+    return Define(cx, obj);
 }
 
 nsresult
@@ -1163,7 +1194,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
              !JS_DefineFunction(cx, sandbox, "isProxy", SandboxIsProxy, 1, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
-        if (!options.globalProperties.Define(cx, sandbox))
+        if (!options.globalProperties.DefineInSandbox(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
 
 #ifndef SPIDERMONKEY_PROMISE
@@ -1572,8 +1603,8 @@ AssembleSandboxMemoryReporterName(JSContext* cx, nsCString& sandboxName)
     if (frame) {
         nsString location;
         int32_t lineNumber = 0;
-        frame->GetFilename(location);
-        frame->GetLineNumber(&lineNumber);
+        frame->GetFilename(cx, location);
+        frame->GetLineNumber(cx, &lineNumber);
 
         sandboxName.AppendLiteral(" (from: ");
         sandboxName.Append(NS_ConvertUTF16toUTF8(location));
@@ -1716,9 +1747,8 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
                           PromiseFlatString(source).get(), source.Length(), &v);
 
         // If the sandbox threw an exception, grab it off the context.
-        if (JS_GetPendingException(sandcx, &exn)) {
-            MOZ_ASSERT(!ok);
-            JS_ClearPendingException(sandcx);
+        if (aes.HasException()) {
+            aes.StealException(&exn);
         }
     }
 

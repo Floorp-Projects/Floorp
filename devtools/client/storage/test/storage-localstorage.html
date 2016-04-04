@@ -1,0 +1,23 @@
+﻿<!doctype html>
+<html>
+  <!--
+  Bug 1231155 - Storage inspector front end - tests
+  -->
+  <head>
+    <meta charset="utf-8" />
+    <title>Storage inspector localStorage test</title>
+    <script type="application/javascript;version=1.7">
+      "use strict";
+
+      function setup() {
+        localStorage.setItem("TestLS1", "ValueLS1");
+        localStorage.setItem("TestLS2", "ValueLS2");
+        localStorage.setItem("TestLS3", "ValueLS3");
+        localStorage.setItem("TestLS4", "ValueLS4");
+        localStorage.setItem("TestLS5", "ValueLS5");
+      }
+    </script>
+  </head>
+  <body onload="setup()">
+  </body>
+</html>

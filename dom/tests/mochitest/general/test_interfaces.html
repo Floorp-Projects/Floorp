@@ -344,6 +344,10 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CSSImportRule",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSKeyframeRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSKeyframesRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "CSSMediaRule",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CSSMozDocumentRule",
@@ -546,7 +550,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HTMLDataListElement",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "HTMLDetailsElement", disabled: true},
+    {name: "HTMLDetailsElement", release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HTMLDirectoryElement",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -798,13 +802,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozClirModeEvent", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "mozContact",
+    {name: "mozContact", b2g: true, permission: "contacts-read"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozContactChangeEvent",
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozCSSKeyframeRule",
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozCSSKeyframesRule",
+    {name: "MozContactChangeEvent", b2g: true, permission: "contacts-read"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozEmergencyCbModeEvent", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -826,7 +826,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozOtaStatusEvent", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozPowerManager",
+    {name: "MozPowerManager", b2g: true, permission: "power"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "mozRTCIceCandidate",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -834,7 +834,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "mozRTCSessionDescription",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "MozSettingsEvent",
+    {name: "MozSettingsEvent", permission: ["settings-api-read"]},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozSettingsTransactionEvent", permission: ["settings-api-read"]},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -968,9 +968,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PropertyNodeList",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushManager", b2g: false, android: false},
+    {name: "PushManager", b2g: false, nightlyAndroid: true, android: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushSubscription", b2g: false, android: false},
+    {name: "PushSubscription", b2g: false, nightlyAndroid: true, android: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "RadioNodeList",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1533,13 +1533,14 @@ function createInterfaceMap(isXBLScope) {
       } else {
         ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
         if ((entry.nightly === !isNightly) ||
+            (entry.nightlyAndroid === !(isAndroid && isNightly) && isAndroid) ||
             (entry.xbl === !isXBLScope) ||
             (entry.desktop === !isDesktop) ||
             (entry.b2g === !isB2G) ||
             (entry.windows === !isWindows) ||
             (entry.mac === !isMac) ||
             (entry.linux === !isLinux) ||
-            (entry.android === !isAndroid) ||
+            (entry.android === !isAndroid && !entry.nightlyAndroid) ||
             (entry.release === !isRelease) ||
             (entry.permission && !hasPermission(entry.permission)) ||
             entry.disabled) {

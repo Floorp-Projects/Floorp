@@ -1087,10 +1087,17 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """),
 
-    'TESTING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
-        """List of files to be installed in the _tests directory.
+    'OBJDIR_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """List of files to be installed anywhere in the objdir. Use sparingly.
 
-        This works similarly to FINAL_TARGET_FILES.
+        ``OBJDIR_FILES`` is similar to FINAL_TARGET_FILES, but it allows copying
+        anywhere in the object directory. This is intended for various one-off
+        cases, not for general use. If you wish to add entries to OBJDIR_FILES,
+        please consult a build peer.
+        """),
+
+    'OBJDIR_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """Like ``OBJDIR_FILES``, with preprocessing. Use sparingly.
         """),
 
     'FINAL_LIBRARY': (unicode, unicode,
@@ -1276,6 +1283,20 @@ VARIABLES = {
 
            BRANDING_FILES += ['foo.png']
            BRANDING_FILES.images.subdir += ['bar.png']
+        """),
+
+    'SDK_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """List of files to be installed into the sdk directory.
+
+        ``SDK_FILES`` will copy (or symlink, if the platform supports it)
+        the contents of its files to the ``dist/sdk`` directory. Files that
+        are destined for a subdirectory can be specified by accessing a field.
+        For example, to export ``foo.py`` to the top-level directory and
+        ``bar.py`` to the directory ``subdir``, append to
+        ``SDK_FILES`` like so::
+
+           SDK_FILES += ['foo.py']
+           SDK_FILES.subdir += ['bar.py']
         """),
 
     'SDK_LIBRARY': (bool, bool,
@@ -1729,7 +1750,7 @@ VARIABLES = {
            This variable only has an effect on Windows.
         """),
 
-    'TEST_HARNESS_FILES': (HierarchicalStringList, list,
+    'TEST_HARNESS_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed for test harnesses.
 
         ``TEST_HARNESS_FILES`` can be used to install files to any directory
@@ -1752,6 +1773,17 @@ VARIABLES = {
     'NO_COMPONENTS_MANIFEST': (bool, bool,
         """Do not create a binary-component manifest entry for the
         corresponding XPCOMBinaryComponent.
+        """),
+
+    'USE_YASM': (bool, bool,
+        """Use the yasm assembler to assemble assembly files from SOURCES.
+
+        By default, the build will use the toolchain assembler, $(AS), to
+        assemble source files in assembly language (.s or .asm files). Setting
+        this value to ``True`` will cause it to use yasm instead.
+
+        If yasm is not available on this system, or does not support the
+        current target architecture, an error will be raised.
         """),
 }
 
@@ -2068,7 +2100,7 @@ SPECIAL_VARIABLES = {
         ``$(FINAL_TARGET)/modules``, after preprocessing.
         """),
 
-    'TESTING_JS_MODULES': (lambda context: context['TESTING_FILES'].modules, list,
+    'TESTING_JS_MODULES': (lambda context: context['TEST_HARNESS_FILES'].modules, list,
         """JavaScript modules to install in the test-only destination.
 
         Some JavaScript modules (JSMs) are test-only and not distributed

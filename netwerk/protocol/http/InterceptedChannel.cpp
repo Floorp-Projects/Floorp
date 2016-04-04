@@ -13,6 +13,7 @@
 #include "nsHttpChannel.h"
 #include "HttpChannelChild.h"
 #include "nsHttpResponseHead.h"
+#include "nsNetUtil.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "nsIChannelEventSink.h"
@@ -137,7 +138,7 @@ InterceptedChannelBase::SecureUpgradeChannelURI(nsIChannel* aChannel)
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIURI> upgradedURI;
-  rv = HttpBaseChannel::GetSecureUpgradedURI(uri, getter_AddRefs(upgradedURI));
+  rv = NS_GetSecureUpgradedURI(uri, getter_AddRefs(upgradedURI));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return upgradedURI.forget();
@@ -429,8 +430,8 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
     nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (mSecureUpgrade) {
-    nsresult rv = HttpBaseChannel::GetSecureUpgradedURI(originalURI,
-                                                        getter_AddRefs(responseURI));
+    nsresult rv = NS_GetSecureUpgradedURI(originalURI,
+                                          getter_AddRefs(responseURI));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     responseURI = originalURI;

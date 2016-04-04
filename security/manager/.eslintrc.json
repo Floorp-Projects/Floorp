@@ -135,6 +135,9 @@
     // No trailing whitespace
     "no-trailing-spaces": 2,
 
+    // No using undeclared variables
+    "no-undef": 2,
+
     // Error on newline where a semicolon is needed
     "no-unexpected-multiline": 2,
 
@@ -174,10 +177,20 @@
     // ++ and -- should not need spacing
     "space-unary-ops": [2, { "words": true, "nonwords": false }],
 
+    // Require "use strict" to be defined globally in the script.
+    "strict": [2, "global"],
+
     // No comparisons to NaN
     "use-isnan": 2,
 
     // Only check typeof against valid results
     "valid-typeof": 2
+  },
+  "env": {
+    "browser": true
+  },
+  "globals": {
+    "Components": false,
+    "dump": false
   }
 }

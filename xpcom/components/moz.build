@@ -54,5 +54,5 @@ LOCAL_INCLUDES += [
     '/modules/libjar',
 ]
 
-if CONFIG['MOZ_WIDGET_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['TK_CFLAGS']

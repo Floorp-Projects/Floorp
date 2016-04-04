@@ -226,7 +226,7 @@ protected:
     nsCOMPtr<nsIURI> mDocumentURL;
 
 private:
-    static PRLogModuleInfo* gLog;
+    static mozilla::LazyLogModule gLog;
 };
 
 int32_t         RDFContentSinkImpl::gRefCnt = 0;
@@ -239,7 +239,7 @@ nsIRDFResource* RDFContentSinkImpl::kRDF_Bag;
 nsIRDFResource* RDFContentSinkImpl::kRDF_Seq;
 nsIRDFResource* RDFContentSinkImpl::kRDF_nextVal;
 
-PRLogModuleInfo* RDFContentSinkImpl::gLog;
+mozilla::LazyLogModule RDFContentSinkImpl::gLog("nsRDFContentSink");
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -290,9 +290,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         NS_RegisterStaticAtoms(rdf_atoms);
     }
-
-    if (! gLog)
-        gLog = PR_NewLogModule("nsRDFContentSink");
 }
 
 
@@ -1285,7 +1282,7 @@ RDFContentSinkImpl::RegisterNamespaces(const char16_t **aAttributes)
             ++endLocal;
         }
         nsDependentSubstring lname(attr, endLocal);
-        nsCOMPtr<nsIAtom> preferred = do_GetAtom(lname);
+        nsCOMPtr<nsIAtom> preferred = NS_Atomize(lname);
         if (preferred == kXMLNSAtom) {
             preferred = nullptr;
         }
@@ -1325,7 +1322,7 @@ RDFContentSinkImpl::SplitExpatName(const char16_t *aExpatName,
     }
 
     const nsDependentSubstring& nameSpaceURI = Substring(aExpatName, uriEnd);
-    *aLocalName = NS_NewAtom(Substring(nameStart, pos)).take();
+    *aLocalName = NS_Atomize(Substring(nameStart, pos)).take();
     return nameSpaceURI;
 }
 

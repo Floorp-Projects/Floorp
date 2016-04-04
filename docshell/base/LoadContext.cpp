@@ -57,11 +57,9 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
     return;
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aOptionalBase->GetIsContent(&mIsContent)));
-  MOZ_ALWAYS_TRUE(
-    NS_SUCCEEDED(aOptionalBase->GetUsePrivateBrowsing(&mUsePrivateBrowsing)));
-  MOZ_ALWAYS_TRUE(
-    NS_SUCCEEDED(aOptionalBase->GetUseRemoteTabs(&mUseRemoteTabs)));
+  MOZ_ALWAYS_SUCCEEDS(aOptionalBase->GetIsContent(&mIsContent));
+  MOZ_ALWAYS_SUCCEEDS(aOptionalBase->GetUsePrivateBrowsing(&mUsePrivateBrowsing));
+  MOZ_ALWAYS_SUCCEEDS(aOptionalBase->GetUseRemoteTabs(&mUseRemoteTabs));
 }
 
 //-----------------------------------------------------------------------------

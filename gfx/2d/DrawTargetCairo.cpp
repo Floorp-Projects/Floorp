@@ -39,6 +39,9 @@
 #include "cairo-win32.h"
 #endif
 
+#define PIXMAN_DONT_DEFINE_STDINT
+#include "pixman.h"
+
 #include <algorithm>
 
 // 2^23
@@ -1749,9 +1752,18 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
     }
   }
 
-  cairo_surface_t* similar = cairo_surface_create_similar(mSurface,
-                                                          GfxFormatToCairoContent(aFormat),
-                                                          aSize.width, aSize.height);
+  cairo_surface_t* similar;
+#ifdef CAIRO_HAS_WIN32_SURFACE
+  if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_WIN32) {
+    similar = cairo_win32_surface_create_with_dib(GfxFormatToCairoFormat(aFormat),
+                                                  aSize.width, aSize.height);
+  } else
+#endif
+  {
+    similar = cairo_surface_create_similar(mSurface,
+                                           GfxFormatToCairoContent(aFormat),
+                                           aSize.width, aSize.height);
+  }
 
   if (!cairo_surface_status(similar)) {
     RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
@@ -1844,6 +1856,244 @@ DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFor
     return target.forget();
   }
   return nullptr;
+}
+
+static inline pixman_format_code_t
+GfxFormatToPixmanFormat(SurfaceFormat aFormat)
+{
+  switch (aFormat) {
+  case SurfaceFormat::A8R8G8B8_UINT32:
+    return PIXMAN_a8r8g8b8;
+  case SurfaceFormat::X8R8G8B8_UINT32:
+    return PIXMAN_x8r8g8b8;
+  case SurfaceFormat::R5G6B5_UINT16:
+    return PIXMAN_r5g6b5;
+  case SurfaceFormat::A8:
+    return PIXMAN_a8;
+  default:
+    // Allow both BGRA and ARGB formats to be passed through unmodified,
+    // even though even though we are actually rendering to A8R8G8B8_UINT32.
+    if (aFormat == SurfaceFormat::B8G8R8A8 ||
+        aFormat == SurfaceFormat::A8R8G8B8) {
+      return PIXMAN_a8r8g8b8;
+    }
+    return (pixman_format_code_t)0;
+  }
+}
+
+static inline bool
+GfxMatrixToPixmanTransform(const Matrix4x4 &aMatrix, pixman_transform* aResult)
+{
+  pixman_f_transform fTransform = {{
+    { aMatrix._11, aMatrix._21, aMatrix._41 },
+    { aMatrix._12, aMatrix._22, aMatrix._42 },
+    { aMatrix._14, aMatrix._24, aMatrix._44 }
+  }};
+  return pixman_transform_from_pixman_f_transform(aResult, &fTransform);
+}
+
+#ifndef USE_SKIA
+bool
+DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& aMatrix)
+{
+  // Composite the 3D transform with the DT's transform.
+  Matrix4x4 fullMat = aMatrix * Matrix4x4::From2D(mTransform);
+  // Transform the surface bounds and clip to this DT.
+  IntRect xformBounds =
+    RoundedOut(
+      fullMat.TransformAndClipBounds(Rect(Point(0, 0), Size(aSurface->GetSize())),
+                                     Rect(Point(0, 0), Size(GetSize()))));
+  if (xformBounds.IsEmpty()) {
+    return true;
+  }
+  // Offset the matrix by the transformed origin.
+  fullMat.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
+  // Invert the matrix into a pattern matrix for pixman.
+  if (!fullMat.Invert()) {
+    return false;
+  }
+  pixman_transform xform;
+  if (!GfxMatrixToPixmanTransform(fullMat, &xform)) {
+    return false;
+  }
+
+  // Read in the source data.
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+  pixman_format_code_t srcFormat = GfxFormatToPixmanFormat(srcSurf->GetFormat());
+  if (!srcFormat) {
+    return false;
+  }
+  DataSourceSurface::ScopedMap srcMap(srcSurf, DataSourceSurface::READ);
+  if (!srcMap.IsMapped()) {
+    return false;
+  }
+
+  // Set up an intermediate destination surface only the size of the transformed bounds.
+  // Try to pass through the source's format unmodified in both the BGRA and ARGB cases.
+  RefPtr<DataSourceSurface> dstSurf =
+    Factory::CreateDataSourceSurface(xformBounds.Size(),
+                                     srcFormat == PIXMAN_a8r8g8b8 ?
+                                       srcSurf->GetFormat() : SurfaceFormat::A8R8G8B8_UINT32);
+  if (!dstSurf) {
+    return false;
+  }
+
+  // Wrap the surfaces in pixman images and do the transform.
+  pixman_image_t* dst =
+    pixman_image_create_bits(PIXMAN_a8r8g8b8,
+                             xformBounds.width, xformBounds.height,
+                             (uint32_t*)dstSurf->GetData(), dstSurf->Stride());
+  pixman_image_t* src =
+    pixman_image_create_bits(srcFormat,
+                             srcSurf->GetSize().width, srcSurf->GetSize().height,
+                             (uint32_t*)srcMap.GetData(), srcMap.GetStride());
+  MOZ_ASSERT(src && dst, "Failed to create pixman images?");
+
+  pixman_image_set_filter(src, PIXMAN_FILTER_BILINEAR, nullptr, 0);
+  pixman_image_set_transform(src, &xform);
+
+  pixman_image_composite32(PIXMAN_OP_SRC,
+                           src, nullptr, dst,
+                           0, 0, 0, 0, 0, 0,
+                           xformBounds.width, xformBounds.height);
+
+  pixman_image_unref(dst);
+  pixman_image_unref(src);
+
+  // Temporarily reset the DT's transform, since it has already been composed above.
+  Matrix origTransform = mTransform;
+  SetTransform(Matrix());
+
+  // Draw the transformed surface within the transformed bounds.
+  DrawSurface(dstSurf, Rect(xformBounds), Rect(Point(0, 0), Size(xformBounds.Size())));
+
+  SetTransform(origTransform);
+
+  return true;
+}
+#endif
+
+#ifdef CAIRO_HAS_XLIB_SURFACE
+static bool gXRenderInitialized = false;
+static bool gXRenderHasTransform = false;
+
+static bool
+SupportsXRender(cairo_surface_t* surface)
+{
+  if (!surface ||
+      cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_XLIB ||
+      !cairo_xlib_surface_get_xrender_format(surface)) {
+    return false;
+  }
+
+  if (gXRenderInitialized) {
+    return true;
+  }
+  gXRenderInitialized = true;
+
+  cairo_device_t* device = cairo_surface_get_device(surface);
+  if (cairo_device_acquire(device) != CAIRO_STATUS_SUCCESS) {
+    return false;
+  }
+
+  Display* display = cairo_xlib_surface_get_display(surface);
+  int major, minor;
+  if (XRenderQueryVersion(display, &major, &minor)) {
+    if (major > 0 || (major == 0 && minor >= 6)) {
+      gXRenderHasTransform = true;
+    }
+  }
+
+  cairo_device_release(device);
+
+  return true;
+}
+#endif
+
+bool
+DrawTargetCairo::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& aMatrix)
+{
+#if CAIRO_HAS_XLIB_SURFACE
+  cairo_surface_t* srcSurf =
+    aSurface->GetType() == SurfaceType::CAIRO ?
+      static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface() : nullptr;
+  if (!SupportsXRender(srcSurf) || !gXRenderHasTransform) {
+    return DrawTarget::Draw3DTransformedSurface(aSurface, aMatrix);
+  }
+
+  Matrix4x4 fullMat = aMatrix * Matrix4x4::From2D(mTransform);
+  IntRect xformBounds =
+    RoundedOut(
+      fullMat.TransformAndClipBounds(Rect(Point(0, 0), Size(aSurface->GetSize())),
+                                     Rect(Point(0, 0), Size(GetSize()))));
+  if (xformBounds.IsEmpty()) {
+    return true;
+  }
+  fullMat.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
+  if (!fullMat.Invert()) {
+    return false;
+  }
+  pixman_transform xform;
+  if (!GfxMatrixToPixmanTransform(fullMat, &xform)) {
+    return false;
+  }
+
+  cairo_surface_t* xformSurf =
+    cairo_surface_create_similar(srcSurf, CAIRO_CONTENT_COLOR_ALPHA,
+                                 xformBounds.width, xformBounds.height);
+  if (!SupportsXRender(xformSurf)) {
+    cairo_surface_destroy(xformSurf);
+    return false;
+  }
+  cairo_device_t* device = cairo_surface_get_device(xformSurf);
+  if (cairo_device_acquire(device) != CAIRO_STATUS_SUCCESS) {
+    cairo_surface_destroy(xformSurf);
+    return false;
+  }
+
+  Display* display = cairo_xlib_surface_get_display(xformSurf);
+
+  Picture srcPict = XRenderCreatePicture(display,
+                                         cairo_xlib_surface_get_drawable(srcSurf),
+                                         cairo_xlib_surface_get_xrender_format(srcSurf),
+                                         0, nullptr);
+  XRenderSetPictureFilter(display, srcPict, FilterBilinear, nullptr, 0);
+  XRenderSetPictureTransform(display, srcPict, (XTransform*)&xform);
+
+  Picture dstPict = XRenderCreatePicture(display,
+                                         cairo_xlib_surface_get_drawable(xformSurf),
+                                         cairo_xlib_surface_get_xrender_format(xformSurf),
+                                         0, nullptr);
+
+  XRenderComposite(display, PictOpSrc,
+                   srcPict, None, dstPict,
+                   0, 0, 0, 0, 0, 0,
+                   xformBounds.width, xformBounds.height);
+
+  XRenderFreePicture(display, srcPict);
+  XRenderFreePicture(display, dstPict);
+
+  cairo_device_release(device);
+  cairo_surface_mark_dirty(xformSurf);
+
+  AutoPrepareForDrawing(this, mContext);
+
+  cairo_identity_matrix(mContext);
+
+  cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
+  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_DEFAULT);
+  cairo_set_source_surface(mContext, xformSurf, xformBounds.x, xformBounds.y);
+
+  cairo_new_path(mContext);
+  cairo_rectangle(mContext, xformBounds.x, xformBounds.y, xformBounds.width, xformBounds.height);
+  cairo_fill(mContext);
+
+  cairo_surface_destroy(xformSurf);
+
+  return true;
+#else
+  return DrawTarget::Draw3DTransformedSurface(aSurface, aMatrix);
+#endif
 }
 
 bool

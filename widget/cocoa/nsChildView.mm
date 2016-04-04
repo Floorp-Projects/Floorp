@@ -64,7 +64,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "gfxUtils.h"
@@ -689,6 +689,10 @@ void* nsChildView::GetNativeData(uint32_t aDataType)
       break;
 
     case NS_RAW_NATIVE_IME_CONTEXT:
+      retVal = GetPseudoIMEContext();
+      if (retVal) {
+        break;
+      }
       retVal = [mView inputContext];
       // If input context isn't available on this widget, we should set |this|
       // instead of nullptr since if this returns nullptr, IMEStateManager
@@ -982,6 +986,8 @@ nsChildView::BackingScaleFactorChanged()
   }
 
   mBackingScaleFactor = newScale;
+  NSRect frame = [mView frame];
+  mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, newScale);
 
   if (mWidgetListener && !mWidgetListener->GetXULWindow()) {
     nsIPresShell* presShell = mWidgetListener->GetPresShell();
@@ -1647,43 +1653,6 @@ bool nsChildView::HasPendingInputEvent()
 
 #pragma mark -
 
-nsresult
-nsChildView::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-  switch (aIMENotification.mMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->CommitIMEComposition();
-      return NS_OK;
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->CancelIMEComposition();
-      return NS_OK;
-    case NOTIFY_IME_OF_FOCUS:
-      if (mTextInputHandler->IsFocused()) {
-        if (mInputContext.IsPasswordEditor()) {
-          TextInputHandler::EnableSecureEventInput();
-        } else {
-          TextInputHandler::EnsureSecureEventInputDisabled();
-        }
-      }
-
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnFocusChangeInGecko(true);
-      return NS_OK;
-    case NOTIFY_IME_OF_BLUR:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnFocusChangeInGecko(false);
-      return NS_OK;
-    case NOTIFY_IME_OF_SELECTION_CHANGE:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnSelectionChange(aIMENotification);
-      return NS_OK;
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
-  }
-}
-
 NS_IMETHODIMP
 nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,
@@ -1782,6 +1751,15 @@ nsChildView::GetInputContext()
       break;
   }
   return mInputContext;
+}
+
+NS_IMETHODIMP_(TextEventDispatcherListener*)
+nsChildView::GetNativeTextEventDispatcherListener()
+{
+  if (NS_WARN_IF(!mTextInputHandler)) {
+    return nullptr;
+  }
+  return mTextInputHandler;
 }
 
 NS_IMETHODIMP
@@ -1919,7 +1897,7 @@ void
 nsChildView::CreateCompositor()
 {
   nsBaseWidget::CreateCompositor();
-  if (mCompositorChild) {
+  if (mCompositorBridgeChild) {
     [(ChildView *)mView setUsingOMTCompositor:true];
   }
 }
@@ -2665,6 +2643,7 @@ nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
   }
 
   aInvalidRegion = mBasicCompositorImage->GetUpdateRegion();
+  *aBufferMode = BufferMode::BUFFER_NONE;
 
   return drawTarget.forget();
 }
@@ -2679,6 +2658,7 @@ nsChildView::EndRemoteDrawing()
 void
 nsChildView::CleanupRemoteDrawing()
 {
+  nsBaseWidget::CleanupRemoteDrawing();
   mBasicCompositorImage = nullptr;
   mCornerMaskImage = nullptr;
   mResizerImage = nullptr;
@@ -2810,7 +2790,8 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         MOZ_CRASH("unsupported event type");
         return;
     }
-    if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
+    if (event.mMessage == eWheel &&
+        (event.mDeltaX != 0 || event.mDeltaY != 0)) {
       ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
     }
     return;
@@ -2870,7 +2851,8 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       MOZ_CRASH("unexpected event type");
       return;
   }
-  if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
+  if (event.mMessage == eWheel &&
+      (event.mDeltaX != 0 || event.mDeltaY != 0)) {
     DispatchEvent(&event, status);
   }
 }
@@ -2970,6 +2952,7 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   LayoutDeviceIntRegion updateRegion = mUpdateRegion;
   if (mTextureSize != mBufferSize) {
     mTextureSize = mBufferSize;
+    needInit = true;
   }
 
   if (needInit || !CanUploadSubtextures()) {
@@ -3527,7 +3510,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetGUIEvent focusGuiEvent(true, eventMessage, mGeckoChild);
-  focusGuiEvent.time = PR_IntervalNow();
+  focusGuiEvent.mTime = PR_IntervalNow();
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }
 
@@ -4541,7 +4524,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   else
     geckoEvent.button = WidgetMouseEvent::eLeftButton;
 
-  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
+  mGeckoChild->DispatchInputEvent(&geckoEvent);
   mBlockedLastMouseDown = NO;
 
   // XXX maybe call markedTextSelectionChanged:client: here?
@@ -4568,7 +4551,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // This might destroy our widget (and null out mGeckoChild).
   bool defaultPrevented =
-    (mGeckoChild->DispatchAPZAwareEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
+    (mGeckoChild->DispatchInputEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
 
   // Check to see if we are double-clicking in the titlebar.
   CGFloat locationInTitlebar = [[self window] frame].size.height - [theEvent locationInWindow].y;
@@ -4689,7 +4672,7 @@ NewCGSRegionFromRegion(const LayoutDeviceIntRegion& aRegion,
                               WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
-  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
+  mGeckoChild->DispatchInputEvent(&geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4735,7 +4718,7 @@ NewCGSRegionFromRegion(const LayoutDeviceIntRegion& aRegion,
   geckoEvent.button = WidgetMouseEvent::eRightButton;
   geckoEvent.clickCount = [theEvent clickCount];
 
-  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
+  mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild)
     return;
 
@@ -4759,7 +4742,7 @@ NewCGSRegionFromRegion(const LayoutDeviceIntRegion& aRegion,
   geckoEvent.clickCount = [theEvent clickCount];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
+  mGeckoChild->DispatchInputEvent(&geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4843,7 +4826,7 @@ static int32_t RoundUp(double aDouble)
   WidgetWheelEvent wheelEvent(true, msg, mGeckoChild);
   [self convertCocoaMouseWheelEvent:theEvent toGeckoEvent:&wheelEvent];
   mExpectingWheelStop = (msg == eWheelOperationStart);
-  mGeckoChild->DispatchAPZAwareEvent(wheelEvent.AsInputEvent());
+  mGeckoChild->DispatchInputEvent(wheelEvent.AsInputEvent());
 }
 
 - (void)sendWheelCondition:(BOOL)condition
@@ -4959,6 +4942,20 @@ PanGestureTypeForEvent(NSEvent* aEvent)
                              position, preciseDelta, modifiers);
     panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
+
+    if (panEvent.mType == PanGestureInput::PANGESTURE_END) {
+      // Check if there's a momentum start event in the event queue, so that we
+      // can annotate this event.
+      NSEvent* nextWheelEvent =
+        [NSApp nextEventMatchingMask:NSScrollWheelMask
+                           untilDate:[NSDate distantPast]
+                              inMode:NSDefaultRunLoopMode
+                             dequeue:NO];
+      if (nextWheelEvent &&
+          PanGestureTypeForEvent(nextWheelEvent) == PanGestureInput::PANGESTURE_MOMENTUMSTART) {
+        panEvent.mFollowedByMomentum = true;
+      }
+    }
 
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
     panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
@@ -5154,9 +5151,10 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(aMouseEvent) &&
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
-  outWheelEvent->deltaMode = usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
-                                              : nsIDOMWheelEvent::DOM_DELTA_LINE;
-  outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
+  outWheelEvent->mDeltaMode =
+    usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
+                     : nsIDOMWheelEvent::DOM_DELTA_LINE;
+  outWheelEvent->mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent

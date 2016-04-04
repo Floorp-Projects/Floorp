@@ -16,9 +16,9 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.util.WeakReferenceHandler;
 
@@ -71,30 +71,9 @@ public class ToolbarProgressView extends ThemedImageView {
         mTargetProgress = 0;
 
         mPrivateBrowsingColorFilter = new PorterDuffColorFilter(
-                ColorUtils.getColor(ctx, R.color.private_browsing_purple), PorterDuff.Mode.SRC_IN);
+                ContextCompat.getColor(ctx, R.color.private_browsing_purple), PorterDuff.Mode.SRC_IN);
 
         mHandler = new ToolbarProgressHandler(this);
-    }
-
-    @Override
-    public void setVisibility(int visibility) {
-        // On GB/Froyo, setting the visibility to GONE/HIDDEN alone does not
-        // work with translations. Calling clearAnimation acts as a workaround.
-        if (Versions.preHC && visibility != VISIBLE) {
-            clearAnimation();
-        }
-
-        super.setVisibility(visibility);
-    }
-
-    @Override
-    public void setAnimation(Animation animation) {
-        // On GB/Froyo, setting the animation after hiding the view causes it
-        // to reappear. As a workaround, disallow setAnimation from being
-        // called if the view is not shown.
-        if (Versions.preHC && isShown()) {
-            super.setAnimation(animation);
-        }
     }
 
     @Override

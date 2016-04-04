@@ -4,19 +4,25 @@
 
 const { Cu, Cc, Ci } = require("chrome");
 
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/memory.properties"
-const L10N = exports.L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = exports.L10N = new LocalizationHelper(STRINGS_URI);
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_CENSUS_DISPLAY_PREF = "devtools.memory.custom-census-displays";
 const CUSTOM_DOMINATOR_TREE_DISPLAY_PREF = "devtools.memory.custom-dominator-tree-displays";
+const CUSTOM_TREE_MAP_DISPLAY_PREF = "devtools.memory.custom-tree-map-displays";
+const BYTES = 1024;
+const KILOBYTES = Math.pow(BYTES, 2);
+const MEGABYTES = Math.pow(BYTES, 3);
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
   snapshotState: states,
   diffingState,
+  censusState,
+  treeMapState,
   censusDisplays,
   dominatorTreeDisplays,
   dominatorTreeState
@@ -80,6 +86,16 @@ exports.getCustomDominatorTreeDisplays = function () {
 };
 
 /**
+ * Returns custom displays defined in
+ * `devtools.memory.custom-tree-map-displays` pref.
+ *
+ * @return {Object}
+ */
+exports.getCustomTreeMapDisplays = function () {
+  return getCustomDisplaysHelper(CUSTOM_TREE_MAP_DISPLAY_PREF);
+};
+
+/**
  * Returns a string representing a readable form of the snapshot's state. More
  * concise than `getStatusTextFull`.
  *
@@ -106,8 +122,11 @@ exports.getStatusText = function (state) {
     case states.READING:
       return L10N.getStr("snapshot.state.reading");
 
-    case states.SAVING_CENSUS:
+    case censusState.SAVING:
       return L10N.getStr("snapshot.state.saving-census");
+
+    case treeMapState.SAVING:
+      return L10N.getStr("snapshot.state.saving-tree-map");
 
     case diffingState.TAKING_DIFF:
       return L10N.getStr("diffing.state.taking-diff");
@@ -133,7 +152,8 @@ exports.getStatusText = function (state) {
     case dominatorTreeState.LOADED:
     case diffingState.TOOK_DIFF:
     case states.READ:
-    case states.SAVED_CENSUS:
+    case censusState.SAVED:
+    case treeMapState.SAVED:
       return "";
 
     default:
@@ -169,8 +189,11 @@ exports.getStatusTextFull = function (state) {
     case states.READING:
       return L10N.getStr("snapshot.state.reading.full");
 
-    case states.SAVING_CENSUS:
+    case censusState.SAVING:
       return L10N.getStr("snapshot.state.saving-census.full");
+
+    case treeMapState.SAVING:
+      return L10N.getStr("snapshot.state.saving-tree-map.full");
 
     case diffingState.TAKING_DIFF:
       return L10N.getStr("diffing.state.taking-diff.full");
@@ -196,7 +219,8 @@ exports.getStatusTextFull = function (state) {
     case dominatorTreeState.LOADED:
     case diffingState.TOOK_DIFF:
     case states.READ:
-    case states.SAVED_CENSUS:
+    case censusState.SAVED:
+    case treeMapState.SAVED:
       return "";
 
     default:
@@ -212,8 +236,8 @@ exports.getStatusTextFull = function (state) {
  * @returns {Boolean}
  */
 exports.snapshotIsDiffable = function snapshotIsDiffable(snapshot) {
-  return snapshot.state === states.SAVED_CENSUS
-    || snapshot.state === states.SAVING_CENSUS
+  return (snapshot.census && snapshot.census.state === censusState.SAVED)
+    || (snapshot.census && snapshot.census.state === censusState.SAVING)
     || snapshot.state === states.SAVED
     || snapshot.state === states.READ;
 };
@@ -256,6 +280,7 @@ exports.createSnapshot = function createSnapshot(state) {
     state: states.SAVING,
     dominatorTree,
     census: null,
+    treeMap: null,
     path: null,
     imported: false,
     selected: false,
@@ -275,8 +300,23 @@ exports.createSnapshot = function createSnapshot(state) {
  */
 exports.censusIsUpToDate = function (filter, display, census) {
   return census
-      && filter === census.filter
+      // Filter could be null == undefined so use loose equality.
+      && filter == census.filter
       && display === census.display;
+};
+
+
+/**
+ * Check to see if the snapshot is in a state that it can take a census.
+ *
+ * @param {SnapshotModel} A snapshot to check.
+ * @param {Boolean} Assert that the snapshot must be in a ready state.
+ * @returns {Boolean}
+ */
+exports.canTakeCensus = function (snapshot) {
+  return snapshot.state === states.READ &&
+    (!snapshot.census || snapshot.census.state === censusState.SAVED) &&
+    (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED);
 };
 
 /**
@@ -291,6 +331,23 @@ exports.dominatorTreeIsComputed = function (snapshot) {
     (snapshot.dominatorTree.state === dominatorTreeState.COMPUTED ||
      snapshot.dominatorTree.state === dominatorTreeState.LOADED ||
      snapshot.dominatorTree.state === dominatorTreeState.INCREMENTAL_FETCHING);
+};
+
+/**
+ * Find the first SAVED census, either from the tree map or the normal
+ * census.
+ *
+ * @param {SnapshotModel} snapshot
+ * @returns {Object|null} Either the census, or null if one hasn't completed
+ */
+exports.getSavedCensus = function (snapshot) {
+  if (snapshot.treeMap && snapshot.treeMap.state === treeMapState.SAVED) {
+    return snapshot.treeMap;
+  }
+  if (snapshot.census && snapshot.census.state === censusState.SAVED) {
+    return snapshot.census;
+  }
+  return null;
 };
 
 /**
@@ -393,4 +450,55 @@ exports.formatNumber = function(number, showSign = false) {
 exports.formatPercent = function(percent, showSign = false) {
   return exports.L10N.getFormatStr("tree-item.percent",
                            exports.formatNumber(percent, showSign));
+};
+
+/**
+ * Change an HSL color array with values ranged 0-1 to a properly formatted
+ * ctx.fillStyle string.
+ *
+ * @param  {Number} h
+ *         hue values ranged between [0 - 1]
+ * @param  {Number} s
+ *         hue values ranged between [0 - 1]
+ * @param  {Number} l
+ *         hue values ranged between [0 - 1]
+ * @return {type}
+ */
+exports.hslToStyle = function(h, s, l) {
+  h = parseInt(h * 360, 10);
+  s = parseInt(s * 100, 10);
+  l = parseInt(l * 100, 10);
+
+  return `hsl(${h},${s}%,${l}%)`;
+};
+
+/**
+ * Linearly interpolate between 2 numbers.
+ *
+ * @param {Number} a
+ * @param {Number} b
+ * @param {Number} t
+ *        A value of 0 returns a, and 1 returns b
+ * @return {Number}
+ */
+exports.lerp = function(a, b, t) {
+  return a * (1 - t) + b * t;
+};
+
+/**
+ * Format a number of bytes as human readable, e.g. 13434 => '13KiB'.
+ *
+ * @param  {Number} n
+ *         Number of bytes
+ * @return {String}
+ */
+exports.formatAbbreviatedBytes = function(n) {
+  if (n < BYTES) {
+    return n + "B";
+  } else if (n < KILOBYTES) {
+    return Math.floor(n / BYTES) + "KiB";
+  } else if (n < MEGABYTES) {
+    return Math.floor(n / KILOBYTES) + "MiB";
+  }
+  return Math.floor(n / MEGABYTES) + "GiB";
 };

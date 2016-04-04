@@ -28,6 +28,10 @@ const MAX_STORE_OBJECT_COUNT = 50;
 // client (ms).
 const BATCH_DELAY = 200;
 
+// MAX_COOKIE_EXPIRY should be 2^63-1, but JavaScript can't handle that
+// precision.
+const MAX_COOKIE_EXPIRY = Math.pow(2, 62);
+
 // A RegExp for characters that cannot appear in a file/directory name. This is
 // used to sanitize the host name for indexed db to lookup whether the file is
 // present in <profileDir>/storage/default/ location
@@ -566,9 +570,9 @@ StorageActors.createActor({
    * Notification observer for "cookie-change".
    *
    * @param subject
-   *        {nsiCookie|[nsiCookie]} A single nsiCookie object or a list of it
-   *        depending on the action. Array is only in case of "batch-deleted"
-   *        action.
+   *        {Cookie|[Array]} A JSON parsed object containing either a single
+   *        cookie representation or an array. Array is only in case of
+   *        a "batch-deleted" action.
    * @param {string} topic
    *        The topic of the notification.
    * @param {string} action
@@ -632,6 +636,44 @@ StorageActors.createActor({
     return null;
   },
 
+  /**
+   * This method marks the table as editable.
+   *
+   * @return {Array}
+   *         An array of column header ids.
+   */
+  getEditableFields: method(Task.async(function*() {
+    return [
+      "name",
+      "path",
+      "host",
+      "expires",
+      "value",
+      "isSecure",
+      "isHttpOnly"
+    ];
+  }), {
+    request: {},
+    response: {
+      value: RetVal("json")
+    }
+  }),
+
+  /**
+   * Pass the editItem command from the content to the chrome process.
+   *
+   * @param {Object} data
+   *        See editCookie() for format details.
+   */
+  editItem: method(Task.async(function*(data) {
+    this.editCookie(data);
+  }), {
+    request: {
+      data: Arg(0, "json"),
+    },
+    response: {}
+  }),
+
   maybeSetupChildProcess: function() {
     cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
 
@@ -639,6 +681,7 @@ StorageActors.createActor({
       this.getCookiesFromHost = cookieHelpers.getCookiesFromHost;
       this.addCookieObservers = cookieHelpers.addCookieObservers;
       this.removeCookieObservers = cookieHelpers.removeCookieObservers;
+      this.editCookie = cookieHelpers.editCookie;
       return;
     }
 
@@ -656,6 +699,8 @@ StorageActors.createActor({
       callParentProcess.bind(null, "addCookieObservers");
     this.removeCookieObservers =
       callParentProcess.bind(null, "removeCookieObservers");
+    this.editCookie =
+      callParentProcess.bind(null, "editCookie");
 
     addMessageListener("storage:storage-cookie-request-child",
                        cookieHelpers.handleParentRequest);
@@ -695,10 +740,118 @@ var cookieHelpers = {
 
     while (cookies.hasMoreElements()) {
       let cookie = cookies.getNext().QueryInterface(Ci.nsICookie2);
+
       store.push(cookie);
     }
 
     return store;
+  },
+
+  /**
+   * Apply the results of a cookie edit.
+   *
+   * @param {Object} data
+   *        An object in the following format:
+   *        {
+   *          host: "http://www.mozilla.org",
+   *          field: "value",
+   *          key: "name",
+   *          oldValue: "%7BHello%7D",
+   *          newValue: "%7BHelloo%7D",
+   *          items: {
+   *            name: "optimizelyBuckets",
+   *            path: "/",
+   *            host: ".mozilla.org",
+   *            expires: "Mon, 02 Jun 2025 12:37:37 GMT",
+   *            creationTime: "Tue, 18 Nov 2014 16:21:18 GMT",
+   *            lastAccessed: "Wed, 17 Feb 2016 10:06:23 GMT",
+   *            value: "%7BHelloo%7D",
+   *            isDomain: "true",
+   *            isSecure: "false",
+   *            isHttpOnly: "false"
+   *          }
+   *        }
+   */
+  editCookie: function(data) {
+    let {field, oldValue, newValue} = data;
+    let origName = field === "name" ? oldValue : data.items.name;
+    let origHost = field === "host" ? oldValue : data.items.host;
+    let origPath = field === "path" ? oldValue : data.items.path;
+    let cookie = null;
+
+    let enumerator = Services.cookies.getCookiesFromHost(origHost);
+    while (enumerator.hasMoreElements()) {
+      let nsiCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+      if (nsiCookie.name === origName && nsiCookie.host === origHost) {
+        cookie = {
+          host: nsiCookie.host,
+          path: nsiCookie.path,
+          name: nsiCookie.name,
+          value: nsiCookie.value,
+          isSecure: nsiCookie.isSecure,
+          isHttpOnly: nsiCookie.isHttpOnly,
+          isSession: nsiCookie.isSession,
+          expires: nsiCookie.expires,
+          originAttributes: nsiCookie.originAttributes
+        };
+        break;
+      }
+    }
+
+    if (!cookie) {
+      return;
+    }
+
+    // If the date is expired set it for 1 minute in the future.
+    let now = new Date();
+    if (!cookie.isSession && (cookie.expires * 1000) <= now) {
+      let tenSecondsFromNow = (now.getTime() + 10 * 1000) / 1000;
+
+      cookie.expires = tenSecondsFromNow;
+    }
+
+    switch (field) {
+      case "isSecure":
+      case "isHttpOnly":
+      case "isSession":
+        newValue = newValue === "true";
+        break;
+
+      case "expires":
+        newValue = Date.parse(newValue) / 1000;
+
+        if (isNaN(newValue)) {
+          newValue = MAX_COOKIE_EXPIRY;
+        }
+        break;
+
+      case "host":
+      case "name":
+      case "path":
+        // Remove the edited cookie.
+        Services.cookies.remove(origHost, origName, origPath,
+                                cookie.originAttributes, false);
+        break;
+    }
+
+    // Apply changes.
+    cookie[field] = newValue;
+
+    // cookie.isSession is not always set correctly on session cookies so we
+    // need to trust cookie.expires instead.
+    cookie.isSession = !cookie.expires;
+
+    // Add the edited cookie.
+    Services.cookies.add(
+      cookie.host,
+      cookie.path,
+      cookie.name,
+      cookie.value,
+      cookie.isSecure,
+      cookie.isHttpOnly,
+      cookie.isSession,
+      cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires
+    );
   },
 
   addCookieObservers: function() {
@@ -712,8 +865,25 @@ var cookieHelpers = {
   },
 
   observe: function(subject, topic, data) {
+    if (!subject) {
+      return;
+    }
+
     switch (topic) {
       case "cookie-changed":
+        if (data === "batch-deleted") {
+          let cookiesNoInterface = subject.QueryInterface(Ci.nsIArray);
+          let cookies = [];
+
+          for (let i = 0; i < cookiesNoInterface.length; i++) {
+            let cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie2);
+            cookies.push(cookie);
+          }
+          cookieHelpers.onCookieChanged(cookies, topic, data);
+
+          return;
+        }
+
         let cookie = subject.QueryInterface(Ci.nsICookie2);
         cookieHelpers.onCookieChanged(cookie, topic, data);
         break;
@@ -740,6 +910,9 @@ var cookieHelpers = {
         return cookieHelpers.addCookieObservers();
       case "removeCookieObservers":
         return cookieHelpers.removeCookieObservers();
+      case "editCookie":
+        let rowdata = msg.data.args[0];
+        return cookieHelpers.editCookie(rowdata);
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
         throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
@@ -855,6 +1028,45 @@ function getObjectForLocalOrSessionStorage(type) {
       }
       return null;
     },
+
+    /**
+     * This method marks the fields as editable.
+     *
+     * @return {Array}
+     *         An array of field ids.
+     */
+    getEditableFields: method(Task.async(function*() {
+      return [
+        "name",
+        "value"
+      ];
+    }), {
+      request: {},
+      response: {
+        value: RetVal("json")
+      }
+    }),
+
+    /**
+     * Edit localStorage or sessionStorage fields.
+     *
+     * @param {Object} data
+     *        See editCookie() for format details.
+     */
+    editItem: method(Task.async(function*({host, field, oldValue, items}) {
+      let storage = this.hostVsStores.get(host);
+
+      if (field === "name") {
+        storage.removeItem(oldValue);
+      }
+
+      storage.setItem(items.name, items.value);
+    }), {
+      request: {
+        data: Arg(0, "json"),
+      },
+      response: {}
+    }),
 
     observe: function(subject, topic, data) {
       if (topic != "dom-storage2-changed" || data != type) {
@@ -1284,7 +1496,7 @@ StorageActors.createActor({
     for (let name of names) {
       let metadata = yield this.getDBMetaData(host, name);
 
-      indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
+      metadata = indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
       storeMap.set(name, metadata);
     }
 
@@ -1557,7 +1769,7 @@ var indexedDBHelpers = {
       let dbs = [];
       if (hostVsStores.has(host)) {
         for (let [, db] of hostVsStores.get(host)) {
-          indexedDBHelpers.patchMetadataMapsAndProtos(db);
+          db = indexedDBHelpers.patchMetadataMapsAndProtos(db);
           dbs.push(db.toObject());
         }
       }
@@ -1572,7 +1784,7 @@ var indexedDBHelpers = {
       if (hostVsStores.has(host) && hostVsStores.get(host).has(db2)) {
         let db = hostVsStores.get(host).get(db2);
 
-        indexedDBHelpers.patchMetadataMapsAndProtos(db);
+        db = indexedDBHelpers.patchMetadataMapsAndProtos(db);
 
         let objectStores2 = db.objectStores;
 
@@ -1677,21 +1889,36 @@ var indexedDBHelpers = {
     return success.promise;
   },
 
+  /**
+   * When indexedDB metadata is parsed to and from JSON then the object's
+   * prototype is dropped and any Maps are changed to arrays of arrays. This
+   * method is used to repair the prototypes and fix any broken Maps.
+   */
   patchMetadataMapsAndProtos: function(metadata) {
-    for (let [, store] of metadata._objectStores) {
-      store.__proto__ = ObjectStoreMetadata.prototype;
+    let md = Object.create(DatabaseMetadata.prototype);
+    Object.assign(md, metadata);
+
+    md._objectStores = new Map(metadata._objectStores);
+
+    for (let [name, store] of md._objectStores) {
+      let obj = Object.create(ObjectStoreMetadata.prototype);
+      Object.assign(obj, store);
+
+      md._objectStores.set(name, obj);
 
       if (typeof store._indexes.length !== "undefined") {
-        store._indexes = new Map(store._indexes);
+        obj._indexes = new Map(store._indexes);
       }
 
-      for (let [, value] of store._indexes) {
-        value.__proto__ = IndexMetadata.prototype;
+      for (let [name2, value] of obj._indexes) {
+        let obj2 = Object.create(IndexMetadata.prototype);
+        Object.assign(obj2, value);
+
+        obj._indexes.set(name2, obj2);
       }
     }
 
-    metadata._objectStores = new Map(metadata._objectStores);
-    metadata.__proto__ = DatabaseMetadata.prototype;
+    return md;
   },
 
   handleChildRequest: function(msg) {

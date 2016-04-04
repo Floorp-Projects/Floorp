@@ -108,6 +108,7 @@ add_task(function* test_webapps_cleardata() {
           }));
         },
         onUnregister(data) {
+          equal(data.code, 200, 'Expected manual unregister reason');
           unregisterDone();
         },
       });
@@ -137,6 +138,5 @@ add_task(function* test_webapps_cleardata() {
   yield clearForPattern(testRecords, { inIsolatedMozBrowser: true });
 
   equal(testRecords.length, 0, 'Should remove all test records');
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for unregister');
+  yield unregisterPromise;
 });

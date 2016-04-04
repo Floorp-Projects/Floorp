@@ -85,6 +85,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins) { MOZ_CRASH(); }
+    void visitAsmSelect(MAsmSelect*) { MOZ_CRASH(); }
 
     LTableSwitch* newLTableSwitch(LAllocation, LDefinition, MTableSwitch*) { MOZ_CRASH(); }
     LTableSwitchV* newLTableSwitchV(MTableSwitch*) { MOZ_CRASH(); }
@@ -95,6 +96,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitSimdBinaryArith(js::jit::MSimdBinaryArith*) { MOZ_CRASH(); }
     void visitRandom(js::jit::MRandom*) { MOZ_CRASH(); }
     void visitTruncateToInt64(MTruncateToInt64*) { MOZ_CRASH(); }
+    void visitInt64ToFloatingPoint(MInt64ToFloatingPoint*) { MOZ_CRASH(); }
 };
 
 typedef LIRGeneratorNone LIRGeneratorSpecific;

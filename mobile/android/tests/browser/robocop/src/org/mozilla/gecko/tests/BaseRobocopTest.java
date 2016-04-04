@@ -12,7 +12,7 @@ import android.test.ActivityInstrumentationTestCase2;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.jayway.android.robotium.solo.Solo;
+import com.robotium.solo.Solo;
 
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
@@ -26,6 +26,7 @@ import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
 import java.net.HttpURLConnection;
@@ -217,7 +218,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
             if ("1".equals(quitAndFinish)) {
                 // Request the browser force quit and wait for it to take effect.
                 Log.i(LOGTAG, "Requesting force quit.");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Robocop:Quit", null));
+                mActions.sendGeckoEvent("Robocop:Quit", null);
                 mSolo.sleep(ROBOCOP_QUIT_WAIT_MS);
 
                 // If still running, finish activities as recommended by Robotium.
@@ -276,5 +277,13 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
         mAsserter.ok(pm.isScreenOn(),
             "Robocop tests need the test device screen to be powered on.", "");
+    }
+
+    protected GeckoProfile getTestProfile() {
+        if (mProfile.startsWith("/")) {
+            return GeckoProfile.get(getActivity(), "default", mProfile);
+        }
+
+        return GeckoProfile.get(getActivity(), mProfile);
     }
 }

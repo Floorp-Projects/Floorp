@@ -355,10 +355,6 @@ SpecialPowersObserverAPI.prototype = {
         let Webapps = {};
         Components.utils.import("resource://gre/modules/Webapps.jsm", Webapps);
         switch (aMessage.json.op) {
-          case "set-launchable":
-            let val = Webapps.DOMApplicationRegistry.allAppsLaunchable;
-            Webapps.DOMApplicationRegistry.allAppsLaunchable = aMessage.json.launchable;
-            return val;
           case "allow-unsigned-addons":
             {
               let utils = {};
@@ -424,10 +420,20 @@ SpecialPowersObserverAPI.prototype = {
       }
 
       case "SPLoadChromeScript": {
-        let url = aMessage.json.url;
         let id = aMessage.json.id;
+        let jsScript;
+        let scriptName;
 
-        let jsScript = this._readUrlAsString(url);
+        if (aMessage.json.url) {
+          jsScript = this._readUrlAsString(aMessage.json.url);
+          scriptName = aMessage.json.url;
+        } else if (aMessage.json.function) {
+          jsScript = aMessage.json.function.body;
+          scriptName = aMessage.json.function.name
+            || "<loadChromeScript anonymous function>";
+        } else {
+          throw new SpecialPowersError("SPLoadChromeScript: Invalid script");
+        }
 
         // Setup a chrome sandbox that has access to sendAsyncMessage
         // and addMessageListener in order to communicate with
@@ -451,8 +457,8 @@ SpecialPowersObserverAPI.prototype = {
         let reporter = function (err, message, stack) {
           // Pipe assertions back to parent process
           mm.sendAsyncMessage("SPChromeScriptAssert",
-                              { id: id, url: url, err: err, message: message,
-                                stack: stack });
+                              { id, name: scriptName, err, message,
+                                stack });
         };
         Object.defineProperty(sb, "assert", {
           get: function () {
@@ -469,10 +475,10 @@ SpecialPowersObserverAPI.prototype = {
 
         // Evaluate the chrome script
         try {
-          Components.utils.evalInSandbox(jsScript, sb, "1.8", url, 1);
+          Components.utils.evalInSandbox(jsScript, sb, "1.8", scriptName, 1);
         } catch(e) {
           throw new SpecialPowersError(
-            "Error while executing chrome script '" + url + "':\n" +
+            "Error while executing chrome script '" + scriptName + "':\n" +
             e + "\n" +
             e.fileName + ":" + e.lineNumber);
         }

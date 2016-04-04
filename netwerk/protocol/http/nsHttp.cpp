@@ -12,6 +12,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/HashFunctions.h"
 #include "nsCRT.h"
+#include <errno.h>
 
 namespace mozilla {
 namespace net {
@@ -61,7 +62,7 @@ NewHeapAtom(const char *value) {
 
 // Hash string ignore case, based on PL_HashString
 static PLDHashNumber
-StringHash(PLDHashTable *table, const void *key)
+StringHash(const void *key)
 {
     PLDHashNumber h = 0;
     for (const char *s = reinterpret_cast<const char*>(key); *s; ++s)
@@ -70,8 +71,7 @@ StringHash(PLDHashTable *table, const void *key)
 }
 
 static bool
-StringCompare(PLDHashTable *table, const PLDHashEntryHdr *entry,
-              const void *testKey)
+StringCompare(const PLDHashEntryHdr *entry, const void *testKey)
 {
     const void *entryKey =
             reinterpret_cast<const PLDHashEntryStub *>(entry)->key;
@@ -295,19 +295,25 @@ nsHttp::FindToken(const char *input, const char *token, const char *seps)
 bool
 nsHttp::ParseInt64(const char *input, const char **next, int64_t *r)
 {
-    const char *start = input;
-    *r = 0;
-    while (*input >= '0' && *input <= '9') {
-        int64_t next = 10 * (*r) + (*input - '0');
-        if (next < *r) // overflow?
-            return false;
-        *r = next;
-        ++input;
-    }
-    if (input == start) // nothing parsed?
+    MOZ_ASSERT(input);
+    MOZ_ASSERT(r);
+
+    char *end = nullptr;
+    errno = 0; // Clear errno to make sure its value is set by strtoll
+    int64_t value = strtoll(input, &end, /* base */ 10);
+
+    // Fail if: - the parsed number overflows.
+    //          - the end points to the start of the input string.
+    //          - we parsed a negative value. Consumers don't expect that.
+    if (errno != 0 || end == input || value < 0) {
+        LOG(("nsHttp::ParseInt64 value=%ld errno=%d", value, errno));
         return false;
-    if (next)
-        *next = input;
+    }
+
+    if (next) {
+        *next = end;
+    }
+    *r = value;
     return true;
 }
 

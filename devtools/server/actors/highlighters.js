@@ -462,6 +462,8 @@ var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
     this._inspector = null;
   },
 
+  release: method(function() {}, { release: true }),
+
   /**
    * Show the highlighter.
    * This calls through to the highlighter instance's |show(node, options)|

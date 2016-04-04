@@ -17,7 +17,7 @@
 
 #include "TexturePoolOGL.h"
 #include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/TextureHostOGL.h"
 
@@ -1202,7 +1202,6 @@ SenderHelper::SendMaskEffect(GLContext* aGLContext,
     // Expose packet creation here, so we could dump secondary mask effect attributes.
     auto packet = MakeUnique<layerscope::Packet>();
     TexturePacket::EffectMask* mask = packet->mutable_texture()->mutable_mask();
-    mask->set_mis3d(aEffect->mIs3D);
     mask->mutable_msize()->set_w(aEffect->mSize.width);
     mask->mutable_msize()->set_h(aEffect->mSize.height);
     auto element = reinterpret_cast<const Float *>(&(aEffect->mMaskTransform));
@@ -1900,7 +1899,7 @@ bool
 LayerScope::CheckSendable()
 {
     // Only compositor threads check LayerScope status
-    MOZ_ASSERT(CompositorParent::IsInCompositorThread() || gIsGtest);
+    MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread() || gIsGtest);
 
     if (!gfxPrefs::LayerScopeEnabled()) {
         return false;

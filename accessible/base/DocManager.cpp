@@ -60,9 +60,6 @@ DocManager::GetDocAccessible(nsIDocument* aDocument)
   if (!aDocument)
     return nullptr;
 
-  // Ensure CacheChildren is called before we query cache.
-  ApplicationAcc()->EnsureChildren();
-
   DocAccessible* docAcc = GetExistingDocAccessible(aDocument);
   if (docAcc)
     return docAcc;
@@ -499,7 +496,7 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     if (IPCAccessibilityActive()) {
       nsIDocShell* docShell = aDocument->GetDocShell();
       if (docShell) {
-        nsCOMPtr<nsITabChild> tabChild = do_GetInterface(docShell);
+        nsCOMPtr<nsITabChild> tabChild = docShell->GetTabChild();
 
         // XXX We may need to handle the case that we don't have a tab child
         // differently.  It may be that this will cause us to fail to notify

@@ -9,6 +9,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/narrate/VoiceSelect.jsm");
 Cu.import("resource://gre/modules/narrate/Narrator.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AsyncPrefs.jsm");
 
 this.EXPORTED_SYMBOLS = ["NarrateControls"];
 
@@ -53,7 +54,7 @@ function NarrateControls(mm, win) {
       </div>
       <div id="narrate-rate" class="narrate-row">
         <input id="narrate-rate-input" value="0" title="${"speed"}"
-               step="25" max="400" min="-400" type="range">
+               step="25" max="100" min="-100" type="range">
       </div>
       <div id="narrate-voices" class="narrate-row"></div>
       <div class="dropdown-arrow"></div>
@@ -61,22 +62,14 @@ function NarrateControls(mm, win) {
 
   this.narrator = new Narrator(win);
 
+  let branch = Services.prefs.getBranch("narrate.");
   let selectLabel = gStrings.GetStringFromName("selectvoicelabel");
-  let comparer = win.Intl ?
-    (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
-  let options = this.narrator.getVoiceOptions().map(v => {
-    return {
-      label: this._createVoiceLabel(v),
-      value: v.voiceURI
-    };
-  }).sort((a, b) => comparer(a.label, b.label));
-  options.unshift({
-    label: gStrings.GetStringFromName("defaultvoice"),
-    value: "automatic"
-  });
-  this.voiceSelect = new VoiceSelect(win, selectLabel, options);
+  this.voiceSelect = new VoiceSelect(win, selectLabel);
+  this.voiceSelect.addOptions(this._getVoiceOptions(),
+    branch.getCharPref("voice"));
   this.voiceSelect.element.addEventListener("change", this);
   this.voiceSelect.element.id = "voice-select";
+  win.speechSynthesis.addEventListener("voiceschanged", this);
   dropdown.querySelector("#narrate-voices").appendChild(
     this.voiceSelect.element);
 
@@ -87,8 +80,6 @@ function NarrateControls(mm, win) {
   rateRange.addEventListener("mousedown", this);
   rateRange.addEventListener("mouseup", this);
 
-  let branch = Services.prefs.getBranch("narrate.");
-  this.voiceSelect.value = branch.getCharPref("voice");
   // The rate is stored as an integer.
   rateRange.value = branch.getIntPref("rate");
 
@@ -114,21 +105,42 @@ NarrateControls.prototype = {
       case "click":
         this._onButtonClick(evt);
         break;
+      case "voiceschanged":
+        this.voiceSelect.clear();
+        this.voiceSelect.addOptions(this._getVoiceOptions(),
+          Services.prefs.getCharPref("narrate.voice"));
+        break;
     }
+  },
+
+  _getVoiceOptions: function() {
+    let win = this._win;
+    let comparer = win.Intl ?
+      (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
+    let options = win.speechSynthesis.getVoices().map(v => {
+      return {
+        label: this._createVoiceLabel(v),
+        value: v.voiceURI
+      };
+    }).sort((a, b) => comparer(a.label, b.label));
+    options.unshift({
+      label: gStrings.GetStringFromName("defaultvoice"),
+      value: "automatic"
+    });
+
+    return options;
   },
 
   _onRateInput: function(evt) {
     if (!this._rateMousedown) {
-      this._mm.sendAsyncMessage("Reader:SetIntPref",
-        { name: "narrate.rate", value: evt.target.value });
+      AsyncPrefs.set("narrate.rate", parseInt(evt.target.value, 10));
       this.narrator.setRate(this._convertRate(evt.target.value));
     }
   },
 
   _onVoiceChange: function() {
     let voice = this.voice;
-    this._mm.sendAsyncMessage("Reader:SetCharPref",
-      { name: "narrate.voice", value: voice });
+    AsyncPrefs.set("narrate.voice", voice);
     this.narrator.setVoice(voice);
   },
 
@@ -147,6 +159,9 @@ NarrateControls.prototype = {
           this._updateSpeechControls(true);
           let options = { rate: this.rate, voice: this.voice };
           this.narrator.start(options).then(() => {
+            this._updateSpeechControls(false);
+          }, err => {
+            Cu.reportError(`Narrate failed: ${err}.`);
             this._updateSpeechControls(false);
           });
         }

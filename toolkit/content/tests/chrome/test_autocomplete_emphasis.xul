@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete emphasis test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<textbox id="richautocomplete" type="autocomplete"
+         autocompletesearch="simple"
+         onsearchcomplete="checkSearchCompleted();"
+         autocompletepopup="richpopup"/>
+<panel id="richpopup" type="autocomplete-richlistbox" noautofocus="true"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+const ACR = Components.interfaces.nsIAutoCompleteResult;
+
+// A global variable to hold the search result for the current search.
+var resultText = "";
+
+// This result can't be constructed in-line, because otherwise we leak memory.
+function nsAutoCompleteSimpleResult(aString)
+{
+  this.searchString = aString;
+  this.searchResult = ACR.RESULT_SUCCESS;
+  this.matchCount = 1;
+}
+
+nsAutoCompleteSimpleResult.prototype = {
+ searchString: null,
+ searchResult: ACR.RESULT_FAILURE,
+ defaultIndex: -1,
+ errorDescription: null,
+ matchCount: 0,
+ getValueAt: function() { return resultText; },
+ getCommentAt: function() { return this.getValueAt(); },
+ getStyleAt: function() { return null; },
+ getImageAt: function() { return null; },
+ getFinalCompleteValueAt: function() { return this.getValueAt(); },
+ getLabelAt: function() { return this.getValueAt(); },
+ removeValueAt: function() {}
+};
+
+// A basic autocomplete implementation that returns the string contained in 'resultText'.
+var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
+var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
+var autoCompleteSimple = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsIFactory) ||
+        iid.equals(Components.interfaces.nsIAutoCompleteSearch))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  startSearch: function(aString, aParam, aResult, aListener) {
+    var result = new nsAutoCompleteSimpleResult(aString);
+    aListener.onSearchResult(this, result);
+  },
+
+  stopSearch: function() {}
+};
+
+var componentManager = Components.manager
+                                 .QueryInterface(Components.interfaces.nsIComponentRegistrar);
+componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
+                                 autoCompleteSimpleName, autoCompleteSimple);
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(nextTest, 0);
+
+/* Test cases have the following attributes:
+ * - search: A search string, to be emphasized in the result.
+ * - result: A fixed result string, so we can hardcode the expected emphasis.
+ * - emphasis: A list of chunks that should be emphasized or not, in strict alternation.
+ * - emphasizeFirst: Whether the first element of 'emphasis' should be emphasized;
+ *                   The emphasis of the other elements is defined by the strict alternation rule.
+ */
+let testcases = [
+    { search: "test",
+      result: "A test string",
+      emphasis: ["A ", "test", " string"],
+      emphasizeFirst: false
+    },
+    { search: "tea two",
+      result: "Tea for two, and two for tea...",
+      emphasis: ["Tea", " for ", "two", ", and ", "two", " for ", "tea", "..."],
+      emphasizeFirst: true
+    },
+    { search: "tat",
+      result: "tatatat",
+      emphasis: ["tatatat"],
+      emphasizeFirst: true
+    },
+    { search: "cheval valise",
+      result: "chevalise",
+      emphasis: ["chevalise"],
+      emphasizeFirst: true
+    }
+];
+let test = -1;
+let currentTest = null;
+
+function nextTest() {
+  test++;
+
+  if (test >= testcases.length) {
+    // Unregister the factory so that we don't get in the way of other tests
+    componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
+    SimpleTest.finish();
+    return;
+  }
+
+  // blur the field to ensure that the popup is closed and that the previous
+  // search has stopped, then start a new search.
+  let autocomplete = $("richautocomplete");
+  autocomplete.blur();
+  autocomplete.focus();
+
+  currentTest = testcases[test];
+  resultText = currentTest.result;
+  autocomplete.value = currentTest.search;
+  synthesizeKey("VK_DOWN", {});
+}
+
+function checkSearchCompleted() {
+  let autocomplete = $("richautocomplete");
+  let result = autocomplete.popup.richlistbox.firstChild;
+
+  for (let attribute of [result._title, result._url]) {
+    is(attribute.childNodes.length, currentTest.emphasis.length, "The element should have the expected number of children.");
+    for (let i = 0; i < currentTest.emphasis.length; i++) {
+      let node = attribute.childNodes[i];
+      // Emphasized parts strictly alternate.
+      if ((i % 2 == 0) == currentTest.emphasizeFirst) {
+        // Check that this part is correctly emphasized.
+        is(node.nodeName, "span", ". That child should be a span node");
+        is(node.className, "ac-emphasize-text", ". That child should be emphasized");
+        is(node.textContent, currentTest.emphasis[i], ". That emphasis should be as expected.");
+      } else {
+        // Check that this part is _not_ emphasized.
+        is(node.nodeName, "#text", ". That child should be a text node");
+        is(node.textContent, currentTest.emphasis[i], ". That text should be as expected.");
+      }
+    }
+  }
+
+  setTimeout(nextTest, 0);
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

@@ -1,24 +1,8 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script>
-      function pingWorker() {
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "panel-message",
-                          result: "ok",
-                          location: window.location.href});
-      }
-      window.addEventListener("socialFrameShow", function(e) {
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "status-panel-visibility", result: "shown"});
-      }, false);
-      window.addEventListener("socialFrameHide", function(e) {
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "status-panel-visibility", result: "hidden"});
-      }, false);
-    </script>
   </head>
-  <body onload="pingWorker();">
+  <body>
     <p>This is a test social panel.</p>
   </body>
 </html>

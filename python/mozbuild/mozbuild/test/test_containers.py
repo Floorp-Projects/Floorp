@@ -38,6 +38,13 @@ class TestReadOnlyNamespace(unittest.TestCase):
         with self.assertRaises(Exception):
             del test.foo
 
+        self.assertEqual(test, test)
+        self.assertEqual(test, ReadOnlyNamespace(foo=1, bar=2))
+        self.assertNotEqual(test, ReadOnlyNamespace(foo='1', bar=2))
+        self.assertNotEqual(test, ReadOnlyNamespace(foo=1, bar=2, qux=3))
+        self.assertNotEqual(test, ReadOnlyNamespace(foo=1, qux=3))
+        self.assertNotEqual(test, ReadOnlyNamespace(foo=3, bar='42'))
+
 
 class TestReadOnlyDict(unittest.TestCase):
     def test_basic(self):

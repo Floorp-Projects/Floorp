@@ -234,16 +234,18 @@ FTPChannelParent::RecvCancel(const nsresult& status)
 bool
 FTPChannelParent::RecvSuspend()
 {
-  if (mChannel)
-    mChannel->Suspend();
+  if (mChannel) {
+    SuspendChannel();
+  }
   return true;
 }
 
 bool
 FTPChannelParent::RecvResume()
 {
-  if (mChannel)
-    mChannel->Resume();
+  if (mChannel) {
+    ResumeChannel();
+  }
   return true;
 }
 
@@ -290,13 +292,8 @@ FTPChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
     return true;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPDivertDataAvailableEvent(this, data, offset,
-                                                     count));
-    return true;
-  }
-
-  DivertOnDataAvailable(data, offset, count);
+  mEventQ->RunOrEnqueue(new FTPDivertDataAvailableEvent(this, data, offset,
+                                                        count));
   return true;
 }
 
@@ -372,12 +369,7 @@ FTPChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
     return false;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPDivertStopRequestEvent(this, statusCode));
-    return true;
-  }
-
-  DivertOnStopRequest(statusCode);
+  mEventQ->RunOrEnqueue(new FTPDivertStopRequestEvent(this, statusCode));
   return true;
 }
 
@@ -434,12 +426,7 @@ FTPChannelParent::RecvDivertComplete()
     return false;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPDivertCompleteEvent(this));
-    return true;
-  }
-
-  DivertComplete();
+  mEventQ->RunOrEnqueue(new FTPDivertCompleteEvent(this));
   return true;
 }
 
@@ -626,6 +613,30 @@ FTPChannelParent::GetInterface(const nsIID& uuid, void** result)
   return QueryInterface(uuid, result);
 }
 
+nsresult
+FTPChannelParent::SuspendChannel()
+{
+  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
+    do_QueryInterface(mChannel);
+  if (chan) {
+    return chan->SuspendInternal();
+  } else {
+    return mChannel->Suspend();
+  }
+}
+
+nsresult
+FTPChannelParent::ResumeChannel()
+{
+  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
+    do_QueryInterface(mChannel);
+  if (chan) {
+    return chan->ResumeInternal();
+  } else {
+    return mChannel->Resume();
+  }
+}
+
 //-----------------------------------------------------------------------------
 // FTPChannelParent::ADivertableParentChannel
 //-----------------------------------------------------------------------------
@@ -640,13 +651,19 @@ FTPChannelParent::SuspendForDiversion()
 
   // Try suspending the channel. Allow it to fail, since OnStopRequest may have
   // been called and thus the channel may not be pending.
-  nsresult rv = mChannel->Suspend();
+  nsresult rv = SuspendChannel();
   MOZ_ASSERT(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_AVAILABLE);
   mSuspendedForDiversion = NS_SUCCEEDED(rv);
 
   // Once this is set, no more OnStart/OnData/OnStop callbacks should be sent
   // to the child.
   mDivertingFromChild = true;
+
+  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
+    do_QueryInterface(mChannel);
+  if (chan) {
+    chan->MessageDiversionStarted(this);
+  }
 
   return NS_OK;
 }
@@ -663,8 +680,14 @@ FTPChannelParent::ResumeForDiversion()
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
+    do_QueryInterface(mChannel);
+  if (chan) {
+    chan->MessageDiversionStop();
+  }
+
   if (mSuspendedForDiversion) {
-    nsresult rv = mChannel->Resume();
+    nsresult rv = ResumeChannel();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       FailDiversion(NS_ERROR_UNEXPECTED, true);
       return rv;
@@ -678,6 +701,22 @@ FTPChannelParent::ResumeForDiversion()
     FailDiversion(NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;   
   }
+  return NS_OK;
+}
+
+nsresult
+FTPChannelParent::SuspendMessageDiversion()
+{
+  // This only need to suspend message queue.
+  mEventQ->Suspend();
+  return NS_OK;
+}
+
+nsresult
+FTPChannelParent::ResumeMessageDiversion()
+{
+  // This only need to resumes message queue.
+  mEventQ->Resume();
   return NS_OK;
 }
 
@@ -801,7 +840,7 @@ FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
 
   // Resume only we suspended earlier.
   if (mSuspendedForDiversion) {
-    mChannel->Resume();
+    ResumeChannel();
   }
   // Channel has already sent OnStartRequest to the child, so ensure that we
   // call it here if it hasn't already been called.

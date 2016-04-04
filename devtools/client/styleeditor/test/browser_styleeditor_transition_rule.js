@@ -24,8 +24,10 @@ add_task(function*() {
 
   yield styleChanges;
 
-  let rules = yield executeInContent("Test:cssRules", {
-    num: 0
+  let rules = yield ContentTask.spawn(gBrowser.selectedBrowser, 0,
+  function*(index) {
+    let sheet = content.document.styleSheets[index];
+    return [...sheet.cssRules].map(rule => rule.cssText);
   });
 
   // Test that we removed the transition rule, but kept the rule we added

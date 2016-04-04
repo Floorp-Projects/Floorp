@@ -8,11 +8,11 @@ ifelse([$1],,define(CONFIGURING_JS,yes))
 
 dnl Possible ways this can be called:
 dnl   from toplevel configure:
-dnl     JS_STANDALONE=  BUILDING_JS=
+dnl     JS_STANDALONE=  MOZ_BUILD_APP!=js
 dnl   from js/src/configure invoked by toplevel configure:
-dnl     JS_STANDALONE=  BUILDING_JS=1
+dnl     JS_STANDALONE=  MOZ_BUILD_APP=js
 dnl   from standalone js/src/configure:
-dnl     JS_STANDALONE=1 BUILDING_JS=1
+dnl     JS_STANDALONE=1 MOZ_BUILD_APP=js
 
 dnl ========================================================
 dnl = Find the right NSPR to use.
@@ -38,7 +38,7 @@ ifdef([CONFIGURING_JS],[
         MOZ_BUILD_NSPR=)
 ])
 
-if test -z "$BUILDING_JS" || test -n "$JS_STANDALONE"; then
+if test "$MOZ_BUILD_APP" != js || test -n "$JS_STANDALONE"; then
   _IS_OUTER_CONFIGURE=1
 fi
 
@@ -99,7 +99,7 @@ else
 fi
 
 if test -z "$nspr_opts"; then
-    if test -z "$BUILDING_JS"; then
+    if test "$MOZ_BUILD_APP" != js; then
       dnl Toplevel configure defaults to using nsprpub from the source tree
       MOZ_BUILD_NSPR=1
       which_nspr="source-tree"
@@ -124,7 +124,7 @@ fi
 
 AC_SUBST(MOZ_BUILD_NSPR)
 
-if test -n "$BUILDING_JS"; then
+if test "$MOZ_BUILD_APP" = js; then
   if test "$JS_POSIX_NSPR" = 1; then
     AC_DEFINE(JS_POSIX_NSPR)
   fi
@@ -137,10 +137,10 @@ fi
 if test -n "$_IS_OUTER_CONFIGURE"; then
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR($NSPR_MINVER, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([you do not have NSPR installed or your version is older than $NSPR_MINVER.])])
+    AM_PATH_NSPR($NSPR_MINVER, [MOZ_SYSTEM_NSPR=1], [AC_MSG_ERROR([you do not have NSPR installed or your version is older than $NSPR_MINVER.])])
 fi
 
-if test -n "$MOZ_NATIVE_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
+if test -n "$MOZ_SYSTEM_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prtypes.h"],
@@ -178,8 +178,8 @@ AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_LIB_DIR)
 
 NSPR_PKGCONF_CHECK="nspr"
-if test -n "$MOZ_NATIVE_NSPR"; then
-    # piggy back on $MOZ_NATIVE_NSPR to set a variable for the nspr check for js.pc
+if test -n "$MOZ_SYSTEM_NSPR"; then
+    # piggy back on $MOZ_SYSTEM_NSPR to set a variable for the nspr check for js.pc
     NSPR_PKGCONF_CHECK="nspr >= $NSPR_MINVER"
 
     _SAVE_CFLAGS=$CFLAGS

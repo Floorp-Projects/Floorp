@@ -4,6 +4,7 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.keys import Keys
+from marionette_driver.by import By
 
 
 class TestWindowHandles(MarionetteTestCase):
@@ -20,7 +21,7 @@ class TestWindowHandles(MarionetteTestCase):
         origin_win = self.marionette.current_window_handle
 
         with self.marionette.using_context("chrome"):
-            main_win = self.marionette.find_element("id", "main-window")
+            main_win = self.marionette.find_element(By.ID, "main-window")
             main_win.send_keys(*keys)
 
         self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
@@ -38,7 +39,7 @@ class TestWindowHandles(MarionetteTestCase):
         tab_testpage = self.marionette.absolute_url("windowHandles.html")
         self.marionette.navigate(tab_testpage)
         start_win = self.marionette.current_window_handle
-        link = self.marionette.find_element("id", "new-tab")
+        link = self.marionette.find_element(By.ID, "new-tab")
         link.click()
         self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
 
@@ -67,7 +68,7 @@ class TestWindowHandles(MarionetteTestCase):
         # Window handles don't persist in cases of remoteness change.
         start_tab = self.marionette.current_window_handle
 
-        self.marionette.find_element("id", "new-window").click()
+        self.marionette.find_element(By.ID, "new-window").click()
 
         self.assertEqual(len(self.marionette.window_handles), 2)
         self.assertEqual(len(self.marionette.chrome_window_handles), 2)
@@ -77,7 +78,7 @@ class TestWindowHandles(MarionetteTestCase):
         self.marionette.switch_to_window(dest_tab)
 
         self.marionette.navigate(opener_page)
-        new_tab_link = self.marionette.find_element("id", "new-tab")
+        new_tab_link = self.marionette.find_element(By.ID, "new-tab")
 
         for i in range(3):
             new_tab_link.click()
@@ -90,6 +91,36 @@ class TestWindowHandles(MarionetteTestCase):
         self.assertEqual(len(self.marionette.window_handles), 1)
         self.marionette.switch_to_window(start_tab)
 
+    def test_chrome_window_handles_with_scopes(self):
+        start_tab = self.marionette.current_window_handle
+        start_chrome_window = self.marionette.current_chrome_window_handle
+        start_chrome_windows = self.marionette.chrome_window_handles
+
+        # Ensure that we work in chrome scope so we don't have any limitations
+        with self.marionette.using_context("chrome"):
+            # Open a browser and a non-browser (about window) chrome window
+            self.marionette.execute_script("window.open()")
+            self.marionette.find_element(By.ID, "aboutName").click()
+
+            self.wait_for_condition(lambda mn: len(mn.chrome_window_handles) ==
+                                    len(start_chrome_windows) + 2)
+
+            handles_in_chrome_scope = self.marionette.chrome_window_handles
+            with self.marionette.using_context("content"):
+                self.assertEqual(self.marionette.chrome_window_handles,
+                                 handles_in_chrome_scope)
+
+        for handle in handles_in_chrome_scope:
+            if handle != start_chrome_window:
+                self.marionette.switch_to_window(handle)
+                self.marionette.close_chrome_window()
+
+        self.marionette.switch_to_window(start_tab)
+
+        self.assertEqual(len(self.marionette.chrome_window_handles), 1)
+        self.assertEqual(len(self.marionette.window_handles), 1)
+        self.assertEqual(self.marionette.current_window_handle, start_tab)
+
     def test_tab_and_window_handles(self):
         start_tab = self.marionette.current_window_handle
         start_chrome_window = self.marionette.current_chrome_window_handle
@@ -98,7 +129,7 @@ class TestWindowHandles(MarionetteTestCase):
 
         # Open a new tab and switch to it.
         self.marionette.navigate(tab_open_page)
-        link = self.marionette.find_element("id", "new-tab")
+        link = self.marionette.find_element(By.ID, "new-tab")
         link.click()
 
         self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
@@ -115,7 +146,7 @@ class TestWindowHandles(MarionetteTestCase):
         # Open a new window from the new tab.
         self.marionette.navigate(window_open_page)
 
-        link = self.marionette.find_element("link text", "Open new window")
+        link = self.marionette.find_element(By.LINK_TEXT, "Open new window")
         link.click()
         self.wait_for_condition(lambda mn: len(mn.window_handles) == 3)
 

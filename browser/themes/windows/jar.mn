@@ -171,8 +171,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/newtab-inverted-XPVista7.svg (tabbrowser/newtab-inverted-XPVista7.svg)
   skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/connecting@2x.png            (tabbrowser/connecting@2x.png)
-  skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
-  skin/classic/browser/tabbrowser/loading@2x.png               (tabbrowser/loading@2x.png)
   skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
   skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.svg           (tabbrowser/tab-arrow-left.svg)
@@ -201,10 +199,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-start.png         (tabbrowser/tab-stroke-start.png)
   skin/classic/browser/tabbrowser/tab-stroke-start@2x.png      (tabbrowser/tab-stroke-start@2x.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
-  skin/classic/browser/usercontext/personal.svg               (../shared/usercontext/personal.svg)
-  skin/classic/browser/usercontext/work.svg                   (../shared/usercontext/work.svg)
-  skin/classic/browser/usercontext/banking.svg                (../shared/usercontext/banking.svg)
-  skin/classic/browser/usercontext/shopping.svg               (../shared/usercontext/shopping.svg)
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-128.png

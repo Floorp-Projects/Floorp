@@ -1,0 +1,14 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url(variables.css);
+@import url(common.css);
+@import url(toolbars.css);
+@import url(light-theme.css);
+
+.theme-body {
+  font-size: 11px;
+  font-family: Lucida Grande, Tahoma, sans-serif;
+}

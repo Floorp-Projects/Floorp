@@ -38,7 +38,7 @@ function test_simple_stepping()
     gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
       // Check the return value.
       do_check_eq(aPacket.type, "paused");
-      do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 4);
+      do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);
       do_check_eq(aPacket.why.type, "resumeLimit");
       // Check that stepping worked.
       do_check_eq(gDebuggee.a, 1);

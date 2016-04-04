@@ -1,0 +1,35 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Promise - uncatchable exceptions</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+onmessage = function(evt) {
+  ok(true, "finished");
+  SimpleTest.finish();
+}
+
+function go() {
+  var script = document.createElement("script");
+  script.src = "promise_uncatchable_exception.js";
+  document.body.appendChild(script);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+</script>
+</pre>
+</body>
+</html>

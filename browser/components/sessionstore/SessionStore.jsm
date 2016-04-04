@@ -838,7 +838,7 @@ var SessionStoreInternal = {
         SessionStoreInternal._resetLocalTabRestoringState(tab);
         SessionStoreInternal.restoreNextTab();
 
-        this._sendTabRestoredNotification(tab);
+        this._sendTabRestoredNotification(tab, data.isRemotenessUpdate);
         break;
       case "SessionStore:crashedTabRevived":
         // The browser was revived by navigating to a different page
@@ -3286,6 +3286,9 @@ var SessionStoreInternal = {
    *        the tab to restore
    * @param aLoadArguments
    *        optional load arguments used for loadURI()
+   * @param aRemotenessSwitch
+   *        true if we're restoring a tab's content because we flipped
+   *        its remoteness (out-of-process) state.
    */
   restoreTabContent: function (aTab, aLoadArguments = null) {
     if (aTab.hasAttribute("customizemode")) {
@@ -3309,7 +3312,8 @@ var SessionStoreInternal = {
     // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
-    if (tabbrowser.updateBrowserRemotenessByURL(browser, uri)) {
+    let isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(browser, uri);
+    if (isRemotenessUpdate) {
       // We updated the remoteness, so we need to send the history down again.
       //
       // Start a new epoch to discard all frame script messages relating to a
@@ -3332,7 +3336,7 @@ var SessionStoreInternal = {
     }
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
-      {loadArguments: aLoadArguments});
+      {loadArguments: aLoadArguments, isRemotenessUpdate});
   },
 
   /**
@@ -3446,23 +3450,31 @@ var SessionStoreInternal = {
     if (screen) {
       let screenLeft = {}, screenTop = {}, screenWidth = {}, screenHeight = {};
       screen.GetAvailRectDisplayPix(screenLeft, screenTop, screenWidth, screenHeight);
+      // screenX/Y are based on the origin of the screen's desktop-pixel coordinate space
+      let screenLeftCss = screenLeft.value;
+      let screenTopCss = screenTop.value;
+      // convert screen's device pixel dimensions to CSS px dimensions
+      screen.GetAvailRect(screenLeft, screenTop, screenWidth, screenHeight);
+      let cssToDevScale = screen.defaultCSSScaleFactor;
+      let screenWidthCss = screenWidth.value / cssToDevScale;
+      let screenHeightCss = screenHeight.value / cssToDevScale;
       // constrain the dimensions to the actual space available
-      if (aWidth > screenWidth.value) {
-        aWidth = screenWidth.value;
+      if (aWidth > screenWidthCss) {
+        aWidth = screenWidthCss;
       }
-      if (aHeight > screenHeight.value) {
-        aHeight = screenHeight.value;
+      if (aHeight > screenHeightCss) {
+        aHeight = screenHeightCss;
       }
       // and then pull the window within the screen's bounds
-      if (aLeft < screenLeft.value) {
-        aLeft = screenLeft.value;
-      } else if (aLeft + aWidth > screenLeft.value + screenWidth.value) {
-        aLeft = screenLeft.value + screenWidth.value - aWidth;
+      if (aLeft < screenLeftCss) {
+        aLeft = screenLeftCss;
+      } else if (aLeft + aWidth > screenLeftCss + screenWidthCss) {
+        aLeft = screenLeftCss + screenWidthCss - aWidth;
       }
-      if (aTop < screenTop.value) {
-        aTop = screenTop.value;
-      } else if (aTop + aHeight > screenTop.value + screenHeight.value) {
-        aTop = screenTop.value + screenHeight.value - aHeight;
+      if (aTop < screenTopCss) {
+        aTop = screenTopCss;
+      } else if (aTop + aHeight > screenTopCss + screenHeightCss) {
+        aTop = screenTopCss + screenHeightCss - aHeight;
       }
     }
 
@@ -3969,11 +3981,17 @@ var SessionStoreInternal = {
 
   /**
    * Dispatch the SSTabRestored event for the given tab.
-   * @param aTab the which has been restored
+   * @param aTab
+   *        The tab which has been restored
+   * @param aIsRemotenessUpdate
+   *        True if this tab was restored due to flip from running from
+   *        out-of-main-process to in-main-process or vice-versa.
    */
-  _sendTabRestoredNotification: function ssi_sendTabRestoredNotification(aTab) {
-    let event = aTab.ownerDocument.createEvent("Events");
-    event.initEvent("SSTabRestored", true, false);
+  _sendTabRestoredNotification(aTab, aIsRemotenessUpdate) {
+    let event = aTab.ownerDocument.createEvent("CustomEvent");
+    event.initCustomEvent("SSTabRestored", true, false, {
+      isRemotenessUpdate: aIsRemotenessUpdate,
+    });
     aTab.dispatchEvent(event);
   },
 

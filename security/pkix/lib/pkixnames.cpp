@@ -114,8 +114,6 @@ ReadGeneralName(Reader& reader,
   return Success;
 }
 
-enum class FallBackToSearchWithinSubject { No = 0, Yes = 1 };
-
 enum class MatchResult
 {
   NoNamesOfGivenType = 0,
@@ -195,7 +193,7 @@ Result MatchPresentedRFC822NameWithReferenceRFC822Name(
          Input presentedRFC822Name, IDRole referenceRFC822NameRole,
          Input referenceRFC822Name, /*out*/ bool& matches);
 
-} // unnamed namespace
+} // namespace
 
 bool IsValidReferenceDNSID(Input hostname);
 bool IsValidPresentedDNSID(Input hostname);
@@ -219,7 +217,8 @@ MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
 // assumed to be a string representation of an IPv4 address, an IPv6 addresss,
 // or a normalized ASCII (possibly punycode) DNS name.
 Result
-CheckCertHostname(Input endEntityCertDER, Input hostname)
+CheckCertHostname(Input endEntityCertDER, Input hostname,
+                  NameMatchingPolicy& nameMatchingPolicy)
 {
   BackCert cert(endEntityCertDER, EndEntityOrCA::MustBeEndEntity, nullptr);
   Result rv = cert.Init();
@@ -227,10 +226,22 @@ CheckCertHostname(Input endEntityCertDER, Input hostname)
     return rv;
   }
 
+  Time notBefore(Time::uninitialized);
+  rv = ParseValidity(cert.GetValidity(), &notBefore);
+  if (rv != Success) {
+    return rv;
+  }
+  FallBackToSearchWithinSubject fallBackToSearchWithinSubject;
+  rv = nameMatchingPolicy.FallBackToCommonName(notBefore,
+                                               fallBackToSearchWithinSubject);
+  if (rv != Success) {
+    return rv;
+  }
+
   const Input* subjectAltName(cert.GetSubjectAltName());
   Input subject(cert.GetSubject());
 
-  // For backward compatibility with legacy certificates, we fall back to
+  // For backward compatibility with legacy certificates, we may fall back to
   // searching for a name match in the subject common name for DNS names and
   // IPv4 addresses. We don't do so for IPv6 addresses because we do not think
   // there are many certificates that would need such fallback, and because
@@ -244,13 +255,13 @@ CheckCertHostname(Input endEntityCertDER, Input hostname)
   uint8_t ipv4[4];
   if (IsValidReferenceDNSID(hostname)) {
     rv = SearchNames(subjectAltName, subject, GeneralNameType::dNSName,
-                     hostname, FallBackToSearchWithinSubject::Yes, match);
+                     hostname, fallBackToSearchWithinSubject, match);
   } else if (ParseIPv6Address(hostname, ipv6)) {
     rv = SearchNames(subjectAltName, subject, GeneralNameType::iPAddress,
                      Input(ipv6), FallBackToSearchWithinSubject::No, match);
   } else if (ParseIPv4Address(hostname, ipv4)) {
     rv = SearchNames(subjectAltName, subject, GeneralNameType::iPAddress,
-                     Input(ipv4), FallBackToSearchWithinSubject::Yes, match);
+                     Input(ipv4), fallBackToSearchWithinSubject, match);
   } else {
     return Result::ERROR_BAD_CERT_DOMAIN;
   }
@@ -1650,7 +1661,7 @@ ReadIPv4AddressComponent(Reader& input, bool lastComponent,
   return true;
 }
 
-} // unnamed namespace
+} // namespace
 
 // On Windows and maybe other platforms, OS-provided IP address parsing
 // functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
@@ -1706,7 +1717,7 @@ FinishIPv6Address(/*in/out*/ uint8_t (&address)[16], int numComponents,
   return true;
 }
 
-} // unnamed namespace
+} // namespace
 
 // On Windows and maybe other platforms, OS-provided IP address parsing
 // functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
@@ -2034,6 +2045,6 @@ IsValidDNSID(Input hostname, IDRole idRole, AllowWildcards allowWildcards)
   return true;
 }
 
-} // unnamed namespace
+} // namespace
 
 } } // namespace mozilla::pkix

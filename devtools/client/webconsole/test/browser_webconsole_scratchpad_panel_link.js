@@ -58,7 +58,7 @@ add_task(function*() {
 
   let [matched] = [...messages[0].matched];
   ok(matched, "Found logged message from Scratchpad");
-  let anchor = matched.querySelector("a.message-location");
+  let anchor = matched.querySelector(".message-location .frame-link-filename");
 
   toolbox.on("scratchpad-selected", function selected() {
     toolbox.off("scratchpad-selected", selected);

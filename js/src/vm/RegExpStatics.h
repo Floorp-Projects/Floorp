@@ -35,7 +35,6 @@ class RegExpStatics
 
     /* The latest RegExp input, set before execution. */
     RelocatablePtrString    pendingInput;
-    RegExpFlag              flags;
 
     /*
      * If non-zero, |matchesInput| and the |lazy*| fields may be used
@@ -59,8 +58,6 @@ class RegExpStatics
     bool makeMatch(JSContext* cx, size_t pairNum, MutableHandleValue out);
     bool createDependent(JSContext* cx, size_t start, size_t end, MutableHandleValue out);
 
-    void markFlagsSet(JSContext* cx);
-
     struct InitBuffer {};
     explicit RegExpStatics(InitBuffer) {}
 
@@ -70,22 +67,12 @@ class RegExpStatics
                              RegExpShared* shared, size_t lastIndex, bool sticky);
     inline bool updateFromMatchPairs(JSContext* cx, JSLinearString* input, MatchPairs& newPairs);
 
-    void setMultiline(JSContext* cx, bool enabled) {
-        if (enabled) {
-            flags = RegExpFlag(flags | MultilineFlag);
-            markFlagsSet(cx);
-        } else {
-            flags = RegExpFlag(flags & ~MultilineFlag);
-        }
-    }
-
     inline void clear();
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
-    void reset(JSContext* cx, JSString* newInput, bool newMultiline) {
+    void reset(JSContext* cx, JSString* newInput) {
         clear();
         pendingInput = newInput;
-        setMultiline(cx, newMultiline);
         checkInvariants();
     }
 
@@ -101,20 +88,14 @@ class RegExpStatics
 
     JSString* getPendingInput() const { return pendingInput; }
 
-    RegExpFlag getFlags() const { return flags; }
-    bool multiline() const { return flags & MultilineFlag; }
-
     void mark(JSTracer* trc) {
         /*
          * Changes to this function must also be reflected in
          * RegExpStatics::AutoRooter::trace().
          */
-        if (matchesInput)
-            TraceEdge(trc, &matchesInput, "res->matchesInput");
-        if (lazySource)
-            TraceEdge(trc, &lazySource, "res->lazySource");
-        if (pendingInput)
-            TraceEdge(trc, &pendingInput, "res->pendingInput");
+        TraceNullableEdge(trc, &matchesInput, "res->matchesInput");
+        TraceNullableEdge(trc, &lazySource, "res->lazySource");
+        TraceNullableEdge(trc, &pendingInput, "res->pendingInput");
     }
 
     /* Value creators. */
@@ -391,8 +372,8 @@ RegExpStatics::clear()
     lazySource = nullptr;
     lazyFlags = RegExpFlag(0);
     lazyIndex = size_t(-1);
+    lazySticky = false;
     pendingInput = nullptr;
-    flags = RegExpFlag(0);
     pendingLazyEvaluation = false;
 }
 

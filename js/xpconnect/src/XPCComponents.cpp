@@ -34,6 +34,8 @@
 #include "ShimInterfaceInfo.h"
 #include "nsIAddonInterposition.h"
 #include "nsISimpleEnumerator.h"
+#include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -2297,7 +2299,9 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     if (!console)
         return NS_OK;
 
-    const uint64_t innerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
+    nsGlobalWindow* globalWin = CurrentWindowOrNull(cx);
+    nsPIDOMWindowInner* win = globalWin ? globalWin->AsInner() : nullptr;
+    const uint64_t innerWindowID = win ? win->WindowID() : 0;
 
     RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);
     JSErrorReport* err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
@@ -2305,7 +2309,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     nsCOMPtr<nsIScriptError> scripterr;
 
     if (errorObj) {
-        JS::RootedObject stackVal(cx, ExceptionStackOrNull(cx, errorObj));
+        JS::RootedObject stackVal(cx,
+          FindExceptionStackForConsoleReport(win, error));
         if (stackVal) {
             scripterr = new nsScriptErrorWithStack(stackVal);
         }
@@ -2317,8 +2322,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     if (!scripterr) {
         nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
         if (frame) {
-            frame->GetFilename(fileName);
-            frame->GetLineNumber(&lineNo);
+            frame->GetFilename(cx, fileName);
+            frame->GetLineNumber(cx, &lineNo);
             JS::Rooted<JS::Value> stack(cx);
             nsresult rv = frame->GetNativeSavedFrame(&stack);
             if (NS_SUCCEEDED(rv) && stack.isObject()) {
@@ -2337,17 +2342,15 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
         nsAutoString fileUni;
         CopyUTF8toUTF16(err->filename, fileUni);
 
-        uint32_t column = err->uctokenptr - err->uclinebuf;
+        uint32_t column = err->tokenOffset();
 
-        const char16_t* ucmessage =
-            static_cast<const char16_t*>(err->ucmessage);
-        const char16_t* uclinebuf =
-            static_cast<const char16_t*>(err->uclinebuf);
+        const char16_t* ucmessage = err->ucmessage;
+        const char16_t* linebuf = err->linebuf();
 
         nsresult rv = scripterr->InitWithWindowID(
                 ucmessage ? nsDependentString(ucmessage) : EmptyString(),
                 fileUni,
-                uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+                linebuf ? nsDependentString(linebuf, err->linebufLength()) : EmptyString(),
                 err->lineno,
                 column, err->flags, "XPConnect JavaScript", innerWindowID);
         NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -2426,9 +2429,9 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
         xpc->GetCurrentJSStack(getter_AddRefs(frame));
         if (frame) {
             nsString frameFile;
-            frame->GetFilename(frameFile);
+            frame->GetFilename(cx, frameFile);
             CopyUTF16toUTF8(frameFile, filename);
-            frame->GetLineNumber(&lineNo);
+            frame->GetLineNumber(cx, &lineNo);
         }
     }
 
@@ -2545,7 +2548,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
     }
 
     if (!options.Parse(cx, propertyList) ||
-        !options.Define(cx, global))
+        !options.DefineInXPCComponents(cx, global))
     {
         return NS_ERROR_FAILURE;
     }
@@ -2709,12 +2712,9 @@ nsXPCComponents_Utils::CallFunctionWithAsyncStack(HandleValue function,
     }
 
     JS::Rooted<JSObject*> asyncStackObj(cx, &asyncStack.toObject());
-    JS::Rooted<JSString*> asyncCauseString(cx, JS_NewUCStringCopyN(cx, asyncCause.BeginReading(),
-                                                                       asyncCause.Length()));
-    if (!asyncCauseString)
-        return NS_ERROR_OUT_OF_MEMORY;
 
-    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, asyncCauseString,
+    NS_ConvertUTF16toUTF8 utf8Cause(asyncCause);
+    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, utf8Cause.get(),
                                          JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
 
     if (!JS_CallFunctionValue(cx, nullptr, function,

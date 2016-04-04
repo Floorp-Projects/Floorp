@@ -26,7 +26,7 @@ add_task(function* showToolbar() {
   ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in runTest");
 
   let showPromise = observeOnce(DeveloperToolbar.NOTIFICATIONS.SHOW);
-  document.getElementById("Tools:DevToolbar").doCommand();
+  document.getElementById("menu_devToolbar").doCommand();
   yield showPromise;
 });
 
@@ -85,7 +85,7 @@ add_task(function* hideToolbar() {
 
   info("Hide toolbar");
   let hidePromise = observeOnce(DeveloperToolbar.NOTIFICATIONS.HIDE);
-  document.getElementById("Tools:DevToolbar").doCommand();
+  document.getElementById("menu_devToolbar").doCommand();
   yield hidePromise;
 
   ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in hideToolbar");

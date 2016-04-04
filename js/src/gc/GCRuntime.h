@@ -17,6 +17,7 @@
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Tracer.h"
+#include "js/GCAnnotations.h"
 
 namespace js {
 
@@ -147,6 +148,11 @@ class GCSchedulingTunables
     bool dynamicMarkSliceEnabled_;
 
     /*
+     * Controls whether painting can trigger IGC slices.
+     */
+    bool refreshFrameSlicesEnabled_;
+
+    /*
      * Controls the number of empty chunks reserved for future allocation.
      */
     uint32_t minEmptyChunkCount_;
@@ -166,6 +172,7 @@ class GCSchedulingTunables
         highFrequencyHeapGrowthMin_(1.5),
         lowFrequencyHeapGrowth_(1.5),
         dynamicMarkSliceEnabled_(false),
+        refreshFrameSlicesEnabled_(true),
         minEmptyChunkCount_(1),
         maxEmptyChunkCount_(30)
     {}
@@ -182,6 +189,7 @@ class GCSchedulingTunables
     double highFrequencyHeapGrowthMin() const { return highFrequencyHeapGrowthMin_; }
     double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
     bool isDynamicMarkSliceEnabled() const { return dynamicMarkSliceEnabled_; }
+    bool areRefreshFrameSlicesEnabled() const { return refreshFrameSlicesEnabled_; }
     unsigned minEmptyChunkCount(const AutoLockGC&) const { return minEmptyChunkCount_; }
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
 
@@ -650,7 +658,8 @@ class GCRuntime
 
     uint64_t nextCellUniqueId() {
         MOZ_ASSERT(nextCellUniqueId_ > 0);
-        return nextCellUniqueId_++;
+        uint64_t uid = ++nextCellUniqueId_;
+        return uid;
     }
 
   public:
@@ -869,7 +878,7 @@ class GCRuntime
         Finished
     };
 
-    void minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pretenureGroups);
+    void minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pretenureGroups) JS_HAZ_GC_CALL;
 
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
@@ -915,7 +924,7 @@ class GCRuntime
     bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
 
     gcstats::ZoneGCStats scanZonesBeforeGC();
-    void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason);
+    void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason) JS_HAZ_GC_CALL;
     bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason);
 
@@ -960,8 +969,7 @@ class GCRuntime
     void sweepZoneAfterCompacting(Zone* zone);
     bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
                         SliceBudget& sliceBudget);
-    void updateAllCellPointersParallel(MovingTracer* trc, Zone* zone);
-    void updateAllCellPointersSerial(MovingTracer* trc, Zone* zone);
+    void updateAllCellPointers(MovingTracer* trc, Zone* zone);
     void updatePointersToRelocatedCells(Zone* zone);
     void protectAndHoldArenas(Arena* arenaList);
     void unprotectHeldRelocatedArenas();
@@ -1030,7 +1038,7 @@ class GCRuntime
     size_t maxMallocBytes;
 
     // An incrementing id used to assign unique ids to cells that require one.
-    uint64_t nextCellUniqueId_;
+    mozilla::Atomic<uint64_t, mozilla::SequentiallyConsistent> nextCellUniqueId_;
 
     /*
      * Number of the committed arenas in all GC chunks including empty chunks.

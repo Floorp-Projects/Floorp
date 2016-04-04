@@ -1,0 +1,207 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Fragmentation, various edge cases</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: block;
+  border:5px solid;
+  align-content: start;
+}
+span { display:block; height:20px; width:30px; }
+i { display:block; height:10px; background:blue; }
+.t { border-bottom-width:0; }
+.b { border-top-width:0; }
+.m { border-bottom-width:0; border-top-width:0; }
+</style>
+</head>
+<body>
+
+<div class="columns" style="height:30px">
+<div style="background:grey">
+<div class="grid t" style="height:25px">
+<span><i style="height:25px"></i></span>
+</div>
+<div class="grid m" style="height:25px">
+<span><i style="height:25px"></i></span>
+</div>
+<div class="grid m" style="height:25px">
+<span><i style="height:10px"></i></span>
+</div>
+<div class="grid b" style="height:25px">
+</div>
+</div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid t" style="height:60px; overflow:hidden">
+<span><i style="overflow:hidden;height:60px"></i></span>
+</div>
+<div class="grid m" style="height:40px">
+<span><i style="height:20px"></i></span>
+</div>
+<div class="grid b" style="height:0px">
+</div>
+</div></div>
+
+<div class="columns" style="height:30px; margin-left:40px">
+<div style="background:grey">
+<div class="grid t" style="height:25px">
+<span><i style="height:25px"></i></span>
+</div>
+<div class="grid m" style="height:25px">
+<span><i style="height:25px"></i></span>
+</div>
+<div class="grid m" style="height:25px">
+<span><i style="height:10px"></i></span>
+</div>
+<div class="grid b" style="height:25px">
+</div>
+</div></div>
+
+<div class="columns" style="height:40px; margin-left:40px">
+<div style="background:grey">
+<div class="grid t" style="height:60px; overflow:hidden">
+<span><i style="overflow:hidden;height:60px"></i></span>
+</div>
+<div class="grid m" style="height:40px">
+<span><i style="height:20px"></i></span>
+</div>
+<div class="grid b" style="height:0px">
+</div>
+</div></div>
+
+<div class="columns" style="height:40px; margin-left:80px">
+<div style="background:grey">
+<div class="grid" style="height:20px">
+<span><i style="overflow:hidden;height:60px"></i></span>
+</div></div>
+<div style="height:10px"></div>
+<div style="margin-left:5px">
+<span><i style="height:20px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:70px; margin-left:120px">
+<div style="background:grey">
+<div class="grid t" style="height:30px">
+<span><i style="height:30px"></i></span>
+</div>
+<div style="height:35px"></div>
+<div class="grid b" style="height:30px">
+<span><i style="height:50px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:70px">
+<div style="background:grey">
+<div class="grid t" style="height:30px">
+<span><i style="height:30px"></i></span>
+</div>
+<div style="height:35px"></div>
+<div class="grid b" style="height:32px">
+<span><i style="height:50px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:70px">
+<div style="background:grey">
+<div class="grid t" style="height:45px">
+<span style="height:45px"><i style="height:45px"></i></span>
+</div>
+<div style="height:20px"></div>
+<div class="grid b" style="height:16px">
+<span style="height:16px"><i style="height:35px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:70px">
+<div style="background:grey">
+<div class="grid t" style="height:65px">
+<span style="height:65px"><i style="height:65px"></i></span>
+</div>
+<div class="grid b" style="height:0px">
+<span><i style="height:15px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:70px">
+<div style="background:grey">
+<div class="grid t" style="height:60px">
+<span style="height:60px"><i style="height:60px"></i></span>
+</div>
+<div style="height:5px"></div>
+<div class="grid b" style="height:1px">
+<span><i style="height:20px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:70px">
+<div style="background:grey">
+<div class="grid t" style="height:61px">
+<span style="height:62px"><i style="height:62px"></i></span>
+</div>
+<div style="height:4px"></div>
+<div class="grid b" style="height:0px">
+<span><i style="height:18px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div style="overflow:hidden">
+<div class="grid" style="height:32px;">
+<span><i style="height:33px;"></i></span>
+</div>
+</div>
+<div class="grid m" style="height:0px">
+<span><i style="height:40px"></i></span>
+</div></div>
+<div style="height:40px"></div>
+<div class="grid m" style="height:0px">
+<span><i style="height:7px"></i></span>
+</div>
+</div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div style="overflow:hidden">
+<div class="grid" style="height:32px;">
+<span><i style="height:33px;"></i></span>
+</div>
+</div>
+<div class="grid m" style="height:0px">
+<span><i style="height:40px"></i></span>
+</div></div>
+<div style="height:40px"></div>
+<div class="grid m" style="height:0px">
+<span><i style="height:7px"></i></span>
+</div>
+</div></div>
+
+</body>
+</html>

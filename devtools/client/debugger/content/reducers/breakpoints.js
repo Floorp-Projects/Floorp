@@ -12,6 +12,17 @@ const initialState = Immutable({
   breakpoints: {}
 });
 
+// Return the first argument that is a string, or null if nothing is a
+// string.
+function firstString(...args) {
+  for (var arg of args) {
+    if (typeof arg === "string") {
+      return arg;
+    }
+  }
+  return null;
+}
+
 function update(state = initialState, action, emitChange) {
   switch(action.type) {
   case constants.ADD_BREAKPOINT: {
@@ -24,7 +35,10 @@ function update(state = initialState, action, emitChange) {
       state = setIn(state, ['breakpoints', id], bp.merge({
         disabled: false,
         loading: true,
-        condition: action.condition || bp.condition || undefined
+        // We want to do an OR here, but we can't because we need
+        // empty strings to be truthy, i.e. an empty string is a valid
+        // condition.
+        condition: firstString(action.condition, bp.condition)
       }));
 
       emitChange(existingBp ? "breakpoint-enabled" : "breakpoint-added",
@@ -103,7 +117,14 @@ function update(state = initialState, action, emitChange) {
     const bp = state.breakpoints[id];
     emitChange("breakpoint-condition-updated", bp);
 
-    if (action.status === 'start') {
+    if (!action.status) {
+      // No status means that it wasn't a remote request. Just update
+      // the condition locally.
+      return mergeIn(state, ['breakpoints', id], {
+        condition: action.condition
+      });
+    }
+    else if (action.status === 'start') {
       return mergeIn(state, ['breakpoints', id], {
         loading: true,
         condition: action.condition
@@ -112,6 +133,7 @@ function update(state = initialState, action, emitChange) {
     else if (action.status === 'done') {
       return mergeIn(state, ['breakpoints', id], {
         loading: false,
+        condition: action.condition,
         // Setting a condition creates a new breakpoint client as of
         // now, so we need to update the actor
         actor: action.value.actor

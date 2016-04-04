@@ -25,12 +25,12 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
     // device pixels.  However, JS contents need the delta values in CSS pixels.
     // We should store the value of mAppUnitsPerDevPixel here because
     // it might be changed by changing zoom or something.
-    if (aWheelEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    if (aWheelEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
       mAppUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
     }
   } else {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
     mEvent->AsWheelEvent()->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
@@ -65,19 +65,19 @@ WheelEvent::InitWheelEvent(const nsAString& aType,
                              aRelatedTarget, aModifiersList);
 
   WidgetWheelEvent* wheelEvent = mEvent->AsWheelEvent();
-  wheelEvent->deltaX = aDeltaX;
-  wheelEvent->deltaY = aDeltaY;
-  wheelEvent->deltaZ = aDeltaZ;
-  wheelEvent->deltaMode = aDeltaMode;
+  wheelEvent->mDeltaX = aDeltaX;
+  wheelEvent->mDeltaY = aDeltaY;
+  wheelEvent->mDeltaZ = aDeltaZ;
+  wheelEvent->mDeltaMode = aDeltaMode;
 }
 
 double
 WheelEvent::DeltaX()
 {
   if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->deltaX;
+    return mEvent->AsWheelEvent()->mDeltaX;
   }
-  return mEvent->AsWheelEvent()->deltaX *
+  return mEvent->AsWheelEvent()->mDeltaX *
     mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
 }
 
@@ -85,9 +85,9 @@ double
 WheelEvent::DeltaY()
 {
   if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->deltaY;
+    return mEvent->AsWheelEvent()->mDeltaY;
   }
-  return mEvent->AsWheelEvent()->deltaY *
+  return mEvent->AsWheelEvent()->mDeltaY *
     mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
 }
 
@@ -95,16 +95,16 @@ double
 WheelEvent::DeltaZ()
 {
   if (!mAppUnitsPerDevPixel) {
-    return mEvent->AsWheelEvent()->deltaZ;
+    return mEvent->AsWheelEvent()->mDeltaZ;
   }
-  return mEvent->AsWheelEvent()->deltaZ *
+  return mEvent->AsWheelEvent()->mDeltaZ *
     mAppUnitsPerDevPixel / nsPresContext::AppUnitsPerCSSPixel();
 }
 
 uint32_t
 WheelEvent::DeltaMode()
 {
-  return mEvent->AsWheelEvent()->deltaMode;
+  return mEvent->AsWheelEvent()->mDeltaMode;
 }
 
 already_AddRefed<WheelEvent>

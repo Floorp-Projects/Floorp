@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -17,8 +15,6 @@ import android.graphics.RectF;
 import android.hardware.SensorEventListener;
 import android.location.LocationListener;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AbsoluteLayout;
 
 public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
@@ -42,12 +38,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
             mProfile = GeckoProfile.get(mContext);
         }
         return mProfile;
-    }
-
-    // Bug 908770: Implement this
-    @Override
-    public PromptService getPromptService() {
-        return null;
     }
 
     @Override
@@ -140,10 +130,53 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
 
     @Override
     public void notifyCheckUpdateResult(String result) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
+        GeckoAppShell.notifyObservers("Update:CheckResult", result);
     }
 
     // Bug 908792: Implement this
     @Override
     public void invalidateOptionsMenu() {}
+
+    @Override
+    public void createShortcut(String title, String URI) {
+        // By default, do nothing.
+    }
+
+    @Override
+    public void checkUriVisited(String uri) {
+        // By default, no URIs are considered visited.
+    }
+
+    @Override
+    public void markUriVisited(final String uri) {
+        // By default, no URIs are marked as visited.
+    }
+
+    @Override
+    public void setUriTitle(final String uri, final String title) {
+        // By default, no titles are associated with URIs.
+    }
+
+    @Override
+    public void setAccessibilityEnabled(boolean enabled) {
+        // By default, take no action when accessibility is toggled on or off.
+    }
+
+    @Override
+    public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
+        // By default, never open external URIs.
+        return false;
+    }
+
+    @Override
+    public String[] getHandlersForMimeType(String mimeType, String action) {
+        // By default, offer no handlers for any MIME type.
+        return new String[] {};
+    }
+
+    @Override
+    public String[] getHandlersForURL(String url, String action) {
+        // By default, offer no handlers for any URL.
+        return new String[] {};
+    }
 }

@@ -45,11 +45,6 @@ EXTRA_JS_MODULES += [
     'UserCustomizations.jsm',
 ]
 
-if CONFIG['MOZ_B2GDROID']:
-    EXTRA_JS_MODULES += [
-        'AndroidUtils.jsm',
-    ]
-
 EXTRA_PP_JS_MODULES += [
     'AppsUtils.jsm',
     'ImportExport.jsm',

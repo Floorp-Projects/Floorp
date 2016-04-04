@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill for forms with 1 password field</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: forms with 1 password field
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+<!-- no username fields -->
+
+<form id='form1' action='formtest.js'> 1
+    <!-- Blank, so fill in the password -->
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form2' action='formtest.js'> 2
+    <!-- Already contains the password, so nothing to do. -->
+    <input type='password' name='pname' value='testpass'>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form3' action='formtest.js'> 3
+    <!-- Contains unknown password, so don't change it -->
+    <input type='password' name='pname' value='xxxxxxxx'>
+    <button type='submit'>Submit</button>
+</form>
+
+
+<!-- username fields -->
+
+<form id='form4' action='formtest.js'> 4
+    <!-- Blanks, so fill in login -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form5' action='formtest.js'> 5
+    <!-- Username already set, so fill in password -->
+    <input type='text'     name='uname' value='testuser'>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form6' action='formtest.js'> 6
+    <!-- Unknown username, so don't fill in password -->
+    <input type='text'     name='uname' value='xxxxxxxx'>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form7' action='formtest.js'> 7
+    <!-- Password already set, could fill in username but that's weird so we don't -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value='testpass'>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form8' action='formtest.js'> 8
+    <!-- Unknown password, so don't fill in a username -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value='xxxxxxxx'>
+    <button type='submit'>Submit</button>
+</form>
+
+
+
+<!-- extra text fields -->
+
+<form id='form9' action='formtest.js'> 9
+    <!-- text field _after_ password should never be treated as a username field -->
+    <input type='password' name='pname' value=''>
+    <input type='text'     name='uname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form10' action='formtest.js'> 10
+    <!-- only the first text field before the password should be for username -->
+    <input type='text'     name='other' value=''>
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form11' action='formtest.js'> 11
+    <!-- variation just to make sure extra text field is still ignored -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <input type='text'     name='other' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+
+
+<!-- same as last bunch, but with xxxx in the extra field. -->
+
+<form id='form12' action='formtest.js'> 12
+    <!-- text field _after_ password should never be treated as a username field -->
+    <input type='password' name='pname' value=''>
+    <input type='text'     name='uname' value='xxxxxxxx'>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form13' action='formtest.js'> 13
+    <!-- only the first text field before the password should be for username -->
+    <input type='text'     name='other' value='xxxxxxxx'>
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form14' action='formtest.js'> 14
+    <!-- variation just to make sure extra text field is still ignored -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <input type='text'     name='other' value='xxxxxxxx'>
+    <button type='submit'>Submit</button>
+</form>
+
+<form id='form15' action='https://mochi.test:8888/tests/formtest.js'> 15
+    <!-- Different scheme for same url, should be filled -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: simple form fill **/
+
+function startTest() {
+    var f = 1;
+
+    // 1-3
+    checkForm(f++, "testpass");
+    checkForm(f++, "testpass");
+    checkForm(f++, "xxxxxxxx");
+
+    // 4-8
+    checkForm(f++, "testuser", "testpass");
+    checkForm(f++, "testuser", "testpass");
+    checkForm(f++, "xxxxxxxx", "");
+    checkForm(f++, "",         "testpass");
+    checkForm(f++, "",         "xxxxxxxx");
+
+    // 9-14
+    checkForm(f++, "testpass", "");
+    checkForm(f++, "",         "testuser", "testpass");
+    checkForm(f++, "testuser", "testpass", "");
+    checkForm(f++, "testpass", "xxxxxxxx");
+    checkForm(f++, "xxxxxxxx", "testuser", "testpass");
+    checkForm(f++, "testuser", "testpass", "xxxxxxxx");
+
+    //15
+    checkForm(f++, "testuser", "testpass");
+
+    SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

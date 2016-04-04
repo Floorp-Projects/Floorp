@@ -19,15 +19,6 @@
   pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
   pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
 
-  function mustThrowWith(msg, reason, f) {
-    try {
-      f();
-      ok(false, msg + " must throw");
-    } catch (e) {
-      is(e.name, reason, msg + " must throw: " + e.message);
-    }
-  };
-
   var v1, v2;
   var delivered = new Promise(resolve => pc2.ontrack = e => {
     // Test RTCTrackEvent here.

@@ -24,13 +24,29 @@ def main(argv):
     if sandbox._help:
         return 0
 
+    return config_status(config)
+
+
+def config_status(config):
     # Sanitize config data to feed config.status
+    # Ideally, all the backend and frontend code would handle the booleans, but
+    # there are so many things involved, that it's easier to keep config.status
+    # untouched for now.
+    def sanitized_bools(v):
+        if v is True:
+            return '1'
+        if v is False:
+            return ''
+        return v
+
     sanitized_config = {}
     sanitized_config['substs'] = {
-        k: v for k, v in config.iteritems()
+        k: sanitized_bools(v) for k, v in config.iteritems()
         if k not in ('DEFINES', 'non_global_defines', 'TOPSRCDIR', 'TOPOBJDIR')
     }
-    sanitized_config['defines'] = config['DEFINES']
+    sanitized_config['defines'] = {
+        k: sanitized_bools(v) for k, v in config['DEFINES'].iteritems()
+    }
     sanitized_config['non_global_defines'] = config['non_global_defines']
     sanitized_config['topsrcdir'] = config['TOPSRCDIR']
     sanitized_config['topobjdir'] = config['TOPOBJDIR']
@@ -43,6 +59,10 @@ def main(argv):
     with codecs.open('config.status', 'w', encoding) as fh:
         fh.write('#!%s\n' % config['PYTHON'])
         fh.write('# coding=%s\n' % encoding)
+        # Because we're serializing as JSON but reading as python, the values
+        # for True, False and None are true, false and null, which don't exist.
+        # Define them.
+        fh.write('true, false, null = True, False, None\n')
         for k, v in sanitized_config.iteritems():
             fh.write('%s = ' % k)
             json.dump(v, fh, sort_keys=True, indent=4, ensure_ascii=False)
@@ -50,7 +70,7 @@ def main(argv):
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
                  "'non_global_defines', 'substs']")
 
-        if not config.get('BUILDING_JS') or config.get('JS_STANDALONE'):
+        if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
             fh.write('''
 if __name__ == '__main__':
     args = dict([(name, globals()[name]) for name in __all__])
@@ -61,13 +81,14 @@ if __name__ == '__main__':
     # Other things than us are going to run this file, so we need to give it
     # executable permissions.
     os.chmod('config.status', 0755)
-    if not config.get('BUILDING_JS') or config.get('JS_STANDALONE'):
+    if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
         if not config.get('JS_STANDALONE'):
             os.environ['WRITE_MOZINFO'] = '1'
         # Until we have access to the virtualenv from this script, execute
         # config.status externally, with the virtualenv python.
         return subprocess.call([config['PYTHON'], 'config.status'])
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

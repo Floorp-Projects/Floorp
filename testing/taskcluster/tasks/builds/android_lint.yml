@@ -1,0 +1,80 @@
+$inherits:
+  from: 'tasks/builds/mobile_base.yml'
+  variables:
+    build_name: 'android-lint'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Android lint'
+      description: 'Android lint'
+
+  workerType: android-api-15
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.android-lint'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-lint'
+
+  scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-lint-workspace'
+    - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+
+  payload:
+    cache:
+      level-{{level}}-{{project}}-build-android-lint-workspace: '/home/worker/workspace'
+      tooltool-cache: '/home/worker/tooltool-cache'
+
+    features:
+      relengAPIProxy: true
+
+    env:
+      # inputs to mozharness
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      # TODO: make these additional configuration files go away
+      MOZHARNESS_CONFIG: >
+          builds/releng_base_android_64_builds.py
+          disable_signing.py
+          platform_supports_post_upload_to_latest.py
+      MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+      MH_CUSTOM_BUILD_VARIANT_CFG: android-lint
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+      GRADLE_USER_HOME: '/home/worker/workspace/build/src/dotgradle'
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+    artifacts:
+      'public/android/lint/lint-results-automationDebug.html':
+        type: file
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.html'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/android/lint/lint-results-automationDebug.xml':
+        type: file
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.xml'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/android/lint/lint-results-automationDebug_files':
+        type: directory
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug_files'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: android-4-0-armv7-api15
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: lint
+      tier: 2
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.linux-x86_64.tar.bz2'
+      tests: 'public/build/target.tests.zip'

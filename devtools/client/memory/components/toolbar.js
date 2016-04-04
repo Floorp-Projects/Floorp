@@ -31,6 +31,10 @@ module.exports = createClass({
       displayName: PropTypes.string.isRequired,
     })).isRequired,
     onDominatorTreeDisplayChange: PropTypes.func.isRequired,
+    treeMapDisplays: PropTypes.arrayOf(PropTypes.shape({
+      displayName: PropTypes.string.isRequired,
+    })).isRequired,
+    onTreeMapDisplayChange: PropTypes.func.isRequired,
     snapshots: PropTypes.arrayOf(models.snapshot).isRequired,
   },
 
@@ -43,6 +47,8 @@ module.exports = createClass({
       censusDisplays,
       dominatorTreeDisplays,
       onDominatorTreeDisplayChange,
+      treeMapDisplays,
+      onTreeMapDisplayChange,
       onToggleRecordAllocationStacks,
       allocations,
       filterString,
@@ -100,6 +106,44 @@ module.exports = createClass({
           value: filterString || undefined,
         })
       );
+    } else if (view == viewState.TREE_MAP) {
+      assert(treeMapDisplays.length >= 1,
+       "Should always have at least one tree map display");
+
+      // Only show the dropdown if there are multiple display options
+      viewToolbarOptions = treeMapDisplays.length > 1
+        ? dom.div(
+            {
+              className: "toolbar-group"
+            },
+
+            dom.label(
+              {
+                className: "display-by",
+                title: L10N.getStr("toolbar.displayBy.tooltip"),
+              },
+              L10N.getStr("toolbar.displayBy"),
+              dom.select(
+                {
+                  id: "select-tree-map-display",
+                  onChange: e => {
+                    const newDisplay =
+                      treeMapDisplays.find(b => b.displayName === e.target.value);
+                    onTreeMapDisplayChange(newDisplay);
+                  },
+                },
+                treeMapDisplays.map(({ tooltip, displayName }) => dom.option(
+                  {
+                    key: `tree-map-display-${displayName}`,
+                    value: displayName,
+                    title: tooltip,
+                  },
+                  displayName
+                ))
+              )
+            )
+          )
+        : null;
     } else {
       assert(view === viewState.DOMINATOR_TREE);
 
@@ -147,8 +191,16 @@ module.exports = createClass({
           {
             id: "select-view",
             onChange: e => onViewChange(e.target.value),
-            defaultValue: viewState.CENSUS,
+            defaultValue: view,
           },
+          dom.option(
+            {
+              value: viewState.TREE_MAP,
+              title: L10N.getStr("toolbar.view.treemap.tooltip"),
+              selected: view
+            },
+            L10N.getStr("toolbar.view.treemap")
+          ),
           dom.option(
             {
               value: viewState.CENSUS,
@@ -179,6 +231,13 @@ module.exports = createClass({
           },
 
           dom.button({
+            id: "clear-snapshots",
+            className: "clear-snapshots devtools-button",
+            onClick: onClearSnapshotsClick,
+            title: L10N.getStr("clear-snapshots.tooltip")
+          }),
+
+          dom.button({
             id: "take-snapshot",
             className: "take-snapshot devtools-button",
             onClick: onTakeSnapshotClick,
@@ -204,14 +263,7 @@ module.exports = createClass({
               "data-text-only": true,
             },
             L10N.getStr("import-snapshot")
-          ),
-
-          dom.button({
-            id: "clear-snapshots",
-            className: "clear-snapshots devtools-button",
-            onClick: onClearSnapshotsClick,
-            title: L10N.getStr("clear-snapshots.tooltip")
-          })
+          )
         ),
 
         dom.label(

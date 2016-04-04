@@ -120,7 +120,9 @@ class TypedArrayObject : public NativeObject
         return tarr->getFixedSlot(BUFFER_SLOT);
     }
     static Value byteOffsetValue(TypedArrayObject* tarr) {
-        return tarr->getFixedSlot(BYTEOFFSET_SLOT);
+        Value v = tarr->getFixedSlot(BYTEOFFSET_SLOT);
+        MOZ_ASSERT(v.toInt32() >= 0);
+        return v;
     }
     static Value byteLengthValue(TypedArrayObject* tarr) {
         return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * tarr->bytesPerElement());

@@ -207,12 +207,6 @@ MOZ_PROGRAM_LDFLAGS += -Wl,-rpath -Wl,@executable_path/Frameworks
 endif
 endif
 
-ifeq ($(SOLARIS_SUNPRO_CXX),1)
-ifeq (86,$(findstring 86,$(OS_TEST)))
-OS_LDFLAGS += -M $(MOZILLA_DIR)/config/solaris_ia32.map
-endif # x86
-endif # Solaris Sun Studio C++
-
 ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_PDBFILE=$(basename $(@F)).pdb
 HOST_PDB_FLAG ?= -Fd$(HOST_PDBFILE)
@@ -236,7 +230,8 @@ SOBJS = $(notdir $(SSRCS:.S=.$(OBJ_SUFFIX)))
 CPPOBJS = $(notdir $(addsuffix .$(OBJ_SUFFIX),$(basename $(CPPSRCS))))
 CMOBJS = $(notdir $(CMSRCS:.m=.$(OBJ_SUFFIX)))
 CMMOBJS = $(notdir $(CMMSRCS:.mm=.$(OBJ_SUFFIX)))
-ASOBJS = $(notdir $(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
+# ASFILES can have different extensions (.s, .asm)
+ASOBJS = $(notdir $(addsuffix .$(OBJ_SUFFIX),$(basename $(ASFILES))))
 RSOBJS = $(addprefix lib,$(notdir $(RSSRCS:.rs=.$(LIB_SUFFIX))))
 ifndef OBJS
 _OBJS = $(COBJS) $(SOBJS) $(CPPOBJS) $(CMOBJS) $(CMMOBJS) $(ASOBJS) $(RSOBJS)
@@ -262,7 +257,6 @@ SIMPLE_PROGRAMS :=
 HOST_LIBRARY :=
 HOST_PROGRAM :=
 HOST_SIMPLE_PROGRAMS :=
-SDK_BINARY := $(filter %.py,$(SDK_BINARY))
 SDK_LIBRARY :=
 endif
 
@@ -293,25 +287,6 @@ ifdef HOST_SIMPLE_PROGRAMS
 GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
-#
-# the Solaris WorkShop template repository cache.  it occasionally can get
-# out of sync, so targets like clobber should kill it.
-#
-ifeq ($(SOLARIS_SUNPRO_CXX),1)
-GARBAGE_DIRS += SunWS_cache
-endif
-
-ifdef MOZ_UPDATE_XTERM
-# Its good not to have a newline at the end of the titlebar string because it
-# makes the make -s output easier to read.  Echo -n does not work on all
-# platforms, but we can trick printf into doing it.
-ifeq (.,$(relativesrcdir))
-UPDATE_TITLE = printf '\033]0;%s in %s\007' $(1) $(2) ;
-else
-UPDATE_TITLE = printf '\033]0;%s in %s\007' $(1) $(relativesrcdir)/$(2) ;
-endif
-endif
-
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
 define BUILDSTATUS
@@ -322,7 +297,6 @@ endif
 endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory,static)
-+@$(UPDATE_TITLE)
 +@$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
@@ -864,25 +838,6 @@ ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
 endif
 
-ifeq ($(SOLARIS_SUNPRO_CC),1)
-_MDDEPFILE = $(MDDEPDIR)/$(@F).pp
-
-define MAKE_DEPS_AUTO_CC
-if test -d $(@D); then \
-	echo 'Building deps for $< using Sun Studio cc'; \
-	$(CC) $(COMPILE_CFLAGS) -xM  $< >$(_MDDEPFILE) ; \
-	$(PYTHON) $(MOZILLA_DIR)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
-fi
-endef
-define MAKE_DEPS_AUTO_CXX
-if test -d $(@D); then \
-	echo 'Building deps for $< using Sun Studio CC'; \
-	$(CXX) $(COMPILE_CXXFLAGS) -xM $< >$(_MDDEPFILE) ; \
-	$(PYTHON) $(MOZILLA_DIR)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
-fi
-endef
-endif # Sun Studio on Solaris
-
 # The object file is in the current directory, and the source file can be any
 # relative path. This macro adds the dependency obj: src for each source file.
 # This dependency must be first for the $< flag to work correctly, and the
@@ -905,24 +860,23 @@ $(OBJS) $(HOST_OBJS) $(PROGOBJS) $(HOST_PROGOBJS): $(GLOBAL_DEPS)
 # Rules for building native targets must come first because of the host_ prefix
 $(HOST_COBJS):
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(HOST_CPPOBJS):
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
-	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(HOST_CMOBJS):
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(HOST_CMMOBJS):
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(COBJS):
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
@@ -963,17 +917,14 @@ $(SOBJS):
 $(CPPOBJS):
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
-	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(CMMOBJS):
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(CMOBJS):
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(filter %.s,$(CPPSRCS:%.cpp=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
@@ -1169,18 +1120,6 @@ SDK_LIBRARY_TARGET := target
 INSTALL_TARGETS += SDK_LIBRARY
 endif
 endif # SDK_LIBRARY
-
-# SDK_BINARY is still used in various makefiles for non-products of the
-# compilation, so we need to keep that running on the libs tier.
-ifneq (,$(strip $(SDK_BINARY)))
-ifndef NO_DIST_INSTALL
-SDK_BINARY_FILES := $(SDK_BINARY)
-SDK_BINARY_DEST := $(SDK_BIN_DIR)
-# SDK_BINARY_TARGET is set in xpcom/idl-parser/Makefile.in
-SDK_BINARY_TARGET ?= libs target
-INSTALL_TARGETS += SDK_BINARY
-endif
-endif # SDK_BINARY
 
 ################################################################################
 # CHROME PACKAGING

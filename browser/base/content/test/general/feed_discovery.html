@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377611
 -->
   <head>
     <title>Test for feed discovery</title>
+    <meta charset="utf-8">
 
     <!-- Straight up standard -->
     <link rel="alternate" type="application/atom+xml" title="1" href="/1.atom" />
@@ -67,46 +68,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377611
     <link rel="alternate stylesheet" type="application/rss+xml" title="Bogus13 RSS" href="/Bogus13" />
   </head>
   <body>
-    <script type="text/javascript">
-      window.onload = function() {
-
-        var tests = new Array();
-
-        var currentWindow =
-        SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                              .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                              .QueryInterface(SpecialPowers.Ci.nsIDocShellTreeItem)
-                              .rootTreeItem
-                              .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                              .getInterface(SpecialPowers.Ci.nsIDOMWindow);
-        var browser = currentWindow.gBrowser.selectedBrowser;
-
-        var discovered = browser.feeds;
-        tests.push({ check: discovered.length > 0,
-                     message: "some feeds should be discovered" });
-
-        var feeds = [];
-
-        for (var aFeed of discovered) {
-          feeds[aFeed.href] = true;
-        }
-
-        for (var aLink of document.getElementsByTagName("link")) {
-          // ignore real stylesheets, and anything without an href property
-          if (aLink.type != "text/css" && aLink.href) {
-            if (/bogus/i.test(aLink.title)) {
-              tests.push({ check: !feeds[aLink.href],
-                           message: "don't discover " + aLink.href });
-            } else {
-              tests.push({ check: feeds[aLink.href],
-                           message: "should discover " + aLink.href });
-            }
-          }
-        }
-        window.arguments[0].tests = tests;
-        window.close();
-      }
-    </script>
   </body>
 </html>
 

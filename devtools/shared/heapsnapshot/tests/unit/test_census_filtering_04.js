@@ -74,7 +74,8 @@ function run_test() {
             totalCount: 7,
             id: 13,
             parent: 12,
-            children: undefined
+            children: undefined,
+            reportLeafIndex: 2,
           },
           {
             name: "Array",
@@ -84,14 +85,17 @@ function run_test() {
             totalCount: 6,
             id: 14,
             parent: 12,
-            children: undefined
+            children: undefined,
+            reportLeafIndex: 3,
           },
         ],
         id: 12,
-        parent: 11
+        parent: 11,
+        reportLeafIndex: undefined,
       }
     ],
-    id: 11
+    id: 11,
+    reportLeafIndex: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { filter: "objects" });

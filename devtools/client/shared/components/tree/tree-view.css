@@ -1,0 +1,201 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url('resource://devtools/client/shared/components/reps/reps.css');
+
+/******************************************************************************/
+/* TreeView Colors */
+
+:root {
+  --tree-link-color: blue;
+  --tree-header-background: #C8D2DC;
+  --tree-header-sorted-background: #AAC3DC;
+}
+
+/******************************************************************************/
+/* TreeView Table*/
+
+.treeTable .treeLabelCell {
+  padding: 2px 0 2px 0px;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.treeTable .treeValueCell {
+  padding: 2px 0 2px 5px;
+  overflow: hidden;
+}
+
+.treeTable .treeLabel {
+  cursor: default;
+  overflow: hidden;
+  padding-left: 4px;
+  white-space: nowrap;
+}
+
+/* No paddding if there is actually no label */
+.treeTable .treeLabel:empty {
+  padding-left: 0;
+}
+
+.treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  cursor: pointer;
+  color: var(--tree-link-color);
+  text-decoration: underline;
+}
+
+.treeTable .treeRow:hover {
+  background-color: var(--theme-body-background);
+}
+
+/* Filtering */
+.treeTable .treeRow.hidden {
+  display: none;
+}
+
+/******************************************************************************/
+/* Toggle Icon */
+
+.treeTable .treeRow .treeIcon {
+  height: 12px;
+  width: 14px;
+  display: inline-block;
+  vertical-align: bottom;
+  margin-left: 3px;
+  padding-top: 1px;
+}
+
+/* All expanded/collapsed styles need to apply on immediate children
+  since there might be nested trees within a tree. */
+.treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+  cursor: pointer;
+  background-repeat: no-repeat;
+}
+
+/* Spinner (used for async fetch). Needs to have higher priority than
+   theme toggle icons */
+.treeTable .treeRow.hasChildren.loading > .treeLabelCell > .treeIcon {
+  background-image: url(chrome://devtools/skin/images/firebug/spinner.png) !important;
+  background-position: 2px 1px !important;
+  background-size: 9px 9px !important;
+}
+
+/* Default toggle icon. The immediate children operator must be
+ used here since there might be nested tree components inside
+ a tree and we don't want to alter those. */
+.treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+  background-image: url(chrome://devtools/skin/images/firebug/twisty-closed-firebug.svg);
+}
+
+.treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
+  background-image: url(chrome://devtools/skin/images/firebug/twisty-open-firebug.svg);
+}
+
+/******************************************************************************/
+/* Header */
+
+.treeTable .treeHeaderRow {
+  height: 18px;
+}
+
+.treeTable .treeHeaderCell {
+  cursor: pointer;
+  -moz-user-select: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 0 !important;
+  background: linear-gradient(
+          rgba(255, 255, 255, 0.05),
+          rgba(0, 0, 0, 0.05)),
+      radial-gradient(1px 60% at right,
+          rgba(0, 0, 0, 0.8) 0%,
+          transparent 80%) repeat-x var(--tree-header-background);
+  color: var(--theme-body-color);
+  white-space: nowrap;
+}
+
+.treeTable .treeHeaderCellBox {
+  padding: 2px 14px 2px 10px;
+}
+
+.treeTable .treeHeaderRow > .treeHeaderCell:first-child > .treeHeaderCellBox {
+  padding: 0;
+}
+
+.treeTable .treeHeaderSorted {
+  background-color: var(--tree-header-sorted-background);
+}
+
+.treeTable .treeHeaderSorted > .treeHeaderCellBox {
+  background: url(chrome://devtools/skin/images/firebug/arrow-down.svg) no-repeat calc(100% - 4px);
+}
+
+.treeTable .treeHeaderSorted.sortedAscending > .treeHeaderCellBox {
+  background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+}
+
+.treeTable .treeHeaderCell:hover:active {
+  background-image: linear-gradient(
+          rgba(0, 0, 0, 0.1),
+          transparent),
+      radial-gradient(1px 60% at right,
+          rgba(0, 0, 0, 0.8) 0%,
+          transparent 80%);
+}
+
+/******************************************************************************/
+/* Themes */
+
+/* Light Theme: toggle icon */
+.theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-size: 56px 28px;
+  background-position: 0 -14px;
+}
+
+.theme-light .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
+  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-size: 56px 28px;
+  background-position: -14px -14px;
+}
+
+/* Dark Theme: toggle icon */
+.theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-size: 56px 28px;
+  background-position: -28px -14px;
+}
+
+.theme-dark .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
+  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-size: 56px 28px;
+  background-position: -42px -14px;
+}
+
+.theme-dark .treeTable .treeRow:hover {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+/* Dark and Light Themes: colors */
+.theme-light .treeTable .treeRow:hover,
+.theme-dark .treeTable .treeRow:hover {
+  background-color: var(--theme-selection-background) !important;
+}
+
+.theme-light .treeTable .treeLabel,
+.theme-dark .treeTable .treeLabel {
+  color: var(--theme-highlight-pink);
+}
+
+.theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  color: var(--theme-highlight-pink);
+}
+
+/* Dark and Light Themes: Support for retina displays */
+@media (min-resolution: 1.1dppx) {
+.theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon,
+.theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+  background-image: url("chrome://devtools/skin/images/controls@2x.png");
+}
+}

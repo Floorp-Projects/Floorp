@@ -15,6 +15,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/TemplateLib.h"
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/interface/native_handle.h"
@@ -1007,7 +1008,7 @@ static ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
   {MB_OF(1920, 1200), 1500, 2000, 10000}, // >HD (3K, 4K, etc)
   {MB_OF(1280, 720), 1200, 1500, 5000}, // HD ~1080-1200
   {MB_OF(800, 480), 600, 800, 2500}, // HD ~720
-  {std::max(MB_OF(400, 240), MB_OF(352, 288)), 200, 300, 1300}, // VGA, WVGA
+  {tl::Max<MB_OF(400, 240), MB_OF(352, 288)>::value, 200, 300, 1300}, // VGA, WVGA
   {MB_OF(176, 144), 100, 150, 500}, // WQVGA, CIF
   {0 , 40, 80, 250} // QCIF and below
 };

@@ -9,10 +9,12 @@
 
 #include "MediaData.h"
 #include "MediaInfo.h"
+#include "VPXDecoder.h"
 
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsPromiseFlatString.h"
+#include "nsIGfxInfo.h"
 
 #include "prlog.h"
 
@@ -49,9 +51,9 @@ namespace mozilla {
 static const char*
 TranslateMimeType(const nsACString& aMimeType)
 {
-  if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+  if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
     return "video/x-vnd.on2.vp8";
-  } else if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
+  } else if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
     return "video/x-vnd.on2.vp9";
   }
   return PromiseFlatCString(aMimeType).get();
@@ -65,6 +67,17 @@ CreateDecoder(const nsACString& aMimeType)
                     &codec), nullptr);
   return codec;
 }
+
+static bool
+GetFeatureStatus(int32_t aFeature)
+{
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(aFeature, &status))) {
+    return false;
+  }
+  return status == nsIGfxInfo::FEATURE_STATUS_OK;
+};
 
 class VideoDataDecoder : public MediaCodecDataDecoder
 {
@@ -248,6 +261,13 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
       aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
     return false;
   }  
+
+  if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8) &&
+       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE)) ||
+      (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9) &&
+       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP9_HW_DECODE))) {
+    return false;
+  }
 
   return widget::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
       nsCString(TranslateMimeType(aMimeType)));

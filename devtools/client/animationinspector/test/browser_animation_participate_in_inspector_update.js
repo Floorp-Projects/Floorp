@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // inspector-updated event is emitted *after* the animation panel is ready.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, controller} = yield openAnimationInspector();
 
   info("Listen for the players-updated, ui-updated and " +
@@ -29,7 +29,7 @@ add_task(function*() {
 
   info("Selecting an animated node");
   let node = yield getNodeFront(".animated", inspector);
-  yield selectNode(node, inspector);
+  yield selectNodeAndWaitForAnimations(node, inspector);
 
   info("Check that all events were received");
   // Only assert that the inspector-updated event is last, the order of the

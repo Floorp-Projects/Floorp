@@ -1164,8 +1164,8 @@ IMEStateManager::DispatchCompositionEvent(
      GetBoolName(aCompositionEvent->mFlags.mPropagationStopped),
      GetBoolName(aIsSynthesized), tabParent.get()));
 
-  if (!aCompositionEvent->mFlags.mIsTrusted ||
-      aCompositionEvent->mFlags.mPropagationStopped) {
+  if (!aCompositionEvent->IsTrusted() ||
+      aCompositionEvent->PropagationStopped()) {
     return;
   }
 
@@ -1261,7 +1261,7 @@ IMEStateManager::HandleSelectionEvent(nsPresContext* aPresContext,
      GetBoolName(aSelectionEvent->mFlags.mIsTrusted),
      tabParent.get()));
 
-  if (!aSelectionEvent->mFlags.mIsTrusted) {
+  if (!aSelectionEvent->IsTrusted()) {
     return;
   }
 
@@ -1303,7 +1303,7 @@ IMEStateManager::OnCompositionEventDiscarded(
      GetBoolName(aCompositionEvent->widget->Destroyed()),
      GetBoolName(aCompositionEvent->mFlags.mIsTrusted)));
 
-  if (!aCompositionEvent->mFlags.mIsTrusted) {
+  if (!aCompositionEvent->IsTrusted()) {
     return;
   }
 

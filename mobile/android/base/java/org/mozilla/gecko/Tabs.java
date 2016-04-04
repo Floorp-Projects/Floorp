@@ -22,6 +22,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
+import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -281,7 +282,7 @@ public class Tabs implements GeckoEventListener {
         }
 
         // Pass a message to Gecko to update tab state in BrowserApp.
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Selected", String.valueOf(tab.getId())));
+        GeckoAppShell.notifyObservers("Tab:Selected", String.valueOf(tab.getId()));
         return tab;
     }
 
@@ -401,7 +402,7 @@ public class Tabs implements GeckoEventListener {
         }
 
         // Pass a message to Gecko to update tab state in BrowserApp
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Closed", args.toString()));
+        GeckoAppShell.notifyObservers("Tab:Closed", args.toString());
     }
 
     /** Return the tab that will be selected by default after this one is closed */
@@ -928,7 +929,7 @@ public class Tabs implements GeckoEventListener {
             Log.w(LOGTAG, "Error building JSON arguments for loadUrl.", e);
         }
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
+        GeckoAppShell.notifyObservers("Tab:Load", args.toString());
 
         if (tabToSelect == null) {
             return null;

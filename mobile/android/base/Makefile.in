@@ -307,13 +307,6 @@ GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath constants.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
-manifest := \
-  AndroidManifest.xml.in \
-  fennec_ids.txt.in \
-  $(NULL)
-
-PP_TARGETS += manifest
-
 # Certain source files need to be preprocessed.  This special rule
 # generates these files into generated/org/mozilla/gecko for
 # consumption by the build system and IDEs.
@@ -569,8 +562,6 @@ libs:: jni-stubs.inc GeneratedJNIWrappers.cpp
 	  echo '*****************************************************' && \
 	  exit 1)
 endif
-
-libs:: $(CURDIR)/fennec_ids.txt
 
 libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)

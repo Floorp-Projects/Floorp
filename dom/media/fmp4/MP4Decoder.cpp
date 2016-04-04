@@ -180,7 +180,7 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
 bool
 MP4Decoder::IsEnabled()
 {
-  return Preferences::GetBool("media.mp4.enabled");
+  return Preferences::GetBool("media.mp4.enabled", true);
 }
 
 // sTestH264ExtraData represents the content of the avcC atom found in
@@ -270,10 +270,10 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* 
                result.AssignLiteral("Yes");
              } else {
                result.AssignLiteral("No");
-               if (failureReason.Length()) {
-                 result.AppendLiteral("; ");
-                 AppendUTF8toUTF16(failureReason, result);
-               }
+             }
+             if (failureReason.Length()) {
+               result.AppendLiteral("; ");
+               AppendUTF8toUTF16(failureReason, result);
              }
              decoder->Shutdown();
              taskQueue->BeginShutdown();

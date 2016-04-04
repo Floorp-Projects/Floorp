@@ -190,7 +190,8 @@ EffectiveAddressAnalysis::analyze()
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
             // Note that we don't check for MAsmJSCompareExchangeHeap
             // or MAsmJSAtomicBinopHeap, because the backend and the OOB
-            // mechanism don't support non-zero offsets for them yet.
+            // mechanism don't support non-zero offsets for them yet
+            // (TODO bug 1254935).
             if (i->isLsh())
                 AnalyzeLsh(graph_.alloc(), i->toLsh());
             else if (i->isAsmJSLoadHeap())

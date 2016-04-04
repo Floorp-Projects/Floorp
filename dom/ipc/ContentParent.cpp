@@ -85,7 +85,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -263,7 +263,14 @@ using namespace mozilla::system;
 #include "mozilla/dom/GamepadMonitoring.h"
 #endif
 
+#ifdef XP_WIN
+#include "mozilla/widget/AudioSession.h"
+#endif
+
 #include "VRManagerParent.h"            // for VRManagerParent
+
+// For VP9Benchmark::sBenchmarkFpsPref
+#include "Benchmark.h"
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
@@ -1183,7 +1190,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
       RefPtr<TabParent> tp(new TabParent(constructorSender, tabId,
                                          aContext, chromeFlags));
       tp->SetInitedByParent();
-      tp->SetOwnerElement(aFrameElement);
 
       PBrowserParent* browser =
       constructorSender->SendPBrowserConstructor(
@@ -1194,7 +1200,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         constructorSender->ChildID(),
         constructorSender->IsForApp(),
         constructorSender->IsForBrowser());
-      return TabParent::GetFrom(browser);
+
+      RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
+      constructedTabParent->SetOwnerElement(aFrameElement);
+      return constructedTabParent;
     }
     return nullptr;
   }
@@ -1292,7 +1301,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 
   RefPtr<TabParent> tp = new TabParent(parent, tabId, aContext, chromeFlags);
   tp->SetInitedByParent();
-  tp->SetOwnerElement(aFrameElement);
   PBrowserParent* browser = parent->SendPBrowserConstructor(
     // DeallocPBrowserParent() releases this ref.
     RefPtr<TabParent>(tp).forget().take(),
@@ -1302,6 +1310,11 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     parent->ChildID(),
     parent->IsForApp(),
     parent->IsForBrowser());
+
+  if (browser) {
+    RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
+    constructedTabParent->SetOwnerElement(aFrameElement);
+  }
 
   if (isInContentProcess) {
     // Just return directly without the following check in content process.
@@ -1599,12 +1612,9 @@ RemoteWindowContext::GetInterface(const nsIID& aIID, void** aSink)
 }
 
 NS_IMETHODIMP
-RemoteWindowContext::OpenURI(nsIURI* aURI, uint32_t aFlags)
+RemoteWindowContext::OpenURI(nsIURI* aURI)
 {
-  URIParams uri;
-  SerializeURI(aURI, uri);
-
-  Unused << mTabParent->SendOpenURI(uri, aFlags);
+  mTabParent->LoadURL(aURI);
   return NS_OK;
 }
 
@@ -1917,7 +1927,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
                                    TabParent* aTopLevel, const TabId& aTabId,
                                    uint64_t* aId)
 {
-  *aId = CompositorParent::AllocateLayerTreeId();
+  *aId = CompositorBridgeParent::AllocateLayerTreeId();
 
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return true;
@@ -1927,7 +1937,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
     return false;
   }
 
-  return CompositorParent::UpdateRemoteContentController(*aId, aContent,
+  return CompositorBridgeParent::UpdateRemoteContentController(*aId, aContent,
                                                          aTabId, aTopLevel);
 }
 
@@ -1975,7 +1985,7 @@ ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
   auto iter = NestedBrowserLayerIds().find(this);
   if (iter != NestedBrowserLayerIds().end() &&
     iter->second.find(aId) != iter->second.end()) {
-    CompositorParent::DeallocateLayerTreeId(aId);
+    CompositorBridgeParent::DeallocateLayerTreeId(aId);
   } else {
     // You can't deallocate layer tree ids that you didn't allocate
     KillHard("DeallocateLayerTreeId");
@@ -2539,16 +2549,16 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
   if (aSetupOffMainThreadCompositing) {
     // NB: internally, this will send an IPC message to the child
-    // process to get it to create the CompositorChild.  This
+    // process to get it to create the CompositorBridgeChild.  This
     // message goes through the regular IPC queue for this
     // channel, so delivery will happen-before any other messages
-    // we send.  The CompositorChild must be created before any
+    // we send.  The CompositorBridgeChild must be created before any
     // PBrowsers are created, because they rely on the Compositor
     // already being around.  (Creation is async, so can't happen
     // on demand.)
-    bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
+    bool useOffMainThreadCompositing = !!CompositorBridgeParent::CompositorLoop();
     if (useOffMainThreadCompositing) {
-      DebugOnly<bool> opened = PCompositor::Open(this);
+      DebugOnly<bool> opened = PCompositorBridge::Open(this);
       MOZ_ASSERT(opened);
 
       opened = PImageBridge::Open(this);
@@ -2618,6 +2628,16 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 #endif
   if (shouldSandbox && !SendSetProcessSandbox(brokerFd)) {
     KillHard("SandboxInitFailed");
+  }
+#endif
+#if defined(XP_WIN)
+  // Send the info needed to join the browser process's audio session.
+  nsID id;
+  nsString sessionName;
+  nsString iconPath;
+  if (NS_SUCCEEDED(mozilla::widget::GetAudioSessionData(id, sessionName,
+                                                        iconPath))) {
+    Unused << SendSetAudioSessionData(id, sessionName, iconPath);
   }
 #endif
 }
@@ -3319,11 +3339,11 @@ ContentParent::DeallocPAPZParent(PAPZParent* aActor)
   return true;
 }
 
-PCompositorParent*
-ContentParent::AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
-                                      base::ProcessId aOtherProcess)
+PCompositorBridgeParent*
+ContentParent::AllocPCompositorBridgeParent(mozilla::ipc::Transport* aTransport,
+                                            base::ProcessId aOtherProcess)
 {
-  return CompositorParent::Create(aTransport, aOtherProcess);
+  return CompositorBridgeParent::Create(aTransport, aOtherProcess);
 }
 
 gfx::PVRManagerParent*
@@ -5319,6 +5339,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
                                 const DocShellOriginAttributes& aOpenerOriginAttributes,
+                                const float& aFullZoom,
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
@@ -5476,7 +5497,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   *aResult = pwwatch->OpenWindow2(parent, uri, name, features, aCalledFromJS,
                                   false, false, thisTabParent, nullptr,
-                                  getter_AddRefs(window));
+                                  aFullZoom, 1, getter_AddRefs(window));
 
   if (NS_WARN_IF(!window)) {
     return true;
@@ -5698,6 +5719,17 @@ ContentParent::RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo)
   MOZ_CRASH("wrong platform!");
   return false;
 #endif
+}
+
+bool
+ContentParent::RecvNotifyBenchmarkResult(const nsString& aCodecName,
+                                         const uint32_t& aDecodeFPS)
+
+{
+  if (aCodecName.EqualsLiteral("VP9")) {
+    Preferences::SetUint(VP9Benchmark::sBenchmarkFpsPref, aDecodeFPS);
+  }
+  return true;
 }
 
 void

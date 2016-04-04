@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Reference Case
+  </title>
+  <style>
+  .container {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    border: 1px solid black;
+  }
+  .wspWrapper {
+    white-space: pre;
+  }
+  </style>
+</head>
+<body>
+<!-- We use an explicit div here, to match the anonymous div that the testcase
+     is expected to generate around the whitespace. -->
+<div class="container">
+  <div>a</div>
+  <div class="wspWrapper">   </div>
+  <div>b</div>
+  <div>c</div>
+</div>
+</body>
+</html>

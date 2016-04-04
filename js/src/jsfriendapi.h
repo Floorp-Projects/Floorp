@@ -313,6 +313,8 @@ JS_DefineFunctionsWithHelp(JSContext* cx, JS::HandleObject obj, const JSFunction
 
 namespace js {
 
+extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
+
 /*
  * Helper Macros for creating JSClasses that function as proxies.
  *
@@ -347,19 +349,7 @@ namespace js {
         js::proxy_Trace,         /* trace       */                                      \
         JS_NULL_CLASS_SPEC,                                                             \
         ext,                                                                            \
-        {                                                                               \
-            js::proxy_LookupProperty,                                                   \
-            js::proxy_DefineProperty,                                                   \
-            js::proxy_HasProperty,                                                      \
-            js::proxy_GetProperty,                                                      \
-            js::proxy_SetProperty,                                                      \
-            js::proxy_GetOwnPropertyDescriptor,                                         \
-            js::proxy_DeleteProperty,                                                   \
-            js::proxy_Watch, js::proxy_Unwatch,                                         \
-            js::proxy_GetElements,                                                      \
-            nullptr,             /* enumerate       */                                  \
-            js::proxy_FunToString,                                                      \
-        }                                                                               \
+        &js::ProxyObjectOps                                                             \
     }
 
 #define PROXY_CLASS_DEF(name, flags)                                    \
@@ -653,7 +643,7 @@ inline bool
 StandardClassIsDependent(JSProtoKey key)
 {
     const Class* clasp = ProtoKeyToClass(key);
-    return clasp && clasp->spec.defined() && clasp->spec.dependent();
+    return clasp && clasp->specDefined() && clasp->specDependent();
 }
 
 // Returns the key for the class inherited by a given standard class (that
@@ -672,7 +662,7 @@ ParentKeyForStandardClass(JSProtoKey key)
 
     // If we're dependent, return the key of the class we depend on.
     if (StandardClassIsDependent(key))
-        return ProtoKeyToClass(key)->spec.parentKey();
+        return ProtoKeyToClass(key)->specParentKey();
 
     // Otherwise, we inherit [Object].
     return JSProto_Object;
@@ -965,9 +955,6 @@ JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
 
 /*
- * NB: these flag bits are encoded into the bytecode stream in the immediate
- * operand of JSOP_ITER, so don't change them without advancing vm/Xdr.h's
- * XDR_BYTECODE_VERSION.
  * NB: keep these in sync with the copy in builtin/SelfHostingDefines.h.
  * The first three are omitted because they shouldn't be used in new code.
  */
@@ -1222,7 +1209,7 @@ NukeCrossCompartmentWrappers(JSContext* cx,
  * * If DoesntShadowUnique is returned then the slot at listBaseExpandoSlot
  *   should contain a private pointer to a ExpandoAndGeneration, which contains
  *   a JS::Value that should either be undefined or point to an expando object,
- *   and a uint32 value. If that value changes then the IC for getting a
+ *   and a uint64 value. If that value changes then the IC for getting a
  *   property will be invalidated.
  * * If Shadows is returned, that means the property is an own property of the
  *   proxy but doesn't live on the expando object.
@@ -1251,7 +1238,7 @@ struct ExpandoAndGeneration {
   }
 
   JS::Heap<JS::Value> expando;
-  uint32_t generation;
+  uint64_t generation;
 };
 
 typedef enum DOMProxyShadowsResult {
@@ -1377,6 +1364,11 @@ class MOZ_STACK_CLASS AutoStableStringChars
   private:
     AutoStableStringChars(const AutoStableStringChars& other) = delete;
     void operator=(const AutoStableStringChars& other) = delete;
+
+    bool baseIsInline(JS::Handle<JSLinearString*> linearString);
+    bool copyLatin1Chars(JSContext*, JS::Handle<JSLinearString*> linearString);
+    bool copyTwoByteChars(JSContext*, JS::Handle<JSLinearString*> linearString);
+    bool copyAndInflateLatin1Chars(JSContext*, JS::Handle<JSLinearString*> linearString);
 };
 
 struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)

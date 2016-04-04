@@ -10,6 +10,7 @@ const { Cc, Ci } = require("chrome");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
+const { ActorClass, Arg, RetVal, method } = require("devtools/server/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const { dirname, joinURI } = require("devtools/shared/path");
@@ -137,47 +138,41 @@ function resolveURIToLocalPath(aURI) {
  * @param String contentType
  *        Optional. The content type of this source, if immediately available.
  */
-function SourceActor({ source, thread, originalUrl, generatedSource,
-                       isInlineSource, contentType }) {
-  this._threadActor = thread;
-  this._originalUrl = originalUrl;
-  this._source = source;
-  this._generatedSource = generatedSource;
-  this._contentType = contentType;
-  this._isInlineSource = isInlineSource;
+let SourceActor = ActorClass({
+  typeName: "source",
 
-  this.onSource = this.onSource.bind(this);
-  this._invertSourceMap = this._invertSourceMap.bind(this);
-  this._encodeAndSetSourceMapURL = this._encodeAndSetSourceMapURL.bind(this);
-  this._getSourceText = this._getSourceText.bind(this);
+  initialize: function ({ source, thread, originalUrl, generatedSource,
+                          isInlineSource, contentType }) {
+    this._threadActor = thread;
+    this._originalUrl = originalUrl;
+    this._source = source;
+    this._generatedSource = generatedSource;
+    this._contentType = contentType;
+    this._isInlineSource = isInlineSource;
 
-  this._mapSourceToAddon();
+    this.onSource = this.onSource.bind(this);
+    this._invertSourceMap = this._invertSourceMap.bind(this);
+    this._encodeAndSetSourceMapURL = this._encodeAndSetSourceMapURL.bind(this);
+    this._getSourceText = this._getSourceText.bind(this);
 
-  if (this.threadActor.sources.isPrettyPrinted(this.url)) {
-    this._init = this.onPrettyPrint({
-      indent: this.threadActor.sources.prettyPrintIndent(this.url)
-    }).then(null, error => {
-      DevToolsUtils.reportException("SourceActor", error);
-    });
-  } else {
-    this._init = null;
-  }
-}
+    this._mapSourceToAddon();
 
-SourceActor.prototype = {
-  constructor: SourceActor,
-  actorPrefix: "source",
-
-  _oldSourceMap: null,
-  _init: null,
-  _addonID: null,
-  _addonPath: null,
+    if (this.threadActor.sources.isPrettyPrinted(this.url)) {
+      this._init = this.prettyPrint(
+        this.threadActor.sources.prettyPrintIndent(this.url)
+      ).then(null, error => {
+        DevToolsUtils.reportException("SourceActor", error);
+      });
+    } else {
+      this._init = null;
+    }
+  },
 
   get isSourceMapped() {
-    return !this.isInlineSource && (
+    return !!(!this.isInlineSource && (
       this._originalURL || this._generatedSource ||
         this.threadActor.sources.isPrettyPrinted(this.url)
-    );
+    ));
   },
 
   get isInlineSource() {
@@ -216,11 +211,13 @@ SourceActor.prototype = {
 
     return {
       actor: this.actorID,
+      generatedUrl: this.generatedSource ? this.generatedSource.url : null,
       url: this.url ? this.url.split(" -> ").pop() : null,
       addonID: this._addonID,
       addonPath: this._addonPath,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
       isPrettyPrinted: this.threadActor.sources.isPrettyPrinted(this.url),
+      isSourceMapped: this.isSourceMapped,
       introductionUrl: introductionUrl ? introductionUrl.split(" -> ").pop() : null,
       introductionType: source ? source.introductionType : null
     };
@@ -329,16 +326,17 @@ SourceActor.prototype = {
         }
       }
 
-      // Use `source.text` if it exists, is not the "no source"
-      // string, and the content type of the source is JavaScript. It
-      // will be "no source" if the Debugger API wasn't able to load
+      // Use `source.text` if it exists, is not the "no source" string, and
+      // the content type of the source is JavaScript or it is synthesized
+      // wasm. It will be "no source" if the Debugger API wasn't able to load
       // the source because sources were discarded
-      // (javascript.options.discardSystemSource == true). Re-fetch
-      // non-JS sources to get the contentType from the headers.
+      // (javascript.options.discardSystemSource == true). Re-fetch non-JS
+      // sources to get the contentType from the headers.
       if (this.source &&
           this.source.text !== "[no source]" &&
           this._contentType &&
-          this._contentType.indexOf('javascript') !== -1) {
+          (this._contentType.indexOf("javascript") !== -1 ||
+           this._contentType === "text/wasm")) {
         return toResolvedContent(this.source.text);
       }
       else {
@@ -367,12 +365,7 @@ SourceActor.prototype = {
    * Get all executable lines from the current source
    * @return Array - Executable lines of the current script
    **/
-  getExecutableLines: function () {
-    // Check if the original source is source mapped
-    let packet = {
-      from: this.actorID
-    };
-
+  getExecutableLines: method(function () {
     function sortLines(lines) {
       // Converting the Set into an array
       lines = [...lines];
@@ -399,15 +392,13 @@ SourceActor.prototype = {
           }
         }
 
-        packet.lines = sortLines(lines);
-        return packet;
+        return sortLines(lines);
       });
     }
 
     let lines = this.getExecutableOffsets(this.source, true);
-    packet.lines = sortLines(lines);
-    return packet;
-  },
+    return sortLines(lines);
+  }, { response: { lines: RetVal("json") } }),
 
   /**
    * Extract all executable offsets from the given script
@@ -429,12 +420,11 @@ SourceActor.prototype = {
   /**
    * Handler for the "source" packet.
    */
-  onSource: function () {
+  onSource: method(function () {
     return resolve(this._init)
       .then(this._getSourceText)
       .then(({ content, contentType }) => {
         return {
-          from: this.actorID,
           source: createValueGrip(content, this.threadActor.threadLifetimePool,
             this.threadActor.objectGrip),
           contentType: contentType
@@ -442,19 +432,18 @@ SourceActor.prototype = {
       })
       .then(null, aError => {
         reportError(aError, "Got an exception during SA_onSource: ");
-        return {
-          "from": this.actorID,
-          "error": this.url,
-          "message": "Could not load the source for " + this.url + ".\n"
-            + DevToolsUtils.safeErrorString(aError)
-        };
+        throw new Error("Could not load the source for " + this.url + ".\n" +
+                        DevToolsUtils.safeErrorString(aError));
       });
-  },
+  }, {
+    request: { type: "source" },
+    response: RetVal("json")
+  }),
 
   /**
    * Handler for the "prettyPrint" packet.
    */
-  onPrettyPrint: function ({ indent }) {
+  prettyPrint: method(function (indent) {
     this.threadActor.sources.prettyPrint(this.url, indent);
     return this._getSourceText()
       .then(this._sendToPrettyPrintWorker(indent))
@@ -468,14 +457,13 @@ SourceActor.prototype = {
       })
       .then(this.onSource)
       .then(null, error => {
-        this.onDisablePrettyPrint();
-        return {
-          from: this.actorID,
-          error: "prettyPrintError",
-          message: DevToolsUtils.safeErrorString(error)
-        };
+        this.disablePrettyPrint();
+        throw new Error(DevToolsUtils.safeErrorString(error));
       });
-  },
+  }, {
+    request: { indent: Arg(0, "number") },
+    response: RetVal("json")
+  }),
 
   /**
    * Return a function that sends a request to the pretty print worker, waits on
@@ -568,7 +556,7 @@ SourceActor.prototype = {
   /**
    * Handler for the "disablePrettyPrint" packet.
    */
-  onDisablePrettyPrint: function () {
+  disablePrettyPrint: method(function () {
     let source = this.generatedSource || this.source;
     let sources = this.threadActor.sources;
     let sm = sources.getSourceMap(source);
@@ -584,33 +572,29 @@ SourceActor.prototype = {
 
     this.threadActor.sources.disablePrettyPrint(this.url);
     return this.onSource();
-  },
+  }, {
+    response: RetVal("json")
+  }),
 
   /**
    * Handler for the "blackbox" packet.
    */
-  onBlackBox: function (aRequest) {
+  blackbox: method(function () {
     this.threadActor.sources.blackBox(this.url);
-    let packet = {
-      from: this.actorID
-    };
     if (this.threadActor.state == "paused"
         && this.threadActor.youngestFrame
         && this.threadActor.youngestFrame.script.url == this.url) {
-      packet.pausedInSource = true;
+      return true;
     }
-    return packet;
-  },
+    return false;
+  }, { response: { pausedInSource: RetVal("boolean") } }),
 
   /**
    * Handler for the "unblackbox" packet.
    */
-  onUnblackBox: function (aRequest) {
+  unblackbox: method(function () {
     this.threadActor.sources.unblackBox(this.url);
-    return {
-      from: this.actorID
-    };
-  },
+  }),
 
   /**
    * Handle a request to set a breakpoint.
@@ -622,15 +606,14 @@ SourceActor.prototype = {
    *          A promise that resolves to a JSON object representing the
    *          response.
    */
-  onSetBreakpoint: function (request) {
+  setBreakpoint: method(function (line, column, condition) {
     if (this.threadActor.state !== "paused") {
-      return {
+      throw {
         error: "wrongState",
         message: "Cannot set breakpoint while debuggee is running."
       };
     }
 
-    let { location: { line, column }, condition } = request;
     let location = new OriginalLocation(this, line, column);
     return this._getOrCreateBreakpointActor(
       location,
@@ -648,7 +631,16 @@ SourceActor.prototype = {
 
       return response;
     });
-  },
+  }, {
+    request: {
+      location: {
+        line: Arg(0, "number"),
+        column: Arg(1, "nullable:number")
+      },
+      condition: Arg(2, "nullable:string")
+    },
+    response: RetVal("json")
+  }),
 
   /**
    * Get or create a BreakpointActor for the given location in the original
@@ -866,17 +858,7 @@ SourceActor.prototype = {
     setBreakpointAtEntryPoints(actor, entryPoints);
     return true;
   }
-};
-
-SourceActor.prototype.requestTypes = {
-  "source": SourceActor.prototype.onSource,
-  "blackbox": SourceActor.prototype.onBlackBox,
-  "unblackbox": SourceActor.prototype.onUnblackBox,
-  "prettyPrint": SourceActor.prototype.onPrettyPrint,
-  "disablePrettyPrint": SourceActor.prototype.onDisablePrettyPrint,
-  "getExecutableLines": SourceActor.prototype.getExecutableLines,
-  "setBreakpoint": SourceActor.prototype.onSetBreakpoint
-};
+});
 
 exports.SourceActor = SourceActor;
 

@@ -182,10 +182,8 @@ js::Debug_CheckSelfHosted(JSContext* cx, HandleValue fun)
     MOZ_CRASH("self-hosted checks should only be done in Debug builds");
 #endif
 
-    MOZ_ASSERT(fun.isObject());
-
-    MOZ_ASSERT(fun.toObject().is<JSFunction>());
-    MOZ_ASSERT(fun.toObject().as<JSFunction>().isSelfHostedOrIntrinsic());
+    RootedObject funObj(cx, UncheckedUnwrap(&fun.toObject()));
+    MOZ_ASSERT(funObj->as<JSFunction>().isSelfHostedOrIntrinsic());
 
     // This is purely to police self-hosted code. There is no actual operation.
     return true;
@@ -535,7 +533,7 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
 }
 
 static bool
-InternalConstruct(JSContext* cx, const CallArgs& args)
+InternalConstruct(JSContext* cx, const AnyConstructArgs& args)
 {
     MOZ_ASSERT(args.array() + args.length() + 1 == args.end(),
                "must pass constructing arguments to a construction attempt");
@@ -544,7 +542,7 @@ InternalConstruct(JSContext* cx, const CallArgs& args)
     // Callers are responsible for enforcing these preconditions.
     MOZ_ASSERT(IsConstructor(args.calleev()),
                "trying to construct a value that isn't a constructor");
-    MOZ_ASSERT(IsConstructor(args.newTarget()),
+    MOZ_ASSERT(IsConstructor(args.CallArgs::newTarget()),
                "provided new.target value must be a constructor");
 
     JSObject& callee = args.callee();
@@ -557,7 +555,7 @@ InternalConstruct(JSContext* cx, const CallArgs& args)
         if (!Invoke(cx, args, CONSTRUCT))
             return false;
 
-        MOZ_ASSERT(args.rval().isObject());
+        MOZ_ASSERT(args.CallArgs::rval().isObject());
         return true;
     }
 
@@ -584,69 +582,69 @@ StackCheckIsConstructorCalleeNewTarget(JSContext* cx, HandleValue callee, Handle
     return true;
 }
 
-static bool
-ConstructFromStack(JSContext* cx, const CallArgs& args)
+bool
+js::ConstructFromStack(JSContext* cx, const CallArgs& args)
 {
     if (!StackCheckIsConstructorCalleeNewTarget(cx, args.calleev(), args.newTarget()))
         return false;
 
     args.setThis(MagicValue(JS_IS_CONSTRUCTING));
-    return InternalConstruct(cx, args);
+    return InternalConstruct(cx, static_cast<const AnyConstructArgs&>(args));
 }
 
 bool
-js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
+js::Construct(JSContext* cx, HandleValue fval, const AnyConstructArgs& args, HandleValue newTarget,
               MutableHandleObject objp)
 {
-    args.setCallee(fval);
-    args.setThis(MagicValue(JS_IS_CONSTRUCTING));
-    args.newTarget().set(newTarget);
+    // Explicitly qualify to bypass AnyConstructArgs's deliberate shadowing.
+    args.CallArgs::setCallee(fval);
+    args.CallArgs::setThis(MagicValue(JS_IS_CONSTRUCTING));
+    args.CallArgs::newTarget().set(newTarget);
+
     if (!InternalConstruct(cx, args))
         return false;
 
-    MOZ_ASSERT(args.rval().isObject());
-    objp.set(&args.rval().toObject());
+    MOZ_ASSERT(args.CallArgs::rval().isObject());
+    objp.set(&args.CallArgs::rval().toObject());
     return true;
 }
 
 bool
 js::InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue thisv,
-                                      const ConstructArgs& args, HandleValue newTarget,
+                                      const AnyConstructArgs& args, HandleValue newTarget,
                                       MutableHandleValue rval)
 {
-    args.setCallee(fval);
+    args.CallArgs::setCallee(fval);
 
     MOZ_ASSERT(thisv.isObject());
-    args.setThis(thisv);
+    args.CallArgs::setThis(thisv);
 
-    args.newTarget().set(newTarget);
+    args.CallArgs::newTarget().set(newTarget);
 
     if (!InternalConstruct(cx, args))
         return false;
 
-    rval.set(args.rval());
+    rval.set(args.CallArgs::rval());
     return true;
 }
 
 bool
-js::InvokeGetter(JSContext* cx, const Value& thisv, Value fval, MutableHandleValue rval)
+js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHandleValue rval)
 {
-    /*
-     * Invoke could result in another try to get or set the same id again, see
-     * bug 355497.
-     */
+    // Invoke could result in another try to get or set the same id again, see
+    // bug 355497.
     JS_CHECK_RECURSION(cx, return false);
 
-    return Invoke(cx, thisv, fval, 0, nullptr, rval);
+    return Invoke(cx, thisv, getter, 0, nullptr, rval);
 }
 
 bool
-js::InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v)
+js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue v)
 {
     JS_CHECK_RECURSION(cx, return false);
 
     RootedValue ignored(cx);
-    return Invoke(cx, thisv, fval, 1, v.address(), &ignored);
+    return Invoke(cx, thisv, setter, 1, v.address(), &ignored);
 }
 
 bool
@@ -1665,9 +1663,10 @@ Interpret(JSContext* cx, RunState& state)
 
     /* State communicated between non-local jumps: */
     bool interpReturnOK;
+    bool frameHalfInitialized;
 
     if (!activation.entryFrame()->prologue(cx))
-        goto error;
+        goto prologue_error;
 
     switch (Debugger::onEnterFrame(cx, activation.entryFrame())) {
       case JSTRAP_CONTINUE:
@@ -1901,15 +1900,21 @@ CASE(JSOP_RETRVAL)
     interpReturnOK = true;
 
   return_continuation:
+    frameHalfInitialized = false;
+
+  prologue_return_continuation:
+
     if (activation.entryFrame() != REGS.fp()) {
         // Stop the engine. (No details about which engine exactly, could be
         // interpreter, Baseline or IonMonkey.)
         TraceLogStopEvent(logger, TraceLogger_Engine);
         TraceLogStopEvent(logger, TraceLogger_Scripts);
 
-        interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
+        if (MOZ_LIKELY(!frameHalfInitialized)) {
+            interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
-        REGS.fp()->epilogue(cx);
+            REGS.fp()->epilogue(cx);
+        }
 
   jit_return_pop_frame:
 
@@ -2872,7 +2877,7 @@ CASE(JSOP_FUNCALL)
     }
 
     if (!REGS.fp()->prologue(cx))
-        goto error;
+        goto prologue_error;
 
     switch (Debugger::onEnterFrame(cx, REGS.fp())) {
       case JSTRAP_CONTINUE:
@@ -3995,9 +4000,11 @@ DEFAULT()
     MOZ_CRASH("Invalid HandleError continuation");
 
   exit:
-    interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
+    if (MOZ_LIKELY(!frameHalfInitialized)) {
+        interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
-    REGS.fp()->epilogue(cx);
+        REGS.fp()->epilogue(cx);
+    }
 
     gc::MaybeVerifyBarriers(cx, true);
 
@@ -4014,6 +4021,11 @@ DEFAULT()
         state.setReturnValue(activation.entryFrame()->returnValue());
 
     return interpReturnOK;
+
+  prologue_error:
+    interpReturnOK = false;
+    frameHalfInitialized = true;
+    goto prologue_return_continuation;
 }
 
 bool
@@ -4572,9 +4584,14 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
                                    constructing ? CONSTRUCT : NO_CONSTRUCT);
     }
 
+#ifdef DEBUG
     // The object must be an array with dense elements and no holes. Baseline's
     // optimized spread call stubs rely on this.
-    MOZ_ASSERT(IsPackedArray(aobj));
+    MOZ_ASSERT(!aobj->isIndexed());
+    MOZ_ASSERT(aobj->getDenseInitializedLength() == aobj->length());
+    for (size_t i = 0; i < aobj->length(); i++)
+        MOZ_ASSERT(!aobj->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE));
+#endif
 
     if (constructing) {
         if (!StackCheckIsConstructorCalleeNewTarget(cx, callee, newTarget))

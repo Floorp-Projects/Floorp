@@ -76,9 +76,6 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.update({ guid: "123456789012",
                                                      parentGuid: "012345678901" }),
                 /The following properties were expected: index/);
-  Assert.throws(() => PlacesUtils.bookmarks.update({ guid: "123456789012",
-                                                     index: 1 }),
-                /The following properties were expected: parentGuid/);
 });
 
 add_task(function* nonexisting_bookmark_throws() {
@@ -274,7 +271,6 @@ add_task(function* update_index() {
   Assert.equal(f3.index, 2);
 
   f3 = yield PlacesUtils.bookmarks.update({ guid: f3.guid,
-                                            parentGuid: f1.parentGuid,
                                             index: 0 });
   f1 = yield PlacesUtils.bookmarks.fetch(f1.guid);
   Assert.equal(f1.index, 2);

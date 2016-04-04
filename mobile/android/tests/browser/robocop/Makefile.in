@@ -5,7 +5,7 @@
 TESTPATH := $(srcdir)/src/org/mozilla/gecko/tests
 
 ANDROID_EXTRA_JARS += \
-  $(srcdir)/libs/robotium-solo-4.3.1.jar \
+  $(srcdir)/libs/robotium-solo-5.5.4.jar \
   $(NULL)
 
 _JAVA_HARNESS := \
@@ -34,18 +34,7 @@ java-tests   := \
   $(wildcard $(TESTPATH)/components/*.java) \
   $(wildcard $(TESTPATH)/helpers/*.java)
 
-PP_TARGETS += manifest
-manifest := $(srcdir)/AndroidManifest.xml.in
-manifest_TARGET := export
-manifest_FLAGS += \
-  -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
-  $(NULL)
-
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
-
-GARBAGE += \
-  AndroidManifest.xml \
-  $(NULL)
 
 JAVAFILES += \
   $(java-harness) \
@@ -54,7 +43,9 @@ JAVAFILES += \
 
 include $(topsrcdir)/config/rules.mk
 
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 tools:: $(ANDROID_APK_NAME).apk
+endif
 
 # The test APK needs to know the contents of the target APK while not
 # being linked against them.  This is a best effort to avoid getting

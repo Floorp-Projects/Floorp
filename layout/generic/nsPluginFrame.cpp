@@ -1218,8 +1218,9 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #endif
 
   if (aBuilder->IsForPainting() && mInstanceOwner) {
-#ifdef XP_MACOSX
+    // Update plugin frame for both content scaling and full zoom changes.
     mInstanceOwner->ResolutionMayHaveChanged();
+#ifdef XP_MACOSX
     mInstanceOwner->WindowFocusMayHaveChanged();
 #endif
     if (mInstanceOwner->UseAsyncRendering()) {
@@ -1711,7 +1712,7 @@ void
 nsPluginFrame::HandleWheelEventAsDefaultAction(WidgetWheelEvent* aWheelEvent)
 {
   MOZ_ASSERT(WantsToHandleWheelEventAsDefaultAction());
-  MOZ_ASSERT(!aWheelEvent->mFlags.mDefaultPrevented);
+  MOZ_ASSERT(!aWheelEvent->DefaultPrevented());
 
   if (NS_WARN_IF(!mInstanceOwner) ||
       NS_WARN_IF(aWheelEvent->mMessage != eWheel)) {
@@ -1728,8 +1729,8 @@ nsPluginFrame::HandleWheelEventAsDefaultAction(WidgetWheelEvent* aWheelEvent)
   // We need to assume that the event is always consumed/handled by the
   // plugin.  There is no way to know if it's actually consumed/handled.
   aWheelEvent->mViewPortIsOverscrolled = false;
-  aWheelEvent->overflowDeltaX = 0;
-  aWheelEvent->overflowDeltaY = 0;
+  aWheelEvent->mOverflowDeltaX = 0;
+  aWheelEvent->mOverflowDeltaY = 0;
   // Consume the event explicitly.
   aWheelEvent->PreventDefault();
 }
@@ -1865,7 +1866,9 @@ nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*)
     }
   }
 
-  objectFrame->RegisterPluginForGeometryUpdates();
+  if (objectFrame->mInstanceOwner) {
+    objectFrame->RegisterPluginForGeometryUpdates();
+  }
 }
 
 nsIFrame*

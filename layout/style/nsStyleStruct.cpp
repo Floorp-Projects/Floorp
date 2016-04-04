@@ -2744,7 +2744,7 @@ mozilla::StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
              aProperty == eCSSPropertyExtra_variable,
              "should be either unknown or custom property");
   mProperty = aProperty;
-  mUnknownProperty = do_GetAtom(aPropertyString);
+  mUnknownProperty = NS_Atomize(aPropertyString);
 }
 
 bool
@@ -3172,6 +3172,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
   mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
   mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
   mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
+  mColorAdjust = NS_STYLE_COLOR_ADJUST_ECONOMY;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
@@ -3183,6 +3184,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mPointerEvents = aSource.mPointerEvents;
   mWritingMode = aSource.mWritingMode;
   mTextOrientation = aSource.mTextOrientation;
+  mColorAdjust = aSource.mColorAdjust;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
@@ -3216,6 +3218,10 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
       // GetHitTestFlags. (Only a reflow, no visual change.)
       NS_UpdateHint(hint, nsChangeHint_NeedReflow);
       NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    }
+    if (mColorAdjust != aOther.mColorAdjust) {
+      // color-adjust only affects media where dynamic changes can't happen.
+      NS_UpdateHint(hint, nsChangeHint_NeutralChange);
     }
   }
   return hint;
@@ -3633,6 +3639,7 @@ nsStyleText::nsStyleText(nsPresContext* aPresContext)
   mTextAlignTrue = false;
   mTextAlignLastTrue = false;
   mTextEmphasisColorForeground = true;
+  mWebkitTextFillColorForeground = true;
   mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
   mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
   mWordBreak = NS_STYLE_WORDBREAK_NORMAL;
@@ -3649,6 +3656,7 @@ nsStyleText::nsStyleText(nsPresContext* aPresContext)
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH :
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT;
   mTextEmphasisColor = aPresContext->DefaultColor();
+  mWebkitTextFillColor = aPresContext->DefaultColor();
   mControlCharacterVisibility = nsCSSParser::ControlCharVisibilityDefault();
 
   mWordSpacing.SetCoordValue(0);
@@ -3666,6 +3674,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mTextAlignTrue(false),
     mTextAlignLastTrue(false),
     mTextEmphasisColorForeground(aSource.mTextEmphasisColorForeground),
+    mWebkitTextFillColorForeground(aSource.mWebkitTextFillColorForeground),
     mTextTransform(aSource.mTextTransform),
     mWhiteSpace(aSource.mWhiteSpace),
     mWordBreak(aSource.mWordBreak),
@@ -3680,6 +3689,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mTextEmphasisStyle(aSource.mTextEmphasisStyle),
     mTabSize(aSource.mTabSize),
     mTextEmphasisColor(aSource.mTextEmphasisColor),
+    mWebkitTextFillColor(aSource.mWebkitTextFillColor),
     mWordSpacing(aSource.mWordSpacing),
     mLetterSpacing(aSource.mLetterSpacing),
     mLineHeight(aSource.mLineHeight),
@@ -3749,7 +3759,9 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
              "If the text-emphasis-color are both foreground color, "
              "mTextEmphasisColor should also be identical");
   if (mTextEmphasisColorForeground != aOther.mTextEmphasisColorForeground ||
-      mTextEmphasisColor != aOther.mTextEmphasisColor) {
+      mTextEmphasisColor != aOther.mTextEmphasisColor ||
+      mWebkitTextFillColorForeground != aOther.mWebkitTextFillColorForeground ||
+      mWebkitTextFillColor != aOther.mWebkitTextFillColor) {
     return nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
   }

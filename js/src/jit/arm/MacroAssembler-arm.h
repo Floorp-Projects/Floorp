@@ -845,6 +845,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_alu(dest.base, lsl(dest.index, dest.scale), scratch, OpAdd);
         storeValue(val, Address(scratch, dest.offset));
     }
+    void storeValue(const Address& src, const Address& dest, Register temp) {
+        load32(ToType(src), temp);
+        store32(temp, ToType(dest));
+
+        load32(ToPayload(src), temp);
+        store32(temp, ToPayload(dest));
+    }
 
     void loadValue(Address src, ValueOperand val);
     void loadValue(Operand dest, ValueOperand val) {
@@ -996,8 +1003,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(src, addr.base, addr.index, scale, addr.offset);
     }
-    void moveDouble(FloatRegister src, FloatRegister dest) {
-        ma_vmov(src, dest);
+    void moveDouble(FloatRegister src, FloatRegister dest, Condition cc = Always) {
+        ma_vmov(src, dest, cc);
     }
 
     void storeFloat32(FloatRegister src, const Address& addr) {
@@ -1308,8 +1315,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void cmp32(Register lhs, Imm32 rhs);
     void cmp32(Register lhs, Register rhs);
-    void cmp32(const Operand& lhs, Imm32 rhs);
-    void cmp32(const Operand& lhs, Register rhs);
+    void cmp32(const Address& lhs, Imm32 rhs) {
+        MOZ_CRASH("NYI");
+    }
+    void cmp32(const Address& lhs, Register rhs) {
+        MOZ_CRASH("NYI");
+    }
 
     void cmpPtr(Register lhs, Register rhs);
     void cmpPtr(Register lhs, ImmWord rhs);
@@ -1434,8 +1445,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return as_cmp(bounded, Imm8(0));
     }
 
-    void moveFloat32(FloatRegister src, FloatRegister dest) {
-        as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay());
+    void moveFloat32(FloatRegister src, FloatRegister dest, Condition cc = Always) {
+        as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
     }
 
     void loadWasmActivation(Register dest) {

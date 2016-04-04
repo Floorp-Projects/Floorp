@@ -85,9 +85,46 @@ private:
   uint32_t mInitialCount;
 };
 
+static bool IsEventTargetChrome(EventTarget* aEventTarget,
+                                nsIDocument** aDocument = nullptr)
+{
+  if (aDocument) {
+    *aDocument = nullptr;
+  }
+
+  if (NS_WARN_IF(!aEventTarget)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEventTarget);
+  if (!doc) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(aEventTarget);
+    if (node) {
+      doc = node->OwnerDoc();
+    } else {
+      nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aEventTarget);
+      if (!window) {
+        return false;
+      }
+      doc = window->GetExtantDoc();
+    }
+    if (!doc) {
+      return false;
+    }
+  }
+  bool isChrome = nsContentUtils::IsChromeDoc(doc);
+  if (aDocument) {
+    doc.swap(*aDocument);
+  }
+  return isChrome;
+}
+
+
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
 #define NS_TARGET_CHAIN_MAY_HAVE_MANAGER        (1 << 2)
+#define NS_TARGET_CHAIN_CHECKED_IF_CHROME       (1 << 3)
+#define NS_TARGET_CHAIN_IS_CHROME_CONTENT       (1 << 4)
 
 // EventTargetChainItem represents a single item in the event target chain.
 class EventTargetChainItem
@@ -207,7 +244,12 @@ public:
     if (WantsWillHandleEvent()) {
       mTarget->WillHandleEvent(aVisitor);
     }
-    if (aVisitor.mEvent->mFlags.mPropagationStopped) {
+    if (aVisitor.mEvent->PropagationStopped()) {
+      return;
+    }
+    if (aVisitor.mEvent->mFlags.mOnlySystemGroupDispatchInContent &&
+        !aVisitor.mEvent->mFlags.mInSystemGroup &&
+        !IsCurrentTargetChrome()) {
       return;
     }
     if (!mManager) {
@@ -233,6 +275,7 @@ public:
    */
   void PostHandleEvent(EventChainPostVisitor& aVisitor);
 
+private:
   nsCOMPtr<EventTarget>             mTarget;
   uint16_t                          mFlags;
   uint16_t                          mItemFlags;
@@ -241,6 +284,17 @@ public:
   nsCOMPtr<EventTarget>             mNewTarget;
   // Cache mTarget's event listener manager.
   RefPtr<EventListenerManager>    mManager;
+
+  bool IsCurrentTargetChrome()
+  {
+    if (!(mFlags & NS_TARGET_CHAIN_CHECKED_IF_CHROME)) {
+      mFlags |= NS_TARGET_CHAIN_CHECKED_IF_CHROME;
+      if (IsEventTargetChrome(mTarget)) {
+        mFlags |= NS_TARGET_CHAIN_IS_CHROME_CONTENT;
+      }
+    }
+    return !!(mFlags & NS_TARGET_CHAIN_IS_CHROME_CONTENT);
+  }
 };
 
 EventTargetChainItem::EventTargetChainItem(EventTarget* aTarget)
@@ -289,7 +343,7 @@ EventTargetChainItem::HandleEventTargetChain(
     EventTargetChainItem& item = aChain[i];
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item.ForceContentDispatch()) &&
-        !aVisitor.mEvent->mFlags.mPropagationStopped) {
+        !aVisitor.mEvent->PropagationStopped()) {
       item.HandleEvent(aVisitor, aCd);
     }
 
@@ -309,7 +363,7 @@ EventTargetChainItem::HandleEventTargetChain(
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
   EventTargetChainItem& targetItem = aChain[0];
-  if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
+  if (!aVisitor.mEvent->PropagationStopped() &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
     targetItem.HandleEvent(aVisitor, aCd);
@@ -332,7 +386,7 @@ EventTargetChainItem::HandleEventTargetChain(
     if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
       if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
            item.ForceContentDispatch()) &&
-          !aVisitor.mEvent->mFlags.mPropagationStopped) {
+          !aVisitor.mEvent->PropagationStopped()) {
         item.HandleEvent(aVisitor, aCd);
       }
       if (aVisitor.mEvent->mFlags.mInSystemGroup) {
@@ -468,18 +522,9 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   if (aEvent->mFlags.mOnlyChromeDispatch) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
-    if (!node) {
-      nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget);
-      if (win) {
-        node = win->GetExtantDoc();
-      }
-    }
-
-    NS_ENSURE_STATE(node);
-    nsIDocument* doc = node->OwnerDoc();
-    if (!nsContentUtils::IsChromeDoc(doc)) {
-      nsPIDOMWindowInner* win = doc ? doc->GetInnerWindow() : nullptr;
+    nsCOMPtr<nsIDocument> doc;
+    if (!IsEventTargetChrome(target, getter_AddRefs(doc)) && doc) {
+      nsPIDOMWindowInner* win = doc->GetInnerWindow();
       // If we can't dispatch the event to chrome, do nothing.
       EventTarget* piTarget = win ? win->GetParentTarget() : nullptr;
       if (!piTarget) {
@@ -490,6 +535,8 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       aEvent->target = target;
       // but use chrome event handler or TabChildGlobal for event target chain.
       target = piTarget;
+    } else if (NS_WARN_IF(!doc)) {
+      return NS_ERROR_UNEXPECTED;
     }
   }
 

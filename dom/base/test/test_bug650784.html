@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650776
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650776</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650776">Mozilla Bug 650776</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 650776 **/
+
+var c = SpecialPowers.Ci.nsIDocumentEncoder;
+var s = SpecialPowers.ParserUtils;
+
+is(s.convertToPlainText("foo", c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 1");
+is(s.convertToPlainText("foo foo foo", c.OutputWrap | c.OutputLFLineBreak, 7), "foo foo\nfoo", "Wrong conversion result 2");
+is(s.convertToPlainText("<body><noscript>b<span>a</span>r</noscript>foo", c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 3");
+is(s.convertToPlainText("<body><noscript>b<span>a</span>r</noscript>foo", c.OutputNoScriptContent, 0), "barfoo", "Wrong conversion result 4");
+is(s.convertToPlainText("foo\u00A0bar", c.OutputPersistNBSP | c.OutputLFLineBreak, 0), "foo\u00A0bar", "Wrong conversion result 5");
+is(s.convertToPlainText("foo\u00A0bar", c.OutputLFLineBreak, 0), "foo bar", "Wrong conversion result 6");
+is(s.convertToPlainText("<body><noframes>bar</noframes>foo", c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 7");
+// OutputNoFramesContent doesn't actually work, because the flag gets overridden in all cases.
+is(s.convertToPlainText("<body><noframes>bar</noframes>foo", c.OutputNoFramesContent | c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 8");
+is(s.convertToPlainText("<i>foo</i> <b>bar</b>", c.OutputFormatted | c.OutputLFLineBreak, 0), "/foo/ *bar*\n", "Wrong conversion result 9");
+is(s.convertToPlainText("<p>foo</p> <p>bar</p>", c.OutputLFLineBreak, 0), "foo\n\nbar", "Wrong conversion result 10");
+
+</script>
+</pre>
+</body>
+</html>

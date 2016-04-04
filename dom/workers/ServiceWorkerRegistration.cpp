@@ -22,6 +22,7 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
+#include "nsContentUtils.h"
 
 #include "WorkerPrivate.h"
 #include "Workers.h"
@@ -729,8 +730,8 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
   RefPtr<Promise> p =
-    Notification::ShowPersistentNotification(global,
-                                             mScope, aTitle, aOptions, aRv);
+    Notification::ShowPersistentNotification(aCx, global, mScope, aTitle,
+                                             aOptions, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -751,7 +752,8 @@ ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptio
 }
 
 already_AddRefed<PushManager>
-ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
+ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
+                                                    ErrorResult& aRv)
 {
   AssertIsOnMainThread();
 
@@ -767,35 +769,9 @@ ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
       return nullptr;
     }
 
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.Init(globalObject))) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    JSContext* cx = jsapi.cx();
-
-    JS::RootedObject globalJs(cx, globalObject->GetGlobalJSObject());
-    GlobalObject global(cx, globalJs);
-
-    // TODO: bug 1148117.  This will fail when swr is exposed on workers
-    JS::Rooted<JSObject*> jsImplObj(cx);
-    nsCOMPtr<nsIGlobalObject> unused = ConstructJSImplementation(cx, "@mozilla.org/push/PushManager;1",
-                              global, &jsImplObj, aRv);
+    GlobalObject global(aCx, globalObject->GetGlobalJSObject());
+    mPushManager = PushManager::Constructor(global, mScope, aRv);
     if (aRv.Failed()) {
-      return nullptr;
-    }
-    mPushManager = new PushManager(globalObject, mScope);
-
-    RefPtr<PushManagerImpl> impl = new PushManagerImpl(jsImplObj, globalObject);
-    impl->SetScope(mScope, aRv);
-    if (aRv.Failed()) {
-      mPushManager = nullptr;
-      return nullptr;
-    }
-    mPushManager->SetPushManagerImpl(*impl, aRv);
-    if (aRv.Failed()) {
-      mPushManager = nullptr;
       return nullptr;
     }
   }
@@ -803,7 +779,7 @@ ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
   RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
 
-  #endif /* ! MOZ_SIMPLEPUSH */
+#endif /* ! MOZ_SIMPLEPUSH */
 }
 
 ////////////////////////////////////////////////////
@@ -1008,7 +984,7 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
   }
 
   RefPtr<UpdateRunnable> r = new UpdateRunnable(proxy, mScope);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return promise.forget();
 }
@@ -1040,7 +1016,7 @@ ServiceWorkerRegistrationWorkerThread::Unregister(ErrorResult& aRv)
   }
 
   RefPtr<StartUnregisterRunnable> r = new StartUnregisterRunnable(proxy, mScope);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return promise.forget();
 }
@@ -1078,7 +1054,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
 
   RefPtr<StartListeningRunnable> r =
     new StartListeningRunnable(mListener);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 }
 
 class AsyncStopListeningRunnable final : public nsRunnable
@@ -1135,7 +1111,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
   if (aReason == RegistrationIsGoingAway) {
     RefPtr<AsyncStopListeningRunnable> r =
       new AsyncStopListeningRunnable(mListener);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   } else if (aReason == WorkerIsGoingAway) {
     RefPtr<SyncStopListeningRunnable> r =
       new SyncStopListeningRunnable(mWorkerPrivate, mListener);
@@ -1154,7 +1130,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
 }
 
 bool
-ServiceWorkerRegistrationWorkerThread::Notify(JSContext* aCx, workers::Status aStatus)
+ServiceWorkerRegistrationWorkerThread::Notify(workers::Status aStatus)
 {
   ReleaseListener(WorkerIsGoingAway);
   return true;
@@ -1212,7 +1188,7 @@ ServiceWorkerRegistrationWorkerThread::ShowNotification(JSContext* aCx,
   // also verifying scope so that we block the worker on the main thread only
   // once.
   RefPtr<Promise> p =
-    Notification::ShowPersistentNotification(mWorkerPrivate->GlobalScope(),
+    Notification::ShowPersistentNotification(aCx, mWorkerPrivate->GlobalScope(),
                                              mScope, aTitle, aOptions, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1227,7 +1203,7 @@ ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOpt
   return Notification::WorkerGet(mWorkerPrivate, aOptions, mScope, aRv);
 }
 
-already_AddRefed<WorkerPushManager>
+already_AddRefed<PushManager>
 ServiceWorkerRegistrationWorkerThread::GetPushManager(ErrorResult& aRv)
 {
 #ifdef MOZ_SIMPLEPUSH
@@ -1235,13 +1211,13 @@ ServiceWorkerRegistrationWorkerThread::GetPushManager(ErrorResult& aRv)
 #else
 
   if (!mPushManager) {
-    mPushManager = new WorkerPushManager(mScope);
+    mPushManager = new PushManager(mScope);
   }
 
-  RefPtr<WorkerPushManager> ret = mPushManager;
+  RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
 
-  #endif /* ! MOZ_SIMPLEPUSH */
+#endif /* ! MOZ_SIMPLEPUSH */
 }
 
 } // dom namespace

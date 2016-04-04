@@ -20,6 +20,7 @@ from mach.decorators import (
 
 from mozbuild.base import MachCommandBase
 from mozbuild.base import MachCommandConditions as conditions
+import mozpack.path as mozpath
 from argparse import ArgumentParser
 
 UNKNOWN_TEST = '''
@@ -96,6 +97,10 @@ TEST_SUITES = {
         'mach_command': 'luciddream',
         'kwargs': {'test_paths': None},
     },
+    'python': {
+        'mach_command': 'python-test',
+        'kwargs': {'tests': None},
+    },
     'reftest': {
         'aliases': ('RR', 'rr', 'Rr'),
         'mach_command': 'reftest',
@@ -145,6 +150,10 @@ TEST_FLAVORS = {
     'mochitest': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'mochitest', 'test_paths': []},
+    },
+    'python': {
+        'mach_command': 'python-test',
+        'kwargs': {},
     },
     'reftest': {
         'mach_command': 'reftest',
@@ -532,7 +541,7 @@ class PushToTry(MachCommandBase):
 
         paths = []
         for p in kwargs["paths"]:
-            p = os.path.normpath(os.path.abspath(p))
+            p = mozpath.normpath(os.path.abspath(p))
             if not (os.path.isdir(p) and p.startswith(self.topsrcdir)):
                 print('Specified path "%s" is not a directory under the srcdir,'
                       ' unable to specify tests outside of the srcdir' % p)

@@ -291,6 +291,14 @@
     "n_values": 10,
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
+  "FAMILY_SAFETY": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1239166],
+    "description": "Status of Family Safety detection and remediation. See nsNSSComponent.cpp."
+  },
   "FETCH_IS_MAINTHREAD": {
     "expires_in_version": "50",
     "kind": "boolean",
@@ -2590,6 +2598,51 @@
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_Connect when the offline state has changed in the last 60s (ms)."
   },
+  "PRCONNECT_FAIL_BLOCKING_TIME_NORMAL": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_SHUTDOWN": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect during a shutdown (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when there has been the connectiviy change in the last 60s (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_LINK_CHANGE": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when there has been a link change in the last 60s (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_OFFLINE": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when the offline state has changed in the last 60s (ms)."
+  },
   "PRCONNECTCONTINUE_BLOCKING_TIME_NORMAL": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -2720,6 +2773,30 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "session used autodialer"
+  },
+  "NETWORK_SESSION_AT_256FD": {
+    "expires_in_version": "49",
+    "kind": "boolean",
+    "description": "session exceeded old 256 limit",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
+  "NETWORK_SESSION_AT_900FD": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "session reached 900 fd limit sockets",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
+  "NETWORK_PROBE_MAXCOUNT": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 50,
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "Result of nsSocketTransportService::ProbeMaxCount()",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
   },
   "FIND_PLUGINS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
@@ -3278,6 +3355,27 @@
     "n_values": 16,
     "bug_numbers": [1150921],
     "description": "Server HTTP status code from remote SafeBrowsing gethash lookups. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
+  },
+  "CSP_DOCUMENTS_COUNT": {
+    "alert_emails": ["seceng@mozilla.com"],
+    "bug_numbers": [1252829],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Number of unique pages that contain a CSP"
+  },
+  "CSP_UNSAFE_INLINE_DOCUMENTS_COUNT": {
+    "alert_emails": ["seceng@mozilla.com"],
+    "bug_numbers": [1252829],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Number of unique pages that contain an unsafe-inline CSP directive"
+  },
+  "CSP_UNSAFE_EVAL_DOCUMENTS_COUNT": {
+    "alert_emails": ["seceng@mozilla.com"],
+    "bug_numbers": [1252829],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Number of unique pages that contain an unsafe-eval CSP directive"
   },
   "PLACES_PAGES_COUNT": {
     "expires_in_version": "never",
@@ -5521,11 +5619,12 @@
     "kind": "enumerated",
     "keyed": true,
     "n_values": 40,
-    "description": "Usage of popup notifications, keyed by ID (0 = Offered, 1..4 = Action, 5 = Click outside, 6 = Leave page, 7 = Use 'X', 8 = Not now, 10 = Open submenu, 11 = Learn more. Add 20 if happened after reopen.)"
+    "description": "(Bug 1207089) Usage of popup notifications, keyed by ID (0 = Offered, 1..4 = Action, 5 = Click outside, 6 = Leave page, 7 = Use 'X', 8 = Not now, 10 = Open submenu, 11 = Learn more. Add 20 if happened after reopen.)"
   },
   "POPUP_NOTIFICATION_MAIN_ACTION_MS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "48",
+    "bug_numbers": [1207089],
+    "expires_in_version": "52",
     "kind": "exponential",
     "keyed": true,
     "low": 100,
@@ -5535,7 +5634,8 @@
   },
   "POPUP_NOTIFICATION_DISMISSAL_MS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "48",
+    "bug_numbers": [1207089],
+    "expires_in_version": "52",
     "kind": "exponential",
     "keyed": true,
     "low": 200,
@@ -7724,7 +7824,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 4,
-    "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
+    "description": "Accumulates type of content per page load (0=no mixed or non-secure page, 1=mixed passive, 2=mixed active, 3=mixed passive and mixed active)"
   },
   "MIXED_CONTENT_UNBLOCK_COUNTER": {
     "expires_in_version": "never",
@@ -8151,6 +8251,14 @@
     "high": 5000,
     "n_buckets": 10
   },
+  "CERT_EV_STATUS": {
+    "expires_in_version": "never",
+    "alert_emails": ["seceng@mozilla.org"],
+    "bug_numbers": [1254653],
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "EV status of a certificate, recorded on each TLS connection. 0=invalid, 1=DV, 2=EV"
+  },
   "CERT_VALIDATION_SUCCESS_BY_CA": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -8473,6 +8581,15 @@
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Number of sessions where at least one chat message was exchanged"
+  },
+  "LOOP_COPY_PANEL_ACTIONS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "edilee@mozilla.com"],
+    "expires_in_version": "51",
+    "kind": "enumerated",
+    "n_values": 5,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1239965, 1259506],
+    "description": "Number of times each of the following copy panel actions are triggered: 0=SHOWN, 1=NO_AGAIN, 2=NO_NEVER, 3=YES_AGAIN, 4=YES_NEVER"
   },
   "LOOP_INFOBAR_ACTION_BUTTONS": {
     "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
@@ -9902,23 +10019,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
-  "FXA_SECURE_CREDENTIALS_SAVE_WITH_MP_LOCKED": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "The number of times FxA had credentials to save in the login manager but the master-password was locked, implying they may lose those credentials after a restart."
-  },
-  "FXA_HAWK_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "FxA error responses caused by invalid Hawk credentials. Keyed on the FxA auth server endpoint."
-  },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
     "alert_emails": ["fx-team@mozilla.com"],
     "bug_numbers": [1232050],
@@ -9937,24 +10037,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
-  "WEAVE_ENGINE_APPLY_NEW_FAILURES": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of records that a Sync engine failed to apply. Keyed on the engine name."
-  },
-  "WEAVE_ENGINE_APPLY_FAILURES": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Failures encountered applying incoming records. Keyed on the engine name."
-  },
   "WEAVE_ENGINE_SYNC_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
     "bug_numbers": [1236383],
@@ -9963,22 +10045,6 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Exceptions thrown by a Sync engine. Keyed on the engine name."
-  },
-  "WEAVE_HAS_NO_KEYS_WHEN_UNLOCKED": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Records how often Sync doesn't have the necessary keys when the master-password is unlocked."
-  },
-  "WEAVE_FXA_KEY_FETCH_AUTH_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Authentication errors encountered fetching Sync keys."
   },
   "CONTENT_DOCUMENTS_DESTROYED": {
     "expires_in_version": "never",
@@ -10130,10 +10196,11 @@
   },
   "PLUGIN_ACTIVATION_COUNT": {
     "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "48",
+    "expires_in_version": "53",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
+    "bug_numbers": [722110,1260065],
     "description": "Counts number of times a certain plugin has been activated."
   },
   "SCROLL_LINKED_EFFECT_FOUND": {
@@ -10295,16 +10362,18 @@
   },
   "YOUTUBE_REWRITABLE_EMBED_SEEN": {
     "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "48",
+    "expires_in_version": "53",
     "kind": "flag",
     "bug_numbers": [1229971],
+    "releaseChannelCollection": "opt-out",
     "description": "Flag activated whenever a rewritable youtube flash embed is seen during a session."
   },
   "YOUTUBE_NONREWRITABLE_EMBED_SEEN": {
     "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "48",
+    "expires_in_version": "53",
     "kind": "flag",
     "bug_numbers": [1237401],
+    "releaseChannelCollection": "opt-out",
     "description": "Flag activated whenever a non-rewritable (enablejsapi=1) youtube flash embed is seen during a session."
   },
   "PLUGIN_DRAWING_MODEL": {
@@ -10355,5 +10424,54 @@
     "high": 100,
     "n_buckets": 50,
     "description": "Position in (theoretical) tab cache of tab being switched to"
+  },
+  "REMOTE_JAR_PROTOCOL_USED": {
+    "alert_emails": ["dev-platform@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "bug_numbers": [1255934],
+    "kind": "count",
+    "description": "Remote JAR protocol usage"
+  },
+  "MEDIA_DECODER_BACKEND_USED": {
+    "alert_emails": ["danderson@mozilla.com"],
+    "bug_numbers": [1259695],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Media decoder backend (0=WMF Software, 1=DXVA2D3D9, 2=DXVA2D3D11)"
+  },
+  "PLUGIN_BLOCKED_FOR_STABILITY": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "52",
+    "kind": "count",
+    "bug_numbers": [1237198],
+    "description": "Count plugins blocked for stability"
+  },
+  "PLUGIN_TINY_CONTENT": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "52",
+    "kind": "count",
+    "bug_numbers": [1237198],
+    "description": "Count tiny plugin content"
+  },
+  "IPC_MESSAGE_SIZE": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1260908],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 8000000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "Measures the size of IPC messages by message name"
+  },
+  "MESSAGE_MANAGER_MESSAGE_SIZE": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1260908],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 8000000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "Measures the size of message manager messages by message name"
   }
 }

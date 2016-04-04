@@ -19,7 +19,7 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
                      InternalSMILTimeEvent* aEvent)
   : Event(aOwner, aPresContext,
           aEvent ? aEvent : new InternalSMILTimeEvent(false, eVoidEvent))
-  , mDetail(mEvent->AsSMILTimeEvent()->detail)
+  , mDetail(mEvent->AsSMILTimeEvent()->mDetail)
 {
   if (aEvent) {
     mEventIsInternal = false;

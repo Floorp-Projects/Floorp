@@ -17,3 +17,7 @@ jar.sources += [
     'src/org/mozilla/javaaddons/test/JavaAddonV0.java',
     'src/org/mozilla/javaaddons/test/JavaAddonV1.java',
 ]
+
+OBJDIR_PP_FILES.mobile.android.tests.javaaddons += [
+    'AndroidManifest.xml.in',
+]

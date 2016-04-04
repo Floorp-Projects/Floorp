@@ -72,7 +72,7 @@ bool CompareShaderVar(const sh::ShaderVariable &x, const sh::ShaderVariable &y)
     return gl::VariableSortOrder(x.type) < gl::VariableSortOrder(y.type);
 }
 
-Shader::Data::Data(GLenum shaderType) : mShaderType(shaderType), mShaderVersion(100)
+Shader::Data::Data(GLenum shaderType) : mLabel(), mShaderType(shaderType), mShaderVersion(100)
 {
 }
 
@@ -101,6 +101,16 @@ Shader::Shader(ResourceManager *manager,
 Shader::~Shader()
 {
     SafeDelete(mImplementation);
+}
+
+void Shader::setLabel(const std::string &label)
+{
+    mData.mLabel = label;
+}
+
+const std::string &Shader::getLabel() const
+{
+    return mData.mLabel;
 }
 
 GLuint Shader::getHandle() const

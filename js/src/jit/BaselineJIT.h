@@ -110,7 +110,15 @@ struct DependentWasmModuleImport
 struct BaselineScript
 {
   public:
+    // Largest script that the baseline compiler will attempt to compile.
+#if defined(JS_CODEGEN_ARM)
+    // ARM branches can only reach 32MB, and the macroassembler doesn't mitigate
+    // that limitation. Use a stricter limit on the acceptable script size to
+    // avoid crashing when branches go out of range.
+    static const uint32_t MAX_JSSCRIPT_LENGTH = 1000000u;
+#else
     static const uint32_t MAX_JSSCRIPT_LENGTH = 0x0fffffffu;
+#endif
 
     // Limit the locals on a given script so that stack check on baseline frames
     // doesn't overflow a uint32_t value.

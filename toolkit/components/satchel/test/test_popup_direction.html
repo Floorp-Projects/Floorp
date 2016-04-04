@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Popup Direction</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Test for Popup Direction
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <!-- normal, basic form -->
+  <form id="form1" onsubmit="return false;">
+    <input  type="text" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var resolvePopupShownListener;
+registerPopupShownListener(() => resolvePopupShownListener());
+
+function waitForNextPopup() {
+  return new Promise(resolve => { resolvePopupShownListener = resolve; });
+}
+
+add_task(function* test_popup_direction() {
+  var input = $_(1, "field1");
+
+  yield new Promise(resolve => updateFormHistory([
+    { op : "remove" },
+    { op : "add", fieldname : "field1", value : "value1" },
+    { op : "add", fieldname : "field1", value : "value2" },
+  ], resolve));
+
+  for (let direction of ["ltr", "rtl"]) {
+    document.getElementById("content").style.direction = direction;
+
+    let popupShown = waitForNextPopup();
+    input.focus();
+    doKey("down");
+    yield popupShown;
+
+    let popupState = yield new Promise(resolve => getPopupState(resolve));
+    is(popupState.direction, direction, "Direction should match.");
+
+    // Close the popup.
+    input.blur();
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>

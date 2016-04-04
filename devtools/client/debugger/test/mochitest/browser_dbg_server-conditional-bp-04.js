@@ -5,7 +5,7 @@
 
 /**
  * Make sure that conditional breakpoints with undefined expressions
- * are stored as plain breakpoints when re-enabling them (with
+ * maintain their conditions when re-enabling them (with
  * server-side support)
  */
 
@@ -31,7 +31,7 @@ function test() {
       yield actions.addBreakpoint(location);
 
       const bp = queries.getBreakpoint(getState(), location);
-      is(bp.condition, undefined, "The conditional expression is correct.");
+      is(bp.condition, "", "The conditional expression is correct.");
 
       resumeDebuggerThenCloseAndFinish(gPanel);
     });

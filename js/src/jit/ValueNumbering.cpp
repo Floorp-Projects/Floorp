@@ -440,6 +440,7 @@ ValueNumberer::fixupOSROnlyLoop(MBasicBlock* block, MBasicBlock* backedge)
     fake->setImmediateDominator(fake);
     fake->addNumDominated(1);
     fake->setDomIndex(fake->id());
+    fake->setUnreachable();
 
     // Create zero-input phis to use as inputs for any phis in |block|.
     // Again, this is a little odd, but it's the least-odd thing we can do
@@ -520,14 +521,12 @@ ValueNumberer::removePredecessorAndCleanUp(MBasicBlock* block, MBasicBlock* pred
     // If this is a loop header, test whether it will become an unreachable
     // loop, or whether it needs special OSR-related fixups.
     bool isUnreachableLoop = false;
-    MBasicBlock* origBackedgeForOSRFixup = nullptr;
     if (block->isLoopHeader()) {
         if (block->loopPredecessor() == pred) {
             if (MOZ_UNLIKELY(hasNonDominatingPredecessor(block, pred))) {
                 JitSpew(JitSpew_GVN, "      "
                         "Loop with header block%u is now only reachable through an "
                         "OSR entry into the middle of the loop!!", block->id());
-                origBackedgeForOSRFixup = block->backedge();
             } else {
                 // Deleting the entry into the loop makes the loop unreachable.
                 isUnreachableLoop = true;
@@ -606,11 +605,6 @@ ValueNumberer::removePredecessorAndCleanUp(MBasicBlock* block, MBasicBlock* pred
         // Use the mark to note that we've already removed all its predecessors,
         // and we know it's unreachable.
         block->mark();
-    } else if (MOZ_UNLIKELY(origBackedgeForOSRFixup != nullptr)) {
-        // The loop is no only reachable through OSR into the middle. Fix it
-        // up so that the CFG can remain valid.
-        if (!fixupOSROnlyLoop(block, origBackedgeForOSRFixup))
-            return false;
     }
 
     return true;
@@ -1079,6 +1073,30 @@ ValueNumberer::visitGraph()
     return true;
 }
 
+bool
+ValueNumberer::insertOSRFixups()
+{
+    ReversePostorderIterator end(graph_.end());
+    for (ReversePostorderIterator iter(graph_.begin()); iter != end; ) {
+        MBasicBlock* block = *iter++;
+
+        // Only add fixup block above for loops which can be reached from OSR.
+        if (!block->isLoopHeader())
+            continue;
+
+        // If the loop header is not self-dominated, then this loop does not
+        // have to deal with a second entry point, so there is no need to add a
+        // second entry point with a fixup block.
+        if (block->immediateDominator() != block)
+            continue;
+
+        if (!fixupOSROnlyLoop(block, block->backedge()))
+            return false;
+    }
+
+    return true;
+}
+
 // OSR fixups serve the purpose of representing the non-OSR entry into a loop
 // when the only real entry is an OSR entry into the middle. However, if the
 // entry into the middle is subsequently folded away, the loop may actually
@@ -1101,22 +1119,44 @@ bool ValueNumberer::cleanupOSRFixups()
                 succ->mark();
                 if (!worklist.append(succ))
                     return false;
+            } else if (succ->isLoopHeader() &&
+                       succ->loopPredecessor() == block &&
+                       succ->numPredecessors() == 3)
+            {
+                // Unmark fixup blocks if the loop predecessor is marked after
+                // the loop header.
+                succ->getPredecessor(1)->unmarkUnchecked();
             }
         }
-        // The one special thing we do during this mark pass is to mark
-        // loop predecessors of reachable blocks as reachable. These blocks are
-        // the OSR fixups blocks which need to remain if the loop remains,
-        // though they can be removed if the loop is removed.
+
+        // OSR fixup blocks are needed if and only if the loop header is
+        // reachable from its backedge (via the OSR block) and not from its
+        // original loop predecessor.
+        //
+        // Thus OSR fixup blocks are removed if the loop header is not
+        // reachable, or if the loop header is reachable from both its backedge
+        // and its original loop predecessor.
         if (block->isLoopHeader()) {
-            MBasicBlock* pred = block->loopPredecessor();
-            if (!pred->isMarked() && pred->numPredecessors() == 0) {
-                MOZ_ASSERT(pred->numSuccessors() == 1,
+            MBasicBlock* maybeFixupBlock = nullptr;
+            if (block->numPredecessors() == 2) {
+                maybeFixupBlock = block->getPredecessor(0);
+            } else {
+                MOZ_ASSERT(block->numPredecessors() == 3);
+                if (!block->loopPredecessor()->isMarked())
+                    maybeFixupBlock = block->getPredecessor(1);
+            }
+
+            if (maybeFixupBlock &&
+                !maybeFixupBlock->isMarked() &&
+                maybeFixupBlock->numPredecessors() == 0)
+            {
+                MOZ_ASSERT(maybeFixupBlock->numSuccessors() == 1,
                            "OSR fixup block should have exactly one successor");
-                MOZ_ASSERT(pred != graph_.entryBlock(),
+                MOZ_ASSERT(maybeFixupBlock != graph_.entryBlock(),
                            "OSR fixup block shouldn't be the entry block");
-                MOZ_ASSERT(pred != graph_.osrBlock(),
+                MOZ_ASSERT(maybeFixupBlock != graph_.osrBlock(),
                            "OSR fixup block shouldn't be the OSR entry block");
-                pred->mark();
+                maybeFixupBlock->mark();
             }
         }
     }
@@ -1159,6 +1199,11 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
     JitSpew(JitSpew_GVN, "Running GVN on graph (with %llu blocks)",
             uint64_t(graph_.numBlocks()));
 
+    // Adding fixup blocks only make sense iff we have a second entry point into
+    // the graph which cannot be reached any more from the entry point.
+    if (graph_.osrBlock())
+        insertOSRFixups();
+
     // Top level non-sparse iteration loop. If an iteration performs a
     // significant change, such as discarding a block which changes the
     // dominator tree and may enable more optimization, this loop takes another
@@ -1182,7 +1227,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
         }
 
         if (blocksRemoved_) {
-            if (!AccountForCFGChanges(mir_, graph_, dependenciesBroken_))
+            if (!AccountForCFGChanges(mir_, graph_, dependenciesBroken_, /* underValueNumberer = */ true))
                 return false;
 
             blocksRemoved_ = false;

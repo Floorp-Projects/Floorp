@@ -7,7 +7,6 @@ var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).So
 var manifest = { // used for testing install
   name: "provider test1",
   origin: "https://test1.example.com",
-  workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
   markURL: "https://test1.example.com/browser/browser/base/content/test/social/social_mark.html?url=%{url}",
   markedIcon: "https://test1.example.com/browser/browser/base/content/test/social/unchecked.jpg",
   unmarkedIcon: "https://test1.example.com/browser/browser/base/content/test/social/checked.jpg",
@@ -18,9 +17,17 @@ var manifest = { // used for testing install
 
 function test() {
   waitForExplicitFinish();
+  let frameScript = "data:,(" + function frame_script() {
+    addEventListener("OpenGraphData", function (aEvent) {
+      sendAsyncMessage("sharedata", aEvent.detail);
+    }, true, true);
+  }.toString() + ")();";
+  let mm = getGroupMessageManager("social");
+  mm.loadFrameScript(frameScript, true);
 
   runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, function () {
+      mm.removeDelayedFrameScript(frameScript);
       finishcb();
     });
   });
@@ -30,7 +37,6 @@ var tests = {
   testMarkMicroformats: function(next) {
     // emulates context menu action using target element, calling SocialMarks.markLink
     let provider = Social._getProviderFromOrigin(manifest.origin);
-    let port = provider.getWorkerPort();
     let target, testTab;
 
     // browser_share tests microformats on the full page, this is testing a
@@ -50,18 +56,13 @@ var tests = {
       }
     });
 
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "got-share-data-message":
-          is(JSON.stringify(e.data.result), expecting, "microformats data ok");
-          gBrowser.removeTab(testTab);
-          port.close();
-          next();
-          break;
-      }
-    }
-    port.postMessage({topic: "test-init"});
+    let mm = getGroupMessageManager("social");
+    mm.addMessageListener("sharedata", function handler(msg) {
+      gBrowser.removeTab(testTab);
+      is(msg.data, expecting, "microformats data ok");
+      mm.removeMessageListener("sharedata", handler);
+      next();
+    });
 
     let url = "https://example.com/browser/browser/base/content/test/social/microformats.html"
     addTab(url, function(tab) {

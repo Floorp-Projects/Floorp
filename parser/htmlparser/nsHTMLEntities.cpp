@@ -23,30 +23,25 @@ struct EntityNodeEntry : public PLDHashEntryHdr
   const EntityNode* node;
 }; 
 
-static bool
-  matchNodeString(PLDHashTable*, const PLDHashEntryHdr* aHdr,
-                  const void* key)
+static bool matchNodeString(const PLDHashEntryHdr* aHdr, const void* key)
 {
   const EntityNodeEntry* entry = static_cast<const EntityNodeEntry*>(aHdr);
   const char* str = static_cast<const char*>(key);
   return (nsCRT::strcmp(entry->node->mStr, str) == 0);
 }
 
-static bool
-  matchNodeUnicode(PLDHashTable*, const PLDHashEntryHdr* aHdr,
-                   const void* key)
+static bool matchNodeUnicode(const PLDHashEntryHdr* aHdr, const void* key)
 {
   const EntityNodeEntry* entry = static_cast<const EntityNodeEntry*>(aHdr);
   const int32_t ucode = NS_PTR_TO_INT32(key);
   return (entry->node->mUnicode == ucode);
 }
 
-static PLDHashNumber
-  hashUnicodeValue(PLDHashTable*, const void* key)
+static PLDHashNumber hashUnicodeValue(const void* key)
 {
   // key is actually the unicode value
   return PLDHashNumber(NS_PTR_TO_INT32(key));
-  }
+}
 
 
 static const PLDHashTableOps EntityToUnicodeOps = {

@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("nsLoginManager");
-  return logger.log.bind(logger);
+  return logger;
 });
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -35,10 +35,10 @@ function LoginManager() {
 LoginManager.prototype = {
 
   classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManager,
-                                          Ci.nsISupportsWeakReference,
-                                          Ci.nsIInterfaceRequestor]),
-  getInterface : function(aIID) {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginManager,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIInterfaceRequestor]),
+  getInterface(aIID) {
     if (aIID.equals(Ci.mozIStorageConnection) && this._storage) {
       let ir = this._storage.QueryInterface(Ci.nsIInterfaceRequestor);
       return ir.getInterface(aIID);
@@ -56,31 +56,29 @@ LoginManager.prototype = {
   /* ---------- private members ---------- */
 
 
-  __formFillService : null, // FormFillController, for username autocompleting
+  __formFillService: null, // FormFillController, for username autocompleting
   get _formFillService() {
-    if (!this.__formFillService)
-      this.__formFillService =
-                      Cc["@mozilla.org/satchel/form-fill-controller;1"].
-                      getService(Ci.nsIFormFillController);
+    if (!this.__formFillService) {
+      this.__formFillService = Cc["@mozilla.org/satchel/form-fill-controller;1"].
+                               getService(Ci.nsIFormFillController);
+    }
     return this.__formFillService;
   },
 
 
-  _storage : null, // Storage component which contains the saved logins
-  _prefBranch  : null, // Preferences service
-  _remember : true,  // mirrors signon.rememberSignons preference
+  _storage: null, // Storage component which contains the saved logins
+  _prefBranch: null, // Preferences service
+  _remember: true,  // mirrors signon.rememberSignons preference
 
 
-  /*
-   * init
-   *
+  /**
    * Initialize the Login Manager. Automatically called when service
    * is created.
    *
    * Note: Service created in /browser/base/content/browser.js,
    *       delayedStartup()
    */
-  init : function () {
+  init() {
 
     // Cache references to current |this| in utility objects
     this._observer._pwmgr            = this;
@@ -107,21 +105,21 @@ LoginManager.prototype = {
   },
 
 
-  _initStorage : function () {
-    var contractID;
+  _initStorage() {
+    let contractID;
     if (AppConstants.platform == "android") {
       contractID = "@mozilla.org/login-manager/storage/mozStorage;1";
     } else {
       contractID = "@mozilla.org/login-manager/storage/json;1";
     }
     try {
-      var catMan = Cc["@mozilla.org/categorymanager;1"].
+      let catMan = Cc["@mozilla.org/categorymanager;1"].
                    getService(Ci.nsICategoryManager);
       contractID = catMan.getCategoryEntry("login-manager-storage",
                                            "nsILoginManagerStorage");
-      log("Found alternate nsILoginManagerStorage with contract ID:", contractID);
+      log.debug("Found alternate nsILoginManagerStorage with contract ID:", contractID);
     } catch (e) {
-      log("No alternate nsILoginManagerStorage registered");
+      log.debug("No alternate nsILoginManagerStorage registered");
     }
 
     this._storage = Cc[contractID].
@@ -133,30 +131,27 @@ LoginManager.prototype = {
   /* ---------- Utility objects ---------- */
 
 
-  /*
-   * _observer object
-   *
+  /**
    * Internal utility object, implements the nsIObserver interface.
    * Used to receive notification for: form submission, preference changes.
    */
-  _observer : {
-    _pwmgr : null,
+  _observer: {
+    _pwmgr: null,
 
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                           Ci.nsISupportsWeakReference]),
 
-    // nsObserver
-    observe : function (subject, topic, data) {
-
+    // nsIObserver
+    observe(subject, topic, data) {
       if (topic == "nsPref:changed") {
         var prefName = data;
-        log("got change to", prefName, "preference");
+        log.debug("got change to", prefName, "preference");
 
         if (prefName == "rememberSignons") {
           this._pwmgr._remember =
               this._pwmgr._prefBranch.getBoolPref("rememberSignons");
         } else {
-          log("Oops! Pref not handled, change ignored.");
+          log.debug("Oops! Pref not handled, change ignored.");
         }
       } else if (topic == "xpcom-shutdown") {
         delete this._pwmgr.__formFillService;
@@ -177,7 +172,7 @@ LoginManager.prototype = {
         this._pwmgr._gatherTelemetry(data ? parseInt(data)
                                           : new Date().getTime());
       } else {
-        log("Oops! Unexpected notification:", topic);
+        log.debug("Oops! Unexpected notification:", topic);
       }
     }
   },
@@ -194,7 +189,7 @@ LoginManager.prototype = {
    *        the number of milliseconds since January 1, 1970, 00:00:00 UTC.
    *        This is set to a fake value during unit testing.
    */
-  _gatherTelemetry : function (referenceTimeMs) {
+  _gatherTelemetry(referenceTimeMs) {
     function clearAndGetHistogram(histogramId) {
       let histogram = Services.telemetry.getHistogramById(histogramId);
       histogram.clear();
@@ -256,40 +251,42 @@ LoginManager.prototype = {
 
 
 
-  /*
-   * initializationPromise
-   *
+  /**
+   * @type Promise
    * This promise is resolved when initialization is complete, and is rejected
    * in case the asynchronous part of initialization failed.
    */
-  initializationPromise : null,
+  initializationPromise: null,
 
 
-  /*
-   * addLogin
-   *
+  /**
    * Add a new login to login storage.
    */
-  addLogin : function (login) {
+  addLogin(login) {
     // Sanity check the login
-    if (login.hostname == null || login.hostname.length == 0)
+    if (login.hostname == null || login.hostname.length == 0) {
       throw new Error("Can't add a login with a null or empty hostname.");
+    }
 
     // For logins w/o a username, set to "", not null.
-    if (login.username == null)
+    if (login.username == null) {
       throw new Error("Can't add a login with a null username.");
+    }
 
-    if (login.password == null || login.password.length == 0)
+    if (login.password == null || login.password.length == 0) {
       throw new Error("Can't add a login with a null or empty password.");
+    }
 
     if (login.formSubmitURL || login.formSubmitURL == "") {
       // We have a form submit URL. Can't have a HTTP realm.
-      if (login.httpRealm != null)
+      if (login.httpRealm != null) {
         throw new Error("Can't add a login with both a httpRealm and formSubmitURL.");
+      }
     } else if (login.httpRealm) {
       // We have a HTTP realm. Can't have a form submit URL.
-      if (login.formSubmitURL != null)
+      if (login.formSubmitURL != null) {
         throw new Error("Can't add a login with both a httpRealm and formSubmitURL.");
+      }
     } else {
       // Need one or the other!
       throw new Error("Can't add a login without a httpRealm or formSubmitURL.");
@@ -300,166 +297,140 @@ LoginManager.prototype = {
     var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
                                  login.httpRealm);
 
-    if (logins.some(l => login.matches(l, true)))
+    if (logins.some(l => login.matches(l, true))) {
       throw new Error("This login already exists.");
+    }
 
-    log("Adding login");
+    log.debug("Adding login");
     return this._storage.addLogin(login);
   },
 
-  /*
-   * removeLogin
-   *
+  /**
    * Remove the specified login from the stored logins.
    */
-  removeLogin : function (login) {
-    log("Removing login");
+  removeLogin(login) {
+    log.debug("Removing login");
     return this._storage.removeLogin(login);
   },
 
 
-  /*
-   * modifyLogin
-   *
+  /**
    * Change the specified login to match the new login.
    */
-  modifyLogin : function (oldLogin, newLogin) {
-    log("Modifying login");
+  modifyLogin(oldLogin, newLogin) {
+    log.debug("Modifying login");
     return this._storage.modifyLogin(oldLogin, newLogin);
   },
 
 
-  /*
-   * getAllLogins
-   *
+  /**
    * Get a dump of all stored logins. Used by the login manager UI.
    *
-   * |count| is only needed for XPCOM.
-   *
-   * Returns an array of logins. If there are no logins, the array is empty.
+   * @param count - only needed for XPCOM.
+   * @return {nsILoginInfo[]} - If there are no logins, the array is empty.
    */
-  getAllLogins : function (count) {
-    log("Getting a list of all logins");
+  getAllLogins(count) {
+    log.debug("Getting a list of all logins");
     return this._storage.getAllLogins(count);
   },
 
 
-  /*
-   * removeAllLogins
-   *
+  /**
    * Remove all stored logins.
    */
-  removeAllLogins : function () {
-    log("Removing all logins");
+  removeAllLogins() {
+    log.debug("Removing all logins");
     this._storage.removeAllLogins();
   },
 
-  /*
-   * getAllDisabledHosts
-   *
-   * Get a list of all hosts for which logins are disabled.
+  /**
+   * Get a list of all origins for which logins are disabled.
    *
    * |count| is only needed for XPCOM.
    *
-   * Returns an array of disabled logins. If there are no disabled logins,
-   * the array is empty.
+   * @return {String[]} of disabled origins. If there are no disabled origins,
+   *                    the array is empty.
    */
-  getAllDisabledHosts : function (count) {
-    log("Getting a list of all disabled hosts");
+  getAllDisabledHosts(count) {
+    log.debug("Getting a list of all disabled origins");
     return this._storage.getAllDisabledHosts(count);
   },
 
 
-  /*
-   * findLogins
-   *
+  /**
    * Search for the known logins for entries matching the specified criteria.
    */
-  findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-    log("Searching for logins matching host:", hostname,
-        "formSubmitURL:", formSubmitURL, "httpRealm:", httpRealm);
+  findLogins(count, origin, formActionOrigin, httpRealm) {
+    log.debug("Searching for logins matching origin:", origin,
+              "formActionOrigin:", formActionOrigin, "httpRealm:", httpRealm);
 
-    return this._storage.findLogins(count, hostname, formSubmitURL,
+    return this._storage.findLogins(count, origin, formActionOrigin,
                                     httpRealm);
   },
 
 
-  /*
-   * searchLogins
-   *
+  /**
    * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
    * JavaScript object and decrypt the results.
    *
-   * Returns an array of decrypted nsILoginInfo.
+   * @return {nsILoginInfo[]} which are decrypted.
    */
-  searchLogins : function(count, matchData) {
-   log("Searching for logins");
+  searchLogins(count, matchData) {
+    log.debug("Searching for logins");
 
     return this._storage.searchLogins(count, matchData);
   },
 
 
-  /*
-   * countLogins
-   *
+  /**
    * Search for the known logins for entries matching the specified criteria,
    * returns only the count.
    */
-  countLogins : function (hostname, formSubmitURL, httpRealm) {
-    log("Counting logins matching host:", hostname,
-        "formSubmitURL:", formSubmitURL, "httpRealm:", httpRealm);
+  countLogins(origin, formActionOrigin, httpRealm) {
+    log.debug("Counting logins matching origin:", origin,
+              "formActionOrigin:", formActionOrigin, "httpRealm:", httpRealm);
 
-    return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
+    return this._storage.countLogins(origin, formActionOrigin, httpRealm);
   },
 
 
-  /*
-   * uiBusy
-   */
   get uiBusy() {
     return this._storage.uiBusy;
   },
 
 
-  /*
-   * isLoggedIn
-   */
   get isLoggedIn() {
     return this._storage.isLoggedIn;
   },
 
 
-  /*
-   * getLoginSavingEnabled
-   *
-   * Check to see if user has disabled saving logins for the host.
+  /**
+   * Check to see if user has disabled saving logins for the origin.
    */
-  getLoginSavingEnabled : function (host) {
-    log("Checking if logins to", host, "can be saved.");
-    if (!this._remember)
+  getLoginSavingEnabled(origin) {
+    log.debug("Checking if logins to", origin, "can be saved.");
+    if (!this._remember) {
       return false;
+    }
 
-    return this._storage.getLoginSavingEnabled(host);
+    return this._storage.getLoginSavingEnabled(origin);
   },
 
 
-  /*
-   * setLoginSavingEnabled
-   *
-   * Enable or disable storing logins for the specified host.
+  /**
+   * Enable or disable storing logins for the specified origin.
    */
-  setLoginSavingEnabled : function (hostname, enabled) {
+  setLoginSavingEnabled(origin, enabled) {
     // Nulls won't round-trip with getAllDisabledHosts().
-    if (hostname.indexOf("\0") != -1)
+    if (origin.indexOf("\0") != -1) {
       throw new Error("Invalid hostname");
+    }
 
-    log("Login saving for", hostname, "now enabled?", enabled);
-    return this._storage.setLoginSavingEnabled(hostname, enabled);
+    log.debug("Login saving for", origin, "now enabled?", enabled);
+    return this._storage.setLoginSavingEnabled(origin, enabled);
   },
 
-  /*
-   * autoCompleteSearchAsync
-   *
+  /**
    * Yuck. This is called directly by satchel:
    * nsFormFillController::StartSearch()
    * [toolkit/components/satchel/nsFormFillController.cpp]
@@ -467,8 +438,8 @@ LoginManager.prototype = {
    * We really ought to have a simple way for code to register an
    * auto-complete provider, and not have satchel calling pwmgr directly.
    */
-  autoCompleteSearchAsync : function (aSearchString, aPreviousResult,
-                                      aElement, aCallback) {
+  autoCompleteSearchAsync(aSearchString, aPreviousResult,
+                          aElement, aCallback) {
     // aPreviousResult is an nsIAutoCompleteResult, aElement is
     // nsIDOMHTMLInputElement
 
@@ -479,9 +450,9 @@ LoginManager.prototype = {
       return;
     }
 
-    log("AutoCompleteSearch invoked. Search is:", aSearchString);
+    log.debug("AutoCompleteSearch invoked. Search is:", aSearchString);
 
-    var previousResult;
+    let previousResult;
     if (aPreviousResult) {
       previousResult = { searchString: aPreviousResult.searchString,
                          logins: aPreviousResult.wrappedJSObject.logins };

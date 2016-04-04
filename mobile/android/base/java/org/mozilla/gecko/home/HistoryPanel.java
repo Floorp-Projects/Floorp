@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 
+import android.support.v4.content.ContextCompat;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,7 +20,6 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -27,7 +27,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.restrictions.Restrictable;
-import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.app.AlertDialog;
@@ -37,6 +37,7 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.text.SpannableStringBuilder;
@@ -209,7 +210,7 @@ public class HistoryPanel extends HomeFragment {
                             Log.e(LOGTAG, "JSON error", e);
                         }
 
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearData", json.toString()));
+                        GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
 
                         Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                     }
@@ -491,27 +492,26 @@ public class HistoryPanel extends HomeFragment {
             final MostRecentSection current = getItem(position);
             final TextView textView = (TextView) view.getTag();
             textView.setText(getMostRecentSectionTitle(current));
-            textView.setTextColor(ColorUtils.getColor(context, current == selected ? R.color.text_and_tabs_tray_grey : R.color.disabled_grey));
+            textView.setTextColor(ContextCompat.getColor(context, current == selected ? R.color.text_and_tabs_tray_grey : R.color.disabled_grey));
             textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, current == selected ? R.drawable.home_group_collapsed : 0, 0);
             return view;
         }
     }
 
-    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
+    private class CursorLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             return new HistoryCursorLoader(getActivity());
         }
 
         @Override
-        public void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             mAdapter.swapCursor(c);
             updateUiFromCursor(c);
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            super.onLoaderReset(loader);
             mAdapter.swapCursor(null);
         }
     }

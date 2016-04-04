@@ -351,7 +351,7 @@ ConvertUnescapedTokenToAtom(const nsAString& aToken)
   // Whether the token is an id-ref or event-symbol it should be a valid NCName
   if (aToken.IsEmpty() || NS_FAILED(nsContentUtils::CheckQName(aToken, false)))
     return nullptr;
-  return do_GetAtom(aToken);
+  return NS_Atomize(aToken);
 }
     
 already_AddRefed<nsIAtom>

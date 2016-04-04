@@ -12,7 +12,10 @@ const TEST_NETWORK_REQUEST_URI =
   "test-network-request.html";
 
 add_task(function* () {
-  let finishedRequest = waitForFinishedRequest();
+  let finishedRequest = waitForFinishedRequest(({ request }) => {
+    return request.url === TEST_NETWORK_REQUEST_URI;
+  });
+
   const hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI,
                                       "browserConsole");
   let request = yield finishedRequest;

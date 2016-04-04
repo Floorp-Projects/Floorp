@@ -756,15 +756,14 @@ struct SegmentKind
 
 struct SegmentEntry : public PLDHashEntryHdr
 {
-  static PLDHashNumber HashKey(PLDHashTable* aTable, const void* aKey)
+  static PLDHashNumber HashKey(const void* aKey)
   {
     auto kind = static_cast<const SegmentKind*>(aKey);
     return mozilla::HashGeneric(kind->mState, kind->mType, kind->mProtect,
                                 kind->mIsStack);
   }
 
-  static bool MatchEntry(PLDHashTable* aTable,
-                         const PLDHashEntryHdr* aEntry, const void* aKey)
+  static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
   {
     auto kind = static_cast<const SegmentKind*>(aKey);
     auto entry = static_cast<const SegmentEntry*>(aEntry);

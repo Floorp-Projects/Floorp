@@ -326,7 +326,7 @@ class MediaRecorder::Session: public nsIObserver
     {
       LOG(LogLevel::Debug, ("Session.DestroyRunnable session refcnt = (%d) stopIssued %d s=(%p)",
                          (int)mSession->mRefCnt, mSession->mStopIssued, mSession.get()));
-      MOZ_ASSERT(NS_IsMainThread() && mSession.get());
+      MOZ_ASSERT(NS_IsMainThread() && mSession);
       RefPtr<MediaRecorder> recorder = mSession->mRecorder;
       if (!recorder) {
         return NS_OK;
@@ -412,6 +412,9 @@ public:
 
     NS_ENSURE_TRUE(mTrackUnionStream, NS_ERROR_FAILURE);
     mTrackUnionStream->Suspend();
+    if (mEncoder) {
+      mEncoder->Suspend();
+    }
 
     return NS_OK;
   }
@@ -422,6 +425,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     NS_ENSURE_TRUE(mTrackUnionStream, NS_ERROR_FAILURE);
+    if (mEncoder) {
+      mEncoder->Resume();
+    }
     mTrackUnionStream->Resume();
 
     return NS_OK;
@@ -635,6 +641,16 @@ private:
       return;
     }
     mTrackUnionStream->AddListener(mEncoder);
+    // Try to use direct listeners if possible
+    DOMMediaStream* domStream = mRecorder->Stream();
+    if (domStream && domStream->GetInputStream()) {
+      mInputStream = domStream->GetInputStream()->AsSourceStream();
+      if (mInputStream) {
+        mInputStream->AddDirectListener(mEncoder);
+        mEncoder->SetDirectConnect(true);
+      }
+    }
+
     // Create a thread to read encode media data from MediaEncoder.
     if (!mReadThread) {
       nsresult rv = NS_NewNamedThread("Media_Encoder", getter_AddRefs(mReadThread));
@@ -687,12 +703,21 @@ private:
   }
   void CleanupStreams()
   {
-    if (mInputPort.get()) {
+    if (mInputStream) {
+      if (mEncoder) {
+        mInputStream->RemoveDirectListener(mEncoder);
+      }
+      mInputStream = nullptr;
+    }
+    if (mInputPort) {
       mInputPort->Destroy();
       mInputPort = nullptr;
     }
 
-    if (mTrackUnionStream.get()) {
+    if (mTrackUnionStream) {
+      if (mEncoder) {
+        mTrackUnionStream->RemoveListener(mEncoder);
+      }
       mTrackUnionStream->Destroy();
       mTrackUnionStream = nullptr;
     }
@@ -734,6 +759,7 @@ private:
   // Receive track data from source and dispatch to Encoder.
   // Pause/ Resume controller.
   RefPtr<ProcessedMediaStream> mTrackUnionStream;
+  RefPtr<SourceMediaStream> mInputStream;
   RefPtr<MediaInputPort> mInputPort;
 
   // Runnable thread for read data from MediaEncode.

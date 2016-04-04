@@ -6,10 +6,10 @@
 
 package org.mozilla.gecko.widget.themed;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.DrawableUtil;
 
 import android.content.Context;
@@ -178,10 +178,9 @@ public class ThemedImageButton extends android.widget.ImageButton
     private void setTintedImageDrawable(final Drawable drawable) {
         final Drawable tintedDrawable;
         if (drawableColors == null || R.id.bookmark == getId()) {
+            // NB: The bookmarked state uses a blue star, so this is a hack to keep it untinted.
             // NB: If we tint a drawable with a null ColorStateList, it will override
             // any existing colorFilters and tint... so don't!
-
-            // NB: The bookmarked state uses a blue star, so this is a hack to keep it from being tinted.
             tintedDrawable = drawable;
         } else if (drawable == null) {
             tintedDrawable = null;
@@ -192,7 +191,7 @@ public class ThemedImageButton extends android.widget.ImageButton
     }
 
     public ColorDrawable getColorDrawable(int id) {
-        return new ColorDrawable(ColorUtils.getColor(getContext(), id));
+        return new ColorDrawable(ContextCompat.getColor(getContext(), id));
     }
 
     protected LightweightTheme getTheme() {

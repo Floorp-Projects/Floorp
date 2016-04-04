@@ -36,15 +36,14 @@
 using namespace mozilla;
 
 static PLDHashNumber
-GlobalNameHashHashKey(PLDHashTable *table, const void *key)
+GlobalNameHashHashKey(const void *key)
 {
   const nsAString *str = static_cast<const nsAString *>(key);
   return HashString(*str);
 }
 
 static bool
-GlobalNameHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                         const void *key)
+GlobalNameHashMatchEntry(const PLDHashEntryHdr *entry, const void *key)
 {
   const GlobalNameMapEntry *e =
     static_cast<const GlobalNameMapEntry *>(entry);

@@ -1134,8 +1134,7 @@ AudioManager::MaybeUpdateVolumeSettingToDatabase(bool aForce)
   }
 
   // Send events to update the Gaia volumes
-  mozilla::AutoSafeJSContext cx;
-  JS::Rooted<JS::Value> value(cx);
+  JS::Rooted<JS::Value> value(nsContentUtils::RootingCx());
   uint32_t volume = 0;
   for (uint32_t idx = 0; idx < MOZ_ARRAY_LENGTH(gVolumeData); ++idx) {
     int32_t streamType = gVolumeData[idx].mStreamType;
@@ -1361,22 +1360,10 @@ AudioManager::VolumeStreamState::SetVolumeIndexToActiveDevices(uint32_t aIndex)
 
   // AudioPolicyManager::setStreamVolumeIndex() set volumes of all active
   // devices for stream.
-  nsresult rv = SetVolumeIndex(aIndex, device);
+  nsresult rv;
+  rv = SetVolumeIndexToConsistentDeviceIfNeeded(aIndex, device);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  // Workaround to make audio volume control consisitent.
-  // Active devices of AUDIO_STREAM_NOTIFICATION are affected by
-  // AUDIO_STREAM_MUSIC's activity. It makes audio volume control inconsistent.
-  // See Bug 1196724
-  if (device != AUDIO_DEVICE_OUT_SPEAKER &&
-      mStreamType == AUDIO_STREAM_NOTIFICATION) {
-      // Rescaling of index is not necessary.
-      rv = SetVolumeIndex(aIndex, AUDIO_DEVICE_OUT_SPEAKER);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
   }
 
   return NS_OK;
@@ -1393,7 +1380,7 @@ AudioManager::VolumeStreamState::SetVolumeIndexToAliasStreams(uint32_t aIndex,
     return NS_OK;
   }
 
-  nsresult rv = SetVolumeIndex(aIndex, aDevice);
+  nsresult rv = SetVolumeIndexToConsistentDeviceIfNeeded(aIndex, aDevice);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1411,6 +1398,27 @@ AudioManager::VolumeStreamState::SetVolumeIndexToAliasStreams(uint32_t aIndex,
   }
 
   return NS_OK;
+}
+
+nsresult
+AudioManager::VolumeStreamState::SetVolumeIndexToConsistentDeviceIfNeeded(uint32_t aIndex, uint32_t aDevice)
+{
+  nsresult rv;
+  if (aDevice == AUDIO_DEVICE_OUT_SPEAKER || aDevice == AUDIO_DEVICE_OUT_EARPIECE) {
+    // Set AUDIO_DEVICE_OUT_SPEAKER and AUDIO_DEVICE_OUT_EARPIECE to same volume.
+    rv = SetVolumeIndex(aIndex, AUDIO_DEVICE_OUT_SPEAKER);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    rv = SetVolumeIndex(aIndex, AUDIO_DEVICE_OUT_EARPIECE);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    // No alias device
+    rv = SetVolumeIndex(aIndex, aDevice);
+  }
+  return rv;  
 }
 
 nsresult

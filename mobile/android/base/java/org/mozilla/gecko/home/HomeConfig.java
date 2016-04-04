@@ -27,9 +27,12 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Log;
+import android.util.Pair;
 
 public final class HomeConfig {
+    public static final String PREF_KEY_BOOKMARKS_PANEL_ENABLED = "bookmarksPanelEnabled";
+    public static final String PREF_KEY_HISTORY_PANEL_ENABLED = "historyPanelEnabled";
+
     /**
      * Used to determine what type of HomeFragment subclass to use when creating
      * a given panel. With the exception of DYNAMIC, all of these types correspond
@@ -41,6 +44,7 @@ public final class HomeConfig {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
         HISTORY("history", HistoryPanel.class),
+        COMBINED_HISTORY("combined_history", CombinedHistoryPanel.class),
         REMOTE_TABS("remote_tabs", RemoteTabsPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
         RECENT_TABS("recent_tabs", RecentTabsPanel.class),
@@ -1140,9 +1144,11 @@ public final class HomeConfig {
         private final HomeConfig mHomeConfig;
         private final Map<String, PanelConfig> mConfigMap;
         private final List<String> mConfigOrder;
-        private final List<GeckoEvent> mEventQueue;
         private final Thread mOriginalThread;
 
+        // Each Pair represents parameters to a GeckoAppShell.notifyObservers call;
+        // the first String is the observer topic and the second string is the notification data.
+        private List<Pair<String, String>> mNotificationQueue;
         private PanelConfig mDefaultPanel;
         private int mEnabledCount;
 
@@ -1154,7 +1160,7 @@ public final class HomeConfig {
             mOriginalThread = Thread.currentThread();
             mConfigMap = new HashMap<String, PanelConfig>();
             mConfigOrder = new LinkedList<String>();
-            mEventQueue = new LinkedList<GeckoEvent>();
+            mNotificationQueue = new ArrayList<>();
 
             mIsFromDefault = configState.isDefault();
 
@@ -1366,7 +1372,8 @@ public final class HomeConfig {
                 installed = true;
 
                 // Add an event to the queue if a new panel is successfully installed.
-                mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Installed", panelConfig.getId()));
+                mNotificationQueue.add(new Pair<String, String>(
+                        "HomePanels:Installed", panelConfig.getId()));
             }
 
             mHasChanged = true;
@@ -1402,7 +1409,7 @@ public final class HomeConfig {
             }
 
             // Add an event to the queue if a panel is successfully uninstalled.
-            mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Uninstalled", panelId));
+            mNotificationQueue.add(new Pair<String, String>("HomePanels:Uninstalled", panelId));
 
             mHasChanged = true;
             return true;
@@ -1474,10 +1481,10 @@ public final class HomeConfig {
             final State newConfigState =
                     new State(mHomeConfig, makeOrderedCopy(true), isDefault());
 
-            // Copy the event queue to a new list, so that we only modify mEventQueue on
+            // Copy the event queue to a new list, so that we only modify mNotificationQueue on
             // the original thread where it was created.
-            final LinkedList<GeckoEvent> eventQueueCopy = new LinkedList<GeckoEvent>(mEventQueue);
-            mEventQueue.clear();
+            final List<Pair<String, String>> copiedQueue = mNotificationQueue;
+            mNotificationQueue = new ArrayList<>();
 
             ThreadUtils.getBackgroundHandler().post(new Runnable() {
                 @Override
@@ -1485,7 +1492,7 @@ public final class HomeConfig {
                     mHomeConfig.save(newConfigState);
 
                     // Send pending events after the new config is saved.
-                    sendEventsToGecko(eventQueueCopy);
+                    sendNotificationsToGecko(copiedQueue);
                 }
             });
 
@@ -1509,8 +1516,8 @@ public final class HomeConfig {
             mHomeConfig.save(newConfigState);
 
             // Send pending events after the new config is saved.
-            sendEventsToGecko(mEventQueue);
-            mEventQueue.clear();
+            sendNotificationsToGecko(mNotificationQueue);
+            mNotificationQueue.clear();
 
             return newConfigState;
         }
@@ -1529,9 +1536,9 @@ public final class HomeConfig {
             return mConfigMap.isEmpty();
         }
 
-        private void sendEventsToGecko(List<GeckoEvent> events) {
-            for (GeckoEvent e : events) {
-                GeckoAppShell.sendEventToGecko(e);
+        private void sendNotificationsToGecko(List<Pair<String, String>> notifications) {
+            for (Pair<String, String> p : notifications) {
+                GeckoAppShell.notifyObservers(p.first, p.second);
             }
         }
 
@@ -1588,6 +1595,7 @@ public final class HomeConfig {
     private static final String BOOKMARKS_PANEL_ID = "7f6d419a-cd6c-4e34-b26f-f68b1b551907";
     private static final String READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
     private static final String HISTORY_PANEL_ID = "f134bf20-11f7-4867-ab8b-e8e705d7fbe8";
+    private static final String COMBINED_HISTORY_PANEL_ID = "4d716ce2-e063-486d-9e7c-b190d7b04dc6";
     private static final String RECENT_TABS_PANEL_ID = "5c2601a5-eedc-4477-b297-ce4cef52adf8";
     private static final String REMOTE_TABS_PANEL_ID = "72429afd-8d8b-43d8-9189-14b779c563d0";
 
@@ -1628,6 +1636,7 @@ public final class HomeConfig {
         case BOOKMARKS:
             return R.string.bookmarks_title;
 
+        case COMBINED_HISTORY:
         case HISTORY:
             return R.string.home_history_title;
 
@@ -1655,6 +1664,9 @@ public final class HomeConfig {
 
         case HISTORY:
             return HISTORY_PANEL_ID;
+
+        case COMBINED_HISTORY:
+            return COMBINED_HISTORY_PANEL_ID;
 
         case REMOTE_TABS:
             return REMOTE_TABS_PANEL_ID;

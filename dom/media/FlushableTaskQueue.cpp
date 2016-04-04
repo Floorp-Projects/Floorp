@@ -20,13 +20,19 @@ FlushableTaskQueue::Flush()
 nsresult
 FlushableTaskQueue::FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable)
 {
-  MonitorAutoLock mon(mQueueMonitor);
-  AutoSetFlushing autoFlush(this);
-  FlushLocked();
-  nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
-  nsresult rv = DispatchLocked(r.forget(), IgnoreFlushing, AssertDispatchSuccess);
-  NS_ENSURE_SUCCESS(rv, rv);
-  AwaitIdleLocked();
+  nsCOMPtr<nsIRunnable> r = aRunnable;
+  {
+    MonitorAutoLock mon(mQueueMonitor);
+    AutoSetFlushing autoFlush(this);
+    FlushLocked();
+    nsresult rv = DispatchLocked(/* passed by ref */r, IgnoreFlushing, AssertDispatchSuccess);
+    NS_ENSURE_SUCCESS(rv, rv);
+    AwaitIdleLocked();
+  }
+  // If the ownership of |r| is not transferred in DispatchLocked() due to
+  // dispatch failure, it will be deleted here outside the lock. We do so
+  // since the destructor of the runnable might access TaskQueue and result
+  // in deadlocks.
   return NS_OK;
 }
 

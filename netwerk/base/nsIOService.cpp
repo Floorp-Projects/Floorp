@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 
 #include "nsIOService.h"
@@ -30,6 +31,7 @@
 #include "nsIConsoleService.h"
 #include "nsIUploadChannel2.h"
 #include "nsXULAppAPI.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
@@ -51,6 +53,7 @@
 #include "CaptivePortalService.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -94,65 +97,71 @@ static mozilla::LazyLogModule gIOServiceLog("nsIOService");
 // TODO: I am sure that there are more ports to be added.  
 //       This cut is based on the classic mozilla codebase
 
-int16_t gBadPortList[] = { 
-  1,    // tcpmux          
-  7,    // echo     
-  9,    // discard          
-  11,   // systat   
-  13,   // daytime          
-  15,   // netstat  
-  17,   // qotd             
-  19,   // chargen  
-  20,   // ftp-data         
-  21,   // ftp-cntl 
-  22,   // ssh              
-  23,   // telnet   
-  25,   // smtp     
-  37,   // time     
-  42,   // name     
-  43,   // nicname  
-  53,   // domain  
-  77,   // priv-rjs 
-  79,   // finger   
-  87,   // ttylink  
-  95,   // supdup   
+int16_t gBadPortList[] = {
+  1,    // tcpmux
+  7,    // echo
+  9,    // discard
+  11,   // systat
+  13,   // daytime
+  15,   // netstat
+  17,   // qotd
+  19,   // chargen
+  20,   // ftp-data
+  21,   // ftp-cntl
+  22,   // ssh
+  23,   // telnet
+  25,   // smtp
+  37,   // time
+  42,   // name
+  43,   // nicname
+  53,   // domain
+  77,   // priv-rjs
+  79,   // finger
+  87,   // ttylink
+  95,   // supdup
   101,  // hostriame
-  102,  // iso-tsap 
-  103,  // gppitnp  
-  104,  // acr-nema 
-  109,  // pop2     
-  110,  // pop3     
-  111,  // sunrpc   
-  113,  // auth     
-  115,  // sftp     
+  102,  // iso-tsap
+  103,  // gppitnp
+  104,  // acr-nema
+  109,  // pop2
+  110,  // pop3
+  111,  // sunrpc
+  113,  // auth
+  115,  // sftp
   117,  // uucp-path
-  119,  // nntp     
+  119,  // nntp
   123,  // NTP
-  135,  // loc-srv / epmap         
+  135,  // loc-srv / epmap
   139,  // netbios
-  143,  // imap2  
+  143,  // imap2
   179,  // BGP
-  389,  // ldap        
+  389,  // ldap
   465,  // smtp+ssl
-  512,  // print / exec          
-  513,  // login         
-  514,  // shell         
-  515,  // printer         
-  526,  // tempo         
-  530,  // courier        
-  531,  // Chat         
-  532,  // netnews        
-  540,  // uucp       
-  556,  // remotefs    
+  512,  // print / exec
+  513,  // login
+  514,  // shell
+  515,  // printer
+  526,  // tempo
+  530,  // courier
+  531,  // Chat
+  532,  // netnews
+  540,  // uucp   
+  556,  // remotefs
   563,  // nntp+ssl
   587,  //
-  601,  //       
+  601,  //
   636,  // ldap+ssl
   993,  // imap+ssl
   995,  // pop3+ssl
   2049, // nfs
+  3659,    // apple-sasl / PasswordServer
   4045, // lockd
-  6000, // x11        
+  6000, // x11
+  6665,    // Alternate IRC [Apple addition]
+  6666,    // Alternate IRC [Apple addition]
+  6667,    // Standard IRC [Apple addition]
+  6668,    // Alternate IRC [Apple addition]
+  6669,    // Alternate IRC [Apple addition]
   0,    // This MUST be zero so that we can populating the array
 };
 
@@ -662,18 +671,6 @@ nsIOService::NewChannelFromURI2(nsIURI* aURI,
                                             result);
 }
 
-NS_IMETHODIMP
-nsIOService::NewChannelFromURIWithLoadInfo(nsIURI* aURI,
-                                           nsILoadInfo* aLoadInfo,
-                                           nsIChannel** result)
-{
-  return NewChannelFromURIWithProxyFlagsInternal(aURI,
-                                                 nullptr, // aProxyURI
-                                                 0,       // aProxyFlags
-                                                 aLoadInfo,
-                                                 result);
-}
-
 /*  ***** DEPRECATED *****
  * please use NewChannelFromURI2 providing the right arguments for:
  *        * aLoadingNode
@@ -688,13 +685,37 @@ NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
   NS_ASSERTION(false, "Deprecated, use NewChannelFromURI2 providing loadInfo arguments!");
+
+  const char16_t* params[] = {
+    MOZ_UTF16("nsIOService::NewChannelFromURI()"),
+    MOZ_UTF16("nsIOService::NewChannelFromURI2()")
+  };
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Security by Default"),
+                                  nullptr, // aDocument
+                                  nsContentUtils::eNECKO_PROPERTIES,
+                                  "APIDeprecationWarning",
+                                  params, ArrayLength(params));
+
   return NewChannelFromURI2(aURI,
                             nullptr, // aLoadingNode
-                            nullptr, // aLoadingPrincipal
+                            nsContentUtils::GetSystemPrincipal(),
                             nullptr, // aTriggeringPrincipal
-                            nsILoadInfo::SEC_NORMAL,
+                            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                             nsIContentPolicy::TYPE_OTHER,
                             result);
+}
+
+NS_IMETHODIMP
+nsIOService::NewChannelFromURIWithLoadInfo(nsIURI* aURI,
+                                           nsILoadInfo* aLoadInfo,
+                                           nsIChannel** result)
+{
+  return NewChannelFromURIWithProxyFlagsInternal(aURI,
+                                                 nullptr, // aProxyURI
+                                                 0,       // aProxyFlags
+                                                 aLoadInfo,
+                                                 result);
 }
 
 nsresult
@@ -881,13 +902,25 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
                                              nsIChannel **result)
 {
   NS_ASSERTION(false, "Deprecated, use NewChannelFromURIWithProxyFlags2 providing loadInfo arguments!");
+
+  const char16_t* params[] = {
+    MOZ_UTF16("nsIOService::NewChannelFromURIWithProxyFlags()"),
+    MOZ_UTF16("nsIOService::NewChannelFromURIWithProxyFlags2()")
+  };
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Security by Default"),
+                                  nullptr, // aDocument
+                                  nsContentUtils::eNECKO_PROPERTIES,
+                                  "APIDeprecationWarning",
+                                  params, ArrayLength(params));
+
   return NewChannelFromURIWithProxyFlags2(aURI,
                                           aProxyURI,
                                           aProxyFlags,
                                           nullptr, // aLoadingNode
-                                          nullptr, // aLoadingPrincipal
+                                          nsContentUtils::GetSystemPrincipal(),
                                           nullptr, // aTriggeringPrincipal
-                                          nsILoadInfo::SEC_NORMAL,
+                                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                           nsIContentPolicy::TYPE_OTHER,
                                           result);
 }
@@ -931,13 +964,26 @@ NS_IMETHODIMP
 nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI, nsIChannel **result)
 {
   NS_ASSERTION(false, "Deprecated, use NewChannel2 providing loadInfo arguments!");
+
+  const char16_t* params[] = {
+    MOZ_UTF16("nsIOService::NewChannel()"),
+    MOZ_UTF16("nsIOService::NewChannel2()")
+  };
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Security by Default"),
+                                  nullptr, // aDocument
+                                  nsContentUtils::eNECKO_PROPERTIES,
+                                  "APIDeprecationWarning",
+                                  params, ArrayLength(params));
+
+  // Call NewChannel2 providing default arguments for the loadInfo.
   return NewChannel2(aSpec,
                      aCharset,
                      aBaseURI,
                      nullptr, // aLoadingNode
-                     nullptr, // aLoadingPrincipal
+                     nsContentUtils::GetSystemPrincipal(), // aLoadingPrincipal
                      nullptr, // aTriggeringPrincipal
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER,
                      result);
 }
@@ -1870,7 +1916,7 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
                             nullptr, // aLoadingNode,
                             systemPrincipal,
                             nullptr, //aTriggeringPrincipal,
-                            nsILoadInfo::SEC_NORMAL,
+                            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                             nsIContentPolicy::TYPE_OTHER,
                             getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(rv, rv);

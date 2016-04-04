@@ -442,10 +442,13 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
   if (mCompositor == aCompositor) {
     return;
   }
-  RefPtr<TextureSource> it = mFirstSource;
-  while (it) {
-    it->SetCompositor(aCompositor);
-    it = it->GetNextSibling();
+  if (aCompositor && mCompositor &&
+      aCompositor->GetBackendType() == mCompositor->GetBackendType()) {
+    RefPtr<TextureSource> it = mFirstSource;
+    while (it) {
+      it->SetCompositor(aCompositor);
+      it = it->GetNextSibling();
+    }
   }
   if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
     mFirstSource->SetOwner(nullptr);
@@ -516,6 +519,16 @@ BufferTextureHost::EnsureWrappingTextureSource()
   }
 
   mFirstSource = mCompositor->CreateDataTextureSourceAround(surf);
+  if (!mFirstSource) {
+    // BasicCompositor::CreateDataTextureSourceAround never returns null
+    // and we don't expect to take this branch if we are using another backend.
+    // Returning false is fine but if we get into this situation it probably
+    // means something fishy is going on, like a texture being used with
+    // several compositor backends.
+    NS_WARNING("Failed to use a BufferTextureHost without intermediate buffer");
+    return false;
+  }
+
   mFirstSource->SetUpdateSerial(mUpdateSerial);
   mFirstSource->SetOwner(this);
 
@@ -791,7 +804,7 @@ ShmemTextureHost::DeallocateSharedData()
   if (mShmem) {
     MOZ_ASSERT(mDeallocator,
                "Shared memory would leak without a ISurfaceAllocator");
-    mDeallocator->DeallocShmem(*mShmem);
+    mDeallocator->AsShmemAllocator()->DeallocShmem(*mShmem);
     mShmem = nullptr;
   }
 }

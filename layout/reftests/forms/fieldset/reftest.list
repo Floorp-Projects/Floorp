@@ -8,7 +8,7 @@ random-if(B2G||Mulet) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-
 fuzzy-if(winWidget&&!layersGPUAccelerated,102,221) == positioned-container-1.html positioned-container-1-ref.html
 == relpos-legend-1.html relpos-legend-1-ref.html
 == relpos-legend-2.html relpos-legend-2-ref.html
-test-pref(layout.css.sticky.enabled,true) skip-if((B2G&&browserIsRemote)||Mulet) == sticky-legend-1.html sticky-legend-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == sticky-legend-1.html sticky-legend-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html

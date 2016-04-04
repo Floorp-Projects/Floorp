@@ -7,10 +7,11 @@
 #ifndef mozilla_psm__CertVerifier_h
 #define mozilla_psm__CertVerifier_h
 
-#include "mozilla/Telemetry.h"
-#include "pkix/pkixtypes.h"
+#include "BRNameMatchingPolicy.h"
 #include "OCSPCache.h"
 #include "ScopedNSSTypes.h"
+#include "mozilla/Telemetry.h"
+#include "pkix/pkixtypes.h"
 
 namespace mozilla { namespace psm {
 
@@ -121,7 +122,8 @@ public:
 
   CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
-               PinningMode pinningMode, SHA1Mode sha1Mode);
+               PinningMode pinningMode, SHA1Mode sha1Mode,
+               BRNameMatchingPolicy::Mode nameMatchingMode);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -132,6 +134,7 @@ public:
   const uint32_t mCertShortLifetimeInDays;
   const PinningMode mPinningMode;
   const SHA1Mode mSHA1Mode;
+  const BRNameMatchingPolicy::Mode mNameMatchingMode;
 
 private:
   OCSPCache mOCSPCache;
@@ -144,7 +147,7 @@ private:
 };
 
 void InitCertVerifierLog();
-SECStatus IsCertBuiltInRoot(CERTCertificate* cert, bool& result);
+mozilla::pkix::Result IsCertBuiltInRoot(CERTCertificate* cert, bool& result);
 mozilla::pkix::Result CertListContainsExpectedKeys(
   const CERTCertList* certList, const char* hostname, mozilla::pkix::Time time,
   CertVerifier::PinningMode pinningMode);

@@ -184,6 +184,17 @@ MacroAssemblerMIPSShared::ma_xor(Register rd, Register rs, Imm32 imm)
     }
 }
 
+void
+MacroAssemblerMIPSShared::ma_ctz(Register rd, Register rs)
+{
+    ma_negu(ScratchRegister, rs);
+    as_and(rd, ScratchRegister, rs);
+    as_clz(rd, rd);
+    ma_negu(SecondScratchReg, rd);
+    ma_addu(SecondScratchReg, Imm32(0x1f));
+    as_movn(rd, SecondScratchReg, ScratchRegister);
+}
+
 // Arithmetic-based ops.
 
 // Add.
@@ -1255,21 +1266,15 @@ MacroAssembler::call(JitCode* c)
 }
 
 void
-MacroAssembler::callAndPushReturnAddress(Register callee)
+MacroAssembler::pushReturnAddress()
 {
-    // Push return address during jalr delay slot.
-    subPtr(Imm32(sizeof(intptr_t)), StackPointer);
-    as_jalr(callee);
-    storePtr(ra, Address(StackPointer, 0));
+    push(ra);
 }
 
 void
-MacroAssembler::callAndPushReturnAddress(Label* label)
+MacroAssembler::popReturnAddress()
 {
-    // Push return address during bal delay slot.
-    subPtr(Imm32(sizeof(intptr_t)), StackPointer);
-    ma_bal(label, DontFillDelaySlot);
-    storePtr(ra, Address(StackPointer, 0));
+    pop(ra);
 }
 
 // ===============================================================

@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 // This test checks a number of things:
 // * it ensures that data loaded from revocations.txt on startup is present
@@ -16,47 +17,15 @@ var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
 var version = "1";
 var platformVersion = "1.9.2";
-var appInfo = {
-  // nsIXULAppInfo
-  vendor: "Mozilla",
+Cu.import("resource://testing-common/AppInfo.jsm", this);
+/*global updateAppInfo:false*/ // Imported via AppInfo.jsm.
+updateAppInfo({
   name: appName,
   ID: id,
   version: version,
-  appBuildID: "2007010101",
   platformVersion: platformVersion ? platformVersion : "1.0",
-  platformBuildID: "2007010101",
-
-  // nsIXULRuntime
-  inSafeMode: false,
-  logConsoleErrors: true,
-  OS: "XPCShell",
-  XPCOMABI: "noarch-spidermonkey",
-  invalidateCachesOnRestart: function invalidateCachesOnRestart() {
-    // Do nothing
-  },
-
-  // nsICrashReporter
-  annotations: {},
-
-  annotateCrashReport: function(key, data) {
-    this.annotations[key] = data;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo,
-                                         Ci.nsIXULRuntime,
-                                         Ci.nsICrashReporter,
-                                         Ci.nsISupports])
-};
-
-var XULAppInfoFactory = {
-  createInstance: function (outer, iid) {
-    appInfo.QueryInterface(iid);
-    if (outer != null) {
-      throw new Error(Cr.NS_ERROR_NO_AGGREGATION);
-    }
-    return appInfo.QueryInterface(iid);
-  }
-};
+  crashReporter: true,
+});
 
 // we need to ensure we setup revocation data before certDB, or we'll start with
 // no revocation.txt in the profile
@@ -78,11 +47,8 @@ var data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
 stream.write(data, data.length);
 stream.close();
 
-var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
-registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                          XULAPPINFO_CONTRACTID, XULAppInfoFactory);
+const PREF_KINTO_UPDATE_ENABLED = "services.kinto.update_enabled";
+const PREF_ONECRL_VIA_AMO = "security.onecrl.via.amo";
 
 var revocations = profile.clone();
 revocations.append("revocations.txt");
@@ -257,6 +223,10 @@ function run_test() {
                  "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy\n" +
                  " YW5vdGhlciBzZXJpYWwu\n" +
                  " c2VyaWFsMi4=";
+
+  // This test assumes OneCRL updates via AMO
+  Services.prefs.setBoolPref(PREF_KINTO_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_ONECRL_VIA_AMO, true);
 
   add_test(function () {
     // check some existing items in revocations.txt are blocked. Since the

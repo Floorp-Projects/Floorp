@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1242644
+Test swapFrameLoaders with different frame types and remoteness
+-->
+<window title="Mozilla Bug 1242644"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+
+  <script type="application/javascript"><![CDATA[
+  ["SimpleTest", "SpecialPowers", "info", "is"].forEach(key => {
+    window[key] = window.opener[key];
+  })
+  const { interfaces: Ci } = Components;
+
+  const NS = {
+    xul: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    html: "http://www.w3.org/1999/xhtml",
+  }
+
+  const TAG = {
+    xul: "browser",
+    html: "iframe", // mozbrowser
+  }
+
+  const SCENARIOS = [
+    ["xul", "xul"],
+    ["xul", "html"],
+    ["html", "xul"],
+    ["html", "html"],
+    ["xul", "xul", "remote"],
+    ["xul", "html", "remote"],
+    ["html", "xul", "remote"],
+    ["html", "html", "remote"],
+  ];
+
+  function once(target, eventName, useCapture = false) {
+    info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+    return new Promise(resolve => {
+      for (let [add, remove] of [
+        ["addEventListener", "removeEventListener"],
+        ["addMessageListener", "removeMessageListener"],
+      ]) {
+        if ((add in target) && (remove in target)) {
+          target[add](eventName, function onEvent(...aArgs) {
+            info("Got event: '" + eventName + "' on " + target + ".");
+            target[remove](eventName, onEvent, useCapture);
+            resolve(aArgs);
+          }, useCapture);
+          break;
+        }
+      }
+    });
+  }
+
+  function* addFrame(type, remote) {
+    let frame = document.createElementNS(NS[type], TAG[type]);
+    frame.setAttribute("remote", remote);
+    if (remote && type == "xul") {
+      frame.setAttribute("style", "-moz-binding: none;");
+    }
+    if (type == "html") {
+      frame.setAttribute("mozbrowser", "true");
+      frame.setAttribute("noisolation", "true");
+      frame.setAttribute("allowfullscreen", "true");
+    } else if (type == "xul") {
+      frame.setAttribute("type", "content");
+    }
+    frame.setAttribute("src", "about:blank");
+    document.documentElement.appendChild(frame);
+    return frame;
+  }
+
+  add_task(function*() {
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv(
+        { "set": [["dom.mozBrowserFramesEnabled", true]] },
+        resolve);
+    });
+  });
+
+  add_task(function*() {
+    for (let scenario of SCENARIOS) {
+      let [ typeA, typeB, remote ] = scenario;
+      remote = !!remote;
+      info(`Adding frame A, type ${typeA}, remote ${remote}`);
+      let frameA = yield addFrame(typeA, remote);
+
+      info(`Adding frame B, type ${typeB}, remote ${remote}`);
+      let frameB = yield addFrame(typeB, remote);
+
+      let frameScriptFactory = function(name) {
+        return `function() {
+          addMessageListener("ping", function() {
+            sendAsyncMessage("pong", "${name}");
+          });
+        }`;
+      }
+
+      // Load frame script into each frame
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        mmA.loadFrameScript("data:,(" + frameScriptFactory("A") + ")()", false);
+        mmB.loadFrameScript("data:,(" + frameScriptFactory("B") + ")()", false);
+      }
+
+      // Ping before swap
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        let inflightA = once(mmA, "pong");
+        let inflightB = once(mmB, "pong");
+
+        info("Ping message manager for frame A");
+        mmA.sendAsyncMessage("ping");
+        let [ { data: pongA } ] = yield inflightA;
+        is(pongA, "A", "Frame A message manager gets reply A before swap");
+
+        info("Ping message manager for frame B");
+        mmB.sendAsyncMessage("ping");
+        let [ { data: pongB } ] = yield inflightB;
+        is(pongB, "B", "Frame B message manager gets reply B before swap");
+      }
+
+      // Ping after swap using message managers acquired before
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        info("swapFrameLoaders");
+        frameA.swapFrameLoaders(frameB);
+
+        let inflightA = once(mmA, "pong");
+        let inflightB = once(mmB, "pong");
+
+        info("Ping message manager for frame A");
+        mmA.sendAsyncMessage("ping");
+        let [ { data: pongA } ] = yield inflightA;
+        is(pongA, "B", "Frame A message manager acquired before swap gets reply B after swap");
+
+        info("Ping message manager for frame B");
+        mmB.sendAsyncMessage("ping");
+        let [ { data: pongB } ] = yield inflightB;
+        is(pongB, "A", "Frame B message manager acquired before swap gets reply A after swap");
+      }
+
+      // Ping after swap using message managers acquired after
+      {
+        let mmA = frameA.frameLoader.messageManager;
+        let mmB = frameB.frameLoader.messageManager;
+
+        let inflightA = once(mmA, "pong");
+        let inflightB = once(mmB, "pong");
+
+        info("Ping message manager for frame A");
+        mmA.sendAsyncMessage("ping");
+        let [ { data: pongA } ] = yield inflightA;
+        is(pongA, "B", "Frame A message manager acquired after swap gets reply B after swap");
+
+        info("Ping message manager for frame B");
+        mmB.sendAsyncMessage("ping");
+        let [ { data: pongB } ] = yield inflightB;
+        is(pongB, "A", "Frame B message manager acquired after swap gets reply A after swap");
+      }
+
+      frameA.remove();
+      frameB.remove();
+    }
+  });
+  ]]></script>
+</window>

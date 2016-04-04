@@ -72,6 +72,8 @@ def create_parser(product_choices=None):
                         help="Multiplier relative to standard test timeout to use")
     parser.add_argument("--repeat", action="store", type=int, default=1,
                         help="Number of times to run the tests")
+    parser.add_argument("--repeat-until-unexpected", action="store_true", default=None,
+                        help="Run tests in a loop until one returns an unexpected result")
 
     parser.add_argument("--no-capture-stdio", action="store_true", default=False,
                         help="Don't capture stdio and write to logging")
@@ -125,6 +127,9 @@ def create_parser(product_choices=None):
                                  help="Path or url to symbols file used to analyse crash minidumps.")
     debugging_group.add_argument("--stackwalk-binary", action="store", type=abs_path,
                                  help="Path to stackwalker program used to analyse minidumps.")
+
+    debugging_group.add_argument("--pdb", action="store_true",
+                                 help="Drop into pdb on python exception")
 
     chunking_group = parser.add_argument_group("Test Chunking")
     chunking_group.add_argument("--total-chunks", action="store", type=int, default=1,

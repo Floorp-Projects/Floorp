@@ -11,9 +11,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-this.EXPORTED_SYMBOLS = ["MatchPattern"];
+this.EXPORTED_SYMBOLS = ["MatchPattern", "MatchGlobs"];
 
-/* globals MatchPattern */
+/* globals MatchPattern, MatchGlobs */
 
 const PERMITTED_SCHEMES = ["http", "https", "file", "ftp", "app", "data"];
 const PERMITTED_SCHEMES_REGEXP = PERMITTED_SCHEMES.join("|");
@@ -170,5 +170,26 @@ MatchPattern.prototype = {
 
   serialize() {
     return this.pat;
+  },
+};
+
+// Globs can match everything. Be careful, this DOES NOT filter by allowed schemes!
+this.MatchGlobs = function(globs) {
+  if (globs) {
+    this.regexps = Array.from(globs, (glob) => globToRegexp(glob, true));
+  } else {
+    this.regexps = [];
+  }
+};
+
+MatchGlobs.prototype = {
+  matches(uri) {
+    let spec = uri.spec;
+    for (let regexp of this.regexps) {
+      if (regexp.test(spec)) {
+        return true;
+      }
+    }
+    return false;
   },
 };

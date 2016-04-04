@@ -49,12 +49,6 @@ struct VS_OUTPUT {
 struct VS_MASK_OUTPUT {
   float4 vPosition : SV_Position;
   float2 vTexCoords : TEXCOORD0;
-  float2 vMaskCoords : TEXCOORD1;
-};
-
-struct VS_MASK_3D_OUTPUT {
-  float4 vPosition : SV_Position;
-  float2 vTexCoords : TEXCOORD0;
   float3 vMaskCoords : TEXCOORD1;
 };
 
@@ -153,23 +147,6 @@ VS_MASK_OUTPUT LayerQuadMaskVS(const VS_INPUT aVertex)
   // calculate the position on the mask texture
   outp.vMaskCoords.x = (position.x - vMaskQuad.x) / vMaskQuad.z;
   outp.vMaskCoords.y = (position.y - vMaskQuad.y) / vMaskQuad.w;
-
-  outp.vTexCoords = TexCoords(aVertex.vPosition.xy);
-
-  return outp;
-}
-
-VS_MASK_3D_OUTPUT LayerQuadMask3DVS(const VS_INPUT aVertex)
-{
-  VS_MASK_3D_OUTPUT outp;
-  float4 position = TransformedPosition(aVertex.vPosition);
-
-  outp.vPosition = VertexPosition(position);
-
-  // calculate the position on the mask texture
-  position.xyz /= position.w;
-  outp.vMaskCoords.x = (position.x - vMaskQuad.x) / vMaskQuad.z;
-  outp.vMaskCoords.y = (position.y - vMaskQuad.y) / vMaskQuad.w;
   // We use the w coord to do non-perspective correct interpolation:
   // the quad might be transformed in 3D, in which case it will have some
   // perspective. The graphics card will do perspective-correct interpolation
@@ -188,15 +165,8 @@ VS_MASK_3D_OUTPUT LayerQuadMask3DVS(const VS_INPUT aVertex)
 
 float4 RGBAShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
 {
-  float2 maskCoords = aVertex.vMaskCoords;
-  float mask = tMask.Sample(sSampler, maskCoords).r;
-  return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity * mask;
-}
-
-float4 RGBAShaderMask3D(const VS_MASK_3D_OUTPUT aVertex) : SV_Target
-{
   float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
-  float mask = tMask.Sample(LayerTextureSamplerLinear, maskCoords).r;
+  float mask = tMask.Sample(sSampler, maskCoords).r;
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity * mask;
 }
 
@@ -206,7 +176,7 @@ float4 RGBShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
   result = tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity;
   result.a = fLayerOpacity;
 
-  float2 maskCoords = aVertex.vMaskCoords;
+  float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(sSampler, maskCoords).r;
   return result * mask;
 }
@@ -240,7 +210,7 @@ float4 CalculateYCbCrColor(const float2 aTexCoords)
 
 float4 YCbCrShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
 {
-  float2 maskCoords = aVertex.vMaskCoords;
+  float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(sSampler, maskCoords).r;
 
   return CalculateYCbCrColor(aVertex.vTexCoords) * fLayerOpacity * mask;
@@ -254,7 +224,7 @@ PS_OUTPUT ComponentAlphaShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
   result.vAlpha = 1.0 - tRGBWhite.Sample(sSampler, aVertex.vTexCoords) + result.vSrc;
   result.vSrc.a = result.vAlpha.g;
 
-  float2 maskCoords = aVertex.vMaskCoords;
+  float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(sSampler, maskCoords).r;
   result.vSrc *= fLayerOpacity * mask;
   result.vAlpha *= fLayerOpacity * mask;
@@ -264,7 +234,7 @@ PS_OUTPUT ComponentAlphaShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
 
 float4 SolidColorShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
 {
-  float2 maskCoords = aVertex.vMaskCoords;
+  float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(sSampler, maskCoords).r;
   return fLayerColor * mask;
 }
@@ -328,18 +298,6 @@ VS_BLEND_OUTPUT LayerQuadBlendMaskVS(const VS_INPUT aVertex)
   VS_BLEND_OUTPUT o;
   o.vPosition = v.vPosition;
   o.vTexCoords = v.vTexCoords;
-  o.vMaskCoords = float3(v.vMaskCoords, 0);
-  o.vBackdropCoords = BackdropPosition(v.vPosition);
-  return o;
-}
-
-VS_BLEND_OUTPUT LayerQuadBlendMask3DVS(const VS_INPUT aVertex)
-{
-  VS_MASK_3D_OUTPUT v = LayerQuadMask3DVS(aVertex);
-
-  VS_BLEND_OUTPUT o;
-  o.vPosition = v.vPosition;
-  o.vTexCoords = v.vTexCoords;
   o.vMaskCoords = v.vMaskCoords;
   o.vBackdropCoords = BackdropPosition(v.vPosition);
   return o;
@@ -367,7 +325,7 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
     VS_MASK_OUTPUT tmp;
     tmp.vPosition = aVertex.vPosition;
     tmp.vTexCoords = aVertex.vTexCoords;
-    tmp.vMaskCoords = aVertex.vMaskCoords.xy;
+    tmp.vMaskCoords = aVertex.vMaskCoords;
 
     if (iBlendConfig.x == PS_LAYER_RGB) {
       return RGBShaderMask(tmp);
@@ -377,13 +335,6 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
       return YCbCrShaderMask(tmp);
     }
     return SolidColorShaderMask(tmp);
-  } else if (iBlendConfig.y == PS_MASK_3D) {
-    // The only Mask 3D shader is RGBA.
-    VS_MASK_3D_OUTPUT tmp;
-    tmp.vPosition = aVertex.vPosition;
-    tmp.vTexCoords = aVertex.vTexCoords;
-    tmp.vMaskCoords = aVertex.vMaskCoords;
-    return RGBAShaderMask3D(tmp);
   }
 
   return float4(0.0, 0.0, 0.0, 1.0);

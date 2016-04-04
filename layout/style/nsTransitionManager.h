@@ -250,10 +250,10 @@ struct TransitionEventInfo {
     , mTimeStamp(aTimeStamp)
   {
     // XXX Looks like nobody initialize WidgetEvent::time
-    mEvent.propertyName =
+    mEvent.mPropertyName =
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
-    mEvent.elapsedTime = aDuration.ToSeconds();
-    mEvent.pseudoElement =
+    mEvent.mElapsedTime = aDuration.ToSeconds();
+    mEvent.mPseudoElement =
       AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(aPseudoType);
   }
 

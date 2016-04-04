@@ -55,7 +55,9 @@ g.eval("/* Any copyright is dedicated to the Public Domain.\n" +
        "    eval(\"42;\");\n" +
        "    function foo() {}\n" +
        "    if (true) {\n" +
-       "        foo();\n" +  // <- this is +6 and must be within the extent
-       "    }\n" +
-       "}");
-test(g.secondCall, 7);
+       "        foo();\n" +
+       // The "missing" newline here is a trick to make a newline
+       // source note come at the end.  A real newline between the two
+       // closing braces causes a setline note instead.
+       "    } }");
+test(g.secondCall, 8);

@@ -51,11 +51,11 @@ class MOZ_RAII AutoCycleDetector
     bool foundCycle() { return cyclic; }
 
   private:
+    Generation hashsetGenerationAtInit;
     JSContext* cx;
     RootedObject obj;
-    bool cyclic;
-    uint32_t hashsetGenerationAtInit;
     Set::AddPtr hashsetAddPointer;
+    bool cyclic;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -190,6 +190,7 @@ class ExclusiveContext : public ContextFriendFields,
     bool isPermanentAtomsInitialized() { return !!runtime_->permanentAtoms; }
     FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms; }
     WellKnownSymbols& wellKnownSymbols() { return *runtime_->wellKnownSymbols; }
+    JS::BuildIdOp buildIdOp() { return runtime_->buildIdOp; }
     const JS::AsmJSCacheOps& asmJSCacheOps() { return runtime_->asmJSCacheOps; }
     PropertyName* emptyString() { return runtime_->emptyString; }
     FreeOp* defaultFreeOp() { return runtime_->defaultFreeOp(); }
@@ -762,7 +763,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
         runtime = rt;
         if (runtime->numExclusiveThreads) {
             runtime->assertCanLock(ExclusiveAccessLock);
-            PR_Lock(runtime->exclusiveAccessLock);
+            runtime->exclusiveAccessLock.lock();
 #ifdef DEBUG
             runtime->exclusiveAccessOwner = PR_GetCurrentThread();
 #endif
@@ -789,7 +790,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
             MOZ_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
             runtime->exclusiveAccessOwner = nullptr;
 #endif
-            PR_Unlock(runtime->exclusiveAccessLock);
+            runtime->exclusiveAccessLock.unlock();
         } else {
             MOZ_ASSERT(runtime->mainThreadHasExclusiveAccess);
 #ifdef DEBUG

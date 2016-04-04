@@ -66,27 +66,14 @@ js::Debugger::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
     return slowPathOnExceptionUnwind(cx, frame);
 }
 
-/* static */ bool
-js::Debugger::observesIonCompilation(JSContext* cx)
-{
-    // If the current compartment is observed by any Debugger.
-    if (!cx->compartment()->isDebuggee())
-        return false;
-
-    // If any attached Debugger watch for Jit compilation results.
-    if (!Debugger::hasLiveHook(cx->global(), Debugger::OnIonCompilation))
-        return false;
-
-    return true;
-}
-
 /* static */ void
-js::Debugger::onIonCompilation(JSContext* cx, Handle<ScriptVector> scripts, LSprinter& graph)
+js::Debugger::onNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule)
 {
-    if (!observesIonCompilation(cx))
-        return;
-
-    slowPathOnIonCompilation(cx, scripts, graph);
+    // Insert the wasm::Module into a compartment-wide list for discovery
+    // later without a heap walk.
+    cx->compartment()->wasmModuleWeakList.insertBack(&wasmModule->module());
+    if (cx->compartment()->isDebuggee())
+        slowPathOnNewWasmModule(cx, wasmModule);
 }
 
 #endif /* vm_Debugger_inl_h */

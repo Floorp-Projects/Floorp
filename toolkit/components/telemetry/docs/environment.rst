@@ -234,7 +234,7 @@ Structure::
                 applyBackgroundUpdates: <integer>,
             },
             ...
-        ],
+        },
         activeExperiment: { // section is empty if there's no active experiment
             id: <string>, // id
             branch: <string>, // branch name

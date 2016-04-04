@@ -1,0 +1,29 @@
+$inherits:
+  from: 'tasks/builds/base_linux64.yml'
+  variables:
+    build_name: 'linux64-artifact'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Linux64 Artifact Opt'
+      description: 'Linux64 Opt Artifact build'
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-artifact'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-artifact'
+
+  workerType: opt-linux64
+
+  payload:
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      MOZHARNESS_CONFIG: 'builds/releng_sub_linux_configs/64_artifact.py balrog/production.py'
+      MOZHARNESS_ACTIONS: 'get-secrets build generate-build-stats'
+      DIST_UPLOADS: ''
+      DIST_TARGET_UPLOADS: ''
+
+  extra:
+    treeherder:
+      groupSymbol: "?"
+      symbol: AB
+      tier: 2

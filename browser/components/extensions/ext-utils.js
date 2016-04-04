@@ -9,6 +9,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -138,6 +139,25 @@ function promisePopupShown(popup) {
   });
 }
 
+XPCOMUtils.defineLazyGetter(global, "stylesheets", () => {
+  let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
+      .getService(Components.interfaces.nsIStyleSheetService);
+  let styleSheetURI = Services.io.newURI("chrome://browser/content/extension.css",
+                                         null, null);
+  let styleSheet = styleSheetService.preloadSheet(styleSheetURI,
+                                                  styleSheetService.AGENT_SHEET);
+  let stylesheets = [styleSheet];
+
+  if (AppConstants.platform === "macosx") {
+    styleSheetURI = Services.io.newURI("chrome://browser/content/extension-mac.css",
+                                       null, null);
+    let macStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
+                                                       styleSheetService.AGENT_SHEET);
+    stylesheets.push(macStyleSheet);
+  }
+  return stylesheets;
+});
+
 class BasePopup {
   constructor(extension, viewNode, popupURL) {
     let popupURI = Services.io.newURI(popupURL, null, extension.baseURI);
@@ -163,6 +183,7 @@ class BasePopup {
 
   destroy() {
     this.browserReady.then(() => {
+      this.browser.removeEventListener("DOMWindowCreated", this, true);
       this.browser.removeEventListener("load", this, true);
       this.browser.removeEventListener("DOMTitleChanged", this, true);
       this.browser.removeEventListener("DOMWindowClose", this, true);
@@ -190,6 +211,13 @@ class BasePopup {
         this.destroy();
         break;
 
+      case "DOMWindowCreated":
+        let winUtils = this.browser.contentWindow
+            .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        for (let stylesheet of global.stylesheets) {
+          winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
+        }
+        break;
       case "DOMWindowClose":
         if (event.target === this.browser.contentWindow) {
           event.preventDefault();
@@ -217,7 +245,6 @@ class BasePopup {
 
   createBrowser(viewNode, popupURI) {
     let document = viewNode.ownerDocument;
-
     this.browser = document.createElementNS(XUL_NS, "browser");
     this.browser.setAttribute("type", "content");
     this.browser.setAttribute("disableglobalhistory", "true");
@@ -259,6 +286,7 @@ class BasePopup {
       GlobalManager.injectInDocShell(this.browser.docShell, this.extension, this.context);
       this.browser.setAttribute("src", this.context.uri.spec);
 
+      this.browser.addEventListener("DOMWindowCreated", this, true);
       this.browser.addEventListener("load", this, true);
       this.browser.addEventListener("DOMTitleChanged", this, true);
       this.browser.addEventListener("DOMWindowClose", this, true);
@@ -638,6 +666,20 @@ global.WindowManager = {
     return "normal";
   },
 
+  updateGeometry(window, options) {
+    if (options.left !== null || options.top !== null) {
+      let left = options.left !== null ? options.left : window.screenX;
+      let top = options.top !== null ? options.top : window.screenY;
+      window.moveTo(left, top);
+    }
+
+    if (options.width !== null || options.height !== null) {
+      let width = options.width !== null ? options.width : window.outerWidth;
+      let height = options.height !== null ? options.height : window.outerHeight;
+      window.resizeTo(width, height);
+    }
+  },
+
   getId(window) {
     if (this._windows.has(window)) {
       return this._windows.get(window);
@@ -710,6 +752,11 @@ global.WindowManager = {
       state = "fullscreen";
     }
 
+    let xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIXULWindow);
+
     let result = {
       id: this.getId(window),
       focused: window.document.hasFocus(),
@@ -720,6 +767,7 @@ global.WindowManager = {
       incognito: PrivateBrowsingUtils.isWindowPrivate(window),
       type: this.windowType(window),
       state,
+      alwaysOnTop: xulWindow.zLevel >= Ci.nsIXULWindow.raisedZ,
     };
 
     if (getInfo && getInfo.populate) {

@@ -12,8 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 
-#include "jit/arm64/Architecture-arm64.h"
-
 inline bool
 js::jit::AtomicOperations::isLockfree8()
 {

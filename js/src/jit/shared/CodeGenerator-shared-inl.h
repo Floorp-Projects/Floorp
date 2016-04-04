@@ -244,26 +244,17 @@ CodeGeneratorShared::ToStackOffset(const LAllocation* a) const
     return ToStackOffset(*a);
 }
 
-Operand
-CodeGeneratorShared::ToOperand(const LAllocation& a)
+Address
+CodeGeneratorShared::ToAddress(const LAllocation& a)
 {
-    if (a.isGeneralReg())
-        return Operand(a.toGeneralReg()->reg());
-    if (a.isFloatReg())
-        return Operand(a.toFloatReg()->reg());
-    return Operand(masm.getStackPointer(), ToStackOffset(&a));
+    MOZ_ASSERT(a.isMemory());
+    return Address(masm.getStackPointer(), ToStackOffset(&a));
 }
 
-Operand
-CodeGeneratorShared::ToOperand(const LAllocation* a)
+Address
+CodeGeneratorShared::ToAddress(const LAllocation* a)
 {
-    return ToOperand(*a);
-}
-
-Operand
-CodeGeneratorShared::ToOperand(const LDefinition* def)
-{
-    return ToOperand(def->output());
+    return ToAddress(*a);
 }
 
 void

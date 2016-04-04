@@ -16,6 +16,14 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 var isParent = Services.appinfo.processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
+// The default Push service implementation.
+XPCOMUtils.defineLazyGetter(this, "PushService", function() {
+  const {PushService} = Cu.import("resource://gre/modules/PushService.jsm",
+                                  {});
+  PushService.init();
+  return PushService;
+});
+
 // Observer notification topics for system subscriptions. These are duplicated
 // and used in `PushNotifier.cpp`. They're exposed on `nsIPushService` instead
 // of `nsIPushNotifier` so that JS callers only need to import this service.
@@ -47,6 +55,7 @@ PushServiceBase.prototype = {
     Ci.nsISupportsWeakReference,
     Ci.nsIPushService,
     Ci.nsIPushQuotaManager,
+    Ci.nsIPushErrorReporter,
   ]),
 
   pushTopic: OBSERVER_TOPIC_PUSH,
@@ -99,14 +108,6 @@ PushServiceParent.prototype = Object.create(PushServiceBase.prototype);
 XPCOMUtils.defineLazyServiceGetter(PushServiceParent.prototype, "_mm",
   "@mozilla.org/parentprocessmessagemanager;1", "nsIMessageBroadcaster");
 
-XPCOMUtils.defineLazyGetter(PushServiceParent.prototype, "_service",
-  function() {
-    const {PushService} = Cu.import("resource://gre/modules/PushService.jsm",
-                                    {});
-    PushService.init();
-    return PushService;
-});
-
 Object.assign(PushServiceParent.prototype, {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PushServiceParent),
 
@@ -117,6 +118,7 @@ Object.assign(PushServiceParent.prototype, {
     "Push:Clear",
     "Push:NotificationForOriginShown",
     "Push:NotificationForOriginClosed",
+    "Push:ReportError",
   ],
 
   // nsIPushService methods
@@ -164,11 +166,17 @@ Object.assign(PushServiceParent.prototype, {
   // nsIPushQuotaManager methods
 
   notificationForOriginShown(origin) {
-    this._service.notificationForOriginShown(origin);
+    this.service.notificationForOriginShown(origin);
   },
 
   notificationForOriginClosed(origin) {
-    this._service.notificationForOriginClosed(origin);
+    this.service.notificationForOriginClosed(origin);
+  },
+
+  // nsIPushErrorReporter methods
+
+  reportDeliveryError(messageId, reason) {
+    this.service.reportDeliveryError(messageId, reason);
   },
 
   receiveMessage(message) {
@@ -187,6 +195,10 @@ Object.assign(PushServiceParent.prototype, {
     if (!target.assertPermission("push")) {
       return;
     }
+    if (name === "Push:ReportError") {
+      this.reportDeliveryError(data.messageId, data.reason);
+      return;
+    }
     let sender = target.QueryInterface(Ci.nsIMessageSender);
     return this._handleRequest(name, principal, data).then(result => {
       sender.sendAsyncMessage(this._getResponseName(name, "OK"), {
@@ -201,7 +213,7 @@ Object.assign(PushServiceParent.prototype, {
   },
 
   _handleReady() {
-    this._service.init();
+    this.service.init();
   },
 
   _toPageRecord(principal, data) {
@@ -228,7 +240,7 @@ Object.assign(PushServiceParent.prototype, {
 
   _handleRequest(name, principal, data) {
     if (name == "Push:Clear") {
-      return this._service.clear(data);
+      return this.service.clear(data);
     }
 
     let pageRecord;
@@ -239,13 +251,13 @@ Object.assign(PushServiceParent.prototype, {
     }
 
     if (name === "Push:Register") {
-      return this._service.register(pageRecord);
+      return this.service.register(pageRecord);
     }
     if (name === "Push:Registration") {
-      return this._service.registration(pageRecord);
+      return this.service.registration(pageRecord);
     }
     if (name === "Push:Unregister") {
-      return this._service.unregister(pageRecord);
+      return this.service.unregister(pageRecord);
     }
 
     return Promise.reject(new Error("Invalid request: unknown name"));
@@ -254,6 +266,27 @@ Object.assign(PushServiceParent.prototype, {
   _getResponseName(requestName, suffix) {
     let name = requestName.slice("Push:".length);
     return "PushService:" + name + ":" + suffix;
+  },
+
+  // Methods used for mocking in tests.
+
+  replaceServiceBackend(options) {
+    this.service.changeTestServer(options.serverURI, options);
+  },
+
+  restoreServiceBackend() {
+    var defaultServerURL = Services.prefs.getCharPref("dom.push.serverURL");
+    this.service.changeTestServer(defaultServerURL);
+  },
+});
+
+// Used to replace the implementation with a mock.
+Object.defineProperty(PushServiceParent.prototype, "service", {
+  get() {
+    return this._service || PushService;
+  },
+  set(impl) {
+    this._service = impl;
   },
 });
 
@@ -331,6 +364,15 @@ Object.assign(PushServiceContent.prototype, {
 
   notificationForOriginClosed(origin) {
     this._mm.sendAsyncMessage("Push:NotificationForOriginClosed", origin);
+  },
+
+  // nsIPushErrorReporter methods
+
+  reportDeliveryError(messageId, reason) {
+    this._mm.sendAsyncMessage("Push:ReportError", {
+      messageId: messageId,
+      reason: reason,
+    });
   },
 
   _addRequest(data) {

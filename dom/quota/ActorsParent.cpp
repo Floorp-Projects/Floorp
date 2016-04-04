@@ -845,7 +845,7 @@ public:
   {
     MOZ_ASSERT(GetState() == State_Initial);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(this->Run()));
+    MOZ_ALWAYS_SUCCEEDS(this->Run());
   }
 
 protected:
@@ -2281,7 +2281,7 @@ CreateRunnable::Run()
   }
 
   if (thread) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->Dispatch(this, NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(this, NS_DISPATCH_NORMAL));
   }
 
   return NS_OK;
@@ -2311,7 +2311,7 @@ ShutdownRunnable::Run()
     gInstance = nullptr;
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   return NS_OK;
 }
@@ -2330,8 +2330,8 @@ ShutdownObserver::Observe(nsISupports* aSubject,
   bool done = false;
 
   RefPtr<ShutdownRunnable> shutdownRunnable = new ShutdownRunnable(done);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(
+    mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
 
   nsIThread* currentThread = NS_GetCurrentThread();
   MOZ_ASSERT(currentThread);
@@ -2404,6 +2404,10 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   MOZ_ASSERT(quotaManager);
 
   MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  if (mQuotaCheckDisabled) {
+    return true;
+  }
 
   if (mSize == aSize) {
     return true;
@@ -2580,6 +2584,28 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   return true;
 }
 
+void
+QuotaObject::DisableQuotaCheck()
+{
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  mQuotaCheckDisabled = true;
+}
+
+void
+QuotaObject::EnableQuotaCheck()
+{
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  mQuotaCheckDisabled = false;
+}
+
 /*******************************************************************************
  * Quota manager
  ******************************************************************************/
@@ -2615,11 +2641,11 @@ QuotaManager::GetOrCreate(nsIRunnable* aCallback)
     MOZ_ASSERT(!gCreateRunnable);
     MOZ_ASSERT_IF(gCreateFailed, !gInstance);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(aCallback)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
   } else {
     if (!gCreateRunnable) {
       gCreateRunnable = new CreateRunnable();
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(gCreateRunnable)));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(gCreateRunnable));
     }
 
     gCreateRunnable->AddCallback(aCallback);
@@ -3041,11 +3067,11 @@ QuotaManager::Shutdown()
   StopIdleMaintenance();
 
   // Kick off the shutdown timer.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+  MOZ_ALWAYS_SUCCEEDS(
     mShutdownTimer->InitWithFuncCallback(&ShutdownTimerCallback,
                                          this,
                                          DEFAULT_SHUTDOWN_TIMER_MS,
-                                         nsITimer::TYPE_ONE_SHOT)));
+                                         nsITimer::TYPE_ONE_SHOT));
 
   // Each client will spin the event loop while we wait on all the threads
   // to close. Our timer may fire during that loop.
@@ -4310,8 +4336,7 @@ QuotaManager::LockedCollectOriginsForEviction(
   {
     MutexAutoUnlock autoUnlock(mQuotaMutex);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(helper,
-                                                         NS_DISPATCH_NORMAL)));
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(helper, NS_DISPATCH_NORMAL));
   }
 
   return helper->BlockAndReturnOriginsForEviction(aLocks);
@@ -4855,8 +4880,7 @@ OriginOperationBase::Finish(nsresult aResult)
   // thread.
   mState = State_UnblockingOpen;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 nsresult
@@ -4868,10 +4892,10 @@ OriginOperationBase::Init()
   AdvanceState();
 
   if (mNeedsMainThreadInit) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
   } else {
     AdvanceState();
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Run()));
+    MOZ_ALWAYS_SUCCEEDS(Run());
   }
 
   return NS_OK;
@@ -4890,8 +4914,7 @@ OriginOperationBase::InitOnMainThread()
 
   AdvanceState();
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -4952,8 +4975,7 @@ OriginOperationBase::DirectoryWork()
   // thread.
   AdvanceState();
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -4966,8 +4988,7 @@ FinalizeOriginEvictionOp::Dispatch()
 
   SetState(State_DirectoryOpenPending);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL)));
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 void
@@ -4978,7 +4999,7 @@ FinalizeOriginEvictionOp::RunOnIOThreadImmediately()
 
   SetState(State_DirectoryWorkOpen);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(this->Run()));
+  MOZ_ALWAYS_SUCCEEDS(this->Run());
 }
 
 void
@@ -6020,7 +6041,7 @@ StorageDirectoryHelper::ProcessOriginDirectories(bool aMove)
   AssertIsOnIOThread();
   MOZ_ASSERT(!mOriginProps.IsEmpty());
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
   {
     mozilla::MutexAutoLock autolock(mMutex);

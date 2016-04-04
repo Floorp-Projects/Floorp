@@ -1,6 +1,6 @@
 random == bug-364968.html bug-364968-ref.html
 == bug-463204.html bug-463204-ref.html
-fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-outside-document.html canvas-inside-document.html
+== canvas-outside-document.html canvas-inside-document.html
 == mozsetimageelement-01.html mozsetimageelement-01-ref.html
 skip-if(B2G||Mulet) == mozsetimageelement-02.html about:blank # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == image-outside-document-invalidate.html about:blank # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
@@ -17,7 +17,7 @@ fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
 == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
-fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,2,80) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
+fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,2,106) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
 fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
@@ -26,7 +26,7 @@ fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sh
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
 fuzzy-if(B2G,11,4) == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
-== element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html
+fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),79,1191) == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html # Linux32 from GCC update
 == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html
 skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop

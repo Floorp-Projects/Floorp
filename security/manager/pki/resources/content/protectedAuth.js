@@ -1,10 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* import-globals-from pippki.js */
+"use strict";
 
 function onLoad()
 {
-  protectedAuthThread =
+  let protectedAuthThread =
     window.arguments[0].QueryInterface(Components.interfaces.nsIProtectedAuthThread);
 
   if (!protectedAuthThread) {
@@ -18,7 +20,7 @@ function onLoad()
     let tag = document.getElementById("tokenName");
     tag.setAttribute("value", tokenName);
 
-    setCursor("wait");
+    window.setCursor("wait");
 
     let obs = {
       observe: function protectedAuthListenerObserve(subject, topic, data) {
@@ -36,5 +38,5 @@ function onLoad()
 
 function onClose()
 {
-  setCursor("default");
+  window.setCursor("auto");
 }

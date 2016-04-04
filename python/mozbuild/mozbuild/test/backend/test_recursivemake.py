@@ -494,6 +494,18 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('quux.png', m)
         self.assertIn('icons/foo.ico', m)
 
+    def test_sdk_files(self):
+        """Ensure SDK_FILES is handled properly."""
+        env = self._consume('sdk-files', RecursiveMakeBackend)
+
+        #SDK_FILES should appear in the dist_sdk install manifest.
+        m = InstallManifest(path=os.path.join(env.topobjdir,
+            '_build_manifests', 'install', 'dist_sdk'))
+        self.assertEqual(len(m), 3)
+        self.assertIn('bar.ico', m)
+        self.assertIn('quux.png', m)
+        self.assertIn('icons/foo.ico', m)
+
     def test_test_manifests_files_written(self):
         """Ensure test manifests get turned into files."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)
@@ -858,6 +870,32 @@ class TestRecursiveMakeBackend(BackendTester):
             'IS_COMPONENT := 1\n',
             'DSO_SONAME := bar\n',
         ])
+
+        self.assertTrue(os.path.exists(mozpath.join(env.topobjdir, 'binaries.json')))
+        with open(mozpath.join(env.topobjdir, 'binaries.json'), 'rb') as fh:
+            binaries = json.load(fh)
+
+        self.assertEqual(binaries, {
+            'programs': [],
+            'shared_libraries': [
+                {
+                    'basename': 'foo',
+                    'import_name': 'foo',
+                    'install_target': 'dist/bin',
+                    'lib_name': 'foo',
+                    'relobjdir': 'foo',
+                    'soname': 'foo',
+                },
+                {
+                    'basename': 'bar',
+                    'import_name': 'bar',
+                    'install_target': 'dist/bin',
+                    'lib_name': 'bar',
+                    'relobjdir': 'bar',
+                    'soname': 'bar',
+                }
+            ],
+        })
 
 
 if __name__ == '__main__':

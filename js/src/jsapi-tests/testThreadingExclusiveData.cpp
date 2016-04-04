@@ -70,10 +70,7 @@ setBitAndCheck(void* arg)
 
 BEGIN_TEST(testExclusiveData)
 {
-    auto maybeCounter = js::ExclusiveData<uint64_t>::Create(0);
-    CHECK(maybeCounter.isSome());
-
-    js::ExclusiveData<uint64_t> counter(mozilla::Move(*maybeCounter));
+    js::ExclusiveData<uint64_t> counter(0);
 
     js::Vector<PRThread*> threads(cx);
     CHECK(threads.reserve(NumThreads));

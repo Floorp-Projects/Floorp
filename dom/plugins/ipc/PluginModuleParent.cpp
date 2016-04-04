@@ -124,6 +124,11 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
         return true;
     }
     PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
+    /*
+     *  We can't accumulate BLOCKED_ON_PLUGIN_MODULE_INIT_MS until here because
+     *  its histogram key is not available until *after* NP_Initialize.
+     */
+    chromeParent->AccumulateModuleInitBlockedTime();
     *rv = chromeParent->GetRunID(runID);
     if (NS_FAILED(*rv)) {
         return true;
@@ -401,13 +406,16 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
     dom::ContentChild* cp = dom::ContentChild::GetSingleton();
     nsresult rv;
     uint32_t runID;
+    TimeStamp sendLoadPluginStart = TimeStamp::Now();
     if (!cp->SendLoadPlugin(aPluginId, &rv, &runID) ||
         NS_FAILED(rv)) {
         return nullptr;
     }
+    TimeStamp sendLoadPluginEnd = TimeStamp::Now();
 
     PluginModuleContentParent* parent = mapping->GetModule();
     MOZ_ASSERT(parent);
+    parent->mTimeBlocked += (sendLoadPluginEnd - sendLoadPluginStart);
 
     if (!mapping->IsChannelOpened()) {
         // mapping is linked into PluginModuleMapping::sModuleListHead and is
@@ -2365,8 +2373,8 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
             SetPluginFuncs(mNPPIface);
         }
 
-        // Send the info needed to join the chrome process's audio session to the
-        // plugin process
+        // Send the info needed to join the browser process's audio session to the
+        // plugin process.
         nsID id;
         nsString sessionName;
         nsString iconPath;
@@ -2626,6 +2634,18 @@ public:
   }
 };
 
+void
+PluginModuleParent::AccumulateModuleInitBlockedTime()
+{
+    if (mPluginName.IsEmpty()) {
+        GetPluginDetails();
+    }
+    Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
+                          GetHistogramKey(),
+                          static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
+    mTimeBlocked = TimeDuration();
+}
+
 nsresult
 PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
                                     uint16_t mode,
@@ -2640,12 +2660,9 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
          *  on plugin module initialization. As implemented, this is the sum of
          *  plugin-container launch + toolhelp32 snapshot + NP_Initialize.
          *  We don't accumulate its value until here because the plugin info
-         *  is not available until *after* NP_Initialize.
+         *  for its histogram key is not available until *after* NP_Initialize.
          */
-        Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
-                              GetHistogramKey(),
-                              static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
-        mTimeBlocked = TimeDuration();
+        AccumulateModuleInitBlockedTime();
     }
 
     nsCaseInsensitiveUTF8StringArrayComparator comparator;

@@ -358,7 +358,7 @@ struct StaticFingerprints {
 };
 
 /* PreloadedHPKPins.json pinsets */
-static const char* kPinset_google_root_pems_Data[] = {
+static const char* const kPinset_google_root_pems_Data[] = {
   kEquifax_Secure_CAFingerprint,
   kEntrust_Root_Certification_Authority___EC1Fingerprint,
   kComodo_Trusted_Services_rootFingerprint,
@@ -420,7 +420,7 @@ static const StaticFingerprints kPinset_google_root_pems = {
   kPinset_google_root_pems_Data
 };
 
-static const char* kPinset_mozilla_Data[] = {
+static const char* const kPinset_mozilla_Data[] = {
   kGeoTrust_Global_CA_2Fingerprint,
   kthawte_Primary_Root_CA___G3Fingerprint,
   kthawte_Primary_Root_CAFingerprint,
@@ -447,7 +447,7 @@ static const StaticFingerprints kPinset_mozilla = {
   kPinset_mozilla_Data
 };
 
-static const char* kPinset_mozilla_services_Data[] = {
+static const char* const kPinset_mozilla_services_Data[] = {
   kDigiCert_Global_Root_CAFingerprint,
 };
 static const StaticFingerprints kPinset_mozilla_services = {
@@ -455,7 +455,7 @@ static const StaticFingerprints kPinset_mozilla_services = {
   kPinset_mozilla_services_Data
 };
 
-static const char* kPinset_mozilla_test_Data[] = {
+static const char* const kPinset_mozilla_test_Data[] = {
   kEnd_Entity_Test_CertFingerprint,
 };
 static const StaticFingerprints kPinset_mozilla_test = {
@@ -464,7 +464,7 @@ static const StaticFingerprints kPinset_mozilla_test = {
 };
 
 /* Chrome static pinsets */
-static const char* kPinset_test_Data[] = {
+static const char* const kPinset_test_Data[] = {
   kTestSPKIFingerprint,
 };
 static const StaticFingerprints kPinset_test = {
@@ -472,7 +472,7 @@ static const StaticFingerprints kPinset_test = {
   kPinset_test_Data
 };
 
-static const char* kPinset_google_Data[] = {
+static const char* const kPinset_google_Data[] = {
   kGOOGLE_PIN_GoogleG2Fingerprint,
   kGoogleBackup2048Fingerprint,
   kGeoTrust_Global_CAFingerprint,
@@ -482,7 +482,7 @@ static const StaticFingerprints kPinset_google = {
   kPinset_google_Data
 };
 
-static const char* kPinset_tor_Data[] = {
+static const char* const kPinset_tor_Data[] = {
   kTor3Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kGOOGLE_PIN_LetsEncryptAuthorityX1Fingerprint,
@@ -496,7 +496,7 @@ static const StaticFingerprints kPinset_tor = {
   kPinset_tor_Data
 };
 
-static const char* kPinset_twitterCom_Data[] = {
+static const char* const kPinset_twitterCom_Data[] = {
   kVerisign_Class_2_Public_Primary_Certification_Authority___G2Fingerprint,
   kGOOGLE_PIN_VeriSignClass3_G2Fingerprint,
   kGeoTrust_Global_CA_2Fingerprint,
@@ -524,7 +524,7 @@ static const StaticFingerprints kPinset_twitterCom = {
   kPinset_twitterCom_Data
 };
 
-static const char* kPinset_twitterCDN_Data[] = {
+static const char* const kPinset_twitterCDN_Data[] = {
   kVerisign_Class_2_Public_Primary_Certification_Authority___G2Fingerprint,
   kComodo_Trusted_Services_rootFingerprint,
   kCOMODO_Certification_AuthorityFingerprint,
@@ -573,7 +573,7 @@ static const StaticFingerprints kPinset_twitterCDN = {
   kPinset_twitterCDN_Data
 };
 
-static const char* kPinset_dropbox_Data[] = {
+static const char* const kPinset_dropbox_Data[] = {
   kEntrust_Root_Certification_Authority___EC1Fingerprint,
   kGOOGLE_PIN_ThawtePremiumServerFingerprint,
   kthawte_Primary_Root_CA___G3Fingerprint,
@@ -598,7 +598,7 @@ static const StaticFingerprints kPinset_dropbox = {
   kPinset_dropbox_Data
 };
 
-static const char* kPinset_facebook_Data[] = {
+static const char* const kPinset_facebook_Data[] = {
   kGOOGLE_PIN_DigiCertECCSecureServerCAFingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kGOOGLE_PIN_SymantecClass3EVG3Fingerprint,
@@ -609,7 +609,7 @@ static const StaticFingerprints kPinset_facebook = {
   kPinset_facebook_Data
 };
 
-static const char* kPinset_spideroak_Data[] = {
+static const char* const kPinset_spideroak_Data[] = {
   kSpiderOak2Fingerprint,
   kSpiderOak3Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
@@ -620,7 +620,7 @@ static const StaticFingerprints kPinset_spideroak = {
   kPinset_spideroak_Data
 };
 
-static const char* kPinset_yahoo_Data[] = {
+static const char* const kPinset_yahoo_Data[] = {
   kYahooBackup1Fingerprint,
   kVerisign_Class_2_Public_Primary_Certification_Authority___G2Fingerprint,
   kVeriSign_Class_3_Public_Primary_Certification_Authority___G5Fingerprint,
@@ -1114,4 +1114,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1465961475786000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1467459274783000);

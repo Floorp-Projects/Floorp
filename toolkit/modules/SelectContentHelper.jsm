@@ -12,6 +12,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
+                                   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+
+const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 this.EXPORTED_SYMBOLS = [
   "SelectContentHelper"
@@ -29,12 +33,16 @@ this.SelectContentHelper.prototype = {
   init: function() {
     this.global.addMessageListener("Forms:SelectDropDownItem", this);
     this.global.addMessageListener("Forms:DismissedDropDown", this);
+    this.global.addMessageListener("Forms:MouseOver", this);
+    this.global.addMessageListener("Forms:MouseOut", this);
     this.global.addEventListener("pagehide", this);
   },
 
   uninit: function() {
     this.global.removeMessageListener("Forms:SelectDropDownItem", this);
     this.global.removeMessageListener("Forms:DismissedDropDown", this);
+    this.global.removeMessageListener("Forms:MouseOver", this);
+    this.global.removeMessageListener("Forms:MouseOut", this);
     this.global.removeEventListener("pagehide", this);
     this.element = null;
     this.global = null;
@@ -74,14 +82,25 @@ this.SelectContentHelper.prototype = {
 
         this.uninit();
         break;
+
+      case "Forms:MouseOver":
+        DOMUtils.setContentState(this.element, kStateHover);
+        break;
+
+      case "Forms:MouseOut":
+        DOMUtils.removeContentState(this.element, kStateHover);
+        break;
+
     }
   },
 
   handleEvent: function(event) {
     switch (event.type) {
       case "pagehide":
-        this.global.sendAsyncMessage("Forms:HideDropDown", {});
-        this.uninit();
+        if (this.element.ownerDocument === event.target) {
+          this.global.sendAsyncMessage("Forms:HideDropDown", {});
+          this.uninit();
+        }
         break;
     }
   }
@@ -111,6 +130,7 @@ function buildOptionListForChildren(node) {
       }
 
       let info = {
+        index: child.index,
         tagName: tagName,
         textContent: textContent,
         disabled: child.disabled,

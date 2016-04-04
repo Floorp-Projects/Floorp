@@ -14,7 +14,7 @@ loader.lazyRequireGetter(this, "EventEmitter",
 
 function PerformancePanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
-  this._toolbox = toolbox;
+  this.toolbox = toolbox;
 
   EventEmitter.decorate(this);
 }
@@ -36,7 +36,7 @@ PerformancePanel.prototype = {
     let deferred = promise.defer();
     this._opening = deferred.promise;
 
-    this.panelWin.gToolbox = this._toolbox;
+    this.panelWin.gToolbox = this.toolbox;
     this.panelWin.gTarget = this.target;
     this._checkRecordingStatus = this._checkRecordingStatus.bind(this);
 
@@ -55,7 +55,7 @@ PerformancePanel.prototype = {
 
     this.panelWin.gFront = front;
     let { PerformanceController, EVENTS } = this.panelWin;
-    PerformanceController.on(EVENTS.NEW_RECORDING, this._checkRecordingStatus);
+    PerformanceController.on(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
     yield this.panelWin.startupPerformance();
 
@@ -74,7 +74,7 @@ PerformancePanel.prototype = {
   // DevToolPanel API
 
   get target() {
-    return this._toolbox.target;
+    return this.toolbox.target;
   },
 
   destroy: Task.async(function*() {
@@ -84,7 +84,7 @@ PerformancePanel.prototype = {
     }
 
     let { PerformanceController, EVENTS } = this.panelWin;
-    PerformanceController.off(EVENTS.NEW_RECORDING, this._checkRecordingStatus);
+    PerformanceController.off(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
     yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");
@@ -93,9 +93,9 @@ PerformancePanel.prototype = {
 
   _checkRecordingStatus: function () {
     if (this.panelWin.PerformanceController.isRecording()) {
-      this._toolbox.highlightTool("performance");
+      this.toolbox.highlightTool("performance");
     } else {
-      this._toolbox.unhighlightTool("performance");
+      this.toolbox.unhighlightTool("performance");
     }
   }
 };

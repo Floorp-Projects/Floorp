@@ -258,7 +258,7 @@ BluetoothHfpManager::Init()
   hal::GetCurrentBatteryInformation(&batteryInfo);
   Notify(batteryInfo);
 
-  mListener = new BluetoothRilListener();
+  mListener = MakeUnique<BluetoothRilListener>();
   NS_ENSURE_TRUE(mListener->Listen(true), false);
 
   nsCOMPtr<nsISettingsService> settings =

@@ -707,6 +707,7 @@ public:
   static const KTableEntry kVectorEffectKTable[];
   static const KTableEntry kTextAnchorKTable[];
   static const KTableEntry kTextRenderingKTable[];
+  static const KTableEntry kColorAdjustKTable[];
   static const KTableEntry kColorInterpolationKTable[];
   static const KTableEntry kColumnFillKTable[];
   static const KTableEntry kBoxPropSourceKTable[];
@@ -794,9 +795,7 @@ public:
   static const KTableEntry kPageSizeKTable[];
   static const KTableEntry kPitchKTable[];
   static const KTableEntry kPointerEventsKTable[];
-  // Not const because we modify its entries when the pref
-  // "layout.css.sticky.enabled" changes:
-  static KTableEntry kPositionKTable[];
+  static const KTableEntry kPositionKTable[];
   static const KTableEntry kRadialGradientShapeKTable[];
   static const KTableEntry kRadialGradientSizeKTable[];
   static const KTableEntry kRadialGradientLegacySizeKTable[];

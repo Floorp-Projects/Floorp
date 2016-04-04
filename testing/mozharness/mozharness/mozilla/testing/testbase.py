@@ -202,8 +202,10 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                 self.warning("Can't figure out symbols_url from installer_url: %s!" %
                              self.installer_url)
 
-        else:
-            self.fatal("Can't figure out symbols_url without an installer_url!")
+        # If no symbols URL can be determined let minidump_stackwalk query the symbols.
+        # As of now this only works for Nightly and release builds.
+        if not self.symbols_url:
+            self.warning("No symbols_url found. Let minidump_stackwalk query for symbols.")
 
         return self.symbols_url
 
@@ -434,6 +436,7 @@ You can set this by:
         aliases = {
             'robocop': 'mochitest',
             'mochitest-chrome': 'mochitest',
+            'mochitest-media': 'mochitest',
             'mochitest-gl': 'mochitest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',

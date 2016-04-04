@@ -444,7 +444,7 @@ void GestureEventListener::HandleInputTimeoutLongTap()
   }
 }
 
-void GestureEventListener::HandleInputTimeoutMaxTap()
+void GestureEventListener::HandleInputTimeoutMaxTap(bool aDuringFastFling)
 {
   GEL_LOG("Running max-tap timeout task in state %d\n", mState);
 
@@ -455,7 +455,9 @@ void GestureEventListener::HandleInputTimeoutMaxTap()
   } else if (mState == GESTURE_FIRST_SINGLE_TOUCH_UP ||
              mState == GESTURE_SECOND_SINGLE_TOUCH_DOWN) {
     SetState(GESTURE_NONE);
-    TriggerSingleTapConfirmedEvent();
+    if (!aDuringFastFling) {
+      TriggerSingleTapConfirmedEvent();
+    }
   } else {
     NS_WARNING("Unhandled state upon MAX_TAP timeout");
     SetState(GESTURE_NONE);
@@ -520,8 +522,10 @@ void GestureEventListener::CreateMaxTapTimeoutTask()
 {
   mLastTapInput = mLastTouchInput;
 
+  TouchBlockState* block = mAsyncPanZoomController->GetInputQueue()->CurrentTouchBlock();
   mMaxTapTimeoutTask =
-    NewRunnableMethod(this, &GestureEventListener::HandleInputTimeoutMaxTap);
+    NewRunnableMethod(this, &GestureEventListener::HandleInputTimeoutMaxTap,
+                      block->IsDuringFastFling());
 
   mAsyncPanZoomController->PostDelayedTask(
     mMaxTapTimeoutTask,

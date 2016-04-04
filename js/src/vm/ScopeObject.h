@@ -816,6 +816,8 @@ class ModuleEnvironmentObject : public LexicalScopeBase
 {
     static const uint32_t MODULE_SLOT = 1;
 
+    static const ObjectOps objectOps_;
+
   public:
     static const Class class_;
 
@@ -961,6 +963,7 @@ class ClonedBlockObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
+    static const ObjectOps objectOps_;
     static const Class class_;
 
   private:

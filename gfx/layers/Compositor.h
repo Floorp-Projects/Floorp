@@ -9,6 +9,7 @@
 #include "Units.h"                      // for ScreenPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
+#include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
@@ -125,7 +126,7 @@ class Layer;
 class TextureSource;
 class DataTextureSource;
 class CompositingRenderTarget;
-class CompositorParent;
+class CompositorBridgeParent;
 class LayerManagerComposite;
 
 enum SurfaceInitMode
@@ -184,7 +185,7 @@ protected:
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  explicit Compositor(CompositorParent* aParent = nullptr)
+  explicit Compositor(CompositorBridgeParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
     , mParent(aParent)
@@ -516,6 +517,11 @@ public:
     return mCompositeUntilTime;
   }
 
+  // A stale Compositor has no CompositorBridgeParent; it will not process
+  // frames and should not be used.
+  void SetInvalid();
+  bool IsValid() const;
+
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
@@ -553,7 +559,7 @@ protected:
 
   uint32_t mCompositorID;
   DiagnosticTypes mDiagnosticTypes;
-  CompositorParent* mParent;
+  CompositorBridgeParent* mParent;
 
   /**
    * We keep track of the total number of pixels filled as we composite the

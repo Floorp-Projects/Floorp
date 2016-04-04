@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CppUnitTests([
+    'TestIsCertBuiltInRoot',
     'TestSTSParser',
 ])
 
@@ -16,3 +17,7 @@ GeckoCppUnitTests([
     'TestCertDB',
     'TestMD4',
 ])
+
+USE_LIBS += [
+    'nss',
+]

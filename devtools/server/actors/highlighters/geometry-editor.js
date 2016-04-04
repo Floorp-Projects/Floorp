@@ -15,6 +15,12 @@ const { setIgnoreLayoutChanges,
 
 const GEOMETRY_LABEL_SIZE = 6;
 
+// List of all DOM Events subscribed directly to the document from the
+// Geometry Editor highlighter
+const DOM_EVENTS = ["mousemove", "mouseup", "pagehide"];
+
+const _dragging = Symbol("geometry/dragging");
+
 /**
  * Element geometry properties helper that gives names of position and size
  * properties.
@@ -113,6 +119,75 @@ function getOffsetParent(node) {
 }
 
 /**
+ * Get the list of geometry properties that are actually set on the provided
+ * node.
+ *
+ * @param {nsIDOMNode} node The node to analyze.
+ * @return {Map} A map indexed by property name and where the value is an
+ * object having the cssRule property.
+ */
+function getDefinedGeometryProperties(node) {
+  let props = new Map();
+  if (!node) {
+    return props;
+  }
+
+  // Get the list of css rules applying to the current node.
+  let cssRules = getCSSStyleRules(node);
+  for (let i = 0; i < cssRules.Count(); i++) {
+    let rule = cssRules.GetElementAt(i);
+    for (let name of GeoProp.allProps()) {
+      let value = rule.style.getPropertyValue(name);
+      if (value && value !== "auto") {
+        // getCSSStyleRules returns rules ordered from least to most specific
+        // so just override any previous properties we have set.
+        props.set(name, {
+          cssRule: rule
+        });
+      }
+    }
+  }
+
+  // Go through the inline styles last, only if the node supports inline style
+  // (e.g. pseudo elements don't have a style property)
+  if (node.style) {
+    for (let name of GeoProp.allProps()) {
+      let value = node.style.getPropertyValue(name);
+      if (value && value !== "auto") {
+        props.set(name, {
+          // There's no cssRule to store here, so store the node instead since
+          // node.style exists.
+          cssRule: node
+        });
+      }
+    }
+  }
+
+  // Post-process the list for invalid properties. This is done after the fact
+  // because of cases like relative positioning with both top and bottom where
+  // only top will actually be used, but both exists in css rules and computed
+  // styles.
+  let { position } = getComputedStyle(node);
+  for (let [name] of props) {
+    // Top/left/bottom/right on static positioned elements have no effect.
+    if (position === "static" && GeoProp.SIDES.indexOf(name) !== -1) {
+      props.delete(name);
+    }
+
+    // Bottom/right on relative positioned elements are only used if top/left
+    // are not defined.
+    let hasRightAndLeft = name === "right" && props.has("left");
+    let hasBottomAndTop = name === "bottom" && props.has("top");
+    if (position === "relative" && (hasRightAndLeft || hasBottomAndTop)) {
+      props.delete(name);
+    }
+  }
+
+  return props;
+}
+exports.getDefinedGeometryProperties = getDefinedGeometryProperties;
+
+/**
  * The GeometryEditor highlights an elements's top, left, bottom, right, width
  * and height dimensions, when they are set.
  *
@@ -138,6 +213,20 @@ function GeometryEditorHighlighter(highlighterEnv) {
 
   this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
+
+  let { pageListenerTarget } = this.highlighterEnv;
+
+  // Register the geometry editor instance to all events we're interested in.
+  DOM_EVENTS.forEach(type => pageListenerTarget.addEventListener(type, this));
+
+  // Register the mousedown event for each Geometry Editor's handler.
+  // Those events are automatically removed when the markup is destroyed.
+  let onMouseDown = this.handleEvent.bind(this);
+
+  for (let side of GeoProp.SIDES) {
+    this.getElement("handler-" + side)
+      .addEventListener("mousedown", onMouseDown);
+  }
 }
 
 GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -154,7 +243,8 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       parent: container,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
+        "hidden": "true"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -194,7 +284,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       prefix: this.ID_CLASS_PREFIX
     });
 
-    // Build the 4 side arrows and labels.
+    // Build the 4 side arrows, handlers and labels.
     for (let name of GeoProp.SIDES) {
       createSVGNode(this.win, {
         nodeType: "line",
@@ -202,6 +292,19 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
         attributes: {
           "class": "arrow " + name,
           "id": "arrow-" + name,
+          "hidden": "true"
+        },
+        prefix: this.ID_CLASS_PREFIX
+      });
+
+      createSVGNode(this.win, {
+        nodeType: "circle",
+        parent: svg,
+        attributes: {
+          "class": "handler-" + name,
+          "id": "handler-" + name,
+          "r": "4",
+          "data-side": name,
           "hidden": "true"
         },
         prefix: this.ID_CLASS_PREFIX
@@ -256,51 +359,21 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       });
     }
 
-    // Build the width/height label and resize handle.
-    let labelSizeG = createSVGNode(this.win, {
-      nodeType: "g",
-      parent: svg,
-      attributes: {
-        "id": "label-size",
-        "hidden": "true"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
-    let subSizeG = createSVGNode(this.win, {
-      nodeType: "g",
-      parent: labelSizeG,
-      attributes: {
-        "transform": "translate(-50 -10)"
-      }
-    });
-
-    createSVGNode(this.win, {
-      nodeType: "path",
-      parent: subSizeG,
-      attributes: {
-        "class": "label-bubble",
-        "d": "M0 0 L100 0 L100 20 L0 20z"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
-    createSVGNode(this.win, {
-      nodeType: "text",
-      parent: subSizeG,
-      attributes: {
-        "class": "label-text",
-        "id": "label-text-size",
-        "x": "50",
-        "y": "10"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
     return container;
   },
 
   destroy: function() {
+    // Avoiding exceptions if `destroy` is called multiple times; and / or the
+    // highlighter environment was already destroyed.
+    if (!this.highlighterEnv) {
+      return;
+    }
+
+    let { pageListenerTarget } = this.highlighterEnv;
+
+    DOM_EVENTS.forEach(type =>
+      pageListenerTarget.removeEventListener(type, this));
+
     AutoRefreshHighlighter.prototype.destroy.call(this);
 
     this.markup.destroy();
@@ -309,72 +382,96 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.offsetParent = null;
   },
 
-  getElement: function(id) {
-    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  handleEvent: function(event, id) {
+    // No event handling if the highlighter is hidden
+    if (this.getElement("root").hasAttribute("hidden")) {
+      return;
+    }
+
+    const { type, pageX, pageY } = event;
+
+    switch (type) {
+      case "pagehide":
+        this.destroy();
+        break;
+      case "mousedown":
+        // The mousedown event is intended only for the handler
+        if (!id) {
+          return;
+        }
+
+        let handlerSide = this.markup.getElement(id).getAttribute("data-side");
+
+        if (handlerSide) {
+          let side = handlerSide;
+          let sideProp = this.definedProperties.get(side);
+
+          if (!sideProp) {
+            return;
+          }
+
+          let value = sideProp.cssRule.style.getPropertyValue(side);
+          let computedValue = this.computedStyle.getPropertyValue(side);
+
+          let [unit] = value.match(/[^\d]+$/) || [""];
+
+          value = parseFloat(value);
+
+          let ratio = (value / parseFloat(computedValue)) || 1;
+          let dir = GeoProp.isInverted(side) ? -1 : 1;
+
+          // Store all the initial values needed for drag & drop
+          this[_dragging] = {
+            side,
+            value,
+            unit,
+            x: pageX,
+            y: pageY,
+            inc: ratio * dir
+          };
+
+          this.getElement("handler-" + side).classList.add("dragging");
+        }
+
+        this.getElement("root").setAttribute("dragging", "true");
+        break;
+      case "mouseup":
+        // If we're dragging, drop it.
+        if (this[_dragging]) {
+          let { side } = this[_dragging];
+          this.getElement("root").removeAttribute("dragging");
+          this.getElement("handler-" + side).classList.remove("dragging");
+          this[_dragging] = null;
+        }
+        break;
+      case "mousemove":
+        if (!this[_dragging]) {
+          return;
+        }
+
+        let { side, x, y, value, unit, inc } = this[_dragging];
+        let sideProps = this.definedProperties.get(side);
+
+        if (!sideProps) {
+          return;
+        }
+
+        let delta = (GeoProp.isHorizontal(side) ? pageX - x : pageY - y) * inc;
+
+        // The inline style has usually the priority over any other CSS rule
+        // set in stylesheets. However, if a rule has `!important` keyword,
+        // it will override the inline style too. To ensure Geometry Editor
+        // will always update the element, we have to add `!important` as
+        // well.
+        this.currentNode.style.setProperty(
+          side, (value + delta) + unit, "important");
+
+        break;
+    }
   },
 
-  /**
-   * Get the list of geometry properties that are actually set on the current
-   * node.
-   * @return {Map} A map indexed by property name and where the value is an
-   * object having the cssRule property.
-   */
-  getDefinedGeometryProperties: function() {
-    let props = new Map();
-    if (!this.currentNode) {
-      return props;
-    }
-
-    // Get the list of css rules applying to the current node.
-    let cssRules = getCSSStyleRules(this.currentNode);
-    for (let i = 0; i < cssRules.Count(); i++) {
-      let rule = cssRules.GetElementAt(i);
-      for (let name of GeoProp.allProps()) {
-        let value = rule.style.getPropertyValue(name);
-        if (value && value !== "auto") {
-          // getCSSStyleRules returns rules ordered from least to most specific
-          // so just override any previous properties we have set.
-          props.set(name, {
-            cssRule: rule
-          });
-        }
-      }
-    }
-
-    // Go through the inline styles last.
-    for (let name of GeoProp.allProps()) {
-      let value = this.currentNode.style.getPropertyValue(name);
-      if (value && value !== "auto") {
-        props.set(name, {
-          // There's no cssRule to store here, so store the node instead since
-          // node.style exists.
-          cssRule: this.currentNode
-        });
-      }
-    }
-
-    // Post-process the list for invalid properties. This is done after the fact
-    // because of cases like relative positioning with both top and bottom where
-    // only top will actually be used, but both exists in css rules and computed
-    // styles.
-    for (let [name] of props) {
-      let pos = this.computedStyle.position;
-
-      // Top/left/bottom/right on static positioned elements have no effect.
-      if (pos === "static" && GeoProp.SIDES.indexOf(name) !== -1) {
-        props.delete(name);
-      }
-
-      // Bottom/right on relative positioned elements are only used if top/left
-      // are not defined.
-      let hasRightAndLeft = name === "right" && props.has("left");
-      let hasBottomAndTop = name === "bottom" && props.has("top");
-      if (pos === "relative" && (hasRightAndLeft || hasBottomAndTop)) {
-        props.delete(name);
-      }
-    }
-
-    return props;
+  getElement: function(id) {
+    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
   },
 
   _show: function() {
@@ -391,13 +488,16 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       this.hide();
       return false;
     }
+
+    this.getElement("root").removeAttribute("hidden");
+
     return true;
   },
 
   _update: function() {
     // At each update, the position or/and size may have changed, so get the
     // list of defined properties, and re-position the arrows and highlighters.
-    this.definedProperties = this.getDefinedGeometryProperties();
+    this.definedProperties = getDefinedGeometryProperties(this.currentNode);
 
     if (!this.definedProperties.size) {
       console.warn("The element does not have editable geometry properties");
@@ -410,12 +510,12 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.updateOffsetParent();
     this.updateCurrentNode();
     this.updateArrows();
-    this.updateSize();
 
     // Avoid zooming the arrows when content is zoomed.
-    this.markup.scaleRootElement(this.currentNode, this.ID_CLASS_PREFIX + "root");
+    let node = this.currentNode;
+    this.markup.scaleRootElement(node, this.ID_CLASS_PREFIX + "root");
 
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, node.ownerDocument.documentElement);
     return true;
   },
 
@@ -488,52 +588,22 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   _hide: function() {
     setIgnoreLayoutChanges(true);
 
+    this.getElement("root").setAttribute("hidden", "true");
     this.getElement("current-node").setAttribute("hidden", "true");
     this.getElement("offset-parent").setAttribute("hidden", "true");
     this.hideArrows();
-    this.hideSize();
 
     this.definedProperties.clear();
 
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false,
+      this.currentNode.ownerDocument.documentElement);
   },
 
   hideArrows: function() {
     for (let side of GeoProp.SIDES) {
       this.getElement("arrow-" + side).setAttribute("hidden", "true");
       this.getElement("label-" + side).setAttribute("hidden", "true");
-    }
-  },
-
-  hideSize: function() {
-    this.getElement("label-size").setAttribute("hidden", "true");
-  },
-
-  updateSize: function() {
-    this.hideSize();
-
-    let labels = [];
-    let width = this.definedProperties.get("width");
-    let height = this.definedProperties.get("height");
-
-    if (width) {
-      labels.push("↔ " + width.cssRule.style.getPropertyValue("width"));
-    }
-    if (height) {
-      labels.push("↕ " + height.cssRule.style.getPropertyValue("height"));
-    }
-
-    if (labels.length) {
-      let labelEl = this.getElement("label-size");
-      let labelTextEl = this.getElement("label-text-size");
-
-      let {bounds} = this.currentQuads.margin[0];
-
-      labelEl.setAttribute("transform", "translate(" +
-        (bounds.left + bounds.width / 2) + " " +
-        (bounds.top + bounds.height / 2) + ")");
-      labelEl.removeAttribute("hidden");
-      labelTextEl.setTextContent(labels.join(" "));
+      this.getElement("handler-" + side).setAttribute("hidden", "true");
     }
   },
 
@@ -600,6 +670,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let arrowEl = this.getElement("arrow-" + side);
     let labelEl = this.getElement("label-" + side);
     let labelTextEl = this.getElement("label-text-" + side);
+    let handlerEl = this.getElement("handler-" + side);
 
     // Position the arrow <line>.
     arrowEl.setAttribute(GeoProp.axis(side) + "1", mainStart);
@@ -608,9 +679,13 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     arrowEl.setAttribute(GeoProp.crossAxis(side) + "2", crossPos);
     arrowEl.removeAttribute("hidden");
 
+    handlerEl.setAttribute("c" + GeoProp.axis(side), mainEnd);
+    handlerEl.setAttribute("c" + GeoProp.crossAxis(side), crossPos);
+    handlerEl.removeAttribute("hidden");
+
     // Position the label <text> in the middle of the arrow (making sure it's
     // not hidden below the fold).
-    let capitalize = str => str.substring(0, 1).toUpperCase() + str.substring(1);
+    let capitalize = str => str[0].toUpperCase() + str.substring(1);
     let winMain = this.win["inner" + capitalize(GeoProp.mainAxisSize(side))];
     let labelMain = mainStart + (mainEnd - mainStart) / 2;
     if ((mainStart > 0 && mainStart < winMain) ||

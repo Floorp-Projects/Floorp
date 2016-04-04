@@ -41,7 +41,7 @@ var { OptimizationsGraph, GraphsController } = require("devtools/client/performa
 var { WaterfallHeader } = require("devtools/client/performance/modules/widgets/waterfall-ticks");
 var { MarkerView } = require("devtools/client/performance/modules/widgets/marker-view");
 var { MarkerDetails } = require("devtools/client/performance/modules/widgets/marker-details");
-var MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
+var { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 var WaterfallUtils = require("devtools/client/performance/modules/logic/waterfall-utils");
 var FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
 var { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
@@ -115,14 +115,14 @@ var PerformanceController = {
     this._prefs.registerObserver();
     this._prefs.on("pref-changed", this._onPrefChanged);
 
-    ToolbarView.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
+    ToolbarView.on(EVENTS.UI_PREF_CHANGED, this._onPrefChanged);
     PerformanceView.on(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.on(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     PerformanceView.on(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
     PerformanceView.on(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.on(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
-    RecordingsView.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelectFromView);
-    DetailsView.on(EVENTS.DETAILS_VIEW_SELECTED, this._pipe);
+    RecordingsView.on(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
+    DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._pipe);
 
     gDevTools.on("pref-changed", this._onThemeChanged);
   }),
@@ -135,14 +135,14 @@ var PerformanceController = {
     this._prefs.off("pref-changed", this._onPrefChanged);
     this._prefs.unregisterObserver();
 
-    ToolbarView.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
+    ToolbarView.off(EVENTS.UI_PREF_CHANGED, this._onPrefChanged);
     PerformanceView.off(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.off(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     PerformanceView.off(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
     PerformanceView.off(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.off(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
-    RecordingsView.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelectFromView);
-    DetailsView.off(EVENTS.DETAILS_VIEW_SELECTED, this._pipe);
+    RecordingsView.off(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
+    DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._pipe);
 
     gDevTools.off("pref-changed", this._onThemeChanged);
   },
@@ -247,12 +247,16 @@ var PerformanceController = {
       sampleFrequency: this.getPref("profiler-sample-frequency")
     };
 
+    let recordingStarted = yield gFront.startRecording(options);
+
     // In some cases, like when the target has a private browsing tab,
     // recording is not currently supported because of the profiler module.
     // Present a notification in this case alerting the user of this issue.
-    if (!(yield gFront.startRecording(options))) {
-      this.emit(EVENTS.NEW_RECORDING_FAILED);
+    if (!recordingStarted) {
+      this.emit(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START);
       PerformanceView.setState("unavailable");
+    } else {
+      this.emit(EVENTS.BACKEND_READY_AFTER_RECORDING_START);
     }
   }),
 
@@ -262,13 +266,7 @@ var PerformanceController = {
   stopRecording: Task.async(function *() {
     let recording = this.getLatestManualRecording();
     yield gFront.stopRecording(recording);
-
-    // Emit another stop event here, as a lot of tests use
-    // the RECORDING_STOPPED event, but in the case of a UI click on a button,
-    // the RECORDING_STOPPED event happens from the server, where this request may
-    // not have yet finished, so listen to this in tests that fail because the `stopRecording`
-    // request is not yet completed. Should only be used in that scenario.
-    this.emit(EVENTS.CONTROLLER_STOPPED_RECORDING);
+    this.emit(EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
   }),
 
   /**
@@ -326,7 +324,7 @@ var PerformanceController = {
    */
   importRecording: Task.async(function*(_, file) {
     let recording = yield gFront.importRecording(file);
-    this._addNewRecording(recording);
+    this._addRecordingIfUnknown(recording);
 
     this.emit(EVENTS.RECORDING_IMPORTED, recording);
   }),
@@ -399,21 +397,19 @@ var PerformanceController = {
    * Fired from the front on any event. Propagates to other handlers from here.
    */
   _onFrontEvent: function (eventName, ...data) {
-    if (eventName === "profiler-status") {
-      this._onProfilerStatusUpdated(...data);
-      return;
+    switch (eventName) {
+      case "profiler-status":
+        let [profilerStatus] = data;
+        this.emit(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, profilerStatus);
+        break;
+      case "recording-started":
+      case "recording-stopping":
+      case "recording-stopped":
+        let [recordingModel] = data;
+        this._addRecordingIfUnknown(recordingModel);
+        this.emit(EVENTS.RECORDING_STATE_CHANGE, eventName, recordingModel);
+        break;
     }
-
-    if (["recording-started", "recording-stopped", "recording-stopping"].indexOf(eventName) !== -1) {
-      this._onRecordingStateChange(eventName, ...data);
-    }
-  },
-
-  /**
-   * Emitted when the front updates PerformanceRecording's buffer status.
-   */
-  _onProfilerStatusUpdated: function (data) {
-    this.emit(EVENTS.PROFILER_STATUS_UPDATED, data);
   },
 
   /**
@@ -421,40 +417,10 @@ var PerformanceController = {
    *
    * @param {PerformanceRecordingFront} recording
    */
-  _addNewRecording: function (recording) {
+  _addRecordingIfUnknown: function (recording) {
     if (this._recordings.indexOf(recording) === -1) {
       this._recordings.push(recording);
-      this.emit(EVENTS.NEW_RECORDING, recording);
-    }
-  },
-
-  /**
-   * Fired when a recording model changes state.
-   *
-   * @param {string} state
-   *        Can be "recording-started", "recording-stopped" or "recording-stopping".
-   * @param {PerformanceRecording} model
-   */
-  _onRecordingStateChange: function (state, model) {
-    this._addNewRecording(model);
-
-    this.emit(EVENTS.RECORDING_STATE_CHANGE, state, model);
-
-    // Emit the state specific events for tests that I'm too
-    // lazy and frusterated to change right now. These events
-    // should only be used in tests and specific rare cases (telemetry),
-    // as the rest of the UI should react to general RECORDING_STATE_CHANGE
-    // events and NEW_RECORDING events to handle lazy recordings.
-    switch (state) {
-      case "recording-started":
-        this.emit(EVENTS.RECORDING_STARTED, model);
-        break;
-      case "recording-stopping":
-        this.emit(EVENTS.RECORDING_WILL_STOP, model);
-        break;
-      case "recording-stopped":
-        this.emit(EVENTS.RECORDING_STOPPED, model);
-        break;
+      this.emit(EVENTS.RECORDING_ADDED, recording);
     }
   },
 
@@ -522,7 +488,7 @@ var PerformanceController = {
    */
   populateWithRecordings: function (recordings=[]) {
     for (let recording of recordings) {
-      PerformanceController._addNewRecording(recording);
+      PerformanceController._addRecordingIfUnknown(recording);
     }
     this.emit(EVENTS.RECORDINGS_SEEDED);
   },

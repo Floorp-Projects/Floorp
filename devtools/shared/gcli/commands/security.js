@@ -27,6 +27,7 @@ const POLICY_REPORT_ONLY = "report-only"
 
 // special handling of directives
 const DIR_UPGRADE_INSECURE = "upgrade-insecure-requests";
+const DIR_BLOCK_ALL_MIXED_CONTENT = "block-all-mixed-content";
 
 // special handling of sources
 const SRC_UNSAFE_INLINE = "'unsafe-inline'";
@@ -89,13 +90,15 @@ exports.items = [
           // loop over all the directive-sources within that directive
           var outSrcs = [];
 
-          // special case handling for upgrade-insecure-requests
-          // which does not have any srcs
-          if (dir === DIR_UPGRADE_INSECURE) {
+          // special case handling for the directives
+          // upgrade-insecure-requests and block-all-mixed-content
+          // which do not include any srcs
+          if (dir === DIR_UPGRADE_INSECURE ||
+              dir === DIR_BLOCK_ALL_MIXED_CONTENT) {
             outSrcs.push({
               icon: GOOD_IMG_SRC,
-              src: "", // no src for upgrade-insecure-requests
-              desc: "" // no description for upgrade-insecure-requests
+              src: "", // no src
+              desc: "" // no description
             });
           }
 
@@ -140,7 +143,7 @@ exports.items = [
     from: "securityCSPInfo",
     to: "view",
     exec: function(cspInfo, context) {
-      var uri = context.environment.document.documentURI;
+      var url = context.environment.target.url;
 
       if (cspInfo.length == 0) {
         return context.createView({
@@ -148,7 +151,7 @@ exports.items = [
             "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
             "  <tr>" +
             "    <td> <img src='chrome://browser/content/gcli_sec_bad.svg' width='20px' /> </td> " +
-            "    <td>" + NO_CSP_ON_PAGE_MSG + " <b>" + uri + "</b></td>" +
+            "    <td>" + NO_CSP_ON_PAGE_MSG + " <b>" + url + "</b></td>" +
             "  </tr>" +
             "</table>"});
       }
@@ -158,7 +161,7 @@ exports.items = [
           "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
           // iterate all policies
           "  <tr foreach='csp in ${cspinfo}' >" +
-          "    <td> ${csp.header} <b>" + uri + "</b><br/><br/>" +
+          "    <td> ${csp.header} <b>" + url + "</b><br/><br/>" +
           "      <table class='gcli-csp-dir-detail' valign='top'>" +
           // >> iterate all directives
           "        <tr foreach='dir in ${csp.directives}' >" +

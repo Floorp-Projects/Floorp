@@ -177,23 +177,48 @@ CodeGeneratorMIPS64::visitUnbox(LUnbox* unbox)
                      unbox->snapshot());
     }
 
-    Operand input = ToOperand(unbox->getOperand(LUnbox::Input));
+    LAllocation* input = unbox->getOperand(LUnbox::Input);
     Register result = ToRegister(unbox->output());
+    if (input->isRegister()) {
+        Register inputReg = ToRegister(input);
+        switch (mir->type()) {
+          case MIRType_Int32:
+            masm.unboxInt32(inputReg, result);
+            break;
+          case MIRType_Boolean:
+            masm.unboxBoolean(inputReg, result);
+            break;
+          case MIRType_Object:
+            masm.unboxObject(inputReg, result);
+            break;
+          case MIRType_String:
+            masm.unboxString(inputReg, result);
+            break;
+          case MIRType_Symbol:
+            masm.unboxSymbol(inputReg, result);
+            break;
+          default:
+            MOZ_CRASH("Given MIRType cannot be unboxed.");
+        }
+        return;
+    }
+
+    Address inputAddr = ToAddress(input);
     switch (mir->type()) {
       case MIRType_Int32:
-        masm.unboxInt32(input, result);
+        masm.unboxInt32(inputAddr, result);
         break;
       case MIRType_Boolean:
-        masm.unboxBoolean(input, result);
+        masm.unboxBoolean(inputAddr, result);
         break;
       case MIRType_Object:
-        masm.unboxObject(input, result);
+        masm.unboxObject(inputAddr, result);
         break;
       case MIRType_String:
-        masm.unboxString(input, result);
+        masm.unboxString(inputAddr, result);
         break;
       case MIRType_Symbol:
-        masm.unboxSymbol(input, result);
+        masm.unboxSymbol(inputAddr, result);
         break;
       default:
         MOZ_CRASH("Given MIRType cannot be unboxed.");
@@ -276,6 +301,27 @@ CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
                mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
     emitBranch(lhs.valueReg(), rhs.valueReg(), cond, lir->ifTrue(), lir->ifFalse());
+}
+
+void
+CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Int64);
+
+    Register cond = ToRegister(lir->condExpr());
+    const LAllocation* falseExpr = lir->falseExpr();
+
+    Register out = ToRegister(lir->output());
+    MOZ_ASSERT(ToRegister(lir->trueExpr()) == out, "true expr is reused for input");
+
+    if (falseExpr->isRegister()) {
+        masm.as_movz(out, ToRegister(falseExpr), cond);
+    } else {
+        Label done;
+        masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
+        masm.loadPtr(ToAddress(falseExpr), out);
+        masm.bind(&done);
+    }
 }
 
 void

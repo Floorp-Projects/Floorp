@@ -7,25 +7,25 @@ package org.mozilla.gecko.home;
 
 import java.util.EnumSet;
 
-import android.os.AsyncTask;
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.ReaderModeUtils;
-import org.mozilla.gecko.Restrictions;
+import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
-import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.restrictions.Restrictable;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -118,6 +118,13 @@ public abstract class HomeFragment extends Fragment {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        GeckoApplication.watchReference(getActivity(), this);
+    }
+
+    @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         if (!(menuInfo instanceof HomeContextMenuInfo)) {
             return;
@@ -204,7 +211,7 @@ public abstract class HomeFragment extends Fragment {
                 Log.e(LOGTAG, "Can't share because URL is null");
                 return false;
             } else {
-                GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
+                IntentHelper.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
                                               Intent.ACTION_SEND, info.getDisplayTitle(), false);
 
                 // Context: Sharing via chrome homepage contextmenu list (home session should be active)
@@ -405,7 +412,7 @@ public abstract class HomeFragment extends Fragment {
                 case READING_LIST:
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "reading_list");
                     mDB.getReadingListAccessor().removeReadingListItemWithURL(cr, mUrl);
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", mUrl));
+                    GeckoAppShell.notifyObservers("Reader:Removed", mUrl);
                     break;
 
                 default:

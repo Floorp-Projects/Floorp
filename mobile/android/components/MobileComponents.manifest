@@ -17,9 +17,6 @@ contract @mozilla.org/network/protocol/about;1?what=healthreport {322ba47e-7047-
 #ifdef MOZ_SAFE_BROWSING
 contract @mozilla.org/network/protocol/about;1?what=blocked {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #endif
-#ifdef MOZ_DEVICES
-contract @mozilla.org/network/protocol/about;1?what=devices {322ba47e-7047-4f71-aebf-cb7d69325cd9}
-#endif
 contract @mozilla.org/network/protocol/about;1?what=accounts {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 contract @mozilla.org/network/protocol/about;1?what=logins {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 
@@ -31,7 +28,6 @@ category xpcom-directory-providers browser-directory-provider @mozilla.org/brows
 # stylesheets
 category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
 
-#ifndef MOZ_B2GDROID
 # SessionStore.js
 component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
 contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
@@ -47,7 +43,6 @@ contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
 contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
 component {80dae1e9-e0d2-4974-915f-f97050fa8068} PromptService.js
 contract @mozilla.org/network/authprompt-adapter-factory;1 {80dae1e9-e0d2-4974-915f-f97050fa8068}
-#endif
 
 # ImageBlockingPolicy.js
 component {f55f77f9-d33d-4759-82fc-60db3ee0bb91} ImageBlockingPolicy.js
@@ -116,8 +111,4 @@ contract @mozilla.org/colorpicker;1 {430b987f-bb9f-46a3-99a5-241749220b29}
 
 # AndroidActivitiesGlue.js
 component {e4deb5f6-d5e3-4fce-bc53-901dd9951c48} AndroidActivitiesGlue.js
-#ifdef MOZ_B2GDROID
-contract @mozilla.org/dom/activities/android-ui-glue;1 {e4deb5f6-d5e3-4fce-bc53-901dd9951c48}
-#else
 contract @mozilla.org/dom/activities/ui-glue;1 {e4deb5f6-d5e3-4fce-bc53-901dd9951c48}
-#endif

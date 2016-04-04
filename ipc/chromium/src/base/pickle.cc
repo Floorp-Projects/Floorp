@@ -437,6 +437,9 @@ bool Pickle::ReadWString(void** iter, std::wstring* result) const {
   int len;
   if (!ReadLength(iter, &len))
     return false;
+  // Avoid integer multiplication overflow.
+  if (len > INT_MAX / static_cast<int>(sizeof(wchar_t)))
+    return false;
   if (!IteratorHasRoomFor(*iter, len * sizeof(wchar_t)))
     return false;
 
@@ -444,24 +447,6 @@ bool Pickle::ReadWString(void** iter, std::wstring* result) const {
   result->assign(chars, len);
 
   UpdateIter(iter, len * sizeof(wchar_t));
-  return true;
-}
-
-bool Pickle::ReadString16(void** iter, string16* result) const {
-  DCHECK(iter);
-  if (!*iter)
-    *iter = const_cast<char*>(payload());
-
-  int len;
-  if (!ReadLength(iter, &len))
-    return false;
-  if (!IteratorHasRoomFor(*iter, len))
-    return false;
-
-  char16* chars = reinterpret_cast<char16*>(*iter);
-  result->assign(chars, len);
-
-  UpdateIter(iter, len * sizeof(char16));
   return true;
 }
 
@@ -588,14 +573,6 @@ bool Pickle::WriteWString(const std::wstring& value) {
 
   return WriteBytes(value.data(),
                     static_cast<int>(value.size() * sizeof(wchar_t)));
-}
-
-bool Pickle::WriteString16(const string16& value) {
-  if (!WriteInt(static_cast<int>(value.size())))
-    return false;
-
-  return WriteBytes(value.data(),
-                    static_cast<int>(value.size()) * sizeof(char16));
 }
 
 bool Pickle::WriteData(const char* data, int length) {

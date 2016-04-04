@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals _Iterator, StopIteration */
+/* globals StopIteration */
 
 "use strict";
 
@@ -502,11 +502,14 @@ CssComputedView.prototype = {
    * Handle the keypress event in the computed view.
    */
   _onKeypress: function(event) {
+    if (!event.target.closest("#sidebar-panel-computedview")) {
+      return;
+    }
     let isOSX = Services.appinfo.OS === "Darwin";
 
     if (((isOSX && event.metaKey && !event.ctrlKey && !event.altKey) ||
         (!isOSX && event.ctrlKey && !event.metaKey && !event.altKey)) &&
-        event.code === "KeyF") {
+        event.key === "f") {
       this.searchField.focus();
       event.preventDefault();
     }

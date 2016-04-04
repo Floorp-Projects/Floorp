@@ -129,14 +129,14 @@ class TestElements(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
 
     def test_timeout_element(self):
-        button = self.marionette.find_element("id", "createDivButton")
+        button = self.marionette.find_element(By.ID, "createDivButton")
         button.click()
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "newDiv")
         self.assertTrue(True, self.marionette.set_search_timeout(8000))
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "newDiv")))
 
     def test_timeout_elements(self):
-        button = self.marionette.find_element("id", "createDivButton")
+        button = self.marionette.find_element(By.ID, "createDivButton")
         button.click()
         self.assertEqual(len(self.marionette.find_elements(By.ID, "newDiv")), 0)
         self.assertTrue(True, self.marionette.set_search_timeout(8000))

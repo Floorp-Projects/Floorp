@@ -6,11 +6,14 @@
 "use strict";
 
 const {
-  snapshotState
+  snapshotState,
+  viewState,
+  censusState
 } = require("devtools/client/memory/constants");
 const {
   takeSnapshotAndCensus
 } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
@@ -25,6 +28,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ panel }) {
   const { dispatch } = store;
   const doc = panel.panelWin.document;
 
+  dispatch(changeView(viewState.CENSUS));
+
   info("Take 3 snapshots");
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
@@ -32,8 +37,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ panel }) {
 
   yield waitUntilState(store, state =>
     state.snapshots.length == 3 &&
-    state.snapshots.every(s => s.state === snapshotState.SAVED_CENSUS));
-  ok(true, "All snapshots are in SAVED_CENSUS state");
+    state.snapshots.every(s => s.census && s.census.state === censusState.SAVED));
+  ok(true, "All snapshots censuses are in SAVED state");
 
   yield waitUntilSnapshotSelected(store, 2);
   ok(true, "Third snapshot selected after creating all snapshots.");

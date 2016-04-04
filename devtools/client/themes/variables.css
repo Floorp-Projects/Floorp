@@ -29,6 +29,7 @@
 
   --theme-body-color: #393f4c;
   --theme-body-color-alt: #585959;
+  --theme-body-color-inactive: #999797;
   --theme-content-color1: #292e33;
   --theme-content-color2: #8fa1b2;
   --theme-content-color3: #667380;
@@ -70,6 +71,7 @@
 
   --theme-body-color: #8fa1b2;
   --theme-body-color-alt: #b6babf;
+  --theme-body-color-inactive: #8fa1b2;
   --theme-content-color1: #a9bacb;
   --theme-content-color2: #8fa1b2;
   --theme-content-color3: #5f7387;
@@ -92,6 +94,47 @@
   --theme-graphs-orange: #d96629;
   --theme-graphs-red: #eb5368;
   --theme-graphs-grey: #757873;
+  --theme-graphs-full-red: #f00;
+  --theme-graphs-full-blue: #00f;
+}
+
+:root.theme-firebug {
+  --theme-body-background: white;
+  --theme-sidebar-background: white;
+  --theme-contrast-background: #e6b064;
+
+  --theme-tab-toolbar-background: #fcfcfc;
+  --theme-toolbar-background: #fcfcfc;
+  --theme-selection-background: #4c9ed9;
+  --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);
+  --theme-selection-color: #f5f7fa;
+  --theme-splitter-color: #dde1e4;
+  --theme-comment: #696969;
+
+  --theme-body-color: #393f4c;
+  --theme-body-color-alt: #585959;
+  --theme-content-color1: #292e33;
+  --theme-content-color2: #8fa1b2;
+  --theme-content-color3: #667380;
+
+  --theme-highlight-green: #2cbb0f;
+  --theme-highlight-blue: #0088cc;
+  --theme-highlight-bluegrey: #0072ab;
+  --theme-highlight-purple: #5b5fff;
+  --theme-highlight-lightorange: #d97e00;
+  --theme-highlight-orange: #f13c00;
+  --theme-highlight-red: #ed2655;
+  --theme-highlight-pink: #b82ee5;
+
+  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
+  --theme-graphs-green: #85d175;
+  --theme-graphs-blue: #83b7f6;
+  --theme-graphs-bluegrey: #0072ab;
+  --theme-graphs-purple: #b693eb;
+  --theme-graphs-yellow: #efc052;
+  --theme-graphs-orange: #d97e00;
+  --theme-graphs-red: #e57180;
+  --theme-graphs-grey: #cccccc;
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
 }

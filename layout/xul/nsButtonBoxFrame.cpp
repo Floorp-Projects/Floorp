@@ -223,7 +223,7 @@ nsButtonBoxFrame::DoMouseClick(WidgetGUIEvent* aEvent, bool aTrustEvent)
   if (shell) {
     nsContentUtils::DispatchXULCommand(mContent,
                                        aEvent ?
-                                         aEvent->mFlags.mIsTrusted : aTrustEvent,
+                                         aEvent->IsTrusted() : aTrustEvent,
                                        nullptr, shell,
                                        isControl, isAlt, isShift, isMeta);
   }

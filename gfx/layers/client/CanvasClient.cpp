@@ -16,7 +16,7 @@
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/CompositorChild.h" // for CompositorChild
+#include "mozilla/layers/CompositorBridgeChild.h" // for CompositorBridgeChild
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
@@ -71,14 +71,14 @@ void
 CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   AutoRemoveTexture autoRemove(this);
-  if (mBuffer &&
-      (mBuffer->IsImmutable() || mBuffer->GetSize() != aSize)) {
-    autoRemove.mTexture = mBuffer;
-    mBuffer = nullptr;
+  if (mBackBuffer &&
+      (mBackBuffer->IsImmutable() || mBackBuffer->GetSize() != aSize)) {
+    autoRemove.mTexture = mBackBuffer;
+    mBackBuffer = nullptr;
   }
 
   bool bufferCreated = false;
-  if (!mBuffer) {
+  if (!mBackBuffer) {
     bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
     gfxContentType contentType = isOpaque
                                                 ? gfxContentType::COLOR
@@ -90,46 +90,48 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
 
-    mBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aLayer);
-    if (!mBuffer) {
+    mBackBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aLayer);
+    if (!mBackBuffer) {
       NS_WARNING("Failed to allocate the TextureClient");
       return;
     }
-    MOZ_ASSERT(mBuffer->CanExposeDrawTarget());
+    MOZ_ASSERT(mBackBuffer->CanExposeDrawTarget());
 
     bufferCreated = true;
   }
 
   bool updated = false;
   {
-    TextureClientAutoLock autoLock(mBuffer, OpenMode::OPEN_WRITE_ONLY);
+    TextureClientAutoLock autoLock(mBackBuffer, OpenMode::OPEN_WRITE_ONLY);
     if (!autoLock.Succeeded()) {
-      mBuffer = nullptr;
+      mBackBuffer = nullptr;
       return;
     }
 
-    RefPtr<DrawTarget> target = mBuffer->BorrowDrawTarget();
+    RefPtr<DrawTarget> target = mBackBuffer->BorrowDrawTarget();
     if (target) {
       aLayer->UpdateTarget(target);
       updated = true;
     }
   }
 
-  if (bufferCreated && !AddTextureClient(mBuffer)) {
-    mBuffer = nullptr;
+  if (bufferCreated && !AddTextureClient(mBackBuffer)) {
+    mBackBuffer = nullptr;
     return;
   }
 
   if (updated) {
     AutoTArray<CompositableForwarder::TimedTextureClient,1> textures;
     CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
-    t->mTextureClient = mBuffer;
-    t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mBuffer->GetSize());
+    t->mTextureClient = mBackBuffer;
+    t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mBackBuffer->GetSize());
     t->mFrameID = mFrameID;
     t->mInputFrameID = VRManagerChild::Get()->GetInputFrameID();
     GetForwarder()->UseTextures(this, textures);
-    mBuffer->SyncWithObject(GetForwarder()->GetSyncObject());
+    mBackBuffer->SyncWithObject(GetForwarder()->GetSyncObject());
   }
+
+  mBackBuffer.swap(mFrontBuffer);
 }
 
 already_AddRefed<TextureClient>
@@ -182,7 +184,7 @@ static inline void SwapRB_R8G8B8A8(uint8_t* pixel) {
 
 class TexClientFactory
 {
-  ISurfaceAllocator* const mAllocator;
+  ClientIPCAllocator* const mAllocator;
   const bool mHasAlpha;
   const gfx::IntSize mSize;
   const gfx::BackendType mBackendType;
@@ -190,7 +192,7 @@ class TexClientFactory
   const LayersBackend mLayersBackend;
 
 public:
-  TexClientFactory(ISurfaceAllocator* allocator, bool hasAlpha,
+  TexClientFactory(ClientIPCAllocator* allocator, bool hasAlpha,
                    const gfx::IntSize& size, gfx::BackendType backendType,
                    TextureFlags baseTexFlags, LayersBackend layersBackend)
     : mAllocator(allocator)
@@ -238,7 +240,7 @@ public:
 };
 
 static already_AddRefed<TextureClient>
-TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
+TexClientFromReadback(SharedSurface* src, ClientIPCAllocator* allocator,
                       TextureFlags baseFlags, LayersBackend layersBackend)
 {
   auto backendType = gfx::BackendType::CAIRO;

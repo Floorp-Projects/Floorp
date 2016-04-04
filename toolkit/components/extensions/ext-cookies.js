@@ -331,13 +331,14 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
               notify(false, subject, "explicit");
               break;
             case "changed":
-              notify(false, subject, "overwrite");
+              notify(true, subject, "overwrite");
+              notify(false, subject, "explicit");
               break;
             case "batch-deleted":
               subject.QueryInterface(Ci.nsIArray);
               for (let i = 0; i < subject.length; i++) {
                 let cookie = subject.queryElementAt(i, Ci.nsICookie2);
-                if (!cookie.isSession && (cookie.expiry + 1) * 1000 <= Date.now()) {
+                if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
                   notify(true, cookie, "expired");
                 } else {
                   notify(true, cookie, "evicted");

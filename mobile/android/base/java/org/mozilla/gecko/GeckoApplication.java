@@ -4,8 +4,16 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.AdjustConstants;
-import org.mozilla.gecko.AppConstants;
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.os.SystemClock;
+import android.util.Log;
+
+import com.squareup.leakcanary.LeakCanary;
+import com.squareup.leakcanary.RefWatcher;
+
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
@@ -17,16 +25,8 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.os.SystemClock;
-import android.util.Log;
-
-import com.squareup.leakcanary.LeakCanary;
-
 import java.io.File;
+import java.lang.reflect.Method;
 
 public class GeckoApplication extends Application 
     implements ContextGetter {
@@ -39,6 +39,8 @@ public class GeckoApplication extends Application
 
     private LightweightTheme mLightweightTheme;
 
+    private RefWatcher mRefWatcher;
+
     public GeckoApplication() {
         super();
         instance = this;
@@ -46,6 +48,19 @@ public class GeckoApplication extends Application
 
     public static GeckoApplication get() {
         return instance;
+    }
+
+    public static RefWatcher getRefWatcher(Context context) {
+        GeckoApplication app = (GeckoApplication) context.getApplicationContext();
+        return app.mRefWatcher;
+    }
+
+    public static void watchReference(Context context, Object object) {
+        if (context == null) {
+            return;
+        }
+
+        getRefWatcher(context).watch(object);
     }
 
     @Override
@@ -129,7 +144,7 @@ public class GeckoApplication extends Application
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.uptimeMillis() + " - Fennec application start");
 
-        LeakCanary.install(this);
+        mRefWatcher = LeakCanary.install(this);
 
         final Context context = getApplicationContext();
         HardwareUtils.init(context);
@@ -164,6 +179,26 @@ public class GeckoApplication extends Application
         GeckoService.register();
 
         super.onCreate();
+
+        if (AppConstants.MOZ_ANDROID_GCM) {
+            // TODO: only run in main process.
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    // It's fine to throw GCM initialization onto a background thread; the registration process requires
+                    // network access, so is naturally asynchronous.  This, of course, races against Gecko page load of
+                    // content requiring GCM-backed services, like Web Push.  There's nothing to be done here.
+                    try {
+                        final Class<?> clazz = Class.forName("org.mozilla.gecko.push.PushService");
+                        final Method onCreate = clazz.getMethod("onCreate", Context.class);
+                        onCreate.invoke(null, getApplicationContext()); // Method is static.
+                    } catch (Exception e) {
+                        Log.e(LOG_TAG, "Got exception during startup; ignoring.", e);
+                        return;
+                    }
+                }
+            });
+        }
 
         if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
             DownloadContentService.startStudy(this);

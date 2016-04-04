@@ -60,6 +60,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
   if (!tmp->mIsStarted) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveNodes)
   }
+  // Remove weak reference on the global window as the context is not usable
+  // without mDestination.
+  tmp->DisconnectFromWindow();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext,
@@ -137,13 +140,18 @@ AudioContext::Init()
   return NS_OK;
 }
 
-AudioContext::~AudioContext()
+void
+AudioContext::DisconnectFromWindow()
 {
   nsPIDOMWindowInner* window = GetOwner();
   if (window) {
     window->RemoveAudioContext(this);
   }
+}
 
+AudioContext::~AudioContext()
+{
+  DisconnectFromWindow();
   UnregisterWeakMemoryReporter(this);
 }
 
@@ -245,8 +253,8 @@ AudioContext::CreateBufferSource(ErrorResult& aRv)
 }
 
 already_AddRefed<AudioBuffer>
-AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
-                           uint32_t aLength, float aSampleRate,
+AudioContext::CreateBuffer(uint32_t aNumberOfChannels, uint32_t aLength,
+                           float aSampleRate,
                            ErrorResult& aRv)
 {
   if (!aNumberOfChannels) {
@@ -255,7 +263,7 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
   }
 
   return AudioBuffer::Create(this, aNumberOfChannels, aLength,
-                             aSampleRate, aJSContext, aRv);
+                             aSampleRate, aRv);
 }
 
 namespace {

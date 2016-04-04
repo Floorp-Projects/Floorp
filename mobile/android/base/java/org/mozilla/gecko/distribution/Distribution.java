@@ -51,6 +51,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import android.support.annotation.WorkerThread;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -126,6 +127,7 @@ public class Distribution {
      * {@link org.mozilla.gecko.distribution.Distribution#exists()} will return
      * false. In the other two callbacks, it will return true.
      */
+    @WorkerThread
     public interface ReadyCallback {
         void distributionNotFound();
         void distributionFound(Distribution distribution);
@@ -218,7 +220,7 @@ public class Distribution {
             public void run() {
                 boolean distributionSet = distribution.doInit();
                 if (distributionSet) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
+                    GeckoAppShell.notifyObservers("Distribution:Set", "");
                 }
             }
         });
@@ -318,7 +320,7 @@ public class Distribution {
         runLateReadyQueue();
 
         // Make sure that changes to search defaults are applied immediately.
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Changed", ""));
+        GeckoAppShell.notifyObservers("Distribution:Changed", "");
     }
 
     /**
@@ -348,34 +350,6 @@ public class Distribution {
         }
 
         return descFile;
-    }
-
-    public DistributionDescriptor getDescriptor() {
-        File descFile = getDistributionFile("preferences.json");
-        if (descFile == null) {
-            // Logging and existence checks are handled in getDistributionFile.
-            return null;
-        }
-
-        try {
-            JSONObject all = new JSONObject(FileUtils.getFileContents(descFile));
-
-            if (!all.has("Global")) {
-                Log.e(LOGTAG, "Distribution preferences.json has no Global entry!");
-                return null;
-            }
-
-            return new DistributionDescriptor(all.getJSONObject("Global"));
-
-        } catch (IOException e) {
-            Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
-            Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
-            return null;
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error parsing preferences.json", e);
-            Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
-            return null;
-        }
     }
 
     /**
@@ -979,6 +953,7 @@ public class Distribution {
 
     private void invokeCallbackDelayed(final ReadyCallback callback) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
+            @WorkerThread
             @Override
             public void run() {
                 switch (state) {

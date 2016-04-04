@@ -69,7 +69,7 @@ Feature::Notified() const
 }
 
 bool
-Feature::Notify(JSContext* aCx, Status aStatus)
+Feature::Notify(Status aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(Feature);
 

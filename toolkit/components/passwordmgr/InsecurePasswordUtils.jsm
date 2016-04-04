@@ -4,9 +4,8 @@
 
 this.EXPORTED_SYMBOLS = [ "InsecurePasswordUtils" ];
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cc = Components.classes;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -15,41 +14,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://devtools/shared/Loader.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
                                   "resource://gre/modules/LoginManagerContent.jsm");
-
-Object.defineProperty(this, "WebConsoleUtils", {
-  get: function() {
-    return devtools.require("devtools/shared/webconsole/utils").Utils;
-  },
-  configurable: true,
-  enumerable: true
+XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
+  return this.devtools.require("devtools/shared/webconsole/utils").Utils;
+});
+XPCOMUtils.defineLazyGetter(this, "l10n", () => {
+  return new this.WebConsoleUtils.L10n(STRINGS_URI);
 });
 
-const STRINGS_URI = "chrome://global/locale/security/security.properties";
-var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
-
 this.InsecurePasswordUtils = {
-
-  _sendWebConsoleMessage : function (messageTag, domDoc) {
-    /*
-     * All web console messages are warnings for now so I decided to set the
-     * flag here and save a bit of the flag creation in the callers.
-     * It's easy to expose this later if needed
-     */
-
-    let  windowId = WebConsoleUtils.getInnerWindowId(domDoc.defaultView);
+  _sendWebConsoleMessage(messageTag, domDoc) {
+    let windowId = WebConsoleUtils.getInnerWindowId(domDoc.defaultView);
     let category = "Insecure Password Field";
+    // All web console messages are warnings for now.
     let flag = Ci.nsIScriptError.warningFlag;
     let message = l10n.getStr(messageTag);
-    let consoleMsg = Cc["@mozilla.org/scripterror;1"]
-      .createInstance(Ci.nsIScriptError);
-
-    consoleMsg.initWithWindowID(
-      message, "", 0, 0, 0, flag, category, windowId);
+    let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+    consoleMsg.initWithWindowID(message, domDoc.location.href, 0, 0, 0, flag, category, windowId);
 
     Services.console.logMessage(consoleMsg);
   },
 
-  /*
+  /**
    * Checks whether the passed nested document is insecure
    * or is inside an insecure parent document.
    *
@@ -61,7 +46,7 @@ this.InsecurePasswordUtils = {
    * and framing an HTTPS page as it would under the reverse scenario (http
    * inside https).
    */
-  _checkForInsecureNestedDocuments : function(domDoc) {
+  _checkForInsecureNestedDocuments(domDoc) {
     if (domDoc.defaultView == domDoc.defaultView.parent) {
       // We are at the top, nothing to check here
       return false;
@@ -75,14 +60,16 @@ this.InsecurePasswordUtils = {
   },
 
 
-  /*
+  /**
    * Checks if there are insecure password fields present on the form's document
    * i.e. passwords inside forms with http action, inside iframes with http src,
    * or on insecure web pages. If insecure password fields are present,
    * a log message is sent to the web console to warn developers.
+   *
+   * @param {FormLike} aForm A form-like object. @See {FormLikeFactory}
    */
-  checkForInsecurePasswords : function (aForm) {
-    var domDoc = aForm.ownerDocument;
+  checkForInsecurePasswords(aForm) {
+    let domDoc = aForm.ownerDocument;
     let topDocument = domDoc.defaultView.top.document;
     let isSafePage = LoginManagerContent.isDocumentSecure(topDocument);
 
@@ -98,6 +85,9 @@ this.InsecurePasswordUtils = {
     }
 
     let isFormSubmitHTTP = false, isFormSubmitHTTPS = false;
+    // Note that aForm.action can be a relative path (e.g. "", "/login", "//example.com", etc.)
+    // but we don't warn about those since we would have already warned about the form's document
+    // not being safe above.
     if (aForm.action.match(/^http:\/\//)) {
       this._sendWebConsoleMessage("InsecureFormActionPasswordsPresent", domDoc);
       isFormSubmitHTTP = true;

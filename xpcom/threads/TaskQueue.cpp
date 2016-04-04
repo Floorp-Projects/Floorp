@@ -39,15 +39,16 @@ TaskQueue::TailDispatcher()
   return *mTailDispatcher;
 }
 
+// Note aRunnable is passed by ref to support conditional ownership transfer.
+// See Dispatch() in TaskQueue.h for more details.
 nsresult
-TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
-                               DispatchMode aMode, DispatchFailureHandling aFailureHandling,
-                               DispatchReason aReason)
+TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
+                          DispatchMode aMode, DispatchFailureHandling aFailureHandling,
+                          DispatchReason aReason)
 {
-  nsCOMPtr<nsIRunnable> r = aRunnable;
   AbstractThread* currentThread;
   if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
-    currentThread->TailDispatcher().AddTask(this, r.forget(), aFailureHandling);
+    currentThread->TailDispatcher().AddTask(this, aRunnable.forget(), aFailureHandling);
     return NS_OK;
   }
 
@@ -58,7 +59,7 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   if (mIsShutdown) {
     return NS_ERROR_FAILURE;
   }
-  mTasks.push(r.forget());
+  mTasks.push(aRunnable.forget());
   if (mIsRunning) {
     return NS_OK;
   }
@@ -193,7 +194,7 @@ TaskQueue::Runner::Run()
   // run in a loop here so that we don't hog the thread pool. This means we may
   // run on another thread next time, but we rely on the memory fences from
   // mQueueMonitor for thread safety of non-threadsafe tasks.
-  nsresult rv = mQueue->mPool->Dispatch(this, NS_DISPATCH_NORMAL);
+  nsresult rv = mQueue->mPool->TailDispatch(this);
   if (NS_FAILED(rv)) {
     // Failed to dispatch, shutdown!
     MonitorAutoLock mon(mQueue->mQueueMonitor);

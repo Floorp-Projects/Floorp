@@ -24,19 +24,19 @@ ifdef MOZ_DEBUG
 DEFINES += -DMOZ_DEBUG=1
 endif
 
-ifdef MOZ_WIDGET_GTK
+ifneq (,$(filter gtk%,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DMOZ_GTK=1
-ifdef MOZ_ENABLE_GTK3
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
 DEFINES += -DMOZ_GTK3=1
 endif
 endif
 
-ifdef MOZ_NATIVE_NSPR
-DEFINES += -DMOZ_NATIVE_NSPR=1
+ifdef MOZ_SYSTEM_NSPR
+DEFINES += -DMOZ_SYSTEM_NSPR=1
 endif
 
-ifdef MOZ_NATIVE_NSS
-DEFINES += -DMOZ_NATIVE_NSS=1
+ifdef MOZ_SYSTEM_NSS
+DEFINES += -DMOZ_SYSTEM_NSS=1
 endif
 
 ifdef NSS_DISABLE_DBM
@@ -56,6 +56,7 @@ endif
 endif
 
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
+DEFINES += -DMOZ_PLUGIN_PROCESS_NAME=$(MOZ_PLUGIN_PROCESS_NAME)
 
 # Set MSVC dlls version to package, if any.
 ifdef MOZ_NO_DEBUG_RTL
@@ -118,8 +119,8 @@ endif
 DEFINES += -DLPROJ_ROOT=$(LPROJ_ROOT)
 
 DEFINES += -DMOZ_ICU_VERSION=$(MOZ_ICU_VERSION)
-ifdef MOZ_NATIVE_ICU
-DEFINES += -DMOZ_NATIVE_ICU
+ifdef MOZ_SYSTEM_ICU
+DEFINES += -DMOZ_SYSTEM_ICU
 endif
 ifdef MOZ_SHARED_ICU
 DEFINES += -DMOZ_SHARED_ICU
@@ -140,8 +141,12 @@ endif
 endif
 
 
+# Builds using the hybrid FasterMake/RecursiveMake backend will
+# fail to produce a langpack. See bug 1255096.
 libs::
+ifeq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 	$(MAKE) -C $(DEPTH)/browser/locales langpack
+endif
 
 ifeq (WINNT,$(OS_ARCH))
 PKGCOMP_FIND_OPTS =

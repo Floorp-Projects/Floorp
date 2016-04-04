@@ -40,6 +40,10 @@ document.dispatchEvent(e);
 ok(didCallListener, "Should have called listener!");
 
 e = document.createEvent("CustomEvent");
+e.initEvent("foo", true, true);
+is(e.detail, null, "Default detail should be null.");
+
+e = document.createEvent("CustomEvent");
 e.initCustomEvent("foobar", true, true, 1);
 is(e.detail, 1, "Detail should be 1.");
 

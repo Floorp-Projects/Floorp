@@ -18,12 +18,14 @@
 
 #include "asmjs/WasmModule.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsprf.h"
 
+#include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
@@ -34,6 +36,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCommon.h"
 #include "js/MemoryMetrics.h"
+#include "vm/StringBuffer.h"
 #ifdef MOZ_VTUNE
 # include "vtune/VTuneWrapper.h"
 #endif
@@ -47,6 +50,7 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+using mozilla::Atomic;
 using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodCopy;
@@ -54,18 +58,26 @@ using mozilla::PodZero;
 using mozilla::Swap;
 using JS::GenericNaN;
 
+// Limit the number of concurrent wasm code allocations per process. Note that
+// on Linux, the real maximum is ~32k, as each module requires 2 maps (RW/RX),
+// and the kernel's default max_map_count is ~65k.
+static Atomic<uint32_t> wasmCodeAllocations(0);
+static const uint32_t MaxWasmCodeAllocations = 16384;
+
 UniqueCodePtr
 wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
 {
-    // On most platforms, this will allocate RWX memory. On iOS, or when
-    // --non-writable-jitcode is used, this will allocate RW memory. In this
-    // case, DynamicallyLinkModule will reprotect the code as RX.
+    // Allocate RW memory. DynamicallyLinkModule will reprotect the code as RX.
     unsigned permissions =
         ExecutableAllocator::initialProtectionFlags(ExecutableAllocator::Writable);
 
-    void* p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", gc::SystemPageSize());
-    if (!p)
+    void* p = nullptr;
+    if (wasmCodeAllocations++ < MaxWasmCodeAllocations)
+        p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", gc::SystemPageSize());
+    if (!p) {
+        wasmCodeAllocations--;
         ReportOutOfMemory(cx);
+    }
 
     return UniqueCodePtr((uint8_t*)p, CodeDeleter(bytes));
 }
@@ -73,6 +85,9 @@ wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
 void
 CodeDeleter::operator()(uint8_t* p)
 {
+    MOZ_ASSERT(wasmCodeAllocations > 0);
+    wasmCodeAllocations--;
+
     MOZ_ASSERT(bytes_ != 0);
     DeallocateExecutableMemory(p, bytes_, gc::SystemPageSize());
 }
@@ -893,13 +908,19 @@ Module::~Module()
 /* virtual */ void
 Module::trace(JSTracer* trc)
 {
-    for (const Import& import : imports()) {
-        if (importToExit(import).fun)
-            TraceEdge(trc, &importToExit(import).fun, "wasm function import");
-    }
+    for (const Import& import : imports())
+        TraceNullableEdge(trc, &importToExit(import).fun, "wasm function import");
 
-    if (heap_)
-        TraceEdge(trc, &heap_, "wasm buffer");
+    TraceNullableEdge(trc, &heap_, "wasm buffer");
+
+    MOZ_ASSERT(ownerObject_);
+    TraceEdge(trc, &ownerObject_, "wasm owner object");
+}
+
+/* virtual */ void
+Module::readBarrier()
+{
+    InternalBarrierMethods<JSObject*>::readBarrier(owner());
 }
 
 /* virtual */ void
@@ -910,6 +931,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
              globalBytes() +
              mallocSizeOf(module_.get()) +
              module_->sizeOfExcludingThis(mallocSizeOf) +
+             source_.sizeOfExcludingThis(mallocSizeOf) +
              funcPtrTables_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(funcLabels_, mallocSizeOf);
 }
@@ -1501,6 +1523,38 @@ Module::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
     return atom;
 }
 
+const char experimentalWarning[] =
+    "Temporary\n"
+    ".--.      .--.   ____       .-'''-. ,---.    ,---.\n"
+    "|  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
+    "| _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
+    "|(_ o _)  |  ||___|  /  |(_ o _).   |  |\\_   /|  |\n"
+    "| (_,_) \\ |  |   _.-`   | (_,_). '. |  _( )_/ |  |\n"
+    "|  |/    \\|  |.'   _    |.---.  \\  :| (_ o _) |  |\n"
+    "|  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
+    "|    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
+    "`---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
+    "text support (Work In Progress):\n\n";
+
+const char enabledMessage[] =
+    "Restart with debugger open to view WebAssembly source";
+
+JSString*
+Module::createText(JSContext* cx)
+{
+    StringBuffer buffer(cx);
+    if (!source_.empty()) {
+        if (!buffer.append(experimentalWarning))
+            return nullptr;
+        if (!BinaryToText(cx, source_.begin(), source_.length(), buffer))
+            return nullptr;
+    } else {
+        if (!buffer.append(enabledMessage))
+            return nullptr;
+    }
+    return buffer.finishString();
+}
+
 const char*
 Module::profilingLabel(uint32_t funcIndex) const
 {
@@ -1568,6 +1622,7 @@ WasmModuleObject::init(Module* module)
     MOZ_ASSERT(!hasModule());
     if (!module)
         return false;
+    module->setOwner(this);
     setReservedSlot(MODULE_SLOT, PrivateValue(module));
     return true;
 }

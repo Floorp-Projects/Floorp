@@ -112,6 +112,19 @@ static_assert(nsIHttpChannelInternal::REDIRECT_MODE_MANUAL == static_cast<uint32
 static_assert(3 == static_cast<uint32_t>(RequestRedirect::EndGuard_),
               "RequestRedirect enumeration value should make Necko Redirect mode value.");
 
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT == static_cast<uint32_t>(RequestCache::Default),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE == static_cast<uint32_t>(RequestCache::No_store),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD == static_cast<uint32_t>(RequestCache::Reload),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE == static_cast<uint32_t>(RequestCache::No_cache),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE == static_cast<uint32_t>(RequestCache::Force_cache),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(5 == static_cast<uint32_t>(RequestCache::EndGuard_),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+
 static StaticRefPtr<ServiceWorkerManager> gInstance;
 
 struct ServiceWorkerManager::RegistrationDataPerPrincipal final
@@ -1116,7 +1129,7 @@ public:
     AssertIsOnMainThread();
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableMethod(this, &ServiceWorkerInstallJob::Install);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   }
 
   void
@@ -1327,7 +1340,7 @@ public:
               this,
               &ServiceWorkerRegisterJob::Done,
               NS_OK);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
           return;
         }
@@ -1351,7 +1364,7 @@ public:
             this,
             &ServiceWorkerRegisterJob::Fail,
             NS_ERROR_DOM_INVALID_STATE_ERR);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
         return;
       }
@@ -1369,7 +1382,7 @@ public:
             this,
             &ServiceWorkerRegisterJob::Fail,
             NS_ERROR_DOM_ABORT_ERR);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
 
         return;
       }
@@ -1444,7 +1457,20 @@ public:
     }
 
     if (!StringBeginsWith(mRegistration->mScope, maxPrefix)) {
-      NS_WARNING("By default a service worker's scope is restricted to at or below it's script's location.");
+      nsXPIDLString message;
+      NS_ConvertUTF8toUTF16 reportScope(mRegistration->mScope);
+      NS_ConvertUTF8toUTF16 reportMaxPrefix(maxPrefix);
+      const char16_t* params[] = { reportScope.get(), reportMaxPrefix.get() };
+
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "ServiceWorkerScopePathMismatch",
+                                                 params, message);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to format localized string");
+      swm->ReportToAllClients(mScope,
+                              message,
+                              EmptyString(),
+                              EmptyString(), 0, 0,
+                              nsIScriptError::errorFlag);
       Fail(NS_ERROR_DOM_SECURITY_ERR);
       return;
     }
@@ -1462,7 +1488,8 @@ public:
 
     MOZ_ASSERT(!mUpdateAndInstallInfo);
     mUpdateAndInstallInfo =
-      new ServiceWorkerInfo(mRegistration, mScriptSpec, aNewCacheName);
+      new ServiceWorkerInfo(mRegistration->mPrincipal, mRegistration->mScope,
+                            mScriptSpec, aNewCacheName);
 
     RefPtr<ServiceWorkerJob> upcasted = this;
     nsMainThreadPtrHandle<nsISupports> handle(
@@ -1811,8 +1838,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   // This allows checks for interfaces like nsILoadContext to yield the values used by the
   // the document, yet will not cancel the update job if the document's load group is cancelled.
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  rv = loadGroup->SetNotificationCallbacks(ir);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+  MOZ_ALWAYS_SUCCEEDS(loadGroup->SetNotificationCallbacks(ir));
 
   RefPtr<ServiceWorkerRegisterJob> job =
     new ServiceWorkerRegisterJob(queue, documentPrincipal, cleanedScope, spec,
@@ -1859,7 +1885,7 @@ ServiceWorkerRegistrationInfo::TryToActivateAsync()
   nsCOMPtr<nsIRunnable> r =
   NS_NewRunnableMethod(this,
                        &ServiceWorkerRegistrationInfo::TryToActivate);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 }
 
 /*
@@ -1941,7 +1967,7 @@ ServiceWorkerRegistrationInfo::Activate()
   nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("activate"),
                                                   callback, failRunnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(failRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(failRunnable));
     return;
   }
 }
@@ -2213,16 +2239,17 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
     if (!data.InsertElementsAt(0, aDataBytes, aDataLength, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    return SendPushEvent(aOriginAttributes, aScope, Some(data));
+    return SendPushEvent(aOriginAttributes, aScope, EmptyString(), Some(data));
   }
   MOZ_ASSERT(optional_argc == 0);
-  return SendPushEvent(aOriginAttributes, aScope, Nothing());
+  return SendPushEvent(aOriginAttributes, aScope, EmptyString(), Nothing());
 }
 
 nsresult
 ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
                                     const nsACString& aScope,
-                                    Maybe<nsTArray<uint8_t>> aData)
+                                    const nsAString& aMessageId,
+                                    const Maybe<nsTArray<uint8_t>>& aData)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
@@ -2240,7 +2267,8 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(serviceWorker->GetPrincipal(), aScope);
 
-  return serviceWorker->WorkerPrivate()->SendPushEvent(aData, registration);
+  return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
+                                                       registration);
 #endif // MOZ_SIMPLEPUSH
 }
 
@@ -2469,7 +2497,7 @@ public:
     AssertIsOnMainThread();
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableMethod(this, &ServiceWorkerUnregisterJob::UnregisterAndDone);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
   }
 
 private:
@@ -2696,9 +2724,13 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                          uint32_t aFlags)
 {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  nsresult rv;
+
+  if (!aFilename.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri), aFilename);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
   AutoTArray<uint64_t, 16> windows;
@@ -2725,7 +2757,8 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                                 uri,
                                                 aLine,
                                                 aLineNumber,
-                                                aColumnNumber);
+                                                aColumnNumber,
+                                                nsContentUtils::eOMIT_LOCATION);
   }
 
   // Report to any documents that have called .register() for this scope.  They
@@ -2757,7 +2790,8 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                                   uri,
                                                   aLine,
                                                   aLineNumber,
-                                                  aColumnNumber);
+                                                  aColumnNumber,
+                                                  nsContentUtils::eOMIT_LOCATION);
     }
 
     if (regList->IsEmpty()) {
@@ -2828,7 +2862,8 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                                 uri,
                                                 aLine,
                                                 aLineNumber,
-                                                aColumnNumber);
+                                                aColumnNumber,
+                                                nsContentUtils::eOMIT_LOCATION);
     return;
   }
 }
@@ -2993,8 +3028,8 @@ ServiceWorkerManager::LoadRegistration(
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
     registration->mActiveWorker =
-      new ServiceWorkerInfo(registration, currentWorkerURL,
-                            aRegistration.cacheName());
+      new ServiceWorkerInfo(registration->mPrincipal, registration->mScope,
+                            currentWorkerURL, aRegistration.cacheName());
     registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   }
 }
@@ -3715,7 +3750,7 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
 
   // If there is no upload stream, then continue immediately
   if (!uploadChannel) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(continueRunnable->Run()));
+    MOZ_ALWAYS_SUCCEEDS(continueRunnable->Run());
     return;
   }
   // Otherwise, ensure the upload stream can be cloned directly.  This may
@@ -5220,13 +5255,15 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   }
   mState = aState;
   nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, mState);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r.forget())));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
 }
 
-ServiceWorkerInfo::ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
+ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
+                                     const nsACString& aScope,
                                      const nsACString& aScriptSpec,
                                      const nsAString& aCacheName)
-  : mRegistration(aReg)
+  : mPrincipal(aPrincipal)
+  , mScope(aScope)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
   , mState(ServiceWorkerState::EndGuard_)
@@ -5234,8 +5271,10 @@ ServiceWorkerInfo::ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
   , mServiceWorkerPrivate(new ServiceWorkerPrivate(this))
   , mSkipWaitingFlag(false)
 {
-  MOZ_ASSERT(mRegistration);
-  MOZ_ASSERT(!aCacheName.IsEmpty());
+  MOZ_ASSERT(mPrincipal);
+  MOZ_ASSERT(!mScope.IsEmpty());
+  MOZ_ASSERT(!mScriptSpec.IsEmpty());
+  MOZ_ASSERT(!mCacheName.IsEmpty());
 }
 
 ServiceWorkerInfo::~ServiceWorkerInfo()

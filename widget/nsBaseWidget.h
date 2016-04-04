@@ -32,10 +32,14 @@ class Accessible;
 }
 #endif
 
+namespace gfx {
+class DrawTarget;
+} // namespace gfx
+
 namespace layers {
 class BasicLayerManager;
-class CompositorChild;
-class CompositorParent;
+class CompositorBridgeChild;
+class CompositorBridgeParent;
 class APZCTreeManager;
 class GeckoContentController;
 class APZEventState;
@@ -90,10 +94,11 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference
 
 protected:
   typedef base::Thread Thread;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::layers::BasicLayerManager BasicLayerManager;
   typedef mozilla::layers::BufferMode BufferMode;
-  typedef mozilla::layers::CompositorChild CompositorChild;
-  typedef mozilla::layers::CompositorParent CompositorParent;
+  typedef mozilla::layers::CompositorBridgeChild CompositorBridgeChild;
+  typedef mozilla::layers::CompositorBridgeParent CompositorBridgeParent;
   typedef mozilla::layers::APZCTreeManager APZCTreeManager;
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
@@ -160,7 +165,7 @@ public:
 
   CompositorVsyncDispatcher* GetCompositorVsyncDispatcher() override;
   void            CreateCompositorVsyncDispatcher();
-  virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
+  virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() override {}
@@ -171,7 +176,10 @@ public:
   virtual void            DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override {}
   virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override { };
-  virtual void            CleanupRemoteDrawing() override { };
+  virtual void            CleanupRemoteDrawing() override;
+  virtual already_AddRefed<mozilla::gfx::DrawTarget> CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
+                                                                                const LayoutDeviceIntRect& aRect,
+                                                                                const bool aInitModeClear) override;
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
   NS_IMETHOD              SetModal(bool aModal) override;
   virtual uint32_t        GetMaxTouchPoints() const override;
@@ -249,16 +257,14 @@ public:
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   virtual void               SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) override;
   NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() override final;
+  NS_IMETHOD_(TextEventDispatcherListener*)
+    GetNativeTextEventDispatcherListener() override;
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const FrameMetrics::ViewID& aViewId,
                           const CSSRect& aRect,
                           const uint32_t& aFlags) override;
-  // Helper function for dispatching events which are not processed by APZ,
-  // but need to be transformed by APZ.
-  nsEventStatus DispatchInputEvent(mozilla::WidgetInputEvent* aEvent) override;
-
   // Dispatch an event that must be first be routed through APZ.
-  nsEventStatus DispatchAPZAwareEvent(mozilla::WidgetInputEvent* aEvent) override;
+  nsEventStatus DispatchInputEvent(mozilla::WidgetInputEvent* aEvent) override;
 
   void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;
@@ -433,6 +439,12 @@ protected:
   virtual nsresult NotifyIMEInternal(const IMENotification& aIMENotification)
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
+  /**
+   * GetPseudoIMEContext() returns pseudo IME context when TextEventDispatcher
+   * has non-native input transaction.  Otherwise, returns nullptr.
+   */
+  void* GetPseudoIMEContext();
+
 protected:
   // Utility to check if an array of clip rects is equal to our
   // internally stored clip rect array mClipRects.
@@ -477,7 +489,7 @@ protected:
                         std::min(c.mMaxSize.height, *aHeight));
   }
 
-  virtual CompositorChild* GetRemoteRenderer() override;
+  virtual CompositorBridgeChild* GetRemoteRenderer() override;
 
   /**
    * Notify the widget that this window is being used with OMTC.
@@ -486,6 +498,8 @@ protected:
   virtual void RegisterTouchWindow() {}
 
   nsIDocument* GetDocument() const;
+
+ void EnsureTextEventDispatcher();
 
   // Notify the compositor that a device reset has occurred.
   void OnRenderingDeviceReset();
@@ -509,11 +523,13 @@ protected:
   nsIWidgetListener* mAttachedWidgetListener;
   nsIWidgetListener* mPreviouslyAttachedWidgetListener;
   RefPtr<LayerManager> mLayerManager;
-  RefPtr<CompositorChild> mCompositorChild;
-  RefPtr<CompositorParent> mCompositorParent;
+  RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
+  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<APZCTreeManager> mAPZC;
   RefPtr<APZEventState> mAPZEventState;
+  // Back buffer of BasicCompositor
+  RefPtr<DrawTarget> mLastBackBuffer;
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
   RefPtr<WidgetShutdownObserver> mShutdownObserver;
   RefPtr<TextEventDispatcher> mTextEventDispatcher;

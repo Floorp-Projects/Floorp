@@ -3,12 +3,13 @@
 
 // Test selecting snapshots for diffing.
 
-const { diffingState, snapshotState } = require("devtools/client/memory/constants");
+const { diffingState, snapshotState, viewState } = require("devtools/client/memory/constants");
 const {
   toggleDiffing,
   selectSnapshotForDiffing
 } = require("devtools/client/memory/actions/diffing");
 const { takeSnapshot } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 function run_test() {
   run_next_test();
@@ -21,11 +22,13 @@ add_task(function *() {
   let store = Store();
   const { getState, dispatch } = store;
 
+  dispatch(changeView(viewState.CENSUS));
   equal(getState().diffing, null, "not diffing by default");
 
   dispatch(takeSnapshot(front, heapWorker));
   dispatch(takeSnapshot(front, heapWorker));
   dispatch(takeSnapshot(front, heapWorker));
+
   yield waitUntilSnapshotState(store, [snapshotState.SAVED,
                                        snapshotState.SAVED,
                                        snapshotState.SAVED]);

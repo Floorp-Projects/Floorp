@@ -32,7 +32,7 @@ public class testFilePicker extends JavascriptTest implements GeckoEventListener
                 fFail("Can't add filename to message " + TEST_FILENAME);
             }
 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FilePicker:Result", message.toString()));
+            mActions.sendGeckoEvent("FilePicker:Result", message.toString());
         }
     }
 

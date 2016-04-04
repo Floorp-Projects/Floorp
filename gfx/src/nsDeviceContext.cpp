@@ -19,7 +19,7 @@
 #include "nsDebug.h"                    // for NS_NOTREACHED, NS_ASSERTION, etc
 #include "nsFont.h"                     // for nsFont
 #include "nsFontMetrics.h"              // for nsFontMetrics
-#include "nsIAtom.h"                    // for nsIAtom, do_GetAtom
+#include "nsIAtom.h"                    // for nsIAtom, NS_Atomize
 #include "nsID.h"
 #include "nsIDeviceContextSpec.h"       // for nsIDeviceContextSpec
 #include "nsILanguageAtomService.h"     // for nsILanguageAtomService, etc
@@ -64,12 +64,8 @@ public:
     void Init(nsDeviceContext* aContext);
     void Destroy();
 
-    nsresult GetMetricsFor(const nsFont& aFont,
-                           nsIAtom* aLanguage, bool aExplicitLanguage,
-                           gfxFont::Orientation aOrientation,
-                           gfxUserFontSet* aUserFontSet,
-                           gfxTextPerfMetrics* aTextPerf,
-                           nsFontMetrics*& aMetrics);
+    already_AddRefed<nsFontMetrics> GetMetricsFor(
+        const nsFont& aFont, const nsFontMetrics::Params& aParams);
 
     void FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
     void Compact();
@@ -104,7 +100,7 @@ nsFontCache::Init(nsDeviceContext* aContext)
         mLocaleLanguage = langService->GetLocaleLanguage();
     }
     if (!mLocaleLanguage) {
-        mLocaleLanguage = do_GetAtom("x-western");
+        mLocaleLanguage = NS_Atomize("x-western");
     }
 }
 
@@ -125,84 +121,42 @@ nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*)
     return NS_OK;
 }
 
-nsresult
+already_AddRefed<nsFontMetrics>
 nsFontCache::GetMetricsFor(const nsFont& aFont,
-                           nsIAtom* aLanguage, bool aExplicitLanguage,
-                           gfxFont::Orientation aOrientation,
-                           gfxUserFontSet* aUserFontSet,
-                           gfxTextPerfMetrics* aTextPerf,
-                           nsFontMetrics*& aMetrics)
+                           const nsFontMetrics::Params& aParams)
 {
-    if (!aLanguage)
-        aLanguage = mLocaleLanguage;
+    nsIAtom* language = aParams.language ? aParams.language
+                                         : mLocaleLanguage.get();
 
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
 
-    nsFontMetrics* fm;
     int32_t n = mFontMetrics.Length() - 1;
     for (int32_t i = n; i >= 0; --i) {
-        fm = mFontMetrics[i];
-        if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet &&
-            fm->Language() == aLanguage && fm->Orientation() == aOrientation) {
+        nsFontMetrics* fm = mFontMetrics[i];
+        if (fm->Font().Equals(aFont) &&
+            fm->GetUserFontSet() == aParams.userFontSet &&
+            fm->Language() == language &&
+            fm->Orientation() == aParams.orientation) {
             if (i != n) {
                 // promote it to the end of the cache
                 mFontMetrics.RemoveElementAt(i);
                 mFontMetrics.AppendElement(fm);
             }
             fm->GetThebesFontGroup()->UpdateUserFonts();
-            NS_ADDREF(aMetrics = fm);
-            return NS_OK;
+            return do_AddRef(fm);
         }
     }
 
     // It's not in the cache. Get font metrics and then cache them.
 
-    fm = new nsFontMetrics();
-    NS_ADDREF(fm);
-    nsresult rv = fm->Init(aFont, aLanguage, aExplicitLanguage, aOrientation,
-                           mContext, aUserFontSet, aTextPerf);
-    if (NS_SUCCEEDED(rv)) {
-        // the mFontMetrics list has the "head" at the end, because append
-        // is cheaper than insert
-        mFontMetrics.AppendElement(fm);
-        aMetrics = fm;
-        NS_ADDREF(aMetrics);
-        return NS_OK;
-    }
-    fm->Destroy();
-    NS_RELEASE(fm);
-
-    // One reason why Init() fails is because the system is running out of
-    // resources. e.g., on Win95/98 only a very limited number of GDI
-    // objects are available. Compact the cache and try again.
-
-    Compact();
-    fm = new nsFontMetrics();
-    NS_ADDREF(fm);
-    rv = fm->Init(aFont, aLanguage, aExplicitLanguage, aOrientation, mContext,
-                  aUserFontSet, aTextPerf);
-    if (NS_SUCCEEDED(rv)) {
-        mFontMetrics.AppendElement(fm);
-        aMetrics = fm;
-        return NS_OK;
-    }
-    fm->Destroy();
-    NS_RELEASE(fm);
-
-    // could not setup a new one, send an old one (XXX search a "best
-    // match"?)
-
-    n = mFontMetrics.Length() - 1; // could have changed in Compact()
-    if (n >= 0) {
-        aMetrics = mFontMetrics[n];
-        NS_ADDREF(aMetrics);
-        return NS_OK;
-    }
-
-    NS_POSTCONDITION(NS_SUCCEEDED(rv),
-                     "font metrics should not be null - bug 136248");
-    return rv;
+    nsFontMetrics::Params params = aParams;
+    params.language = language;
+    RefPtr<nsFontMetrics> fm = new nsFontMetrics(aFont, params, mContext);
+    // the mFontMetrics list has the "head" at the end, because append
+    // is cheaper than insert
+    mFontMetrics.AppendElement(do_AddRef(fm.get()).take());
+    return fm.forget();
 }
 
 void
@@ -249,41 +203,28 @@ nsDeviceContext::nsDeviceContext()
     : mWidth(0), mHeight(0), mDepth(0),
       mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
       mAppUnitsPerPhysicalInch(-1),
-      mFullZoom(1.0f), mPrintingScale(1.0f),
-      mFontCache(nullptr)
+      mFullZoom(1.0f), mPrintingScale(1.0f)
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
 }
 
-// Note: we use a bare pointer for mFontCache so that nsFontCache
-// can be an incomplete type in nsDeviceContext.h.
-// Therefore we have to do all the refcounting by hand.
 nsDeviceContext::~nsDeviceContext()
 {
     if (mFontCache) {
         mFontCache->Destroy();
-        NS_RELEASE(mFontCache);
     }
 }
 
-nsresult
+already_AddRefed<nsFontMetrics>
 nsDeviceContext::GetMetricsFor(const nsFont& aFont,
-                               nsIAtom* aLanguage,
-                               bool aExplicitLanguage,
-                               gfxFont::Orientation aOrientation,
-                               gfxUserFontSet* aUserFontSet,
-                               gfxTextPerfMetrics* aTextPerf,
-                               nsFontMetrics*& aMetrics)
+                               const nsFontMetrics::Params& aParams)
 {
     if (!mFontCache) {
         mFontCache = new nsFontCache();
-        NS_ADDREF(mFontCache);
         mFontCache->Init(this);
     }
 
-    return mFontCache->GetMetricsFor(aFont, aLanguage, aExplicitLanguage,
-                                     aOrientation, aUserFontSet, aTextPerf,
-                                     aMetrics);
+    return mFontCache->GetMetricsFor(aFont, aParams);
 }
 
 nsresult

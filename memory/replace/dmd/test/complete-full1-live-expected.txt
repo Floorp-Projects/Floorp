@@ -1,0 +1,127 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o complete-full1-live-actual.txt complete-full1-live.json
+
+Invocation {
+  $DMD = '--mode=live --stacks=full --show-dump-stats=yes'
+  Mode = 'live'
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  1 block in heap block record 1 of 12
+  8,192 bytes (7,169 requested / 1,023 slop)
+  67.72% of the heap (67.72% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 2 of 12
+  1,024 bytes (1,023 requested / 1 slop)
+  8.47% of the heap (76.19% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  9 blocks in heap block record 3 of 12
+  1,008 bytes (900 requested / 108 slop)
+  Individual block sizes: 112 x 9
+  8.33% of the heap (84.52% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  6 blocks in heap block record 4 of 12
+  528 bytes (528 requested / 0 slop)
+  Individual block sizes: 128; 112; 96; 80; 64; 48
+  4.37% of the heap (88.89% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  6 blocks in heap block record 5 of 12
+  528 bytes (528 requested / 0 slop)
+  Individual block sizes: 128; 112; 96; 80; 64; 48
+  4.37% of the heap (93.25% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 6 of 12
+  512 bytes (512 requested / 0 slop)
+  4.23% of the heap (97.49% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 7 of 12
+  80 bytes (79 requested / 1 slop)
+  0.66% of the heap (98.15% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 8 of 12
+  80 bytes (78 requested / 2 slop)
+  0.66% of the heap (98.81% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 9 of 12
+  80 bytes (77 requested / 3 slop)
+  0.66% of the heap (99.47% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 10 of 12
+  32 bytes (30 requested / 2 slop)
+  0.26% of the heap (99.74% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 11 of 12
+  16 bytes (16 requested / 0 slop)
+  0.13% of the heap (99.87% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+Live {
+  1 block in heap block record 12 of 12
+  16 bytes (10 requested / 6 slop)
+  0.13% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: ... DMD.cpp ...
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 12,096 bytes in 30 blocks
+}
+

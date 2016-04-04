@@ -4,13 +4,11 @@
 <html>
 <head>
   <title>Validate Interfaces Exposed to Workers</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-  var Cu = Components.utils;
-  Cu.import('resource://gre/modules/Services.jsm');
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -19,9 +17,7 @@
   }, function() {
     // attach to a different origin's CacheStorage
     var url = 'http://example.com/';
-    var uri = Services.io.newURI(url, null, null);
-    var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-    var storage = new CacheStorage('content', principal);
+    var storage = SpecialPowers.createChromeCache('content', url);
 
     // verify we can use the other origin's CacheStorage as normal
     var req = new Request('http://example.com/index.html');

@@ -14,16 +14,33 @@ include('build/moz.configure/init.configure')
 # - Spidermonkey-specific options and rules should go in js/moz.configure.
 # - etc.
 
+# Multiprocess Firefox Testing UI - Nightly and Aurora
+# To be removed in Bug 1003313
+@depends(milestone)
+def e10s_testing_only(milestone):
+    if not milestone.is_release:
+        return True
+
+set_config('E10S_TESTING_ONLY', e10s_testing_only)
+set_define('E10S_TESTING_ONLY', e10s_testing_only)
+
+
 option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
        help='Download and use prebuilt binary artifacts.')
 
 @depends('--enable-artifact-builds')
 def artifact_builds(value):
     if value:
-        imply_option('--disable-compile-environment')
-        set_config('MOZ_ARTIFACT_BUILDS', '1')
-    return bool(value)
+        return True
 
+set_config('MOZ_ARTIFACT_BUILDS', artifact_builds)
+
+@depends('--enable-artifact-builds')
+def imply_disable_compile_environment(value):
+    if value:
+        return False
+
+imply_option('--enable-compile-environment', imply_disable_compile_environment)
 
 option('--disable-compile-environment',
        help='Disable compiler/library checks')
@@ -31,14 +48,22 @@ option('--disable-compile-environment',
 @depends('--disable-compile-environment')
 def compile_environment(value):
     if value:
-        set_config('COMPILE_ENVIRONMENT', '1')
-    return bool(value)
+        return True
+
+set_config('COMPILE_ENVIRONMENT', compile_environment)
+add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
+
+@depends('--disable-compile-environment', '--help')
+def toolchain_include(value, help):
+    if value:
+        return 'build/moz.configure/toolchain.configure'
+
+include(toolchain_include)
 
 
 @depends('--help')
-@advanced
+@imports(_from='mozbuild.backend', _import='backends')
 def build_backends_choices(help):
-    from mozbuild.backend import backends
     return tuple(backends)
 
 
@@ -52,7 +77,91 @@ def build_backend(backends, artifact_builds):
     else:
         all_backends = ['RecursiveMake', 'FasterMake']
     all_backends.extend(backends)
-    set_config('BUILD_BACKENDS', unique_list(all_backends))
+    return unique_list(all_backends)
+
+set_config('BUILD_BACKENDS', build_backend)
+
+
+# Awk detection
+# ==============================================================
+awk = check_prog('AWK', ('gawk', 'mawk', 'nawk', 'awk'))
+
+# Until the AWK variable is not necessary in old-configure
+@depends(awk)
+def awk_for_old_configure(value):
+    return value
+
+add_old_configure_assignment('AWK', awk_for_old_configure)
+
+
+# Perl detection
+# ==============================================================
+perl = check_prog('PERL', ('perl5', 'perl'))
+
+# Until the PERL variable is not necessary in old-configure
+@depends(perl)
+def perl_for_old_configure(value):
+    return value
+
+add_old_configure_assignment('PERL', perl_for_old_configure)
+
+@template
+def perl_version_check(min_version):
+    @depends(perl)
+    @checking('for minimum required perl version >= %s' % min_version)
+    @imports('subprocess')
+    def get_perl_version(perl):
+        try:
+            return Version(subprocess.check_output([perl, '-e', 'print $]']))
+        except subprocess.CalledProcessError as e:
+            die('Failed to get perl version: %s', e.message)
+
+    @depends(get_perl_version)
+    def check_perl_version(version):
+        if version < min_version:
+            die('Perl %s or higher is required.', min_version)
+
+    @depends(perl)
+    @checking('for full perl installation')
+    @imports('subprocess')
+    def has_full_perl_installation(perl):
+        ret = subprocess.call(
+            [perl, '-e', 'use Config; exit(!-d $Config{archlib})'])
+        return ret == 0
+
+    @depends(has_full_perl_installation)
+    def require_full_perl_installation(has_full_perl_installation):
+        if not has_full_perl_installation:
+            die('Cannot find Config.pm or $Config{archlib}. '
+                'A full perl installation is required.')
+
+perl_version_check('5.006')
+
+
+# Miscellaneous programs
+# ==============================================================
+check_prog('DOXYGEN', ('doxygen',), allow_missing=True)
+check_prog('TAR', ('gnutar', 'gtar', 'tar'))
+check_prog('UNZIP', ('unzip',))
+check_prog('XARGS', ('xargs',))
+check_prog('ZIP', ('zip',))
+
+@depends(target)
+def extra_programs(target):
+    if target.kernel == 'Darwin':
+        return namespace(
+            DSYMUTIL=('dsymutil', 'llvm-dsymutil'),
+            GENISOIMAGE=('genisoimage',),
+        )
+    if target.os == 'GNU' and target.kernel == 'Linux':
+        return namespace(RPMBUILD=('rpmbuild',))
+
+check_prog('DSYMUTIL', delayed_getattr(extra_programs, 'DSYMUTIL'),
+           allow_missing=True)
+check_prog('GENISOIMAGE', delayed_getattr(extra_programs, 'GENISOIMAGE'),
+           allow_missing=True)
+check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
+           allow_missing=True)
 
 
 # Fallthrough to autoconf-based configure

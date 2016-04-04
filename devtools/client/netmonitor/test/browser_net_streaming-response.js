@@ -48,6 +48,7 @@ function test() {
 
     RequestsMenu.selectedIndex = 1;
     yield panelWin.once(panelWin.EVENTS.TAB_UPDATED);
+    yield panelWin.once(panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
 
     testEditorContent(editor, REQUESTS[1]); // the mpeg-dash part
 

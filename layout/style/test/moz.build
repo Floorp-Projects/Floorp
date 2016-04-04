@@ -4,6 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# ** Note: The comment below along with the CPP_UNIT_TESTS and LIBS variables
+# ** were commented out in the original Makefile.in, and should be restored
+# ** some day, perhaps as a gtest.
+#
+# ParseCSS.cpp used to be built as a test program, but it was not
+# being used for anything, and recent changes to the CSS loader have
+# made it fail to link.  Further changes are planned which should make
+# it buildable again.
+#
+# TestCSSPropertyLookup.cpp needs the internal XPCOM APIs and so cannot
+# be built with libxul enabled.
+#
+#CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
+#LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
+
 HAS_MISC_RULE = True
 
 HostSimplePrograms([
@@ -18,7 +33,6 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test.chrome += [
-    'chrome/additional_sheets_helper.html',
     'chrome/moz_document_helper.html',
 ]
 
@@ -101,3 +115,12 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
 DEFINES['MOZILLA_INTERNAL_API'] = True
 if CONFIG['MOZ_ENABLE_MASK_AS_SHORTHAND']:
    HOST_DEFINES['MOZ_ENABLE_MASK_AS_SHORTHAND'] = True
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    GENERATED_FILES += ['css_properties.js']
+    GENERATED_FILES['css_properties.js'].script = 'gen-css-properties.py'
+    GENERATED_FILES['css_properties.js'].inputs = [
+        'css_properties_like_longhand.js',
+        '!host_ListCSSProperties%s' % CONFIG['HOST_BIN_SUFFIX'],
+    ]
+    TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test += ['!css_properties.js']

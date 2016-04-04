@@ -43,13 +43,10 @@ class AnimatorProxy {
 
     public static AnimatorProxy create(View view) {
         AnimatorProxy proxy = PROXIES.get(view);
-        final boolean needsAnimationProxy = Versions.preHC;
-
         // If the view's animation proxy has been overridden from somewhere else, we need to
         // create a new AnimatorProxy for the view.
-        if (proxy == null || (needsAnimationProxy && proxy.mImpl != view.getAnimation())) {
-            AnimatorProxyImpl impl = (needsAnimationProxy ? new AnimatorProxyPreHC(view) :
-                                                            new AnimatorProxyPostHC(view));
+        if (proxy == null) {
+            AnimatorProxyImpl impl = (new AnimatorProxyPostHC(view));
 
             proxy = new AnimatorProxy(impl);
             PROXIES.put(view, proxy);
@@ -136,158 +133,6 @@ class AnimatorProxy {
 
     public void setTranslationY(float translationY) {
         mImpl.setTranslationY(translationY);
-    }
-
-    /*
-     * AnimatorProxyPreHC uses the technique used by the NineOldAndroids described here:
-     * http://jakewharton.com/advanced-pre-honeycomb-animation/
-     *
-     * Some of this code is based on Jake Wharton's AnimatorProxy released as part of
-     * the NineOldAndroids library under the Apache License 2.0.
-     */
-    private static class AnimatorProxyPreHC extends Animation implements AnimatorProxyImpl {
-        private final WeakReference<View> mViewRef;
-
-        private final RectF mBefore;
-        private final RectF mAfter;
-        private final Matrix mTempMatrix;
-
-        private float mAlpha;
-        private float mTranslationX;
-        private float mTranslationY;
-
-        public AnimatorProxyPreHC(View view) {
-            mBefore = new RectF();
-            mAfter = new RectF();
-            mTempMatrix = new Matrix();
-
-            mAlpha = 1;
-
-            loadCurrentTransformation(view);
-
-            setDuration(0);
-            setFillAfter(true);
-            view.setAnimation(this);
-
-            mViewRef = new WeakReference<View>(view);
-        }
-
-        private void loadCurrentTransformation(View view) {
-            Animation animation = view.getAnimation();
-            if (animation == null)
-                return;
-
-            Transformation transformation = new Transformation();
-            float[] matrix = new float[9];
-
-            animation.getTransformation(AnimationUtils.currentAnimationTimeMillis(), transformation);
-            transformation.getMatrix().getValues(matrix);
-
-            mAlpha = transformation.getAlpha();
-            mTranslationX = matrix[Matrix.MTRANS_X];
-            mTranslationY = matrix[Matrix.MTRANS_Y];
-        }
-
-        private void prepareForUpdate() {
-            View view = mViewRef.get();
-            if (view != null)
-                computeRect(mBefore, view);
-        }
-
-        private void computeRect(final RectF r, View view) {
-            final float w = view.getWidth();
-            final float h = view.getHeight();
-
-            r.set(0, 0, w, h);
-
-            final Matrix m = mTempMatrix;
-            m.reset();
-            transformMatrix(m, view);
-            mTempMatrix.mapRect(r);
-
-            r.offset(view.getLeft(), view.getTop());
-        }
-
-        private void transformMatrix(Matrix m, View view) {
-            m.postTranslate(mTranslationX, mTranslationY);
-        }
-
-        private void invalidateAfterUpdate() {
-            View view = mViewRef.get();
-            if (view == null || view.getParent() == null)
-                return;
-
-            final RectF after = mAfter;
-            computeRect(after, view);
-            after.union(mBefore);
-
-            ((View)view.getParent()).invalidate(
-                    (int) Math.floor(after.left),
-                    (int) Math.floor(after.top),
-                    (int) Math.ceil(after.right),
-                    (int) Math.ceil(after.bottom));
-        }
-
-        @Override
-        public float getAlpha() {
-            return mAlpha;
-        }
-
-        @Override
-        public void setAlpha(float alpha) {
-            if (mAlpha == alpha)
-                return;
-
-            mAlpha = alpha;
-
-            View view = mViewRef.get();
-            if (view != null)
-                view.invalidate();
-        }
-
-        @Override
-        public float getTranslationX() {
-            return mTranslationX;
-        }
-
-        @Override
-        public void setTranslationX(float translationX) {
-            if (mTranslationX == translationX)
-                return;
-
-            prepareForUpdate();
-            mTranslationX = translationX;
-            invalidateAfterUpdate();
-        }
-
-        @Override
-        public float getTranslationY() {
-            return mTranslationY;
-        }
-
-        @Override
-        public void setTranslationY(float translationY) {
-            if (mTranslationY == translationY)
-                return;
-
-            prepareForUpdate();
-            mTranslationY = translationY;
-            invalidateAfterUpdate();
-        }
-
-        @Override
-        public View getView() {
-            return mViewRef.get();
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            View view = mViewRef.get();
-            if (view != null) {
-                t.setAlpha(mAlpha);
-                transformMatrix(t.getMatrix(), view);
-            }
-        }
     }
 
     private static class AnimatorProxyPostHC implements AnimatorProxyImpl {

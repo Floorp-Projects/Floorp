@@ -703,6 +703,7 @@ class TelemetryImpl final
 public:
   void InitMemoryReporter();
 
+  static bool IsInitialized();
   static bool CanRecordBase();
   static bool CanRecordExtended();
   static already_AddRefed<nsITelemetry> CreateTelemetryInstance();
@@ -1238,19 +1239,6 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
         && JS_DefineProperty(cx, obj, "sum",
                              double(ss.sum(locker)), JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
-  }
-
-  if (h->histogram_type() != Histogram::HISTOGRAM) {
-    // Export |sum_squares| as two separate 32-bit properties so that we
-    // can accurately reconstruct it on the analysis side.
-    uint64_t sum_squares = ss.sum_squares(locker);
-    // Cast to avoid implicit truncation warnings.
-    uint32_t lo = static_cast<uint32_t>(sum_squares);
-    uint32_t hi = static_cast<uint32_t>(sum_squares >> 32);
-    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", lo, JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "sum_squares_hi", hi, JSPROP_ENUMERATE))) {
-      return REFLECT_FAILURE;
-    }
   }
 
   const size_t count = h->bucket_count();
@@ -3322,6 +3310,12 @@ TelemetryImpl::SetCanRecordBase(bool canRecord) {
   return NS_OK;
 }
 
+/* static */ bool
+TelemetryImpl::IsInitialized()
+{
+  return sTelemetry;
+}
+
 /**
  * Indicates if Telemetry can record base data (FHR data). This is true if the
  * FHR data reporting service or self-support are enabled.
@@ -3361,7 +3355,7 @@ TelemetryImpl::CanRecordExtended() {
 
 NS_IMETHODIMP
 TelemetryImpl::GetIsOfficialTelemetry(bool *ret) {
-#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING)
+#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING) && !defined(DEBUG)
   *ret = true;
 #else
   *ret = false;
@@ -3915,7 +3909,7 @@ Accumulate(ID aHistogram, uint32_t aSample)
 void
 Accumulate(ID aID, const nsCString& aKey, uint32_t aSample)
 {
-  if (!TelemetryImpl::CanRecordBase()) {
+  if (!TelemetryImpl::IsInitialized() || !TelemetryImpl::CanRecordBase()) {
     return;
   }
   const TelemetryHistogram& th = gHistograms[aID];

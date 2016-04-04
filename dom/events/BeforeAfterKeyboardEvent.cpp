@@ -26,7 +26,7 @@ BeforeAfterKeyboardEvent::BeforeAfterKeyboardEvent(
 
   if (!aEvent) {
     mEventIsInternal = true;
-    mEvent->time = PR_Now();
+    mEvent->mTime = PR_Now();
   }
 }
 

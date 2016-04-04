@@ -208,7 +208,8 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
                             GLint yOffset, GLint zOffset, GLenum unpackFormat,
                             GLenum unpackType, dom::ImageData* imageData)
 {
-    dom::Uint8ClampedArray scopedArr;
+    dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(
+      nsContentUtils::RootingCxForThread());
 
     UniquePtr<webgl::TexUnpackBlob> blob;
     blob = UnpackBlobFromImageData(mContext, funcName, unpackType, imageData, &scopedArr);
@@ -1718,9 +1719,20 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     const webgl::FormatUsageInfo* srcUsage;
     uint32_t srcWidth;
     uint32_t srcHeight;
-    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcWidth, &srcHeight))
+    GLenum srcMode;
+    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcWidth, &srcHeight,
+                                        &srcMode))
         return;
     auto srcFormat = srcUsage->format;
+
+    // GLES 3.0.4 p145:
+    // "Calling CopyTexSubImage3D, CopyTexImage2D, or CopyTexSubImage2D will result in an
+    //  INVALID_OPERATION error if any of the following conditions is true: READ_BUFFER
+    //  is NONE"
+    if (srcMode == LOCAL_GL_NONE) {
+        mContext->ErrorInvalidOperation("%s: READ_BUFFER is NONE. ", funcName);
+        return;
+    }
 
     ////////////////////////////////////
     // Check that source and dest info are compatible
@@ -1868,9 +1880,20 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
     const webgl::FormatUsageInfo* srcUsage;
     uint32_t srcWidth;
     uint32_t srcHeight;
-    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcWidth, &srcHeight))
+    GLenum srcMode;
+    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcWidth, &srcHeight,
+                                        &srcMode))
         return;
     auto srcFormat = srcUsage->format;
+
+    // GLES 3.0.4 p145:
+    // "Calling CopyTexSubImage3D, CopyTexImage2D, or CopyTexSubImage2D will result in an
+    //  INVALID_OPERATION error if any of the following conditions is true: READ_BUFFER
+    //  is NONE"
+    if (srcMode == LOCAL_GL_NONE) {
+        mContext->ErrorInvalidOperation("%s: READ_BUFFER is NONE. ", funcName);
+        return;
+    }
 
     ////////////////////////////////////
     // Check that source and dest info are compatible

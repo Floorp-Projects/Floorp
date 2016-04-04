@@ -33,7 +33,7 @@
 using namespace mozilla;
 using namespace mozilla::pkix;
 
-extern PRLogModuleInfo* gCertVerifierLog;
+extern LazyLogModule gCertVerifierLog;
 
 static const uint64_t ServerFailureDelaySeconds = 5 * 60;
 
@@ -549,12 +549,15 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
       static_cast<unsigned int>(ocspRequestLength)
     };
     // Owned by arena
-    const SECItem* responseSECItem =
+    SECItem* responseSECItem = nullptr;
+    Result tempRV =
       DoOCSPRequest(arena.get(), url, &ocspRequestItem,
                     OCSPFetchingTypeToTimeoutTime(mOCSPFetching),
-                    mOCSPGetConfig == CertVerifier::ocspGetEnabled);
-    if (!responseSECItem) {
-      rv = MapPRErrorCodeToResult(PR_GetError());
+                    mOCSPGetConfig == CertVerifier::ocspGetEnabled,
+                    responseSECItem);
+    MOZ_ASSERT((tempRV != Success) || responseSECItem);
+    if (tempRV != Success) {
+      rv = tempRV;
     } else if (response.Init(responseSECItem->data, responseSECItem->len)
                  != Success) {
       rv = Result::ERROR_OCSP_MALFORMED_RESPONSE; // too big
@@ -780,9 +783,9 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
   }
 
   bool isBuiltInRoot = false;
-  srv = IsCertBuiltInRoot(root, isBuiltInRoot);
-  if (srv != SECSuccess) {
-    return MapPRErrorCodeToResult(PR_GetError());
+  Result rv = IsCertBuiltInRoot(root, isBuiltInRoot);
+  if (rv != Success) {
+    return rv;
   }
   bool skipPinningChecksBecauseOfMITMMode =
     (!isBuiltInRoot && mPinningMode == CertVerifier::pinningAllowUserCAMITM);

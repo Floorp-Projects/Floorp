@@ -4,58 +4,59 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-test_certificates = (
-    'badSubjectAltNames.pem',
-    'beforeEpoch.pem',
-    'beforeEpochINT.pem',
-    'beforeEpochIssuer.pem',
-    'ca-used-as-end-entity.pem',
-    'default-ee.pem',
-    'eeIssuedByNonCA.pem',
-    'eeIssuedByV1Cert.pem',
-    'expired-ee.pem',
-    'expiredINT.pem',
-    'expiredissuer.pem',
-    'idn-certificate.pem',
-    'inadequateKeySizeEE.pem',
-    'inadequatekeyusage-ee.pem',
-    'ipAddressAsDNSNameInSAN.pem',
-    'md5signature-expired.pem',
-    'md5signature.pem',
-    'mismatchCN.pem',
-    'mismatch-expired.pem',
-    'mismatch-notYetValid.pem',
-    'mismatch.pem',
-    'mismatch-untrusted-expired.pem',
-    'mismatch-untrusted.pem',
-    'notYetValidINT.pem',
-    'notYetValidIssuer.pem',
-    'notYetValid.pem',
-    'noValidNames.pem',
-    'nsCertTypeCritical.pem',
-    'nsCertTypeCriticalWithExtKeyUsage.pem',
-    'nsCertTypeNotCritical.pem',
-    'other-issuer-ee.pem',
-    'other-test-ca.pem',
-    'self-signed-EE-with-cA-true.pem',
-    'selfsigned-inadequateEKU.pem',
-    'selfsigned.pem',
-    'test-ca.pem',
-    'test-int.pem',
-    'unknownissuer.pem',
-    'untrusted-expired.pem',
-    'untrustedissuer.pem',
-    'v1Cert.pem',
-)
-
-for test_certificate in test_certificates:
-    GeneratedTestCertificate(test_certificate)
-    
-test_keys = (
-    'default-ee.key',
-    'inadequateKeySizeEE.key',
-    'other-test-ca.key',
-)
-
-for test_key in test_keys:
-    GeneratedTestKey(test_key)
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'badSubjectAltNames.pem',
+#    'beforeEpoch.pem',
+#    'beforeEpochINT.pem',
+#    'beforeEpochIssuer.pem',
+#    'ca-used-as-end-entity.pem',
+#    'default-ee.pem',
+#    'eeIssuedByNonCA.pem',
+#    'eeIssuedByV1Cert.pem',
+#    'expired-ee.pem',
+#    'expiredINT.pem',
+#    'expiredissuer.pem',
+#    'idn-certificate.pem',
+#    'inadequateKeySizeEE.pem',
+#    'inadequatekeyusage-ee.pem',
+#    'ipAddressAsDNSNameInSAN.pem',
+#    'md5signature-expired.pem',
+#    'md5signature.pem',
+#    'mismatchCN.pem',
+#    'mismatch-expired.pem',
+#    'mismatch-notYetValid.pem',
+#    'mismatch.pem',
+#    'mismatch-untrusted-expired.pem',
+#    'mismatch-untrusted.pem',
+#    'notYetValidINT.pem',
+#    'notYetValidIssuer.pem',
+#    'notYetValid.pem',
+#    'noValidNames.pem',
+#    'nsCertTypeCritical.pem',
+#    'nsCertTypeCriticalWithExtKeyUsage.pem',
+#    'nsCertTypeNotCritical.pem',
+#    'other-issuer-ee.pem',
+#    'other-test-ca.pem',
+#    'self-signed-EE-with-cA-true.pem',
+#    'selfsigned-inadequateEKU.pem',
+#    'selfsigned.pem',
+#    'test-ca.pem',
+#    'test-int.pem',
+#    'unknownissuer.pem',
+#    'untrusted-expired.pem',
+#    'untrustedissuer.pem',
+#    'v1Cert.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)
+#
+#test_keys = (
+#    'default-ee.key',
+#    'inadequateKeySizeEE.key',
+#    'other-test-ca.key',
+#)
+#
+#for test_key in test_keys:
+#    GeneratedTestKey(test_key)

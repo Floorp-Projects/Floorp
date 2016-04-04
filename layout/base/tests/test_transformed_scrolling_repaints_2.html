@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that scaled elements with scrolled contents don't repaint unnecessarily when we scroll inside them (1.1 scale)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="setPrefAndStartTest()">
+<div id="t" style="-moz-transform: scale(1.1, 1.1); -moz-transform-origin:top left; width:200px; height:100px; background:yellow; overflow:hidden">
+  <div style="height:40px;"></div>
+  <div id="e" style="height:30px; background:lime"></div>
+  <div style="height:300px; background:yellow"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var t = document.getElementById("t");
+var e = document.getElementById("e");
+var utils = SpecialPowers.getDOMWindowUtils(window);
+
+function startTest() {
+  // Do a couple of scrolls to ensure we've triggered activity heuristics
+  waitForAllPaintsFlushed(function () {
+    t.scrollTop = 5;
+    waitForAllPaintsFlushed(function () {
+      t.scrollTop = 10;
+      waitForAllPaintsFlushed(function () {
+        // Clear paint state now and scroll again.
+        utils.checkAndClearPaintedState(e);
+        t.scrollTop = 20;
+        waitForAllPaintsFlushed(function () {
+          var painted = utils.checkAndClearPaintedState(e);
+          is(painted, false, "Fully-visible scrolled element should not have been painted");
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
+function setPrefAndStartTest() {
+  SpecialPowers.pushPrefEnv(
+    {"set": [["layers.single-tile.enabled", false]]},
+    // Need a timeout here to allow paint unsuppression before we start the test
+    function() {
+      setTimeout(startTest, 0);
+    }
+  );
+}
+</script>
+</pre>
+</body>
+</html>

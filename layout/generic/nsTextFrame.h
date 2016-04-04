@@ -28,8 +28,6 @@ class PropertyProvider;
 struct SelectionDetails;
 class nsTextFragment;
 
-typedef nsFrame nsTextFrameBase;
-
 class nsDisplayTextGeometry;
 class nsDisplayText;
 
@@ -39,7 +37,7 @@ public:
   static void Shutdown();
 };
 
-class nsTextFrame : public nsTextFrameBase {
+class nsTextFrame : public nsFrame {
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::TextRangeStyle TextRangeStyle;
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -57,7 +55,7 @@ public:
   friend class nsDisplayText;
 
   explicit nsTextFrame(nsStyleContext* aContext)
-    : nsTextFrameBase(aContext)
+    : nsFrame(aContext)
   {
     NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
   }
@@ -748,26 +746,9 @@ protected:
                                 bool aVertical,
                                 gfxFloat aDecorationOffsetDir,
                                 uint8_t aDecoration);
-  enum DecorationType
-  {
-    eNormalDecoration,
-    eSelectionDecoration
-  };
-  void PaintDecorationLine(gfxContext* const aCtx,
-                           const LayoutDeviceRect& aDirtyRect,
-                           nscolor aColor,
-                           const nscolor* aOverrideColor,
-                           const Point& aPt,
-                           gfxFloat aICoordInFrame,
-                           const Size& aLineSize,
-                           gfxFloat aAscent,
-                           gfxFloat aOffset,
-                           uint8_t aDecoration,
-                           uint8_t aStyle,
-                           DecorationType aDecorationType,
-                           DrawPathCallbacks* aCallbacks,
-                           bool aVertical,
-                           gfxFloat aDescentLimit = -1.0);
+
+  struct PaintDecorationLineParams;
+  void PaintDecorationLine(const PaintDecorationLineParams& aParams);
   /**
    * ComputeDescentLimitForSelectionUnderline() computes the most far position
    * where we can put selection underline.

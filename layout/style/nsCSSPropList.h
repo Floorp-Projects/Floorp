@@ -1388,6 +1388,16 @@ CSS_PROP_COLOR(
     nullptr,
     offsetof(nsStyleColor, mColor),
     eStyleAnimType_Color)
+CSS_PROP_VISIBILITY(
+    color-adjust,
+    color_adjust,
+    ColorAdjust,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.color-adjust.enabled",
+    VARIANT_HK,
+    kColorAdjustKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     -moz-columns,
     _moz_columns,
@@ -2272,7 +2282,7 @@ CSS_PROP_TEXT(
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
-    VARIANT_HLPN | VARIANT_KEYWORD | VARIANT_NORMAL | VARIANT_SYSFONT,
+    VARIANT_HLPN | VARIANT_KEYWORD | VARIANT_NORMAL | VARIANT_SYSFONT | VARIANT_CALC,
     kLineHeightKTable,
     offsetof(nsStyleText, mLineHeight),
     eStyleAnimType_Coord)
@@ -3328,6 +3338,19 @@ CSS_PROP_TEXT(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_TEXT(
+    -webkit-text-fill-color,
+    _webkit_text_fill_color,
+    WebkitTextFillColor,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    "layout.css.prefixes.webkit",
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleText, mWebkitTextFillColor),
+    eStyleAnimType_Custom)
 CSS_PROP_TEXT(
     text-indent,
     text_indent,

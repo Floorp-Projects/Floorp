@@ -309,6 +309,19 @@ nsCSPContext::GetUpgradeInsecureRequests(bool *outUpgradeRequest)
 }
 
 NS_IMETHODIMP
+nsCSPContext::GetBlockAllMixedContent(bool *outBlockAllMixedContent)
+{
+  *outBlockAllMixedContent = false;
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    if (mPolicies[i]->hasDirective(nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+      *outBlockAllMixedContent = true;
+      return NS_OK;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
 {
   *outIsSet = false;
@@ -601,6 +614,9 @@ nsCSPContext::SetRequestContext(nsIDOMDocument* aDOMDocument,
     // console messages until it becomes available, see flushConsoleMessages
     mQueueUpMessages = !mInnerWindowID;
     mCallingChannelLoadGroup = doc->GetDocumentLoadGroup();
+
+    // set the flag on the document for CSP telemetry
+    doc->SetHasCSP(true);
   }
   else {
     NS_WARNING("No Document in SetRequestContext; can not query loadgroup; sending reports may fail.");

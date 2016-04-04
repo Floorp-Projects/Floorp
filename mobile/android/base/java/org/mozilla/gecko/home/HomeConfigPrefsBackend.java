@@ -15,13 +15,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
 import org.mozilla.gecko.home.HomeConfig.OnReloadListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomeConfig.State;
 import org.mozilla.gecko.restrictions.Restrictable;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.BroadcastReceiver;
@@ -74,12 +74,8 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                                                   EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)));
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.BOOKMARKS));
-        panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.HISTORY));
+        panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.COMBINED_HISTORY));
 
-        // We disable Synced Tabs for guest mode / restricted profiles.
-        if (Restrictions.isAllowed(mContext, Restrictable.MODIFY_ACCOUNTS)) {
-            panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.REMOTE_TABS));
-        }
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS));
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.READING_LIST));
@@ -264,6 +260,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         final JSONArray jsonPanelConfigs;
         try {
             jsonPanelConfigs = maybePerformMigration(mContext, jsonString);
+            updatePrefsFromConfig(jsonPanelConfigs);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error loading the list of home panels from JSON prefs", e);
 
@@ -381,6 +378,40 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             registerReloadReceiver();
         }
     }
+
+    /**
+     * Update prefs that depend on home panels state.
+     *
+     * This includes the prefs that keep track of whether bookmarks or history are enabled, which are
+     * used to control the visibility of the corresponding menu items.
+     */
+    private void updatePrefsFromConfig(JSONArray panelsArray) {
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mContext);
+        if (!prefs.contains(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED)
+                || !prefs.contains(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED)) {
+
+            final String bookmarkType = PanelType.BOOKMARKS.toString();
+            final String historyType = PanelType.HISTORY.toString();
+            try {
+                for (int i = 0; i < panelsArray.length(); i++) {
+                    final JSONObject panelObj = panelsArray.getJSONObject(i);
+                    final String panelType = panelObj.optString(PanelConfig.JSON_KEY_TYPE, null);
+                    if (panelType == null) {
+                        break;
+                    }
+                    final boolean isDisabled = panelObj.optBoolean(PanelConfig.JSON_KEY_DISABLED, false);
+                    if (bookmarkType.equals(panelType)) {
+                        prefs.edit().putBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, !isDisabled).apply();
+                    } else if (historyType.equals(panelType)) {
+                        prefs.edit().putBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, !isDisabled).apply();
+                    }
+                }
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error fetching panel from config to update prefs");
+            }
+        }
+    }
+
 
     private void sendReloadBroadcast() {
         final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(mContext);

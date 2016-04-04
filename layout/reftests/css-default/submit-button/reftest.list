@@ -1,7 +1,7 @@
 == default-submit-button-1.html default-submit-button-ref.html
 == default-submit-button-2.html default-submit-button-ref.html
 == default-submit-button-3.html default-submit-button-ref.html
-random-if(Android&&AndroidVersion==15) == default-submit-button-4.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
+== default-submit-button-4.html about:blank
 == default-submit-button-5.html default-submit-button-ref.html
 == default-submit-button-6.html default-submit-button-ref.html
 == default-submit-button-7.html default-submit-button-ref.html

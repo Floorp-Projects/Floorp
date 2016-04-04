@@ -24,10 +24,16 @@ echo "running as" $(id)
 set -v
 cd $WORKSPACE
 
+fail() {
+    echo # make sure error message is on a new line
+    echo "[test-linux.sh:error]" "${@}"
+    exit 1
+}
+
 # test required parameters are supplied
-if [[ -z ${MOZHARNESS_URL} ]]; then exit 1; fi
-if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
-if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
+if [[ -z ${MOZHARNESS_URL} ]]; then fail "MOZHARNESS_URL is not set"; fi
+if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
+if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
 mkdir -p ~/artifacts/public
 
@@ -47,14 +53,15 @@ cleanup() {
 trap cleanup EXIT INT
 
 # Unzip the mozharness ZIP file created by the build task
-curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL
+if ! curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
+    fail "failed to download mozharness zip"
+fi
 rm -rf mozharness
 unzip -q mozharness.zip
 rm mozharness.zip
 
 if ! [ -d mozharness ]; then
-    echo "mozharness zip did not contain mozharness/"
-    exit 1
+    fail "mozharness zip did not contain mozharness/"
 fi
 
 # start up the pulseaudio daemon.  Note that it's important this occur
@@ -85,8 +92,9 @@ if $NEED_XVFB; then
             retry_count=$(($retry_count + 1))
             echo "Failed to start Xvfb, retry: $retry_count"
             sleep 2
-        fi done
-    if [ $xvfb_test == 255 ]; then exit 255; fi
+        fi
+    done
+    if [ $xvfb_test == 255 ]; then fail "xvfb did not start properly"; fi
 fi
 
 if $START_VNC; then

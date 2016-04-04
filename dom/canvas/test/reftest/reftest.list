@@ -20,16 +20,15 @@ pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback wrappe
 == webgl-resize-test.html  wrapper.html?green.png
 
 # Check that captureStream() displays in a local video element
-skip-if(winWidget&&layersGPUAccelerated&&d2d) == webgl-capturestream-test.html?preserve wrapper.html?green.png
+== webgl-capturestream-test.html?preserve wrapper.html?green.png
 
 # Some of the failure conditions are a little crazy. I'm (jgilbert) setting these based on
 # failures encountered when running on Try, and then targetting the Try config by
 # differences in the `sandbox` contents. That is, I'm labeling based on symptoms rather
 # than cause.
-# Lin-R-e10s: gtkWidget && browserIsRemote
-# WinXP-R: winWidget && layersGPUAccelerated && !d2d
-# Win7+-R: winWidget && layersGPUAccelerated && d2d
-# Win7+-Ru: winWidget && !layersGPUAccelerated
+# WinXP R:  winWidget && layersGPUAccelerated  && !d3d11
+# Win7+ R:  winWidget && layersGPUAccelerated  && d3d11
+# Win7+ Ru: winWidget && !layersGPUAccelerated && d3d11
 # (Note that we have to remove spaces when used below)
 
 # IMPORTANT: Expected outcomes are evaluated left-to-right, and they replace eachother.
@@ -42,73 +41,73 @@ skip-if(winWidget&&layersGPUAccelerated&&d2d) == webgl-capturestream-test.html?p
 # Does we draw the correct colors in the correct places?
 # Combinations: PowerSet([readback, aa, preserve, premult, alpha]) x [frame=1,frame=6]
 # This is 2^6 = 64 combinations.
-                                                                                                         == webgl-color-test.html?frame=1&__&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&aa&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&__&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&aa&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&__&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=1&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=1&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=1&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=1&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=1&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-                                                                                                         == webgl-color-test.html?frame=1&__&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                         == webgl-color-test.html?frame=1&aa&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                         == webgl-color-test.html?frame=1&__&preserve&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                         == webgl-color-test.html?frame=1&aa&preserve&premult&alpha  wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=1&__&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&__&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=1&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=1&__&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=1&aa&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=1&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=1&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
+                                                                                                        == webgl-color-test.html?frame=1&__&________&premult&alpha wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=1&aa&________&premult&alpha wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=1&__&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=1&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
-                                                                                                         == webgl-color-test.html?frame=6&__&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=6&aa&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=6&__&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                          == webgl-color-test.html?frame=6&aa&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=6&__&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=6&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         == webgl-color-test.html?frame=6&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                          == webgl-color-test.html?frame=6&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=6&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=6&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    == webgl-color-test.html?frame=6&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&(!layersGPUAccelerated||!d3d11)) == webgl-color-test.html?frame=6&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-                                                                                                         == webgl-color-test.html?frame=6&__&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                         == webgl-color-test.html?frame=6&aa&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                         == webgl-color-test.html?frame=6&__&preserve&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                         == webgl-color-test.html?frame=6&aa&preserve&premult&alpha  wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=6&__&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&__&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                                                        == webgl-color-test.html?frame=6&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=6&__&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=6&aa&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=6&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)                                        == webgl-color-test.html?frame=6&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
+                                                                                                        == webgl-color-test.html?frame=6&__&________&premult&alpha wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=6&aa&________&premult&alpha wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=6&__&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                                                        == webgl-color-test.html?frame=6&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)   pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)   pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)   pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)   pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&__&preserve&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=1&readback&aa&preserve&premult&alpha  wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&________&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&________&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&__&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=1&readback&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                         pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&_______&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&layersGPUAccelerated&&!d3d11)    pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(1,30000) fails-if(gtkWidget&&browserIsRemote) fails-if(winWidget&&(!layersGPUAccelerated||!d3d11)) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&_______&alpha  wrapper.html?colors-non-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&________&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&__&preserve&premult&alpha  wrapper.html?colors-premult.png
-                                                                                                        pref(webgl.force-layers-readback,true)  == webgl-color-test.html?frame=6&readback&aa&preserve&premult&alpha  wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&_______&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&premult&_____ wrapper.html?colors-no-alpha.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&_______&alpha wrapper.html?colors-non-premult.png
+fuzzy(1,30000) fails-if(winWidget&&layersGPUAccelerated&&!d3d11) pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&_______&alpha wrapper.html?colors-non-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&________&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&________&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&__&preserve&premult&alpha wrapper.html?colors-premult.png
+                                                                 pref(webgl.force-layers-readback,true) == webgl-color-test.html?frame=6&readback&aa&preserve&premult&alpha wrapper.html?colors-premult.png
 
 # Check for hanging bindings/state settings:
 == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png
@@ -153,10 +152,10 @@ skip-if(!winWidget) pref(webgl.disable-angle,true)  == webgl-color-test.html?nat
 == stroketext-shadow.html stroketext-shadow-ref.html
 
 # focus rings
-pref(canvas.focusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidVersion<15,8,500) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
-pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidVersion<15,8,500) skip-if(winWidget) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
+pref(canvas.focusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
+pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(Android) skip-if(winWidget) fuzzy-if(gtkWidget,64,410) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
 
 # Check that captureStream() displays in a local video element
-skip-if(winWidget&&layersGPUAccelerated&&d2d) == capturestream.html wrapper.html?green.png
+== capturestream.html wrapper.html?green.png
 
 fuzzy-if(azureSkiaGL,1,2) fuzzy-if(Android,3,40) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html

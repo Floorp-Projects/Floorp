@@ -128,18 +128,17 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
 };
 
 /* static */ PLDHashNumber
-nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
+nsRuleNode::ChildrenHashHashKey(const void *aKey)
 {
   const nsRuleNode::Key *key =
     static_cast<const nsRuleNode::Key*>(aKey);
   // Disagreement on importance and level for the same rule is extremely
   // rare, so hash just on the rule.
-  return PLDHashTable::HashVoidPtrKeyStub(aTable, key->mRule);
+  return PLDHashTable::HashVoidPtrKeyStub(key->mRule);
 }
 
 /* static */ bool
-nsRuleNode::ChildrenHashMatchEntry(PLDHashTable *aTable,
-                                   const PLDHashEntryHdr *aHdr,
+nsRuleNode::ChildrenHashMatchEntry(const PLDHashEntryHdr *aHdr,
                                    const void *aKey)
 {
   const ChildrenHashEntry *entry =
@@ -194,6 +193,7 @@ nsRuleNode::EnsureBlockDisplay(uint8_t& display,
   case NS_STYLE_DISPLAY_TABLE :
   case NS_STYLE_DISPLAY_BLOCK :
   case NS_STYLE_DISPLAY_FLEX :
+  case NS_STYLE_DISPLAY_WEBKIT_BOX :
   case NS_STYLE_DISPLAY_GRID :
     // do not muck with these at all - already blocks
     // This is equivalent to nsStyleDisplay::IsBlockOutside.  (XXX Maybe we
@@ -210,6 +210,11 @@ nsRuleNode::EnsureBlockDisplay(uint8_t& display,
   case NS_STYLE_DISPLAY_INLINE_FLEX:
     // make inline flex containers into flex containers
     display = NS_STYLE_DISPLAY_FLEX;
+    break;
+
+  case NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX:
+    // make -webkit-inline-box containers into -webkit-box containers
+    display = NS_STYLE_DISPLAY_WEBKIT_BOX;
     break;
 
   case NS_STYLE_DISPLAY_INLINE_GRID:
@@ -240,6 +245,9 @@ nsRuleNode::EnsureInlineDisplay(uint8_t& display)
       break;
     case NS_STYLE_DISPLAY_FLEX :
       display = NS_STYLE_DISPLAY_INLINE_FLEX;
+      break;
+    case NS_STYLE_DISPLAY_WEBKIT_BOX :
+      display = NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX;
       break;
     case NS_STYLE_DISPLAY_GRID :
       display = NS_STYLE_DISPLAY_INLINE_GRID;
@@ -322,11 +330,6 @@ GetMetricsFor(nsPresContext* aPresContext,
 {
   nsFont font = aStyleFont->mFont;
   font.size = aFontSize;
-  gfxUserFontSet *fs = nullptr;
-  if (aUseUserFontSet) {
-    fs = aPresContext->GetUserFontSet();
-  }
-  gfxTextPerfMetrics *tp = aPresContext->GetTextPerfMetrics();
   gfxFont::Orientation orientation = gfxFont::eHorizontal;
   if (aStyleContext) {
     WritingMode wm(aStyleContext);
@@ -334,13 +337,14 @@ GetMetricsFor(nsPresContext* aPresContext,
       orientation = gfxFont::eVertical;
     }
   }
-  RefPtr<nsFontMetrics> fm;
-  aPresContext->DeviceContext()->GetMetricsFor(font,
-                                               aStyleFont->mLanguage,
-                                               aStyleFont->mExplicitLanguage,
-                                               orientation,
-                                               fs, tp, *getter_AddRefs(fm));
-  return fm.forget();
+  nsFontMetrics::Params params;
+  params.language = aStyleFont->mLanguage;
+  params.explicitLanguage = aStyleFont->mExplicitLanguage;
+  params.orientation = orientation;
+  params.userFontSet =
+    aUseUserFontSet ? aPresContext->GetUserFontSet() : nullptr;
+  params.textPerf = aPresContext->GetTextPerfMetrics();
+  return aPresContext->DeviceContext()->GetMetricsFor(font, params);
 }
 
 
@@ -1445,50 +1449,8 @@ nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
 void
-nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
+nsRuleNode::Destroy()
 {
-  nsRuleNode *destroyQueue, **destroyQueueTail;
-  if (aDestroyQueueTail) {
-    destroyQueueTail = *aDestroyQueueTail;
-  } else {
-    destroyQueue = nullptr;
-    destroyQueueTail = &destroyQueue;
-  }
-
-  if (ChildrenAreHashed()) {
-    PLDHashTable *children = ChildrenHash();
-    for (auto iter = children->Iter(); !iter.Done(); iter.Next()) {
-      auto entry = static_cast<ChildrenHashEntry*>(iter.Get());
-      *destroyQueueTail = entry->mRuleNode;
-      destroyQueueTail = &entry->mRuleNode->mNextSibling;
-    }
-    *destroyQueueTail = nullptr; // ensure null-termination
-    delete children;
-  } else if (HaveChildren()) {
-    *destroyQueueTail = ChildrenList();
-    do {
-      destroyQueueTail = &(*destroyQueueTail)->mNextSibling;
-    } while (*destroyQueueTail);
-  }
-  mChildren.asVoid = nullptr;
-
-  if (aDestroyQueueTail) {
-    // Our caller destroys the queue.
-    *aDestroyQueueTail = destroyQueueTail;
-  } else {
-    // We have to do destroy the queue.  When we destroy each node, it
-    // will add its children to the queue.
-    while (destroyQueue) {
-      nsRuleNode *cur = destroyQueue;
-      destroyQueue = destroyQueue->mNextSibling;
-      if (!destroyQueue) {
-        NS_ASSERTION(destroyQueueTail == &cur->mNextSibling, "mangled list");
-        destroyQueueTail = &destroyQueue;
-      }
-      cur->DestroyInternal(&destroyQueueTail);
-    }
-  }
-
   // Destroy ourselves.
   this->~nsRuleNode();
 
@@ -1497,10 +1459,11 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
   mPresContext->PresShell()->FreeByObjectID(eArenaObjectID_nsRuleNode, this);
 }
 
-nsRuleNode* nsRuleNode::CreateRootNode(nsPresContext* aPresContext)
+already_AddRefed<nsRuleNode>
+nsRuleNode::CreateRootNode(nsPresContext* aPresContext)
 {
-  return new (aPresContext)
-    nsRuleNode(aPresContext, nullptr, nullptr, SheetType::Unknown, false);
+  return do_AddRef(new (aPresContext)
+    nsRuleNode(aPresContext, nullptr, nullptr, SheetType::Unknown, false));
 }
 
 nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
@@ -1523,21 +1486,11 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
   mChildren.asVoid = nullptr;
   MOZ_COUNT_CTOR(nsRuleNode);
 
-  if (mRule) {
-    mRule->AddRef();
-  }
-
   NS_ASSERTION(IsRoot() || GetLevel() == aLevel, "not enough bits");
   NS_ASSERTION(IsRoot() || IsImportantRule() == aIsImportant, "yikes");
-  /* If IsRoot(), then aContext->StyleSet() is typically null at this
-     point.  In any case, we don't want to treat the root rulenode as
-     unused.  */
-  if (!IsRoot()) {
-    mParent->AddRef();
-    MOZ_ASSERT(aContext->StyleSet()->IsGecko(),
-               "ServoStyleSets should not have rule nodes");
-    aContext->StyleSet()->AsGecko()->RuleNodeUnused();
-  }
+  MOZ_ASSERT(aContext->StyleSet()->IsGecko(),
+             "ServoStyleSets should not have rule nodes");
+  aContext->StyleSet()->AsGecko()->RuleNodeUnused(this, /* aMayGC = */ false);
 
   // nsStyleSet::GetContext depends on there being only one animation
   // rule.
@@ -1549,12 +1502,14 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
 
 nsRuleNode::~nsRuleNode()
 {
+  MOZ_ASSERT(!HaveChildren());
   MOZ_COUNT_DTOR(nsRuleNode);
+  if (mParent) {
+    mParent->RemoveChild(this);
+  }
+
   if (mStyleData.mResetData || mStyleData.mInheritedData)
     mStyleData.Destroy(mDependentBits, mPresContext);
-  if (mRule) {
-    mRule->Release();
-  }
 }
 
 nsRuleNode*
@@ -1652,13 +1607,42 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
                                         sizeof(ChildrenHashEntry),
                                         aNumKids);
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
+    Key key = curr->GetKey();
     // This will never fail because of the initial size we gave the table.
     auto entry =
-      static_cast<ChildrenHashEntry*>(hash->Add(curr->mRule));
+      static_cast<ChildrenHashEntry*>(hash->Add(&key));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
     entry->mRuleNode = curr;
   }
   SetChildrenHash(hash);
+}
+
+void
+nsRuleNode::RemoveChild(nsRuleNode* aNode)
+{
+  MOZ_ASSERT(HaveChildren());
+  if (ChildrenAreHashed()) {
+    PLDHashTable* children = ChildrenHash();
+    Key key = aNode->GetKey();
+    MOZ_ASSERT(children->Search(&key));
+    children->Remove(&key);
+    if (children->EntryCount() == 0) {
+      delete children;
+      mChildren.asVoid = nullptr;
+    }
+  } else {
+    // This linear traversal is unfortunate, but we do the same thing when
+    // adding nodes. The traversal is bounded by kMaxChildrenInList.
+    nsRuleNode** curr = &mChildren.asList;
+    while (*curr != aNode) {
+      curr = &((*curr)->mNextSibling);
+      MOZ_ASSERT(*curr);
+    }
+    *curr = (*curr)->mNextSibling;
+
+    // If there was one element in the list, this sets mChildren.asList
+    // to 0, and HaveChildren() will return false.
+  }
 }
 
 inline void
@@ -3358,7 +3342,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     langValue->GetStringValue(lang);
 
     nsContentUtils::ASCIIToLower(lang);
-    aFont->mLanguage = do_GetAtom(lang);
+    aFont->mLanguage = NS_Atomize(lang);
     aFont->mExplicitLanguage = true;
   }
 
@@ -4272,6 +4256,101 @@ TruncateStringToSingleGrapheme(nsAString& aStr)
   }
 }
 
+struct LineHeightCalcObj
+{
+  float mLineHeight;
+  bool mIsNumber;
+};
+
+struct SetLineHeightCalcOps : public css::NumbersAlreadyNormalizedOps
+{
+  typedef LineHeightCalcObj result_type;
+  nsStyleContext* const mStyleContext;
+  nsPresContext* const mPresContext;
+  RuleNodeCacheConditions& mConditions;
+
+  SetLineHeightCalcOps(nsStyleContext* aStyleContext,
+                       nsPresContext* aPresContext,
+                       RuleNodeCacheConditions& aConditions)
+    : mStyleContext(aStyleContext),
+      mPresContext(aPresContext),
+      mConditions(aConditions)
+  {
+  }
+
+  result_type
+  MergeAdditive(nsCSSUnit aCalcFunction,
+                result_type aValue1, result_type aValue2)
+  {
+    MOZ_ASSERT(aValue1.mIsNumber == aValue2.mIsNumber);
+
+    LineHeightCalcObj result;
+    result.mIsNumber = aValue1.mIsNumber;
+    if (aCalcFunction == eCSSUnit_Calc_Plus) {
+      result.mLineHeight = aValue1.mLineHeight + aValue2.mLineHeight;
+      return result;
+    }
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
+               "unexpected unit");
+    result.mLineHeight = aValue1.mLineHeight - aValue2.mLineHeight;
+    return result;
+  }
+
+  result_type
+  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
+                       float aValue1, result_type aValue2)
+  {
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
+               "unexpected unit");
+    LineHeightCalcObj result;
+    result.mIsNumber = aValue2.mIsNumber;
+    result.mLineHeight = aValue1 * aValue2.mLineHeight;
+    return result;
+  }
+
+  result_type
+  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
+                       result_type aValue1, float aValue2)
+  {
+    LineHeightCalcObj result;
+    result.mIsNumber = aValue1.mIsNumber;
+    if (aCalcFunction == eCSSUnit_Calc_Times_R) {
+      result.mLineHeight = aValue1.mLineHeight * aValue2;
+      return result;
+    }
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Divided,
+               "unexpected unit");
+    result.mLineHeight = aValue1.mLineHeight / aValue2;
+    return result;
+  }
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    LineHeightCalcObj result;
+    if (aValue.IsLengthUnit()) {
+      result.mIsNumber = false;
+      result.mLineHeight = CalcLength(aValue, mStyleContext,
+                                      mPresContext, mConditions);
+    }
+    else if (eCSSUnit_Percent == aValue.GetUnit()) {
+      mConditions.SetUncacheable();
+      result.mIsNumber = false;
+      nscoord fontSize = mStyleContext->StyleFont()->mFont.size;
+      result.mLineHeight = fontSize * aValue.GetPercentValue();
+    }
+    else if (eCSSUnit_Number == aValue.GetUnit()) {
+      result.mIsNumber = true;
+      result.mLineHeight = aValue.GetFloatValue();
+    } else {
+      MOZ_ASSERT(false, "unexpected value");
+      result.mIsNumber = true;
+      result.mLineHeight = 1.0f;
+    }
+
+    return result;
+  }
+};
+
 const void*
 nsRuleNode::ComputeTextData(void* aStartStruct,
                             const nsRuleData* aRuleData,
@@ -4314,7 +4393,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     }
   }
 
-  // line-height: normal, number, length, percent, inherit
+  // line-height: normal, number, length, percent, calc, inherit
   const nsCSSValue* lineHeightValue = aRuleData->ValueForLineHeight();
   if (eCSSUnit_Percent == lineHeightValue->GetUnit()) {
     conditions.SetUncacheable();
@@ -4326,6 +4405,16 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   else if (eCSSUnit_Initial == lineHeightValue->GetUnit() ||
            eCSSUnit_System_Font == lineHeightValue->GetUnit()) {
     text->mLineHeight.SetNormalValue();
+  }
+  else if (eCSSUnit_Calc == lineHeightValue->GetUnit()) {
+    SetLineHeightCalcOps ops(aContext, mPresContext, conditions);
+    LineHeightCalcObj obj = css::ComputeCalc(*lineHeightValue, ops);
+    if (obj.mIsNumber) {
+      text->mLineHeight.SetFactorValue(obj.mLineHeight);
+    } else {
+      text->mLineHeight.SetCoordValue(
+        NSToCoordRoundWithClamp(obj.mLineHeight));
+    }
   }
   else {
     SetCoord(*lineHeightValue, text->mLineHeight, parentText->mLineHeight,
@@ -4600,6 +4689,27 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     }
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown value unit type");
+  }
+
+  // -webkit-text-fill-color: color, string, inherit, initial
+  const nsCSSValue*
+    webkitTextFillColorValue = aRuleData->ValueForWebkitTextFillColor();
+  if (webkitTextFillColorValue->GetUnit() == eCSSUnit_Null) {
+    // We don't want to change anything in this case.
+  } else if (webkitTextFillColorValue->GetUnit() == eCSSUnit_Inherit ||
+             webkitTextFillColorValue->GetUnit() == eCSSUnit_Unset) {
+    conditions.SetUncacheable();
+    text->mWebkitTextFillColorForeground = parentText->mWebkitTextFillColorForeground;
+    text->mWebkitTextFillColor = parentText->mWebkitTextFillColor;
+  } else if ((webkitTextFillColorValue->GetUnit() == eCSSUnit_EnumColor &&
+              webkitTextFillColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
+             webkitTextFillColorValue->GetUnit() == eCSSUnit_Initial) {
+    text->mWebkitTextFillColorForeground = true;
+    text->mWebkitTextFillColor = mPresContext->DefaultColor();
+  } else {
+    text->mWebkitTextFillColorForeground = false;
+    SetColor(*webkitTextFillColorValue, 0, mPresContext, aContext,
+             text->mWebkitTextFillColor, conditions);
   }
 
   // -moz-control-character-visibility: enum, inherit, initial
@@ -6350,6 +6460,12 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
   } else {
     MOZ_ASSERT(orientation->GetUnit() == eCSSUnit_Null, "Should be null unit");
   }
+
+  SetDiscrete(*aRuleData->ValueForColorAdjust(), visibility->mColorAdjust,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentVisibility->mColorAdjust,
+              NS_STYLE_COLOR_ADJUST_ECONOMY, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(Visibility, visibility)
 }
@@ -9965,116 +10081,6 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
 
   MOZ_ASSERT(data, "should have aborted on out-of-memory");
   return data;
-}
-
-void
-nsRuleNode::Mark()
-{
-  for (nsRuleNode *node = this;
-       node && !(node->mDependentBits & NS_RULE_NODE_GC_MARK);
-       node = node->mParent)
-    node->mDependentBits |= NS_RULE_NODE_GC_MARK;
-}
-
-bool
-nsRuleNode::DestroyIfNotMarked()
-{
-  // If we're not marked, then we have to delete ourself.
-  // However, we never allow the root node to GC itself, because nsStyleSet
-  // wants to hold onto the root node and not worry about re-creating a
-  // rule walker if the root node is deleted.
-  MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
-             "ServoStyleSets should not have rule nodes");
-  if (!(mDependentBits & NS_RULE_NODE_GC_MARK) &&
-      // Skip this only if we're the *current* root and not an old one.
-      !(IsRoot() && mPresContext->StyleSet()->AsGecko()->GetRuleTree() == this)) {
-    Destroy();
-    return true;
-  }
-
-  // Clear our mark, for the next time around.
-  mDependentBits &= ~NS_RULE_NODE_GC_MARK;
-  return false;
-}
-
-void
-nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
-{
-  NS_ASSERTION(!(mDependentBits & NS_RULE_NODE_GC_MARK),
-               "missing DestroyIfNotMarked() call");
-  NS_ASSERTION(HaveChildren(),
-               "why call SweepChildren with no children?");
-  uint32_t childrenDestroyed = 0;
-  nsRuleNode* survivorsWithChildren = nullptr;
-  if (ChildrenAreHashed()) {
-    PLDHashTable* children = ChildrenHash();
-    uint32_t oldChildCount = children->EntryCount();
-    for (auto iter = children->Iter(); !iter.Done(); iter.Next()) {
-      auto entry = static_cast<ChildrenHashEntry*>(iter.Get());
-      nsRuleNode* node = entry->mRuleNode;
-      if (node->DestroyIfNotMarked()) {
-        iter.Remove();
-      } else if (node->HaveChildren()) {
-        // When children are hashed mNextSibling is not normally used but we
-        // use it here to build a list of children that needs to be swept.
-        nsRuleNode** headQ = &survivorsWithChildren;
-        node->mNextSibling = *headQ;
-        *headQ = node;
-      }
-    }
-    childrenDestroyed = oldChildCount - children->EntryCount();
-    if (childrenDestroyed == oldChildCount) {
-      delete children;
-      mChildren.asVoid = nullptr;
-    }
-  } else {
-    for (nsRuleNode** children = ChildrenListPtr(); *children; ) {
-      nsRuleNode* next = (*children)->mNextSibling;
-      if ((*children)->DestroyIfNotMarked()) {
-        // This rule node was destroyed, unlink it from the list by
-        // making *children point to the next entry.
-        *children = next;
-        ++childrenDestroyed;
-      } else {
-        children = &(*children)->mNextSibling;
-      }
-    }
-    survivorsWithChildren = ChildrenList();
-  }
-  if (survivorsWithChildren) {
-    aSweepQueue.AppendElement(survivorsWithChildren);
-  }
-  NS_ASSERTION(childrenDestroyed <= mRefCnt, "wrong ref count");
-  mRefCnt -= childrenDestroyed;
-  NS_POSTCONDITION(IsRoot() || mRefCnt > 0,
-                   "We didn't get swept, so we'd better have style contexts "
-                   "pointing to us or to one of our descendants, which means "
-                   "we'd better have a nonzero mRefCnt here!");
-}
-
-bool
-nsRuleNode::Sweep()
-{
-  NS_ASSERTION(IsRoot(), "must start sweeping at a root");
-  NS_ASSERTION(!mNextSibling, "root must not have mNextSibling");
-
-  if (DestroyIfNotMarked()) {
-    return true;
-  }
-
-  AutoTArray<nsRuleNode*, 70> sweepQueue;
-  sweepQueue.AppendElement(this);
-  while (!sweepQueue.IsEmpty()) {
-    nsTArray<nsRuleNode*>::index_type last = sweepQueue.Length() - 1;
-    nsRuleNode* ruleNode = sweepQueue[last];
-    sweepQueue.RemoveElementAt(last);
-    for (; ruleNode; ruleNode = ruleNode->mNextSibling) {
-      if (ruleNode->HaveChildren()) {
-        ruleNode->SweepChildren(sweepQueue);
-      }
-    }
-  }
-  return false;
 }
 
 /* static */ bool

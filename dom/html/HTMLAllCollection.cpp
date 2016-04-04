@@ -114,7 +114,7 @@ HTMLAllCollection::GetDocumentAllList(const nsAString& aID)
     return docAllList;
   }
 
-  nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
+  nsCOMPtr<nsIAtom> id = NS_Atomize(aID);
   RefPtr<nsContentList> docAllList =
     new nsContentList(mDocument, DocAllResultMatch, nullptr, nullptr, true, id);
   mNamedMap.Put(aID, docAllList);

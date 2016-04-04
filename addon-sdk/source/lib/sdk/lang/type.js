@@ -216,6 +216,20 @@ exports.isJSON = function (value) {
 };
 
 /**
+ * Returns `true` if `value` is JSONable
+ */
+const isJSONable = (value) => {
+  try {
+    JSON.parse(JSON.stringify(value));
+  }
+  catch (e) {
+    return false;
+  }
+  return true;
+};
+exports.isJSONable = isJSONable;
+
+/**
  * Returns if `value` is an instance of a given `Type`. This is exactly same as
  * `value instanceof Type` with a difference that `Type` can be from a scope
  * that has a different top level object. (Like in case where `Type` is a

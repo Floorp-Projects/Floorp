@@ -31,6 +31,7 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 var loaderModules = {
   "Services": Object.create(Services),
   "toolkit/loader": Loader,
+  promise,
   PromiseDebugging,
   ChromeUtils,
   ThreadSafeChromeUtils,
@@ -62,18 +63,28 @@ XPCOMUtils.defineLazyGetter(loaderModules, "xpcInspector", () => {
 XPCOMUtils.defineLazyGetter(loaderModules, "indexedDB", () => {
   // On xpcshell, we can't instantiate indexedDB without crashing
   try {
-    return Cu.Sandbox(this, {wantGlobalProperties:["indexedDB"]}).indexedDB;
+    let sandbox
+      = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
+                   {wantGlobalProperties: ["indexedDB"]});
+    return sandbox.indexedDB;
+
   } catch(e) {
     return {};
   }
 });
 
 XPCOMUtils.defineLazyGetter(loaderModules, "CSS", () => {
-  return Cu.Sandbox(this, {wantGlobalProperties: ["CSS"]}).CSS;
+  let sandbox
+    = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
+                 {wantGlobalProperties: ["CSS"]});
+  return sandbox.CSS;
 });
 
 XPCOMUtils.defineLazyGetter(loaderModules, "URL", () => {
-  return Cu.Sandbox(this, {wantGlobalProperties: ["URL"]}).URL;
+  let sandbox
+    = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
+                 {wantGlobalProperties: ["URL"]});
+  return sandbox.URL;
 });
 
 var sharedGlobalBlocklist = ["sdk/indexed-db"];
@@ -95,8 +106,6 @@ BuiltinProvider.prototype = {
         "devtools": "resource://devtools",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "promise": "resource://gre/modules/Promise-backend.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn": "resource://devtools/acorn",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
@@ -267,6 +276,7 @@ DevToolsLoader.prototype = {
 
     // Pass through internal loader settings specific to this loader instance
     this._provider.invisibleToDebugger = this.invisibleToDebugger;
+    // Changes here should be mirrored to devtools/.eslintrc.
     this._provider.globals = {
       isWorker: false,
       reportError: Cu.reportError,

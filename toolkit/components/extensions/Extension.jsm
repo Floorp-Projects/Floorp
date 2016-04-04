@@ -82,6 +82,7 @@ ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extensio
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/idle.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/notifications.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/runtime.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/storage.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/test.json");
@@ -397,12 +398,7 @@ GlobalManager = {
             try {
               promise = findPath(path)[name](...args);
             } catch (e) {
-              if (e instanceof context.cloneScope.Error) {
-                promise = Promise.reject(e);
-              } else {
-                Cu.reportError(e);
-                promise = Promise.reject({message: "An unexpected error occurred"});
-              }
+              promise = Promise.reject(e);
             }
 
             return context.wrapPromise(promise || Promise.resolve(), callback);
@@ -468,7 +464,22 @@ GlobalManager = {
     let extension = this.extensionMap.get(id);
     let uri = contentWindow.document.documentURIObject;
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
-    let context = new ExtensionPage(extension, {type: "tab", contentWindow, uri, docShell, incognito});
+
+    let browser = docShell.chromeEventHandler;
+
+    let type = "tab";
+    if (browser instanceof Ci.nsIDOMElement) {
+      if (browser.hasAttribute("webextension-view-type")) {
+        type = browser.getAttribute("webextension-view-type");
+      } else if (browser.classList.contains("inline-options-browser")) {
+        // Options pages are currently displayed inline, but in Chrome
+        // and in our UI mock-ups for a later milestone, they're
+        // pop-ups.
+        type = "popup";
+      }
+    }
+
+    let context = new ExtensionPage(extension, {type, contentWindow, uri, docShell, incognito});
     inject(extension, context);
 
     let eventHandler = docShell.chromeEventHandler;
@@ -483,6 +494,36 @@ GlobalManager = {
   },
 };
 
+// All moz-extension URIs use a machine-specific UUID rather than the
+// extension's own ID in the host component. This makes it more
+// difficult for web pages to detect whether a user has a given add-on
+// installed (by trying to load a moz-extension URI referring to a
+// web_accessible_resource from the extension). getExtensionUUID
+// returns the UUID for a given add-on ID.
+function getExtensionUUID(id) {
+  const PREF_NAME = "extensions.webextensions.uuids";
+
+  let pref = Preferences.get(PREF_NAME, "{}");
+  let map = {};
+  try {
+    map = JSON.parse(pref);
+  } catch (e) {
+    Cu.reportError(`Error parsing ${PREF_NAME}.`);
+  }
+
+  if (id in map) {
+    return map[id];
+  }
+
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let uuid = uuidGenerator.generateUUID().number;
+  uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
+
+  map[id] = uuid;
+  Preferences.set(PREF_NAME, JSON.stringify(map));
+  return uuid;
+}
+
 // Represents the data contained in an extension, contained either
 // in a directory or a zip file, which may or may not be installed.
 // This class implements the functionality of the Extension class,
@@ -496,6 +537,7 @@ this.ExtensionData = function(rootURI) {
 
   this.manifest = null;
   this.id = null;
+  this.uuid = null;
   this.localeData = null;
   this._promiseLocales = null;
 
@@ -519,6 +561,26 @@ ExtensionData.prototype = {
   packagingError(message) {
     this.errors.push(message);
     this.logger.error(`Loading extension '${this.id}': ${message}`);
+  },
+
+  /**
+   * Returns the moz-extension: URL for the given path within this
+   * extension.
+   *
+   * Must not be called unless either the `id` or `uuid` property has
+   * already been set.
+   *
+   * @param {string} path The path portion of the URL.
+   * @returns {string}
+   */
+  getURL(path = "") {
+    if (!(this.id || this.uuid)) {
+      throw new Error("getURL may not be called before an `id` or `uuid` has been set");
+    }
+    if (!this.uuid) {
+      this.uuid = getExtensionUUID(this.id);
+    }
+    return `moz-extension://${this.uuid}/${path}`;
   },
 
   readDirectory: Task.async(function* (path) {
@@ -609,15 +671,33 @@ ExtensionData.prototype = {
     });
   },
 
-  // Reads the extension's |manifest.json| file, and stores its
-  // parsed contents in |this.manifest|.
+  // Reads the extension's |manifest.json| file and optional |mozilla.json|,
+  // and stores the parsed and merged contents in |this.manifest|.
   readManifest() {
     return Promise.all([
       this.readJSON("manifest.json"),
+      this.readJSON("mozilla.json").catch(err => null),
       Management.lazyInit(),
-    ]).then(([manifest]) => {
+    ]).then(([manifest, mozManifest]) => {
       this.manifest = manifest;
       this.rawManifest = manifest;
+
+      if (mozManifest) {
+        if (typeof mozManifest != "object") {
+          this.logger.warn(`Loading extension '${this.id}': mozilla.json has unexpected type ${typeof mozManifest}`);
+        } else {
+          Object.keys(mozManifest).forEach(key => {
+            if (key != "applications") {
+              throw new Error(`Illegal property "${key}" in mozilla.json`);
+            }
+            if (key in manifest) {
+              this.logger.warn(`Ignoring property "${key}" from mozilla.json`);
+            } else {
+              manifest[key] = mozManifest[key];
+            }
+          });
+        }
+      }
 
       if (manifest && manifest.default_locale) {
         return this.initLocale();
@@ -781,36 +861,6 @@ ExtensionData.prototype = {
   }),
 };
 
-// All moz-extension URIs use a machine-specific UUID rather than the
-// extension's own ID in the host component. This makes it more
-// difficult for web pages to detect whether a user has a given add-on
-// installed (by trying to load a moz-extension URI referring to a
-// web_accessible_resource from the extension). getExtensionUUID
-// returns the UUID for a given add-on ID.
-function getExtensionUUID(id) {
-  const PREF_NAME = "extensions.webextensions.uuids";
-
-  let pref = Preferences.get(PREF_NAME, "{}");
-  let map = {};
-  try {
-    map = JSON.parse(pref);
-  } catch (e) {
-    Cu.reportError(`Error parsing ${PREF_NAME}.`);
-  }
-
-  if (id in map) {
-    return map[id];
-  }
-
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let uuid = uuidGenerator.generateUUID().number;
-  uuid = uuid.slice(1, -1); // Strip of { and } off the UUID.
-
-  map[id] = uuid;
-  Preferences.set(PREF_NAME, JSON.stringify(map));
-  return uuid;
-}
-
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
 this.Extension = function(addonData) {
@@ -826,8 +876,7 @@ this.Extension = function(addonData) {
 
   this.addonData = addonData;
   this.id = addonData.id;
-  this.baseURI = Services.io.newURI("moz-extension://" + this.uuid, null, null);
-  this.baseURI.QueryInterface(Ci.nsIURL);
+  this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
   this.principal = this.createPrincipal();
 
   this.views = new Set();
@@ -960,6 +1009,65 @@ this.Extension.generateXPI = function(id, data) {
 };
 
 /**
+ * A skeleton Extension-like object, used for testing, which installs an
+ * add-on via the add-on manager when startup() is called, and
+ * uninstalles it on shutdown().
+ */
+function MockExtension(id, file, rootURI) {
+  this.id = id;
+  this.file = file;
+  this.rootURI = rootURI;
+
+  this._extension = null;
+  this._extensionPromise = new Promise(resolve => {
+    let onstartup = (msg, extension) => {
+      if (extension.id == this.id) {
+        Management.off("startup", onstartup);
+
+        this._extension = extension;
+        resolve(extension);
+      }
+    };
+    Management.on("startup", onstartup);
+  });
+}
+
+MockExtension.prototype = {
+  testMessage(...args) {
+    return this._extension.testMessage(...args);
+  },
+
+  on(...args) {
+    this._extensionPromise.then(extension => {
+      extension.on(...args);
+    });
+  },
+
+  off(...args) {
+    this._extensionPromise.then(extension => {
+      extension.off(...args);
+    });
+  },
+
+  startup() {
+    return AddonManager.installTemporaryAddon(this.file).then(addon => {
+      this.addon = addon;
+      return this._extensionPromise;
+    });
+  },
+
+  shutdown() {
+    this.addon.uninstall(true);
+    return this.cleanupGeneratedFile();
+  },
+
+  cleanupGeneratedFile() {
+    flushJarCache(this.file);
+    return OS.File.remove(this.file.path);
+  },
+};
+
+/**
  * Generates a new extension using |Extension.generateXPI|, and initializes a
  * new |Extension| instance which will execute it.
  */
@@ -971,6 +1079,10 @@ this.Extension.generate = function(id, data) {
 
   let fileURI = Services.io.newFileURI(file);
   let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
+
+  if (data.useAddonManager) {
+    return new MockExtension(id, file, jarURI);
+  }
 
   return new Extension({
     id,

@@ -24,16 +24,15 @@ struct HashTableEntry : PLDHashEntryHdr {
 
 
 static PLDHashNumber
-HashKey( PLDHashTable *table, const void *key)
+HashKey(const void *key)
 {
     return (PLDHashNumber) NS_PTR_TO_INT32(key);
 }
 
 
 static bool
-MatchEntry(PLDHashTable *              /* table */,
-            const PLDHashEntryHdr *       header,
-            const void *                  key)
+MatchEntry(const PLDHashEntryHdr *       header,
+           const void *                  key)
 {
     HashTableEntry * hashEntry = (HashTableEntry *) header;
     return (hashEntry->mBinding->mRecord.HashNumber() == (PLDHashNumber) NS_PTR_TO_INT32(key));

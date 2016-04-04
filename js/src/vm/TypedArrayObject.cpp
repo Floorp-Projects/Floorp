@@ -861,6 +861,18 @@ TypedArrayObject::staticFunctions[] = {
     JS_FS_END
 };
 
+static const ClassSpec
+TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
+    GenericCreateConstructor<TypedArrayConstructor, 3, gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype,
+    TypedArrayObject::staticFunctions,
+    nullptr,
+    TypedArrayObject::protoFunctions,
+    TypedArrayObject::protoAccessors,
+    nullptr,
+    ClassSpec::DontDefineConstructor
+};
+
 /* static */ const Class
 TypedArrayObject::sharedTypedArrayPrototypeClass = {
     // Actually ({}).toString.call(%TypedArray%.prototype) should throw,
@@ -883,16 +895,7 @@ TypedArrayObject::sharedTypedArrayPrototypeClass = {
     nullptr,                /* hasInstance */
     nullptr,                /* construct */
     nullptr,                /* trace */
-    {
-        GenericCreateConstructor<TypedArrayConstructor, 3, gc::AllocKind::FUNCTION>,
-        GenericCreatePrototype,
-        TypedArrayObject::staticFunctions,
-        nullptr,
-        TypedArrayObject::protoFunctions,
-        TypedArrayObject::protoAccessors,
-        nullptr,
-        ClassSpec::DontDefineConstructor
-    }
+    &TypedArrayObjectSharedTypedArrayPrototypeClassSpec
 };
 
 template<typename T>
@@ -1905,24 +1908,36 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint32, uint32_t, uint32_t)
 IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float32, float, float)
 IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 
-#define TYPED_ARRAY_CLASS_SPEC(_typedArray)                                    \
+#define IMPL_TYPED_ARRAY_CLASS_SPEC(_type)                                     \
 {                                                                              \
-    _typedArray::createConstructor,                                            \
-    _typedArray::createPrototype,                                              \
+    _type##Array::createConstructor,                                           \
+    _type##Array::createPrototype,                                             \
     nullptr,                                                                   \
     nullptr,                                                                   \
     nullptr,                                                                   \
     nullptr,                                                                   \
-    _typedArray::finishClassInit,                                              \
+    _type##Array::finishClassInit,                                             \
     JSProto_TypedArray                                                         \
 }
 
-#define IMPL_TYPED_ARRAY_CLASS(_typedArray)                                    \
+static const ClassSpec TypedArrayObjectClassSpecs[Scalar::MaxTypedArrayViewType] = {
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Int8),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Uint8),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Int16),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Uint16),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Int32),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Uint32),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Float32),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Float64),
+    IMPL_TYPED_ARRAY_CLASS_SPEC(Uint8Clamped)
+};
+
+#define IMPL_TYPED_ARRAY_CLASS(_type)                                          \
 {                                                                              \
-    #_typedArray,                                                              \
+    #_type "Array",                                                            \
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |             \
     JSCLASS_HAS_PRIVATE |                                                      \
-    JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray) |                          \
+    JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array) |                         \
     JSCLASS_DELAY_METADATA_CALLBACK,                                           \
     nullptr,                 /* addProperty */                                 \
     nullptr,                 /* delProperty */                                 \
@@ -1936,19 +1951,43 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
     TypedArrayObject::trace, /* trace  */                                      \
-    TYPED_ARRAY_CLASS_SPEC(_typedArray)                                        \
+    &TypedArrayObjectClassSpecs[Scalar::Type::_type]                           \
 }
 
 const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
-    IMPL_TYPED_ARRAY_CLASS(Int8Array),
-    IMPL_TYPED_ARRAY_CLASS(Uint8Array),
-    IMPL_TYPED_ARRAY_CLASS(Int16Array),
-    IMPL_TYPED_ARRAY_CLASS(Uint16Array),
-    IMPL_TYPED_ARRAY_CLASS(Int32Array),
-    IMPL_TYPED_ARRAY_CLASS(Uint32Array),
-    IMPL_TYPED_ARRAY_CLASS(Float32Array),
-    IMPL_TYPED_ARRAY_CLASS(Float64Array),
-    IMPL_TYPED_ARRAY_CLASS(Uint8ClampedArray)
+    IMPL_TYPED_ARRAY_CLASS(Int8),
+    IMPL_TYPED_ARRAY_CLASS(Uint8),
+    IMPL_TYPED_ARRAY_CLASS(Int16),
+    IMPL_TYPED_ARRAY_CLASS(Uint16),
+    IMPL_TYPED_ARRAY_CLASS(Int32),
+    IMPL_TYPED_ARRAY_CLASS(Uint32),
+    IMPL_TYPED_ARRAY_CLASS(Float32),
+    IMPL_TYPED_ARRAY_CLASS(Float64),
+    IMPL_TYPED_ARRAY_CLASS(Uint8Clamped)
+};
+
+#define IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(_type) \
+{ \
+    DELEGATED_CLASSSPEC(TypedArrayObject::classes[Scalar::Type::_type].spec), \
+    nullptr, \
+    nullptr, \
+    nullptr, \
+    nullptr, \
+    nullptr, \
+    nullptr, \
+    JSProto_TypedArray | ClassSpec::IsDelegated \
+}
+
+static const ClassSpec TypedArrayObjectProtoClassSpecs[Scalar::MaxTypedArrayViewType] = {
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Int8),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint8),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Int16),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint16),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Int32),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint32),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Float32),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Float64),
+    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint8Clamped)
 };
 
 // The various typed array prototypes are supposed to 1) be normal objects,
@@ -1958,7 +1997,7 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
 // prototype's class have the relevant typed array's cached JSProtoKey in them.
 // Thus we need one class with cached prototype per kind of typed array, with a
 // delegated ClassSpec.
-#define IMPL_TYPED_ARRAY_PROTO_CLASS(typedArray, i) \
+#define IMPL_TYPED_ARRAY_PROTO_CLASS(_type) \
 { \
     /*
      * Actually ({}).toString.call(Uint8Array.prototype) should throw, because
@@ -1967,8 +2006,8 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
      * above), but it's what we've always done, so keep doing it till we
      * implement @@toStringTag or ES6 changes.
      */ \
-    #typedArray "Prototype", \
-    JSCLASS_HAS_CACHED_PROTO(JSProto_##typedArray), \
+    #_type "ArrayPrototype", \
+    JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array), \
     nullptr, /* addProperty */ \
     nullptr, /* delProperty */ \
     nullptr, /* getProperty */ \
@@ -1981,28 +2020,19 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
     nullptr, /* hasInstance */ \
     nullptr, /* construct */ \
     nullptr, /* trace  */ \
-    { \
-        DELEGATED_CLASSSPEC(&TypedArrayObject::classes[i].spec), \
-        nullptr, \
-        nullptr, \
-        nullptr, \
-        nullptr, \
-        nullptr, \
-        nullptr, \
-        JSProto_TypedArray | ClassSpec::IsDelegated \
-    } \
+    &TypedArrayObjectProtoClassSpecs[Scalar::Type::_type] \
 }
 
 const Class TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Int8Array, 0),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8Array, 1),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Int16Array, 2),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint16Array, 3),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Int32Array, 4),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint32Array, 5),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Float32Array, 6),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Float64Array, 7),
-    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8ClampedArray, 8)
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Int8),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Int16),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint16),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Int32),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint32),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Float32),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Float64),
+    IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8Clamped)
 };
 
 /* static */ bool
@@ -2487,14 +2517,12 @@ JS_GetDataViewByteLength(JSObject* obj)
 JS_FRIEND_API(JSObject*)
 JS_NewDataView(JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset, int32_t byteLength)
 {
-    ConstructArgs cargs(cx);
-    if (!cargs.init(3))
-        return nullptr;
-
     RootedObject constructor(cx);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(&DataViewObject::class_);
     if (!GetBuiltinConstructor(cx, key, &constructor))
         return nullptr;
+
+    FixedConstructArgs<3> cargs(cx);
 
     cargs[0].setObject(*arrayBuffer);
     cargs[1].setNumber(byteOffset);

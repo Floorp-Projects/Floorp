@@ -341,23 +341,24 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void unboxNonDouble(const Address& src, Register dest);
     void unboxNonDouble(const BaseIndex& src, Register dest);
     void unboxInt32(const ValueOperand& operand, Register dest);
-    void unboxInt32(const Operand& operand, Register dest);
+    void unboxInt32(Register src, Register dest);
     void unboxInt32(const Address& src, Register dest);
     void unboxInt32(const BaseIndex& src, Register dest);
     void unboxBoolean(const ValueOperand& operand, Register dest);
-    void unboxBoolean(const Operand& operand, Register dest);
+    void unboxBoolean(Register src, Register dest);
     void unboxBoolean(const Address& src, Register dest);
     void unboxBoolean(const BaseIndex& src, Register dest);
     void unboxDouble(const ValueOperand& operand, FloatRegister dest);
+    void unboxDouble(Register src, Register dest);
     void unboxDouble(const Address& src, FloatRegister dest);
     void unboxString(const ValueOperand& operand, Register dest);
-    void unboxString(const Operand& operand, Register dest);
+    void unboxString(Register src, Register dest);
     void unboxString(const Address& src, Register dest);
     void unboxSymbol(const ValueOperand& src, Register dest);
-    void unboxSymbol(const Operand& src, Register dest);
+    void unboxSymbol(Register src, Register dest);
     void unboxSymbol(const Address& src, Register dest);
     void unboxObject(const ValueOperand& src, Register dest);
-    void unboxObject(const Operand& src, Register dest);
+    void unboxObject(Register src, Register dest);
     void unboxObject(const Address& src, Register dest);
     void unboxObject(const BaseIndex& src, Register dest) { unboxNonDouble(src, dest); }
     void unboxValue(const ValueOperand& src, AnyRegister dest);
@@ -476,6 +477,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void storeValue(JSValueType type, Register reg, Address dest);
     void storeValue(const Value& val, Address dest);
     void storeValue(const Value& val, BaseIndex dest);
+    void storeValue(const Address& src, const Address& dest, Register temp) {
+        loadPtr(src, temp);
+        storePtr(temp, dest);
+    }
 
     void loadValue(Address src, ValueOperand val);
     void loadValue(Operand dest, ValueOperand val) {

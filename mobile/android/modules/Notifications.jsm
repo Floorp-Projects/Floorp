@@ -231,14 +231,6 @@ var Notifications = {
           });
         }
 
-        if (notification && !notification._buttons) {
-          break;
-        }
-
-        let button = notification._buttons[data.buttonId];
-        if (button && button.onClicked) {
-          button.onClicked(id, notification._cookie);
-        }
         break;
       case "notification-cleared":
       case "notification-closed":

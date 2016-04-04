@@ -46,7 +46,7 @@
 
     <style name="Widget.ListView" parent="Widget.BaseListView">
         <item name="android:divider">@color/toolbar_divider_grey</item>
-        <item name="android:dividerHeight">1dp</item>
+        <item name="android:dividerHeight">@dimen/page_row_divider_height</item>
         <item name="android:cacheColorHint">@android:color/transparent</item>
         <item name="android:listSelector">@drawable/action_bar_button</item>
     </style>
@@ -163,13 +163,14 @@
         <item name="android:textColor">@color/fennec_ui_orange</item>
     </style>
 
-    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+    <style name="Widget.FolderView" parent="Widget.TwoLinePageRow.Title">
+        <item name="android:layout_height">@dimen/page_group_height</item>
+        <item name="android:minHeight">@dimen/page_group_height</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">none</item>
         <item name="android:background">@color/about_page_header_grey</item>
         <item name="android:paddingLeft">20dp</item>
         <item name="android:drawablePadding">20dp</item>
-        <item name="android:drawableLeft">@drawable/bookmark_folder</item>
     </style>
 
     <style name="Widget.PanelItemView" />
@@ -299,11 +300,7 @@
         We are overriding the snackbar message style to guarantee a consistent style across Android versions (bug 1217416).
     -->
     <style name="TextAppearance.Design.Snackbar.Message" parent="android:TextAppearance" tools:override="true">
-        <!--
-            This is the value of "design_snackbar_text_size". As long as B2Gdroid does not include the
-            Android Design Support Library we cannot reference it here directly.
-        -->
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/design_snackbar_text_size</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
 
@@ -741,6 +738,8 @@
 
     <style name="TextAppearance.ShareOverlay.Header">
         <item name="android:textColor">@android:color/white</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="ShareOverlayRow">
@@ -829,6 +828,9 @@
         <item name="android:paddingBottom">16dp</item>
         <item name="android:paddingLeft">8dp</item>
         <item name="android:paddingRight">8dp</item>
+
+        <!-- AppCompat sets Button text to all caps so we override that here. -->
+        <item name="textAllCaps">false</item>
     </style>
 
     <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />

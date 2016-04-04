@@ -196,7 +196,6 @@ this.DOMApplicationRegistry = {
   // Path to the webapps.json file where we store the registry data.
   appsFile: null,
   webapps: { },
-  allAppsLaunchable: false,
   _updateHandlers: [ ],
   _pendingUninstalls: {},
   _contentActions: new Map(),
@@ -209,7 +208,6 @@ this.DOMApplicationRegistry = {
                      "Webapps:GetSelf",
                      "Webapps:CheckInstalled",
                      "Webapps:GetInstalled",
-                     "Webapps:GetNotInstalled",
                      "Webapps:Launch",
                      "Webapps:LocationChange",
                      "Webapps:InstallPackage",
@@ -256,11 +254,6 @@ this.DOMApplicationRegistry = {
                                         this.getFullAppByManifestURL.bind(this));
 
     MessageBroadcaster.init(this.getAppByManifestURL);
-
-    if (AppConstants.MOZ_B2GDROID) {
-      Cu.import("resource://gre/modules/AndroidUtils.jsm");
-      AndroidUtils.init(this);
-    }
   },
 
   // loads the current registry, that could be empty on first run.
@@ -530,7 +523,7 @@ this.DOMApplicationRegistry = {
 
   // Installs a 3rd party app.
   installPreinstalledApp: function installPreinstalledApp(aId) {
-    if (!AppConstants.MOZ_B2GDROID && AppConstants.platform !== "gonk") {
+    if (AppConstants.platform !== "gonk") {
       return false;
     }
 
@@ -799,12 +792,8 @@ this.DOMApplicationRegistry = {
           }
         }
 
-        if (AppConstants.MOZ_B2GDROID || AppConstants.MOZ_B2G) {
+        if (AppConstants.MOZ_B2G) {
           yield this.installSystemApps();
-        }
-
-        if (AppConstants.MOZ_B2GDROID) {
-          yield AndroidUtils.installAndroidApps();
         }
 
         // At first run, install preloaded apps and set up their permissions.
@@ -1211,9 +1200,6 @@ this.DOMApplicationRegistry = {
       Services.obs.removeObserver(this, "memory-pressure");
       cpmm = null;
       ppmm = null;
-      if (AppConstants.MOZ_B2GDROID) {
-        AndroidUtils.uninit();
-      }
     } else if (aTopic == "memory-pressure") {
       // Clear the manifest cache on memory pressure.
       this._manifestCache = {};
@@ -1276,10 +1262,6 @@ this.DOMApplicationRegistry = {
   },
 
   receiveMessage: function(aMessage) {
-    // nsIPrefBranch throws if pref does not exist, faster to simply write
-    // the pref instead of first checking if it is false.
-    Services.prefs.setBoolPref("dom.mozApps.used", true);
-
     let msg = aMessage.data || {};
     let mm = aMessage.target;
     msg.mm = mm;
@@ -1309,7 +1291,6 @@ this.DOMApplicationRegistry = {
                   (checkPermission("homescreen-webapps-manage") && isCurrentHomescreen);
         break;
 
-      case "Webapps:GetNotInstalled":
       case "Webapps:ApplyDownload":
       case "Webapps:Import":
       case "Webapps:ExtractManifest":
@@ -1372,7 +1353,7 @@ this.DOMApplicationRegistry = {
     this.registryReady.then( () => {
       switch (aMessage.name) {
         case "Webapps:Install": {
-          if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
+          if (AppConstants.platform == "android") {
             Services.obs.notifyObservers(mm, "webapps-runtime-install", JSON.stringify(msg));
           } else {
             this.doInstall(msg, mm);
@@ -1383,7 +1364,7 @@ this.DOMApplicationRegistry = {
           this.getSelf(msg, mm);
           break;
         case "Webapps:Uninstall":
-          if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
+          if (AppConstants.platform == "android") {
             Services.obs.notifyObservers(mm, "webapps-runtime-uninstall", JSON.stringify(msg));
           } else {
             this.doUninstall(msg, mm);
@@ -1401,11 +1382,8 @@ this.DOMApplicationRegistry = {
         case "Webapps:GetInstalled":
           this.getInstalled(msg, mm);
           break;
-        case "Webapps:GetNotInstalled":
-          this.getNotInstalled(msg, mm);
-          break;
         case "Webapps:InstallPackage": {
-          if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
+          if (AppConstants.platform == "android") {
             Services.obs.notifyObservers(mm, "webapps-runtime-install-package", JSON.stringify(msg));
           } else {
             this.doInstallPackage(msg, mm);
@@ -2547,8 +2525,7 @@ this.DOMApplicationRegistry = {
 
       // Disallow reinstalls from the same manifest url for now.
       for (let id in this.webapps) {
-        if (this.webapps[id].manifestURL == app.manifestURL &&
-            this._isLaunchable(this.webapps[id])) {
+        if (this.webapps[id].manifestURL == app.manifestURL) {
           sendError("REINSTALL_FORBIDDEN");
           return false;
         }
@@ -2679,7 +2656,7 @@ this.DOMApplicationRegistry = {
 
       // Disallow reinstalls from the same manifest URL for now.
       let id = this._appIdForManifestURL(app.manifestURL);
-      if (id !== null && this._isLaunchable(this.webapps[id])) {
+      if (id !== null) {
         sendError("REINSTALL_FORBIDDEN");
         return false;
       }
@@ -3141,13 +3118,7 @@ this.DOMApplicationRegistry = {
     if (!aData.isPackage) {
       this.updateAppHandlers(null, app.manifest, app);
       if (aInstallSuccessCallback) {
-        try {
-          yield aInstallSuccessCallback(app, app.manifest);
-        } catch (e) {
-          // Ignore exceptions during the local installation of
-          // an app. If it fails, the app will anyway be considered
-          // as not installed because isLaunchable will return false.
-        }
+        yield aInstallSuccessCallback(app, app.manifest);
       }
     }
 
@@ -3237,13 +3208,7 @@ this.DOMApplicationRegistry = {
                          aNewApp.manifestURL, aManifest);
 
     if (aInstallSuccessCallback) {
-      try {
-        yield aInstallSuccessCallback(aNewApp, aManifest, zipFile.path);
-      } catch (e) {
-        // Ignore exceptions during the local installation of
-        // an app. If it fails, the app will anyway be considered
-        // as not installed because isLaunchable will return false.
-      }
+      yield aInstallSuccessCallback(aNewApp, aManifest, zipFile.path);
     }
 
     MessageBroadcaster.broadcastMessage("Webapps:UpdateState", {
@@ -4018,7 +3983,7 @@ this.DOMApplicationRegistry = {
         debug("Setting origin to " + uri.prePath +
               " for " + aOldApp.manifestURL);
         let newId = uri.prePath.substring(6); // "app://".length
-        if (newId in this.webapps && this._isLaunchable(this.webapps[newId])) {
+        if (newId in this.webapps) {
           throw "DUPLICATE_ORIGIN";
         }
         aOldApp.origin = uri.prePath;
@@ -4297,8 +4262,7 @@ this.DOMApplicationRegistry = {
 
     for (let id in this.webapps) {
       if (this.webapps[id].origin == aData.origin &&
-          this.webapps[id].localId == aData.appId &&
-          this._isLaunchable(this.webapps[id])) {
+          this.webapps[id].localId == aData.appId) {
         let app = AppsUtils.cloneAppObject(this.webapps[id]);
         aData.apps.push(app);
         tmp.push({ id: id });
@@ -4323,8 +4287,7 @@ this.DOMApplicationRegistry = {
     let tmp = [];
 
     for (let appId in this.webapps) {
-      if (this.webapps[appId].manifestURL == aData.manifestURL &&
-          this._isLaunchable(this.webapps[appId])) {
+      if (this.webapps[appId].manifestURL == aData.manifestURL) {
         aData.app = AppsUtils.cloneAppObject(this.webapps[appId]);
         tmp.push({ id: appId });
         break;
@@ -4345,8 +4308,7 @@ this.DOMApplicationRegistry = {
     let tmp = [];
 
     for (let id in this.webapps) {
-      if (this.webapps[id].installOrigin == aData.origin &&
-          this._isLaunchable(this.webapps[id])) {
+      if (this.webapps[id].installOrigin == aData.origin) {
         aData.apps.push(AppsUtils.cloneAppObject(this.webapps[id]));
         tmp.push({ id: id });
       }
@@ -4356,24 +4318,6 @@ this.DOMApplicationRegistry = {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
       aMm.sendAsyncMessage("Webapps:GetInstalled:Return:OK", this.formatMessage(aData));
-    });
-  },
-
-  getNotInstalled: function(aData, aMm) {
-    aData.apps = [];
-    let tmp = [];
-
-    for (let id in this.webapps) {
-      if (!this._isLaunchable(this.webapps[id])) {
-        aData.apps.push(AppsUtils.cloneAppObject(this.webapps[id]));
-        tmp.push({ id: id });
-      }
-    }
-
-    this._readManifests(tmp).then((aResult) => {
-      for (let i = 0; i < aResult.length; i++)
-        aData.apps[i].manifest = aResult[i].manifest;
-      aMm.sendAsyncMessage("Webapps:GetNotInstalled:Return:OK", this.formatMessage(aData));
     });
   },
 
@@ -4801,10 +4745,6 @@ this.DOMApplicationRegistry = {
     if (app) {
       this.updateDataStoreForApp(app.id);
     }
-  },
-
-  _isLaunchable: function(aApp) {
-    return true;
   },
 
   _notifyCategoryAndObservers: function(subject, topic, data,  msg) {

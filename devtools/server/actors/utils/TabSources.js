@@ -246,6 +246,7 @@ TabSources.prototype = {
     }
 
     throw new Error('getSourceByURL: could not find source for ' + url);
+    return null;
   },
 
   /**
@@ -299,6 +300,9 @@ TabSources.prototype = {
     let element = aSource.element ? aSource.element.unsafeDereference() : null;
     if (element && (element.tagName !== "SCRIPT" || !element.hasAttribute("src"))) {
       spec.isInlineSource = true;
+    } else if (aSource.introductionType === "wasm") {
+      // Wasm sources are not JavaScript. Give them their own content-type.
+      spec.contentType = "text/wasm";
     } else {
       if (url) {
         // There are a few special URLs that we know are JavaScript:
@@ -554,6 +558,7 @@ TabSources.prototype = {
     // Forcefully set the sourcemap cache. This will be used even if
     // sourcemaps are disabled.
     this._sourceMapCache[url] = resolve(aMap);
+    this.emit("updatedSource", this.getSourceActor(aSource));
   },
 
   /**

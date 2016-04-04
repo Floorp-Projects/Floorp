@@ -275,7 +275,7 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aChannel->GetLoadInfo(getter_AddRefs(loadInfo))));
+  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
 
   nsContentPolicyType contentPolicy = loadInfo->InternalContentPolicyType();
   if (IsNavigationContentPolicy(contentPolicy)) {
@@ -288,7 +288,7 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
   }
 
   uint32_t securityMode;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(loadInfo->GetSecurityMode(&securityMode)));
+  MOZ_ALWAYS_SUCCEEDS(loadInfo->GetSecurityMode(&securityMode));
 
   switch(securityMode) {
     case nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS:
@@ -311,7 +311,7 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   uint32_t corsMode;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(httpChannel->GetCorsMode(&corsMode)));
+  MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCorsMode(&corsMode));
   MOZ_ASSERT(corsMode != nsIHttpChannelInternal::CORS_MODE_NAVIGATE);
 
   // This cast is valid due to static asserts in ServiceWorkerManager.cpp.
@@ -325,10 +325,10 @@ InternalRequest::MapChannelToRequestCredentials(nsIChannel* aChannel)
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aChannel->GetLoadInfo(getter_AddRefs(loadInfo))));
+  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
 
   uint32_t securityMode;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(loadInfo->GetSecurityMode(&securityMode)));
+  MOZ_ALWAYS_SUCCEEDS(loadInfo->GetSecurityMode(&securityMode));
 
   // TODO: Remove following code after stylesheet and image support cookie policy
   if (securityMode == nsILoadInfo::SEC_NORMAL) {
@@ -361,6 +361,15 @@ InternalRequest::MapChannelToRequestCredentials(nsIChannel* aChannel)
 
   MOZ_ASSERT_UNREACHABLE("Unexpected cookie policy!");
   return RequestCredentials::Same_origin;
+}
+
+void
+InternalRequest::MaybeSkipCacheIfPerformingRevalidation()
+{
+  if (mCacheMode == RequestCache::Default &&
+      mHeaders->HasRevalidationHeaders()) {
+    mCacheMode = RequestCache::No_store;
+  }
 }
 
 } // namespace dom

@@ -17,8 +17,6 @@ chrome.jar:
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutDownloads.xhtml         (content/aboutDownloads.xhtml)
   content/aboutDownloads.js            (content/aboutDownloads.js)
-  content/aboutFeedback.xhtml          (content/aboutFeedback.xhtml)
-  content/aboutFeedback.js             (content/aboutFeedback.js)
   content/aboutPrivateBrowsing.xhtml   (content/aboutPrivateBrowsing.xhtml)
   content/aboutPrivateBrowsing.js      (content/aboutPrivateBrowsing.js)
   content/Reader.js                    (content/Reader.js)
@@ -54,10 +52,6 @@ chrome.jar:
 #ifdef MOZ_SERVICES_HEALTHREPORT
   content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
   content/aboutHealthReport.js         (content/aboutHealthReport.js)
-#endif
-#ifdef MOZ_DEVICES
-  content/aboutDevices.xhtml           (content/aboutDevices.xhtml)
-  content/aboutDevices.js              (content/aboutDevices.js)
 #endif
   content/aboutAccounts.xhtml          (content/aboutAccounts.xhtml)
   content/aboutAccounts.js             (content/aboutAccounts.js)

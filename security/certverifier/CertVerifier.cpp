@@ -8,21 +8,25 @@
 
 #include <stdint.h>
 
+#include "BRNameMatchingPolicy.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
 #include "cert.h"
+#include "nsNSSComponent.h"
+#include "nsServiceManagerUtils.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
 #include "prerror.h"
 #include "secerr.h"
+#include "secmod.h"
 #include "sslerr.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
-PRLogModuleInfo* gCertVerifierLog = nullptr;
+mozilla::LazyLogModule gCertVerifierLog("certverifier");
 
 namespace mozilla { namespace psm {
 
@@ -35,13 +39,15 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            OcspGetConfig ogc,
                            uint32_t certShortLifetimeInDays,
                            PinningMode pinningMode,
-                           SHA1Mode sha1Mode)
+                           SHA1Mode sha1Mode,
+                           BRNameMatchingPolicy::Mode nameMatchingMode)
   : mOCSPDownloadConfig(odc)
   , mOCSPStrict(osc == ocspStrict)
   , mOCSPGETEnabled(ogc == ocspGetEnabled)
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
   , mPinningMode(pinningMode)
   , mSHA1Mode(sha1Mode)
+  , mNameMatchingMode(nameMatchingMode)
 {
 }
 
@@ -52,9 +58,6 @@ CertVerifier::~CertVerifier()
 void
 InitCertVerifierLog()
 {
-  if (!gCertVerifierLog) {
-    gCertVerifierLog = PR_NewLogModule("certverifier");
-  }
 }
 
 Result
@@ -71,35 +74,53 @@ IsCertChainRootBuiltInRoot(CERTCertList* chain, bool& result)
   if (!root) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  SECStatus srv = IsCertBuiltInRoot(root, result);
-  if (srv != SECSuccess) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-  return Success;
+  return IsCertBuiltInRoot(root, result);
 }
 
-SECStatus
+Result
 IsCertBuiltInRoot(CERTCertificate* cert, bool& result)
 {
   result = false;
-  UniquePK11SlotList slots(PK11_GetAllSlotsForCert(cert, nullptr));
-  if (!slots) {
-    if (PORT_GetError() == SEC_ERROR_NO_TOKEN) {
-      // no list
-      return SECSuccess;
-    }
-    return SECFailure;
+  nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (!component) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  for (PK11SlotListElement* le = slots->head; le; le = le->next) {
-    char* token = PK11_GetTokenName(le->slot);
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-           ("BuiltInRoot? subject=%s token=%s",cert->subjectName, token));
-    if (strcmp("Builtin Object Token", token) == 0) {
-      result = true;
-      return SECSuccess;
-    }
+  nsresult rv;
+#ifdef DEBUG
+  rv = component->IsCertTestBuiltInRoot(cert, result);
+  if (NS_FAILED(rv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  return SECSuccess;
+  if (result) {
+    return Success;
+  }
+#endif // DEBUG
+  nsAutoString modName;
+  rv = component->GetPIPNSSBundleString("RootCertModuleName", modName);
+  if (NS_FAILED(rv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  NS_ConvertUTF16toUTF8 modNameUTF8(modName);
+  UniqueSECMODModule builtinRootsModule(SECMOD_FindModule(modNameUTF8.get()));
+  // If the built-in roots module isn't loaded, nothing is a built-in root.
+  if (!builtinRootsModule) {
+    return Success;
+  }
+  UniquePK11SlotInfo builtinSlot(SECMOD_FindSlot(builtinRootsModule.get(),
+                                                 "Builtin Object Token"));
+  // This could happen if the user loaded a module that is acting like the
+  // built-in roots module but doesn't actually have a slot called "Builtin
+  // Object Token". In that case, again nothing is a built-in root.
+  if (!builtinSlot) {
+    return Success;
+  }
+  // Attempt to find a copy of the given certificate in the "Builtin Object
+  // Token" slot of the built-in root module. If we get a valid handle, this
+  // certificate exists in the root module, so we consider it a built-in root.
+  CK_OBJECT_HANDLE handle = PK11_FindCertInSlot(builtinSlot.get(), cert,
+                                                nullptr);
+  result = (handle != CK_INVALID_HANDLE);
+  return Success;
 }
 
 static Result
@@ -305,11 +326,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       for (size_t i = 0;
            i < sha1ModeConfigurationsCount && rv != Success && srv == SECSuccess;
            i++) {
-        // Because of the try-strict and fallback approach, we have to clear any
-        // previously noted telemetry information
-        if (pinningTelemetryInfo) {
-          pinningTelemetryInfo->Reset();
-        }
         // Don't attempt verification if the SHA1 mode set by preferences
         // (mSHA1Mode) is more restrictive than the SHA1 mode option we're on.
         // (To put it another way, only attempt verification if the SHA1 mode
@@ -319,6 +335,13 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
         if (SHA1ModeMoreRestrictiveThanGivenMode(sha1ModeConfigurations[i])) {
           continue;
         }
+
+        // Because of the try-strict and fallback approach, we have to clear any
+        // previously noted telemetry information
+        if (pinningTelemetryInfo) {
+          pinningTelemetryInfo->Reset();
+        }
+
         NSSCertDBTrustDomain
           trustDomain(trustSSL, evOCSPFetching,
                       mOCSPCache, pinArg, ocspGETConfig,
@@ -394,11 +417,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       for (size_t i = 0; i < keySizeOptionsCount && rv != Success; i++) {
         for (size_t j = 0; j < sha1ModeConfigurationsCount && rv != Success;
              j++) {
-          // invalidate any telemetry info relating to failed chains
-          if (pinningTelemetryInfo) {
-            pinningTelemetryInfo->Reset();
-          }
-
           // Don't attempt verification if the SHA1 mode set by preferences
           // (mSHA1Mode) is more restrictive than the SHA1 mode option we're on.
           // (To put it another way, only attempt verification if the SHA1 mode
@@ -407,6 +425,11 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
           // still enforcing the mode set by preferences.
           if (SHA1ModeMoreRestrictiveThanGivenMode(sha1ModeConfigurations[j])) {
             continue;
+          }
+
+          // invalidate any telemetry info relating to failed chains
+          if (pinningTelemetryInfo) {
+            pinningTelemetryInfo->Reset();
           }
 
           NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
@@ -466,7 +489,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // Only collect CERT_CHAIN_SHA1_POLICY_STATUS telemetry indicating a
       // failure when mSHA1Mode is the default.
       // NB: When we change the default, we have to change this.
-      if (sha1ModeResult && mSHA1Mode == SHA1Mode::Allowed) {
+      if (sha1ModeResult && mSHA1Mode == SHA1Mode::ImportedRoot) {
         *sha1ModeResult = SHA1ModeResult::Failed;
       }
 
@@ -696,7 +719,16 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
-  result = CheckCertHostname(peerCertInput, hostnameInput);
+  bool isBuiltInRoot;
+  result = IsCertChainRootBuiltInRoot(builtChain, isBuiltInRoot);
+  if (result != Success) {
+    PR_SetError(MapResultToPRErrorCode(result), 0);
+    return SECFailure;
+  }
+  BRNameMatchingPolicy nameMatchingPolicy(
+    isBuiltInRoot ? mNameMatchingMode
+                  : BRNameMatchingPolicy::Mode::DoNotEnforce);
+  result = CheckCertHostname(peerCertInput, hostnameInput, nameMatchingPolicy);
   if (result != Success) {
     // Treat malformed name information as a domain mismatch.
     if (result == Result::ERROR_BAD_DER) {

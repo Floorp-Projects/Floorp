@@ -588,6 +588,17 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         return NS_OK;
       }
     }
+
+    if (aFeature == FEATURE_VP8_HW_DECODE || aFeature == FEATURE_VP9_HW_DECODE) {
+      NS_LossyConvertUTF16toASCII model(mModel);
+      bool isBlocked =
+        // GIFV crash, see bug 1232911.
+        model.Equals("GT-N8013", nsCaseInsensitiveCStringComparator());
+
+      *aStatus = isBlocked ? nsIGfxInfo::FEATURE_BLOCKED_DEVICE
+                           : nsIGfxInfo::FEATURE_STATUS_OK;
+      return NS_OK;
+    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);

@@ -72,8 +72,7 @@ function injectController(doc, topic, data) {
     }
 
     // we always handle window.close on social content, even if they are not
-    // "enabled".  "enabled" is about the worker state and a provider may
-    // still be in e.g. the share panel without having their worker enabled.
+    // "enabled".
     hookWindowCloseForPanelClose(window);
 
     SocialService.getProvider(doc.nodePrincipal.origin, function(provider) {
@@ -98,54 +97,22 @@ function attachToWindow(provider, targetWindow) {
     return;
   }
 
-  let port = provider.workerURL ? provider.getWorkerPort(targetWindow) : null;
-
   let mozSocialObj = {
-    // Use a method for backwards compat with existing providers, but we
-    // should deprecate this in favor of a simple .port getter.
-    getWorker: {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: function() {
-
-        // We do a bunch of hacky stuff to expose this API to content without
-        // relying on ChromeObjectWrapper functionality that is now unsupported.
-        // The content-facing API here should really move to JS-Implemented
-        // WebIDL.
-        let workerAPI = Cu.cloneInto({
-          port: {
-            postMessage: port.postMessage.bind(port),
-            close: port.close.bind(port),
-            toString: port.toString.bind(port)
-          }
-        }, targetWindow, {cloneFunctions: true});
-
-        // Jump through hoops to define the accessor property.
-        let abstractPortPrototype = Object.getPrototypeOf(Object.getPrototypeOf(port));
-        let desc = Object.getOwnPropertyDescriptor(port.__proto__.__proto__, 'onmessage');
-        desc.get = Cu.exportFunction(desc.get.bind(port), targetWindow);
-        desc.set = Cu.exportFunction(desc.set.bind(port), targetWindow);
-        Object.defineProperty(workerAPI.wrappedJSObject.port, 'onmessage', desc);
-
-        return workerAPI;
-      }
-    },
-    hasBeenIdleFor: {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: function() {
-        return false;
-      }
-    },
     openChatWindow: {
       enumerable: true,
       configurable: true,
       writable: true,
       value: function(toURL, callback) {
         let url = targetWindow.document.documentURIObject.resolve(toURL);
-        openChatWindow(targetWindow, provider, url, callback);
+        let dwu = getChromeWindow(targetWindow)
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIDOMWindowUtils);
+        openChatWindow(targetWindow, provider, url, chatWin => {
+          if (chatWin && dwu.isHandlingUserInput)
+            chatWin.focus();
+          if (callback)
+            callback(!!chatWin);
+        });
       }
     },
     openPanel: {
@@ -230,15 +197,6 @@ function attachToWindow(provider, targetWindow) {
     delete targetWindow.navigator.wrappedJSObject.mozSocial;
     return targetWindow.navigator.wrappedJSObject.mozSocial = contentObj;
   });
-
-  if (port) {
-    targetWindow.addEventListener("unload", function () {
-      // We want to close the port, but also want the target window to be
-      // able to use the port during an unload event they setup - so we
-      // set a timer which will fire after the unload events have all fired.
-      schedule(function () { port.close(); });
-    });
-  }
 }
 
 function hookWindowCloseForPanelClose(targetWindow) {

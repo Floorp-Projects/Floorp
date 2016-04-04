@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/Attributes.h" // For MOZ_NON_OWNING_REF
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,11 +25,17 @@ public:
 
   void Unlink() override { mEffect = nullptr; }
 
+  void SetDelay(double aDelay);
   void SetEndDelay(double aEndDelay);
-  void SetDuration(const UnrestrictedDoubleOrString& aDuration);
+  void SetFill(const FillMode& aFill);
+  void SetIterationStart(double aIterationStart, ErrorResult& aRv);
+  void SetIterations(double aIterations, ErrorResult& aRv);
+  void SetDuration(const UnrestrictedDoubleOrString& aDuration,
+                   ErrorResult& aRv);
+  void SetDirection(const PlaybackDirection& aDirection);
+  void SetEasing(const nsAString& aEasing, ErrorResult& aRv);
 
 private:
-  void NotifyTimingUpdate();
   KeyframeEffect* MOZ_NON_OWNING_REF mEffect;
 };
 
