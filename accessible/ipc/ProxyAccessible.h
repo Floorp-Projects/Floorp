@@ -58,7 +58,7 @@ public:
   ProxyAccessible* NextSibling() const
   {
     size_t idx = IndexInParent();
-    return idx < Parent()->mChildren.Length() ? Parent()->mChildren[idx + 1]
+    return idx + 1 < Parent()->mChildren.Length() ? Parent()->mChildren[idx + 1]
     : nullptr;
   }
 
