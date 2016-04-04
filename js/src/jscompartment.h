@@ -17,6 +17,7 @@
 #include "asmjs/WasmCompartment.h"
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
+#include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
 #include "vm/PIC.h"
@@ -68,7 +69,7 @@ class DtoaCache {
 #endif
 };
 
-struct CrossCompartmentKey
+class CrossCompartmentKey
 {
   public:
     enum DebuggerObjectKind : uint8_t { DebuggerSource, DebuggerEnvironment, DebuggerObject,
@@ -169,6 +170,17 @@ struct CrossCompartmentKey
             return l.wrapped == k.wrapped;
         }
     };
+
+    bool isTenured() const {
+        struct IsTenuredFunctor {
+            using ReturnType = bool;
+            ReturnType operator()(JSObject** tp) { return !IsInsideNursery(*tp); }
+            ReturnType operator()(JSScript** tp) { return true; }
+            ReturnType operator()(JSString** tp) { return true; }
+        };
+        return const_cast<CrossCompartmentKey*>(this)->applyToWrapped(IsTenuredFunctor());
+    }
+
     void trace(JSTracer* trc);
     bool needsSweep();
 
@@ -177,8 +189,9 @@ struct CrossCompartmentKey
     WrappedType wrapped;
 };
 
-using WrapperMap = GCRekeyableHashMap<CrossCompartmentKey, ReadBarrieredValue,
-                                      CrossCompartmentKey::Hasher, SystemAllocPolicy>;
+
+using WrapperMap = NurseryAwareHashMap<CrossCompartmentKey, JS::Value,
+                                       CrossCompartmentKey::Hasher, SystemAllocPolicy>;
 
 // We must ensure that all newly allocated JSObjects get their metadata
 // set. However, metadata builders may require the new object be in a sane
@@ -617,7 +630,7 @@ struct JSCompartment
     /* Whether to preserve JIT code on non-shrinking GCs. */
     bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
-    void sweepAfterMinorGC();
+    void sweepAfterMinorGC(JSTracer* trc);
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
@@ -1065,5 +1078,12 @@ class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
 };
 
 } /* namespace js */
+
+namespace JS {
+template <>
+struct GCPolicy<js::CrossCompartmentKey> : public StructGCPolicy<js::CrossCompartmentKey> {
+    static bool isTenured(const js::CrossCompartmentKey& key) { return key.isTenured(); }
+};
+} // namespace JS
 
 #endif /* jscompartment_h */
