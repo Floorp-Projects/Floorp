@@ -1145,6 +1145,7 @@ class FunctionCompiler
             MOZ_ASSERT(inDeadCode());
             MOZ_ASSERT(afterLabel >= blockPatches_.length() || blockPatches_[afterLabel].empty());
             MOZ_ASSERT(headerLabel >= blockPatches_.length() || blockPatches_[headerLabel].empty());
+            *loopResult = nullptr;
             blockDepth_ -= 2;
             loopDepth_--;
             return true;
