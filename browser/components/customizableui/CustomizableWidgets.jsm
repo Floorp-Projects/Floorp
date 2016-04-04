@@ -286,7 +286,7 @@ const CustomizableWidgets = [
   }, {
     id: "sync-button",
     label: "remotetabs-panelmenu.label",
-    tooltiptext: "remotetabs-panelmenu.tooltiptext",
+    tooltiptext: "remotetabs-panelmenu.tooltiptext2",
     type: "view",
     viewId: "PanelUI-remotetabs",
     defaultArea: CustomizableUI.AREA_PANEL,
