@@ -205,8 +205,6 @@ add_task(function* testTabSwitchContext() {
           });
         });
       };
-      let tabLoadPromise;
-
       return [
         expect => {
           browser.test.log("Initial state. No icon visible.");
@@ -225,16 +223,13 @@ add_task(function* testTabSwitchContext() {
         expect => {
           browser.test.log("Create a new tab. No icon visible.");
           browser.tabs.create({active: true, url: "about:blank?0"}, tab => {
-            tabLoadPromise = promiseTabLoad({url: "about:blank?0", id: tab.id});
             tabs.push(tab.id);
             expect(null);
           });
         },
         expect => {
           browser.test.log("Await tab load. No icon visible.");
-          tabLoadPromise.then(() => {
-            expect(null);
-          });
+          expect(null);
         },
         expect => {
           browser.test.log("Change properties. Expect new properties.");
