@@ -79,7 +79,6 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared }) {
   const loaderOptions = devtools.require("@loader/options");
   const dynamicPaths = {};
   const componentProxies = new Map();
-  const hotReloadEnabled = Services.prefs.getBoolPref("devtools.loader.hotreload");
 
   if (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES) {
     dynamicPaths["devtools/client/shared/vendor/react"] =
@@ -134,7 +133,7 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared }) {
     }
   };
 
-  if (hotReloadEnabled) {
+  if (Services.prefs.getBoolPref("devtools.loader.hotreload")) {
     opts.loadModuleHook = (module, require) => {
       const { uri, exports } = module;
 
@@ -158,24 +157,19 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared }) {
       }
       return exports;
     }
+    const watcher = devtools.require("devtools/client/shared/devtools-file-watcher");
+    let onFileChanged = (_, relativePath, path) => {
+      this.hotReloadFile(componentProxies, "resource://devtools/" + relativePath);
+    };
+    watcher.on("file-changed", onFileChanged);
+    window.addEventListener("unload", () => {
+      watcher.off("file-changed", onFileChanged);
+    });
   }
 
   const mainModule = loaders.Module(baseURI, joinURI(baseURI, "main.js"));
   this.loader = loaders.Loader(opts);
   this.require = loaders.Require(this.loader, mainModule);
-
-  if (hotReloadEnabled) {
-    const watcher = devtools.require("devtools/client/shared/file-watcher");
-    const onFileChanged = (_, relativePath) => {
-      this.hotReloadFile(window, componentProxies,
-                         "resource://devtools/" + relativePath);
-    };
-    watcher.on("file-changed", onFileChanged);
-
-    window.addEventListener("unload", () => {
-      watcher.off("file-changed", onFileChanged);
-    });
-  }
 }
 
 BrowserLoaderBuilder.prototype = {
@@ -201,7 +195,7 @@ BrowserLoaderBuilder.prototype = {
     });
   },
 
-  hotReloadFile: function(window, componentProxies, fileURI) {
+  hotReloadFile: function(componentProxies, fileURI) {
     if (fileURI.match(/\.js$/)) {
       // Test for React proxy components
       const proxy = componentProxies.get(fileURI);

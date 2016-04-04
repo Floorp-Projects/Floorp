@@ -103,7 +103,7 @@ function replaceCSSResource(window, fileURI) {
 
 function watchCSS(window) {
   if (Services.prefs.getBoolPref("devtools.loader.hotreload")) {
-    const watcher = require("devtools/client/shared/file-watcher");
+    const watcher = require("devtools/client/shared/devtools-file-watcher");
 
     function onFileChanged(_, relativePath) {
       if (relativePath.match(/\.css$/)) {
