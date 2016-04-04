@@ -287,6 +287,70 @@ def all_test_flavors():
             list(WEB_PLATFORM_TESTS_FLAVORS) +
             ['python'])
 
+def convert_support_files(extras, test, install_root, manifest_dir, out_dir):
+    # Processes a "support-files" entry from a test object and returns
+    # the installs to perform for this test object.
+    #
+    # Arguments:
+    #  extras - Tuples used for the basis of memoization (the same support-files
+    #           in the same manifest always have the same effect).
+    #  test - The test object to process.
+    #  install_root - The directory under $objdir/_tests that will contain
+    #                 the tests for this harness (examples are "testing/mochitest",
+    #                 "xpcshell").
+    #  manifest_dir - Absoulute path to the (srcdir) directory containing the
+    #                 manifest that included this test
+    #  out_dir - The path relative to $objdir/_tests used as the destination for the
+    #            test, based on the relative path to the manifest in the srcdir,
+    #            the install_root, and 'install-to-subdir', if present in the manifest.
+    pattern_installs, installs, external = [], [], set()
+    for thing, seen in extras:
+        value = test.get(thing, '')
+        # We need to memoize on the basis of both the path and the output
+        # directory for the benefit of tests specifying 'install-to-subdir'.
+        if (value, out_dir) in seen:
+            continue
+        seen.add((value, out_dir))
+        for pattern in value.split():
+            if thing == 'generated-files':
+                external.add(mozpath.join(out_dir, pattern))
+            # We only support globbing on support-files because
+            # the harness doesn't support * for head and tail.
+            elif '*' in pattern and thing == 'support-files':
+                pattern_installs.append((manifest_dir, pattern, out_dir))
+            # "absolute" paths identify files that are to be
+            # placed in the install_root directory (no globs)
+            elif pattern[0] == '/':
+                full = mozpath.normpath(mozpath.join(manifest_dir,
+                                                     mozpath.basename(pattern)))
+                installs.append((full, mozpath.join(install_root, pattern[1:])))
+            else:
+                full = mozpath.normpath(mozpath.join(manifest_dir, pattern))
+                dest_path = mozpath.join(out_dir, pattern)
+
+                # If the path resolves to a different directory
+                # tree, we take special behavior depending on the
+                # entry type.
+                if not full.startswith(manifest_dir):
+                    # If it's a support file, we install the file
+                    # into the current destination directory.
+                    # This implementation makes installing things
+                    # with custom prefixes impossible. If this is
+                    # needed, we can add support for that via a
+                    # special syntax later.
+                    if thing == 'support-files':
+                        dest_path = mozpath.join(out_dir,
+                                                 os.path.basename(pattern))
+                    # If it's not a support file, we ignore it.
+                    # This preserves old behavior so things like
+                    # head files doesn't get installed multiple
+                    # times.
+                    else:
+                        continue
+                installs.append((full, mozpath.normpath(dest_path)))
+
+    return pattern_installs, installs, external
+
 # Convenience methods for test manifest reading.
 def read_manifestparser_manifest(context, manifest_path):
     path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
