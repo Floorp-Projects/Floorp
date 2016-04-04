@@ -228,6 +228,6 @@ impl <U: WebDriverExtensionRoute> WebDriverHttpApi<U> {
             }
         }
         Err(WebDriverError::new(error,
-                                &format!("{} {} did not match a known command", method, path)[..]))
+                                format!("{} {} did not match a known command", method, path)))
     }
 }
