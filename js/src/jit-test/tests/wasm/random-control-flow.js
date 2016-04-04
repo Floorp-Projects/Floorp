@@ -63,3 +63,32 @@ wasmEvalText(`
  (export "" 1)
 )
 `)();
+
+wasmEvalText(`
+(module
+    (import "check" "one" (param i32))
+    (import "check" "two" (param i32) (param i32))
+    (func (param i32) (call_import 0 (get_local 0)))
+    (func (param i32) (param i32) (call_import 1 (get_local 0) (get_local 1)))
+    (func
+        (call 1
+            (i32.const 43)
+            (block $b
+                (if (i32.const 1)
+                    (call 0
+                        (block
+                            (call 0 (i32.const 42))
+                            (br $b (i32.const 10)))))
+                (i32.const 44))))
+    (export "foo" 2))
+`, {
+    check: {
+        one(x) {
+            assertEq(x, 42);
+        },
+        two(x, y) {
+            assertEq(x, 43);
+            assertEq(y, 10);
+        }
+    }
+}).foo();
