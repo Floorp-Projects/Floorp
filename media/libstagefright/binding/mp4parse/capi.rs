@@ -49,12 +49,20 @@ const MP4PARSE_ERROR_IO: i32 = 6;
 const TRACK_TYPE_H264: u32 = 0;
 const TRACK_TYPE_AAC: u32 = 1;
 
+/// Map Track mime_type to uint32 constants.
+const TRACK_CODEC_UNKNOWN: u32 = 0;
+const TRACK_CODEC_AAC: u32 = 1;
+const TRACK_CODEC_OPUS: u32 = 2;
+const TRACK_CODEC_H264: u32 = 3;
+const TRACK_CODEC_VP9: u32 = 4;
+
 // These structs *must* match those declared in include/mp4parse.h.
 
 #[repr(C)]
 pub struct TrackInfo {
     track_type: u32,
     track_id: u32,
+    codec: u32,
     duration: u64,
     media_time: i64, // wants to be u64? understand how elst adjustment works
     // TODO(kinetik): include crypto guff
@@ -171,6 +179,14 @@ pub unsafe extern "C" fn mp4parse_get_track_info(context: *mut MediaContext, tra
         TrackType::Video => TRACK_TYPE_H264,
         TrackType::Audio => TRACK_TYPE_AAC,
         TrackType::Unknown => return MP4PARSE_ERROR_UNSUPPORTED,
+    };
+
+    info.codec = match &*context.tracks[track_index].mime_type {
+        "audio/opus" => TRACK_CODEC_OPUS,
+        "video/vp9" => TRACK_CODEC_VP9,
+        "video/h264" => TRACK_CODEC_H264,
+        "audio/aac" => TRACK_CODEC_AAC,
+        _ => TRACK_CODEC_UNKNOWN,
     };
 
     // Maybe context & track should just have a single simple is_valid() instead?
