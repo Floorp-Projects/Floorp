@@ -3675,7 +3675,7 @@ InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst)
      */
     for (JSCompartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
         if (e.front().mutableKey().applyToWrapped(IsDestComparatorFunctor(dst)) &&
-            ToMarkable(e.front().value()) == src)
+            ToMarkable(e.front().value().unbarrieredGet()) == src)
         {
             return true;
         }

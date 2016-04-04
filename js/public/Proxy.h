@@ -219,6 +219,14 @@ class JS_FRIEND_API(BaseProxyHandler)
         return true;
     }
 
+    virtual bool canNurseryAllocate() const {
+        /*
+         * Nursery allocation is allowed if and only if it is safe to not
+         * run |finalize| when the ProxyObject dies.
+         */
+        return false;
+    }
+
     /* Policy enforcement methods.
      *
      * enter() allows the policy to specify whether the caller may perform |act|
