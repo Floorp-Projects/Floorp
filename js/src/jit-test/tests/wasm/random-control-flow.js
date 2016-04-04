@@ -92,3 +92,12 @@ wasmEvalText(`
         }
     }
 }).foo();
+
+wasmEvalText(`(module (func
+ (return (i32.const 0))
+ (select
+  (loop (i32.const 1))
+  (loop (i32.const 2))
+  (i32.const 3)
+ )
+))`);
