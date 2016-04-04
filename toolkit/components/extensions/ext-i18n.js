@@ -11,7 +11,7 @@ extensions.registerSchemaAPI("i18n", null, (extension, context) => {
   return {
     i18n: {
       getMessage: function(messageName, substitutions) {
-        return extension.localizeMessage(messageName, substitutions);
+        return extension.localizeMessage(messageName, substitutions, {cloneScope: context.cloneScope});
       },
 
       getAcceptLanguages: function() {
