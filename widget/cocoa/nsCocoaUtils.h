@@ -386,6 +386,15 @@ public:
    * Unicode character.
    */
   static uint32_t ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode);
+
+  /**
+   * Convert string with font attribute to NSMutableAttributedString
+   */
+  static NSMutableAttributedString* GetNSMutableAttributedString(
+           const nsAString& aText,
+           const nsTArray<mozilla::FontRange>& aFontRanges,
+           const bool aIsVertical,
+           const CGFloat aBackingScaleFactor);
 };
 
 #endif // nsCocoaUtils_h_

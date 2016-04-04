@@ -981,3 +981,45 @@ nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode)
 
   return 0;
 }
+
+NSMutableAttributedString*
+nsCocoaUtils::GetNSMutableAttributedString(
+                const nsAString& aText,
+                const nsTArray<mozilla::FontRange>& aFontRanges,
+                const bool aIsVertical,
+                const CGFloat aBackingScaleFactor)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL
+
+  NSString* nsstr = nsCocoaUtils::ToNSString(aText);
+  NSMutableAttributedString* attrStr =
+    [[[NSMutableAttributedString alloc] initWithString:nsstr
+                                            attributes:nil] autorelease];
+
+  int32_t lastOffset = aText.Length();
+  for (auto i = aFontRanges.Length(); i > 0; --i) {
+    const FontRange& fontRange = aFontRanges[i - 1];
+    NSString* fontName = nsCocoaUtils::ToNSString(fontRange.mFontName);
+    CGFloat fontSize = fontRange.mFontSize / aBackingScaleFactor;
+    NSFont* font = [NSFont fontWithName:fontName size:fontSize];
+    if (!font) {
+      font = [NSFont systemFontOfSize:fontSize];
+    }
+
+    NSDictionary* attrs = @{ NSFontAttributeName: font };
+    NSRange range = NSMakeRange(fontRange.mStartOffset,
+                                lastOffset - fontRange.mStartOffset);
+    [attrStr setAttributes:attrs range:range];
+    lastOffset = fontRange.mStartOffset;
+  }
+
+  if (aIsVertical) {
+    [attrStr addAttribute:NSVerticalGlyphFormAttributeName
+                    value:[NSNumber numberWithInt: 1]
+                    range:NSMakeRange(0, [attrStr length])];
+  }
+
+  return attrStr;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL
+}
