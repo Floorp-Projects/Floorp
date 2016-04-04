@@ -218,7 +218,6 @@ protected:
 protected:
 
   nsCOMPtr<nsIEditRules>        mRules;
-  bool    mWrapToWindow;
   int32_t mWrapColumn;
   int32_t mMaxTextLength;
   int32_t mInitTriggerCounter;
