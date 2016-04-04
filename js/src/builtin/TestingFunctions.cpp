@@ -560,6 +560,10 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<TypedArrayObject*> code(cx, &args[0].toObject().as<TypedArrayObject>());
+
+    if (!TypedArrayObject::ensureHasBuffer(cx, code))
+        return false;
+
     if (code->isSharedMemory()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
