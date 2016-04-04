@@ -6,8 +6,9 @@
 #ifndef InputData_h__
 #define InputData_h__
 
-#include "nsIDOMWheelEvent.h"
 #include "nsDebug.h"
+#include "nsIDOMWheelEvent.h"
+#include "nsIScrollableFrame.h"
 #include "nsPoint.h"
 #include "nsTArray.h"
 #include "Units.h"
@@ -575,6 +576,22 @@ public:
         MOZ_CRASH();
     }
     return SCROLLDELTA_LINE;
+  }
+
+  static nsIScrollableFrame::ScrollUnit
+  ScrollUnitForDeltaType(ScrollDeltaType aDeltaType)
+  {
+    switch (aDeltaType) {
+    case SCROLLDELTA_LINE:
+      return nsIScrollableFrame::LINES;
+    case SCROLLDELTA_PAGE:
+      return nsIScrollableFrame::PAGES;
+    case SCROLLDELTA_PIXEL:
+      return nsIScrollableFrame::DEVICE_PIXELS;
+    default:
+      MOZ_CRASH();
+    }
+    return nsIScrollableFrame::LINES;
   }
 
   enum ScrollMode

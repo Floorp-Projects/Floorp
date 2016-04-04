@@ -25,6 +25,7 @@
 #include "Layers.h"                     // for Layer::ScrollDirection
 #include "LayersTypes.h"
 #include "mozilla/gfx/Matrix.h"
+#include "nsIScrollableFrame.h"
 #include "nsRegion.h"
 #include "PotentialCheckerboardDurationTracker.h"
 
@@ -622,15 +623,6 @@ protected:
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
 
-  // Snap to a snap position nearby the current scroll position, if appropriate.
-  void ScrollSnap();
-  // Snap to a snap position nearby the destination predicted based on the
-  // current velocity, if appropriate.
-  void ScrollSnapToDestination();
-
-  // Helper function for ScrollSnap() and ScrollSnapToDestination().
-  void ScrollSnapNear(const CSSPoint& aDestination);
-
   uint64_t mLayersId;
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
 
@@ -761,7 +753,6 @@ public:
    * any transform due to axis over-scroll.
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(AsyncMode aMode) const;
-
 
 
   /* ===================================================================
@@ -1156,6 +1147,35 @@ private:
   // be checkerboarding. Combined with other info, this allows us to meaningfully
   // say how frequently users actually encounter checkerboarding.
   PotentialCheckerboardDurationTracker mPotentialCheckerboardTracker;
+
+
+  /* ===================================================================
+   * The functions in this section are used for CSS scroll snapping.
+   */
+
+  // If |aEvent| should trigger scroll snapping, adjust |aDelta| to reflect
+  // the snapping (that is, make it a delta that will take us to the desired
+  // snap point). Returns true iff. the delta was so adjusted.
+  bool MaybeAdjustDeltaForScrollSnapping(ParentLayerPoint& aDelta,
+                                         const ScrollWheelInput& aEvent);
+
+  // Snap to a snap position nearby the current scroll position, if appropriate.
+  void ScrollSnap();
+
+  // Snap to a snap position nearby the destination predicted based on the
+  // current velocity, if appropriate.
+  void ScrollSnapToDestination();
+
+  // Snap to a snap position nearby the provided destination, if appropriate.
+  void ScrollSnapNear(const CSSPoint& aDestination);
+
+  // Find a snap point near |aDestination| that we should snap to.
+  // Returns the snap point if one was found, or an empty Maybe otherwise.
+  // |aUnit| affects the snapping behaviour (see ScrollSnapUtils::
+  // GetSnapPointForDestination). It should generally be determined by the
+  // type of event that's triggering the scroll.
+  Maybe<CSSPoint> FindSnapPointNear(const CSSPoint& aDestination,
+                                    nsIScrollableFrame::ScrollUnit aUnit);
 };
 
 } // namespace layers
