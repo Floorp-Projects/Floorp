@@ -451,6 +451,9 @@ public class GeckoEvent {
             }
             break;
         }
+
+        // SensorEvent timestamp is in nanoseconds, Gecko expects microseconds.
+        event.mTime = s.timestamp / 1000;
         return event;
     }
 
