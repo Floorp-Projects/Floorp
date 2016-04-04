@@ -6,7 +6,6 @@
 
 var { editableField } = require("devtools/client/shared/inplace-editor");
 
-const LINE_HEIGHT = 15;
 const MAX_WIDTH = 300;
 const START_TEXT = "Start text";
 const LONG_TEXT = "I am a long text and I will not fit in a 300px container. " +
@@ -95,7 +94,10 @@ let testMaxWidth = Task.async(function* (editor) {
  * @return {Number} the number of lines
  */
 function getLines(textarea) {
-  return Math.floor(textarea.clientHeight / LINE_HEIGHT);
+  let win = textarea.ownerDocument.defaultView;
+  let style = win.getComputedStyle(textarea);
+  let lineHeight = style.getPropertyCSSValue("line-height").cssText;
+  return Math.floor(textarea.clientHeight / parseFloat(lineHeight));
 }
 
 /**
@@ -125,7 +127,6 @@ function createSpan(doc) {
   info("Creating a new span element");
   let span = doc.createElement("span");
   span.setAttribute("tabindex", "0");
-  span.style.lineHeight = LINE_HEIGHT + "px";
   span.style.fontSize = "11px";
   span.style.fontFamily = "monospace";
   span.textContent = START_TEXT;
