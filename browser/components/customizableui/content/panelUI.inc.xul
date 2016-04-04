@@ -24,6 +24,7 @@
           <hbox id="PanelUI-fxa-status"
                 defaultlabel="&fxaSignIn.label;"
                 signedinTooltiptext="&fxaSignedIn.tooltip;"
+                tooltiptext="&fxaSignedIn.tooltip;"
                 errorlabel="&fxaSignInError.label;"
                 unverifiedlabel="&fxaUnverified.label;"
                 onclick="if (event.which == 1) gFxAccounts.onMenuPanelCommand();">
