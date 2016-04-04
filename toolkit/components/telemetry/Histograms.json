@@ -10019,23 +10019,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
-  "FXA_SECURE_CREDENTIALS_SAVE_WITH_MP_LOCKED": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "The number of times FxA had credentials to save in the login manager but the master-password was locked, implying they may lose those credentials after a restart."
-  },
-  "FXA_HAWK_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "FxA error responses caused by invalid Hawk credentials. Keyed on the FxA auth server endpoint."
-  },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
     "alert_emails": ["fx-team@mozilla.com"],
     "bug_numbers": [1232050],
@@ -10054,24 +10037,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
-  "WEAVE_ENGINE_APPLY_NEW_FAILURES": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of records that a Sync engine failed to apply. Keyed on the engine name."
-  },
-  "WEAVE_ENGINE_APPLY_FAILURES": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Failures encountered applying incoming records. Keyed on the engine name."
-  },
   "WEAVE_ENGINE_SYNC_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
     "bug_numbers": [1236383],
@@ -10080,22 +10045,6 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Exceptions thrown by a Sync engine. Keyed on the engine name."
-  },
-  "WEAVE_HAS_NO_KEYS_WHEN_UNLOCKED": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Records how often Sync doesn't have the necessary keys when the master-password is unlocked."
-  },
-  "WEAVE_FXA_KEY_FETCH_AUTH_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "49",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Authentication errors encountered fetching Sync keys."
   },
   "CONTENT_DOCUMENTS_DESTROYED": {
     "expires_in_version": "never",
