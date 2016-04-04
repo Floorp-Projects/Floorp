@@ -803,3 +803,50 @@ function PressKeyXTimes(key, x, modifiers = {}) {
     EventUtils.synthesizeKey(key, modifiers);
   }
 }
+
+/**
+ * Wait for a context menu popup to open.
+ *
+ * @param nsIDOMElement popup
+ *        The XUL popup you expect to open.
+ * @param nsIDOMElement button
+ *        The button/element that receives the contextmenu event. This is
+ *        expected to open the popup.
+ * @param function onShown
+ *        Function to invoke on popupshown event.
+ * @param function onHidden
+ *        Function to invoke on popuphidden event.
+ * @return object
+ *         A Promise object that is resolved after the popuphidden event
+ *         callback is invoked.
+ */
+function waitForContextMenu(popup, button, onShown, onHidden) {
+  let deferred = promise.defer();
+
+  function onPopupShown() {
+    info("onPopupShown");
+    popup.removeEventListener("popupshown", onPopupShown);
+
+    onShown && onShown();
+
+    // Use executeSoon() to get out of the popupshown event.
+    popup.addEventListener("popuphidden", onPopupHidden);
+    executeSoon(() => popup.hidePopup());
+  }
+  function onPopupHidden() {
+    info("onPopupHidden");
+    popup.removeEventListener("popuphidden", onPopupHidden);
+
+    onHidden && onHidden();
+
+    deferred.resolve(popup);
+  }
+
+  popup.addEventListener("popupshown", onPopupShown);
+
+  info("wait for the context menu to open");
+  let eventDetails = {type: "contextmenu", button: 2};
+  EventUtils.synthesizeMouse(button, 2, 2, eventDetails,
+                             button.ownerDocument.defaultView);
+  return deferred.promise;
+}
