@@ -12,20 +12,7 @@ add_task(function* testDetectLanguage() {
       const BASE_PATH = "browser/browser/components/extensions/test/browser";
 
       function loadTab(url) {
-        let tabId;
-        let awaitUpdated = new Promise(resolve => {
-          browser.tabs.onUpdated.addListener(function onUpdated(changedTabId, changed, tab) {
-            if (changedTabId === tabId && changed.url) {
-              browser.tabs.onUpdated.removeListener(onUpdated);
-              resolve(tab);
-            }
-          });
-        });
-
-        return browser.tabs.create({url}).then(tab => {
-          tabId = tab.id;
-          return awaitUpdated;
-        });
+        return browser.tabs.create({url});
       }
 
       loadTab(`http://example.co.jp/${BASE_PATH}/file_language_ja.html`).then(tab => {
