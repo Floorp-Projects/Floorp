@@ -47,6 +47,10 @@ const REASON = {
   UPDATE: "update"
 };
 
+// Maximum length of item name to show in context menu label - will be
+// trimmed with ellipsis if it's longer.
+const ITEM_NAME_MAX_LENGTH = 32;
+
 /**
  * StorageUI is controls and builds the UI of the Storage Inspector.
  *
@@ -74,6 +78,7 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
   this.table = new TableWidget(tableNode, {
     emptyText: L10N.getStr("table.emptyText"),
     highlightUpdated: true,
+    cellContextMenuId: "storage-table-popup"
   });
 
   this.displayObjectSidebar = this.displayObjectSidebar.bind(this);
@@ -105,6 +110,15 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
 
   this.handleKeypress = this.handleKeypress.bind(this);
   this._panelDoc.addEventListener("keypress", this.handleKeypress);
+
+  this.onPopupShowing = this.onPopupShowing.bind(this);
+  this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
+  this._tablePopup.addEventListener("popupshowing", this.onPopupShowing, false);
+
+  this.onRemoveItem = this.onRemoveItem.bind(this);
+  this._tablePopupDelete = this._panelDoc.getElementById(
+    "storage-table-popup-delete");
+  this._tablePopupDelete.addEventListener("command", this.onRemoveItem, false);
 };
 
 exports.StorageUI = StorageUI;
@@ -130,6 +144,9 @@ StorageUI.prototype = {
     this._panelDoc.removeEventListener("keypress", this.handleKeypress);
     this.searchBox.removeEventListener("input", this.filterItems);
     this.searchBox = null;
+
+    this._tablePopup.removeEventListener("popupshowing", this.onPopupShowing);
+    this._tablePopupDelete.removeEventListener("command", this.onRemoveItem);
   },
 
   /**
@@ -733,5 +750,41 @@ StorageUI.prototype = {
       names = [JSON.stringify(item.slice(2))];
     }
     this.fetchStorageObjects(type, host, names, REASON.NEXT_50_ITEMS);
-  }
+  },
+
+  /**
+   * Fires before a cell context menu with the "Delete" action is shown.
+   * If the current storage actor doesn't support removing items, prevent
+   * showing the menu.
+   */
+  onPopupShowing: function(event) {
+    if (!this.getCurrentActor().removeItem) {
+      event.preventDefault();
+      return;
+    }
+
+    let rowId = this.table.contextMenuRowId;
+    let data = this.table.items.get(rowId);
+    let name = data[this.table.uniqueId];
+
+    const maxLen = ITEM_NAME_MAX_LENGTH;
+    if (name.length > maxLen) {
+      name = name.substr(0, maxLen) + L10N.ellipsis;
+    }
+
+    this._tablePopupDelete.setAttribute("label",
+      L10N.getFormatStr("storage.popupMenu.deleteLabel", name));
+  },
+
+  /**
+   * Handles removing an item from the storage
+   */
+  onRemoveItem: function() {
+    let [, host] = this.tree.selectedItem;
+    let actor = this.getCurrentActor();
+    let rowId = this.table.contextMenuRowId;
+    let data = this.table.items.get(rowId);
+
+    actor.removeItem(host, data[this.table.uniqueId]);
+  },
 };
