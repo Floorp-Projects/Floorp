@@ -69,23 +69,11 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
             return false;
     }
 
-    const js::Class* jsclazz;
-
-    if (mScriptableInfo) {
-        const XPCNativeScriptableFlags& flags(mScriptableInfo->GetFlags());
-
-        if (flags.AllowPropModsToPrototype()) {
-            jsclazz = flags.WantCall() ?
-                &XPC_WN_ModsAllowed_WithCall_Proto_JSClass :
-                &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
-        } else {
-            jsclazz = flags.WantCall() ?
-                &XPC_WN_NoMods_WithCall_Proto_JSClass :
-                &XPC_WN_NoMods_NoCall_Proto_JSClass;
-        }
-    } else {
-        jsclazz = &XPC_WN_NoMods_NoCall_Proto_JSClass;
-    }
+    const js::Class* jsclazz =
+        (mScriptableInfo &&
+         mScriptableInfo->GetFlags().AllowPropModsToPrototype())
+        ? &XPC_WN_ModsAllowed_Proto_JSClass
+        : &XPC_WN_NoMods_Proto_JSClass;
 
     JS::RootedObject global(cx, mScope->GetGlobalJSObject());
     JS::RootedObject proto(cx, JS_GetObjectPrototype(cx, global));
