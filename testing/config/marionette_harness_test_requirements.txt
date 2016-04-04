@@ -1,0 +1,13 @@
+-r mozbase_requirements.txt
+
+# TODO - if we structure common.tests.zip to match the in-tree structure of the
+# testing directory, we could use ./marionette_requirements.txt instead
+../web-platform/tests/tools/wptserve
+../marionette/client
+../marionette/harness/marionette/runner/mixins/browsermob-proxy-py
+../marionette/harness
+
+# pytest
+py==1.4.31
+pytest==2.9.1
+../../python/mock-1.0.0
