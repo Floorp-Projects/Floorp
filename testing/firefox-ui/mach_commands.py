@@ -29,10 +29,13 @@ def setup_argument_parser_update():
 
 
 def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
-    import argparse
-
     from mozlog.structured import commandline
     import firefox_ui_harness
+
+    if testtype == 'functional':
+        parser = setup_argument_parser_functional()
+    else:
+        parser = setup_argument_parser_update()
 
     test_types = {
         'functional': {
@@ -57,14 +60,24 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
         kwargs['server_root'] = os.path.join(fxui_dir, 'resources')
 
     # If no tests have been selected, set default ones
-    if not kwargs.get('tests'):
-        kwargs['tests'] = [os.path.join(fxui_dir, 'tests', test)
+    if kwargs.get('tests'):
+        tests = kwargs.get('tests')
+    else:
+        tests = [os.path.join(fxui_dir, 'tests', test)
                            for test in test_types[testtype]['default_tests']]
 
     kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
                                                  {"mach": sys.stdout})
 
-    failed = test_types[testtype]['cli_module'].cli(args=kwargs)
+    args = parser.parse_args(args=tests)
+
+    for k, v in kwargs.iteritems():
+        setattr(args, k, v)
+
+    parser.verify_usage(args)
+
+    failed = test_types[testtype]['cli_module'].cli(args=vars(args))
+
     if failed > 0:
         return 1
     else:

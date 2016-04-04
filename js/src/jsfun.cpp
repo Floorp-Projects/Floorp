@@ -834,6 +834,15 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     return functionProto;
 }
 
+static const ClassSpec JSFunctionClassSpec = {
+    CreateFunctionConstructor,
+    CreateFunctionPrototype,
+    nullptr,
+    nullptr,
+    function_methods,
+    function_properties
+};
+
 const Class JSFunction::class_ = {
     js_Function_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
@@ -849,14 +858,7 @@ const Class JSFunction::class_ = {
     fun_hasInstance,
     nullptr,                 /* construct   */
     fun_trace,
-    {
-        CreateFunctionConstructor,
-        CreateFunctionPrototype,
-        nullptr,
-        nullptr,
-        function_methods,
-        function_properties
-    }
+    &JSFunctionClassSpec
 };
 
 const Class* const js::FunctionClassPtr = &JSFunction::class_;

@@ -10,7 +10,7 @@ if (!(this.SharedArrayBuffer && this.Atomics)) {
     quit(0);
 }
 
-// Checks for parameter validation of futex API.  ALl of these test
+// Checks for parameter validation of wait/wake API.  All of these test
 // cases should throw exceptions during parameter validation, before
 // we check whether any waiting should be done.
 
@@ -57,9 +57,8 @@ let sab = new SharedArrayBuffer(16);
 
     for ( let i=0 ; i < values.length ; i++ ) {
 	let view = values[i];
-	assertThrowsInstanceOf(() => Atomics.futexWait(view, 0, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWake(view, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 0, 1, 0), TypeError);
+	assertThrowsInstanceOf(() => Atomics.wait(view, 0, 0), TypeError);
+	assertThrowsInstanceOf(() => Atomics.wake(view, 0), TypeError);
     }
 }
 
@@ -71,9 +70,8 @@ let sab = new SharedArrayBuffer(16);
     for ( let View of views ) {
 	let view = new View(ab);
 
-	assertThrowsInstanceOf(() => Atomics.futexWait(view, 0, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWake(view, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 0, 1, 0), TypeError);
+	assertThrowsInstanceOf(() => Atomics.wait(view, 0, 0), TypeError);
+	assertThrowsInstanceOf(() => Atomics.wake(view, 0), TypeError);
     }
 }
 
@@ -86,9 +84,8 @@ let sab = new SharedArrayBuffer(16);
     for ( let View of views ) {
 	let view = new View(sab);
 
-	assertThrowsInstanceOf(() => Atomics.futexWait(view, 0, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWake(view, 0), TypeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 0, 1, 0), TypeError);
+	assertThrowsInstanceOf(() => Atomics.wait(view, 0, 0), TypeError);
+	assertThrowsInstanceOf(() => Atomics.wake(view, 0), TypeError);
     }
 }
 
@@ -108,10 +105,8 @@ let sab = new SharedArrayBuffer(16);
 
     for ( let iidx=0 ; iidx < indices.length ; iidx++ ) {
 	let Idx = indices[iidx](view);
-	assertThrowsInstanceOf(() => Atomics.futexWait(view, Idx, 10), RangeError);
-	assertThrowsInstanceOf(() => Atomics.futexWake(view, Idx), RangeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, Idx, 5, 0, 0), RangeError);
-	assertThrowsInstanceOf(() => Atomics.futexWakeOrRequeue(view, 0, 5, Idx, 0), RangeError);
+	assertThrowsInstanceOf(() => Atomics.wait(view, Idx, 10), RangeError);
+	assertThrowsInstanceOf(() => Atomics.wake(view, Idx), RangeError);
     }
 }
 

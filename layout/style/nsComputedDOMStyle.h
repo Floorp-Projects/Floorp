@@ -428,6 +428,7 @@ private:
   already_AddRefed<CSSValue> DoGetWebkitTextFillColor();
 
   /* Visibility properties */
+  already_AddRefed<CSSValue> DoGetColorAdjust();
   already_AddRefed<CSSValue> DoGetOpacity();
   already_AddRefed<CSSValue> DoGetPointerEvents();
   already_AddRefed<CSSValue> DoGetVisibility();

@@ -620,7 +620,9 @@ AudioCallbackDriver::Init()
   // We have to translate the deviceID values to cubeb devid's since those can be
   // freed whenever enumerate is called.
   {
+#ifdef MOZ_WEBRTC
     StaticMutexAutoLock lock(AudioInputCubeb::Mutex());
+#endif
     if ((!mGraphImpl->mInputWanted
 #ifdef MOZ_WEBRTC
          || AudioInputCubeb::GetDeviceID(mGraphImpl->mInputDeviceID, input_id)
@@ -645,7 +647,9 @@ AudioCallbackDriver::Init()
                           DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
       mAudioStream.own(stream);
     } else {
+#ifdef MOZ_WEBRTC
       StaticMutexAutoUnlock unlock(AudioInputCubeb::Mutex());
+#endif
       NS_WARNING("Could not create a cubeb stream for MediaStreamGraph, falling back to a SystemClockDriver");
       // Fall back to a driver using a normal thread.
       MonitorAutoLock lock(GraphImpl()->GetMonitor());

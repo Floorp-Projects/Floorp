@@ -845,11 +845,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
 
     hasAsyncTransform = true;
 
-    AsyncTransform asyncTransformWithoutOverscroll;
-    ParentLayerPoint scrollOffset;
-    controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
-                                               scrollOffset);
-    AsyncTransformComponentMatrix overscrollTransform = controller->GetOverscrollTransform();
+    AsyncTransform asyncTransformWithoutOverscroll =
+        controller->GetCurrentAsyncTransform(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
+    AsyncTransformComponentMatrix overscrollTransform =
+        controller->GetOverscrollTransform(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
     AsyncTransformComponentMatrix asyncTransform =
         AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll)
       * overscrollTransform;
@@ -882,6 +881,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                 geckoZoom,
                                 mContentRect);
         } else {
+          ParentLayerPoint scrollOffset = controller->GetCurrentAsyncScrollOffset(
+              AsyncPanZoomController::RESPECT_FORCE_DISABLE);
           // Compute the painted displayport in document-relative CSS pixels.
           CSSRect displayPort(metrics.GetCriticalDisplayPort().IsEmpty() ?
               metrics.GetDisplayPort() :
@@ -1032,7 +1033,8 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   const FrameMetrics& metrics = aContent.Metrics();
   AsyncPanZoomController* apzc = aContent.GetApzc();
 
-  AsyncTransformComponentMatrix asyncTransform = apzc->GetCurrentAsyncTransform();
+  AsyncTransformComponentMatrix asyncTransform =
+    apzc->GetCurrentAsyncTransform(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
 
   // |asyncTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned based
@@ -1147,7 +1149,9 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   // the same coordinate space. This requires applying the content transform
   // and then unapplying it after unapplying the async transform.
   if (aScrollbarIsDescendant) {
-    Matrix4x4 asyncUntransform = (asyncTransform * apzc->GetOverscrollTransform()).Inverse().ToUnknownMatrix();
+    AsyncTransformComponentMatrix overscroll =
+        apzc->GetOverscrollTransform(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
+    Matrix4x4 asyncUntransform = (asyncTransform * overscroll).Inverse().ToUnknownMatrix();
     Matrix4x4 contentTransform = aContent.GetTransform();
     Matrix4x4 contentUntransform = contentTransform.Inverse();
 
