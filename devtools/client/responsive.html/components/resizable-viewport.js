@@ -121,9 +121,13 @@ module.exports = createClass({
     } = this.props;
 
     let resizeHandleClass = "viewport-resize-handle";
-
     if (screenshot.isCapturing) {
       resizeHandleClass += " hidden";
+    }
+
+    let contentClass = "viewport-content";
+    if (this.state.isResizing) {
+      contentClass += " resizing";
     }
 
     return dom.div(
@@ -137,12 +141,18 @@ module.exports = createClass({
         onResizeViewport,
         onRotateViewport,
       }),
-      Browser({
-        location,
-        width: viewport.width,
-        height: viewport.height,
-        isResizing: this.state.isResizing
-      }),
+      dom.div(
+        {
+          className: contentClass,
+          style: {
+            width: viewport.width + "px",
+            height: viewport.height + "px",
+          },
+        },
+        Browser({
+          location,
+        })
+      ),
       dom.div({
         className: resizeHandleClass,
         onMouseDown: this.onResizeStart,
