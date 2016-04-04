@@ -18,6 +18,7 @@ import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
@@ -1167,7 +1168,9 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     // This is a reimplementation of _toHashedPath from ReaderMode.jsm - given that we're likely
     // to migrate the SavedReaderViewHelper implementation at some point, it seems safest to have a local
     // implementation here - moreover this is probably faster than calling into JS.
-    private static String getReaderCacheFileNameForURL(String url) {
+    // This is public only to allow for testing.
+    @RobocopTarget
+    public static String getReaderCacheFileNameForURL(String url) {
         try {
             // On KitKat and above we can use java.nio.charset.StandardCharsets.UTF_8 in place of "UTF8"
             // which avoids having to handle UnsupportedCodingException
