@@ -141,6 +141,7 @@ public:
   MOZ_WARN_UNUSED_RESULT
   virtual bool AppendTextTo(nsAString& aResult,
                             const mozilla::fallible_t&) override;
+  virtual void DestroyContent() override;
   virtual void SaveSubtreeState() override;
 
 #ifdef DEBUG
