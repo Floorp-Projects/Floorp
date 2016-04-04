@@ -404,6 +404,42 @@
       }
     }
 
+    function removeNotARIAOwnedEl(aContainer, aChild)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer)
+      ];
+
+      this.invoke = function removeNotARIAOwnedEl_invoke()
+      {
+        var tree = {
+          SECTION: [
+            { TEXT_LEAF: [ ] },
+            { GROUPING: [ ] }
+          ]
+        };
+        testAccessibleTree(aContainer, tree);
+
+        getNode(aContainer).removeChild(getNode(aChild));
+      }
+
+      this.finalCheck = function removeNotARIAOwnedEl_finalCheck()
+      {
+        var tree = {
+          SECTION: [
+            { GROUPING: [ ] }
+          ]
+        };
+        testAccessibleTree(aContainer, tree);
+      }
+
+      this.getID = function removeNotARIAOwnedEl_getID()
+      {
+        return `remove not ARIA owned child`;
+      }
+    }
+
+
     ////////////////////////////////////////////////////////////////////////////
     // Test
     ////////////////////////////////////////////////////////////////////////////
@@ -435,6 +471,8 @@
 
       // test4
       gQueue.push(new showHiddenElement());
+
+      gQueue.push(new removeNotARIAOwnedEl("t6_container", "t6_span"));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -477,6 +515,11 @@
     <div id="t4_child1" style="display:none" role="checkbox"></div>
     <div id="t4_child2" role="radio"></div>
   </div>
+
+  <div id="t6_container" aria-owns="t6_fake">
+    <span id="t6_span">hey</span>
+  </div>
+  <div id="t6_fake" role="group"></div>
 </body>
 
 </html>
