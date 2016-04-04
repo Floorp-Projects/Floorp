@@ -35,11 +35,13 @@ function* do_test(test) {
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
+  info("Moving mouse out of the way.");
   yield new Promise(resolve => {
     EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 300, 300, resolve);
   });
 
-  ContentTask.spawn(tab.linkedBrowser, test, function*(test) {
+  info("creating input field");
+  yield ContentTask.spawn(tab.linkedBrowser, test, function*(test) {
     let doc = content.document;
     let input = doc.createElement("input");
     doc.body.appendChild(input);
@@ -58,6 +60,7 @@ function* do_test(test) {
   });
 
   if (test.value) {
+    info("Creating mock filepicker to select files");
     let MockFilePicker = SpecialPowers.MockFilePicker;
     MockFilePicker.init(window);
     MockFilePicker.returnValue = MockFilePicker.returnOK;
@@ -68,6 +71,7 @@ function* do_test(test) {
       // Open the File Picker dialog (MockFilePicker) to select
       // the files for the test.
       yield BrowserTestUtils.synthesizeMouseAtCenter("#test_input", {}, tab.linkedBrowser);
+      info("Waiting for the input to have the requisite files");
       yield ContentTask.spawn(tab.linkedBrowser, {}, function*() {
         let input = content.document.querySelector("#test_input");
         yield ContentTaskUtils.waitForCondition(() => input.files.length,
@@ -77,6 +81,8 @@ function* do_test(test) {
     } finally {
       MockFilePicker.cleanup();
     }
+  } else {
+    info("No real file selection required.");
   }
 
   let awaitTooltipOpen = new Promise(resolve => {
@@ -89,17 +95,22 @@ function* do_test(test) {
       resolve(event.target);
     });
   });
+  info("Initial mouse move");
   yield new Promise(resolve => {
     EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 100, 5, resolve);
   });
+  info("Waiting");
   yield new Promise(resolve => setTimeout(resolve, 100));
+  info("Second mouse move");
   yield new Promise(resolve => {
     EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 110, 15, resolve);
   });
+  info("Waiting for tooltip to open");
   let tooltip = yield awaitTooltipOpen;
 
   is(tooltip.getAttribute("label"), test.result, "tooltip label should match expectation");
 
+  info("Closing tab");
   yield BrowserTestUtils.removeTab(tab);
 }
 
