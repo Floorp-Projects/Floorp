@@ -10,9 +10,12 @@
 #include ../search/manifests/SearchAndroidManifest_permissions.xml.in
 #endif
 
-#ifdef MOZ_ANDROID_GCM
+<!-- Bug 1261302: we have two new permissions to request,
+     RECEIVE_BOOT_COMPLETED and the permission for push.  We want to ask for
+     them during the same release, which should be Fennec 48.  Therefore we
+     decouple the push permission from MOZ_ANDROID_GCM to let it ride ahead
+     (potentially) of the push feature. -->
 #include GcmAndroidManifest_permissions.xml.in
-#endif
 
     <!-- A signature level permission specific to each Firefox version (Android
          package name, e.g., org.mozilla.firefox).  Use this permission to
