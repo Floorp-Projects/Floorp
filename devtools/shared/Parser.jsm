@@ -8,6 +8,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Console.jsm");
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
@@ -1558,12 +1559,35 @@ var SyntaxTreeVisitor = {
       callbacks.onArrayExpression(node);
     }
     for (let element of node.elements) {
-      // TODO: remove the typeof check when support for SpreadExpression is
-      // added (bug 890913).
-      if (element && typeof this[element.type] == "function") {
+      if (element) {
         this[element.type](element, node, callbacks);
       }
     }
+  },
+
+  /**
+   * A spread expression.
+   *
+   * interface SpreadExpression <: Expression {
+   *   type: "SpreadExpression";
+   *   expression: Expression;
+   * }
+   */
+  SpreadExpression: function(node, parent, callbacks) {
+    node._parent = parent;
+
+    if (this.break) {
+      return;
+    }
+    if (callbacks.onNode) {
+      if (callbacks.onNode(node, parent) === false) {
+        return;
+      }
+    }
+    if (callbacks.onSpreadExpression) {
+      callbacks.onSpreadExpression(node);
+    }
+    this[node.expression.type](node.expression, node, callbacks);
   },
 
   /**
@@ -1936,6 +1960,9 @@ var SyntaxTreeVisitor = {
     this[node.callee.type](node.callee, node, callbacks);
     for (let argument of node.arguments) {
       if (argument) {
+        if (!this[argument.type]) {
+          console.error("Unknown parser object:", argument.type);
+        }
         this[argument.type](argument, node, callbacks);
       }
     }
