@@ -3446,11 +3446,11 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
         mTouches.Put(aEvent->sequence, touch.forget());
         // add all touch points to event object
         for (auto iter = mTouches.Iter(); !iter.Done(); iter.Next()) {
-            event.touches.AppendElement(new dom::Touch(*iter.UserData()));
+            event.mTouches.AppendElement(new dom::Touch(*iter.UserData()));
         }
     } else if (aEvent->type == GDK_TOUCH_END ||
                aEvent->type == GDK_TOUCH_CANCEL) {
-        *event.touches.AppendElement() = touch.forget();
+        *event.mTouches.AppendElement() = touch.forget();
     }
 
     DispatchInputEvent(&event);

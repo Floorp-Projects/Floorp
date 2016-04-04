@@ -520,6 +520,7 @@ class ErrorReport {
   public:
 
     nsCString mCategory;
+    nsString mErrorMsgName;
     nsString mErrorMsg;
     nsString mFileName;
     nsString mSourceLine;

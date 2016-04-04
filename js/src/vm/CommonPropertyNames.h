@@ -112,6 +112,9 @@
     macro(formatToParts, formatToParts, "formatToParts") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
+    macro(futexOK, futexOK, "ok") \
+    macro(futexNotEqual, futexNotEqual, "not-equal") \
+    macro(futexTimedOut, futexTimedOut, "timed-out") \
     macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
     macro(GeneratorFunction, GeneratorFunction, "GeneratorFunction") \
     macro(get, get, "get") \

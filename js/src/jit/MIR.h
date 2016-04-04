@@ -9995,7 +9995,21 @@ class MArrayJoin
     MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
-// See comments above MMemoryBarrier, below.
+// All barriered operations - MCompareExchangeTypedArrayElement,
+// MExchangeTypedArrayElement, and MAtomicTypedArrayElementBinop, as
+// well as MLoadUnboxedScalar and MStoreUnboxedScalar when they are
+// marked as requiring a memory barrer - have the following
+// attributes:
+//
+// - Not movable
+// - Not removable
+// - Not congruent with any other instruction
+// - Effectful (they alias every TypedArray store)
+//
+// The intended effect of those constraints is to prevent all loads
+// and stores preceding the barriered operation from being moved to
+// after the barriered operation, and vice versa, and to prevent the
+// barriered operation from being removed or hoisted.
 
 enum MemoryBarrierRequirement
 {
@@ -10003,7 +10017,7 @@ enum MemoryBarrierRequirement
     DoesRequireMemoryBarrier
 };
 
-// Also see comments above MMemoryBarrier, below.
+// Also see comments at MMemoryBarrierRequirement, above.
 
 // Load an unboxed scalar value from a typed array or other object.
 class MLoadUnboxedScalar
@@ -13645,49 +13659,6 @@ class MRecompileCheck : public MNullaryInstruction
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
-    }
-};
-
-// All barriered operations - MMemoryBarrier, MCompareExchangeTypedArrayElement,
-// MExchangeTypedArrayElement, and MAtomicTypedArrayElementBinop, as well as
-// MLoadUnboxedScalar and MStoreUnboxedScalar when they are marked as requiring
-// a memory barrer - have the following attributes:
-//
-// - Not movable
-// - Not removable
-// - Not congruent with any other instruction
-// - Effectful (they alias every TypedArray store)
-//
-// The intended effect of those constraints is to prevent all loads
-// and stores preceding the barriered operation from being moved to
-// after the barriered operation, and vice versa, and to prevent the
-// barriered operation from being removed or hoisted.
-
-class MMemoryBarrier
-  : public MNullaryInstruction
-{
-    // The type is a combination of the memory barrier types in AtomicOp.h.
-    const MemoryBarrierBits type_;
-
-    explicit MMemoryBarrier(MemoryBarrierBits type)
-      : type_(type)
-    {
-        MOZ_ASSERT((type_ & ~MembarAllbits) == MembarNobits);
-        setGuard();             // Not removable
-    }
-
-  public:
-    INSTRUCTION_HEADER(MemoryBarrier)
-
-    static MMemoryBarrier* New(TempAllocator& alloc, MemoryBarrierBits type = MembarFull) {
-        return new(alloc) MMemoryBarrier(type);
-    }
-    MemoryBarrierBits type() const {
-        return type_;
-    }
-
-    AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::UnboxedElement);
     }
 };
 
