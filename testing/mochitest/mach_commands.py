@@ -385,9 +385,6 @@ class MachCommands(MachCommandBase):
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
 
-        driver = self._spawn(BuildDriver)
-        driver.install_tests(remove=False)
-
         test_paths = kwargs['test_paths']
         kwargs['test_paths'] = []
 
@@ -409,6 +406,9 @@ class MachCommands(MachCommandBase):
         tests = []
         if resolve_tests:
             tests = mochitest.resolve_tests(test_paths, test_objects, cwd=self._mach_context.cwd)
+
+        driver = self._spawn(BuildDriver)
+        driver.install_tests(tests)
 
         subsuite = kwargs.get('subsuite')
         if subsuite == 'default':
@@ -529,9 +529,6 @@ class RobocopCommands(MachCommandBase):
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
 
-        driver = self._spawn(BuildDriver)
-        driver.install_tests(remove=False)
-
         test_paths = kwargs['test_paths']
         kwargs['test_paths'] = []
 
@@ -539,6 +536,8 @@ class RobocopCommands(MachCommandBase):
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=self._mach_context.cwd,
                                             flavor='instrumentation', subsuite='robocop'))
+        driver = self._spawn(BuildDriver)
+        driver.install_tests(tests)
 
         if len(tests) < 1:
             print(ROBOCOP_TESTS_NOT_FOUND.format('\n'.join(

@@ -561,6 +561,10 @@ class TestManifest(ContextDerived):
         # Set of files provided by an external mechanism.
         'external_installs',
 
+        # Set of files required by multiple test directories, whose installation
+        # will be resolved when running tests.
+        'deferred_installs',
+
         # The full path of this manifest file.
         'path',
 
@@ -602,6 +606,7 @@ class TestManifest(ContextDerived):
         self.pattern_installs = []
         self.tests = []
         self.external_installs = set()
+        self.deferred_installs = set()
 
 
 class LocalInclude(ContextDerived):

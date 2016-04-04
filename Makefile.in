@@ -193,9 +193,18 @@ endif
 # Dummy wrapper rule to allow the faster backend to piggy back
 $(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
 
-# For compatibility
 .PHONY: install-tests
-install-tests: install-_tests
+install-tests: install-test-files
+
+# We no longer run "make install-tests" directly before running tests, but we still
+# want to depend on things like config.status, hence this target.
+.PHONY: run-tests-deps
+run-tests-deps: $(install_manifest_depends)
+
+# Force --no-remove, because $objdir/_tests is handled by multiple manifests.
+.PHONY: install-test-files
+install-test-files:
+	$(call py_action,process_install_manifest,--no-remove _tests _build_manifests/install/_test_files)
 
 include $(topsrcdir)/build/moz-automation.mk
 
