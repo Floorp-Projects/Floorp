@@ -101,12 +101,11 @@ add_task(function* () {
 
             browser.test.log(`Testing tabs.create(${JSON.stringify(test.create)}), expecting ${JSON.stringify(test.result)}`);
 
-            let tabId;
             let updatedPromise = new Promise(resolve => {
               let onUpdated = (changedTabId, changed) => {
-                if (changedTabId === tabId && changed.url) {
+                if (changed.url) {
                   browser.tabs.onUpdated.removeListener(onUpdated);
-                  resolve(changed.url);
+                  resolve({tabId: changedTabId, url: changed.url});
                 }
               };
               browser.tabs.onUpdated.addListener(onUpdated);
@@ -120,6 +119,7 @@ add_task(function* () {
               browser.tabs.onCreated.addListener(onCreated);
             });
 
+            let tabId;
             Promise.all([
               browser.tabs.create(test.create),
               createdPromise,
@@ -136,8 +136,9 @@ add_task(function* () {
               }
 
               return updatedPromise;
-            }).then(url => {
-              browser.test.assertEq(expected.url, url, `Expected value for tab.url`);
+            }).then(updated => {
+              browser.test.assertEq(tabId, updated.tabId, `Expected value for tab.id`);
+              browser.test.assertEq(expected.url, updated.url, `Expected value for tab.url`);
 
               return browser.tabs.remove(tabId);
             }).then(() => {
