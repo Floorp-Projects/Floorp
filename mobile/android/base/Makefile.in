@@ -375,7 +375,7 @@ res/raw/browsersearch.json: .locales.deps ;
 res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
-  $(abspath $(CURDIR)/AndroidManifest.xml) \
+  $(DEPTH)/mobile/android/base/AndroidManifest.xml \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
@@ -496,8 +496,8 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .aapt.nodeps: FORCE
 	cp $(gradle_dir)/app/intermediates/res/resources-automation-debug.ap_ gecko-nodeps.ap_
 else
-# .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
-$(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
+# .aapt.nodeps: $(DEPTH)/mobile/android/base/AndroidManifest.xml FORCE
+$(eval $(call aapt_command,.aapt.nodeps,$(DEPTH)/mobile/android/base/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 endif
 
 # Override the Java settings with some specific android settings
@@ -525,7 +525,7 @@ $(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 
 # Targets built very early during a Gradle build.
 gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
-gradle-targets: $(abspath AndroidManifest.xml)
+gradle-targets: $(DEPTH)/mobile/android/base/AndroidManifest.xml
 gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
 ifndef MOZILLA_OFFICIAL
