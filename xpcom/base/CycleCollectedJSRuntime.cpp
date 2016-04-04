@@ -918,8 +918,8 @@ CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
 class PromiseJobRunnable final : public nsRunnable
 {
 public:
-  PromiseJobRunnable(JS::HandleObject aCallback, JS::HandleObject aAllocationSite)
-    : mCallback(new PromiseJobCallback(aCallback, aAllocationSite, nullptr))
+  PromiseJobRunnable(JSContext* aCx, JS::HandleObject aCallback)
+    : mCallback(new PromiseJobCallback(aCx, aCallback, nullptr))
   {
   }
 
@@ -946,14 +946,13 @@ private:
 bool
 CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
                                                    JS::HandleObject aJob,
-                                                   JS::HandleObject aAllocationSite,
                                                    void* aData)
 {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
   MOZ_ASSERT(JS_GetRuntime(aCx) == self->Runtime());
   MOZ_ASSERT(Get() == self);
 
-  nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite);
+  nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aCx, aJob);
   self->DispatchToMicroTask(runnable);
   return true;
 }
