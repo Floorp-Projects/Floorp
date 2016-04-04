@@ -115,8 +115,8 @@ var FullZoom = {
     this._onContentPrefChanged(aGroup, aValue, aIsPrivate);
   },
 
-  onContentPrefRemoved: function FullZoom_onContentPrefRemoved(aGroup, aName) {
-    this._onContentPrefChanged(aGroup, undefined);
+  onContentPrefRemoved: function FullZoom_onContentPrefRemoved(aGroup, aName, aIsPrivate) {
+    this._onContentPrefChanged(aGroup, undefined, aIsPrivate);
   },
 
   /**

@@ -386,6 +386,7 @@ ContentPrefService2.prototype = {
 
     let prefs = new ContentPrefStore();
 
+    let isPrivate = context && context.usePrivateBrowsing;
     this._execStmts(stmts, {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
@@ -395,7 +396,7 @@ ContentPrefService2.prototype = {
       onDone: function onDone(reason, ok) {
         if (ok) {
           this._cache.set(group, name, undefined);
-          if (context && context.usePrivateBrowsing) {
+          if (isPrivate) {
             for (let [sgroup, ] of
                    this._pbStore.match(group, name, includeSubdomains)) {
               prefs.set(sgroup, name, undefined);
@@ -406,7 +407,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name);
+            this._cps._notifyPrefRemoved(sgroup, name, isPrivate);
           }
         }
       },
@@ -498,6 +499,7 @@ ContentPrefService2.prototype = {
 
     let prefs = new ContentPrefStore();
 
+    let isPrivate = context && context.usePrivateBrowsing;
     this._execStmts(stmts, {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
@@ -506,16 +508,20 @@ ContentPrefService2.prototype = {
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
-        if (ok && context && context.usePrivateBrowsing) {
+        if (ok && isPrivate) {
           for (let [sgroup, sname, ] of this._pbStore) {
-            prefs.set(sgroup, sname, undefined);
-            this._pbStore.remove(sgroup, sname);
+            if (!group ||
+                (!includeSubdomains && group == sgroup) ||
+                (includeSubdomains && sgroup && this._pbStore.groupsMatchIncludingSubdomains(group, sgroup))) {
+              prefs.set(sgroup, sname, undefined);
+              this._pbStore.remove(sgroup, sname);
+            }
           }
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname);
+            this._cps._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
       },
@@ -559,6 +565,7 @@ ContentPrefService2.prototype = {
     stmts = stmts.concat(this._settingsAndGroupsCleanupStmts());
 
     let prefs = new ContentPrefStore();
+    let isPrivate = context && context.usePrivateBrowsing;
     this._execStmts(stmts, {
       onRow: function onRow(row) {
         let grp = row.getResultByName("grp");
@@ -569,16 +576,18 @@ ContentPrefService2.prototype = {
       onDone: function onDone(reason, ok) {
         // This nukes all the groups in _pbStore since we don't have their timestamp
         // information.
-        if (ok && context && context.usePrivateBrowsing) {
+        if (ok && isPrivate) {
           for (let [sgroup, sname, ] of this._pbStore) {
-            prefs.set(sgroup, sname, undefined);
+            if (sgroup) {
+              prefs.set(sgroup, sname, undefined);
+            }
           }
           this._pbStore.removeAllGroups();
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname);
+            this._cps._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
       },
@@ -647,6 +656,7 @@ ContentPrefService2.prototype = {
     `));
 
     let prefs = new ContentPrefStore();
+    let isPrivate = context && context.usePrivateBrowsing;
 
     this._execStmts(stmts, {
       onRow: function onRow(row) {
@@ -655,7 +665,7 @@ ContentPrefService2.prototype = {
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
-        if (ok && context && context.usePrivateBrowsing) {
+        if (ok && isPrivate) {
           for (let [sgroup, sname, ] of this._pbStore) {
             if (sname === name) {
               prefs.set(sgroup, name, undefined);
@@ -666,7 +676,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] of prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name);
+            this._cps._notifyPrefRemoved(sgroup, name, isPrivate);
           }
         }
       },

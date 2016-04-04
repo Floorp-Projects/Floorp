@@ -77,6 +77,12 @@ ContentPrefStore.prototype = {
     this._globalNames.clear();
   },
 
+  groupsMatchIncludingSubdomains: function CPS_groupsMatchIncludingSubdomains(group, group2) {
+    let idx = group2.indexOf(group);
+    return (idx == group2.length - group.length &&
+         (idx == 0 || group2[idx - 1] == "."));
+  },
+
   * [Symbol.iterator]() {
     for (let [group, names] of this._groups) {
       for (let [name, val] of names) {
@@ -100,10 +106,9 @@ ContentPrefStore.prototype = {
       if (includeSubdomains) {
         for (let [sgroup, , ] of this) {
           if (sgroup) {
-            let idx = sgroup.indexOf(group);
-            if (idx == sgroup.length - group.length &&
-                (idx == 0 || sgroup[idx - 1] == "."))
+            if (this.groupsMatchIncludingSubdomains(group, sgroup)) {
               yield sgroup;
+            }
           }
         }
       }
