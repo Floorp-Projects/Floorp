@@ -7,9 +7,10 @@
  * displays.
  */
 
-let { snapshotState: states } = require("devtools/client/memory/constants");
+let { snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
 let { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+let { changeView } = require("devtools/client/memory/actions/view");
 
 let CUSTOM = {
   displayName: "Custom",
@@ -32,12 +33,13 @@ add_task(function *() {
   let store = Store();
   let { getState, dispatch } = store;
 
+  dispatch(changeView(viewState.CENSUS));
   dispatch(setCensusDisplayAndRefresh(heapWorker, CUSTOM));
   equal(getState().censusDisplay, CUSTOM,
         "CUSTOM display stored in display state.");
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
 
   equal(getState().snapshots[0].census.display, CUSTOM,
   "New snapshot stored CUSTOM display when done taking census");

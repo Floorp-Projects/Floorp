@@ -8,9 +8,10 @@
  * action for that.
  */
 
-let { censusDisplays, snapshotState: states } = require("devtools/client/memory/constants");
+let { censusDisplays, snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
 let { setCensusDisplay } = require("devtools/client/memory/actions/census-display");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 function run_test() {
   run_next_test();
@@ -22,6 +23,8 @@ add_task(function*() {
   yield front.attach();
   let store = Store();
   let { getState, dispatch } = store;
+
+  dispatch(changeView(viewState.CENSUS));
 
   // Test default display with no snapshots
   equal(getState().censusDisplay.breakdown.by, "coarseType",
@@ -43,7 +46,7 @@ add_task(function*() {
 
   // Test new snapshots
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
+  yield waitUntilCensusState(store, s => s.census, [censusState.SAVED]);
   equal(getState().snapshots[0].census.display, censusDisplays.allocationStack,
         "New snapshots use the current, non-default display");
 });

@@ -204,10 +204,14 @@ state machine describing the snapshot states. Any of these states may go to the
 ERROR state, from which they can never leave.
 
 ```
-SAVING → SAVED → READING → READ    SAVED_CENSUS
-                  ↗             ↘      ↑  ↓
-         IMPORTING                SAVING_CENSUS
+SAVING → SAVED → READING → READ
+                  ↗
+         IMPORTING
 ```
+
+Each of the report types (census, diffing, tree maps, dominators) have their own states as well, and are documented at `devtools/client/memory/constants.js`.
+These report states are updated as the various filtering and selecting options
+are updated in the UI.
 
 ### Testing the Frontend
 

@@ -11,6 +11,8 @@ const {
   censusIsUpToDate,
   snapshotIsDiffable
 } = require("../utils");
+// This is a circular dependency, so do not destructure the needed properties.
+const snapshotActions = require("./snapshot");
 
 /**
  * Toggle diffing mode on or off.

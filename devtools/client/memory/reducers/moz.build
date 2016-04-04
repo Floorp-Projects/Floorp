@@ -12,5 +12,6 @@ DevToolsModules(
     'filter.js',
     'sizes.js',
     'snapshots.js',
+    'tree-map-display.js',
     'view.js',
 )
