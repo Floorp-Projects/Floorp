@@ -1,29 +1,5 @@
 "use strict";
 
-function frameScript() {
-  let Ci = Components.interfaces;
-  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-  let menuitem = content.document.getElementById("menuitem");
-  menuitem.addEventListener("click", function() {
-    sendAsyncMessage("Test:ContextMenuClick", windowUtils.isHandlingUserInput);
-  });
-}
-
-var gMessageManager;
-
-function listenOneMessage(aMsg, aListener) {
-  function listener({ data }) {
-    gMessageManager.removeMessageListener(aMsg, listener);
-    aListener(data);
-  }
-  gMessageManager.addMessageListener(aMsg, listener);
-}
-
-function promiseOneMessage(aMsg) {
-  return new Promise(resolve => listenOneMessage(aMsg, resolve));
-}
-
 const kPage = "http://example.org/browser/" +
               "dom/html/test/file_content_contextmenu.html";
 
@@ -32,9 +8,6 @@ add_task(function* () {
     gBrowser,
     url: kPage
   }, function*(aBrowser) {
-    gMessageManager = aBrowser.messageManager;
-    ContentTask.spawn(aBrowser, null, frameScript);
-
     let contextMenu = document.getElementById("contentAreaContextMenu");
     ok(contextMenu, "Got context menu");
 
@@ -53,9 +26,20 @@ add_task(function* () {
     let testMenuItem = pageMenuSep.previousSibling;
     is(testMenuItem.label, "Test Context Menu Click", "Got context menu item");
 
-    let promiseContextMenuClick = promiseOneMessage("Test:ContextMenuClick");
+    let promiseCtxMenuClick = ContentTask.spawn(aBrowser, null, function*() {
+      yield new Promise(resolve => {
+        let Ci = Components.interfaces;
+        let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
+        let menuitem = content.document.getElementById("menuitem");
+        menuitem.addEventListener("click", function() {
+          Assert.ok(windowUtils.isHandlingUserInput,
+                    "Content menu click should be a user input");
+          resolve();
+        });
+      });
+    });
     EventUtils.synthesizeMouseAtCenter(testMenuItem, {}, window);
-    let isUserInput = yield promiseContextMenuClick;
-    ok(isUserInput, "Content menu click should be a user input");
+    yield promiseCtxMenuClick;
   });
 });
