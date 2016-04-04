@@ -1559,84 +1559,16 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
 
 // ES6, 25.4.1.6.
 static bool
-intrinsic_EnqueuePromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
+intrinsic_EnqueuePromiseJob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].toObject().as<NativeObject>().getDenseInitializedLength() == 4);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[0].toObject().is<JSFunction>());
 
-    // When using JS::AddPromiseReactions, no actual promise is created, so we
-    // might not have one here.
-    RootedObject promise(cx);
-    if (args[1].isObject())
-        promise = UncheckedUnwrap(&args[1].toObject());
-
-#ifdef DEBUG
-    MOZ_ASSERT_IF(promise, promise->is<PromiseObject>());
-    RootedNativeObject jobArgs(cx, &args[0].toObject().as<NativeObject>());
-    MOZ_ASSERT((jobArgs->getDenseElement(0).isNumber() &&
-                (jobArgs->getDenseElement(0).toNumber() == PROMISE_HANDLER_IDENTITY ||
-                 jobArgs->getDenseElement(0).toNumber() == PROMISE_HANDLER_THROWER)) ||
-               jobArgs->getDenseElement(0).toObject().isCallable());
-    MOZ_ASSERT(jobArgs->getDenseElement(2).toObject().isCallable());
-    MOZ_ASSERT(jobArgs->getDenseElement(3).toObject().isCallable());
-#endif
-
-    RootedAtom funName(cx, cx->names().empty);
-    RootedFunction job(cx, NewNativeFunction(cx, PromiseReactionJob, 0, funName,
-                                             gc::AllocKind::FUNCTION_EXTENDED));
-    if (!job)
+    RootedFunction job(cx, &args[0].toObject().as<JSFunction>());
+    if (!cx->runtime()->enqueuePromiseJob(cx, job))
         return false;
-
-    job->setExtendedSlot(0, args[0]);
-    if (!cx->runtime()->enqueuePromiseJob(cx, job, promise))
-        return false;
-    args.rval().setUndefined();
-    return true;
-}
-
-// ES6, 25.4.1.6.
-static bool
-intrinsic_EnqueuePromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-#ifdef DEBUG
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].toObject().as<NativeObject>().getDenseInitializedLength() == 3);
-    MOZ_ASSERT(UncheckedUnwrap(&args[1].toObject())->is<PromiseObject>());
-    RootedNativeObject jobArgs(cx, &args[0].toObject().as<NativeObject>());
-    MOZ_ASSERT(jobArgs->getDenseElement(0).toObject().isCallable());
-    MOZ_ASSERT(jobArgs->getDenseElement(1).isObject());
-    MOZ_ASSERT(UncheckedUnwrap(&jobArgs->getDenseElement(2).toObject())->is<PromiseObject>());
-#endif
-
-    RootedAtom funName(cx, cx->names().empty);
-    RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
-                                             gc::AllocKind::FUNCTION_EXTENDED));
-    if (!job)
-        return false;
-
-    job->setExtendedSlot(0, args[0]);
-    RootedObject promise(cx, CheckedUnwrap(&args[1].toObject()));
-    if (!cx->runtime()->enqueuePromiseJob(cx, job, promise))
-        return false;
-    args.rval().setUndefined();
-    return true;
-}
-
-// ES2016, February 12 draft, 25.4.1.9.
-static bool
-intrinsic_HostPromiseRejectionTracker(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].toObject().is<PromiseObject>());
-
-    Rooted<PromiseObject*> promise(cx, &args[0].toObject().as<PromiseObject>());
-    mozilla::DebugOnly<bool> isHandled = args[1].toBoolean();
-    MOZ_ASSERT(isHandled, "HostPromiseRejectionTracker intrinsic currently only marks as handled");
-    cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
     args.rval().setUndefined();
     return true;
 }
@@ -2002,9 +1934,33 @@ intrinsic_onPromiseSettled(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
-    Rooted<PromiseObject*> promise(cx, &args[0].toObject().as<PromiseObject>());
-    promise->onSettled(cx);
+    RootedObject promise(cx, &args[0].toObject());
+    JS::dbg::onPromiseSettled(cx, promise);
     args.rval().setUndefined();
+    return true;
+}
+
+/**
+ * Intrinsic used to tell the debugger about settled promises.
+ *
+ * This is invoked both when resolving and rejecting promises, after the
+ * resulting state has been set on the promise, and it's up to the debugger
+ * to act on this signal in whichever way it wants.
+ */
+static bool
+intrinsic_captureCurrentStack(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() < 2);
+    unsigned maxFrameCount = 0;
+    if (args.length() == 1)
+        maxFrameCount = args[0].toInt32();
+
+    RootedObject stack(cx);
+    if (!JS::CaptureCurrentStack(cx, &stack, maxFrameCount))
+        return false;
+
+    args.rval().setObject(*stack);
     return true;
 }
 
@@ -2243,9 +2199,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsPromise",                      intrinsic_IsInstanceOfBuiltin<PromiseObject>, 1,0),
     JS_FN("IsWrappedPromise",               intrinsic_IsWrappedPromiseObject,     1, 0),
-    JS_FN("_EnqueuePromiseReactionJob",     intrinsic_EnqueuePromiseReactionJob,  2, 0),
-    JS_FN("_EnqueuePromiseResolveThenableJob", intrinsic_EnqueuePromiseResolveThenableJob, 2, 0),
-    JS_FN("HostPromiseRejectionTracker",    intrinsic_HostPromiseRejectionTracker,2, 0),
+    JS_FN("_EnqueuePromiseJob",             intrinsic_EnqueuePromiseJob,          1, 0),
     JS_FN("_GetOriginalPromiseConstructor", intrinsic_OriginalPromiseConstructor, 0, 0),
     JS_FN("RejectUnwrappedPromise",         intrinsic_RejectUnwrappedPromise,     2, 0),
     JS_FN("CallPromiseMethodIfWrapped",
@@ -2338,6 +2292,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
 
     JS_FN("_dbg_onPromiseSettled", intrinsic_onPromiseSettled, 1, 0),
+    JS_FN("_dbg_captureCurrentStack", intrinsic_captureCurrentStack, 1, 0),
 
     JS_FS_END
 };

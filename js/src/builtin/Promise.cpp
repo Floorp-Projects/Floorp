@@ -14,7 +14,6 @@
 #include "gc/Heap.h"
 #include "js/Date.h"
 #include "js/Debug.h"
-#include "vm/SelfHosting.h"
 
 #include "jsobjinlines.h"
 
@@ -41,37 +40,7 @@ static const JSPropertySpec promise_static_properties[] = {
     JS_PS_END
 };
 
-static Value
-Now()
-{
-    return JS::TimeValue(JS::TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC));
-}
-
-static bool
-CreateResolvingFunctions(JSContext* cx, HandleValue promise,
-                         MutableHandleValue resolveVal,
-                         MutableHandleValue rejectVal)
-{
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return false;
-    args.setThis(UndefinedValue());
-    args[0].set(promise);
-
-    if (!CallSelfHostedFunction(cx, cx->names().CreateResolvingFunctions, args))
-        return false;
-
-    RootedArrayObject resolvingFunctions(cx, &args.rval().toObject().as<ArrayObject>());
-    resolveVal.set(resolvingFunctions->getDenseElement(0));
-    rejectVal.set(resolvingFunctions->getDenseElement(1));
-
-    MOZ_ASSERT(IsCallable(resolveVal));
-    MOZ_ASSERT(IsCallable(rejectVal));
-
-    return true;
-}
-
-// ES2016, February 12 draft, 25.4.3.1. steps 3-11.
+// ES6, 25.4.3.1. steps 3-11.
 PromiseObject*
 PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {
@@ -104,36 +73,33 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
             ac.emplace(cx, usedProto);
 
         promise = &NewObjectWithClassProto(cx, &class_, usedProto)->as<PromiseObject>();
+
+        // Step 4.
         if (!promise)
             return nullptr;
 
-        // Step 4.
+        // Step 5.
         promise->setFixedSlot(PROMISE_STATE_SLOT, Int32Value(PROMISE_STATE_PENDING));
 
-        // Step 5.
+        // Step 6.
         RootedArrayObject reactions(cx, NewDenseEmptyArray(cx));
         if (!reactions)
             return nullptr;
         promise->setFixedSlot(PROMISE_FULFILL_REACTIONS_SLOT, ObjectValue(*reactions));
 
-        // Step 6.
+        // Step 7.
         reactions = NewDenseEmptyArray(cx);
         if (!reactions)
             return nullptr;
         promise->setFixedSlot(PROMISE_REJECT_REACTIONS_SLOT, ObjectValue(*reactions));
 
-        // Step 7.
-        promise->setFixedSlot(PROMISE_IS_HANDLED_SLOT,
-                              Int32Value(PROMISE_IS_HANDLED_STATE_UNHANDLED));
-
-        // Store an allocation stack so we can later figure out what the
-        // control flow was for some unexpected results. Frightfully expensive,
-        // but oh well.
         RootedObject stack(cx);
         if (!JS::CaptureCurrentStack(cx, &stack, 0))
             return nullptr;
-        promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectOrNullValue(stack));
-        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT, Now());
+        promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectValue(*stack));
+        Value now = JS::TimeValue(JS::TimeClip(static_cast<double>(PRMJ_Now()) /
+                                               PRMJ_USEC_PER_MSEC));
+        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT, now);
     }
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
@@ -144,10 +110,27 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     // The resolving functions are created in the compartment active when the
     // (maybe wrapped) Promise constructor was called. They contain checks and
     // can unwrap the Promise if required.
-    RootedValue resolveVal(cx);
-    RootedValue rejectVal(cx);
-    if (!CreateResolvingFunctions(cx, promiseVal, &resolveVal, &rejectVal))
+    RootedValue resolvingFunctionsVal(cx);
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CreateResolvingFunctions,
+                                         &resolvingFunctionsVal))
+    {
         return nullptr;
+    }
+    InvokeArgs args(cx);
+    if (!args.init(1))
+        return nullptr;
+    args.setCallee(resolvingFunctionsVal);
+    args.setThis(UndefinedValue());
+    args[0].set(promiseVal);
+
+    if (!Invoke(cx, args))
+        return nullptr;
+
+    RootedArrayObject resolvingFunctions(cx, &args.rval().toObject().as<ArrayObject>());
+    RootedValue resolveVal(cx, resolvingFunctions->getDenseElement(0));
+    MOZ_ASSERT(IsCallable(resolveVal));
+    RootedValue rejectVal(cx, resolvingFunctions->getDenseElement(1));
+    MOZ_ASSERT(IsCallable(rejectVal));
 
     // Need to wrap the resolution functions before storing them on the Promise.
     if (wrappedProto) {
@@ -194,7 +177,6 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
             return nullptr;
     }
 
-    // Let the Debugger know about this Promise.
     JS::dbg::onNewPromise(cx, promise);
 
     // Step 11.
@@ -206,7 +188,7 @@ namespace {
 mozilla::Atomic<uint64_t> gIDGenerator(0);
 } // namespace
 
-uint64_t
+double
 PromiseObject::getID()
 {
     Value idVal(getReservedSlot(PROMISE_ID_SLOT));
@@ -214,7 +196,7 @@ PromiseObject::getID()
         idVal.setDouble(++gIDGenerator);
         setReservedSlot(PROMISE_ID_SLOT, idVal);
     }
-    return uint64_t(idVal.toNumber());
+    return idVal.toNumber();
 }
 
 /**
@@ -405,137 +387,6 @@ PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
     args.setThis(UndefinedValue());
     args[0].set(rejectionValue);
     return Invoke(cx, args);
-}
-
-void PromiseObject::onSettled(JSContext* cx)
-{
-    Rooted<PromiseObject*> promise(cx, this);
-    RootedObject stack(cx);
-    if (!JS::CaptureCurrentStack(cx, &stack, 0)) {
-        cx->clearPendingException();
-        return;
-    }
-    promise->setFixedSlot(PROMISE_RESOLUTION_SITE_SLOT, ObjectOrNullValue(stack));
-    promise->setFixedSlot(PROMISE_RESOLUTION_TIME_SLOT, Now());
-
-    if (promise->state() == JS::PromiseState::Rejected &&
-        promise->getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() !=
-            PROMISE_IS_HANDLED_STATE_HANDLED)
-    {
-        cx->runtime()->addUnhandledRejectedPromise(cx, promise);
-    }
-
-    JS::dbg::onPromiseSettled(cx, promise);
-}
-
-// ES6, 25.4.2.1.
-bool
-PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction job(cx, &args.callee().as<JSFunction>());
-    RootedNativeObject jobArgs(cx, &job->getExtendedSlot(0).toObject().as<NativeObject>());
-
-    RootedValue argument(cx, jobArgs->getDenseElement(1));
-
-    // Step 1 (omitted).
-
-    // Steps 2-3.
-    RootedValue handlerVal(cx, jobArgs->getDenseElement(0));
-    RootedValue handlerResult(cx);
-    bool shouldReject = false;
-
-    // Steps 4-7.
-    if (handlerVal.isNumber()) {
-        int32_t handlerNum = int32_t(handlerVal.toNumber());
-        // Step 4.
-        if (handlerNum == PROMISE_HANDLER_IDENTITY) {
-            handlerResult = argument;
-        } else {
-            // Step 5.
-            MOZ_ASSERT(handlerNum == PROMISE_HANDLER_THROWER);
-            shouldReject = true;
-            handlerResult = argument;
-        }
-    } else {
-        // Step 6.
-        InvokeArgs args2(cx);
-        if (!args2.init(1))
-            return false;
-        args2.setThis(UndefinedValue());
-        args2.setCallee(handlerVal);
-        args2[0].set(argument);
-        if (Invoke(cx, args2)) {
-            handlerResult = args2.rval();
-        } else {
-            shouldReject = true;
-            // Not much we can do about uncatchable exceptions, so just bail
-            // for those.
-            if (!cx->isExceptionPending() || !GetAndClearException(cx, &handlerResult))
-                return false;
-        }
-    }
-
-    // Steps 7-9.
-    InvokeArgs args2(cx);
-    if (!args2.init(1))
-        return false;
-    args2.setThis(UndefinedValue());
-    args2[0].set(handlerResult);
-    if (shouldReject) {
-        args2.setCallee(jobArgs->getDenseElement(3));
-    } else {
-        args2.setCallee(jobArgs->getDenseElement(2));
-    }
-    bool result = Invoke(cx, args2);
-
-    args.rval().set(args2.rval());
-    return result;
-}
-
-// ES6, 25.4.2.2.
-bool
-PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction job(cx, &args.callee().as<JSFunction>());
-    RootedNativeObject jobArgs(cx, &job->getExtendedSlot(0).toObject().as<NativeObject>());
-
-    RootedValue promise(cx, jobArgs->getDenseElement(2));
-    RootedValue then(cx, jobArgs->getDenseElement(0));
-    RootedValue thenable(cx, jobArgs->getDenseElement(1));
-
-    // Step 1.
-    RootedValue resolveVal(cx);
-    RootedValue rejectVal(cx);
-    if (!CreateResolvingFunctions(cx, promise, &resolveVal, &rejectVal))
-        return false;
-
-    // Step 2.
-    InvokeArgs args2(cx);
-    if (!args2.init(2))
-        return false;
-    args2.setThis(thenable);
-    args2.setCallee(then);
-    args2[0].set(resolveVal);
-    args2[1].set(rejectVal);
-
-    // In difference to the usual pattern, we return immediately on success.
-    if (Invoke(cx, args2))
-        return true;
-
-    RootedValue thenCallResult(cx);
-    if (!GetAndClearException(cx, &thenCallResult))
-        return false;
-
-    InvokeArgs rejectArgs(cx);
-    if (!rejectArgs.init(1))
-        return false;
-    rejectArgs.setThis(UndefinedValue());
-    rejectArgs.setCallee(rejectVal);
-    rejectArgs[0].set(thenCallResult);
-
-    return Invoke(cx, rejectArgs);
 }
 
 } // namespace js
