@@ -1035,8 +1035,13 @@ ProxyAccessible::TakeFocus()
 uint32_t
 ProxyAccessible::EmbeddedChildCount() const
 {
-  uint32_t count;
-  Unused << mDoc->SendEmbeddedChildCount(mID, &count);
+  size_t count = 0, kids = mChildren.Length();
+  for (size_t i = 0; i < kids; i++) {
+    if (mChildren[i]->IsEmbeddedObject()) {
+      count++;
+    }
+  }
+
   return count;
 }
 
