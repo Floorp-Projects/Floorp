@@ -203,7 +203,7 @@ function run_test() {
 
   // check that we can create an empty origin attributes dict with default
   // members and values.
-  emptyAttrs = ChromeUtils.createDefaultOriginAttributes();
+  emptyAttrs = ChromeUtils.fillNonDefaultOriginAttributes({});
   checkValues(emptyAttrs);
 
   var uri = "http://example.org";
@@ -226,7 +226,7 @@ function run_test() {
 
   // check that we can create an origin attributes from a dict properly
   tests.forEach(function(t) {
-    let attrs = ChromeUtils.createOriginAttributesFromDict(t[1]);
+    let attrs = ChromeUtils.fillNonDefaultOriginAttributes(t[1]);
     checkValues(attrs, t[1]);
     do_check_eq(ChromeUtils.originAttributesToSuffix(attrs), t[0]);
   });
