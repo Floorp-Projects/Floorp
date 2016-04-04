@@ -21,9 +21,8 @@ class Accessible;
 class EmbeddedObjCollector final
 {
 public:
-  virtual ~EmbeddedObjCollector() { }
+  ~EmbeddedObjCollector() { }
 
-public:
   /**
    * Return index of the given accessible within the collection.
    */
