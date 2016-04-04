@@ -54,6 +54,11 @@ function runSafeWithoutClone(f, ...args) {
 // Run a function, cloning arguments into context.cloneScope, and
 // report exceptions. |f| is expected to be in context.cloneScope.
 function runSafeSync(context, f, ...args) {
+  if (context.unloaded) {
+    Cu.reportError("runSafeSync called after context unloaded");
+    return;
+  }
+
   try {
     args = Cu.cloneInto(args, context.cloneScope);
   } catch (e) {
@@ -71,6 +76,10 @@ function runSafe(context, f, ...args) {
   } catch (e) {
     Cu.reportError(e);
     dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${filterStack(Error())}`);
+  }
+  if (context.unloaded) {
+    dump(`runSafe failure: context is already unloaded ${filterStack(new Error())}\n`);
+    return undefined;
   }
   return runSafeWithoutClone(f, ...args);
 }
@@ -135,6 +144,7 @@ class BaseContext {
     this.checkedLastError = false;
     this._lastError = null;
     this.contextId = ++gContextId;
+    this.unloaded = false;
   }
 
   get cloneScope() {
@@ -143,6 +153,22 @@ class BaseContext {
 
   get principal() {
     throw new Error("Not implemented");
+  }
+
+  runSafe(...args) {
+    if (this.unloaded) {
+      Cu.reportError("context.runSafe called after context unloaded");
+    } else {
+      return runSafeSync(this, ...args);
+    }
+  }
+
+  runSafeWithoutClone(...args) {
+    if (this.unloaded) {
+      Cu.reportError("context.runSafeWithoutClone called after context unloaded");
+    } else {
+      return runSafeSyncWithoutClone(...args);
+    }
   }
 
   checkLoadURL(url, options = {}) {
@@ -271,15 +297,17 @@ class BaseContext {
   wrapPromise(promise, callback = null) {
     // Note: `promise instanceof this.cloneScope.Promise` returns true
     // here even for promises that do not belong to the content scope.
-    let runSafe = runSafeSync.bind(null, this);
+    let runSafe = this.runSafe.bind(this);
     if (promise.constructor === this.cloneScope.Promise) {
-      runSafe = runSafeSyncWithoutClone;
+      runSafe = this.runSafeWithoutClone.bind(this);
     }
 
     if (callback) {
       promise.then(
         args => {
-          if (args instanceof SpreadArgs) {
+          if (this.unloaded) {
+            dump(`Promise resolved after context unloaded\n`);
+          } else if (args instanceof SpreadArgs) {
             runSafe(callback, ...args);
           } else {
             runSafe(callback, args);
@@ -287,21 +315,37 @@ class BaseContext {
         },
         error => {
           this.withLastError(error, () => {
-            runSafeSyncWithoutClone(callback);
+            if (this.unloaded) {
+              dump(`Promise rejected after context unloaded\n`);
+            } else {
+              this.runSafeWithoutClone(callback);
+            }
           });
         });
     } else {
       return new this.cloneScope.Promise((resolve, reject) => {
         promise.then(
-          value => { runSafe(resolve, value); },
           value => {
-            runSafeSyncWithoutClone(reject, this.normalizeError(value));
+            if (this.unloaded) {
+              dump(`Promise resolved after context unloaded\n`);
+            } else {
+              runSafe(resolve, value);
+            }
+          },
+          value => {
+            if (this.unloaded) {
+              dump(`Promise rejected after context unloaded\n`);
+            } else {
+              this.runSafeWithoutClone(reject, this.normalizeError(value));
+            }
           });
       });
     }
   }
 
   unload() {
+    this.unloaded = true;
+
     MessageChannel.abortResponses({
       extensionId: this.extension.id,
       contextId: this.contextId,
@@ -570,13 +614,19 @@ EventManager.prototype = {
 
   fire(...args) {
     for (let callback of this.callbacks) {
-      runSafe(this.context, callback, ...args);
+      Promise.resolve(callback).then(callback => {
+        if (this.context.unloaded) {
+          dump(`${this.name} event fired after context unloaded.`);
+        } else if (this.callbacks.has(callback)) {
+          this.context.runSafe(callback, ...args);
+        }
+      });
     }
   },
 
   fireWithoutClone(...args) {
     for (let callback of this.callbacks) {
-      runSafeSyncWithoutClone(callback, ...args);
+      this.context.runSafeWithoutClone(callback, ...args);
     }
   },
 
@@ -609,7 +659,15 @@ function SingletonEventManager(context, name, register) {
 
 SingletonEventManager.prototype = {
   addListener(callback, ...args) {
-    let unregister = this.register(callback, ...args);
+    let wrappedCallback = (...args) => {
+      if (this.context.unloaded) {
+        dump(`${this.name} event fired after context unloaded.`);
+      } else if (this.unregister.has(callback)) {
+        return callback(...args);
+      }
+    };
+
+    let unregister = this.register(wrappedCallback, ...args);
     this.unregister.set(callback, unregister);
   },
 
@@ -933,7 +991,7 @@ Messenger.prototype = {
             this.delegate.getSender(this.context, target, sender);
           }
           let port = new Port(this.context, mm, name, portId, sender);
-          runSafeSyncWithoutClone(callback, port.api());
+          this.context.runSafeWithoutClone(callback, port.api());
           return true;
         },
       };

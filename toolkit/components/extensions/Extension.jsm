@@ -240,7 +240,6 @@ ExtensionPage = class extends BaseContext {
     this.contentWindow = contentWindow || null;
     this.uri = uri || extension.baseURI;
     this.incognito = params.incognito || false;
-    this.unloaded = false;
 
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
@@ -284,8 +283,6 @@ ExtensionPage = class extends BaseContext {
     if (this.unloaded) {
       return;
     }
-
-    this.unloaded = true;
 
     super.unload();
 
