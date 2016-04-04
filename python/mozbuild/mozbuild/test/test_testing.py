@@ -239,6 +239,10 @@ class TestTestResolver(Base):
 
         o = MozbuildObject(self.FAKE_TOPSRCDIR, None, None, topobjdir=topobjdir)
 
+        # Monkey patch the test resolver to avoid tests failing to find make
+        # due to our fake topscrdir.
+        TestResolver._run_make = lambda *a, **b: None
+
         return o._spawn(TestResolver)
 
     def test_cwd_children_only(self):
