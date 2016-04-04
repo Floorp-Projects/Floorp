@@ -27,6 +27,8 @@ enum ChaosFeature {
   IOAmounts = 0x8,
   // Iterate over hash tables in random order.
   HashTableIteration = 0x10,
+  // Randomly refuse to use cached version of image (when allowed by spec).
+  ImageCache = 0x20,
   Any = 0xffffffff,
 };
 

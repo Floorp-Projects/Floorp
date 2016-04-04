@@ -2093,11 +2093,11 @@ nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, LayoutDeviceIntPoint& aPoint) 
   if (touchEvent) {
     // return false if there is more than one touch on the page, or if
     // we can't find a touch point
-    if (touchEvent->touches.Length() != 1) {
+    if (touchEvent->mTouches.Length() != 1) {
       return false;
     }
 
-    dom::Touch* touch = touchEvent->touches.SafeElementAt(0);
+    dom::Touch* touch = touchEvent->mTouches.SafeElementAt(0);
     if (!touch) {
       return false;
     }

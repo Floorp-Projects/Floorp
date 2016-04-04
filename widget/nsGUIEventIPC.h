@@ -303,8 +303,8 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
   {
     WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
     // Sigh, Touch bites us again!  We want to be able to do
-    //   WriteParam(aMsg, aParam.touches);
-    const paramType::TouchArray& touches = aParam.touches;
+    //   WriteParam(aMsg, aParam.mTouches);
+    const paramType::TouchArray& touches = aParam.mTouches;
     WriteParam(aMsg, touches.Length());
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       mozilla::dom::Touch* touch = touches[i];
@@ -337,7 +337,7 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
             !ReadParam(aMsg, aIter, &force)) {
           return false;
         }
-        aResult->touches.AppendElement(
+        aResult->mTouches.AppendElement(
           new mozilla::dom::Touch(
             identifier, refPoint, radius, rotationAngle, force));
     }

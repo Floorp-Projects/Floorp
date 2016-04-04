@@ -774,7 +774,11 @@ nsContentIterator::NextNode(nsINode* aNode, nsTArray<int32_t>* aIndexes)
 
   // post-order
   nsINode* parent = node->GetParentNode();
-  NS_WARN_IF(!parent);
+  if (NS_WARN_IF(!parent)) {
+    MOZ_ASSERT(parent, "The node is the root node but not the last node");
+    mIsDone = true;
+    return node;
+  }
   nsIContent* sibling = nullptr;
   int32_t indx = 0;
 
@@ -839,7 +843,11 @@ nsContentIterator::PrevNode(nsINode* aNode, nsTArray<int32_t>* aIndexes)
   // if we are a Pre-order iterator, use pre-order
   if (mPre) {
     nsINode* parent = node->GetParentNode();
-    NS_WARN_IF(!parent);
+    if (NS_WARN_IF(!parent)) {
+      MOZ_ASSERT(parent, "The node is the root node but not the first node");
+      mIsDone = true;
+      return aNode;
+    }
     nsIContent* sibling = nullptr;
     int32_t indx = 0;
 

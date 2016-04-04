@@ -7963,10 +7963,6 @@ class LMemoryBarrier : public LInstructionHelper<0, 0, 0>
     MemoryBarrierBits type() const {
         return type_;
     }
-
-    const MMemoryBarrier* mir() const {
-        return mir_->toMemoryBarrier();
-    }
 };
 
 class LDebugger : public LCallInstructionHelper<0, 0, 2>

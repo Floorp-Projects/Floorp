@@ -713,6 +713,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mIsLayersIdRoot);
     WriteParam(aMsg, aParam.mUsesContainerScrolling);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
+    WriteParam(aMsg, aParam.mForceDisableApz);
   }
 
   static bool ReadContentDescription(const Message* aMsg, void** aIter, paramType* aResult)
@@ -772,7 +773,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetAllowVerticalScrollWithWheel) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsLayersIdRoot) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUsesContainerScrolling) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer));
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetForceDisableApz));
   }
 };
 

@@ -1314,7 +1314,7 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
     // This loop is similar to the one used in
     // PresShell::DispatchTouchEvent().
     const WidgetTouchEvent::TouchArray& touches =
-      aEvent->AsTouchEvent()->touches;
+      aEvent->AsTouchEvent()->mTouches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];
       // NB: the |mChanged| check is an optimization, subprocesses can

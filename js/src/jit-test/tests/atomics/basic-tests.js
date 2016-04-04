@@ -3,7 +3,7 @@
 // These do not test atomicity, just that calling and coercions and
 // indexing and exception behavior all work right.
 //
-// These do not test the futex operations.
+// These do not test the wait/wake operations.
 
 load(libdir + "asserts.js");
 
@@ -65,8 +65,6 @@ function testMethod(a, ...indices) {
 	// val = 14
 	Atomics.store(a, x, 0);
 	// val = 0
-
-	Atomics.fence();
 
 	// val = 0
 	assertEq(Atomics.add(a, x, 3), 0);
@@ -136,8 +134,6 @@ function testFunction(a, ...indices) {
 	// val = 14
 	gAtomics_store(a, x, 0);
 	// val = 0
-
-	gAtomics_fence();
 
 	// val = 0
 	assertEq(gAtomics_add(a, x, 3), 0);
@@ -211,7 +207,7 @@ var globlength = 0;		// Will be set later
 function testRangeCAS(a) {
     dprint("Range: " + a.constructor.name);
 
-    var msg = /out-of-range index for atomic access/;
+    var msg = /out-of-range index/; // A generic message
 
     assertErrorMessage(() => Atomics.compareExchange(a, -1, 0, 1), RangeError, msg);
     assertEq(a[0], 0);
@@ -380,7 +376,7 @@ function adHocExchange() {
 // ie, it must return false for n=8.
 //
 // SpiderMonkey has isLockFree(1), isLockFree(2), isLockFree(4) on all
-// supported platforms, though this is not guaranteed by the spec.
+// supported platforms, only the last is guaranteed by the spec.
 
 var sizes   = [    1,     2,     3,     4,     5,     6,     7,  8,
                    9,    10,    11,    12];
@@ -456,6 +452,13 @@ function testUint8Clamped(sab) {
     assertEq(thrown, true);
 }
 
+function testWeirdIndices() {
+    var a = new Int8Array(new SharedArrayBuffer(16));
+    a[3] = 10;
+    assertEq(Atomics.load(a, "0x03"), 10);
+    assertEq(Atomics.load(a, {valueOf: () => 3}), 10);
+}
+
 function isLittleEndian() {
     var xxx = new ArrayBuffer(2);
     var xxa = new Int16Array(xxx);
@@ -497,7 +500,6 @@ function runTests() {
     gAtomics_exchange = Atomics.exchange;
     gAtomics_load = Atomics.load;
     gAtomics_store = Atomics.store;
-    gAtomics_fence = Atomics.fence;
     gAtomics_add = Atomics.add;
     gAtomics_sub = Atomics.sub;
     gAtomics_and = Atomics.and;
@@ -551,6 +553,7 @@ function runTests() {
     // Misc
     testIsLockFree();
     testIsLockFree2();
+    testWeirdIndices();
 }
 
 if (this.Atomics && this.SharedArrayBuffer)

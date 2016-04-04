@@ -1368,6 +1368,14 @@ var gCSSProperties = {
     alias_for: "box-sizing",
     subproperties: [ "box-sizing" ],
   },
+  "color-adjust": {
+    domProp: "colorAdjust",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "economy" ],
+    other_values: [ "exact" ],
+    invalid_values: []
+  },
   "-moz-columns": {
     domProp: "MozColumns",
     inherited: false,

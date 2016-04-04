@@ -241,7 +241,7 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
   LayerToParentLayerMatrix4x4 transform = mTransform *
       CompleteAsyncTransform(
         mApzc
-      ? mApzc->GetCurrentAsyncTransformWithOverscroll()
+      ? mApzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::NORMAL)
       : AsyncTransformComponentMatrix());
   return UntransformBy(transform.Inverse(), aPoint);
 }

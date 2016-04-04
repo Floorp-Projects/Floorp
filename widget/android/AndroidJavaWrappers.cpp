@@ -611,7 +611,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
     event.mTime = Time();
 
     const LayoutDeviceIntPoint& offset = widget->WidgetToScreenOffset();
-    event.touches.SetCapacity(endIndex - startIndex);
+    event.mTouches.SetCapacity(endIndex - startIndex);
     for (int i = startIndex; i < endIndex; i++) {
         // In this code branch, we are dispatching this event directly
         // into Gecko (as opposed to going through the AsyncPanZoomController),
@@ -629,7 +629,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
                                     radius,
                                     Orientations()[i],
                                     Pressures()[i]);
-        event.touches.AppendElement(t);
+        event.mTouches.AppendElement(t);
     }
 
     return event;
