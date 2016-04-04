@@ -34,7 +34,7 @@ function getSender(context, target, sender) {
 
     sender.tab = TabManager.convert(context.extension, tab);
   } else if ("tabId" in sender) {
-    // The message came from an ExtensionPage. In that case, it should
+    // The message came from an ExtensionContext. In that case, it should
     // include a tabId property (which is filled in by the page-open
     // listener below).
     sender.tab = TabManager.convert(context.extension, TabManager.getTab(sender.tabId));
@@ -42,14 +42,14 @@ function getSender(context, target, sender) {
   }
 }
 
-// WeakMap[ExtensionPage -> {tab, parentWindow}]
+// WeakMap[ExtensionContext -> {tab, parentWindow}]
 var pageDataMap = new WeakMap();
 
 /* eslint-disable mozilla/balanced-listeners */
 // This listener fires whenever an extension page opens in a tab
 // (either initiated by the extension or the user). Its job is to fill
 // in some tab-specific details and keep data around about the
-// ExtensionPage.
+// ExtensionContext.
 extensions.on("page-load", (type, page, params, sender, delegate) => {
   if (params.type == "tab" || params.type == "popup") {
     let browser = params.docShell.chromeEventHandler;

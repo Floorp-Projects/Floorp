@@ -564,7 +564,7 @@ LocaleData.prototype = {
 //
 // The result is an object with addListener, removeListener, and
 // hasListener methods. |context| is an add-on scope (either an
-// ExtensionPage in the chrome process or ExtensionContext in a
+// ExtensionContext in the chrome process or ExtensionContext in a
 // content process). |name| is for debugging. |register| is a function
 // to register the listener. |register| is only called once, event if
 // multiple listeners are registered. |register| should return an
