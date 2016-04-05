@@ -213,6 +213,16 @@ SessionStore.prototype = {
         this.onTabRemove(window, browser);
         break;
       }
+      case "TabPreZombify": {
+        let browser = aEvent.target;
+        this.onTabRemove(window, browser, true);
+        break;
+      }
+      case "TabPostZombify": {
+        let browser = aEvent.target;
+        this.onTabAdd(window, browser, true);
+        break;
+      }
       case "TabSelect": {
         let browser = aEvent.target;
         this.onTabSelect(window, browser);
@@ -277,11 +287,13 @@ SessionStore.prototype = {
     for (let i = 0; i < tabs.length; i++)
       this.onTabAdd(aWindow, tabs[i].browser, true);
 
-    // Notification of tab add/remove/selection
+    // Notification of tab add/remove/selection/zombification
     let browsers = aWindow.document.getElementById("browsers");
     browsers.addEventListener("TabOpen", this, true);
     browsers.addEventListener("TabClose", this, true);
     browsers.addEventListener("TabSelect", this, true);
+    browsers.addEventListener("TabPreZombify", this, true);
+    browsers.addEventListener("TabPostZombify", this, true);
   },
 
   onWindowClose: function ss_onWindowClose(aWindow) {
@@ -293,6 +305,8 @@ SessionStore.prototype = {
     browsers.removeEventListener("TabOpen", this, true);
     browsers.removeEventListener("TabClose", this, true);
     browsers.removeEventListener("TabSelect", this, true);
+    browsers.removeEventListener("TabPreZombify", this, true);
+    browsers.removeEventListener("TabPostZombify", this, true);
 
     if (this._loadState == STATE_RUNNING) {
       // Update all window data for a last time
@@ -972,6 +986,8 @@ SessionStore.prototype = {
       };
 
       let tab = window.BrowserApp.addTab(tabData.entries[tabData.index - 1].url, params);
+      tab.browser.__SS_data = tabData;
+      tab.browser.__SS_extdata = tabData.extData;
       this._restoreTab(tabData, tab.browser);
     }
   },
@@ -991,12 +1007,18 @@ SessionStore.prototype = {
   * point, but text data must be delayed until the content loads.
   */
   _restoreTab: function ss_restoreTab(aTabData, aBrowser) {
+    // aTabData shouldn't be empty here, but if it is,
+    // _restoreHistory() will crash otherwise.
+    if (!aTabData || aTabData.entries.length == 0) {
+      Cu.reportError("SessionStore.js: Error trying to restore tab with empty tabdata");
+      return;
+    }
     this._restoreHistory(aTabData, aBrowser.sessionHistory);
 
     // Restoring the text data requires waiting for the content to load. So
     // we set a flag and delay this until the "load" event.
     //this._restoreTextData(aTabData, aBrowser);
-    aBrowser.__SS_restore_data = aTabData || {};
+    aBrowser.__SS_restore_data = aTabData;
   },
 
   /**
@@ -1094,19 +1116,19 @@ SessionStore.prototype = {
         }
       }
 
+      tab.browser.__SS_data = tabData;
+      tab.browser.__SS_extdata = tabData.extData;
+
       if (window.BrowserApp.selectedTab == tab) {
         this._restoreTab(tabData, tab.browser);
 
         delete tab.browser.__SS_restore;
         tab.browser.removeAttribute("pending");
       } else {
-        // Make sure the browser has its session data for the delay reload
-        tab.browser.__SS_data = tabData;
+        // Mark the browser for delay loading
         tab.browser.__SS_restore = true;
         tab.browser.setAttribute("pending", "true");
       }
-
-      tab.browser.__SS_extdata = tabData.extData;
     }
 
     // Restore the closed tabs array on the current window.
@@ -1153,12 +1175,11 @@ SessionStore.prototype = {
       tabIndex: this._lastClosedTabIndex
     };
     let tab = aWindow.BrowserApp.addTab(aCloseTabData.entries[aCloseTabData.index - 1].url, params);
+    tab.browser.__SS_data = aCloseTabData;
+    tab.browser.__SS_extdata = aCloseTabData.extData;
     this._restoreTab(aCloseTabData, tab.browser);
 
     this._lastClosedTabIndex = -1;
-
-    // Put back the extra data
-    tab.browser.__SS_extdata = aCloseTabData.extData;
 
     if (this._notifyClosedTabs) {
       this._sendClosedTabsToJava(aWindow);
