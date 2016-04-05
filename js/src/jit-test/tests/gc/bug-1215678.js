@@ -2,7 +2,7 @@
 if (!('oomTest' in this))
     a;
 
-enableShellObjectMetadataCallback()
+enableShellAllocationMetadataBuilder()
 oomTest(() => {
   newGlobal()
 })

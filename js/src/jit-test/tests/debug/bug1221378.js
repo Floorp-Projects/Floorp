@@ -8,4 +8,4 @@
 // actually use), then the ability to make whatever metadata collection code
 // remains allocate an Array will cover this regression. For example, it could
 // be a flag that one can only set in debug builds from TestingFunctions.cpp.
-newGlobal().eval('enableShellObjectMetadataCallback(); Array');
+newGlobal().eval('enableShellAllocationMetadataBuilder(); Array');

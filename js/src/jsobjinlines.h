@@ -277,7 +277,7 @@ ClassCanHaveFixedData(const Class* clasp)
 
 // This function is meant to be called from allocation fast paths.
 //
-// If we do have an allocation metadata hook, it can cause a GC, so the object
+// If we do have an allocation metadata builder, it can cause a GC, so the object
 // must be rooted. The usual way to do this would be to make our callers pass a
 // HandleObject, but that would require them to pay the cost of rooting the
 // object unconditionally, even though collecting metadata is rare. Instead,
@@ -290,14 +290,14 @@ SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
 {
     MOZ_ASSERT(!cxArg->compartment()->hasObjectPendingMetadata());
 
-    // The metadata callback is invoked for each object created on the main
+    // The metadata builder is invoked for each object created on the main
     // thread, except when analysis/compilation is active, to avoid recursion.
     if (JSContext* cx = cxArg->maybeJSContext()) {
-        if (MOZ_UNLIKELY((size_t)cx->compartment()->hasObjectMetadataCallback()) &&
-            !cx->zone()->suppressObjectMetadataCallback)
+        if (MOZ_UNLIKELY((size_t)cx->compartment()->hasAllocationMetadataBuilder()) &&
+            !cx->zone()->suppressAllocationMetadataBuilder)
         {
             // Don't collect metadata on objects that represent metadata.
-            AutoSuppressObjectMetadataCallback suppressMetadata(cx);
+            AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
             RootedObject rooted(cx, obj);
             cx->compartment()->setNewObjectMetadata(cx, rooted);
@@ -371,7 +371,7 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
         }
     }
 
-    if (group->clasp()->shouldDelayMetadataCallback())
+    if (group->clasp()->shouldDelayMetadataBuilder())
         cx->compartment()->setObjectPendingMetadata(cx, obj);
     else
         obj = SetNewObjectMetadata(cx, obj);

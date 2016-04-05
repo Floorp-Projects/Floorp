@@ -1048,6 +1048,8 @@
     </toolbarpalette>
   </toolbox>
 
+  <hbox id="fullscr-toggler" hidden="true"/>
+
   <deck id="content-deck" flex="1">
     <hbox flex="1" id="browser">
       <vbox id="browser-border-start" hidden="true" layer="true"/>
@@ -1170,8 +1172,5 @@
 #     Introducing the iframe dynamically, as needed, was found to be better than
 #     starting with an empty iframe here in browser.xul from a Ts standpoint.
 </deck>
-
-# Put it at the very end to make sure it is not covered by anything.
-<hbox id="fullscr-toggler" hidden="true"/>
 
 </window>
