@@ -128,6 +128,7 @@ function checkBookmarksItemsChevronContextMenu() {
         if (child.style.visibility != "hidden")
           return true;
       }
+      return false;
     });
     yield checkPlacesContextMenu(chevronPopup);
     info("Waiting for bookmark toolbar item chevron popup to close");
