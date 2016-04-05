@@ -181,7 +181,8 @@ class SavedStacks {
 
     // An alloction metadata builder that marks cells with the JavaScript stack
     // at which they were allocated.
-    class MetadataBuilder : public AllocationMetadataBuilder {
+    struct MetadataBuilder : public AllocationMetadataBuilder {
+        MetadataBuilder() : AllocationMetadataBuilder() { }
         virtual JSObject* build(JSContext *cx, HandleObject obj,
                                 AutoEnterOOMUnsafeRegion& oomUnsafe) const override;
     };
