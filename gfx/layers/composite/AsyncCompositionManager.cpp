@@ -825,6 +825,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   // The final clip for the layer is the intersection of these clips.
   Maybe<ParentLayerIntRect> asyncClip = aLayer->GetClipRect();
 
+  // If we are a perspective transform ContainerLayer, apply the clip deferred
+  // from our child (if there is any) before we iterate over our frame metrics,
+  // because this clip is subject to all async transforms of this layer.
+  asyncClip = IntersectMaybeRects(asyncClip, clipDeferredFromChildren);
+
   // The transform of a mask layer is relative to the masked layer's parent
   // layer. So whenever we apply an async transform to a layer, we need to
   // apply that same transform to the layer's own mask layer.
@@ -978,8 +983,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   }
 
   if (hasAsyncTransform || clipDeferredFromChildren) {
-    aLayer->AsLayerComposite()->SetShadowClipRect(
-        IntersectMaybeRects(asyncClip, clipDeferredFromChildren));
+    aLayer->AsLayerComposite()->SetShadowClipRect(asyncClip);
   }
 
   if (hasAsyncTransform) {
