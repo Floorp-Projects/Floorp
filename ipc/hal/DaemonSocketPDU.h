@@ -10,10 +10,12 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/SocketBase.h"
 #include "mozilla/ipc/DaemonSocketMessageHandlers.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace ipc {
 
+static const size_t MAX_NFDS = 16;
 class DaemonSocketIOConsumer;
 
 /**
@@ -72,7 +74,7 @@ public:
   ssize_t Send(int aFd) override;
   ssize_t Receive(int aFd) override;
 
-  int AcquireFd();
+  nsTArray<int> AcquireFds();
 
   nsresult UpdateHeader();
 
@@ -82,7 +84,7 @@ private:
 
   DaemonSocketIOConsumer* mConsumer;
   RefPtr<DaemonSocketResultHandler> mRes;
-  ScopedClose mReceivedFd;
+  nsTArray<ScopedClose> mReceivedFds;
 };
 
 }
