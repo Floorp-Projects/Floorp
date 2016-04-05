@@ -14,16 +14,17 @@ addRDMTask(TEST_URL, function*({ ui }) {
   yield waitUntilState(store, state => state.viewports.length == 1);
 
   // A single viewport of default size appeared
-  let browser = ui.toolWindow.document.querySelector(".browser");
-  is(browser.width, "320", "Viewport has default width");
-  is(browser.height, "480", "Viewport has default height");
+  let viewport = ui.toolWindow.document.querySelector(".viewport-content");
+
+  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
+     "320px", "Viewport has default width");
+  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("height"),
+     "480px", "Viewport has default height");
 
   // Browser's location should match original tab
-  // TODO: For the moment, we have parent process <iframe>s and we can just
-  // check the location directly.  Bug 1240896 will change this to <iframe
-  // mozbrowser remote>, which is in the child process, so ContentTask or
-  // similar will be needed.
-  yield waitForFrameLoad(browser, TEST_URL);
-  is(browser.contentWindow.location.href, TEST_URL,
-     "Viewport location matches");
+  yield waitForFrameLoad(ui, TEST_URL);
+  let location = yield spawnViewportTask(ui, {}, function*() {
+    return content.location.href;
+  });
+  is(location, TEST_URL, "Viewport location matches");
 });
