@@ -126,7 +126,7 @@ main(int argc, char* argv[])
     PR_fprintf(PR_STDERR, "Failed to initialize NSS\n");
     exit(EXIT_FAILURE);
   }
-  PLArenaPool* arena = PORT_NewArena(256 * argc);
+  UniquePLArenaPool arena(PORT_NewArena(256 * argc));
   if (!arena) {
     PrintPRError("PORT_NewArena failed");
     exit(EXIT_FAILURE);

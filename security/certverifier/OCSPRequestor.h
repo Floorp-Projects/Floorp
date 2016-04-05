@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_psm_OCSPRequestor_h
-#define mozilla_psm_OCSPRequestor_h
+#ifndef OCSPRequestor_h
+#define OCSPRequestor_h
 
 #include "CertVerifier.h"
 #include "secmodt.h"
@@ -13,11 +13,11 @@
 namespace mozilla { namespace psm {
 
 // The memory returned via |encodedResponse| is owned by the given arena.
-Result DoOCSPRequest(PLArenaPool* arena, const char* url,
+Result DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
                      const SECItem* encodedRequest, PRIntervalTime timeout,
                      bool useGET,
              /*out*/ SECItem*& encodedResponse);
 
 } } // namespace mozilla::psm
 
-#endif // mozilla_psm_OCSPRequestor_h
+#endif // OCSPRequestor_h
