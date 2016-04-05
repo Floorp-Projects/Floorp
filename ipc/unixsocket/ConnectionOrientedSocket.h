@@ -79,7 +79,7 @@ private:
   /**
    * Connector object used to create the connection we are currently using.
    */
-  nsAutoPtr<UnixSocketConnector> mConnector;
+  UniquePtr<UnixSocketConnector> mConnector;
 
   /**
    * Number of valid bytes in |mPeerAddress|.
