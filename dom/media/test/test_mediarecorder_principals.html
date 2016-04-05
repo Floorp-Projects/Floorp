@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489415
+-->
+<head>
+  <title>Test for MediaRecorder Reaction to Principal Change</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<div>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1018299">Test for MediaRecorder Principal Handling</a>
+</div>
+
+<video id="v1" preload="auto"></video>
+<video id="v2" preload="auto"></video>
+
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+var throwOutside = e => setTimeout(() => { throw e; });
+
+// Generate a random key. The first load with that key will return
+// data, the second and subsequent loads with that key will return a redirect
+// to a different origin ('localhost:8888' will be redirected to 'example.org',
+// and 'example.org' will be redirected to 'localhost:8888'). We rely on the
+// fact that Ogg will do a seek to the end of the resource, triggering a new
+// load with the same key which will return a same-origin resource.
+// Loading data from two different origins should be detected by the media
+// cache and result in a null principal so that the MediaRecorder usages below
+// fail.
+let key = Math.floor(Math.random()*100000000);
+let interval;
+
+function testPrincipals(resource) {
+  if (!resource) {
+    todo(false, "No types supported");
+    return;
+  }
+  // Reduce cache size and cache-ahead to make HTMLMediaElement do partial requests.
+  return pushPrefs(['media.cache_readahead_limit', 2],
+                   ['media.cache_size', 192])
+  .then(() => {
+    // First test: Load file from same-origin first, then get redirected to
+    // another origin before attempting to record stream.
+    let video = document.getElementById("v1");
+    video.src =
+        "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v1_" +
+        key + "&res=" + resource.name;
+    video.load();
+    // To limit readahead, avoid racing with playback and "catching up" mode.
+    return new Promise(resolve => video.oncanplaythrough = resolve).then(() => {
+      video.play();
+      interval = setInterval(() => info("video.currentTime = "+ video.currentTime), 1000);
+
+      let msg = "mediaRecorder.start() must throw SecurityError";
+      return new Promise(resolve => video.onplaying = resolve)
+      .then(() => waitUntil(() => video.currentTime > resource.duration / 2))
+      // Test failure of the next step only, so "catch-bypass" any errors above.
+      .then(() => Promise.resolve()
+        .then(() => new MediaRecorder(video.mozCaptureStreamUntilEnded()).start())
+        .then(() => ok(false, msg), e => is(e.name, "SecurityError", msg)), 0)
+      .then(() => clearInterval(interval));
+    });
+  })
+  .then(() => {
+    // Second test: Load file from same-origin first, but record ASAP, before
+    // getting redirected to another origin.
+    let video = document.getElementById("v2");
+    video.src =
+        "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v2_" +
+        key + "&res=" + resource.name;
+    video.load();
+    let rec, hasStopped, hasEnded = new Promise(r => video.onended = r);
+    let data = [];
+
+    let msgNoThrow = "mediaRecorder.start() should not throw here";
+    let msgSecErr = "mediaRecorder.onerror must fire SecurityError";
+    let msgOnStop = "mediaRecorder.onstop must also have fired";
+    return new Promise(resolve => video.onloadedmetadata = resolve).then(() => {
+      rec = new MediaRecorder(video.mozCaptureStreamUntilEnded());
+      rec.ondataavailable = e => data.push(e.data);
+      rec.start();
+      hasStopped = new Promise(resolve => rec.onstop = resolve);
+      video.play();
+    })
+    .then(() => ok(true, msgNoThrow), e => is(e.name, null, msgNoThrow))
+    .then(() => Promise.race([
+      new Promise((_, reject) => rec.onerror = e => reject(new DOMException("", e.name))),
+      hasEnded
+    ]))
+    .then(() => ok(false, msgSecErr), e => is(e.name, "SecurityError", msgSecErr))
+    .then(() => Promise.race([hasStopped, hasEnded.then(() => Promise.reject())]))
+    .then(() => ok(true, msgOnStop), e => ok(false, msgOnStop))
+    .then(() => clearInterval(interval));
+  });
+}
+
+testPrincipals(getPlayableVideo(gSeekTests))
+.catch(e => throwOutside(e))
+.then(() => SimpleTest.finish())
+.catch(e => throwOutside(e));
+
+var stop = stream => stream.getTracks().forEach(track => track.stop());
+var wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+var waitUntil = f => new Promise(resolve => {
+  var ival = setInterval(() => f() && resolve(clearInterval(ival)), 100);
+});
+
+</script>
+</pre>
+
+</body>
+</html>
