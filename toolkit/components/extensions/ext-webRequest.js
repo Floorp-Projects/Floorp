@@ -34,6 +34,7 @@ function WebRequestEventManager(context, eventName) {
       let data2 = {
         requestId: data.requestId,
         url: data.url,
+        originUrl: data.originUrl,
         method: data.method,
         type: data.type,
         timeStamp: Date.now(),

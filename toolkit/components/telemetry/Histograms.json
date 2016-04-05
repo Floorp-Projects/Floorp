@@ -5259,13 +5259,6 @@
     "description": "Time for a URL bar DB search to return (ms)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_GECKOAPP_STARTUP_ACTION": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, WebApp, Guest, Restricted, Shortcut)",
-    "cpp_guard": "ANDROID"
-  },
   "FENNEC_RESTRICTED_PROFILE_RESTRICTIONS": {
     "expires_in_version": "50",
     "kind": "enumerated",
@@ -9319,23 +9312,6 @@
     "high": 50,
     "n_buckets": 10,
     "description": "The number of tabs queued when opened."
-  },
-  "FENNEC_TABQUEUE_PROMPT_ENABLE_YES" : {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "The number of times the tab queue prompt was seen before the user selected YES."
-  },
-  "FENNEC_TABQUEUE_PROMPT_ENABLE_NO" : {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "The number of times the tab queue prompt was seen before the user selected NO."
-  },
-  "FENNEC_TABQUEUE_ENABLED": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Has the tab queue functionality been enabled."
   },
   "FENNEC_CUSTOM_HOMEPAGE": {
     "expires_in_version": "50",
