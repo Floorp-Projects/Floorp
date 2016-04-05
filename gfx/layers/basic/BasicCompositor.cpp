@@ -160,7 +160,7 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
 }
 
 already_AddRefed<CompositingRenderTarget>
-BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, SurfaceInitMode aInit, BufferMode aBufferMode)
+BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRect& aClearRect, BufferMode aBufferMode)
 {
   MOZ_ASSERT(mDrawTarget);
   MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
@@ -173,7 +173,7 @@ BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, S
   IntRect rect = aRect.ToUnknownRect();
 
   if (aBufferMode != BufferMode::BUFFER_NONE) {
-    RefPtr<DrawTarget> target = mWidget->CreateBackBufferDrawTarget(mDrawTarget, aRect, aInit == INIT_MODE_CLEAR);
+    RefPtr<DrawTarget> target = mWidget->CreateBackBufferDrawTarget(mDrawTarget, aRect, aClearRect);
     if (!target) {
       return nullptr;
     }
@@ -185,8 +185,9 @@ BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, S
       windowRect.ExpandToEnclose(IntPoint(0, 0));
     }
     rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
-    if (aInit == INIT_MODE_CLEAR) {
-      mDrawTarget->ClearRect(Rect(rect - rt->GetOrigin()));
+    if (!aClearRect.IsEmpty()) {
+      IntRect clearRect = aRect.ToUnknownRect();
+      mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
     }
   }
 
@@ -474,7 +475,7 @@ void
 BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                             const gfx::Rect *aClipRectIn,
                             const gfx::Rect& aRenderBounds,
-                            bool aOpaque,
+                            const nsIntRegion& aOpaqueRegion,
                             gfx::Rect *aClipRectOut /* = nullptr */,
                             gfx::Rect *aRenderBoundsOut /* = nullptr */)
 {
@@ -522,11 +523,20 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     return;
   }
 
+  LayoutDeviceIntRect clearRect;
+  if (!aOpaqueRegion.IsEmpty()) {
+    LayoutDeviceIntRegion clearRegion = mInvalidRegion;
+    clearRegion.SubOut(LayoutDeviceIntRegion::FromUnknownRegion(aOpaqueRegion));
+    clearRect = clearRegion.GetBounds();
+  } else {
+    clearRect = mInvalidRect;
+  }
+
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
     CreateRenderTargetForWindow(mInvalidRect,
-                                aOpaque ? INIT_MODE_NONE : INIT_MODE_CLEAR,
+                                clearRect,
                                 bufferMode);
   if (!target) {
     if (!mTarget) {

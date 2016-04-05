@@ -631,7 +631,7 @@ void
 CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                           const Rect *aClipRectIn,
                           const Rect& aRenderBounds,
-                          bool aOpaque,
+                          const nsIntRegion& aOpaqueRegion,
                           Rect *aClipRectOut,
                           Rect *aRenderBoundsOut)
 {
