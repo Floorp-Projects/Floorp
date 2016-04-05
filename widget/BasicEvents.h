@@ -496,6 +496,61 @@ public:
 };
 
 /******************************************************************************
+ * mozilla::NativeEventData
+ *
+ * WidgetGUIEvent's mPluginEvent member used to be a void* pointer,
+ * used to reference external, OS-specific data structures.
+ *
+ * That void* pointer wasn't serializable by itself, causing
+ * certain plugin events not to function in e10s. See bug 586656.
+ *
+ * To make this serializable, we changed this void* pointer into
+ * a proper buffer, and copy these external data structures into this
+ * buffer.
+ *
+ * That buffer is NativeEventData::mBuffer below.
+ *
+ * We wrap this in that NativeEventData class providing operators to
+ * be compatible with existing code that was written around
+ * the old void* field.
+ ******************************************************************************/
+
+class NativeEventData final
+{
+  nsTArray<uint8_t> mBuffer;
+
+  friend struct IPC::ParamTraits<mozilla::NativeEventData>;
+
+public:
+
+  MOZ_EXPLICIT_CONVERSION operator bool() const
+  {
+    return !mBuffer.IsEmpty();
+  }
+
+  template<typename T>
+  MOZ_EXPLICIT_CONVERSION operator const T*() const
+  {
+    return mBuffer.IsEmpty()
+           ? nullptr
+           : reinterpret_cast<const T*>(mBuffer.Elements());
+  }
+
+  template <typename T>
+  void Copy(const T& other)
+  {
+    static_assert(!mozilla::IsPointer<T>::value, "Don't want a pointer!");
+    mBuffer.SetLength(sizeof(T));
+    memcpy(mBuffer.Elements(), &other, mBuffer.Length());
+  }
+
+  void Clear()
+  {
+    mBuffer.Clear();
+  }
+};
+
+/******************************************************************************
  * mozilla::WidgetGUIEvent
  ******************************************************************************/
 
@@ -537,24 +592,6 @@ public:
   nsCOMPtr<nsIWidget> mWidget;
 
   /*
-   * Explanation for this PluginEvent class:
-   *
-   * WidgetGUIEvent's mPluginEvent member used to be a void* pointer,
-   * used to reference external, OS-specific data structures.
-   *
-   * That void* pointer wasn't serializable by itself, causing
-   * certain plugin events not to function in e10s. See bug 586656.
-   *
-   * To make this serializable, we changed this void* pointer into
-   * a proper buffer, and copy these external data structures into this
-   * buffer.
-   *
-   * That buffer is PluginEvent::mBuffer below.
-   *
-   * We wrap this in that PluginEvent class providing operators to
-   * be compatible with existing code that was written around
-   * the old void* field.
-   *
    * Ideally though, we wouldn't allow arbitrary reinterpret_cast'ing here;
    * instead, we would at least store type information here so that
    * this class can't be used to reinterpret one structure type into another.
@@ -562,40 +599,7 @@ public:
    * WidgetGUIEvent and other Event classes to remove the need for this
    * mPluginEvent field.
    */
-  class PluginEvent final
-  {
-    nsTArray<uint8_t> mBuffer;
-
-    friend struct IPC::ParamTraits<mozilla::WidgetGUIEvent>;
-
-  public:
-
-    MOZ_EXPLICIT_CONVERSION operator bool() const
-    {
-      return !mBuffer.IsEmpty();
-    }
-
-    template<typename T>
-    MOZ_EXPLICIT_CONVERSION operator const T*() const
-    {
-      return mBuffer.IsEmpty()
-             ? nullptr
-             : reinterpret_cast<const T*>(mBuffer.Elements());
-    }
-
-    template <typename T>
-    void Copy(const T& other)
-    {
-      static_assert(!mozilla::IsPointer<T>::value, "Don't want a pointer!");
-      mBuffer.SetLength(sizeof(T));
-      memcpy(mBuffer.Elements(), &other, mBuffer.Length());
-    }
-
-    void Clear()
-    {
-      mBuffer.Clear();
-    }
-  };
+  typedef NativeEventData PluginEvent;
 
   // Event for NPAPI plugin
   PluginEvent mPluginEvent;
