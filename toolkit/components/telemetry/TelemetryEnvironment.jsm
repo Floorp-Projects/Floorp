@@ -146,7 +146,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["layers.componentalpha.enabled", {what: RECORD_PREF_VALUE}],
   ["layers.d3d11.disable-warp", {what: RECORD_PREF_VALUE}],
   ["layers.d3d11.force-warp", {what: RECORD_PREF_VALUE}],
-  ["layers.offmainthreadcomposition.force-disabled", {what: RECORD_PREF_VALUE}],
+  ["layers.offmainthreadcomposition.enabled", {what: RECORD_PREF_VALUE}],
   ["layers.prefer-d3d9", {what: RECORD_PREF_VALUE}],
   ["layers.prefer-opengl", {what: RECORD_PREF_VALUE}],
   ["layout.css.devPixelsPerPx", {what: RECORD_PREF_VALUE}],
