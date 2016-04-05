@@ -108,7 +108,7 @@ function* testTables() {
   }
 }
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   testTree();

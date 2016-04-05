@@ -13,7 +13,7 @@ const TEST_DATA = [
     desc: "Hiding a node by creating a new stylesheet",
     selector: "#normal-div",
     before: true,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         let div = content.document.createElement("div");
         div.id = "new-style";
@@ -27,7 +27,7 @@ const TEST_DATA = [
     desc: "Showing a node by deleting an existing stylesheet",
     selector: "#normal-div",
     before: false,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         content.document.getElementById("new-style").remove();
       `);
@@ -38,7 +38,7 @@ const TEST_DATA = [
     desc: "Hiding a node by changing its style property",
     selector: "#display-none",
     before: false,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         let node = content.document.querySelector("#display-none");
         node.style.display = "block";
@@ -50,7 +50,7 @@ const TEST_DATA = [
     desc: "Showing a node by removing its hidden attribute",
     selector: "#hidden-true",
     before: false,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         content.document.querySelector("#hidden-true")
                         .removeAttribute("hidden");
@@ -62,7 +62,7 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a hidden attribute",
     selector: "#hidden-true",
     before: true,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.setAttribute("#hidden-true", "hidden", "true");
     },
     after: false
@@ -71,7 +71,7 @@ const TEST_DATA = [
     desc: "Showing a node by changin a stylesheet's rule",
     selector: "#hidden-via-stylesheet",
     before: false,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         content.document.styleSheets[0]
                         .cssRules[0].style
@@ -84,7 +84,7 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a new rule to a stylesheet",
     selector: "#hidden-via-stylesheet",
     before: true,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         content.document.styleSheets[0].insertRule(
           "#hidden-via-stylesheet {display: none;}", 1);
@@ -96,7 +96,7 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a class that matches an existing rule",
     selector: "#normal-div",
     before: true,
-    changeStyle: function*(testActor) {
+    changeStyle: function* (testActor) {
       yield testActor.eval(`
         content.document.styleSheets[0].insertRule(
           ".a-new-class {display: none;}", 2);
@@ -108,7 +108,7 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   for (let data of TEST_DATA) {

@@ -11,7 +11,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps-large.html";
 
-add_task(function*() {
+add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   yield openEditor(ui.editors[0]);

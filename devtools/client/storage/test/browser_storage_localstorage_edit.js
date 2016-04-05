@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
 
   yield selectTreeItem(["localStorage", "http://test1.example.org"]);

@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
   let ids;
 

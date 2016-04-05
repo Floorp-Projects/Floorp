@@ -15,7 +15,7 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
   let {inspector, view, testActor} = yield openLayoutView();
 

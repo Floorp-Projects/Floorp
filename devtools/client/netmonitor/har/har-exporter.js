@@ -175,6 +175,7 @@ const HarExporter = {
       return JSON.stringify(har, null, "  ");
     } catch (err) {
       Cu.reportError(err);
+      return undefined;
     }
   },
 };

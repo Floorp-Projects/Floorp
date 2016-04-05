@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 
 const TEST_URL = "data:text/html;charset=utf8,<div>test element</div>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");

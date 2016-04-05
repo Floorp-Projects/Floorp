@@ -8,7 +8,7 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
 const NEW_RULE = "body { background-color: purple; }";
 
-add_task(function*() {
+add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "correct number of editors");
@@ -25,7 +25,7 @@ add_task(function*() {
   yield styleChanges;
 
   let rules = yield ContentTask.spawn(gBrowser.selectedBrowser, 0,
-  function*(index) {
+  function* (index) {
     let sheet = content.document.styleSheets[index];
     return [...sheet.cssRules].map(rule => rule.cssText);
   });

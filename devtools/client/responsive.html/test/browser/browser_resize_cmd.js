@@ -6,7 +6,7 @@
 /* global ResponsiveUIManager */
 /* eslint key-spacing: 0 */
 
-add_task(function*() {
+add_task(function* () {
   let manager = ResponsiveUIManager;
   let done;
 
@@ -31,7 +31,7 @@ add_task(function*() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(isOpen(), "responsive mode is open");
         }),
@@ -50,7 +50,7 @@ add_task(function*() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(!isOpen(), "responsive mode is closed");
         }),
@@ -73,7 +73,7 @@ add_task(function*() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(isOpen(), "responsive mode is open");
         }),
@@ -92,7 +92,7 @@ add_task(function*() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(!isOpen(), "responsive mode is closed");
         }),
@@ -119,7 +119,7 @@ add_task(function*() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(isOpen(), "responsive mode is open");
         }),
@@ -138,7 +138,7 @@ add_task(function*() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(!isOpen(), "responsive mode is closed");
         }),

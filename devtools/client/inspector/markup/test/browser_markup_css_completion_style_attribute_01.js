@@ -69,7 +69,7 @@ const TEST_DATA = [
    -1, -1, false]
 ];
 
-add_task(function*() {
+add_task(function* () {
   info("Opening the inspector on the test URL");
   let {inspector} = yield openInspectorForURL(TEST_URL);
 

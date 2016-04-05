@@ -66,7 +66,7 @@ const TEST_DATA = [
   ["down", "head"]
 ];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");

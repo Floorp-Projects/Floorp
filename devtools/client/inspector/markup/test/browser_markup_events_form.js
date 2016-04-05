@@ -14,7 +14,7 @@ const TEST_ACTOR_URL = CHROME_URL_ROOT + "actor_events_form.js";
 
 var {EventsFormFront} = require(TEST_ACTOR_URL);
 
-add_task(function*() {
+add_task(function* () {
   info("Opening the Toolbox");
   let tab = yield addTab(TEST_PAGE_URL);
   let toolbox = yield openToolboxForTab(tab, "webconsole");

@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 // inspector-updated event. This means that the test verifies that the
 // inspector-updated event is emitted *after* the animation panel is ready.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, controller} = yield openAnimationInspector();
 

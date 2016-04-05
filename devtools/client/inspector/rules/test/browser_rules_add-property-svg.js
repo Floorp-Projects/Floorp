@@ -9,7 +9,7 @@
 var TEST_URL = "chrome://global/skin/icons/warning.svg";
 var TEST_SELECTOR = "path";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URL);
   let {inspector, view} = yield openRuleView();
   yield selectNode(TEST_SELECTOR, inspector);

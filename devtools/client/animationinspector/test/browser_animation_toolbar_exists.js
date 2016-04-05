@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // Also test that this toolbar gets replaced by the timeline toolbar when there
 // are animations to be displayed.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, window} = yield openAnimationInspector();
   let doc = window.document;

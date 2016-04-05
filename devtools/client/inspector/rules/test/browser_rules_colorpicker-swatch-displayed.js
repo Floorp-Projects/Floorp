@@ -37,7 +37,7 @@ const TESTS = [
   {selector: "*", propertyName: "box-shadow", nb: 2},
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
 
