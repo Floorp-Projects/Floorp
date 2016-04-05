@@ -44,6 +44,7 @@ const {
 
 var models = require("devtools/client/memory/models");
 
+var Immutable = require("devtools/client/shared/vendor/immutable");
 var React = require("devtools/client/shared/vendor/react");
 var ReactDOM = require("devtools/client/shared/vendor/react-dom");
 var Heap = React.createFactory(require("devtools/client/memory/components/heap"));
