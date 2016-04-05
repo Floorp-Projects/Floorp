@@ -169,7 +169,7 @@ nsBaseWidget::nsBaseWidget()
 , mUpdateCursor(true)
 , mUseAttachedEvents(false)
 , mIMEHasFocus(false)
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
 , mAccessibilityInUseFlag(false)
 #endif
 {
@@ -237,7 +237,7 @@ WidgetShutdownObserver::Unregister()
   }
 }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
 // defined in nsAppRunner.cpp
 extern const char* kAccessibilityLastRunDatePref;
 
@@ -259,12 +259,6 @@ nsBaseWidget::Shutdown()
     delete sPluginWidgetList;
     sPluginWidgetList = nullptr;
   }
-#if defined(XP_WIN)
-  if (mAccessibilityInUseFlag) {
-    uint32_t now = PRTimeToSeconds(PR_Now());
-    Preferences::SetInt(kAccessibilityLastRunDatePref, now);
-  }
-#endif
 #endif
 }
 
@@ -1875,8 +1869,12 @@ nsBaseWidget::GetRootAccessible()
   nsCOMPtr<nsIAccessibilityService> accService =
     services::GetAccessibilityService();
   if (accService) {
-#ifdef XP_WIN
-    mAccessibilityInUseFlag = true;
+#if defined(XP_WIN) || defined(XP_MACOSX)
+    if (!mAccessibilityInUseFlag) {
+      mAccessibilityInUseFlag = true;
+      uint32_t now = PRTimeToSeconds(PR_Now());
+      Preferences::SetInt(kAccessibilityLastRunDatePref, now);
+    }
 #endif
     return accService->GetRootDocumentAccessible(presShell, nsContentUtils::IsSafeToRunScript());
   }
