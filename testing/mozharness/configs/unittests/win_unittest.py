@@ -196,6 +196,11 @@ config = {
                         "--setpref=layers.acceleration.disabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
+        "reftest-omtc": {
+            "options": ["--suite=reftest",
+                        "--setpref=layers.offmainthreadcomposition.enabled=true"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
+        },
         "crashtest-ipc": {
             "options": ["--suite=crashtest",
                         '--setpref=browser.tabs.remote=true',
