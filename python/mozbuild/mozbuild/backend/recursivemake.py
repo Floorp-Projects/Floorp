@@ -23,6 +23,7 @@ from mozpack.manifests import (
 import mozpack.path as mozpath
 
 from mozbuild.frontend.context import (
+    AbsolutePath,
     Path,
     RenamedSourcePath,
     SourcePath,
@@ -1253,14 +1254,13 @@ class RecursiveMakeBackend(CommonBackend):
                 dest = mozpath.join(reltarget, path, f.target_basename)
                 if not isinstance(f, ObjDirPath):
                     if '*' in f:
-                        if not isinstance(f, SourcePath):
-                            raise Exception("Wildcards are only supported in "
-                                            "SourcePath objects in %s. Path is: %s" % (
-                                                type(obj), f
-                                            ))
-                        if f.startswith('/'):
-                            basepath = f.full_path.rstrip('*')
-                            install_manifest.add_pattern_symlink(basepath, '*', path)
+                        if f.startswith('/') or isinstance(f, AbsolutePath):
+                            basepath, wild = os.path.split(f.full_path)
+                            if '*' in basepath:
+                                raise Exception("Wildcards are only supported in the filename part of "
+                                                "srcdir-relative or absolute paths.")
+
+                            install_manifest.add_pattern_symlink(basepath, wild, path)
                         else:
                             install_manifest.add_pattern_symlink(f.srcdir, f, path)
                     else:
