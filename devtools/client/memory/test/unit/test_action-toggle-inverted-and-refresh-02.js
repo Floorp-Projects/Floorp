@@ -7,7 +7,10 @@
 
 const { censusDisplays, snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
 const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
+const {
+  setCensusDisplay,
+  setCensusDisplayAndRefresh,
+} = require("devtools/client/memory/actions/census-display");
 const { changeView } = require("devtools/client/memory/actions/view");
 
 function run_test() {
@@ -23,8 +26,9 @@ add_task(function *() {
 
   dispatch(changeView(viewState.CENSUS));
 
-  dispatch(setCensusDisplayAndRefresh(heapWorker, censusDisplays.allocationStack));
-  equal(getState().censusDisplay.inverted, false);
+  dispatch(setCensusDisplay(censusDisplays.allocationStack));
+  equal(getState().censusDisplay.inverted, false,
+        "Should not have an inverted census display");
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVING]);

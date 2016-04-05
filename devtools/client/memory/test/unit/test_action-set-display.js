@@ -17,6 +17,9 @@ function run_test() {
   run_next_test();
 }
 
+// We test setting an invalid display, which triggers an assertion failure.
+EXPECTED_DTU_ASSERT_FAILURE_COUNT = 1;
+
 add_task(function*() {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
