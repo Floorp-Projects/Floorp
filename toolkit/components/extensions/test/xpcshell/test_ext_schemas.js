@@ -370,6 +370,11 @@ let wrapper = {
     tally("call", ns, name, args);
   },
 
+  callFunctionNoReturn(path, name, args) {
+    let ns = path.join(".");
+    tally("call", ns, name, args);
+  },
+
   shouldInject(path) {
     let ns = path.join(".");
     return ns != "do-not-inject";
