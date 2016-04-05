@@ -616,9 +616,17 @@ if CONFIG['JS_HAS_CTYPES']:
     ]
 
 if CONFIG['ENABLE_INTL_API']:
-    USE_LIBS += [
-        'icu',
-    ]
+    if not CONFIG['MOZ_ICU_DATA_ARCHIVE']:
+        USE_LIBS += [
+            'icu',
+        ]
+    else:
+        # Linking 'icu' will pull in the stubdata library,
+        # which the shell doesn't want, so link the other bits.
+        USE_LIBS += [
+            'icui18n',
+            'icuuc',
+        ]
 
 USE_LIBS += [
     'nspr',

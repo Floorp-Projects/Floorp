@@ -76,212 +76,34 @@ if test -n "$USE_ICU"; then
     fi
     MOZ_ICU_VERSION="$version"
 
-    AC_SUBST(MOZ_ICU_VERSION)
+    # TODO: the l is actually endian-dependent
+    # We could make this set as 'l' or 'b' for little or big, respectively,
+    # but we'd need to check in a big-endian version of the file.
+    ICU_DATA_FILE="icudt${version}l.dat"
 
-    if test -z "$MOZ_SYSTEM_ICU"; then
-        case "$OS_TARGET" in
-            WINNT)
-                ICU_LIB_NAMES="sicuin sicuuc sicudt"
-                MOZ_ICU_DBG_SUFFIX=
-                if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
-                    MOZ_ICU_DBG_SUFFIX=d
-                fi
-                ;;
-            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|GNU/kFreeBSD|SunOS|Android)
-                ICU_LIB_NAMES="icui18n icuuc icudata"
-                ;;
-            *)
-                AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-        esac
+    dnl We won't build ICU data as a separate file when building
+    dnl JS standalone so that embedders don't have to deal with it.
+    if test -z "$JS_STANDALONE" -a -z "$MOZ_SYSTEM_ICU"; then
+        MOZ_ICU_DATA_ARCHIVE=1
+    else
+        MOZ_ICU_DATA_ARCHIVE=
     fi
 fi
 
-AC_SUBST(MOZ_ICU_DBG_SUFFIX)
+AC_SUBST(MOZ_ICU_VERSION)
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(USE_ICU)
-AC_SUBST_LIST(ICU_LIB_NAMES)
+AC_SUBST(ICU_DATA_FILE)
+AC_SUBST(MOZ_ICU_DATA_ARCHIVE)
 
 if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
+    if test -z "$YASM" -a -z "$GNU_AS"; then
+      AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
+    fi
     dnl We build ICU as a static library.
     AC_DEFINE(U_STATIC_IMPLEMENTATION)
     dnl Source files that use ICU should have control over which parts of the ICU
     dnl namespace they want to use.
     AC_DEFINE(U_USING_ICU_NAMESPACE,0)
 fi
-
-
-])
-
-AC_DEFUN([MOZ_SUBCONFIGURE_ICU], [
-
-if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
-
-    if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
-        # Set ICU compile options
-        ICU_CPPFLAGS=""
-        # don't use icu namespace automatically in client code
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_USING_ICU_NAMESPACE=0"
-        # don't include obsolete header files
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_NO_DEFAULT_INCLUDE_UTF_HEADERS=1"
-        # remove chunks of the library that we don't need (yet)
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_LEGACY_CONVERSION"
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_TRANSLITERATION"
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_REGULAR_EXPRESSIONS"
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_BREAK_ITERATION"
-        # we don't need to pass data to and from legacy char* APIs
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_CHARSET_IS_UTF8"
-        # make sure to not accidentally pick up system-icu headers
-        ICU_CPPFLAGS="$ICU_CPPFLAGS -I$icudir/common -I$icudir/i18n"
-
-        ICU_CROSS_BUILD_OPT=""
-
-        if test "$CROSS_COMPILE"; then
-            # Remove _DEPEND_CFLAGS from HOST_FLAGS to avoid configure error
-            HOST_ICU_CFLAGS="$HOST_CFLAGS"
-            HOST_ICU_CXXFLAGS="$HOST_CXXFLAGS"
-
-            HOST_ICU_CFLAGS=`echo $HOST_ICU_CFLAGS | sed "s|$_DEPEND_CFLAGS||g"`
-            HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CFXXLAGS | sed "s|$_DEPEND_CFLAGS||g"`
-
-            # ICU requires RTTI
-            if test "$GNU_CC"; then
-                HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CXXFLAGS | sed 's|-fno-rtti|-frtti|g'`
-            elif test "$_MSC_VER"; then
-                HOST_ICU_CXXFLAGS=`echo $HOST_ICU_CXXFLAGS | sed 's|-GR-|-GR|g'`
-            fi
-
-            HOST_ICU_BUILD_OPTS=""
-            if test -n "$MOZ_DEBUG"; then
-                HOST_ICU_BUILD_OPTS="$HOST_ICU_BUILD_OPTS --enable-debug"
-            fi
-
-            abs_srcdir=`(cd $srcdir; pwd)`
-            mkdir -p $_objdir/intl/icu/host
-            (export AR="$HOST_AR"
-             export RANLIB="$HOST_RANLIB"
-             export CC="$HOST_CC"
-             export CXX="$HOST_CXX"
-             export CPP="$HOST_CPP"
-             export LD="$HOST_LD"
-             export CFLAGS="$HOST_ICU_CFLAGS $HOST_OPTIMIZE_FLAGS"
-             export CPPFLAGS="$ICU_CPPFLAGS"
-             export CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMIZE_FLAGS"
-             export LDFLAGS="$HOST_LDFLAGS"
-             ac_configure_args="$HOST_ICU_BUILD_OPTS"
-             ac_configure_args="$ac_configure_args --enable-static --disable-shared --enable-extras=no --enable-icuio=no --enable-layout=no --enable-tests=no --enable-samples=no"
-             AC_OUTPUT_SUBDIRS_NOW(intl/icu/source:intl/icu/host)
-            ) || exit 1
-            # generate config/icucross.mk
-            $GMAKE -C $_objdir/intl/icu/host/ config/icucross.mk
-
-            # --with-cross-build requires absolute path
-            ICU_HOST_PATH=`cd $_objdir/intl/icu/host && pwd`
-            ICU_CROSS_BUILD_OPT="--with-cross-build=$ICU_HOST_PATH --disable-tools"
-            ICU_TARGET_OPT="--build=$build --host=$target"
-        else
-            # CROSS_COMPILE isn't set build and target are i386 and x86-64.
-            # So we must set target for --build and --host.
-            ICU_TARGET_OPT="--build=$target --host=$target"
-        fi
-
-        # To reduce library size, use static linking
-        ICU_LINK_OPTS="--enable-static --disable-shared"
-
-        # Force the ICU static libraries to be position independent code
-        ICU_CFLAGS="$DSO_PIC_CFLAGS $CFLAGS"
-        ICU_CXXFLAGS="$DSO_PIC_CFLAGS $CXXFLAGS"
-
-        ICU_BUILD_OPTS=""
-        if test -n "$MOZ_DEBUG" -o "MOZ_DEBUG_SYMBOLS"; then
-            ICU_CFLAGS="$ICU_CFLAGS $MOZ_DEBUG_FLAGS"
-            ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_DEBUG_FLAGS"
-            if test -n "$CROSS_COMPILE" -a "$OS_TARGET" = "Darwin" \
-                    -a "$HOST_OS_ARCH" != "Darwin"
-            then
-                # Bug 951758: Cross-OSX builds with non-Darwin hosts have issues
-                # with -g and friends (like -gdwarf and -gfull) because they try
-                # to run dsymutil
-                changequote(,)
-                ICU_CFLAGS=`echo $ICU_CFLAGS | sed 's|-g[^ \t]*||g'`
-                ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-g[^ \t]*||g'`
-                changequote([,])
-            fi
-
-            ICU_LDFLAGS="$MOZ_DEBUG_LDFLAGS"
-            if test -z "$MOZ_DEBUG"; then
-                # To generate debug symbols, it requires MOZ_DEBUG_FLAGS.
-                # But, not debug build.
-                ICU_CFLAGS="$ICU_CFLAGS -UDEBUG -DNDEBUG"
-                ICU_CXXFLAGS="$ICU_CXXFLAGS -UDEBUG -DNDEBUG"
-            elif test -z "$MOZ_NO_DEBUG_RTL"; then
-                ICU_BUILD_OPTS="$ICU_BUILD_OPTS --enable-debug"
-            fi
-        fi
-        if test -z "$MOZ_OPTIMIZE"; then
-            ICU_BUILD_OPTS="$ICU_BUILD_OPTS --disable-release"
-        else
-            ICU_CFLAGS="$ICU_CFLAGS $MOZ_OPTIMIZE_FLAGS"
-            ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
-        fi
-
-        if test "$am_cv_langinfo_codeset" = "no"; then
-            # ex. Android
-            ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_HAVE_NL_LANGINFO_CODESET=0"
-        fi
-
-        # ICU requires RTTI
-        if test "$GNU_CC"; then
-            ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-fno-rtti|-frtti|g'`
-        else
-            if test "$_MSC_VER"; then
-                ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-GR-|-GR|g'`
-            fi
-
-            # Add RTL flags for MSVCRT.DLL
-            if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
-                ICU_CFLAGS="$ICU_CFLAGS -MDd"
-                ICU_CXXFLAGS="$ICU_CXXFLAGS -MDd"
-            else
-                ICU_CFLAGS="$ICU_CFLAGS -MD"
-                ICU_CXXFLAGS="$ICU_CXXFLAGS -MD"
-            fi
-
-            # add disable optimize flag for workaround for bug 899948
-            if test -z "$MOZ_OPTIMIZE"; then
-                ICU_CFLAGS="$ICU_CFLAGS -Od"
-                ICU_CXXFLAGS="$ICU_CXXFLAGS -Od"
-            fi
-        fi
-
-        if test -n "$gonkdir"; then
-            ICU_CXXFLAGS="-I$gonkdir/abi/cpp/include $ICU_CXXFLAGS"
-        elif test "$OS_TARGET" = Android -a "$MOZ_ANDROID_CXX_STL" = mozstlport; then
-            ICU_CXXFLAGS="-I$_topsrcdir/build/gabi++/include $ICU_CXXFLAGS"
-        fi
-
-        ICU_CXXFLAGS="$ICU_CXXFLAGS -DU_STATIC_IMPLEMENTATION"
-        ICU_CFLAGS="$ICU_CFLAGS -DU_STATIC_IMPLEMENTATION"
-        if test "$GNU_CC"; then
-          ICU_CFLAGS="$ICU_CFLAGS -fvisibility=hidden"
-          ICU_CXXFLAGS="$ICU_CXXFLAGS -fvisibility=hidden"
-        fi
-
-        (export AR="$AR"
-         export RANLIB="$RANLIB"
-         export CC="$CC"
-         export CXX="$CXX"
-         export LD="$LD"
-         export ARFLAGS="$ARFLAGS"
-         export CPPFLAGS="$ICU_CPPFLAGS $CPPFLAGS"
-         export CFLAGS="$ICU_CFLAGS"
-         export CXXFLAGS="$ICU_CXXFLAGS"
-         export LDFLAGS="$ICU_LDFLAGS $LDFLAGS"
-         ac_configure_args="$ICU_BUILD_OPTS $ICU_CROSS_BUILD_OPT $ICU_LINK_OPTS $ICU_TARGET_OPT"
-         ac_configure_args="$ac_configure_args --disable-extras --disable-icuio --disable-layout --disable-tests --disable-samples --disable-strict"
-         AC_OUTPUT_SUBDIRS(intl/icu/source:intl/icu/target)
-        ) || exit 1
-    fi
-
-fi
-
 ])
