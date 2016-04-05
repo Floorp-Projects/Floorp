@@ -6,10 +6,10 @@
 "filename": "mozmake.exe"
 },
 {
-"size": 78886322,
-"digest": "9c2c40637de27a0852aa1166f2a08159908b23f7a55855c933087c541461bbb2a1ec9e0522df0d2b9da2b2c343b673dbb5a2fa8d30216fe8acee1eb1383336ea",
+"size": 51746920,
+"digest": "9d886f27b50ad0479062674e815f3a99bd75dbcf2e3932090352f2866fc90cc8d8aea0e790a42baba3bee302f43d236cce7377d469bb665e5d5a3f5edf05d0c5",
 "algorithm": "sha512",
-"filename": "rustc-beta-i686-pc-windows-msvc.tar.bz2",
+"filename": "rustc.tar.bz2",
 "unpack": true
 },
 {

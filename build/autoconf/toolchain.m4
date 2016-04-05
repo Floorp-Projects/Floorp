@@ -191,46 +191,25 @@ PATH=$_SAVE_PATH
 
 AC_DEFUN([MOZ_CXX11],
 [
-dnl Check whether gcc's c++0x mode works
 dnl Updates to the test below should be duplicated further below for the
 dnl cross-compiling case.
 AC_LANG_CPLUSPLUS
 if test "$GNU_CXX"; then
-    CXXFLAGS="$CXXFLAGS -std=gnu++0x"
-    _ADDED_CXXFLAGS="-std=gnu++0x"
-
-    AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
-        ac_cv_cxx0x_headers_bug,
-        [AC_TRY_COMPILE([#include <memory>], [],
-                        ac_cv_cxx0x_headers_bug="no",
-                        ac_cv_cxx0x_headers_bug="yes")])
-
-    if test "$CLANG_CXX" -a "$ac_cv_cxx0x_headers_bug" = "yes"; then
-        CXXFLAGS="$CXXFLAGS -I$_topsrcdir/build/unix/headers"
-        _ADDED_CXXFLAGS="$_ADDED_CXXFLAGS -I$_topsrcdir/build/unix/headers"
-        AC_CACHE_CHECK(whether workaround for gcc c++0x headers conflict with clang works,
-            ac_cv_cxx0x_clang_workaround,
-            [AC_TRY_COMPILE([#include <memory>], [],
-                            ac_cv_cxx0x_clang_workaround="yes",
-                            ac_cv_cxx0x_clang_workaround="no")])
-
-        if test "ac_cv_cxx0x_clang_workaround" = "no"; then
-            AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
-        fi
-    elif test "$ac_cv_cxx0x_headers_bug" = "yes"; then
-        AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
-    fi
+    CXXFLAGS="$CXXFLAGS -std=gnu++11"
+    _ADDED_CXXFLAGS="-std=gnu++11"
 
     if test -n "$CLANG_CC"; then
         dnl We'd normally just check for the version from CC_VERSION (fed
         dnl from __clang_major__ and __clang_minor__), but the clang that
         dnl comes with Xcode has a completely different version scheme
         dnl despite exposing the version with the same defines.
-        dnl So instead of a version check, check for one of the C++11
-        dnl features that was added in clang 3.3.
-        AC_TRY_COMPILE([], [#if !__has_feature(cxx_inheriting_constructors)
-                            #error inheriting constructors are not supported
-                            #endif],,AC_MSG_ERROR([Only clang/llvm 3.3 or newer supported]))
+        dnl So instead of a version check, do a feature check. Normally,
+        dnl we'd use __has_feature, but there are unfortunately no C++11
+        dnl differences in clang 3.4. However, it supports the 2013-08-28
+        dnl draft of the ISO WG21 SG10 feature test macro recommendations.
+        AC_TRY_COMPILE([], [#if !__cpp_static_assert
+                            #error ISO WG21 SG10 feature test macros unsupported
+                            #endif],,AC_MSG_ERROR([Only clang/llvm 3.4 or newer supported]))
     fi
 
     AC_CACHE_CHECK([whether 64-bits std::atomic requires -latomic],
@@ -300,7 +279,7 @@ EOF
             fi
         fi
 
-        HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++0x"
+        HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++11"
 
         _SAVE_CXXFLAGS="$CXXFLAGS"
         _SAVE_CPPFLAGS="$CPPFLAGS"
@@ -308,31 +287,10 @@ EOF
         CXXFLAGS="$HOST_CXXFLAGS"
         CPPFLAGS="$HOST_CPPFLAGS"
         CXX="$HOST_CXX"
-        AC_CACHE_CHECK(for host gcc c++0x headers bug without rtti,
-            ac_cv_host_cxx0x_headers_bug,
-            [AC_TRY_COMPILE([#include <memory>], [],
-                            ac_cv_host_cxx0x_headers_bug="no",
-                            ac_cv_host_cxx0x_headers_bug="yes")])
-
-        if test "$host_compiler" = CLANG -a "$ac_cv_host_cxx0x_headers_bug" = "yes"; then
-            CXXFLAGS="$CXXFLAGS -I$_topsrcdir/build/unix/headers"
-            AC_CACHE_CHECK(whether workaround for host gcc c++0x headers conflict with host clang works,
-                ac_cv_host_cxx0x_clang_workaround,
-                [AC_TRY_COMPILE([#include <memory>], [],
-                                ac_cv_host_cxx0x_clang_workaround="yes",
-                                ac_cv_host_cxx0x_clang_workaround="no")])
-
-            if test "ac_cv_host_cxx0x_clang_workaround" = "no"; then
-                AC_MSG_ERROR([Your host toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
-            fi
-            HOST_CXXFLAGS="$CXXFLAGS"
-        elif test "$ac_cv_host_cxx0x_headers_bug" = "yes"; then
-            AC_MSG_ERROR([Your host toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
-        fi
         if test "$host_compiler" = CLANG; then
-            AC_TRY_COMPILE([], [#if !__has_feature(cxx_inheriting_constructors)
-                                #error inheriting constructors are not supported
-                                #endif],,AC_MSG_ERROR([Only clang/llvm 3.3 or newer supported]))
+            AC_TRY_COMPILE([], [#if !__cpp_static_assert
+                                #error ISO WG21 SG10 feature test macros unsupported
+                                #endif],,AC_MSG_ERROR([Only clang/llvm 3.4 or newer supported]))
         fi
 
         CXXFLAGS="$_SAVE_CXXFLAGS"

@@ -17,7 +17,7 @@
     const childFrameURL =
       "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
 
-    function childFrameScript() {
+    function childFrameScript(isFramePrivate) {
       "use strict";
 
       function Tester(resultArray) {
@@ -77,7 +77,7 @@
         let observer;
         let removed = false;
         cps.addObserverForName("testName", observer = {
-          onContentPrefSet: function(group, name, value) {
+          onContentPrefSet: function(group, name, value, isPrivate) {
             if (removed) {
               message.target.sendAsyncMessage("testRemoteContentPrefs:fail",
                                               { reason: "unexpected notification" });
@@ -85,13 +85,15 @@
             tester.is(group, null, "group should be null");
             tester.is(name, "testName", "should only see testName");
             tester.is(value, 42, "value should be correct");
+            tester.is(isPrivate, isFramePrivate, "privacy should match");
 
             message.target.sendAsyncMessage("testRemoteContentPrefs:test2poke2", {})
           },
 
-          onContentPrefRemoved: function(group, name) {
+          onContentPrefRemoved: function(group, name, isPrivate) {
             tester.is(group, null, "group should be null");
             tester.is(name, "testName");
+            tester.is(isPrivate, isFramePrivate, "privacy should match");
             tester.is(test.next().done, true, "should be done with test2");
 
             cps.removeObserverForName("testName", observer);
@@ -148,11 +150,11 @@
         let tester = new Tester();
 
         let prefObserver = {
-          onContentPrefSet: function(group, name, value) {
-            test.next({ group: group, name: name, value: value });
+          onContentPrefSet: function(group, name, value, isPrivate) {
+            test.next({ group: group, name: name, value: value, isPrivate: isPrivate });
           },
-          onContentPrefRemoved: function(group, name) {
-            test.next({ group: group, name: name });
+          onContentPrefRemoved: function(group, name, isPrivate) {
+            test.next({ group: group, name: name, isPrivate: isPrivate });
           }
         };
 
@@ -165,6 +167,7 @@
         cps.set("http://mochi.test", "test", 42, { usePrivateBrowsing: true });
         let event = yield;
         tester.is(event.name, "test");
+        tester.is(event.isPrivate, true);
 
         message.target.sendAsyncMessage("testRemoteContentPrefs:getPref",
                                         { group: "http://mochi.test", name: "test" });
@@ -201,7 +204,7 @@
     }
 
     let test;
-    function* testStructure(mm) {
+    function* testStructure(mm, isPrivate, callback) {
       let lastResult;
 
       function testDone(msg) {
@@ -225,10 +228,10 @@
                              .getService(SpecialPowers.Ci.nsIContentPrefService2);
       mm.sendAsyncMessage("testRemoteContentPrefs:test2", {});
       mm.addMessageListener("testRemoteContentPrefs:test2poke", function() {
-        cps.setGlobal("testName", 42, null);
+        cps.setGlobal("testName", 42, {usePrivateBrowsing: isPrivate});
       });
       mm.addMessageListener("testRemoteContentPrefs:test2poke2", function() {
-        cps.removeGlobal("testName", null);
+        cps.removeGlobal("testName", {usePrivateBrowsing: isPrivate});
       });
 
       lastResult = yield;
@@ -255,28 +258,40 @@
       lastResult = yield;
       processResults(lastResult.results);
 
-      SimpleTest.finish();
+      document.getElementById('iframe').remove();
+      setTimeout(callback, 0);
     }
 
-    function runTests() {
-      info("Browser prefs set.");
-
+    function runTest(isPrivate, callback) {
+      info("testing with isPrivate=" + isPrivate);
       let iframe = document.createElement("iframe");
       SpecialPowers.wrap(iframe).mozbrowser = true;
+      if (isPrivate) {
+        SpecialPowers.wrap(iframe).mozprivatebrowsing = true;
+      }
       iframe.id = "iframe";
       iframe.src = childFrameURL;
 
       iframe.addEventListener("mozbrowserloadend", function() {
         info("Got iframe load event.");
         let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
-        mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
+        mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")(" + isPrivate + ");",
                            false);
 
-        test = testStructure(mm);
+        test = testStructure(mm, isPrivate, callback);
         test.next();
       });
 
       document.body.appendChild(iframe);
+    }
+
+    function runTests() {
+      info("Browser prefs set.");
+      runTest(false, function() {
+        runTest(true, function() {
+          SimpleTest.finish();
+        });
+      });
     }
 
     addEventListener("load", function() {

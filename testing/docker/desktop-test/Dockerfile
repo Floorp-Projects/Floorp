@@ -1,4 +1,4 @@
-FROM          taskcluster/ubuntu1204-test-upd:0.1.8.20160218152601
+FROM          taskcluster/ubuntu1204-test-upd:0.1.9.20160329211700
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration

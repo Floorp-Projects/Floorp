@@ -12321,8 +12321,15 @@ class CGDictionary(CGThing):
             "Init", "bool",
             [Argument('const nsAString&', 'aJSON')],
             body=dedent("""
-                MOZ_ASSERT(NS_IsMainThread());
-                AutoSafeJSContext cx;
+                AutoJSAPI jsapi;
+                JSObject* cleanGlobal = SimpleGlobalObject::Create(SimpleGlobalObject::GlobalType::BindingDetail);
+                if (!cleanGlobal) {
+                  return false;
+                }
+                if (!jsapi.Init(cleanGlobal)) {
+                  return false;
+                }
+                JSContext* cx = jsapi.cx();
                 JS::Rooted<JS::Value> json(cx);
                 bool ok = ParseJSON(cx, aJSON, &json);
                 NS_ENSURE_TRUE(ok, false);
@@ -12485,10 +12492,12 @@ class CGDictionary(CGThing):
             methods.append(self.initIdsMethod())
 
         methods.append(self.initMethod())
-        methods.append(self.initFromJSONMethod())
+        canBeRepresentedAsJSON = self.dictionarySafeToJSONify(self.dictionary)
+        if canBeRepresentedAsJSON:
+            methods.append(self.initFromJSONMethod())
         try:
             methods.append(self.toObjectInternalMethod())
-            if self.dictionarySafeToJSONify(self.dictionary):
+            if canBeRepresentedAsJSON:
                 methods.append(self.toJSONMethod())
         except MethodNotNewObjectError:
             # If we can't have a ToObjectInternal() because one of our members
@@ -13399,6 +13408,8 @@ class CGBindingRoot(CGThing):
             return any(m.getExtendedAttribute("UseCounter") for m in iface.members)
         bindingHeaders["mozilla/UseCounter.h"] = any(
             descriptorRequiresTelemetry(d) for d in descriptors)
+        bindingHeaders["mozilla/dom/SimpleGlobalObject.h"] = any(
+            CGDictionary.dictionarySafeToJSONify(d) for d in dictionaries)
 
         cgthings.extend(traverseMethods)
         cgthings.extend(unlinkMethods)

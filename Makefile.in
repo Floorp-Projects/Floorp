@@ -193,9 +193,18 @@ endif
 # Dummy wrapper rule to allow the faster backend to piggy back
 $(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
 
-# For compatibility
 .PHONY: install-tests
-install-tests: install-_tests
+install-tests: install-test-files
+
+# We no longer run "make install-tests" directly before running tests, but we still
+# want to depend on things like config.status, hence this target.
+.PHONY: run-tests-deps
+run-tests-deps: $(install_manifest_depends)
+
+# Force --no-remove, because $objdir/_tests is handled by multiple manifests.
+.PHONY: install-test-files
+install-test-files:
+	$(call py_action,process_install_manifest,--no-remove _tests _build_manifests/install/_test_files)
 
 include $(topsrcdir)/build/moz-automation.mk
 
@@ -279,12 +288,8 @@ SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
-ifdef MOZ_SYMBOLS_EXTRA_BUILDID
-EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
-endif
-
 SYMBOL_INDEX_NAME = \
-  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)-$(CPU_ARCH)$(EXTRA_BUILDID)-symbols.txt
+  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)-$(CPU_ARCH)-symbols.txt
 
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
@@ -316,8 +321,6 @@ uploadsymbols:
 ifdef MOZ_CRASHREPORTER
 ifdef SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE
 	$(PYTHON) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
-else
-	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
 endif
 endif
 

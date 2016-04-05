@@ -444,6 +444,33 @@ class TestEmitterBasic(unittest.TestCase):
         paths = sorted([v[0] for v in o.installs.values()])
         self.assertEqual(paths, expected)
 
+    def test_test_manifest_shared_support_files(self):
+        """Support files starting with '!' are given separate treatment, so their
+        installation can be resolved when running tests.
+        """
+        reader = self.reader('test-manifest-shared-support')
+        supported, child = self.read_topsrcdir(reader)
+
+        expected_deferred_installs = {
+            '!/child/test_sub.js',
+            '!/child/another-file.sjs',
+            '!/child/data/**',
+        }
+
+        self.assertEqual(len(supported.installs), 3)
+        self.assertEqual(set(supported.deferred_installs),
+                         expected_deferred_installs)
+        self.assertEqual(len(child.installs), 3)
+        self.assertEqual(len(child.pattern_installs), 1)
+
+    def test_test_manifest_deffered_install_missing(self):
+        """A non-existent shared support file reference produces an error."""
+        reader = self.reader('test-manifest-shared-missing')
+
+        with self.assertRaisesRegexp(SandboxValidationError,
+                                     'entry in support-files not present in the srcdir'):
+            self.read_topsrcdir(reader)
+
     def test_test_manifest_install_to_subdir(self):
         """ """
         reader = self.reader('test-manifest-install-subdir')
