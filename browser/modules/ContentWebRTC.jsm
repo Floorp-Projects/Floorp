@@ -130,6 +130,11 @@ function handleGUMRequest(aSubject, aTopic, aData) {
   contentWindow.navigator.mozGetUserMediaDevices(
     constraints,
     function (devices) {
+      // If the window has been closed while we were waiting for the list of
+      // devices, there's nothing to do in the callback anymore.
+      if (contentWindow.closed)
+        return;
+
       prompt(contentWindow, aSubject.windowID, aSubject.callID,
              constraints, devices, secure);
     },
