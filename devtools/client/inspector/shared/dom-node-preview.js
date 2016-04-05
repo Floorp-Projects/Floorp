@@ -328,7 +328,7 @@ var HighlighterLock = {
   highlighter: null,
   isShown: false,
 
-  highlight: Task.async(function*(animationTargetNode) {
+  highlight: Task.async(function* (animationTargetNode) {
     if (!this.highlighter) {
       let util = animationTargetNode.inspector.toolbox.highlighterUtils;
       this.highlighter = yield util.getHighlighterByType("BoxModelHighlighter");
@@ -339,7 +339,7 @@ var HighlighterLock = {
     this.emit("highlighted", animationTargetNode);
   }),
 
-  unhighlight: Task.async(function*() {
+  unhighlight: Task.async(function* () {
     if (!this.highlighter || !this.isShown) {
       return;
     }

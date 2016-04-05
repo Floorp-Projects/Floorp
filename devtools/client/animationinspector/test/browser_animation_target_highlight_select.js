@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Test that the DOM element targets displayed in animation player widgets can
 // be used to highlight elements in the DOM and select them in the inspector.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {toolbox, inspector, panel} = yield openAnimationInspector();

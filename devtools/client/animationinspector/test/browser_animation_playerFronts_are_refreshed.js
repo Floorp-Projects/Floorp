@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Check that the AnimationPlayerFront objects lifecycle is managed by the
 // AnimationController.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {controller, inspector} = yield openAnimationInspector();
 

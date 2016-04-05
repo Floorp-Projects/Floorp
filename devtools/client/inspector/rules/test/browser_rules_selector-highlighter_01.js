@@ -16,7 +16,7 @@ const TEST_URI = `
   Test the selector highlighter
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
 

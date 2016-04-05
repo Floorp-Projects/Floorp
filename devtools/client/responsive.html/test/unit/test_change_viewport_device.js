@@ -14,7 +14,7 @@ const {
   changeDevice,
 } = require("devtools/client/responsive.html/actions/viewports");
 
-add_task(function*() {
+add_task(function* () {
   let store = Store();
   const { getState, dispatch } = store;
 

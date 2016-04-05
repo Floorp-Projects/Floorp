@@ -30,7 +30,7 @@ const TEST_URI = encodeURIComponent([
 ].join(""));
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html," + TEST_URI);
   let {inspector, view} = yield openLayoutView();
   yield selectNode("div", inspector);

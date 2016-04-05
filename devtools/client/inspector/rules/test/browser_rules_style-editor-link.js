@@ -52,7 +52,7 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(`
   </html>
 `);
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(DOCUMENT_URL);
   let {toolbox, inspector, view, testActor} = yield openRuleView();
   yield selectNode("div", inspector);

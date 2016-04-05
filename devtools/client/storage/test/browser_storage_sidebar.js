@@ -97,7 +97,7 @@ const testCases = [
   }
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   for (let test of testCases) {

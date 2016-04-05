@@ -455,7 +455,7 @@ function getExactMatchImpl(obj, name, {chainIterator, getProperty}) {
 }
 
 var JSObjectSupport = {
-  chainIterator: function*(obj) {
+  chainIterator: function* (obj) {
     while (obj) {
       yield obj;
       obj = Object.getPrototypeOf(obj);
@@ -473,7 +473,7 @@ var JSObjectSupport = {
 };
 
 var DebuggerObjectSupport = {
-  chainIterator: function*(obj) {
+  chainIterator: function* (obj) {
     while (obj) {
       yield obj;
       obj = obj.proto;
@@ -491,7 +491,7 @@ var DebuggerObjectSupport = {
 };
 
 var DebuggerEnvironmentSupport = {
-  chainIterator: function*(obj) {
+  chainIterator: function* (obj) {
     while (obj) {
       yield obj;
       obj = obj.parent;

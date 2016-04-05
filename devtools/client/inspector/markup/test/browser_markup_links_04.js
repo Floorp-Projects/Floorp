@@ -74,7 +74,7 @@ const TEST_DATA = [{
   isLinkCopyItemVisible: false
 }];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   let linkFollow = inspector.panelDoc.getElementById("node-menu-link-follow");

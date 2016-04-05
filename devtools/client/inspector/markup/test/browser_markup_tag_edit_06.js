@@ -79,7 +79,7 @@ var TEST_DATA = [{
   }
 }];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   yield runAddAttributesTests(TEST_DATA, "div", inspector, testActor);
 });

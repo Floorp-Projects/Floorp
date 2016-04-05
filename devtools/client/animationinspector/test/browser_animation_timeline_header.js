@@ -14,7 +14,7 @@ const {findOptimalTimeInterval, TimeScale} = require("devtools/client/animationi
 // animation-timeline.js
 const TIME_GRADUATION_MIN_SPACING = 40;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
 

@@ -7,7 +7,7 @@
 // Test that the layout-view for elements within iframes also updates when they
 // change
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_layout_iframe1.html");
   let {inspector, view, testActor} = yield openLayoutView();
 

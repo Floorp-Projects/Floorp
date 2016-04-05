@@ -93,7 +93,7 @@ function* openTabAndSetupStorage(url) {
   gWindow = content.wrappedJSObject;
 
   // Setup the async storages in main window and for all its iframes
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     /**
      * Get all windows including frames recursively.
      *
@@ -138,7 +138,7 @@ function* openTabAndSetupStorage(url) {
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = Task.async(function*(cb) {
+var openStoragePanel = Task.async(function* (cb) {
   info("Opening the storage inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -223,7 +223,7 @@ function forceCollections() {
 function* finishTests() {
   // Bug 1233497 makes it so that we can no longer yield CPOWs from Tasks.
   // We work around this by calling clear() via a ContentTask instead.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     /**
      * Get all windows including frames recursively.
      *
