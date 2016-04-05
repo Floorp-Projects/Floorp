@@ -17,6 +17,9 @@ NO_NDK=1
 ac_add_options --with-gradle="$topsrcdir/gradle/bin/gradle"
 export GRADLE_MAVEN_REPOSITORY="file://$topsrcdir/jcentral"
 
+unset HOST_CC
+unset HOST_CXX
+
 ac_add_options --disable-compile-environment
 ac_add_options --disable-tests
 
