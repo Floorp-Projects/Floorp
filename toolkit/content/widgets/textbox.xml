@@ -171,8 +171,9 @@
 
       <destructor>
         <![CDATA[
-          if (this.inputField.value)
-            this.boxObject.setProperty('value', this.inputField.value);
+          var field = this.inputField;
+          if (field && field.value)
+            this.boxObject.setProperty('value', field.value);
           this.mInputField = null;
         ]]>
       </destructor>

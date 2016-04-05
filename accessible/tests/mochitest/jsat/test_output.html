@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             src="../common.js"></script>
     <script type="application/javascript"
             src="./output.js"></script>
+    <script type="application/javascript"
+            src="./jsatcommon.js"></script>
     <script type="application/javascript">
 
       function doTest() {
@@ -506,22 +508,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }];
 
         // Test all possible utterance order preference values.
-        tests.forEach(function run(test) {
-          var utteranceOrderValues = [0, 1];
-          utteranceOrderValues.forEach(
-            function testUtteranceOrder(utteranceOrder) {
-              SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, utteranceOrder);
-              testOutput(test.expectedUtterance[utteranceOrder],
-                         test.accOrElmOrID, test.oldAccOrElmOrID, 1);
-              testOutput(test.expectedBraille[utteranceOrder],
-                         test.accOrElmOrID, test.oldAccOrElmOrID, 0);
-            }
-          );
-        });
+        function testOutputOrder(aOutputOrder) {
+          return function() {
+            SpecialPowers.pushPrefEnv({
+              "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]]
+            }, function() {
+              tests.forEach(function run(test) {
+                testOutput(test.expectedUtterance[aOutputOrder], test.accOrElmOrID,
+                  test.oldAccOrElmOrID, 1);
+                testOutput(test.expectedBraille[aOutputOrder], test.accOrElmOrID,
+                  test.oldAccOrElmOrID, 0);
+              });
+              AccessFuTest.nextTest();
+            });
+          };
+        }
 
-        // If there was an original utterance order preference, revert to it.
-        SpecialPowers.clearUserPref(PREF_UTTERANCE_ORDER);
-        SimpleTest.finish();
+        AccessFuTest.addFunc(testOutputOrder(0));
+        AccessFuTest.addFunc(testOutputOrder(1));
+        AccessFuTest.waitForExplicitFinish();
+        AccessFuTest.runTests();
       }
 
       SimpleTest.waitForExplicitFinish();

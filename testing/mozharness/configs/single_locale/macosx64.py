@@ -11,7 +11,6 @@ config = {
         "MOZ_OBJDIR": "obj-l10n",
         "EN_US_BINARY_URL": "%(en_us_binary_url)s",
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
-        "MOZ_SYMBOLS_EXTRA_BUILDID": "macosx64",
         "MOZ_PKG_PLATFORM": "mac",
         # "IS_NIGHTLY": "yes",
         "DIST": "%(abs_objdir)s",
