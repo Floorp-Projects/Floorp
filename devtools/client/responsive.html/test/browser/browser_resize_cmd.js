@@ -15,7 +15,7 @@ add_task(function*() {
   }
 
   const TEST_URL = "data:text/html;charset=utf-8,hi";
-  return helpers.addTabWithToolbar(TEST_URL, (options) => {
+  yield helpers.addTabWithToolbar(TEST_URL, (options) => {
     return helpers.audit(options, [
       {
         setup() {
@@ -55,6 +55,10 @@ add_task(function*() {
           ok(!isOpen(), "responsive mode is closed");
         }),
       },
+    ]);
+  });
+  yield helpers.addTabWithToolbar(TEST_URL, (options) => {
+    return helpers.audit(options, [
       {
         setup() {
           done = once(manager, "on");
@@ -93,6 +97,10 @@ add_task(function*() {
           ok(!isOpen(), "responsive mode is closed");
         }),
       },
+    ]);
+  });
+  yield helpers.addTabWithToolbar(TEST_URL, (options) => {
+    return helpers.audit(options, [
       {
         setup() {
           done = once(manager, "on");
@@ -136,5 +144,5 @@ add_task(function*() {
         }),
       },
     ]);
-  }).then(finish);
+  });
 });
