@@ -1354,7 +1354,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
         break;
 
     case nsIAccessibleEvent::EVENT_SHOW:
-        return FireAtkShowHideEvent(aEvent, atkObj, true);
+        return FireAtkShowHideEvent(atkObj, true, aEvent->IsFromUserInput());
 
     case nsIAccessibleEvent::EVENT_HIDE:
         // XXX - Handle native dialog accessibles.
@@ -1363,7 +1363,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
           guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
           g_signal_emit(atkObj, id, 0);
         }
-        return FireAtkShowHideEvent(aEvent, atkObj, false);
+        return FireAtkShowHideEvent(atkObj, false, aEvent->IsFromUserInput());
 
         /*
          * Because dealing with menu is very different between nsIAccessible
@@ -1577,15 +1577,14 @@ static const char *kMutationStrings[2][2] = {
 };
 
 nsresult
-AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
-                                     AtkObject* aObject, bool aIsAdded)
+AccessibleWrap::FireAtkShowHideEvent(AtkObject* aObject, bool aIsAdded,
+                                     bool aFromUser)
 {
     int32_t indexInParent = getIndexInParentCB(aObject);
     AtkObject *parentObject = getParentCB(aObject);
     NS_ENSURE_STATE(parentObject);
 
-    bool isFromUserInput = aEvent->IsFromUserInput();
-    const char *signal_name = kMutationStrings[isFromUserInput][aIsAdded];
+    const char *signal_name = kMutationStrings[aFromUser][aIsAdded];
     g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, nullptr);
 
     return NS_OK;
