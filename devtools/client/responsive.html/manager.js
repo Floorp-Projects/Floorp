@@ -4,8 +4,10 @@
 
 "use strict";
 
+const { Ci, Cr } = require("chrome");
 const promise = require("promise");
 const { Task } = require("resource://gre/modules/Task.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
@@ -69,14 +71,14 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    * @return Promise
    *         Resolved (with no value) when closing is complete.
    */
-  closeIfNeeded(window, tab) {
+  closeIfNeeded: Task.async(function*(window, tab) {
     if (this.isActiveForTab(tab)) {
-      this.activeTabs.get(tab).destroy();
+      yield this.activeTabs.get(tab).destroy();
       this.activeTabs.delete(tab);
       this.emit("off", { tab });
     }
     return promise.resolve();
-  },
+  }),
 
   /**
    * Returns true if responsive UI is active for a given tab.
@@ -201,14 +203,17 @@ ResponsiveUI.prototype = {
     yield waitForMessage(toolWindow, "browser-mounted");
   }),
 
-  destroy() {
+  destroy: Task.async(function*() {
     let tabBrowser = this.tab.linkedBrowser;
-    tabBrowser.goBack();
-    this.window = null;
+    let browserWindow = this.browserWindow;
+    this.browserWindow = null;
     this.tab = null;
     this.inited = null;
     this.toolWindow = null;
-  },
+    let loaded = waitForDocLoadComplete(browserWindow.gBrowser);
+    tabBrowser.goBack();
+    yield loaded;
+  }),
 
   handleEvent(event) {
     let { tab, window } = this;
@@ -278,5 +283,29 @@ function tabLoaded(tab) {
   }
 
   tab.linkedBrowser.addEventListener("load", handle, true);
+  return deferred.promise;
+}
+
+/**
+ * Waits for the next load to complete in the current browser.
+ */
+function waitForDocLoadComplete(gBrowser) {
+  let deferred = promise.defer();
+  let progressListener = {
+    onStateChange: function(webProgress, req, flags, status) {
+      let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
+                    Ci.nsIWebProgressListener.STATE_STOP;
+
+      // When a load needs to be retargetted to a new process it is cancelled
+      // with NS_BINDING_ABORTED so ignore that case
+      if ((flags & docStop) == docStop && status != Cr.NS_BINDING_ABORTED) {
+        gBrowser.removeProgressListener(progressListener);
+        deferred.resolve();
+      }
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                           Ci.nsISupportsWeakReference])
+  };
+  gBrowser.addProgressListener(progressListener);
   return deferred.promise;
 }
