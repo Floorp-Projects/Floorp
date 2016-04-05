@@ -1174,9 +1174,15 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 
   // FLEX GROW & SHRINK WEIGHTS
   // --------------------------
-  const nsStylePosition* stylePos = aChildFrame->StylePosition();
-  float flexGrow   = stylePos->mFlexGrow;
-  float flexShrink = stylePos->mFlexShrink;
+  float flexGrow, flexShrink;
+  if (IsLegacyBox(aParentReflowState.mStyleDisplay, mStyleContext)) {
+    flexGrow = flexShrink = aChildFrame->StyleXUL()->mBoxFlex;
+  } else {
+    const nsStylePosition* stylePos = aChildFrame->StylePosition();
+    flexGrow   = stylePos->mFlexGrow;
+    flexShrink = stylePos->mFlexShrink;
+  }
+
   WritingMode childWM = childRS.GetWritingMode();
 
   // MAIN SIZES (flex base size, min/max size)
