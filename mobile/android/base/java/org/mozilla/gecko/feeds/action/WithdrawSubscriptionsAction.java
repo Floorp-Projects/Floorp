@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.database.Cursor;
 
 import org.json.JSONException;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
@@ -81,6 +83,8 @@ public class WithdrawSubscriptionsAction extends FeedAction {
                     log("Removing subscription for feed: " + subscription.getFeedUrl());
 
                     urlAnnotations.deleteFeedSubscription(resolver, subscription);
+
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.SERVICE, "content_update");
                 }
             }
         } catch (JSONException e) {
