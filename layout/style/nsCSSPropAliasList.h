@@ -323,7 +323,13 @@ CSS_PROP_ALIAS(-webkit-box-sizing,
                WebkitBoxSizing,
                WEBKIT_PREFIX_PREF)
 
-// Alias old flexbox properties to modern flexbox pseudo-equivalents:
+// Alias -webkit-box properties to their -moz-box equivalents.
+// (NOTE: Even though they're aliases, in practice these -webkit properties
+// will behave a bit differently from their -moz versions, if they're
+// accompanied by "display:-webkit-box", because we generate a different frame
+// for those two display values.)
+// XXXdholbert Not all of these are converted yet, but they will be by the
+// end of this patch stack.
 CSS_PROP_ALIAS(-webkit-box-flex,
                flex_grow,
                WebkitBoxFlex,
@@ -333,11 +339,11 @@ CSS_PROP_ALIAS(-webkit-box-ordinal-group,
                WebkitBoxOrdinalGroup,
                WEBKIT_PREFIX_PREF)
 CSS_PROP_ALIAS(-webkit-box-align,
-               align_items,
+               box_align,
                WebkitBoxAlign,
                WEBKIT_PREFIX_PREF)
 CSS_PROP_ALIAS(-webkit-box-pack,
-               justify_content,
+               box_pack,
                WebkitBoxPack,
                WEBKIT_PREFIX_PREF)
 
