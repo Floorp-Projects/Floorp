@@ -930,6 +930,19 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
     return true;
 }
 
+JS_PUBLIC_API(bool)
+IsSavedFrame(JSObject* obj)
+{
+    if (!obj)
+        return false;
+
+    JSObject* unwrapped = CheckedUnwrap(obj);
+    if (!unwrapped)
+        return false;
+
+    return js::SavedFrame::isSavedFrameAndNotProto(*unwrapped);
+}
+
 } /* namespace JS */
 
 namespace js {
