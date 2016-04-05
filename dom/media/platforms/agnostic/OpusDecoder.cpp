@@ -7,7 +7,9 @@
 #include "OpusDecoder.h"
 #include "TimeUnits.h"
 #include "VorbisUtils.h"
+#include "VorbisDecoder.h" // For VorbisLayout
 #include "mozilla/Endian.h"
+#include "mozilla/PodOperations.h"
 
 #include <stdint.h>
 #include <inttypes.h>  // For PRId64
@@ -66,7 +68,7 @@ OpusDataDecoder::Init()
                                                  mOpusParser->mChannels,
                                                  mOpusParser->mStreams,
                                                  mOpusParser->mCoupledStreams,
-                                                 mOpusParser->mMappingTable,
+                                                 mMappingTable,
                                                  &r);
   mSkip = mOpusParser->mPreSkip;
   mPaddingDiscarded = false;
@@ -100,11 +102,28 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   if (!mOpusParser->DecodeHeader(const_cast<unsigned char*>(aData), aLength)) {
     return NS_ERROR_FAILURE;
   }
+  int channels = mOpusParser->mChannels;
   // No channel mapping for more than 8 channels.
-  if (mOpusParser->mChannels > 8) {
+  if (channels > 8) {
     OPUS_DEBUG("No channel mapping for more than 8 channels. Source is %d channels",
-               mOpusParser->mChannels);
+               channels);
     return NS_ERROR_FAILURE;
+  }
+
+  AudioConfig::ChannelLayout vorbisLayout(
+    channels, VorbisDataDecoder::VorbisLayout(channels));
+  AudioConfig::ChannelLayout smpteLayout(channels);
+  static_assert(sizeof(mOpusParser->mMappingTable) / sizeof(mOpusParser->mMappingTable[0]) >= MAX_AUDIO_CHANNELS,
+                       "Invalid size set");
+  uint8_t map[sizeof(mOpusParser->mMappingTable) / sizeof(mOpusParser->mMappingTable[0])];
+  if (vorbisLayout.MappingTable(smpteLayout, map)) {
+    for (int i = 0; i < channels; i++) {
+      mMappingTable[i] = mOpusParser->mMappingTable[map[i]];
+    }
+  } else {
+    // Should never get here as vorbis layout is always convertible to SMPTE
+    // default layout.
+    PodCopy(mMappingTable, mOpusParser->mMappingTable, MAX_AUDIO_CHANNELS);
   }
 
   return NS_OK;
