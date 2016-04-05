@@ -116,6 +116,51 @@ IsLegacyBox(const nsStyleDisplay* aStyleDisp,
   return false;
 }
 
+// Returns the "align-items" value that's equivalent to the legacy "box-align"
+// value in the given style struct.
+static uint8_t
+ConvertLegacyStyleToAlignItems(const nsStyleXUL* aStyleXUL)
+{
+  // -[moz|webkit]-box-align corresponds to modern "align-items"
+  switch (aStyleXUL->mBoxAlign) {
+    case NS_STYLE_BOX_ALIGN_STRETCH:
+      return NS_STYLE_ALIGN_STRETCH;
+    case NS_STYLE_BOX_ALIGN_START:
+      return NS_STYLE_ALIGN_FLEX_START;
+    case NS_STYLE_BOX_ALIGN_CENTER:
+      return NS_STYLE_ALIGN_CENTER;
+    case NS_STYLE_BOX_ALIGN_BASELINE:
+      return NS_STYLE_ALIGN_BASELINE;
+    case NS_STYLE_BOX_ALIGN_END:
+      return NS_STYLE_ALIGN_FLEX_END;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unrecognized mBoxAlign enum value");
+  // Fall back to default value of "align-items" property:
+  return NS_STYLE_ALIGN_STRETCH;
+}
+
+// Returns the "justify-content" value that's equivalent to the legacy
+// "box-pack" value in the given style struct.
+static uint8_t
+ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
+{
+  // -[moz|webkit]-box-pack corresponds to modern "justify-content"
+  switch (aStyleXUL->mBoxPack) {
+    case NS_STYLE_BOX_PACK_START:
+      return NS_STYLE_ALIGN_FLEX_START;
+    case NS_STYLE_BOX_PACK_CENTER:
+      return NS_STYLE_ALIGN_CENTER;
+    case NS_STYLE_BOX_PACK_END:
+      return NS_STYLE_ALIGN_FLEX_END;
+    case NS_STYLE_BOX_PACK_JUSTIFY:
+      return NS_STYLE_ALIGN_SPACE_BETWEEN;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unrecognized mBoxPack enum value");
+  // Fall back to default value of "justify-content" property:
+  return NS_STYLE_ALIGN_FLEX_START;
+}
 
 // Indicates whether advancing along the given axis is equivalent to
 // increasing our X or Y position (as opposed to decreasing it).
@@ -1608,14 +1653,28 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
   MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
              "out-of-flow frames should not be treated as flex items");
 
-  mAlignSelf = aFlexItemReflowState.mStylePosition->ComputedAlignSelf(
-                 mFrame->StyleContext()->GetParent());
-  if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
-    mAlignSelf = NS_STYLE_ALIGN_STRETCH;
-  }
+  const nsHTMLReflowState* containerRS = aFlexItemReflowState.parentReflowState;
+  if (IsLegacyBox(containerRS->mStyleDisplay,
+                  containerRS->frame->StyleContext())) {
+    // For -webkit-box/-webkit-inline-box, we need to:
+    // (1) Use "-webkit-box-align" instead of "align-items" to determine the
+    //     container's cross-axis alignment behavior.
+    // (2) Suppress the ability for flex items to override that with their own
+    //     cross-axis alignment. (The legacy box model doesn't support this.)
+    // So, each FlexItem simply copies the container's converted "align-items"
+    // value and disregards their own "align-self" property.
+    const nsStyleXUL* containerStyleXUL = containerRS->frame->StyleXUL();
+    mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
+  } else {
+    mAlignSelf = aFlexItemReflowState.mStylePosition->ComputedAlignSelf(
+                   mFrame->StyleContext()->GetParent());
+    if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
+      mAlignSelf = NS_STYLE_ALIGN_STRETCH;
+    }
 
-  // XXX strip off the <overflow-position> bit until we implement that
-  mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+    // XXX strip off the <overflow-position> bit until we implement that
+    mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  }
 
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
   CheckForMinSizeAuto(aFlexItemReflowState, aAxisTracker);
@@ -3821,11 +3880,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     }
   }
 
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
+  const auto justifyContent = IsLegacyBox(aReflowState.mStyleDisplay,
+                                          mStyleContext) ?
+    ConvertLegacyStyleToJustifyContent(StyleXUL()) :
+    aReflowState.mStylePosition->ComputedJustifyContent();
 
+  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     // Main-Axis Alignment - Flexbox spec section 9.5
     // ==============================================
-    auto justifyContent = aReflowState.mStylePosition->ComputedJustifyContent();
     line->PositionItemsInMainAxis(justifyContent,
                                   aContentBoxMainSize,
                                   aAxisTracker);
