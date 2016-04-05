@@ -575,7 +575,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         }
 
         const hal::SensorAccuracyType &accuracy = (hal::SensorAccuracyType) curEvent->MetaState();
-        hal::SensorData sdata(type, PR_Now(), values, accuracy);
+        hal::SensorData sdata(type, curEvent->Time(), values, accuracy);
         hal::NotifySensorChange(sdata);
       }
       break;

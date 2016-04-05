@@ -26,7 +26,7 @@ public:
   MOZ_IMPLICIT AccessibleOrProxy(Accessible* aAcc) :
     mBits(reinterpret_cast<uintptr_t>(aAcc)) {}
   MOZ_IMPLICIT AccessibleOrProxy(ProxyAccessible* aProxy) :
-    mBits(reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) {}
+    mBits(aProxy ? (reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) : 0) {}
   MOZ_IMPLICIT AccessibleOrProxy(decltype(nullptr)) : mBits(0) {}
 
   bool IsProxy() const { return mBits & IS_PROXY; }

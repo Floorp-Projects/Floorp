@@ -41,6 +41,21 @@ var gSubDialog = {
   },
 
   open: function(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
+    // If we're already open/opening on this URL, do nothing.
+    if (this._openedURL == aURL && !this._isClosing) {
+      return;
+    }
+    // If we're open on some (other) URL or we're closing, open when closing has finished.
+    if (this._openedURL || this._isClosing) {
+      if (!this._isClosing) {
+        this.close();
+      }
+      let args = Array.from(arguments);
+      this._closingPromise.then(() => {
+        this.open.apply(this, args);
+      });
+      return;
+    }
     this._addDialogEventListeners();
 
     let features = (!!aFeatures ? aFeatures + "," : "") + "resizable,dialog=no,centerscreen";
@@ -58,7 +73,6 @@ var gSubDialog = {
     this._box.setAttribute("resizable", featureParams.has("resizable") &&
                                         featureParams.get("resizable") != "no" &&
                                         featureParams.get("resizable") != "0");
-    return dialog;
   },
 
   close: function(aEvent = null) {
@@ -66,6 +80,9 @@ var gSubDialog = {
       return;
     }
     this._isClosing = true;
+    this._closingPromise = new Promise(resolve => {
+      this._resolveClosePromise = resolve;
+    });
 
     if (this._closingCallback) {
       try {
@@ -90,6 +107,16 @@ var gSubDialog = {
     setTimeout(() => {
       // Unload the dialog after the event listeners run so that the load of about:blank isn't
       // cancelled by the ESC <key>.
+      let onBlankLoad = e => {
+        if (this._frame.contentWindow.location.href == "about:blank") {
+          this._frame.removeEventListener("load", onBlankLoad);
+          // We're now officially done closing, so update the state to reflect that.
+          delete this._openedURL;
+          this._isClosing = false;
+          this._resolveClosePromise();
+        }
+      };
+      this._frame.addEventListener("load", onBlankLoad);
       this._frame.loadURI("about:blank");
     }, 0);
   },
@@ -132,8 +159,9 @@ var gSubDialog = {
   },
 
   _onContentLoaded: function(aEvent) {
-    if (aEvent.target != this._frame || aEvent.target.contentWindow.location == "about:blank")
+    if (aEvent.target != this._frame || aEvent.target.contentWindow.location == "about:blank") {
       return;
+    }
 
     for (let styleSheetURL of this._injectedStyleSheets) {
       this.injectXMLStylesheet(styleSheetURL);
@@ -169,8 +197,9 @@ var gSubDialog = {
   },
 
   _onLoad: function(aEvent) {
-    if (aEvent.target.contentWindow.location == "about:blank")
+    if (aEvent.target.contentWindow.location == "about:blank") {
       return;
+    }
 
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
@@ -260,8 +289,9 @@ var gSubDialog = {
 
     let docEl = frame.contentDocument.documentElement;
     let persistedAttributes = docEl.getAttribute("persist");
-    if (!persistedAttributes.contains("width") &&
-        !persistedAttributes.contains("height")) {
+    if (!persistedAttributes ||
+        (!persistedAttributes.contains("width") &&
+         !persistedAttributes.contains("height"))) {
       return;
     }
 
