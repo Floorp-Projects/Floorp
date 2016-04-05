@@ -242,10 +242,8 @@ TabListView.prototype = {
 
     itemNode.querySelector(".item-title").textContent = item.title;
 
-    if (item.icon) {
-      let icon = itemNode.querySelector(".item-icon-container");
-      icon.style.backgroundImage = "url(" + item.icon + ")";
-    }
+    let icon = itemNode.querySelector(".item-icon-container");
+    icon.style.backgroundImage = "url(" + item.icon + ")";
   },
 
   onClick(event) {
