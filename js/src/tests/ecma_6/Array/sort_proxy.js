@@ -26,7 +26,7 @@ function testArray(arr) {
     proxy.sort((x, y) => 1 * x - y);
     arr.sort((x, y) => 1 * x - y);
 
-    for (let i of arr)
+    for (let i in arr)
         assertEq(arr[i], proxy[i]);
 }
 
