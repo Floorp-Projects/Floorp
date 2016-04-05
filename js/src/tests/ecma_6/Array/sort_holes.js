@@ -54,5 +54,13 @@ assertDeepEq(oneHole[0], {size: 27});
 assertEq(oneHole.length, 2600);
 assertEq(denseCount(oneHole), 1);
 
+// Sealed objects should be sortable, including those with holes (so long
+// as the holes appear at the end, so that they don't need to be moved).
+assertDeepEq(Object.seal([0, 99, -1]).sort((x, y) => 1 * x - y),
+             Object.seal([-1, 0, 99]));
+
+assertDeepEq(Object.seal([1, 5, 4, , ,]).sort((x, y) => 1 * x - y),
+             Object.seal([1, 4, 5, , ,]));
+
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);
