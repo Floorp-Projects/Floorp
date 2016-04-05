@@ -207,4 +207,14 @@ this.Async = {
     query.executeAsync(storageCallback);
     return Async.waitForSyncCallback(storageCallback.syncCb);
   },
+
+  promiseSpinningly(promise) {
+    let cb = Async.makeSpinningCallback();
+    promise.then(result =>  {
+      cb(null, result);
+    }, err => {
+      cb(err || new Error("Promise rejected without explicit error"));
+    });
+    return cb.wait();
+  },
 };

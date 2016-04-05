@@ -272,69 +272,69 @@ BookmarksEngine.prototype = {
   _guidMapFailed: false,
   _buildGUIDMap: function _buildGUIDMap() {
     let guidMap = {};
-    for (let guid in this._store.getAllIDs()) {
-      // Figure out with which key to store the mapping.
-      let key;
-      let id = this._store.idForGUID(guid);
-      let itemType;
-      try {
-        itemType = PlacesUtils.bookmarks.getItemType(id);
-      } catch (ex) {
-        this._log.warn("Deleting invalid bookmark record with id", id);
-        try {
-          PlacesUtils.bookmarks.removeItem(id);
-        } catch (ex) {
-          this._log.warn("Failed to delete invalid bookmark", ex);
+    let tree = Async.promiseSpinningly(PlacesUtils.promiseBookmarksTree("", {
+      includeItemIds: true
+    }));
+    function* walkBookmarksTree(tree, parent=null) {
+      if (tree) {
+        // Skip root node
+        if (parent) {
+          yield [tree, parent];
         }
-        continue;
+        if (tree.children) {
+          for (let child of tree.children) {
+            yield* walkBookmarksTree(child, tree);
+          }
+        }
       }
-      switch (itemType) {
-        case PlacesUtils.bookmarks.TYPE_BOOKMARK:
+    }
 
-          // Smart bookmarks map to their annotation value.
-          let queryId;
-          try {
-            queryId = PlacesUtils.annotations.getItemAnnotation(
-              id, SMART_BOOKMARKS_ANNO);
-          } catch(ex) {}
+    function* walkBookmarksRoots(tree, rootGUIDs) {
+      for (let guid of rootGUIDs) {
+        let id = kSpecialIds.specialIdForGUID(guid, false);
+        let bookmarkRoot = id === null ? null :
+          tree.children.find(child => child.id === id);
+        if (bookmarkRoot === null) {
+          continue;
+        }
+        yield* walkBookmarksTree(bookmarkRoot, tree);
+      }
+    }
 
-          if (queryId) {
-            key = "q" + queryId;
+    let rootsToWalk = kSpecialIds.guids.filter(guid =>
+      guid !== 'places' && guid !== 'tags');
+
+    for (let [node, parent] of walkBookmarksRoots(tree, rootsToWalk)) {
+      let {guid, id, type: placeType} = node;
+      guid = kSpecialIds.specialGUIDForId(id) || guid;
+      let key;
+      switch (placeType) {
+        case PlacesUtils.TYPE_X_MOZ_PLACE:
+          // Bookmark
+          let query = null;
+          if (node.annos && node.uri.startsWith("place:")) {
+            query = node.annos.find(({name}) => name === SMART_BOOKMARKS_ANNO);
+          }
+          if (query && query.value) {
+            key = "q" + query.value;
           } else {
-            let uri;
-            try {
-              uri = PlacesUtils.bookmarks.getBookmarkURI(id);
-            } catch (ex) {
-              // Bug 1182366 - NS_ERROR_MALFORMED_URI here stops bookmarks sync.
-              // Try and get the string value of the URL for diagnostic purposes.
-              let url = this._getStringUrlForId(id);
-              this._log.warn(`Deleting bookmark with invalid URI. url="${url}", id=${id}`);
-              try {
-                PlacesUtils.bookmarks.removeItem(id);
-              } catch (ex) {
-                this._log.warn("Failed to delete invalid bookmark", ex);
-              }
-              continue;
-            }
-            key = "b" + uri.spec + ":" + PlacesUtils.bookmarks.getItemTitle(id);
+            key = "b" + node.uri + ":" + node.title;
           }
           break;
-        case PlacesUtils.bookmarks.TYPE_FOLDER:
-          key = "f" + PlacesUtils.bookmarks.getItemTitle(id);
+        case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
+          // Folder
+          key = "f" + node.title;
           break;
-        case PlacesUtils.bookmarks.TYPE_SEPARATOR:
-          key = "s" + PlacesUtils.bookmarks.getItemIndex(id);
+        case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
+          // Separator
+          key = "s" + node.index;
           break;
         default:
+          this._log.error("Unknown place type: '"+placeType+"'");
           continue;
       }
 
-      // The mapping is on a per parent-folder-name basis.
-      let parent = PlacesUtils.bookmarks.getFolderIdForItem(id);
-      if (parent <= 0)
-        continue;
-
-      let parentName = PlacesUtils.bookmarks.getItemTitle(parent);
+      let parentName = parent.title;
       if (guidMap[parentName] == null)
         guidMap[parentName] = {};
 

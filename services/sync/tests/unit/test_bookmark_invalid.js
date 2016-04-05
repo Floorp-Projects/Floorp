@@ -12,46 +12,6 @@ var engine = Service.engineManager.get("bookmarks");
 var store = engine._store;
 var tracker = engine._tracker;
 
-// Return a promise resolved when the specified message is written to the
-// bookmarks engine log.
-function promiseLogMessage(messagePortion) {
-  return new Promise(resolve => {
-    let appender;
-    let log = Log.repository.getLogger("Sync.Engine.Bookmarks");
-
-    function TestAppender() {
-      Log.Appender.call(this);
-    }
-    TestAppender.prototype = Object.create(Log.Appender.prototype);
-    TestAppender.prototype.doAppend = function(message) {
-      if (message.indexOf(messagePortion) >= 0) {
-        log.removeAppender(appender);
-        resolve();
-      }
-    };
-    TestAppender.prototype.level = Log.Level.Debug;
-    appender = new TestAppender();
-    log.addAppender(appender);
-  });
-}
-
-// Returns a promise that resolves if the specified ID does *not* exist and
-// rejects if it does.
-function promiseNoItem(itemId) {
-  return new Promise((resolve, reject) => {
-    try {
-      PlacesUtils.bookmarks.getFolderIdForItem(itemId);
-      reject("fetching the item didn't fail");
-    } catch (ex) {
-      if (ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
-        resolve("item doesn't exist");
-      } else {
-        reject("unexpected exception: " + ex);
-      }
-    }
-  });
-}
-
 add_task(function* test_ignore_invalid_uri() {
   _("Ensure that we don't die with invalid bookmarks.");
 
@@ -70,13 +30,9 @@ add_task(function* test_ignore_invalid_uri() {
       { id: bmid, url: "<invalid url>" });
   }));
 
-  // DB is now "corrupt" - setup a log appender to capture what we log.
-  let promiseMessage = promiseLogMessage('Deleting bookmark with invalid URI. url="<invalid url>"');
-  // This should work and log our invalid id.
+  // Ensure that this doesn't throw even though the DB is now in a bad state (a
+  // bookmark has an illegal url).
   engine._buildGUIDMap();
-  yield promiseMessage;
-  // And we should have deleted the item.
-  yield promiseNoItem(bmid);
 });
 
 add_task(function* test_ignore_missing_uri() {
@@ -96,13 +52,9 @@ add_task(function* test_ignore_missing_uri() {
       , { id: bmid });
   }));
 
-  // DB is now "corrupt" - bookmarks will fail to locate a string url to log
-  // and use "<not found>" as a placeholder.
-  let promiseMessage = promiseLogMessage('Deleting bookmark with invalid URI. url="<not found>"');
+  // Ensure that this doesn't throw even though the DB is now in a bad state (a
+  // bookmark has an illegal url).
   engine._buildGUIDMap();
-  yield promiseMessage;
-  // And we should have deleted the item.
-  yield promiseNoItem(bmid);
 });
 
 function run_test() {
