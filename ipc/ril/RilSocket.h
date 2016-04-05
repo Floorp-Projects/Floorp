@@ -48,7 +48,7 @@ public:
    * @param aCx The RIL worker's JS context.
    * @param aBuffer Data received from the socket.
    */
-  void ReceiveSocketData(JSContext* aCx, nsAutoPtr<UnixSocketBuffer>& aBuffer);
+  void ReceiveSocketData(JSContext* aCx, UniquePtr<UnixSocketBuffer>& aBuffer);
 
   /**
    * Starts a task on the socket that will try to connect to a socket in a
