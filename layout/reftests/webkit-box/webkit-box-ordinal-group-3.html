@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-box-orient with huge values inside a -webkit-box
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+    }
+    br { clear: both; }
+
+    .box > * {
+      border: 1px dotted purple;
+    }
+
+    .bogTen   { -webkit-box-ordinal-group: 10; }
+    .bogHugeA { -webkit-box-ordinal-group: 2147483646; /* 2^31 - 2 */ }
+    .bogHugeB {
+      /* NOTE: This is INT32_MAX, so we may not be able to distinguish this
+         from anything larger than it (if we represent it internally in a
+         32-bit signed integer). However, it's still worth testing larger
+         values against e.g. 10 to be sure they don't overflow into
+         negative territory. */
+      -webkit-box-ordinal-group: 2147483647; /* 2^31 - 1 */ }
+
+    .bogHugeC { -webkit-box-ordinal-group: 4294967294; /* 2^32 - 2 */ }
+    .bogHugeD { -webkit-box-ordinal-group: 4294967295; /* 2^32 - 1 */ }
+    .bogHugeE { -webkit-box-ordinal-group: 4294967296; /* 2^32     */ }
+    .bogHugeF { -webkit-box-ordinal-group: 8589934592; /* 2^33     */ }
+  </style>
+</head>
+<body>
+  <!-- Test each huge value to see if it sorts after smaller values.
+       (The divs with huge values should sort to the right.) -->
+  <div class="box">
+    <div class="bogHugeA">A</div>
+    <div class="bogTen">10</div>
+    <div>*</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeB">B</div>
+    <div class="bogTen">10</div>
+    <div>*</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeC">C</div>
+    <div class="bogTen">10</div>
+    <div>*</div>
+  </div>
+
+  <br>
+
+  <div class="box">
+    <div class="bogHugeD">D</div>
+    <div class="bogTen">10</div>
+    <div>*</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeE">E</div>
+    <div class="bogTen">10</div>
+    <div>*</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeE">F</div>
+    <div class="bogTen">10</div>
+    <div>*</div>
+  </div>
+
+  <br>
+
+  <!-- Test that 'bogHugeA' sorts to the left of larger huge values. It's
+       less than INT32_MAX, so it's reasonable to expect that it can be
+       compared correctly against (possibly-clamped) larger values) -->
+  <div class="box">
+    <div class="bogHugeB">B</div>
+    <div class="bogHugeA">A</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeC">C</div>
+    <div class="bogHugeA">A</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeD">D</div>
+    <div class="bogHugeA">A</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeE">E</div>
+    <div class="bogHugeA">A</div>
+  </div>
+  <div class="box">
+    <div class="bogHugeF">F</div>
+    <div class="bogHugeA">A</div>
+  </div>
+</body>
+</html>
