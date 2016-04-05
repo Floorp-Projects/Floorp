@@ -26,6 +26,7 @@ oopCommandlineHandler.prototype = {
                 // environment
                 branch.setBoolPref("dom.ipc.tabs.disabled", false);
                 branch.setBoolPref("layers.acceleration.disabled", false);
+                branch.setBoolPref("layers.offmainthreadcomposition.enabled", true);
                 branch.setBoolPref("layers.offmainthreadcomposition.async-animations", true);
                 branch.setBoolPref("layers.async-video.enabled", true);
                 branch.setBoolPref("layers.async-pan-zoom.enabled", true);
