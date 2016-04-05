@@ -1,0 +1,377 @@
+diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
+--- a/modules/fdlibm/src/e_acos.cpp
++++ b/modules/fdlibm/src/e_acos.cpp
+@@ -99,12 +99,8 @@ double
+ 	    c  = (z-df*df)/(s+df);
+ 	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
+ 	    q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));
+ 	    r = p/q;
+ 	    w = r*s+c;
+ 	    return 2.0*(df+w);
+ 	}
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(acos, acosl);
+-#endif
+diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
+--- a/modules/fdlibm/src/e_acosh.cpp
++++ b/modules/fdlibm/src/e_acosh.cpp
+@@ -56,12 +56,8 @@ double
+ 	} else if (hx > 0x40000000) {	/* 2**28 > x > 2 */
+ 	    t=x*x;
+ 	    return __ieee754_log(2.0*x-one/(x+sqrt(t-one)));
+ 	} else {			/* 1<x<2 */
+ 	    t = x-one;
+ 	    return log1p(t+sqrt(2.0*t+t*t));
+ 	}
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(acosh, acoshl);
+-#endif
+diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
+--- a/modules/fdlibm/src/e_asin.cpp
++++ b/modules/fdlibm/src/e_asin.cpp
+@@ -105,12 +105,8 @@ double
+ 	    c  = (t-w*w)/(s+w);
+ 	    r  = p/q;
+ 	    p  = 2.0*s*r-(pio2_lo-2.0*c);
+ 	    q  = pio4_hi-2.0*w;
+ 	    t  = pio4_hi-(p-q);
+ 	}    
+ 	if(hx>0) return t; else return -t;    
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(asin, asinl);
+-#endif
+diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
+--- a/modules/fdlibm/src/e_atan2.cpp
++++ b/modules/fdlibm/src/e_atan2.cpp
+@@ -117,12 +117,8 @@ double
+ 	switch (m) {
+ 	    case 0: return       z  ;	/* atan(+,+) */
+ 	    case 1: return      -z  ;	/* atan(-,+) */
+ 	    case 2: return  pi-(z-pi_lo);/* atan(+,-) */
+ 	    default: /* case 3 */
+ 	    	    return  (z-pi_lo)-pi;/* atan(-,-) */
+ 	}
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(atan2, atan2l);
+-#endif
+diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
+--- a/modules/fdlibm/src/e_atanh.cpp
++++ b/modules/fdlibm/src/e_atanh.cpp
+@@ -56,12 +56,8 @@ double
+ 	SET_HIGH_WORD(x,ix);
+ 	if(ix<0x3fe00000) {		/* x < 0.5 */
+ 	    t = x+x;
+ 	    t = 0.5*log1p(t+t*x/(one-x));
+ 	} else 
+ 	    t = 0.5*log1p((x+x)/(one-x));
+ 	if(hx>=0) return t; else return -t;
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(atanh, atanhl);
+-#endif
+diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
+--- a/modules/fdlibm/src/e_cosh.cpp
++++ b/modules/fdlibm/src/e_cosh.cpp
+@@ -73,12 +73,8 @@ double
+ 
+     /* |x| in [log(maxdouble), overflowthresold] */
+ 	if (ix<=0x408633CE)
+ 	    return __ldexp_exp(fabs(x), -1);
+ 
+     /* |x| > overflowthresold, cosh(x) overflow */
+ 	return huge*huge;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(cosh, coshl);
+-#endif
+diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
+--- a/modules/fdlibm/src/e_exp.cpp
++++ b/modules/fdlibm/src/e_exp.cpp
+@@ -152,12 +152,8 @@ double
+ 	else 		y = one-((lo-(x*c)/(2.0-c))-hi);
+ 	if(k >= -1021) {
+ 	    if (k==1024) return y*2.0*0x1p1023;
+ 	    return y*twopk;
+ 	} else {
+ 	    return y*twopk*twom1000;
+ 	}
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(exp, expl);
+-#endif
+diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
+--- a/modules/fdlibm/src/e_hypot.cpp
++++ b/modules/fdlibm/src/e_hypot.cpp
+@@ -119,12 +119,8 @@ double
+ 	if(k!=0) {
+ 	    u_int32_t high;
+ 	    t1 = 1.0;
+ 	    GET_HIGH_WORD(high,t1);
+ 	    SET_HIGH_WORD(t1,high+(k<<20));
+ 	    return t1*w;
+ 	} else return w;
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(hypot, hypotl);
+-#endif
+diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
+--- a/modules/fdlibm/src/e_log.cpp
++++ b/modules/fdlibm/src/e_log.cpp
+@@ -135,12 +135,8 @@ double
+ 	    hfsq=0.5*f*f;
+ 	    if(k==0) return f-(hfsq-s*(hfsq+R)); else
+ 		     return dk*ln2_hi-((hfsq-(s*(hfsq+R)+dk*ln2_lo))-f);
+ 	} else {
+ 	    if(k==0) return f-s*(f-R); else
+ 		     return dk*ln2_hi-((s*(f-R)-dk*ln2_lo)-f);
+ 	}
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(log, logl);
+-#endif
+diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
+--- a/modules/fdlibm/src/e_log10.cpp
++++ b/modules/fdlibm/src/e_log10.cpp
+@@ -82,12 +82,8 @@ double
+ 	 * with some parallelism and it reduces the error for many args.
+ 	 */
+ 	w = y2 + val_hi;
+ 	val_lo += (y2 - w) + val_hi;
+ 	val_hi = w;
+ 
+ 	return val_lo + val_hi;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(log10, log10l);
+-#endif
+diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
+--- a/modules/fdlibm/src/e_log2.cpp
++++ b/modules/fdlibm/src/e_log2.cpp
+@@ -105,12 +105,8 @@ double
+ 
+ 	/* spadd(val_hi, val_lo, y), except for not using double_t: */
+ 	w = y + val_hi;
+ 	val_lo += (y - w) + val_hi;
+ 	val_hi = w;
+ 
+ 	return val_lo + val_hi;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(log2, log2l);
+-#endif
+diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
+--- a/modules/fdlibm/src/e_sinh.cpp
++++ b/modules/fdlibm/src/e_sinh.cpp
+@@ -67,12 +67,8 @@ double
+ 
+     /* |x| in [log(maxdouble), overflowthresold] */
+ 	if (ix<=0x408633CE)
+ 	    return h*2.0*__ldexp_exp(fabs(x), -1);
+ 
+     /* |x| > overflowthresold, sinh(x) overflow */
+ 	return x*shuge;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(sinh, sinhl);
+-#endif
+diff --git a/modules/fdlibm/src/e_sqrt.cpp b/modules/fdlibm/src/e_sqrt.cpp
+--- a/modules/fdlibm/src/e_sqrt.cpp
++++ b/modules/fdlibm/src/e_sqrt.cpp
+@@ -182,20 +182,16 @@ double
+ 	ix0 = (q>>1)+0x3fe00000;
+ 	ix1 =  q1>>1;
+ 	if ((q&1)==1) ix1 |= sign;
+ 	ix0 += (m <<20);
+ 	INSERT_WORDS(z,ix0,ix1);
+ 	return z;
+ }
+ 
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(sqrt, sqrtl);
+-#endif
+-
+ /*
+ Other methods  (use floating-point arithmetic)
+ -------------
+ (This is a copy of a drafted paper by Prof W. Kahan 
+ and K.C. Ng, written in May, 1986)
+ 
+ 	Two algorithms are given here to implement sqrt(x) 
+ 	(IEEE double precision arithmetic) in software.
+diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
+--- a/modules/fdlibm/src/s_asinh.cpp
++++ b/modules/fdlibm/src/s_asinh.cpp
+@@ -50,12 +50,8 @@ asinh(double x)
+ 	    t = fabs(x);
+ 	    w = __ieee754_log(2.0*t+one/(__ieee754_sqrt(x*x+one)+t));
+ 	} else {		/* 2.0 > |x| > 2**-28 */
+ 	    t = x*x;
+ 	    w =log1p(fabs(x)+t/(one+__ieee754_sqrt(one+t)));
+ 	}
+ 	if(hx>0) return w; else return -w;
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(asinh, asinhl);
+-#endif
+diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
+--- a/modules/fdlibm/src/s_atan.cpp
++++ b/modules/fdlibm/src/s_atan.cpp
+@@ -112,12 +112,8 @@ atan(double x)
+ 	s1 = z*(aT[0]+w*(aT[2]+w*(aT[4]+w*(aT[6]+w*(aT[8]+w*aT[10])))));
+ 	s2 = w*(aT[1]+w*(aT[3]+w*(aT[5]+w*(aT[7]+w*aT[9]))));
+ 	if (id<0) return x - x*(s1+s2);
+ 	else {
+ 	    z = atanhi[id] - ((x*(s1+s2) - atanlo[id]) - x);
+ 	    return (hx<0)? -z:z;
+ 	}
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(atan, atanl);
+-#endif
+diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
+--- a/modules/fdlibm/src/s_cbrt.cpp
++++ b/modules/fdlibm/src/s_cbrt.cpp
+@@ -105,12 +105,8 @@ cbrt(double x)
+ 	s=t*t;				/* t*t is exact */
+ 	r=x/s;				/* error <= 0.5 ulps; |r| < |t| */
+ 	w=t+t;				/* t+t is exact */
+ 	r=(r-t)/(w+r);			/* r-t is exact; w+r ~= 3*t */
+ 	t=t+t*r;			/* error <= 0.5 + 0.5/3 + epsilon */
+ 
+ 	return(t);
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(cbrt, cbrtl);
+-#endif
+diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
+--- a/modules/fdlibm/src/s_ceil.cpp
++++ b/modules/fdlibm/src/s_ceil.cpp
+@@ -65,12 +65,8 @@ ceil(double x)
+ 		    }
+ 		}
+ 		i1 &= (~i);
+ 	    }
+ 	}
+ 	INSERT_WORDS(x,i0,i1);
+ 	return x;
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(ceil, ceill);
+-#endif
+diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
+--- a/modules/fdlibm/src/s_expm1.cpp
++++ b/modules/fdlibm/src/s_expm1.cpp
+@@ -210,12 +210,8 @@ expm1(double x)
+ 		SET_HIGH_WORD(t,((0x3ff-k)<<20));	/* 2^-k */
+ 	       	y = x-(e+t);
+ 	       	y += one;
+ 		y = y*twopk;
+ 	    }
+ 	}
+ 	return y;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(expm1, expm1l);
+-#endif
+diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
+--- a/modules/fdlibm/src/s_floor.cpp
++++ b/modules/fdlibm/src/s_floor.cpp
+@@ -66,12 +66,8 @@ floor(double x)
+ 		    }
+ 		}
+ 		i1 &= (~i);
+ 	    }
+ 	}
+ 	INSERT_WORDS(x,i0,i1);
+ 	return x;
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(floor, floorl);
+-#endif
+diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
+--- a/modules/fdlibm/src/s_log1p.cpp
++++ b/modules/fdlibm/src/s_log1p.cpp
+@@ -168,12 +168,8 @@ log1p(double x)
+ 	    	     return k*ln2_hi-((R-(k*ln2_lo+c))-f);
+ 	}
+  	s = f/(2.0+f);
+ 	z = s*s;
+ 	R = z*(Lp1+z*(Lp2+z*(Lp3+z*(Lp4+z*(Lp5+z*(Lp6+z*Lp7))))));
+ 	if(k==0) return f-(hfsq-s*(hfsq+R)); else
+ 		 return k*ln2_hi-((hfsq-(s*(hfsq+R)+(k*ln2_lo+c)))-f);
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(log1p, log1pl);
+-#endif
+diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
+--- a/modules/fdlibm/src/s_scalbn.cpp
++++ b/modules/fdlibm/src/s_scalbn.cpp
+@@ -53,13 +53,8 @@ scalbn (double x, int n)
+         if (k <= -54)
+             if (n > 50000) 	/* in case integer overflow in n+k */
+ 		return huge*copysign(huge,x);	/*overflow*/
+ 	    else return tiny*copysign(tiny,x); 	/*underflow*/
+         k += 54;				/* subnormal result */
+ 	SET_HIGH_WORD(x,(hx&0x800fffff)|(k<<20));
+         return x*twom54;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(scalbn, ldexpl);
+-__weak_reference(scalbn, scalbnl);
+-#endif
+diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
+--- a/modules/fdlibm/src/s_tanh.cpp
++++ b/modules/fdlibm/src/s_tanh.cpp
+@@ -72,12 +72,8 @@ tanh(double x)
+ 	        z= -t/(t+two);
+ 	    }
+     /* |x| >= 22, return +-1 */
+ 	} else {
+ 	    z = one - tiny;		/* raise inexact flag */
+ 	}
+ 	return (jx>=0)? z: -z;
+ }
+-
+-#if (LDBL_MANT_DIG == 53)
+-__weak_reference(tanh, tanhl);
+-#endif
+diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
+--- a/modules/fdlibm/src/s_trunc.cpp
++++ b/modules/fdlibm/src/s_trunc.cpp
+@@ -55,12 +55,8 @@ trunc(double x)
+ 	    i = ((u_int32_t)(0xffffffff))>>(j0-20);
+ 	    if((i1&i)==0) return x;	/* x is integral */
+ 	    if(huge+x>0.0)		/* raise inexact flag */
+ 		i1 &= (~i);
+ 	}
+ 	INSERT_WORDS(x,i0,i1);
+ 	return x;
+ }
+-
+-#if LDBL_MANT_DIG == 53
+-__weak_reference(trunc, truncl);
+-#endif
