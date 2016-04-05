@@ -24,6 +24,7 @@ this.TabsInTitlebar = {
           return Promise.reject("TabsInTitlebar isn't supported on Linux");
         }
         Services.prefs.setBoolPref(PREF_TABS_IN_TITLEBAR, true);
+        return undefined;
       }),
     },
 

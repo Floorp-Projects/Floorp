@@ -123,14 +123,14 @@ var gSyncSetup = {
 
   startNewAccountSetup: function () {
     if (!Weave.Utils.ensureMPUnlocked())
-      return false;
+      return;
     this._settingUpNew = true;
     this.wizard.pageIndex = NEW_ACCOUNT_START_PAGE;
   },
 
   useExistingAccount: function () {
     if (!Weave.Utils.ensureMPUnlocked())
-      return false;
+      return;
     this._settingUpNew = false;
     if (this.wizardType == "pair") {
       // We're already pairing, so there's no point in pairing again.
