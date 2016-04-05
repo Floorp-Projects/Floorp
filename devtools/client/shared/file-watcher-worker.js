@@ -9,17 +9,6 @@ importScripts("resource://gre/modules/osfile.jsm");
 
 const modifiedTimes = new Map();
 
-function findSourceDir(path) {
-  if (path === "" || path === "/") {
-    return null;
-  } else if (OS.File.exists(
-    OS.Path.join(path, "devtools/client/shared/file-watcher.js")
-  )) {
-    return path;
-  }
-  return findSourceDir(OS.Path.dirname(path));
-}
-
 function gatherFiles(path, fileRegex) {
   let files = [];
   const iterator = new OS.File.DirectoryIterator(path);
@@ -71,28 +60,8 @@ function scanFiles(files, onChangedFile) {
 
 onmessage = function(event) {
   const { path, fileRegex } = event.data;
-  const devtoolsPath = event.data.devtoolsPath.replace(/\/$/, "");
 
-  // We need to figure out a src dir to watch. These are the actual
-  // files the user is working with, not the files in the obj dir. We
-  // do this by walking up the filesystem and looking for the devtools
-  // directories, and falling back to the raw path. This means none of
-  // this will work for users who store their obj dirs outside of the
-  // src dir.
-  //
-  // We take care not to mess with the `devtoolsPath` if that's what
-  // we end up using, because it might be intentionally mapped to a
-  // specific place on the filesystem for loading devtools externally.
-  //
-  // `devtoolsPath` is currently the devtools directory inside of the
-  // obj dir, and we search for `devtools/client`, so go up 2 levels
-  // to skip that devtools dir and start searching for the src dir.
-  const searchPoint = OS.Path.dirname(OS.Path.dirname(devtoolsPath));
-  const srcPath = findSourceDir(searchPoint);
-  const rootPath = srcPath ? OS.Path.join(srcPath, "devtools") : devtoolsPath;
-  const watchPath = OS.Path.join(rootPath, path.replace(/^devtools\//, ""));
-
-  const info = OS.File.stat(watchPath);
+  const info = OS.File.stat(path);
   if (!info.isDir) {
     throw new Error("Watcher expects a directory as root path");
   }
@@ -100,14 +69,13 @@ onmessage = function(event) {
   // We get a list of all the files upfront, which means we don't
   // support adding new files. But you need to rebuild Firefox when
   // adding a new file anyway.
-  const files = gatherFiles(watchPath, fileRegex || /.*/);
+  const files = gatherFiles(path, fileRegex || /.*/);
 
   // Every second, scan for file changes by stat-ing each of them and
   // comparing modification time.
   setInterval(() => {
     scanFiles(files, changedFile => {
-      postMessage({ fullPath: changedFile,
-                    relativePath: changedFile.replace(rootPath + "/", "") });
+      postMessage({ path: changedFile });
     });
   }, 1000);
 };

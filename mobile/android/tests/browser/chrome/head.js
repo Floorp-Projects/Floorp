@@ -19,6 +19,19 @@ function promiseBrowserEvent(browser, eventType) {
   });
 }
 
+function promiseTabEvent(container, eventType) {
+  return new Promise((resolve) => {
+    function handle(event) {
+      info("Received event " + eventType + " from container");
+      container.removeEventListener(eventType, handle, true);
+      resolve(event);
+    }
+
+    container.addEventListener(eventType, handle, true);
+    info("Now waiting for " + eventType + " event from container");
+  });
+}
+
 function promiseNotification(topic) {
   Cu.import("resource://gre/modules/Services.jsm");
 
