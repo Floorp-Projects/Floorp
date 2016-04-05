@@ -89,7 +89,8 @@ class Context {
       },
     };
 
-    let props = ["addListener", "callFunction", "callAsyncFunction",
+    let props = ["addListener", "callFunction",
+                 "callFunctionNoReturn", "callAsyncFunction",
                  "hasListener", "removeListener",
                  "getProperty", "setProperty",
                  "checkLoadURL", "logError",
@@ -1001,6 +1002,12 @@ class FunctionEntry extends CallEntry {
         let actuals = this.checkParameters(args, context);
         let callback = actuals.pop();
         return context.callAsyncFunction(path, name, actuals, callback);
+      };
+    } else if (!this.returns) {
+      stub = (...args) => {
+        this.checkDeprecated(context);
+        let actuals = this.checkParameters(args, context);
+        return context.callFunctionNoReturn(path, name, actuals);
       };
     } else {
       stub = (...args) => {

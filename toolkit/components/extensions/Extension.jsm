@@ -397,6 +397,10 @@ GlobalManager = {
             return findPath(path)[name](...args);
           },
 
+          callFunctionNoReturn(path, name, args) {
+            return findPath(path)[name](...args);
+          },
+
           callAsyncFunction(path, name, args, callback) {
             // We pass an empty stub function as a default callback for
             // the `chrome` API, so promise objects are not returned,
