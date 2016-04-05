@@ -322,6 +322,9 @@ class JavaPanZoomController
         return false;
     }
 
+    // Ignore MontionEvent velocity. Needed for C++APZ
+    public void onMotionEventVelocity(final long aEventTime, final float aSpeedY) {}
+
     /** This function MUST be called on the UI thread */
     @Override
     public boolean onMotionEvent(MotionEvent event) {

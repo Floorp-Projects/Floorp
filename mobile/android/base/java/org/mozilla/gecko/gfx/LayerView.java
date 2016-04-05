@@ -225,6 +225,9 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         event.offsetLocation(0, -mSurfaceTranslation);
 
         if (mToolbarAnimator != null && mToolbarAnimator.onInterceptTouchEvent(event)) {
+            if (mPanZoomController != null) {
+                mPanZoomController.onMotionEventVelocity(event.getEventTime(), mToolbarAnimator.getVelocity());
+            }
             return true;
         }
         if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
