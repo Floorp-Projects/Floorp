@@ -317,6 +317,8 @@ ViewSourceChrome.prototype = {
     if (!args.partial) {
       this.loadViewSource(args);
     }
+
+    return undefined;
   },
 
   /**

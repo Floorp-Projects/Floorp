@@ -219,14 +219,14 @@ Services.prefs.addObserver(PREF_DEBUG_LOG, function() {
 
 function debug(msg, error=null) {
   if (DEBUG_LOG) {
-    return log(msg, "DEBUG: ", error);
+    log(msg, "DEBUG: ", error);
   }
 }
 function warn(msg, error = null) {
-  return log(msg, "WARNING: ", error);
+  log(msg, "WARNING: ", error);
 }
 function fatalerr(msg, error = null) {
-  return log(msg, "FATAL ERROR: ", error);
+  log(msg, "FATAL ERROR: ", error);
 }
 
 // Utility function designed to get the current state of execution

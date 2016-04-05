@@ -35,6 +35,7 @@ function searchNodeHavingUrl(aRoot, aUrl) {
       return aRoot.getChild(i);
     }
   }
+  return undefined;
 }
 
 function newQueryWithOptions()
