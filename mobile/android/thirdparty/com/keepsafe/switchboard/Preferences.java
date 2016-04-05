@@ -18,7 +18,7 @@ package com.keepsafe.switchboard;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
+import android.support.annotation.Nullable;
 
 /**
  * Application preferences for SwitchBoard.
@@ -26,91 +26,53 @@ import android.content.SharedPreferences.Editor;
  *
  */
 public class Preferences {
-	private static final String TAG = "Preferences";
-	
-	private static final String switchBoardSettings = "com.keepsafe.switchboard.settings";
-	
-	//dynamic config
-	private static final String kDynamicConfigServerUrl = "dynamic-config-server-url";
-	private static final String kDynamicConfigServerUpdateUrl = "dynamic-config-server-update-url";
-	private static final String kDynamicConfig = "dynamic-config";
-	
-	
 
-	//dynamic config
-	/** TODO check this!!!
-	 * Returns a JSON string array with <br />
-	 * position 0 = updateserverUrl <br />
-	 * Fields a null if not existent.
-	 * @param c
-	 * @return
-	 */
-	public static String getDynamicUpdateServerUrl(Context c) {
-		SharedPreferences settings = (SharedPreferences) Preferences.getPreferenceObject(c, false);
-		return settings.getString(kDynamicConfigServerUpdateUrl, null);
-	}
-	
-	/**
-	 * Returns a JSON string array with <br />
-	 * postiion 1 = configServerUrl <br />
-	 * Fields a null if not existent.
-	 * @param c
-	 * @return
-	 */
-	public static String getDynamicConfigServerUrl(Context c) {
-		SharedPreferences settings = (SharedPreferences) Preferences.getPreferenceObject(c, false);
-		return settings.getString(kDynamicConfigServerUrl, null);
-	}
+    private static final String switchBoardSettings = "com.keepsafe.switchboard.settings";
 
-	/**
-	 * Stores the config servers URL. 
-	 * @param c
-	 * @param updateServerUrl Url end point to get the current config server location
-	 * @param configServerUrl UR: end point to get the current endpoint for the apps config file
-	 * @return true if saved successful
-	 */
-	public static boolean setDynamicConfigServerUrl(Context c, String updateServerUrl, String configServerUrl) {
-	
-		SharedPreferences.Editor settings = (Editor) Preferences.getPreferenceObject(c, true);
-		settings.putString(kDynamicConfigServerUpdateUrl, updateServerUrl);
-		settings.putString(kDynamicConfigServerUrl, configServerUrl);
-		return settings.commit();
-	}
-	
-	/**
-	 * Gets the user config as a JSON string.
-	 * @param c
-	 * @return
-	 */
-	public static String getDynamicConfigJson(Context c) {
-		SharedPreferences settings = (SharedPreferences) Preferences.getPreferenceObject(c, false);
-		return settings.getString(kDynamicConfig, null);
-	}
+    private static final String kDynamicConfigServerUrl = "dynamic-config-server-url";
+    private static final String kDynamicConfig = "dynamic-config";
 
-	/**
-	 * Saves the user config as a JSON sting.
-	 * @param c
-	 * @param configJson
-	 * @return
-	 */
-	public static boolean setDynamicConfigJson(Context c, String configJson) {
-		SharedPreferences.Editor settings = (Editor) Preferences.getPreferenceObject(c, true);
-		settings.putString(kDynamicConfig, configJson);
-		return settings.commit();
-	}
+    /**
+     * Returns the stored config server URL.
+     * @param c Context
+     * @return URL for config endpoint.
+     */
+    @Nullable public static String getDynamicConfigServerUrl(Context c) {
+        final SharedPreferences prefs = c.getApplicationContext().getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE);
+        return prefs.getString(kDynamicConfigServerUrl, null);
+    }
 
-	static private Object getPreferenceObject(Context ctx, boolean writeable) {
-		
-		Object returnValue = null;
-		
-		Context sharedDelegate = ctx.getApplicationContext();
-		
-		if(!writeable) {
-			returnValue = sharedDelegate.getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE);
-		} else {
-			returnValue = sharedDelegate.getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
-		}
-		
-		return returnValue;
-	}
+    /**
+     * Stores the config servers URL.
+     * @param c Context
+     * @param configServerUrl URL for config endpoint.
+     */
+    public static void setDynamicConfigServerUrl(Context c, String configServerUrl) {
+        final SharedPreferences.Editor editor = c.getApplicationContext().
+                getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
+        editor.putString(kDynamicConfigServerUrl, configServerUrl);
+        editor.apply();
+    }
+
+    /**
+     * Gets the user config as a JSON string.
+     * @param c Context
+     * @return Config JSON
+     */
+    @Nullable public static String getDynamicConfigJson(Context c) {
+        final SharedPreferences prefs = c.getApplicationContext().getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE);
+        return prefs.getString(kDynamicConfig, null);
+    }
+
+    /**
+     * Saves the user config as a JSON sting.
+     * @param c Context
+     * @param configJson Config JSON
+     */
+    public static void setDynamicConfigJson(Context c, String configJson) {
+        final SharedPreferences.Editor editor = c.getApplicationContext().
+                getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
+        editor.putString(kDynamicConfig, configJson);
+        editor.apply();
+    }
 }
