@@ -129,13 +129,16 @@ def extra_old_configure_args(help):
 
 @template
 @imports(_from='mozbuild.configure', _import='DependsFunction')
-def add_old_configure_assignment(var, value_func):
-    assert isinstance(value_func, DependsFunction)
+def add_old_configure_assignment(var, value):
+    if not isinstance(var, DependsFunction):
+        var = depends('--help')(lambda x: var)
+    if not isinstance(value, DependsFunction):
+        value = depends('--help')(lambda x: value)
 
-    @depends(old_configure_assignments, value_func)
+    @depends(old_configure_assignments, var, value)
     @imports(_from='mozbuild.shellutil', _import='quote')
-    def add_assignment(assignments, value):
-        if value is None:
+    def add_assignment(assignments, var, value):
+        if var is None or value is None:
             return
         if value is True:
             assignments.append('%s=1' % var)
