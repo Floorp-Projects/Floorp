@@ -252,12 +252,6 @@ else
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(WINDRES, windres, :)
     AC_CHECK_PROGS(OTOOL, otool, :)
-    if test -z "$HOST_CC"; then
-        HOST_CC="$CC"
-    fi
-    if test -z "$HOST_CXX"; then
-        HOST_CXX="$CXX"
-    fi
     if test -z "$HOST_RANLIB"; then
         HOST_RANLIB="$RANLIB"
     fi
@@ -274,8 +268,6 @@ if test -n "$MOZ_WINCONSOLE"; then
 fi
 
 MOZ_TOOL_VARIABLES
-
-MOZ_CHECK_COMPILER_WRAPPER
 
 MOZ_RUST_SUPPORT
 
@@ -1401,8 +1393,6 @@ case "$target" in
         MOZ_CXX_SUPPORTS_WARNING(-Wno-, format, ac_cxx_has_wno_format)
     else
         TARGET_COMPILER_ABI=msvc
-        HOST_CC='$(CC)'
-        HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
         if test "$AS_BIN"; then
             AS="$(basename "$AS_BIN")"

@@ -72,11 +72,15 @@ include(android_ndk_include)
 
 # Compiler wrappers
 # ==============================================================
-js_option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
-          help='Enable compiling with wrappers such as distcc and ccache')
+# Normally, we'd use js_option and automatically have those variables
+# propagated to js/src, but things are complicated by possible additional
+# wrappers in CC/CXX, and by other subconfigures that do not handle those
+# options and do need CC/CXX altered.
+option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
+       help='Enable compiling with wrappers such as distcc and ccache')
 
-js_option('--with-ccache', env='CCACHE', nargs='?',
-          help='Enable compiling with ccache')
+option('--with-ccache', env='CCACHE', nargs='?',
+       help='Enable compiling with ccache')
 
 @depends_if('--with-ccache')
 def ccache(value):
@@ -140,3 +144,280 @@ def toolchain_prefix(value, target, host, cross_compiling):
 
 set_config('TOOLCHAIN_PREFIX', toolchain_prefix)
 add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
+
+
+# Compilers
+# ==============================================================
+@imports('os')
+@imports('subprocess')
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='tempfile', _import='mkstemp')
+@imports(_from='textwrap', _import='dedent')
+def check_compiler(compiler, language):
+    check = dedent('''\
+        #if defined(_MSC_VER)
+        #if defined(__clang__)
+        COMPILER clang-cl _MSC_VER
+        #else
+        COMPILER msvc _MSC_FULL_VER
+        #endif
+        #elif defined(__clang__)
+        COMPILER clang __clang_major__.__clang_minor__.__clang_patchlevel__
+        #elif defined(__GNUC__)
+        COMPILER gcc __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
+        #endif
+    ''')
+
+    suffix = {
+        'C': '.c',
+        'C++': '.cpp',
+    }[language]
+
+    fd, path = mkstemp(prefix='conftest.', suffix=suffix)
+    try:
+        source = check.encode('ascii', 'replace')
+
+        log.debug('Creating `%s` with content:', path)
+        with LineIO(lambda l: log.debug('| %s', l)) as out:
+            out.write(source)
+
+        os.write(fd, source)
+        os.close(fd)
+
+        cmd = compiler + ['-E', path]
+        log.debug('Executing: `%s`', quote(*cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        retcode = proc.wait()
+        if retcode == 0:
+            for line in stdout.splitlines():
+                if line.startswith('COMPILER '):
+                    _, type, version = line.split(None, 2)
+                    version = version.replace(' ', '')
+                    return type, version
+            return
+
+        log.debug('The command returned non-zero exit status %d.', retcode)
+        for out, desc in ((stdout, 'output'), (stderr, 'error output')):
+            if out:
+                log.debug('Its %s was:', desc)
+                with LineIO(lambda l: log.debug('| %s', l)) as o:
+                    o.write(out)
+    finally:
+        os.remove(path)
+
+
+@template
+def default_c_compilers(host_or_target):
+    '''Template defining the set of default C compilers for the host and
+    target platforms.
+    `host_or_target` is either `host` or `target` (the @depends functions
+    from init.configure.
+    '''
+    assert host_or_target in (host, target)
+
+    @depends(host_or_target, host, toolchain_prefix)
+    def default_c_compilers(host_or_target, host, toolchain_prefix):
+        if host_or_target.kernel == 'WINNT':
+            return ('cl', 'clang-cl', 'gcc', 'clang')
+        if host_or_target.kernel == 'Darwin':
+            return ('clang',)
+        if host_or_target != host:  # cross compilation
+            return ('%sgcc' % toolchain_prefix, 'gcc', 'clang')
+        return ('gcc', 'clang')
+
+    return default_c_compilers
+
+
+@template
+def default_cxx_compilers(c_compiler):
+    '''Template defining the set of default C++ compilers for the host and
+    target platforms.
+    `c_compiler` is the @depends function returning a Compiler instance for
+    the desired platform.
+
+    Because the build system expects the C and C++ compilers to be from the
+    same compiler suite, we derive the default C++ compilers from the C
+    compiler that was found if none was provided.
+    '''
+
+    @depends(c_compiler)
+    def default_cxx_compilers(c_compiler):
+        dir = os.path.dirname(c_compiler.compiler)
+        file = os.path.basename(c_compiler.compiler)
+
+        if c_compiler.type == 'gcc':
+            return (os.path.join(dir, file.replace('gcc', 'g++')),)
+
+        if c_compiler.type == 'clang':
+            return (os.path.join(dir, file.replace('clang', 'clang++')),)
+
+        return (c_compiler.compiler,)
+
+    return default_cxx_compilers
+
+
+@template
+def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
+    '''Template handling the generic base checks for the compiler for the
+    given `language` on the given platform (`host_or_target`).
+    `host_or_target` is either `host` or `target` (the @depends functions
+    from init.configure.
+    When the language in 'C++', `c_compiler` is the result of the `compiler`
+    template for the language 'C' for the same `host_or_target`.
+    When `host_or_target` is `host`, `other_compiler` is the result of the
+    `compiler` template for the same `language` for `target`.
+    '''
+    assert host_or_target in (host, target)
+    assert language in ('C', 'C++')
+    assert language == 'C' or c_compiler
+    assert host_or_target == target or other_compiler
+
+    host_or_target_str = {
+        host: 'host',
+        target: 'target',
+    }[host_or_target]
+
+    var = {
+        ('C', target): 'CC',
+        ('C++', target): 'CXX',
+        ('C', host): 'HOST_CC',
+        ('C++', host): 'HOST_CXX',
+    }[language, host_or_target]
+
+    default_compilers = {
+        'C': lambda: default_c_compilers(host_or_target),
+        'C++': lambda: default_cxx_compilers(c_compiler),
+    }[language]()
+
+    what='the %s %s compiler' % (host_or_target_str, language),
+
+    option(env=var, nargs=1, help='Path to %s' % what)
+
+    # Handle the compiler given by the user through one of the CC/CXX/HOST_CC/
+    # HOST_CXX variables.
+    @depends_if(var)
+    @imports(_from='itertools', _import='takewhile')
+    @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
+    def provided_compiler(cmd):
+        # Historically, the compiler variables have contained more than the
+        # path to the compiler itself. So for backwards compatibility, try to
+        # find what is what in there, assuming the first dash-prefixed item is
+        # a compiler option, the item before that is the compiler, and anything
+        # before that is a compiler wrapper.
+        cmd = shell_split(cmd[0])
+
+        without_flags = list(takewhile(lambda x: not x.startswith('-'), cmd))
+
+        return namespace(
+            wrapper=without_flags[:-1],
+            compiler=without_flags[-1],
+            flags=cmd[len(without_flags):],
+        )
+
+    # Derive the host C compiler from the target C compiler when no explicit
+    # compiler was given and we're not cross compiling.
+    if language == 'C' and host_or_target == host:
+        @depends(provided_compiler, other_compiler, cross_compiling)
+        def provided_compiler(value, other_compiler, cross_compiling):
+            if value:
+                return value
+            if not cross_compiling:
+                return other_compiler
+
+    # Normally, we'd use `var` instead of `_var`, but the interaction with
+    # old-configure complicates things, and for now, we a) can't take the plain
+    # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
+    # old-configure AC_SUBST it (because it's autoconf doing it, not us)
+    compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
+                          input=delayed_getattr(provided_compiler, 'compiler'))
+
+    @depends(compiler, provided_compiler, compiler_wrapper)
+    @checking('%s version' % what, lambda x: x.version if x else 'not found')
+    @imports(_from='mozbuild.shellutil', _import='quote')
+    def valid_compiler(compiler, provided_compiler, compiler_wrapper):
+        wrapper = list(compiler_wrapper or ())
+        if provided_compiler:
+            provided_wrapper = list(provided_compiler.wrapper)
+            # When doing a subconfigure, the compiler is set by old-configure
+            # and it contains the wrappers from --with-compiler-wrapper and
+            # --with-ccache.
+            if provided_wrapper[:len(wrapper)] == wrapper:
+                provided_wrapper = provided_wrapper[len(wrapper):]
+            wrapper.extend(provided_wrapper)
+            flags = provided_compiler.flags
+        else:
+            flags = []
+
+        # Ideally, we'd always use the absolute path, but unfortunately, on
+        # Windows, the compiler is very often in a directory containing spaces.
+        # Unfortunately, due to the way autoconf does its compiler tests with
+        # eval, that doesn't work out. So in that case, check that the
+        # compiler can still be found in $PATH, and use the file name instead
+        # of the full path.
+        if quote(compiler) != compiler:
+            full_path = os.path.abspath(compiler)
+            compiler = os.path.basename(compiler)
+            found_compiler = find_program(compiler)
+            if not found_compiler:
+                die('%s is not in your $PATH'
+                    % quote(os.path.dirname(full_path)))
+            if os.path.normcase(find_program(compiler)) != os.path.normcase(
+                    full_path):
+                die('Found `%s` before `%s` in your $PATH. '
+                    'Please reorder your $PATH.',
+                    quote(os.path.dirname(found_compiler)),
+                    quote(os.path.dirname(full_path)))
+
+        result = check_compiler(wrapper + [compiler] + flags, language)
+        if result:
+            type, version = result
+            return namespace(
+                wrapper=wrapper,
+                compiler=compiler,
+                flags=flags,
+                type=type,
+                version=version,
+            )
+        die('Failed to get the compiler version')
+
+    if language == 'C++':
+        @depends(valid_compiler, c_compiler)
+        def compiler_suite_consistency(compiler, c_compiler):
+            if compiler.type != c_compiler.type:
+                die('The %s C compiler is %s, while the %s C++ compiler is '
+                    '%s. Need to use the same compiler suite.',
+                    host_or_target_str, c_compiler.type,
+                    host_or_target_str, compiler.type)
+
+            if compiler.version != c_compiler.version:
+                die('The %s C compiler is version %s, while the %s C++ '
+                    'compiler is version %s. Need to use the same compiler '
+                    'version.',
+                    host_or_target_str, c_compiler.version,
+                    host_or_target_str, compiler.version)
+
+    # Set CC/CXX/HOST_CC/HOST_CXX for old-configure, which needs the wrapper
+    # and the flags that were part of the user input for those variables to
+    # be provided.
+    add_old_configure_assignment(var, depends_if(valid_compiler)(
+        lambda x: list(x.wrapper) + [x.compiler] + list(x.flags)))
+
+    # Set CC_TYPE/CC_VERSION/HOST_CC_TYPE/HOST_CC_VERSION to allow
+    # old-configure to do some of its still existing checks.
+    if language == 'C':
+        add_old_configure_assignment(
+            '%s_TYPE' % var, delayed_getattr(valid_compiler, 'type'))
+        add_old_configure_assignment(
+            '%s_VERSION' % var, delayed_getattr(valid_compiler, 'version'))
+
+    return valid_compiler
+
+
+c_compiler = compiler('C', target)
+cxx_compiler = compiler('C++', target, c_compiler=c_compiler)
+host_c_compiler = compiler('C', host, other_compiler=c_compiler)
+host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
+                             other_compiler=cxx_compiler)

@@ -265,7 +265,9 @@ def wanted_mozconfig_variables(help):
      return set([
          'AUTOCONF',
          'AWK',
+         'CC',
          'CCACHE',
+         'CXX',
          'COMPILER_WRAPPER',
          'DISABLE_EXPORT_JS',
          'DISABLE_SHARED_JS',
@@ -276,6 +278,8 @@ def wanted_mozconfig_variables(help):
          'GRADLE',
          'GRADLE_FLAGS',
          'GRADLE_MAVEN_REPOSITORY',
+         'HOST_CC',
+         'HOST_CXX',
          'JS_STANDALONE',
          'L10NBASEDIR',
          'MOZILLABUILD',
