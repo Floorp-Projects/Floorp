@@ -22,6 +22,12 @@
 
   <commandset id="editMenuCommands"/>
 
+  <popupset id="storagePopupSet">
+    <menupopup id="storage-table-popup">
+      <menuitem id="storage-table-popup-delete"/>
+    </menupopup>
+  </popupset>
+
   <box flex="1" class="devtools-responsive-container theme-body">
     <vbox id="storage-tree"/>
     <splitter class="devtools-side-splitter"/>

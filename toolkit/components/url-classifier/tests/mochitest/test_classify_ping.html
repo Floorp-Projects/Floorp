@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1233914 - ping doesn't honor the TP list here.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+  SimpleTest.requestFlakyTimeout("Delay to make sure ping is made prior than XHR");
+
+  const timeout = 200;
+  const host_nottrack = "http://not-tracking.example.com/";
+  const host_track = "http://trackertest.org/";
+  const path_ping = "tests/toolkit/components/url-classifier/tests/mochitest/ping.sjs";
+  const TP_ENABLE_PREF = "privacy.trackingprotection.enabled";
+
+  function testPingNonBlacklist() {
+    SpecialPowers.setBoolPref(TP_ENABLE_PREF, true);
+
+    var msg = "ping should reach page not in blacklist";
+    var expectPing = true;
+    var id = "1111";
+    ping(id, host_nottrack);
+
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        isPinged(id, expectPing, msg, resolve);
+      }, timeout);
+    });
+  }
+
+  function testPingBlacklistSafebrowsingOff() {
+    SpecialPowers.setBoolPref(TP_ENABLE_PREF, false);
+
+    var msg = "ping should reach page in blacklist when tracking protection is off";
+    var expectPing = true;
+    var id = "2222";
+    ping(id, host_track);
+
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        isPinged(id, expectPing, msg, resolve);
+      }, timeout);
+    });
+  }
+
+  function testPingBlacklistSafebrowsingOn() {
+    SpecialPowers.setBoolPref(TP_ENABLE_PREF, true);
+
+    var msg = "ping should not reach page in blacklist when tracking protection is on";
+    var expectPing = false;
+    var id = "3333";
+    ping(id, host_track);
+
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        isPinged(id, expectPing, msg, resolve);
+      }, timeout);
+    });
+  }
+
+  function ping(id, host) {
+    var elm = document.createElement("a");
+    elm.setAttribute('ping', host + path_ping + "?id=" + id);
+    elm.setAttribute('href', "#");
+    document.body.appendChild(elm);
+
+    // Trigger ping.
+    elm.click();
+
+    document.body.removeChild(elm);
+  }
+
+  function isPinged(id, expected, msg, callback) {
+    var url = "http://mochi.test:8888/" + path_ping;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url + "?id=" + id);
+    xhr.onload = function() {
+      var isPinged = xhr.response === "ping";
+      is(expected, isPinged, msg);
+
+      callback();
+    };
+    xhr.send();
+  }
+
+  function cleanup() {
+    SpecialPowers.clearUserPref(TP_ENABLE_PREF);
+  }
+
+  function runTest() {
+    Promise.resolve()
+      .then(testPingNonBlacklist)
+      .then(testPingBlacklistSafebrowsingOff)
+      .then(testPingBlacklistSafebrowsingOn)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.registerCleanupFunction(cleanup);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["browser.send_pings", true],
+    ["urlclassifier.trackingTable", "test-track-simple"],
+  ]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>
