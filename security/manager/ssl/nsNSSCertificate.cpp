@@ -1233,7 +1233,7 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
     return NS_ERROR_FAILURE;
   }
 
-  ScopedPLArenaPool arena(PORT_NewArena(1024));
+  UniquePLArenaPool arena(PORT_NewArena(1024));
   if (!arena) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("nsNSSCertificate::ExportAsCMS - out of memory\n"));
@@ -1242,7 +1242,7 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
 
   SECItem certP7 = { siBuffer, nullptr, 0 };
   NSSCMSEncoderContext* ecx = NSS_CMSEncoder_Start(cmsg.get(), nullptr, nullptr,
-                                                   &certP7, arena, nullptr,
+                                                   &certP7, arena.get(), nullptr,
                                                    nullptr, nullptr, nullptr,
                                                    nullptr, nullptr);
   if (!ecx) {
