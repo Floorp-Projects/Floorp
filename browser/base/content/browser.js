@@ -1841,6 +1841,20 @@ function loadOneOrMoreURIs(aURIString)
 }
 
 function focusAndSelectUrlBar() {
+  // In customize mode, the url bar is disabled. If a new tab is opened or the
+  // user switches to a different tab, this function gets called before we've
+  // finished leaving customize mode, and the url bar will still be disabled.
+  // We can't focus it when it's disabled, so we need to re-run ourselves when
+  // we've finished leaving customize mode.
+  if (CustomizationHandler.isExitingCustomizeMode) {
+    gNavToolbox.addEventListener("aftercustomization", function afterCustomize() {
+      gNavToolbox.removeEventListener("aftercustomization", afterCustomize);
+      focusAndSelectUrlBar();
+    });
+
+    return true;
+  }
+
   if (gURLBar) {
     if (window.fullScreen)
       FullScreen.showNavToolbox();
