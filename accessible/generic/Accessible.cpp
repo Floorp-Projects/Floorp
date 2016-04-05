@@ -2519,27 +2519,6 @@ Accessible::LastRelease()
   delete this;
 }
 
-void
-Accessible::TestChildCache(Accessible* aCachedChild) const
-{
-#ifdef DEBUG
-  int32_t childCount = mChildren.Length();
-  if (childCount == 0) {
-    return;
-  }
-
-  Accessible* child = nullptr;
-  for (int32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    child = mChildren[childIdx];
-    if (child == aCachedChild)
-      break;
-  }
-
-  NS_ASSERTION(child == aCachedChild,
-               "[TestChildCache] cached accessible wasn't found. Wrong accessible tree!");
-#endif
-}
-
 Accessible*
 Accessible::GetSiblingAtOffset(int32_t aOffset, nsresult* aError) const
 {
