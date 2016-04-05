@@ -84,6 +84,14 @@ public:
    */
   virtual nsresult Duplicate(UnixSocketConnector*& aConnector) = 0;
 
+  /**
+   * Copies the instance of |UnixSocketConnector|. I/O thread only.
+   *
+   * @param[in] aConnector Returns a new instance of the connector class
+   * @return NS_OK on success, or an XPCOM error code otherwise
+   */
+  nsresult Duplicate(UniquePtr<UnixSocketConnector>& aConnector);
+
 protected:
   UnixSocketConnector();
 };
