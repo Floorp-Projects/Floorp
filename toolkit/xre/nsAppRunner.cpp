@@ -4663,21 +4663,21 @@ enum {
   kE10sForceDisabled = 8,
 };
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
 const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
 const char* kAccessibilityLoadedLastSessionPref = "accessibility.loadedInLastSession";
-#endif // XP_WIN
-const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
-const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
 
-#ifdef XP_WIN
 static inline uint32_t
 PRTimeToSeconds(PRTime t_usec)
 {
   PRTime usec_per_sec = PR_USEC_PER_SEC;
   return uint32_t(t_usec /= usec_per_sec);
 }
-#endif // XP_WIN
+#endif // XP_WIN || XP_MACOSX
+
+const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
+const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
+
 
 uint32_t
 MultiprocessBlockPolicy() {
@@ -4704,7 +4704,7 @@ MultiprocessBlockPolicy() {
   }
 
   bool disabledForA11y = false;
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
   /**
    * Avoids enabling e10s if accessibility has recently loaded. Performs the
    * following checks:
@@ -4731,7 +4731,7 @@ MultiprocessBlockPolicy() {
       disabledForA11y = true;
     }
   }
-#endif // XP_WIN
+#endif // XP_WIN || XP_MACOSX
 
   if (disabledForA11y) {
     gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
