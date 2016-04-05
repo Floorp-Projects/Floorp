@@ -1,0 +1,34 @@
+diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
+--- a/modules/fdlibm/src/fdlibm.h
++++ b/modules/fdlibm/src/fdlibm.h
+@@ -12,16 +12,18 @@
+ /*
+  * from: @(#)fdlibm.h 5.1 93/09/24
+  * $FreeBSD$
+  */
+ 
+ #ifndef mozilla_imported_fdlibm_h
+ #define mozilla_imported_fdlibm_h
+ 
++namespace fdlibm {
++
+ double	acos(double);
+ double	asin(double);
+ double	atan(double);
+ double	atan2(double, double);
+ 
+ double	cosh(double);
+ double	sinh(double);
+ double	tanh(double);
+@@ -45,9 +47,11 @@ double	log1p(double);
+ double	log2(double);
+ 
+ double	copysign(double, double);
+ double	scalbn(double, int);
+ double	trunc(double);
+ 
+ float	floorf(float);
+ 
++} /* namespace fdlibm */
++
+ #endif /* mozilla_imported_fdlibm_h */
