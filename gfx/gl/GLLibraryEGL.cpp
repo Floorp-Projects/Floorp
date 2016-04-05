@@ -161,7 +161,7 @@ GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl)
     // D3D11 ANGLE only works with OMTC; there's a bug in the non-OMTC layer
     // manager, and it's pointless to try to fix it.  We also don't try
     // D3D11 ANGLE if the layer manager is prefering D3D9 (hrm, do we care?)
-    if (gfxPrefs::LayersOffMainThreadCompositionEnabled() &&
+    if (!gfxPrefs::LayersOffMainThreadCompositionForceDisabled() &&
         !gfxPrefs::LayersPreferD3D9())
     {
         if (gfxPrefs::WebGLANGLEForceD3D11())
