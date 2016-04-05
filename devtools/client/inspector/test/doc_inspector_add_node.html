@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Add elements tests</title>
+  <style>
+    body::before {
+      content: "pseudo-element";
+    }
+  </style>
+</head>
+<body>
+  <div id="foo"></div>
+  <svg>
+    <rect x="0" y="0" width="100" height="50"></rect>
+  </svg>
+  <div id="bar">
+    <div id="baz"></div>
+  </div>
+  <iframe src="data:text/html;charset=utf-8,Test iframe content"></iframe>
+</body>
+</html>
