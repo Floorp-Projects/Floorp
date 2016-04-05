@@ -15,6 +15,7 @@ function mockAddonProvider(name) {
       shutdownOrder.push(this.name);
       if (this.shutdownCallback)
         return this.shutdownCallback();
+      return undefined;
     },
     getAddonByID(id, callback) {
       if (this.hasShutdown) {
