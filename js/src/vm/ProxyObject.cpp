@@ -20,7 +20,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     const Class* clasp = options.clasp();
 
     MOZ_ASSERT(isValidProxyClass(clasp));
-    MOZ_ASSERT(clasp->shouldDelayMetadataCallback());
+    MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     MOZ_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
 
     /*

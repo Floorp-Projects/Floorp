@@ -924,7 +924,7 @@ const Class UnboxedPlainObject::class_ = {
     js_Object_str,
     Class::NON_NATIVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
-    JSCLASS_DELAY_METADATA_CALLBACK,
+    JSCLASS_DELAY_METADATA_BUILDER,
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
     nullptr,        /* getProperty */

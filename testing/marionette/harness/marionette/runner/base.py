@@ -408,10 +408,11 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--socket-timeout',
                         default=self.socket_timeout_default,
                         help='Set the global timeout for marionette socket operations.')
-        self.add_argument('--e10s',
-                        action='store_true',
-                        default=False,
-                        help='Enable e10s when running marionette tests.')
+        self.add_argument('--disable-e10s',
+                        action='store_false',
+                        dest='e10s',
+                        default=True,
+                        help='Disable e10s when running marionette tests.')
         self.add_argument('--tag',
                         action='append', dest='test_tags',
                         default=None,
@@ -538,7 +539,7 @@ class BaseMarionetteTestRunner(object):
                  adb_host=None, adb_port=None, prefs=None, test_tags=None,
                  socket_timeout=BaseMarionetteArguments.socket_timeout_default,
                  startup_timeout=None, addons=None, workspace=None,
-                 verbose=0, **kwargs):
+                 verbose=0, e10s=True, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulator_binary = emulator_binary
@@ -589,6 +590,7 @@ class BaseMarionetteTestRunner(object):
         # and default location for profile is TMP
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
+        self.e10s = e10s
 
         def gather_debug(test, status):
             rv = {}
@@ -880,6 +882,7 @@ setReq.onerror = function() {
                             " Invalid test names:\n  %s"
                             % '\n  '.join(invalid_tests))
 
+        self.logger.info("running with e10s: {}".format(self.e10s))
         version_info = mozversion.get_version(binary=self.bin,
                                               sources=self.sources,
                                               dm_type=os.environ.get('DM_TRANS', 'adb'),
@@ -960,6 +963,7 @@ setReq.onerror = function() {
         if self.shuffle:
             self.logger.info("Using seed where seed is:%d" % self.shuffle_seed)
 
+        self.logger.info('mode: {}'.format('e10s' if self.e10s else 'non-e10s'))
         self.logger.suite_end()
 
     def start_httpd(self, need_external_ip):
@@ -1010,7 +1014,6 @@ setReq.onerror = function() {
             filters = []
             if self.test_tags:
                 filters.append(tags(self.test_tags))
-            e10s = self.appinfo.get('browserTabsRemoteAutostart', False)
             json_path = update_mozinfo(filepath)
             self.logger.info("mozinfo updated with the following: {}".format(None))
             manifest_tests = manifest.active_tests(exists=False,
@@ -1018,7 +1021,7 @@ setReq.onerror = function() {
                                                    filters=filters,
                                                    device=self.device,
                                                    app=self.appName,
-                                                   e10s=e10s,
+                                                   e10s=self.e10s,
                                                    **mozinfo.info)
             if len(manifest_tests) == 0:
                 self.logger.error("no tests to run using specified "

@@ -33,6 +33,7 @@ from mozharness.mozilla.testing.codecoverage import (
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
 SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill']
+SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
 
 # DesktopUnittest {{{1
 class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin, CodeCoverageMixin):
@@ -319,7 +320,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             if self.symbols_path:
                 str_format_values['symbols_path'] = self.symbols_path
 
-            if c['e10s']:
+            if suite_category in SUITE_DEFAULT_E10S and not c['e10s']:
+                base_cmd.append('--disable-e10s')
+            elif suite_category not in SUITE_DEFAULT_E10S and c['e10s']:
                 base_cmd.append('--e10s')
 
             if c.get('strict_content_sandbox'):
