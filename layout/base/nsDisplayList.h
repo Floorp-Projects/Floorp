@@ -2696,11 +2696,6 @@ public:
   nsRect GetPositioningArea();
 
   /**
-   * Return the destination area of one instance of the image.
-   */
-  nsRect GetDestArea() const { return mDestArea; }
-
-  /**
    * Returns true if existing rendered pixels of this display item may need
    * to be redrawn if the positioning area size changes but its position does
    * not.
@@ -2742,7 +2737,6 @@ protected:
                                   gfxRect* aDestRect);
   bool IsNonEmptyFixedImage() const;
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder);
-  nsRect GetDestAreaInternal(nsDisplayListBuilder* aBuilder);
 
   void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
@@ -2762,10 +2756,9 @@ protected:
   const nsStyleBackground* mBackgroundStyle;
   nsCOMPtr<imgIContainer> mImage;
   RefPtr<ImageContainer> mImageContainer;
-  LayoutDeviceRect mImageLayerDestRect;
+  LayoutDeviceRect mDestRect;
   /* Bounds of this display item */
   nsRect mBounds;
-  nsRect mDestArea;
   uint32_t mLayer;
 };
 
