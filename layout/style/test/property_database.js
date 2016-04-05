@@ -7195,8 +7195,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     domProp: "webkitBoxFlex",
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "flex-grow",
-    subproperties: [ "flex-grow" ],
+    alias_for: "-moz-box-flex",
+    subproperties: [ "-moz-box-flex" ],
   };
   gCSSProperties["-webkit-box-ordinal-group"] = {
     domProp: "webkitBoxOrdinalGroup",
