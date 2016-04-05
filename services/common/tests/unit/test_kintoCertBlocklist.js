@@ -3,8 +3,8 @@
 
 const { Constructor: CC } = Components;
 
-Cu.import("resource://services-common/KintoCertificateBlocklist.js");
-Cu.import("resource://services-common/kinto-offline-client.js");
+Cu.import("resource://services-common/KintoBlocklist.js");
+Cu.import("resource://services-common/kinto-offline-client.js")
 Cu.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
