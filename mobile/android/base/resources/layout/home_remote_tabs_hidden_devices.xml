@@ -13,4 +13,5 @@
     android:layout_height="@dimen/home_remote_tabs_hidden_footer_height"
     android:gravity="center"
     android:maxLength="1024"
-    android:textColor="@color/tabs_tray_icon_grey" />
+    android:textSize="12dp"
+    android:textColor="@color/disabled_grey" />
