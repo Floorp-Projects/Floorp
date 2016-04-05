@@ -18,7 +18,6 @@ package com.keepsafe.switchboard;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.util.Log;
 
 /**
  * An async loader to load user config in background thread based on internal generated UUID.
@@ -32,53 +31,27 @@ import android.util.Log;
  */
 public class AsyncConfigLoader extends AsyncTask<Void, Void, Void> {
 
-	private String TAG = "AsyncConfigLoader";
-	
-	public static final int UPDATE_SERVER = 1;
-	public static final int CONFIG_SERVER = 2;
-	
-	private Context context;
-	private int configToLoad;
-	private String uuid;
-	
-	/**
-	 * Sets the params for async loading either SwitchBoard.updateConfigServerUrl()
-	 * or SwitchBoard.loadConfig.
-	 * @param c Application context
-	 * @param configType Either UPDATE_SERVER or CONFIG_SERVER
-	 */
-	public AsyncConfigLoader(Context c, int configType) {
-		this(c, configType, null);
-	}
-	
-	/**
-	 * Sets the params for async loading either SwitchBoard.updateConfigServerUrl()
-	 * or SwitchBoard.loadConfig.
-	 * Loads config with a custom UUID
-	 * @param c Application context
-	 * @param configType Either UPDATE_SERVER or CONFIG_SERVER
-	 * @param uuid Custom UUID
-	 */
-	public AsyncConfigLoader(Context c, int configType, String uuid) {
-		this.context = c;
-		this.configToLoad = configType;
-		this.uuid = uuid;
-	}
-	
-	@Override
-	protected Void doInBackground(Void... params) {
-		
-		if(configToLoad == UPDATE_SERVER) {
-			SwitchBoard.updateConfigServerUrl(context);
-		}
-		else {
-			if(uuid == null)
-				SwitchBoard.loadConfig(context);
-			else
-				SwitchBoard.loadConfig(context, uuid);
-		}
-			
-		return null;
-	}
-	
+    private Context context;
+    private String uuid;
+    private String defaultServerUrl;
+
+    /**
+     * Sets the params for async loading either SwitchBoard.updateConfigServerUrl()
+     * or SwitchBoard.loadConfig.
+     * Loads config with a custom UUID
+     * @param c Application context
+     * @param uuid Custom UUID
+     * @param defaultServerUrl Default URL endpoint for Switchboard config.
+     */
+    public AsyncConfigLoader(Context c, String uuid, String defaultServerUrl) {
+        this.context = c;
+        this.uuid = uuid;
+        this.defaultServerUrl = defaultServerUrl;
+    }
+
+    @Override
+    protected Void doInBackground(Void... params) {
+        SwitchBoard.loadConfig(context, uuid, defaultServerUrl);
+        return null;
+    }
 }
