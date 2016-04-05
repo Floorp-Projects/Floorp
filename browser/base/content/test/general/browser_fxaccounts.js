@@ -80,7 +80,7 @@ add_task(function* test_nouser() {
   Assert.ok(isFooterVisible())
 
   Assert.equal(panelUILabel.getAttribute("label"), panelUIStatus.getAttribute("defaultlabel"));
-  Assert.ok(!panelUIStatus.hasAttribute("tooltiptext"), "no tooltip when signed out");
+  Assert.equal(panelUIStatus.getAttribute("tooltiptext"), panelUIStatus.getAttribute("signedinTooltiptext"));
   Assert.ok(!panelUIFooter.hasAttribute("fxastatus"), "no fxsstatus when signed out");
   Assert.ok(!panelUIFooter.hasAttribute("fxaprofileimage"), "no fxaprofileimage when signed out");
 

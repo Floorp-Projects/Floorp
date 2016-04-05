@@ -271,7 +271,8 @@ var gFxAccounts = {
     let defaultLabel = this.panelUIStatus.getAttribute("defaultlabel");
     let errorLabel = this.panelUIStatus.getAttribute("errorlabel");
     let unverifiedLabel = this.panelUIStatus.getAttribute("unverifiedlabel");
-    let signedInTooltiptext = this.panelUIStatus.getAttribute("signedinTooltiptext");
+    // The localization string is for the signed in text, but it's the default text as well
+    let defaultTooltiptext = this.panelUIStatus.getAttribute("signedinTooltiptext");
 
     let updateWithUserData = (userData) => {
       // Window might have been closed while fetching data.
@@ -281,12 +282,11 @@ var gFxAccounts = {
 
       // Reset the button to its original state.
       this.panelUILabel.setAttribute("label", defaultLabel);
-      this.panelUIStatus.removeAttribute("tooltiptext");
+      this.panelUIStatus.setAttribute("tooltiptext", defaultTooltiptext);
       this.panelUIFooter.removeAttribute("fxastatus");
       this.panelUIFooter.removeAttribute("fxaprofileimage");
       this.panelUIAvatar.style.removeProperty("list-style-image");
       let showErrorBadge = false;
-
       if (!this._inCustomizationMode && userData) {
         // At this point we consider the user as logged-in (but still can be in an error state)
         if (this.loginFailed) {
@@ -305,7 +305,6 @@ var gFxAccounts = {
         } else {
           this.panelUIFooter.setAttribute("fxastatus", "signedin");
           this.panelUILabel.setAttribute("label", userData.email);
-          this.panelUIStatus.setAttribute("tooltiptext", signedInTooltiptext);
         }
         if (profileInfoEnabled) {
           this.panelUIFooter.setAttribute("fxaprofileimage", "enabled");
