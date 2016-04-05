@@ -110,6 +110,10 @@
       <menuitem id="node-menu-screenshotnode"
         label="&inspectorScreenshotNode.label;"
         oncommand="inspector.screenshotNode()" />
+      <menuitem id="node-menu-add"
+        label="&inspectorAddNode.label;"
+        accesskey="&inspectorAddNode.accesskey;"
+        oncommand="inspector.addNode()"/>
       <menuitem id="node-menu-duplicatenode"
         label="&inspectorDuplicateNode.label;"
         oncommand="inspector.duplicateNode()"/>
@@ -157,6 +161,10 @@
       <toolbar id="inspector-toolbar"
         class="devtools-toolbar"
         nowindowdrag="true">
+        <toolbarbutton id="inspector-element-add-button"
+          class="devtools-toolbarbutton"
+          tooltiptext="&inspectorAddNode.label;"
+          oncommand="inspector.addNode()" />
         <spacer flex="1"/>
         <box id="inspector-searchlabel" />
         <textbox id="inspector-searchbox"
