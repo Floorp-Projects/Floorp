@@ -107,8 +107,8 @@ var updatedBlocklist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
 
 
 var blocklists = {
-  "/initialBlocklist/" : initialBlocklist,
-  "/updatedBlocklist/" : updatedBlocklist
+  "/initialBlocklist/": initialBlocklist,
+  "/updatedBlocklist/": updatedBlocklist
 };
 
 function serveResponse(request, response) {
