@@ -1354,16 +1354,29 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
         break;
 
     case nsIAccessibleEvent::EVENT_SHOW:
-        return FireAtkShowHideEvent(atkObj, true, aEvent->IsFromUserInput());
+      {
+        AccMutationEvent* event = downcast_accEvent(aEvent);
+        Accessible* parentAcc = event ? event->Parent() : accessible->Parent();
+        AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
+        return FireAtkShowHideEvent(atkObj, parent, true,
+                                    aEvent->IsFromUserInput());
+      }
 
     case nsIAccessibleEvent::EVENT_HIDE:
+      {
         // XXX - Handle native dialog accessibles.
         if (!accessible->IsRoot() && accessible->HasARIARole() &&
             accessible->ARIARole() == roles::DIALOG) {
           guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
           g_signal_emit(atkObj, id, 0);
         }
-        return FireAtkShowHideEvent(atkObj, false, aEvent->IsFromUserInput());
+
+        AccMutationEvent* event = downcast_accEvent(aEvent);
+        Accessible* parentAcc = event ? event->Parent() : accessible->Parent();
+        AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
+        return FireAtkShowHideEvent(atkObj, parent, false,
+                                    aEvent->IsFromUserInput());
+      }
 
         /*
          * Because dealing with menu is very different between nsIAccessible
@@ -1577,15 +1590,14 @@ static const char *kMutationStrings[2][2] = {
 };
 
 nsresult
-AccessibleWrap::FireAtkShowHideEvent(AtkObject* aObject, bool aIsAdded,
-                                     bool aFromUser)
+AccessibleWrap::FireAtkShowHideEvent(AtkObject* aObject, AtkObject* aParent,
+                                     bool aIsAdded, bool aFromUser)
 {
     int32_t indexInParent = getIndexInParentCB(aObject);
-    AtkObject *parentObject = getParentCB(aObject);
-    NS_ENSURE_STATE(parentObject);
+    NS_ENSURE_STATE(aParent);
 
     const char *signal_name = kMutationStrings[aFromUser][aIsAdded];
-    g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, nullptr);
+    g_signal_emit_by_name(aParent, signal_name, indexInParent, aObject, nullptr);
 
     return NS_OK;
 }
