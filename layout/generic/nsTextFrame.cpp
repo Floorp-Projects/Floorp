@@ -4823,9 +4823,11 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
+  bool isTextTransparent =
+    NS_GET_A(StyleContext()->GetTextFillColor()) == 0;
   Maybe<bool> isSelected;
   if (((GetStateBits() & TEXT_NO_RENDERED_GLYPHS) ||
-       (NS_GET_A(StyleColor()->mColor) == 0 && !StyleText()->HasTextShadow())) &&
+       (isTextTransparent && !StyleText()->HasTextShadow())) &&
       aBuilder->IsForPainting() && !IsSVGText()) {
     isSelected.emplace(IsSelected());
     if (!isSelected.value()) {
