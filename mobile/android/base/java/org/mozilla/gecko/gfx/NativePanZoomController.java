@@ -51,6 +51,9 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
             int action, long time, int metaState,
             float x, float y, int buttons);
 
+    @WrapForJNI
+    private native void handleMotionEventVelocity(long time, float ySpeed);
+
     private boolean handleMotionEvent(MotionEvent event) {
         if (mDestroyed) {
             return false;
@@ -192,6 +195,11 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     public boolean onKeyEvent(KeyEvent event) {
         // FIXME implement this
         return false;
+    }
+
+    @Override
+    public void onMotionEventVelocity(final long aEventTime, final float aSpeedY) {
+        handleMotionEventVelocity(aEventTime, aSpeedY);
     }
 
     @Override

@@ -264,6 +264,14 @@ public:
   nsEventStatus HandleGestureEvent(const InputData& aEvent);
 
   /**
+   * Handler for touch velocity.
+   * Sometimes the touch move event will have a velocity even though no scrolling
+   * is occurring such as when the toolbar is being hidden/shown in Fennec.
+   * This function can be called to have the y axis' velocity queue updated.
+   */
+  void HandleTouchVelocity(uint32_t aTimesampMs, float aSpeedY);
+
+  /**
    * Populates the provided object (if non-null) with the scrollable guid of this apzc.
    */
   void GetGuid(ScrollableLayerGuid* aGuidOut) const;

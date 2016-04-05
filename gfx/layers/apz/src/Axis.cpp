@@ -89,6 +89,21 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord 
   }
 
   float newVelocity = mAxisLocked ? 0.0f : (float)(mVelocitySamplePos - aPos + aAdditionalDelta) / (float)(aTimestampMs - mVelocitySampleTimeMs);
+
+  newVelocity = ApplyFlingCurveToVelocity(newVelocity);
+
+  AXIS_LOG("%p|%s updating velocity to %f with touch\n",
+    mAsyncPanZoomController, Name(), newVelocity);
+  mVelocity = newVelocity;
+  mPos = aPos;
+  mVelocitySampleTimeMs = aTimestampMs;
+  mVelocitySamplePos = aPos;
+
+  AddVelocityToQueue(aTimestampMs, mVelocity);
+}
+
+float Axis::ApplyFlingCurveToVelocity(float aVelocity) const {
+  float newVelocity = aVelocity;
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
     bool velocityIsNegative = (newVelocity < 0);
     newVelocity = fabs(newVelocity);
@@ -117,18 +132,24 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord 
     }
   }
 
-  AXIS_LOG("%p|%s updating velocity to %f with touch\n",
-    mAsyncPanZoomController, Name(), newVelocity);
-  mVelocity = newVelocity;
-  mPos = aPos;
-  mVelocitySampleTimeMs = aTimestampMs;
-  mVelocitySamplePos = aPos;
+  return newVelocity;
+}
 
-  // Limit queue size pased on pref
-  mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, mVelocity));
+void Axis::AddVelocityToQueue(uint32_t aTimestampMs, float aVelocity) {
+  mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, aVelocity));
   if (mVelocityQueue.Length() > gfxPrefs::APZMaxVelocityQueueSize()) {
     mVelocityQueue.RemoveElementAt(0);
   }
+}
+
+void Axis::HandleTouchVelocity(uint32_t aTimestampMs, float aSpeed) {
+  // mVelocityQueue is controller-thread only
+  APZThreadUtils::AssertOnControllerThread();
+
+  mVelocity = ApplyFlingCurveToVelocity(aSpeed);
+  mVelocitySampleTimeMs = aTimestampMs;
+
+  AddVelocityToQueue(aTimestampMs, mVelocity);
 }
 
 void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {

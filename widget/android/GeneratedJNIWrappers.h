@@ -3663,6 +3663,21 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
+    struct HandleMotionEventVelocity_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int64_t,
+                float> Args;
+        static constexpr char name[] = "handleMotionEventVelocity";
+        static constexpr char signature[] =
+                "(JF)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct HandleMouseEvent_t {
         typedef NativePanZoomController Owner;
         typedef bool ReturnType;
