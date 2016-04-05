@@ -252,6 +252,7 @@ CacheIndex::CacheIndex()
   , mRWBufPos(0)
   , mJournalReadSuccessfully(false)
   , mFrecencyArraySorted(false)
+  , mAsyncGetDiskConsumptionBlocked(false)
 {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
@@ -1356,7 +1357,8 @@ CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserve
 
   NS_ENSURE_ARG(observer);
 
-  if (index->mState == READY || index->mState == WRITING) {
+  if ((index->mState == READY || index->mState == WRITING) &&
+      !index->mAsyncGetDiskConsumptionBlocked) {
     LOG(("CacheIndex::AsyncGetDiskConsumption - calling immediately"));
     // Safe to call the callback under the lock,
     // we always post to the main thread.
@@ -3125,6 +3127,12 @@ CacheIndex::ChangeState(EState aNewState)
     CacheFileIOManager::CacheIndexStateChanged();
   }
 
+  NotifyAsyncGetDiskConsumptionCallbacks();
+}
+
+void
+CacheIndex::NotifyAsyncGetDiskConsumptionCallbacks()
+{
   if (mState == READY && mDiskConsumptionObservers.Length()) {
     for (uint32_t i = 0; i < mDiskConsumptionObservers.Length(); ++i) {
       DiskConsumptionObserver* o = mDiskConsumptionObservers[i];
@@ -3657,6 +3665,22 @@ CacheIndex::ReportHashStats()
   }
 
   CacheObserver::SetHashStatsReported();
+}
+
+// static
+void
+CacheIndex::OnAsyncEviction(bool aEvicting)
+{
+  RefPtr<CacheIndex> index = gInstance;
+  if (!index) {
+    return;
+  }
+
+  StaticMutexAutoLock lock(sLock);
+  index->mAsyncGetDiskConsumptionBlocked = aEvicting;
+  if (!aEvicting) {
+    index->NotifyAsyncGetDiskConsumptionCallbacks();
+  }
 }
 
 } // namespace net
