@@ -52,6 +52,106 @@ class FindProgramSandbox(ConfigureSandbox):
 
 
 class TestChecksConfigure(unittest.TestCase):
+    def test_checking(self):
+        out = StringIO()
+        sandbox = FindProgramSandbox({}, stdout=out, stderr=out)
+        base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
+        sandbox.exec_file(os.path.join(base_dir, 'checks.configure'))
+
+        exec(textwrap.dedent('''
+            @checking('for a thing')
+            def foo(value):
+                return value
+        '''), sandbox)
+
+        foo = sandbox['foo']
+
+        foo(True)
+        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
+
+        out.truncate(0)
+        foo(False)
+        self.assertEqual(out.getvalue(), 'checking for a thing... no\n')
+
+        out.truncate(0)
+        foo(42)
+        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
+
+        out.truncate(0)
+        foo('foo')
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
+
+        out.truncate(0)
+        data = ['foo', 'bar']
+        foo(data)
+        self.assertEqual(out.getvalue(), 'checking for a thing... %r\n' % data)
+
+        # When the function given to checking does nothing interesting, the
+        # behavior is not altered
+        exec(textwrap.dedent('''
+            @checking('for a thing', lambda x: x)
+            def foo(value):
+                return value
+        '''), sandbox)
+
+        foo = sandbox['foo']
+
+        out.truncate(0)
+        foo(True)
+        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
+
+        out.truncate(0)
+        foo(False)
+        self.assertEqual(out.getvalue(), 'checking for a thing... no\n')
+
+        out.truncate(0)
+        foo(42)
+        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
+
+        out.truncate(0)
+        foo('foo')
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
+
+        out.truncate(0)
+        data = ['foo', 'bar']
+        foo(data)
+        self.assertEqual(out.getvalue(), 'checking for a thing... %r\n' % data)
+
+        exec(textwrap.dedent('''
+            def munge(x):
+                if not x:
+                    return 'not found'
+                if isinstance(x, (str, bool, int)):
+                    return x
+                return ' '.join(x)
+
+            @checking('for a thing', munge)
+            def foo(value):
+                return value
+        '''), sandbox)
+
+        foo = sandbox['foo']
+
+        out.truncate(0)
+        foo(True)
+        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
+
+        out.truncate(0)
+        foo(False)
+        self.assertEqual(out.getvalue(), 'checking for a thing... not found\n')
+
+        out.truncate(0)
+        foo(42)
+        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
+
+        out.truncate(0)
+        foo('foo')
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
+
+        out.truncate(0)
+        foo(['foo', 'bar'])
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo bar\n')
+
     def get_result(self, command='', args=[], environ={},
                    prog='/bin/configure'):
         config = {}
