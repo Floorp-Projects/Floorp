@@ -227,7 +227,7 @@ public:
   }
 
 private:
-  nsAutoPtr<UnixSocketBuffer> mBuffer;
+  UniquePtr<UnixSocketBuffer> mBuffer;
 };
 
 void
@@ -366,7 +366,7 @@ StreamSocket::~StreamSocket()
 }
 
 void
-StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+StreamSocket::ReceiveSocketData(UniquePtr<UnixSocketBuffer>& aBuffer)
 {
   mConsumer->ReceiveSocketData(mIndex, aBuffer);
 }
