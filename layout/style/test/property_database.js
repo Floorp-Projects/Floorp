@@ -7202,8 +7202,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     domProp: "webkitBoxOrdinalGroup",
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "order",
-    subproperties: [ "order" ],
+    alias_for: "-moz-box-ordinal-group",
+    subproperties: [ "-moz-box-ordinal-group" ],
   };
   /* This one is not an alias - it's implemented as a logical property: */
   gCSSProperties["-webkit-box-orient"] = {
