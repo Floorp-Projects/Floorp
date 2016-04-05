@@ -43,16 +43,11 @@ var MemoryObserver = {
     let data = browser.__SS_data;
     let extra = browser.__SS_extdata;
 
-    // Destroying the tab will stop audio playback without invoking the
-    // normal events, therefore we need to explicitly tell the Java UI
-    // to stop displaying the audio playing indicator.
-    if (tab.playingAudio) {
-      Messaging.sendRequest({
-        type: "Tab:AudioPlayingChange",
-        tabID: tab.id,
-        isAudioPlaying: false
-      });
-    }
+    // Notify any interested parties (e.g. the session store)
+    // that the original tab object is going to be destroyed
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("TabPreZombify", true, false, window, null);
+    browser.dispatchEvent(evt);
 
     // We need this data to correctly create and position the new browser
     // If this browser is already a zombie, fallback to the session data
@@ -69,6 +64,11 @@ var MemoryObserver = {
     browser.__SS_extdata = extra;
     browser.__SS_restore = true;
     browser.setAttribute("pending", "true");
+
+    // Notify the session store to reattach its listeners to the new tab object
+    evt = document.createEvent("UIEvents");
+    evt.initUIEvent("TabPostZombify", true, false, window, null);
+    browser.dispatchEvent(evt);
   },
 
   gc: function() {

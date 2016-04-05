@@ -158,7 +158,9 @@ var ContentPolicy = {
                 type: WebRequestCommon.typeForPolicyType(policyType),
                 windowId,
                 parentWindowId};
-
+    if (requestOrigin) {
+      data.originUrl = requestOrigin.spec;
+    }
     if (block) {
       let rval = mm.sendSyncMessage("WebRequest:ShouldLoad", data);
       if (rval.length == 1 && rval[0].cancel) {
