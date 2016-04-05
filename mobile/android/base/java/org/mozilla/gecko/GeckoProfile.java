@@ -469,6 +469,7 @@ public final class GeckoProfile {
         mDB = dbFactory.get(profileName, mProfileDir);
     }
 
+    @RobocopTarget
     public BrowserDB getDB() {
         return mDB;
     }
