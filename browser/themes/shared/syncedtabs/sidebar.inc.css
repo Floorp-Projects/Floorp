@@ -84,19 +84,8 @@ body {
 .client .item.tab > .item-title-container {
   padding-inline-start: 35px;
 }
-
 .item.tab > .item-title-container {
   padding-inline-start: 20px;
-}
-
-.item.tab > .item-title-container > .item-icon-container {
-  background-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-.item.tab > .item-title-container > .item-icon-container {
-    background-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
 }
 
 .item-icon-container {
