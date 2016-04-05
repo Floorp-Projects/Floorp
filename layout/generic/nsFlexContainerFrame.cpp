@@ -962,6 +962,29 @@ BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
   }
 }
 
+// Convenience function to get either the "order" or the "box-ordinal-group"
+// property-value for a flex item (depending on whether the container is a
+// modern flex container or a legacy box).
+static int32_t
+GetOrderOrBoxOrdinalGroup(nsIFrame* aFlexItem, bool aIsLegacyBox)
+{
+  if (aIsLegacyBox) {
+    // We'll be using mBoxOrdinal, which has type uint32_t. However, the modern
+    // 'order' property (whose functionality we're co-opting) has type int32_t.
+    // So: if we happen to have a uint32_t value that's greater than INT32_MAX,
+    // we clamp it rather than letting it overflow. Chances are, this is just
+    // an author using BIG_VALUE anyway, so the clamped value should be fine.
+    // (particularly since sufficiently-huge values are busted in Chrome/WebKit
+    // per https://bugs.chromium.org/p/chromium/issues/detail?id=599645 )
+    uint32_t clampedBoxOrdinal = std::min(aFlexItem->StyleXUL()->mBoxOrdinal,
+                                          static_cast<uint32_t>(INT32_MAX));
+    return static_cast<int32_t>(clampedBoxOrdinal);
+  }
+
+  // Normal case: just use modern 'order' property.
+  return aFlexItem->StylePosition()->mOrder;
+}
+
 // Helper-function to find the first non-anonymous-box descendent of aFrame.
 static nsIFrame*
 GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
@@ -1026,6 +1049,11 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
 {
   MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
              "this method only intended for comparing flex items");
+  MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
+             "this method only intended for comparing siblings");
+  nsStyleContext* parentFrameSC = aFrame1->GetParent()->StyleContext();
+  bool isInLegacyBox = IsLegacyBox(parentFrameSC->StyleDisplay(),
+                                   parentFrameSC);
 
   if (aFrame1 == aFrame2) {
     // Anything is trivially LEQ itself, so we return "true" here... but it's
@@ -1039,8 +1067,8 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
     nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
 
-    int32_t order1 = aRealFrame1->StylePosition()->mOrder;
-    int32_t order2 = aRealFrame2->StylePosition()->mOrder;
+    int32_t order1 = GetOrderOrBoxOrdinalGroup(aRealFrame1, isInLegacyBox);
+    int32_t order2 = GetOrderOrBoxOrdinalGroup(aRealFrame2, isInLegacyBox);
 
     if (order1 != order2) {
       return order1 < order2;
@@ -1107,13 +1135,18 @@ IsOrderLEQ(nsIFrame* aFrame1,
 {
   MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
              "this method only intended for comparing flex items");
+  MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
+             "this method only intended for comparing siblings");
+  nsStyleContext* parentFrameSC = aFrame1->GetParent()->StyleContext();
+  bool isInLegacyBox = IsLegacyBox(parentFrameSC->StyleDisplay(),
+                                   parentFrameSC);
 
   // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
   nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
   nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
 
-  int32_t order1 = aRealFrame1->StylePosition()->mOrder;
-  int32_t order2 = aRealFrame2->StylePosition()->mOrder;
+  int32_t order1 = GetOrderOrBoxOrdinalGroup(aRealFrame1, isInLegacyBox);
+  int32_t order2 = GetOrderOrBoxOrdinalGroup(aRealFrame2, isInLegacyBox);
 
   return order1 <= order2;
 }
