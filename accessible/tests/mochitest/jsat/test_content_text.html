@@ -186,8 +186,7 @@
            new ExpectedTextSelectionChanged(0, 0)
           ],
           [function() {
-             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 3);
-             typeKey('a')();
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 3]]}, typeKey('a')());
            },
            new ExpectedTextChanged('a'),
            new ExpectedTextSelectionChanged(1, 1),
@@ -213,8 +212,7 @@
            new ExpectedTextSelectionChanged(6, 6),
           ],
           [function() {
-             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 2);
-             typeKey('a')();
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 2]]}, typeKey('a')());
            },
            new ExpectedTextChanged(''),
            new ExpectedTextSelectionChanged(7, 7),
@@ -228,8 +226,7 @@
            new ExpectedTextSelectionChanged(9, 9),
           ],
           [function() {
-             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 1);
-             typeKey('f')();
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 1]]}, typeKey('f')());
            },
            new ExpectedTextChanged('f'),
            new ExpectedTextSelectionChanged(10, 10),
@@ -243,8 +240,7 @@
            new ExpectedTextSelectionChanged(12, 12),
           ],
           [function() {
-             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 0);
-             typeKey('f')();
+             SpecialPowers.pushPrefEnv({"set": [[KEYBOARD_ECHO_SETTING, 0]]}, typeKey('f')());
            },
            new ExpectedTextChanged(''),
            new ExpectedTextSelectionChanged(13, 13),

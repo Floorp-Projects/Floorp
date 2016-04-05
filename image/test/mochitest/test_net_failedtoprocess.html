@@ -6,9 +6,8 @@ observer event with the nsIURI of the failed image as the subject
 -->
 <head>
   <title>Test for image net:failed-to-process-uri-content</title>
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -18,8 +17,8 @@ observer event with the nsIURI of the failed image as the subject
 
 SimpleTest.waitForExplicitFinish();
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
 var obs = Cc["@mozilla.org/observer-service;1"].getService();
 obs = obs.QueryInterface(Ci.nsIObserverService);
 
@@ -34,7 +33,7 @@ var observer = {
   observe: function(subject, topic, data) {
     ok(topic == "net:failed-to-process-uri-content", "wrong topic");
     subject = subject.QueryInterface(Ci.nsIURI);
-    ok(subject.asciiSpec == "chrome://mochitests/content/chrome/image/test/mochitest/invalid.jpg", "wrong subject");
+    is(subject.asciiSpec, "http://mochi.test:8888/tests/image/test/mochitest/invalid.jpg", "wrong subject");
 
     obs.removeObserver(this, "net:failed-to-process-uri-content");
 
@@ -42,7 +41,7 @@ var observer = {
   }
 };
 
-obs.addObserver(observer, "net:failed-to-process-uri-content", false);
+obs.addObserver(SpecialPowers.wrapCallbackObject(observer), "net:failed-to-process-uri-content", false);
 
 document.write('<img src="damon.jpg">');
 document.write('<img src="invalid.jpg">');

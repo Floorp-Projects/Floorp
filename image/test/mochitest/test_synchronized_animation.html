@@ -5,10 +5,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=867758
 -->
 <head>
   <title>Test for Bug 867758</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <script type="application/javascript" src="imgutils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=867758">Mozilla Bug 867758</a>
@@ -19,13 +19,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=867758
 <script type="application/javascript;version=1.8">
 /** Test for Bug 867758**/
 
+SimpleTest.requestFlakyTimeout("Early failure timeout");
 SimpleTest.waitForExplicitFinish();
 
 const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 const gContent = document.getElementById("content");
 
 var gDispatched = false;
@@ -42,10 +42,10 @@ function cleanUpAndFinish() {
   if (gFinished) {
     return;
   }
-  var imgLoadingContent = gImg1.QueryInterface(Ci.nsIImageLoadingContent);
+  var imgLoadingContent = SpecialPowers.wrap(gImg1).QueryInterface(Ci.nsIImageLoadingContent);
   imgLoadingContent.removeObserver(gOuter);
 
-  imgLoadingContent = gImg2.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent = SpecialPowers.wrap(gImg2).QueryInterface(Ci.nsIImageLoadingContent);
   imgLoadingContent.removeObserver(gOuter);
 
   SimpleTest.finish();
@@ -79,7 +79,7 @@ function waitForLoadAndTest(image) {
     context.drawImage(image, 0, 0);
 
     // Attach the observer.
-    var imgLoadingContent = image.QueryInterface(Ci.nsIImageLoadingContent);
+    var imgLoadingContent = SpecialPowers.wrap(image).QueryInterface(Ci.nsIImageLoadingContent);
     imgLoadingContent.addObserver(gOuter);
 
     // If the other image already loaded, add both images to the document, which
@@ -101,7 +101,7 @@ function main() {
   var obs = new ImageDecoderObserverStub();
   obs.frameUpdate = frameUpdate;
 
-  gOuter = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools).createScriptedObserver(obs);
+  gOuter = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools).createScriptedObserver(SpecialPowers.wrapCallbackObject(obs));
 
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.

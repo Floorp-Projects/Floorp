@@ -174,15 +174,12 @@ class TestManager(object):
         self.topsrcdir = mozpath.normpath(config.topsrcdir)
 
         self.tests_by_path = defaultdict(list)
+        self.installs_by_path = defaultdict(list)
+        self.deferred_installs = set()
 
-    def add(self, t, flavor=None, topsrcdir=None):
+    def add(self, t, flavor, topsrcdir):
         t = dict(t)
         t['flavor'] = flavor
-
-        if topsrcdir is None:
-            topsrcdir = self.topsrcdir
-        else:
-            topsrcdir = mozpath.normpath(topsrcdir)
 
         path = mozpath.normpath(t['path'])
         assert mozpath.basedir(path, [topsrcdir])
@@ -192,6 +189,16 @@ class TestManager(object):
         t['dir_relpath'] = mozpath.dirname(key)
 
         self.tests_by_path[key].append(t)
+
+    def add_installs(self, obj, topsrcdir):
+        for src, (dest, _) in obj.installs.iteritems():
+            key = src[len(topsrcdir)+1:]
+            self.installs_by_path[key].append((src, dest))
+        for src, pat, dest in obj.pattern_installs:
+            key = mozpath.join(src[len(topsrcdir)+1:], pat)
+            self.installs_by_path[key].append((src, pat, dest))
+        for path in obj.deferred_installs:
+            self.deferred_installs.add(path[2:])
 
 
 class BinariesCollection(object):
@@ -218,8 +225,8 @@ class CommonBackend(BuildBackend):
 
         if isinstance(obj, TestManifest):
             for test in obj.tests:
-                self._test_manager.add(test, flavor=obj.flavor,
-                    topsrcdir=obj.topsrcdir)
+                self._test_manager.add(test, obj.flavor, obj.topsrcdir)
+            self._test_manager.add_installs(obj, obj.topsrcdir)
 
         elif isinstance(obj, XPIDLFile):
             # TODO bug 1240134 tracks not processing XPIDL files during
@@ -358,6 +365,14 @@ class CommonBackend(BuildBackend):
         topobjdir = self.environment.topobjdir
         with self._write_file(mozpath.join(topobjdir, 'all-tests.json')) as fh:
             json.dump(self._test_manager.tests_by_path, fh)
+
+        path = mozpath.join(self.environment.topobjdir, 'test-installs.json')
+        with self._write_file(path) as fh:
+            json.dump({k: v for k, v in self._test_manager.installs_by_path.items()
+                       if k in self._test_manager.deferred_installs},
+                      fh,
+                      sort_keys=True,
+                      indent=4)
 
         # Write out a machine-readable file describing binaries.
         with self._write_file(mozpath.join(topobjdir, 'binaries.json')) as fh:

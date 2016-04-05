@@ -12,6 +12,8 @@ const Ci = Components.interfaces;
 var mainWindow;
 
 var contentPage = "http://mochi.test:8888/chrome/dom/workers/test/empty.html";
+var workerScope = "http://mochi.test:8888/chrome/dom/workers/test/serviceworkers/";
+var workerURL = workerScope + "worker.js";
 
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
@@ -44,18 +46,34 @@ function setupWindow() {
 }
 
 var wN;
+var registration;
 var wP;
+
+function testPrivateWindow() {
+  testOnWindow(true, function(aWin) {
+    wP = aWin;
+    ok(!("serviceWorker" in wP.content.navigator), "ServiceWorkers are not available for private windows");
+    runTest();
+  });
+}
 
 function doTests() {
   testOnWindow(false, function(aWin) {
     wN = aWin;
     ok("serviceWorker" in wN.content.navigator, "ServiceWorkers are available for normal windows");
 
-    testOnWindow(true, function(aWin) {
-      wP = aWin;
-      ok(!("serviceWorker" in wP.content.navigator), "ServiceWorkers are not available for private windows");
-      runTest();
-    });
+    wN.content.navigator.serviceWorker.register(workerURL,
+                                                { scope: workerScope })
+      .then(function(aRegistration) {
+        registration = aRegistration;
+        ok(registration, "Registering a service worker in a normal window should succeed");
+
+        // Bug 1255621: We should be able to load a controlled document in a private window.
+        testPrivateWindow();
+      }, function(aError) {
+        ok(false, "Error registering worker in normal window: " + aError);
+        testPrivateWindow();
+      });
   });
 }
 
@@ -64,12 +82,17 @@ var steps = [
   doTests
 ];
 
+function cleanup() {
+  wN.close();
+  wP.close();
+
+  SimpleTest.finish();
+}
+
 function runTest() {
   if (!steps.length) {
-    wN.close();
-    wP.close();
+    registration.unregister().then(cleanup, cleanup);
 
-    SimpleTest.finish();
     return;
   }
 
@@ -80,6 +103,7 @@ function runTest() {
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [
   ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
   ["browser.startup.page", 0],
   ["browser.startup.homepage_override.mstone", "ignore"],
 ]}, runTest);

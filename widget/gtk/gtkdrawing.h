@@ -399,6 +399,13 @@ moz_gtk_get_arrow_size(GtkThemeWidgetType widgetType,
                        gint* width, gint* height);
 
 /**
+ * Get the minimum height of a entry widget
+ * size:    [OUT] the minimum height
+ *
+ */
+void moz_gtk_get_entry_min_height(gint* height);
+
+/**
  * Get the desired size of a toolbar separator
  * size:    [OUT] the desired width
  *

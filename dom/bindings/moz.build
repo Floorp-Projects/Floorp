@@ -34,6 +34,7 @@ EXPORTS.mozilla.dom += [
     'Nullable.h',
     'PrimitiveConversions.h',
     'RootedDictionary.h',
+    'SimpleGlobalObject.h',
     'StructuredClone.h',
     'ToJSValue.h',
     'TypedArray.h',
@@ -86,6 +87,7 @@ UNIFIED_SOURCES += [
     'DOMJSProxyHandler.cpp',
     'Exceptions.cpp',
     'IterableIterator.cpp',
+    'SimpleGlobalObject.cpp',
     'ToJSValue.cpp',
 ]
 
