@@ -721,10 +721,19 @@ DrawTargetCairo::LockBits(uint8_t** aData, IntSize* aSize,
                           int32_t* aStride, SurfaceFormat* aFormat,
                           IntPoint* aOrigin)
 {
-  cairo_surface_t* surf = cairo_get_group_target(mContext);
+  cairo_surface_t* target = cairo_get_group_target(mContext);
+  cairo_surface_t* surf = target;
+#ifdef CAIRO_HAS_WIN32_SURFACE
+  if (cairo_surface_get_type(surf) == CAIRO_SURFACE_TYPE_WIN32) {
+    cairo_surface_t* imgsurf = cairo_win32_surface_get_image(surf);
+    if (imgsurf) {
+      surf = imgsurf;
+    }
+  }
+#endif
   if (cairo_surface_get_type(surf) == CAIRO_SURFACE_TYPE_IMAGE) {
     PointDouble offset;
-    cairo_surface_get_device_offset(surf, &offset.x, &offset.y);
+    cairo_surface_get_device_offset(target, &offset.x, &offset.y);
     // verify the device offset can be converted to integers suitable for a bounds rect
     IntPoint origin(int32_t(-offset.x), int32_t(-offset.y));
     if (-PointDouble(origin) != offset ||
@@ -756,6 +765,14 @@ DrawTargetCairo::ReleaseBits(uint8_t* aData)
   MOZ_ASSERT(mLockedBits == aData);
   mLockedBits = nullptr;
   cairo_surface_t* surf = cairo_get_group_target(mContext);
+#ifdef CAIRO_HAS_WIN32_SURFACE
+  if (cairo_surface_get_type(surf) == CAIRO_SURFACE_TYPE_WIN32) {
+    cairo_surface_t* imgsurf = cairo_win32_surface_get_image(surf);
+    if (imgsurf) {
+      cairo_surface_mark_dirty(imgsurf);
+    }
+  }
+#endif
   cairo_surface_mark_dirty(surf);
 }
 

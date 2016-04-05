@@ -37,6 +37,8 @@ xpcAccessible::GetNextSibling(nsIAccessible** aNextSibling)
 {
   NS_ENSURE_ARG_POINTER(aNextSibling);
   *aNextSibling = nullptr;
+  if (IntlGeneric().IsNull())
+    return NS_ERROR_FAILURE;
 
   if (!Intl())
     return NS_ERROR_FAILURE;
@@ -51,6 +53,8 @@ xpcAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling)
 {
   NS_ENSURE_ARG_POINTER(aPreviousSibling);
   *aPreviousSibling = nullptr;
+  if (IntlGeneric().IsNull())
+    return NS_ERROR_FAILURE;
 
   if (!Intl())
     return NS_ERROR_FAILURE;
@@ -149,6 +153,8 @@ xpcAccessible::GetIndexInParent(int32_t* aIndexInParent)
 {
   NS_ENSURE_ARG_POINTER(aIndexInParent);
   *aIndexInParent = -1;
+  if (IntlGeneric().IsNull())
+    return NS_ERROR_FAILURE;
 
   if (!Intl())
     return NS_ERROR_FAILURE;

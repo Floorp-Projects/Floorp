@@ -8,17 +8,18 @@
  */
 
 const gDialogURL = getRootDirectory(gTestPath) + "subdialog.xul";
+const gDialogURL2 = getRootDirectory(gTestPath) + "subdialog2.xul";
 
-function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn) {
+function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn, url = gDialogURL) {
   let domcontentloadedFnStr = domcontentloadedFn ?
     "(" + domcontentloadedFn.toString() + ")()" :
     "";
-  return ContentTask.spawn(browser, {gDialogURL, domcontentloadedFnStr}, function*(args) {
-    let {gDialogURL, domcontentloadedFnStr} = args;
+  return ContentTask.spawn(browser, {url, domcontentloadedFnStr}, function*(args) {
+    let {url, domcontentloadedFnStr} = args;
     let rv = { acceptCount: 0 };
     let win = content.window;
     let subdialog = win.gSubDialog;
-    subdialog.open(gDialogURL, null, rv);
+    subdialog.open(url, null, rv);
 
     info("waiting for subdialog DOMFrameContentLoaded");
     yield ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
@@ -126,6 +127,28 @@ add_task(function* check_canceling_dialog() {
   yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
     function() { content.window.gSubDialog._frame.contentDocument.documentElement.cancelDialog(); },
     "cancel", 0);
+});
+
+add_task(function* check_reopening_dialog() {
+  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+  info("opening another dialog which will close the first");
+  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, "", gDialogURL2);
+  info("closing as normal");
+  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+    function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
+    "accept", 1);
+});
+
+add_task(function* check_opening_while_closing() {
+  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+  info("closing");
+  content.window.gSubDialog.close();
+  info("reopening immediately after calling .close()");
+  yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+  yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+    function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
+    "accept", 1);
+
 });
 
 add_task(function* window_close_on_dialog() {

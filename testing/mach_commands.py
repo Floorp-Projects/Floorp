@@ -612,7 +612,6 @@ class PushToTry(MachCommandBase):
         """
 
         from mozbuild.testing import TestResolver
-        from mozbuild.controller.building import BuildDriver
         from autotry import AutoTry
 
         print("mach try is under development, please file bugs blocking 1149670.")
@@ -645,9 +644,6 @@ class PushToTry(MachCommandBase):
         builds, platforms, tests, talos, paths, tags, extra = self.validate_args(**kwargs)
 
         if paths or tags:
-            driver = self._spawn(BuildDriver)
-            driver.install_tests(remove=False)
-
             paths = [os.path.relpath(os.path.normpath(os.path.abspath(item)), self.topsrcdir)
                      for item in paths]
             paths_by_flavor = at.paths_by_flavor(paths=paths, tags=tags)

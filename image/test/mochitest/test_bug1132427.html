@@ -2,9 +2,9 @@
 <html>
 <head>
   <title>Test for scrolling selection into view</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -24,6 +24,7 @@
 // test will pass without testing anything important, but that's not a big deal. That should be
 // rare enough, and the next time the test is run will should do proper testing.
 
+SimpleTest.requestFlakyTimeout("Pre-existing timeouts when converting from mochitest-chrome");
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(openWindow);
 
@@ -32,7 +33,6 @@ var win = null;
 function openWindow() {
   win = window.open("bug1132427.html",
                 "", "scrollbars=yes,toolbar,menubar,width=600,height=800");
-  win.addEventListener("load", doTest, false);
   win.focus();
 }
 
@@ -53,19 +53,19 @@ function continueTest() {
   // we need to drawWindow the chrome window so we can get a dump of the retained widget layers
   // if we have to repaint to fulfill this drawWindow request then it will be impossible to
   // observe the bug
-  var chromewin = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIWebNavigation)
-                     .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+  var chromewin = SpecialPowers.wrap(win).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                     .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                     .QueryInterface(SpecialPowers.Ci.nsIDocShellTreeItem)
                      .rootTreeItem
-                     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIDOMWindow);
+                     .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                     .getInterface(SpecialPowers.Ci.nsIDOMWindow);
 
   var el = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
   el.width = chromewin.innerWidth;
   el.height = chromewin.innerHeight;
   var ctx = el.getContext("2d");
   // pass the correct flags so we don't have to flush the retained layers
-  ctx.drawWindow(chromewin, 0, 0, chromewin.innerWidth, chromewin.innerHeight, "rgba(0,0,0,0)",
+  SpecialPowers.wrap(ctx).drawWindow(chromewin, 0, 0, chromewin.innerWidth, chromewin.innerHeight, "rgba(0,0,0,0)",
     ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_DRAW_CARET);
 
   var leftbox = win.document.getElementById("left").getBoundingClientRect();

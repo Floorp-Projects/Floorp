@@ -314,7 +314,7 @@ ContentPrefService.prototype = {
 
     if (aContext && aContext.usePrivateBrowsing) {
       this._privModeStorage.remove(group, aName);
-      this._notifyPrefRemoved(group, aName);
+      this._notifyPrefRemoved(group, aName, true);
       return;
     }
 
@@ -337,7 +337,7 @@ ContentPrefService.prototype = {
       this._deleteGroupIfUnused(groupID);
 
     this._cache.remove(group, aName);
-    this._notifyPrefRemoved(group, aName);
+    this._notifyPrefRemoved(group, aName, false);
   },
 
   removeGroupedPrefs: function ContentPrefService_removeGroupedPrefs(aContext) {
@@ -376,7 +376,7 @@ ContentPrefService.prototype = {
       for (let [group, name, ] of this._privModeStorage) {
         if (name === aName) {
           this._privModeStorage.remove(group, aName);
-          this._notifyPrefRemoved(group, aName);
+          this._notifyPrefRemoved(group, aName, true);
         }
       }
     }
@@ -418,7 +418,7 @@ ContentPrefService.prototype = {
       if (groupNames[i]) // ie. not null, which will be last (and i == groupIDs.length)
         this._deleteGroupIfUnused(groupIDs[i]);
       if (!aContext || !aContext.usePrivateBrowsing) {
-        this._notifyPrefRemoved(groupNames[i], aName);
+        this._notifyPrefRemoved(groupNames[i], aName, false);
       }
     }
   },
@@ -526,10 +526,10 @@ ContentPrefService.prototype = {
   /**
    * Notify all observers about the removal of a preference.
    */
-  _notifyPrefRemoved: function ContentPrefService__notifyPrefRemoved(aGroup, aName) {
+  _notifyPrefRemoved: function ContentPrefService__notifyPrefRemoved(aGroup, aName, aIsPrivate) {
     for (var observer of this._getObservers(aName)) {
       try {
-        observer.onContentPrefRemoved(aGroup, aName);
+        observer.onContentPrefRemoved(aGroup, aName, aIsPrivate);
       }
       catch(ex) {
         Cu.reportError(ex);

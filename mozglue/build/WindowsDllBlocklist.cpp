@@ -197,7 +197,7 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "grabkernel.dll", MAKE_VERSION(1, 0, 0, 1) },
 
   // ESET, bug 1229252
-  { "eOppMonitor.dll", ALL_VERSIONS },
+  { "eoppmonitor.dll", ALL_VERSIONS },
 
   { nullptr, 0 }
 };

@@ -230,6 +230,27 @@ class TestConfigureOutputHandler(unittest.TestCase):
             'ERROR:fail\n'
         )
 
+        out.seek(0)
+        out.truncate()
+
+        try:
+            with handler.queue_debug():
+                logger.info('checking bar... ')
+                logger.debug('do foo')
+                logger.debug('do bar')
+                logger.info('no')
+                e = Exception('fail')
+                raise e
+        except Exception as caught:
+            self.assertIs(caught, e)
+
+        self.assertEqual(
+            out.getvalue(),
+            'checking bar... no\n'
+            'DEBUG:do foo\n'
+            'DEBUG:do bar\n'
+        )
+
     def test_is_same_output(self):
         fd1 = sys.stderr.fileno()
         fd2 = os.dup(fd1)

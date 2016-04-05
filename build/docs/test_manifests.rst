@@ -99,6 +99,18 @@ support-files
    file is selected from the base name (e.g., ``foo`` for ``/path/foo``).
    Files starting with ``/`` cannot be selected using globbing.
 
+   Some support files are used by tests across multiple directories. In
+   this case, a test depending on a support file from another directory
+   must note that dependency with the path to the required support file
+   in its own **support-files** entry. These use a syntax where paths
+   starting with ``!/`` will indicate the beginning of the path to a
+   shared support file starting from the root of the srcdir. For example,
+   if a manifest at ``dom/base/test/mochitest.ini`` has a support file,
+   ``dom/base/test/server-script.sjs``, and a mochitest in
+   ``dom/workers/test`` depends on that support file, the test manifest
+   at ``dom/workers/test/mochitest.ini`` must include
+   ``!/dom/base/test/server-script.sjs`` in its **support-files** entry.
+
 generated-files
    List of files that are generated as part of the build and don't exist in
    the source tree.

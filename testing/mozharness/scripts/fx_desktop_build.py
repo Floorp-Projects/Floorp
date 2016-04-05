@@ -71,7 +71,6 @@ class FxDesktopBuild(BuildScript, object):
                 ],
                 'stage_product': 'firefox',
                 'platform_supports_post_upload_to_latest': True,
-                'use_branch_in_symbols_extra_buildid': True,
                 'latest_mar_dir': '/pub/mozilla.org/firefox/nightly/latest-%(branch)s',
                 'compare_locales_repo': 'https://hg.mozilla.org/build/compare-locales',
                 'compare_locales_rev': 'RELEASE_AUTOMATION',

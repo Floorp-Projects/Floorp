@@ -132,14 +132,6 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
     return false;
   }
 
-  // Preserve the default source if we have one, it has a separate setter.
-  uint32_t prevNumCandidates = mCandidates.Length();
-  nsString defaultURLString;
-  if (prevNumCandidates && (mCandidates[prevNumCandidates - 1].Type() ==
-                            ResponsiveImageCandidate::eCandidateType_Default)) {
-    defaultURLString = mCandidates[prevNumCandidates - 1].URLString();
-  }
-
   mCandidates.Clear();
 
   nsAString::const_iterator iter, end;
@@ -187,9 +179,7 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
   bool parsedCandidates = mCandidates.Length() > 0;
 
   // Re-add default to end of list
-  if (!defaultURLString.IsEmpty()) {
-    AppendDefaultCandidate(defaultURLString);
-  }
+  MaybeAppendDefaultCandidate();
 
   return parsedCandidates;
 }
@@ -233,10 +223,10 @@ ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString)
     mCandidates.RemoveElementAt(candidates - 1);
   }
 
-  // Add new default if set
-  if (!aURLString.IsEmpty()) {
-    AppendDefaultCandidate(aURLString);
-  }
+  mDefaultSourceURL = aURLString;
+
+  // Add new default to end of list
+  MaybeAppendDefaultCandidate();
 }
 
 void
@@ -269,9 +259,8 @@ ResponsiveImageSelector::AppendCandidateIfUnique(const ResponsiveImageCandidate 
   int numCandidates = mCandidates.Length();
 
   // With the exception of Default, which should not be added until we are done
-  // building the list, the spec forbids mixing width and explicit density
-  // selectors in the same set.
-  if (numCandidates && mCandidates[0].Type() != aCandidate.Type()) {
+  // building the list.
+  if (aCandidate.Type() == ResponsiveImageCandidate::eCandidateType_Default) {
     return;
   }
 
@@ -286,13 +275,29 @@ ResponsiveImageSelector::AppendCandidateIfUnique(const ResponsiveImageCandidate 
 }
 
 void
-ResponsiveImageSelector::AppendDefaultCandidate(const nsAString& aURLString)
+ResponsiveImageSelector::MaybeAppendDefaultCandidate()
 {
-  NS_ENSURE_TRUE(!aURLString.IsEmpty(), /* void */);
+  NS_ENSURE_TRUE(!mDefaultSourceURL.IsEmpty(), /* void */);
+
+  int numCandidates = mCandidates.Length();
+
+  // https://html.spec.whatwg.org/multipage/embedded-content.html#update-the-source-set
+  // step 4.1.3:
+  // If child has a src attribute whose value is not the empty string and source
+  // set does not contain an image source with a density descriptor value of 1,
+  // and no image source with a width descriptor, append child's src attribute
+  // value to source set.
+  for (int i = 0; i < numCandidates; i++) {
+    if (mCandidates[i].IsComputedFromWidth()) {
+      return;
+    } else if (mCandidates[i].Density(this) == 1.0) {
+      return;
+    }
+  }
 
   ResponsiveImageCandidate defaultCandidate;
   defaultCandidate.SetParameterDefault();
-  defaultCandidate.SetURLSpec(aURLString);
+  defaultCandidate.SetURLSpec(mDefaultSourceURL);
   // We don't use MaybeAppend since we want to keep this even if it can never
   // match, as it may if the source set changes.
   mCandidates.AppendElement(defaultCandidate);
@@ -363,22 +368,15 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   //   the greatest density available
 
   // If the list contains computed width candidates, compute the current
-  // effective image width. Note that we currently disallow both computed and
-  // static density candidates in the same selector, so checking the first
-  // candidate is sufficient.
-  int32_t computedWidth = -1;
-  if (numCandidates && mCandidates[0].IsComputedFromWidth()) {
-    DebugOnly<bool> computeResult = \
-      ComputeFinalWidthForCurrentViewport(&computedWidth);
-    MOZ_ASSERT(computeResult,
-               "Computed candidates not allowed without sizes data");
-
-    // If we have a default candidate in the list, don't consider it when using
-    // computed widths. (It has a static 1.0 density that is inapplicable to a
-    // sized-image)
-    if (numCandidates > 1 && mCandidates[numCandidates - 1].Type() ==
-        ResponsiveImageCandidate::eCandidateType_Default) {
-      numCandidates--;
+  // effective image width.
+  double computedWidth = -1;
+  for (int i = 0; i < numCandidates; i++) {
+    if (mCandidates[i].IsComputedFromWidth()) {
+      DebugOnly<bool> computeResult = \
+        ComputeFinalWidthForCurrentViewport(&computedWidth);
+      MOZ_ASSERT(computeResult,
+                 "Computed candidates not allowed without sizes data");
+      break;
     }
   }
 
@@ -423,7 +421,7 @@ ResponsiveImageSelector::GetSelectedCandidateIndex()
 }
 
 bool
-ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(int32_t *aWidth)
+ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
 {
   unsigned int numSizes = mSizeQueries.Length();
   nsIDocument* doc = Document();
@@ -457,7 +455,7 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(int32_t *aWidth)
   }
 
   MOZ_ASSERT(effectiveWidth >= 0);
-  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(std::max(effectiveWidth, 0));
+  *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));
   return true;
 }
 
@@ -733,7 +731,7 @@ double
 ResponsiveImageCandidate::Density(ResponsiveImageSelector *aSelector) const
 {
   if (mType == eCandidateType_ComputedFromWidth) {
-    int32_t width;
+    double width;
     if (!aSelector->ComputeFinalWidthForCurrentViewport(&width)) {
       return 1.0;
     }
@@ -747,7 +745,7 @@ ResponsiveImageCandidate::Density(ResponsiveImageSelector *aSelector) const
 }
 
 double
-ResponsiveImageCandidate::Density(int32_t aMatchingWidth) const
+ResponsiveImageCandidate::Density(double aMatchingWidth) const
 {
   if (mType == eCandidateType_Invalid) {
     MOZ_ASSERT(false, "Getting density for uninitialized candidate");
@@ -765,7 +763,7 @@ ResponsiveImageCandidate::Density(int32_t aMatchingWidth) const
       MOZ_ASSERT(false, "Don't expect to have a negative matching width at this point");
       return 1.0;
     }
-    double density = double(mValue.mWidth) / double(aMatchingWidth);
+    double density = double(mValue.mWidth) / aMatchingWidth;
     MOZ_ASSERT(density > 0.0);
     return density;
   }

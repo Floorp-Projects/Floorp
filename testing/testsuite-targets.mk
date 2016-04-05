@@ -243,7 +243,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 stage-all: stage-b2g
 endif
 
-make-stage-dir:
+# Prepare _tests before any of the other staging/packaging steps.
+# make-stage-dir is a prerequisite to all the stage-* targets in testsuite-targets.mk.
+make-stage-dir: install-test-files
 	rm -rf $(PKG_STAGE)
 	$(NSINSTALL) -D $(PKG_STAGE)
 	$(NSINSTALL) -D $(PKG_STAGE)/bin

@@ -539,13 +539,53 @@ class TestRecursiveMakeBackend(BackendTester):
         """Pattern matches in test manifests' support-files should be recorded."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)
         m = InstallManifest(path=mozpath.join(env.topobjdir,
-            '_build_manifests', 'install', '_tests'))
+            '_build_manifests', 'install', '_test_files'))
 
         # This is not the most robust test in the world, but it gets the job
         # done.
         entries = [e for e in m._dests.keys() if '**' in e]
         self.assertEqual(len(entries), 1)
         self.assertIn('support/**', entries[0])
+
+    def test_test_manifest_deffered_installs_written(self):
+        """Shared support files are written to their own data file by the backend."""
+        env = self._consume('test-manifest-shared-support', RecursiveMakeBackend)
+        all_tests_path = mozpath.join(env.topobjdir, 'all-tests.json')
+        self.assertTrue(os.path.exists(all_tests_path))
+        test_installs_path = mozpath.join(env.topobjdir, 'test-installs.json')
+
+        with open(test_installs_path, 'r') as fh:
+            test_installs = json.load(fh)
+
+        self.assertEqual(set(test_installs.keys()),
+                         set(['child/test_sub.js',
+                              'child/data/**',
+                              'child/another-file.sjs']))
+        for key in test_installs.keys():
+            self.assertIn(key, test_installs)
+
+        test_files_manifest = mozpath.join(env.topobjdir,
+                                           '_build_manifests',
+                                           'install',
+                                           '_test_files')
+
+        # First, read the generated for ini manifest contents.
+        m = InstallManifest(path=test_files_manifest)
+
+        # Then, synthesize one from the test-installs.json file. This should
+        # allow us to re-create a subset of the above.
+        synthesized_manifest = InstallManifest()
+        for item, installs in test_installs.items():
+            for install_info in installs:
+                if len(install_info) == 3:
+                    synthesized_manifest.add_pattern_symlink(*install_info)
+                if len(install_info) == 2:
+                    synthesized_manifest.add_symlink(*install_info)
+
+        self.assertEqual(len(synthesized_manifest), 3)
+        for item, info in synthesized_manifest._dests.items():
+            self.assertIn(item, m)
+            self.assertEqual(info, m._dests[item])
 
     def test_xpidl_generation(self):
         """Ensure xpidl files and directories are written out."""
@@ -769,7 +809,7 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('test-manifests-duplicate-support-files',
             RecursiveMakeBackend)
 
-        p = os.path.join(env.topobjdir, '_build_manifests', 'install', '_tests')
+        p = os.path.join(env.topobjdir, '_build_manifests', 'install', '_test_files')
         m = InstallManifest(p)
         self.assertIn('testing/mochitest/tests/support-file.txt', m)
 
@@ -824,7 +864,7 @@ class TestRecursiveMakeBackend(BackendTester):
         man_dir = mozpath.join(env.topobjdir, '_build_manifests', 'install')
         self.assertTrue(os.path.isdir(man_dir))
 
-        full = mozpath.join(man_dir, '_tests')
+        full = mozpath.join(man_dir, '_test_files')
         self.assertTrue(os.path.exists(full))
 
         m = InstallManifest(path=full)

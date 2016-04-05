@@ -5,10 +5,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=841579
 -->
 <head>
   <title>Test for Bug 841579</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <script type="application/javascript" src="imgutils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=841579">Mozilla Bug 841579</a>
@@ -19,12 +19,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=841579
 <script type="application/javascript;version=1.8">
 /** Test for Bug 841579**/
 
+SimpleTest.requestFlakyTimeout("Early failure timeout");
 SimpleTest.waitForExplicitFinish();
 
 const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 const gContent = document.getElementById("content");
 
 var gImg;
@@ -82,7 +83,7 @@ function cleanUpAndFinish() {
   if (gIsTestFinished) {
     return;
   }
-  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
+  let imgLoadingContent = SpecialPowers.wrap(gImg).QueryInterface(Ci.nsIImageLoadingContent);
   imgLoadingContent.removeObserver(gMyDecoderObserver);
   // TODO: this isn't the case until post-bug 716140's refactorings
   // ok(gNotifications == gLoads, "Should be notified the same number of times as loads");
@@ -103,8 +104,8 @@ function main() {
   observer.decodeComplete = onDecodeComplete;
   gMyDecoderObserver =
     Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
-      .createScriptedObserver(observer);
-  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
+      .createScriptedObserver(SpecialPowers.wrapCallbackObject(observer));
+  let imgLoadingContent = SpecialPowers.wrap(gImg).QueryInterface(Ci.nsIImageLoadingContent);
   imgLoadingContent.addObserver(gMyDecoderObserver);
 
   // We want to test the cold loading behavior, so clear cache in case an

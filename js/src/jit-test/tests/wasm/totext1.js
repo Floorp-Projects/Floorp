@@ -1,7 +1,15 @@
 if (!wasmIsSupported())
      quit();
- 
+
 load(libdir + "asserts.js");
+
+var caught = false;
+try {
+    wasmBinaryToText(new Int8Array(1));
+} catch (e) {
+    caught = true;
+}
+assertEq(caught, true);
 
 function runTest(code) {
   var expected = wasmTextToBinary(code);
@@ -22,7 +30,7 @@ runTest(`
            (br_if $exit (get_local 0))
            (br 2)
         )
-        (if (i32.const 1) 
+        (if (i32.const 1)
            (f64.min (f64.neg (f64.const 1)) (f64.const 0))
            (f64.add (f64.const 0.5) (f64.load offset=0 (i32.const 0)) )
         )

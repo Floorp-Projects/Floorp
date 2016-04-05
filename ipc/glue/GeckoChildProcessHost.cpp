@@ -143,7 +143,7 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
 //static
 void
-GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
+GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType processType)
 {
   if (ShouldHaveDirectoryService()) {
     MOZ_ASSERT(gGREBinPath);
@@ -187,8 +187,8 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
   exePath = exePath.AppendASCII(processName);
 #else
 #ifdef OS_WIN
-  if (XRE_GetProcessType() == GeckoProcessType_Plugin ||
-      XRE_GetProcessType() == GeckoProcessType_GMPlugin) {
+  if (processType == GeckoProcessType_Plugin ||
+      processType == GeckoProcessType_GMPlugin) {
     exePath = exePath.AppendASCII(MOZ_PLUGIN_PROCESS_NAME);
   } else
 #endif
@@ -269,7 +269,7 @@ uint32_t GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoPro
     static uint32_t pluginContainerArchs = 0;
     if (pluginContainerArchs == 0) {
       FilePath exePath;
-      GetPathToBinary(exePath);
+      GetPathToBinary(exePath, type);
       nsresult rv = GetArchitecturesForBinary(exePath.value().c_str(), &pluginContainerArchs);
       NS_ASSERTION(NS_SUCCEEDED(rv) && pluginContainerArchs != 0, "Getting architecture of plugin container failed!");
       if (NS_FAILED(rv) || pluginContainerArchs == 0) {
@@ -762,7 +762,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #endif  // OS_LINUX || OS_MACOSX
 
   FilePath exePath;
-  GetPathToBinary(exePath);
+  GetPathToBinary(exePath, mProcessType);
 
 #ifdef MOZ_WIDGET_ANDROID
   // The java wrapper unpacks this for us but can't make it executable
@@ -941,7 +941,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #elif defined(OS_WIN)
 
   FilePath exePath;
-  GetPathToBinary(exePath);
+  GetPathToBinary(exePath, mProcessType);
 
   CommandLine cmdLine(exePath.ToWStringHack());
   cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());

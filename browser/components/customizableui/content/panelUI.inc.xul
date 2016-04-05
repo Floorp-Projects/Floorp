@@ -140,7 +140,7 @@
             </hbox>
             <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
             <vbox id="PanelUI-remotetabs-fetching">
-              <label>&appMenuRemoteTabs.fetching.label;</label>
+              <!-- Show intentionally blank panel, see bug 1239845 -->
             </vbox>
             <!-- Sync has only 1 (ie, this) device connected -->
             <hbox id="PanelUI-remotetabs-nodevicespane" pack="center" flex="1">
