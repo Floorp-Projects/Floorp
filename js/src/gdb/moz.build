@@ -33,6 +33,11 @@ USE_LIBS += [
     'static:js',
 ]
 
+if CONFIG['ENABLE_INTL_API'] and CONFIG['MOZ_ICU_DATA_ARCHIVE']:
+    # The ICU libraries linked into libmozjs will not include the ICU data,
+    # so link it directly.
+    USE_LIBS += ['icudata']
+
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 # This is intended as a temporary workaround to enable VS2015.

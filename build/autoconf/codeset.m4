@@ -21,4 +21,5 @@ AC_DEFUN([AM_LANGINFO_CODESET],
       [Define if you have <langinfo.h> and nl_langinfo(CODESET).])
       HAVE_LANGINFO_CODESET=1
   fi
+  AC_SUBST(HAVE_LANGINFO_CODESET)
 ])
