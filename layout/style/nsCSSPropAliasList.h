@@ -328,10 +328,8 @@ CSS_PROP_ALIAS(-webkit-box-sizing,
 // will behave a bit differently from their -moz versions, if they're
 // accompanied by "display:-webkit-box", because we generate a different frame
 // for those two display values.)
-// XXXdholbert Not all of these are converted yet, but they will be by the
-// end of this patch stack.
 CSS_PROP_ALIAS(-webkit-box-flex,
-               flex_grow,
+               box_flex,
                WebkitBoxFlex,
                WEBKIT_PREFIX_PREF)
 CSS_PROP_ALIAS(-webkit-box-ordinal-group,
