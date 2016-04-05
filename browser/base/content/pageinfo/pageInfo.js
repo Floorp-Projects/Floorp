@@ -405,7 +405,10 @@ function loadPageInfo(frameOuterWindowID, imageElement)
       return;
     }
 
-    addImage(message.data.imageViewRow);
+    for (let item of message.data.mediaItems) {
+      addImage(item);
+    }
+
     selectImage();
   });
 
