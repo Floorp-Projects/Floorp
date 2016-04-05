@@ -97,13 +97,22 @@ set_config('MOZ_USING_CCACHE', using_ccache)
 @depends('--with-compiler-wrapper', ccache)
 @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
 def compiler_wrapper(wrapper, ccache):
+    if wrapper:
+        raw_wrapper = wrapper[0]
+        wrapper = shell_split(raw_wrapper)
+        wrapper_program = find_program(wrapper[0])
+        if not wrapper_program:
+            die('Cannot find `%s` from the given compiler wrapper `%s`',
+                wrapper[0], raw_wrapper)
+        wrapper[0] = wrapper_program
+
     if ccache:
         if wrapper:
-            return tuple([ccache] + shell_split(wrapper[0]))
+            return tuple([ccache] + wrapper)
         else:
             return (ccache,)
     elif wrapper:
-        return tuple(shell_split(wrapper[0]))
+        return tuple(wrapper)
 
 add_old_configure_assignment('COMPILER_WRAPPER', compiler_wrapper)
 
