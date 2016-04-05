@@ -14,10 +14,9 @@ addRDMTask(TEST_URL, function*({ ui, manager }) {
   // Wait until the viewport has been added
   yield waitUntilState(store, state => state.viewports.length == 1);
 
-  let browser = toolWindow.document.querySelector(".browser");
   let exitButton = toolWindow.document.getElementById("global-exit-button");
 
-  yield waitForFrameLoad(browser, TEST_URL);
+  yield waitForFrameLoad(ui, TEST_URL);
 
   ok(manager.isActiveForTab(ui.tab),
     "Responsive Design Mode active for the tab");

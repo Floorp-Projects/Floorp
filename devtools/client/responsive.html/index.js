@@ -136,7 +136,10 @@ window.setViewportSize = (width, height) => {
 
 /**
  * Called by manager.js when tests want to use the viewport's message manager.
+ * It is packed into an object because this is the format most easily usable
+ * with ContentTask.spawn().
  */
 window.getViewportMessageManager = () => {
-  return document.querySelector("iframe.browser").frameLoader;
+  let { messageManager } = document.querySelector("iframe.browser").frameLoader;
+  return { messageManager };
 };
