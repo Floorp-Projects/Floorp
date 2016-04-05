@@ -215,6 +215,7 @@ class LinuxArtifactJob(ArtifactJob):
         'firefox/firefox-webcontent',
         'firefox/updater',
         'firefox/**/*.so',
+        mozpath.join('firefox', buildconfig.substs.get('ICU_DATA_FILE')),
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -306,6 +307,7 @@ class MacArtifactJob(ArtifactJob):
                 'gmp-clearkey/0.1/libclearkey.dylib',
                 # 'gmp-fake/1.0/libfake.dylib',
                 # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                buildconfig.substs.get('ICU_DATA_FILE'),
             ])
 
             with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
@@ -346,6 +348,7 @@ class WinArtifactJob(ArtifactJob):
         'firefox/application.ini',
         'firefox/**/*.dll',
         'firefox/*.exe',
+        mozpath.join('firefox', buildconfig.substs.get('ICU_DATA_FILE')),
     }
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     test_artifact_patterns = {
