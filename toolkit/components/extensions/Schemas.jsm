@@ -24,9 +24,9 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-function readJSON(uri) {
+function readJSON(url) {
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch({uri, loadUsingSystemPrincipal: true}, (inputStream, status) => {
+    NetUtil.asyncFetch({uri: url, loadUsingSystemPrincipal: true}, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
         reject(new Error(status));
         return;
@@ -89,12 +89,18 @@ class Context {
       },
     };
 
-    let props = ["addListener", "callFunction",
-                 "callFunctionNoReturn", "callAsyncFunction",
-                 "hasListener", "removeListener",
-                 "getProperty", "setProperty",
-                 "checkLoadURL", "logError",
-                 "preprocessors"];
+    let methods = ["addListener", "callFunction",
+                   "callFunctionNoReturn", "callAsyncFunction",
+                   "hasListener", "removeListener",
+                   "getProperty", "setProperty",
+                   "checkLoadURL", "logError"];
+    for (let method of methods) {
+      if (method in params) {
+        this[method] = params[method].bind(params);
+      }
+    }
+
+    let props = ["preprocessors"];
     for (let prop of props) {
       if (prop in params) {
         if (prop in this && typeof this[prop] == "object") {
@@ -1065,6 +1071,15 @@ class Event extends CallEntry {
 }
 
 this.Schemas = {
+  initialized: false,
+
+  // Set of URLs that we have loaded via the load() method.
+  loadedUrls: new Set(),
+
+  // Maps a schema URL to the JSON contained in that schema file. This
+  // is useful for sending the JSON across processes.
+  schemaJSON: new Map(),
+
   // Map[<schema-name> -> Map[<symbol-name> -> Entry]]
   // This keeps track of all the schemas that have been loaded so far.
   namespaces: new Map(),
@@ -1339,8 +1354,32 @@ this.Schemas = {
     this.register(namespaceName, event.name, e);
   },
 
-  load(uri) {
-    return readJSON(uri).then(json => {
+  init() {
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      let data = Services.cpmm.initialProcessData;
+      let schemas = data["Extension:Schemas"];
+      if (schemas) {
+        this.schemaJSON = schemas;
+      }
+      Services.cpmm.addMessageListener("Schema:Add", this);
+    }
+  },
+
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "Schema:Add":
+        this.schemaJSON.set(msg.data.url, msg.data.schema);
+        break;
+    }
+  },
+
+  load(url) {
+    let loadFromJSON = json => {
       for (let namespace of json) {
         let name = namespace.namespace;
 
@@ -1364,14 +1403,35 @@ this.Schemas = {
           this.loadEvent(name, event);
         }
       }
-    });
+    };
+
+    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
+      return readJSON(url).then(json => {
+        this.schemaJSON.set(url, json);
+
+        let data = Services.ppmm.initialProcessData;
+        data["Extension:Schemas"] = this.schemaJSON;
+
+        Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema: json});
+
+        loadFromJSON(json);
+      });
+    } else {
+      if (this.loadedUrls.has(url)) {
+        return;
+      }
+      this.loadedUrls.add(url);
+
+      let schema = this.schemaJSON.get(url);
+      loadFromJSON(schema);
+    }
   },
 
   inject(dest, wrapperFuncs) {
     for (let [namespace, ns] of this.namespaces) {
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        if (wrapperFuncs.shouldInject([namespace], name)) {
+        if (wrapperFuncs.shouldInject(namespace, name)) {
           entry.inject([namespace], name, obj, new Context(wrapperFuncs));
         }
       }

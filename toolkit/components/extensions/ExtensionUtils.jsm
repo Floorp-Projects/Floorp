@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
 
 function filterStack(error) {
   return String(error.stack).replace(/(^.*(Task\.jsm|Promise-backend\.js).*\n)+/gm, "<Promise Chain>\n");
@@ -139,12 +141,13 @@ class SpreadArgs extends Array {
 let gContextId = 0;
 
 class BaseContext {
-  constructor() {
+  constructor(extensionId) {
     this.onClose = new Set();
     this.checkedLastError = false;
     this._lastError = null;
     this.contextId = ++gContextId;
     this.unloaded = false;
+    this.extensionId = extensionId;
   }
 
   get cloneScope() {
@@ -347,7 +350,7 @@ class BaseContext {
     this.unloaded = true;
 
     MessageChannel.abortResponses({
-      extensionId: this.extension.id,
+      extensionId: this.extensionId,
       contextId: this.contextId,
     });
 
@@ -1040,6 +1043,150 @@ function detectLanguage(text) {
   }));
 }
 
+let nextId = 1;
+
+// We create one instance of this class for every extension context
+// that needs to use remote APIs. It uses the message manager to
+// communicate with the ParentAPIManager singleton in
+// Extension.jsm. It handles asynchronous function calls as well as
+// event listeners.
+class ChildAPIManager {
+  constructor(context, messageManager, namespaces, contextData) {
+    this.context = context;
+    this.messageManager = messageManager;
+    this.namespaces = namespaces;
+
+    let id = String(context.extension.id) + "." + String(context.contextId);
+    this.id = id;
+
+    let data = {childId: id, extensionId: context.extension.id, principal: context.principal};
+    Object.assign(data, contextData);
+    messageManager.sendAsyncMessage("API:CreateProxyContext", data);
+
+    messageManager.addMessageListener("API:RunListener", this);
+    messageManager.addMessageListener("API:CallResult", this);
+
+    // Map[path -> Set[listener]]
+    // path is, e.g., "runtime.onMessage".
+    this.listeners = new Map();
+
+    // Map[callId -> Deferred]
+    this.callPromises = new Map();
+  }
+
+  receiveMessage({name, data}) {
+    if (data.childId != this.id) {
+      return;
+    }
+
+    switch (name) {
+      case "API:RunListener":
+        let ref = data.path.concat(data.name).join(".");
+        let listeners = this.listeners.get(ref);
+        for (let callback of listeners) {
+          runSafe(this.context, callback, ...data.args);
+        }
+        break;
+
+      case "API:CallResult":
+        let deferred = this.callPromises.get(data.callId);
+        if (data.lastError) {
+          deferred.reject({message: data.lastError});
+        } else {
+          deferred.resolve(new SpreadArgs(data.args));
+        }
+        this.callPromises.delete(data.callId);
+        break;
+    }
+  }
+
+  close() {
+    this.messageManager.sendAsyncMessage("Extension:CloseProxyContext", {childId: this.id});
+  }
+
+  get cloneScope() {
+    return this.context.cloneScope;
+  }
+
+  callFunction(path, name, args) {
+    throw new Error("Not implemented");
+  }
+
+  callFunctionNoReturn(path, name, args) {
+    this.messageManager.sendAsyncMessage("API:Call", {
+      childId: this.id,
+      path, name, args,
+    });
+  }
+
+  callAsyncFunction(path, name, args, callback) {
+    let callId = nextId++;
+    let deferred = PromiseUtils.defer();
+    this.callPromises.set(callId, deferred);
+
+    this.messageManager.sendAsyncMessage("API:Call", {
+      childId: this.id,
+      callId,
+      path, name, args,
+    });
+
+    return this.context.wrapPromise(deferred.promise, callback);
+  }
+
+  shouldInject(namespace, name) {
+    return this.namespaces.includes(namespace);
+  }
+
+  getProperty(path, name) {
+    throw new Error("Not implemented");
+  }
+
+  setProperty(path, name, value) {
+    throw new Error("Not implemented");
+  }
+
+  addListener(path, name, listener, args) {
+    let ref = path.concat(name).join(".");
+    let set;
+    if (this.listeners.has(ref)) {
+      set = this.listeners.get(ref);
+    } else {
+      set = new Set();
+      this.listeners.set(ref, set);
+    }
+
+    set.add(listener);
+
+    if (set.size == 1) {
+      args = args.slice(1);
+
+      this.messageManager.sendAsyncMessage("API:AddListener", {
+        childId: this.id,
+        path, name, args,
+      });
+    }
+  }
+
+  removeListener(path, name, listener) {
+    let ref = path.concat(name).join(".");
+    let set = this.listeners.get(ref) || new Set();
+    set.remove(listener);
+
+    if (set.size == 0) {
+      this.messageManager.sendAsyncMessage("Extension:RemoveListener", {
+        childId: this.id,
+        path, name,
+      });
+    }
+  }
+
+  hasListener(path, name, listener) {
+    let ref = path.concat(name).join(".");
+    let set = this.listeners.get(ref) || new Set();
+    return set.has(listener);
+  }
+}
+
 this.ExtensionUtils = {
   detectLanguage,
   extend,
@@ -1060,4 +1207,5 @@ this.ExtensionUtils = {
   PlatformInfo,
   SingletonEventManager,
   SpreadArgs,
+  ChildAPIManager,
 };
