@@ -122,11 +122,11 @@ add_task(function* () {
   // Set focus to some other window.
   yield focusWindow(window);
 
-  yield triggerPopup(win1, function*() {
+  yield triggerPopup(win1, function* () {
     yield checkWindow("popup", winId1, "win1");
   });
 
-  yield triggerPopup(win2, function*() {
+  yield triggerPopup(win2, function* () {
     yield checkWindow("popup", winId2, "win2");
   });
 
