@@ -9,7 +9,7 @@
 // of elements should be working.
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref("dom.webcomponents.enabled", true);
 
   let {inspector} = yield openInspectorForURL(TEST_URL);

@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // Also check that negative endDelays do not overflow the UI, and are shown
 // like positive endDelays.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_end_delay.html");
   let {inspector, panel} = yield openAnimationInspector();
 

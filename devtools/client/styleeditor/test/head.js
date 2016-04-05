@@ -49,7 +49,7 @@ function addTab(url, win) {
  * @param {String} url The url to be loaded in the current tab.
  * @return a promise that resolves when the page has fully loaded.
  */
-var navigateTo = Task.async(function*(url) {
+var navigateTo = Task.async(function* (url) {
   info(`Navigating to ${url}`);
   let browser = gBrowser.selectedBrowser;
 
@@ -64,13 +64,13 @@ var navigateTo = Task.async(function*(url) {
   yield navigating.promise;
 });
 
-var navigateToAndWaitForStyleSheets = Task.async(function*(url, ui) {
+var navigateToAndWaitForStyleSheets = Task.async(function* (url, ui) {
   let onReset = ui.once("stylesheets-reset");
   yield navigateTo(url);
   yield onReset;
 });
 
-var reloadPageAndWaitForStyleSheets = Task.async(function*(ui) {
+var reloadPageAndWaitForStyleSheets = Task.async(function* (ui) {
   info("Reloading the page.");
 
   let onReset = ui.once("stylesheets-reset");
@@ -79,7 +79,7 @@ var reloadPageAndWaitForStyleSheets = Task.async(function*(ui) {
   yield onReset;
 });
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(function* () {
   while (gBrowser.tabs.length > 1) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     yield gDevTools.closeToolbox(target);
@@ -91,7 +91,7 @@ registerCleanupFunction(function*() {
 /**
  * Open the style editor for the current tab.
  */
-var openStyleEditor = Task.async(function*(tab) {
+var openStyleEditor = Task.async(function* (tab) {
   if (!tab) {
     tab = gBrowser.selectedTab;
   }
@@ -107,7 +107,7 @@ var openStyleEditor = Task.async(function*(tab) {
  * Creates a new tab in specified window navigates it to the given URL and
  * opens style editor in it.
  */
-var openStyleEditorForURL = Task.async(function*(url, win) {
+var openStyleEditorForURL = Task.async(function* (url, win) {
   let tab = yield addTab(url, win);
   let result = yield openStyleEditor(tab);
   result.tab = tab;

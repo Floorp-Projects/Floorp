@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Check that when playerFronts are updated, the same number of playerWidgets
 // are created in the panel.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, controller} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;

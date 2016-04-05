@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Test that the panel shows an animation player when an animated node is
 // selected.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 

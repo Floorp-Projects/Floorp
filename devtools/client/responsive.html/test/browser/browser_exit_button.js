@@ -7,7 +7,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-addRDMTask(TEST_URL, function*({ ui, manager }) {
+addRDMTask(TEST_URL, function* ({ ui, manager }) {
   let { toolWindow } = ui;
   let { store } = toolWindow;
 

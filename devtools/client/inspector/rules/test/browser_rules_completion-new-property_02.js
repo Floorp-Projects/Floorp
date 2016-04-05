@@ -48,7 +48,7 @@ const TEST_URI = `
   <h1>Test element</h1>
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {toolbox, inspector, view, testActor} = yield openRuleView();
 

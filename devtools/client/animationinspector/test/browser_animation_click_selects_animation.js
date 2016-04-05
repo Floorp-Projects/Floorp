@@ -7,7 +7,7 @@
 // Check that animations displayed in the timeline can be selected by clicking
 // them, and that this emits the right events and adds the right classes.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;

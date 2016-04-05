@@ -604,6 +604,7 @@ LayoutView.prototype = {
       this.elementRules = styleEntries.map(e => e.rule);
 
       this.inspector.emit("layoutview-updated");
+      return undefined;
     }).bind(this)).catch(console.error);
 
     this._lastRequest = lastRequest;

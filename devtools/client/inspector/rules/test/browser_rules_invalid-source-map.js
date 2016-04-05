@@ -11,7 +11,7 @@ const TESTCASE_URI = URL_ROOT + "doc_invalid_sourcemap.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
 const CSS_LOC = "doc_invalid_sourcemap.css:1";
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref(PREF, true);
 
   yield addTab(TESTCASE_URI);

@@ -10,7 +10,7 @@
 const TEST_URL = "data:text/html;charset=utf8," +
                  "<style>div{color:red}</style><div>highlighter test</div>";
 
-add_task(function*() {
+add_task(function* () {
   let { ui } = yield openStyleEditorForURL(TEST_URL);
   let editor = ui.editors[0];
 

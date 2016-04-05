@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 // Test that the panel only refreshes when it is visible in the sidebar.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {inspector, panel} = yield openAnimationInspector();

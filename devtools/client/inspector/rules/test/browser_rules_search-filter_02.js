@@ -10,7 +10,7 @@
 const SEARCH = "20%";
 const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
   let {inspector, view} = yield openRuleView();
   yield selectNode("#boxy", inspector);

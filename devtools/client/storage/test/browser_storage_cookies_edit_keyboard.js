@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   yield gUI.table.once(TableWidget.EVENTS.FIELDS_EDITABLE);
 

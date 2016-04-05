@@ -141,6 +141,7 @@ Tools.webConsole = {
     }
 
     panel.focusInput();
+    return undefined;
   },
 
   isTargetSupported: function() {

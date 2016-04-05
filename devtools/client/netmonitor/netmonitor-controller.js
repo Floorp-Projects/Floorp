@@ -163,7 +163,7 @@ var NetMonitorController = {
    * @return object
    *         A promise that is resolved when the monitor finishes startup.
    */
-  startupNetMonitor: Task.async(function*() {
+  startupNetMonitor: Task.async(function* () {
     if (this._startup) {
       return this._startup.promise;
     }
@@ -173,6 +173,7 @@ var NetMonitorController = {
       yield this.connect();
     }
     this._startup.resolve();
+    return undefined;
   }),
 
   /**
@@ -181,7 +182,7 @@ var NetMonitorController = {
    * @return object
    *         A promise that is resolved when the monitor finishes shutdown.
    */
-  shutdownNetMonitor: Task.async(function*() {
+  shutdownNetMonitor: Task.async(function* () {
     if (this._shutdown) {
       return this._shutdown.promise;
     }
@@ -193,6 +194,7 @@ var NetMonitorController = {
       yield this.disconnect();
     }
     this._shutdown.resolve();
+    return undefined;
   }),
 
   /**
@@ -204,7 +206,7 @@ var NetMonitorController = {
    * @return object
    *         A promise that is resolved when the monitor finishes connecting.
    */
-  connect: Task.async(function*() {
+  connect: Task.async(function* () {
     if (this._connection) {
       return this._connection.promise;
     }
@@ -224,6 +226,7 @@ var NetMonitorController = {
           this._target.form);
         return this.timelineFront.start({ withDocLoadingEvents: true });
       }
+      return undefined;
     };
 
     this.webConsoleClient = this._target.activeConsole;
@@ -236,12 +239,13 @@ var NetMonitorController = {
 
     this._connection.resolve();
     this._connected = true;
+    return undefined;
   }),
 
   /**
    * Disconnects the debugger client and removes event handlers as necessary.
    */
-  disconnect: Task.async(function*() {
+  disconnect: Task.async(function* () {
     if (this._disconnection) {
       return this._disconnection.promise;
     }
@@ -266,6 +270,7 @@ var NetMonitorController = {
 
     this._disconnection.resolve();
     this._connected = false;
+    return undefined;
   }),
 
   /**
@@ -329,7 +334,9 @@ var NetMonitorController = {
     }
     if (type == ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED) {
       this._currentActivity = ACTIVITY_TYPE.ENABLE_CACHE;
-      this._target.once("will-navigate", () => this._currentActivity = type);
+      this._target.once("will-navigate", () => {
+        this._currentActivity = type;
+      });
       return reconfigureTabAndWaitForNavigation({
         cacheDisabled: false,
         performReload: true
@@ -337,7 +344,9 @@ var NetMonitorController = {
     }
     if (type == ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED) {
       this._currentActivity = ACTIVITY_TYPE.DISABLE_CACHE;
-      this._target.once("will-navigate", () => this._currentActivity = type);
+      this._target.once("will-navigate", () => {
+        this._currentActivity = type;
+      });
       return reconfigureTabAndWaitForNavigation({
         cacheDisabled: true,
         performReload: true
