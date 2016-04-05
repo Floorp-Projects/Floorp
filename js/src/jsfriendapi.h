@@ -2669,6 +2669,8 @@ class MOZ_RAII JS_FRIEND_API(AutoCTypesActivityCallback) {
 // Abstract base class for objects that build allocation metadata for JavaScript
 // values.
 struct AllocationMetadataBuilder {
+    AllocationMetadataBuilder() { }
+
     // Return a metadata object for the newly constructed object |obj|, or
     // nullptr if there's no metadata to attach.
     //
