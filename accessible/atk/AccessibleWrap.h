@@ -79,8 +79,8 @@ protected:
 
   nsresult FireAtkStateChangeEvent(AccEvent* aEvent, AtkObject *aObject);
   nsresult FireAtkTextChangedEvent(AccEvent* aEvent, AtkObject *aObject);
-  nsresult FireAtkShowHideEvent(AccEvent* aEvent, AtkObject *aObject,
-                                bool aIsAdded);
+  nsresult FireAtkShowHideEvent(AtkObject *aObject, bool aIsAdded,
+                                bool aFromUser);
 
   AtkObject *mAtkObject;
 
