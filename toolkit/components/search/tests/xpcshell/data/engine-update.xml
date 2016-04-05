@@ -1,0 +1,10 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>update</ShortName>
+<Description>update</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Url type="text/html" method="GET" template="http://searchtest.local">
+  <Param name="search" value="{searchTerms}"/>
+</Url>
+<UpdateUrl>http://searchtest.local/opensearch.xml</UpdateUrl>
+<IconUpdateUrl>http://searchtest.local/favicon.ico</IconUpdateUrl>
+</SearchPlugin>
