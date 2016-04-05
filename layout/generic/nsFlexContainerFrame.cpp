@@ -78,6 +78,44 @@ kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
 
 // Helper structs / classes / methods
 // ==================================
+// Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}-box.
+static inline bool
+IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
+{
+  return aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_BOX ||
+    aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX;
+}
+
+// Helper to check whether our nsFlexContainerFrame is emulating a legacy
+// -webkit-{inline-}box, in which case we should use legacy CSS properties
+// instead of the modern ones. The params are are the nsStyleDisplay and the
+// nsStyleContext associated with the nsFlexContainerFrame itself.
+static inline bool
+IsLegacyBox(const nsStyleDisplay* aStyleDisp,
+            nsStyleContext* aStyleContext)
+{
+  // Trivial case: just check "display" directly.
+  if (IsDisplayValueLegacyBox(aStyleDisp)) {
+    return true;
+  }
+
+  // If this frame is for a scrollable element, then it will actually have
+  // "display:block", and its *parent* will have the real flex-flavored display
+  // value. So in that case, check the parent to find out if we're legacy.
+  if (aStyleDisp->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+    nsStyleContext* parentStyleContext = aStyleContext->GetParent();
+    NS_ASSERTION(parentStyleContext &&
+                 aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent,
+                 "The only way a nsFlexContainerFrame can have 'display:block' "
+                 "should be if it's the inner part of a scrollable element");
+    if (IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 
 // Indicates whether advancing along the given axis is equivalent to
 // increasing our X or Y position (as opposed to decreasing it).
