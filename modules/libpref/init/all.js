@@ -4422,8 +4422,6 @@ pref("layers.max-active", -1);
 // if you change the tile size.
 pref("layers.tiles.adjust", true);
 
-// Set the default values, and then override per-platform as needed
-pref("layers.offmainthreadcomposition.enabled", true);
 // Compositor target frame rate. NOTE: If vsync is enabled the compositor
 // frame rate will still be capped.
 // -1 -> default (match layout.frame_rate or 60 FPS)

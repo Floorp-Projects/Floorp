@@ -16,7 +16,6 @@ config = {
             'http://dev-stage01.build.mozilla.org/pub/mozilla'
             '.org/firefox/bundles',
         ],
-        'symbol_server_host': "dev-stage01.srv.releng.scl3.mozilla.com",
         'stage_server': 'upload.ffxbld.productdelivery.stage.mozaws.net',
         "sendchange_masters": ["dev-master1.srv.releng.scl3.mozilla.com:9038"],
         'taskcluster_index': 'index.garbage.staging',
@@ -33,7 +32,6 @@ config = {
         "hgtool_base_bundle_urls": [
             'https://ftp-ssl.mozilla.org/pub/mozilla.org/firefox/bundles'
         ],
-        'symbol_server_host': "symbolpush.mozilla.org",
         # bug 1216907, set this at branch level
         # 'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         "sendchange_masters": ["buildbot-master81.build.mozilla.org:9301"],
@@ -41,7 +39,6 @@ config = {
     },
     "taskcluster": {
         'graph_server': 'graphs.mozilla.org',
-        'symbol_server_host': "symbolpush.mozilla.org",
         'stage_server': 'ignored',
         # use the relengapi proxy to talk to tooltool
         "tooltool_servers": ['http://relengapi/tooltool/'],

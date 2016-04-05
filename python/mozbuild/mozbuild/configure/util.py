@@ -4,7 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import codecs
 import itertools
+import locale
 import logging
 import os
 import sys
@@ -58,7 +60,19 @@ class ConfigureOutputHandler(logging.Handler):
     '''
     def __init__(self, stdout=sys.stdout, stderr=sys.stderr, maxlen=20):
         super(ConfigureOutputHandler, self).__init__()
-        self._stdout, self._stderr = stdout, stderr
+
+        # Python has this feature where it sets the encoding of pipes to
+        # ascii, which blatantly fails when trying to print out non-ascii.
+        def fix_encoding(fh):
+            try:
+                if not fh.isatty():
+                    return codecs.getwriter(locale.getpreferredencoding())(fh)
+            except AttributeError:
+                pass
+            return fh
+
+        self._stdout = fix_encoding(stdout)
+        self._stderr = fix_encoding(stderr) if stdout != stderr else self._stdout
         try:
             fd1 = self._stdout.fileno()
             fd2 = self._stderr.fileno()
@@ -107,19 +121,7 @@ class ConfigureOutputHandler(logging.Handler):
                 return
             else:
                 if record.levelno >= logging.ERROR and len(self._debug):
-                    self._keep_if_debug = self.PRINT
-                    if len(self._debug) == self._debug.maxlen:
-                        r = self._debug.popleft()
-                        self.emit(logging.LogRecord(
-                            r.name, r.levelno, r.pathname, r.lineno,
-                            '<truncated - see config.log for full output>',
-                            (), None))
-                    while True:
-                        try:
-                            self.emit(self._debug.popleft())
-                        except IndexError:
-                            break
-                    self._keep_if_debug = self.KEEP
+                    self._emit_queue()
 
                 if self._stdout_waiting == self.WAITING and self._same_output:
                     self._stdout_waiting = self.INTERRUPTED
@@ -137,9 +139,30 @@ class ConfigureOutputHandler(logging.Handler):
     @contextmanager
     def queue_debug(self):
         self._keep_if_debug = self.KEEP
-        yield
+        try:
+            yield
+        except Exception:
+            self._emit_queue()
+            # The exception will be handled and very probably printed out by
+            # something upper in the stack.
+            raise
         self._keep_if_debug = self.THROW
         self._debug.clear()
+
+    def _emit_queue(self):
+        self._keep_if_debug = self.PRINT
+        if len(self._debug) == self._debug.maxlen:
+            r = self._debug.popleft()
+            self.emit(logging.LogRecord(
+                r.name, r.levelno, r.pathname, r.lineno,
+                '<truncated - see config.log for full output>',
+                (), None))
+        while True:
+            try:
+                self.emit(self._debug.popleft())
+            except IndexError:
+                break
+        self._keep_if_debug = self.KEEP
 
 
 class LineIO(object):

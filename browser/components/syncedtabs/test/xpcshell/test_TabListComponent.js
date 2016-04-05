@@ -67,6 +67,9 @@ add_task(function* testInitUninit() {
 
 add_task(function* testActions() {
   let store = new SyncedTabsListStore();
+  let clipboardHelperMock = {
+    copyString() {},
+  };
   let windowMock = {
     top: {
       PlacesCommandHook: {
@@ -74,10 +77,11 @@ add_task(function* testActions() {
       },
       PlacesUtils: { bookmarksMenuFolderId: "id" }
     },
-    openUILink() {}
+    openLinkIn() {}
   };
   let component = new TabListComponent({
-    window: windowMock, store, View: null, SyncedTabs});
+    window: windowMock, store, View: null, SyncedTabs,
+    clipboardHelper: clipboardHelperMock});
 
   sinon.stub(store, "getData");
   component.onFilter("query");
@@ -117,9 +121,13 @@ add_task(function* testActions() {
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1], "uri");
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][2], "title");
 
-  sinon.spy(windowMock, "openUILink");
-  component.onOpenTab("uri", "event");
-  Assert.ok(windowMock.openUILink.calledWith("uri", "event"));
+  sinon.spy(windowMock, "openLinkIn");
+  component.onOpenTab("uri", "where", "params");
+  Assert.ok(windowMock.openLinkIn.calledWith("uri", "where", "params"));
+
+  sinon.spy(clipboardHelperMock, "copyString");
+  component.onCopyTabLocation("uri");
+  Assert.ok(clipboardHelperMock.copyString.calledWith("uri"));
 
   sinon.stub(SyncedTabs, "syncTabs");
   component.onSyncRefresh();

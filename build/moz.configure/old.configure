@@ -248,7 +248,6 @@ def old_configure_options(*options):
     '--enable-posix-nspr-emulation',
     '--enable-pref-extensions',
     '--enable-printing',
-    '--enable-profilelocking',
     '--enable-pulseaudio',
     '--enable-raw',
     '--enable-readline',
@@ -312,7 +311,6 @@ def old_configure_options(*options):
     '--with-app-basename',
     '--with-app-name',
     '--with-arch',
-    '--with-arm-kuser',
     '--with-bing-api-keyfile',
     '--with-branding',
     '--with-crashreporter-enable-percent',
@@ -362,7 +360,6 @@ def old_configure_options(*options):
     '--with-unify-dist',
     '--with-user-appdir',
     '--with-windows-version',
-    '--with-xulrunner-stub-name',
     '--x-includes',
     '--x-libraries',
 
@@ -411,13 +408,14 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     for handler in logger.handlers:
         if isinstance(handler, logging.FileHandler):
             handler.close()
+            logger.removeHandler(handler)
 
     log_size = os.path.getsize('config.log')
 
     ret = subprocess.call(cmd)
     if ret:
         with log.queue_debug():
-            with open('config.log') as fh:
+            with encoded_open('config.log', 'r') as fh:
                 fh.seek(log_size)
                 for line in fh:
                     log.debug(line.rstrip())

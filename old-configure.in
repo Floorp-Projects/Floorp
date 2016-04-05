@@ -257,17 +257,8 @@ else
     if test -z "$HOST_CC"; then
         HOST_CC="$CC"
     fi
-    if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
-    fi
     if test -z "$HOST_CXX"; then
         HOST_CXX="$CXX"
-    fi
-    if test -z "$HOST_CXXFLAGS"; then
-        HOST_CXXFLAGS="$CXXFLAGS"
-    fi
-    if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
     fi
     if test -z "$HOST_RANLIB"; then
         HOST_RANLIB="$RANLIB"
@@ -597,7 +588,6 @@ if test -n "$_WIN32_MSVC"; then
     # Since we're skipping compiler and library checks, hard-code
     # some facts here.
     AC_DEFINE(HAVE_IO_H)
-    AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
 fi
 
@@ -610,8 +600,6 @@ AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
-AC_SUBST(INTEL_CC)
-AC_SUBST(INTEL_CXX)
 
 AC_SUBST(STL_FLAGS)
 AC_SUBST(WRAP_STL_INCLUDES)
@@ -632,10 +620,8 @@ dnl = Mac OS X toolchain support
 dnl ========================================================
 
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
-dnl that a universal binary is being produced and MOZ_CAN_RUN_PROGRAMS
-dnl when we can run target binaries.
+dnl that a universal binary is being produced.
 AC_SUBST(UNIVERSAL_BINARY)
-AC_SUBST(MOZ_CAN_RUN_PROGRAMS)
 
 MOZ_ARG_WITH_STRING(unify-dist,
 [  --with-unify-dist=dir   Location of the dist directory to unify with at packaging time (Mac OS X universal build only)],
@@ -751,9 +737,7 @@ dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
 AS_BIN=$AS
-AR_LIST='$(AR) t'
 AR_EXTRACT='$(AR) x'
-AR_DELETE='$(AR) d'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
 DLL_PREFIX=lib
@@ -928,14 +912,8 @@ if test "$GNU_CC"; then
     MMX_FLAGS="-mmmx"
     SSE_FLAGS="-msse"
     SSE2_FLAGS="-msse2"
-    # Per bug 719659 comment 2, some of the headers on ancient build machines
-    # may require gnu89 inline semantics.  But otherwise, we use C99.
-    # But on OS X we just use C99 plus GNU extensions, in order to fix
-    # bug 917526.
+    # We use C99.
     CFLAGS="$CFLAGS -std=gnu99"
-    if test "${OS_ARCH}" != Darwin; then
-        CFLAGS="$CFLAGS -fgnu89-inline"
-    fi
     # FIXME: Let us build with strict aliasing. bug 414641.
     CFLAGS="$CFLAGS -fno-strict-aliasing"
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(DSO_SONAME) -o $@'
@@ -1563,7 +1541,6 @@ case "$target" in
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         MOZ_FIX_LINK_PATHS=
-        MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
@@ -1599,8 +1576,6 @@ case "$target" in
         HAVE_X86_AVX2=1
         MOZ_MEMORY=1
     fi
-    AC_DEFINE(HAVE_SNPRINTF)
-    AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     dnl See http://support.microsoft.com/kb/143208 to use STL
@@ -2682,7 +2657,6 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_SYSTEM_PNG" = 1; then
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
 
-MOZ_PNG_ARM_NEON_CHECK=
 if test "$MOZ_SYSTEM_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
     MOZ_ARG_ENABLE_STRING(png-arm-neon-support,
         [  --enable-png-arm-neon-support=TYPE
@@ -2701,12 +2675,9 @@ if test "$MOZ_SYSTEM_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
             ;;
         *)
             MOZ_PNG_ARM_NEON=1
-            MOZ_PNG_ARM_NEON_CHECK=1
             ;;
     esac
 fi
-
-AC_SUBST(MOZ_PNG_ARM_NEON_CHECK)
 
 fi # SKIP_LIBRARY_CHECKS
 
@@ -2790,7 +2761,6 @@ MOZ_PERMISSIONS=1
 MOZ_PLACES=1
 MOZ_SOCIAL=1
 MOZ_PREF_EXTENSIONS=1
-MOZ_PROFILELOCKING=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
@@ -2813,7 +2783,6 @@ NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket w
 if test -n "$MOZ_RTSP"; then
   NECKO_PROTOCOLS_DEFAULT="$NECKO_PROTOCOLS_DEFAULT rtsp"
 fi
-USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
@@ -2848,10 +2817,6 @@ esac
 
 case "${target}" in
     *-android*|*-linuxandroid*)
-        if test "$CPU_ARCH" = "arm" ; then
-          USE_ARM_KUSER=1
-        fi
-
         NSS_DISABLE_DBM=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
@@ -2862,15 +2827,6 @@ case "${target}" in
         ;;
 
 esac
-
-MOZ_ARG_WITH_STRING(xulrunner-stub-name,
-[  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
-  XULRUNNER_STUB_NAME=$withval)
-
-if test -z "$XULRUNNER_STUB_NAME"; then
-  XULRUNNER_STUB_NAME=xulrunner-stub
-fi
-AC_SUBST(XULRUNNER_STUB_NAME)
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh so it must be set before confvars.sh is called.
@@ -3165,17 +3121,6 @@ fi # COMPILE_ENVIRONMENT
 AC_SUBST(MOZ_FS_LAYOUT)
 
 dnl ========================================================
-dnl Use ARM userspace kernel helpers; tell NSPR to enable
-dnl their usage and use them in spidermonkey.
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(arm-kuser,
-[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
-    USE_ARM_KUSER=1,)
-if test -n "$USE_ARM_KUSER"; then
-   AC_DEFINE(USE_ARM_KUSER)
-fi
-
-dnl ========================================================
 dnl = startup-notification support module
 dnl ========================================================
 
@@ -3331,14 +3276,10 @@ then
                       MOZ_ENABLE_QTMOBILITY=1,
                       MOZ_ENABLE_QTMOBILITY=)
     if test "$MOZ_ENABLE_QTMOBILITY"; then
-       MOZ_ENABLE_QTMOBILITY=1
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
-       AC_DEFINE(MOZ_ENABLE_QTMOBILITY)
-       AC_SUBST(MOZ_ENABLE_QTMOBILITY)
     else
        AC_CHECK_LIB(QtSensors, main, [
-          MOZ_ENABLE_QTMOBILITY=1
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMobility"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtSensors"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtFeedback"
@@ -3389,14 +3330,12 @@ then
     TK_LIBS=$MOZ_QT_LIBS
 fi
 
-AC_SUBST(GTK_CONFIG)
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
-AC_SUBST(MOZ_ENABLE_QTMOBILITY)
 AC_SUBST_LIST(MOZ_QT_CFLAGS)
 AC_SUBST_LIST(MOZ_QT_LIBS)
 
@@ -3892,7 +3831,6 @@ if test -n "$MOZ_WEBRTC_HARDWARE_AEC_NS"; then
 fi
 
 AC_SUBST(MOZ_WEBRTC)
-AC_SUBST(MOZ_WEBRTC_LEAKING_TESTS)
 AC_SUBST(MOZ_WEBRTC_SIGNALING)
 AC_SUBST(MOZ_PEERCONNECTION)
 AC_SUBST(MOZ_WEBRTC_ASSERT_ALWAYS)
@@ -4156,7 +4094,6 @@ if test -z "$MOZ_SYSTEM_LIBVPX"; then
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
     dnl We currently require gcc on all arm platforms.
-    VPX_NEED_OBJ_INT_EXTRACT=
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
@@ -4230,15 +4167,6 @@ if test -z "$MOZ_SYSTEM_LIBVPX"; then
 
     if test -n "$VPX_USE_YASM" && test "$OS_ARCH:$CPU_ARCH" != "WINNT:x86_64"; then
       VPX_ASFLAGS="-DPIC"
-    fi
-
-    if test -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
-      dnl We prefer to get asm offsets using inline assembler, which the above
-      dnl compilers can do. When we're not using one of those, we have to fall
-      dnl back to obj_int_extract, which reads them from a compiled object
-      dnl file. Unfortunately, that only works if we're compiling on a system
-      dnl with the header files for the appropriate object file format.
-      VPX_NEED_OBJ_INT_EXTRACT=1
     fi
 
     if test -n "$VPX_X86_ASM"; then
@@ -5862,9 +5790,6 @@ else
   *-android*|*-linuxandroid*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
-    if test -n "$gonkdir"; then
-      AC_DEFINE(MOZ_MEMORY_GONK)
-    fi
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -6507,25 +6432,6 @@ AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
 AC_SUBST(PROFILE_USE_LDFLAGS)
 
-dnl =============================================
-dnl Support for -fno-integrated-as (recent clang)
-dnl =============================================
-dnl Under clang 3.4+, use -fno-integrated-as to
-dnl build libvpx's vp8_asm_enc_offsets.c
-
-_SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fno-integrated-as -S"
-
-AC_MSG_CHECKING([whether C compiler supports -fno-integrated-as])
-AC_TRY_COMPILE([], [return 0;],
-               [ NO_INTEGRATED_AS_CFLAGS="-fno-integrated-as"
-                 result="yes" ], result="no")
-AC_MSG_RESULT([$result])
-
-CFLAGS="$_SAVE_CFLAGS"
-
-AC_SUBST(NO_INTEGRATED_AS_CFLAGS)
-
 fi # ! SKIP_COMPILER_CHECKS
 
 AC_DEFINE(CPP_THROW_NEW, [throw()])
@@ -6910,20 +6816,6 @@ fi
 AC_SUBST(MOZ_XUL)
 
 dnl ========================================================
-dnl disable profile locking
-dnl   do no use this in applications that can have more than
-dnl   one process accessing the profile directory.
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(profilelocking,
-[  --disable-profilelocking
-                          Disable profile locking],
-    MOZ_PROFILELOCKING=,
-    MOZ_PROFILELOCKING=1 )
-if test "$MOZ_PROFILELOCKING"; then
-  AC_DEFINE(MOZ_PROFILELOCKING)
-fi
-
-dnl ========================================================
 dnl necko configuration options
 dnl ========================================================
 
@@ -7088,9 +6980,7 @@ dnl ========================================================
 
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
-AC_SUBST(AR_LIST)
 AC_SUBST(AR_EXTRACT)
-AC_SUBST(AR_DELETE)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
@@ -7124,8 +7014,6 @@ AC_SUBST(JAVAH)
 AC_SUBST(JAR)
 AC_SUBST(JARSIGNER)
 AC_SUBST(KEYTOOL)
-
-AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
@@ -7176,7 +7064,6 @@ AC_SUBST(STRIP_FLAGS)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
 
@@ -7224,27 +7111,6 @@ fi
 
 AC_DEFINE_UNQUOTED(MOZ_MACBUNDLE_ID,$MOZ_MACBUNDLE_ID)
 AC_SUBST(MOZ_MACBUNDLE_ID)
-
-dnl ========================================================
-dnl = Child Process Name for IPC
-dnl ========================================================
-if test "$MOZ_WIDGET_TOOLKIT" != "android"; then
-  MOZ_CHILD_PROCESS_NAME="firefox-webcontent${BIN_SUFFIX}"
-  MOZ_PLUGIN_PROCESS_NAME="firefox-plugin-container${BIN_SUFFIX}"
-else
-  # We want to let Android unpack the file at install time, but it only does
-  # so if the file is named libsomething.so. The lib/ path is also required
-  # because the unpacked file will be under the lib/ subdirectory and will
-  # need to be executed from that path.
-  MOZ_CHILD_PROCESS_NAME="libfirefox-webcontent.so"
-  MOZ_CHILD_PROCESS_NAME_PIE="libplugin-container-pie.so"
-  AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
-fi
-MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
-
-AC_SUBST(MOZ_CHILD_PROCESS_NAME)
-AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
-AC_SUBST(MOZ_PLUGIN_PROCESS_NAME)
 
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
@@ -7295,6 +7161,27 @@ fi
 if test -z "$ANDROID_PACKAGE_NAME" ; then
    ANDROID_PACKAGE_NAME="org.mozilla.$MOZ_APP_NAME"
 fi
+
+dnl ========================================================
+dnl = Child Process Name for IPC
+dnl ========================================================
+if test "$MOZ_WIDGET_TOOLKIT" != "android"; then
+  MOZ_CHILD_PROCESS_NAME="${MOZ_APP_NAME}-webcontent${BIN_SUFFIX}"
+  MOZ_PLUGIN_PROCESS_NAME="plugin-container${BIN_SUFFIX}"
+else
+  # We want to let Android unpack the file at install time, but it only does
+  # so if the file is named libsomething.so. The lib/ path is also required
+  # because the unpacked file will be under the lib/ subdirectory and will
+  # need to be executed from that path.
+  MOZ_CHILD_PROCESS_NAME="libfirefox-webcontent.so"
+  MOZ_CHILD_PROCESS_NAME_PIE="libplugin-container-pie.so"
+  AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
+fi
+MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
+
+AC_SUBST(MOZ_CHILD_PROCESS_NAME)
+AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
+AC_SUBST(MOZ_PLUGIN_PROCESS_NAME)
 
 # Mozilla released Firefox for Android {Release,Beta} and {Aurora,Nightly} to
 # the public with specific common shared IDs and we need to keep them
@@ -7473,7 +7360,6 @@ AC_SUBST(OS_COMPILE_CFLAGS)
 AC_SUBST(OS_COMPILE_CXXFLAGS)
 AC_SUBST(OS_LDFLAGS)
 AC_SUBST(OS_LIBS)
-AC_SUBST(WCHAR_CFLAGS)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
@@ -7533,7 +7419,6 @@ AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
-AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)

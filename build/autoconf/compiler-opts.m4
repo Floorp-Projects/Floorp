@@ -16,8 +16,6 @@ dnl set DEVELOPER_OPTIONS early; MOZ_DEFAULT_COMPILER is usually the first non-s
       DEVELOPER_OPTIONS=,
       DEVELOPER_OPTIONS=1)
 
-  AC_SUBST(DEVELOPER_OPTIONS)
-
 dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then

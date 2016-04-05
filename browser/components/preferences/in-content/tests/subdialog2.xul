@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog id="subDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Sample sub-dialog #2" style="width: 32em; height: 5em;"
+        onload="document.getElementById('textbox').focus();"
+        ondialogaccept="acceptSubdialog();">
+  <script>
+    function acceptSubdialog() {
+      window.arguments[0].acceptCount++;
+    }
+  </script>
+
+  <description id="desc">A sample sub-dialog for testing</description>
+
+  <textbox id="textbox" value="Default text" />
+
+  <separator class="thin"/>
+
+  <button oncommand="close();" icon="close" label="Close" />
+
+</dialog>

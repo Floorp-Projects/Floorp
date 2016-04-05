@@ -49,6 +49,12 @@ class FunctionCompiler
     typedef Vector<ControlFlowPatch, 0, SystemAllocPolicy> ControlFlowPatchVector;
     typedef Vector<ControlFlowPatchVector, 0, SystemAllocPolicy> ControlFlowPatchsVector;
 
+  public:
+    class Call;
+
+  private:
+    typedef Vector<Call*, 0, SystemAllocPolicy> CallVector;
+
     ModuleGeneratorThreadView& mg_;
     Decoder&                   decoder_;
     const FuncBytes&           func_;
@@ -61,6 +67,8 @@ class FunctionCompiler
     MIRGenerator&              mirGen_;
 
     MBasicBlock*               curBlock_;
+    CallVector                 callStack_;
+    uint32_t                   maxStackArgBytes_;
 
     uint32_t                   loopDepth_;
     uint32_t                   blockDepth_;
@@ -85,6 +93,7 @@ class FunctionCompiler
         info_(mirGen.info()),
         mirGen_(mirGen),
         curBlock_(nullptr),
+        maxStackArgBytes_(0),
         loopDepth_(0),
         blockDepth_(0),
         compileResults_(compileResults)
@@ -154,8 +163,11 @@ class FunctionCompiler
         return true;
     }
 
-    void checkPostconditions()
+    void finish()
     {
+        mirGen().initWasmMaxStackArgBytes(maxStackArgBytes_);
+
+        MOZ_ASSERT(callStack_.empty());
         MOZ_ASSERT(loopDepth_ == 0);
         MOZ_ASSERT(blockDepth_ == 0);
 #ifdef DEBUG
@@ -663,8 +675,8 @@ class FunctionCompiler
         // always ABIStackAlignment-aligned, but don't forget to account for
         // ShadowStackSpace and any other ABI warts.
         ABIArgGenerator abi;
-        if (abi.stackBytesConsumedSoFar() > mirGen_.maxAsmJSStackArgBytes())
-            mirGen_.setAsmJSMaxStackArgBytes(abi.stackBytesConsumedSoFar());
+
+        propagateMaxStackArgBytes(abi.stackBytesConsumedSoFar());
 
         CallSiteDesc callDesc(0, CallSiteDesc::Relative);
         curBlock_->add(MAsmJSInterruptCheck::New(alloc()));
@@ -718,7 +730,6 @@ class FunctionCompiler
     {
         uint32_t lineOrBytecode_;
         ABIArgGenerator abi_;
-        uint32_t prevMaxStackBytes_;
         uint32_t maxChildStackBytes_;
         uint32_t spIncrement_;
         MAsmJSCall::Args regArgs_;
@@ -730,18 +741,17 @@ class FunctionCompiler
       public:
         Call(FunctionCompiler& f, uint32_t lineOrBytecode)
           : lineOrBytecode_(lineOrBytecode),
-            prevMaxStackBytes_(0),
             maxChildStackBytes_(0),
             spIncrement_(0),
             childClobbers_(false)
         { }
     };
 
-    void startCallArgs(Call* call)
+    bool startCallArgs(Call* call)
     {
-        if (inDeadCode())
-            return;
-        call->prevMaxStackBytes_ = mirGen().resetAsmJSMaxStackArgBytes();
+        // Always push calls to maintain the invariant that if we're inDeadCode
+        // in finishCallArgs, we have something to pop.
+        return callStack_.append(call);
     }
 
     bool passArg(MDefinition* argDef, ValType type, Call* call)
@@ -749,43 +759,52 @@ class FunctionCompiler
         if (inDeadCode())
             return true;
 
-        uint32_t childStackBytes = mirGen().resetAsmJSMaxStackArgBytes();
-        call->maxChildStackBytes_ = Max(call->maxChildStackBytes_, childStackBytes);
-        if (childStackBytes > 0 && !call->stackArgs_.empty())
-            call->childClobbers_ = true;
-
         ABIArg arg = call->abi_.next(ToMIRType(type));
-        if (arg.kind() == ABIArg::Stack) {
-            MAsmJSPassStackArg* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(),
-                                                              argDef);
-            curBlock_->add(mir);
-            if (!call->stackArgs_.append(mir))
-                return false;
-        } else {
-            if (!call->regArgs_.append(MAsmJSCall::Arg(arg.reg(), argDef)))
-                return false;
+        if (arg.kind() != ABIArg::Stack)
+            return call->regArgs_.append(MAsmJSCall::Arg(arg.reg(), argDef));
+
+        auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
+        curBlock_->add(mir);
+        return call->stackArgs_.append(mir);
+    }
+
+    void propagateMaxStackArgBytes(uint32_t stackBytes)
+    {
+        if (callStack_.empty()) {
+            // Outermost call
+            maxStackArgBytes_ = Max(maxStackArgBytes_, stackBytes);
+            return;
         }
-        return true;
+
+        // Non-outermost call
+        Call* outer = callStack_.back();
+        outer->maxChildStackBytes_ = Max(outer->maxChildStackBytes_, stackBytes);
+        if (stackBytes && !outer->stackArgs_.empty())
+            outer->childClobbers_ = true;
     }
 
     void finishCallArgs(Call* call)
     {
-        if (inDeadCode())
+        MOZ_ALWAYS_TRUE(callStack_.popCopy() == call);
+
+        if (inDeadCode()) {
+            propagateMaxStackArgBytes(call->maxChildStackBytes_);
             return;
-        uint32_t parentStackBytes = call->abi_.stackBytesConsumedSoFar();
-        uint32_t newStackBytes;
+        }
+
+        uint32_t stackBytes = call->abi_.stackBytesConsumedSoFar();
+
         if (call->childClobbers_) {
             call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, AsmJSStackAlignment);
-            for (unsigned i = 0; i < call->stackArgs_.length(); i++)
-                call->stackArgs_[i]->incrementOffset(call->spIncrement_);
-            newStackBytes = Max(call->prevMaxStackBytes_,
-                                call->spIncrement_ + parentStackBytes);
+            for (MAsmJSPassStackArg* stackArg : call->stackArgs_)
+                stackArg->incrementOffset(call->spIncrement_);
+            stackBytes += call->spIncrement_;
         } else {
             call->spIncrement_ = 0;
-            newStackBytes = Max(call->prevMaxStackBytes_,
-                                Max(call->maxChildStackBytes_, parentStackBytes));
+            stackBytes = Max(stackBytes, call->maxChildStackBytes_);
         }
-        mirGen_.setAsmJSMaxStackArgBytes(newStackBytes);
+
+        propagateMaxStackArgBytes(stackBytes);
     }
 
   private:
@@ -895,15 +914,14 @@ class FunctionCompiler
         curBlock_ = nullptr;
     }
 
-    bool unreachableTrap()
+    void unreachableTrap()
     {
         if (inDeadCode())
-            return true;
+            return;
 
         auto* ins = MAsmThrowUnreachable::New(alloc());
         curBlock_->end(ins);
         curBlock_ = nullptr;
-        return true;
     }
 
     bool branchAndStartThen(MDefinition* cond, MBasicBlock** thenBlock, MBasicBlock** elseBlock)
@@ -1127,6 +1145,7 @@ class FunctionCompiler
             MOZ_ASSERT(inDeadCode());
             MOZ_ASSERT(afterLabel >= blockPatches_.length() || blockPatches_[afterLabel].empty());
             MOZ_ASSERT(headerLabel >= blockPatches_.length() || blockPatches_[headerLabel].empty());
+            *loopResult = nullptr;
             blockDepth_ -= 2;
             loopDepth_--;
             return true;
@@ -1679,7 +1698,8 @@ EmitAtomicsExchange(FunctionCompiler& f, MDefinition** def)
 static bool
 EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
 {
-    f.startCallArgs(call);
+    if (!f.startCallArgs(call))
+        return false;
     for (ValType argType : sig.args()) {
         MDefinition* arg;
         if (!EmitExpr(f, &arg))
@@ -1750,7 +1770,8 @@ EmitF32MathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, Expr f32, MDefi
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
     FunctionCompiler::Call call(f, lineOrBytecode);
-    f.startCallArgs(&call);
+    if (!f.startCallArgs(&call))
+        return false;
 
     MDefinition* firstArg;
     if (!EmitExpr(f, &firstArg) || !f.passArg(firstArg, ValType::F32, &call))
@@ -1768,7 +1789,8 @@ EmitF64MathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, Expr f64, MDefi
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
     FunctionCompiler::Call call(f, lineOrBytecode);
-    f.startCallArgs(&call);
+    if (!f.startCallArgs(&call))
+        return false;
 
     MDefinition* firstArg;
     if (!EmitExpr(f, &firstArg) || !f.passArg(firstArg, ValType::F64, &call))
@@ -2674,7 +2696,8 @@ static bool
 EmitUnreachable(FunctionCompiler& f, MDefinition** def)
 {
     *def = nullptr;
-    return f.unreachableTrap();
+    f.unreachableTrap();
+    return true;
 }
 
 static bool
@@ -3158,7 +3181,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
         else
             f.returnExpr(last);
 
-        f.checkPostconditions();
+        f.finish();
     }
 
     // Compile MIR graph

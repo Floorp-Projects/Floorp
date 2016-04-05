@@ -2364,7 +2364,11 @@ RangeAnalysis::addRangeAssertions()
             // Beta nodes and interrupt checks are required to be located at the
             // beginnings of basic blocks, so we must insert range assertions
             // after any such instructions.
-            MInstruction* insertAt = block->safeInsertTop(ins);
+            MInstruction* insertAt = nullptr;
+            if (block->graph().osrBlock() == block)
+                insertAt = ins->toInstruction();
+            else
+                insertAt = block->safeInsertTop(ins);
 
             if (insertAt == *iter)
                 block->insertAfter(insertAt,  guard);

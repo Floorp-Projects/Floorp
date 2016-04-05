@@ -63,6 +63,7 @@ private:
   void FireDOMMotionEvent(class nsIDOMDocument *domDoc,
                           mozilla::dom::EventTarget* target,
                           uint32_t type,
+                          PRTime timestamp,
                           double x,
                           double y,
                           double z);

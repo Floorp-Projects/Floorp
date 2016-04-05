@@ -15,7 +15,7 @@
 
     function prefStart() {
       // Start AccessFu via pref.
-      SpecialPowers.setIntPref("accessibility.accessfu.activate", 1);
+      SpecialPowers.pushPrefEnv({"set": [['accessibility.accessfu.activate', 1]]});
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
     }
 
@@ -39,18 +39,22 @@
 
     function setMode(aModeIndex, aExpectedMode) {
       return function() {
-        SpecialPowers.setIntPref(
-          'accessibility.accessfu.quicknav_index', aModeIndex);
-        _expectMode(aExpectedMode, AccessFuTest.nextTest);
+        SpecialPowers.pushPrefEnv(
+          {"set": [['accessibility.accessfu.quicknav_index', aModeIndex]]},
+          function() {
+            _expectMode(aExpectedMode, AccessFuTest.nextTest);
+        });
       }
     }
 
     function reconfigureModes() {
-      SpecialPowers.setCharPref('accessibility.accessfu.quicknav_modes',
-        'Landmark,Button,Entry,Graphic');
-      // When the modes are reconfigured, the current mode should
-      // be set to the first in the new list.
-      _expectMode('Landmark', AccessFuTest.nextTest);
+      SpecialPowers.pushPrefEnv(
+        {"set": [['accessibility.accessfu.quicknav_modes', 'Landmark,Button,Entry,Graphic']]},
+        function() {
+          // When the modes are reconfigured, the current mode should
+          // be set to the first in the new list.
+          _expectMode('Landmark', AccessFuTest.nextTest);
+      });
     }
 
     function _expectMode(aExpectedMode, aCallback) {
@@ -69,7 +73,7 @@
     function prefStop() {
       ok(AccessFu._enabled, "AccessFu was started via preference.");
       AccessFuTest.once_log("EventManager.stop", () => AccessFuTest.finish());
-      SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
+      SpecialPowers.pushPrefEnv({"set": [['accessibility.accessfu.activate', 0]]});
     }
 
     function doTest() {

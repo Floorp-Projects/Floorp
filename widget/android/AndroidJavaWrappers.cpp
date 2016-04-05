@@ -376,6 +376,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
              mW = jenv->GetDoubleField(jobj, jWField);
              mFlags = jenv->GetIntField(jobj, jFlagsField);
              mMetaState = jenv->GetIntField(jobj, jMetaStateField);
+             mTime = jenv->GetLongField(jobj, jTimeField);
              break;
 
         case LOCATION_EVENT: {

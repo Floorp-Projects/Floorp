@@ -26,7 +26,11 @@ except Exception:
 
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
+import mozpack.path as mozpath
+
 from ..base import MozbuildObject
+
+from ..testing import install_test_files
 
 from ..compilation.warnings import (
     WarningsCollector,
@@ -653,17 +657,19 @@ class CCacheStats(object):
 class BuildDriver(MozbuildObject):
     """Provides a high-level API for build actions."""
 
-    def install_tests(self, remove=True):
-        """Install test files (through manifest)."""
+    def install_tests(self, test_objs):
+        """Install test files."""
 
         if self.is_clobber_needed():
             print(INSTALL_TESTS_CLOBBER.format(
                   clobber_file=os.path.join(self.topobjdir, 'CLOBBER')))
             sys.exit(1)
 
-        env = {}
-        if not remove:
-            env[b'NO_REMOVE'] = b'1'
-
-        self._run_make(target='install-tests', append_env=env, pass_thru=True,
-            print_directory=False)
+        if not test_objs:
+            # If we don't actually have a list of tests to install we install
+            # test and support files wholesale.
+            self._run_make(target='install-test-files', pass_thru=True,
+                           print_directory=False)
+        else:
+            install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
+                               '_tests', test_objs)
