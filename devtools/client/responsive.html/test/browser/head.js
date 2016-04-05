@@ -54,7 +54,7 @@ var openRDM = Task.async(function*(tab) {
 var closeRDM = Task.async(function*(tab) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
-  manager.closeIfNeeded(window, tab);
+  yield manager.closeIfNeeded(window, tab);
   info("Responsive design mode closed");
 });
 
@@ -85,15 +85,20 @@ function addRDMTask(url, generator) {
   });
 }
 
-var waitForFrameLoad = Task.async(function*(frame, targetURL) {
-  let window = frame.contentWindow;
-  if ((window.document.readyState == "complete" ||
-       window.document.readyState == "interactive") &&
-      window.location.href == targetURL) {
-    return;
-  }
-  yield once(frame, "load");
-});
+function spawnViewportTask(ui, args, task) {
+  return ContentTask.spawn(ui.getViewportMessageManager(), args, task);
+}
+
+function waitForFrameLoad(ui, targetURL) {
+  return spawnViewportTask(ui, { targetURL }, function*(args) {
+    if ((content.document.readyState == "complete" ||
+         content.document.readyState == "interactive") &&
+        content.location.href == args.targetURL) {
+      return;
+    }
+    yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
+  });
+}
 
 function waitForViewportResizeTo(ui, width, height) {
   return new Promise(resolve => {
