@@ -52,6 +52,8 @@
     _(Sincos)                                         \
     _(RangeAnalysis)                                  \
     _(LoopUnrolling)                                  \
+    _(Sink)                                           \
+    _(RemoveUnnecessaryBitops)                        \
     _(EffectiveAddressAnalysis)                       \
     _(AlignmentMaskAnalysis)                          \
     _(EliminateDeadCode)                              \
