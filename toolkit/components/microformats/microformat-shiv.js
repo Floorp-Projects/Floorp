@@ -1067,6 +1067,7 @@ var Microformats; // jshint ignore:line
                 if(propertyType === 'dt') {
                     return modules.dates.concatFragments(out,this.options.dateFormat).toString(this.options.dateFormat);
                 }
+                return undefined;
             } else {
                 return null;
             }

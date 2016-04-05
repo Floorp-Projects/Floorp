@@ -401,6 +401,7 @@ this.Microformats = {
           return s;
         }
       }
+      return undefined;
     },
     /**
      * Used to specifically retrieve a date in a microformat node.
@@ -417,6 +418,7 @@ this.Microformats = {
       if (date) {
         return Microformats.parser.normalizeISO8601(date);
       }
+      return undefined;
     },
     /**
      * Used to specifically retrieve a URI in a microformat node. This includes
@@ -909,6 +911,7 @@ this.Microformats = {
         }
         return true;
       }
+      return undefined;
     },
     /* This function normalizes an ISO8601 date by adding punctuation and */
     /* ensuring that hours and seconds have values */
@@ -1381,6 +1384,7 @@ var hCard_definition = {
             return {"given-name" : given_name, "family-name" : family_name};
           }
         }
+        return undefined;
       }
     },
     "nickname" : {
@@ -1637,6 +1641,7 @@ var hCalendar_definition = {
             return rrule[i].split('=')[1];
           }
         }
+        return undefined;
       }
     }
   }
@@ -1695,6 +1700,7 @@ geo.prototype.toString = function() {
       return this.latitude + ", " + this.longitude;
     }
   }
+  return undefined;
 }
 
 var geo_definition = {
@@ -1717,6 +1723,7 @@ var geo_definition = {
             }
           }
         }
+        return undefined;
       }
     },
     "longitude" : {
@@ -1734,6 +1741,7 @@ var geo_definition = {
             }
           }
         }
+        return undefined;
       }
     }
   },

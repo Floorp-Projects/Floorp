@@ -650,6 +650,7 @@ PerformanceDataLeaf.prototype = {
         return false;
       }
     }
+    return true;
   },
 
   /**
