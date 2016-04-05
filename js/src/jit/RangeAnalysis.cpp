@@ -3059,7 +3059,6 @@ RangeAnalysis::truncate()
     MOZ_ASSERT(!mir->compilingAsmJS());
 
     Vector<MDefinition*, 16, SystemAllocPolicy> worklist;
-    Vector<MBinaryBitwiseInstruction*, 16, SystemAllocPolicy> bitops;
 
     for (PostorderIterator block(graph_.poBegin()); block != graph_.poEnd(); block++) {
         for (MInstructionReverseIterator iter(block->rbegin()); iter != block->rend(); iter++) {
@@ -3158,11 +3157,26 @@ RangeAnalysis::truncate()
         AdjustTruncatedInputs(alloc(), def);
     }
 
+    return true;
+}
+
+bool
+RangeAnalysis::removeUnnecessaryBitops()
+{
+    // Note: This operation change the semantic of the program in a way which
+    // uniquely works with Int32, Recover Instructions added by the Sink phase
+    // expects the MIR Graph to still have a valid flow as-if they were double
+    // operations instead of Int32 operations. Thus, this phase should be
+    // executed after the Sink phase, and before DCE.
+
     // Fold any unnecessary bitops in the graph, such as (x | 0) on an integer
     // input. This is done after range analysis rather than during GVN as the
     // presence of the bitop can change which instructions are truncated.
     for (size_t i = 0; i < bitops.length(); i++) {
         MBinaryBitwiseInstruction* ins = bitops[i];
+        if (ins->isRecoveredOnBailout())
+            continue;
+
         MDefinition* folded = ins->foldUnnecessaryBitop();
         if (folded != ins) {
             ins->replaceAllLiveUsesWith(folded);
@@ -3170,8 +3184,10 @@ RangeAnalysis::truncate()
         }
     }
 
+    bitops.clear();
     return true;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Collect Range information of operands
