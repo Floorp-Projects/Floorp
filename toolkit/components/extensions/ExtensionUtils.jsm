@@ -616,7 +616,7 @@ EventManager.prototype = {
     for (let callback of this.callbacks) {
       Promise.resolve(callback).then(callback => {
         if (this.context.unloaded) {
-          dump(`${this.name} event fired after context unloaded.`);
+          dump(`${this.name} event fired after context unloaded.\n`);
         } else if (this.callbacks.has(callback)) {
           this.context.runSafe(callback, ...args);
         }
@@ -634,7 +634,7 @@ EventManager.prototype = {
     if (this.callbacks.size) {
       this.unregister();
     }
-    this.callbacks = null;
+    this.callbacks = Object.freeze([]);
   },
 
   api() {
@@ -661,7 +661,7 @@ SingletonEventManager.prototype = {
   addListener(callback, ...args) {
     let wrappedCallback = (...args) => {
       if (this.context.unloaded) {
-        dump(`${this.name} event fired after context unloaded.`);
+        dump(`${this.name} event fired after context unloaded.\n`);
       } else if (this.unregister.has(callback)) {
         return callback(...args);
       }
