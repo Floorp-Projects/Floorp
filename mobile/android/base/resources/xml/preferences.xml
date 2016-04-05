@@ -3,9 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- Phone v11+ only: Sync is a top-level menu item.
-     See xml-v11/preference_headers.xml for tablet layout.
-     Preference changes here should be mirrored to xml/preferences.xml.in. -->
+<!-- See xml-v11/preference_headers.xml for tablet layout. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
@@ -48,6 +46,7 @@
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_notifications"
+        android:summary="@string/pref_category_notifications_summary"
         android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment">
         <extra android:name="resource"
             android:value="preferences_notifications"/>
