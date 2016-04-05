@@ -170,14 +170,6 @@ exports.menuitems = [
       modifiers: "shift"
     }
   },
-  { id: "javascriptConsole",
-    l10nKey: "errorConsoleCmd",
-    disabled: true,
-    oncommand(event) {
-      let window = event.target.ownerDocument.defaultView;
-      window.toJavaScriptConsole();
-    }
-  },
   { id: "menu_devtools_serviceworkers",
     l10nKey: "devtoolsServiceWorkers",
     disabled: true,

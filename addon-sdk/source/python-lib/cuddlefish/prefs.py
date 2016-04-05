@@ -112,7 +112,6 @@ DEFAULT_FIREFOX_PREFS = {
     'browser.startup.homepage' : 'about:blank',
     'startup.homepage_welcome_url' : 'about:blank',
     'devtools.browsertoolbox.panel': 'jsdebugger',
-    'devtools.errorconsole.enabled' : True,
     'devtools.chrome.enabled' : True,
 
     # From:
