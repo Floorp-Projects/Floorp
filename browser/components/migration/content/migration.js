@@ -161,6 +161,7 @@ var MigrationWizard = {
       else
         this._selectedProfile = null;
     }
+    return undefined;
   },
 
   // 2 - [Profile Selection]

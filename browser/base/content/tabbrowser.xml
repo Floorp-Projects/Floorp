@@ -4314,6 +4314,7 @@
             }
 
           }
+          return undefined;
         ]]></body>
       </method>
 
