@@ -658,7 +658,7 @@ struct JSClass {
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
-#define JSCLASS_DELAY_METADATA_CALLBACK (1<<1)  // class's initialization code
+#define JSCLASS_DELAY_METADATA_BUILDER  (1<<1)  // class's initialization code
                                                 // will call
                                                 // SetNewObjectMetadata itself
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  // private is (nsISupports*)
@@ -798,8 +798,8 @@ struct Class
         return flags & JSCLASS_IS_DOMJSCLASS;
     }
 
-    bool shouldDelayMetadataCallback() const {
-        return flags & JSCLASS_DELAY_METADATA_CALLBACK;
+    bool shouldDelayMetadataBuilder() const {
+        return flags & JSCLASS_DELAY_METADATA_BUILDER;
     }
 
     static size_t offsetOfFlags() { return offsetof(Class, flags); }

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-box-orient inside a -webkit-box
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+    }
+    br { clear: both; }
+
+    .box > * {
+      border: 1px dotted purple;
+    }
+
+    .bogOne  { -webkit-box-ordinal-group: 1; }
+    .bogTwo  { -webkit-box-ordinal-group: 2; }
+    .bogNine { -webkit-box-ordinal-group: 9; }
+  </style>
+</head>
+<body>
+  <!-- First row: initial value mixed with single specified values -->
+  <div class="box">
+    <div>*</div>
+    <div class="bogOne">1a</div>
+    <div>*</div>
+    <div class="bogOne">1b</div>
+    <div>*</div>
+  </div>
+
+  <div class="box">
+    <div>*</div>
+    <div class="bogTwo">2a</div>
+    <div>*</div>
+    <div class="bogTwo">2b</div>
+    <div>*</div>
+  </div>
+
+  <div class="box">
+    <div>*</div>
+    <div class="bogNine">9a</div>
+    <div>*</div>
+    <div class="bogNine">9b</div>
+    <div>*</div>
+  </div>
+
+  <br>
+
+  <!-- Second row: various mixes of specified values -->
+  <div class="box">
+    <div>*</div>
+    <div class="bogOne">1</div>
+    <div class="bogTwo">2</div>
+    <div class="bogNine">9</div>
+  </div>
+
+  <div class="box">
+    <div class="bogNine">9</div>
+    <div class="bogTwo">2</div>
+    <div class="bogOne">1</div>
+    <div>*</div>
+  </div>
+
+  <div class="box">
+    <div class="bogTwo">2a</div>
+    <div class="bogNine">9</div>
+    <div class="bogTwo">2b</div>
+    <div class="bogOne">1</div>
+    <div>*</div>
+  </div>
+
+  <div class="box">
+    <div class="bogTwo">2a</div>
+    <div class="bogNine">9a</div>
+    <div class="bogNine">9b</div>
+    <div class="bogTwo">2b</div>
+    <div class="bogOne">1</div>
+  </div>
+</body>
+</html>

@@ -134,7 +134,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // need to observe lazily-constructed prototype objects coming into
     // existence. And assertions start to fail when the builder itself attempts
     // an allocation that re-entrantly tries to create the same prototype.
-    AutoSuppressObjectMetadataCallback suppressMetadata(cx);
+    AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
     // Constructor resolution may execute self-hosted scripts. These
     // self-hosted scripts do not call out to user code by construction. Allow
