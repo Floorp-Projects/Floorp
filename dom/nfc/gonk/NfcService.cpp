@@ -64,7 +64,7 @@ public:
   //
 
   void ReceiveSocketData(
-    int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
+    int aIndex, UniquePtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
 
   void OnConnectSuccess(int aIndex) override;
   void OnConnectError(int aIndex) override;
@@ -362,12 +362,12 @@ NfcConsumer::IsNfcServiceThread() const
 
 void
 NfcConsumer::ReceiveSocketData(
-  int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer)
+  int aIndex, UniquePtr<mozilla::ipc::UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(IsNfcServiceThread());
   MOZ_ASSERT(aIndex == STREAM_SOCKET);
 
-  Receive(aBuffer);
+  Receive(aBuffer.get());
 }
 
 void
