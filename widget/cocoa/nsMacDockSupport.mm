@@ -39,20 +39,16 @@ nsMacDockSupport::~nsMacDockSupport()
 NS_IMETHODIMP
 nsMacDockSupport::GetDockMenu(nsIStandaloneNativeMenu ** aDockMenu)
 {
-  *aDockMenu = nullptr;
-
-  if (mDockMenu)
-    return mDockMenu->QueryInterface(NS_GET_IID(nsIStandaloneNativeMenu),
-                                     reinterpret_cast<void **>(aDockMenu));
+  nsCOMPtr<nsIStandaloneNativeMenu> dockMenu(mDockMenu);
+  dockMenu.forget(aDockMenu);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMacDockSupport::SetDockMenu(nsIStandaloneNativeMenu * aDockMenu)
 {
-  nsresult rv;
-  mDockMenu = do_QueryInterface(aDockMenu, &rv);
-  return rv;
+  mDockMenu = aDockMenu;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

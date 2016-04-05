@@ -1573,6 +1573,10 @@ if (AppConstants.platform == "macosx") {
   };
 
   gBrowserInit.nonBrowserWindowShutdown = function() {
+    let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+                      .getService(Ci.nsIMacDockSupport);
+    dockSupport.dockMenu = null;
+
     // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
     // just cancel the pending timeout and return;
     if (this._delayedStartupTimeoutId) {
