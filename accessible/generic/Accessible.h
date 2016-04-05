@@ -503,12 +503,6 @@ public:
                             uint32_t aLength = UINT32_MAX);
 
   /**
-   * Assert if child not in parent's cache if the cache was initialized at this
-   * point.
-   */
-  void TestChildCache(Accessible* aCachedChild) const;
-
-  /**
    * Return boundaries in screen coordinates.
    */
   virtual nsIntRect Bounds() const;
