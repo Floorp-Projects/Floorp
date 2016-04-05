@@ -109,6 +109,60 @@ extern bool
 Call(JSContext* cx, HandleValue fval, HandleValue thisv, const AnyInvokeArgs& args,
      MutableHandleValue rval);
 
+inline bool
+Call(JSContext* cx, HandleValue fval, HandleValue thisv, MutableHandleValue rval)
+{
+    FixedInvokeArgs<0> args(cx);
+    return Call(cx, fval, thisv, args, rval);
+}
+
+inline bool
+Call(JSContext* cx, HandleValue fval, JSObject* thisObj, MutableHandleValue rval)
+{
+    RootedValue thisv(cx, ObjectOrNullValue(thisObj));
+    FixedInvokeArgs<0> args(cx);
+    return Call(cx, fval, thisv, args, rval);
+}
+
+inline bool
+Call(JSContext* cx, HandleValue fval, HandleValue thisv, HandleValue arg0, MutableHandleValue rval)
+{
+    FixedInvokeArgs<1> args(cx);
+    args[0].set(arg0);
+    return Call(cx, fval, thisv, args, rval);
+}
+
+inline bool
+Call(JSContext* cx, HandleValue fval, JSObject* thisObj, HandleValue arg0,
+     MutableHandleValue rval)
+{
+    RootedValue thisv(cx, ObjectOrNullValue(thisObj));
+    FixedInvokeArgs<1> args(cx);
+    args[0].set(arg0);
+    return Call(cx, fval, thisv, args, rval);
+}
+
+inline bool
+Call(JSContext* cx, HandleValue fval, HandleValue thisv,
+     HandleValue arg0, HandleValue arg1, MutableHandleValue rval)
+{
+    FixedInvokeArgs<2> args(cx);
+    args[0].set(arg0);
+    args[1].set(arg1);
+    return Call(cx, fval, thisv, args, rval);
+}
+
+inline bool
+Call(JSContext* cx, HandleValue fval, JSObject* thisObj,
+     HandleValue arg0, HandleValue arg1, MutableHandleValue rval)
+{
+    RootedValue thisv(cx, ObjectOrNullValue(thisObj));
+    FixedInvokeArgs<2> args(cx);
+    args[0].set(arg0);
+    args[1].set(arg1);
+    return Call(cx, fval, thisv, args, rval);
+}
+
 // ES6 7.3.13 Construct(F, argumentsList, newTarget).  All parameters are
 // required, hopefully forcing callers to be careful not to (say) blindly pass
 // callee as |newTarget| when a different value should have been passed.
