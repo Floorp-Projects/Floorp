@@ -1,0 +1,39 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES.update(
+    # Don't use icu namespace automatically in client code.
+    U_USING_ICU_NAMESPACE = 0,
+
+    # Don't include obsolete header files.
+    U_NO_DEFAULT_INCLUDE_UTF_HEADERS = 1,
+
+    # Remove chunks of the library that we don't need (yet).
+    UCONFIG_NO_LEGACY_CONVERSION = True,
+    UCONFIG_NO_TRANSLITERATION = True,
+    UCONFIG_NO_REGULAR_EXPRESSIONS = True,
+    UCONFIG_NO_BREAK_ITERATION = True,
+
+    # We don't need to pass data to and from legacy char* APIs.
+    U_CHARSET_IS_UTF8 = True,
+)
+
+if not CONFIG['HAVE_LANGINFO_CODESET']:
+    DEFINES['U_HAVE_NL_LANGINFO_CODESET'] = 0
+
+# ICU requires RTTI
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-frtti']
+elif CONFIG['OS_TARGET'] == 'WINNT':
+    CXXFLAGS += ['-GR']
+
+DISABLE_STL_WRAPPING = True
+ALLOW_COMPILER_WARNINGS = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
+    LOCAL_INCLUDES += ['/build/gabi++/include']
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    LOCAL_INCLUDES += ['%' + CONFIG['ANDROID_SOURCE'] + '/abi/cpp/include']

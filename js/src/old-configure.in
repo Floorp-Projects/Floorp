@@ -2719,8 +2719,6 @@ _INTL_API=yes
 
 MOZ_CONFIG_ICU()
 
-MOZ_SUBCONFIGURE_ICU()
-
 dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================
