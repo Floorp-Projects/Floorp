@@ -421,8 +421,8 @@ cat >requirements.txt <<'EOF'
 # sha256: 90pZQ6kAXB6Je8-H9-ivfgDAb6l3e5rWkfafn6VKh9g
 virtualenv==13.1.2
 
-# sha256: wJnELXTi1SC2HdNyzZlrD6dgXAZheDT9exPHm5qaWzA
-mercurial==3.7.3
+# sha256: W6lDjWqw25P3sHhrpjITjrZKncDZPjDd4rF7Mo_cbXo
+mercurial==3.7.2
 EOF
 peep install -r requirements.txt
 
