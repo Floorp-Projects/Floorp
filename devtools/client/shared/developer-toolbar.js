@@ -498,10 +498,6 @@ DeveloperToolbar.prototype.show = function(focus) {
           tabbrowser.addEventListener("beforeunload", this, true);
 
           this._initErrorsCount(tabbrowser.selectedTab);
-          this._devtoolsUnloaded = this._devtoolsUnloaded.bind(this);
-          this._devtoolsLoaded = this._devtoolsLoaded.bind(this);
-          Services.obs.addObserver(this._devtoolsUnloaded, "devtools-unloaded", false);
-          Services.obs.addObserver(this._devtoolsLoaded, "devtools-loaded", false);
 
           this._element.hidden = false;
 
@@ -572,24 +568,6 @@ DeveloperToolbar.prototype.hide = function() {
 };
 
 /**
- * The devtools-unloaded event handler.
- * @private
- */
-DeveloperToolbar.prototype._devtoolsUnloaded = function() {
-  let tabbrowser = this._chromeWindow.gBrowser;
-  Array.prototype.forEach.call(tabbrowser.tabs, this._stopErrorsCount, this);
-};
-
-/**
- * The devtools-loaded event handler.
- * @private
- */
-DeveloperToolbar.prototype._devtoolsLoaded = function() {
-  let tabbrowser = this._chromeWindow.gBrowser;
-  this._initErrorsCount(tabbrowser.selectedTab);
-};
-
-/**
  * Initialize the listeners needed for tracking the number of errors for a given
  * tab.
  *
@@ -657,8 +635,6 @@ DeveloperToolbar.prototype.destroy = function() {
   tabbrowser.removeEventListener("load", this, true);
   tabbrowser.removeEventListener("beforeunload", this, true);
 
-  Services.obs.removeObserver(this._devtoolsUnloaded, "devtools-unloaded");
-  Services.obs.removeObserver(this._devtoolsLoaded, "devtools-loaded");
   Array.prototype.forEach.call(tabbrowser.tabs, this._stopErrorsCount, this);
 
   this.focusManager.removeMonitoredElement(this.outputPanel._frame);

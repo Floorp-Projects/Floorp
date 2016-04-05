@@ -112,24 +112,6 @@ function reload(event) {
           }
         }, false);
       }
-
-      // Manually reload gcli if it has been used
-      // Bug 1248348: Inject the developer toolbar dynamically within browser/
-      // so that we can easily remove/reinject it
-      const desc = Object.getOwnPropertyDescriptor(window, "DeveloperToolbar");
-      if (desc && !desc.get) {
-        let wasVisible = window.DeveloperToolbar.visible;
-        window.DeveloperToolbar.hide()
-          .then(() => {
-            window.DeveloperToolbar.destroy();
-
-            let { DeveloperToolbar } = devtools.require("devtools/client/shared/developer-toolbar");
-            window.DeveloperToolbar = new DeveloperToolbar(window, window.document.getElementById("developer-toolbar"));
-            if (wasVisible) {
-              window.DeveloperToolbar.show();
-            }
-          });
-      }
     } else if (windowtype === "devtools:webide") {
       window.location.reload();
     } else if (windowtype === "devtools:webconsole") {

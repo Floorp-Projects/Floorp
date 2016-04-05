@@ -157,12 +157,6 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
   }
 });
 
-XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
-  let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  let { DeveloperToolbar } = require("devtools/client/shared/developer-toolbar");
-  return new DeveloperToolbar(window);
-});
-
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
   let tmp = {};
   Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", tmp);
@@ -1399,11 +1393,6 @@ var gBrowserInit = {
     // load completes). In that case, there's nothing to do here.
     if (!this._loadHandled)
       return;
-
-    let desc = Object.getOwnPropertyDescriptor(window, "DeveloperToolbar");
-    if (desc && !desc.get) {
-      DeveloperToolbar.destroy();
-    }
 
     // First clean up services initialized in gBrowserInit.onLoad (or those whose
     // uninit methods don't depend on the services having been initialized).
