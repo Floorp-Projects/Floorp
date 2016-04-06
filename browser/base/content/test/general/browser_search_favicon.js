@@ -40,20 +40,21 @@ add_task(function*() {
   let result = gURLBar.popup.richlistbox.children[1];
 
   isnot(result, null, "Expect a search result");
-  is(result.getAttribute("type"), "search favicon", "Expect correct `type` attribute");
+  is(result.getAttribute("type"), "action searchengine favicon", "Expect correct `type` attribute");
 
-  is_element_visible(result._title, "Title element should be visible");
-  is_element_visible(result._extraBox, "Extra box element should be visible");
+  let titleHbox = result._titleText.parentNode.parentNode;
+  ok(titleHbox.classList.contains("ac-title"), "Title hbox sanity check");
+  is_element_visible(titleHbox, "Title element should be visible");
 
-  is(result._extraBox.pack, "start", "Extra box element should start after the title");
-  let iconElem = result._extraBox.nextSibling;
-  is_element_visible(iconElem,
-                     "The element containing the magnifying glass icon should be visible");
-  ok(iconElem.classList.contains("ac-result-type-keyword"),
-     "That icon should have the same class use for `keyword` results");
+  let urlHbox = result._urlText.parentNode.parentNode;
+  ok(urlHbox.classList.contains("ac-url"), "URL hbox sanity check");
+  is_element_hidden(urlHbox, "URL element should be hidden");
 
-  is_element_visible(result._url, "URL element should be visible");
-  is(result._url.textContent, "Search with SearchEngine");
+  let actionHbox = result._actionText.parentNode.parentNode;
+  ok(actionHbox.classList.contains("ac-action"), "Action hbox sanity check");
+  is_element_hidden(actionHbox, "Action element should be hidden because it is not selected");
+  // \u2014 == em dash
+  is(result._actionText.textContent, "\u2014Search with SearchEngine", "Action text should be as expected");
 
   gBrowser.removeCurrentTab();
 });
