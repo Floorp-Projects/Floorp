@@ -13,18 +13,18 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerUnregisterJob2 final : public ServiceWorkerJob2
+class ServiceWorkerUnregisterJob final : public ServiceWorkerJob
 {
 public:
-  ServiceWorkerUnregisterJob2(nsIPrincipal* aPrincipal,
-                              const nsACString& aScope,
-                              bool aSendToParent);
+  ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal,
+                             const nsACString& aScope,
+                             bool aSendToParent);
 
   bool
   GetResult() const;
 
 private:
-  virtual ~ServiceWorkerUnregisterJob2();
+  virtual ~ServiceWorkerUnregisterJob();
 
   virtual void
   AsyncExecute() override;

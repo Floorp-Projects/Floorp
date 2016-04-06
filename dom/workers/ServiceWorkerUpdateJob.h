@@ -18,27 +18,27 @@ namespace workers {
 // as a different job type.  This is necessary because the register job
 // performs largely the same operations as the update job, but has a few
 // different starting steps.
-class ServiceWorkerUpdateJob2 : public ServiceWorkerJob2
+class ServiceWorkerUpdateJob : public ServiceWorkerJob
 {
 public:
   // Construct an update job to be used only for updates.
-  ServiceWorkerUpdateJob2(nsIPrincipal* aPrincipal,
-                          const nsACString& aScope,
-                          const nsACString& aScriptSpec,
-                          nsILoadGroup* aLoadGroup);
+  ServiceWorkerUpdateJob(nsIPrincipal* aPrincipal,
+                         const nsACString& aScope,
+                         const nsACString& aScriptSpec,
+                         nsILoadGroup* aLoadGroup);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration() const;
 
 protected:
   // Construct an update job that is overriden as another job type.
-  ServiceWorkerUpdateJob2(Type aType,
-                          nsIPrincipal* aPrincipal,
-                          const nsACString& aScope,
-                          const nsACString& aScriptSpec,
-                          nsILoadGroup* aLoadGroup);
+  ServiceWorkerUpdateJob(Type aType,
+                         nsIPrincipal* aPrincipal,
+                         const nsACString& aScope,
+                         const nsACString& aScriptSpec,
+                         nsILoadGroup* aLoadGroup);
 
-  virtual ~ServiceWorkerUpdateJob2();
+  virtual ~ServiceWorkerUpdateJob();
 
   // FailUpdateJob() must be called if an update job needs Finish() with
   // an error.
