@@ -49,20 +49,19 @@ add_task(function*() {
   let uri = NetUtil.newURI(result.getAttribute("url"));
   is(uri.spec, makeActionURI("keyword", {url: "http://example.com/?q=something", input: "keyword something"}).spec, "Expect correct url");
 
-  is_element_visible(result._title, "Title element should be visible");
-  is(result._title.childNodes.length, 1, "Title element should have 1 child");
-  is(result._title.childNodes[0].nodeName, "#text", "That child should be a text node");
-  is(result._title.childNodes[0].data, "example.com", "Node should contain the name of the bookmark");
+  let titleHbox = result._titleText.parentNode.parentNode;
+  ok(titleHbox.classList.contains("ac-title"), "Title hbox element sanity check");
+  is_element_visible(titleHbox, "Title element should be visible");
+  is(result._titleText.textContent, "example.com: something", "Node should contain the name of the bookmark and query");
 
-  is_element_visible(result._extraBox, "Extra element should be visible");
-  is(result._extra.childNodes.length, 1, "Title element should have 1 child");
-  is(result._extra.childNodes[0].nodeName, "span", "That child should be a span node");
-  let span = result._extra.childNodes[0];
-  is(span.childNodes.length, 1, "span element should have 1 child");
-  is(span.childNodes[0].nodeName, "#text", "That child should be a text node");
-  is(span.childNodes[0].data, "something", "Node should contain the query for the keyword");
+  let urlHbox = result._urlText.parentNode.parentNode;
+  ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
+  is_element_hidden(urlHbox, "URL element should be hidden");
 
-  is_element_hidden(result._url, "URL element should be hidden");
+  let actionHbox = result._actionText.parentNode.parentNode;
+  ok(actionHbox.classList.contains("ac-action"), "Action hbox element sanity check");
+  is_element_visible(actionHbox, "Action element should be visible");
+  is(result._actionText.textContent, "", "Action text should be empty");
 
   // Click on the result
   info("Normal click on result");
