@@ -814,7 +814,13 @@ SyncEngine.prototype = {
     return this._previousFailed;
   },
   set previousFailed(val) {
-    let cb = (error) => this._log.error("Failed to set previousFailed", error);
+    let cb = (error) => {
+      if (error) {
+        this._log.error("Failed to set previousFailed", error);
+      } else {
+        this._log.debug("Successfully wrote previousFailed.");
+      }
+    }
     // Coerce the array to a string for more efficient comparison.
     if (val + "" == this._previousFailed) {
       return;
