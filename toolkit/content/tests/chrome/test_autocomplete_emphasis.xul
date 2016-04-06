@@ -138,15 +138,29 @@ function checkSearchCompleted() {
   let autocomplete = $("richautocomplete");
   let result = autocomplete.popup.richlistbox.firstChild;
 
-  for (let attribute of [result._title, result._url]) {
-    is(attribute.childNodes.length, currentTest.emphasis.length, "The element should have the expected number of children.");
+  for (let attribute of [result._titleText, result._urlText]) {
+
+    let numChildren = currentTest.emphasis.length;
+    let childNodeStart = 0;
+    if (attribute == result._urlText) {
+      // For the URL description, the first child is the em dash separator that
+      // visually separates the the title string from the URL string.
+      numChildren++;
+      childNodeStart = 1;
+      let node = attribute.childNodes[0];
+      ok(node.classList.contains("ac-title-urlaction-separator"),
+         "First child of URL text should be separator");
+    }
+
+    is(attribute.childNodes.length, numChildren, "The element should have the expected number of children.");
+
     for (let i = 0; i < currentTest.emphasis.length; i++) {
-      let node = attribute.childNodes[i];
+      let node = attribute.childNodes[childNodeStart + i];
       // Emphasized parts strictly alternate.
       if ((i % 2 == 0) == currentTest.emphasizeFirst) {
         // Check that this part is correctly emphasized.
         is(node.nodeName, "span", ". That child should be a span node");
-        is(node.className, "ac-emphasize-text", ". That child should be emphasized");
+        ok(node.classList.contains("ac-emphasize-text"), ". That child should be emphasized");
         is(node.textContent, currentTest.emphasis[i], ". That emphasis should be as expected.");
       } else {
         // Check that this part is _not_ emphasized.
