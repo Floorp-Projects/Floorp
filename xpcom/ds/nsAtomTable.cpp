@@ -79,7 +79,13 @@ public:
     if (buf) {
       mString = static_cast<char16_t*>(buf->Data());
     } else {
-      buf = nsStringBuffer::Alloc((mLength + 1) * sizeof(char16_t));
+      const size_t size = (mLength + 1) * sizeof(char16_t);
+      buf = nsStringBuffer::Alloc(size);
+      if (MOZ_UNLIKELY(!buf)) {
+        // We OOM because atom allocations should be small and it's hard to
+        // handle them more gracefully in a constructor.
+        NS_ABORT_OOM(size);
+      }
       mString = static_cast<char16_t*>(buf->Data());
       CopyUnicodeTo(aString, 0, mString, mLength);
       mString[mLength] = char16_t(0);
