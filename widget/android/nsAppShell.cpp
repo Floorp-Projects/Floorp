@@ -969,10 +969,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    if (curEvent->AckNeeded()) {
-        widget::GeckoAppShell::AcknowledgeEvent();
-    }
-
     EVLOG("nsAppShell: -- done event %p %d", (void*)curEvent.get(), curEvent->Type());
 }
 

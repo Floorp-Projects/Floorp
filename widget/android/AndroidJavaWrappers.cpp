@@ -18,7 +18,6 @@ using namespace mozilla::dom;
 jclass AndroidGeckoEvent::jGeckoEventClass = 0;
 jfieldID AndroidGeckoEvent::jActionField = 0;
 jfieldID AndroidGeckoEvent::jTypeField = 0;
-jfieldID AndroidGeckoEvent::jAckNeededField = 0;
 jfieldID AndroidGeckoEvent::jTimeField = 0;
 jfieldID AndroidGeckoEvent::jPoints = 0;
 jfieldID AndroidGeckoEvent::jPointIndicies = 0;
@@ -104,7 +103,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
 
     jActionField = geckoEvent.getField("mAction", "I");
     jTypeField = geckoEvent.getField("mType", "I");
-    jAckNeededField = geckoEvent.getField("mAckNeeded", "Z");
     jTimeField = geckoEvent.getField("mTime", "J");
     jPoints = geckoEvent.getField("mPoints", "[Landroid/graphics/Point;");
     jPointIndicies = geckoEvent.getField("mPointIndicies", "[I");
@@ -341,7 +339,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
     mAction = jenv->GetIntField(jobj, jActionField);
     mType = jenv->GetIntField(jobj, jTypeField);
-    mAckNeeded = jenv->GetBooleanField(jobj, jAckNeededField);
 
     switch (mType) {
         case NATIVE_GESTURE_EVENT:
@@ -513,7 +510,6 @@ void
 AndroidGeckoEvent::Init(int aType)
 {
     mType = aType;
-    mAckNeeded = false;
 }
 
 bool

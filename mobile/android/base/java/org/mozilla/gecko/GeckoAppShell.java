@@ -387,56 +387,6 @@ public class GeckoAppShell
         return null;
     }
 
-    private static final Object sEventAckLock = new Object();
-    private static boolean sWaitingForEventAck;
-
-    // Block the current thread until the Gecko event loop is caught up
-    public static void sendEventToGeckoSync(GeckoEvent e) {
-        e.setAckNeeded(true);
-
-        long time = SystemClock.uptimeMillis();
-        boolean isUiThread = ThreadUtils.isOnUiThread();
-
-        synchronized (sEventAckLock) {
-            if (sWaitingForEventAck) {
-                // should never happen since we always leave it as false when we exit this function.
-                Log.e(LOGTAG, "geckoEventSync() may have been called twice concurrently!", new Exception());
-                // fall through for graceful handling
-            }
-
-            sendEventToGecko(e);
-            sWaitingForEventAck = true;
-            while (true) {
-                if (GeckoThread.isStateAtLeast(GeckoThread.State.EXITING)) {
-                    // Gecko is quitting; don't do anything.
-                    Log.d(LOGTAG, "Skipping Gecko event sync during exit");
-                    sWaitingForEventAck = false;
-                    return;
-                }
-
-                try {
-                    sEventAckLock.wait(1000);
-                } catch (InterruptedException ie) {
-                }
-                if (!sWaitingForEventAck) {
-                    // response received
-                    break;
-                }
-                long waited = SystemClock.uptimeMillis() - time;
-                Log.d(LOGTAG, "Gecko event sync taking too long: " + waited + "ms");
-            }
-        }
-    }
-
-    // Signal the Java thread that it's time to wake up
-    @WrapForJNI
-    public static void acknowledgeEvent() {
-        synchronized (sEventAckLock) {
-            sWaitingForEventAck = false;
-            sEventAckLock.notifyAll();
-        }
-    }
-
     private static final Runnable sCallbackRunnable = new Runnable() {
         @Override
         public void run() {
