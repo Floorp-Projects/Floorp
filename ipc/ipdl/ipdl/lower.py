@@ -915,31 +915,31 @@ class MessageDecl(ipdl.ast.MessageDecl):
                 or self.decl.type.isCtor()
                 or self.decl.type.isDtor())
 
-    def msgClass(self):
+    def msgCtorFunc(self):
         return 'Msg_%s'% (self.decl.progname)
 
     def prettyMsgName(self, pfx=''):
-        return pfx + self.msgClass()
+        return pfx + self.msgCtorFunc()
 
-    def pqMsgClass(self):
-        return '%s::%s'% (self.namespace, self.msgClass())
+    def pqMsgCtorFunc(self):
+        return '%s::%s'% (self.namespace, self.msgCtorFunc())
 
-    def msgId(self):  return self.msgClass()+ '__ID'
+    def msgId(self):  return self.msgCtorFunc()+ '__ID'
     def pqMsgId(self):
         return '%s::%s'% (self.namespace, self.msgId())
 
-    def replyClass(self):
+    def replyCtorFunc(self):
         return 'Reply_%s'% (self.decl.progname)
 
-    def pqReplyClass(self):
-        return '%s::%s'% (self.namespace, self.replyClass())
+    def pqReplyCtorFunc(self):
+        return '%s::%s'% (self.namespace, self.replyCtorFunc())
 
-    def replyId(self):  return self.replyClass()+ '__ID'
+    def replyId(self):  return self.replyCtorFunc()+ '__ID'
     def pqReplyId(self):
         return '%s::%s'% (self.namespace, self.replyId())
 
     def prettyReplyName(self, pfx=''):
-        return pfx + self.replyClass()
+        return pfx + self.replyCtorFunc()
 
     def actorDecl(self):
         return self.params[0]
@@ -1655,7 +1655,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             decls = []
 
             mfDecl, mfDefn = _splitFuncDeclDefn(
-                _generateMessageConstructor(md.msgClass(), md.msgId(),
+                _generateMessageConstructor(md.msgCtorFunc(), md.msgId(),
                                             md.decl.type.priority,
                                             md.prettyMsgName(p.name+'::'),
                                             md.decl.type.compress))
@@ -1665,7 +1665,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             if md.hasReply():
                 rfDecl, rfDefn = _splitFuncDeclDefn(
                     _generateMessageConstructor(
-                        md.replyClass(), md.replyId(),
+                        md.replyCtorFunc(), md.replyId(),
                         md.decl.type.priority,
                         md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress))
@@ -5108,7 +5108,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if md.decl.type.isDtor():  this = md.actorDecl().var()
 
         stmts = ([ StmtDecl(Decl(Type('IPC::Message', ptr=1), msgvar.name),
-                            init=ExprCall(ExprVar(md.pqMsgClass()),
+                            init=ExprCall(ExprVar(md.pqMsgCtorFunc()),
                                           args=[ routingId ])) ]
                  + [ Whitespace.NL ]
                  + [ StmtExpr(self.write(p.ipdltype, p.var(), msgvar, this))
@@ -5128,7 +5128,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         replyvar = self.replyvar
         return (
             [ StmtExpr(ExprAssn(
-                replyvar, ExprCall(ExprVar(md.pqReplyClass()), args=[ routingId ]))),
+                replyvar, ExprCall(ExprVar(md.pqReplyCtorFunc()), args=[ routingId ]))),
               Whitespace.NL ]
             + [ StmtExpr(self.write(r.ipdltype, r.var(), replyvar))
                 for r in md.returns ]
