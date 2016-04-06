@@ -1266,8 +1266,6 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
     if (el->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_owns)) {
       mNotificationController->ScheduleRelocation(aAccessible);
     }
-
-    RelocateARIAOwnedIfNeeded(el);
   }
 }
 
@@ -1979,11 +1977,11 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
   return updateFlags;
 }
 
-void
+bool
 DocAccessible::RelocateARIAOwnedIfNeeded(nsIContent* aElement)
 {
   if (!aElement->HasID())
-    return;
+    return false;
 
   AttrRelProviderArray* list =
     mDependentIDsHash.Get(nsDependentAtomString(aElement->GetID()));
@@ -1993,10 +1991,13 @@ DocAccessible::RelocateARIAOwnedIfNeeded(nsIContent* aElement)
         Accessible* owner = GetAccessible(list->ElementAt(idx)->mContent);
         if (owner) {
           mNotificationController->ScheduleRelocation(owner);
+          return true;
         }
       }
     }
   }
+
+  return false;
 }
 
 void
@@ -2055,10 +2056,34 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
 #endif
 
   IDRefsIterator iter(this, aOwner->Elm(), nsGkAtoms::aria_owns);
-  Accessible* child = nullptr;
-
   uint32_t arrayIdx = 0, insertIdx = aOwner->ChildCount() - children->Length();
-  while ((child = iter.Next())) {
+  while (nsIContent* childEl = iter.NextElem()) {
+    Accessible* child = GetAccessible(childEl);
+
+    // Make an attempt to create an accessible if it wasn't created yet.
+    if (!child) {
+      if (aOwner->IsAcceptableChild(childEl)) {
+        child = GetAccService()->CreateAccessible(childEl, aOwner);
+        if (child) {
+          AutoTreeMutation imut(aOwner);
+          aOwner->InsertChildAt(insertIdx, child);
+          imut.AfterInsertion(child);
+          imut.Done();
+
+          child->SetRelocated(true);
+          children->InsertElementAt(arrayIdx, child);
+
+          insertIdx = child->IndexInParent() + 1;
+          arrayIdx++;
+
+          RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aOwner);
+          uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
+          FireEventsOnInsertion(aOwner, reorderEvent, flags);
+        }
+      }
+      continue;
+    }
+
 #ifdef A11Y_LOG
   logging::TreeInfo("aria owns traversal", logging::eVerbose,
                     "candidate", child, nullptr);
