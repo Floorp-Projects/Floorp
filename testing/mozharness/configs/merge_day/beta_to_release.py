@@ -1,16 +1,17 @@
 config = {
     "log_name": "beta_to_release",
-    "version_files": [
-        {"file": "browser/config/version.txt", "suffix": ""},
-        {"file": "browser/config/version_display.txt", "suffix": ""},
-        {"file": "config/milestone.txt", "suffix": ""},
+    "copy_files": [
+        {
+            "src": "browser/config/version.txt",
+            "dst": "browser/config/version_display.txt",
+        },
     ],
     "replacements": [
         # File, from, to
         ("{}/{}".format(d, f),
         "ac_add_options --with-branding=mobile/android/branding/beta",
         "ac_add_options --with-branding=mobile/android/branding/official")
-        for d in ["mobile/android/config/mozconfigs/android-api-11/",
+        for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-api-9-10-constrained/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["debug", "nightly", "l10n-nightly", "l10n-release", "release"]
