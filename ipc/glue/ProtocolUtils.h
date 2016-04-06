@@ -311,8 +311,7 @@ MOZ_NEVER_INLINE void
 ProtocolErrorBreakpoint(const char* aMsg);
 
 MOZ_NEVER_INLINE void
-FatalError(const char* aProtocolName, const char* aMsg,
-           base::ProcessId aOtherPid, bool aIsParent);
+FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent);
 
 struct PrivateIPDLInterface {};
 

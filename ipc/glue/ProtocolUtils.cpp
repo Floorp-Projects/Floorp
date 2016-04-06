@@ -343,8 +343,7 @@ ProtocolErrorBreakpoint(const char* aMsg)
 }
 
 void
-FatalError(const char* aProtocolName, const char* aMsg,
-           ProcessId aOtherPid, bool aIsParent)
+FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
 {
   ProtocolErrorBreakpoint(aMsg);
 
