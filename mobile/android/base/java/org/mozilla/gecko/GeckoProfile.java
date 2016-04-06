@@ -536,6 +536,7 @@ public final class GeckoProfile {
         return false;
     }
 
+    @RobocopTarget
     public boolean inGuestMode() {
         return mInGuestMode;
     }
@@ -548,6 +549,7 @@ public final class GeckoProfile {
         }
     }
 
+    @RobocopTarget
     public String getName() {
         return mName;
     }
@@ -556,6 +558,7 @@ public final class GeckoProfile {
         return CUSTOM_PROFILE.equals(mName);
     }
 
+    @RobocopTarget
     public synchronized File getDir() {
         forceCreate();
         return mProfileDir;
