@@ -227,7 +227,7 @@ MediaPipelineFactory::CreateOrGetTransportFlow(
 
   flow = mPCMedia->GetTransportFlow(aLevel, aIsRtcp);
   if (flow) {
-    if (mPCMedia->ice_ctx_hdlr()->IsRestarting()) {
+    if (mPCMedia->IsIceRestarting()) {
       MOZ_MTLOG(ML_INFO, "Flow[" << flow->id() << "]: "
                                  << "detected ICE restart - level: "
                                  << aLevel << " rtcp: " << aIsRtcp);

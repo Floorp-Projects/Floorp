@@ -1545,7 +1545,9 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 {
   PC_AUTO_ENTER_API_CALL(true);
   bool restartIce = aOptions.mIceRestart.isSome() && *(aOptions.mIceRestart);
-  if (!restartIce && mMedia->ice_ctx_hdlr()->IsRestarting()) {
+  if (!restartIce &&
+      mMedia->GetIceRestartState() ==
+          PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
     RollbackIceRestart();
   }
 
@@ -1565,8 +1567,21 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
   CSFLogDebug(logTag, "CreateOffer()");
 
   nsresult nrv;
-  if (aOptions.mIceRestart.isSome() && *(aOptions.mIceRestart) &&
-      !mMedia->ice_ctx_hdlr()->IsRestarting()) {
+  if (restartIce) {
+    // If restart is requested and a restart is already in progress, we
+    // need to make room for the restart request so we either rollback
+    // or finalize to "clear" the previous restart.
+    if (mMedia->GetIceRestartState() ==
+            PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
+      // we're mid-restart and can rollback
+      RollbackIceRestart();
+    } else if (mMedia->GetIceRestartState() ==
+                   PeerConnectionMedia::ICE_RESTART_COMMITTED) {
+      // we're mid-restart and can't rollback, finalize restart even
+      // though we're not really ready yet
+      FinalizeIceRestart();
+    }
+
     CSFLogInfo(logTag, "Offerer restarting ice");
     nrv = SetupIceRestart();
     if (NS_FAILED(nrv)) {
@@ -1625,13 +1640,18 @@ PeerConnectionImpl::CreateAnswer()
 
   nsresult nrv;
   if (mJsepSession->RemoteIceIsRestarting()) {
-    CSFLogInfo(logTag, "Answerer restarting ice");
-    nrv = SetupIceRestart();
-    if (NS_FAILED(nrv)) {
-      CSFLogError(logTag, "%s: SetupIceRestart failed, res=%u",
-                           __FUNCTION__,
-                           static_cast<unsigned>(nrv));
-      return nrv;
+    if (mMedia->GetIceRestartState() ==
+            PeerConnectionMedia::ICE_RESTART_COMMITTED) {
+      FinalizeIceRestart();
+    } else if (!mMedia->IsIceRestarting()) {
+      CSFLogInfo(logTag, "Answerer restarting ice");
+      nrv = SetupIceRestart();
+      if (NS_FAILED(nrv)) {
+        CSFLogError(logTag, "%s: SetupIceRestart failed, res=%u",
+                             __FUNCTION__,
+                             static_cast<unsigned>(nrv));
+        return nrv;
+      }
     }
   }
 
@@ -1669,7 +1689,7 @@ PeerConnectionImpl::CreateAnswer()
 nsresult
 PeerConnectionImpl::SetupIceRestart()
 {
-  if (mMedia->ice_ctx_hdlr()->IsRestarting()) {
+  if (mMedia->IsIceRestarting()) {
     CSFLogError(logTag, "%s: ICE already restarting",
                          __FUNCTION__);
     return NS_ERROR_UNEXPECTED;
@@ -1717,6 +1737,15 @@ PeerConnectionImpl::RollbackIceRestart()
   mPreviousIcePwd = "";
 
   return NS_OK;
+}
+
+void
+PeerConnectionImpl::FinalizeIceRestart()
+{
+  mMedia->FinalizeIceRestart();
+  // clear the previous ice creds since they are no longer needed
+  mPreviousIceUfrag = "";
+  mPreviousIcePwd = "";
 }
 
 NS_IMETHODIMP
@@ -2929,8 +2958,13 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
 
   bool fireNegotiationNeeded = false;
   if (mSignalingState == PCImplSignalingState::SignalingStable) {
-    if (rollback && mMedia->ice_ctx_hdlr()->IsRestarting()) {
-      RollbackIceRestart();
+    if (mMedia->GetIceRestartState() ==
+            PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
+      if (rollback) {
+        RollbackIceRestart();
+      } else {
+        mMedia->CommitIceRestart();
+      }
     }
 
     // Either negotiation is done, or we've rolled back. In either case, we
@@ -3227,11 +3261,8 @@ void PeerConnectionImpl::IceConnectionStateChange(
   if (mIceConnectionState == PCImplIceConnectionState::Connected ||
       mIceConnectionState == PCImplIceConnectionState::Completed ||
       mIceConnectionState == PCImplIceConnectionState::Failed) {
-    if (mMedia->ice_ctx_hdlr()->IsRestarting()) {
-      mMedia->FinalizeIceRestart();
-      // clear the previous ice creds since they are no longer needed
-      mPreviousIceUfrag = "";
-      mPreviousIcePwd = "";
+    if (mMedia->IsIceRestarting()) {
+      FinalizeIceRestart();
     }
   }
 

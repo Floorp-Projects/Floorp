@@ -128,8 +128,6 @@ void TransportLayerIce::PostSetup() {
                                         &TransportLayerIce::IcePacketReceived);
   if (stream_->state() == NrIceMediaStream::ICE_OPEN) {
     TL_SET_STATE(TS_OPEN);
-    // Reset old ice stream if new stream is good
-    ResetOldStream();
   }
 }
 
@@ -137,7 +135,7 @@ void TransportLayerIce::ResetOldStream() {
   if (old_stream_ == nullptr) {
     return; // no work to do
   }
-  // ICE Ready on the new stream, we can forget the old stream now
+  // ICE restart successful on the new stream, we can forget the old stream now
   MOZ_MTLOG(ML_INFO, LAYER_INFO << "ResetOldStream(" << old_stream_->name()
                                 << ")");
   old_stream_->SignalReady.disconnect(this);
@@ -150,6 +148,7 @@ void TransportLayerIce::RestoreOldStream() {
   if (old_stream_ == nullptr) {
     return; // no work to do
   }
+  // ICE restart rollback, we need to restore the old stream
   MOZ_MTLOG(ML_INFO, LAYER_INFO << "RestoreOldStream(" << old_stream_->name()
                                 << ")");
   stream_->SignalReady.disconnect(this);
@@ -201,8 +200,6 @@ void TransportLayerIce::IceReady(NrIceMediaStream *stream) {
   MOZ_MTLOG(ML_INFO, LAYER_INFO << "ICE Ready(" << stream->name() << ","
     << component_ << ")");
   TL_SET_STATE(TS_OPEN);
-  // Reset old ice stream if new stream is good after ice restart
-  ResetOldStream();
 }
 
 void TransportLayerIce::IceFailed(NrIceMediaStream *stream) {
