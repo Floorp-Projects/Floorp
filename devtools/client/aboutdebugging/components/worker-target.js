@@ -29,15 +29,24 @@ module.exports = createClass({
     let isRunning = this.isRunning();
     let isServiceWorker = this.isServiceWorker();
 
-    return dom.div({ className: "target" },
+    return dom.div({ className: "target-container" },
       dom.img({
         className: "target-icon",
         role: "presentation",
         src: target.icon
       }),
-      dom.div({ className: "target-details" },
-        dom.div({ className: "target-name" }, target.name)
-      ),
+      dom.div({ className: "target" },
+        dom.div({ className: "target-name" }, target.name),
+        isServiceWorker ? dom.ul({ className: "target-details" },
+          dom.li({ className: "target-detail" },
+            dom.strong(null, Strings.GetStringFromName("scope")),
+            dom.span({ className: "serviceworker-scope" }, target.scope),
+            dom.a({
+              onClick: this.unregister,
+              className: "unregister-link"
+            }, Strings.GetStringFromName("unregister"))
+          )
+        ) : null),
       (isRunning && isServiceWorker ?
         dom.button({
           className: "push-button",
@@ -83,6 +92,18 @@ module.exports = createClass({
     client.request({
       to: target.workerActor,
       type: "push"
+    });
+  },
+
+  unregister() {
+    let { client, target } = this.props;
+    if (!this.isServiceWorker()) {
+      // Unregister is only available for service workers.
+      return;
+    }
+    client.request({
+      to: target.registrationActor,
+      type: "unregister"
     });
   },
 
