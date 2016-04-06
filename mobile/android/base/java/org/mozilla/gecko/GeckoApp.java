@@ -2161,9 +2161,9 @@ public abstract class GeckoApp
             return;
         }
 
-        if (GeckoThread.isRunning()) {
-            // Let the Gecko thread prepare for exit.
-            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createAppBackgroundingEvent());
+        // Wait for Gecko to handle our pause event sent in onPause.
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            GeckoThread.waitOnGecko();
         }
 
         if (mRestartIntent != null) {

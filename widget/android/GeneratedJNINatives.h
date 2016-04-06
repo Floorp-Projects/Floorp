@@ -199,7 +199,11 @@ public:
 
         mozilla::jni::MakeNativeMethod<GeckoThread::SpeculativeConnect_t>(
                 mozilla::jni::NativeStub<GeckoThread::SpeculativeConnect_t, Impl>
-                ::template Wrap<&Impl::SpeculativeConnect>)
+                ::template Wrap<&Impl::SpeculativeConnect>),
+
+        mozilla::jni::MakeNativeMethod<GeckoThread::WaitOnGecko_t>(
+                mozilla::jni::NativeStub<GeckoThread::WaitOnGecko_t, Impl>
+                ::template Wrap<&Impl::WaitOnGecko>)
     };
 };
 

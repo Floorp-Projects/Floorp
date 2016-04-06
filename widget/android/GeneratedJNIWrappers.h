@@ -2295,6 +2295,19 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
+    struct WaitOnGecko_t {
+        typedef GeckoThread Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "waitOnGecko";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct ClsLoader_t {
         typedef GeckoThread Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
