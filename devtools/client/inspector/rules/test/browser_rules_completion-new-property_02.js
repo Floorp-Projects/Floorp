@@ -18,12 +18,12 @@
 //  ]
 var testData = [
   ["d", {}, "display", 1, 3, false],
-  ["VK_TAB", {}, "", -1, 10, true],
-  ["VK_DOWN", {}, "-moz-box", 0, 10, true],
+  ["VK_TAB", {}, "", -1, 41, true],
+  ["VK_DOWN", {}, "block", 0, 41, true],
   ["n", {}, "none", -1, 0, true],
   ["VK_TAB", {shiftKey: true}, "display", -1, 0, true],
   ["VK_BACK_SPACE", {}, "", -1, 0, false],
-  ["o", {}, "opacity", 6, 10, false],
+  ["o", {}, "overflow", 13, 16, false],
   ["u", {}, "outline", 0, 5, false],
   ["VK_DOWN", {}, "outline-color", 1, 5, false],
   ["VK_TAB", {}, "none", -1, 0, true],
@@ -34,7 +34,7 @@ var testData = [
   ["VK_DOWN", {}, "rosybrown", 4, 6, true],
   ["VK_DOWN", {}, "royalblue", 5, 6, true],
   ["VK_RIGHT", {}, "royalblue", -1, 0, false],
-  [" ", {}, "royalblue !important", 0, 10, true],
+  [" ", {}, "royalblue aliceblue", 0, 159, true],
   ["!", {}, "royalblue !important", 0, 0, true],
   ["VK_ESCAPE", {}, null, -1, 0, true]
 ];

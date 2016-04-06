@@ -22,7 +22,7 @@ var testData = [
   ["VK_DOWN", {}, "blanchedalmond", 1, 4, true],
   ["VK_DOWN", {}, "blue", 2, 4, true],
   ["VK_RIGHT", {}, "blue", -1, 0, false],
-  [" ", {}, "blue !important", 0, 10, true],
+  [" ", {}, "blue aliceblue", 0, 158, true],
   ["!", {}, "blue !important", 0, 0, true],
   ["VK_BACK_SPACE", {}, "blue !", -1, 0, true],
   ["VK_BACK_SPACE", {}, "blue ", -1, 0, true],

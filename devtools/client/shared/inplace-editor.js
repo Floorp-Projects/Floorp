@@ -33,7 +33,10 @@ const CONTENT_TYPES = {
   CSS_MIXED: 2,
   CSS_PROPERTY: 3,
 };
-const MAX_POPUP_ENTRIES = 10;
+
+// The limit of 500 autocomplete suggestions should not be reached but is kept
+// for safety.
+const MAX_POPUP_ENTRIES = 500;
 
 const FOCUS_FORWARD = Ci.nsIFocusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
@@ -728,6 +731,8 @@ InplaceEditor.prototype = {
         };
       }
     }
+
+    return null;
   },
 
   /**
@@ -1337,13 +1342,28 @@ InplaceEditor.prototype = {
         }
       }
 
-      // Pick the best first suggestion from the provided list of suggestions.
-      let cssValues = finalList.map(item => item.label);
-      let mostRelevantIndex = findMostRelevantCssPropertyIndex(cssValues);
+      // Sort items starting with [a-z0-9] first, to make sure vendor-prefixed
+      // values and "!important" are suggested only after standard values.
+      finalList.sort((item1, item2) => {
+        // Get the expected alphabetical comparison between the items.
+        let comparison = item1.label.localeCompare(item2.label);
+        if (/^\w/.test(item1.label) != /^\w/.test(item2.label)) {
+          // One starts with [a-z0-9], one does not: flip the comparison.
+          comparison = -1 * comparison;
+        }
+        return comparison;
+      });
+
+      let index = 0;
+      if (startCheckQuery) {
+        // Only select a "best" suggestion when the user started a query.
+        let cssValues = finalList.map(item => item.label);
+        index = findMostRelevantCssPropertyIndex(cssValues);
+      }
 
       // Insert the most relevant item from the final list as the input value.
-      if (autoInsert && finalList[mostRelevantIndex]) {
-        let item = finalList[mostRelevantIndex].label;
+      if (autoInsert && finalList[index]) {
+        let item = finalList[index].label;
         input.value = query + item.slice(startCheckQuery.length) +
                       input.value.slice(query.length);
         input.setSelectionRange(query.length, query.length + item.length -
@@ -1359,7 +1379,7 @@ InplaceEditor.prototype = {
         offset = this._isSingleLine() ? offset : 0;
 
         // Select the most relevantItem if autoInsert is allowed
-        let selectedIndex = autoInsert ? mostRelevantIndex : -1;
+        let selectedIndex = autoInsert ? index : -1;
 
         // Open the suggestions popup.
         this.popup.setItems(finalList);
