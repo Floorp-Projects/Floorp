@@ -674,13 +674,14 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
   }
 
   TrackID videoTrackId = 1;
-  nsresult rv = stream->Init(aFrameRate, videoTrackId);
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
+  nsresult rv =
+    stream->Init(aFrameRate, videoTrackId, principal);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO, nsString(),
                          new BasicUnstoppableTrackSource(principal));
 

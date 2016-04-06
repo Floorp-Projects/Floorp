@@ -121,7 +121,7 @@ public:
   /* Start the device and add the track to the provided SourceMediaStream, with
    * the provided TrackID. You may start appending data to the track
    * immediately after. */
-  virtual nsresult Start(SourceMediaStream*, TrackID) = 0;
+  virtual nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) = 0;
 
   /* tell the source if there are any direct listeners attached */
   virtual void SetDirectListeners(bool) = 0;
@@ -130,7 +130,8 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) = 0;
+                          StreamTime aDesiredTime,
+                          const PrincipalHandle& aPrincipalHandle) = 0;
 
   /* Stop the device and release the corresponding MediaStream */
   virtual nsresult Stop(SourceMediaStream *aSource, TrackID aID) = 0;

@@ -440,7 +440,7 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
   for (uint32_t i = 0; i < audio->mChannels; ++i) {
     channels.AppendElement(bufferData + i * audio->mFrames);
   }
-  aOutput->AppendFrames(buffer.forget(), channels, audio->mFrames);
+  aOutput->AppendFrames(buffer.forget(), channels, audio->mFrames, PRINCIPAL_HANDLE_NONE /* Fixed in later patch */);
   aStream->mAudioFramesWritten += audio->mFrames;
 
   aStream->mNextAudioTime = audio->GetEndTime();
@@ -499,7 +499,7 @@ WriteVideoToMediaStream(MediaStream* aStream,
   StreamTime duration =
       aStream->MicrosecondsToStreamTimeRoundDown(aEndMicroseconds) -
       aStream->MicrosecondsToStreamTimeRoundDown(aStartMicroseconds);
-  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize);
+  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize, PRINCIPAL_HANDLE_NONE /* Fixed in later patch */);
 }
 
 static bool

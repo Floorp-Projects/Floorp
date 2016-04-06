@@ -781,6 +781,7 @@ private:
   const int DEFAULT_IMAGE_WIDTH = 400;
   const int DEFAULT_IMAGE_HEIGHT = 300;
   RefPtr<OverlayImage> mOverlayImage;
+  PrincipalID mPrincipalHandle;
 #endif
 };
 

@@ -118,7 +118,10 @@ void Fake_AudioStreamSource::Periodic() {
   mozilla::AudioSegment segment;
   AutoTArray<const int16_t *,1> channels;
   channels.AppendElement(data);
-  segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE);
+  segment.AppendFrames(samples.forget(),
+                       channels,
+                       AUDIO_BUFFER_SIZE,
+                       mozilla::PRINCIPAL_HANDLE_NONE);
 
   for(std::set<RefPtr<Fake_MediaStreamListener>>::iterator it = mListeners.begin();
        it != mListeners.end(); ++it) {
