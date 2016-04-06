@@ -491,6 +491,7 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
     LGPrivate *lgdb_p = NULL;
     CK_RV error = CKR_HOST_MEMORY;
 
+
     *pSdb = NULL;
     sdb = (SDB *) PORT_Alloc(sizeof(SDB));
     if (sdb == NULL) {
@@ -515,7 +516,6 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
 
     sdb->private = lgdb_p;
     sdb->version = 0;
-    /*sdb->sdb_type = SDB_LEGACY; */
     sdb->sdb_flags = flags;
     sdb->app_private = NULL;
     sdb->sdb_FindObjectsInit = lg_FindObjectsInit;
@@ -578,10 +578,16 @@ legacy_Open(const char *configdir, const char *certPrefix,
 {
     CK_RV crv = CKR_OK;
     SECStatus rv;
-    PRBool readOnly = (flags == SDB_RDONLY)? PR_TRUE: PR_FALSE;
+    PRBool readOnly = ((flags & 0x7) == SDB_RDONLY)? PR_TRUE: PR_FALSE;
 
 #define NSS_VERSION_VARIABLE __nss_dbm_version
 #include "verref.h"
+
+    if (flags & SDB_FIPS) {
+	if (!lg_FIPSEntryOK()) {
+	    return CKR_DEVICE_ERROR;
+	}
+    }
 
     rv = SECOID_Init();
     if (SECSuccess != rv) {

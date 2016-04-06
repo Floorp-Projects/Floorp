@@ -14,7 +14,7 @@
 /* Cipher Suite "Families" */
 #define CIPHER_FAMILY_PKCS12			"PKCS12"
 #define CIPHER_FAMILY_SMIME			"SMIME"
-#define CIPHER_FAMILY_SSL2			"SSLv2"
+#define CIPHER_FAMILY_SSL2                      "SSLv2" /* deprecated */
 #define CIPHER_FAMILY_SSL3			"SSLv3"
 #define CIPHER_FAMILY_SSL			"SSL"
 #define CIPHER_FAMILY_ALL			""

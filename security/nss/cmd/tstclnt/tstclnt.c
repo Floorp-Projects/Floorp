@@ -56,16 +56,6 @@
 
 PRIntervalTime maxInterval    = PR_INTERVAL_NO_TIMEOUT;
 
-int ssl2CipherSuites[] = {
-    SSL_EN_RC4_128_WITH_MD5,			/* A */
-    SSL_EN_RC4_128_EXPORT40_WITH_MD5,		/* B */
-    SSL_EN_RC2_128_CBC_WITH_MD5,		/* C */
-    SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,	/* D */
-    SSL_EN_DES_64_CBC_WITH_MD5,			/* E */
-    SSL_EN_DES_192_EDE3_CBC_WITH_MD5,		/* F */
-    0
-};
-
 int ssl3CipherSuites[] = {
     -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
     -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,	 * b */
@@ -219,14 +209,14 @@ static void PrintParameterUsage(void)
     fprintf(stderr, 
             "%-20s Restricts the set of enabled SSL/TLS protocols versions.\n"
             "%-20s All versions are enabled by default.\n"
-            "%-20s Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1 tls1.2\n"
+            "%-20s Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2\n"
             "%-20s Example: \"-V ssl3:\" enables SSL 3 and newer.\n",
             "-V [min]:[max]", "", "", "");
     fprintf(stderr, "%-20s Send TLS_FALLBACK_SCSV\n", "-K");
     fprintf(stderr, "%-20s Prints only payload data. Skips HTTP header.\n", "-S");
     fprintf(stderr, "%-20s Client speaks first. \n", "-f");
     fprintf(stderr, "%-20s Use synchronous certificate validation "
-                    "(required for SSL2)\n", "-O");
+                    "(currently required for TLS 1.3)\n", "-O");
     fprintf(stderr, "%-20s Override bad server cert. Make it OK.\n", "-o");
     fprintf(stderr, "%-20s Disable SSL socket locking.\n", "-s");
     fprintf(stderr, "%-20s Verbose progress reporting.\n", "-v");
@@ -273,13 +263,6 @@ static void PrintCipherUsage(const char *progName)
     fprintf(stderr, "%-20s Letter(s) chosen from the following list\n", 
                     "-c ciphers");
     fprintf(stderr, 
-"A    SSL2 RC4 128 WITH MD5\n"
-"B    SSL2 RC4 128 EXPORT40 WITH MD5\n"
-"C    SSL2 RC2 128 CBC WITH MD5\n"
-"D    SSL2 RC2 128 CBC EXPORT40 WITH MD5\n"
-"E    SSL2 DES 64 CBC WITH MD5\n"
-"F    SSL2 DES 192 EDE3 CBC WITH MD5\n"
-"\n"
 "c    SSL3 RSA WITH RC4 128 MD5\n"
 "d    SSL3 RSA WITH 3DES EDE CBC SHA\n"
 "e    SSL3 RSA WITH DES CBC SHA\n"
@@ -920,7 +903,6 @@ int main(int argc, char **argv)
     int                npds;
     int                override = 0;
     SSLVersionRange    enabledVersions;
-    PRBool             enableSSL2 = PR_TRUE;
     int                bypassPKCS11 = 0;
     int                disableLocking = 0;
     int                useExportPolicy = 0;
@@ -1035,8 +1017,7 @@ int main(int argc, char **argv)
           case 'U': enableSignedCertTimestamps = 1;               break;
 
           case 'V': if (SECU_ParseSSLVersionRangeString(optstate->value,
-                            enabledVersions, enableSSL2,
-                            &enabledVersions, &enableSSL2) != SECSuccess) {
+                            enabledVersions, &enabledVersions) != SECSuccess) {
                         Usage(progName);
                     }
                     break;
@@ -1250,7 +1231,7 @@ int main(int argc, char **argv)
     else
         NSS_SetDomesticPolicy();
 
-    /* all the SSL2 and SSL3 cipher suites are enabled by default. */
+    /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {
         /* disable all the ciphers, then enable the ones we want. */
         disableAllSSLCiphers();
@@ -1289,18 +1270,17 @@ int main(int argc, char **argv)
 	return 1;
     }
 
-    /* all the SSL2 and SSL3 cipher suites are enabled by default. */
+    /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {
     	char *cstringSaved = cipherString;
     	int ndx;
 
 	while (0 != (ndx = *cipherString++)) {
-	    int  cipher;
+            int cipher = 0;
 
 	    if (ndx == ':') {
 		int ctmp = 0;
 
-		cipher = 0;
 		HEXCHAR_TO_INT(*cipherString, ctmp)
 		cipher |= (ctmp << 12);
 		cipherString++;
@@ -1314,13 +1294,12 @@ int main(int argc, char **argv)
 		cipher |= ctmp;
 		cipherString++;
 	    } else {
-		const int *cptr;
-
 		if (! isalpha(ndx))
 		    Usage(progName);
-		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-		    /* do nothing */;
+                ndx = tolower(ndx) - 'a';
+                if (ndx < PR_ARRAY_SIZE(ssl3CipherSuites)) {
+                    cipher = ssl3CipherSuites[ndx];
+                }
 	    }
 	    if (cipher > 0) {
 		SECStatus status;
@@ -1337,18 +1316,6 @@ int main(int argc, char **argv)
     rv = SSL_VersionRangeSet(s, &enabledVersions);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error setting SSL/TLS version range ");
-        return 1;
-    }
-
-    rv = SSL_OptionSet(s, SSL_ENABLE_SSL2, enableSSL2);
-    if (rv != SECSuccess) {
-       SECU_PrintError(progName, "error enabling SSLv2 ");
-       return 1;
-    }
-
-    rv = SSL_OptionSet(s, SSL_V2_COMPATIBLE_HELLO, enableSSL2);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "error enabling SSLv2 compatible hellos ");
         return 1;
     }
 
@@ -1613,6 +1580,12 @@ int main(int argc, char **argv)
 		            "%s: about to call PR_Poll on writable socket !\n", 
 			    progName);
 		    cc = PR_Poll(pollset, 1, PR_INTERVAL_NO_TIMEOUT);
+                    if (cc < 0) {
+                        SECU_PrintError(progName, 
+                                        "PR_Poll failed");
+                        error = 1;
+                        goto done;
+                    }
 		    FPRINTF(stderr,
 		            "%s: PR_Poll returned with writable socket !\n", 
 			    progName);

@@ -31,29 +31,11 @@
  *
  * In sslcon.c:
  *  ssl_GatherRecord1stHandshake
- *  ssl2_HandleClientSessionKeyMessage
- *  ssl2_HandleMessage
- *  ssl2_HandleVerifyMessage
- *  ssl2_BeginClientHandshake
- *  ssl2_BeginServerHandshake
- *  ssl2_HandleClientHelloMessage
- *  ssl2_HandleServerHelloMessage
+ *  ssl_BeginClientHandshake
+ *  ssl_BeginServerHandshake
  *
- * The ss->handshake function returns SECWouldBlock under these conditions:
- * 1.   ssl_GatherRecord1stHandshake called ssl2_GatherData which read in
- *  the beginning of an SSL v3 hello message and returned SECWouldBlock
- *  to switch to SSL v3 handshake processing.
- *
- * 2.   ssl2_HandleClientHelloMessage discovered version 3.0 in the incoming
- *  v2 client hello msg, and called ssl3_HandleV2ClientHello which
- *  returned SECWouldBlock.
- *
- * 3.   SECWouldBlock was returned by one of the callback functions, via
- *  one of these paths:
- * -    ssl2_HandleMessage() -> ssl2_HandleRequestCertificate() ->
- *  ss->getClientAuthData()
- *
- * -    ssl2_HandleServerHelloMessage() -> ss->handleBadCert()
+ * The ss->handshake function returns SECWouldBlock if it was returned by
+ *  one of the callback functions, via one of these paths:
  *
  * -    ssl_GatherRecord1stHandshake() -> ssl3_GatherCompleteHandshake() ->
  *  ssl3_HandleRecord() -> ssl3_HandleHandshake() ->
@@ -78,40 +60,15 @@ int
 ssl_Do1stHandshake(sslSocket *ss)
 {
     int rv = SECSuccess;
-    int loopCount = 0;
 
-    do {
+    while (ss->handshake && rv == SECSuccess) {
         PORT_Assert(ss->opt.noLocks || ssl_Have1stHandshakeLock(ss));
         PORT_Assert(ss->opt.noLocks || !ssl_HaveRecvBufLock(ss));
         PORT_Assert(ss->opt.noLocks || !ssl_HaveXmitBufLock(ss));
         PORT_Assert(ss->opt.noLocks || !ssl_HaveSSL3HandshakeLock(ss));
 
-        if (ss->handshake == 0) {
-            /* Previous handshake finished. Switch to next one */
-            ss->handshake = ss->nextHandshake;
-            ss->nextHandshake = 0;
-        }
-        if (ss->handshake == 0) {
-            /* Previous handshake finished. Switch to security handshake */
-            ss->handshake = ss->securityHandshake;
-            ss->securityHandshake = 0;
-        }
-        if (ss->handshake == 0) {
-            /* for v3 this is done in ssl3_FinishHandshake */
-            if (!ss->firstHsDone && ss->version < SSL_LIBRARY_VERSION_3_0) {
-                ssl_GetRecvBufLock(ss);
-                ss->gs.recordLen = 0;
-                ssl_FinishHandshake(ss);
-                ssl_ReleaseRecvBufLock(ss);
-            }
-            break;
-        }
         rv = (*ss->handshake)(ss);
-        ++loopCount;
-        /* This code must continue to loop on SECWouldBlock,
-         * or any positive value.   See XXX_1 comments.
-         */
-    } while (rv != SECFailure); /* was (rv >= 0); XXX_1 */
+    };
 
     PORT_Assert(ss->opt.noLocks || !ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || !ssl_HaveXmitBufLock(ss));
@@ -138,9 +95,8 @@ ssl_FinishHandshake(sslSocket *ss)
     ss->gs.readOffset = 0;
 
     if (ss->handshakeCallback) {
-        PORT_Assert(ss->version < SSL_LIBRARY_VERSION_3_0 ||
-                    (ss->ssl3.hs.preliminaryInfo & ssl_preinfo_all) ==
-                        ssl_preinfo_all);
+        PORT_Assert((ss->ssl3.hs.preliminaryInfo & ssl_preinfo_all) ==
+                    ssl_preinfo_all);
         (ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
     }
 }
@@ -164,7 +120,6 @@ ssl3_SetAlwaysBlock(sslSocket *ss)
 {
     if (!ss->firstHsDone) {
         ss->handshake = ssl3_AlwaysBlock;
-        ss->nextHandshake = 0;
     }
 }
 
@@ -219,18 +174,18 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ss->firstHsDone = PR_FALSE;
     ss->enoughFirstHsDone = PR_FALSE;
     if (asServer) {
-        ss->handshake = ssl2_BeginServerHandshake;
+        ss->handshake = ssl_BeginServerHandshake;
         ss->handshaking = sslHandshakingAsServer;
     } else {
-        ss->handshake = ssl2_BeginClientHandshake;
+        ss->handshake = ssl_BeginClientHandshake;
         ss->handshaking = sslHandshakingAsClient;
     }
-    ss->nextHandshake = 0;
-    ss->securityHandshake = 0;
 
     ssl_GetRecvBufLock(ss);
-    status = ssl_InitGather(&ss->gs);
+    status = ssl3_InitGather(&ss->gs);
     ssl_ReleaseRecvBufLock(ss);
+    if (status != SECSuccess)
+        goto loser;
 
     ssl_GetSSL3HandshakeLock(ss);
     ss->ssl3.hs.canFalseStart = PR_FALSE;
@@ -250,6 +205,7 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     if (!ss->TCPconnected)
         ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
 
+loser:
     SSL_UNLOCK_WRITER(ss);
     SSL_UNLOCK_READER(ss);
 
@@ -278,15 +234,9 @@ SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache)
 
     ssl_Get1stHandshakeLock(ss);
 
-    /* SSL v2 protocol does not support subsequent handshakes. */
-    if (ss->version < SSL_LIBRARY_VERSION_3_0) {
-        PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
-        rv = SECFailure;
-    } else {
-        ssl_GetSSL3HandshakeLock(ss);
-        rv = ssl3_RedoHandshake(ss, flushCache); /* force full handshake. */
-        ssl_ReleaseSSL3HandshakeLock(ss);
-    }
+    ssl_GetSSL3HandshakeLock(ss);
+    rv = ssl3_RedoHandshake(ss, flushCache); /* force full handshake. */
+    ssl_ReleaseSSL3HandshakeLock(ss);
 
     ssl_Release1stHandshakeLock(ss);
 
@@ -397,11 +347,6 @@ SSL_RecommendedCanFalseStart(PRFileDesc *fd, PRBool *canFalseStart)
         return SECFailure;
     }
 
-    if (ss->version < SSL_LIBRARY_VERSION_3_0) {
-        PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
-        return SECFailure;
-    }
-
     /* Require a forward-secret key exchange. */
     *canFalseStart = ss->ssl3.hs.kea_def->kea == kea_dhe_dss ||
                      ss->ssl3.hs.kea_def->kea == kea_dhe_rsa ||
@@ -415,8 +360,7 @@ SSL_RecommendedCanFalseStart(PRFileDesc *fd, PRBool *canFalseStart)
 ** next handshake from the peer, and sending any responses.
 ** For non-blocking sockets, returns PR_ERROR_WOULD_BLOCK  if it cannot
 ** read the next handshake from the underlying socket.
-** For SSLv2, returns when handshake is complete or fatal error occurs.
-** For SSLv3, returns when handshake is complete, or application data has
+** Returns when handshake is complete, or application data has
 ** arrived that must be taken by application before handshake can continue,
 ** or a fatal error occurs.
 ** Application should use handshake completion callback to tell which.
@@ -465,12 +409,9 @@ SSL_ForceHandshake(PRFileDesc *fd)
         } else if (gatherResult == SECWouldBlock) {
             PORT_SetError(PR_WOULD_BLOCK_ERROR);
         }
-    } else if (!ss->firstHsDone) {
-        rv = ssl_Do1stHandshake(ss);
     } else {
-        /* tried to force handshake on an SSL 2 socket that has
-        ** already completed the handshake. */
-        rv = SECSuccess; /* just pretend we did it. */
+        PORT_Assert(!ss->firstHsDone);
+        rv = ssl_Do1stHandshake(ss);
     }
 
     ssl_Release1stHandshakeLock(ss);
@@ -590,8 +531,7 @@ ssl_SendSavedWriteData(sslSocket *ss)
 **
 ** Caller does NOT hold 1stHandshakeLock because that handshake is over.
 ** Caller doesn't call this until initial handshake is complete.
-** For SSLv2, there is no subsequent handshake.
-** For SSLv3, the call to ssl3_GatherAppDataRecord may encounter handshake
+** The call to ssl3_GatherAppDataRecord may encounter handshake
 ** messages from a subsequent handshake.
 **
 ** This code is similar to, and easily confused with,
@@ -611,14 +551,8 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
 
     available = ss->gs.writeOffset - ss->gs.readOffset;
     if (available == 0) {
-        /* Get some more data */
-        if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
-            /* Wait for application data to arrive.  */
-            rv = ssl3_GatherAppDataRecord(ss, 0);
-        } else {
-            /* See if we have a complete record */
-            rv = ssl2_GatherRecord(ss, 0);
-        }
+        /* Wait for application data to arrive.  */
+        rv = ssl3_GatherAppDataRecord(ss, 0);
         if (rv <= 0) {
             if (rv == 0) {
                 /* EOF */
@@ -948,12 +882,6 @@ ssl_CreateSecurityInfo(sslSocket *ss)
 {
     SECStatus status;
 
-    /* initialize sslv2 socket to send data in the clear. */
-    ssl2_UseClearSendFunc(ss);
-
-    ss->sec.blockSize = 1;
-    ss->sec.blockShift = 0;
-
     ssl_GetXmitBufLock(ss);
     status = sslBuffer_Grow(&ss->sec.writeBuf, 4096);
     ssl_ReleaseXmitBufLock(ss);
@@ -964,7 +892,6 @@ ssl_CreateSecurityInfo(sslSocket *ss)
 SECStatus
 ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
 {
-    ss->sec.send = os->sec.send;
     ss->sec.isServer = os->sec.isServer;
     ss->sec.keyBits = os->sec.keyBits;
     ss->sec.secretKeyBits = os->sec.secretKeyBits;
@@ -975,39 +902,6 @@ ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
 
     ss->sec.cache = os->sec.cache;
     ss->sec.uncache = os->sec.uncache;
-
-    /* we don't dup the connection info. */
-
-    ss->sec.sendSequence = os->sec.sendSequence;
-    ss->sec.rcvSequence = os->sec.rcvSequence;
-
-    if (os->sec.hash && os->sec.hashcx) {
-        ss->sec.hash = os->sec.hash;
-        ss->sec.hashcx = os->sec.hash->clone(os->sec.hashcx);
-        if (os->sec.hashcx && !ss->sec.hashcx)
-            goto loser;
-    } else {
-        ss->sec.hash = NULL;
-        ss->sec.hashcx = NULL;
-    }
-
-    if (SECITEM_CopyItem(0, &ss->sec.sendSecret, &os->sec.sendSecret))
-        goto loser;
-    if (SECITEM_CopyItem(0, &ss->sec.rcvSecret, &os->sec.rcvSecret))
-        goto loser;
-
-    /* XXX following code is wrong if either cx != 0 */
-    PORT_Assert(os->sec.readcx == 0);
-    PORT_Assert(os->sec.writecx == 0);
-    ss->sec.readcx = os->sec.readcx;
-    ss->sec.writecx = os->sec.writecx;
-    ss->sec.destroy = 0;
-
-    ss->sec.enc = os->sec.enc;
-    ss->sec.dec = os->sec.dec;
-
-    ss->sec.blockShift = os->sec.blockShift;
-    ss->sec.blockSize = os->sec.blockSize;
 
     return SECSuccess;
 
@@ -1021,28 +915,6 @@ loser:
 void
 ssl_ResetSecurityInfo(sslSecurityInfo *sec, PRBool doMemset)
 {
-    /* Destroy MAC */
-    if (sec->hash && sec->hashcx) {
-        (*sec->hash->destroy)(sec->hashcx, PR_TRUE);
-        sec->hashcx = NULL;
-        sec->hash = NULL;
-    }
-    SECITEM_ZfreeItem(&sec->sendSecret, PR_FALSE);
-    SECITEM_ZfreeItem(&sec->rcvSecret, PR_FALSE);
-
-    /* Destroy ciphers */
-    if (sec->destroy) {
-        (*sec->destroy)(sec->readcx, PR_TRUE);
-        (*sec->destroy)(sec->writecx, PR_TRUE);
-        sec->readcx = NULL;
-        sec->writecx = NULL;
-    } else {
-        PORT_Assert(sec->readcx == 0);
-        PORT_Assert(sec->writecx == 0);
-    }
-    sec->readcx = 0;
-    sec->writecx = 0;
-
     if (sec->localCert) {
         CERT_DestroyCertificate(sec->localCert);
         sec->localCert = NULL;
@@ -1091,10 +963,10 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
     int rv;
 
     if (ss->opt.handshakeAsServer) {
-        ss->securityHandshake = ssl2_BeginServerHandshake;
+        ss->handshake = ssl_BeginServerHandshake;
         ss->handshaking = sslHandshakingAsServer;
     } else {
-        ss->securityHandshake = ssl2_BeginClientHandshake;
+        ss->handshake = ssl_BeginClientHandshake;
         ss->handshaking = sslHandshakingAsClient;
     }
 
@@ -1145,8 +1017,7 @@ ssl_SecureClose(sslSocket *ss)
 {
     int rv;
 
-    if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
-        !(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
+    if (!(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
         ss->firstHsDone &&
         !ss->recvdCloseNotify &&
         ss->ssl3.initialized) {
@@ -1177,7 +1048,6 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
     }
 
     if ((sslHow & ssl_SHUTDOWN_SEND) != 0 &&
-        ss->version >= SSL_LIBRARY_VERSION_3_0 &&
         !(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
         ss->firstHsDone &&
         !ss->recvdCloseNotify &&
@@ -1225,7 +1095,7 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     /* If any of these is non-zero, the initial handshake is not done. */
     if (!ss->firstHsDone) {
         ssl_Get1stHandshakeLock(ss);
-        if (ss->handshake || ss->nextHandshake || ss->securityHandshake) {
+        if (ss->handshake) {
             rv = ssl_Do1stHandshake(ss);
         }
         ssl_Release1stHandshakeLock(ss);
@@ -1290,14 +1160,12 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     if (!ss->firstHsDone) {
         PRBool falseStart = PR_FALSE;
         ssl_Get1stHandshakeLock(ss);
-        if (ss->opt.enableFalseStart &&
-            ss->version >= SSL_LIBRARY_VERSION_3_0) {
+        if (ss->opt.enableFalseStart) {
             ssl_GetSSL3HandshakeLock(ss);
             falseStart = ss->ssl3.hs.canFalseStart;
             ssl_ReleaseSSL3HandshakeLock(ss);
         }
-        if (!falseStart &&
-            (ss->handshake || ss->nextHandshake || ss->securityHandshake)) {
+        if (!falseStart && ss->handshake) {
             rv = ssl_Do1stHandshake(ss);
         }
         ssl_Release1stHandshakeLock(ss);
@@ -1322,7 +1190,6 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     }
 
     if (!ss->firstHsDone) {
-        PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_3_0);
 #ifdef DEBUG
         ssl_GetSSL3HandshakeLock(ss);
         PORT_Assert(ss->ssl3.hs.canFalseStart);
@@ -1332,12 +1199,8 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
                     SSL_GETPID(), ss->fd));
     }
 
-    /* Send out the data using one of these functions:
-     *  ssl2_SendClear, ssl2_SendStream, ssl2_SendBlock,
-     *  ssl3_SendApplicationData
-     */
     ssl_GetXmitBufLock(ss);
-    rv = (*ss->sec.send)(ss, buf, len, flags);
+    rv = ssl3_SendApplicationData(ss, buf, len, flags);
     ssl_ReleaseXmitBufLock(ss);
     ss->writerThread = NULL;
 done:
@@ -1501,15 +1364,9 @@ SSL_GetSessionID(PRFileDesc *fd)
             item = (SECItem *)PORT_Alloc(sizeof(SECItem));
             if (item) {
                 sslSessionID *sid = ss->sec.ci.sid;
-                if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-                    item->len = SSL2_SESSIONID_BYTES;
-                    item->data = (unsigned char *)PORT_Alloc(item->len);
-                    PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
-                } else {
-                    item->len = sid->u.ssl3.sessionIDLength;
-                    item->data = (unsigned char *)PORT_Alloc(item->len);
-                    PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
-                }
+                item->len = sid->u.ssl3.sessionIDLength;
+                item->data = (unsigned char *)PORT_Alloc(item->len);
+                PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
             }
         }
 
@@ -1575,9 +1432,6 @@ SSL_AuthCertificateComplete(PRFileDesc *fd, PRErrorCode error)
 
     if (!ss->ssl3.initialized) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        rv = SECFailure;
-    } else if (ss->version < SSL_LIBRARY_VERSION_3_0) {
-        PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
         rv = SECFailure;
     } else {
         rv = ssl3_AuthCertificateComplete(ss, error);

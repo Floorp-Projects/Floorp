@@ -1176,10 +1176,10 @@ finish_des:
 	context->destroy = (SFTKDestroy) sftk_ChaCha20Poly1305_DestroyContext;
 	break;
 
-    case CKM_NETSCAPE_AES_KEY_WRAP_PAD:
+    case CKM_NSS_AES_KEY_WRAP_PAD:
     	context->doPad = PR_TRUE;
 	/* fall thru */
-    case CKM_NETSCAPE_AES_KEY_WRAP:
+    case CKM_NSS_AES_KEY_WRAP:
 	context->multi = PR_FALSE;
 	context->blockSize = 8;
 	if (key_type != CKK_AES) {
@@ -3639,10 +3639,17 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
 
     attribute = sftk_FindAttribute(key, CKA_PRIME_BITS);
     if (attribute == NULL) {
-	return CKR_TEMPLATE_INCOMPLETE;
+	attribute =sftk_FindAttribute(key, CKA_PRIME);
+	if (attribute == NULL) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	} else {
+	    primeBits = attribute->attrib.ulValueLen;
+	    sftk_FreeAttribute(attribute);
+	}
+    } else {
+	primeBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
+	sftk_FreeAttribute(attribute);
     }
-    primeBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
-    sftk_FreeAttribute(attribute);
     if (primeBits < 1024) {
 	j = PQG_PBITS_TO_INDEX(primeBits);
 	if (j == (unsigned int)-1) {
@@ -3650,7 +3657,7 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
 	}
     }
 
-    attribute = sftk_FindAttribute(key, CKA_NETSCAPE_PQG_SEED_BITS);
+    attribute = sftk_FindAttribute(key, CKA_NSS_PQG_SEED_BITS);
     if (attribute != NULL) {
 	seedBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
 	sftk_FreeAttribute(attribute);
@@ -3662,9 +3669,61 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
 	sftk_FreeAttribute(attribute);
     }
 
+    /* if P and Q are supplied, we want to generate a new G */
+    attribute = sftk_FindAttribute(key, CKA_PRIME);
+    if (attribute != NULL) {
+	PLArenaPool *arena;
+
+	sftk_FreeAttribute(attribute);
+	arena = PORT_NewArena(1024);
+	if (arena == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    goto loser;
+	}
+	params = PORT_ArenaAlloc(arena, sizeof(*params));
+	if (params == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    goto loser;
+	}
+	params->arena = arena;
+	crv = sftk_Attribute2SSecItem(arena, &params->prime, key, CKA_PRIME);
+	if (crv != CKR_OK) {
+	    goto loser;
+	}
+	crv = sftk_Attribute2SSecItem(arena, &params->subPrime, 
+							key, CKA_SUBPRIME);
+	if (crv != CKR_OK) {
+	    goto loser;
+	}
+
+	arena = PORT_NewArena(1024);
+	if (arena == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    goto loser;
+	}
+	vfy = PORT_ArenaAlloc(arena, sizeof(*vfy));
+	if (vfy == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    goto loser;
+	}
+	vfy->arena = arena;
+	crv = sftk_Attribute2SSecItem(arena, &vfy->seed, key, CKA_NSS_PQG_SEED);
+	if (crv != CKR_OK) {
+	    goto loser;
+	}
+	crv = sftk_Attribute2SSecItem(arena, &vfy->h, key, CKA_NSS_PQG_H);
+	if (crv != CKR_OK) {
+	    goto loser;
+	}
+    	sftk_DeleteAttributeType(key,CKA_PRIME);
+    	sftk_DeleteAttributeType(key,CKA_SUBPRIME);
+    	sftk_DeleteAttributeType(key,CKA_NSS_PQG_SEED);
+    	sftk_DeleteAttributeType(key,CKA_NSS_PQG_H);
+    }
+
     sftk_DeleteAttributeType(key,CKA_PRIME_BITS);
     sftk_DeleteAttributeType(key,CKA_SUBPRIME_BITS);
-    sftk_DeleteAttributeType(key,CKA_NETSCAPE_PQG_SEED_BITS);
+    sftk_DeleteAttributeType(key,CKA_NSS_PQG_SEED_BITS);
 
     /* use the old PQG interface if we have old input data */
     if ((primeBits < 1024) || ((primeBits == 1024) && (subprimeBits == 0))) {
@@ -3701,17 +3760,19 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
 				 params->base.data, params->base.len);
     if (crv != CKR_OK) goto loser;
     counter = vfy->counter;
-    crv = sftk_AddAttributeType(key,CKA_NETSCAPE_PQG_COUNTER,
+    crv = sftk_AddAttributeType(key,CKA_NSS_PQG_COUNTER,
 				 &counter, sizeof(counter));
-    crv = sftk_AddAttributeType(key,CKA_NETSCAPE_PQG_SEED,
+    crv = sftk_AddAttributeType(key,CKA_NSS_PQG_SEED,
 				 vfy->seed.data, vfy->seed.len);
     if (crv != CKR_OK) goto loser;
-    crv = sftk_AddAttributeType(key,CKA_NETSCAPE_PQG_H,
+    crv = sftk_AddAttributeType(key,CKA_NSS_PQG_H,
 				 vfy->h.data, vfy->h.len);
     if (crv != CKR_OK) goto loser;
 
 loser:
-    PQG_DestroyParams(params);
+    if (params) {
+         PQG_DestroyParams(params);
+    }
 
     if (vfy) {
 	PQG_DestroyVerify(vfy);
@@ -5018,7 +5079,6 @@ ecgn_done:
 			    (PRUint32)crv);
 		sftk_LogAuditMessage(NSS_AUDIT_ERROR, NSS_AUDIT_SELF_TEST, msg);
 	    }
-	    return crv;
 	}
     }
 
@@ -5027,6 +5087,7 @@ ecgn_done:
 	sftk_FreeObject(publicKey);
 	NSC_DestroyObject(hSession,privateKey->handle);
 	sftk_FreeObject(privateKey);
+	return crv;
     }
 
     *phPrivateKey = privateKey->handle;

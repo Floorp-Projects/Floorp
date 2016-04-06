@@ -46,11 +46,22 @@ ifeq ($(FREEBL_NO_DEPEND),1)
 endif
 
 ifeq ($(FREEBL_LOWHASH),1)
+	DEFINES += -DFREEBL_LOWHASH
 	LOWHASH_SRCS = nsslowhash.c
 	LOWHASH_EXPORTS = nsslowhash.h
-	MAPFILE_SOURCE = freebl_hash.def
+	MAPFILE_SOURCE = freebl_hash_vector.def
+	NEED_STUB_BUILD = 1
 else
 	MAPFILE_SOURCE = freebl.def
+endif
+
+ifdef USE_STUB_BUILD
+	CSRCS           = lowhash_vector.c
+	SIMPLE_OBJS     = $(CSRCS:.c=$(OBJ_SUFFIX))
+	OBJS            = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS))
+	ALL_TRASH :=    $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
+                $(NOSUCHFILE) so_locations
+	MAPFILE_SOURCE = freebl_hash.def
 endif
 
 # FREEBL_USE_PRELINK
@@ -87,6 +98,10 @@ ifdef LINUX
 	DEFINES += -D__GNU_SOURCE=1
 endif
 endif
+ifdef NSS_NO_INIT_SUPPORT
+    DEFINES += -DNSS_NO_INIT_SUPPORT
+endif
+
 ifdef FREEBL_PRELINK_COMMAND
 	DEFINES +=-DFREEBL_PRELINK_COMMAND=\"$(FREEBL_PRELINK_COMMAND)\"
 endif
@@ -112,7 +127,7 @@ ifeq (OS2,$(OS_TARGET))
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
     DEFINES += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
-    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+    DEFINES += -DMP_IS_LITTLE_ENDIAN
 endif
 
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
@@ -148,7 +163,7 @@ else
 endif
 else
     # -DMP_NO_MP_WORD
-    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+    DEFINES += -DMP_IS_LITTLE_ENDIAN
 ifdef NS_USE_GCC
 # Ideally, we should use amd64 assembly code, but it's not yet mingw-w64
 # compatible.
@@ -203,7 +218,7 @@ ifeq ($(CPU_ARCH),x86_64)
     ASFLAGS += -fPIC -Wa,--noexecstack
     DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
     DEFINES += -DNSS_USE_COMBA
-    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+    DEFINES += -DMP_IS_LITTLE_ENDIAN
 #   DEFINES += -DMPI_AMD64_ADD
     # comment the next four lines to turn off Intel HW acceleration.
     DEFINES += -DUSE_HW_AES -DINTEL_GCM
@@ -216,7 +231,7 @@ ifeq ($(CPU_ARCH),x86)
     ASFILES  = mpi_x86.s
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT
-    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+    DEFINES += -DMP_IS_LITTLE_ENDIAN
     # The floating point ECC code doesn't work on Linux x86 (bug 311432).
     #ECL_USE_FP = 1
 endif
@@ -226,6 +241,11 @@ ifeq ($(CPU_ARCH),arm)
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
     MPI_SRCS += mpi_arm.c
 endif
+ifeq ($(CPU_ARCH),ppc)
+ifdef USE_64
+    DEFINES += -DNSS_NO_INIT_SUPPORT
+endif # USE_64
+endif # ppc
 endif # Linux
 
 ifeq ($(OS_TARGET),AIX)
@@ -454,7 +474,7 @@ else
 	    # Intel acceleration for GCM does not build currently with Studio
 	endif
 	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
-	DEFINES += -DNSS_USE_COMBA -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+	DEFINES += -DNSS_USE_COMBA -DMP_IS_LITTLE_ENDIAN
 	# comment the next two lines to turn off Intel HW acceleration
 	DEFINES += -DUSE_HW_AES
 	ASFILES += intel-aes.s
@@ -484,7 +504,7 @@ endif
 
 # poly1305-donna-x64-sse2-incremental-source.c requires __int128 support
 # in GCC 4.6.0.
-ifeq ($(CC_NAME),clang)
+ifdef CC_IS_CLANG
     HAVE_INT128_SUPPORT = 1
 else ifeq (1,$(CC_IS_GCC))
     ifneq (,$(filter 4.6 4.7 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
@@ -598,6 +618,17 @@ release_md libs:: $(SINGLE_SHLIB_DIR)
 
 endif
 
+ifdef NEED_STUB_BUILD
+SINGLE_SHLIB_DIR = $(OBJDIR)/$(OS_TARGET)_SINGLE_SHLIB
+ALL_TRASH += $(SINGLE_SHLIB_DIR) 
+$(SINGLE_SHLIB_DIR):
+	-mkdir $(SINGLE_SHLIB_DIR)
+
+release_md libs:: $(SINGLE_SHLIB_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 USE_STUB_BUILD=1 \
+ OBJDIR=$(SINGLE_SHLIB_DIR) $@
+endif
+
 # multiple shared libraries
 
 ######################## ABI32_FPU stuff #########################
@@ -697,8 +728,8 @@ $(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
 # symbolic names to registers, for example,
 #     .set  Htbl, %rdi
 # So we can't use Clang's integrated assembler with intel-gcm.s.
-ifneq (,$(findstring clang,$(shell $(AS) --version)))
-$(OBJDIR)/$(PROG_PREFIX)intel-gcm$(OBJ_SUFFIX): ASFLAGS += -no-integrated-as
+ifdef CC_IS_CLANG
+$(OBJDIR)/$(PROG_PREFIX)intel-gcm$(OBJ_SUFFIX): CFLAGS += -no-integrated-as
 endif
 endif
 
