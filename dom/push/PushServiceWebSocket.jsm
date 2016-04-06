@@ -1356,7 +1356,7 @@ this.PushServiceWebSocket = {
   },
 
   /**
-   * Called by UDP Server Socket. As soon as a ping is recieved via UDP,
+   * Called by UDP Server Socket. As soon as a ping is received via UDP,
    * reconnect the WebSocket and get the actual data.
    */
   onPacketReceived: function(aServ, aMessage) {
