@@ -518,8 +518,8 @@ assertEq(f(3), -1);
 // unreachable
 
 const UNREACHABLE = /unreachable/;
-assertErrorMessage(wasmEvalText(`(module (func (trap)) (export "" 0))`), Error, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (if (trap) (i32.const 0))) (export "" 0))`), Error, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (block (br_if 0 (trap)))) (export "" 0))`), Error, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (block (br_table 0 (trap)))) (export "" 0))`), Error, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.add (i32.const 0) (trap))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (unreachable)) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (if (unreachable) (i32.const 0))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (block (br_if 0 (unreachable)))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (block (br_table 0 (unreachable)))) (export "" 0))`), Error, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.add (i32.const 0) (unreachable))) (export "" 0))`), Error, UNREACHABLE);
