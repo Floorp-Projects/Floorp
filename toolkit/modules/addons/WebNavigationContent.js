@@ -54,7 +54,18 @@ var WebProgressListener = {
   },
 
   onStateChange: function onStateChange(webProgress, request, stateFlags, status) {
-    let locationURI = request.QueryInterface(Ci.nsIChannel).URI;
+    let {originalURI, URI: locationURI} = request.QueryInterface(Ci.nsIChannel);
+
+    // Prevents "about", "chrome", "resource" and "moz-extension" URI schemes to be
+    // reported with the resolved "file" or "jar" URIs. (see Bug 1246125 for rationale)
+    if (locationURI.schemeIs("file") || locationURI.schemeIs("jar")) {
+      let shouldUseOriginalURI = originalURI.schemeIs("about") ||
+                                 originalURI.schemeIs("chrome") ||
+                                 originalURI.schemeIs("resource") ||
+                                 originalURI.schemeIs("moz-extension");
+
+      locationURI = shouldUseOriginalURI ? originalURI : locationURI;
+    }
 
     this.sendStateChange({webProgress, locationURI, stateFlags, status});
 
