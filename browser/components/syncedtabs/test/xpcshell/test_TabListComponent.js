@@ -77,7 +77,7 @@ add_task(function* testActions() {
       },
       PlacesUtils: { bookmarksMenuFolderId: "id" }
     },
-    openLinkIn() {}
+    openUILinkIn() {}
   };
   let component = new TabListComponent({
     window: windowMock, store, View: null, SyncedTabs,
@@ -121,9 +121,9 @@ add_task(function* testActions() {
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1], "uri");
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][2], "title");
 
-  sinon.spy(windowMock, "openLinkIn");
+  sinon.spy(windowMock, "openUILinkIn");
   component.onOpenTab("uri", "where", "params");
-  Assert.ok(windowMock.openLinkIn.calledWith("uri", "where", "params"));
+  Assert.ok(windowMock.openUILinkIn.calledWith("uri", "where", "params"));
 
   sinon.spy(clipboardHelperMock, "copyString");
   component.onCopyTabLocation("uri");
