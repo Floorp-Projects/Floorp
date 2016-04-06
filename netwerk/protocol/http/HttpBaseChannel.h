@@ -491,9 +491,10 @@ protected:
   uint32_t mRedirectMode;
   uint32_t mFetchCacheMode;
 
-  // This parameter is used to ensure that we do not call OnStartRequest more
-  // than once.
+  // These parameters are used to ensure that we do not call OnStartRequest and
+  // OnStopRequest more than once.
   bool mOnStartRequestCalled;
+  bool mOnStopRequestCalled;
 
   uint64_t mTransferSize;
   uint64_t mDecodedBodySize;
