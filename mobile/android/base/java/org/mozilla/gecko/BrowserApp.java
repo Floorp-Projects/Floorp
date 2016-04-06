@@ -3937,11 +3937,6 @@ public class BrowserApp extends GeckoApp
     @Override
     public int getLayout() { return R.layout.gecko_app; }
 
-    @Override
-    protected String getDefaultProfileName() throws NoMozillaDirectoryException {
-        return GeckoProfile.getDefaultProfileName(this);
-    }
-
     // For use from tests only.
     @RobocopTarget
     public ReadingListHelper getReadingListHelper() {
