@@ -344,24 +344,24 @@ public class GeckoThread extends Thread {
         String profileArg = "";
 
         if (mProfile != null && mProfile.inGuestMode()) {
-            try {
-                profileArg = " -profile " + mProfile.getDir().getCanonicalPath();
-            } catch (final IOException ioe) {
-                Log.e(LOGTAG, "error getting guest profile path", ioe);
-            }
+            profileArg = " -profile " + mProfile.getDir().getAbsolutePath();
 
             if (args == null || !args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
                 profileArg += " " + BrowserApp.GUEST_BROWSING_ARG;
             }
 
-        } else if (args == null || !args.matches(".*\\B-profile\\s+\\S+.*")) {
-            // If not using a custom profile, make sure a profile exists.
+        } else {
+            // Make sure a profile exists.
             final GeckoProfile profile = getProfile();
             profile.forceCreate();
 
-            // If args don't include the profile name, make sure it's included.
-            if (args == null || !args.matches(".*\\B-P\\s+\\S+.*")) {
-                profileArg = " -P " + profile.getName();
+            // If args don't include the profile, make sure it's included.
+            if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
+                if (profile.isCustomProfile()) {
+                    profileArg = " -profile " + profile.getDir().getAbsolutePath();
+                } else {
+                    profileArg = " -P " + profile.getName();
+                }
             }
         }
 
