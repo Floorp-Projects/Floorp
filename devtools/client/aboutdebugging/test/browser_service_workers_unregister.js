@@ -57,7 +57,7 @@ add_task(function* () {
   is(name.textContent, SERVICE_WORKER, "Found the service worker in the list");
 
   info("Check the scope displayed scope is correct");
-  let scope = target.querySelector(".serviceworker-scope");
+  let scope = target.querySelector(".service-worker-scope");
   is(scope.textContent, SCOPE,
     "The expected scope is displayed in the service worker info.");
 

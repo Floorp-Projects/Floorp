@@ -7,6 +7,7 @@ DevToolsModules(
     'addon-target.js',
     'addons-controls.js',
     'addons-tab.js',
+    'service-worker-target.js',
     'tab-header.js',
     'tab-menu-entry.js',
     'tab-menu.js',
