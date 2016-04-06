@@ -2744,7 +2744,6 @@ MOZ_WEBRTC_ASSERT_ALWAYS=1
 MOZ_WEBRTC_HARDWARE_AEC_NS=
 MOZ_SCTP=
 MOZ_ANDROID_OMX=
-MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
@@ -3992,18 +3991,6 @@ MOZ_ARG_ENABLE_BOOL(android-omx,
 
 if test -n "$MOZ_ANDROID_OMX"; then
   AC_DEFINE(MOZ_ANDROID_OMX)
-fi
-
-dnl ========================================================
-dnl = Enable getUserMedia support
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(media-navigator,
-[  --enable-media-navigator  Enable support for getUserMedia],
-    MOZ_MEDIA_NAVIGATOR=1,
-    MOZ_MEDIA_NAVIGATOR=)
-
-if test -n "$MOZ_MEDIA_NAVIGATOR"; then
-  AC_DEFINE(MOZ_MEDIA_NAVIGATOR)
 fi
 
 dnl ========================================================
