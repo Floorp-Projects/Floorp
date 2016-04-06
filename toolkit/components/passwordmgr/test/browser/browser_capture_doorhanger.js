@@ -479,6 +479,34 @@ add_task(function* test_change2pw0unExistingWithSameP() {
   Services.logins.removeLogin(login2);
 });
 
+add_task(function* test_changeUPLoginOnPUpdateForm() {
+  info("Check for change-password popup, u+p login on password update form.");
+  Services.logins.addLogin(login1);
+
+  yield testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+    is(fieldValues.username, "null", "Checking submitted username");
+    is(fieldValues.password, "pass2", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-change");
+    ok(notif, "got notification popup");
+    clickDoorhangerButton(notif, CHANGE_BUTTON);
+    ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+  });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username unchanged");
+  is(login.password, "pass2", "Check the password changed");
+  is(login.timesUsed, 2, "Check times used");
+
+  checkOnlyLoginWasUsedTwice({ justChanged: true });
+
+  // cleanup
+  login1.password = "pass2";
+  Services.logins.removeLogin(login1);
+  login1.password = "notifyp1";
+});
+
 add_task(function* test_recipeCaptureFields_NewLogin() {
   info("Check that we capture the proper fields when a field recipe is in use.");
 
