@@ -14,10 +14,19 @@ FIREFOX_PREFERENCES = {
     "devtools.debugger.prompt-connection": False,
     "devtools.debugger.remote-enabled": True,
     "media.volume_scale": "0",
-    "loop.gettingStarted.latestFTUVersion": 1,
+    "loop.gettingStarted.latestFTUVersion": 2,
 
     # this dialog is fragile, and likely to introduce intermittent failures
     "media.navigator.permission.disabled": True,
     # Use fake streams only
-    "media.navigator.streams.fake": True
+    "media.navigator.streams.fake": True,
+
+    # attempts to work around Ubuntu wanting to install add-ons
+    "extensions.enabledScopes": 5,
+    "extensions.autoDisableScopes": 0,
+    "extensions.update.enabled": False,
+    "extensions.installDistroAddons": False,
+    "extensions.blocklist.enabled": False,
+    "extensions.update.notifyUser": False,
+    "xpinstall.signatures.required": False,
 }

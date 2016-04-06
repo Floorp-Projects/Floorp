@@ -296,14 +296,15 @@ describe("loop.shared.utils", function() {
   describe("#formatURL", function() {
     beforeEach(function() {
       // Stub to prevent console messages.
-      sandbox.stub(window.console, "error");
+      sandbox.stub(window.console, "log");
     });
 
     it("should decode encoded URIs", function() {
       expect(sharedUtils.formatURL("http://invalid.com/?a=Foo%20Bar"))
         .eql({
           location: "http://invalid.com/?a=Foo Bar",
-          hostname: "invalid.com"
+          hostname: "invalid.com",
+          protocol: "http:"
         });
     });
 
@@ -314,18 +315,22 @@ describe("loop.shared.utils", function() {
       expect(sharedUtils.formatURL("http://\u0261oogle.com/"))
         .eql({
           location: "http://xn--oogle-qmc.com/",
-          hostname: "xn--oogle-qmc.com"
+          hostname: "xn--oogle-qmc.com",
+          protocol: "http:"
         });
     });
 
-    it("should return null if it the url is not valid", function() {
-      expect(sharedUtils.formatURL("hinvalid//url")).eql(null);
+    it("should return null if suppressConsoleError is true and the url is not valid", function() {
+      expect(sharedUtils.formatURL("hinvalid//url", true)).eql(null);
     });
 
-    it("should log an error message to the console", function() {
-      sharedUtils.formatURL("hinvalid//url");
+    it("should return null if suppressConsoleError is true and is a malformed URI sequence", function() {
+      expect(sharedUtils.formatURL("http://www.example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%", true)).eql(null);
+    });
 
-      sinon.assert.calledOnce(console.error);
+    it("should log a malformed URI sequence error to the console", function() {
+      sharedUtils.formatURL("http://www.example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%");
+      sinon.assert.calledOnce(console.log);
     });
   });
 

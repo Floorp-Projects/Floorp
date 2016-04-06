@@ -5,15 +5,13 @@ describe("loopapi-client", function() {
   "use strict";
 
   var expect = chai.expect;
-  var sandbox, clock, replyTimeoutMs;
+  var sandbox;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     window.addMessageListener = sinon.stub();
     window.removeMessageListener = sinon.stub();
     window.sendAsyncMessage = sinon.stub();
-    clock = sandbox.useFakeTimers();
-    replyTimeoutMs = loop.request.getReplyTimeoutMs();
   });
 
   afterEach(function() {
@@ -36,7 +34,12 @@ describe("loopapi-client", function() {
         [loop._lastMessageID, "GetLoopPref", "enabled"]);
       sinon.assert.calledOnce(window.addMessageListener);
 
-      clock.tick(replyTimeoutMs);
+      // Call the added listener, so that the promise resolves.
+      window.addMessageListener.args[0][1]({
+        name: "Loop:Message",
+        data: [loop._lastMessageID, "true"]
+      });
+
       return promise;
     });
 
@@ -46,7 +49,12 @@ describe("loopapi-client", function() {
       sinon.assert.calledWithExactly(window.sendAsyncMessage, "Loop:Message",
         [loop._lastMessageID, "GetLoopPref", "enabled"]);
 
-      clock.tick(replyTimeoutMs);
+      // Call the added listener, so that the promise resolves.
+      window.addMessageListener.args[0][1]({
+        name: "Loop:Message",
+        data: [loop._lastMessageID, "true"]
+      });
+
       return promise;
     });
 
@@ -56,7 +64,12 @@ describe("loopapi-client", function() {
       sinon.assert.calledWithExactly(window.sendAsyncMessage, "Loop:Message",
         [loop._lastMessageID, "SetLoopPref", "enabled", false, 1, 2, 3]);
 
-      clock.tick(replyTimeoutMs);
+      // Call the added listener, so that the promise resolves.
+      window.addMessageListener.args[0][1]({
+        name: "Loop:Message",
+        data: [loop._lastMessageID, "true"]
+      });
+
       return promise;
     });
 
@@ -77,17 +90,6 @@ describe("loopapi-client", function() {
       return promise;
     });
 
-    it("should cancel the message listener when no reply is received in time", function() {
-      var promise = loop.request("GetLoopPref", "enabled");
-
-      promise.then(function(result) {
-        expect(result).to.eql(undefined);
-      });
-
-      clock.tick(replyTimeoutMs);
-      return promise;
-    });
-
     it("should not start listening for messages more than once", function() {
       return new Promise(function(resolve) {
         loop.request("GetLoopPref", "enabled").then(function() {
@@ -99,10 +101,18 @@ describe("loopapi-client", function() {
             resolve();
           });
 
-          clock.tick(replyTimeoutMs);
+          // Call the added listener, so that the promise resolves.
+          window.addMessageListener.args[0][1]({
+            name: "Loop:Message",
+            data: [loop._lastMessageID, "true"]
+          });
         });
 
-        clock.tick(replyTimeoutMs);
+        // Call the added listener, so that the promise resolves.
+        window.addMessageListener.args[0][1]({
+          name: "Loop:Message",
+          data: [loop._lastMessageID, "true"]
+        });
       });
     });
   });
@@ -166,7 +176,12 @@ describe("loopapi-client", function() {
           [loop._lastMessageID - 1, "GetLoopPref", "e10s.enabled"]]
         ]);
 
-      clock.tick(replyTimeoutMs);
+      // Call the added listener, so that the promise resolves.
+      window.addMessageListener.args[0][1]({
+        name: "Loop:Message",
+        data: [loop._lastMessageID, "true"]
+      });
+
       return promise;
     });
 
@@ -183,7 +198,12 @@ describe("loopapi-client", function() {
           [loop._lastMessageID - 1, "GetLoopPref", "e10s.enabled"]]
         ]);
 
-      clock.tick(replyTimeoutMs);
+      // Call the added listener, so that the promise resolves.
+      window.addMessageListener.args[0][1]({
+        name: "Loop:Message",
+        data: [loop._lastMessageID, "true"]
+      });
+
       return promise;
     });
 

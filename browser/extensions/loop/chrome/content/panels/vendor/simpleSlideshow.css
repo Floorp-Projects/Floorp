@@ -1,0 +1,109 @@
+/* This is derived from PIOTR F's code,
+currently available at https://github.com/piotrf/simple-react-slideshow
+
+Simple React Slideshow Example
+
+Original Author: PIOTR F.
+License: MIT
+
+Copyright (c) 2015 Piotr
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+html {
+  font-size: 10px;
+  font-family: menu;
+  color: #fff;
+}
+
+body {
+  background: none;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  line-height: 2.4rem;  /* or 1.3rem original*/
+}
+
+.slides {
+  display: block;
+  width: 100%;
+  height: 390px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.slide {
+  display: none;
+  height: 100%;
+  width:  100%;
+}
+.slide.slide--active {
+  display: block;
+}
+
+.control-panel {
+  height: 60px;
+  background: #fff;
+  width: 100%;
+}
+
+.toggle {
+  color: white;
+  display: block;
+  padding: 0px;
+  position: absolute;
+  bottom: 20px;
+  background-color: transparent;
+  background-image: url(../../shared/img/arrow-01.svg);
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  border: none;
+  /*padding: 0;*/
+  height: 20px;
+  width: 20px;
+}
+.toggle-prev {
+  left: 20px;
+  transform: scaleX(-1);
+}
+.toggle-next {
+  right: 20px;
+
+}
+
+.button-close {
+  display: block;
+  position: absolute;
+  background-color: transparent;
+  background-image: url(../../shared/img/close-02.svg);
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  border: none;
+  padding: 0;
+  height: 20px;
+  width: 20px;
+  top: 20px;
+  right: 20px;
+}

@@ -246,7 +246,7 @@ loop.roomViews = function (mozL10n) {
     displayName: "DesktopRoomInvitationView",
 
     statics: {
-      TRIGGERED_RESET_DELAY: 2000
+      TRIGGERED_RESET_DELAY: 3000
     },
 
     mixins: [sharedMixins.DropdownMenuMixin(".room-invitation-overlay")],
@@ -254,6 +254,7 @@ loop.roomViews = function (mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       error: React.PropTypes.object,
+      facebookEnabled: React.PropTypes.bool.isRequired,
       // This data is supplied by the activeRoomStore.
       roomData: React.PropTypes.object.isRequired,
       show: React.PropTypes.bool.isRequired,
@@ -323,6 +324,7 @@ loop.roomViews = function (mozL10n) {
       }
 
       var cx = classNames;
+
       return React.createElement(
         "div",
         { className: "room-invitation-overlay" },
@@ -330,18 +332,43 @@ loop.roomViews = function (mozL10n) {
           "div",
           { className: "room-invitation-content" },
           React.createElement(
-            "p",
+            "div",
+            { className: "room-context-header" },
+            mozL10n.get("invite_header_text_bold2")
+          ),
+          React.createElement(
+            "div",
             null,
+            mozL10n.get("invite_header_text4")
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "input-button-group" },
+          React.createElement(
+            "div",
+            { className: "input-button-group-label" },
+            mozL10n.get("invite_your_link")
+          ),
+          React.createElement(
+            "div",
+            { className: "input-button-content" },
             React.createElement(
-              "span",
-              { className: "room-context-header" },
-              mozL10n.get("invite_header_text_bold")
+              "div",
+              { className: "input-group group-item-top" },
+              React.createElement("input", { readOnly: true, type: "text", value: this.props.roomData.roomUrl })
             ),
-            " ",
             React.createElement(
-              "span",
-              null,
-              mozL10n.get("invite_header_text3")
+              "div",
+              { className: cx({
+                  "group-item-bottom": true,
+                  "btn": true,
+                  "invite-button": true,
+                  "btn-copy": true,
+                  "triggered": this.state.copiedUrl
+                }),
+                onClick: this.handleCopyButtonClick },
+              mozL10n.get(this.state.copiedUrl ? "invite_copied_link_button" : "invite_copy_link_button")
             )
           )
         ),
@@ -349,23 +376,8 @@ loop.roomViews = function (mozL10n) {
           "div",
           { className: cx({
               "btn-group": true,
-              "call-action-group": true
+              "share-action-group": true
             }) },
-          React.createElement(
-            "div",
-            { className: cx({
-                "btn-copy": true,
-                "invite-button": true,
-                "triggered": this.state.copiedUrl
-              }),
-              onClick: this.handleCopyButtonClick },
-            React.createElement("img", { src: "shared/img/glyph-link-16x16.svg" }),
-            React.createElement(
-              "p",
-              null,
-              mozL10n.get(this.state.copiedUrl ? "invite_copied_link_button" : "invite_copy_link_button")
-            )
-          ),
           React.createElement(
             "div",
             { className: "btn-email invite-button",
@@ -373,23 +385,27 @@ loop.roomViews = function (mozL10n) {
               onMouseOver: this.resetTriggeredButtons },
             React.createElement("img", { src: "shared/img/glyph-email-16x16.svg" }),
             React.createElement(
-              "p",
+              "div",
               null,
               mozL10n.get("invite_email_link_button")
             )
           ),
-          React.createElement(
-            "div",
-            { className: "btn-facebook invite-button",
-              onClick: this.handleFacebookButtonClick,
-              onMouseOver: this.resetTriggeredButtons },
-            React.createElement("img", { src: "shared/img/glyph-facebook-16x16.svg" }),
-            React.createElement(
-              "p",
-              null,
-              mozL10n.get("invite_facebook_button2")
-            )
-          )
+          (() => {
+            if (this.props.facebookEnabled) {
+              return React.createElement(
+                "div",
+                { className: "btn-facebook invite-button",
+                  onClick: this.handleFacebookButtonClick,
+                  onMouseOver: this.resetTriggeredButtons },
+                React.createElement("img", { src: "shared/img/glyph-facebook-16x16.svg" }),
+                React.createElement(
+                  "div",
+                  null,
+                  mozL10n.get("invite_facebook_button3")
+                )
+              );
+            }
+          })()
         ),
         React.createElement(SocialShareDropdown, {
           dispatcher: this.props.dispatcher,
@@ -411,7 +427,9 @@ loop.roomViews = function (mozL10n) {
 
     propTypes: {
       chatWindowDetached: React.PropTypes.bool.isRequired,
+      cursorStore: React.PropTypes.instanceOf(loop.store.RemoteCursorStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      facebookEnabled: React.PropTypes.bool.isRequired,
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
       onCallTerminated: React.PropTypes.func.isRequired,
@@ -446,19 +464,6 @@ loop.roomViews = function (mozL10n) {
       } else {
         this.closeWindow();
       }
-    },
-
-    /**
-     * Used to control publishing a stream - i.e. to mute a stream
-     *
-     * @param {String} type The type of stream, e.g. "audio" or "video".
-     * @param {Boolean} enabled True to enable the stream, false otherwise.
-     */
-    publishStream: function (type, enabled) {
-      this.props.dispatcher.dispatch(new sharedActions.SetMute({
-        type: type,
-        enabled: enabled
-      }));
     },
 
     /**
@@ -556,6 +561,9 @@ loop.roomViews = function (mozL10n) {
     render: function () {
       if (this.state.roomName || this.state.roomContextUrls) {
         var roomTitle = this.state.roomName || this.state.roomContextUrls[0].description || this.state.roomContextUrls[0].location;
+        if (!roomTitle) {
+          roomTitle = mozL10n.get("room_name_untitled_page");
+        }
         this.setTitle(roomTitle);
       }
 
@@ -587,6 +595,7 @@ loop.roomViews = function (mozL10n) {
               React.createElement(
                 sharedViews.MediaLayoutView,
                 {
+                  cursorStore: this.props.cursorStore,
                   dispatcher: this.props.dispatcher,
                   displayScreenShare: false,
                   isLocalLoading: this._isLocalLoading(),
@@ -607,12 +616,12 @@ loop.roomViews = function (mozL10n) {
                   audio: { enabled: !this.state.audioMuted, visible: true },
                   dispatcher: this.props.dispatcher,
                   hangup: this.leaveRoom,
-                  publishStream: this.publishStream,
                   showHangup: this.props.chatWindowDetached,
                   video: { enabled: !this.state.videoMuted, visible: true } }),
                 React.createElement(DesktopRoomInvitationView, {
                   dispatcher: this.props.dispatcher,
                   error: this.state.error,
+                  facebookEnabled: this.props.facebookEnabled,
                   roomData: roomData,
                   show: shouldRenderInvitationOverlay,
                   socialShareProviders: this.state.socialShareProviders })
