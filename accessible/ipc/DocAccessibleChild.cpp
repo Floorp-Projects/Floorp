@@ -151,7 +151,7 @@ DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
   nsTArray<AccessibleData> shownTree;
   ShowEventData data(parentID, idxInParent, shownTree);
   SerializeTree(aShowEvent->GetAccessible(), data.NewTree());
-  SendShowEvent(data);
+  SendShowEvent(data, aShowEvent->IsFromUserInput());
 }
 
 bool
