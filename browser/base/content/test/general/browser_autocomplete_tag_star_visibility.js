@@ -79,7 +79,6 @@ add_task(function*() {
     },
   }];
 
-
   for (let testcase of testcases) {
     info(`Test case: ${testcase.description}`);
 
@@ -93,10 +92,13 @@ add_task(function*() {
     ok(result && !result.collasped, "Should have result");
 
     is(result.getAttribute("type"), testcase.expected.type, "Result should have expected type");
+
+    let typeIconStyle = window.getComputedStyle(result._typeIcon);
+    let imageURL = typeIconStyle.listStyleImage;
     if (testcase.expected.typeImageVisible) {
-      is_element_visible(result._typeImage, "Type image should be visible");
+      ok(/^url\(.+\)$/.test(imageURL), "Type image should be visible");
     } else {
-      is_element_hidden(result._typeImage, "Type image should be hidden");
+      is(imageURL, "none", "Type image should be hidden");
     }
 
     gURLBar.popup.hidePopup();
