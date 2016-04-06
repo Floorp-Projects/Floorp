@@ -255,7 +255,7 @@ loop.panel = function (_, mozL10n) {
         loop.requestMulti(["GetUserProfile"], ["GetDoNotDisturb"]).then(function (results) {
           this.setState({
             signedIn: !!results[0],
-            doNotDisturb: results[2]
+            doNotDisturb: results[1]
           });
         }.bind(this));
       }
@@ -867,7 +867,9 @@ loop.panel = function (_, mozL10n) {
         "room-list": true,
         // add extra space to last item so when scrolling to bottom,
         // last item is not covered by the gradient
-        "room-list-add-space": this.state.rooms.length && this.state.rooms.length > 5
+        "room-list-add-space": this.state.rooms.length && this.state.rooms.length > 5,
+        // Indicate there's a pending action to disable opening more rooms.
+        "room-list-pending-creation": this.state.pendingCreation
       });
 
       if (this.state.error) {
