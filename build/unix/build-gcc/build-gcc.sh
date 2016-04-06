@@ -39,6 +39,8 @@ cd gcc-$gcc_version
 
 ./contrib/download_prerequisites
 
+patch -p1 < "${this_path}/PR64905.patch" || exit 1
+
 cd ..
 mkdir gcc-objdir
 cd gcc-objdir

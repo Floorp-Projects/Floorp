@@ -1,0 +1,11 @@
+--- trunk/gcc/lra-eliminations.c	2015/02/04 20:00:48	220415
++++ trunk/gcc/lra-eliminations.c	2015/02/04 20:02:21	220416
+@@ -182,6 +182,8 @@
+   if (! value
+       && ep->from == FRAME_POINTER_REGNUM && ep->to == STACK_POINTER_REGNUM)
+     frame_pointer_needed = 1;
++  if (!frame_pointer_needed)
++    REGNO_POINTER_ALIGN (HARD_FRAME_POINTER_REGNUM) = 0;
+ }
+ 
+ /* Map: eliminable "from" register -> its current elimination,
