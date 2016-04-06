@@ -714,6 +714,7 @@ private:
 
   nsresult SetupIceRestart();
   nsresult RollbackIceRestart();
+  void FinalizeIceRestart();
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   static void GetStatsForPCObserver_s(
