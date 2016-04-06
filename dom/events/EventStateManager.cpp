@@ -2303,8 +2303,8 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
-  event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
-  event.delta = aDelta;
+  event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
+  event.mDelta = aDelta;
   event.inputSource = aEvent->inputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2343,8 +2343,8 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
-  event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
-  event.delta = aPixelDelta;
+  event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
+  event.mDelta = aPixelDelta;
   event.inputSource = aEvent->inputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
