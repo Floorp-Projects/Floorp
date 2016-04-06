@@ -71,12 +71,6 @@ ServiceWorkerUnregisterJob2::AsyncExecute()
 
   // "If no service worker client is using registration..."
   if (!registration->IsControllingDocuments()) {
-    // "If registration's uninstalling flag is set.."
-    if (!registration->mPendingUninstall) {
-      Finish(NS_OK);
-      return;
-    }
-
     // "Invoke [[Clear Registration]]..."
     swm->RemoveRegistration(registration);
   }
