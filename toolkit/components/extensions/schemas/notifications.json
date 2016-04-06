@@ -186,6 +186,7 @@
         "async": "callback",
         "parameters": [
           {
+            "optional": true,
             "type": "string",
             "name": "notificationId",
             "description": "Identifier of the notification. If it is empty, this method generates an id. If it matches an existing notification, this method first clears that notification before proceeding with the create operation."
