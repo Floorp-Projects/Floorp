@@ -47,8 +47,6 @@ namespace workers {
 class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
-class ServiceWorkerJob;
-class ServiceWorkerJobQueue;
 class ServiceWorkerJobQueue2;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
@@ -328,14 +326,8 @@ class ServiceWorkerManager final
   friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
-  friend class ServiceWorkerJobQueue;
-  friend class ServiceWorkerInstallJob;
-  friend class ServiceWorkerRegisterJob;
   friend class ServiceWorkerJob2;
-  friend class ServiceWorkerJobBase;
-  friend class ServiceWorkerScriptJobBase;
   friend class ServiceWorkerRegistrationInfo;
-  friend class ServiceWorkerUnregisterJob;
   friend class ServiceWorkerUnregisterJob2;
   friend class ServiceWorkerUpdateJob2;
   friend class UpdateTimerCallback;
@@ -631,9 +623,6 @@ private:
   };
 
   void AppendPendingOperation(nsIRunnable* aRunnable);
-  // TODO: remove this
-  void AppendPendingOperation(ServiceWorkerJobQueue* aQueue,
-                              ServiceWorkerJob* aJob);
 
   bool HasBackgroundActor() const
   {
@@ -651,8 +640,7 @@ private:
 
   RefPtr<ServiceWorkerManagerChild> mActor;
 
-  struct PendingOperation;
-  nsTArray<PendingOperation> mPendingOperations;
+  nsTArray<nsCOMPtr<nsIRunnable>> mPendingOperations;
 
   bool mShuttingDown;
 
