@@ -880,8 +880,14 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   if (extension.errors.length)
     throw new Error("Extension is invalid");
 
+  let bss = (manifest.browser_specific_settings && manifest.browser_specific_settings.gecko)
+      || (manifest.applications && manifest.applications.gecko) || {};
+  if (manifest.browser_specific_settings && manifest.applications) {
+    logger.warn("Ignoring applications property in manifest");
+  }
+
   let addon = new AddonInternal();
-  addon.id = manifest.applications.gecko.id;
+  addon.id = bss.id;
   addon.version = manifest.version;
   addon.type = "webextension";
   addon.unpack = false;
@@ -890,7 +896,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.hasBinaryComponents = false;
   addon.multiprocessCompatible = true;
   addon.internalName = null;
-  addon.updateURL = manifest.applications.gecko.update_url;
+  addon.updateURL = bss.update_url;
   addon.updateKey = null;
   addon.optionsURL = null;
   addon.optionsType = null;
@@ -937,9 +943,9 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
 
   addon.targetApplications = [{
     id: TOOLKIT_ID,
-    minVersion: (manifest.applications.gecko.strict_min_version ||
+    minVersion: (bss.strict_min_version ||
                  AddonManagerPrivate.webExtensionsMinPlatformVersion),
-    maxVersion: manifest.applications.gecko.strict_max_version || "*",
+    maxVersion: bss.strict_max_version || "*",
   }];
 
   addon.targetPlatforms = [];
@@ -1314,14 +1320,29 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
 
   let uri = Services.io.newFileURI(file).QueryInterface(Ci.nsIFileURL);
 
-  let addon = file.leafName == FILE_WEB_MANIFEST ?
-              yield loadManifestFromWebManifest(uri) :
-              loadFromRDF(uri);
+  let addon;
+  if (file.leafName == FILE_WEB_MANIFEST) {
+    addon = yield loadManifestFromWebManifest(uri);
+    if (!addon.id) {
+      if (aInstallLocation == TemporaryInstallLocation) {
+        let id = Cc["@mozilla.org/uuid-generator;1"]
+            .getService(Ci.nsIUUIDGenerator)
+            .generateUUID().toString();
+        logger.info(`Generated temporary id ${id} for ${aDir.path}`);
+        addon.id = id;
+      } else {
+        addon.id = aDir.leafName;
+      }
+    }
+  } else {
+    addon = loadFromRDF(uri);
+  }
 
   addon._sourceBundle = aDir.clone();
   addon._installLocation = aInstallLocation;
   addon.size = getFileSize(aDir);
-  addon.signedState = yield verifyDirSignedState(aDir, addon);
+  addon.signedState = yield verifyDirSignedState(aDir, addon)
+    .then(({signedState}) => signedState);
   addon.appDisabled = !isUsableAddon(addon);
 
   defineSyncGUID(addon);
@@ -1380,7 +1401,9 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
 
   let uri = buildJarURI(aZipReader.file, entry);
 
-  let addon = entry == FILE_WEB_MANIFEST ?
+  let isWebExtension = (entry == FILE_WEB_MANIFEST);
+
+  let addon = isWebExtension ?
               yield loadManifestFromWebManifest(uri) :
               loadFromRDF(uri);
 
@@ -1392,7 +1415,11 @@ var loadManifestFromZipReader = Task.async(function*(aZipReader, aInstallLocatio
   while (entries.hasMore())
     addon.size += aZipReader.getEntry(entries.getNext()).realSize;
 
-  addon.signedState = yield verifyZipSignedState(aZipReader.file, addon);
+  let {signedState, cert} = yield verifyZipSignedState(aZipReader.file, addon);
+  addon.signedState = signedState;
+  if (isWebExtension && !addon.id && cert) {
+    addon.id = cert.commonName;
+  }
   addon.appDisabled = !isUsableAddon(addon);
 
   defineSyncGUID(addon);
@@ -1571,7 +1598,7 @@ function verifyZipSigning(aZip, aCertificate) {
  */
 function getSignedStatus(aRv, aCert, aAddonID) {
   let expectedCommonName = aAddonID;
-  if (aAddonID.length > 64) {
+  if (aAddonID && aAddonID.length > 64) {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                     createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
@@ -1586,7 +1613,7 @@ function getSignedStatus(aRv, aCert, aAddonID) {
 
   switch (aRv) {
     case Cr.NS_OK:
-      if (expectedCommonName != aCert.commonName)
+      if (expectedCommonName && expectedCommonName != aCert.commonName)
         return AddonManager.SIGNEDSTATE_BROKEN;
 
       let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
@@ -1659,11 +1686,16 @@ let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
  *         the xpi file to check
  * @param  aAddon
  *         the add-on object to verify
- * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
+ * @return a Promise that resolves to an object with properties:
+ *         signedState: an AddonManager.SIGNEDSTATE_* constant
+ *         cert: an nsIX509Cert
  */
 function verifyZipSignedState(aFile, aAddon) {
   if (!shouldVerifySignedState(aAddon))
-    return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    return Promise.resolve({
+      signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+      cert: null
+    });
 
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
   if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
@@ -1674,7 +1706,10 @@ function verifyZipSignedState(aFile, aAddon) {
       openSignedAppFileFinished: function(aRv, aZipReader, aCert) {
         if (aZipReader)
           aZipReader.close();
-        resolve(getSignedStatus(aRv, aCert, aAddon.id));
+        resolve({
+          signedState: getSignedStatus(aRv, aCert, aAddon.id),
+          cert: aCert
+        });
       }
     };
     // This allows the certificate DB to get the raw JS callback object so the
@@ -1693,11 +1728,16 @@ function verifyZipSignedState(aFile, aAddon) {
  *         the directory to check
  * @param  aAddon
  *         the add-on object to verify
- * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
+ * @return a Promise that resolves to an object with properties:
+ *         signedState: an AddonManager.SIGNEDSTATE_* constant
+ *         cert: an nsIX509Cert
  */
 function verifyDirSignedState(aDir, aAddon) {
   if (!shouldVerifySignedState(aAddon))
-    return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    return Promise.resolve({
+      signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+      cert: null,
+    });
 
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
   if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
@@ -1706,7 +1746,10 @@ function verifyDirSignedState(aDir, aAddon) {
   return new Promise(resolve => {
     let callback = {
       verifySignedDirectoryFinished: function(aRv, aCert) {
-        resolve(getSignedStatus(aRv, aCert, aAddon.id));
+        resolve({
+          signedState: getSignedStatus(aRv, aCert, aAddon.id),
+          cert: null,
+        });
       }
     };
     // This allows the certificate DB to get the raw JS callback object so the
@@ -1728,9 +1771,9 @@ function verifyDirSignedState(aDir, aAddon) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyBundleSignedState(aBundle, aAddon) {
-  if (aBundle.isFile())
-    return verifyZipSignedState(aBundle, aAddon);
-  return verifyDirSignedState(aBundle, aAddon);
+  let promise = aBundle.isFile() ? verifyZipSignedState(aBundle, aAddon)
+      : verifyDirSignedState(aBundle, aAddon);
+  return promise.then(({signedState}) => signedState);
 }
 
 /**
