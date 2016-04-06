@@ -342,8 +342,8 @@ RelocationOverlay::forwardTo(Cell* cell)
                   offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) &&
                   offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.flags),
                   "RelocationOverlay::magic_ is in the wrong location");
-    newLocation_ = cell;
     magic_ = Relocated;
+    newLocation_ = cell;
 }
 
 } /* namespace gc */
