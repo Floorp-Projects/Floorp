@@ -1585,6 +1585,14 @@ MaiAtkObject::FireTextChangeEvent(const nsString& aStr, int32_t aStart,
   }
 }
 
+void
+a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible* aParent,
+                         bool aInsert, bool aFromUser)
+{
+  MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
+  obj->FireAtkShowHideEvent(GetWrapperFor(aParent), aInsert, aFromUser);
+}
+
 #define ADD_EVENT "children_changed::add"
 #define HIDE_EVENT "children_changed::remove"
 

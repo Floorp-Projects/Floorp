@@ -57,6 +57,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
+  ProxyShowHideEvent(parent->ChildAt(newChildIdx), parent, true, aFromUser);
   return true;
 }
 
@@ -132,6 +133,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
   }
 
   ProxyAccessible* parent = root->Parent();
+  ProxyShowHideEvent(root, parent, false, aFromUser);
   parent->RemoveChild(root);
   root->Shutdown();
 
