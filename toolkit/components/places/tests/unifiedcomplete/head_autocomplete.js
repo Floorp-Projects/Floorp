@@ -114,8 +114,6 @@ function _check_autocomplete_matches(match, result) {
   let { uri, title, tags, searchEngine, style } = match;
   if (tags)
     title += " \u2013 " + tags.sort().join(", ");
-  if (searchEngine)
-    title += TITLE_SEARCH_ENGINE_SEPARATOR + searchEngine;
   if (style)
     style = style.sort();
   else
@@ -371,6 +369,9 @@ function makeSearchMatch(input, extra = {}) {
     params.alias = extra.alias;
   }
   let style = [ "action", "searchengine" ];
+  if (Array.isArray(extra.style)) {
+    style.push(...extra.style);
+  }
   if (extra.heuristic) {
     style.push("heuristic");
   }

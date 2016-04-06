@@ -211,16 +211,18 @@ var SessionSaverInternal = {
       }
     }
 
-    // If this is the final write on a clean shutdown, and the user changed
-    // their cookie preferences to "Keep until I close Firefox", then we
-    // should remove all cookies. Check "resume_session_once" so we keep
-    // cookies when restarting due to a Firefox update.
-    if (RunState.isClosing &&
-        Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
-          Services.cookies.ACCEPT_SESSION &&
-        !Services.prefs.getBoolPref("browser.sessionstore.resume_session_once")) {
-      for (let window of state.windows) {
-        delete window.cookies;
+    // Clear all cookies on clean shutdown according to user preferences
+    if (RunState.isClosing) {
+      let expireCookies = Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
+                            Services.cookies.ACCEPT_SESSION;
+      let sanitizeCookies = Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
+                            Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
+      let restart = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
+      // Don't clear cookies when restarting
+      if ((expireCookies || sanitizeCookies) && !restart) {
+        for (let window of state.windows) {
+          delete window.cookies;
+        }
       }
     }
 

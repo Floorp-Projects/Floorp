@@ -8,5 +8,6 @@ DevToolsModules(
     'devices.js',
     'index.js',
     'location.js',
+    'screenshot.js',
     'viewports.js',
 )
