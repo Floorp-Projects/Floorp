@@ -10285,14 +10285,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   NS_ENSURE_ARG_POINTER(aSink);
   *aSink = nullptr;
 
-  if (aIID.Equals(NS_GET_IID(mozIDOMWindowProxy))) {
-    MOZ_ASSERT(IsInnerWindow());
-    nsGlobalWindow* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<mozIDOMWindowProxy> proxy = outer->AsOuter();
-    proxy.forget(aSink);
-  } else if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
+  if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
     nsGlobalWindow* outer = GetOuterWindowInternal();
     NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
 
