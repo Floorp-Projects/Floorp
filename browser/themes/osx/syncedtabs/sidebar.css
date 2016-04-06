@@ -130,6 +130,8 @@ html {
   background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
   background-repeat: no-repeat;
   background-size: 11px 11px;
+  width: 11px;
+  height: 11px;
 }
 
 .search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
