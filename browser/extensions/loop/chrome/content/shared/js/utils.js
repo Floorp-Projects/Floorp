@@ -6,7 +6,19 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-var inChrome = typeof Components != "undefined" && "utils" in Components;
+var inChrome = typeof Components != "undefined" &&
+  "utils" in Components;
+
+// The slideshow is special, and currently loads with chrome privs, but
+// needs to use this module like the rest of the content does.  Once we make
+// it load remotely, this can go away.
+if (inChrome) {
+  if (typeof window != "undefined" &&
+    window.location.href === "chrome://loop/content/panels/slideshow.html") {
+
+    inChrome = false;
+  }
+}
 
 (function() {
   "use strict";
@@ -109,6 +121,10 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     CONTEXT_TILE: "context-tile"
   };
 
+  var CURSOR_MESSAGE_TYPES = {
+    POSITION: "cursor-position"
+  };
+
   /**
    * Format a given date into an l10n-friendly string.
    *
@@ -185,6 +201,13 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
     if (/BlackBerry/i.test(platform)) {
       return "blackberry";
+    }
+
+    // Checks if the platform is Android. Due to the difficulties of detecting an
+    // android device, we need to rely on window.navigator.userAgent instead of
+    // using window.navigator.platform.
+    if (rootNavigator.userAgent.toLowerCase().indexOf("android") > -1) {
+      return "android";
     }
 
     return null;
@@ -367,28 +390,39 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   /**
    * Formats a url for display purposes. This includes converting the
    * domain to punycode, and then decoding the url.
+   * Intended to be used for both display and (uglier in confusing cases) clickthrough,
+   * as described by dveditz in comment 12 of the bug 1196143,
+   * as well as testing the behavior case in the browser.
    *
-   * @param {String} url The url to format.
-   * @return {Object}    An object containing the hostname and full location.
+   * @param {String}  url                   The url to format.
+   * @param {String}  suppressConsoleError  For testing, call with a boolean which is true to squash the default console error.
+   * @return {Object}                       An object containing the hostname,
+   *                                        full location and protocol.
    */
-  function formatURL(url) {
+  function formatURL(url, suppressConsoleError) {
     // We're using new URL to pass this through the browser's ACE/punycode
     // processing system. If the browser considers a url to need to be
     // punycode encoded for it to be displayed, then new URL will do that for
     // us. This saves us needing our own punycode library.
+    // Note that URL does canonicalize hostname-only URLs,
+    // adding a slash to them, but this is ok for at least HTTP(S)
+    // because GET always has to specify a path, which will (by default) be
     var urlObject;
     try {
       urlObject = new URL(url);
+      // Finally, ensure we look good.
+      return {
+        hostname: urlObject.hostname,
+        location: decodeURI(urlObject.href),
+        protocol: urlObject.protocol
+      };
     } catch (ex) {
-      console.error("Error occurred whilst parsing URL:", ex);
+      if (suppressConsoleError ? !suppressConsoleError : true) {
+        console.log("Error occurred whilst parsing URL: ", ex);
+        console.trace();
+      }
       return null;
     }
-
-    // Finally, ensure we look good.
-    return {
-      hostname: urlObject.hostname,
-      location: decodeURI(urlObject.href)
-    };
   }
 
   /**
@@ -749,6 +783,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   this.utils = {
     CALL_TYPES: CALL_TYPES,
     CHAT_CONTENT_TYPES: CHAT_CONTENT_TYPES,
+    CURSOR_MESSAGE_TYPES: CURSOR_MESSAGE_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
     REST_ERRNOS: REST_ERRNOS,
     STREAM_PROPERTIES: STREAM_PROPERTIES,

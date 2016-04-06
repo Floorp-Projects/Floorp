@@ -25,7 +25,6 @@ LOOPDIR=browser/extensions/loop
 
 TESTS="
   ${LOOPDIR}/chrome/test/mochitest
-  browser/components/uitour/test/browser_UITour_loop.js
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
   browser/base/content/test/general/browser_parsable_css.js
 "
