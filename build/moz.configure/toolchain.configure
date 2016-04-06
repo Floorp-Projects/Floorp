@@ -191,29 +191,109 @@ def try_preprocess(compiler, language, source):
 
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
 @imports(_from='textwrap', _import='dedent')
-def check_compiler(compiler, language):
+def get_compiler_info(compiler, language):
+    '''Returns information about the given `compiler` (command line in the
+    form of a list or tuple), in the given `language`.
+
+    The returned information includes:
+    - the compiler type (msvc, clang-cl, clang or gcc)
+    - the compiler version
+    - the compiler supported language
+    - the compiler supported language version
+    '''
+    # Note: MSVC doesn't expose __STDC_VERSION__. It does expose __STDC__,
+    # but only when given the -Za option, which disables compiler
+    # extensions.
     check = dedent('''\
         #if defined(_MSC_VER)
         #if defined(__clang__)
-        COMPILER clang-cl _MSC_VER
+        %COMPILER clang-cl
+        %VERSION _MSC_VER
         #else
-        COMPILER msvc _MSC_FULL_VER
+        %COMPILER msvc
+        %VERSION _MSC_FULL_VER
         #endif
         #elif defined(__clang__)
-        COMPILER clang __clang_major__.__clang_minor__.__clang_patchlevel__
+        %COMPILER clang
+        %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
         #elif defined(__GNUC__)
-        COMPILER gcc __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
+        %COMPILER gcc
+        %VERSION __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
+        #endif
+
+        #if __cplusplus
+        %cplusplus __cplusplus
+        #elif __STDC_VERSION__
+        %STDC_VERSION __STDC_VERSION__
+        #elif __STDC__
+        %STDC_VERSION 198900L
         #endif
     ''')
 
     result = try_preprocess(compiler, language, check)
 
-    if result:
-        for line in result.splitlines():
-            if line.startswith('COMPILER '):
-                _, type, version = line.split(None, 2)
-                version = version.replace(' ', '')
-                return CompilerType(type), version
+    if not result:
+        raise FatalCheckError(
+            'Unknown compiler or compiler not supported.')
+
+    data = {}
+    for line in result.splitlines():
+        if line.startswith('%'):
+            k, _, v = line.partition(' ')
+            k = k.lstrip('%')
+            data[k] = v.replace(' ', '')
+            log.debug('%s = %s', k, data[k])
+
+    type = data.get('COMPILER')
+    if not type:
+        raise FatalCheckError(
+            'Unknown compiler or compiler not supported.')
+
+    cplusplus = int(data.get('cplusplus', '0L').rstrip('L'))
+    stdc_version = int(data.get('STDC_VERSION', '0L').rstrip('L'))
+
+    return namespace(
+        type=CompilerType(type),
+        version=data['VERSION'],
+        language='C++' if cplusplus else 'C',
+        language_version=cplusplus if cplusplus else stdc_version,
+    )
+
+
+@imports(_from='mozbuild.shellutil', _import='quote')
+def check_compiler(compiler, language):
+    info = get_compiler_info(compiler, language)
+
+    flags = []
+
+    def append_flag(flag):
+        if flag not in flags:
+            if info.type == 'clang-cl':
+                flags.append('-Xclang')
+            flags.append(flag)
+
+    # Check language standards
+    # --------------------------------------------------------------------
+    if language != info.language:
+        raise FatalCheckError(
+            '`%s` is not a %s compiler.' % (quote(*compiler), language))
+
+    # Note: We do a strict version check because there sometimes are backwards
+    # incompatible changes in the standard, and not all code that compiles as
+    # C99 compiles as e.g. C11 (as of writing, this is true of libnestegg, for
+    # example)
+    if info.language == 'C' and info.language_version != 199901:
+        if info.type in ('clang-cl', 'clang', 'gcc'):
+            append_flag('-std=gnu99')
+
+    # Note: MSVC, while supporting C++11, still reports 199711L for __cplusplus.
+    # Note: this is a strict version check because we used to always add
+    # -std=gnu++11.
+    if info.language == 'C++' and info.language_version != 201103:
+        if info.type in ('clang-cl', 'clang', 'gcc'):
+            append_flag('-std=gnu++11')
+
+    return info.type, info.version, flags
 
 
 @template
@@ -342,7 +422,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
                           input=delayed_getattr(provided_compiler, 'compiler'))
 
     @depends(compiler, provided_compiler, compiler_wrapper)
-    @checking('%s version' % what, lambda x: x.version if x else 'not found')
+    @checking('whether %s can be used' % what, lambda x: bool(x))
     @imports(_from='mozbuild.shellutil', _import='quote')
     def valid_compiler(compiler, provided_compiler, compiler_wrapper):
         wrapper = list(compiler_wrapper or ())
@@ -378,17 +458,20 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
                     quote(os.path.dirname(found_compiler)),
                     quote(os.path.dirname(full_path)))
 
-        result = check_compiler(wrapper + [compiler] + flags, language)
-        if result:
-            type, version = result
-            return namespace(
-                wrapper=wrapper,
-                compiler=compiler,
-                flags=flags,
-                type=type,
-                version=version,
-            )
-        die('Failed to get the compiler version')
+        type, version, more_flags = check_compiler(
+            wrapper + [compiler] + flags, language)
+        return namespace(
+            wrapper=wrapper,
+            compiler=compiler,
+            flags=flags + more_flags,
+            type=type,
+            version=version,
+        )
+
+    @depends(valid_compiler)
+    @checking('%s version' % what)
+    def compiler_version(compiler):
+        return compiler.version
 
     if language == 'C++':
         @depends(valid_compiler, c_compiler)

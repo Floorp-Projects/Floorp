@@ -140,9 +140,6 @@ dnl Updates to the test below should be duplicated further below for the
 dnl cross-compiling case.
 AC_LANG_CPLUSPLUS
 if test "$GNU_CXX"; then
-    CXXFLAGS="$CXXFLAGS -std=gnu++11"
-    _ADDED_CXXFLAGS="-std=gnu++11"
-
     if test -n "$CLANG_CC"; then
         dnl We'd normally just check for the version from CC_VERSION (fed
         dnl from __clang_major__ and __clang_minor__), but the clang that
@@ -201,8 +198,6 @@ if test -n "$CROSS_COMPILE"; then
 	fi
     fi
 
-    HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++11"
-
     _SAVE_CXXFLAGS="$CXXFLAGS"
     _SAVE_CPPFLAGS="$CPPFLAGS"
     _SAVE_CXX="$CXX"
@@ -218,8 +213,6 @@ if test -n "$CROSS_COMPILE"; then
     CXXFLAGS="$_SAVE_CXXFLAGS"
     CPPFLAGS="$_SAVE_CPPFLAGS"
     CXX="$_SAVE_CXX"
-elif test "$GNU_CXX"; then
-    HOST_CXXFLAGS="$HOST_CXXFLAGS $_ADDED_CXXFLAGS"
 fi
 AC_LANG_C
 ])
