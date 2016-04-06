@@ -192,17 +192,22 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippe
     ApplyClipOrPaintClipMask(*ctx, aClippedFrame, aMatrix);
   }
 
-  mat.Invert();
 
   if (aInputMask) {
-    MOZ_ASSERT(!aInputMaskTransform.HasNonTranslation());
-
+    // We could potentially due this more efficiently with OPERATOR_IN
+    // but that operator does not work well on CG or D2D
     RefPtr<SourceSurface> currentMask = maskDT->Snapshot();
     maskDT->SetTransform(Matrix());
     maskDT->ClearRect(Rect(0, 0, intRect.width, intRect.height));
-    maskDT->MaskSurface(SurfacePattern(currentMask, ExtendMode::CLAMP), aInputMask,
-                        Point(aInputMaskTransform._31 - intRect.x, aInputMaskTransform._32 - intRect.y));
+    Matrix transform = ToMatrix(mat);
+    maskDT->SetTransform(aInputMaskTransform * transform);
+    // draw currentMask with the inverse of the transform that we just so that
+    // it ends up in the same spot with aExtraMask transformed by aInputMaskTransform
+    maskDT->MaskSurface(SurfacePattern(currentMask, ExtendMode::CLAMP, aInputMaskTransform.Inverse() * ToMatrix(mat).Inverse()),
+                        aInputMask,
+                        Point(0, 0));
   }
+  mat.Invert();
 
   *aMaskTransform = ToMatrix(mat);
   return maskDT->Snapshot();
