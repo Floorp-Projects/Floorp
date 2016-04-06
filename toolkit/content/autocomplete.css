@@ -12,6 +12,24 @@
   }
 }
 
-richlistitem > .ac-title-box > .ac-title > .ac-comment:not([selected]) > html|span.ac-selected-text {
+richlistitem {
+  -moz-box-orient: horizontal;
+  overflow: hidden;
+}
+
+.ac-title-text,
+.ac-tags-text,
+.ac-url-text,
+.ac-action-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ac-tags[empty] {
+  display: none;
+}
+
+.ac-action[actiontype=searchengine]:not([selected]) {
   display: none;
 }

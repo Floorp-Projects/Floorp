@@ -91,16 +91,27 @@ body {
   margin: 0 0 0 5px;
 }
 
-#global-exit-button,
-#global-exit-button::before {
+#global-toolbar .toolbar-button,
+#global-toolbar .toolbar-button::before {
   width: 12px;
   height: 12px;
+}
+
+#global-screenshot-button::before {
+  background-image: url("./images/screenshot.svg");
+  margin: -6px 0 0 -6px;
 }
 
 #global-exit-button::before {
   background-image: url("./images/close.svg");
   margin: -6px 0 0 -6px;
 }
+
+#global-screenshot-button:disabled {
+  filter: url("chrome://devtools/skin/images/filters.svg#checked-icon-state");
+  opacity: 1 !important;
+}
+
 
 #viewports {
   /* Snap to the top of the app when there isn't enough vertical space anymore
@@ -218,6 +229,10 @@ body {
   background-repeat: no-repeat;
   background-origin: content-box;
   cursor: se-resize;
+}
+
+.viewport-resize-handle.hidden {
+  display: none;
 }
 
 .viewport-horizontal-resize-handle {

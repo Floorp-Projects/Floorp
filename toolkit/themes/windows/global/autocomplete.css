@@ -97,133 +97,58 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   margin: 0;
 }
 
-.autocomplete-richlistitem {
-  padding: 1px;
-}
-
-.autocomplete-richlistitem[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-%ifdef XP_WIN
-@media (-moz-os-version: windows-vista) and (-moz-windows-default-theme),
-       (-moz-os-version: windows-win7) and (-moz-windows-default-theme) {
-  .autocomplete-richlistitem[selected="true"] {
-    color: inherit;
-    background-color: transparent;
-    /* four gradients for the bevel highlights on each edge, one for blue background */
-    background-image:
-      linear-gradient(to bottom, rgba(255,255,255,0.9) 3px, transparent 3px),
-      linear-gradient(to right, rgba(255,255,255,0.5) 3px, transparent 3px),
-      linear-gradient(to left, rgba(255,255,255,0.5) 3px, transparent 3px),
-      linear-gradient(to top, rgba(255,255,255,0.4) 3px, transparent 3px),
-      linear-gradient(to bottom, rgba(163,196,247,0.3), rgba(122,180,246,0.3));
-    background-clip: content-box;
-    border-radius: 6px;
-    outline: 1px solid rgb(124,163,206);
-    -moz-outline-radius: 3px;
-    outline-offset: -2px;
-  }
-}
-%endif
-
-.ac-title-box {
-  margin-top: 4px;
-}
-
-.ac-url-box {
-  /* When setting a vertical margin here, half of that needs to be added
-     .ac-title-box's translateY for when .ac-url-box is hidden (see below). */
-  margin: 1px 0 4px;
-}
-
-.autocomplete-richlistitem[actiontype="keyword"] .ac-url-box,
-.autocomplete-richlistitem[actiontype="searchengine"] .ac-url-box,
-.autocomplete-richlistitem[actiontype="visiturl"] .ac-url-box,
-.autocomplete-richlistitem[type~="autofill"] .ac-url-box {
-  visibility: hidden;
-}
-
-.autocomplete-richlistitem[actiontype="keyword"] .ac-title-box,
-.autocomplete-richlistitem[actiontype="searchengine"] .ac-title-box,
-.autocomplete-richlistitem[actiontype="visiturl"] .ac-title-box,
-.autocomplete-richlistitem[type~="autofill"] .ac-title-box {
-  /* Center the title by moving it down by half of .ac-url-box's height,
-     including vertical margins (if any). */
-  transform: translateY(calc(.5em + 2px));
+.ac-type-icon {
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  -moz-margin-start: 14px;
+  -moz-margin-end: 6px;
 }
 
 .ac-site-icon {
-  width: 16px; 
+  width: 16px;
   height: 16px;
-  margin: 0 5px -2px;
+  max-width: 16px;
+  max-height: 16px;
+  -moz-margin-start: 0;
+  -moz-margin-end: 11px;
 }
 
-.ac-type-icon {
-  width: 16px; 
-  height: 16px;
-  -moz-margin-start: 6px;
+.ac-title {
+  -moz-margin-start: 0;
+  -moz-margin-end: 6px;
+}
+
+html|span.ac-tag {
+  -moz-margin-start: 0;
+  -moz-margin-end: 2px;
+}
+
+.ac-tags {
+  -moz-margin-start: 0;
   -moz-margin-end: 4px;
-  margin-bottom: -1px;
 }
 
-.ac-url-box > .ac-site-icon,
-.ac-url-box > .ac-type-icon {
-  /* Otherwise the spacer is big enough to stretch its container */
-  height: auto;
+html|span.ac-title-urlaction-separator {
+  padding-left: 0;
+  padding-right: 6px;
 }
 
-.ac-extra > .ac-result-type-tag {
-  margin: 0 4px;
+/* Better align the URL/action with the title. */
+.ac-tags,
+.ac-url,
+.ac-action {
+  margin-bottom: -2px;
 }
 
-.ac-extra > .ac-comment {
-  padding-right: 4px;
-}
-
-.ac-ellipsis-after {
+.ac-title-text,
+.ac-tags-text,
+.ac-url-text,
+.ac-action-text,
+.ac-text-overflow-container {
+  padding: 0 !important;
   margin: 0 !important;
-  padding: 0; 
-  min-width: 1em;
-}
-
-.ac-normal-text {
-  margin: 0 !important;
-  padding: 0;
-}
-
-.ac-normal-text > html|span {
-  margin: 0 !important;
-  padding: 0;
-}
-
-html|span.ac-emphasize-text {
-  box-shadow: inset 0 0 1px 1px rgba(208,208,208,0.5);
-  background-color: rgba(208,208,208,0.3);
-  border-radius: 2px;
-  text-shadow: 0 0 currentColor;
-}
-
-@media (-moz-windows-default-theme) {
-  @media not all and (-moz-os-version: windows-xp) {
-    html|span.ac-emphasize-text {
-      box-shadow: inset 0 0 1px 1px rgba(0,0,0,0.1);
-      background-color: rgba(0,0,0,0.05);
-    }
-  }
-
-  @media (-moz-os-version: windows-xp) {
-    .ac-url-text > html|span.ac-emphasize-text,
-    .ac-action-text > html|span.ac-emphasize-text {
-      box-shadow: inset 0 0 1px 1px rgba(202,214,201,0.3);
-      background-color: rgba(202,214,201,0.2);
-    }
-  }
-}
-
-.ac-title, .ac-url {
-  overflow: hidden;
 }
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */

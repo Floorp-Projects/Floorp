@@ -324,3 +324,9 @@
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
   }
 }
+
+.ac-type-icon {
+  /* Left-align the type icon in awesomebar popup results with the icon in the
+     urlbar. */
+  -moz-margin-start: 13px;
+}

@@ -18,8 +18,17 @@ add_task(function* test_searchEngine() {
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
   yield check_autocomplete({
     search: "term",
-    matches: [ { uri: uri1, title: "Terms", searchEngine: "SearchEngine", style: ["favicon", "search"] },
-               { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ]
+    matches: [
+      makeSearchMatch("Terms", {
+        engineName: "SearchEngine",
+        style: ["favicon"]
+      }),
+      {
+        uri: uri2,
+        title: "Terms - SearchEngine Search",
+        style: ["bookmark"]
+      }
+    ]
   });
 
   do_print("Past search terms should not be styled if restyling is disabled");
