@@ -1157,6 +1157,7 @@ PeerConnectionMedia::OnCandidateFound_s(NrIceMediaStream *aStream,
 {
   ASSERT_ON_THREAD(mSTSThread);
   MOZ_ASSERT(aStream);
+  MOZ_RELEASE_ASSERT(mIceCtxHdlr);
 
   CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
 
