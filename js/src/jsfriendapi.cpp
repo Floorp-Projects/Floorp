@@ -139,7 +139,7 @@ JS_NewObjectWithUniqueType(JSContext* cx, const JSClass* clasp, HandleObject pro
 JS_FRIEND_API(JSObject*)
 JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto)
 {
-    AutoSuppressObjectMetadataCallback suppressMetadata(cx);
+    AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
     return JS_NewObjectWithGivenProto(cx, clasp, proto);
 }
 
@@ -603,7 +603,7 @@ js::VisitGrayWrapperTargets(Zone* zone, GCThingCallback callback, void* closure)
 JS_FRIEND_API(JSObject*)
 js::GetWeakmapKeyDelegate(JSObject* key)
 {
-    if (JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp)
+    if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp())
         return op(key);
     return nullptr;
 }
@@ -1234,13 +1234,13 @@ js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext* cx,
 }
 
 JS_FRIEND_API(void)
-js::SetObjectMetadataCallback(JSContext* cx, ObjectMetadataCallback callback)
+js::SetAllocationMetadataBuilder(JSContext* cx, const AllocationMetadataBuilder *callback)
 {
-    cx->compartment()->setObjectMetadataCallback(callback);
+    cx->compartment()->setAllocationMetadataBuilder(callback);
 }
 
 JS_FRIEND_API(JSObject*)
-js::GetObjectMetadata(JSObject* obj)
+js::GetAllocationMetadata(JSObject* obj)
 {
     ObjectWeakMap* map = obj->compartment()->objectMetadataTable;
     if (map)
@@ -1272,7 +1272,7 @@ js::ReportErrorWithId(JSContext* cx, const char* msg, HandleId id)
 #ifdef DEBUG
 bool
 js::HasObjectMovedOp(JSObject* obj) {
-    return !!GetObjectClass(obj)->ext.objectMovedOp;
+    return !!GetObjectClass(obj)->extObjectMovedOp();
 }
 #endif
 

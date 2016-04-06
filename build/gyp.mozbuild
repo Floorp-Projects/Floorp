@@ -89,7 +89,7 @@ elif os == 'Android':
         gyp_vars.update(
             gtest_target_type='executable',
             moz_webrtc_mediacodec=1,
-            android_toolchain=CONFIG['ANDROID_TOOLCHAIN'],
+            android_toolchain=CONFIG.get('ANDROID_TOOLCHAIN', ''),
         )
 
 flavors = {

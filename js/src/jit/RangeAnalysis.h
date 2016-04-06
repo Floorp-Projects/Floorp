@@ -95,6 +95,7 @@ class RangeAnalysis
   protected:
     MIRGenerator* mir;
     MIRGraph& graph_;
+    Vector<MBinaryBitwiseInstruction*, 16, SystemAllocPolicy> bitops;
 
     TempAllocator& alloc() const;
 
@@ -108,6 +109,7 @@ class RangeAnalysis
     bool prepareForUCE(bool* shouldRemoveDeadCode);
     bool tryRemovingGuards();
     bool truncate();
+    bool removeUnnecessaryBitops();
 
     // Any iteration bounds discovered for loops in the graph.
     LoopIterationBoundVector loopIterationBounds;

@@ -20,7 +20,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-navigator-object
-[HeaderFile="Navigator.h", NeedResolve]
+[HeaderFile="Navigator.h"]
 interface Navigator {
   // objects implementing this interface also implement the interfaces given below
 };
@@ -384,7 +384,6 @@ partial interface Navigator {
 };
 #endif // MOZ_AUDIO_CHANNEL_MANAGER
 
-#ifdef MOZ_MEDIA_NAVIGATOR
 callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
 callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
 
@@ -418,7 +417,6 @@ partial interface Navigator {
                               // now that devices are enumerated earlier.
                               optional DOMString callID = "");
 };
-#endif // MOZ_MEDIA_NAVIGATOR
 
 // Service Workers/Navigation Controllers
 partial interface Navigator {

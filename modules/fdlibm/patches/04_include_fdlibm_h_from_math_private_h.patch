@@ -1,0 +1,631 @@
+diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
+--- a/modules/fdlibm/src/e_acos.cpp
++++ b/modules/fdlibm/src/e_acos.cpp
+@@ -35,17 +35,16 @@
+  *	if x is NaN, return x itself;
+  *	if |x|>1, return NaN with invalid signal.
+  *
+  * Function needed: sqrt
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ one=  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+ pi =  3.14159265358979311600e+00, /* 0x400921FB, 0x54442D18 */
+ pio2_hi =  1.57079632679489655800e+00; /* 0x3FF921FB, 0x54442D18 */
+ static volatile double
+ pio2_lo =  6.12323399573676603587e-17; /* 0x3C91A626, 0x33145C07 */
+diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
+--- a/modules/fdlibm/src/e_acosh.cpp
++++ b/modules/fdlibm/src/e_acosh.cpp
+@@ -26,17 +26,16 @@
+  *
+  * Special cases:
+  *	acosh(x) is NaN with signal if x<1.
+  *	acosh(NaN) is NaN without signal.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ one	= 1.0,
+ ln2	= 6.93147180559945286227e-01;  /* 0x3FE62E42, 0xFEFA39EF */
+ 
+ double
+ __ieee754_acosh(double x)
+diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
+--- a/modules/fdlibm/src/e_asin.cpp
++++ b/modules/fdlibm/src/e_asin.cpp
+@@ -41,17 +41,16 @@
+  * Special cases:
+  *	if x is NaN, return x itself;
+  *	if |x|>1, return NaN with invalid signal.
+  *
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+ huge =  1.000e+300,
+ pio2_hi =  1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
+ pio2_lo =  6.12323399573676603587e-17, /* 0x3C91A626, 0x33145C07 */
+ pio4_hi =  7.85398163397448278999e-01, /* 0x3FE921FB, 0x54442D18 */
+diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
+--- a/modules/fdlibm/src/e_atan2.cpp
++++ b/modules/fdlibm/src/e_atan2.cpp
+@@ -39,17 +39,16 @@
+  * The hexadecimal values are the intended ones for the following 
+  * constants. The decimal values may be used, provided that the 
+  * compiler will convert from decimal to binary accurately enough 
+  * to produce the hexadecimal values shown.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static volatile double
+ tiny  = 1.0e-300;
+ static const double
+ zero  = 0.0,
+ pi_o_4  = 7.8539816339744827900E-01, /* 0x3FE921FB, 0x54442D18 */
+ pi_o_2  = 1.5707963267948965580E+00, /* 0x3FF921FB, 0x54442D18 */
+diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
+--- a/modules/fdlibm/src/e_atanh.cpp
++++ b/modules/fdlibm/src/e_atanh.cpp
+@@ -30,17 +30,16 @@
+  *	atanh(x) is NaN if |x| > 1 with signal;
+  *	atanh(NaN) is that NaN with no signal;
+  *	atanh(+-1) is +-INF with signal.
+  *
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double one = 1.0, huge = 1e300;
+ static const double zero = 0.0;
+ 
+ double
+ __ieee754_atanh(double x)
+ {
+diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
+--- a/modules/fdlibm/src/e_cosh.cpp
++++ b/modules/fdlibm/src/e_cosh.cpp
+@@ -32,17 +32,16 @@
+  *
+  * Special cases:
+  *	cosh(x) is |x| if x is +INF, -INF, or NaN.
+  *	only cosh(0)=1 is exact for finite x.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double one = 1.0, half=0.5, huge = 1.0e300;
+ 
+ double
+ __ieee754_cosh(double x)
+ {
+ 	double t,w;
+diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
+--- a/modules/fdlibm/src/e_exp.cpp
++++ b/modules/fdlibm/src/e_exp.cpp
+@@ -73,17 +73,16 @@
+  * The hexadecimal values are the intended ones for the following 
+  * constants. The decimal values may be used, provided that the 
+  * compiler will convert from decimal to binary accurately enough
+  * to produce the hexadecimal values shown.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ one	= 1.0,
+ halF[2]	= {0.5,-0.5,},
+ o_threshold=  7.09782712893383973096e+02,  /* 0x40862E42, 0xFEFA39EF */
+ u_threshold= -7.45133219101941108420e+02,  /* 0xc0874910, 0xD52D3051 */
+ ln2HI[2]   ={ 6.93147180369123816490e-01,  /* 0x3fe62e42, 0xfee00000 */
+diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
+--- a/modules/fdlibm/src/e_hypot.cpp
++++ b/modules/fdlibm/src/e_hypot.cpp
+@@ -43,17 +43,16 @@
+  *
+  * Accuracy:
+  * 	hypot(x,y) returns sqrt(x^2+y^2) with error less 
+  * 	than 1 ulps (units in the last place) 
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ double
+ __ieee754_hypot(double x, double y)
+ {
+ 	double a,b,t1,t2,y1,y2,w;
+ 	int32_t j,k,ha,hb;
+ 
+diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
+--- a/modules/fdlibm/src/e_log.cpp
++++ b/modules/fdlibm/src/e_log.cpp
+@@ -62,17 +62,16 @@
+  * The hexadecimal values are the intended ones for the following 
+  * constants. The decimal values may be used, provided that the 
+  * compiler will convert from decimal to binary accurately enough 
+  * to produce the hexadecimal values shown.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ ln2_hi  =  6.93147180369123816490e-01,	/* 3fe62e42 fee00000 */
+ ln2_lo  =  1.90821492927058770002e-10,	/* 3dea39ef 35793c76 */
+ two54   =  1.80143985094819840000e+16,  /* 43500000 00000000 */
+ Lg1 = 6.666666666666735130e-01,  /* 3FE55555 55555593 */
+ Lg2 = 3.999999999940941908e-01,  /* 3FD99999 9997FA04 */
+diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
+--- a/modules/fdlibm/src/e_log10.cpp
++++ b/modules/fdlibm/src/e_log10.cpp
+@@ -19,17 +19,16 @@
+  * comments.
+  *
+  *    log10(x) = (f - 0.5*f*f + k_log1p(f)) / ln10 + k * log10(2)
+  * in not-quite-routine extra precision.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ #include "k_log.h"
+ 
+ static const double
+ two54      =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
+ ivln10hi   =  4.34294481878168880939e-01, /* 0x3fdbcb7b, 0x15200000 */
+ ivln10lo   =  2.50829467116452752298e-11, /* 0x3dbb9438, 0xca9aadd5 */
+ log10_2hi  =  3.01029995663611771306e-01, /* 0x3FD34413, 0x509F6000 */
+diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
+--- a/modules/fdlibm/src/e_log2.cpp
++++ b/modules/fdlibm/src/e_log2.cpp
+@@ -21,17 +21,16 @@
+  * This reduces x to {k, 1+f} exactly as in e_log.c, then calls the kernel,
+  * then does the combining and scaling steps
+  *    log2(x) = (f - 0.5*f*f + k_log1p(f)) / ln2 + k
+  * in not-quite-routine extra precision.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ #include "k_log.h"
+ 
+ static const double
+ two54      =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
+ ivln2hi    =  1.44269504072144627571e+00, /* 0x3ff71547, 0x65200000 */
+ ivln2lo    =  1.67517131648865118353e-10; /* 0x3de705fc, 0x2eefa200 */
+ 
+diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
+--- a/modules/fdlibm/src/e_pow.cpp
++++ b/modules/fdlibm/src/e_pow.cpp
+@@ -52,17 +52,16 @@
+  *
+  * Constants :
+  * The hexadecimal values are the intended ones for the following 
+  * constants. The decimal values may be used, provided that the 
+  * compiler will convert from decimal to binary accurately enough 
+  * to produce the hexadecimal values shown.
+  */
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ bp[] = {1.0, 1.5,},
+ dp_h[] = { 0.0, 5.84962487220764160156e-01,}, /* 0x3FE2B803, 0x40000000 */
+ dp_l[] = { 0.0, 1.35003920212974897128e-08,}, /* 0x3E4CFDEB, 0x43CFD006 */
+ zero    =  0.0,
+ one	=  1.0,
+diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
+--- a/modules/fdlibm/src/e_sinh.cpp
++++ b/modules/fdlibm/src/e_sinh.cpp
+@@ -29,17 +29,16 @@
+  *
+  * Special cases:
+  *	sinh(x) is |x| if x is +INF, -INF, or NaN.
+  *	only sinh(0)=0 is exact for finite x.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double one = 1.0, shuge = 1.0e307;
+ 
+ double
+ __ieee754_sinh(double x)
+ {
+ 	double t,h;
+diff --git a/modules/fdlibm/src/e_sqrt.cpp b/modules/fdlibm/src/e_sqrt.cpp
+--- a/modules/fdlibm/src/e_sqrt.cpp
++++ b/modules/fdlibm/src/e_sqrt.cpp
+@@ -81,17 +81,16 @@
+  *	sqrt(NaN) = NaN		... with invalid signal for signaling NaN
+  *
+  * Other methods : see the appended file at the end of the program below.
+  *---------------
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static	const double	one	= 1.0, tiny=1.0e-300;
+ 
+ double
+ __ieee754_sqrt(double x)
+ {
+ 	double z;
+diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
+--- a/modules/fdlibm/src/k_exp.cpp
++++ b/modules/fdlibm/src/k_exp.cpp
+@@ -24,17 +24,16 @@
+  * SUCH DAMAGE.
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <complex.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const uint32_t k = 1799;		/* constant for reduction */
+ static const double kln2 =  1246.97177782734161156;	/* k * ln2 */
+ 
+ /*
+  * Compute exp(x), scaled to avoid spurious overflow.  An exponent is
+  * returned separately in 'expt'.
+diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
+--- a/modules/fdlibm/src/math_private.h
++++ b/modules/fdlibm/src/math_private.h
+@@ -15,16 +15,18 @@
+  */
+ 
+ #ifndef _MATH_PRIVATE_H_
+ #define	_MATH_PRIVATE_H_
+ 
+ #include <sys/types.h>
+ #include <machine/endian.h>
+ 
++#include "fdlibm.h"
++
+ /*
+  * The original fdlibm code used statements like:
+  *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
+  *	ix0 = *(n0+(int*)&x);			* high word of x *
+  *	ix1 = *((1-n0)+(int*)&x);		* low word of x *
+  * to dig two 32 bit words out of the 64 bit IEEE floating point
+  * value.  That is non-ANSI, and, moreover, the gcc instruction
+  * scheduler gets it wrong.  We instead use the following macros.
+diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
+--- a/modules/fdlibm/src/s_asinh.cpp
++++ b/modules/fdlibm/src/s_asinh.cpp
+@@ -21,17 +21,16 @@
+  *	asinh(x) := x  if  1+x*x=1,
+  *		 := sign(x)*(log(x)+ln2)) for large |x|, else
+  *		 := sign(x)*log(2|x|+1/(|x|+sqrt(x*x+1))) if|x|>2, else
+  *		 := sign(x)*log1p(|x| + x^2/(1 + sqrt(1+x^2)))
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+ ln2 =  6.93147180559945286227e-01, /* 0x3FE62E42, 0xFEFA39EF */
+ huge=  1.00000000000000000000e+300;
+ 
+ double
+diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
+--- a/modules/fdlibm/src/s_atan.cpp
++++ b/modules/fdlibm/src/s_atan.cpp
+@@ -30,17 +30,16 @@
+  * The hexadecimal values are the intended ones for the following
+  * constants. The decimal values may be used, provided that the
+  * compiler will convert from decimal to binary accurately enough
+  * to produce the hexadecimal values shown.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double atanhi[] = {
+   4.63647609000806093515e-01, /* atan(0.5)hi 0x3FDDAC67, 0x0561BB4F */
+   7.85398163397448278999e-01, /* atan(1.0)hi 0x3FE921FB, 0x54442D18 */
+   9.82793723247329054082e-01, /* atan(1.5)hi 0x3FEF730B, 0xD281F69B */
+   1.57079632679489655800e+00, /* atan(inf)hi 0x3FF921FB, 0x54442D18 */
+ };
+diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
+--- a/modules/fdlibm/src/s_cbrt.cpp
++++ b/modules/fdlibm/src/s_cbrt.cpp
+@@ -10,17 +10,16 @@
+  * ====================================================
+  *
+  * Optimized by Bruce D. Evans.
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ /* cbrt(x)
+  * Return cube root of x
+  */
+ static const u_int32_t
+ 	B1 = 715094163, /* B1 = (1023-1023/3-0.03306235651)*2**20 */
+ 	B2 = 696219795; /* B2 = (1023-1023/3-54/3-0.03306235651)*2**20 */
+diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
+--- a/modules/fdlibm/src/s_ceil.cpp
++++ b/modules/fdlibm/src/s_ceil.cpp
+@@ -19,17 +19,16 @@
+  * Method:
+  *	Bit twiddling.
+  * Exception:
+  *	Inexact flag raised if x not equal to ceil(x).
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double huge = 1.0e300;
+ 
+ double
+ ceil(double x)
+ {
+ 	int32_t i0,i1,j0;
+diff --git a/modules/fdlibm/src/s_ceilf.cpp b/modules/fdlibm/src/s_ceilf.cpp
+--- a/modules/fdlibm/src/s_ceilf.cpp
++++ b/modules/fdlibm/src/s_ceilf.cpp
+@@ -11,17 +11,16 @@
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float huge = 1.0e30;
+ 
+ float
+ ceilf(float x)
+ {
+ 	int32_t i0,j0;
+diff --git a/modules/fdlibm/src/s_copysign.cpp b/modules/fdlibm/src/s_copysign.cpp
+--- a/modules/fdlibm/src/s_copysign.cpp
++++ b/modules/fdlibm/src/s_copysign.cpp
+@@ -14,17 +14,16 @@
+ __FBSDID("$FreeBSD$");
+ 
+ /*
+  * copysign(double x, double y)
+  * copysign(x,y) returns a value with the magnitude of x and
+  * with the sign bit of y.
+  */
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ double
+ copysign(double x, double y)
+ {
+ 	u_int32_t hx,hy;
+ 	GET_HIGH_WORD(hx,x);
+ 	GET_HIGH_WORD(hy,y);
+diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
+--- a/modules/fdlibm/src/s_expm1.cpp
++++ b/modules/fdlibm/src/s_expm1.cpp
+@@ -105,17 +105,16 @@
+  * The hexadecimal values are the intended ones for the following
+  * constants. The decimal values may be used, provided that the
+  * compiler will convert from decimal to binary accurately enough
+  * to produce the hexadecimal values shown.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ one		= 1.0,
+ tiny		= 1.0e-300,
+ o_threshold	= 7.09782712893383973096e+02,/* 0x40862E42, 0xFEFA39EF */
+ ln2_hi		= 6.93147180369123816490e-01,/* 0x3fe62e42, 0xfee00000 */
+ ln2_lo		= 1.90821492927058770002e-10,/* 0x3dea39ef, 0x35793c76 */
+diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
+--- a/modules/fdlibm/src/s_fabs.cpp
++++ b/modules/fdlibm/src/s_fabs.cpp
+@@ -13,17 +13,16 @@
+ #ifndef lint
+ static char rcsid[] = "$FreeBSD$";
+ #endif
+ 
+ /*
+  * fabs(x) returns the absolute value of x.
+  */
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ double
+ fabs(double x)
+ {
+ 	u_int32_t high;
+ 	GET_HIGH_WORD(high,x);
+ 	SET_HIGH_WORD(x,high&0x7fffffff);
+diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
+--- a/modules/fdlibm/src/s_floor.cpp
++++ b/modules/fdlibm/src/s_floor.cpp
+@@ -19,17 +19,16 @@
+  * Method:
+  *	Bit twiddling.
+  * Exception:
+  *	Inexact flag raised if x not equal to floor(x).
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double huge = 1.0e300;
+ 
+ double
+ floor(double x)
+ {
+ 	int32_t i0,i1,j0;
+diff --git a/modules/fdlibm/src/s_floorf.cpp b/modules/fdlibm/src/s_floorf.cpp
+--- a/modules/fdlibm/src/s_floorf.cpp
++++ b/modules/fdlibm/src/s_floorf.cpp
+@@ -20,17 +20,16 @@
+  * floorf(x)
+  * Return x rounded toward -inf to integral value
+  * Method:
+  *	Bit twiddling.
+  * Exception:
+  *	Inexact flag raised if x not equal to floorf(x).
+  */
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float huge = 1.0e30;
+ 
+ float
+ floorf(float x)
+ {
+ 	int32_t i0,j0;
+diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
+--- a/modules/fdlibm/src/s_log1p.cpp
++++ b/modules/fdlibm/src/s_log1p.cpp
+@@ -75,17 +75,16 @@
+  *		if(u==1.0) return x ; else
+  *			   return log(u)*(x/(u-1.0));
+  *
+  *	 See HP-15C Advanced Functions Handbook, p.193.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ ln2_hi  =  6.93147180369123816490e-01,	/* 3fe62e42 fee00000 */
+ ln2_lo  =  1.90821492927058770002e-10,	/* 3dea39ef 35793c76 */
+ two54   =  1.80143985094819840000e+16,  /* 43500000 00000000 */
+ Lp1 = 6.666666666666735130e-01,  /* 3FE55555 55555593 */
+ Lp2 = 3.999999999940941908e-01,  /* 3FD99999 9997FA04 */
+diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
+--- a/modules/fdlibm/src/s_scalbn.cpp
++++ b/modules/fdlibm/src/s_scalbn.cpp
+@@ -19,17 +19,16 @@ static char rcsid[] = "$FreeBSD$";
+  * scalbn(x,n) returns x* 2**n  computed by  exponent
+  * manipulation rather than by actually performing an
+  * exponentiation or a multiplication.
+  */
+ 
+ #include <sys/cdefs.h>
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double
+ two54   =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
+ twom54  =  5.55111512312578270212e-17, /* 0x3C900000, 0x00000000 */
+ huge   = 1.0e+300,
+ tiny   = 1.0e-300;
+ 
+diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
+--- a/modules/fdlibm/src/s_tanh.cpp
++++ b/modules/fdlibm/src/s_tanh.cpp
+@@ -34,17 +34,16 @@
+  *
+  * Special cases:
+  *	tanh(NaN) is NaN;
+  *	only tanh(0)=0 is exact for finite argument.
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const volatile double tiny = 1.0e-300;
+ static const double one = 1.0, two = 2.0, huge = 1.0e300;
+ 
+ double
+ tanh(double x)
+ {
+diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
+--- a/modules/fdlibm/src/s_trunc.cpp
++++ b/modules/fdlibm/src/s_trunc.cpp
+@@ -19,17 +19,16 @@
+  * Method:
+  *	Bit twiddling.
+  * Exception:
+  *	Inexact flag raised if x not equal to trunc(x).
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const double huge = 1.0e300;
+ 
+ double
+ trunc(double x)
+ {
+ 	int32_t i0,i1,j0;

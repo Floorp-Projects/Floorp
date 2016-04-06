@@ -62,7 +62,8 @@ public:
           return;
         }
 
-        if (!JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, 0)) {
+        if (JS::IsSavedFrame(asyncStack) &&
+            !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, 0)) {
           JS_ClearPendingException(aCx);
         } else {
           stackFrame.mAsyncParent = parentFrame;

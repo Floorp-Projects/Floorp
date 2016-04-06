@@ -107,7 +107,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(Accessible, LastRelease())
 
 Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc),
-  mParent(nullptr), mIndexInParent(-1), mChildrenFlags(eChildrenUninitialized),
+  mParent(nullptr), mIndexInParent(-1),
   mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0),
   mRoleMapEntry(nullptr)
 {
@@ -2074,8 +2074,9 @@ Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
     MOZ_ASSERT(mStateFlags & eKidsMutating, "Illicit children change");
   }
 
-  if (!nsAccUtils::IsEmbeddedObject(aChild))
-    SetChildrenFlag(eMixedChildren);
+  if (!nsAccUtils::IsEmbeddedObject(aChild)) {
+    mStateFlags |= eHasTextKids;
+  }
 
   aChild->BindToParent(this, aIndex);
   return true;
@@ -2180,7 +2181,7 @@ Accessible::IndexInParent() const
 uint32_t
 Accessible::EmbeddedChildCount()
 {
-  if (IsChildrenFlag(eMixedChildren)) {
+  if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector->Count();
@@ -2192,7 +2193,7 @@ Accessible::EmbeddedChildCount()
 Accessible*
 Accessible::GetEmbeddedChildAt(uint32_t aIndex)
 {
-  if (IsChildrenFlag(eMixedChildren)) {
+  if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ?
@@ -2205,7 +2206,7 @@ Accessible::GetEmbeddedChildAt(uint32_t aIndex)
 int32_t
 Accessible::GetIndexOfEmbeddedChild(Accessible* aChild)
 {
-  if (IsChildrenFlag(eMixedChildren)) {
+  if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ?
@@ -2518,58 +2519,6 @@ Accessible::LastRelease()
   delete this;
 }
 
-void
-Accessible::CacheChildren()
-{
-  NS_ENSURE_TRUE_VOID(Document());
-
-  AutoTreeMutation mt(this);
-  TreeWalker walker(this);
-  Accessible* child = nullptr;
-  while ((child = walker.Next()) && AppendChild(child)) {
-    mt.AfterInsertion(child);
-  }
-  mt.Done();
-}
-
-void
-Accessible::TestChildCache(Accessible* aCachedChild) const
-{
-#ifdef DEBUG
-  int32_t childCount = mChildren.Length();
-  if (childCount == 0) {
-    NS_ASSERTION(IsChildrenFlag(eChildrenUninitialized),
-                 "No children but initialized!");
-    return;
-  }
-
-  Accessible* child = nullptr;
-  for (int32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    child = mChildren[childIdx];
-    if (child == aCachedChild)
-      break;
-  }
-
-  NS_ASSERTION(child == aCachedChild,
-               "[TestChildCache] cached accessible wasn't found. Wrong accessible tree!");
-#endif
-}
-
-void
-Accessible::EnsureChildren()
-{
-  NS_ASSERTION(!IsDefunct(), "Caching children for defunct accessible!");
-
-  if (!IsChildrenFlag(eChildrenUninitialized))
-    return;
-
-  // State is embedded children until text leaf accessible is appended.
-  SetChildrenFlag(eEmbeddedChildren); // Prevent reentry
-  if (KidsFromDOM()) {
-    CacheChildren();
-  }
-}
-
 Accessible*
 Accessible::GetSiblingAtOffset(int32_t aOffset, nsresult* aError) const
 {
@@ -2738,8 +2687,6 @@ Accessible::GetLevelInternal()
 void
 Accessible::StaticAsserts() const
 {
-  static_assert(eLastChildrenFlag <= (1 << kChildrenFlagsBits) - 1,
-                "Accessible::mChildrenFlags was oversized by eLastChildrenFlag!");
   static_assert(eLastStateFlag <= (1 << kStateFlagsBits) - 1,
                 "Accessible::mStateFlags was oversized by eLastStateFlag!");
   static_assert(eLastAccType <= (1 << kTypeBits) - 1,

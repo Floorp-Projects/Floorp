@@ -46,14 +46,6 @@ GARBAGE += $(addprefix $(FINAL_TARGET)/defaults/pref/, firefox.js)
 
 endif
 
-ifneq (,$(filter gtk%,$(MOZ_WIDGET_TOOLKIT)))
-libs::
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(FINAL_TARGET)/icons
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png  $(FINAL_TARGET)/chrome/icons/default
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png  $(FINAL_TARGET)/chrome/icons/default
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(FINAL_TARGET)/chrome/icons/default
-endif
-
 # channel-prefs.js is handled separate from other prefs due to bug 756325
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref

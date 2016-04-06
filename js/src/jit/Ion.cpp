@@ -1651,9 +1651,9 @@ OptimizeMIR(MIRGenerator* mir)
         }
     }
 
+    RangeAnalysis r(mir, graph);
     if (mir->optimizationInfo().rangeAnalysisEnabled()) {
         AutoTraceLog log(logger, TraceLogger_RangeAnalysis);
-        RangeAnalysis r(mir, graph);
         if (!r.addBetaNodes())
             return false;
         gs.spewPass("Beta");
@@ -1720,6 +1720,28 @@ OptimizeMIR(MIRGenerator* mir)
         }
     }
 
+    {
+        AutoTraceLog log(logger, TraceLogger_Sink);
+        if (!Sink(mir, graph))
+            return false;
+        gs.spewPass("Sink");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Sink"))
+            return false;
+    }
+
+    if (mir->optimizationInfo().rangeAnalysisEnabled()) {
+        AutoTraceLog log(logger, TraceLogger_RemoveUnnecessaryBitops);
+        if (!r.removeUnnecessaryBitops())
+            return false;
+        gs.spewPass("Remove Unnecessary Bitops");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Remove Unnecessary Bitops"))
+            return false;
+    }
+
     if (mir->optimizationInfo().eaaEnabled()) {
         AutoTraceLog log(logger, TraceLogger_EffectiveAddressAnalysis);
         EffectiveAddressAnalysis eaa(mir, graph);
@@ -1750,17 +1772,6 @@ OptimizeMIR(MIRGenerator* mir)
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("DCE"))
-            return false;
-    }
-
-    {
-        AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
-        if (!Sink(mir, graph))
-            return false;
-        gs.spewPass("Sink");
-        AssertExtendedGraphCoherency(graph);
-
-        if (mir->shouldCancel("Sink"))
             return false;
     }
 

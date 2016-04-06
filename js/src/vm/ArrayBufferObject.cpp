@@ -96,9 +96,14 @@ const Class ArrayBufferObject::protoClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer)
 };
 
+static const ClassExtension ArrayBufferObjectClassExtension = {
+    nullptr,    /* weakmapKeyDelegateOp */
+    ArrayBufferObject::objectMoved
+};
+
 const Class ArrayBufferObject::class_ = {
     "ArrayBuffer",
-    JSCLASS_DELAY_METADATA_CALLBACK |
+    JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,
@@ -115,11 +120,7 @@ const Class ArrayBufferObject::class_ = {
     nullptr,        /* construct   */
     ArrayBufferObject::trace,
     JS_NULL_CLASS_SPEC,
-    {
-        false,      /* isWrappedNative */
-        nullptr,    /* weakmapKeyDelegateOp */
-        ArrayBufferObject::objectMoved
-    }
+    &ArrayBufferObjectClassExtension
 };
 
 const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {

@@ -714,11 +714,11 @@ def get_parser(argv=None):
                              'chunkByDir directories.',
                         default=None)
 
-    parser.add_argument('--e10s',
-                        action='store_true',
+    parser.add_argument('--disable-e10s',
+                        action='store_false',
                         dest='e10s',
-                        help='Find test on chunk with electrolysis preferences enabled.',
-                        default=False)
+                        help='Find test on chunk with electrolysis preferences disabled.',
+                        default=True)
 
     parser.add_argument('-p', '--platform',
                         choices=['linux', 'linux64', 'mac', 'macosx64', 'win32', 'win64'],

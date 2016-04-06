@@ -100,8 +100,8 @@ option('--enable-default-toolkit', nargs=1,
                 'cairo-gonk'),
        help='Select default toolkit')
 
-@depends('--enable-default-toolkit', target, gonkdir)
-def toolkit(value, target, gonkdir):
+@depends('--enable-default-toolkit', target)
+def toolkit(value, target):
     # Define possible choices for each platform. The default is the first one
     # listed when there are several.
     os = target.os
@@ -112,9 +112,10 @@ def toolkit(value, target, gonkdir):
     elif target.os == 'iOS':
         platform_choices = ('cairo-uikit',)
     elif target.os == 'Android':
-        if gonkdir:
-            platform_choices = ('cairo-gonk',)
-            os = 'B2G'
+        if value.origin == 'implied':
+            # Trust values coming from imply_option() (used in
+            # b2g/moz.configure).
+            platform_choices = tuple(value)
         else:
             platform_choices = ('cairo-android',)
     else:

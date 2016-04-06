@@ -1,0 +1,17 @@
+This is the fdlibm library imported from
+https://github.com/freebsd/freebsd
+
+Upstream code can be viewed at
+  https://github.com/freebsd/freebsd/tree/master/lib/msun/src
+
+Each file is downloaded separately, as cloning whole repository takes so much
+resources.
+
+The in-tree copy is updated by running
+  sh update.sh
+from within the modules/fdlibm directory.
+
+Current version: [commit bcea9d50b15e4f0027a5dd526e0e2a612238471e].
+
+patches 01-14 fixes files to be usable within mozilla-central tree.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=933257

@@ -2284,9 +2284,9 @@ const ObjectOps TypedObject::objectOps_ = {
 DEFINE_TYPEDOBJ_CLASS(OutlineTransparentTypedObject, OutlineTypedObject::obj_trace, 0);
 DEFINE_TYPEDOBJ_CLASS(OutlineOpaqueTypedObject,      OutlineTypedObject::obj_trace, 0);
 DEFINE_TYPEDOBJ_CLASS(InlineTransparentTypedObject,  InlineTypedObject::obj_trace,
-                      JSCLASS_DELAY_METADATA_CALLBACK);
+                      JSCLASS_DELAY_METADATA_BUILDER);
 DEFINE_TYPEDOBJ_CLASS(InlineOpaqueTypedObject,       InlineTypedObject::obj_trace,
-                      JSCLASS_DELAY_METADATA_CALLBACK);
+                      JSCLASS_DELAY_METADATA_BUILDER);
 
 static int32_t
 LengthForType(TypeDescr& descr)

@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_Ril_h
 #define mozilla_ipc_Ril_h 1
 
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsTArray.h"
 
@@ -34,16 +33,17 @@ public:
 
   static void Shutdown();
 
+  // Public for |MakeUnique| Call |Register| instead.
+  RilWorker(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+
 private:
   class RegisterConsumerTask;
   class UnregisterConsumerTask;
 
-  RilWorker(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
-
   nsresult RegisterConsumer(unsigned int aClientId);
   void     UnregisterConsumer(unsigned int aClientId);
 
-  static nsTArray<nsAutoPtr<RilWorker>> sRilWorkers;
+  static nsTArray<UniquePtr<RilWorker>> sRilWorkers;
 
   RefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
 };

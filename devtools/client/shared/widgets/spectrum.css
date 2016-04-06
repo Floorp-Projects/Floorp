@@ -7,13 +7,7 @@
 }
 
 #eyedropper-button::before {
-  background-image: url("chrome://devtools/skin/images/command-eyedropper.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  #eyedropper-button::before {
-    background-image: url("chrome://devtools/skin/images/command-eyedropper@2x.png");
-  }
+  background-image: url("chrome://devtools/skin/images/command-eyedropper.svg");
 }
 
 /* Mix-in classes */

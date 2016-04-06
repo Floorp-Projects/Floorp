@@ -66,6 +66,7 @@ included_inclnames_to_ignore = set([
     'jsautokw.h',               # generated in $OBJDIR
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
     'js-config.h',              # generated in $OBJDIR
+    'fdlibm.h',                 # fdlibm
     'pratom.h',                 # NSPR
     'prcvar.h',                 # NSPR
     'prerror.h',                # NSPR

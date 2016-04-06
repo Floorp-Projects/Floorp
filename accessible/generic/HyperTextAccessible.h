@@ -62,6 +62,7 @@ public:
 
   virtual void Shutdown() override;
   virtual bool RemoveChild(Accessible* aAccessible) override;
+  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
   virtual Relation RelationByType(RelationType aType) override;
 
   // HyperTextAccessible (static helper method)

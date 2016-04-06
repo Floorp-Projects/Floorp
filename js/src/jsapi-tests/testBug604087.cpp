@@ -14,14 +14,14 @@
 
 #include "vm/ProxyObject.h"
 
-const js::Class OuterWrapperClass =
-    PROXY_CLASS_WITH_EXT(
-        "Proxy",
-        0, /* additional class flags */
-        PROXY_MAKE_EXT(
-            false,   /* isWrappedNative */
-            nullptr  /* objectMoved */
-        ));
+static const js::ClassExtension OuterWrapperClassExtension = PROXY_MAKE_EXT(
+    nullptr  /* objectMoved */
+);
+
+const js::Class OuterWrapperClass = PROXY_CLASS_WITH_EXT(
+    "Proxy",
+    0, /* additional class flags */
+    &OuterWrapperClassExtension);
 
 static JSObject*
 wrap(JSContext* cx, JS::HandleObject toWrap, JS::HandleObject target)

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleText getText related function tests for tree mutations</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function insertBefore(aId, aEl, aTextBefore, aTextAfter, aStartIdx, aEndIdx)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aId)
+      ];
+
+      this.invoke = function insertBefore_invoke()
+      {
+        testText(aId, 0, -1, aTextBefore);
+        getNode(aId).insertBefore(aEl, getNode(aId).firstChild);
+      }
+
+      this.finalCheck = function insertBefore_finalCheck()
+      {
+        testText(aId, aStartIdx, aEndIdx, aTextAfter);
+      }
+
+      this.getID = function insertTextBefore_getID() {
+        return "insert " + prettyName(aEl) + " before";
+      }
+    }
+
+    function insertTextBefore(aId, aTextBefore, aText)
+    {
+      var el = document.createTextNode(aText);
+      this.__proto__ = new insertBefore(aId, el, aTextBefore,
+                                        aText + aTextBefore, 0, -1)
+    }
+
+    function insertImgBefore(aId, aTextBefore)
+    {
+      var el = document.createElement("img");
+      el.setAttribute("src", "../moz.png");
+      el.setAttribute("alt", "mozilla");
+
+      this.__proto__ = new insertBefore(aId, el, aTextBefore,
+                                        kEmbedChar + aTextBefore, 0, -1)
+    }
+
+    function insertTextBefore2(aId)
+    {
+      var el = document.createTextNode("hehe");
+      this.__proto__ = new insertBefore(aId, el, "ho", "ho", 4, -1)
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new insertTextBefore("c1", "ho", "ha"));
+      gQueue.push(new insertImgBefore("c1", "haho"));
+      gQueue.push(new insertImgBefore("c2", kEmbedChar));
+      gQueue.push(new insertTextBefore2("c3"));
+      gQueue.invoke(); // will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1">ho</div>
+  <div id="c2"><img src="../moz.png" alt="mozilla"></div>
+  <div id="c3">ho</div>
+</body>
+</html>

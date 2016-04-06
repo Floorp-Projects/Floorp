@@ -677,7 +677,7 @@ ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject
  */
 const Class MappedArgumentsObject::class_ = {
     "Arguments",
-    JSCLASS_DELAY_METADATA_CALLBACK |
+    JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(MappedArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_SKIP_NURSERY_FINALIZE |
@@ -702,7 +702,7 @@ const Class MappedArgumentsObject::class_ = {
  */
 const Class UnmappedArgumentsObject::class_ = {
     "Arguments",
-    JSCLASS_DELAY_METADATA_CALLBACK |
+    JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(UnmappedArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_SKIP_NURSERY_FINALIZE |

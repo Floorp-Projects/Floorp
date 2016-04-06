@@ -20,7 +20,6 @@ PREPROCESSED_WEBIDL_FILES = [
 WEBIDL_FILES = [
     'AbstractWorker.webidl',
     'ActivityRequestHandler.webidl',
-    'AlarmsManager.webidl',
     'AnalyserNode.webidl',
     'Animatable.webidl',
     'Animation.webidl',
@@ -926,4 +925,9 @@ if CONFIG['MOZ_B2G']:
     ]
     GENERATED_EVENTS_WEBIDL_FILES += [
         'MozApplicationEvent.webidl'
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    WEBIDL_FILES += [
+        'AlarmsManager.webidl',
     ]

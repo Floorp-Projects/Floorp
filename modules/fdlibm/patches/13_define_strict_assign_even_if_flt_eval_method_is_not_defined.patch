@@ -1,0 +1,31 @@
+diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
+--- a/modules/fdlibm/src/math_private.h
++++ b/modules/fdlibm/src/math_private.h
+@@ -285,16 +285,27 @@ do {								\
+ 	if (sizeof(type) >= sizeof(long double))	\
+ 		(lval) = (rval);		\
+ 	else {					\
+ 		__lval = (rval);		\
+ 		(lval) = __lval;		\
+ 	}					\
+ } while (0)
+ #endif
++#else
++#define	STRICT_ASSIGN(type, lval, rval) do {	\
++	volatile type __lval;			\
++						\
++	if (sizeof(type) >= sizeof(long double))	\
++		(lval) = (rval);		\
++	else {					\
++		__lval = (rval);		\
++		(lval) = __lval;		\
++	}					\
++} while (0)
+ #endif /* FLT_EVAL_METHOD */
+ 
+ /* Support switching the mode to FP_PE if necessary. */
+ #if defined(__i386__) && !defined(NO_FPSETPREC)
+ #define	ENTERI()				\
+ 	long double __retval;			\
+ 	fp_prec_t __oprec;			\
+ 						\

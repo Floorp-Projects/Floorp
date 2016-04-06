@@ -301,13 +301,11 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   #endif
 
       // Make sure the text node is in accessible document still.
-      Accessible* container = mDocument->GetAccessibleOrContainer(containerNode);
-      NS_ASSERTION(container,
-                   "Text node having rendered text hasn't accessible document!");
+      Accessible* container = mDocument->AccessibleOrTrueContainer(containerNode);
+      MOZ_ASSERT(container,
+                 "Text node having rendered text hasn't accessible document!");
       if (container) {
-        nsTArray<nsCOMPtr<nsIContent> > insertedContents;
-        insertedContents.AppendElement(textNode);
-        mDocument->ProcessContentInserted(container, &insertedContents);
+        mDocument->ProcessContentInserted(container, textNode);
       }
     }
   }

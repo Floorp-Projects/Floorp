@@ -59,6 +59,17 @@ set_config('HAVE_YASM', have_yasm)
 add_old_configure_assignment('YASM', have_yasm)
 
 
+# Android NDK
+# ==============================================================
+
+@depends('--disable-compile-environment', build_project, '--help')
+def android_ndk_include(compile_env, build_project, _):
+    if compile_env and build_project in ('mobile/android', 'js'):
+        return 'android-ndk.configure'
+
+include(android_ndk_include)
+
+
 # Compiler wrappers
 # ==============================================================
 js_option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
@@ -117,6 +128,6 @@ def toolchain_prefix(value, target, host, cross_compiling):
     if cross_compiling and not all(i.cpu in ('x86_64', 'x86')
                                    for i in (target, host)):
         return '%s-' % target.toolchain
-    return ''
 
+set_config('TOOLCHAIN_PREFIX', toolchain_prefix)
 add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)

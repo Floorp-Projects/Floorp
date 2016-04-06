@@ -117,7 +117,7 @@ class CompileCompartment
 
     const JitCompartment* jitCompartment();
 
-    bool hasObjectMetadataCallback();
+    bool hasAllocationMetadataBuilder();
 
     // Mirror CompartmentOptions.
     void setSingletonsAsValues();

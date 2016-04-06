@@ -497,6 +497,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   gfx::Color tileActiveColor(1, 1, 1, 0.4f);
   gfx::Color tileBorderColor(0, 0, 0, 0.1f);
   gfx::Color pageBorderColor(0, 0, 0);
+  gfx::Color criticalDisplayPortColor(1.f, 1.f, 0);
   gfx::Color displayPortColor(0, 1.f, 0);
   gfx::Color viewPortColor(0, 0, 1.f, 0.3f);
   gfx::Color visibilityColor(1.f, 0, 0);
@@ -507,6 +508,10 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   LayerRect scrollRect = fm.GetScrollableRect() * fm.LayersPixelsPerCSSPixel();
   LayerRect viewRect = ParentLayerRect(scrollOffset, compositionBounds.Size()) / LayerToParentLayerScale(1);
   LayerRect dp = (fm.GetDisplayPort() + fm.GetScrollOffset()) * fm.LayersPixelsPerCSSPixel();
+  Maybe<LayerRect> cdp;
+  if (!fm.GetCriticalDisplayPort().IsEmpty()) {
+    cdp = Some((fm.GetCriticalDisplayPort() + fm.GetScrollOffset()) * fm.LayersPixelsPerCSSPixel());
+  }
 
   // Don't render trivial minimap. They can show up from textboxes and other tiny frames.
   if (viewRect.width < 64 && viewRect.height < 64) {
@@ -577,6 +582,12 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   Rect r = transform.TransformBounds(dp.ToUnknownRect());
   compositor->FillRect(r, tileActiveColor, clipRect, aContainer->GetEffectiveTransform());
   compositor->SlowDrawRect(r, displayPortColor, clipRect, aContainer->GetEffectiveTransform());
+
+  // Render the critical displayport if there is one
+  if (cdp) {
+    r = transform.TransformBounds(cdp->ToUnknownRect());
+    compositor->SlowDrawRect(r, criticalDisplayPortColor, clipRect, aContainer->GetEffectiveTransform());
+  }
 
   // Render the viewport.
   r = transform.TransformBounds(viewRect.ToUnknownRect());

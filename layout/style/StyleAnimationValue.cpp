@@ -3285,10 +3285,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty__webkit_text_fill_color: {
-          auto styleText = static_cast<const nsStyleText*>(styleStruct);
-          nscolor color = styleText->mWebkitTextFillColorForeground ?
-            aStyleContext->StyleColor()->mColor : styleText->mWebkitTextFillColor;
-          aComputedValue.SetColorValue(color);
+          aComputedValue.SetColorValue(aStyleContext->GetTextFillColor());
           break;
         }
 

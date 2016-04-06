@@ -5,21 +5,6 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 AC_DEFUN([MOZ_ANDROID_NDK],
 [
 
-MOZ_ARG_WITH_STRING(android-ndk,
-[  --with-android-ndk=DIR
-                          location where the Android NDK can be found],
-    android_ndk=$withval)
-
-MOZ_ARG_WITH_STRING(android-toolchain,
-[  --with-android-toolchain=DIR
-                          location of the Android toolchain],
-    android_toolchain=$withval)
-
-MOZ_ARG_WITH_STRING(android-gnu-compiler-version,
-[  --with-android-gnu-compiler-version=VER
-                          gnu compiler version to use],
-    android_gnu_compiler_version=$withval)
-
 MOZ_ARG_WITH_STRING(android-cxx-stl,
 [  --with-android-cxx-stl=VALUE
                           use the specified C++ STL (stlport, libstdc++, libc++)],
@@ -39,76 +24,7 @@ if test $android_version -lt MIN_ANDROID_VERSION ; then
 fi
 
 case "$target" in
-arm-*linux*-android*|*-linuxandroid*)
-    android_tool_prefix="arm-linux-androideabi"
-    ;;
-i?86-*android*)
-    android_tool_prefix="i686-linux-android"
-    ;;
-mipsel-*android*)
-    android_tool_prefix="mipsel-linux-android"
-    ;;
-*)
-    android_tool_prefix="$target_os"
-    ;;
-esac
-
-case "$target" in
 *-android*|*-linuxandroid*)
-    if test -z "$android_ndk" ; then
-        AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
-    fi
-
-    if test -z "$android_toolchain" ; then
-        AC_MSG_CHECKING([for android toolchain directory])
-
-        kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
-
-        for version in $android_gnu_compiler_version 4.9 4.8 4.7; do
-            case "$target_cpu" in
-            arm)
-                target_name=arm-linux-androideabi-$version
-                ;;
-            i?86)
-                target_name=x86-$version
-                ;;
-            mipsel)
-                target_name=mipsel-linux-android-$version
-                ;;
-            *)
-                AC_MSG_ERROR([target cpu is not supported])
-                ;;
-            esac
-            case "$host_cpu" in
-            i*86)
-                android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
-                ;;
-            x86_64)
-                android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86_64
-                if ! test -d "$android_toolchain" ; then
-                    android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
-                fi
-                ;;
-            *)
-                AC_MSG_ERROR([No known toolchain for your host cpu])
-                ;;
-            esac
-            if test -d "$android_toolchain" ; then
-                android_gnu_compiler_version=$version
-                break
-            elif test -n "$android_gnu_compiler_version" ; then
-                AC_MSG_ERROR([not found. Your --with-android-gnu-compiler-version may be wrong.])
-            fi
-        done
-
-        if test -z "$android_gnu_compiler_version" ; then
-            AC_MSG_ERROR([not found. You have to specify --with-android-toolchain=/path/to/ndk/toolchain.])
-        else
-            AC_MSG_RESULT([$android_toolchain])
-        fi
-        NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-toolchain=$android_toolchain"
-    fi
-
     NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-version=$android_version"
 
     AC_MSG_CHECKING([for android platform directory])
@@ -133,8 +49,6 @@ case "$target" in
         AC_MSG_ERROR([not found. Please check your NDK. With the current configuration, it should be in $android_platform])
     fi
 
-    TOOLCHAIN_PREFIX="$android_toolchain/bin/$android_tool_prefix-"
-
     CPPFLAGS="-idirafter $android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
@@ -145,13 +59,9 @@ case "$target" in
     dnl undefined symbol (present on the hardware, just not in the
     dnl NDK.)
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
-    ANDROID_NDK="${android_ndk}"
-    ANDROID_TOOLCHAIN="${android_toolchain}"
     ANDROID_PLATFORM="${android_platform}"
 
     AC_DEFINE(ANDROID)
-    AC_SUBST(ANDROID_NDK)
-    AC_SUBST(ANDROID_TOOLCHAIN)
     AC_SUBST(ANDROID_PLATFORM)
 
     ;;

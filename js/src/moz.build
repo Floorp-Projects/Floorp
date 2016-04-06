@@ -616,11 +616,20 @@ if CONFIG['JS_HAS_CTYPES']:
     ]
 
 if CONFIG['ENABLE_INTL_API']:
-    USE_LIBS += [
-        'icu',
-    ]
+    if not CONFIG['MOZ_ICU_DATA_ARCHIVE']:
+        USE_LIBS += [
+            'icu',
+        ]
+    else:
+        # Linking 'icu' will pull in the stubdata library,
+        # which the shell doesn't want, so link the other bits.
+        USE_LIBS += [
+            'icui18n',
+            'icuuc',
+        ]
 
 USE_LIBS += [
+    'fdlibm',
     'nspr',
     'zlib',
 ]
@@ -670,7 +679,6 @@ if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4661']
     CXXFLAGS += ['-we4067', '-we4258', '-we4275']
     CXXFLAGS += ['-wd4146'] # FIXME: unary minus operator applied to unsigned type (bug 1229189)
-    CXXFLAGS += ['-wd4273'] # FIXME: inconsistent dll linkage (bug 1229666)
 
     # This is intended as a temporary hack to support building with VS2015.
     # 'noexcept' used with no exception handling mode specified;

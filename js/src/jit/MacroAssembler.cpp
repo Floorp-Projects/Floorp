@@ -727,7 +727,7 @@ MacroAssembler::checkAllocatorState(Label* fail)
 
     // Don't execute the inline path if the compartment has an object metadata callback,
     // as the metadata to use for the object may vary between executions of the op.
-    if (GetJitContext()->compartment->hasObjectMetadataCallback())
+    if (GetJitContext()->compartment->hasAllocationMetadataBuilder())
         jump(fail);
 }
 

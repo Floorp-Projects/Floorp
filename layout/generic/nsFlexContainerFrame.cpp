@@ -78,6 +78,89 @@ kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
 
 // Helper structs / classes / methods
 // ==================================
+// Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}-box.
+static inline bool
+IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
+{
+  return aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_BOX ||
+    aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX;
+}
+
+// Helper to check whether our nsFlexContainerFrame is emulating a legacy
+// -webkit-{inline-}box, in which case we should use legacy CSS properties
+// instead of the modern ones. The params are are the nsStyleDisplay and the
+// nsStyleContext associated with the nsFlexContainerFrame itself.
+static inline bool
+IsLegacyBox(const nsStyleDisplay* aStyleDisp,
+            nsStyleContext* aStyleContext)
+{
+  // Trivial case: just check "display" directly.
+  if (IsDisplayValueLegacyBox(aStyleDisp)) {
+    return true;
+  }
+
+  // If this frame is for a scrollable element, then it will actually have
+  // "display:block", and its *parent* will have the real flex-flavored display
+  // value. So in that case, check the parent to find out if we're legacy.
+  if (aStyleDisp->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+    nsStyleContext* parentStyleContext = aStyleContext->GetParent();
+    NS_ASSERTION(parentStyleContext &&
+                 aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent,
+                 "The only way a nsFlexContainerFrame can have 'display:block' "
+                 "should be if it's the inner part of a scrollable element");
+    if (IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Returns the "align-items" value that's equivalent to the legacy "box-align"
+// value in the given style struct.
+static uint8_t
+ConvertLegacyStyleToAlignItems(const nsStyleXUL* aStyleXUL)
+{
+  // -[moz|webkit]-box-align corresponds to modern "align-items"
+  switch (aStyleXUL->mBoxAlign) {
+    case NS_STYLE_BOX_ALIGN_STRETCH:
+      return NS_STYLE_ALIGN_STRETCH;
+    case NS_STYLE_BOX_ALIGN_START:
+      return NS_STYLE_ALIGN_FLEX_START;
+    case NS_STYLE_BOX_ALIGN_CENTER:
+      return NS_STYLE_ALIGN_CENTER;
+    case NS_STYLE_BOX_ALIGN_BASELINE:
+      return NS_STYLE_ALIGN_BASELINE;
+    case NS_STYLE_BOX_ALIGN_END:
+      return NS_STYLE_ALIGN_FLEX_END;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unrecognized mBoxAlign enum value");
+  // Fall back to default value of "align-items" property:
+  return NS_STYLE_ALIGN_STRETCH;
+}
+
+// Returns the "justify-content" value that's equivalent to the legacy
+// "box-pack" value in the given style struct.
+static uint8_t
+ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
+{
+  // -[moz|webkit]-box-pack corresponds to modern "justify-content"
+  switch (aStyleXUL->mBoxPack) {
+    case NS_STYLE_BOX_PACK_START:
+      return NS_STYLE_ALIGN_FLEX_START;
+    case NS_STYLE_BOX_PACK_CENTER:
+      return NS_STYLE_ALIGN_CENTER;
+    case NS_STYLE_BOX_PACK_END:
+      return NS_STYLE_ALIGN_FLEX_END;
+    case NS_STYLE_BOX_PACK_JUSTIFY:
+      return NS_STYLE_ALIGN_SPACE_BETWEEN;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unrecognized mBoxPack enum value");
+  // Fall back to default value of "justify-content" property:
+  return NS_STYLE_ALIGN_FLEX_START;
+}
 
 // Indicates whether advancing along the given axis is equivalent to
 // increasing our X or Y position (as opposed to decreasing it).
@@ -879,6 +962,29 @@ BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
   }
 }
 
+// Convenience function to get either the "order" or the "box-ordinal-group"
+// property-value for a flex item (depending on whether the container is a
+// modern flex container or a legacy box).
+static int32_t
+GetOrderOrBoxOrdinalGroup(nsIFrame* aFlexItem, bool aIsLegacyBox)
+{
+  if (aIsLegacyBox) {
+    // We'll be using mBoxOrdinal, which has type uint32_t. However, the modern
+    // 'order' property (whose functionality we're co-opting) has type int32_t.
+    // So: if we happen to have a uint32_t value that's greater than INT32_MAX,
+    // we clamp it rather than letting it overflow. Chances are, this is just
+    // an author using BIG_VALUE anyway, so the clamped value should be fine.
+    // (particularly since sufficiently-huge values are busted in Chrome/WebKit
+    // per https://bugs.chromium.org/p/chromium/issues/detail?id=599645 )
+    uint32_t clampedBoxOrdinal = std::min(aFlexItem->StyleXUL()->mBoxOrdinal,
+                                          static_cast<uint32_t>(INT32_MAX));
+    return static_cast<int32_t>(clampedBoxOrdinal);
+  }
+
+  // Normal case: just use modern 'order' property.
+  return aFlexItem->StylePosition()->mOrder;
+}
+
 // Helper-function to find the first non-anonymous-box descendent of aFrame.
 static nsIFrame*
 GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
@@ -943,6 +1049,11 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
 {
   MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
              "this method only intended for comparing flex items");
+  MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
+             "this method only intended for comparing siblings");
+  nsStyleContext* parentFrameSC = aFrame1->GetParent()->StyleContext();
+  bool isInLegacyBox = IsLegacyBox(parentFrameSC->StyleDisplay(),
+                                   parentFrameSC);
 
   if (aFrame1 == aFrame2) {
     // Anything is trivially LEQ itself, so we return "true" here... but it's
@@ -956,8 +1067,8 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
     nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
 
-    int32_t order1 = aRealFrame1->StylePosition()->mOrder;
-    int32_t order2 = aRealFrame2->StylePosition()->mOrder;
+    int32_t order1 = GetOrderOrBoxOrdinalGroup(aRealFrame1, isInLegacyBox);
+    int32_t order2 = GetOrderOrBoxOrdinalGroup(aRealFrame2, isInLegacyBox);
 
     if (order1 != order2) {
       return order1 < order2;
@@ -1024,13 +1135,18 @@ IsOrderLEQ(nsIFrame* aFrame1,
 {
   MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
              "this method only intended for comparing flex items");
+  MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
+             "this method only intended for comparing siblings");
+  nsStyleContext* parentFrameSC = aFrame1->GetParent()->StyleContext();
+  bool isInLegacyBox = IsLegacyBox(parentFrameSC->StyleDisplay(),
+                                   parentFrameSC);
 
   // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
   nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
   nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
 
-  int32_t order1 = aRealFrame1->StylePosition()->mOrder;
-  int32_t order2 = aRealFrame2->StylePosition()->mOrder;
+  int32_t order1 = GetOrderOrBoxOrdinalGroup(aRealFrame1, isInLegacyBox);
+  int32_t order2 = GetOrderOrBoxOrdinalGroup(aRealFrame2, isInLegacyBox);
 
   return order1 <= order2;
 }
@@ -1058,9 +1174,15 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 
   // FLEX GROW & SHRINK WEIGHTS
   // --------------------------
-  const nsStylePosition* stylePos = aChildFrame->StylePosition();
-  float flexGrow   = stylePos->mFlexGrow;
-  float flexShrink = stylePos->mFlexShrink;
+  float flexGrow, flexShrink;
+  if (IsLegacyBox(aParentReflowState.mStyleDisplay, mStyleContext)) {
+    flexGrow = flexShrink = aChildFrame->StyleXUL()->mBoxFlex;
+  } else {
+    const nsStylePosition* stylePos = aChildFrame->StylePosition();
+    flexGrow   = stylePos->mFlexGrow;
+    flexShrink = stylePos->mFlexShrink;
+  }
+
   WritingMode childWM = childRS.GetWritingMode();
 
   // MAIN SIZES (flex base size, min/max size)
@@ -1570,14 +1692,28 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
   MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
              "out-of-flow frames should not be treated as flex items");
 
-  mAlignSelf = aFlexItemReflowState.mStylePosition->ComputedAlignSelf(
-                 mFrame->StyleContext()->GetParent());
-  if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
-    mAlignSelf = NS_STYLE_ALIGN_STRETCH;
-  }
+  const nsHTMLReflowState* containerRS = aFlexItemReflowState.parentReflowState;
+  if (IsLegacyBox(containerRS->mStyleDisplay,
+                  containerRS->frame->StyleContext())) {
+    // For -webkit-box/-webkit-inline-box, we need to:
+    // (1) Use "-webkit-box-align" instead of "align-items" to determine the
+    //     container's cross-axis alignment behavior.
+    // (2) Suppress the ability for flex items to override that with their own
+    //     cross-axis alignment. (The legacy box model doesn't support this.)
+    // So, each FlexItem simply copies the container's converted "align-items"
+    // value and disregards their own "align-self" property.
+    const nsStyleXUL* containerStyleXUL = containerRS->frame->StyleXUL();
+    mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
+  } else {
+    mAlignSelf = aFlexItemReflowState.mStylePosition->ComputedAlignSelf(
+                   mFrame->StyleContext()->GetParent());
+    if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
+      mAlignSelf = NS_STYLE_ALIGN_STRETCH;
+    }
 
-  // XXX strip off the <overflow-position> bit until we implement that
-  mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+    // XXX strip off the <overflow-position> bit until we implement that
+    mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  }
 
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
   CheckForMinSizeAuto(aFlexItemReflowState, aAxisTracker);
@@ -3783,11 +3919,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     }
   }
 
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
+  const auto justifyContent = IsLegacyBox(aReflowState.mStyleDisplay,
+                                          mStyleContext) ?
+    ConvertLegacyStyleToJustifyContent(StyleXUL()) :
+    aReflowState.mStylePosition->ComputedJustifyContent();
 
+  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     // Main-Axis Alignment - Flexbox spec section 9.5
     // ==============================================
-    auto justifyContent = aReflowState.mStylePosition->ComputedJustifyContent();
     line->PositionItemsInMainAxis(justifyContent,
                                   aContentBoxMainSize,
                                   aAxisTracker);

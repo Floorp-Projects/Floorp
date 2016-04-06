@@ -10,7 +10,6 @@
 #define mozilla_ipc_SocketBase_h
 
 #include "base/message_loop.h"
-#include "nsAutoPtr.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -523,7 +522,7 @@ public:
   void Run() override;
 
 private:
-  nsAutoPtr<SocketIOBase> mIO;
+  UniquePtr<SocketIOBase> mIO;
 };
 
 //

@@ -3928,10 +3928,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetWebkitTextFillColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  const nsStyleText* text = StyleText();
-  nscolor color = text->mWebkitTextFillColorForeground ?
-    StyleColor()->mColor : text->mWebkitTextFillColor;
-  SetToRGBAColor(val, color);
+  SetToRGBAColor(val, mStyleContext->GetTextFillColor());
   return val.forget();
 }
 

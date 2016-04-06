@@ -84,7 +84,9 @@ class MemoryMonitor extends BroadcastReceiver {
         if (increaseMemoryPressure(MEMORY_PRESSURE_HIGH)) {
             // We need to wait on Gecko here, because if we haven't reduced
             // memory usage enough when we return from this, Android will kill us.
-            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createNoOpEvent());
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                GeckoThread.waitOnGecko();
+            }
         }
     }
 

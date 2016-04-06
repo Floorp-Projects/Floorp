@@ -1201,9 +1201,11 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         constructorSender->IsForApp(),
         constructorSender->IsForBrowser());
 
-      RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
-      constructedTabParent->SetOwnerElement(aFrameElement);
-      return constructedTabParent;
+      if (browser) {
+        RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
+        constructedTabParent->SetOwnerElement(aFrameElement);
+        return constructedTabParent;
+      }
     }
     return nullptr;
   }
@@ -5428,7 +5430,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   // Opening new tabs is the easy case...
   if (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
     if (NS_WARN_IF(!browserDOMWin)) {
-      *aResult = NS_ERROR_FAILURE;
+      *aResult = NS_ERROR_ABORT;
       return true;
     }
 

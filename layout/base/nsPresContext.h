@@ -42,6 +42,7 @@
 #include "Units.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "prenv.h"
+#include "mozilla/StaticPresData.h"
 
 class nsAString;
 class nsIPrintSettings;
@@ -135,7 +136,9 @@ class nsRootPresContext;
 class nsPresContext : public nsIObserver {
 public:
   typedef mozilla::FramePropertyTable FramePropertyTable;
+  typedef mozilla::LangGroupFontPrefs LangGroupFontPrefs;
   typedef mozilla::ScrollbarStyles ScrollbarStyles;
+  typedef mozilla::StaticPresData StaticPresData;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -365,23 +368,15 @@ public:
    * Get the default font for the given language and generic font ID.
    * If aLanguage is nullptr, the document's language is used.
    *
-   * This object is read-only, you must copy the font to modify it.
-   *
-   * When aFontID is kPresContext_DefaultVariableFontID or
-   * kPresContext_DefaultFixedFontID (which equals
-   * kGenericFont_moz_fixed, which is used for the -moz-fixed generic),
-   * the nsFont returned has its name as a CSS generic family (serif or
-   * sans-serif for the former, monospace for the latter), and its size
-   * as the default font size for variable or fixed fonts for the
-   * language group.
-   *
-   * For aFontID corresponding to a CSS Generic, the nsFont returned has
-   * its name set to that generic font's name, and its size set to
-   * the user's preference for font size for that generic and the
-   * given language.
+   * See the comment in StaticPresData::GetDefaultFont.
    */
   const nsFont* GetDefaultFont(uint8_t aFontID,
-                                           nsIAtom *aLanguage) const;
+                               nsIAtom *aLanguage) const
+  {
+    nsIAtom* lang = aLanguage ? aLanguage : mLanguage.get();
+    return StaticPresData::Get()->GetDefaultFontHelper(aFontID, lang,
+                                                       GetFontPrefsForLang(lang));
+  }
 
   /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
@@ -1125,64 +1120,14 @@ protected:
 
   void GetUserPreferences();
 
-  // Allow nsAutoPtr<LangGroupFontPrefs> dtor to access this protected struct's
-  // dtor:
-  struct LangGroupFontPrefs;
-  friend class nsAutoPtr<LangGroupFontPrefs>;
-  struct LangGroupFontPrefs {
-    // Font sizes default to zero; they will be set in GetFontPreferences
-    LangGroupFontPrefs()
-      : mLangGroup(nullptr)
-      , mMinimumFontSize(0)
-      , mDefaultVariableFont(mozilla::eFamily_serif, 0)
-      , mDefaultFixedFont(mozilla::eFamily_monospace, 0)
-      , mDefaultSerifFont(mozilla::eFamily_serif, 0)
-      , mDefaultSansSerifFont(mozilla::eFamily_sans_serif, 0)
-      , mDefaultMonospaceFont(mozilla::eFamily_monospace, 0)
-      , mDefaultCursiveFont(mozilla::eFamily_cursive, 0)
-      , mDefaultFantasyFont(mozilla::eFamily_fantasy, 0)
-    {}
-
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-      size_t n = 0;
-      LangGroupFontPrefs *curr = mNext;
-      while (curr) {
-        n += aMallocSizeOf(curr);
-
-        // Measurement of the following members may be added later if DMD finds
-        // it is worthwhile:
-        // - mLangGroup
-        // - mDefault*Font
-
-        curr = curr->mNext;
-      }
-      return n;
-    }
-
-    nsCOMPtr<nsIAtom> mLangGroup;
-    nscoord mMinimumFontSize;
-    nsFont mDefaultVariableFont;
-    nsFont mDefaultFixedFont;
-    nsFont mDefaultSerifFont;
-    nsFont mDefaultSansSerifFont;
-    nsFont mDefaultMonospaceFont;
-    nsFont mDefaultCursiveFont;
-    nsFont mDefaultFantasyFont;
-    nsAutoPtr<LangGroupFontPrefs> mNext;
-  };
-
   /**
    * Fetch the user's font preferences for the given aLanguage's
    * langugage group.
    */
-  const LangGroupFontPrefs* GetFontPrefsForLang(nsIAtom *aLanguage) const;
-
-  void ResetCachedFontPrefs() {
-    // Throw away any other LangGroupFontPrefs objects:
-    mLangGroupFontPrefs.mNext = nullptr;
-
-    // Make GetFontPreferences reinitialize mLangGroupFontPrefs:
-    mLangGroupFontPrefs.mLangGroup = nullptr;
+  const LangGroupFontPrefs* GetFontPrefsForLang(nsIAtom *aLanguage) const
+  {
+    nsIAtom* lang = aLanguage ? aLanguage : mLanguage.get();
+    return StaticPresData::Get()->GetFontPrefsForLangHelper(lang, &mLangGroupFontPrefs);
   }
 
   void UpdateCharSet(const nsCString& aCharSet);
@@ -1332,6 +1277,11 @@ protected:
   uint16_t              mImageAnimationMode;
   uint16_t              mImageAnimationModePref;
 
+  // Most documents will only use one (or very few) language groups. Rather
+  // than have the overhead of a hash lookup, we simply look along what will
+  // typically be a very short (usually of length 1) linked list. There are 31
+  // language groups, so in the worst case scenario we'll need to traverse 31
+  // link items.
   LangGroupFontPrefs    mLangGroupFontPrefs;
 
   nscoord               mBorderWidthTable[3];
@@ -1432,18 +1382,6 @@ protected:
 protected:
 
   virtual ~nsPresContext();
-
-  // these are private, use the list in nsFont.h if you want a public list
-  enum {
-    eDefaultFont_Variable,
-    eDefaultFont_Fixed,
-    eDefaultFont_Serif,
-    eDefaultFont_SansSerif,
-    eDefaultFont_Monospace,
-    eDefaultFont_Cursive,
-    eDefaultFont_Fantasy,
-    eDefaultFont_COUNT
-  };
 
   nscolor MakeColorPref(const nsString& aColor);
 

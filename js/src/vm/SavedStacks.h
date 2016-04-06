@@ -149,7 +149,6 @@ namespace js {
 
 class SavedStacks {
     friend class SavedFrame;
-    friend JSObject* SavedStacksMetadataCallback(JSContext* cx, HandleObject target);
     friend bool JS::ubi::ConstructSavedFrameStackSlow(JSContext* cx,
                                                       JS::ubi::StackFrame& ubiFrame,
                                                       MutableHandleObject outSavedFrameStack);
@@ -179,6 +178,16 @@ class SavedStacks {
     void     setRNGState(uint64_t state0, uint64_t state1) { bernoulli.setRandomState(state0, state1); }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+
+    // An alloction metadata builder that marks cells with the JavaScript stack
+    // at which they were allocated.
+    struct MetadataBuilder : public AllocationMetadataBuilder {
+        MetadataBuilder() : AllocationMetadataBuilder() { }
+        virtual JSObject* build(JSContext *cx, HandleObject obj,
+                                AutoEnterOOMUnsafeRegion& oomUnsafe) const override;
+    };
+
+    static const MetadataBuilder metadataBuilder;
 
   private:
     SavedFrame::Set frames;
@@ -298,8 +307,6 @@ class SavedStacks {
 
     bool getLocation(JSContext* cx, const FrameIter& iter, MutableHandle<LocationValue> locationp);
 };
-
-JSObject* SavedStacksMetadataCallback(JSContext* cx, HandleObject target);
 
 template <>
 class RootedBase<SavedStacks::LocationValue>

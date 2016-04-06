@@ -711,7 +711,6 @@ WorkerDebuggerGlobalScope::GetGlobal(JSContext* aCx,
   aGlobal.set(scope->GetWrapper());
 }
 
-
 void
 WorkerDebuggerGlobalScope::CreateSandbox(JSContext* aCx, const nsAString& aName,
                                          JS::Handle<JSObject*> aPrototype,

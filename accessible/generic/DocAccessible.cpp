@@ -390,33 +390,6 @@ DocAccessible::DocType(nsAString& aType) const
     docType->GetPublicId(aType);
 }
 
-Accessible*
-DocAccessible::GetAccessible(nsINode* aNode) const
-{
-  Accessible* accessible = mNodeToAccessibleMap.Get(aNode);
-
-  // No accessible in the cache, check if the given ID is unique ID of this
-  // document accessible.
-  if (!accessible) {
-    if (GetNode() != aNode)
-      return nullptr;
-
-    accessible = const_cast<DocAccessible*>(this);
-  }
-
-#ifdef DEBUG
-  // All cached accessible nodes should be in the parent
-  // It will assert if not all the children were created
-  // when they were first cached, and no invalidation
-  // ever corrected parent accessible's child cache.
-  Accessible* parent = accessible->Parent();
-  if (parent)
-    parent->TestChildCache(accessible);
-#endif
-
-  return accessible;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible
 
@@ -1385,23 +1358,7 @@ DocAccessible::ProcessInvalidationList()
     if (!HasAccessible(content)) {
       Accessible* container = GetContainerAccessible(content);
       if (container) {
-        TreeWalker walker(container);
-        if (container->IsAcceptableChild(content) && walker.Seek(content)) {
-          Accessible* child =
-            GetAccService()->GetOrCreateAccessible(content, container);
-          if (child) {
-            RefPtr<AccReorderEvent> reorderEvent =
-              new AccReorderEvent(container);
-
-            AutoTreeMutation mt(container);
-            container->InsertAfter(child, walker.Prev());
-            mt.AfterInsertion(child);
-            mt.Done();
-
-            uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
-            FireEventsOnInsertion(container, reorderEvent, flags);
-          }
-        }
+        ProcessContentInserted(container, content);
       }
     }
   }
@@ -1787,8 +1744,9 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
                                       const nsTArray<nsCOMPtr<nsIContent> >* aNodes)
 {
   // Process insertions if the container accessible is still in tree.
-  if (!HasAccessible(aContainer->GetNode()))
+  if (!aContainer->IsInDocument()) {
     return;
+  }
 
   // If new root content has been inserted then update it.
   if (aContainer == this) {
@@ -1846,6 +1804,32 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
 #endif
 
   FireEventsOnInsertion(aContainer, reorderEvent, updateFlags);
+}
+
+void
+DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
+{
+  if (!aContainer->IsInDocument()) {
+    return;
+  }
+
+  TreeWalker walker(aContainer);
+  if (aContainer->IsAcceptableChild(aNode) && walker.Seek(aNode)) {
+    Accessible* child =
+      GetAccService()->GetOrCreateAccessible(aNode, aContainer);
+
+    if (child) {
+      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
+
+      AutoTreeMutation mt(aContainer);
+      aContainer->InsertAfter(child, walker.Prev());
+      mt.AfterInsertion(child);
+      mt.Done();
+
+      uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
+      FireEventsOnInsertion(aContainer, reorderEvent, flags);
+    }
+  }
 }
 
 void
@@ -2279,6 +2263,10 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
     }
     mt.Done();
   }
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("cached children", logging::eVerbose, aRoot);
+#endif
 
   // Fire document load complete on ARIA documents.
   // XXX: we should delay an event if the ARIA document has aria-busy.

@@ -1,0 +1,74 @@
+diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
+--- a/modules/fdlibm/src/math_private.h
++++ b/modules/fdlibm/src/math_private.h
+@@ -14,20 +14,21 @@
+  * $FreeBSD$
+  */
+ 
+ #ifndef _MATH_PRIVATE_H_
+ #define	_MATH_PRIVATE_H_
+ 
+ #include <stdint.h>
+ #include <sys/types.h>
+-#include <machine/endian.h>
+ 
+ #include "fdlibm.h"
+ 
++#include "mozilla/Endian.h"
++
+ /*
+  * The original fdlibm code used statements like:
+  *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
+  *	ix0 = *(n0+(int*)&x);			* high word of x *
+  *	ix1 = *((1-n0)+(int*)&x);		* low word of x *
+  * to dig two 32 bit words out of the 64 bit IEEE floating point
+  * value.  That is non-ANSI, and, moreover, the gcc instruction
+  * scheduler gets it wrong.  We instead use the following macros.
+@@ -36,27 +37,17 @@
+  * endianness at run time.
+  */
+ 
+ /*
+  * A union which permits us to convert between a double and two 32 bit
+  * ints.
+  */
+ 
+-#ifdef __arm__
+-#if defined(__VFP_FP__) || defined(__ARM_EABI__)
+-#define	IEEE_WORD_ORDER	BYTE_ORDER
+-#else
+-#define	IEEE_WORD_ORDER	BIG_ENDIAN
+-#endif
+-#else /* __arm__ */
+-#define	IEEE_WORD_ORDER	BYTE_ORDER
+-#endif
+-
+-#if IEEE_WORD_ORDER == BIG_ENDIAN
++#if MOZ_BIG_ENDIAN
+ 
+ typedef union
+ {
+   double value;
+   struct
+   {
+     u_int32_t msw;
+     u_int32_t lsw;
+@@ -64,17 +55,17 @@ typedef union
+   struct
+   {
+     u_int64_t w;
+   } xparts;
+ } ieee_double_shape_type;
+ 
+ #endif
+ 
+-#if IEEE_WORD_ORDER == LITTLE_ENDIAN
++#if MOZ_LITTLE_ENDIAN
+ 
+ typedef union
+ {
+   double value;
+   struct
+   {
+     u_int32_t lsw;
+     u_int32_t msw;

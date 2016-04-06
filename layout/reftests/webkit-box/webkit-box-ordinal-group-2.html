@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-box-orient:0 inside a -webkit-box
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      border: 1px solid black;
+      margin: 5px 20px;
+    }
+
+    .box > * {
+      border: 1px dotted purple;
+    }
+
+    .bogZero { -webkit-box-ordinal-group: 0; }
+    .bogOne  { -webkit-box-ordinal-group: 1; }
+  </style>
+</head>
+<body>
+  <!-- -webkit-box-ordinal-group is strictly positive in Blink & WebKit. 0 is
+       rejected as an invalid value. So, the bogZero element below should
+       end up with the initial value (1) and should *not* be sorted out of its
+       DOM position in the final rendering. -->
+  <div class="box">
+    <div class="bogOne">1</div>
+    <div class="bogZero">0</div>
+  </div>
+</body>
+</html>

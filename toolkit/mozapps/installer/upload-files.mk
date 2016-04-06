@@ -87,29 +87,6 @@ ifdef WIN_UCRT_REDIST_DIR
   JSSHELL_BINS += ucrtbase.dll
 endif
 
-ifdef MOZ_SHARED_ICU
-ifeq ($(OS_TARGET), WINNT)
-JSSHELL_BINS += \
-  icudt$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
-  icuin$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
-  icuuc$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
-  $(NULL)
-else
-ifeq ($(OS_TARGET), Darwin)
-JSSHELL_BINS += \
-  libicudata.$(MOZ_ICU_VERSION).dylib \
-  libicui18n.$(MOZ_ICU_VERSION).dylib \
-  libicuuc.$(MOZ_ICU_VERSION).dylib \
-  $(NULL)
-else
-JSSHELL_BINS += \
-  libicudata.so.$(MOZ_ICU_VERSION) \
-  libicui18n.so.$(MOZ_ICU_VERSION) \
-  libicuuc.so.$(MOZ_ICU_VERSION) \
-  $(NULL)
-endif # Darwin
-endif # WINNT
-endif # MOZ_STATIC_JS
 MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
 JARLOG_DIR = $(topobjdir)/jarlog/

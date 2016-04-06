@@ -388,17 +388,11 @@ class MochitestArguments(ArgumentContainer):
           "help": "Breaks execution and enters the JS debugger on a test failure. Should "
                   "be used together with --jsdebugger."
           }],
-        [["--e10s"],
-         {"action": "store_true",
-          "default": False,
-          "help": "Run tests with electrolysis preferences and test filtering enabled.",
-          }],
         [["--disable-e10s"],
          {"action": "store_false",
-          "default": False,
+          "default": True,
           "dest": "e10s",
           "help": "Run tests with electrolysis preferences and test filtering disabled.",
-          "suppress": True,
           }],
         [["--store-chrome-manifest"],
          {"action": "store",
@@ -793,8 +787,12 @@ class MochitestArguments(ArgumentContainer):
                         '--use-test-media-devices' % f)
 
         if options.nested_oop:
-            if not options.e10s:
-                options.e10s = True
+            options.e10s = True
+
+        # a11y and chrome tests don't run with e10s enabled in CI
+        if options.a11y or options.chrome:
+            options.e10s = False
+
         mozinfo.update({"e10s": options.e10s})  # for test manifest parsing.
 
         options.leakThresholds = {
@@ -1174,6 +1172,11 @@ class AndroidArguments(ArgumentContainer):
                     "Unable to find robocop APK '%s'" %
                     options.robocopApk)
             options.robocopApk = os.path.abspath(options.robocopApk)
+
+        # Disable e10s by default on Android because we don't run Android
+        # e10s jobs anywhere yet.
+        options.e10s = False
+        mozinfo.update({'e10s': options.e10s})
 
         # allow us to keep original application around for cleanup while
         # running robocop via 'am'

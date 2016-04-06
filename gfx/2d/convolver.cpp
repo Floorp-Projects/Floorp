@@ -322,13 +322,13 @@ void ConvolveHorizontally(const unsigned char* src_data,
                           bool has_alpha, bool use_simd) {
   int width = filter.num_values();
   int processed = 0;
-#if defined(USE_SSE2)
+#if defined(USE_SSE2) || defined(_MIPS_ARCH_LOONGSON3A)
   int simd_width = width & ~3;
   if (use_simd && simd_width) {
     // SIMD implementation works with 4 pixels at a time.
     // Therefore we process as much as we can using SSE and then use
     // C implementation for leftovers
-    ConvolveHorizontally_SSE2(src_data, filter, out_row);
+    ConvolveHorizontally_SIMD(src_data, filter, out_row);
     processed = simd_width;
   }
 #endif

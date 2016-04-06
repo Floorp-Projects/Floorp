@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from StringIO import StringIO
 import os
+import textwrap
 import unittest
 
 from mozunit import main
@@ -51,6 +52,106 @@ class FindProgramSandbox(ConfigureSandbox):
 
 
 class TestChecksConfigure(unittest.TestCase):
+    def test_checking(self):
+        out = StringIO()
+        sandbox = FindProgramSandbox({}, stdout=out, stderr=out)
+        base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
+        sandbox.exec_file(os.path.join(base_dir, 'checks.configure'))
+
+        exec(textwrap.dedent('''
+            @checking('for a thing')
+            def foo(value):
+                return value
+        '''), sandbox)
+
+        foo = sandbox['foo']
+
+        foo(True)
+        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
+
+        out.truncate(0)
+        foo(False)
+        self.assertEqual(out.getvalue(), 'checking for a thing... no\n')
+
+        out.truncate(0)
+        foo(42)
+        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
+
+        out.truncate(0)
+        foo('foo')
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
+
+        out.truncate(0)
+        data = ['foo', 'bar']
+        foo(data)
+        self.assertEqual(out.getvalue(), 'checking for a thing... %r\n' % data)
+
+        # When the function given to checking does nothing interesting, the
+        # behavior is not altered
+        exec(textwrap.dedent('''
+            @checking('for a thing', lambda x: x)
+            def foo(value):
+                return value
+        '''), sandbox)
+
+        foo = sandbox['foo']
+
+        out.truncate(0)
+        foo(True)
+        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
+
+        out.truncate(0)
+        foo(False)
+        self.assertEqual(out.getvalue(), 'checking for a thing... no\n')
+
+        out.truncate(0)
+        foo(42)
+        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
+
+        out.truncate(0)
+        foo('foo')
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
+
+        out.truncate(0)
+        data = ['foo', 'bar']
+        foo(data)
+        self.assertEqual(out.getvalue(), 'checking for a thing... %r\n' % data)
+
+        exec(textwrap.dedent('''
+            def munge(x):
+                if not x:
+                    return 'not found'
+                if isinstance(x, (str, bool, int)):
+                    return x
+                return ' '.join(x)
+
+            @checking('for a thing', munge)
+            def foo(value):
+                return value
+        '''), sandbox)
+
+        foo = sandbox['foo']
+
+        out.truncate(0)
+        foo(True)
+        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
+
+        out.truncate(0)
+        foo(False)
+        self.assertEqual(out.getvalue(), 'checking for a thing... not found\n')
+
+        out.truncate(0)
+        foo(42)
+        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
+
+        out.truncate(0)
+        foo('foo')
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
+
+        out.truncate(0)
+        foo(['foo', 'bar'])
+        self.assertEqual(out.getvalue(), 'checking for a thing... foo bar\n')
+
     def get_result(self, command='', args=[], environ={},
                    prog='/bin/configure'):
         config = {}
@@ -91,19 +192,23 @@ class TestChecksConfigure(unittest.TestCase):
             'check_prog("FOO", ("unknown",))')
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for foo... not found\n'
-                              'DEBUG: foo: Trying unknown\n'
-                              'ERROR: Cannot find foo\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for foo... not found
+            DEBUG: foo: Trying unknown
+            ERROR: Cannot find foo
+        '''))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "unknown 3"))')
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for foo... not found\n'
-                              'DEBUG: foo: Trying unknown\n'
-                              'DEBUG: foo: Trying unknown-2\n'
-                              "DEBUG: foo: Trying 'unknown 3'\n"
-                              'ERROR: Cannot find foo\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for foo... not found
+            DEBUG: foo: Trying unknown
+            DEBUG: foo: Trying unknown-2
+            DEBUG: foo: Trying 'unknown 3'
+            ERROR: Cannot find foo
+        '''))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "unknown 3"), '
@@ -132,9 +237,11 @@ class TestChecksConfigure(unittest.TestCase):
             ['FOO=/usr/local/bin/known-a'])
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for foo... not found\n'
-                              'DEBUG: foo: Trying /usr/local/bin/known-a\n'
-                              'ERROR: Cannot find foo\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for foo... not found
+            DEBUG: foo: Trying /usr/local/bin/known-a
+            ERROR: Cannot find foo
+        '''))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown",))',
@@ -148,44 +255,50 @@ class TestChecksConfigure(unittest.TestCase):
             'allow_missing=True)', ['FOO=unknown'])
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for foo... not found\n'
-                              'DEBUG: foo: Trying unknown\n'
-                              'ERROR: Cannot find foo\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for foo... not found
+            DEBUG: foo: Trying unknown
+            ERROR: Cannot find foo
+        '''))
 
     def test_check_prog_what(self):
         config, out, status = self.get_result(
             'check_prog("CC", ("known-a",), what="the target C compiler")')
         self.assertEqual(status, 0)
         self.assertEqual(config, {'CC': '/usr/bin/known-a'})
-        self.assertEqual(out, 'checking for the target C compiler... /usr/bin/known-a\n')
+        self.assertEqual(
+            out, 'checking for the target C compiler... /usr/bin/known-a\n')
 
         config, out, status = self.get_result(
             'check_prog("CC", ("unknown", "unknown-2", "unknown 3"),'
             '           what="the target C compiler")')
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for the target C compiler... not found\n'
-                              'DEBUG: cc: Trying unknown\n'
-                              'DEBUG: cc: Trying unknown-2\n'
-                              "DEBUG: cc: Trying 'unknown 3'\n"
-                              'ERROR: Cannot find the target C compiler\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for the target C compiler... not found
+            DEBUG: cc: Trying unknown
+            DEBUG: cc: Trying unknown-2
+            DEBUG: cc: Trying 'unknown 3'
+            ERROR: Cannot find the target C compiler
+        '''))
 
     def test_check_prog_input(self):
-        config, out, status = self.get_result(
-            'option("--with-ccache", nargs=1, help="ccache")\n'
-            'check_prog("CCACHE", ("known-a",), input="--with-ccache")',
-            ['--with-ccache=known-b'])
+        config, out, status = self.get_result(textwrap.dedent('''
+            option("--with-ccache", nargs=1, help="ccache")
+            check_prog("CCACHE", ("known-a",), input="--with-ccache")
+        '''), ['--with-ccache=known-b'])
         self.assertEqual(status, 0)
         self.assertEqual(config, {'CCACHE': '/usr/local/bin/known-b'})
-        self.assertEqual(out, 'checking for ccache... /usr/local/bin/known-b\n')
+        self.assertEqual(
+            out, 'checking for ccache... /usr/local/bin/known-b\n')
 
-        script = (
-            'option(env="CC", nargs=1, help="compiler")\n'
-            '@depends("CC")\n'
-            'def compiler(value):\n'
-            '    return value[0].split()[0] if value else None\n'
-            'check_prog("CC", ("known-a",), input=compiler)'
-        )
+        script = textwrap.dedent('''
+            option(env="CC", nargs=1, help="compiler")
+            @depends("CC")
+            def compiler(value):
+                return value[0].split()[0] if value else None
+            check_prog("CC", ("known-a",), input=compiler)
+        ''')
         config, out, status = self.get_result(script)
         self.assertEqual(status, 0)
         self.assertEqual(config, {'CC': '/usr/bin/known-a'})
@@ -214,40 +327,46 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(config, {'FOO': '/usr/bin/known-a'})
         self.assertEqual(out, 'checking for foo... /usr/bin/known-a\n')
 
-        script = (
-            'option(env="TARGET", nargs=1, default="linux", help="target")\n'
-            '@depends("TARGET")\n'
-            'def compiler(value):\n'
-            '    if value:\n'
-            '        if value[0] == "linux":\n'
-            '            return ("gcc", "clang")\n'
-            '        if value[0] == "winnt":\n'
-            '            return ("cl", "clang-cl")\n'
-            'check_prog("CC", compiler)'
-        )
+        script = textwrap.dedent('''
+            option(env="TARGET", nargs=1, default="linux", help="target")
+            @depends("TARGET")
+            def compiler(value):
+                if value:
+                    if value[0] == "linux":
+                        return ("gcc", "clang")
+                    if value[0] == "winnt":
+                        return ("cl", "clang-cl")
+            check_prog("CC", compiler)
+        ''')
         config, out, status = self.get_result(script)
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for cc... not found\n'
-                              'DEBUG: cc: Trying gcc\n'
-                              'DEBUG: cc: Trying clang\n'
-                              'ERROR: Cannot find cc\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for cc... not found
+            DEBUG: cc: Trying gcc
+            DEBUG: cc: Trying clang
+            ERROR: Cannot find cc
+        '''))
 
         config, out, status = self.get_result(script, ['TARGET=linux'])
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for cc... not found\n'
-                              'DEBUG: cc: Trying gcc\n'
-                              'DEBUG: cc: Trying clang\n'
-                              'ERROR: Cannot find cc\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for cc... not found
+            DEBUG: cc: Trying gcc
+            DEBUG: cc: Trying clang
+            ERROR: Cannot find cc
+        '''))
 
         config, out, status = self.get_result(script, ['TARGET=winnt'])
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
-        self.assertEqual(out, 'checking for cc... not found\n'
-                              'DEBUG: cc: Trying cl\n'
-                              'DEBUG: cc: Trying clang-cl\n'
-                              'ERROR: Cannot find cc\n')
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for cc... not found
+            DEBUG: cc: Trying cl
+            DEBUG: cc: Trying clang-cl
+            ERROR: Cannot find cc
+        '''))
 
         config, out, status = self.get_result(script, ['TARGET=none'])
         self.assertEqual(status, 0)

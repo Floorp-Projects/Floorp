@@ -7,9 +7,8 @@ package org.mozilla.gecko.tests;
 import java.util.Locale;
 
 import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.PrefsHelper;
 
@@ -46,7 +45,7 @@ public class testOSLocale extends BaseTest {
 
         public void fetch() throws InterruptedException {
             // Wait for any pending changes to have taken. Bug 1092580.
-            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createNoOpEvent());
+            GeckoThread.waitOnGecko();
             synchronized (waiter) {
                 PrefsHelper.getPrefs(TO_FETCH, this);
                 waiter.wait(MAX_WAIT_MS);

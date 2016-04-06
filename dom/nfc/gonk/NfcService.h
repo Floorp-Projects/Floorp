@@ -40,7 +40,7 @@ private:
 
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<nsINfcGonkEventListener> mListener;
-  nsAutoPtr<NfcConsumer> mNfcConsumer;
+  UniquePtr<NfcConsumer> mNfcConsumer;
 };
 
 } // namespace mozilla

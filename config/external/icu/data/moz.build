@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['MOZ_ICU_DATA_ARCHIVE']:
+    # Copy the pre-built ICU data file to dist/bin.
+    FINAL_TARGET_FILES += [CONFIG['ICU_DATA_FILE']]
+
+# Build a library containing the ICU data for use in the JS shell, so that
+# JSAPI consumers don't have to deal with setting ICU's data path.
+Library('icudata')
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['CPU_ARCH'] == 'x86':
+        ASFLAGS += ['-DPREFIX']
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    ASFLAGS += ['-DPREFIX']
+
+ASFLAGS += [
+    '-DICU_DATA_FILE="%s"' % CONFIG['ICU_DATA_FILE'],
+    '-DICU_DATA_SYMBOL=icudt%s_dat' % CONFIG['MOZ_ICU_VERSION'],
+]
+LOCAL_INCLUDES += ['.']
+
+if CONFIG['HAVE_YASM']:
+    USE_YASM = True
+    SOURCES += ['icudata.s']
+elif CONFIG['GNU_AS']:
+    SOURCES += ['icudata_gas.S']

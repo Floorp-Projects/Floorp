@@ -73,8 +73,6 @@ public class GeckoEvent {
         MOTION_EVENT(2),
         SENSOR_EVENT(3),
         LOCATION_EVENT(5),
-        APP_BACKGROUNDING(9),
-        APP_FOREGROUNDING(10),
         LOAD_URI(12),
         NOOP(15),
         VIEWPORT(20),
@@ -115,7 +113,6 @@ public class GeckoEvent {
 
     private final int mType;
     private int mAction;
-    private boolean mAckNeeded;
     private long mTime;
     private Point[] mPoints;
     private int[] mPointIndicies;
@@ -158,14 +155,6 @@ public class GeckoEvent {
 
     private GeckoEvent(NativeGeckoEvent event) {
         mType = event.value;
-    }
-
-    public static GeckoEvent createAppBackgroundingEvent() {
-        return GeckoEvent.get(NativeGeckoEvent.APP_BACKGROUNDING);
-    }
-
-    public static GeckoEvent createAppForegroundingEvent() {
-        return GeckoEvent.get(NativeGeckoEvent.APP_FOREGROUNDING);
     }
 
     public static GeckoEvent createNoOpEvent() {
@@ -640,9 +629,5 @@ public class GeckoEvent {
         event.mCount = values.length;
         event.mGamepadValues = values;
         return event;
-    }
-
-    public void setAckNeeded(boolean ackNeeded) {
-        mAckNeeded = ackNeeded;
     }
 }

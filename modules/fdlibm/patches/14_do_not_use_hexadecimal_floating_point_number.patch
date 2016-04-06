@@ -1,0 +1,47 @@
+diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
+--- a/modules/fdlibm/src/e_exp.cpp
++++ b/modules/fdlibm/src/e_exp.cpp
+@@ -146,14 +146,17 @@ double
+ 	if(k >= -1021)
+ 	    INSERT_WORDS(twopk,0x3ff00000+(k<<20), 0);
+ 	else
+ 	    INSERT_WORDS(twopk,0x3ff00000+((k+1000)<<20), 0);
+ 	c  = x - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
+ 	if(k==0) 	return one-((x*c)/(c-2.0)-x); 
+ 	else 		y = one-((lo-(x*c)/(2.0-c))-hi);
+ 	if(k >= -1021) {
+-	    if (k==1024) return y*2.0*0x1p1023;
++	    if (k==1024) {
++	        double const_0x1p1023 = pow(2, 1023);
++	        return y*2.0*const_0x1p1023;
++	    }
+ 	    return y*twopk;
+ 	} else {
+ 	    return y*twopk*twom1000;
+ 	}
+ }
+diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
+--- a/modules/fdlibm/src/s_expm1.cpp
++++ b/modules/fdlibm/src/s_expm1.cpp
+@@ -192,17 +192,20 @@ expm1(double x)
+ 	    e -= hxs;
+ 	    if(k== -1) return 0.5*(x-e)-0.5;
+ 	    if(k==1) {
+ 	       	if(x < -0.25) return -2.0*(e-(x+0.5));
+ 	       	else 	      return  one+2.0*(x-e);
+ 	    }
+ 	    if (k <= -2 || k>56) {   /* suffice to return exp(x)-1 */
+ 	        y = one-(e-x);
+-		if (k == 1024) y = y*2.0*0x1p1023;
++		if (k == 1024) {
++		    double const_0x1p1023 = pow(2, 1023);
++		    y = y*2.0*const_0x1p1023;
++		}
+ 		else y = y*twopk;
+ 	        return y-one;
+ 	    }
+ 	    t = one;
+ 	    if(k<20) {
+ 	        SET_HIGH_WORD(t,0x3ff00000 - (0x200000>>k));  /* t=1-2^-k */
+ 	       	y = t-(e-x);
+ 		y = y*twopk;

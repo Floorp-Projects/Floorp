@@ -6003,14 +6003,31 @@ PresShell::AssumeAllFramesVisible()
     return true;
   }
 
-  // We assume all frames are visible in print, print preview, chrome, xul, and
+  // We assume all frames are visible in print, print preview, chrome, and
   // resource docs and don't keep track of them.
   if (mPresContext->Type() == nsPresContext::eContext_PrintPreview ||
       mPresContext->Type() == nsPresContext::eContext_Print ||
       mPresContext->IsChrome() ||
-      mDocument->IsResourceDoc() ||
-      mDocument->IsXULDocument()) {
+      mDocument->IsResourceDoc()) {
     return true;
+  }
+
+  // If we're assuming all frames are visible in the top level content
+  // document, we need to in subdocuments as well. Otherwise we can get in a
+  // situation where things like animations won't work in subdocuments because
+  // their frames appear not to be visible, since we won't schedule an image
+  // visibility update if the top level content document is assuming all
+  // frames are visible.
+  //
+  // Note that it's not safe to call IsRootContentDocument() if we're
+  // currently being destroyed, so we have to check that first.
+  if (!mHaveShutDown && !mIsDestroying &&
+      !mPresContext->IsRootContentDocument()) {
+    nsPresContext* presContext =
+      mPresContext->GetToplevelContentDocumentPresContext();
+    if (presContext && presContext->PresShell()->AssumeAllFramesVisible()) {
+      return true;
+    }
   }
 
   return false;

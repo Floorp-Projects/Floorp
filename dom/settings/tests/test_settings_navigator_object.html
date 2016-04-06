@@ -37,7 +37,7 @@ SpecialPowers.pushPermissions([
   {type: "settings-api-write", allow: 0, context: document},
   {type: "settings-clear", allow: 0, context: document}
 ], function() {
-  is(frames[0].navigator.mozSettings, null, "navigator.mozSettings is null when the page doesn't have permissions");
+  is(frames[0].navigator.mozSettings, undefined, "navigator.mozSettings is undefined when the page doesn't have permissions");
   testPref();
 });
 </script>
