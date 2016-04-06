@@ -103,7 +103,7 @@ ServiceWorkerJobQueue2::ScheduleJob(ServiceWorkerJob2* aJob)
   MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob2::State::Started);
 
   RefPtr<ServiceWorkerJob2>& tailJob = mJobList[mJobList.Length() - 1];
-  if (aJob->IsEquivalentTo(tailJob)) {
+  if (!tailJob->ResultCallbacksInvoked() && aJob->IsEquivalentTo(tailJob)) {
     tailJob->StealResultCallbacksFrom(aJob);
     return;
   }
