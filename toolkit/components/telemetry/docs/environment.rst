@@ -39,6 +39,7 @@ Structure::
         defaultSearchEngineData: {, // data about the current default engine
           name: <string>, // engine name, e.g. "Yahoo"; or "NONE" if no default
           loadPath: <string>, // where the engine line is located; missing if no default
+          origin: <string>, // 'default', 'verified', 'unverified', or 'invalid'; based on the presence and validity of the engine's loadPath verification hash.
           submissionURL: <string> // missing if no default or for user-installed engines
         },
         searchCohort: <string>, // optional, contains an identifier for any active search A/B experiments
@@ -280,6 +281,8 @@ The object contains:
  [profile]/searchplugins/engine.xml
  [distribution]/searchplugins/common/engine.xml
  [other]/engine.xml
+
+- an ``origin`` property: the value will be ``default`` for engines that are built-in or from distribution partners, ``verified`` for user-installed engines with valid verification hashes, ``unverified`` for non-default engines without verification hash, and ``invalid`` for engines with broken verification hashes.
 
 - a ``submissionURL`` property with the HTTP url we would use to search.
   For privacy, we don't record this for user-installed engines.
