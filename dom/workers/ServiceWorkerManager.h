@@ -49,6 +49,7 @@ class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJob;
 class ServiceWorkerJobQueue;
+class ServiceWorkerJobQueue2;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
 
@@ -515,7 +516,7 @@ private:
   void
   Init();
 
-  ServiceWorkerJobQueue*
+  already_AddRefed<ServiceWorkerJobQueue2>
   GetOrCreateJobQueue(const nsACString& aOriginSuffix,
                       const nsACString& aScope);
 
@@ -630,6 +631,7 @@ private:
   };
 
   void AppendPendingOperation(nsIRunnable* aRunnable);
+  // TODO: remove this
   void AppendPendingOperation(ServiceWorkerJobQueue* aQueue,
                               ServiceWorkerJob* aJob);
 
