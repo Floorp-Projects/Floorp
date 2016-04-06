@@ -28,21 +28,6 @@ let gBrowserApp;
 
 setup_browser();
 
-// Make the timer global so it doesn't get GC'd
-let gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-function sleep(wait) {
-  return new Promise((resolve, reject) => {
-    dump("sleep start");
-    gTimer.initWithCallback({
-      notify: function () {
-        dump("sleep end");
-        resolve();
-      },
-    }, wait, gTimer.TYPE_ONE_SHOT);
-  });
-}
-
 function queryElement(contentWindow, data) {
   let frame = contentWindow;
   if (data.hasOwnProperty("frame")) {
@@ -86,10 +71,6 @@ function getInputValue(browser, data) {
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
-// Wait 2 seconds for the async Java/JS messsaging dance to settle down. We don't have
-// enough pre/post events, messages or notifications to handle this without a delay.
-const CLOSE_TAB_WAIT = 2000;
-
 function setup_browser() {
   gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   gBrowserApp = gChromeWin.BrowserApp;
@@ -120,7 +101,7 @@ add_task(function* test_formdata() {
 
       // Remove the tab.
       gBrowserApp.closeTab(tab);
-      yield sleep(CLOSE_TAB_WAIT);
+      yield promiseTabEvent(browser, "SSTabCloseProcessed");
     });
   }
 
@@ -175,7 +156,7 @@ add_task(function* test_formdata2() {
 
       // Remove the tab.
       gBrowserApp.closeTab(tab);
-      yield sleep(CLOSE_TAB_WAIT);
+      yield promiseTabEvent(browser, "SSTabCloseProcessed");
     });
   }
 
@@ -230,19 +211,16 @@ add_task(function* test_formdata_navigation() {
       // Go back.
       is(browser.canGoBack, true, "can go back");
       browser.goBack();
-      yield promiseTabEvent(gBrowserApp.deck, "pageshow");
+      yield promiseTabEvent(browser, "SSTabDataUpdated");
       is(browser.currentURI.spec, URL, "navigated back to form data page");
 
       // Make sure form data is still present.
       is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value present after navigation");
       is(getInputValue(browser, {id: "txt", frame: 0}), INNER_VALUE, "inner value present after navigation");
 
-      // Allow the session store a bit of time to actually capture the form data.
-      yield sleep(CLOSE_TAB_WAIT);
-
       // Remove the tab.
       gBrowserApp.closeTab(tab);
-      yield sleep(CLOSE_TAB_WAIT);
+      yield promiseTabEvent(browser, "SSTabCloseProcessed");
     });
   }
 
