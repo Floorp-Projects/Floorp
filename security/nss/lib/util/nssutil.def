@@ -283,3 +283,10 @@ NSSUTIL_ArgParseModuleSpecEx;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.24 {       # NSS Utilities 3.24 release
+;+    global:
+PORT_InitCheapArena;
+PORT_DestroyCheapArena;
+;+    local:
+;+       *;
+;+};

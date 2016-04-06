@@ -59,6 +59,7 @@
 # -------------------------------------------------------
 #   BUILT_OPT    - use optimized/debug build
 #   USE_64       - use 64bit/32bit build
+#   USE_ASAN     - use Address Sanitizer build
 #
 # Optional environment variables to enable specific NSS features:
 # ---------------------------------------------------------------
@@ -161,7 +162,7 @@ run_cycle_pkix()
     export NSS_ENABLE_PKIX_VERIFY
 
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher dbtests sdr crmf smime merge multinit"
+    TESTS_SKIP="cipher dbtests sdr crmf smime merge multinit util_gtests"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?
@@ -207,7 +208,7 @@ run_cycle_upgrade_db()
 
     # run the subset of tests with the upgraded database
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits chains ssl_gtests pk11_gtests der_gtests"
+    TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits chains ssl_gtests pk11_gtests der_gtests util_gtests"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?
@@ -238,7 +239,7 @@ run_cycle_shared_db()
 
     # run the tests for native sharedb support
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix dbupgrade sdr ocsp pkits ssl_gtests pk11_gtests der_gtests"
+    TESTS_SKIP="cipher libpkix dbupgrade sdr ocsp pkits ssl_gtests pk11_gtests der_gtests util_gtests"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?
@@ -279,7 +280,7 @@ run_cycles()
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
-tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ssl_gtests pk11_gtests der_gtests"
+tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ssl_gtests pk11_gtests der_gtests util_gtests"
 TESTS=${NSS_TESTS:-$tests}
 
 ALL_TESTS=${TESTS}
