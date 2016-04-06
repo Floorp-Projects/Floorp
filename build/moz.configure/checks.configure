@@ -13,7 +13,6 @@
 # destructure in the assignment below the function declaration.
 @template
 @imports(_from='__builtin__', _import='Exception')
-@imports(_from='__builtin__', _import='__name__')
 def _declare_exceptions():
     class FatalCheckError(Exception):
         '''An exception to throw from a function decorated with @checking.
