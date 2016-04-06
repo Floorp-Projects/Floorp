@@ -315,9 +315,14 @@ private:
   {
     MOZ_ASSERT(aJob);
     QueueData& queue = GetQueue(aJob->mJobType);
-    MOZ_ASSERT(!queue.mJobs.IsEmpty());
-    MOZ_ASSERT(queue.mJobs[0] == aJob);
-    if (NS_WARN_IF(queue.mJobs[0] != aJob)) {
+    // XXX There are some corner cases where jobs can double-complete.  Until
+    // we track all these down we do a non-fatal assert in debug builds and
+    // a runtime check to verify the queue is in the correct state.
+    NS_ASSERTION(!queue.mJobs.IsEmpty(),
+                 "Job queue should contain the job that just completed.");
+    NS_ASSERTION(queue.mJobs[0] == aJob,
+                 "Job queue should contain the job that just completed.");
+    if (NS_WARN_IF(queue.mJobs.SafeElementAt(0, nullptr) != aJob)) {
       return;
     }
     Pop(queue);
