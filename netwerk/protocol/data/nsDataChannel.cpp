@@ -31,8 +31,8 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
 
     nsCString contentType, contentCharset, dataBuffer;
     bool lBase64;
-    rv = nsDataHandler::ParseURI(spec, contentType, contentCharset,
-                                 lBase64, dataBuffer);
+    rv = nsDataHandler::ParseURI(spec, contentType, &contentCharset,
+                                 lBase64, &dataBuffer);
 
     NS_UnescapeURL(dataBuffer);
 
