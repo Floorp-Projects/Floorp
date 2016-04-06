@@ -39,7 +39,7 @@ def android_toolchain(target, host, ndk, toolchain, gnu_compiler_version):
             target_base = 'arm-linux-androideabi'
         elif target.cpu == 'x86':
             target_base = 'x86'
-        elif target.cpu == 'mips' and target.endianness == 'little':
+        elif target.cpu == 'mips32' and target.endianness == 'little':
             target_base = 'mipsel-linux-android'
         else:
             die('Target cpu is not supported.')
