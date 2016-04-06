@@ -288,6 +288,10 @@ TreeWalker::AccessibleFor(nsIContent* aNode, uint32_t aFlags, bool* aSkipSubtree
 
   // Create an accessible if allowed.
   if (!(aFlags & eWalkCache) && mContext->IsAcceptableChild(aNode)) {
+    if (mDoc->RelocateARIAOwnedIfNeeded(aNode)) {
+      *aSkipSubtree = true;
+      return nullptr;
+    }
     return GetAccService()->CreateAccessible(aNode, mContext, aSkipSubtree);
   }
 
