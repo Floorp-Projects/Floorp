@@ -170,12 +170,12 @@ Script.prototype = {
     }
 
     if (this.options.include_globs != null) {
-      if (!this.include_globs_.matches(uri)) {
+      if (!this.include_globs_.matches(uri.spec)) {
         return false;
       }
     }
 
-    if (this.exclude_globs_.matches(uri)) {
+    if (this.exclude_globs_.matches(uri.spec)) {
       return false;
     }
 
