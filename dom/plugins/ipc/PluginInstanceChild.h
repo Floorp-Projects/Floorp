@@ -657,6 +657,25 @@ private:
 
     // Has this instance been destroyed, either by ActorDestroy or NPP_Destroy?
     bool mDestroyed;
+
+    // A counter is incremented by AutoStackHelper to indicate that there is an
+    // active plugin call which should be preventing shutdown.
+public:
+    class AutoStackHelper {
+    public:
+        explicit AutoStackHelper(PluginInstanceChild* instance)
+            : mInstance(instance)
+        {
+            ++mInstance->mStackDepth;
+        }
+        ~AutoStackHelper() {
+            --mInstance->mStackDepth;
+        }
+    private:
+        PluginInstanceChild *const mInstance;
+    };
+private:
+    int32_t mStackDepth;
 };
 
 } // namespace plugins
