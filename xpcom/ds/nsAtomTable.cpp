@@ -108,6 +108,7 @@ public:
   DynamicAtom(const nsAString& aString, uint32_t aHash)
   {
     mLength = aString.Length();
+    mIsStatic = false;
     RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
     if (buf) {
       mString = static_cast<char16_t*>(buf->Data());
@@ -152,9 +153,10 @@ class StaticAtom final : public nsIAtom
 
   // This constructor must only be used in conjunction with placement new on an
   // existing DynamicAtom (in DynamicAtom::TransmuteToStatic()) in order to
-  // transmute that DynamicAtom into a StaticAtom. The constructor does three
+  // transmute that DynamicAtom into a StaticAtom. The constructor does four
   // notable things.
   // - Overwrites the vtable pointer (implicitly).
+  // - Inverts mIsStatic.
   // - Zeroes the refcount (via the nsIAtom constructor). Having a zero refcount
   //   doesn't matter because StaticAtom's AddRef/Release methods don't consult
   //   the refcount.
@@ -165,6 +167,10 @@ class StaticAtom final : public nsIAtom
   {
     static_assert(sizeof(DynamicAtom) >= sizeof(StaticAtom),
                   "can't safely transmute a smaller object to a bigger one");
+
+    // We must be transmuting an existing DynamicAtom.
+    MOZ_ASSERT(!mIsStatic);
+    mIsStatic = true;
 
     char16_t* staticString = static_cast<char16_t*>(aStaticBuffer->Data());
     MOZ_ASSERT(nsCRT::strcmp(staticString, mString) == 0);
@@ -178,6 +184,7 @@ public:
   StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
   {
     mLength = aLength;
+    mIsStatic = true;
     mString = static_cast<char16_t*>(aStringBuffer->Data());
     // Technically we could currently avoid doing this addref by instead making
     // the static atom buffers have an initial refcount of 2.
@@ -419,18 +426,6 @@ StaticAtom::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
   *aResult = aString.Equals(nsDependentString(mString, mLength));
   return NS_OK;
-}
-
-NS_IMETHODIMP_(bool)
-DynamicAtom::IsStaticAtom()
-{
-  return false;
-}
-
-NS_IMETHODIMP_(bool)
-StaticAtom::IsStaticAtom()
-{
-  return true;
 }
 
 NS_IMETHODIMP_(size_t)

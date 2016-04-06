@@ -33,11 +33,6 @@ interface nsIAtom : nsISupports
    */
   [binaryname(ScriptableEquals)] boolean equals(in AString aString);
 
-  /**
-   * Returns true if the atom is static and false otherwise.
-   */
-  [noscript, notxpcom] boolean isStaticAtom();
-
   [noscript, notxpcom]
   size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 
@@ -45,6 +40,10 @@ interface nsIAtom : nsISupports
   // note this is NOT virtual so this won't muck with the vtable!
   inline bool Equals(const nsAString& aString) const {
     return aString.Equals(nsDependentString(mString, mLength));
+  }
+
+  inline bool IsStaticAtom() const {
+    return mIsStatic;
   }
 
   inline char16ptr_t GetUTF16String() const {
@@ -75,7 +74,8 @@ interface nsIAtom : nsISupports
   }
 
 protected:
-  uint32_t mLength;
+  uint32_t mLength:31;
+  uint32_t mIsStatic:1;
   uint32_t mHash;
   /**
    * WARNING! There is an invisible constraint on |mString|: the chars it
