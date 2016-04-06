@@ -991,8 +991,7 @@ int nr_ice_component_can_candidate_tcptype_pair(nr_socket_tcp_type left, nr_sock
     return(1);
   }
 
-/* local vs. remote matters here because we allow private -> public pairing,
- * but discourage public -> private pairing. */
+/* filter out pairings which won't work. */
 int nr_ice_component_can_candidate_addr_pair(nr_transport_addr *local, nr_transport_addr *remote)
   {
     int remote_range;
@@ -1006,10 +1005,6 @@ int nr_ice_component_can_candidate_addr_pair(nr_transport_addr *local, nr_transp
      * loopback with a host candidate. */
     if(nr_transport_addr_is_loopback(local) !=
        nr_transport_addr_is_loopback(remote))
-      return(0);
-    remote_range = nr_transport_addr_get_private_addr_range(remote);
-    if(remote_range && (nr_transport_addr_get_private_addr_range(local) !=
-       remote_range))
       return(0);
 
     return(1);
