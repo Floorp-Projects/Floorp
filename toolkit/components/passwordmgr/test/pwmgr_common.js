@@ -282,26 +282,6 @@ function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
-function loadRecipes(recipes) {
-  return new Promise(resolve => {
-    chromeScript.addMessageListener("loadedRecipes", function loaded() {
-      chromeScript.removeMessageListener("loadedRecipes", loaded);
-      resolve(recipes);
-    });
-    chromeScript.sendAsyncMessage("loadRecipes", recipes);
-  });
-}
-
-function resetRecipes() {
-  return new Promise(resolve => {
-    chromeScript.addMessageListener("recipesReset", function reset() {
-      chromeScript.removeMessageListener("recipesReset", reset);
-      resolve();
-    });
-    chromeScript.sendAsyncMessage("resetRecipes");
-  });
-}
-
 /**
  * Run a function synchronously in the parent process and destroy it in the test cleanup function.
  * @param {Function|String} aFunctionOrURL - either a function that will be stringified and run
@@ -330,7 +310,6 @@ function runChecksAfterCommonInit(aFunction = null) {
     pwmgrCommonScript.addMessageListener("registerRunTests", () => registerRunTests());
   }
   pwmgrCommonScript.sendSyncMessage("setupParent");
-  return pwmgrCommonScript;
 }
 
 // Code to run when loaded as a chrome script in tests via loadChromeScript
@@ -353,13 +332,6 @@ if (this.addMessageListener) {
     var recipeParent = yield LoginManagerParent.recipeParentPromise;
     yield recipeParent.load(recipes);
     sendAsyncMessage("loadedRecipes", recipes);
-  }));
-
-  addMessageListener("resetRecipes", Task.async(function* resetRecipes() {
-    let { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
-    let recipeParent = yield LoginManagerParent.recipeParentPromise;
-    yield recipeParent.reset();
-    sendAsyncMessage("recipesReset");
   }));
 
   var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
