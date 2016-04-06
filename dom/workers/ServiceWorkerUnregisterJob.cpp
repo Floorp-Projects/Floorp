@@ -1,0 +1,113 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "ServiceWorkerUnregisterJob.h"
+
+namespace mozilla {
+namespace dom {
+namespace workers {
+
+
+ServiceWorkerUnregisterJob2::ServiceWorkerUnregisterJob2(nsIPrincipal* aPrincipal,
+                                                         const nsACString& aScope,
+                                                         bool aSendToParent)
+  : ServiceWorkerJob2(Type::Unregister, aPrincipal, aScope, EmptyCString())
+  , mResult(false)
+  , mSendToParent(aSendToParent)
+{
+}
+
+bool
+ServiceWorkerUnregisterJob2::GetResult() const
+{
+  AssertIsOnMainThread();
+  return mResult;
+}
+ServiceWorkerUnregisterJob2::~ServiceWorkerUnregisterJob2()
+{
+}
+
+void
+ServiceWorkerUnregisterJob2::AsyncExecute()
+{
+  AssertIsOnMainThread();
+
+  if (Canceled()) {
+    Finish(NS_ERROR_DOM_ABORT_ERR);
+    return;
+  }
+
+  PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(mPrincipal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Finish(NS_OK);
+    return;
+  }
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+  nsAutoCString scopeKey;
+  rv = swm->PrincipalToScopeKey(mPrincipal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Finish(NS_OK);
+    return;
+  }
+
+  // "Let registration be the result of running [[Get Registration]]
+  // algorithm passing scope as the argument."
+  ServiceWorkerManager::RegistrationDataPerPrincipal* data;
+  // TODO: Don't reach into SWM internals here.  Expose a method instead.
+  if (!swm->mRegistrationInfos.Get(scopeKey, &data)) {
+    // "If registration is null, then, resolve promise with false."
+    Finish(NS_OK);
+    return;
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  if (!data->mInfos.Get(mScope, getter_AddRefs(registration))) {
+    // "If registration is null, then, resolve promise with false."
+    Finish(NS_OK);
+    return;
+  }
+
+  MOZ_ASSERT(registration);
+
+  // Note, we send the message to remove the registration from disk now even
+  // though we may only set the mPendingUninstall flag below.  This is
+  // necessary to ensure the registration is removed if the controlled
+  // clients are closed by shutting down the browser.  If the registration
+  // is resurrected by clearing mPendingUninstall then it should be saved
+  // to disk again.
+  // TODO: Don't reach into SWM internals here.  Expose a method instead.
+  if (mSendToParent && !registration->mPendingUninstall && swm->mActor) {
+    swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
+  }
+
+  // "Set registration's uninstalling flag."
+  registration->mPendingUninstall = true;
+
+  // "Resolve promise with true"
+  mResult = true;
+  InvokeResultCallbacks(NS_OK);
+
+  // "If no service worker client is using registration..."
+  if (!registration->IsControllingDocuments()) {
+    // "If registration's uninstalling flag is set.."
+    if (!registration->mPendingUninstall) {
+      Finish(NS_OK);
+      return;
+    }
+
+    // "Invoke [[Clear Registration]]..."
+    swm->RemoveRegistration(registration);
+  }
+
+  Finish(NS_OK);
+}
+
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
