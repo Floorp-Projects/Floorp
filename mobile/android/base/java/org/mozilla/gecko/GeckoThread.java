@@ -105,11 +105,14 @@ public class GeckoThread extends Thread {
     @WrapForJNI
     private static MessageQueue msgQueue;
 
+    private GeckoProfile mProfile;
+
     private final String mArgs;
     private final String mAction;
     private final boolean mDebugging;
 
-    GeckoThread(String args, String action, boolean debugging) {
+    GeckoThread(GeckoProfile profile, String args, String action, boolean debugging) {
+        mProfile = profile;
         mArgs = args;
         mAction = action;
         mDebugging = debugging;
@@ -117,14 +120,10 @@ public class GeckoThread extends Thread {
         setName("Gecko");
     }
 
-    public static boolean ensureInit(String args, String action) {
-        return ensureInit(args, action, /* debugging */ false);
-    }
-
-    public static boolean ensureInit(String args, String action, boolean debugging) {
+    public static boolean ensureInit(GeckoProfile profile, String args, String action, boolean debugging) {
         ThreadUtils.assertOnUiThread();
         if (isState(State.INITIAL) && sGeckoThread == null) {
-            sGeckoThread = new GeckoThread(args, action, debugging);
+            sGeckoThread = new GeckoThread(profile, args, action, debugging);
             return true;
         }
         return false;
@@ -341,30 +340,32 @@ public class GeckoThread extends Thread {
         return null;
     }
 
-    private static String addCustomProfileArg(String args) {
+    private String addCustomProfileArg(String args) {
         String profileArg = "";
-        String guestArg = "";
-        if (GeckoAppShell.getGeckoInterface() != null) {
-            final GeckoProfile profile = GeckoAppShell.getGeckoInterface().getProfile();
 
-            if (profile.inGuestMode()) {
-                try {
-                    profileArg = " -profile " + profile.getDir().getCanonicalPath();
-                } catch (final IOException ioe) {
-                    Log.e(LOGTAG, "error getting guest profile path", ioe);
-                }
+        if (mProfile != null && mProfile.inGuestMode()) {
+            try {
+                profileArg = " -profile " + mProfile.getDir().getCanonicalPath();
+            } catch (final IOException ioe) {
+                Log.e(LOGTAG, "error getting guest profile path", ioe);
+            }
 
-                if (args == null || !args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
-                    guestArg = " " + BrowserApp.GUEST_BROWSING_ARG;
-                }
-            } else if (!GeckoProfile.sIsUsingCustomProfile) {
-                // If nothing was passed in the intent, make sure the default profile exists and
-                // force Gecko to use the default profile for this activity
-                profileArg = " -P " + profile.forceCreate().getName();
+            if (args == null || !args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
+                profileArg += " " + BrowserApp.GUEST_BROWSING_ARG;
+            }
+
+        } else if (args == null || !args.matches(".*\\B-profile\\s+\\S+.*")) {
+            // If not using a custom profile, make sure a profile exists.
+            final GeckoProfile profile = getProfile();
+            profile.forceCreate();
+
+            // If args don't include the profile name, make sure it's included.
+            if (args == null || !args.matches(".*\\B-P\\s+\\S+.*")) {
+                profileArg = " -P " + profile.getName();
             }
         }
 
-        return (args != null ? args : "") + profileArg + guestArg;
+        return (args != null ? args : "") + profileArg;
     }
 
     private String getGeckoArgs(final String apkPath) {
@@ -393,6 +394,30 @@ public class GeckoThread extends Thread {
         }
 
         return args.toString();
+    }
+
+    public static GeckoProfile getActiveProfile() {
+        if (sGeckoThread == null) {
+            return null;
+        }
+        final GeckoProfile profile = sGeckoThread.mProfile;
+        if (profile != null) {
+            return profile;
+        }
+        return sGeckoThread.getProfile();
+    }
+
+    public synchronized GeckoProfile getProfile() {
+        if (mProfile == null) {
+            final Context context = GeckoAppShell.getApplicationContext();
+            mProfile = GeckoProfile.getFromArgs(context, mArgs);
+
+            // fall back to default profile if we didn't load a specific one
+            if (mProfile == null) {
+                mProfile = GeckoProfile.getDefaultProfile(context);
+            }
+        }
+        return mProfile;
     }
 
     @Override

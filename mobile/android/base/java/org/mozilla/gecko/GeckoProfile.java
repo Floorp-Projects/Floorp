@@ -206,6 +206,17 @@ public final class GeckoProfile {
         return get(context, "");
     }
 
+    public static GeckoProfile getDefaultProfile(Context context) {
+        try {
+            return get(context, getDefaultProfileName(context));
+
+        } catch (final NoMozillaDirectoryException e) {
+            // If this failed, we're screwed.
+            Log.wtf(LOGTAG, "Unable to get default profile name.", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public static GeckoProfile get(Context context, String profileName) {
         synchronized (sProfileCache) {
             GeckoProfile profile = sProfileCache.get(profileName);
