@@ -81,12 +81,6 @@ public:
 
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
 
-  // According to the spec, Soft Update shouldn't queue an update job
-  // if the registration queue is not empty. Because our job queue
-  // works slightly different, we use a flag to determine if the registration
-  // is already updating.
-  bool mUpdating;
-
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
   // pendingUninstall and when all controlling documents go away, removed.

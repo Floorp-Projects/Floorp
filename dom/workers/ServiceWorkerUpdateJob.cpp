@@ -229,9 +229,6 @@ ServiceWorkerUpdateJob2::Update()
   // SetRegistration() must be called before Update().
   MOZ_ASSERT(mRegistration);
 
-  // TODO: I think we can remove mUpdating from registration now
-  mRegistration->mUpdating = true;
-
   if (Canceled()) {
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
     return;
@@ -376,9 +373,6 @@ void
 ServiceWorkerUpdateJob2::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResult)
 {
   AssertIsOnMainThread();
-
-  // TODO: I think we can remove this now
-  mRegistration->mUpdating = false;
 
   if (Canceled()) {
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
