@@ -615,4 +615,28 @@ public class GeckoThread extends Thread {
 
     @WrapForJNI @RobocopTarget
     public static native void waitOnGecko();
+
+    @WrapForJNI(stubName = "OnPause")
+    private static native void nativeOnPause();
+
+    public static void onPause() {
+        if (isStateAtLeast(State.PROFILE_READY)) {
+            nativeOnPause();
+        } else {
+            queueNativeCallUntil(State.PROFILE_READY, GeckoThread.class,
+                                 "nativeOnPause");
+        }
+    }
+
+    @WrapForJNI(stubName = "OnResume")
+    private static native void nativeOnResume();
+
+    public static void onResume() {
+        if (isStateAtLeast(State.PROFILE_READY)) {
+            nativeOnResume();
+        } else {
+            queueNativeCallUntil(State.PROFILE_READY, GeckoThread.class,
+                                 "nativeOnResume");
+        }
+    }
 }

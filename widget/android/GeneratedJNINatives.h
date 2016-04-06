@@ -197,6 +197,14 @@ class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 public:
     static constexpr JNINativeMethod methods[] = {
 
+        mozilla::jni::MakeNativeMethod<GeckoThread::OnPause_t>(
+                mozilla::jni::NativeStub<GeckoThread::OnPause_t, Impl>
+                ::template Wrap<&Impl::OnPause>),
+
+        mozilla::jni::MakeNativeMethod<GeckoThread::OnResume_t>(
+                mozilla::jni::NativeStub<GeckoThread::OnResume_t, Impl>
+                ::template Wrap<&Impl::OnResume>),
+
         mozilla::jni::MakeNativeMethod<GeckoThread::SpeculativeConnect_t>(
                 mozilla::jni::NativeStub<GeckoThread::SpeculativeConnect_t, Impl>
                 ::template Wrap<&Impl::SpeculativeConnect>),
