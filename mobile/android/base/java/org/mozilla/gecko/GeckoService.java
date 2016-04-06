@@ -87,7 +87,8 @@ public class GeckoService extends IntentService {
         if (DEBUG) {
             Log.d(LOGTAG, "Created");
         }
-        GeckoThread.ensureInit(/* args */ null, /* action */ null);
+        GeckoThread.ensureInit(/* profile */ null, /* args */ null,
+                               /* action */ null, /* debugging */ false);
         GeckoThread.launch();
     }
 
