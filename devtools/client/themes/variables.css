@@ -117,7 +117,7 @@
   --theme-selection-background-semitransparent: rgba(128,128,128,0.2);
   --theme-selection-color: white;
   --theme-splitter-color: #aabccf;
-  --theme-comment: #757873;
+  --theme-comment: green;
 
   --theme-body-color: #18191a;
   --theme-body-color-alt: #585959;
@@ -152,4 +152,9 @@
 
   /* Font size */
   --theme-toolbar-font-size: 12px;
+
+  /* Header */
+  --theme-header-background: #F0F0F0 linear-gradient(to top,
+                                                     rgba(0, 0, 0, 0.1),
+                                                     transparent) repeat-x;
 }

@@ -122,6 +122,26 @@
   background-color: #87ceeb;
 }
 
+.theme-firebug #layout-main,
+.theme-firebug #layout-borders,
+.theme-firebug #layout-content {
+  border-style: solid;
+}
+
+.theme-firebug #layout-main,
+.theme-firebug #layout-header {
+  font-family: var(--proportional-font-family);
+}
+
+.theme-firebug #layout-main {
+  color: var(--theme-body-color);
+  font-size: var(--theme-toolbar-font-size);
+}
+
+.theme-firebug #layout-header {
+  font-size: var(--theme-toolbar-font-size);
+}
+
 /* Editable region sizes are contained in absolutely positioned <p> */
 
 #layout-main > p {
