@@ -264,7 +264,6 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& a
   , mLastUpdateCheckTime(0)
   , mScope(aScope)
   , mPrincipal(aPrincipal)
-  , mUpdating(false)
   , mPendingUninstall(false)
 {}
 
@@ -2898,15 +2897,13 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
   // or its equivalent, with client, registration as its argument."
   // TODO(catalinb): We don't implement the force bypass cache flag.
   // See: https://github.com/slightlyoff/ServiceWorker/issues/759
-  if (!registration->mUpdating) {
-    RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey,
-                                                               aScope);
+  RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey,
+                                                             aScope);
 
-    RefPtr<ServiceWorkerUpdateJob2> job =
-      new ServiceWorkerUpdateJob2(principal, registration->mScope,
-                                  newest->ScriptSpec(), nullptr);
-    queue->ScheduleJob(job);
-  }
+  RefPtr<ServiceWorkerUpdateJob2> job =
+    new ServiceWorkerUpdateJob2(principal, registration->mScope,
+                                newest->ScriptSpec(), nullptr);
+  queue->ScheduleJob(job);
 }
 
 namespace {
