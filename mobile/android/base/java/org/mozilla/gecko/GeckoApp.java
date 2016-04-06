@@ -175,7 +175,6 @@ public abstract class GeckoApp
     public List<GeckoAppShell.AppStateListener> mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
-    protected GeckoProfile mProfile;
     protected boolean mIsRestoringActivity;
 
     private ContactService mContactService;
@@ -718,7 +717,7 @@ public abstract class GeckoApp
                 return;
             }
             // We're on a background thread, so we can be synchronous.
-            final long millis = mProfile.getDB().getPrePathLastVisitedTimeMilliseconds(getContentResolver(), prePath);
+            final long millis = getProfile().getDB().getPrePathLastVisitedTimeMilliseconds(getContentResolver(), prePath);
             callback.sendSuccess(millis);
         }
     }
@@ -1631,7 +1630,7 @@ public abstract class GeckoApp
                             }
                         }
                     }, "Tabs:TabsOpened");
-                    TabQueueHelper.openQueuedUrls(GeckoApp.this, mProfile, TabQueueHelper.FILE_NAME, true);
+                    TabQueueHelper.openQueuedUrls(GeckoApp.this, getProfile(), TabQueueHelper.FILE_NAME, true);
                 } else {
                     openTabsRunnable.run();
                 }
@@ -1702,12 +1701,8 @@ public abstract class GeckoApp
     }
 
     @Override
-    public synchronized GeckoProfile getProfile() {
-        // fall back to default profile if we didn't load a specific one
-        if (mProfile == null) {
-            mProfile = GeckoProfile.get(this);
-        }
-        return mProfile;
+    public GeckoProfile getProfile() {
+        return GeckoThread.getActiveProfile();
     }
 
     /**
