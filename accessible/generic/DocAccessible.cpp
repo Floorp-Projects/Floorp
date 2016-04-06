@@ -1358,23 +1358,7 @@ DocAccessible::ProcessInvalidationList()
     if (!HasAccessible(content)) {
       Accessible* container = GetContainerAccessible(content);
       if (container) {
-        TreeWalker walker(container);
-        if (container->IsAcceptableChild(content) && walker.Seek(content)) {
-          Accessible* child =
-            GetAccService()->GetOrCreateAccessible(content, container);
-          if (child) {
-            RefPtr<AccReorderEvent> reorderEvent =
-              new AccReorderEvent(container);
-
-            AutoTreeMutation mt(container);
-            container->InsertAfter(child, walker.Prev());
-            mt.AfterInsertion(child);
-            mt.Done();
-
-            uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
-            FireEventsOnInsertion(container, reorderEvent, flags);
-          }
-        }
+        ProcessContentInserted(container, content);
       }
     }
   }
@@ -1760,8 +1744,9 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
                                       const nsTArray<nsCOMPtr<nsIContent> >* aNodes)
 {
   // Process insertions if the container accessible is still in tree.
-  if (!HasAccessible(aContainer->GetNode()))
+  if (!aContainer->IsInDocument()) {
     return;
+  }
 
   // If new root content has been inserted then update it.
   if (aContainer == this) {
@@ -1819,6 +1804,32 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
 #endif
 
   FireEventsOnInsertion(aContainer, reorderEvent, updateFlags);
+}
+
+void
+DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
+{
+  if (!aContainer->IsInDocument()) {
+    return;
+  }
+
+  TreeWalker walker(aContainer);
+  if (aContainer->IsAcceptableChild(aNode) && walker.Seek(aNode)) {
+    Accessible* child =
+      GetAccService()->GetOrCreateAccessible(aNode, aContainer);
+
+    if (child) {
+      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
+
+      AutoTreeMutation mt(aContainer);
+      aContainer->InsertAfter(child, walker.Prev());
+      mt.AfterInsertion(child);
+      mt.Done();
+
+      uint32_t flags = UpdateTreeInternal(child, true, reorderEvent);
+      FireEventsOnInsertion(aContainer, reorderEvent, flags);
+    }
+  }
 }
 
 void

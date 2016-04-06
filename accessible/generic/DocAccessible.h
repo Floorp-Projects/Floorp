@@ -490,6 +490,8 @@ protected:
    */
   void ProcessContentInserted(Accessible* aContainer,
                               const nsTArray<nsCOMPtr<nsIContent> >* aInsertedContent);
+  void ProcessContentInserted(Accessible* aContainer,
+                              nsIContent* aInsertedContent);
 
   /**
    * Used to notify the document to make it process the invalidation list.
