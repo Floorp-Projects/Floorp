@@ -628,8 +628,6 @@ public:
         MOTION_EVENT = 2,
         SENSOR_EVENT = 3,
         LOCATION_EVENT = 5,
-        APP_BACKGROUNDING = 9,
-        APP_FOREGROUNDING = 10,
         LOAD_URI = 12,
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
