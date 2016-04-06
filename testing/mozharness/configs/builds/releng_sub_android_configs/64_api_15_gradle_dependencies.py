@@ -10,6 +10,7 @@ config = {
          'assembleAutomationRelease',
          'assembleAutomationDebug',
          'assembleAutomationDebugAndroidTest',
+         'checkstyle',
         ],
     ],
 }

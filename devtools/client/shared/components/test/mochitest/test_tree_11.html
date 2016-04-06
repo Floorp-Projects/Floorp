@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when an item in the Tree component is focused by arrow key, the view is scrolled.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+  <style>
+   * {
+       margin: 0;
+       padding: 0;
+       height: 30px;
+       max-height: 30px;
+       min-height: 30px;
+       font-size: 10px;
+       overflow: auto;
+   }
+  </style>
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = React.addons.TestUtils;
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
+    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+
+    yield setProps(tree, {
+      itemHeight: 10,
+      onFocus: item => setProps(tree, { focused: item }),
+      focused: "K",
+    });
+    yield setState(tree, {
+      scroll: 10,
+    });
+    yield forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:true",
+      "---L:false",
+    ], "Should render initial correctly");
+
+    yield new Promise(resolve => {
+      const treeElem = document.querySelector(".tree");
+      treeElem.addEventListener("scroll", function onScroll() {
+        dumpn("Got scroll event");
+        treeElem.removeEventListener("scroll", onScroll);
+        resolve();
+      });
+
+      dumpn("Sending ArrowDown key");
+      Simulate.keyDown(treeElem, { key: "ArrowDown" });
+    });
+
+    dumpn("Forcing re-render");
+    yield forceRender(tree);
+
+    isRenderedTree(document.body.textContent, [
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:true",
+      "--F:false",
+    ], "Should have scrolled down one");
+
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

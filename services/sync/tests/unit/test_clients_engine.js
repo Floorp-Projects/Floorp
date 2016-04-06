@@ -627,6 +627,10 @@ add_test(function test_send_uri_to_client_for_display() {
 
   do_check_eq(error.message.indexOf("Unknown remote client ID: "), 0);
 
+  Svc.Prefs.resetBranch("");
+  Service.recordManager.clearCache();
+  engine._resetClient();
+
   run_next_test();
 });
 
@@ -666,8 +670,9 @@ add_test(function test_receive_display_uri() {
 
   do_check_true(engine.processIncomingCommands());
 
+  Svc.Prefs.resetBranch("");
+  Service.recordManager.clearCache();
   engine._resetClient();
-  run_next_test();
 });
 
 add_test(function test_optional_client_fields() {
@@ -693,6 +698,7 @@ add_test(function test_optional_client_fields() {
   // We don't currently populate device or formfactor.
   // See Bug 1100722, Bug 1100723.
 
+  engine._resetClient();
   run_next_test();
 });
 
@@ -831,6 +837,65 @@ add_test(function test_deleted_commands() {
     let activePayload = JSON.parse(JSON.parse(collection.payload(activeID)).ciphertext);
     deepEqual(activePayload.commands, [{ command: "logout", args: [] }],
       "Should send the command to the active client");
+  } finally {
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
+    engine._resetClient();
+
+    try {
+      server.deleteCollections("foo");
+    } finally {
+      server.stop(run_next_test);
+    }
+  }
+});
+
+add_test(function test_send_uri_ack() {
+  _("Ensure a sent URI is deleted when the client syncs");
+
+  let now = Date.now() / 1000;
+  let contents = {
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
+    clients: {},
+    crypto: {}
+  };
+  let server = serverForUsers({"foo": "password"}, contents);
+  let user   = server.user("foo");
+
+  new SyncTestingInfrastructure(server.server);
+  generateNewKeys(Service.collectionKeys);
+
+  try {
+    let fakeSenderID = Utils.makeGUID();
+
+    _("Initial sync for empty clients collection");
+    engine._sync();
+    let collection = server.getCollection("foo", "clients");
+    let ourPayload = JSON.parse(JSON.parse(collection.payload(engine.localID)).ciphertext);
+    ok(ourPayload, "Should upload our client record");
+
+    _("Send a URL to the device on the server");
+    ourPayload.commands = [{
+      command: "displayURI",
+      args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
+    }];
+    server.insertWBO("foo", "clients", new ServerWBO(engine.localID, encryptPayload(ourPayload), now));
+
+    _("Sync again");
+    engine._sync();
+    deepEqual(engine.localCommands, [{
+      command: "displayURI",
+      args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
+    }], "Should receive incoming URI");
+    ok(engine.processIncomingCommands(), "Should process incoming commands");
+    ok(!engine.localCommands, "Should clear commands after processing");
+
+    _("Check that the command was removed on the server");
+    engine._sync();
+    ourPayload = JSON.parse(JSON.parse(collection.payload(engine.localID)).ciphertext);
+    ok(ourPayload, "Should upload the synced client record");
+    ok(!ourPayload.commands, "Should not reupload cleared commands");
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();

@@ -42,10 +42,8 @@ let bootstrap = {
               "agent");
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
-    let app = App({
-      onExit: () => window.postMessage({ type: "exit" }, "*"),
-    });
-    let provider = createElement(Provider, { store }, app);
+    let provider = createElement(Provider, { store }, App());
+
     ReactDOM.render(provider, document.querySelector("#root"));
     this.initDevices();
     window.postMessage({ type: "init" }, "*");
