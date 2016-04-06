@@ -114,15 +114,24 @@ LoadLibraryForEGLOnWindows(const nsAString& filename)
 static EGLDisplay
 GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
 {
-    EGLint attrib_list[] = {  LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-                              LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_WARP_ANGLE,
+    EGLint attrib_list[] = {  LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
+                              LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
+                              // Requires:
+                              LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+                              LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
                               LOCAL_EGL_NONE };
     EGLDisplay display = egl.fGetPlatformDisplayEXT(LOCAL_EGL_PLATFORM_ANGLE_ANGLE,
                                                     displayType,
                                                     attrib_list);
 
-    if (display == EGL_NO_DISPLAY)
+    if (display == EGL_NO_DISPLAY) {
+        const EGLint err = egl.fGetError();
+        if (err != LOCAL_EGL_SUCCESS) {
+            printf_stderr("Unexpected error: 0x%04x", err);
+            MOZ_CRASH("Unexpected error.");
+        }
         return EGL_NO_DISPLAY;
+    }
 
     if (!egl.fInitialize(display, nullptr, nullptr))
         return EGL_NO_DISPLAY;
@@ -375,17 +384,15 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel)
 
     if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
         bool accelAngleSupport = IsAccelAngleSupported(gfxInfo);
-        bool warpAngleSupport = gfxPlatform::CanUseDirect3D11ANGLE();
 
         bool shouldTryAccel = forceAccel || accelAngleSupport;
-        bool shouldTryWARP = !shouldTryAccel && warpAngleSupport;
+        bool shouldTryWARP = !shouldTryAccel;
         if (gfxPrefs::WebGLANGLEForceWARP()) {
             shouldTryWARP = true;
             shouldTryAccel = false;
         }
 
-        // Fallback to a WARP display if non-WARP is blacklisted,
-        // or if WARP is forced
+        // Fallback to a WARP display if non-WARP is blacklisted, or if WARP is forced.
         if (shouldTryWARP) {
             chosenDisplay = GetAndInitWARPDisplay(*this, EGL_DEFAULT_DISPLAY);
             if (chosenDisplay) {
