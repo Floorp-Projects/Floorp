@@ -99,10 +99,15 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
                                  nsDisplayList* aList)
 {
   nsRect dirty;
+  DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   nsDisplayListBuilder::OutOfFlowDisplayData*
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(aFrame);
   if (savedOutOfFlowData) {
     dirty = savedOutOfFlowData->mDirtyRect;
+    clipState.SetClipForContainingBlockDescendants(
+      &savedOutOfFlowData->mContainingBlockClip);
+    clipState.SetScrollClipForContainingBlockDescendants(
+      savedOutOfFlowData->mContainingBlockScrollClip);
   }
   nsDisplayList list;
   aFrame->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
