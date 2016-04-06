@@ -1119,8 +1119,6 @@ public abstract class GeckoApp
         mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
         final SafeIntent intent = new SafeIntent(getIntent());
-        final String action = intent.getAction();
-        final String args = intent.getStringExtra("args");
 
         earlyStartJavaSampler(intent);
 
@@ -1128,26 +1126,6 @@ public abstract class GeckoApp
         // incoming intent, so pass it in here. GeckoLoader will do its
         // business later and dispose of the reference.
         GeckoLoader.setLastIntent(intent);
-
-        // If we don't already have a profile, but we do have arguments,
-        // let's see if they're enough to find one.
-        // Note that subclasses must ensure that if they try to access
-        // the profile prior to this code being run, then they do something
-        // similar.
-        if (mProfile == null && args != null) {
-            final GeckoProfile p = GeckoProfile.getFromArgs(this, args);
-            if (p != null) {
-                mProfile = p;
-            }
-        }
-
-        // Speculatively pre-fetch the profile in the background.
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                getProfile();
-            }
-        });
 
         // Workaround for <http://code.google.com/p/android/issues/detail?id=20915>.
         try {
@@ -1194,12 +1172,30 @@ public abstract class GeckoApp
             Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
 
         } else {
-            final String uri = getURIFromIntent(intent);
+            final String action = intent.getAction();
+            final String args = intent.getStringExtra("args");
+
+            // If we don't already have a profile, but we do have arguments,
+            // let's see if they're enough to find one.
+            // Note that subclasses must ensure that if they try to access
+            // the profile prior to this code being run, then they do something
+            // similar.
+            final GeckoProfile profile = (args != null) ?
+                GeckoProfile.getFromArgs(getApplicationContext(), args) : null;
 
             sAlreadyLoaded = true;
-            GeckoThread.ensureInit(args, action,
+            GeckoThread.ensureInit(profile, args, action,
                     /* debugging */ ACTION_DEBUG.equals(action));
 
+            // Speculatively pre-fetch the profile in the background.
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    getProfile();
+                }
+            });
+
+            final String uri = getURIFromIntent(intent);
             if (!TextUtils.isEmpty(uri)) {
                 // Start a speculative connection as soon as Gecko loads.
                 GeckoThread.speculativeConnect(uri);
