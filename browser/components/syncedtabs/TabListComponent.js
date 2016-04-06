@@ -107,7 +107,7 @@ TabListComponent.prototype = {
   },
 
   onOpenTab(url, where, params) {
-    this._window.openLinkIn(url, where, params);
+    this._window.openUILinkIn(url, where, params);
   },
 
   onCopyTabLocation(url) {
