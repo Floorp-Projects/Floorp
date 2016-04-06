@@ -135,6 +135,12 @@ class StubUrlAnnotations implements UrlAnnotations {
 
     @Override
     public void deleteReaderViewUrl(ContentResolver cr, String pageURL) {}
+
+    @Override
+    public boolean hasAcceptedOrDeclinedHomeScreenShortcut(ContentResolver cr, String url) { return false; }
+
+    @Override
+    public void insertHomeScreenShortcut(ContentResolver cr, String url, boolean hasCreatedShortCut) {}
 }
 
 /*
@@ -205,6 +211,11 @@ public class StubBrowserDB implements BrowserDB {
     }
 
     public Cursor getRecentHistory(ContentResolver cr, int limit) {
+        return null;
+    }
+
+    @Override
+    public Cursor getHistoryForURL(ContentResolver cr, String uri) {
         return null;
     }
 
