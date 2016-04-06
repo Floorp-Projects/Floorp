@@ -127,7 +127,7 @@ public:
               const Optional<int32_t>& aTimeout,
               const Sequence<JS::Value>& aArguments, ErrorResult& aRv);
   int32_t
-  SetInterval(JSContext* /* unused */, const nsAString& aHandler,
+  SetInterval(JSContext* aCx, const nsAString& aHandler,
               const Optional<int32_t>& aTimeout,
               const Sequence<JS::Value>& /* unused */, ErrorResult& aRv);
   void
