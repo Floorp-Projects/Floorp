@@ -3,19 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
-/* globals gDevTools, TargetFactory, Toolbox */
 
 "use strict";
 
-loader.lazyRequireGetter(this, "gDevTools",
-  "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "TargetFactory",
-  "devtools/client/framework/target", true);
-loader.lazyRequireGetter(this, "Toolbox",
-  "devtools/client/framework/toolbox", true);
-
 const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
+const { debugWorker } = require("../modules/worker");
 const Services = require("Services");
 
 const Strings = Services.strings.createBundle(
@@ -26,8 +19,6 @@ module.exports = createClass({
 
   render() {
     let { target, debugDisabled } = this.props;
-    let isRunning = this.isRunning();
-    let isServiceWorker = this.isServiceWorker();
 
     return dom.div({ className: "target-container" },
       dom.img({
@@ -36,97 +27,18 @@ module.exports = createClass({
         src: target.icon
       }),
       dom.div({ className: "target" },
-        dom.div({ className: "target-name" }, target.name),
-        isServiceWorker ? dom.ul({ className: "target-details" },
-          dom.li({ className: "target-detail" },
-            dom.strong(null, Strings.GetStringFromName("scope")),
-            dom.span({ className: "serviceworker-scope" }, target.scope),
-            dom.a({
-              onClick: this.unregister,
-              className: "unregister-link"
-            }, Strings.GetStringFromName("unregister"))
-          )
-        ) : null),
-      (isRunning && isServiceWorker ?
-        dom.button({
-          className: "push-button",
-          onClick: this.push
-        }, Strings.GetStringFromName("push")) :
-        null
+        dom.div({ className: "target-name" }, target.name)
       ),
-      (isRunning ?
-        dom.button({
-          className: "debug-button",
-          onClick: this.debug,
-          disabled: debugDisabled
-        }, Strings.GetStringFromName("debug")) :
-        dom.button({
-          className: "start-button",
-          onClick: this.start
-        }, Strings.GetStringFromName("start"))
-      )
+      dom.button({
+        className: "debug-button",
+        onClick: this.debug,
+        disabled: debugDisabled
+      }, Strings.GetStringFromName("debug"))
     );
   },
 
   debug() {
     let { client, target } = this.props;
-    if (!this.isRunning()) {
-      // If the worker is not running, we can't debug it.
-      return;
-    }
-    client.attachWorker(target.workerActor, (response, workerClient) => {
-      let workerTarget = TargetFactory.forWorker(workerClient);
-      gDevTools.showToolbox(workerTarget, "jsdebugger", Toolbox.HostType.WINDOW)
-        .then(toolbox => {
-          toolbox.once("destroy", () => workerClient.detach());
-        });
-    });
-  },
-
-  push() {
-    let { client, target } = this.props;
-    if (!this.isRunning()) {
-      // If the worker is not running, we can't push to it.
-      return;
-    }
-    client.request({
-      to: target.workerActor,
-      type: "push"
-    });
-  },
-
-  unregister() {
-    let { client, target } = this.props;
-    if (!this.isServiceWorker()) {
-      // Unregister is only available for service workers.
-      return;
-    }
-    client.request({
-      to: target.registrationActor,
-      type: "unregister"
-    });
-  },
-
-  start() {
-    let { client, target } = this.props;
-    if (!this.isServiceWorker() || this.isRunning()) {
-      // Either the worker is already running, or it's not a service worker, in
-      // which case we don't know how to start it.
-      return;
-    }
-    client.request({
-      to: target.registrationActor,
-      type: "start"
-    });
-  },
-
-  isRunning() {
-    // We know the target is running if it has a worker actor.
-    return !!this.props.target.workerActor;
-  },
-
-  isServiceWorker() {
-    // We know the target is a service worker if it has a registration actor.
-    return !!this.props.target.registrationActor;
-  },
+    debugWorker(client, target.workerActor);
+  }
 });
