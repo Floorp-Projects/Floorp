@@ -367,6 +367,12 @@ public:
   void RecreateAccessible(nsIContent* aContent);
 
   /**
+   * Schedule ARIA owned element relocation if needed. Return true if relocation
+   * was scheduled.
+   */
+  bool RelocateARIAOwnedIfNeeded(nsIContent* aEl);
+
+  /**
    * If this document is in a content process return the object responsible for
    * communicating with the main process for it.
    */
@@ -519,11 +525,6 @@ protected:
 
   uint32_t UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
                               AccReorderEvent* aReorderEvent);
-
-  /**
-   * Schedule ARIA owned element relocation if needed.
-   */
-  void RelocateARIAOwnedIfNeeded(nsIContent* aEl);
 
   /**
    * Validates all aria-owns connections and updates the tree accordingly.
