@@ -33,6 +33,12 @@ ServiceWorkerJob2::Canceled() const
 }
 
 bool
+ServiceWorkerJob2::ResultCallbacksInvoked() const
+{
+  return mResultCallbacksInvoked;
+}
+
+bool
 ServiceWorkerJob2::IsEquivalentTo(ServiceWorkerJob2* aJob) const
 {
   AssertIsOnMainThread();
@@ -51,7 +57,7 @@ ServiceWorkerJob2::AppendResultCallback(Callback* aCallback)
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(mFinalCallback != aCallback);
   MOZ_ASSERT(!mResultCallbackList.Contains(aCallback));
-  // TODO: handle the case where InvokeResultCallback() has already been called
+  MOZ_ASSERT(!mResultCallbacksInvoked);
   mResultCallbackList.AppendElement(aCallback);
 }
 
@@ -123,6 +129,7 @@ ServiceWorkerJob2::ServiceWorkerJob2(Type aType,
   , mScriptSpec(aScriptSpec)
   , mState(State::Initial)
   , mCanceled(false)
+  , mResultCallbacksInvoked(false)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(mPrincipal);
@@ -136,6 +143,7 @@ ServiceWorkerJob2::~ServiceWorkerJob2()
   // Jobs must finish or never be started.  Destroying an actively running
   // job is an error.
   MOZ_ASSERT(mState != State::Started);
+  MOZ_ASSERT_IF(mState == State::Finished, mResultCallbacksInvoked);
 }
 
 void
@@ -143,6 +151,9 @@ ServiceWorkerJob2::InvokeResultCallbacks(ErrorResult& aRv)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(mState == State::Started);
+
+  MOZ_ASSERT(!mResultCallbacksInvoked);
+  mResultCallbacksInvoked = true;
 
   nsTArray<RefPtr<Callback>> callbackList;
   callbackList.SwapElements(mResultCallbackList);
@@ -191,7 +202,9 @@ ServiceWorkerJob2::Finish(ErrorResult& aRv)
   // The final callback may drop the last ref to this object.
   RefPtr<ServiceWorkerJob2> kungFuDeathGrip = this;
 
-  InvokeResultCallbacks(aRv);
+  if (!mResultCallbacksInvoked) {
+    InvokeResultCallbacks(aRv);
+  }
 
   mState = State::Finished;
 

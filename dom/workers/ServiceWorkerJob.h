@@ -66,6 +66,11 @@ public:
   bool
   Canceled() const;
 
+  // Determine if the result callbacks have already been called.  This is
+  // equivalent to the spec checked to see if the job promise has settled.
+  bool
+  ResultCallbacksInvoked() const;
+
   bool
   IsEquivalentTo(ServiceWorkerJob2* aJob) const;
 
@@ -137,6 +142,7 @@ private:
   nsTArray<RefPtr<Callback>> mResultCallbackList;
   State mState;
   bool mCanceled;
+  bool mResultCallbacksInvoked;
 
 public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJob2)
