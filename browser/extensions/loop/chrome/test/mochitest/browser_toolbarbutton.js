@@ -8,7 +8,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
-Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 1);
+Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 2);
 
 const fxASampleToken = {
   token_type: "bearer",

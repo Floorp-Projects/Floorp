@@ -24,8 +24,17 @@ loop.conversation = function (mozL10n) {
     mixins: [Backbone.Events, loop.store.StoreMixin("conversationAppStore"), sharedMixins.DocumentTitleMixin, sharedMixins.WindowCloseMixin],
 
     propTypes: {
+      cursorStore: React.PropTypes.instanceOf(loop.store.RemoteCursorStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
+    },
+
+    componentWillMount: function () {
+      this.listenTo(this.props.cursorStore, "change:remoteCursorPosition", this._onRemoteCursorChange);
+    },
+
+    _onRemoteCursorChange: function () {
+      return loop.request("AddRemoteCursorOverlay", this.props.cursorStore.getStoreState("remoteCursorPosition"));
     },
 
     getInitialState: function () {
@@ -66,7 +75,9 @@ loop.conversation = function (mozL10n) {
           {
             return React.createElement(DesktopRoomConversationView, {
               chatWindowDetached: this.state.chatWindowDetached,
+              cursorStore: this.props.cursorStore,
               dispatcher: this.props.dispatcher,
+              facebookEnabled: this.state.facebookEnabled,
               onCallTerminated: this.handleCallTerminated,
               roomStore: this.props.roomStore });
           }
@@ -99,7 +110,7 @@ loop.conversation = function (mozL10n) {
       windowId = hash[1];
     }
 
-    var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetLoopPref", "ot.guid"], ["GetLoopPref", "textChat.enabled"], ["GetLoopPref", "feedback.periodSec"], ["GetLoopPref", "feedback.dateLastSeenSec"]];
+    var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetLoopPref", "ot.guid"], ["GetLoopPref", "feedback.periodSec"], ["GetLoopPref", "feedback.dateLastSeenSec"], ["GetLoopPref", "facebook.enabled"]];
     var prefetch = [["GetConversationWindowData", windowId]];
 
     return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function (results) {
@@ -139,14 +150,11 @@ loop.conversation = function (mozL10n) {
         }
       });
 
-      // We want data channels only if the text chat preference is enabled.
-      var useDataChannels = results[++requestIdx];
-
       var dispatcher = new loop.Dispatcher();
       var sdkDriver = new loop.OTSdkDriver({
         constants: constants,
         isDesktop: true,
-        useDataChannels: useDataChannels,
+        useDataChannels: true,
         dispatcher: dispatcher,
         sdk: OT
       });
@@ -163,7 +171,8 @@ loop.conversation = function (mozL10n) {
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
         feedbackPeriod: results[++requestIdx],
-        feedbackTimestamp: results[++requestIdx]
+        feedbackTimestamp: results[++requestIdx],
+        facebookEnabled: results[++requestIdx]
       });
 
       prefetch.forEach(function (req) {
@@ -178,13 +187,18 @@ loop.conversation = function (mozL10n) {
       var textChatStore = new loop.store.TextChatStore(dispatcher, {
         sdkDriver: sdkDriver
       });
+      var remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
+        sdkDriver: sdkDriver
+      });
 
       loop.store.StoreMixin.register({
         conversationAppStore: conversationAppStore,
+        remoteCursorStore: remoteCursorStore,
         textChatStore: textChatStore
       });
 
       React.render(React.createElement(AppControllerView, {
+        cursorStore: remoteCursorStore,
         dispatcher: dispatcher,
         roomStore: roomStore }), document.querySelector("#main"));
 
@@ -195,6 +209,8 @@ loop.conversation = function (mozL10n) {
       dispatcher.dispatch(new sharedActions.GetWindowData({
         windowId: windowId
       }));
+
+      loop.request("TelemetryAddValue", "LOOP_MAU", constants.LOOP_MAU_TYPE.OPEN_CONVERSATION);
     });
   }
 

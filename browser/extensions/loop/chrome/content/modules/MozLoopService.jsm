@@ -26,19 +26,6 @@ const TWO_WAY_MEDIA_CONN_LENGTH = {
 };
 
 /**
- * Values that we segment sharing state change telemetry probes into.
- *
- * @type {{WINDOW_ENABLED: Number, WINDOW_DISABLED: Number,
- *   BROWSER_ENABLED: Number, BROWSER_DISABLED: Number}}
- */
-const SHARING_STATE_CHANGE = {
-  WINDOW_ENABLED: 0,
-  WINDOW_DISABLED: 1,
-  BROWSER_ENABLED: 2,
-  BROWSER_DISABLED: 3
-};
-
-/**
  * Values that we segment sharing a room URL action telemetry probes into.
  *
  * @type {{COPY_FROM_PANEL: Number, COPY_FROM_CONVERSATION: Number,
@@ -73,13 +60,27 @@ const ROOM_DELETE = {
 };
 
 /**
- * Values that we segment room context action telemetry probes into.
+ * Values that we segment sharing screen pause/ resume action telemetry probes into.
  *
- * @type {{ADD_FROM_PANEL: Number, ADD_FROM_CONVERSATION: Number}}
+ * @type {{PAUSED: Number, RESUMED: Number}}
  */
-const ROOM_CONTEXT_ADD = {
-  ADD_FROM_PANEL: 0,
-  ADD_FROM_CONVERSATION: 1
+const SHARING_SCREEN = {
+  PAUSED: 0,
+  RESUMED: 1
+};
+
+ /**
+ * Values that we segment MAUs telemetry probes into.
+ *
+ * @type {{OPEN_PANEL: Number, OPEN_CONVERSATION: Number,
+ *        ROOM_OPEN: Number, ROOM_SHARE: Number, ROOM_DELETE: Number}}
+ */
+const LOOP_MAU_TYPE = {
+  OPEN_PANEL: 0,
+  OPEN_CONVERSATION: 1,
+  ROOM_OPEN: 2,
+  ROOM_SHARE: 3,
+  ROOM_DELETE: 4
 };
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
@@ -105,17 +106,17 @@ Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE",
-  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_STATE_CHANGE", "SHARING_ROOM_URL",
-  "ROOM_CREATE", "ROOM_DELETE", "ROOM_CONTEXT_ADD"];
+this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE", "LOOP_MAU_TYPE",
+  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_ROOM_URL", "SHARING_SCREEN",
+  "ROOM_CREATE", "ROOM_DELETE"];
 
 XPCOMUtils.defineConstant(this, "LOOP_SESSION_TYPE", LOOP_SESSION_TYPE);
 XPCOMUtils.defineConstant(this, "TWO_WAY_MEDIA_CONN_LENGTH", TWO_WAY_MEDIA_CONN_LENGTH);
-XPCOMUtils.defineConstant(this, "SHARING_STATE_CHANGE", SHARING_STATE_CHANGE);
 XPCOMUtils.defineConstant(this, "SHARING_ROOM_URL", SHARING_ROOM_URL);
+XPCOMUtils.defineConstant(this, "SHARING_SCREEN", SHARING_SCREEN);
 XPCOMUtils.defineConstant(this, "ROOM_CREATE", ROOM_CREATE);
 XPCOMUtils.defineConstant(this, "ROOM_DELETE", ROOM_DELETE);
-XPCOMUtils.defineConstant(this, "ROOM_CONTEXT_ADD", ROOM_CONTEXT_ADD);
+XPCOMUtils.defineConstant(this, "LOOP_MAU_TYPE", LOOP_MAU_TYPE);
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopAPI",
   "chrome://loop/content/modules/MozLoopAPI.jsm");
@@ -198,6 +199,7 @@ var gFxAOAuthClientPromise = null;
 var gFxAOAuthClient = null;
 var gErrors = new Map();
 var gConversationWindowData = new Map();
+var gAddonVersion = "unknown";
 
 /**
  * Internal helper methods and state
@@ -615,7 +617,9 @@ var MozLoopServiceInternal = {
                                           2 * 32, true);
     }
 
-    if (payloadObj) {
+    // Later versions of Firefox will do utf-8 encoding of the request, but
+    // we need to do it ourselves for older versions.
+    if (!gHawkClient.willUTF8EncodeRequests && payloadObj) {
       // Note: we must copy the object rather than mutate it, to avoid
       // mutating the values of the object passed in.
       let newPayloadObj = {};
@@ -641,7 +645,11 @@ var MozLoopServiceInternal = {
       throw error;
     };
 
-    return gHawkClient.request(path, method, credentials, payloadObj).then(
+    var extraHeaders = {
+      "x-loop-addon-ver": gAddonVersion
+    };
+
+    return gHawkClient.request(path, method, credentials, payloadObj, extraHeaders).then(
       (result) => {
         this.clearError("network");
         return result;
@@ -770,14 +778,20 @@ var MozLoopServiceInternal = {
       return gLocalizedStrings;
     }
 
-    let stringBundle =
-      Services.strings.createBundle("chrome://browser/locale/loop/loop.properties");
-
-    let enumerator = stringBundle.getSimpleEnumeration();
-    while (enumerator.hasMoreElements()) {
-      let string = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
-      gLocalizedStrings.set(string.key, string.value);
+    // Load all strings from a bundle location preferring strings loaded later.
+    function loadAllStrings(location) {
+      let bundle = Services.strings.createBundle(location);
+      let enumerator = bundle.getSimpleEnumeration();
+      while (enumerator.hasMoreElements()) {
+        let string = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
+        gLocalizedStrings.set(string.key, string.value);
+      }
     }
+
+    // Load fallback/en-US strings then prefer the localized ones if available.
+    loadAllStrings("chrome://loop-locale-fallback/content/loop.properties");
+    loadAllStrings("chrome://loop/locale/loop.properties");
+
     // Supply the strings from the branding bundle on a per-need basis.
     let brandBundle =
       Services.strings.createBundle("chrome://branding/locale/brand.properties");
@@ -866,15 +880,30 @@ var MozLoopServiceInternal = {
     return "about:loopconversation#" + chatWindowId;
   },
 
+  getChatWindows() {
+    let isLoopURL = ({ src }) => /^about:loopconversation#/.test(src);
+    return [...Chat.chatboxes].filter(isLoopURL);
+  },
+
   /**
    * Hangup and close all chat windows that are open.
    */
   hangupAllChatWindows() {
-    let isLoopURL = ({ src }) => /^about:loopconversation#/.test(src);
-    let loopChatWindows = [...Chat.chatboxes].filter(isLoopURL);
-    for (let chatbox of loopChatWindows) {
+    for (let chatbox of this.getChatWindows()) {
       let window = chatbox.content.contentWindow;
       window.dispatchEvent(new window.CustomEvent("LoopHangupNow"));
+    }
+  },
+
+  /**
+   * Pause or resume all chat windows that are open.
+   */
+  toggleBrowserSharing(on = true) {
+    for (let chatbox of this.getChatWindows()) {
+      let window = chatbox.content.contentWindow;
+      window.dispatchEvent(new window.CustomEvent("ToggleBrowserSharing", {
+        detail: on
+      }));
     }
   },
 
@@ -935,7 +964,13 @@ var MozLoopServiceInternal = {
         let window = chatbox.contentWindow;
 
         function socialFrameChanged(eventName) {
-          UITour.availableTargetsCache.clear();
+          // `clearAvailableTargetsCache` is new in Firefox 46. The else branch
+          // supports Firefox 45.
+          if ("clearAvailableTargetsCache" in UITour) {
+            UITour.clearAvailableTargetsCache();
+          } else {
+            UITour.availableTargetsCache.clear();
+          }
           UITour.notify(eventName);
 
           if (eventName == "Loop:ChatWindowDetached" || eventName == "Loop:ChatWindowAttached") {
@@ -1238,13 +1273,17 @@ this.MozLoopService = {
    *
    * Note: this returns a promise for unit test purposes.
    *
+   * @param {String} addonVersion The name of the add-on
+   *
    * @return {Promise}
    */
-  initialize: Task.async(function*() {
+  initialize: Task.async(function*(addonVersion) {
     // Ensure we don't setup things like listeners more than once.
     if (gServiceInitialized) {
       return Promise.resolve();
     }
+
+    gAddonVersion = addonVersion;
 
     gServiceInitialized = true;
 
@@ -1285,11 +1324,24 @@ this.MozLoopService = {
 
       let window = gWM.getMostRecentWindow("navigator:browser");
       if (window) {
+        // The participant that joined isn't necessarily included in room.participants (depending on
+        // when the broadcast happens) so concatenate.
+        let isOwnerInRoom = room.participants.concat(participant).some(p => p.owner);
+        let bundle = MozLoopServiceInternal.localizedStrings;
+
+        let localizedString;
+        if (isOwnerInRoom) {
+          localizedString = bundle.get("rooms_room_joined_owner_connected_label2");
+        } else {
+          let l10nString = bundle.get("rooms_room_joined_owner_not_connected_label");
+          let roomUrlHostname = new URL(room.decryptedContext.urls[0].location).hostname.replace(/^www\./, "");
+          localizedString = l10nString.replace("{{roomURLHostname}}", roomUrlHostname);
+        }
         window.LoopUI.showNotification({
           sound: "room-joined",
           // Fallback to the brand short name if the roomName isn't available.
           title: room.roomName || MozLoopServiceInternal.localizedStrings.get("clientShortname2"),
-          message: MozLoopServiceInternal.localizedStrings.get("rooms_room_joined_label"),
+          message: localizedString,
           selectTab: "rooms"
         });
       }
@@ -1412,6 +1464,10 @@ this.MozLoopService = {
    */
   hangupAllChatWindows() {
     return MozLoopServiceInternal.hangupAllChatWindows();
+  },
+
+  toggleBrowserSharing(on) {
+    return MozLoopServiceInternal.toggleBrowserSharing(on);
   },
 
   /**
@@ -1578,6 +1634,19 @@ this.MozLoopService = {
       return "en-US";
     }
   },
+
+  /*
+   * Returns current FTU version
+   *
+   * @return {Number}
+   *
+   * XXX must match number in panel.jsx; expose this via MozLoopAPI
+   * and kill that constant.
+   */
+   get FTU_VERSION()
+   {
+     return 2;
+   },
 
   /**
    * Set any preference under "loop.".
@@ -1842,20 +1911,66 @@ this.MozLoopService = {
 
   /**
    * Opens the Getting Started tour in the browser.
-   *
-   * @param {String} [aSrc] A string representing the entry point to begin the tour, optional.
    */
-  openGettingStartedTour: Task.async(function(aSrc = null) {
-    try {
-      let url = this.getTourURL(aSrc);
-      let win = Services.wm.getMostRecentWindow("navigator:browser");
-      win.switchToTabHavingURI(url, true, {
-        ignoreFragment: true,
-        replaceQueryString: true
-      });
-    } catch (ex) {
-      log.error("Error opening Getting Started tour", ex);
+  openGettingStartedTour: Task.async(function() {
+    const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+    // User will have _just_ clicked the tour menu item or the FTU
+    // button in the panel, (or else it wouldn't be visible), so...
+    let xulWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let xulDoc = xulWin.document;
+
+    let box = xulDoc.createElementNS(kNSXUL, "box");
+    box.setAttribute("id", "loop-slideshow-container");
+
+    let appContent = xulDoc.getElementById("appcontent");
+    let tabBrowser = xulDoc.getElementById("content");
+    appContent.insertBefore(box, tabBrowser);
+
+    var xulBrowser = xulDoc.createElementNS(kNSXUL, "browser");
+    xulBrowser.setAttribute("id", "loop-slideshow-browser");
+    xulBrowser.setAttribute("flex", "1");
+    xulBrowser.setAttribute("type", "content");
+    box.appendChild(xulBrowser);
+
+    // Notify the UI, which has the side effect of disabling panel opening
+    // and updating the toolbar icon to visually indicate difference.
+    xulWin.LoopUI.isSlideshowOpen = true;
+
+    var removeSlideshow = function() {
+      try {
+        appContent.removeChild(box);
+      } catch (ex) {
+        log.error(ex);
+      }
+
+      this.setLoopPref("gettingStarted.latestFTUVersion", this.FTU_VERSION);
+
+      // Notify the UI, which has the side effect of re-enabling panel opening
+      // and updating the toolbar.
+      xulWin.LoopUI.isSlideshowOpen = false;
+      xulWin.LoopUI.openCallPanel();
+
+      xulWin.removeEventListener("CloseSlideshow", removeSlideshow);
+
+      log.info("slideshow removed");
+    }.bind(this);
+
+    function xulLoadListener() {
+      xulBrowser.contentWindow.addEventListener("CloseSlideshow",
+        removeSlideshow);
+      log.info("CloseSlideshow handler added");
+
+      xulBrowser.removeEventListener("load", xulLoadListener, true);
     }
+
+    xulBrowser.addEventListener("load", xulLoadListener, true);
+
+    // XXX we are loading the slideshow page with chrome privs.
+    // To make this remote, we'll need to think through a better
+    // security model.
+    xulBrowser.setAttribute("src",
+      "chrome://loop/content/panels/slideshow.html");
   }),
 
   /**
