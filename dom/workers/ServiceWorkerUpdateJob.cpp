@@ -135,6 +135,14 @@ ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
   AssertIsOnMainThread();
   MOZ_ASSERT(aRv.Failed());
 
+  // Cleanup after a failed installation.  This essentially implements
+  // step 12 of the Install algorithm.
+  //
+  //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#installation-algorithm
+  //
+  // The spec currently only runs this after an install event fails,
+  // but we must handle many more internal errors.  So we check for
+  // cleanup on every non-successful exit.
   if (mRegistration) {
     if (mServiceWorker) {
       mServiceWorker->UpdateState(ServiceWorkerState::Redundant);
@@ -184,6 +192,10 @@ ServiceWorkerUpdateJob::AsyncExecute()
     return;
   }
 
+  // Begin step 1 of the Update algorithm.
+  //
+  //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#update-algorithm
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     swm->GetRegistration(mPrincipal, mScope);
@@ -196,8 +208,9 @@ ServiceWorkerUpdateJob::AsyncExecute()
     return;
   }
 
-  // If a different script has been registered between when this update
-  // was scheduled and it running now, then simply abort.
+  // If a Register job with a new script executed ahead of us in the job queue,
+  // then our update for the old script no longer makes sense.  Simply abort
+  // in this case.
   RefPtr<ServiceWorkerInfo> newest = registration->Newest();
   if (newest && !mScriptSpec.Equals(newest->ScriptSpec())) {
     ErrorResult rv;
@@ -225,16 +238,14 @@ void
 ServiceWorkerUpdateJob::Update()
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(!Canceled());
 
   // SetRegistration() must be called before Update().
   MOZ_ASSERT(mRegistration);
-
-  if (Canceled()) {
-    FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
-    return;
-  }
-
   MOZ_ASSERT(!mRegistration->mInstallingWorker);
+
+  // Begin the script download and comparison steps starting at step 5
+  // of the Update algorithm.
 
   RefPtr<ServiceWorkerInfo> workerInfo = mRegistration->Newest();
   nsAutoString cacheName;
@@ -270,6 +281,8 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
     return;
   }
 
+  // Handle failure of the download or comparison.  This is part of Update
+  // step 5 as "If the algorithm asynchronously completes with null, then:".
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
     FailUpdateJob(aStatus);
     return;
@@ -280,6 +293,9 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   // script URL and scope.  Make sure to do this validation before accepting
   // an byte-for-byte match since the service-worker-allowed header might have
   // changed since the last time it was installed.
+
+  // This is step 2 the "validate response" section of Update algorithm step 5.
+  // Step 1 is performed in the serviceWorkerScriptCache code.
 
   nsCOMPtr<nsIURI> scriptURI;
   nsresult rv = NS_NewURI(getter_AddRefs(scriptURI), mScriptSpec);
@@ -336,13 +352,15 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   }
 
   // The response has been validated, so now we can consider if its a
-  // byte-for-byte match.
+  // byte-for-byte match.  This is step 6 of the Update algorithm.
   if (aInCacheAndEqual) {
     Finish(NS_OK);
     return;
   }
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_UPDATED, 1);
+
+  // Begin step 7 of the Update algorithm to evaluate the new script.
 
   MOZ_ASSERT(!mServiceWorker);
   mServiceWorker = new ServiceWorkerInfo(mRegistration->mPrincipal,
@@ -373,6 +391,9 @@ ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResu
     return;
   }
 
+  // Step 7.5 of the Update algorithm verifying that the script evaluated
+  // successfully.
+
   if (NS_WARN_IF(!aScriptEvaluationResult)) {
     ErrorResult error;
 
@@ -390,12 +411,13 @@ void
 ServiceWorkerUpdateJob::Install()
 {
   AssertIsOnMainThread();
-
-  if (Canceled()) {
-    return FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
-  }
+  MOZ_ASSERT(!Canceled());
 
   MOZ_ASSERT(!mRegistration->mInstallingWorker);
+
+  // Begin step 2 of the Install algorithm.
+  //
+  //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#installation-algorithm
 
   MOZ_ASSERT(mServiceWorker);
   mRegistration->mInstallingWorker = mServiceWorker.forget();
@@ -406,9 +428,11 @@ ServiceWorkerUpdateJob::Install()
   swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                  WhichServiceWorker::INSTALLING_WORKER);
 
+  // Step 6 of the Install algorithm resolving the job promise.
   InvokeResultCallbacks(NS_OK);
 
-  // The job should NOT fail from this point on.
+  // The job promise cannot be rejected after this point, but the job can
+  // still fail; e.g. if the install event handler throws, etc.
 
   // fire the updatefound event
   nsCOMPtr<nsIRunnable> upr =
@@ -448,6 +472,8 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
+  // Continue executing the Install algorithm at step 12.
+
   // "If installFailed is true"
   if (NS_WARN_IF(!aInstallEventSuccess)) {
     // The installing worker is cleaned up by FailUpdateJob().
@@ -473,7 +499,13 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
 
   Finish(NS_OK);
 
-  // Activate() is invoked out of band of atomic.
+  // Step 20 calls for explicitly waiting for queued event tasks to fire.  Instead,
+  // we simply queue a runnable to execute Activate.  This ensures the events are
+  // flushed from the queue before proceeding.
+
+  // Step 22 of the Install algorithm.  Activate is executed after the completion
+  // of this job.  The controlling client and skipWaiting checks are performed
+  // in TryToActivate().
   mRegistration->TryToActivateAsync();
 }
 
