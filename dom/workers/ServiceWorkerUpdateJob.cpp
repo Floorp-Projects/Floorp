@@ -316,8 +316,6 @@ ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
     }
   }
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
   if (!StringBeginsWith(mRegistration->mScope, maxPrefix)) {
     nsXPIDLString message;
     NS_ConvertUTF8toUTF16 reportScope(mRegistration->mScope);
@@ -328,25 +326,13 @@ ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
                                                "ServiceWorkerScopePathMismatch",
                                                params, message);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to format localized string");
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->ReportToAllClients(mScope,
                             message,
                             EmptyString(),
                             EmptyString(), 0, 0,
                             nsIScriptError::errorFlag);
     FailUpdateJob(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  nsAutoCString scopeKey;
-  rv = swm->PrincipalToScopeKey(mRegistration->mPrincipal, scopeKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailUpdateJob(NS_ERROR_FAILURE);
-    return;
-  }
-
-  ServiceWorkerManager::RegistrationDataPerPrincipal* data;
-  if (!swm->mRegistrationInfos.Get(scopeKey, &data)) {
-    FailUpdateJob(NS_ERROR_FAILURE);
     return;
   }
 
