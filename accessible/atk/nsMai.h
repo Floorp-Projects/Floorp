@@ -121,6 +121,12 @@ struct MaiAtkObject
   void FireTextChangeEvent(const nsString& aStr, int32_t aStart, uint32_t aLen,
                            bool aIsInsert, bool aIsFromUser);
 
+  /**
+   * Notify ATK of a shown or hidden subtree rooted at aObject whose parent is
+   * aParent
+   */
+  void FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded, bool aFromUser);
+
 private:
   /*
    * do we have text-remove and text-insert signals if not we need to use
