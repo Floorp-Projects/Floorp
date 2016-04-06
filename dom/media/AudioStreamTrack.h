@@ -14,8 +14,9 @@ namespace dom {
 
 class AudioStreamTrack : public MediaStreamTrack {
 public:
-  AudioStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel)
-    : MediaStreamTrack(aStream, aTrackID, aLabel) {}
+  AudioStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
+                   const nsString& aLabel, MediaStreamTrackSource* aSource)
+    : MediaStreamTrack(aStream, aTrackID, aLabel, aSource) {}
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

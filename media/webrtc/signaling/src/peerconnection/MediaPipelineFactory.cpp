@@ -849,10 +849,7 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
     return NS_OK;
   }
 
-  MediaEngineSource *engine =
-    domLocalStream->GetMediaEngine(videotrack->GetTrackID());
-
-  dom::MediaSourceEnum source = engine->GetMediaSource();
+  dom::MediaSourceEnum source = videotrack->GetSource().GetMediaSource();
   webrtc::VideoCodecMode mode = webrtc::kRealtimeVideo;
   switch (source) {
     case dom::MediaSourceEnum::Browser:

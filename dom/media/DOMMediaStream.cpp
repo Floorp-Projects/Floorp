@@ -128,15 +128,16 @@ public:
 
     MediaStreamTrack* track = mStream->FindOwnedDOMTrack(
       mStream->GetOwnedStream(), aTrackId);
-    if (track) {
-      // This track has already been manually created. Abort.
-      return;
+    if (!track) {
+      // Track had not been created on main thread before, create it now.
+      NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
+                       "A new track was detected on the input stream; creating "
+                       "a corresponding MediaStreamTrack. Initial tracks "
+                       "should be added manually to immediately and "
+                       "synchronously be available to JS.");
+      track = mStream->CreateOwnDOMTrack(aTrackId, aType, nsString(),
+                                         new BasicUnstoppableTrackSource());
     }
-
-    NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
-                     "A new track was detected on the input stream; creating a corresponding MediaStreamTrack. "
-                     "Initial tracks should be added manually to immediately and synchronously be available to JS.");
-    mStream->CreateOwnDOMTrack(aTrackId, aType, nsString());
   }
 
   void DoNotifyTrackEnded(TrackID aTrackId)
@@ -617,12 +618,15 @@ DOMMediaStream::InitAudioCaptureStream(MediaStreamGraph* aGraph)
 {
   const TrackID AUDIO_TRACK = 1;
 
+  RefPtr<BasicUnstoppableTrackSource> audioCaptureSource =
+    new BasicUnstoppableTrackSource(MediaSourceEnum::AudioCapture);
+
   AudioCaptureStream* audioCaptureStream =
     static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK));
   InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
-  CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString());
+  CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString(), audioCaptureSource);
   audioCaptureStream->Start();
 }
 
@@ -705,14 +709,6 @@ DOMMediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
   }
 }
 
-void
-DOMMediaStream::StopTrack(TrackID aTrackID)
-{
-  if (mInputStream && mInputStream->AsSourceStream()) {
-    mInputStream->AsSourceStream()->EndTrack(aTrackID);
-  }
-}
-
 already_AddRefed<Promise>
 DOMMediaStream::ApplyConstraintsToTrack(TrackID aTrackID,
                                         const MediaTrackConstraints& aConstraints,
@@ -784,7 +780,9 @@ DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver
 }
 
 MediaStreamTrack*
-DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, const nsString& aLabel)
+DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
+                                  const nsString& aLabel,
+                                  MediaStreamTrackSource* aSource)
 {
   MOZ_RELEASE_ASSERT(mInputStream);
   MOZ_RELEASE_ASSERT(mOwnedStream);
@@ -794,10 +792,10 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, co
   MediaStreamTrack* track;
   switch (aType) {
   case MediaSegment::AUDIO:
-    track = new AudioStreamTrack(this, aTrackID, aLabel);
+    track = new AudioStreamTrack(this, aTrackID, aLabel, aSource);
     break;
   case MediaSegment::VIDEO:
-    track = new VideoStreamTrack(this, aTrackID, aLabel);
+    track = new VideoStreamTrack(this, aTrackID, aLabel, aSource);
     break;
   default:
     MOZ_CRASH("Unhandled track type");

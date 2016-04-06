@@ -19,13 +19,26 @@ static PRLogModuleInfo* gMediaStreamTrackLog;
 namespace mozilla {
 namespace dom {
 
-MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel)
-  : mOwningStream(aStream), mTrackID(aTrackID), mLabel(aLabel), mEnded(false), mEnabled(true)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaStreamTrackSource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaStreamTrackSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamTrackSource)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_0(MediaStreamTrackSource)
+
+MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
+                                   const nsString& aLabel,
+                                   MediaStreamTrackSource* aSource)
+  : mOwningStream(aStream), mTrackID(aTrackID), mLabel(aLabel), mSource(aSource),
+    mEnded(false), mEnabled(true), mRemote(aSource->IsRemote()), mStopped(false)
 {
 
   if (!gMediaStreamTrackLog) {
     gMediaStreamTrackLog = PR_NewLogModule("MediaStreamTrack");
   }
+
+  MOZ_RELEASE_ASSERT(mSource);
+  mSource->RegisterSink();
 
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -46,8 +59,22 @@ MediaStreamTrack::~MediaStreamTrack()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaStreamTrack, DOMEventTargetHelper,
-                                   mOwningStream, mOriginalTrack)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamTrack)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaStreamTrack,
+                                                DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwningStream)
+  tmp->mSource->UnregisterSink();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginalTrack)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaStreamTrack,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwningStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginalTrack)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
@@ -75,7 +102,23 @@ MediaStreamTrack::Stop()
 {
   LOG(LogLevel::Info, ("MediaStreamTrack %p Stop()", this));
 
-  mOwningStream->StopTrack(mTrackID);
+  if (mStopped) {
+    LOG(LogLevel::Warning, ("MediaStreamTrack %p Already stopped", this));
+    return;
+  }
+
+  if (mRemote) {
+    LOG(LogLevel::Warning, ("MediaStreamTrack %p is remote. Can't be stopped.", this));
+    return;
+  }
+
+  if (!mSource) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  mSource->UnregisterSink();
+  mStopped = true;
 }
 
 already_AddRefed<Promise>

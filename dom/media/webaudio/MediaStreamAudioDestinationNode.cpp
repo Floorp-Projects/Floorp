@@ -10,6 +10,7 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "DOMMediaStream.h"
+#include "MediaStreamTrack.h"
 #include "TrackUnionStream.h"
 
 namespace mozilla {
@@ -34,7 +35,10 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
                                                       aContext->Graph()))
 {
   // Ensure an audio track with the correct ID is exposed to JS
-  mDOMStream->CreateOwnDOMTrack(AudioNodeStream::AUDIO_TRACK, MediaSegment::AUDIO, nsString());
+  RefPtr<MediaStreamTrackSource> source =
+    new BasicUnstoppableTrackSource(MediaSourceEnum::AudioCapture);
+  mDOMStream->CreateOwnDOMTrack(AudioNodeStream::AUDIO_TRACK,
+                                MediaSegment::AUDIO, nsString(), source);
 
   ProcessedMediaStream* outputStream = mDOMStream->GetInputStream()->AsProcessedStream();
   MOZ_ASSERT(!!outputStream);
