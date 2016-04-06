@@ -81,11 +81,8 @@ TabListComponent.prototype = {
     this._store.blurInput();
   },
 
-  onSelectRow(position, id) {
+  onSelectRow(position) {
     this._store.selectRow(position[0], position[1]);
-    if (id) {
-      this._store.toggleBranch(id);
-    }
   },
 
   onMoveSelectionDown() {
@@ -107,7 +104,7 @@ TabListComponent.prototype = {
   },
 
   onOpenTab(url, where, params) {
-    this._window.openLinkIn(url, where, params);
+    this._window.openUILinkIn(url, where, params);
   },
 
   onCopyTabLocation(url) {

@@ -255,7 +255,7 @@ TabListView.prototype = {
     if (itemNode.classList.contains("tab")) {
       let url = itemNode.dataset.url;
       if (url) {
-        this.props.onOpenTab(url, event);
+        this.onOpenSelected(url, event);
       }
     }
 
@@ -264,11 +264,8 @@ TabListView.prototype = {
       return;
     }
 
-    this._selectRow(itemNode);
-  },
-
-  _selectRow(itemNode) {
-    this.props.onSelectRow(this._getSelectionPosition(itemNode), itemNode.dataset.id);
+    let position = this._getSelectionPosition(itemNode);
+    this.props.onSelectRow(position);
   },
 
   /**
@@ -285,7 +282,7 @@ TabListView.prototype = {
     } else if (event.keyCode == this._window.KeyEvent.DOM_VK_RETURN) {
       let selectedNode = this.container.querySelector('.item.selected');
       if (selectedNode.dataset.url) {
-        this.props.onOpenTab(selectedNode.dataset.url, event);
+        this.onOpenSelected(selectedNode.dataset.url, event);
       } else if (selectedNode) {
         this.props.onToggleBranch(selectedNode.dataset.id);
       }
@@ -307,7 +304,12 @@ TabListView.prototype = {
     }
   },
 
-  onOpenSelected(event) {
+  onOpenSelected(url, event) {
+    let where = getChromeWindow(this._window).whereToOpenLink(event);
+    this.props.onOpenTab(url, where, {});
+  },
+
+  onOpenSelectedFromContextMenu(event) {
     let item = this._getSelectedTabNode();
     if (item) {
       let where = event.target.getAttribute("where");
@@ -422,7 +424,7 @@ TabListView.prototype = {
       case "syncedTabsOpenSelectedInTab":
       case "syncedTabsOpenSelectedInWindow":
       case "syncedTabsOpenSelectedInPrivateWindow":
-        this.onOpenSelected(event);
+        this.onOpenSelectedFromContextMenu(event);
         break;
       case "syncedTabsBookmarkSelected":
         this.onBookmarkTab();
@@ -452,7 +454,8 @@ TabListView.prototype = {
     } else {
       let itemNode = this._findParentItemNode(event.target);
       if (itemNode) {
-        this._selectRow(itemNode);
+        let position = this._getSelectionPosition(itemNode);
+        this.props.onSelectRow(position);
       }
       menu = getContextMenu(this._window);
       this.adjustContextMenu(menu);

@@ -167,6 +167,8 @@
   skin/classic/browser/devedition/urlbar-history-dropmarker.svg (../shared/devedition/urlbar-history-dropmarker.svg)
   skin/classic/browser/devedition/urlbar-arrow.png             (../shared/devedition/urlbar-arrow.png)
   skin/classic/browser/devedition/urlbar-arrow@2x.png          (../shared/devedition/urlbar-arrow@2x.png)
+  skin/classic/browser/urlbar-star.svg                         (../shared/urlbar-star.svg)
+  skin/classic/browser/urlbar-tab.svg                          (../shared/urlbar-tab.svg)
   skin/classic/browser/usercontext/personal.svg                (../shared/usercontext/personal.svg)
   skin/classic/browser/usercontext/work.svg                    (../shared/usercontext/work.svg)
   skin/classic/browser/usercontext/banking.svg                 (../shared/usercontext/banking.svg)

@@ -282,10 +282,32 @@ handlers[actions.FETCH_DOMINATOR_TREE_END] = function (snapshots, { id, root }) 
     assert(snapshot.dominatorTree.state == dominatorTreeState.FETCHING,
            "Should be in the FETCHING state");
 
+    let focused;
+    if (snapshot.dominatorTree.focused) {
+      focused = (function findFocused(node) {
+        if (node.nodeId === snapshot.dominatorTree.focused.nodeId) {
+          return node;
+        }
+
+        if (node.children) {
+          const length = node.children.length;
+          for (let i = 0; i < length; i++) {
+            const result = findFocused(node.children[i]);
+            if (result) {
+              return result;
+            }
+          }
+        }
+
+        return undefined;
+      }(root));
+    }
+
     const dominatorTree = immutableUpdate(snapshot.dominatorTree, {
       state: dominatorTreeState.LOADED,
       root,
       expanded: Immutable.Set(),
+      focused,
     });
 
     return immutableUpdate(snapshot, { dominatorTree });

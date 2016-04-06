@@ -892,15 +892,6 @@ panel[type="autocomplete-richlistbox"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#history-dropmarker");
 }
 
-.ac-ellipsis-after {
-  visibility: hidden;
-}
-
-.ac-url-text[type~="action"],
-.ac-action-text:not([type~="action"]) {
-  visibility: collapse;
-}
-
 %endif
 
 
