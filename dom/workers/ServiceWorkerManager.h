@@ -335,6 +335,7 @@ class ServiceWorkerManager final
   friend class ServiceWorkerScriptJobBase;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
+  friend class ServiceWorkerUpdateJob2;
   friend class UpdateTimerCallback;
 
 public:
