@@ -93,6 +93,8 @@ public interface BrowserDB {
      */
     public abstract Cursor getRecentHistory(ContentResolver cr, int limit);
 
+    public abstract Cursor getHistoryForURL(ContentResolver cr, String uri);
+
     public abstract Cursor getRecentHistoryBetweenTime(ContentResolver cr, int historyLimit, long start, long end);
 
     public abstract long getPrePathLastVisitedTimeMilliseconds(ContentResolver cr, String prePath);
