@@ -1740,7 +1740,7 @@ this.PlacesUtils = {
    *  - guid (string): the item's GUID (same as aItemGuid for the top item).
    *  - [deprecated] id (number): the item's id. This is only if
    *    aOptions.includeItemIds is set.
-   *  - type (number):  the item's type.  @see PlacesUtils.TYPE_X_*
+   *  - type (string):  the item's type.  @see PlacesUtils.TYPE_X_*
    *  - title (string): the item's title. If it has no title, this property
    *    isn't set.
    *  - dateAdded (number, microseconds from the epoch): the date-added value of
@@ -1749,6 +1749,7 @@ this.PlacesUtils = {
    *    value of the item.
    *  - annos (see getAnnotationsForItem): the item's annotations.  This is not
    *    set if there are no annotations set for the item).
+   *  - index: the item's index under it's parent.
    *
    * The root object (i.e. the one for aItemGuid) also has the following
    * properties set:
