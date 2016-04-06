@@ -27,7 +27,7 @@ public class TabHistoryController {
     };
 
     public interface OnShowTabHistory {
-        void onShowHistory(List<TabHistoryPage>historyPageList, int toIndex);
+        void onShowHistory(List<TabHistoryPage> historyPageList, int toIndex);
     }
 
     public TabHistoryController(OnShowTabHistory showTabHistoryListener) {
