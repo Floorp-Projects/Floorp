@@ -105,7 +105,30 @@ static bool gStaticAtomTableSealed = false;
 class DynamicAtom final : public nsIAtom
 {
 public:
-  DynamicAtom(const nsAString& aString, uint32_t aHash);
+  DynamicAtom(const nsAString& aString, uint32_t aHash)
+  {
+    mLength = aString.Length();
+    RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
+    if (buf) {
+      mString = static_cast<char16_t*>(buf->Data());
+    } else {
+      buf = nsStringBuffer::Alloc((mLength + 1) * sizeof(char16_t));
+      mString = static_cast<char16_t*>(buf->Data());
+      CopyUnicodeTo(aString, 0, mString, mLength);
+      mString[mLength] = char16_t(0);
+    }
+
+    mHash = aHash;
+    MOZ_ASSERT(mHash == HashString(mString, mLength));
+
+    NS_ASSERTION(mString[mLength] == char16_t(0), "null terminated");
+    NS_ASSERTION(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
+                 "enough storage");
+    NS_ASSERTION(Equals(aString), "correct data");
+
+    // Take ownership of buffer
+    mozilla::Unused << buf.forget();
+  }
 
 private:
   // We don't need a virtual destructor because we always delete via a
@@ -119,6 +142,8 @@ public:
 
   void TransmuteToStatic(nsStringBuffer* aStringBuffer);
 };
+
+NS_IMPL_ISUPPORTS(DynamicAtom, nsIAtom)
 
 class StaticAtom final : public nsIAtom
 {
@@ -150,11 +175,26 @@ class StaticAtom final : public nsIAtom
 
 public:
   // This is the normal constructor.
-  StaticAtom(nsStringBuffer* aData, uint32_t aLength, PLDHashNumber aKeyHash);
+  StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
+  {
+    mLength = aLength;
+    mString = static_cast<char16_t*>(aStringBuffer->Data());
+    // Technically we could currently avoid doing this addref by instead making
+    // the static atom buffers have an initial refcount of 2.
+    aStringBuffer->AddRef();
+
+    mHash = aHash;
+    MOZ_ASSERT(mHash == HashString(mString, mLength));
+
+    MOZ_ASSERT(mString[mLength] == char16_t(0), "null terminated");
+    MOZ_ASSERT(aStringBuffer &&
+               aStringBuffer->StorageSize() == (mLength + 1) * sizeof(char16_t),
+               "correct storage");
+  }
 
   // We don't need a virtual destructor because we always delete via a
   // StaticAtom* pointer (in AtomTableClearEntry()), not an nsIAtom* pointer.
-  ~StaticAtom();
+  ~StaticAtom() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
@@ -313,49 +353,6 @@ NS_PurgeAtomTable()
   }
 }
 
-DynamicAtom::DynamicAtom(const nsAString& aString, uint32_t aHash)
-{
-  mLength = aString.Length();
-  RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
-  if (buf) {
-    mString = static_cast<char16_t*>(buf->Data());
-  } else {
-    buf = nsStringBuffer::Alloc((mLength + 1) * sizeof(char16_t));
-    mString = static_cast<char16_t*>(buf->Data());
-    CopyUnicodeTo(aString, 0, mString, mLength);
-    mString[mLength] = char16_t(0);
-  }
-
-  mHash = aHash;
-  MOZ_ASSERT(mHash == HashString(mString, mLength));
-
-  NS_ASSERTION(mString[mLength] == char16_t(0), "null terminated");
-  NS_ASSERTION(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
-               "enough storage");
-  NS_ASSERTION(Equals(aString), "correct data");
-
-  // Take ownership of buffer
-  mozilla::Unused << buf.forget();
-}
-
-StaticAtom::StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength,
-                       uint32_t aHash)
-{
-  mLength = aLength;
-  mString = static_cast<char16_t*>(aStringBuffer->Data());
-  // Technically we could currently avoid doing this addref by instead making
-  // the static atom buffers have an initial refcount of 2.
-  aStringBuffer->AddRef();
-
-  mHash = aHash;
-  MOZ_ASSERT(mHash == HashString(mString, mLength));
-
-  NS_ASSERTION(mString[mLength] == char16_t(0), "null terminated");
-  NS_ASSERTION(aStringBuffer &&
-               aStringBuffer->StorageSize() == (mLength + 1) * sizeof(char16_t),
-               "correct storage");
-}
-
 DynamicAtom::~DynamicAtom()
 {
   MOZ_ASSERT(gAtomTable, "uninitialized atom hashtable");
@@ -366,12 +363,6 @@ DynamicAtom::~DynamicAtom()
   gAtomTable->Remove(&key);
 
   nsStringBuffer::FromData(mString)->Release();
-}
-
-NS_IMPL_ISUPPORTS(DynamicAtom, nsIAtom)
-
-StaticAtom::~StaticAtom()
-{
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType)
