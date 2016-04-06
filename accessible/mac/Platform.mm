@@ -101,6 +101,11 @@ ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t,
                      bool, bool)
 {
 }
+
+void
+ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool)
+{
+}
 } // namespace a11y
 } // namespace mozilla
 
