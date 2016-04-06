@@ -353,9 +353,9 @@
 
 .theme-firebug .breadcrumbs-widget-item:hover {
   border-color: rgba(0, 0, 0, 0.2);
-  background-image: transparent linear-gradient(
-                    rgba(255, 255, 255, 0.4),
-                    rgba(255, 255, 255, 0.2)) no-repeat;
+  background: transparent linear-gradient(
+              rgba(255, 255, 255, 0.4),
+              rgba(255, 255, 255, 0.2)) no-repeat;
   box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.6) inset,
               0 0 1px rgba(255, 255, 255, 0.6) inset,
               0 0 2px rgba(0, 0, 0, 0.05);
@@ -1318,6 +1318,60 @@ widgets.css is overwritten. */
 
 .theme-light .table-widget-column[readonly] {
   background-color: rgba(0,0,0,0.1);
+}
+
+.table-widget-body .devtools-side-splitter:last-of-type {
+  display: none;
+}
+
+/* Firebug theme support for table widget */
+
+.theme-firebug .devtools-toolbar.table-widget-column-header {
+  font-family: var(--proportional-font-family);
+  color: var(--theme-body-color);
+
+  /* Make sure to override the default Firebug devtools-toolbar height */
+  height: 19px !important;
+
+  /* Make sure to override the dafault .table-widget-column-header font-weight and background */
+  font-weight: bold !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05));
+  background-color: #C8D2DC !important;
+}
+
+.theme-firebug .devtools-toolbar.table-widget-column-header[sorted] {
+  background-color: #AAC3DC !important;
+}
+
+.theme-firebug .devtools-toolbar.table-widget-column-header:hover:active {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1),
+                                    transparent);
+}
+
+.theme-firebug .devtools-toolbar.table-widget-column-header[sorted=descending]:not(:active) {
+  background-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
+}
+
+.theme-firebug .devtools-toolbar.table-widget-column-header[sorted=ascending]:not(:active) {
+  background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+}
+
+.theme-firebug .table-widget-body .devtools-side-splitter {
+  background: linear-gradient(#CBD4DE,#656A6E,#CBD4DE 18px, transparent 18px),
+              linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05) 10px, transparent 18px),
+              linear-gradient(transparent, rgba(0, 0, 0, 0.5) 10px, transparent 18px)
+              repeat-x transparent !important;
+  min-width: 1px;
+  width: 1px;
+  position: absolute;
+}
+
+.theme-firebug .table-widget-column .table-widget-cell:not(.even) {
+  background: #EFEFEF;
+}
+
+.theme-firebug .table-widget-column .table-widget-cell.even {
+  background: #FFFFFF;
 }
 
 /* Cells */

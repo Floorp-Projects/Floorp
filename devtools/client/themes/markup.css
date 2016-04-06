@@ -294,3 +294,23 @@ ul.children + .tag-line::before {
   background-color: var(--theme-body-color-alt);
   color: var(--theme-body-background);
 }
+
+/* Firebug Theme */
+
+.theme-firebug .theme-fg-color3 {
+  color: var(--theme-graphs-full-blue);
+}
+
+.theme-firebug .open,
+.theme-firebug .close,
+.theme-firebug .attr-name.theme-fg-color2 {
+  color: var(--theme-highlight-purple);
+}
+
+.theme-firebug .attr-value.theme-fg-color6 {
+  color: var(--theme-highlight-red);
+}
+
+.theme-firebug .markupview-events {
+  font-size: var(--theme-toolbar-font-size);
+}

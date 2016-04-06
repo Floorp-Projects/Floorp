@@ -59,6 +59,24 @@
   margin: 2px;
 }
 
+/* Firebug theme uses breakpoint icon istead of a checkbox */
+
+.theme-firebug #sources-pane .dbg-breakpoint-checkbox .checkbox-check {
+  -moz-appearance: none;
+  border: none;
+  background: url(chrome://devtools/skin/images/firebug/breakpoint.svg) no-repeat 50% 50%;
+}
+
+.theme-firebug #sources-pane .dbg-breakpoint-checkbox:not([checked="true"]) > .checkbox-check,
+.theme-firebug #sources-pane .dbg-breakpoint-checkbox:not([checked="true"]) ~ * {
+  opacity: 0.5;
+}
+
+.theme-firebug #sources-pane .dbg-breakpoint-checkbox {
+  padding-inline-end: 0;
+  margin-inline-end: 0;
+}
+
 .dbg-breakpoint-condition-thrown-message {
   display: none;
   color: var(--theme-highlight-red);
@@ -76,12 +94,12 @@
   min-width: 32px;
 }
 
-#sources-toolbar .devtools-toolbarbutton:not([label]) {
+:root:not(.theme-firebug) #sources-toolbar .devtools-toolbarbutton:not([label]) {
   -moz-image-region: rect(0,16px,16px,0);
 }
 
 @media (min-resolution: 1.1dppx) {
-  #sources-toolbar .devtools-toolbarbutton:not([label]) {
+  :root:not(.theme-firebug) #sources-toolbar .devtools-toolbarbutton:not([label]) {
     -moz-image-region: rect(0,32px,32px,0);
   }
 }
@@ -96,6 +114,10 @@
   }
 }
 
+.theme-firebug #black-box {
+  list-style-image: url(images/firebug/debugger-blackbox.svg);
+}
+
 #pretty-print {
   list-style-image: url(images/debugger-prettyprint.png);
 }
@@ -106,9 +128,18 @@
   }
 }
 
+.theme-firebug #pretty-print {
+  list-style-image: url(images/firebug/debugger-prettyprint.svg);
+}
+
 #toggle-breakpoints {
   list-style-image: url(images/debugger-toggleBreakpoints.svg);
   -moz-image-region: rect(0,32px,16px,16px) !important;
+}
+
+.theme-firebug #toggle-breakpoints {
+  list-style-image: url(images/firebug/debugger-toggleBreakpoints.svg);
+  -moz-image-region: unset !important;
 }
 
 #toggle-breakpoints[checked] {
@@ -567,6 +598,14 @@
   }
 }
 
+.theme-firebug #resume {
+  list-style-image: url(images/firebug/pause.svg);
+}
+
+.theme-firebug #resume[checked] {
+  list-style-image: url(images/firebug/play.svg);
+}
+
 #resume[break-on-next] {
   background: var(--theme-highlight-lightorange);
 }
@@ -597,12 +636,24 @@
   }
 }
 
+.theme-firebug #step-over {
+  list-style-image: url(images/firebug/debugger-step-over.svg);
+}
+
+.theme-firebug #step-in {
+  list-style-image: url(images/firebug/debugger-step-in.svg);
+}
+
+.theme-firebug #step-out {
+  list-style-image: url(images/firebug/debugger-step-out.svg);
+}
+
 #instruments-pane-toggle {
-  list-style-image: url(images/pane-collapse.svg);
+  list-style-image: var(--theme-pane-collapse-image);
 }
 
 #instruments-pane-toggle[pane-collapsed] {
-  list-style-image: url(images/pane-expand.svg);
+  list-style-image: var(--theme-pane-expand-image);
 }
 
 /* Horizontal vs. vertical layout */
@@ -633,4 +684,54 @@
 #body[layout=vertical] .side-menu-widget-group,
 #body[layout=vertical] .side-menu-widget-item {
   -moz-margin-end: 0;
+}
+
+/* Firebug theme customization of source group title */
+.theme-firebug #sources-pane .side-menu-widget-group-title {
+  border-bottom: none;
+  padding: 2px 4px;
+  background: var(--theme-header-background);
+  font-weight: bold;
+}
+
+/* Sections titles (toolbars) in Variables panel they have different height */
+.theme-firebug #variables-tabpanel .title.devtools-toolbar {
+  display: -moz-box;
+  height: 20px !important;
+}
+
+/* Firebug theme support for the Callstack Panel */
+
+.theme-firebug #callstack-list {
+  font-family: var(--proportional-font-family);
+}
+
+.theme-firebug #callstack-list .dbg-classic-stackframe-title {
+  color: var(--theme-content-color2);
+  font-weight: normal;
+  font-family: monospace;
+}
+
+.theme-firebug #callstack-list .side-menu-widget-item {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.theme-firebug #callstack-list .dbg-classic-stackframe-details-url,
+.theme-firebug #callstack-list .dbg-classic-stackframe-details-sep,
+.theme-firebug #callstack-list .dbg-classic-stackframe-details-line {
+  color: blue;
+  font-weight: bold;
+}
+
+.theme-firebug #callstack-list .side-menu-widget-item {
+  margin: 0 4px;
+}
+
+.theme-firebug #callstack-list .side-menu-widget-item.selected {
+  color: var(--theme-selection-color);
+}
+
+.theme-firebug #callstack-list .side-menu-widget-item:first-child {
+  border-top: none;
 }
