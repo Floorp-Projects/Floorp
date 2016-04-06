@@ -365,6 +365,9 @@ public:
                                                  const fallible_t&);
 
   void NS_FASTCALL Assign(const char_type* aData);
+  MOZ_WARN_UNUSED_RESULT bool NS_FASTCALL Assign(const char_type* aData,
+                                                 const fallible_t&);
+
   void NS_FASTCALL Assign(const char_type* aData, size_type aLength);
   MOZ_WARN_UNUSED_RESULT bool NS_FASTCALL Assign(const char_type* aData,
                                                  size_type aLength,
