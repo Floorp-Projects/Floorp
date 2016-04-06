@@ -4112,14 +4112,32 @@ bool HTMLMediaElement::CanActivateAutoplay()
   // being paused. We also activate autopaly when playing a media source since
   // the data download is controlled by the script and there is no way to
   // evaluate MediaDecoder::CanPlayThrough().
-  return !mPausedForInactiveDocumentOrChannel &&
-         mAutoplaying &&
-         mPaused &&
-         ((mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
-          mSrcStream || mMediaSource) &&
-         HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
-         mAutoplayEnabled &&
-         !IsEditable();
+
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) || !mAutoplayEnabled) {
+    return false;
+  }
+
+  if (!mAutoplaying) {
+    return false;
+  }
+
+  if (IsEditable()) {
+    return false;
+  }
+
+  if (!mPaused) {
+    return false;
+  }
+
+  if (mPausedForInactiveDocumentOrChannel) {
+    return false;
+  }
+
+  bool hasData =
+    (mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
+    mSrcStream || mMediaSource;
+
+  return hasData;
 }
 
 void HTMLMediaElement::CheckAutoplayDataReady()
