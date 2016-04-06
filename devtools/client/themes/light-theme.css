@@ -174,7 +174,7 @@ body {
 .devtools-sidebar-alltabs,
 .cm-s-mozilla .CodeMirror-dialog { /* General toolbar styling */
   color: var(--theme-body-color);
-  background-color: var(--theme-toolbar-background);
+  background: var(--theme-toolbar-background);
   border-color: var(--theme-splitter-color);
 }
 
