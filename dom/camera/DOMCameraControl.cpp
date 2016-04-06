@@ -529,7 +529,8 @@ nsDOMCameraControl::TrackCreated(TrackID aTrackID) {
   // This track is not connected through a port.
   MediaInputPort* inputPort = nullptr;
   dom::VideoStreamTrack* track =
-    new dom::VideoStreamTrack(this, aTrackID, nsString());
+    new dom::VideoStreamTrack(this, aTrackID, nsString(),
+                              new BasicUnstoppableTrackSource());
   RefPtr<TrackPort> port =
     new TrackPort(inputPort, track,
                   TrackPort::InputPortOwnership::OWNED);

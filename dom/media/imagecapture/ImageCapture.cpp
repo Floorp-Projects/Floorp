@@ -81,13 +81,14 @@ ImageCapture::TakePhotoByMediaEngine()
                             public DOMMediaStream::PrincipalChangeObserver
   {
   public:
-    TakePhotoCallback(DOMMediaStream* aStream, ImageCapture* aImageCapture)
-      : mStream(aStream)
+    TakePhotoCallback(VideoStreamTrack* aVideoTrack, ImageCapture* aImageCapture)
+      : mVideoTrack(aVideoTrack)
       , mImageCapture(aImageCapture)
       , mPrincipalChanged(false)
     {
       MOZ_ASSERT(NS_IsMainThread());
-      mStream->AddPrincipalChangeObserver(this);
+      MOZ_RELEASE_ASSERT(mVideoTrack->GetStream());
+      mVideoTrack->GetStream()->AddPrincipalChangeObserver(this);
     }
 
     void PrincipalChanged(DOMMediaStream* aMediaStream) override
@@ -114,25 +115,18 @@ ImageCapture::TakePhotoByMediaEngine()
     ~TakePhotoCallback()
     {
       MOZ_ASSERT(NS_IsMainThread());
-      mStream->RemovePrincipalChangeObserver(this);
+      MOZ_RELEASE_ASSERT(mVideoTrack->GetStream());
+      mVideoTrack->GetStream()->RemovePrincipalChangeObserver(this);
     }
 
-    RefPtr<DOMMediaStream> mStream;
+    RefPtr<VideoStreamTrack> mVideoTrack;
     RefPtr<ImageCapture> mImageCapture;
     bool mPrincipalChanged;
   };
 
-  RefPtr<DOMMediaStream> domStream = mVideoStreamTrack->GetStream();
-  DOMLocalMediaStream* domLocalStream = domStream->AsDOMLocalMediaStream();
-  if (domLocalStream) {
-    RefPtr<MediaEngineSource> mediaEngine =
-      domLocalStream->GetMediaEngine(mVideoStreamTrack->GetTrackID());
-    RefPtr<MediaEnginePhotoCallback> callback =
-      new TakePhotoCallback(domStream, this);
-    return mediaEngine->TakePhoto(callback);
-  }
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  RefPtr<MediaEnginePhotoCallback> callback =
+    new TakePhotoCallback(mVideoStreamTrack, this);
+  return mVideoStreamTrack->GetSource().TakePhoto(callback);
 }
 
 void

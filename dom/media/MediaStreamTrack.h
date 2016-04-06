@@ -7,6 +7,7 @@
 #define MEDIASTREAMTRACK_H_
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsError.h"
 #include "nsID.h"
 #include "StreamBuffer.h"
 #include "MediaTrackConstraints.h"
@@ -14,11 +15,118 @@
 namespace mozilla {
 
 class DOMMediaStream;
+class MediaEnginePhotoCallback;
 
 namespace dom {
 
 class AudioStreamTrack;
 class VideoStreamTrack;
+
+/**
+ * Common interface through which a MediaStreamTrack can communicate with its
+ * producer on the main thread.
+ *
+ * Kept alive by a strong ref in all MediaStreamTracks (original and clones)
+ * sharing this source.
+ */
+class MediaStreamTrackSource : public nsISupports
+{
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackSource)
+
+public:
+  explicit MediaStreamTrackSource(const bool aIsRemote)
+    : mNrSinks(0), mIsRemote(aIsRemote), mStopped(false)
+  {
+    MOZ_COUNT_CTOR(MediaStreamTrackSource);
+  }
+
+  /**
+   * Gets the source's MediaSourceEnum for usage by PeerConnections.
+   */
+  virtual MediaSourceEnum GetMediaSource() const = 0;
+
+  /**
+   * Indicates whether the track is remote or not per the MediaCapture and
+   * Streams spec.
+   */
+  virtual bool IsRemote() const { return mIsRemote; }
+
+  /**
+   * Forwards a photo request to backends that support it. Other backends return
+   * NS_ERROR_NOT_IMPLEMENTED to indicate that a MediaStreamGraph-based fallback
+   * should be used.
+   */
+  virtual nsresult TakePhoto(MediaEnginePhotoCallback*) const { return NS_ERROR_NOT_IMPLEMENTED; }
+
+  /**
+   * Called by the source interface when all registered sinks have unregistered.
+   */
+  virtual void Stop() = 0;
+
+  /**
+   * Called by each MediaStreamTrack clone on initialization.
+   */
+  void RegisterSink()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mStopped) {
+      return;
+    }
+    ++mNrSinks;
+  }
+
+  /**
+   * Called by each MediaStreamTrack clone on track.Stop().
+   */
+  void UnregisterSink()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    NS_ASSERTION(mNrSinks > 0, "Unmatched UnregisterSink()");
+    --mNrSinks;
+    if (mNrSinks == 0 && !IsRemote()) {
+      Stop();
+      mStopped = true;
+    }
+  }
+
+protected:
+  virtual ~MediaStreamTrackSource()
+  {
+    MOZ_COUNT_DTOR(MediaStreamTrackSource);
+    NS_ASSERTION(mNrSinks == 0, "Some sinks did not unregister");
+  }
+
+  // Number of currently registered sinks.
+  size_t mNrSinks;
+
+  // True if this is a remote track source, i.e., a PeerConnection.
+  const bool mIsRemote;
+
+  // True if this source is not remote, all MediaStreamTrack users have
+  // unregistered from this source and Stop() has been called.
+  bool mStopped;
+};
+
+/**
+ * Basic implementation of MediaStreamTrackSource that ignores Stop().
+ */
+class BasicUnstoppableTrackSource : public MediaStreamTrackSource
+{
+public:
+  explicit BasicUnstoppableTrackSource(const MediaSourceEnum aMediaSource =
+                                         MediaSourceEnum::Other)
+    : MediaStreamTrackSource(true), mMediaSource(aMediaSource) {}
+
+  MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
+
+  void Stop() override {}
+
+protected:
+  ~BasicUnstoppableTrackSource() {}
+
+  const MediaSourceEnum mMediaSource;
+};
 
 /**
  * Class representing a track in a DOMMediaStream.
@@ -29,7 +137,9 @@ public:
    * aTrackID is the MediaStreamGraph track ID for the track in the
    * MediaStream owned by aStream.
    */
-  MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel);
+  MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
+                   const nsString& aLabel,
+                   MediaStreamTrackSource* aSource);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
@@ -65,6 +175,12 @@ public:
   // Notifications from the MediaStreamGraph
   void NotifyEnded() { mEnded = true; }
 
+  MediaStreamTrackSource& GetSource() const
+  {
+    MOZ_RELEASE_ASSERT(mSource, "The track source is only removed on destruction");
+    return *mSource;
+  }
+
   // Webrtc allows the remote side to name tracks whatever it wants, and we
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
@@ -74,11 +190,15 @@ protected:
 
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
+  TrackID mInputTrackID;
+  RefPtr<MediaStreamTrackSource> mSource;
   RefPtr<MediaStreamTrack> mOriginalTrack;
   nsString mID;
   nsString mLabel;
   bool mEnded;
   bool mEnabled;
+  const bool mRemote;
+  bool mStopped;
 };
 
 } // namespace dom

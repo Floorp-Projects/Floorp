@@ -286,6 +286,14 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
 
 class Fake_DOMMediaStream;
 
+class Fake_MediaStreamTrackSource
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamTrackSource)
+
+protected:
+  virtual ~Fake_MediaStreamTrackSource() {}
+};
+
 class Fake_MediaStreamTrack
 {
 public:
@@ -423,7 +431,8 @@ public:
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
 
   Fake_MediaStreamTrack*
-  CreateOwnDOMTrack(mozilla::TrackID aTrackID, mozilla::MediaSegment::Type aType)
+  CreateOwnDOMTrack(mozilla::TrackID aTrackID, mozilla::MediaSegment::Type aType,
+                    const nsString& aLabel, Fake_MediaStreamTrackSource* aSource)
   {
     switch(aType) {
       case mozilla::MediaSegment::AUDIO: {
@@ -503,6 +512,10 @@ typedef Fake_MediaStreamListener MediaStreamListener;
 typedef Fake_MediaStreamDirectListener MediaStreamDirectListener;
 typedef Fake_DOMMediaStream DOMMediaStream;
 typedef Fake_DOMMediaStream DOMLocalMediaStream;
+
+namespace dom {
+typedef Fake_MediaStreamTrackSource MediaStreamTrackSource;
+}
 }
 
 #endif
