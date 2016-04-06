@@ -182,6 +182,14 @@ public:
         }
         specConn->SpeculativeConnect(uri, nullptr);
     }
+
+    static void WaitOnGecko()
+    {
+        struct NoOpEvent : nsAppShell::Event {
+            void Run() override {}
+        };
+        nsAppShell::SyncRunEvent(NoOpEvent());
+    }
 };
 
 class GeckoAppShellSupport final

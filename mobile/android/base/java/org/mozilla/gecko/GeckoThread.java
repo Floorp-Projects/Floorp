@@ -612,4 +612,7 @@ public class GeckoThread extends Thread {
         queueNativeCallUntil(State.PROFILE_READY, GeckoThread.class,
                              "speculativeConnectNative", uri);
     }
+
+    @WrapForJNI @RobocopTarget
+    public static native void waitOnGecko();
 }
