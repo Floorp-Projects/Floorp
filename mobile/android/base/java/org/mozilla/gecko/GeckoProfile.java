@@ -79,8 +79,6 @@ public final class GeckoProfile {
     private static GeckoProfile sGuestProfile;
     private static boolean sShouldCheckForGuestProfile = true;
 
-    public static boolean sIsUsingCustomProfile;
-
     private final String mName;
     private final File mMozillaDir;
     private final Context mApplicationContext;
@@ -111,12 +109,15 @@ public final class GeckoProfile {
     };
 
     /**
-     * Warning: has a side-effect of setting sIsUsingCustomProfile.
      * Can return null.
      */
     public static GeckoProfile getFromArgs(final Context context, final String args) {
         if (args == null) {
             return null;
+        }
+
+        if (GuestSession.shouldUse(context, args)) {
+            return GeckoProfile.getOrCreateGuestProfile(context);
         }
 
         String profileName = null;
@@ -139,8 +140,6 @@ public final class GeckoProfile {
             if (profileName == null) {
                 profileName = GeckoProfile.DEFAULT_PROFILE;
             }
-
-            GeckoProfile.sIsUsingCustomProfile = true;
         }
 
         if (profileName == null && profilePath == null) {
@@ -151,18 +150,13 @@ public final class GeckoProfile {
     }
 
     public static GeckoProfile get(Context context) {
-        boolean isGeckoApp = false;
-        try {
-            isGeckoApp = context instanceof GeckoApp;
-        } catch (NoClassDefFoundError ex) {}
+        if (context == null) {
+            throw new IllegalArgumentException("context must be non-null");
+        }
 
-        if (isGeckoApp) {
-            // Check for a cached profile on this context already
-            // TODO: We should not be caching profile information on the Activity context
-            final GeckoApp geckoApp = (GeckoApp) context;
-            if (geckoApp.mProfile != null) {
-                return geckoApp.mProfile;
-            }
+        final GeckoProfile profile = GeckoThread.getActiveProfile();
+        if (profile != null) {
+            return profile;
         }
 
         final String args;
@@ -172,38 +166,13 @@ public final class GeckoProfile {
             args = null;
         }
 
-        if (GuestSession.shouldUse(context, args)) {
-            final GeckoProfile p = GeckoProfile.getOrCreateGuestProfile(context);
-            if (isGeckoApp) {
-                ((GeckoApp) context).mProfile = p;
-            }
-            return p;
-        }
-
         final GeckoProfile fromArgs = GeckoProfile.getFromArgs(context, args);
         if (fromArgs != null) {
-            if (isGeckoApp) {
-                ((GeckoApp) context).mProfile = fromArgs;
-            }
             return fromArgs;
         }
 
-        if (isGeckoApp) {
-            final GeckoApp geckoApp = (GeckoApp) context;
-            String defaultProfileName;
-            try {
-                defaultProfileName = geckoApp.getDefaultProfileName();
-            } catch (NoMozillaDirectoryException e) {
-                // If this failed, we're screwed. But there are so many callers that
-                // we'll just throw a RuntimeException.
-                Log.wtf(LOGTAG, "Unable to get default profile name.", e);
-                throw new RuntimeException(e);
-            }
-            // Otherwise, get the default profile for the Activity.
-            return get(context, defaultProfileName);
-        }
-
-        return get(context, "");
+        // Otherwise, get the default profile for the Activity.
+        return getDefaultProfile(context);
     }
 
     public static GeckoProfile getDefaultProfile(Context context) {
