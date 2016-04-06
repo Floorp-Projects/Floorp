@@ -197,6 +197,9 @@ InterceptedChannelChrome::ResetInterception()
   nsresult rv = mChannel->StartRedirectChannelToURI(uri, nsIChannelEventSink::REDIRECT_INTERNAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mResponseBody->Close();
+  mResponseBody = nullptr;
+
   mReleaseHandle = nullptr;
   mChannel = nullptr;
   return NS_OK;
@@ -228,6 +231,11 @@ InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLS
   if (!mChannel) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  // Make sure the cache entry's output stream is always closed.  If the
+  // channel was intercepted with a null-body response then its possible
+  // the synthesis completed without a stream copy operation.
+  mResponseBody->Close();
 
   mReportCollector->FlushConsoleReports(mChannel);
 
@@ -381,6 +389,7 @@ InterceptedChannelContent::ResetInterception()
 
   mReportCollector->FlushConsoleReports(mChannel);
 
+  mResponseBody->Close();
   mResponseBody = nullptr;
   mSynthesizedInput = nullptr;
 
@@ -416,6 +425,11 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
   if (NS_WARN_IF(!mChannel)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  // Make sure the body output stream is always closed.  If the channel was
+  // intercepted with a null-body response then its possible the synthesis
+  // completed without a stream copy operation.
+  mResponseBody->Close();
 
   mReportCollector->FlushConsoleReports(mChannel);
 
