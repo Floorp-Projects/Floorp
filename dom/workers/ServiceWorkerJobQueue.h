@@ -14,32 +14,32 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerJob2;
+class ServiceWorkerJob;
 
-class ServiceWorkerJobQueue2 final
+class ServiceWorkerJobQueue final
 {
   class Callback;
 
-  nsTArray<RefPtr<ServiceWorkerJob2>> mJobList;
+  nsTArray<RefPtr<ServiceWorkerJob>> mJobList;
 
-  ~ServiceWorkerJobQueue2();
+  ~ServiceWorkerJobQueue();
 
   void
-  JobFinished(ServiceWorkerJob2* aJob);
+  JobFinished(ServiceWorkerJob* aJob);
 
   void
   RunJob();
 
 public:
-  ServiceWorkerJobQueue2();
+  ServiceWorkerJobQueue();
 
   void
-  ScheduleJob(ServiceWorkerJob2* aJob);
+  ScheduleJob(ServiceWorkerJob* aJob);
 
   void
   CancelAll();
 
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue2)
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue)
 };
 
 } // namespace workers

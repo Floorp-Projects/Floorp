@@ -20,7 +20,7 @@ class ErrorResult;
 namespace dom {
 namespace workers {
 
-class ServiceWorkerJob2
+class ServiceWorkerJob
 {
 public:
   // Implement this interface to receive notification when a job completes.
@@ -31,7 +31,7 @@ public:
     // will be called.  If a job is never executed due to browser shutdown,
     // then this method will never be called.  This method is always called
     // on the main thread asynchronously after Start() completes.
-    virtual void JobFinished(ServiceWorkerJob2* aJob, ErrorResult& aStatus) = 0;
+    virtual void JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) = 0;
 
     NS_IMETHOD_(MozExternalRefCountType)
     AddRef(void) = 0;
@@ -72,7 +72,7 @@ public:
   ResultCallbacksInvoked() const;
 
   bool
-  IsEquivalentTo(ServiceWorkerJob2* aJob) const;
+  IsEquivalentTo(ServiceWorkerJob* aJob) const;
 
   // Add a callback that will be invoked when the job's result is available.
   // Some job types will invoke this before the job is actually finished.
@@ -85,7 +85,7 @@ public:
   // This takes ownership of any result callbacks associated with the given job
   // and then appends them to this job's callback list.
   void
-  StealResultCallbacksFrom(ServiceWorkerJob2* aJob);
+  StealResultCallbacksFrom(ServiceWorkerJob* aJob);
 
   // Start the job.  All work will be performed asynchronously on
   // the main thread.  The Finish() method must be called exactly
@@ -100,12 +100,12 @@ public:
   Cancel();
 
 protected:
-  ServiceWorkerJob2(Type aType,
-                    nsIPrincipal* aPrincipal,
-                    const nsACString& aScope,
-                    const nsACString& aScriptSpec);
+  ServiceWorkerJob(Type aType,
+                   nsIPrincipal* aPrincipal,
+                   const nsACString& aScope,
+                   const nsACString& aScriptSpec);
 
-  virtual ~ServiceWorkerJob2();
+  virtual ~ServiceWorkerJob();
 
   // Invoke the result callbacks immediately.  The job must be in the
   // Started state.  The callbacks are cleared after being invoked,
@@ -145,7 +145,7 @@ private:
   bool mResultCallbacksInvoked;
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJob2)
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJob)
 };
 
 } // namespace workers

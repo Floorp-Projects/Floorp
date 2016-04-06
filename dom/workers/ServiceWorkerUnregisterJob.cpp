@@ -11,27 +11,27 @@ namespace dom {
 namespace workers {
 
 
-ServiceWorkerUnregisterJob2::ServiceWorkerUnregisterJob2(nsIPrincipal* aPrincipal,
-                                                         const nsACString& aScope,
-                                                         bool aSendToParent)
-  : ServiceWorkerJob2(Type::Unregister, aPrincipal, aScope, EmptyCString())
+ServiceWorkerUnregisterJob::ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal,
+                                                       const nsACString& aScope,
+                                                       bool aSendToParent)
+  : ServiceWorkerJob(Type::Unregister, aPrincipal, aScope, EmptyCString())
   , mResult(false)
   , mSendToParent(aSendToParent)
 {
 }
 
 bool
-ServiceWorkerUnregisterJob2::GetResult() const
+ServiceWorkerUnregisterJob::GetResult() const
 {
   AssertIsOnMainThread();
   return mResult;
 }
-ServiceWorkerUnregisterJob2::~ServiceWorkerUnregisterJob2()
+ServiceWorkerUnregisterJob::~ServiceWorkerUnregisterJob()
 {
 }
 
 void
-ServiceWorkerUnregisterJob2::AsyncExecute()
+ServiceWorkerUnregisterJob::AsyncExecute()
 {
   AssertIsOnMainThread();
 
