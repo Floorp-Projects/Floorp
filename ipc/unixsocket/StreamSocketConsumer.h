@@ -7,7 +7,7 @@
 #ifndef mozilla_ipc_streamsocketconsumer_h
 #define mozilla_ipc_streamsocketconsumer_h
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -27,7 +27,7 @@ public:
    * @param aBuffer Data received from the socket.
    */
   virtual void ReceiveSocketData(int aIndex,
-                                 nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
+                                 UniquePtr<UnixSocketBuffer>& aBuffer) = 0;
 
   /**
    * Callback for socket success. Consumer-thread only.

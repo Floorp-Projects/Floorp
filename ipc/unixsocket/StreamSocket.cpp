@@ -89,7 +89,7 @@ private:
   /**
    * I/O buffer for received data
    */
-  nsAutoPtr<UnixSocketRawData> mBuffer;
+  UniquePtr<UnixSocketRawData> mBuffer;
 };
 
 StreamSocketIO::StreamSocketIO(MessageLoop* aConsumerLoop,
@@ -182,7 +182,7 @@ StreamSocketIO::QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer)
   MOZ_ASSERT(aBuffer);
 
   if (!mBuffer) {
-    mBuffer = new UnixSocketRawData(MAX_READ_SIZE);
+    mBuffer = MakeUnique<UnixSocketRawData>(MAX_READ_SIZE);
   }
   *aBuffer = mBuffer.get();
 
@@ -227,14 +227,14 @@ public:
   }
 
 private:
-  nsAutoPtr<UnixSocketBuffer> mBuffer;
+  UniquePtr<UnixSocketBuffer> mBuffer;
 };
 
 void
 StreamSocketIO::ConsumeBuffer()
 {
   GetConsumerThread()->PostTask(FROM_HERE,
-                                new ReceiveTask(this, mBuffer.forget()));
+                                new ReceiveTask(this, mBuffer.release()));
 }
 
 void
@@ -366,7 +366,7 @@ StreamSocket::~StreamSocket()
 }
 
 void
-StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+StreamSocket::ReceiveSocketData(UniquePtr<UnixSocketBuffer>& aBuffer)
 {
   mConsumer->ReceiveSocketData(mIndex, aBuffer);
 }

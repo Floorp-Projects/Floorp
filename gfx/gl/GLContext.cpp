@@ -954,6 +954,15 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (!IsSupported(GLFeature::framebuffer_object) &&
+            !IsSupported(GLFeature::framebuffer_object_EXT_OES))
+        {
+            NS_ERROR("GLContext requires framebuffer object support.");
+            mInitialized = false;
+        }
+    }
+
+    if (mInitialized) {
         if (IsSupported(GLFeature::sync)) {
             SymLoadStruct syncSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fFenceSync,      { "FenceSync",      nullptr } },

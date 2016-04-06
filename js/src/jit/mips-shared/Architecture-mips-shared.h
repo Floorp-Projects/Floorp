@@ -308,9 +308,15 @@ class FloatRegisterMIPSShared
     }
 };
 
-uint32_t GetMIPSFlags();
-bool hasFPU();
-bool isLoongson();
+namespace mips_private {
+    extern uint32_t Flags;
+    extern bool hasFPU;
+    extern bool isLoongson;
+}
+
+inline uint32_t GetMIPSFlags() { return mips_private::Flags; }
+inline bool hasFPU() { return mips_private::hasFPU; }
+inline bool isLoongson() { return mips_private::isLoongson; }
 
 // MIPS doesn't have double registers that can NOT be treated as float32.
 inline bool

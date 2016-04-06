@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="1000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="100">
+
+<meta charset="utf-8">
+<title>Bug 1248913 - Keep background-attachment:fixed image fixed under APZ scrolling even when a background-blend-mode is applied.</title>
+
+<style>
+
+html {
+  background: radial-gradient(circle 200px at 400px 400px, lime 100px, transparent 0) fixed,
+              radial-gradient(circle 200px at 400px 400px, blue 100px, transparent 0) scroll
+               white no-repeat;
+  background-blend-mode: multiply;
+  overflow: hidden;
+}
+
+body {
+  height: 4000px;
+}
+
+</style>
+
+<div></div>

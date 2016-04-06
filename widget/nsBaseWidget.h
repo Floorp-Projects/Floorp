@@ -179,7 +179,7 @@ public:
   virtual void            CleanupRemoteDrawing() override;
   virtual already_AddRefed<mozilla::gfx::DrawTarget> CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
                                                                                 const LayoutDeviceIntRect& aRect,
-                                                                                const bool aInitModeClear) override;
+                                                                                const LayoutDeviceIntRect& aClearRect) override;
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
   NS_IMETHOD              SetModal(bool aModal) override;
   virtual uint32_t        GetMaxTouchPoints() const override;

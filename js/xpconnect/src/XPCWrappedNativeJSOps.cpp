@@ -620,9 +620,15 @@ XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* reso
                                  resolvedp);
 }
 
+static const js::ClassExtension XPC_WN_JSClassExtension = {
+    nullptr, // weakmapKeyDelegateOp
+    WrappedNativeObjectMoved
+};
+
 const js::Class XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",    // name;
     WRAPPER_FLAGS |
+    JSCLASS_IS_WRAPPED_NATIVE |
     JSCLASS_PRIVATE_IS_NSISUPPORTS, // flags
 
     /* Mandatory non-null function pointer members. */
@@ -644,11 +650,7 @@ const js::Class XPC_WN_NoHelper_JSClass = {
     JS_NULL_CLASS_SPEC,
 
     // ClassExtension
-    {
-        true,    // isWrappedNative
-        nullptr, // weakmapKeyDelegateOp
-        WrappedNativeObjectMoved
-    },
+    &XPC_WN_JSClassExtension,
 
     // ObjectOps
     JS_NULL_OBJECT_OPS
@@ -967,13 +969,17 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
 {
     MOZ_COUNT_CTOR(XPCNativeScriptableShared);
 
+    // Initialize the js::Class.
+
     memset(&mJSClass, 0, sizeof(mJSClass));
     mJSClass.name = aName;  // take ownership
 
     if (!aPopulate)
         return;
 
-    mJSClass.flags = WRAPPER_FLAGS | JSCLASS_PRIVATE_IS_NSISUPPORTS;
+    mJSClass.flags = WRAPPER_FLAGS |
+                     JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                     JSCLASS_IS_WRAPPED_NATIVE;
 
     if (mFlags.IsGlobalObject())
         mJSClass.flags |= XPCONNECT_GLOBAL_FLAGS;
@@ -1033,9 +1039,6 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
     else
         mJSClass.finalize = XPC_WN_NoHelper_Finalize;
 
-    if (mFlags.WantNewEnumerate())
-        mJSClass.ops = &XPC_WN_ObjectOpsWithEnumerate;
-
     if (mFlags.WantCall())
         mJSClass.call = XPC_WN_Helper_Call;
     if (mFlags.WantConstruct())
@@ -1049,8 +1052,14 @@ XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
     else
         mJSClass.trace = XPCWrappedNative::Trace;
 
-    mJSClass.ext.isWrappedNative = true;
-    mJSClass.ext.objectMovedOp = WrappedNativeObjectMoved;
+    // Initialize the js::ClassExtension.
+
+    mJSClass.ext = &XPC_WN_JSClassExtension;
+
+    // Initialize the js::ObjectOps.
+
+    if (mFlags.WantNewEnumerate())
+        mJSClass.ops = &XPC_WN_ObjectOpsWithEnumerate;
 }
 
 /***************************************************************************/
@@ -1250,12 +1259,10 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, b
                                  JSPROP_ENUMERATE, resolvep);
 }
 
-#define XPC_WN_SHARED_PROTO_CLASS_EXT                                  \
-    {                                                                  \
-        false,      /* isWrappedNative */                              \
-        nullptr,    /* weakmapKeyDelegateOp */                         \
-        XPC_WN_Shared_Proto_ObjectMoved                                \
-    }
+static const js::ClassExtension XPC_WN_Shared_Proto_ClassExtension = {
+    nullptr,    /* weakmapKeyDelegateOp */
+    XPC_WN_Shared_Proto_ObjectMoved
+};
 
 const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     "XPC_WN_ModsAllowed_WithCall_Proto_JSClass", // name;
@@ -1278,7 +1285,7 @@ const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Trace,      // trace;
 
     JS_NULL_CLASS_SPEC,
-    XPC_WN_SHARED_PROTO_CLASS_EXT,
+    &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_WithCall_ObjectOps
 };
 
@@ -1303,7 +1310,7 @@ const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Trace,      // trace;
 
     JS_NULL_CLASS_SPEC,
-    XPC_WN_SHARED_PROTO_CLASS_EXT,
+    &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_NoCall_ObjectOps
 };
 
@@ -1381,7 +1388,7 @@ const js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Trace,      // trace;
 
     JS_NULL_CLASS_SPEC,
-    XPC_WN_SHARED_PROTO_CLASS_EXT,
+    &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_WithCall_ObjectOps
 };
 
@@ -1406,7 +1413,7 @@ const js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Trace,      // trace;
 
     JS_NULL_CLASS_SPEC,
-    XPC_WN_SHARED_PROTO_CLASS_EXT,
+    &XPC_WN_Shared_Proto_ClassExtension,
     XPC_WN_NoCall_ObjectOps
 };
 
@@ -1481,6 +1488,11 @@ static_assert(((WRAPPER_FLAGS >> JSCLASS_RESERVED_SLOTS_SHIFT) &
                JSCLASS_RESERVED_SLOTS_MASK) == 0,
               "WRAPPER_FLAGS should not include any reserved slots");
 
+static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {
+    nullptr,                               // weakmapKeyDelegateOp
+    XPC_WN_TearOff_ObjectMoved
+};
+
 const js::Class XPC_WN_Tearoff_JSClass = {
     "WrappedNative_TearOff",                   // name;
     WRAPPER_FLAGS |
@@ -1502,9 +1514,5 @@ const js::Class XPC_WN_Tearoff_JSClass = {
     JS_NULL_CLASS_SPEC,
 
     // ClassExtension
-    {
-        false,                                 // isWrappedNative
-        nullptr,                               // weakmapKeyDelegateOp
-        XPC_WN_TearOff_ObjectMoved
-    },
+    &XPC_WN_Tearoff_JSClassExtension
 };

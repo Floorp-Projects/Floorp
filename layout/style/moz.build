@@ -105,6 +105,7 @@ EXPORTS.mozilla += [
     'StyleSheetHandleInlines.h',
     'StyleSheetInfo.h',
     'StyleSheetInlines.h',
+    'StyleStructContext.h',
 ]
 
 EXPORTS.mozilla.dom += [

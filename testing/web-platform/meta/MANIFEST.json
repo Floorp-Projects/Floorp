@@ -28394,6 +28394,10 @@
         "url": "/web-animations/animation-effect-timing/delay.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/direction.html",
+        "url": "/web-animations/animation-effect-timing/direction.html"
+      },
+      {
         "path": "web-animations/animation-effect-timing/duration.html",
         "url": "/web-animations/animation-effect-timing/duration.html"
       },
@@ -28410,16 +28414,12 @@
         "url": "/web-animations/animation-effect-timing/getComputedStyle.html"
       },
       {
-        "path": "web-animations/animation-effect-timing/iterations.html",
-        "url": "/web-animations/animation-effect-timing/iterations.html"
-      },
-      {
         "path": "web-animations/animation-effect-timing/iterationStart.html",
         "url": "/web-animations/animation-effect-timing/iterationStart.html"
       },
       {
-        "path": "web-animations/animation-effect-timing/direction.html",
-        "url": "/web-animations/animation-effect-timing/direction.html"
+        "path": "web-animations/animation-effect-timing/iterations.html",
+        "url": "/web-animations/animation-effect-timing/iterations.html"
       },
       {
         "path": "web-animations/animation-timeline/document-timeline.html",
@@ -34878,6 +34878,18 @@
             ],
             "url": "/compat/webkit-text-fill-color-property-001c.html"
           }
+        ],
+        "compat/webkit-text-fill-color-property-001d.html": [
+          {
+            "path": "compat/webkit-text-fill-color-property-001d.html",
+            "references": [
+              [
+                "/compat/webkit-text-fill-color-property-001-ref.html",
+                "=="
+              ]
+            ],
+            "url": "/compat/webkit-text-fill-color-property-001d.html"
+          }
         ]
       },
       "testharness": {
@@ -34950,6 +34962,18 @@
             ]
           ],
           "url": "/compat/webkit-text-fill-color-property-001c.html"
+        }
+      ],
+      "compat/webkit-text-fill-color-property-001d.html": [
+        {
+          "path": "compat/webkit-text-fill-color-property-001d.html",
+          "references": [
+            [
+              "/compat/webkit-text-fill-color-property-001-ref.html",
+              "=="
+            ]
+          ],
+          "url": "/compat/webkit-text-fill-color-property-001d.html"
         }
       ]
     }

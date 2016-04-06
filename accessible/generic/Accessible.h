@@ -376,11 +376,6 @@ public:
     { mRoleMapEntry = aRoleMapEntry; }
 
   /**
-   * Cache children if necessary.
-   */
-  void EnsureChildren();
-
-  /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
   bool AppendChild(Accessible* aChild)
@@ -475,12 +470,6 @@ public:
     { return mChildren.ElementAt(aIndex); }
 
   /**
-   * Return true if children were initialized.
-   */
-  inline bool AreChildrenCached() const
-    { return !IsChildrenFlag(eChildrenUninitialized); }
-
-  /**
    * Return true if the accessible is attached to tree.
    */
   bool IsBoundToParent() const { return !!mParent; }
@@ -512,12 +501,6 @@ public:
    */
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX);
-
-  /**
-   * Assert if child not in parent's cache if the cache was initialized at this
-   * point.
-   */
-  void TestChildCache(Accessible* aCachedChild) const;
 
   /**
    * Return boundaries in screen coordinates.
@@ -984,11 +967,6 @@ protected:
   void LastRelease();
 
   /**
-   * Cache accessible children.
-   */
-  virtual void CacheChildren();
-
-  /**
    * Set accessible parent and index in parent.
    */
   void BindToParent(Accessible* aParent, uint32_t aIndexInParent);
@@ -1001,30 +979,7 @@ protected:
                                          nsresult *aError = nullptr) const;
 
   /**
-   * Flags used to describe the state and type of children.
-   */
-  enum ChildrenFlags {
-    eChildrenUninitialized = 0, // children aren't initialized
-    eMixedChildren = 1 << 0, // text leaf children are presented
-    eEmbeddedChildren = 1 << 1, // all children are embedded objects
-
-    eLastChildrenFlag = eEmbeddedChildren
-  };
-
-  /**
-   * Return true if the children flag is set.
-   */
-  bool IsChildrenFlag(ChildrenFlags aFlag) const
-    { return static_cast<ChildrenFlags>(mChildrenFlags) == aFlag; }
-
-  /**
-   * Set children flag.
-   */
-  void SetChildrenFlag(ChildrenFlags aFlag) { mChildrenFlags = aFlag; }
-
-  /**
    * Flags used to describe the state of this accessible.
-   * @note keep these flags in sync with ChildrenFlags
    */
   enum StateFlags {
     eIsDefunct = 1 << 0, // accessible is defunct
@@ -1039,6 +994,7 @@ protected:
     eRelocated = 1 << 9, // accessible was moved in tree
     eNoXBLKids = 1 << 10, // accessible don't allows XBL children
     eNoKidsFromDOM = 1 << 11, // accessible doesn't allow children from DOM
+    eHasTextKids = 1 << 12, // accessible have a text leaf in children
 
     eLastStateFlag = eNoKidsFromDOM
   };
@@ -1139,16 +1095,14 @@ protected:
   nsTArray<RefPtr<Accessible> > mChildren;
   int32_t mIndexInParent;
 
-  static const uint8_t kChildrenFlagsBits = 2;
-  static const uint8_t kStateFlagsBits = 12;
+  static const uint8_t kStateFlagsBits = 13;
   static const uint8_t kContextFlagsBits = 3;
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 15;
 
   /**
-   * Keep in sync with ChildrenFlags, StateFlags, ContextFlags, and AccTypes.
+   * Keep in sync with StateFlags, ContextFlags, and AccTypes.
    */
-  uint32_t mChildrenFlags : kChildrenFlagsBits;
   uint32_t mStateFlags : kStateFlagsBits;
   uint32_t mContextFlags : kContextFlagsBits;
   uint32_t mType : kTypeBits;

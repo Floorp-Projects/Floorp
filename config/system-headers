@@ -1327,7 +1327,7 @@ kvm.h
 spawn.h
 err.h
 xlocale.h
-#ifdef MOZ_SHARED_ICU
+#ifdef MOZ_SYSTEM_ICU
 unicode/locid.h
 unicode/numsys.h
 unicode/timezone.h

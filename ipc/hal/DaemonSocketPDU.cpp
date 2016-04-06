@@ -119,7 +119,7 @@ DaemonSocketPDU::Receive(int aFd)
   iv.iov_base = GetData(0);
   iv.iov_len = GetAvailableSpace();
 
-  uint8_t cmsgbuf[CMSG_SPACE(sizeof(int))];
+  uint8_t cmsgbuf[CMSG_SPACE(sizeof(int)* MAX_NFDS)];
 
   struct msghdr msg;
   memset(&msg, 0, sizeof(msg));
@@ -140,24 +140,33 @@ DaemonSocketPDU::Receive(int aFd)
 
   SetRange(0, res);
 
-  struct cmsghdr *chdr = CMSG_FIRSTHDR(&msg);
+  struct cmsghdr* chdr = CMSG_FIRSTHDR(&msg);
 
   for (; chdr; chdr = CMSG_NXTHDR(&msg, chdr)) {
     if (NS_WARN_IF(!CMSGHDR_CONTAINS_FD(chdr))) {
       continue;
     }
-    // Retrieve sent file descriptor. If multiple file descriptors
-    // have been sent, we close all but the final one.
-    mReceivedFd = *(static_cast<int*>(CMSG_DATA(chdr)));
+    // Retrieve sent file descriptors.
+    size_t fdCount = (chdr->cmsg_len - CMSG_ALIGN(sizeof(struct cmsghdr))) / sizeof(int);
+    for (size_t i = 0; i < fdCount; i++) {
+      int* receivedFd = static_cast<int*>(CMSG_DATA(chdr)) + i;
+      mReceivedFds.AppendElement(ScopedClose(*receivedFd));
+    }
   }
 
   return res;
 }
 
-int
-DaemonSocketPDU::AcquireFd()
+nsTArray<int>
+DaemonSocketPDU::AcquireFds()
 {
-  return mReceivedFd.forget();
+  // Forget all RAII object to avoid closing the fds.
+  nsTArray<int> fds;
+  for (auto& fd : mReceivedFds) {
+    fds.AppendElement(fd.forget());
+  }
+  mReceivedFds.Clear();
+  return fds;
 }
 
 nsresult

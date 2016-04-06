@@ -18,14 +18,11 @@
 namespace js {
 namespace jit {
 
-uint32_t GetMIPSFlags()
+static uint32_t
+get_mips_flags()
 {
-    static uint32_t flags = 0;
+    uint32_t flags = HWCAP_MIPS;
 
-    if (flags)
-        return flags;
-
-    flags |= HWCAP_MIPS;
 #if defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
     flags |= HWCAP_FPU;
 #else
@@ -47,14 +44,21 @@ uint32_t GetMIPSFlags()
     return flags;
 }
 
-bool hasFPU()
+static bool check_fpu()
 {
-    return js::jit::GetMIPSFlags() & HWCAP_FPU;
+    return mips_private::Flags & HWCAP_FPU;
 }
 
-bool isLoongson()
+static bool check_loongson()
 {
-    return js::jit::GetMIPSFlags() & HWCAP_LOONGSON;
+    return mips_private::Flags & HWCAP_LOONGSON;
+}
+
+namespace mips_private {
+    // Cache a local copy so we only have to read /proc/cpuinfo once.
+    uint32_t Flags = get_mips_flags();
+    bool hasFPU = check_fpu();;
+    bool isLoongson = check_loongson();
 }
 
 Registers::Code

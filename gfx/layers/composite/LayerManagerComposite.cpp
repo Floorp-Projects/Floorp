@@ -482,7 +482,7 @@ LayerManagerComposite::UpdateAndRender()
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
   }
 
-  Render(invalid);
+  Render(invalid, opaque);
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
   RenderToPresentationSurface();
 #endif
@@ -814,7 +814,7 @@ ClearLayerFlags(Layer* aLayer) {
 }
 
 void
-LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
+LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegion& aOpaqueRegion)
 {
   PROFILER_LABEL("LayerManagerComposite", "Render",
     js::ProfileEntry::Category::GRAPHICS);
@@ -900,14 +900,13 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
   CompositorBench(mCompositor, bounds);
 
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  bool opaqueContent = (mRoot->GetContentFlags() & Layer::CONTENT_OPAQUE) != 0;
   if (mRoot->GetClipRect()) {
     clipRect = *mRoot->GetClipRect();
     Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
-    mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, opaqueContent, nullptr, &actualBounds);
+    mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion, nullptr, &actualBounds);
   } else {
     gfx::Rect rect;
-    mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, opaqueContent, &rect, &actualBounds);
+    mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion, &rect, &actualBounds);
     clipRect = ParentLayerIntRect(rect.x, rect.y, rect.width, rect.height);
   }
 
@@ -1161,9 +1160,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);
   Rect rect, actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  bool opaqueContent = (mRoot->GetContentFlags() & Layer::CONTENT_OPAQUE) != 0;
-
-  mCompositor->BeginFrame(invalid, nullptr, bounds, opaqueContent, &rect, &actualBounds);
+  mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), &rect, &actualBounds);
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer

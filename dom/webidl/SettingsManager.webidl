@@ -30,7 +30,8 @@ callback SettingChangeCallback = void (SettingChange setting);
 
 [JSImplementation="@mozilla.org/settingsManager;1",
  NavigatorProperty="mozSettings",
- Pref="dom.mozSettings.enabled"]
+ Pref="dom.mozSettings.enabled",
+ CheckAnyPermissions="settings-api-read settings-api-write"]
 interface SettingsManager : EventTarget {
   SettingsLock createLock();
 

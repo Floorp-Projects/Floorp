@@ -653,7 +653,7 @@ js::proxy_Finalize(FreeOp* fop, JSObject* obj)
 
     MOZ_ASSERT(obj->is<ProxyObject>());
     obj->as<ProxyObject>().handler()->finalize(fop, obj);
-    js_free(GetProxyDataLayout(obj)->values);
+    js_free(detail::GetProxyDataLayout(obj)->values);
 }
 
 void
@@ -715,6 +715,10 @@ js::proxy_FunToString(JSContext* cx, HandleObject proxy, unsigned indent)
 {
     return Proxy::fun_toString(cx, proxy, indent);
 }
+
+const ClassExtension js::ProxyClassExtension = PROXY_MAKE_EXT(
+    js::proxy_ObjectMoved
+);
 
 const ObjectOps js::ProxyObjectOps = {
     js::proxy_LookupProperty,

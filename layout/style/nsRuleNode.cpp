@@ -2451,7 +2451,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_Display:
     {
-      nsStyleDisplay* disp = new (mPresContext) nsStyleDisplay();
+      nsStyleDisplay* disp = new (mPresContext) nsStyleDisplay(mPresContext);
       aContext->SetStyle(eStyleStruct_Display, disp);
       return disp;
     }
@@ -2469,7 +2469,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_TextReset:
     {
-      nsStyleTextReset* text = new (mPresContext) nsStyleTextReset();
+      nsStyleTextReset* text = new (mPresContext) nsStyleTextReset(mPresContext);
       aContext->SetStyle(eStyleStruct_TextReset, text);
       return text;
     }
@@ -2481,13 +2481,13 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_Background:
     {
-      nsStyleBackground* bg = new (mPresContext) nsStyleBackground();
+      nsStyleBackground* bg = new (mPresContext) nsStyleBackground(mPresContext);
       aContext->SetStyle(eStyleStruct_Background, bg);
       return bg;
     }
     case eStyleStruct_Margin:
     {
-      nsStyleMargin* margin = new (mPresContext) nsStyleMargin();
+      nsStyleMargin* margin = new (mPresContext) nsStyleMargin(mPresContext);
       aContext->SetStyle(eStyleStruct_Margin, margin);
       return margin;
     }
@@ -2499,7 +2499,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_Padding:
     {
-      nsStylePadding* padding = new (mPresContext) nsStylePadding();
+      nsStylePadding* padding = new (mPresContext) nsStylePadding(mPresContext);
       aContext->SetStyle(eStyleStruct_Padding, padding);
       return padding;
     }
@@ -2517,49 +2517,49 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_Position:
     {
-      nsStylePosition* pos = new (mPresContext) nsStylePosition();
+      nsStylePosition* pos = new (mPresContext) nsStylePosition(mPresContext);
       aContext->SetStyle(eStyleStruct_Position, pos);
       return pos;
     }
     case eStyleStruct_Table:
     {
-      nsStyleTable* table = new (mPresContext) nsStyleTable();
+      nsStyleTable* table = new (mPresContext) nsStyleTable(mPresContext);
       aContext->SetStyle(eStyleStruct_Table, table);
       return table;
     }
     case eStyleStruct_TableBorder:
     {
-      nsStyleTableBorder* table = new (mPresContext) nsStyleTableBorder();
+      nsStyleTableBorder* table = new (mPresContext) nsStyleTableBorder(mPresContext);
       aContext->SetStyle(eStyleStruct_TableBorder, table);
       return table;
     }
     case eStyleStruct_Content:
     {
-      nsStyleContent* content = new (mPresContext) nsStyleContent();
+      nsStyleContent* content = new (mPresContext) nsStyleContent(mPresContext);
       aContext->SetStyle(eStyleStruct_Content, content);
       return content;
     }
     case eStyleStruct_Quotes:
     {
-      nsStyleQuotes* quotes = new (mPresContext) nsStyleQuotes();
+      nsStyleQuotes* quotes = new (mPresContext) nsStyleQuotes(mPresContext);
       aContext->SetStyle(eStyleStruct_Quotes, quotes);
       return quotes;
     }
     case eStyleStruct_UserInterface:
     {
-      nsStyleUserInterface* ui = new (mPresContext) nsStyleUserInterface();
+      nsStyleUserInterface* ui = new (mPresContext) nsStyleUserInterface(mPresContext);
       aContext->SetStyle(eStyleStruct_UserInterface, ui);
       return ui;
     }
     case eStyleStruct_UIReset:
     {
-      nsStyleUIReset* ui = new (mPresContext) nsStyleUIReset();
+      nsStyleUIReset* ui = new (mPresContext) nsStyleUIReset(mPresContext);
       aContext->SetStyle(eStyleStruct_UIReset, ui);
       return ui;
     }
     case eStyleStruct_XUL:
     {
-      nsStyleXUL* xul = new (mPresContext) nsStyleXUL();
+      nsStyleXUL* xul = new (mPresContext) nsStyleXUL(mPresContext);
       aContext->SetStyle(eStyleStruct_XUL, xul);
       return xul;
     }
@@ -2571,19 +2571,19 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_SVG:
     {
-      nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
+      nsStyleSVG* svg = new (mPresContext) nsStyleSVG(mPresContext);
       aContext->SetStyle(eStyleStruct_SVG, svg);
       return svg;
     }
     case eStyleStruct_SVGReset:
     {
-      nsStyleSVGReset* svgReset = new (mPresContext) nsStyleSVGReset();
+      nsStyleSVGReset* svgReset = new (mPresContext) nsStyleSVGReset(mPresContext);
       aContext->SetStyle(eStyleStruct_SVGReset, svgReset);
       return svgReset;
     }
     case eStyleStruct_Variables:
     {
-      nsStyleVariables* vars = new (mPresContext) nsStyleVariables();
+      nsStyleVariables* vars = new (mPresContext) nsStyleVariables(mPresContext);
       aContext->SetStyle(eStyleStruct_Variables, vars);
       return vars;
     }
@@ -2602,13 +2602,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
  * Begin an nsRuleNode::Compute*Data function for an inherited struct.
  *
  * @param type_ The nsStyle* type this function computes.
- * @param ctorargs_ The arguments used for the default nsStyle* constructor.
  * @param data_ Variable (declared here) holding the result of this
  *              function.
  * @param parentdata_ Variable (declared here) holding the parent style
  *                    context's data for this struct.
  */
-#define COMPUTE_START_INHERITED(type_, ctorargs_, data_, parentdata_)         \
+#define COMPUTE_START_INHERITED(type_, data_, parentdata_)                    \
   NS_ASSERTION(aRuleDetail != eRuleFullInherited,                             \
                "should not have bothered calling Compute*Data");              \
                                                                               \
@@ -2628,7 +2627,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     if (parentContext) {                                                      \
       parentdata_ = parentContext->Style##type_();                            \
     } else {                                                                  \
-      maybeFakeParentData.emplace ctorargs_;                                  \
+      maybeFakeParentData.emplace(mPresContext);                              \
       parentdata_ = maybeFakeParentData.ptr();                                \
     }                                                                         \
   }                                                                           \
@@ -2636,7 +2635,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     /* no need to copy construct an nsStyleVariables, as we will copy */      \
     /* inherited variables (and call SetUncacheable()) in */                  \
     /* ComputeVariablesData */                                                \
-    data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
+    data_ = new (mPresContext) nsStyle##type_(mPresContext);                  \
   else if (aStartStruct)                                                      \
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
@@ -2650,10 +2649,10 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       if (parentdata_)                                                        \
         data_ = new (mPresContext) nsStyle##type_(*parentdata_);              \
       else                                                                    \
-        data_ = new (mPresContext) nsStyle##type_ ctorargs_;                  \
+        data_ = new (mPresContext) nsStyle##type_(mPresContext);              \
     }                                                                         \
     else                                                                      \
-      data_ = new (mPresContext) nsStyle##type_ ctorargs_;                    \
+      data_ = new (mPresContext) nsStyle##type_(mPresContext);                \
   }                                                                           \
                                                                               \
   if (!parentdata_)                                                           \
@@ -2663,13 +2662,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
  * Begin an nsRuleNode::Compute*Data function for a reset struct.
  *
  * @param type_ The nsStyle* type this function computes.
- * @param ctorargs_ The arguments used for the default nsStyle* constructor.
  * @param data_ Variable (declared here) holding the result of this
  *              function.
  * @param parentdata_ Variable (declared here) holding the parent style
  *                    context's data for this struct.
  */
-#define COMPUTE_START_RESET(type_, ctorargs_, data_, parentdata_)             \
+#define COMPUTE_START_RESET(type_, data_, parentdata_)                        \
   NS_ASSERTION(aRuleDetail != eRuleFullInherited,                             \
                "should not have bothered calling Compute*Data");              \
                                                                               \
@@ -2688,7 +2686,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     data_ = new (mPresContext)                                                \
             nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));      \
   else                                                                        \
-    data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
+    data_ = new (mPresContext) nsStyle##type_(mPresContext);                  \
                                                                               \
   /* If |conditions.Cacheable()| might be true by the time we're done, we */  \
   /* can't call parentContext->Style##type_() since it could recur into */    \
@@ -2701,7 +2699,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     if (parentContext) {                                                      \
       parentdata_ = parentContext->Style##type_();                            \
     } else {                                                                  \
-      maybeFakeParentData.emplace ctorargs_;                                  \
+      maybeFakeParentData.emplace(mPresContext);                              \
       parentdata_ = maybeFakeParentData.ptr();                                \
     }                                                                         \
   }                                                                           \
@@ -4037,7 +4035,7 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
                             const RuleDetail aRuleDetail,
                             const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(Font, (mPresContext), font, parentFont)
+  COMPUTE_START_INHERITED(Font, font, parentFont)
 
   // NOTE:  The |aRuleDetail| passed in is a little bit conservative due
   // to the -moz-system-font property.  We really don't need to consider
@@ -4359,7 +4357,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                             const RuleDetail aRuleDetail,
                             const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(Text, (mPresContext), text, parentText)
+  COMPUTE_START_INHERITED(Text, text, parentText)
 
   // tab-size: integer, inherit
   SetDiscrete(*aRuleData->ValueForTabSize(),
@@ -4731,7 +4729,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
                                  const RuleDetail aRuleDetail,
                                  const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(TextReset, (), text, parentText)
+  COMPUTE_START_RESET(TextReset, text, parentText)
 
   // vertical-align: enum, length, percent, calc, inherit
   const nsCSSValue* verticalAlignValue = aRuleData->ValueForVerticalAlign();
@@ -4893,7 +4891,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                                      const RuleDetail aRuleDetail,
                                      const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(UserInterface, (), ui, parentUI)
+  COMPUTE_START_INHERITED(UserInterface, ui, parentUI)
 
   // cursor: enum, url, inherit
   const nsCSSValue* cursorValue = aRuleData->ValueForCursor();
@@ -4988,7 +4986,7 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(UIReset, (), ui, parentUI)
+  COMPUTE_START_RESET(UIReset, ui, parentUI)
 
   // user-select: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForUserSelect(),
@@ -5234,7 +5232,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Display, (), display, parentDisplay)
+  COMPUTE_START_RESET(Display, display, parentDisplay)
 
   // We may have ended up with aStartStruct's values of mDisplay and
   // mFloats, but those may not be correct if our style data overrides
@@ -6378,8 +6376,7 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
                                   const RuleDetail aRuleDetail,
                                   const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(Visibility, (mPresContext),
-                          visibility, parentVisibility)
+  COMPUTE_START_INHERITED(Visibility, visibility, parentVisibility)
 
   // IMPORTANT: No properties in this struct have lengths in them.  We
   // depend on this since CalcLengthWith can call StyleVisibility()
@@ -6478,7 +6475,7 @@ nsRuleNode::ComputeColorData(void* aStartStruct,
                              const RuleDetail aRuleDetail,
                              const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(Color, (mPresContext), color, parentColor)
+  COMPUTE_START_INHERITED(Color, color, parentColor)
 
   // color: color, string, inherit
   // Special case for currentColor.  According to CSS3, setting color to 'currentColor'
@@ -6959,7 +6956,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const RuleDetail aRuleDetail,
                                   const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Background, (), bg, parentBG)
+  COMPUTE_START_RESET(Background, bg, parentBG)
 
   // background-color: color, string, inherit
   const nsCSSValue* backColorValue = aRuleData->ValueForBackgroundColor();
@@ -7103,7 +7100,7 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Margin, (), margin, parentMargin)
+  COMPUTE_START_RESET(Margin, margin, parentMargin)
 
   // margin: length, percent, calc, inherit
   const nsCSSProperty* subprops =
@@ -7209,7 +7206,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Border, (mPresContext), border, parentBorder)
+  COMPUTE_START_RESET(Border, border, parentBorder)
 
   // box-decoration-break: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBoxDecorationBreak(),
@@ -7552,7 +7549,7 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Padding, (), padding, parentPadding)
+  COMPUTE_START_RESET(Padding, padding, parentPadding)
 
   // padding: length, percent, calc, inherit
   const nsCSSProperty* subprops =
@@ -7581,7 +7578,7 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Outline, (mPresContext), outline, parentOutline)
+  COMPUTE_START_RESET(Outline, outline, parentOutline)
 
   // outline-width: length, enum, inherit
   const nsCSSValue* outlineWidthValue = aRuleData->ValueForOutlineWidth();
@@ -7692,7 +7689,7 @@ nsRuleNode::ComputeListData(void* aStartStruct,
                             const RuleDetail aRuleDetail,
                             const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(List, (mPresContext), list, parentList)
+  COMPUTE_START_INHERITED(List, list, parentList)
 
   // list-style-type: string, none, inherit, initial
   const nsCSSValue* typeValue = aRuleData->ValueForListStyleType();
@@ -8149,7 +8146,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
                                 const RuleDetail aRuleDetail,
                                 const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Position, (), pos, parentPos)
+  COMPUTE_START_RESET(Position, pos, parentPos)
 
   // box offsets: length, percent, calc, auto, inherit
   static const nsCSSProperty offsetProps[] = {
@@ -8529,7 +8526,7 @@ nsRuleNode::ComputeTableData(void* aStartStruct,
                              const RuleDetail aRuleDetail,
                              const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Table, (), table, parentTable)
+  COMPUTE_START_RESET(Table, table, parentTable)
 
   // table-layout: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForTableLayout(),
@@ -8555,7 +8552,7 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
                                    const RuleDetail aRuleDetail,
                                    const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(TableBorder, (), table, parentTable)
+  COMPUTE_START_INHERITED(TableBorder, table, parentTable)
 
   // border-collapse: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBorderCollapse(), table->mBorderCollapse,
@@ -8616,7 +8613,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   uint32_t count;
   nsAutoString buffer;
 
-  COMPUTE_START_RESET(Content, (), content, parentContent)
+  COMPUTE_START_RESET(Content, content, parentContent)
 
   // content: [string, url, counter, attr, enum]+, normal, none, inherit
   const nsCSSValue* contentValue = aRuleData->ValueForContent();
@@ -8853,7 +8850,7 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(Quotes, (), quotes, parentQuotes)
+  COMPUTE_START_INHERITED(Quotes, quotes, parentQuotes)
 
   // quotes: inherit, initial, none, [string string]+
   const nsCSSValue* quotesValue = aRuleData->ValueForQuotes();
@@ -8908,7 +8905,7 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
                            const RuleDetail aRuleDetail,
                            const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(XUL, (), xul, parentXUL)
+  COMPUTE_START_RESET(XUL, xul, parentXUL)
 
   // box-align: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBoxAlign(),
@@ -8974,7 +8971,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                               const RuleDetail aRuleDetail,
                               const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(Column, (mPresContext), column, parent)
+  COMPUTE_START_RESET(Column, column, parent)
 
   // column-width: length, auto, inherit
   SetCoord(*aRuleData->ValueForColumnWidth(),
@@ -9197,7 +9194,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const RuleDetail aRuleDetail,
                            const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(SVG, (), svg, parentSVG)
+  COMPUTE_START_INHERITED(SVG, svg, parentSVG)
 
   // clip-rule: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForClipRule(),
@@ -9737,7 +9734,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                                 const RuleDetail aRuleDetail,
                                 const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset)
+  COMPUTE_START_RESET(SVGReset, svgReset, parentSVGReset)
 
   // stop-color:
   const nsCSSValue* stopColorValue = aRuleData->ValueForStopColor();
@@ -10031,7 +10028,7 @@ nsRuleNode::ComputeVariablesData(void* aStartStruct,
                                  const RuleDetail aRuleDetail,
                                  const RuleNodeCacheConditions aConditions)
 {
-  COMPUTE_START_INHERITED(Variables, (), variables, parentVariables)
+  COMPUTE_START_INHERITED(Variables, variables, parentVariables)
 
   MOZ_ASSERT(aRuleData->mVariables,
              "shouldn't be in ComputeVariablesData if there were no variable "

@@ -1565,7 +1565,7 @@ Module::profilingLabel(uint32_t funcIndex) const
 
 const Class WasmModuleObject::class_ = {
     "WasmModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_CALLBACK |
+    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS),
     nullptr, /* addProperty */
     nullptr, /* delProperty */

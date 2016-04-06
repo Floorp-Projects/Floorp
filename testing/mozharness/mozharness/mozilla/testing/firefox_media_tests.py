@@ -210,8 +210,8 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             cmd += ['--profile', self.profile]
         if self.tests:
             cmd.append(self.tests)
-        if self.e10s:
-            cmd.append('--e10s')
+        if not self.e10s:
+            cmd.append('--disable-e10s')
         if self.browsermob_script:
             cmd += ['--browsermob-script', self.browsermob_script]
         if self.browsermob_port:

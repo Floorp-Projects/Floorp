@@ -506,7 +506,7 @@ GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
     masm.movePtr(ImmGCPtr(templateObject->group()), tempReg);
     masm.branchTest32(Assembler::NonZero, Address(tempReg, ObjectGroup::offsetOfFlags()),
                       Imm32(OBJECT_FLAG_PRE_TENURE), &failure);
-    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataCallback()),
+    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataBuilder()),
                    ImmWord(0), &failure);
     masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, &failure);
     masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);

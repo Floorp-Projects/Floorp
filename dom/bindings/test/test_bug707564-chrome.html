@@ -25,7 +25,7 @@ function test()
   var nav = document.getElementById("t1").contentWindow.navigator;
   is(nav.foopy, undefined, "We should have an Xray now");
   is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object");
-  var props = Object.getOwnPropertyNames(nav);
+  var props = Object.getOwnPropertyNames(Object.getPrototypeOf(nav));
   isnot(props.indexOf("mozContacts"), -1,
         "Should enumerate a mozContacts property on navigator xray");
 

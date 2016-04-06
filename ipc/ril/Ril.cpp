@@ -38,7 +38,7 @@ class RilConsumer;
 
 static const char RIL_SOCKET_NAME[] = "/dev/socket/rilproxy";
 
-static nsTArray<nsAutoPtr<RilConsumer>> sRilConsumers;
+static nsTArray<UniquePtr<RilConsumer>> sRilConsumers;
 
 //
 // RilConsumer
@@ -60,7 +60,7 @@ public:
 
   void ReceiveSocketData(JSContext* aCx,
                          int aIndex,
-                         nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
+                         UniquePtr<UnixSocketBuffer>& aBuffer) override;
   void OnConnectSuccess(int aIndex) override;
   void OnConnectError(int aIndex) override;
   void OnDisconnect(int aIndex) override;
@@ -182,7 +182,7 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
     return NS_OK;
   }
 
-  nsAutoPtr<UnixSocketRawData> raw;
+  UniquePtr<UnixSocketRawData> raw;
 
   Value v = aArgs[1];
 
@@ -193,7 +193,7 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
       return NS_ERROR_FAILURE;
     }
 
-    raw = new UnixSocketRawData(abs.ptr(), abs.length());
+    raw = MakeUnique<UnixSocketRawData>(abs.ptr(), abs.length());
   } else if (!v.isPrimitive()) {
     JSObject* obj = v.toObjectOrNull();
     if (!JS_IsTypedArrayObject(obj)) {
@@ -221,7 +221,7 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
         aCx, "Incorrect argument.  Shared memory not supported");
       return NS_ERROR_FAILURE;
     }
-    raw = new UnixSocketRawData(data, size);
+    raw = MakeUnique<UnixSocketRawData>(data, size);
   } else {
     JS_ReportError(
       aCx, "Incorrect argument. Expecting a string or a typed array");
@@ -233,7 +233,7 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
     return NS_ERROR_FAILURE;
   }
 
-  mSocket->SendSocketData(raw.forget());
+  mSocket->SendSocketData(raw.release());
 
   return NS_OK;
 }
@@ -289,9 +289,9 @@ RilConsumer::Close()
 void
 RilConsumer::ReceiveSocketData(JSContext* aCx,
                                int aIndex,
-                               nsAutoPtr<UnixSocketBuffer>& aBuffer)
+                               UniquePtr<UnixSocketBuffer>& aBuffer)
 {
-  Receive(aCx, (uint32_t)aIndex, aBuffer);
+  Receive(aCx, (uint32_t)aIndex, aBuffer.get());
 }
 
 void
@@ -323,7 +323,7 @@ RilConsumer::OnDisconnect(int aIndex)
 // RilWorker
 //
 
-nsTArray<nsAutoPtr<RilWorker>> RilWorker::sRilWorkers;
+nsTArray<UniquePtr<RilWorker>> RilWorker::sRilWorkers;
 
 nsresult
 RilWorker::Register(unsigned int aClientId,
@@ -339,7 +339,7 @@ RilWorker::Register(unsigned int aClientId,
   }
 
   // Now that we're set up, connect ourselves to the RIL thread.
-  sRilWorkers[aClientId] = new RilWorker(aDispatcher);
+  sRilWorkers[aClientId] = MakeUnique<RilWorker>(aDispatcher);
 
   nsresult rv = sRilWorkers[aClientId]->RegisterConsumer(aClientId);
   if (NS_FAILED(rv)) {
@@ -386,7 +386,7 @@ public:
 
     MOZ_ASSERT(!sRilConsumers[mClientId]);
 
-    nsAutoPtr<RilConsumer> rilConsumer(new RilConsumer());
+    auto rilConsumer = MakeUnique<RilConsumer>();
 
     nsresult rv = rilConsumer->ConnectWorkerToRIL(aCx);
     if (NS_FAILED(rv)) {
@@ -397,7 +397,7 @@ public:
     if (NS_FAILED(rv)) {
       return false;
     }
-    sRilConsumers[mClientId] = rilConsumer;
+    sRilConsumers[mClientId] = Move(rilConsumer);
 
     return true;
   }

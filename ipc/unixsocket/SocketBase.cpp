@@ -403,7 +403,7 @@ SocketDeleteInstanceTask::~SocketDeleteInstanceTask()
 void
 SocketDeleteInstanceTask::Run()
 {
-  mIO = nullptr; // delete instance
+  mIO.reset(); // delete instance
 }
 
 //

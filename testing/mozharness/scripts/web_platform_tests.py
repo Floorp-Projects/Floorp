@@ -29,6 +29,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         [['--e10s'], {
             "action": "store_true",
             "dest": "e10s",
+            "default": False,
             "help": "Run with e10s enabled"}
          ],
         [["--total-chunks"], {
@@ -135,8 +136,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         for test_type in c.get("test_type", []):
             cmd.append("--test-type=%s" % test_type)
 
-        if c.get("e10s"):
-            cmd.append("--e10s")
+        if not c["e10s"]:
+            cmd.append("--disable-e10s")
 
         for opt in ["total_chunks", "this_chunk"]:
             val = c.get(opt)

@@ -623,6 +623,7 @@ nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mPosterImage);
   if (!imageLoader) {
+    nsVideoFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 

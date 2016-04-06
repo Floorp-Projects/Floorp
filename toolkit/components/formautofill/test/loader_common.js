@@ -41,19 +41,19 @@
  *
  * add_task(function* test_something () { ... });
  *   This adds a test either in the parent process or child process:
- *     - Parent: xpcshell, mochitest-chrome without --e10s, mochitest-browser
- *     - Child: mochitest-chrome with --e10s
- *   In the future, these might run in the child process for "xpcshell --e10s".
+ *     - Parent: xpcshell, mochitest-chrome --disable-e10s, mochitest-browser
+ *     - Child: mochitest-chrome with e10s
+ *   In the future, these might run in the child process for "xpcshell".
  *
  * add_task_in_parent_process(function* test_something () { ... });
  *   This test runs in the parent process, but the child process will wait for
  *   its completion before continuing with the next task.  This wait currently
- *   happens only in mochitest-chrome with --e10s, in other frameworks that run
+ *   happens only in mochitest-chrome with e10s, in other frameworks that run
  *   only in the parent process this is the same as a normal add_task.
  *
  * add_task_in_child_process(function* test_something () { ... });
  *   This test runs only in the child process.  This means that the test is not
- *   run unless this is an e10s test, currently mochitest-chrome with --e10s.
+ *   run unless this is an e10s test, currently mochitest-chrome with e10s.
  *
  * add_task_in_both_processes(function* test_something () { ... });
  *   Useful for initialization that must be done both in the parent and the

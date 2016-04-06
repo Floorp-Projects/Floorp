@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Reference
+  </title>
+  <style>
+    .box {
+      display: flex;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+    }
+    br { clear: both; }
+
+    .box > * {
+      border: 1px dotted purple;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div>*</div>
+    <div>10</div>
+    <div>A</div>
+  </div>
+  <div class="box">
+    <div>*</div>
+    <div>10</div>
+    <div>B</div>
+  </div>
+  <div class="box">
+    <div>*</div>
+    <div>10</div>
+    <div>C</div>
+  </div>
+
+  <br>
+
+  <div class="box">
+    <div>*</div>
+    <div>10</div>
+    <div>D</div>
+  </div>
+  <div class="box">
+    <div>*</div>
+    <div>10</div>
+    <div>E</div>
+  </div>
+  <div class="box">
+    <div>*</div>
+    <div>10</div>
+    <div>F</div>
+  </div>
+
+  <br>
+
+  <div class="box">
+    <div>A</div>
+    <div>B</div>
+  </div>
+  <div class="box">
+    <div>A</div>
+    <div>C</div>
+  </div>
+  <div class="box">
+    <div>A</div>
+    <div>D</div>
+  </div>
+  <div class="box">
+    <div>A</div>
+    <div>E</div>
+  </div>
+  <div class="box">
+    <div>A</div>
+    <div>F</div>
+  </div>
+</body>
+</html>

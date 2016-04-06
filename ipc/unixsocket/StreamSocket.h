@@ -34,7 +34,7 @@ public:
    *
    * @param aBuffer Data received from the socket.
    */
-  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer);
+  void ReceiveSocketData(UniquePtr<UnixSocketBuffer>& aBuffer);
 
   /**
    * Starts a task on the socket that will try to connect to a socket in a

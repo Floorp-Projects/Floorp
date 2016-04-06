@@ -36,12 +36,20 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
 
     def _check_and_fix_leaked_handles(self):
         handle_count = len(self.marionette.window_handles)
+        url = []
 
         try:
-            self.assertEqual(handle_count, self._start_handle_count,
-                             'A test must not leak window handles. This test started with '
-                             '%s open top level browsing contexts, but ended with %s.' %
-                             (self._start_handle_count, handle_count))
+            #Verify the existence of leaked tabs and print their URLs.
+            if self._start_handle_count < handle_count:
+                message = ('A test must not leak window handles. This test started with '
+                           '%s open top level browsing contexts, but ended with %s.'
+                           ' Remaining Tabs URLs:') % (self._start_handle_count , handle_count)
+                with self.marionette.using_context('content'):
+                    for tab in self.marionette.window_handles:
+                        if tab not in self._init_tab_handles:
+                            url.append(' %s' % self.marionette.get_url())
+                self.assertListEqual(self._init_tab_handles , self.marionette.window_handles ,
+                                     message + ','.join(url))
         finally:
             # For clean-up make sure we work on a proper browser window
             if not self.browser or self.browser.closed:
@@ -83,6 +91,7 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
         super(BaseFirefoxTestCase, self).setUp(*args, **kwargs)
 
         self._start_handle_count = len(self.marionette.window_handles)
+        self._init_tab_handles = self.marionette.window_handles
         self.marionette.set_context('chrome')
 
         self.browser = self.windows.current

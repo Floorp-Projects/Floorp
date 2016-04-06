@@ -99,7 +99,8 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
         ".set arch=loongson3a \n\t"
         // Load 4 coefficients => duplicate 1st and 2nd of them for all channels.
         // [16] xx xx xx xx c3 c2 c1 c0
-        "ldc1 %[coeffl], (%[fval]) \n\t"
+        "gsldlc1 %[coeffl], 7(%[fval]) \n\t"
+        "gsldrc1 %[coeffl], (%[fval]) \n\t"
         "xor %[coeffh], %[coeffh], %[coeffh] \n\t"
         // [16] xx xx xx xx c1 c1 c0 c0
         _mm_pshuflh(coeff16, coeff, shuf_50)
@@ -170,7 +171,8 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
       asm volatile (
         ".set push \n\t"
         ".set arch=loongson3a \n\t"
-        "ldc1 %[coeffl], (%[fval]) \n\t"
+        "gsldlc1 %[coeffl], 7(%[fval]) \n\t"
+        "gsldrc1 %[coeffl], (%[fval]) \n\t"
         "xor %[coeffh], %[coeffh], %[coeffh] \n\t"
         // Mask out extra filter taps.
         "and %[coeffl], %[coeffl], %[mask] \n\t"
@@ -305,7 +307,8 @@ void ConvolveHorizontally4_LS3(const unsigned char* src_data[4],
         ".set push \n\t"
         ".set arch=loongson3a \n\t"
         // [16] xx xx xx xx c3 c2 c1 c0
-        "ldc1 %[coeffl], (%[fval]) \n\t"
+        "gsldlc1 %[coeffl], 7(%[fval]) \n\t"
+        "gsldrc1 %[coeffl], (%[fval]) \n\t"
         "xor %[coeffh], %[coeffh], %[coeffh] \n\t"
         // [16] xx xx xx xx c1 c1 c0 c0
         _mm_pshuflh(coeff16lo, coeff, shuf_50)
@@ -374,7 +377,8 @@ void ConvolveHorizontally4_LS3(const unsigned char* src_data[4],
       asm volatile (
         ".set push \n\t"
         ".set arch=loongson3a \n\t"
-        "ldc1 %[coeffl], (%[fval]) \n\t"
+        "gsldlc1 %[coeffl], 7(%[fval]) \n\t"
+        "gsldrc1 %[coeffl], (%[fval]) \n\t"
         "xor %[coeffh], %[coeffh], %[coeffh] \n\t"
         // Mask out extra filter taps.
         "and %[coeffl], %[coeffl], %[mask] \n\t"
@@ -500,7 +504,8 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
         ".set arch=loongson3a \n\t"
         // Duplicate the filter coefficient 8 times.
         // [16] cj cj cj cj cj cj cj cj
-        "mtc1 %[fval], %[coeff16l] \n\t"
+        "gsldlc1 %[coeff16l], 7+%[fval] \n\t"
+        "gsldrc1 %[coeff16l], %[fval] \n\t"
         "pshufh %[coeff16l], %[coeff16l], %[zerol] \n\t"
         "mov.d %[coeff16h], %[coeff16l] \n\t"
         // Load four pixels (16 bytes) together.
@@ -537,7 +542,7 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
          [accum1h]"+f"(accum1h), [accum1l]"+f"(accum1l),
          [coeff16h]"=&f"(coeff16h), [coeff16l]"=&f"(coeff16l)
         :[zeroh]"f"(zero), [zerol]"f"(zero),
-         [fval]"r"(filter_values[filter_y]),
+         [fval]"m"(filter_values[filter_y]),
          [src]"r"(src)
       );
 
@@ -675,7 +680,8 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
       asm volatile (
         ".set push \n\t"
         ".set arch=loongson3a \n\t"
-        "mtc1 %[fval], %[coeff16l] \n\t"
+        "gsldlc1 %[coeff16l], 7+%[fval] \n\t"
+        "gsldrc1 %[coeff16l], %[fval] \n\t"
         "pshufh %[coeff16l], %[coeff16l], %[zerol] \n\t"
         "mov.d %[coeff16h], %[coeff16l] \n\t"
         // [8] a3 b3 g3 r3 a2 b2 g2 r2 a1 b1 g1 r1 a0 b0 g0 r0
@@ -711,7 +717,7 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
          [accum2h]"+f"(accum2h), [accum2l]"+f"(accum2l),
          [coeff16h]"=&f"(coeff16h), [coeff16l]"=&f"(coeff16l)
         :[zeroh]"f"(zero), [zerol]"f"(zero),
-         [fval]"r"(filter_values[filter_y]),
+         [fval]"m"(filter_values[filter_y]),
          [src]"r"(src)
       );
     }

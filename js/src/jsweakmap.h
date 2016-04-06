@@ -282,7 +282,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     void exposeGCThingToActiveJS(JSObject* obj) const { JS::ExposeObjectToActiveJS(obj); }
 
     JSObject* getDelegate(JSObject* key) const {
-        JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp;
+        JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
         return op ? op(key) : nullptr;
     }
 

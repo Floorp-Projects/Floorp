@@ -1,0 +1,70 @@
+# This is the "base" task which contains the common values all harness
+# unit tests must provide.
+# It's inspired by build.yml, since harness unit tests just depend on
+# checking out the source tree.
+---
+taskId: {{build_slugid}}
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: '{{source}}'
+    owner: mozilla-taskcluster-maintenance@mozilla.com
+  tags:
+    createdForUser: {{owner}}
+  workerType: desktop-test-xlarge
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+  routes:
+    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}'
+    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}'
+  scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-test-workspace'
+  payload:
+    # 30 minutes should be more than enough for harness unit tests
+    maxRunTime: 1800
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId: '{{#task_id_for_image}}desktop-build{{/task_id_for_image}}'
+    cache:
+      # The taskcluster-vcs tooling stores the large clone caches in this
+      # directory and will reuse them for new requests this saves about 20s~
+      # and is the most generic cache possible.
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-{{project}}-test-workspace: '/home/worker/workspace'
+    artifacts:
+      'public/logs/':
+        type: directory
+        path: '/home/worker/workspace/build/upload/logs/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+    command:
+      - bash
+      - /home/worker/bin/build.sh
+    env:
+      # Common environment variables for checking out gecko
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
+      TOOLTOOL_REPO: 'https://git.mozilla.org/build/tooltool.git'
+      TOOLTOOL_REV: 'master'
+      TOOLS_DISABLE: true
+      MOZ_BUILD_DATE: '{{pushdate}}'
+      MOZ_SCM_LEVEL: '{{level}}'
+
+  extra:
+    # These definitions are expected of build tasks but not used in our case
+    build_product: '{{build_product}}'
+    build_name: '{{build_name}}'
+    build_type: '{{build_type}}'
+    locations:
+        build: null
+        tests: null
+    index:
+      rank: {{pushlog_id}}
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster

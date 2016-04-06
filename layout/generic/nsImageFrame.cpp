@@ -2151,6 +2151,7 @@ nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
+    ImageFrameSuper::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
