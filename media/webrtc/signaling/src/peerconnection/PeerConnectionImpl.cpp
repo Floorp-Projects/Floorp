@@ -1879,6 +1879,19 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
             continue;
           }
           info->AddTrack(track->GetTrackId());
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+          RefPtr<MediaStreamTrackSource> source =
+            new BasicUnstoppableTrackSource(MediaSourceEnum::Other);
+          if (track->GetMediaType() == SdpMediaSection::kAudio) {
+            info->GetMediaStream()->CreateOwnDOMTrack(
+              info->GetNumericTrackId(track->GetTrackId()),
+              MediaSegment::AUDIO, nsString(), source);
+          } else {
+            info->GetMediaStream()->CreateOwnDOMTrack(
+              info->GetNumericTrackId(track->GetTrackId()),
+              MediaSegment::VIDEO, nsString(), source);
+          }
+#endif
           CSFLogDebug(logTag, "Added remote track %s/%s",
                       info->GetId().c_str(), track->GetTrackId().c_str());
         } else {

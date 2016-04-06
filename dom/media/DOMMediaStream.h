@@ -35,7 +35,6 @@ class DOMHwMediaStream;
 class DOMLocalMediaStream;
 class DOMMediaStream;
 class MediaStream;
-class MediaEngineSource;
 class MediaInputPort;
 class MediaStreamGraph;
 class ProcessedMediaStream;
@@ -46,6 +45,7 @@ class HTMLCanvasElement;
 class MediaStreamTrack;
 class AudioStreamTrack;
 class VideoStreamTrack;
+class MediaStreamTrackSource;
 class AudioTrack;
 class VideoTrack;
 class AudioTrackList;
@@ -184,6 +184,7 @@ class DOMMediaStream : public DOMEventTargetHelper
   typedef dom::MediaStreamTrack MediaStreamTrack;
   typedef dom::AudioStreamTrack AudioStreamTrack;
   typedef dom::VideoStreamTrack VideoStreamTrack;
+  typedef dom::MediaStreamTrackSource MediaStreamTrackSource;
   typedef dom::AudioTrack AudioTrack;
   typedef dom::VideoTrack VideoTrack;
   typedef dom::AudioTrackList AudioTrackList;
@@ -381,8 +382,6 @@ public:
    */
   virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
 
-  virtual void StopTrack(TrackID aTrackID);
-
   virtual already_AddRefed<dom::Promise>
   ApplyConstraintsToTrack(TrackID aTrackID,
                           const MediaTrackConstraints& aConstraints,
@@ -483,7 +482,9 @@ public:
    *
    * Creates a MediaStreamTrack, adds it to mTracks and returns it.
    */
-  MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, const nsString& aLabel);
+  MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
+                                      const nsString& aLabel,
+                                      MediaStreamTrackSource* aSource);
 
   // When the initial set of tracks has been added, run
   // aCallback->NotifyTracksAvailable.
@@ -640,8 +641,6 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void Stop();
-
-  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) { return nullptr; }
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
