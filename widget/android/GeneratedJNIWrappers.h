@@ -131,21 +131,6 @@ class GeckoAppShell : public mozilla::jni::ObjectBase<GeckoAppShell, jobject>
 public:
     explicit GeckoAppShell(const Context& ctx) : ObjectBase<GeckoAppShell, jobject>(ctx) {}
 
-    struct AcknowledgeEvent_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "acknowledgeEvent";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto AcknowledgeEvent() -> void;
-
     struct AddPluginViewWrapper_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
