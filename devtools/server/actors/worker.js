@@ -342,6 +342,23 @@ let ServiceWorkerRegistrationActor = protocol.ActorClass({
     response: RetVal("json")
   }),
 
+  unregister: method(function() {
+    let { principal, scope } = this._registration;
+    let unregisterCallback = {
+      unregisterSucceeded: function() {},
+      unregisterFailed: function() {
+        console.error("Failed to unregister the service worker for " + scope);
+      },
+      QueryInterface: XPCOMUtils.generateQI(
+        [Ci.nsIServiceWorkerUnregisterCallback])
+    };
+    swm.propagateUnregister(principal, unregisterCallback, scope);
+
+    return { type: "unregistered" };
+  }, {
+    request: {},
+    response: RetVal("json")
+  }),
 });
 
 function ServiceWorkerRegistrationActorList(conn) {
