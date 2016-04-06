@@ -1,6 +1,7 @@
 const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 
 Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
+Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
   Services.logins.removeAllLogins();
