@@ -330,6 +330,7 @@ class ServiceWorkerManager final
   friend class ServiceWorkerJobQueue;
   friend class ServiceWorkerInstallJob;
   friend class ServiceWorkerRegisterJob;
+  friend class ServiceWorkerJob2;
   friend class ServiceWorkerJobBase;
   friend class ServiceWorkerScriptJobBase;
   friend class ServiceWorkerRegistrationInfo;
