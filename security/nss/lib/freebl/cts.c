@@ -97,7 +97,6 @@ CTS_EncryptUpdate(CTSContext *cts, unsigned char *outbuf,
     unsigned int tmp;
     int fullblocks;
     int written;
-    unsigned char *saveout = outbuf;
     SECStatus rv;
 
     if (inlen < blocksize) {
@@ -142,8 +141,6 @@ CTS_EncryptUpdate(CTSContext *cts, unsigned char *outbuf,
     PORT_Memset(lastBlock, 0, blocksize);
     if (rv == SECSuccess) {
 	*outlen = written + blocksize;
-    } else {
-	PORT_Memset(saveout, 0, written+blocksize);
     }
     return rv;
 }
@@ -187,7 +184,6 @@ CTS_DecryptUpdate(CTSContext *cts, unsigned char *outbuf,
     unsigned char Cn[MAX_BLOCK_SIZE];   /* block Cn   */
     unsigned char lastBlock[MAX_BLOCK_SIZE];
     const unsigned char *tmp;
-    unsigned char *saveout = outbuf;
     unsigned int tmpLen;
     unsigned int fullblocks, pad;
     unsigned int i;
@@ -284,8 +280,6 @@ CTS_DecryptUpdate(CTSContext *cts, unsigned char *outbuf,
     rv = (*cts->cipher)(cts->context, Pn, &tmpLen, blocksize, lastBlock,
 	 blocksize, blocksize);
     if (rv != SECSuccess) {
-	PORT_Memset(lastBlock, 0, blocksize);
-	PORT_Memset(saveout, 0, *outlen);
 	return SECFailure;
     }
     /* make up for the out of order CBC decryption */

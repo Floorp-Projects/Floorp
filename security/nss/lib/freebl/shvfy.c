@@ -16,7 +16,6 @@
 #include "prmem.h"
 #include "hasht.h"
 #include "pqg.h"
-#include "blapii.h"
 
 /*
  * Most modern version of Linux support a speed optimization scheme where an
@@ -274,10 +273,8 @@ readItem(PRFileDesc *fd, SECItem *item)
     return SECSuccess;
 }
 
-static PRBool blapi_SHVerifyFile(const char *shName, PRBool self);
-
-static PRBool
-blapi_SHVerify(const char *name, PRFuncPtr addr, PRBool self)
+PRBool
+BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 {
     PRBool result = PR_FALSE; /* if anything goes wrong,
 			       * the signature does not verify */
@@ -286,7 +283,7 @@ blapi_SHVerify(const char *name, PRFuncPtr addr, PRBool self)
     if (!shName) {
 	goto loser;
     }
-    result = blapi_SHVerifyFile(shName, self);
+    result = BLAPI_SHVerifyFile(shName);
 
 loser:
     if (shName != NULL) {
@@ -297,19 +294,7 @@ loser:
 }
 
 PRBool
-BLAPI_SHVerify(const char *name, PRFuncPtr addr)
-{
-    return blapi_SHVerify(name, addr, PR_FALSE);
-}
-
-PRBool
 BLAPI_SHVerifyFile(const char *shName)
-{
-    return blapi_SHVerifyFile(shName, PR_FALSE);
-}
-
-static PRBool
-blapi_SHVerifyFile(const char *shName, PRBool self)
 {
     char *checkName = NULL;
     PRFileDesc *checkFD = NULL;
@@ -334,12 +319,6 @@ blapi_SHVerifyFile(const char *shName, PRBool self)
     PORT_Memset(&key,0,sizeof(key));
     hash.data = hashBuf;
     hash.len = sizeof(hashBuf);
-
-    /* If our integrity check was never ran or failed, fail any other 
-     * integrity checks to prevent any token going into FIPS mode. */
-    if (!self && (BL_FIPSEntryOK(PR_FALSE) != SECSuccess)) {
-	return PR_FALSE;
-    }
 
     if (!shName) {
 	goto loser;
@@ -381,9 +360,7 @@ blapi_SHVerifyFile(const char *shName, PRBool self)
 
     /* seek past any future header extensions */
     offset = decodeInt(&buf[4]);
-    if (PR_Seek(checkFD, offset, PR_SEEK_SET) < 0) {
-	goto loser;
-    }
+    PR_Seek(checkFD, offset, PR_SEEK_SET);
 
     /* read the key */
     rv = readItem(checkFD,&key.params.prime);
@@ -527,5 +504,5 @@ BLAPI_VerifySelf(const char *name)
 	 */
 	return PR_TRUE;
     }
-    return blapi_SHVerify(name, (PRFuncPtr) decodeInt, PR_TRUE);
+    return BLAPI_SHVerify(name, (PRFuncPtr) decodeInt);
 }

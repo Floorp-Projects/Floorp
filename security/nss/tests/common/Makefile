@@ -19,6 +19,3 @@ dll_prefix:
 
 dll_suffix:
 	@echo $(DLL_SUFFIX)
-
-freebl_lowhash:
-	@echo $(FREEBL_LOWHASH)

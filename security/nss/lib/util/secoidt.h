@@ -481,8 +481,6 @@ typedef enum {
 
     SEC_OID_CHACHA20_POLY1305          = 346,
 
-    SEC_OID_TLS_ECDHE_PSK              = 347,
-
     SEC_OID_TOTAL
 } SECOidTag;
 

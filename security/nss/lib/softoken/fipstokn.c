@@ -92,7 +92,6 @@ libaudit_init(void)
  * ******************** Password Utilities *******************************
  */
 static PRBool isLoggedIn = PR_FALSE;
-static PRBool isLevel2 = PR_TRUE;
 PRBool sftk_fatalError = PR_FALSE;
 
 /*
@@ -193,7 +192,7 @@ static CK_RV sftk_newPinCheck(CK_CHAR_PTR pPin, CK_ULONG ulPinLen) {
 static CK_RV sftk_fipsCheck(void) {
     if (sftk_fatalError) 
 	return CKR_DEVICE_ERROR;
-    if (isLevel2 && !isLoggedIn) 
+    if (!isLoggedIn) 
 	return CKR_USER_NOT_LOGGED_IN;
     return CKR_OK;
 }
@@ -426,42 +425,19 @@ CK_RV FC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList) {
 /* sigh global so pkcs11 can read it */
 PRBool nsf_init = PR_FALSE;
 
-void fc_log_init_error(CK_RV crv) {
-    if (sftk_audit_enabled) {
-       char msg[128];
-       PR_snprintf(msg,sizeof msg,
-                       "C_Initialize()=0x%08lX "
-                       "power-up self-tests failed",
-                       (PRUint32)crv);
-       sftk_LogAuditMessage(NSS_AUDIT_ERROR, NSS_AUDIT_SELF_TEST, msg);
-    }
-}
-
-
 /* FC_Initialize initializes the PKCS #11 library. */
 CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
     const char *envp;
     CK_RV crv;
 
-    if ((envp = PR_GetEnv("NSS_ENABLE_AUDIT")) != NULL) {
-	sftk_audit_enabled = (atoi(envp) == 1);
-    }
-
-    /* At this point we should have already done post and integrity checks.
-     * if we haven't, it probably means the FIPS product has not been installed
-     * or the tests failed. Don't let an application try to enter FIPS mode */
-    crv = sftk_FIPSEntryOK();
-    if (crv != CKR_OK) {
-       sftk_fatalError = PR_TRUE;
-       fc_log_init_error(crv);
-       return crv;
-    }
-
-
     sftk_ForkReset(pReserved, &crv);
 
     if (nsf_init) {
 	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
+    }
+
+    if ((envp = PR_GetEnvSecure("NSS_ENABLE_AUDIT")) != NULL) {
+	sftk_audit_enabled = (atoi(envp) == 1);
     }
 
     crv = nsc_CommonInitialize(pReserved, PR_TRUE);
@@ -473,8 +449,22 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
     }
 
     sftk_fatalError = PR_FALSE; /* any error has been reset */
+
+    crv = sftk_fipsPowerUpSelfTest();
+    if (crv != CKR_OK) {
+        nsc_CommonFinalize(NULL, PR_TRUE);
+	sftk_fatalError = PR_TRUE;
+	if (sftk_audit_enabled) {
+	    char msg[128];
+	    PR_snprintf(msg,sizeof msg,
+			"C_Initialize()=0x%08lX "
+			"power-up self-tests failed",
+			(PRUint32)crv);
+	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, NSS_AUDIT_SELF_TEST, msg);
+	}
+	return crv;
+    }
     nsf_init = PR_TRUE;
-    isLevel2 = PR_TRUE; /* assume level 2 unless we learn otherwise */
 
     return CKR_OK;
 }
@@ -529,11 +519,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CHECK_FORK();
 
     crv = NSC_GetTokenInfo(slotID,pInfo);
-    if (crv == CKR_OK) {
-	if ((pInfo->flags & CKF_LOGIN_REQUIRED) == 0) {
-	    isLevel2 = PR_FALSE;
- 	}
-    }
+    if (crv == CKR_OK) 
+       pInfo->flags |= CKF_LOGIN_REQUIRED;
     return crv;
 
 }
@@ -546,10 +533,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
      CHECK_FORK();
 
     SFTK_FIPSFATALCHECK();
-    if ((slotID == FIPS_SLOT_ID) || (slotID >=SFTK_MIN_FIPS_USER_SLOT_ID)) {
-	slotID = NETSCAPE_SLOT_ID;
-    }
-    /* FIPS Slots support all functions */
+    if (slotID == FIPS_SLOT_ID) slotID = NETSCAPE_SLOT_ID;
+    /* FIPS Slot supports all functions */
     return NSC_GetMechanismList(slotID,pMechanismList,pusCount);
 }
 
@@ -561,10 +546,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CHECK_FORK();
 
     SFTK_FIPSFATALCHECK();
-    if ((slotID == FIPS_SLOT_ID) || (slotID >=SFTK_MIN_FIPS_USER_SLOT_ID)) {
-	slotID = NETSCAPE_SLOT_ID;
-    }
-    /* FIPS Slots support all functions */
+    if (slotID == FIPS_SLOT_ID) slotID = NETSCAPE_SLOT_ID;
+    /* FIPS Slot supports all functions */
     return NSC_GetMechanismInfo(slotID,type,pInfo);
 }
 
@@ -599,14 +582,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CHECK_FORK();
 
     if (sftk_fatalError) return CKR_DEVICE_ERROR;
-    /* NSC_InitPIN will only work once per database. We can either initialize
-     * it to level1 (pin len == 0) or level2. If we initialize to level 2, then
-     * we need to make sure the pin meets FIPS requirements */
-    if ((ulPinLen== 0) || ((rv = sftk_newPinCheck(pPin,ulPinLen)) == CKR_OK)) {
+    if ((rv = sftk_newPinCheck(pPin,ulPinLen)) == CKR_OK) {
 	rv = NSC_InitPIN(hSession,pPin,ulPinLen);
-	if (rv == CKR_OK) {
-	    isLevel2 = (ulPinLen > 0) ? PR_TRUE : PR_FALSE;
-	}
     }
     if (sftk_audit_enabled) {
 	char msg[128];
@@ -632,12 +609,6 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     if ((rv = sftk_fipsCheck()) == CKR_OK &&
 	(rv = sftk_newPinCheck(pNewPin,usNewLen)) == CKR_OK) {
 	rv = NSC_SetPIN(hSession,pOldPin,usOldLen,pNewPin,usNewLen);
-	if (rv == CKR_OK) {
-	    /* if we set the password in level1 we now go
-	     * to level2. NOTE: we don't allow the user to
-	     * go from level2 to level1 */
-	    isLevel2 = PR_TRUE; 
-	}
     }
     if (sftk_audit_enabled) {
 	char msg[128];

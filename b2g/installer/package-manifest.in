@@ -811,11 +811,7 @@
 @BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
 #endif
 @BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
-#if defined(XP_LINUX) && !defined(ANDROID)
-@BINPATH@/@DLL_PREFIX@freeblpriv3@DLL_SUFFIX@
-#else
 @BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
-#endif
 #ifndef CROSS_COMPILE
 @BINPATH@/@DLL_PREFIX@freebl3.chk
 @BINPATH@/@DLL_PREFIX@softokn3.chk

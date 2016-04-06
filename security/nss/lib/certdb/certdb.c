@@ -257,22 +257,27 @@ SECStatus
 CERT_IssuerNameFromDERCert(SECItem *derCert, SECItem *derName)
 {
     int rv;
-    PORTCheapArenaPool tmpArena;
+    PLArenaPool *arena;
     CERTSignedData sd;
     void *tmpptr;
 
-    PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+
+    if (!arena) {
+        return (SECFailure);
+    }
 
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_QuickDERDecodeItem(&tmpArena.arena, &sd, CERT_SignedDataTemplate,
-                                derCert);
+    rv = SEC_QuickDERDecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+
     if (rv) {
         goto loser;
     }
 
     PORT_Memset(derName, 0, sizeof(SECItem));
-    rv = SEC_QuickDERDecodeItem(&tmpArena.arena, derName,
-                                SEC_CertIssuerTemplate, &sd.data);
+    rv = SEC_QuickDERDecodeItem(arena, derName, SEC_CertIssuerTemplate,
+                                &sd.data);
+
     if (rv) {
         goto loser;
     }
@@ -285,11 +290,11 @@ CERT_IssuerNameFromDERCert(SECItem *derCert, SECItem *derName)
 
     PORT_Memcpy(derName->data, tmpptr, derName->len);
 
-    PORT_DestroyCheapArena(&tmpArena);
+    PORT_FreeArena(arena, PR_FALSE);
     return (SECSuccess);
 
 loser:
-    PORT_DestroyCheapArena(&tmpArena);
+    PORT_FreeArena(arena, PR_FALSE);
     return (SECFailure);
 }
 
@@ -297,22 +302,27 @@ SECStatus
 CERT_SerialNumberFromDERCert(SECItem *derCert, SECItem *derName)
 {
     int rv;
-    PORTCheapArenaPool tmpArena;
+    PLArenaPool *arena;
     CERTSignedData sd;
     void *tmpptr;
 
-    PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+
+    if (!arena) {
+        return (SECFailure);
+    }
 
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_QuickDERDecodeItem(&tmpArena.arena, &sd, CERT_SignedDataTemplate,
-                                derCert);
+    rv = SEC_QuickDERDecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+
     if (rv) {
         goto loser;
     }
 
     PORT_Memset(derName, 0, sizeof(SECItem));
-    rv = SEC_QuickDERDecodeItem(&tmpArena.arena, derName,
-                                SEC_CertSerialNumberTemplate, &sd.data);
+    rv = SEC_QuickDERDecodeItem(arena, derName, SEC_CertSerialNumberTemplate,
+                                &sd.data);
+
     if (rv) {
         goto loser;
     }
@@ -325,11 +335,11 @@ CERT_SerialNumberFromDERCert(SECItem *derCert, SECItem *derName)
 
     PORT_Memcpy(derName->data, tmpptr, derName->len);
 
-    PORT_DestroyCheapArena(&tmpArena);
+    PORT_FreeArena(arena, PR_FALSE);
     return (SECSuccess);
 
 loser:
-    PORT_DestroyCheapArena(&tmpArena);
+    PORT_FreeArena(arena, PR_FALSE);
     return (SECFailure);
 }
 
@@ -2062,27 +2072,36 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
     unsigned int cType = cert->nsCertType;
     PRBool ret = PR_FALSE;
 
-    /*
-     * Check if the constraints are available and it's a CA, OR if it's
-     * a X.509 v1 Root CA.
-     */
-    CERTBasicConstraints constraints;
-    if ((CERT_FindBasicConstraintExten(cert, &constraints) == SECSuccess &&
-        constraints.isCA) ||
-        (cert->isRoot && cert_Version(cert) < SEC_CERTIFICATE_VERSION_3))
-        cType |= (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
+    if (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
+                 NS_CERT_TYPE_OBJECT_SIGNING_CA)) {
+        ret = PR_TRUE;
+    } else {
+        SECStatus rv;
+        CERTBasicConstraints constraints;
 
-    /*
-     * Apply trust overrides, if any.
-     */
-    cType = cert_ComputeTrustOverrides(cert, cType);
-    ret = (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
-                    NS_CERT_TYPE_OBJECT_SIGNING_CA)) ? PR_TRUE : PR_FALSE;
-
-    if (rettype) {
-        *rettype = cType;
+        rv = CERT_FindBasicConstraintExten(cert, &constraints);
+        if (rv == SECSuccess && constraints.isCA) {
+            ret = PR_TRUE;
+            cType |= (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
+        }
     }
 
+    /* finally check if it's an X.509 v1 root CA */
+    if (!ret &&
+        (cert->isRoot && cert_Version(cert) < SEC_CERTIFICATE_VERSION_3)) {
+        ret = PR_TRUE;
+        cType |= (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
+    }
+    /* Now apply trust overrides, if any */
+    cType = cert_ComputeTrustOverrides(cert, cType);
+    ret = (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
+                    NS_CERT_TYPE_OBJECT_SIGNING_CA))
+              ? PR_TRUE
+              : PR_FALSE;
+
+    if (rettype != NULL) {
+        *rettype = cType;
+    }
     return ret;
 }
 

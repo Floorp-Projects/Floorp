@@ -1,0 +1,28 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to use NSS header files instead of the regular RSA ones */
+#undef WITH_NSS
+
+/* Define if you have the memset function.  */
+#undef HAVE_MEMSET
+
+/* Define if you have the strlen function.  */
+#undef HAVE_STRLEN
+
+/* Define if you have the <ck.h> header file.  */
+#undef HAVE_CK_H
+
+/* Define if you have the <nspr.h> header file.  */
+#undef HAVE_NSPR_H
+
+/* Define if you have the <pkcs11.h> header file.  */
+#undef HAVE_PKCS11_H
+
+/* Define if you have the <pkcs11t.h> header file.  */
+#undef HAVE_PKCS11T_H
+
+/* Define if you have the nspr4 library (-lnspr4).  */
+#undef HAVE_LIBNSPR4

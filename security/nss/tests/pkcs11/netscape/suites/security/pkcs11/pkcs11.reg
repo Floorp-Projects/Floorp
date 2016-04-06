@@ -1,0 +1,932 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+[General]
+mut=PKCS11
+mutversion=1.0
+htmlout=NOW
+reporterSpec=NOW
+program=pk11test
+globalArgs=internal
+
+[Test-1]
+
+testId=0
+testname=Use supplied pin, Generate keys on target token, NO OP, 
+
+[Test-2]
+
+testId=4
+testname=Use supplied pin, Generate keys on target token, RSA PKCS, 
+
+[Test-3]
+
+testId=8
+testname=Use supplied pin, Generate keys on target token, RSA 9796, 
+
+[Test-4]
+
+testId=12
+testname=Use supplied pin, Generate keys on target token, RSA X.509, 
+
+[Test-5]
+
+testId=16
+testname=Use supplied pin, Generate keys on target token, MD2 RSA PKCS, 
+
+[Test-6]
+
+testId=20
+testname=Use supplied pin, Generate keys on target token, MD5 RSA PKCS, 
+
+[Test-7]
+
+testId=24
+testname=Use supplied pin, Generate keys on target token, SHA1 RSA PKCS, 
+
+[Test-8]
+
+testId=28
+testname=Use supplied pin, Generate keys on target token, DSA, 
+
+[Test-9]
+
+testId=32
+testname=Use supplied pin, Generate keys on target token, DSA SHA1, 
+
+[Test-10]
+
+testId=36
+testname=Use supplied pin, Generate keys on target token, ECDSA, 
+
+[Test-11]
+
+testId=40
+testname=Use supplied pin, Generate keys on target token, ECDSA SHA1, 
+
+[Test-12]
+
+testId=44
+testname=Use supplied pin, Generate keys on target token, RC2 ECB, 
+
+[Test-13]
+
+testId=48
+testname=Use supplied pin, Generate keys on target token, RC2 CBC, 
+
+[Test-14]
+
+testId=52
+testname=Use supplied pin, Generate keys on target token, RC4, 
+
+[Test-15]
+
+testId=56
+testname=Use supplied pin, Generate keys on target token, RC5 ECB, 
+
+[Test-16]
+
+testId=60
+testname=Use supplied pin, Generate keys on target token, RC5 CBC, 
+
+[Test-17]
+
+testId=64
+testname=Use supplied pin, Generate keys on target token, DES ECB, 
+
+[Test-18]
+
+testId=68
+testname=Use supplied pin, Generate keys on target token, DES CBC, 
+
+[Test-19]
+
+testId=72
+testname=Use supplied pin, Generate keys on target token, DES3 ECB, 
+
+[Test-20]
+
+testId=76
+testname=Use supplied pin, Generate keys on target token, DES3 CBC, 
+
+[Test-21]
+
+testId=80
+testname=Use supplied pin, Generate keys on target token, CAST ECB, 
+
+[Test-22]
+
+testId=84
+testname=Use supplied pin, Generate keys on target token, CAST CBC, 
+
+[Test-23]
+
+testId=88
+testname=Use supplied pin, Generate keys on target token, CAST3 ECB, 
+
+[Test-24]
+
+testId=92
+testname=Use supplied pin, Generate keys on target token, CAST3 CBC, 
+
+[Test-25]
+
+testId=96
+testname=Use supplied pin, Generate keys on target token, CAST5 ECB, 
+
+[Test-26]
+
+testId=100
+testname=Use supplied pin, Generate keys on target token, CAST5 CBC, 
+
+[Test-27]
+
+testId=104
+testname=Use supplied pin, Generate keys on target token, IDEA ECB, 
+
+[Test-28]
+
+testId=108
+testname=Use supplied pin, Generate keys on target token, IDEA CBC, 
+
+[Test-29]
+
+testId=112
+testname=Use supplied pin, Generate keys on target token, CDMF ECB, 
+
+[Test-30]
+
+testId=116
+testname=Use supplied pin, Generate keys on target token, CDMF CBC, 
+
+[Test-31]
+
+testId=120
+testname=Use supplied pin, Generate keys on target token, SKIPJACK ECB64, 
+
+[Test-32]
+
+testId=124
+testname=Use supplied pin, Generate keys on target token, SKIPJACK CBC64, 
+
+[Test-33]
+
+testId=128
+testname=Use supplied pin, Generate keys on target token, SKIPJACK OFB64, 
+
+[Test-34]
+
+testId=132
+testname=Use supplied pin, Generate keys on target token, SKIPJACK CFB64, 
+
+[Test-35]
+
+testId=136
+testname=Use supplied pin, Generate keys on target token, SKIPJACK CFB32, 
+
+[Test-36]
+
+testId=140
+testname=Use supplied pin, Generate keys on target token, SKIPJACK CFB16, 
+
+[Test-37]
+
+testId=144
+testname=Use supplied pin, Generate keys on target token, SKIPJACK CFB8, 
+
+[Test-38]
+
+testId=148
+testname=Use supplied pin, Generate keys on target token, BATON ECB128, 
+
+[Test-39]
+
+testId=152
+testname=Use supplied pin, Generate keys on target token, BATON ECB96, 
+
+[Test-40]
+
+testId=156
+testname=Use supplied pin, Generate keys on target token, BATON CBC128, 
+
+[Test-41]
+
+testId=160
+testname=Use supplied pin, Generate keys on target token, BATON counter, 
+
+[Test-42]
+
+testId=164
+testname=Use supplied pin, Generate keys on target token, BATON shuffle, 
+
+[Test-43]
+
+testId=168
+testname=Use supplied pin, Generate keys on target token, JUNIPER ECB128, 
+
+[Test-44]
+
+testId=172
+testname=Use supplied pin, Generate keys on target token, JUNIPER CBC128, 
+
+[Test-45]
+
+testId=176
+testname=Use supplied pin, Generate keys on target token, JUNIPER counter, 
+
+[Test-46]
+
+testId=180
+testname=Use supplied pin, Generate keys on target token, JUNIPER shuffle, 
+
+[Test-47]
+
+testId=2
+testname=Use supplied pin, Generate keys on internal module, NO OP, 
+
+[Test-48]
+
+testId=6
+testname=Use supplied pin, Generate keys on internal module, RSA PKCS, 
+
+[Test-49]
+
+testId=10
+testname=Use supplied pin, Generate keys on internal module, RSA 9796, 
+
+[Test-50]
+
+testId=14
+testname=Use supplied pin, Generate keys on internal module, RSA X.509, 
+
+[Test-51]
+
+testId=18
+testname=Use supplied pin, Generate keys on internal module, MD2 RSA PKCS, 
+
+[Test-52]
+
+testId=22
+testname=Use supplied pin, Generate keys on internal module, MD5 RSA PKCS, 
+
+[Test-53]
+
+testId=26
+testname=Use supplied pin, Generate keys on internal module, SHA1 RSA PKCS, 
+
+[Test-54]
+
+testId=30
+testname=Use supplied pin, Generate keys on internal module, DSA, 
+
+[Test-55]
+
+testId=34
+testname=Use supplied pin, Generate keys on internal module, DSA SHA1, 
+
+[Test-56]
+
+testId=38
+testname=Use supplied pin, Generate keys on internal module, ECDSA, 
+
+[Test-57]
+
+testId=42
+testname=Use supplied pin, Generate keys on internal module, ECDSA SHA1, 
+
+[Test-58]
+
+testId=46
+testname=Use supplied pin, Generate keys on internal module, RC2 ECB, 
+
+[Test-59]
+
+testId=50
+testname=Use supplied pin, Generate keys on internal module, RC2 CBC, 
+
+[Test-60]
+
+testId=54
+testname=Use supplied pin, Generate keys on internal module, RC4, 
+
+[Test-61]
+
+testId=58
+testname=Use supplied pin, Generate keys on internal module, RC5 ECB, 
+
+[Test-62]
+
+testId=62
+testname=Use supplied pin, Generate keys on internal module, RC5 CBC, 
+
+[Test-63]
+
+testId=66
+testname=Use supplied pin, Generate keys on internal module, DES ECB, 
+
+[Test-64]
+
+testId=70
+testname=Use supplied pin, Generate keys on internal module, DES CBC, 
+
+[Test-65]
+
+testId=74
+testname=Use supplied pin, Generate keys on internal module, DES3 ECB, 
+
+[Test-66]
+
+testId=78
+testname=Use supplied pin, Generate keys on internal module, DES3 CBC, 
+
+[Test-67]
+
+testId=82
+testname=Use supplied pin, Generate keys on internal module, CAST ECB, 
+
+[Test-68]
+
+testId=86
+testname=Use supplied pin, Generate keys on internal module, CAST CBC, 
+
+[Test-69]
+
+testId=90
+testname=Use supplied pin, Generate keys on internal module, CAST3 ECB, 
+
+[Test-70]
+
+testId=94
+testname=Use supplied pin, Generate keys on internal module, CAST3 CBC, 
+
+[Test-71]
+
+testId=98
+testname=Use supplied pin, Generate keys on internal module, CAST5 ECB, 
+
+[Test-72]
+
+testId=102
+testname=Use supplied pin, Generate keys on internal module, CAST5 CBC, 
+
+[Test-73]
+
+testId=106
+testname=Use supplied pin, Generate keys on internal module, IDEA ECB, 
+
+[Test-74]
+
+testId=110
+testname=Use supplied pin, Generate keys on internal module, IDEA CBC, 
+
+[Test-75]
+
+testId=114
+testname=Use supplied pin, Generate keys on internal module, CDMF ECB, 
+
+[Test-76]
+
+testId=118
+testname=Use supplied pin, Generate keys on internal module, CDMF CBC, 
+
+[Test-77]
+
+testId=122
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK ECB64, 
+
+[Test-78]
+
+testId=126
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK CBC64, 
+
+[Test-79]
+
+testId=130
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK OFB64, 
+
+[Test-80]
+
+testId=134
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK CFB64, 
+
+[Test-81]
+
+testId=138
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK CFB32, 
+
+[Test-82]
+
+testId=142
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK CFB16, 
+
+[Test-83]
+
+testId=146
+testname=Use supplied pin, Generate keys on internal module, SKIPJACK CFB8, 
+
+[Test-84]
+
+testId=150
+testname=Use supplied pin, Generate keys on internal module, BATON ECB128, 
+
+[Test-85]
+
+testId=154
+testname=Use supplied pin, Generate keys on internal module, BATON ECB96, 
+
+[Test-86]
+
+testId=158
+testname=Use supplied pin, Generate keys on internal module, BATON CBC128, 
+
+[Test-87]
+
+testId=162
+testname=Use supplied pin, Generate keys on internal module, BATON counter, 
+
+[Test-88]
+
+testId=166
+testname=Use supplied pin, Generate keys on internal module, BATON shuffle, 
+
+[Test-89]
+
+testId=170
+testname=Use supplied pin, Generate keys on internal module, JUNIPER ECB128, 
+
+[Test-90]
+
+testId=174
+testname=Use supplied pin, Generate keys on internal module, JUNIPER CBC128, 
+
+[Test-91]
+
+testId=178
+testname=Use supplied pin, Generate keys on internal module, JUNIPER counter, 
+
+[Test-92]
+
+testId=182
+testname=Use supplied pin, Generate keys on internal module, JUNIPER shuffle, 
+
+[Test-93]
+
+testId=1
+testname=Use different (incorrect) pin, Generate keys on target token, NO OP, 
+
+[Test-94]
+
+testId=5
+testname=Use different (incorrect) pin, Generate keys on target token, RSA PKCS, 
+
+[Test-95]
+
+testId=9
+testname=Use different (incorrect) pin, Generate keys on target token, RSA 9796, 
+
+[Test-96]
+
+testId=13
+testname=Use different (incorrect) pin, Generate keys on target token, RSA X.509, 
+
+[Test-97]
+
+testId=17
+testname=Use different (incorrect) pin, Generate keys on target token, MD2 RSA PKCS, 
+
+[Test-98]
+
+testId=21
+testname=Use different (incorrect) pin, Generate keys on target token, MD5 RSA PKCS, 
+
+[Test-99]
+
+testId=25
+testname=Use different (incorrect) pin, Generate keys on target token, SHA1 RSA PKCS, 
+
+[Test-100]
+
+testId=29
+testname=Use different (incorrect) pin, Generate keys on target token, DSA, 
+
+[Test-101]
+
+testId=33
+testname=Use different (incorrect) pin, Generate keys on target token, DSA SHA1, 
+
+[Test-102]
+
+testId=37
+testname=Use different (incorrect) pin, Generate keys on target token, ECDSA, 
+
+[Test-103]
+
+testId=41
+testname=Use different (incorrect) pin, Generate keys on target token, ECDSA SHA1, 
+
+[Test-104]
+
+testId=45
+testname=Use different (incorrect) pin, Generate keys on target token, RC2 ECB, 
+
+[Test-105]
+
+testId=49
+testname=Use different (incorrect) pin, Generate keys on target token, RC2 CBC, 
+
+[Test-106]
+
+testId=53
+testname=Use different (incorrect) pin, Generate keys on target token, RC4, 
+
+[Test-107]
+
+testId=57
+testname=Use different (incorrect) pin, Generate keys on target token, RC5 ECB, 
+
+[Test-108]
+
+testId=61
+testname=Use different (incorrect) pin, Generate keys on target token, RC5 CBC, 
+
+[Test-109]
+
+testId=65
+testname=Use different (incorrect) pin, Generate keys on target token, DES ECB, 
+
+[Test-110]
+
+testId=69
+testname=Use different (incorrect) pin, Generate keys on target token, DES CBC, 
+
+[Test-111]
+
+testId=73
+testname=Use different (incorrect) pin, Generate keys on target token, DES3 ECB, 
+
+[Test-112]
+
+testId=77
+testname=Use different (incorrect) pin, Generate keys on target token, DES3 CBC, 
+
+[Test-113]
+
+testId=81
+testname=Use different (incorrect) pin, Generate keys on target token, CAST ECB, 
+
+[Test-114]
+
+testId=85
+testname=Use different (incorrect) pin, Generate keys on target token, CAST CBC, 
+
+[Test-115]
+
+testId=89
+testname=Use different (incorrect) pin, Generate keys on target token, CAST3 ECB, 
+
+[Test-116]
+
+testId=93
+testname=Use different (incorrect) pin, Generate keys on target token, CAST3 CBC, 
+
+[Test-117]
+
+testId=97
+testname=Use different (incorrect) pin, Generate keys on target token, CAST5 ECB, 
+
+[Test-118]
+
+testId=101
+testname=Use different (incorrect) pin, Generate keys on target token, CAST5 CBC, 
+
+[Test-119]
+
+testId=105
+testname=Use different (incorrect) pin, Generate keys on target token, IDEA ECB, 
+
+[Test-120]
+
+testId=109
+testname=Use different (incorrect) pin, Generate keys on target token, IDEA CBC, 
+
+[Test-121]
+
+testId=113
+testname=Use different (incorrect) pin, Generate keys on target token, CDMF ECB, 
+
+[Test-122]
+
+testId=117
+testname=Use different (incorrect) pin, Generate keys on target token, CDMF CBC, 
+
+[Test-123]
+
+testId=121
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK ECB64, 
+
+[Test-124]
+
+testId=125
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK CBC64, 
+
+[Test-125]
+
+testId=129
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK OFB64, 
+
+[Test-126]
+
+testId=133
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK CFB64, 
+
+[Test-127]
+
+testId=137
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK CFB32, 
+
+[Test-128]
+
+testId=141
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK CFB16, 
+
+[Test-129]
+
+testId=145
+testname=Use different (incorrect) pin, Generate keys on target token, SKIPJACK CFB8, 
+
+[Test-130]
+
+testId=149
+testname=Use different (incorrect) pin, Generate keys on target token, BATON ECB128, 
+
+[Test-131]
+
+testId=153
+testname=Use different (incorrect) pin, Generate keys on target token, BATON ECB96, 
+
+[Test-132]
+
+testId=157
+testname=Use different (incorrect) pin, Generate keys on target token, BATON CBC128, 
+
+[Test-133]
+
+testId=161
+testname=Use different (incorrect) pin, Generate keys on target token, BATON counter, 
+
+[Test-134]
+
+testId=165
+testname=Use different (incorrect) pin, Generate keys on target token, BATON shuffle, 
+
+[Test-135]
+
+testId=169
+testname=Use different (incorrect) pin, Generate keys on target token, JUNIPER ECB128, 
+
+[Test-136]
+
+testId=173
+testname=Use different (incorrect) pin, Generate keys on target token, JUNIPER CBC128, 
+
+[Test-137]
+
+testId=177
+testname=Use different (incorrect) pin, Generate keys on target token, JUNIPER counter, 
+
+[Test-138]
+
+testId=181
+testname=Use different (incorrect) pin, Generate keys on target token, JUNIPER shuffle, 
+
+[Test-139]
+
+testId=3
+testname=Use different (incorrect) pin, Generate keys on internal module, NO OP, 
+
+[Test-140]
+
+testId=7
+testname=Use different (incorrect) pin, Generate keys on internal module, RSA PKCS, 
+
+[Test-141]
+
+testId=11
+testname=Use different (incorrect) pin, Generate keys on internal module, RSA 9796, 
+
+[Test-142]
+
+testId=15
+testname=Use different (incorrect) pin, Generate keys on internal module, RSA X.509, 
+
+[Test-143]
+
+testId=19
+testname=Use different (incorrect) pin, Generate keys on internal module, MD2 RSA PKCS, 
+
+[Test-144]
+
+testId=23
+testname=Use different (incorrect) pin, Generate keys on internal module, MD5 RSA PKCS, 
+
+[Test-145]
+
+testId=27
+testname=Use different (incorrect) pin, Generate keys on internal module, SHA1 RSA PKCS, 
+
+[Test-146]
+
+testId=31
+testname=Use different (incorrect) pin, Generate keys on internal module, DSA, 
+
+[Test-147]
+
+testId=35
+testname=Use different (incorrect) pin, Generate keys on internal module, DSA SHA1, 
+
+[Test-148]
+
+testId=39
+testname=Use different (incorrect) pin, Generate keys on internal module, ECDSA, 
+
+[Test-149]
+
+testId=43
+testname=Use different (incorrect) pin, Generate keys on internal module, ECDSA SHA1, 
+
+[Test-150]
+
+testId=47
+testname=Use different (incorrect) pin, Generate keys on internal module, RC2 ECB, 
+
+[Test-151]
+
+testId=51
+testname=Use different (incorrect) pin, Generate keys on internal module, RC2 CBC, 
+
+[Test-152]
+
+testId=55
+testname=Use different (incorrect) pin, Generate keys on internal module, RC4, 
+
+[Test-153]
+
+testId=59
+testname=Use different (incorrect) pin, Generate keys on internal module, RC5 ECB, 
+
+[Test-154]
+
+testId=63
+testname=Use different (incorrect) pin, Generate keys on internal module, RC5 CBC, 
+
+[Test-155]
+
+testId=67
+testname=Use different (incorrect) pin, Generate keys on internal module, DES ECB, 
+
+[Test-156]
+
+testId=71
+testname=Use different (incorrect) pin, Generate keys on internal module, DES CBC, 
+
+[Test-157]
+
+testId=75
+testname=Use different (incorrect) pin, Generate keys on internal module, DES3 ECB, 
+
+[Test-158]
+
+testId=79
+testname=Use different (incorrect) pin, Generate keys on internal module, DES3 CBC, 
+
+[Test-159]
+
+testId=83
+testname=Use different (incorrect) pin, Generate keys on internal module, CAST ECB, 
+
+[Test-160]
+
+testId=87
+testname=Use different (incorrect) pin, Generate keys on internal module, CAST CBC, 
+
+[Test-161]
+
+testId=91
+testname=Use different (incorrect) pin, Generate keys on internal module, CAST3 ECB, 
+
+[Test-162]
+
+testId=95
+testname=Use different (incorrect) pin, Generate keys on internal module, CAST3 CBC, 
+
+[Test-163]
+
+testId=99
+testname=Use different (incorrect) pin, Generate keys on internal module, CAST5 ECB, 
+
+[Test-164]
+
+testId=103
+testname=Use different (incorrect) pin, Generate keys on internal module, CAST5 CBC, 
+
+[Test-165]
+
+testId=107
+testname=Use different (incorrect) pin, Generate keys on internal module, IDEA ECB, 
+
+[Test-166]
+
+testId=111
+testname=Use different (incorrect) pin, Generate keys on internal module, IDEA CBC, 
+
+[Test-167]
+
+testId=115
+testname=Use different (incorrect) pin, Generate keys on internal module, CDMF ECB, 
+
+[Test-168]
+
+testId=119
+testname=Use different (incorrect) pin, Generate keys on internal module, CDMF CBC, 
+
+[Test-169]
+
+testId=123
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK ECB64, 
+
+[Test-170]
+
+testId=127
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK CBC64, 
+
+[Test-171]
+
+testId=131
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK OFB64, 
+
+[Test-172]
+
+testId=135
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK CFB64, 
+
+[Test-173]
+
+testId=139
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK CFB32, 
+
+[Test-174]
+
+testId=143
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK CFB16, 
+
+[Test-175]
+
+testId=147
+testname=Use different (incorrect) pin, Generate keys on internal module, SKIPJACK CFB8, 
+
+[Test-176]
+
+testId=151
+testname=Use different (incorrect) pin, Generate keys on internal module, BATON ECB128, 
+
+[Test-177]
+
+testId=155
+testname=Use different (incorrect) pin, Generate keys on internal module, BATON ECB96, 
+
+[Test-178]
+
+testId=159
+testname=Use different (incorrect) pin, Generate keys on internal module, BATON CBC128, 
+
+[Test-179]
+
+testId=163
+testname=Use different (incorrect) pin, Generate keys on internal module, BATON counter, 
+
+[Test-180]
+
+testId=167
+testname=Use different (incorrect) pin, Generate keys on internal module, BATON shuffle, 
+
+[Test-181]
+
+testId=171
+testname=Use different (incorrect) pin, Generate keys on internal module, JUNIPER ECB128, 
+
+[Test-182]
+
+testId=175
+testname=Use different (incorrect) pin, Generate keys on internal module, JUNIPER CBC128, 
+
+[Test-183]
+
+testId=179
+testname=Use different (incorrect) pin, Generate keys on internal module, JUNIPER counter, 
+
+[Test-184]
+
+testId=183
+testname=Use different (incorrect) pin, Generate keys on internal module, JUNIPER shuffle, 
+

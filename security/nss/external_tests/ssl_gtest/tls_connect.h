@@ -22,17 +22,12 @@ namespace nss_test {
 class TlsConnectTestBase : public ::testing::Test {
  public:
   static ::testing::internal::ParamGenerator<std::string> kTlsModesStream;
-  static ::testing::internal::ParamGenerator<std::string> kTlsModesDatagram;
   static ::testing::internal::ParamGenerator<std::string> kTlsModesAll;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV10;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV11;
-  static ::testing::internal::ParamGenerator<uint16_t> kTlsV10V11;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV11V12;
-  static ::testing::internal::ParamGenerator<uint16_t> kTlsV10To12;
-  static ::testing::internal::ParamGenerator<uint16_t> kTlsV13;
-  static ::testing::internal::ParamGenerator<uint16_t> kTlsV11Plus;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV12Plus;
-  static ::testing::internal::ParamGenerator<uint16_t> kTlsVAll;
+  static ::testing::internal::ParamGenerator<uint16_t> kTlsV13;
 
   static inline Mode ToMode(const std::string& str) {
     return str == "TLS" ? STREAM : DGRAM;
@@ -46,10 +41,6 @@ class TlsConnectTestBase : public ::testing::Test {
 
   // Initialize client and server.
   void Init();
-  // Clear the statistics.
-  void ClearStats();
-  // Clear the server session cache.
-  void ClearServerCache();
   // Re-initialize client and server with the default RSA cert.
   void ResetRsa();
   // Re-initialize client and server with an ECDSA cert on the server
