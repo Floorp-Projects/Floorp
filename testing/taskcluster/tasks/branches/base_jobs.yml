@@ -297,7 +297,16 @@ tasks:
     when:
       file_patterns:
         - 'testing/docker/android-gradle-build/**'
+        - 'testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py'
         - '**/*.gradle'
+  android-checkstyle:
+    task: tasks/builds/android_checkstyle.yml
+    root: true
+    when:
+      file_patterns:
+        - 'mobile/android/**/checkstyle.xml'
+        - 'mobile/android/**/*.gradle'
+        - 'mobile/android/**/*.java'
   android-lint:
     task: tasks/builds/android_lint.yml
     root: true

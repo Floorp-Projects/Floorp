@@ -71,6 +71,15 @@ exports.devices = {
 exports.location = PropTypes.string;
 
 /**
+ * The progression of the screenshot
+ */
+exports.screenshot = {
+
+  isCapturing: PropTypes.bool.isRequired,
+
+};
+
+/**
  * A single viewport displaying a document.
  */
 exports.viewport = {

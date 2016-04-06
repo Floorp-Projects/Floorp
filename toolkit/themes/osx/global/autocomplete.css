@@ -93,98 +93,58 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   margin: 0;
 }
 
-.autocomplete-richlistitem[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
-  background-image: linear-gradient(rgba(255,255,255,0.3), transparent);
-}
-
-.autocomplete-richlistitem {
-  padding: 5px 2px;
-}
-
-.ac-url-box {
-  /* When setting a vertical margin here, half of that needs to be added
-     .ac-title-box's translateY for when .ac-url-box is hidden (see below). */
-  margin-top: 1px;
-}
-
-.autocomplete-richlistitem[actiontype="keyword"] .ac-url-box,
-.autocomplete-richlistitem[actiontype="searchengine"] .ac-url-box,
-.autocomplete-richlistitem[actiontype="visiturl"] .ac-url-box,
-.autocomplete-richlistitem[type~="autofill"] .ac-url-box {
-  visibility: hidden;
-}
-
-.autocomplete-richlistitem[actiontype="keyword"] .ac-title-box,
-.autocomplete-richlistitem[actiontype="searchengine"] .ac-title-box,
-.autocomplete-richlistitem[actiontype="visiturl"] .ac-title-box,
-.autocomplete-richlistitem[type~="autofill"] .ac-title-box {
-  /* Center the title by moving it down by half of .ac-url-box's height,
-     including vertical margins (if any). */
-  transform: translateY(.5em);
-}
-
-.ac-site-icon {
-  width: 16px; 
-  height: 16px;
-  margin-bottom: -1px;
-  -moz-margin-start: 7px;
-  -moz-margin-end: 5px;
-}
-
 .ac-type-icon {
   width: 16px;
   height: 16px;
-  -moz-margin-start: 6px;
+  max-width: 16px;
+  max-height: 16px;
+  -moz-margin-start: 16px;
+  -moz-margin-end: 6px;
+}
+
+.ac-site-icon {
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  -moz-margin-start: 0;
+  -moz-margin-end: 11px;
+}
+
+.ac-title {
+  -moz-margin-start: 0;
+  -moz-margin-end: 6px;
+}
+
+html|span.ac-tag {
+  -moz-margin-start: 0;
+  -moz-margin-end: 2px;
+}
+
+.ac-tags {
+  -moz-margin-start: 0;
   -moz-margin-end: 4px;
 }
 
-.ac-url-box > .ac-site-icon,
-.ac-url-box > .ac-type-icon {
-  /* Otherwise the spacer is big enough to stretch its container */
-  height: auto;
+html|span.ac-title-urlaction-separator {
+  -moz-margin-start: 0;
+  -moz-margin-end: 6px;
 }
 
-.ac-extra > .ac-result-type-tag {
-  margin: 0 4px;
+/* Better align the URL/action with the title. */
+.ac-tags,
+.ac-url,
+.ac-action {
+  margin-bottom: -2px;
 }
 
-.ac-extra > .ac-comment {
-  padding-right: 4px;
-}
-
-.ac-ellipsis-after {
+.ac-title-text,
+.ac-tags-text,
+.ac-url-text,
+.ac-action-text,
+.ac-text-overflow-container {
+  padding: 0 !important;
   margin: 0 !important;
-  padding: 0; 
-  min-width: 1.1em;
-}
-
-.ac-normal-text {
-  margin: 0 !important;
-  padding: 0;
-}
-
-.ac-normal-text > html|span {
-  margin: 0 !important;
-  padding: 0;
-}
-
-html|span.ac-emphasize-text {
-  box-shadow: inset 0 0 1px 1px rgba(208,208,208,0.4);
-  background-color: rgba(208,208,208,0.2);
-  border-radius: 2px;
-  text-shadow: 0 0 currentColor;
-}
-
-.ac-url-text > html|span.ac-emphasize-text,
-.ac-action-text > html|span.ac-emphasize-text {
-  box-shadow: inset 0 0 1px 1px rgba(183,210,226,0.4);
-  background-color: rgba(183,210,226,0.3);
-}
-
-.ac-title, .ac-url {
-  overflow: hidden;
 }
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
