@@ -118,9 +118,8 @@ public:
   SetTimeout(JSContext* aCx, Function& aHandler, const int32_t aTimeout,
              const Sequence<JS::Value>& aArguments, ErrorResult& aRv);
   int32_t
-  SetTimeout(JSContext* /* unused */, const nsAString& aHandler,
-             const int32_t aTimeout, const Sequence<JS::Value>& /* unused */,
-             ErrorResult& aRv);
+  SetTimeout(JSContext* aCx, const nsAString& aHandler, const int32_t aTimeout,
+             const Sequence<JS::Value>& /* unused */, ErrorResult& aRv);
   void
   ClearTimeout(int32_t aHandle);
   int32_t
