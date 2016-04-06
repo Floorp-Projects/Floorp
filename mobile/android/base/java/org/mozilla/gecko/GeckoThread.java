@@ -23,6 +23,7 @@ import android.os.MessageQueue;
 import android.os.SystemClock;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -120,13 +121,36 @@ public class GeckoThread extends Thread {
         setName("Gecko");
     }
 
-    public static boolean ensureInit(GeckoProfile profile, String args, String action, boolean debugging) {
+    public static boolean init(GeckoProfile profile, String args, String action, boolean debugging) {
         ThreadUtils.assertOnUiThread();
         if (isState(State.INITIAL) && sGeckoThread == null) {
             sGeckoThread = new GeckoThread(profile, args, action, debugging);
             return true;
         }
         return false;
+    }
+
+    public static boolean initWithProfile(String profileName, File profileDir) {
+        if (profileName == null) {
+            throw new IllegalArgumentException("Null profile name");
+        }
+
+        final GeckoProfile profile = getActiveProfile();
+        if (profile == null) {
+            // We haven't initialized yet; okay to initialize now.
+            final Context context = GeckoAppShell.getApplicationContext();
+            return init(GeckoProfile.get(context, profileName, profileDir),
+                        /* args */ null, /* action */ null, /* debugging */ false);
+        }
+
+        // We already initialized and have a profile; see if it matches ours.
+        try {
+            return profileDir == null ? profileName.equals(profile.getName()) :
+                    profile.getDir().getCanonicalPath().equals(profileDir.getCanonicalPath());
+        } catch (final IOException e) {
+            Log.e(LOGTAG, "Cannot compare profile " + profileName);
+            return false;
+        }
     }
 
     public static boolean launch() {

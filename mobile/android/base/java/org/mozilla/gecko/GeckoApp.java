@@ -1184,8 +1184,7 @@ public abstract class GeckoApp
                 GeckoProfile.getFromArgs(getApplicationContext(), args) : null;
 
             sAlreadyLoaded = true;
-            GeckoThread.ensureInit(profile, args, action,
-                    /* debugging */ ACTION_DEBUG.equals(action));
+            GeckoThread.init(profile, args, action, /* debugging */ ACTION_DEBUG.equals(action));
 
             // Speculatively pre-fetch the profile in the background.
             ThreadUtils.postToBackgroundThread(new Runnable() {
