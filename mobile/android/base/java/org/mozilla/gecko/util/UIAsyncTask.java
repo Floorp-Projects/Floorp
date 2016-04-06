@@ -19,7 +19,7 @@ import android.os.Looper;
  * Android uses a "Params" type parameter to represent the type of all the parameters to this task.
  * It then uses arguments of type Params... to permit arbitrarily-many of these to be passed
  * fluently.
- * 
+ *
  * Unfortunately, since Java does not support generic array types (and since varargs desugars to a
  * single array parameter) that behaviour exposes a hole in the type system. See:
  * http://docs.oracle.com/javase/tutorial/java/generics/nonReifiableVarargsType.html#vulnerabilities

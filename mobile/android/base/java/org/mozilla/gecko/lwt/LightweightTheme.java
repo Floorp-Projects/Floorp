@@ -52,7 +52,7 @@ public class LightweightTheme implements GeckoEventListener {
     private boolean mIsLight;
 
     public static interface OnChangeListener {
-        // The View should change its background/text color. 
+        // The View should change its background/text color.
         public void onLightweightThemeChanged();
 
         // The View should reset to its default background/text color.

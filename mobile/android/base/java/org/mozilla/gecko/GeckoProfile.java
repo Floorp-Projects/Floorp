@@ -92,7 +92,7 @@ public final class GeckoProfile {
      * Access to this member should be synchronized to avoid
      * races during creation -- particularly between getDir and GeckoView#init.
      *
-     * Not final because this is lazily computed. 
+     * Not final because this is lazily computed.
      */
     private File mProfileDir;
 

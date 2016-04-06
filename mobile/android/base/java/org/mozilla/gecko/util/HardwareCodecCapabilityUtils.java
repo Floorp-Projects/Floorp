@@ -106,7 +106,7 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   public static boolean getHWDecoderCapability() {
-    if (Versions.feature20Plus) { 
+    if (Versions.feature20Plus) {
       for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
         MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
         if (info.isEncoder()) {

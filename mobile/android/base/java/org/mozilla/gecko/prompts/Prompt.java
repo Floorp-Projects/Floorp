@@ -280,7 +280,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      * @param listItems
      *        The items to add.
      * @param choiceMode
-     *        One of the ListView.CHOICE_MODE constants to designate whether this list shows checkmarks, radios buttons, or nothing. 
+     *        One of the ListView.CHOICE_MODE constants to designate whether this list shows checkmarks, radios buttons, or nothing.
     */
     private void addListItems(AlertDialog.Builder builder, PromptListItem[] listItems, int choiceMode) {
         switch(choiceMode) {

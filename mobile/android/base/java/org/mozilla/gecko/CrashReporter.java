@@ -234,17 +234,17 @@ public class CrashReporter extends AppCompatActivity
 
     private void savePrefs() {
         SharedPreferences.Editor editor = GeckoSharedPrefs.forApp(this).edit();
-                  
+
         final boolean allowContact = ((CheckBox) findViewById(R.id.allow_contact)).isChecked();
         final boolean includeUrl   = ((CheckBox) findViewById(R.id.include_url)).isChecked();
         final boolean sendReport   = ((CheckBox) findViewById(R.id.send_report)).isChecked();
         final String contactEmail  = ((EditText) findViewById(R.id.email)).getText().toString();
-                   
+
         editor.putBoolean(PREFS_ALLOW_CONTACT, allowContact);
         editor.putBoolean(PREFS_INCLUDE_URL, includeUrl);
         editor.putBoolean(PREFS_SEND_REPORT, sendReport);
         editor.putString(PREFS_CONTACT_EMAIL, contactEmail);
-                    
+
         // A slight performance improvement via async apply() vs. blocking on commit().
         editor.apply();
     }
