@@ -239,7 +239,8 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
       mUuidGen(MakeUnique<PCUuidGenerator>()),
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()),
-      mProxyResolveCompleted(false) {
+      mProxyResolveCompleted(false),
+      mIceRestartState(ICE_RESTART_NONE) {
 }
 
 nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers,
@@ -586,11 +587,30 @@ PeerConnectionMedia::StartIceChecks_s(
   mIceCtxHdlr->ctx()->StartChecks();
 }
 
+bool
+PeerConnectionMedia::IsIceRestarting() const
+{
+  ASSERT_ON_THREAD(mMainThread);
+
+  return (mIceRestartState != ICE_RESTART_NONE);
+}
+
+PeerConnectionMedia::IceRestartState
+PeerConnectionMedia::GetIceRestartState() const
+{
+  ASSERT_ON_THREAD(mMainThread);
+
+  return mIceRestartState;
+}
+
 void
 PeerConnectionMedia::BeginIceRestart(const std::string& ufrag,
                                      const std::string& pwd)
 {
   ASSERT_ON_THREAD(mMainThread);
+  if (IsIceRestarting()) {
+    return;
+  }
 
   bool default_address_only = GetPrefDefaultAddressOnly();
   RefPtr<NrIceCtx> new_ctx = mIceCtxHdlr->CreateCtx(ufrag,
@@ -603,6 +623,8 @@ PeerConnectionMedia::BeginIceRestart(const std::string& ufrag,
                     &PeerConnectionMedia::BeginIceRestart_s,
                     new_ctx),
                 NS_DISPATCH_NORMAL);
+
+  mIceRestartState = ICE_RESTART_PROVISIONAL;
 }
 
 void
@@ -613,28 +635,54 @@ PeerConnectionMedia::BeginIceRestart_s(RefPtr<NrIceCtx> new_ctx)
   // hold the original context so we can disconnect signals if needed
   RefPtr<NrIceCtx> originalCtx = mIceCtxHdlr->ctx();
 
-  mIceCtxHdlr->BeginIceRestart(new_ctx);
-  if (mIceCtxHdlr->IsRestarting()) {
+  if (mIceCtxHdlr->BeginIceRestart(new_ctx)) {
     ConnectSignals(mIceCtxHdlr->ctx().get(), originalCtx.get());
   }
+}
+
+void
+PeerConnectionMedia::CommitIceRestart()
+{
+  ASSERT_ON_THREAD(mMainThread);
+  if (mIceRestartState != ICE_RESTART_PROVISIONAL) {
+    return;
+  }
+
+  mIceRestartState = ICE_RESTART_COMMITTED;
 }
 
 void
 PeerConnectionMedia::FinalizeIceRestart()
 {
   ASSERT_ON_THREAD(mMainThread);
+  if (!IsIceRestarting()) {
+    return;
+  }
 
   RUN_ON_THREAD(GetSTSThread(),
                 WrapRunnable(
                     RefPtr<PeerConnectionMedia>(this),
                     &PeerConnectionMedia::FinalizeIceRestart_s),
                 NS_DISPATCH_NORMAL);
+
+  mIceRestartState = ICE_RESTART_NONE;
 }
 
 void
 PeerConnectionMedia::FinalizeIceRestart_s()
 {
   ASSERT_ON_THREAD(mSTSThread);
+
+  // reset old streams since we don't need them anymore
+  for (auto i = mTransportFlows.begin();
+       i != mTransportFlows.end();
+       ++i) {
+    RefPtr<TransportFlow> aFlow = i->second;
+    if (!aFlow) continue;
+    TransportLayerIce* ice =
+      static_cast<TransportLayerIce*>(aFlow->GetLayer(TransportLayerIce::ID()));
+    ice->ResetOldStream();
+  }
 
   mIceCtxHdlr->FinalizeIceRestart();
 }
@@ -643,6 +691,9 @@ void
 PeerConnectionMedia::RollbackIceRestart()
 {
   ASSERT_ON_THREAD(mMainThread);
+  if (mIceRestartState != ICE_RESTART_PROVISIONAL) {
+    return;
+  }
 
   RUN_ON_THREAD(GetSTSThread(),
                 WrapRunnable(
@@ -655,12 +706,20 @@ void
 PeerConnectionMedia::RollbackIceRestart_s()
 {
   ASSERT_ON_THREAD(mSTSThread);
-  if (!mIceCtxHdlr->IsRestarting()) {
-    return;
-  }
 
   // hold the restart context so we can disconnect signals
   RefPtr<NrIceCtx> restartCtx = mIceCtxHdlr->ctx();
+
+  // restore old streams since we're rolling back
+  for (auto i = mTransportFlows.begin();
+       i != mTransportFlows.end();
+       ++i) {
+    RefPtr<TransportFlow> aFlow = i->second;
+    if (!aFlow) continue;
+    TransportLayerIce* ice =
+      static_cast<TransportLayerIce*>(aFlow->GetLayer(TransportLayerIce::ID()));
+    ice->RestoreOldStream();
+  }
 
   mIceCtxHdlr->RollbackIceRestart();
   ConnectSignals(mIceCtxHdlr->ctx().get(), restartCtx.get());
