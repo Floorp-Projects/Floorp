@@ -93,7 +93,7 @@ CERT_DecodeBasicConstraintValue(CERTBasicConstraints *value,
                                 const SECItem *encodedValue)
 {
     EncodedContext decodeContext;
-    PORTCheapArenaPool tmpArena;
+    PLArenaPool *our_pool;
     SECStatus rv = SECSuccess;
 
     do {
@@ -104,9 +104,13 @@ CERT_DecodeBasicConstraintValue(CERTBasicConstraints *value,
         decodeContext.isCA.data = &hexFalse;
         decodeContext.isCA.len = 1;
 
-        PORT_InitCheapArena(&tmpArena, SEC_ASN1_DEFAULT_ARENA_SIZE);
+        our_pool = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
+        if (our_pool == NULL) {
+            PORT_SetError(SEC_ERROR_NO_MEMORY);
+            GEN_BREAK(SECFailure);
+        }
 
-        rv = SEC_QuickDERDecodeItem(&tmpArena.arena, &decodeContext,
+        rv = SEC_QuickDERDecodeItem(our_pool, &decodeContext,
                                     CERTBasicConstraintsTemplate, encodedValue);
         if (rv == SECFailure)
             break;
@@ -136,8 +140,8 @@ CERT_DecodeBasicConstraintValue(CERTBasicConstraints *value,
             GEN_BREAK(SECFailure);
             break;
         }
-    } while (0);
 
-    PORT_DestroyCheapArena(&tmpArena);
+    } while (0);
+    PORT_FreeArena(our_pool, PR_FALSE);
     return (rv);
 }

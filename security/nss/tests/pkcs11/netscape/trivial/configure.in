@@ -1,0 +1,150 @@
+dnl
+dnl This Source Code Form is subject to the terms of the Mozilla Public
+dnl License, v. 2.0. If a copy of the MPL was not distributed with this
+dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+AC_INIT(trivial.c)
+AC_CONFIG_HEADER(config.h)
+AC_PROG_MAKE_SET
+
+AC_ARG_WITH(nspr, [  --with-nspr[=path]      specify location of NSPR],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(NSPR is required);;
+  yes)
+    NSPR_INCLUDE="$includedir"
+    NSPR_LIBPATH="$libdir"
+    ;;
+  *)
+    NSPR_INCLUDE="$withval/include"
+    NSPR_LIBPATH="$withval/lib"
+    ;;
+  esac ],
+[ NSPR_INCLUDE="$includedir"
+  NSPR_LIBPATH="$libdir" ]
+)
+
+NSPR_CFLAGS="-I$NSPR_INCLUDE"
+NSPR_LDFLAGS="-L$NSPR_LIBPATH -lnspr4 -lplc4 -lplds4"
+
+dnl This isn't optimum, but the mozilla build system and autoconf don't really mesh well..
+
+AC_ARG_WITH(nss-dist,    [  --with-nss-dist[=path]  specify path to NSS dist directory],
+[ case "$withval" in
+  no)
+    NSS_CFLAGS=""
+    nss="0"
+    ;;
+  yes)
+    AC_MSG_ERROR(You have to specify a path for --with-nss-dist)
+    ;;
+  *)
+    NSS_CFLAGS="-I$withval/private/security -I$withval/public/security"
+    nss="1"
+    ;;
+  esac ])
+
+AC_ARG_WITH(nss-hdrs, [  --with-nss-hdrs[=path]  or, specify path to installed NSS headers],
+[ if test "x$nss" != "x"; then
+    AC_MSG_ERROR(Only specify --with-nss-hdrs or --with-nss-dist, not both)
+  fi
+  case "$withval" in
+  no)
+    NSS_CFLAGS=""
+    nss="0"
+    ;;
+  yes)
+    NSS_CFLAGS="-I$includedir"
+    nss="1"
+    ;;
+  *)
+    NSS_CFLAGS="-I$withval"
+    nss="1"
+    ;;
+  esac ])
+
+AC_ARG_WITH(rsa-hdrs, [  --with-rsa-hdrs[=path]  if not using NSS, specify path to RSA headers],
+[ if test "x$nss" != "x"; then
+    AC_MSG_ERROR(Only specify --with-nss-{hdrs,dist} or --with-rsa-hdrs, not both)
+  fi
+  case "$withval" in
+  no)
+    rsa="0"
+    ;;
+  yes)
+    RSA_INCLUDE="$includedir"
+    rsa="1"
+    ;;
+  *)
+    RSA_INCLUDE="$withval"
+    rsa="1"
+    ;;
+  esac ])
+
+if test "x$nss" = "x"; then
+  if test "x$rsa" = "x"; then
+    RSA_INCLUDE="$includedir"
+  fi
+  RSA_CFLAGS="-I$RSA_INCLUDE"
+fi
+
+if test "x$nss" = "x1"; then
+  AC_DEFINE(WITH_NSS,1)
+fi
+
+AC_SUBST(WITH_NSS)
+
+if test "x$rsa" = "x1"; then
+  RSA_CFLAGS-"-I$RSA_INCLUDE"
+fi
+
+AC_ARG_ENABLE(debug, [  --disable-debug         default is enabled],
+[ case "$enableval" in
+  no)
+    DEBUG_CFLAGS="";;
+  yes)
+    DEBUG_CFLAGS="-DDEBUG";;
+  *)
+    DEBUG_CFLAGS="-DDEBUG";;
+  esac ], DEBUG_CFLAGS="-DDEBUG")
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_RANLIB
+AC_CHECK_PROG(AR, ar, ar)
+AC_CHECK_PROG(LD, ld, ld)
+AC_CHECK_PROG(RM, rm, rm)
+AC_CHECK_PROG(TAR, tar, tar)
+AC_SUBST(CC INSTALL RANLIB AR LD RM TAR)
+
+CPPFLAGS="$CFLAGS $NSPR_CFLAGS $NSS_CFLAGS $RSA_CFLAGS $DEBUG_CFLAGS"
+LIBS="$NSPR_LDFLAGS $LIBS"
+
+AC_SUBST(CFLAGS)
+
+dnl Checks for libraries.
+AC_CHECK_LIB(nspr4, PR_Init)
+
+dnl Checks for header files.
+AC_CHECK_HEADERS(nspr.h)
+AC_SUBST(HAVE_NSPR_H)
+
+if test "x$nss" = "x1"; then
+  AC_CHECK_HEADERS(ck.h)
+fi
+
+if test "x$rsa" = "x1"; then
+  AC_CHECK_HEADERS(pkcs11t.h pkcs11.h)
+fi
+
+AC_SUBST(HAVE_CK_H HAVE_PKCS11T_H HAVE_PKCS11_H)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_SUBST(const)
+
+AC_CHECK_FUNCS(memset strlen)
+AC_SUBST(HAVE_MEMSET HAVE_STRLEN)
+AC_OUTPUT(Makefile, [echo timestamp > stamp-h])

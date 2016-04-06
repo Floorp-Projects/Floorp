@@ -41,8 +41,8 @@
 
 #define RD_BUF_SIZE (60 * 1024)
 
+extern int ssl2CipherSuites[];
 extern int ssl3CipherSuites[];
-extern int numSSL3CipherSuites;
 
 GlobalThreadMgr threadMGR;
 char *certNickname = NULL;
@@ -507,11 +507,12 @@ main(int argc, char **argv)
 	    disableAllSSLCiphers();
 
 	    while (0 != (ndx = *cipherString++)) {
-                int cipher = 0;
+		int  cipher;
 
 		if (ndx == ':') {
 		    int ctmp = 0;
 
+		    cipher = 0;
 		    HEXCHAR_TO_INT(*cipherString, ctmp)
 		    cipher |= (ctmp << 12);
 		    cipherString++;
@@ -525,12 +526,12 @@ main(int argc, char **argv)
 		    cipher |= ctmp;
 		    cipherString++;
 		} else {
+		    const int *cptr;
 		    if (! isalpha(ndx))
 			Usage(progName);
-                    ndx = tolower(ndx) - 'a';
-                    if (ndx < numSSL3CipherSuites) {
-                        cipher = ssl3CipherSuites[ndx];
-                    }
+		    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+		    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
+			/* do nothing */;
 		}
 		if (cipher > 0) {
 		    SSL_CipherPrefSetDefault(cipher, PR_TRUE);

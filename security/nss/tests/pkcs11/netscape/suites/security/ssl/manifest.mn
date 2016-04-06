@@ -1,0 +1,25 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../../../../../../..
+
+#MODULE = sectools
+
+EXPORTS = 
+
+CSRCS = sslt.c \
+	ssls.c \
+	sslc.c \
+	$(NULL)
+
+PROGRAM =  sslt
+
+REQUIRES = nss dbm seccmd
+
+DEFINES = -DNSPR20 -DREPLACER
+
+REGRESSION_SPEC = ssl.reg
+
+RESULTS_SUBDIR = security/ssl
+

@@ -121,7 +121,11 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
     }
 
     if (ss->opt.useSecurity && ss->enoughFirstHsDone) {
-        cipherName = ssl3_cipherName[ss->sec.cipherType];
+        if (ss->version < SSL_LIBRARY_VERSION_3_0) {
+            cipherName = ssl_cipherName[ss->sec.cipherType];
+        } else {
+            cipherName = ssl3_cipherName[ss->sec.cipherType];
+        }
         PORT_Assert(cipherName);
         if (cipherName) {
             if (PORT_Strstr(cipherName, "DES"))

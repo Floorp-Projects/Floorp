@@ -42,8 +42,6 @@ const uint8_t kTlsAlertDecodeError = 50;
 const uint8_t kTlsAlertUnsupportedExtension = 110;
 const uint8_t kTlsAlertNoApplicationProtocol = 120;
 
-const uint8_t kTlsExtensionPreSharedKey = 41;
-
 const uint8_t kTlsFakeChangeCipherSpec[] = {
     kTlsChangeCipherSpecType,        // Type
     0xfe,                     0xff,  // Version

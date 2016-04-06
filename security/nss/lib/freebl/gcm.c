@@ -192,7 +192,9 @@ gcmHash_DestroyContext(gcmHashContext *ghash, PRBool freeit)
     mp_clear(&ghash->H);
     mp_clear(&ghash->X);
     mp_clear(&ghash->C_i);
-    PORT_Memset(ghash, 0, sizeof(gcmHashContext));
+    MP_DIGITS(&ghash->H) = 0;
+    MP_DIGITS(&ghash->X) = 0;
+    MP_DIGITS(&ghash->C_i) = 0;
     if (freeit) {
 	PORT_Free(ghash);
     }
@@ -265,7 +267,6 @@ gcm_HashMult(gcmHashContext *ghash, const unsigned char *buf,
     }
     rv = SECSuccess;
 cleanup:
-    PORT_Memset(tmp_buf, 0, sizeof(tmp_buf));
     if (rv != SECSuccess) {
 	MP_TO_SEC_ERROR(err);
     }
@@ -365,7 +366,6 @@ cleanup:
 static void
 gcmHash_DestroyContext(gcmHashContext *ghash, PRBool freeit)
 {
-    PORT_Memset(ghash, 0, sizeof(gcmHashContext));
     if (freeit) {
 	PORT_Free(ghash);
     }
@@ -423,7 +423,6 @@ gcm_HashMult(gcmHashContext *ghash, const unsigned char *buf,
 	}
 	GCM_TRACE_X(ghash, "X%d = ")
     }
-    PORT_Memset(C_i, 0, sizeof(C_i));
     return SECSuccess;
 }
 
@@ -539,30 +538,26 @@ gcmHash_Final(gcmHashContext *ghash, unsigned char *outbuf,
 
     rv = gcmHash_Sync(ghash, blocksize);
     if (rv != SECSuccess) {
-	goto cleanup;
+	return SECFailure;
     }
 
     rv = gcm_HashMult(ghash, ghash->counterBuf, (GCM_HASH_LEN_LEN*2)/blocksize,
 								blocksize);
     if (rv != SECSuccess) {
-	goto cleanup;
+	return SECFailure;
     }
 
     GCM_TRACE_X(ghash, "GHASH(H,A,C) = ")
 
     rv = gcm_getX(ghash, T, blocksize);
     if (rv != SECSuccess) {
-	goto cleanup;
+	return SECFailure;
     }
 
     if (maxout > blocksize) maxout = blocksize;
     PORT_Memcpy(outbuf, T, maxout);
     *outlen = maxout;
-    rv = SECSuccess;
-
-cleanup:
-    PORT_Memset(T, 0, sizeof(T));
-    return rv;
+    return SECSuccess;
 }
 
 SECStatus
@@ -700,8 +695,6 @@ GCM_DestroyContext(GCMContext *gcm, PRBool freeit)
      * allocated data (like mp_int's) */
     CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
     gcmHash_DestroyContext(&gcm->ghash_context, PR_FALSE);
-    PORT_Memset(&gcm->tagBits, 0, sizeof(gcm->tagBits));
-    PORT_Memset(gcm->tagKey, 0, sizeof(gcm->tagKey));
     if (freeit) {
 	PORT_Free(gcm);
     }
@@ -845,10 +838,8 @@ GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
     if (NSS_SecureMemcmp(tag, intag, tagBytes) != 0) {
 	/* force a CKR_ENCRYPTED_DATA_INVALID error at in softoken */
 	PORT_SetError(SEC_ERROR_BAD_DATA);
-	PORT_Memset(tag, 0, sizeof(tag));
 	return SECFailure;
     }
-    PORT_Memset(tag, 0, sizeof(tag));
     /* finish the decryption */
     return CTR_Update(&gcm->ctr_context, outbuf, outlen, maxout,
 			  inbuf, inlen, blocksize);
