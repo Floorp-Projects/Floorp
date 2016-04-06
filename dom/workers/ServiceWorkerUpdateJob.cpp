@@ -146,13 +146,13 @@ ServiceWorkerUpdateJob2::FailUpdateJob(ErrorResult& aRv)
 
     if (mRegistration->mInstallingWorker) {
       mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
+      serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
+                                           mRegistration->mInstallingWorker->CacheName());
       mRegistration->mInstallingWorker = nullptr;
       if (swm) {
         swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                        WhichServiceWorker::INSTALLING_WORKER);
       }
-      serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
-                                           mRegistration->mInstallingWorker->CacheName());
     }
 
     if (swm) {
@@ -450,11 +450,7 @@ ServiceWorkerUpdateJob2::ContinueAfterInstallEvent(bool aInstallEventSuccess)
 
   // "If installFailed is true"
   if (NS_WARN_IF(!aInstallEventSuccess)) {
-    mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
-    mRegistration->mInstallingWorker = nullptr;
-    swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
-                                                   WhichServiceWorker::INSTALLING_WORKER);
-    swm->MaybeRemoveRegistration(mRegistration);
+    // The installing worker is cleaned up by FailUpdateJob().
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
@@ -463,13 +459,8 @@ ServiceWorkerUpdateJob2::ContinueAfterInstallEvent(bool aInstallEventSuccess)
   if (mRegistration->mWaitingWorker) {
     mRegistration->mWaitingWorker->WorkerPrivate()->TerminateWorker();
     mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
-
-    nsresult rv =
-      serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
-                                           mRegistration->mWaitingWorker->CacheName());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to purge the old waiting cache.");
-    }
+    serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
+                                         mRegistration->mWaitingWorker->CacheName());
   }
 
   mRegistration->mWaitingWorker = mRegistration->mInstallingWorker.forget();
