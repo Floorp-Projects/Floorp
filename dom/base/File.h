@@ -695,17 +695,6 @@ public:
     }
   }
 
-  // Create as a file to be later initialized
-  BlobImplFile()
-    : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
-    , mWholeFile(true)
-    , mIsTemporary(false)
-  {
-    // Lazily get the content type and size
-    mContentType.SetIsVoid(true);
-    mName.SetIsVoid(true);
-  }
-
   // Overrides
   virtual uint64_t GetSize(ErrorResult& aRv) override;
   virtual void GetType(nsAString& aType) override;
