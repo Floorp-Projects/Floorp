@@ -3236,7 +3236,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprCall(p.processingErrorVar(), args=[ codevar, reasonvar ])))
         else:
             onprocessingerror.addstmt(
-                _runtimeAbort("`OnProcessingError' called on non-toplevel actor"))
+                _fatalError("`OnProcessingError' called on non-toplevel actor"))
         self.cls.addstmts([ onprocessingerror, Whitespace.NL ])
 
         # int32_t GetProtocolTypeId() { return PFoo; }
@@ -3255,7 +3255,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprCall(p.shouldContinueFromTimeoutVar())))
             else:
                 ontimeout.addstmts([
-                    _runtimeAbort("`OnReplyTimeout' called on non-toplevel actor"),
+                    _fatalError("`OnReplyTimeout' called on non-toplevel actor"),
                     StmtReturn.FALSE
                 ])
 
@@ -3305,7 +3305,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
         else:
             onclose.addstmt(
-                _runtimeAbort("`OnClose' called on non-toplevel actor"))
+                _fatalError("`OnClose' called on non-toplevel actor"))
         self.cls.addstmts([ onclose, Whitespace.NL ])
 
         # OnChannelError()
@@ -3319,7 +3319,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
         else:
             onerror.addstmt(
-                _runtimeAbort("`OnError' called on non-toplevel actor"))
+                _fatalError("`OnError' called on non-toplevel actor"))
         self.cls.addstmts([ onerror, Whitespace.NL ])
 
         # OnChannelConnected()
@@ -3327,7 +3327,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                             params=[ Decl(Type.INT32, 'aPid') ]))
         if not ptype.isToplevel():
             onconnected.addstmt(
-                _runtimeAbort("'OnConnected' called on non-toplevel actor"))
+                _fatalError("'OnConnected' called on non-toplevel actor"))
 
         self.cls.addstmts([ onconnected, Whitespace.NL ])
 
@@ -3345,7 +3345,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                             ExprSelect(p.channelVar(), '.',
                                        'ProcessNativeEventsInInterruptCall'))),
                     CppDirective('else'),
-                    _runtimeAbort('This method is Windows-only'),
+                    _fatalError('This method is Windows-only'),
                     CppDirective('endif'),
                     ])
 
@@ -3797,7 +3797,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             else:
                 abort = StmtBlock()
                 abort.addstmts([
-                    _runtimeAbort('this protocol tree does not use shmem'),
+                    _fatalError('this protocol tree does not use shmem'),
                     StmtReturn(_Result.NotKnown)
                 ])
                 self.asyncSwitch.addcase(
@@ -3839,9 +3839,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             getchannel.addstmt(StmtReturn(p.channelVar()))
 
         cloneprotocol.addstmts([
-            _runtimeAbort('Clone() for ' +
-                          p.name +
-                          ' has not yet been implemented'),
+            _fatalError('Clone() for ' +
+                        p.name +
+                        ' has not yet been implemented'),
             StmtReturn(ExprLiteral.NULL)
         ])
 
@@ -3874,7 +3874,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             manageearray = p.managedVar(manageeipdltype, self.side)
             abortstmt = StmtIf(ExprBinary(actorvar, '==', ExprLiteral.NULL))
             abortstmt.addifstmts([
-                _runtimeAbort('can not clone an ' + actortype.name() + ' actor'),
+                _fatalError('can not clone an ' + actortype.name() + ' actor'),
                 StmtReturn()])
             forstmt = StmtFor(
                 init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
@@ -3940,7 +3940,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             virtual=1))
 
         if not len(p.managesStmts):
-            removemanagee.addstmts([ _runtimeAbort('unreached'), StmtReturn() ])
+            removemanagee.addstmts([ _fatalError('unreached'), StmtReturn() ])
         else:
             switchontype = StmtSwitch(pvar)
             for managee in p.managesStmts:
@@ -3966,7 +3966,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
                                      case)
             default = StmtBlock()
-            default.addstmts([ _runtimeAbort('unreached'), StmtReturn() ])
+            default.addstmts([ _fatalError('unreached'), StmtReturn() ])
             switchontype.addcase(DefaultLabel(), default)
             removemanagee.addstmt(switchontype)
 
@@ -4057,7 +4057,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifbad = StmtIf(ExprNot(okvar))
         badShmemActions = []
         if (self.side == 'child'):
-            badShmemActions.append(_runtimeAbort('bad Shmem'));
+            badShmemActions.append(_fatalError('bad Shmem'));
         else:
             badShmemActions.append(_printWarningMessage('bad Shmem'));
         badShmemActions.append(StmtReturn.FALSE);
@@ -4227,7 +4227,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             pswitch.addcase(label, case)
 
         die = Block()
-        die.addstmts([ _runtimeAbort('Invalid protocol'),
+        die.addstmts([ _fatalError('Invalid protocol'),
                        StmtReturn(_Result.ValuError) ])
         pswitch.addcase(DefaultLabel(), die)
 
@@ -4328,7 +4328,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifnull = StmtIf(ExprNot(var))
         ifnotnullable = StmtIf(ExprNot(nullablevar))
         ifnotnullable.addifstmt(
-            _runtimeAbort("NULL actor value passed to non-nullable param"))
+            _fatalError("NULL actor value passed to non-nullable param"))
         ifnull.addifstmt(ifnotnullable)
         ifnull.addifstmt(StmtExpr(ExprAssn(idvar, _NULL_ACTOR_ID)))
         # else
@@ -4341,7 +4341,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # this is always a hard-abort, because it means that some C++
         # code has a live pointer to a freed actor, so we're playing
         # Russian roulette with invalid memory
-        iffreed.addifstmt(_runtimeAbort("actor has been |delete|d"))
+        iffreed.addifstmt(_fatalError("actor has been |delete|d"))
         ifnull.addelsestmt(iffreed)
 
         write.addstmts([
@@ -4635,7 +4635,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             writecase = StmtBlock()
             if c.special and c.side != self.side:
-                writecase.addstmt(_runtimeAbort('wrong side!'))
+                writecase.addstmt(_fatalError('wrong side!'))
             else:
                 wexpr = ExprCall(ExprSelect(var, '.', c.getTypeName()))
                 writecase.addstmt(StmtExpr(self.write(ct, wexpr, msgvar)))
@@ -4669,7 +4669,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         unknowntype = 'unknown union type'
         writeswitch.addcase(DefaultLabel(),
-                            StmtBlock([ _runtimeAbort(unknowntype),
+                            StmtBlock([ _fatalError(unknowntype),
                                         StmtReturn() ]))
         readswitch.addcase(DefaultLabel(), StmtBlock(errfnRead(unknowntype)))
 
@@ -4877,7 +4877,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if self.side=='child':
             # in the child process this should not fail
-            failif.addifstmt(_runtimeAbort('constructor for actor failed'))
+            failif.addifstmt(_fatalError('constructor for actor failed'))
         else:
             failif.addifstmts(self.destroyActor(md, actorvar,
                               why=_DestroyReason.FailedConstructor))
