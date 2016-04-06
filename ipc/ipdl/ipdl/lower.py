@@ -399,13 +399,13 @@ def _protocolErrorBreakpoint(msg):
     return StmtExpr(ExprCall(ExprVar('mozilla::ipc::ProtocolErrorBreakpoint'),
                              args=[ msg ]))
 
-def _ipcFatalError(name, msg, otherpid, isparent):
+def _ipcFatalError(name, msg, isparent):
     if isinstance(name, str):
         name = ExprLiteral.String(name)
     if isinstance(msg, str):
         msg = ExprLiteral.String(msg)
     return StmtExpr(ExprCall(ExprVar('mozilla::ipc::FatalError'),
-                             args=[ name, msg, otherpid, isparent ]))
+                             args=[ name, msg, isparent ]))
 
 def _printWarningMessage(msg):
     if isinstance(msg, str):
@@ -3398,13 +3398,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             params=[ Decl(Type('char', const=1, ptrconst=1), msgparam.name) ],
             const=1, never_inline=1))
         if self.side is 'parent':
-            otherpid = p.callOtherPid()
             isparent = ExprLiteral.TRUE
         else:
-            otherpid = ExprLiteral.ZERO
             isparent = ExprLiteral.FALSE
         fatalerror.addstmts([
-            _ipcFatalError(actorname, msgparam, otherpid, isparent)
+            _ipcFatalError(actorname, msgparam, isparent)
         ])
         self.cls.addstmts([ fatalerror, Whitespace.NL ])
 
