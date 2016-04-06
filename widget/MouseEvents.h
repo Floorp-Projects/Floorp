@@ -383,8 +383,8 @@ class WidgetMouseScrollEvent : public WidgetMouseEventBase
 {
 private:
   WidgetMouseScrollEvent()
-    : delta(0)
-    , isHorizontal(false)
+    : mDelta(0)
+    , mIsHorizontal(false)
   {
   }
 
@@ -398,8 +398,8 @@ public:
                          nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
                            eMouseScrollEventClass)
-    , delta(0)
-    , isHorizontal(false)
+    , mDelta(0)
+    , mIsHorizontal(false)
   {
   }
 
@@ -421,19 +421,19 @@ public:
   // nsIDOMUIEvent::SCROLL_PAGE_UP or nsIDOMUIEvent::SCROLL_PAGE_DOWN, the
   // value inducates one page scroll.  If the event message is
   // eLegacyMousePixelScroll, the value indicates scroll amount in pixels.
-  int32_t delta;
+  int32_t mDelta;
 
   // If this is true, it may cause to scroll horizontally.
   // Otherwise, vertically.
-  bool isHorizontal;
+  bool mIsHorizontal;
 
   void AssignMouseScrollEventData(const WidgetMouseScrollEvent& aEvent,
                                   bool aCopyTargets)
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
 
-    delta = aEvent.delta;
-    isHorizontal = aEvent.isHorizontal;
+    mDelta = aEvent.mDelta;
+    mIsHorizontal = aEvent.mIsHorizontal;
   }
 };
 
