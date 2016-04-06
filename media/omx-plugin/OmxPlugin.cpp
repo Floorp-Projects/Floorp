@@ -31,13 +31,7 @@
 #undef LOG
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "OmxPlugin" , ## args)
 
-#if !defined(MOZ_ANDROID_GB) && !defined(MOZ_ANDROID_HC)
-#define MOZ_ANDROID_V4_OR_ABOVE
-#endif
-
-#if defined(MOZ_ANDROID_V4_OR_ABOVE)
 #include <I420ColorConverter.h>
-#endif
 
 using namespace MPAPI;
 
@@ -200,11 +194,9 @@ OmxDecoder::~OmxDecoder()
     mAudioSource->stop();
   }
 
-#ifndef MOZ_ANDROID_HC
   if (mColorConverter) {
     delete mColorConverter;
   }
-#endif
 }
 
 class AutoStopMediaSource {
@@ -268,14 +260,12 @@ static uint32_t GetVideoCreationFlags(PluginHost* aPluginHost)
   int32_t flags = 0;
   aPluginHost->GetIntPref("media.stagefright.omxcodec.flags", &flags);
   if (flags != 0) {
-#if !defined(MOZ_ANDROID_GB)
     LOG("media.stagefright.omxcodec.flags=%d", flags);
     if ((flags & OMXCodec::kHardwareCodecsOnly) != 0) {
       LOG("FORCE HARDWARE DECODING");
     } else if ((flags & OMXCodec::kSoftwareCodecsOnly) != 0) {
       LOG("FORCE SOFTWARE DECODING");
     }
-#endif
   }
 
   flags |= GetDefaultStagefrightFlags(aPluginHost);
@@ -310,14 +300,11 @@ IsColorFormatSupported(OMX_COLOR_FORMATTYPE aColorFormat)
 
   // These formats are okay if we can't find a better one; Android provides a
   // software conversion to a sane colour format.
-#if !defined(MOZ_ANDROID_HC)
   if (ColorConverter(aColorFormat, OMX_COLOR_Format16bitRGB565).isValid()) {
     LOG("Colour format %#x supported by Android ColorConverter.", aColorFormat);
     return ColorFormatSupportOK;
   }
-#endif
 
-#if defined(MOZ_ANDROID_V4_OR_ABOVE)
   I420ColorConverter yuvConverter;
 
   if (yuvConverter.isLoaded() &&
@@ -325,7 +312,6 @@ IsColorFormatSupported(OMX_COLOR_FORMATTYPE aColorFormat)
     LOG("Colour format %#x supported by Android I420ColorConverter.", aColorFormat);
     return ColorFormatSupportOK;
   }
-#endif
 
   return ColorFormatNotSupported;
 }
@@ -433,11 +419,7 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
     // Throw away the videoSource and try again with new flags.
     LOG("Falling back to software decoder");
     videoSource.clear();
-#if defined(MOZ_ANDROID_GB)
-    flags = DEFAULT_STAGEFRIGHT_FLAGS | OMXCodec::kPreferSoftwareCodecs;
-#else
     flags = DEFAULT_STAGEFRIGHT_FLAGS | OMXCodec::kSoftwareCodecsOnly;
-#endif
   }
 
   MOZ_ASSERT(flags != DEFAULT_STAGEFRIGHT_FLAGS);
@@ -633,18 +615,14 @@ bool OmxDecoder::SetVideoFormat() {
   }
 
   // Gingerbread does not support the kKeyCropRect key
-#if !defined(MOZ_ANDROID_GB)
   if (!format->findRect(kKeyCropRect, &mVideoCropLeft, &mVideoCropTop,
                                       &mVideoCropRight, &mVideoCropBottom)) {
-#endif
     mVideoCropLeft = 0;
     mVideoCropTop = 0;
     mVideoCropRight = mVideoStride - 1;
     mVideoCropBottom = mVideoSliceHeight - 1;
     LOG("crop rect not available, assuming no cropping");
-#if !defined(MOZ_ANDROID_GB)
   }
-#endif
 
   if (mVideoCropLeft < 0 || mVideoCropLeft >= mVideoCropRight || mVideoCropRight >= mVideoStride ||
       mVideoCropTop < 0 || mVideoCropTop >= mVideoCropBottom || mVideoCropBottom >= mVideoSliceHeight) {
@@ -798,9 +776,6 @@ bool OmxDecoder::ToVideoFrame_RGB565(VideoFrame *aFrame, int64_t aTimeUs, void *
 }
 
 bool OmxDecoder::ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
-#ifdef MOZ_ANDROID_HC
-  return false;
-#else
   if (!mColorConverter) {
     mColorConverter = new ColorConverter((OMX_COLOR_FORMATTYPE)mVideoColorFormat,
                                          OMX_COLOR_Format16bitRGB565);
@@ -820,26 +795,18 @@ bool OmxDecoder::ToVideoFrame_ColorConverter(VideoFrame *aFrame, int64_t aTimeUs
 
   aFrame->mSize = mVideoWidth * mVideoHeight * 2;
 
-#if defined(MOZ_ANDROID_GB)
-  mColorConverter->convert(mVideoWidth, mVideoHeight,
-                           aData, 0 /* srcSkip */,
-                           buffer, mVideoWidth * 2);
-#else
   mColorConverter->convert(aData, mVideoStride, mVideoSliceHeight,
                            mVideoCropLeft, mVideoCropTop,
                            mVideoCropLeft + mVideoWidth - 1,
                            mVideoCropTop + mVideoHeight - 1,
                            buffer, mVideoWidth, mVideoHeight,
                            0, 0, mVideoWidth - 1, mVideoHeight - 1);
-#endif
 
   return true;
-#endif
 }
 
 bool OmxDecoder::ToVideoFrame_I420ColorConverter(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback)
 {
-#if defined(MOZ_ANDROID_V4_OR_ABOVE)
   I420ColorConverter yuvConverter;
 
   if (!yuvConverter.isLoaded()) {
@@ -866,9 +833,6 @@ bool OmxDecoder::ToVideoFrame_I420ColorConverter(VideoFrame *aFrame, int64_t aTi
   }
 
   return result == OK;
-#else
-  return false;
-#endif
 }
 
 bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame, BufferCallback *aBufferCallback) {
