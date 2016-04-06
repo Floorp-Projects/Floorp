@@ -275,12 +275,11 @@ ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
     return;
   }
 
-  if (aInCacheAndEqual) {
-    Finish(NS_OK);
-    return;
-  }
-
-  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_UPDATED, 1);
+  // The spec validates the response before performing the byte-for-byte check.
+  // Here we perform the comparison in another module and then validate the
+  // script URL and scope.  Make sure to do this validation before accepting
+  // an byte-for-byte match since the service-worker-allowed header might have
+  // changed since the last time it was installed.
 
   nsCOMPtr<nsIURI> scriptURI;
   nsresult rv = NS_NewURI(getter_AddRefs(scriptURI), mScriptSpec);
@@ -335,6 +334,15 @@ ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
     FailUpdateJob(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
+
+  // The response has been validated, so now we can consider if its a
+  // byte-for-byte match.
+  if (aInCacheAndEqual) {
+    Finish(NS_OK);
+    return;
+  }
+
+  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_UPDATED, 1);
 
   MOZ_ASSERT(!mServiceWorker);
   mServiceWorker = new ServiceWorkerInfo(mRegistration->mPrincipal,
