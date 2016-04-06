@@ -42,17 +42,23 @@
   background-color: transparent;
   border-radius: 3px;
   overflow-x: hidden;
-  max-height: 40rem;
+  max-height: 20rem;
 }
 
 :root[platform="linux"] .devtools-autocomplete-popup {
-  max-height: 32rem;
+  /* Root font size is bigger on Linux, adjust rem-based values. */
+  max-height: 16rem;
 }
 
 .devtools-autocomplete-listbox {
   -moz-appearance: none !important;
   background-color: transparent;
   border-width: 0px !important;
+  margin: 0;
+}
+
+.devtools-autocomplete-listbox > scrollbox {
+  padding: 2px;
 }
 
 .devtools-autocomplete-listbox > richlistitem,
