@@ -145,7 +145,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
             lp.width = lp.height = mIconSize;
         }
     }
- 
+
     private class IconGridItem {
         final String label;
         final String description;

@@ -939,7 +939,7 @@ public class GeckoSmsManager
             for (int i = 1; i < mNumbersCount; ++i) {
               formatter.format(", '%s'", mNumbers[i]);
             }
-            
+
             formatter.format(") AND ");
           }
 

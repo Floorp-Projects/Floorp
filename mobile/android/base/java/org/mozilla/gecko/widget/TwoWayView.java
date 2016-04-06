@@ -1438,7 +1438,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             if (maybeStartScrolling(delta)) {
                 return true;
             }
-            
+
             break;
         }
 

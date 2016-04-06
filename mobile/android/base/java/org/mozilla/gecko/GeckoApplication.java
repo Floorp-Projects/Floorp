@@ -28,7 +28,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import java.io.File;
 import java.lang.reflect.Method;
 
-public class GeckoApplication extends Application 
+public class GeckoApplication extends Application
     implements ContextGetter {
     private static final String LOG_TAG = "GeckoApplication";
 
@@ -110,7 +110,7 @@ public class GeckoApplication extends Application
             // shutdown, closing the disk cache cleanly. If the android
             // low memory killer subsequently kills us, the disk cache will
             // be left in a consistent state, avoiding costly cleanup and
-            // re-creation. 
+            // re-creation.
             GeckoThread.onPause();
             mPausedGecko = true;
 

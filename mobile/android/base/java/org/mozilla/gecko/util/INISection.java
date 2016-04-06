@@ -38,7 +38,7 @@ public class INISection {
             Log.i(LOGTAG, msg);
         }
     }
-  
+
     // get a global property out of the hash table. will return null if the property doesn't exist
     public Object getProperty(String key) {
         getProperties(); // ensure that we have parsed the file
@@ -86,9 +86,9 @@ public class INISection {
         if (value == null)
             removeProperty(key);
         else
-            mProperties.put(key.trim(), value);     
-    }   
- 
+            mProperties.put(key.trim(), value);
+    }
+
     // remove a property
     public void removeProperty(String name) {
         // ensure that we have parsed the file

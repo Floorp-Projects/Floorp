@@ -110,7 +110,7 @@ public class PropertyAnimator implements Runnable {
 
         float interpolation = mInterpolator.getInterpolation(timePassed * mDurationReciprocal);
 
-        for (ElementHolder element : mElementsList) { 
+        for (ElementHolder element : mElementsList) {
             float delta = element.from + ((element.to - element.from) * interpolation);
             invalidate(element, delta);
         }
