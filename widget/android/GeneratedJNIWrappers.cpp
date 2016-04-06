@@ -972,6 +972,9 @@ auto GeckoThread::SetState(mozilla::jni::Object::Param a0) -> void
 constexpr char GeckoThread::SpeculativeConnect_t::name[];
 constexpr char GeckoThread::SpeculativeConnect_t::signature[];
 
+constexpr char GeckoThread::WaitOnGecko_t::name[];
+constexpr char GeckoThread::WaitOnGecko_t::signature[];
+
 constexpr char GeckoThread::ClsLoader_t::name[];
 constexpr char GeckoThread::ClsLoader_t::signature[];
 
