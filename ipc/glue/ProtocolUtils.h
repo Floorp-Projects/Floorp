@@ -310,8 +310,18 @@ LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
 MOZ_NEVER_INLINE void
 ProtocolErrorBreakpoint(const char* aMsg);
 
+// The code generator calls this function for errors which come from the
+// methods of protocols.  Doing this saves codesize by making the error
+// cases significantly smaller.
 MOZ_NEVER_INLINE void
 FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent);
+
+// The code generator calls this function for errors which are not
+// protocol-specific: errors in generated struct methods or errors in
+// transition functions, for instance.  Doing this saves codesize by
+// by making the error cases significantly smaller.
+MOZ_NEVER_INLINE void
+LogicError(const char* aMsg);
 
 struct PrivateIPDLInterface {};
 
