@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Subtest for Login Manager notifications</title>
+</head>
+<body>
+<h2>Change password</h2>
+<form id="form" action="formsubmit.sjs">
+  <input id="pass_current" name="pass_current" type="password" value="notifyp1">
+  <input id="pass" name="pass" type="password">
+  <input id="pass_confirm" name="pass_confirm" type="password">
+  <button type='submit'>Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  passField.value = "pass2";
+  passConfirmField.value = "pass2";
+
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+var userField = document.getElementById("user");
+var passField = document.getElementById("pass");
+var passConfirmField = document.getElementById("pass_confirm");
+
+</script>
+</body>
+</html>
