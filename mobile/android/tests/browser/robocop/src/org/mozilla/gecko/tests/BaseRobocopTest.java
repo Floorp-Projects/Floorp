@@ -281,7 +281,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
 
     protected GeckoProfile getTestProfile() {
         if (mProfile.startsWith("/")) {
-            return GeckoProfile.get(getActivity(), "default", mProfile);
+            return GeckoProfile.get(getActivity(), /* profileName */ null, mProfile);
         }
 
         return GeckoProfile.get(getActivity(), mProfile);
