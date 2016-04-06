@@ -664,6 +664,9 @@ private:
 
   void
   UpdateTimerFired(nsIPrincipal* aPrincipal, const nsACString& aScope);
+
+  void
+  MaybeSendUnregister(nsIPrincipal* aPrincipal, const nsACString& aScope);
 };
 
 } // namespace workers

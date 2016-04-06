@@ -4104,6 +4104,27 @@ ServiceWorkerManager::UpdateTimerFired(nsIPrincipal* aPrincipal,
   SoftUpdate(attrs, aScope);
 }
 
+void
+ServiceWorkerManager::MaybeSendUnregister(nsIPrincipal* aPrincipal,
+                                          const nsACString& aScope)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(!aScope.IsEmpty());
+
+  if (!mActor) {
+    return;
+  }
+
+  PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  Unused << mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(aScope));
+}
+
 NS_IMPL_ISUPPORTS(ServiceWorkerInfo, nsIServiceWorkerInfo)
 
 NS_IMETHODIMP
