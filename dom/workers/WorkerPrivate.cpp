@@ -102,6 +102,7 @@
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerFeature.h"
+#include "WorkerNavigator.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "WorkerThread.h"
