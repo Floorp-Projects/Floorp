@@ -263,12 +263,6 @@ interface nsIPrintSettings : nsISupports
    */
   attribute boolean isInitializedFromPrefs;
 
-  /**
-   * This attribute tracks if the settings made on the margin box is
-   * stored in the prefs or not.
-   */
-  attribute boolean persistMarginBoxSettings;
-
   /* C++ Helper Functions */
   [noscript] void SetMarginInTwips(in nsNativeIntMarginRef aMargin);
   [noscript] void SetEdgeInTwips(in nsNativeIntMarginRef aEdge);
