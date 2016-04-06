@@ -1815,8 +1815,10 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
 
   TreeWalker walker(aContainer);
   if (aContainer->IsAcceptableChild(aNode) && walker.Seek(aNode)) {
-    Accessible* child =
-      GetAccService()->GetOrCreateAccessible(aNode, aContainer);
+    Accessible* child = GetAccessible(aNode);
+    if (!child) {
+      child = GetAccService()->CreateAccessible(aNode, aContainer);
+    }
 
     if (child) {
       RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
