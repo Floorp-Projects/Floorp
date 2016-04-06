@@ -355,6 +355,9 @@ crmf_copy_poposigningkey(PLArenaPool *poolp,
     if (inPopoSignKey->derInput.data != NULL) {
         rv = SECITEM_CopyItem(poolp, &destPopoSignKey->derInput,
                               &inPopoSignKey->derInput);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
     }
     destPopoSignKey->algorithmIdentifier = (poolp == NULL) ? PORT_ZNew(SECAlgorithmID)
                                                            : PORT_ArenaZNew(poolp, SECAlgorithmID);

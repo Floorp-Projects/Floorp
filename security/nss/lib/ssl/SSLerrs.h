@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define UNUSED_ERROR(x) ER3(SSL_ERROR_UNUSED_##x, (SSL_ERROR_BASE + x), \
+                            "Unrecognized SSL error_code.")
+
 /* SSL-specific security error codes  */
 /* caller must include "sslerr.h" */
 
@@ -20,8 +23,7 @@ ER3(SSL_ERROR_NO_CERTIFICATE, SSL_ERROR_BASE + 3,
 ER3(SSL_ERROR_BAD_CERTIFICATE, SSL_ERROR_BASE + 4,
     "Unable to communicate securely with peer: peers's certificate was rejected.")
 
-ER3(SSL_ERROR_UNUSED_5, SSL_ERROR_BASE + 5,
-    "Unrecognized SSL error code.")
+UNUSED_ERROR(5)
 
 ER3(SSL_ERROR_BAD_CLIENT, SSL_ERROR_BASE + 6,
     "The server has encountered bad data from the client.")
@@ -35,8 +37,7 @@ ER3(SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE, SSL_ERROR_BASE + 8,
 ER3(SSL_ERROR_UNSUPPORTED_VERSION, SSL_ERROR_BASE + 9,
     "Peer using unsupported version of security protocol.")
 
-ER3(SSL_ERROR_UNUSED_10, SSL_ERROR_BASE + 10,
-    "Unrecognized SSL error code.")
+UNUSED_ERROR(10)
 
 ER3(SSL_ERROR_WRONG_CERTIFICATE, SSL_ERROR_BASE + 11,
     "Client authentication failed: private key in key database does not match public key in certificate database.")
@@ -455,7 +456,7 @@ ER3(SSL_ERROR_RX_UNEXPECTED_ENCRYPTED_EXTENSIONS, (SSL_ERROR_BASE + 142),
     "SSL received an unexpected Encrypted Extensions handshake message.")
 
 ER3(SSL_ERROR_MISSING_EXTENSION_ALERT, (SSL_ERROR_BASE + 143),
-    "SSL received a missing_extenson alert.")
+    "SSL received a missing_extension alert.")
 
 ER3(SSL_ERROR_KEY_EXCHANGE_FAILURE, (SSL_ERROR_BASE + 144),
     "SSL had an error performing key exchange.")
@@ -465,3 +466,7 @@ ER3(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION, (SSL_ERROR_BASE + 145),
 
 ER3(SSL_ERROR_RX_MALFORMED_ENCRYPTED_EXTENSIONS, (SSL_ERROR_BASE + 146),
     "SSL received a malformed Encrypted Extensions handshake message.")
+
+ER3(SSL_ERROR_RX_MALFORMED_PRE_SHARED_KEY, (SSL_ERROR_BASE + 147),
+    "SSL received an invalid PreSharedKey extension.")
+

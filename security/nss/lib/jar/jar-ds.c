@@ -8,29 +8,29 @@
 ZZList *
 ZZ_NewList(void)
 {
-    ZZList *list = (ZZList *) PORT_ZAlloc (sizeof (ZZList));
+    ZZList *list = (ZZList *)PORT_ZAlloc(sizeof(ZZList));
     if (list)
-	ZZ_InitList (list);
+        ZZ_InitList(list);
     return list;
 }
 
 ZZLink *
 ZZ_NewLink(JAR_Item *thing)
 {
-    ZZLink *link = (ZZLink *) PORT_ZAlloc (sizeof (ZZLink));
+    ZZLink *link = (ZZLink *)PORT_ZAlloc(sizeof(ZZLink));
     if (link)
-	link->thing = thing;
+        link->thing = thing;
     return link;
 }
 
-void 
+void
 ZZ_DestroyLink(ZZLink *link)
 {
     PORT_Free(link);
 }
 
-void 
-ZZ_DestroyList (ZZList *list)
+void
+ZZ_DestroyList(ZZList *list)
 {
     PORT_Free(list);
 }

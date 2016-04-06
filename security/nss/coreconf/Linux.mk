@@ -153,8 +153,12 @@ DSO_LDOPTS		= -shared $(ARCHFLAG) -Wl,--gc-sections
 # The linker on Red Hat Linux 7.2 and RHEL 2.1 (GNU ld version 2.11.90.0.8)
 # incorrectly reports undefined references in the libraries we link with, so
 # we don't use -z defs there.
+# Also, -z defs conflicts with Address Sanitizer, which emits relocations
+# against the libsanitizer runtime built into the main executable.
 ZDEFS_FLAG		= -Wl,-z,defs
+ifneq ($(USE_ASAN),1)
 DSO_LDOPTS		+= $(if $(findstring 2.11.90.0.8,$(shell ld -v)),,$(ZDEFS_FLAG))
+endif
 LDFLAGS			+= $(ARCHFLAG)
 
 # On Maemo, we need to use the -rpath-link flag for even the standard system
@@ -210,3 +214,5 @@ PROCESS_MAP_FILE = grep -v ';-' $< | \
 ifeq ($(OS_RELEASE),2.4)
 DEFINES += -DNO_FORK_CHECK
 endif
+
+include $(CORE_DEPTH)/coreconf/sanitizers.mk

@@ -44,7 +44,7 @@ extern "C" {
 
 #define ZLIB_VERSION "1.0.4"
 
-/* 
+/*
      The 'zlib' compression library provides in-memory compression and
   decompression functions, including integrity checks of the uncompressed
   data.  This version of the library supports only one compression method
@@ -68,30 +68,30 @@ extern "C" {
   for some forms of corrupted input.
 */
 
-typedef voidpf (*alloc_func) OF((voidpf opaque, uInt items, uInt size));
-typedef void   (*free_func)  OF((voidpf opaque, voidpf address));
+typedef voidpf(*alloc_func) OF((voidpf opaque, uInt items, uInt size));
+typedef void(*free_func) OF((voidpf opaque, voidpf address));
 
 struct internal_state;
 
 typedef struct z_stream_s {
-    Bytef    *next_in;  /* next input byte */
-    uInt     avail_in;  /* number of bytes available at next_in */
-    uLong    total_in;  /* total nb of input bytes read so far */
+    Bytef *next_in; /* next input byte */
+    uInt avail_in;  /* number of bytes available at next_in */
+    uLong total_in; /* total nb of input bytes read so far */
 
-    Bytef    *next_out; /* next output byte should be put there */
-    uInt     avail_out; /* remaining free space at next_out */
-    uLong    total_out; /* total nb of bytes output so far */
+    Bytef *next_out; /* next output byte should be put there */
+    uInt avail_out;  /* remaining free space at next_out */
+    uLong total_out; /* total nb of bytes output so far */
 
-    char     *msg;      /* last error message, NULL if no error */
+    char *msg;                        /* last error message, NULL if no error */
     struct internal_state FAR *state; /* not visible by applications */
 
-    alloc_func zalloc;  /* used to allocate the internal state */
-    free_func  zfree;   /* used to free the internal state */
-    voidpf     opaque;  /* private data object passed to zalloc and zfree */
+    alloc_func zalloc; /* used to allocate the internal state */
+    free_func zfree;   /* used to free the internal state */
+    voidpf opaque;     /* private data object passed to zalloc and zfree */
 
-    int     data_type;  /* best guess about the data type: ascii or binary */
-    uLong   adler;      /* adler32 value of the uncompressed data */
-    uLong   reserved;   /* reserved for future use */
+    int data_type;  /* best guess about the data type: ascii or binary */
+    uLong adler;    /* adler32 value of the uncompressed data */
+    uLong reserved; /* reserved for future use */
 } z_stream;
 
 typedef z_stream FAR *z_streamp;
@@ -125,58 +125,59 @@ typedef z_stream FAR *z_streamp;
    a single step).
 */
 
-                        /* constants */
+/* constants */
 
-#define Z_NO_FLUSH      0
+#define Z_NO_FLUSH 0
 #define Z_PARTIAL_FLUSH 1
-#define Z_SYNC_FLUSH    2
-#define Z_FULL_FLUSH    3
-#define Z_FINISH        4
+#define Z_SYNC_FLUSH 2
+#define Z_FULL_FLUSH 3
+#define Z_FINISH 4
 /* Allowed flush values; see deflate() below for details */
 
-#define Z_OK            0
-#define Z_STREAM_END    1
-#define Z_NEED_DICT     2
-#define Z_ERRNO        (-1)
+#define Z_OK 0
+#define Z_STREAM_END 1
+#define Z_NEED_DICT 2
+#define Z_ERRNO (-1)
 #define Z_STREAM_ERROR (-2)
-#define Z_DATA_ERROR   (-3)
-#define Z_MEM_ERROR    (-4)
-#define Z_BUF_ERROR    (-5)
+#define Z_DATA_ERROR (-3)
+#define Z_MEM_ERROR (-4)
+#define Z_BUF_ERROR (-5)
 #define Z_VERSION_ERROR (-6)
 /* Return codes for the compression/decompression functions. Negative
  * values are errors, positive values are used for special but normal events.
  */
 
-#define Z_NO_COMPRESSION         0
-#define Z_BEST_SPEED             1
-#define Z_BEST_COMPRESSION       9
-#define Z_DEFAULT_COMPRESSION  (-1)
+#define Z_NO_COMPRESSION 0
+#define Z_BEST_SPEED 1
+#define Z_BEST_COMPRESSION 9
+#define Z_DEFAULT_COMPRESSION (-1)
 /* compression levels */
 
-#define Z_FILTERED            1
-#define Z_HUFFMAN_ONLY        2
-#define Z_DEFAULT_STRATEGY    0
+#define Z_FILTERED 1
+#define Z_HUFFMAN_ONLY 2
+#define Z_DEFAULT_STRATEGY 0
 /* compression strategy; see deflateInit2() below for details */
 
-#define Z_BINARY   0
-#define Z_ASCII    1
-#define Z_UNKNOWN  2
+#define Z_BINARY 0
+#define Z_ASCII 1
+#define Z_UNKNOWN 2
 /* Possible values of the data_type field */
 
-#define Z_DEFLATED   8
+#define Z_DEFLATED 8
 /* The deflate compression method (the only one supported in this version) */
 
-#define Z_NULL  0  /* for initializing zalloc, zfree, opaque */
+#define Z_NULL 0 /* for initializing zalloc, zfree, opaque */
 
 #define zlib_version zlibVersion()
 /* for compatibility with versions < 1.0.2 */
 
-                        /* basic functions */
+/* basic functions */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(const char *)    zlibVersion    (void);
+PR_EXTERN(const char *)
+zlibVersion(void);
 #else
-extern const char * EXPORT zlibVersion OF((void));
+extern const char *EXPORT zlibVersion OF((void));
 #endif
 /* The application can compare zlibVersion and ZLIB_VERSION for consistency.
    If the first character differs, the library code actually used is
@@ -184,7 +185,7 @@ extern const char * EXPORT zlibVersion OF((void));
    This check is automatically made by deflateInit and inflateInit.
  */
 
-/* 
+/*
 extern int EXPORT deflateInit OF((z_streamp strm, int level));
 
      Initializes the internal stream state for compression. The fields
@@ -206,9 +207,9 @@ extern int EXPORT deflateInit OF((z_streamp strm, int level));
    perform any compression: this will be done by deflate().
 */
 
-
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    deflate    (z_streamp strm, int flush);
+PR_EXTERN(int)
+deflate(z_streamp strm, int flush);
 #else
 extern int EXPORT deflate OF((z_streamp strm, int flush));
 #endif
@@ -261,7 +262,7 @@ extern int EXPORT deflate OF((z_streamp strm, int flush));
   more input data, until it returns with Z_STREAM_END or an error. After
   deflate has returned Z_STREAM_END, the only possible operations on the
   stream are deflateReset or deflateEnd.
-  
+
     Z_FINISH can be used immediately after deflateInit if all the compression
   is to be done in a single step. In this case, avail_out must be at least
   0.1% larger than avail_in plus 12 bytes.  If deflate does not return
@@ -279,9 +280,9 @@ extern int EXPORT deflate OF((z_streamp strm, int flush));
   if next_in or next_out was NULL), Z_BUF_ERROR if no progress is possible.
 */
 
-
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    deflateEnd    (z_streamp strm);
+PR_EXTERN(int)
+deflateEnd(z_streamp strm);
 #else
 extern int EXPORT deflateEnd OF((z_streamp strm));
 #endif
@@ -297,8 +298,7 @@ extern int EXPORT deflateEnd OF((z_streamp strm));
    deallocated).
 */
 
-
-/* 
+/*
 extern int EXPORT inflateInit OF((z_streamp strm));
 
      Initializes the internal stream state for decompression. The fields
@@ -313,9 +313,9 @@ extern int EXPORT inflateInit OF((z_streamp strm));
    done by inflate().
 */
 
-
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    inflate    (z_streamp strm, int flush);
+PR_EXTERN(int)
+inflate(z_streamp strm, int flush);
 #else
 extern int EXPORT inflate OF((z_streamp strm, int flush));
 #endif
@@ -372,9 +372,9 @@ extern int EXPORT inflate OF((z_streamp strm, int flush));
   dictionary chosen by the compressor.
 */
 
-
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    inflateEnd    (z_streamp strm);
+PR_EXTERN(int)
+inflateEnd(z_streamp strm);
 #else
 extern int EXPORT inflateEnd OF((z_streamp strm));
 #endif
@@ -388,13 +388,13 @@ extern int EXPORT inflateEnd OF((z_streamp strm));
    static string (which must not be deallocated).
 */
 
-                        /* Advanced functions */
+/* Advanced functions */
 
 /*
     The following functions are needed only in some special applications.
 */
 
-/*   
+/*
 extern int EXPORT deflateInit2 OF((z_streamp strm,
                                    int  level,
                                    int  method,
@@ -450,17 +450,18 @@ extern int EXPORT deflateInit2 OF((z_streamp strm,
    not enough memory, Z_STREAM_ERROR if a parameter is invalid (such as
    an invalid method). msg is set to null if there is no error message.
    deflateInit2 does not perform any compression: this will be done by
-   deflate(). 
+   deflate().
 */
-                            
+
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    deflateSetDictionary    (z_streamp strm,
-					   const Bytef *dictionary,
-					   uInt  dictLength);
+PR_EXTERN(int)
+deflateSetDictionary(z_streamp strm,
+                     const Bytef *dictionary,
+                     uInt dictLength);
 #else
 extern int EXPORT deflateSetDictionary OF((z_streamp strm,
                                            const Bytef *dictionary,
-				           uInt  dictLength));
+                                           uInt dictLength));
 #endif
 /*
      Initializes the compression dictionary (history buffer) from the given
@@ -485,11 +486,12 @@ extern int EXPORT deflateSetDictionary OF((z_streamp strm,
    parameter is invalid (such as NULL dictionary) or the stream state
    is inconsistent (for example if deflate has already been called for this
    stream). deflateSetDictionary does not perform any compression: this will
-   be done by deflate(). 
+   be done by deflate().
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    deflateCopy    (z_streamp dest, z_streamp source);
+PR_EXTERN(int)
+deflateCopy(z_streamp dest, z_streamp source);
 #else
 extern int EXPORT deflateCopy OF((z_streamp dest, z_streamp source));
 #endif
@@ -515,7 +517,8 @@ extern int EXPORT deflateCopy OF((z_streamp dest, z_streamp source));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    deflateReset    (z_streamp strm);
+PR_EXTERN(int)
+deflateReset(z_streamp strm);
 #else
 extern int EXPORT deflateReset OF((z_streamp strm));
 #endif
@@ -530,7 +533,8 @@ extern int EXPORT deflateReset OF((z_streamp strm));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    deflateParams    (z_streamp strm, int level, int strategy);
+PR_EXTERN(int)
+deflateParams(z_streamp strm, int level, int strategy);
 #else
 extern int EXPORT deflateParams OF((z_streamp strm, int level, int strategy));
 #endif
@@ -551,7 +555,7 @@ extern int EXPORT deflateParams OF((z_streamp strm, int level, int strategy));
    if strm->avail_out was zero.
 */
 
-/*   
+/*
 extern int EXPORT inflateInit2 OF((z_streamp strm,
                                    int  windowBits));
 
@@ -587,13 +591,14 @@ extern int EXPORT inflateInit2 OF((z_streamp strm,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    inflateSetDictionary    (z_streamp strm,
-					   const Bytef *dictionary,
-					   uInt  dictLength);
+PR_EXTERN(int)
+inflateSetDictionary(z_streamp strm,
+                     const Bytef *dictionary,
+                     uInt dictLength);
 #else
 extern int EXPORT inflateSetDictionary OF((z_streamp strm,
-				           const Bytef *dictionary,
-					   uInt  dictLength));
+                                           const Bytef *dictionary,
+                                           uInt dictLength));
 #endif
 /*
      Initializes the decompression dictionary (history buffer) from the given
@@ -612,11 +617,12 @@ extern int EXPORT inflateSetDictionary OF((z_streamp strm,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    inflateSync    (z_streamp strm);
+PR_EXTERN(int)
+inflateSync(z_streamp strm);
 #else
 extern int EXPORT inflateSync OF((z_streamp strm));
 #endif
-/* 
+/*
     Skips invalid compressed data until the special marker (see deflate()
   above) can be found, or until all available input is skipped. No output
   is provided.
@@ -631,7 +637,8 @@ extern int EXPORT inflateSync OF((z_streamp strm));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    inflateReset    (z_streamp strm);
+PR_EXTERN(int)
+inflateReset(z_streamp strm);
 #else
 extern int EXPORT inflateReset OF((z_streamp strm));
 #endif
@@ -644,8 +651,7 @@ extern int EXPORT inflateReset OF((z_streamp strm));
    stream state was inconsistent (such as zalloc or state being NULL).
 */
 
-
-                        /* utility functions */
+/* utility functions */
 
 /*
      The following utility functions are implemented on top of the
@@ -656,11 +662,12 @@ extern int EXPORT inflateReset OF((z_streamp strm));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    compress    (Bytef *dest,   uLongf *destLen,
-			       const Bytef *source, uLong sourceLen);
+PR_EXTERN(int)
+compress(Bytef *dest, uLongf *destLen,
+         const Bytef *source, uLong sourceLen);
 #else
-extern int EXPORT compress OF((Bytef *dest,   uLongf *destLen,
-			       const Bytef *source, uLong sourceLen));
+extern int EXPORT compress OF((Bytef * dest, uLongf *destLen,
+                               const Bytef *source, uLong sourceLen));
 #endif
 /*
      Compresses the source buffer into the destination buffer.  sourceLen is
@@ -676,11 +683,12 @@ extern int EXPORT compress OF((Bytef *dest,   uLongf *destLen,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)    uncompress    (Bytef *dest, uLongf *destLen,
-				 const Bytef *source, uLong sourceLen);
+PR_EXTERN(int)
+uncompress(Bytef *dest, uLongf *destLen,
+           const Bytef *source, uLong sourceLen);
 #else
-extern int EXPORT uncompress OF((Bytef *dest, uLongf *destLen,
-				 const Bytef *source, uLong sourceLen));
+extern int EXPORT uncompress OF((Bytef * dest, uLongf *destLen,
+                                 const Bytef *source, uLong sourceLen));
 #endif
 /*
      Decompresses the source buffer into the destination buffer.  sourceLen is
@@ -698,13 +706,13 @@ extern int EXPORT uncompress OF((Bytef *dest, uLongf *destLen,
    buffer, or Z_DATA_ERROR if the input data was corrupted.
 */
 
-
 typedef voidp gzFile;
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(gzFile)    gzopen     (const char *path, const char *mode);
+PR_EXTERN(gzFile)
+gzopen(const char *path, const char *mode);
 #else
-extern gzFile EXPORT gzopen  OF((const char *path, const char *mode));
+extern gzFile EXPORT gzopen OF((const char *path, const char *mode));
 #endif
 /*
      Opens a gzip (.gz) file for reading or writing. The mode parameter
@@ -718,9 +726,10 @@ extern gzFile EXPORT gzopen  OF((const char *path, const char *mode));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(gzFile)    gzdopen     (int fd, const char *mode);
+PR_EXTERN(gzFile)
+gzdopen(int fd, const char *mode);
 #else
-extern gzFile EXPORT gzdopen  OF((int fd, const char *mode));
+extern gzFile EXPORT gzdopen OF((int fd, const char *mode));
 #endif
 /*
      gzdopen() associates a gzFile with the file descriptor fd.  File
@@ -735,9 +744,10 @@ extern gzFile EXPORT gzdopen  OF((int fd, const char *mode));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)       gzread     (gzFile file, voidp buf, unsigned len);
+PR_EXTERN(int)
+gzread(gzFile file, voidp buf, unsigned len);
 #else
-extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len));
+extern int EXPORT gzread OF((gzFile file, voidp buf, unsigned len));
 #endif
 /*
      Reads the given number of uncompressed bytes from the compressed file.
@@ -747,9 +757,10 @@ extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len));
    end of file, -1 for error). */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)       gzwrite    (gzFile file, const voidp buf, unsigned len);
+PR_EXTERN(int)
+gzwrite(gzFile file, const voidp buf, unsigned len);
 #else
-extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len));
+extern int EXPORT gzwrite OF((gzFile file, const voidp buf, unsigned len));
 #endif
 /*
      Writes the given number of uncompressed bytes into the compressed file.
@@ -758,9 +769,10 @@ extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)       gzflush    (gzFile file, int flush);
+PR_EXTERN(int)
+gzflush(gzFile file, int flush);
 #else
-extern int EXPORT    gzflush OF((gzFile file, int flush));
+extern int EXPORT gzflush OF((gzFile file, int flush));
 #endif
 /*
      Flushes all pending output into the compressed file. The parameter
@@ -772,9 +784,10 @@ extern int EXPORT    gzflush OF((gzFile file, int flush));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int)       gzclose    (gzFile file);
+PR_EXTERN(int)
+gzclose(gzFile file);
 #else
-extern int EXPORT    gzclose OF((gzFile file));
+extern int EXPORT gzclose OF((gzFile file));
 #endif
 /*
      Flushes all pending output if necessary, closes the compressed file
@@ -783,9 +796,10 @@ extern int EXPORT    gzclose OF((gzFile file));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(const char *)    gzerror    (gzFile file, int *errnum);
+PR_EXTERN(const char *)
+gzerror(gzFile file, int *errnum);
 #else
-extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
+extern const char *EXPORT gzerror OF((gzFile file, int *errnum));
 #endif
 /*
      Returns the error message for the last error which occurred on the
@@ -795,7 +809,7 @@ extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
    to get the exact error code.
 */
 
-                        /* checksum functions */
+/* checksum functions */
 
 /*
      These functions are not related to compression but are exported
@@ -804,7 +818,8 @@ extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(uLong)    adler32    (uLong adler, const Bytef *buf, uInt len);
+PR_EXTERN(uLong)
+adler32(uLong adler, const Bytef *buf, uInt len);
 #else
 extern uLong EXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
 #endif
@@ -825,9 +840,10 @@ extern uLong EXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(uLong)    crc32      (uLong crc, const Bytef *buf, uInt len);
+PR_EXTERN(uLong)
+crc32(uLong crc, const Bytef *buf, uInt len);
 #else
-extern uLong EXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
+extern uLong EXPORT crc32 OF((uLong crc, const Bytef *buf, uInt len));
 #endif
 /*
      Update a running crc with the bytes buf[0..len-1] and return the updated
@@ -844,47 +860,51 @@ extern uLong EXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
      if (crc != original_crc) error();
 */
 
-
-                        /* various hacks, don't look :) */
+/* various hacks, don't look :) */
 
 /* deflateInit and inflateInit are macros to allow checking the zlib version
  * and the compiler's view of z_stream:
  */
 #ifdef MOZILLA_CLIENT
-PR_EXTERN(int) deflateInit (z_streamp strm, int level, const char *version,
-			    int stream_size);
-PR_EXTERN(int) inflateInit_(z_streamp strm, const char *version,
-			    int stream_size);
-PR_EXTERN(int) deflateInit2_(z_streamp strm, int  level, int  method,
-			     int windowBits, int memLevel, int strategy,
-			     const char *version, int stream_size);
-PR_EXTERN(int) inflateInit2_(z_streamp strm, int  windowBits,
-			     const char *version, int stream_size);
+PR_EXTERN(int)
+deflateInit(z_streamp strm, int level, const char *version,
+            int stream_size);
+PR_EXTERN(int)
+inflateInit_(z_streamp strm, const char *version,
+             int stream_size);
+PR_EXTERN(int)
+deflateInit2_(z_streamp strm, int level, int method,
+              int windowBits, int memLevel, int strategy,
+              const char *version, int stream_size);
+PR_EXTERN(int)
+inflateInit2_(z_streamp strm, int windowBits,
+              const char *version, int stream_size);
 #else
-extern int EXPORT deflateInit_ OF((z_streamp strm, int level, const char *version, 
-				   int stream_size));
-extern int EXPORT inflateInit_ OF((z_streamp strm, const char *version, 
-				   int stream_size));
-extern int EXPORT deflateInit2_ OF((z_streamp strm, int  level, int  method, 
-				    int windowBits, int memLevel, int strategy, 
-				    const char *version, int stream_size));
-extern int EXPORT inflateInit2_ OF((z_streamp strm, int  windowBits, 
-				    const char *version, int stream_size));
+extern int EXPORT deflateInit_ OF((z_streamp strm, int level, const char *version,
+                                   int stream_size));
+extern int EXPORT inflateInit_ OF((z_streamp strm, const char *version,
+                                   int stream_size));
+extern int EXPORT deflateInit2_ OF((z_streamp strm, int level, int method,
+                                    int windowBits, int memLevel, int strategy,
+                                    const char *version, int stream_size));
+extern int EXPORT inflateInit2_ OF((z_streamp strm, int windowBits,
+                                    const char *version, int stream_size));
 #endif /* MOZILLA_CLIENT */
 
-
 #define deflateInit(strm, level) \
-        deflateInit_((strm), (level),       ZLIB_VERSION, sizeof(z_stream))
+    deflateInit_((strm), (level), ZLIB_VERSION, sizeof(z_stream))
 #define inflateInit(strm) \
-        inflateInit_((strm),                ZLIB_VERSION, sizeof(z_stream))
+    inflateInit_((strm), ZLIB_VERSION, sizeof(z_stream))
 #define deflateInit2(strm, level, method, windowBits, memLevel, strategy) \
-        deflateInit2_((strm),(level),(method),(windowBits),(memLevel),\
-		      (strategy),           ZLIB_VERSION, sizeof(z_stream))
+    deflateInit2_((strm), (level), (method), (windowBits), (memLevel),    \
+                  (strategy), ZLIB_VERSION, sizeof(z_stream))
 #define inflateInit2(strm, windowBits) \
-        inflateInit2_((strm), (windowBits), ZLIB_VERSION, sizeof(z_stream))
+    inflateInit2_((strm), (windowBits), ZLIB_VERSION, sizeof(z_stream))
 
 #if !defined(_Z_UTIL_H) && !defined(NO_DUMMY_DECL)
-    struct internal_state {int dummy;}; /* hack for buggy compilers */
+struct internal_state {
+    int dummy;
+}; /* hack for buggy compilers */
 #endif
 
 uLongf *get_crc_table OF((void)); /* can be used by asm versions of crc32() */

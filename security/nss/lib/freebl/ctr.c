@@ -30,6 +30,7 @@ CTR_InitContext(CTRContext *ctr, void *context, freeblCipherFunc cipher,
     }
 
     /* Invariant: 0 < ctr->bufPtr <= blocksize */
+    ctr->checkWrap = PR_FALSE;
     ctr->bufPtr = blocksize; /* no unused data in the buffer */
     ctr->cipher = cipher;
     ctr->context = context;
@@ -40,6 +41,10 @@ CTR_InitContext(CTRContext *ctr, void *context, freeblCipherFunc cipher,
 	return SECFailure;
     }
     PORT_Memcpy(ctr->counter, ctrParams->cb, blocksize);
+    if (ctr->counterBits < 64) {
+	PORT_Memcpy(ctr->counterFirst, ctr->counter, blocksize);
+	ctr->checkWrap = PR_TRUE;
+    }
     return SECSuccess;
 }
 
@@ -147,6 +152,12 @@ CTR_Update(CTRContext *ctr, unsigned char *outbuf,
 	rv = (*ctr->cipher)(ctr->context, ctr->buffer, &tmp, blocksize,
 			ctr->counter, blocksize, blocksize);
 	ctr_GetNextCtr(ctr->counter, ctr->counterBits, blocksize);
+	if (ctr->checkWrap) {
+	    if (PORT_Memcmp(ctr->counter, ctr->counterFirst, blocksize) == 0) {
+		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		return SECFailure;
+	    }
+	}
 	if (rv != SECSuccess) {
 	    return SECFailure;
 	}
@@ -162,6 +173,12 @@ CTR_Update(CTRContext *ctr, unsigned char *outbuf,
     rv = (*ctr->cipher)(ctr->context, ctr->buffer, &tmp, blocksize,
 			ctr->counter, blocksize, blocksize);
     ctr_GetNextCtr(ctr->counter, ctr->counterBits, blocksize);
+    if (ctr->checkWrap) {
+	if (PORT_Memcmp(ctr->counter, ctr->counterFirst, blocksize) == 0) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return SECFailure;
+	}
+    }
     if (rv != SECSuccess) {
 	return SECFailure;
     }

@@ -171,24 +171,19 @@ ssl_DestroySID(sslSessionID *sid)
     PORT_Assert(sid->references == 0);
     PORT_Assert(sid->cached != in_client_cache);
 
-    if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-        SECITEM_ZfreeItem(&sid->u.ssl2.masterKey, PR_FALSE);
-        SECITEM_ZfreeItem(&sid->u.ssl2.cipherArg, PR_FALSE);
-    } else {
-        if (sid->u.ssl3.locked.sessionTicket.ticket.data) {
-            SECITEM_FreeItem(&sid->u.ssl3.locked.sessionTicket.ticket,
-                             PR_FALSE);
-        }
-        if (sid->u.ssl3.srvName.data) {
-            SECITEM_FreeItem(&sid->u.ssl3.srvName, PR_FALSE);
-        }
-        if (sid->u.ssl3.signedCertTimestamps.data) {
-            SECITEM_FreeItem(&sid->u.ssl3.signedCertTimestamps, PR_FALSE);
-        }
+    if (sid->u.ssl3.locked.sessionTicket.ticket.data) {
+        SECITEM_FreeItem(&sid->u.ssl3.locked.sessionTicket.ticket,
+                         PR_FALSE);
+    }
+    if (sid->u.ssl3.srvName.data) {
+        SECITEM_FreeItem(&sid->u.ssl3.srvName, PR_FALSE);
+    }
+    if (sid->u.ssl3.signedCertTimestamps.data) {
+        SECITEM_FreeItem(&sid->u.ssl3.signedCertTimestamps, PR_FALSE);
+    }
 
-        if (sid->u.ssl3.lock) {
-            PR_DestroyRWLock(sid->u.ssl3.lock);
-        }
+    if (sid->u.ssl3.lock) {
+        PR_DestroyRWLock(sid->u.ssl3.lock);
     }
 
     if (sid->peerID != NULL)
@@ -286,8 +281,7 @@ ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, const char *peerID,
                     ((peerID != NULL) && (sid->peerID != NULL) &&
                      PORT_Strcmp(sid->peerID, peerID) == 0)) &&
                    /* is cacheable */
-                   (sid->version < SSL_LIBRARY_VERSION_3_0 ||
-                    sid->u.ssl3.keys.resumable) &&
+                   (sid->u.ssl3.keys.resumable) &&
                    /* server hostname matches. */
                    (sid->urlSvrName != NULL) &&
                    (0 == PORT_Strcmp(urlSvrName, sid->urlSvrName))) {
@@ -326,37 +320,26 @@ CacheSID(sslSessionID *sid)
         return;
     }
 
-    /* XXX should be different trace for version 2 vs. version 3 */
-    if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-        expirationPeriod = ssl_sid_timeout;
-        PRINT_BUF(8, (0, "sessionID:",
-                      sid->u.ssl2.sessionID, sizeof(sid->u.ssl2.sessionID)));
-        PRINT_BUF(8, (0, "masterKey:",
-                      sid->u.ssl2.masterKey.data, sid->u.ssl2.masterKey.len));
-        PRINT_BUF(8, (0, "cipherArg:",
-                      sid->u.ssl2.cipherArg.data, sid->u.ssl2.cipherArg.len));
-    } else {
-        if (sid->u.ssl3.sessionIDLength == 0 &&
-            sid->u.ssl3.locked.sessionTicket.ticket.data == NULL)
-            return;
+    if (sid->u.ssl3.sessionIDLength == 0 &&
+        sid->u.ssl3.locked.sessionTicket.ticket.data == NULL)
+        return;
 
-        /* Client generates the SessionID if this was a stateless resume. */
-        if (sid->u.ssl3.sessionIDLength == 0) {
-            SECStatus rv;
-            rv = PK11_GenerateRandom(sid->u.ssl3.sessionID,
-                                     SSL3_SESSIONID_BYTES);
-            if (rv != SECSuccess)
-                return;
-            sid->u.ssl3.sessionIDLength = SSL3_SESSIONID_BYTES;
-        }
-        expirationPeriod = ssl3_sid_timeout;
-        PRINT_BUF(8, (0, "sessionID:",
-                      sid->u.ssl3.sessionID, sid->u.ssl3.sessionIDLength));
-
-        sid->u.ssl3.lock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, NULL);
-        if (!sid->u.ssl3.lock) {
+    /* Client generates the SessionID if this was a stateless resume. */
+    if (sid->u.ssl3.sessionIDLength == 0) {
+        SECStatus rv;
+        rv = PK11_GenerateRandom(sid->u.ssl3.sessionID,
+                                 SSL3_SESSIONID_BYTES);
+        if (rv != SECSuccess)
             return;
-        }
+        sid->u.ssl3.sessionIDLength = SSL3_SESSIONID_BYTES;
+    }
+    expirationPeriod = ssl3_sid_timeout;
+    PRINT_BUF(8, (0, "sessionID:",
+                  sid->u.ssl3.sessionID, sid->u.ssl3.sessionIDLength));
+
+    sid->u.ssl3.lock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, NULL);
+    if (!sid->u.ssl3.lock) {
+        return;
     }
     PORT_Assert(sid->creationTime != 0 && sid->expirationTime != 0);
     if (!sid->creationTime)
@@ -393,19 +376,11 @@ UncacheSID(sslSessionID *zap)
     }
 
     SSL_TRC(8, ("SSL: Uncache: zap=0x%x cached=%d addr=0x%08x%08x%08x%08x port=0x%04x "
-                "time=%x cipher=%d",
+                "time=%x cipherSuite=%d",
                 zap, zap->cached, zap->addr.pr_s6_addr32[0],
                 zap->addr.pr_s6_addr32[1], zap->addr.pr_s6_addr32[2],
                 zap->addr.pr_s6_addr32[3], zap->port, zap->creationTime,
-                zap->u.ssl2.cipherType));
-    if (zap->version < SSL_LIBRARY_VERSION_3_0) {
-        PRINT_BUF(8, (0, "sessionID:",
-                      zap->u.ssl2.sessionID, sizeof(zap->u.ssl2.sessionID)));
-        PRINT_BUF(8, (0, "masterKey:",
-                      zap->u.ssl2.masterKey.data, zap->u.ssl2.masterKey.len));
-        PRINT_BUF(8, (0, "cipherArg:",
-                      zap->u.ssl2.cipherArg.data, zap->u.ssl2.cipherArg.len));
-    }
+                zap->u.ssl3.cipherSuite));
 
     /* See if it's in the cache, if so nuke it */
     while ((sid = *sidp) != 0) {
