@@ -64,12 +64,16 @@
 #include "ServiceWorker.h"
 #include "ServiceWorkerClient.h"
 #include "ServiceWorkerContainer.h"
+#include "ServiceWorkerJobQueue.h"
 #include "ServiceWorkerManagerChild.h"
 #include "ServiceWorkerPrivate.h"
+#include "ServiceWorkerRegisterJob.h"
 #include "ServiceWorkerRegistrar.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerScriptCache.h"
 #include "ServiceWorkerEvents.h"
+#include "ServiceWorkerUnregisterJob.h"
+#include "ServiceWorkerUpdateJob.h"
 #include "SharedWorker.h"
 #include "WorkerInlines.h"
 #include "WorkerPrivate.h"
@@ -145,7 +149,7 @@ struct ServiceWorkerManager::RegistrationDataPerPrincipal final
   nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mInfos;
 
   // Maps scopes to job queues.
-  nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
+  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerJobQueue2> mJobQueues;
 
   // Map scopes to scheduled update timers.
   nsInterfaceHashtable<nsCStringHashKey, nsITimer> mUpdateTimers;
@@ -709,7 +713,7 @@ public:
   }
 };
 
-class ServiceWorkerResolveWindowPromiseOnUpdateCallback final : public ServiceWorkerUpdateFinishCallback
+class ServiceWorkerResolveWindowPromiseOnUpdateCallback final : public ServiceWorkerJob2::Callback
 {
   RefPtr<nsPIDOMWindowInner> mWindow;
   // The promise "returned" by the call to Update up to
@@ -719,6 +723,22 @@ class ServiceWorkerResolveWindowPromiseOnUpdateCallback final : public ServiceWo
   ~ServiceWorkerResolveWindowPromiseOnUpdateCallback()
   {}
 
+  virtual void
+  JobFinished(ServiceWorkerJob2* aJob, ErrorResult& aStatus) override
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aJob);
+
+    if (aStatus.Failed()) {
+      mPromise->MaybeReject(aStatus);
+      return;
+    }
+
+    RefPtr<ServiceWorkerRegistrationMainThread> swr =
+      mWindow->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(aJob->GetScope()));
+    mPromise->MaybeResolve(swr);
+  }
+
 public:
   ServiceWorkerResolveWindowPromiseOnUpdateCallback(nsPIDOMWindowInner* aWindow,
                                                     Promise* aPromise)
@@ -726,19 +746,7 @@ public:
     , mPromise(aPromise)
   {}
 
-  void
-  UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
-  {
-    RefPtr<ServiceWorkerRegistrationMainThread> swr =
-      mWindow->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(aInfo->mScope));
-    mPromise->MaybeResolve(swr);
-  }
-
-  void
-  UpdateFailed(ErrorResult& aStatus) override
-  {
-    mPromise->MaybeReject(aStatus);
-  }
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerResolveWindowPromiseOnUpdateCallback, override)
 };
 
 class ContinueUpdateRunnable final : public LifeCycleEventCallback
@@ -1828,8 +1836,8 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
 
   AddRegisteringDocument(cleanedScope, doc);
 
-  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, cleanedScope);
-  MOZ_ASSERT(queue);
+  RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey,
+                                                             cleanedScope);
 
   RefPtr<ServiceWorkerResolveWindowPromiseOnUpdateCallback> cb =
     new ServiceWorkerResolveWindowPromiseOnUpdateCallback(window, promise);
@@ -1845,10 +1853,11 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
   MOZ_ALWAYS_SUCCEEDS(loadGroup->SetNotificationCallbacks(ir));
 
-  RefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, documentPrincipal, cleanedScope, spec,
-                                 cb, loadGroup);
-  queue->Append(job);
+  RefPtr<ServiceWorkerRegisterJob2> job =
+    new ServiceWorkerRegisterJob2(documentPrincipal, cleanedScope, spec,
+                                  loadGroup);
+  job->AppendResultCallback(cb);
+  queue->ScheduleJob(job);
 
   AssertIsOnMainThread();
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REGISTRATIONS, 1);
@@ -2588,6 +2597,46 @@ private:
   }
 };
 
+namespace {
+
+class UnregisterJobCallback final : public ServiceWorkerJob2::Callback
+{
+  nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
+
+  ~UnregisterJobCallback()
+  {
+  }
+
+public:
+  explicit UnregisterJobCallback(nsIServiceWorkerUnregisterCallback* aCallback)
+    : mCallback(aCallback)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mCallback);
+  }
+
+  void
+  JobFinished(ServiceWorkerJob2* aJob, ErrorResult& aStatus)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aJob);
+
+    if (aStatus.Failed()) {
+      mCallback->UnregisterFailed();
+      return;
+    }
+
+    MOZ_ASSERT(aJob->GetType() == ServiceWorkerJob2::Type::Unregister);
+    RefPtr<ServiceWorkerUnregisterJob2> unregisterJob =
+      static_cast<ServiceWorkerUnregisterJob2*>(aJob);
+    mCallback->UnregisterSucceeded(unregisterJob->GetResult());
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(UnregisterJobCallback)
+};
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
                                  nsIServiceWorkerUnregisterCallback* aCallback,
@@ -2618,18 +2667,17 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
   }
 
   NS_ConvertUTF16toUTF8 scope(aScope);
-  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, scope);
-  MOZ_ASSERT(queue);
+  RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey, scope);
 
-  RefPtr<ServiceWorkerUnregisterJob> job =
-    new ServiceWorkerUnregisterJob(queue, scope, aCallback, aPrincipal);
+  RefPtr<ServiceWorkerUnregisterJob2> job =
+    new ServiceWorkerUnregisterJob2(aPrincipal, scope, true /* send to parent */);
 
-  if (mActor) {
-    queue->Append(job);
-    return NS_OK;
+  if (aCallback) {
+    RefPtr<UnregisterJobCallback> cb = new UnregisterJobCallback(aCallback);
+    job->AppendResultCallback(cb);
   }
 
-  AppendPendingOperation(queue, job);
+  queue->ScheduleJob(job);
   return NS_OK;
 }
 
@@ -2659,22 +2707,17 @@ ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
   }
 
   NS_ConvertUTF16toUTF8 scope(aScope);
-  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, scope);
-  MOZ_ASSERT(queue);
+  RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey, scope);
 
-  RefPtr<ServiceWorkerUnregisterJob> job =
-    new ServiceWorkerUnregisterJob(queue, scope, nullptr, aPrincipal, false);
+  RefPtr<ServiceWorkerUnregisterJob2> job =
+    new ServiceWorkerUnregisterJob2(aPrincipal, scope,
+                                    false /* send to parent */);
 
-  if (mActor) {
-    queue->Append(job);
-    return NS_OK;
-  }
-
-  AppendPendingOperation(queue, job);
+  queue->ScheduleJob(job);
   return NS_OK;
 }
 
-ServiceWorkerJobQueue*
+already_AddRefed<ServiceWorkerJobQueue2>
 ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
                                           const nsACString& aScope)
 {
@@ -2685,13 +2728,14 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
     mRegistrationInfos.Put(aKey, data);
   }
 
-  ServiceWorkerJobQueue* queue;
-  if (!data->mJobQueues.Get(aScope, &queue)) {
-    queue = new ServiceWorkerJobQueue(aKey);
-    data->mJobQueues.Put(aScope, queue);
+  RefPtr<ServiceWorkerJobQueue2> queue;
+  if (!data->mJobQueues.Get(aScope, getter_AddRefs(queue))) {
+    RefPtr<ServiceWorkerJobQueue2> newQueue = new ServiceWorkerJobQueue2();
+    queue = newQueue;
+    data->mJobQueues.Put(aScope, newQueue.forget());
   }
 
-  return queue;
+  return queue.forget();
 }
 
 /* static */
@@ -3969,15 +4013,55 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
   // TODO(catalinb): We don't implement the force bypass cache flag.
   // See: https://github.com/slightlyoff/ServiceWorker/issues/759
   if (!registration->mUpdating) {
-    ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, aScope);
-    MOZ_ASSERT(queue);
+    RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey,
+                                                               aScope);
 
-    RefPtr<ServiceWorkerRegisterJob> job =
-      new ServiceWorkerRegisterJob(queue, principal, registration->mScope,
-                                   newest->ScriptSpec(), nullptr);
-    queue->Append(job);
+    RefPtr<ServiceWorkerUpdateJob2> job =
+      new ServiceWorkerUpdateJob2(principal, registration->mScope,
+                                  newest->ScriptSpec(), nullptr);
+    queue->ScheduleJob(job);
   }
 }
+
+namespace {
+
+class UpdateJobCallback final : public ServiceWorkerJob2::Callback
+{
+  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
+
+  ~UpdateJobCallback()
+  {
+  }
+
+public:
+  explicit UpdateJobCallback(ServiceWorkerUpdateFinishCallback* aCallback)
+    : mCallback(aCallback)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mCallback);
+  }
+
+  void
+  JobFinished(ServiceWorkerJob2* aJob, ErrorResult& aStatus)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aJob);
+
+    if (aStatus.Failed()) {
+      mCallback->UpdateFailed(aStatus);
+      return;
+    }
+
+    MOZ_ASSERT(aJob->GetType() == ServiceWorkerJob2::Type::Update);
+    RefPtr<ServiceWorkerUpdateJob2> updateJob =
+      static_cast<ServiceWorkerUpdateJob2*>(aJob);
+    RefPtr<ServiceWorkerRegistrationInfo> reg = updateJob->GetRegistration();
+    mCallback->UpdateSucceeded(reg);
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(UpdateJobCallback)
+};
+} // anonymous namespace
 
 void
 ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
@@ -4013,16 +4097,18 @@ ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
     return;
   }
 
-  ServiceWorkerJobQueue* queue =
-    GetOrCreateJobQueue(scopeKey, aScope);
-  MOZ_ASSERT(queue);
+  RefPtr<ServiceWorkerJobQueue2> queue = GetOrCreateJobQueue(scopeKey, aScope);
 
   // "Invoke Update algorithm, or its equivalent, with client, registration as
   // its argument."
-  RefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, aPrincipal, registration->mScope,
-                                 newest->ScriptSpec(), aCallback);
-  queue->Append(job);
+  RefPtr<ServiceWorkerUpdateJob2> job =
+    new ServiceWorkerUpdateJob2(aPrincipal, registration->mScope,
+                                newest->ScriptSpec(), nullptr);
+
+  RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
+  job->AppendResultCallback(cb);
+
+  queue->ScheduleJob(job);
 }
 
 namespace {
@@ -4472,10 +4558,10 @@ ServiceWorkerManager::ForceUnregister(RegistrationDataPerPrincipal* aRegistratio
   MOZ_ASSERT(aRegistrationData);
   MOZ_ASSERT(aRegistration);
 
-  ServiceWorkerJobQueue* queue;
-  aRegistrationData->mJobQueues.Get(aRegistration->mScope, &queue);
+  RefPtr<ServiceWorkerJobQueue2> queue;
+  aRegistrationData->mJobQueues.Get(aRegistration->mScope, getter_AddRefs(queue));
   if (queue) {
-    queue->CancelJobs();
+    queue->CancelAll();
   }
 
   nsCOMPtr<nsITimer> timer =
@@ -4787,8 +4873,8 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
       it1.UserData()->mUpdateTimers.Clear();
 
       for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done(); it2.Next()) {
-        ServiceWorkerJobQueue* queue = it2.UserData();
-        queue->CancelJobs();
+        RefPtr<ServiceWorkerJobQueue2> queue = it2.UserData();
+        queue->CancelAll();
       }
       it1.UserData()->mJobQueues.Clear();
     }
