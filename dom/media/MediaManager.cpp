@@ -296,14 +296,16 @@ public:
           nsresult rv;
 
           if (mAudioDevice) {
-            rv = mAudioDevice->GetSource()->Start(source, kAudioTrack);
+            rv = mAudioDevice->GetSource()->Start(source, kAudioTrack,
+                                                  mListener->GetPrincipalHandle());
             if (NS_FAILED(rv)) {
               ReturnCallbackError(rv, "Starting audio failed");
               return;
             }
           }
           if (mVideoDevice) {
-            rv = mVideoDevice->GetSource()->Start(source, kVideoTrack);
+            rv = mVideoDevice->GetSource()->Start(source, kVideoTrack,
+                                                  mListener->GetPrincipalHandle());
             if (NS_FAILED(rv)) {
               ReturnCallbackError(rv, "Starting video failed");
               return;
@@ -1995,8 +1997,10 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   StreamListeners* listeners = AddWindowID(windowID);
 
   // Create a disabled listener to act as a placeholder
+  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
   RefPtr<GetUserMediaCallbackMediaStreamListener> listener =
-    new GetUserMediaCallbackMediaStreamListener(mMediaThread, windowID);
+    new GetUserMediaCallbackMediaStreamListener(mMediaThread, windowID,
+                                                MakePrincipalHandle(principal));
 
   // No need for locking because we always do this in the main thread.
   listeners->AppendElement(listener);
@@ -2010,14 +2014,14 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
     uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mAudio)) {
       rv = permManager->TestExactPermissionFromPrincipal(
-        aWindow->GetExtantDoc()->NodePrincipal(), "microphone", &audioPerm);
+        principal, "microphone", &audioPerm);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mVideo)) {
       rv = permManager->TestExactPermissionFromPrincipal(
-        aWindow->GetExtantDoc()->NodePrincipal(), "camera", &videoPerm);
+        principal, "camera", &videoPerm);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -2311,9 +2315,12 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
 
   StreamListeners* listeners = AddWindowID(windowId);
 
+  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
+
   // Create a disabled listener to act as a placeholder
   RefPtr<GetUserMediaCallbackMediaStreamListener> listener =
-    new GetUserMediaCallbackMediaStreamListener(mMediaThread, windowId);
+    new GetUserMediaCallbackMediaStreamListener(mMediaThread, windowId,
+                                                MakePrincipalHandle(principal));
 
   // No need for locking because we always do this in the main thread.
   listeners->AppendElement(listener);

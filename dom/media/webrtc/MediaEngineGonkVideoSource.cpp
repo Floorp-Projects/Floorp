@@ -67,7 +67,8 @@ void
 MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                        SourceMediaStream* aSource,
                                        TrackID aID,
-                                       StreamTime aDesiredTime)
+                                       StreamTime aDesiredTime,
+                                       const PrincipalID& aPrincipalHandle)
 {
   VideoSegment segment;
 
@@ -95,10 +96,10 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   if (delta > 0) {
     // nullptr images are allowed
     IntSize size(image ? mWidth : 0, image ? mHeight : 0);
-    segment.AppendFrame(image.forget(), delta, size);
+    segment.AppendFrame(image.forget(), delta, size, aPrincipalHandle);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
-    aSource->AppendToTrack(aID, &(segment));
+    aSource->AppendToTrack(aID, &(segment), aPrincipalHandle);
   }
 }
 
@@ -883,7 +884,7 @@ MediaEngineGonkVideoSource::OnNewMediaBufferFrame(MediaBuffer* aBuffer)
         // Unfortunately, clock in gonk camera looks like is a different one
         // comparing to MSG. As result, it causes time inaccurate. (frames be
         // queued in MSG longer and longer as time going by in device like Frame)
-        AppendToTrack(mSources[i], mImage, mTrackID, 1);
+        AppendToTrack(mSources[i], mImage, mTrackID, 1, mPrincipalHandles[i]);
       }
     }
     if (mImage->AsGrallocImage()) {

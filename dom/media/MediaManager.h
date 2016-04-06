@@ -126,9 +126,11 @@ class GetUserMediaCallbackMediaStreamListener : public MediaStreamListener
 public:
   // Create in an inactive state
   GetUserMediaCallbackMediaStreamListener(base::Thread *aThread,
-    uint64_t aWindowID)
+    uint64_t aWindowID,
+    const PrincipalHandle& aPrincipalHandle)
     : mMediaThread(aThread)
     , mWindowID(aWindowID)
+    , mPrincipalHandle(aPrincipalHandle)
     , mStopped(false)
     , mFinished(false)
     , mRemoved(false)
@@ -260,11 +262,11 @@ public:
     // watch it especially for fake audio.
     if (mAudioDevice) {
       mAudioDevice->GetSource()->NotifyPull(aGraph, mStream, kAudioTrack,
-                                            aDesiredTime);
+                                            aDesiredTime, mPrincipalHandle);
     }
     if (mVideoDevice) {
       mVideoDevice->GetSource()->NotifyPull(aGraph, mStream, kVideoTrack,
-                                            aDesiredTime);
+                                            aDesiredTime, mPrincipalHandle);
     }
   }
 
@@ -301,10 +303,13 @@ public:
   void
   NotifyDirectListeners(MediaStreamGraph* aGraph, bool aHasListeners);
 
+  PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
+
 private:
   // Set at construction
   base::Thread* mMediaThread;
   uint64_t mWindowID;
+  const PrincipalHandle mPrincipalHandle;
 
   // true after this listener has sent MEDIA_STOP. MainThread only.
   bool mStopped;

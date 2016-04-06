@@ -91,7 +91,8 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
           // after Resume(), so it'll get added to one of the DirectListener frames
           VideoSegment segment;
           gfx::IntSize size(0,0);
-          segment.AppendFrame(nullptr, aQueuedMedia.GetDuration(), size);
+          segment.AppendFrame(nullptr, aQueuedMedia.GetDuration(), size,
+                              PRINCIPAL_HANDLE_NONE);
           mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
                                                   aTrackOffset, aTrackEvents,
                                                   segment);

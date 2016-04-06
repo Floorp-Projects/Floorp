@@ -1480,7 +1480,8 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
 
     outputChannels.AppendElements(channels);
 
-    segment.AppendFrames(samples.forget(), outputChannels, frames);
+    segment.AppendFrames(samples.forget(), outputChannels, frames,
+                         PRINCIPAL_HANDLE_NONE /* Fixed in later patch */);
 
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
@@ -1609,7 +1610,8 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   // delta and thus messes up handling of the graph
   if (delta > 0) {
     VideoSegment segment;
-    segment.AppendFrame(image.forget(), delta, IntSize(width_, height_));
+    segment.AppendFrame(image.forget(), delta, IntSize(width_, height_),
+                        PRINCIPAL_HANDLE_NONE /* Fixed in later patch */);
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
       played_ticks_ = desired_time;

@@ -48,7 +48,7 @@ public:
                     const nsString& aDeviceId,
                     const nsACString& aOrigin) override;
   nsresult Deallocate() override;
-  nsresult Start(SourceMediaStream*, TrackID) override;
+  nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
   nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
@@ -57,7 +57,8 @@ public:
   void NotifyPull(MediaStreamGraph* aGraph,
                   SourceMediaStream *aSource,
                   TrackID aId,
-                  StreamTime aDesiredTime) override;
+                  StreamTime aDesiredTime,
+                  const PrincipalHandle& aPrincipalHandle) override;
   uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override;
@@ -118,17 +119,19 @@ public:
                     const nsString& aDeviceId,
                     const nsACString& aOrigin) override;
   nsresult Deallocate() override;
-  nsresult Start(SourceMediaStream*, TrackID) override;
+  nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
   nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
-  void AppendToSegment(AudioSegment& aSegment, TrackTicks aSamples);
+  void AppendToSegment(AudioSegment& aSegment,
+                       TrackTicks aSamples);
   void NotifyPull(MediaStreamGraph* aGraph,
                   SourceMediaStream *aSource,
                   TrackID aId,
-                  StreamTime aDesiredTime) override
+                  StreamTime aDesiredTime,
+                  const PrincipalHandle& aPrincipalHandle) override
   {
 #ifdef DEBUG
     StreamBuffer::Track* data = aSource->FindTrack(aId);
@@ -170,6 +173,7 @@ protected:
   ~MediaEngineDefaultAudioSource();
 
   TrackID mTrackID;
+  PrincipalHandle mPrincipalHandle;
   nsCOMPtr<nsITimer> mTimer;
 
   TimeStamp mLastNotify;

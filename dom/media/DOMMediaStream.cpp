@@ -1263,6 +1263,20 @@ DOMAudioNodeMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
 DOMHwMediaStream::DOMHwMediaStream(nsPIDOMWindowInner* aWindow)
   : DOMLocalMediaStream(aWindow, nullptr)
 {
+#ifdef MOZ_WIDGET_GONK
+  if (!mWindow) {
+    NS_ERROR("Expected window here.");
+    mPrincipalHandle = PRINCIPAL_ID_NONE;
+    return;
+  }
+  nsIDocument* doc = mWindow->GetDoc();
+  if (!doc) {
+    NS_ERROR("Expected document here.");
+    mPrincipalHandle = PRINCIPAL_ID_NONE;
+    return;
+  }
+  mPrincipalHandle = ConvertPrincipalToID(doc->GetPrincipal());
+#endif
 }
 
 DOMHwMediaStream::~DOMHwMediaStream()
@@ -1312,7 +1326,7 @@ DOMHwMediaStream::Init(MediaStream* stream, OverlayImage* aImage)
     RefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
     mozilla::gfx::IntSize size = image->GetSize();
 
-    segment.AppendFrame(image.forget(), delta, size);
+    segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
 #endif
     srcStream->AddTrack(TRACK_VIDEO_PRIMARY, 0, new VideoSegment());
     srcStream->AppendToTrack(TRACK_VIDEO_PRIMARY, &segment);
@@ -1369,7 +1383,7 @@ DOMHwMediaStream::SetImageSize(uint32_t width, uint32_t height)
   mozilla::gfx::IntSize size = image->GetSize();
   VideoSegment segment;
 
-  segment.AppendFrame(image.forget(), delta, size);
+  segment.AppendFrame(image.forget(), delta, size, PRINCIPAL_ID_NONE);
   srcStream->AppendToTrack(TRACK_VIDEO_PRIMARY, &segment);
 #endif
 }
@@ -1405,7 +1419,7 @@ DOMHwMediaStream::SetOverlayImage(OverlayImage* aImage)
   mozilla::gfx::IntSize size = image->GetSize();
   VideoSegment segment;
 
-  segment.AppendFrame(image.forget(), delta, size);
+  segment.AppendFrame(image.forget(), delta, size, PRINCIPAL_ID_NONE);
   srcStream->AppendToTrack(TRACK_VIDEO_PRIMARY, &segment);
 #endif
 }

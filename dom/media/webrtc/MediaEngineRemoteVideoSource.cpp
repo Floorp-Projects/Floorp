@@ -77,6 +77,7 @@ MediaEngineRemoteVideoSource::Shutdown()
         MonitorAutoLock lock(mMonitor);
         empty = mSources.IsEmpty();
         if (empty) {
+          MOZ_ASSERT(mPrincipalHandles.IsEmpty());
           break;
         }
         source = mSources[0];
@@ -130,6 +131,7 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
   } else if (MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
+      MOZ_ASSERT(mPrincipalHandles.IsEmpty());
       LOG(("Video device %d reallocated", mCaptureIndex));
     } else {
       LOG(("Video device %d allocated shared", mCaptureIndex));
@@ -166,7 +168,8 @@ MediaEngineRemoteVideoSource::Deallocate()
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
+MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
+                                    const PrincipalHandle& aPrincipalHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
@@ -178,6 +181,8 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   {
     MonitorAutoLock lock(mMonitor);
     mSources.AppendElement(aStream);
+    mPrincipalHandles.AppendElement(aPrincipalHandle);
+    MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
   }
 
   aStream->AddTrack(aID, 0, new VideoSegment(), SourceMediaStream::ADDTRACK_QUEUED);
@@ -209,10 +214,15 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
   {
     MonitorAutoLock lock(mMonitor);
 
-    if (!mSources.RemoveElement(aSource)) {
+    size_t i = mSources.IndexOf(aSource);
+    if (i == mSources.NoIndex) {
       // Already stopped - this is allowed
       return NS_OK;
     }
+
+    MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
+    mSources.RemoveElementAt(i);
+    mPrincipalHandles.RemoveElementAt(i);
 
     aSource->EndTrack(aID);
 
@@ -268,7 +278,8 @@ MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstra
 void
 MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                          SourceMediaStream* aSource,
-                                         TrackID aID, StreamTime aDesiredTime)
+                                         TrackID aID, StreamTime aDesiredTime,
+                                         const PrincipalHandle& aPrincipalHandle)
 {
   VideoSegment segment;
 
@@ -276,8 +287,13 @@ MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
 
   if (delta > 0) {
+    size_t i = mSources.IndexOf(aSource);
+    if (i == mSources.NoIndex) {
+      NS_ERROR("aSource not in mSources");
+      return;
+    }
     // nullptr images are allowed
-    AppendToTrack(aSource, mImage, aID, delta);
+    AppendToTrack(aSource, mImage, aID, delta, aPrincipalHandle);
   }
 }
 
@@ -361,7 +377,8 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
   uint32_t len = mSources.Length();
   for (uint32_t i = 0; i < len; i++) {
     if (mSources[i]) {
-      AppendToTrack(mSources[i], mImage, mTrackID, 1); // shortest possible duration
+      // shortest possible duration
+      AppendToTrack(mSources[i], mImage, mTrackID, 1, mPrincipalHandles[i]);
     }
   }
 
