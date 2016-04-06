@@ -654,7 +654,7 @@ function BrowserExtensionContent(data) {
   this.uuid = data.uuid;
   this.data = data;
   this.scripts = data.content_scripts.map(scriptData => new Script(scriptData));
-  this.webAccessibleResources = data.webAccessibleResources;
+  this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
   this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
 
   this.localeData = new LocaleData(data.localeData);
