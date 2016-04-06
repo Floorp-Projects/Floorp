@@ -190,6 +190,34 @@ private:
   RefPtr<detail::FunctionImplBase<ReturnType, Arguments...>> mImpl;
 };
 
+template<typename Signature>
+bool
+operator==(const function<Signature>& aX, decltype(nullptr))
+{
+  return !aX;
+}
+
+template<typename Signature>
+bool
+operator==(decltype(nullptr), const function<Signature>& aX)
+{
+  return !aX;
+}
+
+template<typename Signature>
+bool
+operator!=(const function<Signature>& aX, decltype(nullptr))
+{
+  return bool(aX);
+}
+
+template<typename Signature>
+bool
+operator!=(decltype(nullptr), const function<Signature>& aX)
+{
+  return bool(aX);
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_Function_h */
