@@ -231,10 +231,11 @@ nsDataHandler::ParseURI(nsCString& spec,
     if (dataBuffer) {
         // Split encoded data from terminal "#ref" (if present)
         char *data = comma + 1;
-        if (!hash) {
-            dataBuffer->Assign(data);
-        } else {
-            dataBuffer->Assign(data, hash - data);
+        bool ok = !hash
+                ? dataBuffer->Assign(data, mozilla::fallible)
+                : dataBuffer->Assign(data, hash - data, mozilla::fallible);
+        if (!ok) {
+            return NS_ERROR_OUT_OF_MEMORY;
         }
     }
 
