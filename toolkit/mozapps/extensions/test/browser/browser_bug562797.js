@@ -235,55 +235,61 @@ add_test(function() {
     return;
   }
 
-  info("Part 1");
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.loadURI("http://example.com/");
-  gBrowser.addEventListener("pageshow", function(event) {
-    if (event.target.location != "http://example.com/")
-      return;
-    gBrowser.removeEventListener("pageshow", arguments.callee, false);
-
-    //Must let the load complete for it to go into the session history
-    executeSoon(function() {
-      info("Part 2");
-      ok(!gBrowser.canGoBack, "Should not be able to go back");
-      ok(!gBrowser.canGoForward, "Should not be able to go forward");
-
-      gBrowser.loadURI("about:addons");
-      gBrowser.addEventListener("pageshow", function(event) {
-        if (event.target.location != "about:addons")
-          return;
-        gBrowser.removeEventListener("pageshow", arguments.callee, true);
-
-        wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
-          info("Part 3");
-          is_in_list(aManager, "addons://list/extension", true, false);
-
-          executeSoon(() => go_back(aManager));
-          gBrowser.addEventListener("pageshow", function() {
-            gBrowser.removeEventListener("pageshow", arguments.callee, false);
-            info("Part 4");
-            executeSoon(() => executeSoon(function () {
-              is(gBrowser.currentURI.spec, "http://example.com/", "Should be showing the webpage");
-              ok(!gBrowser.canGoBack, "Should not be able to go back");
-              ok(gBrowser.canGoForward, "Should be able to go forward");
-
-              go_forward(aManager);
-              gBrowser.addEventListener("pageshow", function() {
-                gBrowser.removeEventListener("pageshow", arguments.callee, false);
-                wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
-                  info("Part 5");
-                  is_in_list(aManager, "addons://list/extension", true, false);
-
-                  close_manager(aManager, run_next_test);
-                });
-              }, false);
-            }));
-          }, false);
-        });
-      }, true);
+  function promiseViewLoad(manager) {
+    return new Promise(resolve => {
+      wait_for_view_load(manager, resolve);
     });
-  }, false);
+  }
+
+  function promiseManagerLoaded(manager) {
+    return new Promise(resolve => {
+      wait_for_manager_load(manager, resolve);
+    });
+  }
+
+  Task.spawn(function*() {
+    info("Part 1");
+    yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/", true, true);
+
+    info("Part 2");
+    ok(!gBrowser.canGoBack, "Should not be able to go back");
+    ok(!gBrowser.canGoForward, "Should not be able to go forward");
+
+    yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:addons");
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    let manager = yield promiseManagerLoaded(gBrowser.contentWindow.wrappedJSObject);
+
+    info("Part 3");
+    is_in_list(manager, "addons://list/extension", true, false);
+
+    // XXX: This is less than ideal, as it's currently difficult to deal with
+    // the browser frame switching between remote/non-remote in e10s mode.
+    let promiseLoaded;
+    if (gMultiProcessBrowser) {
+      promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    } else {
+      promiseLoaded = BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "pageshow");
+    }
+
+    go_back(manager);
+    yield promiseLoaded;
+
+    info("Part 4");
+    is(gBrowser.currentURI.spec, "http://example.com/", "Should be showing the webpage");
+    ok(!gBrowser.canGoBack, "Should not be able to go back");
+    ok(gBrowser.canGoForward, "Should be able to go forward");
+
+    promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    go_forward(manager);
+    yield promiseLoaded;
+
+    manager = yield promiseManagerLoaded(gBrowser.contentWindow.wrappedJSObject);
+    info("Part 5");
+    is_in_list(manager, "addons://list/extension", true, false);
+
+    close_manager(manager, run_next_test);
+  });
 });
 
 // Tests simple forward and back navigation and that the right heading and
