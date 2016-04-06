@@ -78,7 +78,7 @@ public class MenuItemDefault extends TextView
         if (item == null)
             return;
 
-        setTitle(item.getTitle());        
+        setTitle(item.getTitle());
         setIcon(item.getIcon());
         setEnabled(item.isEnabled());
         setCheckable(item.isCheckable());

@@ -157,7 +157,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         }
         return bridge;
     }
-    
+
     /**
      * Returns the absolute path of a database file depending on the specified profile and dbName.
      * @param profile
@@ -183,7 +183,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
      * current provider instance.
      * @param profile
      *          the id of the profile to be used to retrieve the related SQLiteBridge
-     * @return the <code>SQLiteBridge</code> related to the specified profile id or <code>null</code> if it was 
+     * @return the <code>SQLiteBridge</code> related to the specified profile id or <code>null</code> if it was
      *         not possible to retrieve a valid SQLiteBridge
      */
     private SQLiteBridge getDatabaseForProfile(String profile) {
@@ -202,7 +202,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
                 return db;
             }
             final String dbPath = getDatabasePathForProfile(profile, dbName);
-            if (dbPath == null) {   
+            if (dbPath == null) {
                 Log.e(mLogTag, "Failed to get a valid db path for profile '" + profile + "'' dbName '" + dbName + "'");
                 return null;
             }
@@ -232,7 +232,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
      * Returns a SQLiteBridge object according to the specified file path.
      * @param dbPath
      *          the path of the file to be used to retrieve the related SQLiteBridge
-     * @return the <code>SQLiteBridge</code> related to the specified file path or <code>null</code> if it was  
+     * @return the <code>SQLiteBridge</code> related to the specified file path or <code>null</code> if it was
      *         not possible to retrieve a valid <code>SQLiteBridge</code>
      *
      */
@@ -255,7 +255,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
      * Returns a SQLiteBridge object to be used to perform operations on the given <code>Uri</code>.
      * @param uri
      *          the <code>Uri</code> to be used to retrieve the related SQLiteBridge
-     * @return a <code>SQLiteBridge</code> object to be used on the given uri or <code>null</code> if it was 
+     * @return a <code>SQLiteBridge</code> object to be used on the given uri or <code>null</code> if it was
      *         not possible to retrieve a valid <code>SQLiteBridge</code>
      *
      */

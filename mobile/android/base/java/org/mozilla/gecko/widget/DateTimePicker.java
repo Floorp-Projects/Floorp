@@ -387,7 +387,7 @@ public class DateTimePicker extends FrameLayout {
         if (mIs12HourMode) {
             mHourSpinner = setupSpinner(R.id.hour, 1, 12);
             mAMPMSpinnerInput = (EditText) mAMPMSpinner.getChildAt(1);
-            mAMPMSpinner.setDisplayedValues(mShortAMPMs); 
+            mAMPMSpinner.setDisplayedValues(mShortAMPMs);
         } else {
             mHourSpinner = setupSpinner(R.id.hour, 0, 23);
             mAMPMSpinnerInput = null;

@@ -567,7 +567,7 @@ public class Distribution {
         } else {
             value = status / 100;
         }
-        
+
         Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, value);
 
         if (status != 200) {

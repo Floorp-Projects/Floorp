@@ -637,7 +637,7 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onAlert(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result);
-    
+
         /**
         * Tell the host application to display a confirmation dialog.
         * @param view The GeckoView that initiated the callback.
@@ -647,7 +647,7 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onConfirm(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result);
-    
+
         /**
         * Tell the host application to display an input prompt dialog.
         * @param view The GeckoView that initiated the callback.
@@ -658,7 +658,7 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onPrompt(GeckoView view, GeckoView.Browser browser, String message, String defaultValue, GeckoView.PromptResult result);
-    
+
         /**
         * Tell the host application to display a remote debugging request dialog.
         * @param view The GeckoView that initiated the callback.
@@ -685,7 +685,7 @@ public class GeckoView extends LayerView
         * @param url The resource being loaded.
         */
         public void onPageStart(GeckoView view, GeckoView.Browser browser, String url);
-    
+
         /**
         * A Browser has finished loading content from the network.
         * @param view The GeckoView that initiated the callback.

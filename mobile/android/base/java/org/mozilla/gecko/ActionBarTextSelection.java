@@ -309,7 +309,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
     private class TextSelectionActionModeCallback implements Callback {
         private JSONArray mItems;
         private ActionModeCompat mActionMode;
-    
+
         public TextSelectionActionModeCallback(JSONArray items) {
             mItems = items;
         }

@@ -218,7 +218,7 @@ public class PromptInput {
                 mView = (View)input;
             } else if (mType.equals("datetime-local") || mType.equals("datetime")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd HH:mm", mValue.replace("T"," ").replace("Z", ""),
-                                                          DateTimePicker.PickersState.DATETIME, 
+                                                          DateTimePicker.PickersState.DATETIME,
                                                           mMinValue.replace("T"," ").replace("Z",""), mMaxValue.replace("T"," ").replace("Z", ""));
                 input.toggleCalendar(true);
                 mView = (View)input;

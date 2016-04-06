@@ -380,7 +380,7 @@ final class DisplayPortCalculator {
                 margins.left = xAmount / 2.0f;
             }
             margins.right = xAmount - margins.left;
-    
+
             if (velocity.y > VELOCITY_THRESHOLD) {
                 margins.top = yAmount * REVERSE_BUFFER;
             } else if (velocity.y < -VELOCITY_THRESHOLD) {
