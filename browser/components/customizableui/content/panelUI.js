@@ -6,8 +6,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
                                   "resource:///modules/ScrollbarSampler.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
                                   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
@@ -127,48 +125,46 @@ const PanelUI = {
    * @param aEvent the event (if any) that triggers showing the menu.
    */
   show: function(aEvent) {
-    let deferred = Promise.defer();
+    return new Promise(resolve => {
+      this.ensureReady().then(() => {
+        if (this.panel.state == "open" ||
+            document.documentElement.hasAttribute("customizing")) {
+          resolve();
+          return;
+        }
 
-    this.ensureReady().then(() => {
-      if (this.panel.state == "open" ||
-          document.documentElement.hasAttribute("customizing")) {
-        deferred.resolve();
-        return;
-      }
+        let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
+        if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
+          updateEditUIVisibility();
+        }
 
-      let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
-      if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
-        updateEditUIVisibility();
-      }
+        let personalBookmarksPlacement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
+        if (personalBookmarksPlacement &&
+            personalBookmarksPlacement.area == CustomizableUI.AREA_PANEL) {
+          PlacesToolbarHelper.customizeChange();
+        }
 
-      let personalBookmarksPlacement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
-      if (personalBookmarksPlacement &&
-          personalBookmarksPlacement.area == CustomizableUI.AREA_PANEL) {
-        PlacesToolbarHelper.customizeChange();
-      }
+        let anchor;
+        if (!aEvent ||
+            aEvent.type == "command") {
+          anchor = this.menuButton;
+        } else {
+          anchor = aEvent.target;
+        }
 
-      let anchor;
-      if (!aEvent ||
-          aEvent.type == "command") {
-        anchor = this.menuButton;
-      } else {
-        anchor = aEvent.target;
-      }
+        this.panel.addEventListener("popupshown", function onPopupShown() {
+          this.removeEventListener("popupshown", onPopupShown);
+          resolve();
+        });
 
-      this.panel.addEventListener("popupshown", function onPopupShown() {
-        this.removeEventListener("popupshown", onPopupShown);
-        deferred.resolve();
+        let iconAnchor =
+          document.getAnonymousElementByAttribute(anchor, "class",
+                                                  "toolbarbutton-icon");
+        this.panel.openPopup(iconAnchor || anchor);
+      }, (reason) => {
+        console.error("Error showing the PanelUI menu", reason);
       });
-
-      let iconAnchor =
-        document.getAnonymousElementByAttribute(anchor, "class",
-                                                "toolbarbutton-icon");
-      this.panel.openPopup(iconAnchor || anchor);
-    }, (reason) => {
-      console.error("Error showing the PanelUI menu", reason);
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -231,15 +227,15 @@ const PanelUI = {
     }
     this._readyPromise = Task.spawn(function*() {
       if (!this._initialized) {
-        let delayedStartupDeferred = Promise.defer();
-        let delayedStartupObserver = (aSubject, aTopic, aData) => {
-          if (aSubject == window) {
-            Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
-            delayedStartupDeferred.resolve();
-          }
-        };
-        Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
-        yield delayedStartupDeferred.promise;
+        yield new Promise(resolve => {
+          let delayedStartupObserver = (aSubject, aTopic, aData) => {
+            if (aSubject == window) {
+              Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+              resolve();
+            }
+          };
+          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
+        });
       }
 
       this.contents.setAttributeNS("http://www.w3.org/XML/1998/namespace", "lang",
