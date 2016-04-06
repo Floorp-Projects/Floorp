@@ -9,6 +9,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsError.h"
 #include "nsID.h"
+#include "nsIPrincipal.h"
 #include "StreamBuffer.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/CORSMode.h"
