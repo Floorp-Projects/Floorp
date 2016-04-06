@@ -25,6 +25,8 @@
 namespace mozilla {
 namespace layers {
 
+static std::map<uint64_t, RefPtr<RemoteContentController>> sDestroyedControllers;
+
 RemoteContentController::RemoteContentController(uint64_t aLayersId,
                                                  dom::TabParent* aBrowserParent)
   : mUILoop(MessageLoop::current())
@@ -37,9 +39,6 @@ RemoteContentController::RemoteContentController(uint64_t aLayersId,
 
 RemoteContentController::~RemoteContentController()
 {
-  if (mBrowserParent) {
-    Unused << PAPZParent::Send__delete__(this);
-  }
 }
 
 void
@@ -317,17 +316,18 @@ RemoteContentController::ActorDestroy(ActorDestroyReason aWhy)
     mApzcTreeManager = nullptr;
   }
   mBrowserParent = nullptr;
-}
 
-// TODO: Remove once upgraded to GCC 4.8+ on linux. Calling a static member
-//       function (like PAPZParent::Send__delete__) in a lambda leads to a bogus
-//       error: "'this' was not captured for this lambda function".
-//
-//       (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51494)
-static void
-DeletePAPZParent(PAPZParent* aPAPZ)
-{
-  Unused << PAPZParent::Send__delete__(aPAPZ);
+  // Clear the RefPtr in the sDestroyedControllers map in a runnable so that
+  // this object is destroyed after we unwind from the IPC code. Note that for
+  // some values of ActorDestroyReason sDestroyedControllers may not even
+  // contain this RemoteContentController. In those cases the gfx code will
+  // eventually call Destroy() on this object, but CanSend() will return false
+  // and so it will be a no-op. The IPC code should take care of destroying
+  // the child-side stuff in those cases.
+  uint64_t key = mLayersId;
+  NS_DispatchToMainThread(NS_NewRunnableFunction([key] {
+    sDestroyedControllers.erase(key);
+  }));
 }
 
 void
@@ -336,7 +336,15 @@ RemoteContentController::Destroy()
   RefPtr<RemoteContentController> controller = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction([controller] {
     if (controller->CanSend()) {
-      DeletePAPZParent(controller);
+      if (controller->SendDestroy()) {
+        // Gfx code is done with this object, and it will probably get destroyed
+        // soon. We need to keep a RefPtr to this object until we get the
+        // __delete__ back, otherwise we might get destroyed in the meantime and
+        // the IPC code will crash on try to handle the __delete__.
+        uint64_t key = controller->mLayersId;
+        MOZ_ASSERT(sDestroyedControllers.find(key) == sDestroyedControllers.end());
+        sDestroyedControllers[key] = controller;
+      }
     }
   }));
 }
