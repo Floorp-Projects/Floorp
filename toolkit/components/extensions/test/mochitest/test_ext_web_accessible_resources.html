@@ -33,6 +33,8 @@ add_task(function* test_web_accessible_resources() {
       [browser.extension.getURL("accessible.html") + "?foo=bar", true],
       [browser.extension.getURL("accessible.html") + "#!foo=bar", true],
       [browser.extension.getURL("forbidden.html"), false],
+      [browser.extension.getURL("wild1.html"), true],
+      [browser.extension.getURL("wild2.htm"), false],
     ];
 
     function runTest() {
@@ -95,6 +97,7 @@ add_task(function* test_web_accessible_resources() {
 
       "web_accessible_resources": [
         "accessible.html",
+        "wild*.html",
       ],
     },
 
@@ -109,6 +112,16 @@ add_task(function* test_web_accessible_resources() {
       </head></html>`,
 
       "inaccessible.html": `<html><head>
+        <meta charset="utf-8">
+        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+      </head></html>`,
+
+      "wild1.html": `<html><head>
+        <meta charset="utf-8">
+        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+      </head></html>`,
+
+      "wild2.htm": `<html><head>
         <meta charset="utf-8">
         <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
       </head></html>`,
