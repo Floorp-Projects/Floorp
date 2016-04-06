@@ -208,8 +208,6 @@ public abstract class GeckoApp
 
     abstract public int getLayout();
 
-    abstract protected String getDefaultProfileName() throws NoMozillaDirectoryException;
-
     protected void processTabQueue() {};
 
     protected void openQueuedTabs() {};
