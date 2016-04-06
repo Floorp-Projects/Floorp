@@ -220,6 +220,7 @@ UNIFIED_SOURCES += [
     'MediaDeviceInfo.cpp',
     'MediaDevices.cpp',
     'MediaFormatReader.cpp',
+    'MediaInfo.cpp',
     'MediaManager.cpp',
     'MediaRecorder.cpp',
     'MediaResource.cpp',
