@@ -13,16 +13,16 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerUpdateJob2::CompareCallback final : public serviceWorkerScriptCache::CompareCallback
+class ServiceWorkerUpdateJob::CompareCallback final : public serviceWorkerScriptCache::CompareCallback
 {
-  RefPtr<ServiceWorkerUpdateJob2> mJob;
+  RefPtr<ServiceWorkerUpdateJob> mJob;
 
   ~CompareCallback()
   {
   }
 
 public:
-  explicit CompareCallback(ServiceWorkerUpdateJob2* aJob)
+  explicit CompareCallback(ServiceWorkerUpdateJob* aJob)
     : mJob(aJob)
   {
     MOZ_ASSERT(mJob);
@@ -37,16 +37,16 @@ public:
     mJob->ComparisonResult(aStatus, aInCacheAndEqual, aNewCacheName, aMaxScope);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateJob2::CompareCallback, override)
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateJob::CompareCallback, override)
 };
 
-class ServiceWorkerUpdateJob2::ContinueUpdateRunnable final : public LifeCycleEventCallback
+class ServiceWorkerUpdateJob::ContinueUpdateRunnable final : public LifeCycleEventCallback
 {
-  nsMainThreadPtrHandle<ServiceWorkerUpdateJob2> mJob;
+  nsMainThreadPtrHandle<ServiceWorkerUpdateJob> mJob;
   bool mSuccess;
 
 public:
-  explicit ContinueUpdateRunnable(const nsMainThreadPtrHandle<ServiceWorkerUpdateJob2>& aJob)
+  explicit ContinueUpdateRunnable(const nsMainThreadPtrHandle<ServiceWorkerUpdateJob>& aJob)
     : mJob(aJob)
     , mSuccess(false)
   {
@@ -69,13 +69,13 @@ public:
   }
 };
 
-class ServiceWorkerUpdateJob2::ContinueInstallRunnable final : public LifeCycleEventCallback
+class ServiceWorkerUpdateJob::ContinueInstallRunnable final : public LifeCycleEventCallback
 {
-  nsMainThreadPtrHandle<ServiceWorkerUpdateJob2> mJob;
+  nsMainThreadPtrHandle<ServiceWorkerUpdateJob> mJob;
   bool mSuccess;
 
 public:
-  explicit ContinueInstallRunnable(const nsMainThreadPtrHandle<ServiceWorkerUpdateJob2>& aJob)
+  explicit ContinueInstallRunnable(const nsMainThreadPtrHandle<ServiceWorkerUpdateJob>& aJob)
     : mJob(aJob)
     , mSuccess(false)
   {
@@ -98,39 +98,39 @@ public:
   }
 };
 
-ServiceWorkerUpdateJob2::ServiceWorkerUpdateJob2(nsIPrincipal* aPrincipal,
-                        const nsACString& aScope,
-                        const nsACString& aScriptSpec,
-                        nsILoadGroup* aLoadGroup)
-  : ServiceWorkerJob2(Type::Update, aPrincipal, aScope, aScriptSpec)
+ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(nsIPrincipal* aPrincipal,
+                                               const nsACString& aScope,
+                                               const nsACString& aScriptSpec,
+                                               nsILoadGroup* aLoadGroup)
+  : ServiceWorkerJob(Type::Update, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
 {
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
-ServiceWorkerUpdateJob2::GetRegistration() const
+ServiceWorkerUpdateJob::GetRegistration() const
 {
   AssertIsOnMainThread();
   RefPtr<ServiceWorkerRegistrationInfo> ref = mRegistration;
   return ref.forget();
 }
 
-ServiceWorkerUpdateJob2::ServiceWorkerUpdateJob2(Type aType,
-                                                 nsIPrincipal* aPrincipal,
-                                                 const nsACString& aScope,
-                                                 const nsACString& aScriptSpec,
-                                                 nsILoadGroup* aLoadGroup)
-  : ServiceWorkerJob2(aType, aPrincipal, aScope, aScriptSpec)
+ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(Type aType,
+                                               nsIPrincipal* aPrincipal,
+                                               const nsACString& aScope,
+                                               const nsACString& aScriptSpec,
+                                               nsILoadGroup* aLoadGroup)
+  : ServiceWorkerJob(aType, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
 {
 }
 
-ServiceWorkerUpdateJob2::~ServiceWorkerUpdateJob2()
+ServiceWorkerUpdateJob::~ServiceWorkerUpdateJob()
 {
 }
 
 void
-ServiceWorkerUpdateJob2::FailUpdateJob(ErrorResult& aRv)
+ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aRv.Failed());
@@ -167,14 +167,14 @@ ServiceWorkerUpdateJob2::FailUpdateJob(ErrorResult& aRv)
 }
 
 void
-ServiceWorkerUpdateJob2::FailUpdateJob(nsresult aRv)
+ServiceWorkerUpdateJob::FailUpdateJob(nsresult aRv)
 {
   ErrorResult rv(aRv);
   FailUpdateJob(rv);
 }
 
 void
-ServiceWorkerUpdateJob2::AsyncExecute()
+ServiceWorkerUpdateJob::AsyncExecute()
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(GetType() == Type::Update);
@@ -212,7 +212,7 @@ ServiceWorkerUpdateJob2::AsyncExecute()
 }
 
 void
-ServiceWorkerUpdateJob2::SetRegistration(ServiceWorkerRegistrationInfo* aRegistration)
+ServiceWorkerUpdateJob::SetRegistration(ServiceWorkerRegistrationInfo* aRegistration)
 {
   AssertIsOnMainThread();
 
@@ -222,7 +222,7 @@ ServiceWorkerUpdateJob2::SetRegistration(ServiceWorkerRegistrationInfo* aRegistr
 }
 
 void
-ServiceWorkerUpdateJob2::Update()
+ServiceWorkerUpdateJob::Update()
 {
   AssertIsOnMainThread();
 
@@ -258,10 +258,10 @@ ServiceWorkerUpdateJob2::Update()
 }
 
 void
-ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
-                                          bool aInCacheAndEqual,
-                                          const nsAString& aNewCacheName,
-                                          const nsACString& aMaxScope)
+ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
+                                         bool aInCacheAndEqual,
+                                         const nsAString& aNewCacheName,
+                                         const nsACString& aMaxScope)
 {
   AssertIsOnMainThread();
 
@@ -349,8 +349,8 @@ ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
                                          mRegistration->mScope,
                                          mScriptSpec, aNewCacheName);
 
-  nsMainThreadPtrHandle<ServiceWorkerUpdateJob2> handle(
-      new nsMainThreadPtrHolder<ServiceWorkerUpdateJob2>(this));
+  nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
+      new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(this));
   RefPtr<LifeCycleEventCallback> callback = new ContinueUpdateRunnable(handle);
 
   ServiceWorkerPrivate* workerPrivate = mServiceWorker->WorkerPrivate();
@@ -364,7 +364,7 @@ ServiceWorkerUpdateJob2::ComparisonResult(nsresult aStatus,
 }
 
 void
-ServiceWorkerUpdateJob2::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResult)
+ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResult)
 {
   AssertIsOnMainThread();
 
@@ -387,7 +387,7 @@ ServiceWorkerUpdateJob2::ContinueUpdateAfterScriptEval(bool aScriptEvaluationRes
 }
 
 void
-ServiceWorkerUpdateJob2::Install()
+ServiceWorkerUpdateJob::Install()
 {
   AssertIsOnMainThread();
 
@@ -421,10 +421,10 @@ ServiceWorkerUpdateJob2::Install()
   // Call ContinueAfterInstallEvent(false) on main thread if the SW
   // script fails to load.
   nsCOMPtr<nsIRunnable> failRunnable = NS_NewRunnableMethodWithArgs<bool>
-    (this, &ServiceWorkerUpdateJob2::ContinueAfterInstallEvent, false);
+    (this, &ServiceWorkerUpdateJob::ContinueAfterInstallEvent, false);
 
-  nsMainThreadPtrHandle<ServiceWorkerUpdateJob2> handle(
-    new nsMainThreadPtrHolder<ServiceWorkerUpdateJob2>(this));
+  nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
+    new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(this));
   RefPtr<LifeCycleEventCallback> callback = new ContinueInstallRunnable(handle);
 
   // Send the install event to the worker thread
@@ -438,7 +438,7 @@ ServiceWorkerUpdateJob2::Install()
 }
 
 void
-ServiceWorkerUpdateJob2::ContinueAfterInstallEvent(bool aInstallEventSuccess)
+ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
 {
   if (Canceled()) {
     return FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);

@@ -47,7 +47,7 @@ namespace workers {
 class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
-class ServiceWorkerJobQueue2;
+class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
 
@@ -320,10 +320,10 @@ class ServiceWorkerManager final
   friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
-  friend class ServiceWorkerJob2;
+  friend class ServiceWorkerJob;
   friend class ServiceWorkerRegistrationInfo;
-  friend class ServiceWorkerUnregisterJob2;
-  friend class ServiceWorkerUpdateJob2;
+  friend class ServiceWorkerUnregisterJob;
+  friend class ServiceWorkerUpdateJob;
   friend class UpdateTimerCallback;
 
 public:
@@ -502,7 +502,7 @@ private:
   void
   Init();
 
-  already_AddRefed<ServiceWorkerJobQueue2>
+  already_AddRefed<ServiceWorkerJobQueue>
   GetOrCreateJobQueue(const nsACString& aOriginSuffix,
                       const nsACString& aScope);
 

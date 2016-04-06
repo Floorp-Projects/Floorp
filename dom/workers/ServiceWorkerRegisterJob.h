@@ -14,15 +14,15 @@ namespace dom {
 namespace workers {
 
 // The register job.  This implements the steps in the spec Register algorithm,
-// but then uses ServiceWorkerUpdateJob2 to implement the Update and Install
+// but then uses ServiceWorkerUpdateJob to implement the Update and Install
 // spec algorithms.
-class ServiceWorkerRegisterJob2 final : public ServiceWorkerUpdateJob2
+class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob
 {
 public:
-  ServiceWorkerRegisterJob2(nsIPrincipal* aPrincipal,
-                            const nsACString& aScope,
-                            const nsACString& aScriptSpec,
-                            nsILoadGroup* aLoadGroup);
+  ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
+                           const nsACString& aScope,
+                           const nsACString& aScriptSpec,
+                           nsILoadGroup* aLoadGroup);
 
 private:
   // Implement the Register algorithm steps and then call the parent class
@@ -30,7 +30,7 @@ private:
   virtual void
   AsyncExecute() override;
 
-  virtual ~ServiceWorkerRegisterJob2();
+  virtual ~ServiceWorkerRegisterJob();
 };
 
 } // namespace workers

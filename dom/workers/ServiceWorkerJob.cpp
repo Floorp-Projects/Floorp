@@ -14,32 +14,32 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-ServiceWorkerJob2::Type
-ServiceWorkerJob2::GetType() const
+ServiceWorkerJob::Type
+ServiceWorkerJob::GetType() const
 {
   return mType;
 }
 
-ServiceWorkerJob2::State
-ServiceWorkerJob2::GetState() const
+ServiceWorkerJob::State
+ServiceWorkerJob::GetState() const
 {
   return mState;
 }
 
 bool
-ServiceWorkerJob2::Canceled() const
+ServiceWorkerJob::Canceled() const
 {
   return mCanceled;
 }
 
 bool
-ServiceWorkerJob2::ResultCallbacksInvoked() const
+ServiceWorkerJob::ResultCallbacksInvoked() const
 {
   return mResultCallbacksInvoked;
 }
 
 bool
-ServiceWorkerJob2::IsEquivalentTo(ServiceWorkerJob2* aJob) const
+ServiceWorkerJob::IsEquivalentTo(ServiceWorkerJob* aJob) const
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aJob);
@@ -50,7 +50,7 @@ ServiceWorkerJob2::IsEquivalentTo(ServiceWorkerJob2* aJob) const
 }
 
 void
-ServiceWorkerJob2::AppendResultCallback(Callback* aCallback)
+ServiceWorkerJob::AppendResultCallback(Callback* aCallback)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(mState != State::Finished);
@@ -62,7 +62,7 @@ ServiceWorkerJob2::AppendResultCallback(Callback* aCallback)
 }
 
 void
-ServiceWorkerJob2::StealResultCallbacksFrom(ServiceWorkerJob2* aJob)
+ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aJob);
@@ -81,7 +81,7 @@ ServiceWorkerJob2::StealResultCallbacksFrom(ServiceWorkerJob2* aJob)
 }
 
 void
-ServiceWorkerJob2::Start(Callback* aFinalCallback)
+ServiceWorkerJob::Start(Callback* aFinalCallback)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mCanceled);
@@ -95,7 +95,7 @@ ServiceWorkerJob2::Start(Callback* aFinalCallback)
   mState = State::Started;
 
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(this, &ServiceWorkerJob2::AsyncExecute);
+    NS_NewRunnableMethod(this, &ServiceWorkerJob::AsyncExecute);
 
   // We may have to wait for the PBackground actor to be initialized
   // before proceeding.  We should always be able to get a ServiceWorkerManager,
@@ -112,17 +112,17 @@ ServiceWorkerJob2::Start(Callback* aFinalCallback)
 }
 
 void
-ServiceWorkerJob2::Cancel()
+ServiceWorkerJob::Cancel()
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mCanceled);
   mCanceled = true;
 }
 
-ServiceWorkerJob2::ServiceWorkerJob2(Type aType,
-                                     nsIPrincipal* aPrincipal,
-                                     const nsACString& aScope,
-                                     const nsACString& aScriptSpec)
+ServiceWorkerJob::ServiceWorkerJob(Type aType,
+                                   nsIPrincipal* aPrincipal,
+                                   const nsACString& aScope,
+                                   const nsACString& aScriptSpec)
   : mType(aType)
   , mPrincipal(aPrincipal)
   , mScope(aScope)
@@ -137,7 +137,7 @@ ServiceWorkerJob2::ServiceWorkerJob2(Type aType,
   // Some job types may have an empty script spec
 }
 
-ServiceWorkerJob2::~ServiceWorkerJob2()
+ServiceWorkerJob::~ServiceWorkerJob()
 {
   AssertIsOnMainThread();
   // Jobs must finish or never be started.  Destroying an actively running
@@ -147,7 +147,7 @@ ServiceWorkerJob2::~ServiceWorkerJob2()
 }
 
 void
-ServiceWorkerJob2::InvokeResultCallbacks(ErrorResult& aRv)
+ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(mState == State::Started);
@@ -172,14 +172,14 @@ ServiceWorkerJob2::InvokeResultCallbacks(ErrorResult& aRv)
 }
 
 void
-ServiceWorkerJob2::InvokeResultCallbacks(nsresult aRv)
+ServiceWorkerJob::InvokeResultCallbacks(nsresult aRv)
 {
   ErrorResult converted(aRv);
   InvokeResultCallbacks(converted);
 }
 
 void
-ServiceWorkerJob2::Finish(ErrorResult& aRv)
+ServiceWorkerJob::Finish(ErrorResult& aRv)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(mState == State::Started);
@@ -200,7 +200,7 @@ ServiceWorkerJob2::Finish(ErrorResult& aRv)
   }
 
   // The final callback may drop the last ref to this object.
-  RefPtr<ServiceWorkerJob2> kungFuDeathGrip = this;
+  RefPtr<ServiceWorkerJob> kungFuDeathGrip = this;
 
   if (!mResultCallbacksInvoked) {
     InvokeResultCallbacks(aRv);
@@ -220,7 +220,7 @@ ServiceWorkerJob2::Finish(ErrorResult& aRv)
 }
 
 void
-ServiceWorkerJob2::Finish(nsresult aRv)
+ServiceWorkerJob::Finish(nsresult aRv)
 {
   ErrorResult converted(aRv);
   Finish(converted);

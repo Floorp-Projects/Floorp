@@ -12,17 +12,17 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-ServiceWorkerRegisterJob2::ServiceWorkerRegisterJob2(nsIPrincipal* aPrincipal,
-                                                     const nsACString& aScope,
-                                                     const nsACString& aScriptSpec,
-                                                     nsILoadGroup* aLoadGroup)
-  : ServiceWorkerUpdateJob2(ServiceWorkerJob2::Type::Register,
-                            aPrincipal, aScope, aScriptSpec, aLoadGroup)
+ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
+                                                   const nsACString& aScope,
+                                                   const nsACString& aScriptSpec,
+                                                   nsILoadGroup* aLoadGroup)
+  : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
+                           aLoadGroup)
 {
 }
 
 void
-ServiceWorkerRegisterJob2::AsyncExecute()
+ServiceWorkerRegisterJob::AsyncExecute()
 {
   AssertIsOnMainThread();
 
@@ -58,7 +58,7 @@ ServiceWorkerRegisterJob2::AsyncExecute()
   Update();
 }
 
-ServiceWorkerRegisterJob2::~ServiceWorkerRegisterJob2()
+ServiceWorkerRegisterJob::~ServiceWorkerRegisterJob()
 {
 }
 

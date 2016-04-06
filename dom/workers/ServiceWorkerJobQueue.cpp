@@ -13,16 +13,16 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerJobQueue2::Callback final : public ServiceWorkerJob2::Callback
+class ServiceWorkerJobQueue::Callback final : public ServiceWorkerJob::Callback
 {
-  RefPtr<ServiceWorkerJobQueue2> mQueue;
+  RefPtr<ServiceWorkerJobQueue> mQueue;
 
   ~Callback()
   {
   }
 
 public:
-  explicit Callback(ServiceWorkerJobQueue2* aQueue)
+  explicit Callback(ServiceWorkerJobQueue* aQueue)
     : mQueue(aQueue)
   {
     AssertIsOnMainThread();
@@ -30,23 +30,23 @@ public:
   }
 
   virtual void
-  JobFinished(ServiceWorkerJob2* aJob, ErrorResult& aStatus) override
+  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override
   {
     AssertIsOnMainThread();
     mQueue->JobFinished(aJob);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue2::Callback, override)
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue::Callback, override)
 };
 
-ServiceWorkerJobQueue2::~ServiceWorkerJobQueue2()
+ServiceWorkerJobQueue::~ServiceWorkerJobQueue()
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(mJobList.IsEmpty());
 }
 
 void
-ServiceWorkerJobQueue2::JobFinished(ServiceWorkerJob2* aJob)
+ServiceWorkerJobQueue::JobFinished(ServiceWorkerJob* aJob)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aJob);
@@ -72,23 +72,23 @@ ServiceWorkerJobQueue2::JobFinished(ServiceWorkerJob2* aJob)
 }
 
 void
-ServiceWorkerJobQueue2::RunJob()
+ServiceWorkerJobQueue::RunJob()
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mJobList.IsEmpty());
-  MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob2::State::Initial);
+  MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob::State::Initial);
 
   RefPtr<Callback> callback = new Callback(this);
   mJobList[0]->Start(callback);
 }
 
-ServiceWorkerJobQueue2::ServiceWorkerJobQueue2()
+ServiceWorkerJobQueue::ServiceWorkerJobQueue()
 {
   AssertIsOnMainThread();
 }
 
 void
-ServiceWorkerJobQueue2::ScheduleJob(ServiceWorkerJob2* aJob)
+ServiceWorkerJobQueue::ScheduleJob(ServiceWorkerJob* aJob)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aJob);
@@ -100,9 +100,9 @@ ServiceWorkerJobQueue2::ScheduleJob(ServiceWorkerJob2* aJob)
     return;
   }
 
-  MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob2::State::Started);
+  MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob::State::Started);
 
-  RefPtr<ServiceWorkerJob2>& tailJob = mJobList[mJobList.Length() - 1];
+  RefPtr<ServiceWorkerJob>& tailJob = mJobList[mJobList.Length() - 1];
   if (!tailJob->ResultCallbacksInvoked() && aJob->IsEquivalentTo(tailJob)) {
     tailJob->StealResultCallbacksFrom(aJob);
     return;
@@ -112,11 +112,11 @@ ServiceWorkerJobQueue2::ScheduleJob(ServiceWorkerJob2* aJob)
 }
 
 void
-ServiceWorkerJobQueue2::CancelAll()
+ServiceWorkerJobQueue::CancelAll()
 {
   AssertIsOnMainThread();
 
-  for (RefPtr<ServiceWorkerJob2>& job : mJobList) {
+  for (RefPtr<ServiceWorkerJob>& job : mJobList) {
     job->Cancel();
   }
 
@@ -124,7 +124,7 @@ ServiceWorkerJobQueue2::CancelAll()
   // run after being canceled.  This means throwing away all jobs except
   // for the job at the front of the list.
   if (!mJobList.IsEmpty()) {
-    MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob2::State::Started);
+    MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob::State::Started);
     mJobList.TruncateLength(1);
   }
 }
