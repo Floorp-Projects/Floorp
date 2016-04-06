@@ -40,12 +40,18 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mParentOuterWindowID(0)
   , mEnforceSecurity(false)
   , mInitialSecurityCheckDone(false)
-  , mIsThirdPartyContext(true)
+  , mIsThirdPartyContext(false)
   , mForcePreflight(false)
   , mIsPreflight(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
+
+  // TODO(bug 1259873): Above, we initialize mIsThirdPartyContext to false meaning
+  // that consumers of LoadInfo that don't pass a context or pass a context from
+  // which we can't find a window will default to assuming that they're 1st
+  // party. It would be nice if we could default "safe" and assume that we are
+  // 3rd party until proven otherwise.
 
   // if consumers pass both, aLoadingContext and aLoadingPrincipal
   // then the loadingPrincipal must be the same as the node's principal
