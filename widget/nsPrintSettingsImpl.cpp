@@ -44,8 +44,7 @@ nsPrintSettings::nsPrintSettings() :
   mPrintToFile(false),
   mOutputFormat(kOutputFormatNative),
   mIsInitedFromPrinter(false),
-  mIsInitedFromPrefs(false),
-  mPersistMarginBoxSettings(true)
+  mIsInitedFromPrefs(false)
 {
 
   /* member initializers and constructor code */
@@ -298,18 +297,6 @@ NS_IMETHODIMP nsPrintSettings::GetIsInitializedFromPrefs(bool *aInitializedFromP
 NS_IMETHODIMP nsPrintSettings::SetIsInitializedFromPrefs(bool aInitializedFromPrefs)
 {
   mIsInitedFromPrefs = (bool)aInitializedFromPrefs;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsPrintSettings::GetPersistMarginBoxSettings(bool *aPersistMarginBoxSettings)
-{
-  NS_ENSURE_ARG_POINTER(aPersistMarginBoxSettings);
-  *aPersistMarginBoxSettings = mPersistMarginBoxSettings;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPersistMarginBoxSettings(bool aPersistMarginBoxSettings)
-{
-  mPersistMarginBoxSettings = aPersistMarginBoxSettings;
   return NS_OK;
 }
 
