@@ -30,6 +30,8 @@ from mozbuild.util import (
     resolve_target_to_make,
     MozbuildDeletionError,
     HierarchicalStringList,
+    EnumString,
+    EnumStringComparisonError,
     ListWithAction,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,
@@ -861,6 +863,29 @@ class TestMisc(unittest.TestCase):
             'before abc between a b c after'
         )
 
+class TestEnumString(unittest.TestCase):
+    def test_string(self):
+        CompilerType = EnumString.subclass('msvc', 'gcc', 'clang', 'clang-cl')
+
+        type = CompilerType('msvc')
+        self.assertEquals(type, 'msvc')
+        self.assertNotEquals(type, 'gcc')
+        self.assertNotEquals(type, 'clang')
+        self.assertNotEquals(type, 'clang-cl')
+        self.assertIn(type, ('msvc', 'clang-cl'))
+        self.assertNotIn(type, ('gcc', 'clang'))
+
+        with self.assertRaises(EnumStringComparisonError):
+            self.assertEquals(type, 'foo')
+
+        with self.assertRaises(EnumStringComparisonError):
+            self.assertNotEquals(type, 'foo')
+
+        with self.assertRaises(EnumStringComparisonError):
+            self.assertIn(type, ('foo', 'gcc'))
+
+        with self.assertRaises(ValueError):
+            type = CompilerType('foo')
 
 if __name__ == '__main__':
     main()
