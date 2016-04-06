@@ -381,6 +381,9 @@ SessionStore.prototype = {
       if (this._notifyClosedTabs) {
         this._sendClosedTabsToJava(aWindow);
       }
+
+      let evt = new Event("SSTabCloseProcessed", {"bubbles":true, "cancelable":false});
+      aBrowser.dispatchEvent(evt);
     }
   },
 
@@ -432,6 +435,8 @@ SessionStore.prototype = {
       this.onTabInput(aWindow, aBrowser);
     }
 
+    let evt = new Event("SSTabDataUpdated", {"bubbles":true, "cancelable":false});
+    aBrowser.dispatchEvent(evt);
     this.saveStateDelayed();
 
     this._updateCrashReportURL(aWindow);
