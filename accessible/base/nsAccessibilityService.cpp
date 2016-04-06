@@ -1010,26 +1010,20 @@ nsAccessibilityService::IsLogged(const nsAString& aModule, bool* aIsLogged)
 // nsAccessibilityService public
 
 Accessible*
-nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
-                                              Accessible* aContext,
-                                              bool* aIsSubtreeHidden)
+nsAccessibilityService::CreateAccessible(nsINode* aNode,
+                                         Accessible* aContext,
+                                         bool* aIsSubtreeHidden)
 {
-  NS_PRECONDITION(aContext && aNode && !gIsShutdown,
-                  "Maybe let'd do a crash? Oh, yes, baby!");
+  MOZ_ASSERT(aContext, "No context provided");
+  MOZ_ASSERT(aNode, "No node to create an accessible for");
+  MOZ_ASSERT(!gIsShutdown, "No creation after shutdown");
 
   if (aIsSubtreeHidden)
     *aIsSubtreeHidden = false;
 
   DocAccessible* document = aContext->Document();
-
-  // Check to see if we already have an accessible for this node in the cache.
-  // XXX: we don't have context check here. It doesn't really necessary until
-  // we have in-law children adoption.
-  Accessible* cachedAccessible = document->GetAccessible(aNode);
-  if (cachedAccessible)
-    return cachedAccessible;
-
-  // No cache entry, so we must create the accessible.
+  MOZ_ASSERT(!document->GetAccessible(aNode),
+             "We already have an accessible for this node.");
 
   if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
     // If it's document node then ask accessible document loader for

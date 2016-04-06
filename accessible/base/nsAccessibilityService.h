@@ -180,16 +180,15 @@ public:
   static bool IsShutdown() { return gIsShutdown; }
 
   /**
-   * Return an accessible for the given DOM node from the cache or create new
-   * one.
+   * Creates an accessible for the given DOM node.
    *
    * @param  aNode             [in] the given node
    * @param  aContext          [in] context the accessible is created in
    * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
    *                             frame and its subtree is hidden
    */
-  Accessible* GetOrCreateAccessible(nsINode* aNode, Accessible* aContext,
-                                    bool* aIsSubtreeHidden = nullptr);
+  Accessible* CreateAccessible(nsINode* aNode, Accessible* aContext,
+                               bool* aIsSubtreeHidden = nullptr);
 
   mozilla::a11y::role MarkupRole(const nsIContent* aContent) const
   {
