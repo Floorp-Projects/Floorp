@@ -113,7 +113,6 @@ public class GeckoEvent {
 
     private final int mType;
     private int mAction;
-    private boolean mAckNeeded;
     private long mTime;
     private Point[] mPoints;
     private int[] mPointIndicies;
@@ -630,9 +629,5 @@ public class GeckoEvent {
         event.mCount = values.length;
         event.mGamepadValues = values;
         return event;
-    }
-
-    public void setAckNeeded(boolean ackNeeded) {
-        mAckNeeded = ackNeeded;
     }
 }

@@ -471,7 +471,6 @@ public:
 
     int Action() { return mAction; }
     int Type() { return mType; }
-    bool AckNeeded() { return mAckNeeded; }
     int64_t Time() { return mTime; }
     const nsTArray<nsIntPoint>& Points() { return mPoints; }
     const nsTArray<int>& PointIndicies() { return mPointIndicies; }
@@ -524,7 +523,6 @@ public:
 protected:
     int mAction;
     int mType;
-    bool mAckNeeded;
     int64_t mTime;
     nsTArray<nsIntPoint> mPoints;
     nsTArray<nsIntPoint> mPointRadii;
@@ -581,7 +579,6 @@ protected:
     static jclass jGeckoEventClass;
     static jfieldID jActionField;
     static jfieldID jTypeField;
-    static jfieldID jAckNeededField;
     static jfieldID jTimeField;
     static jfieldID jPoints;
     static jfieldID jPointIndicies;

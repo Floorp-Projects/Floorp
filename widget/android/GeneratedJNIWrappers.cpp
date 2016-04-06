@@ -50,14 +50,6 @@ auto DownloadsIntegration::ScanMedia(mozilla::jni::String::Param a0, mozilla::jn
 template<> const char mozilla::jni::Context<GeckoAppShell, jobject>::name[] =
         "org/mozilla/gecko/GeckoAppShell";
 
-constexpr char GeckoAppShell::AcknowledgeEvent_t::name[];
-constexpr char GeckoAppShell::AcknowledgeEvent_t::signature[];
-
-auto GeckoAppShell::AcknowledgeEvent() -> void
-{
-    return mozilla::jni::Method<AcknowledgeEvent_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
 constexpr char GeckoAppShell::AddPluginViewWrapper_t::name[];
 constexpr char GeckoAppShell::AddPluginViewWrapper_t::signature[];
 
