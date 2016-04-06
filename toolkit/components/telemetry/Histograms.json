@@ -1467,6 +1467,14 @@
     "n_values": 48,
     "description": "HTTP: Protocol Version Used on Response from nsHttp.h"
   },
+  "HTTP_09_INFO": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "HTTP 09 Response Breakdown: lowbit subresource, high bit nonstd port",
+    "bug_numbers": [1262572],
+    "alert_emails": ["necko@mozilla.com"]
+  },
   "SPDY_PARALLEL_STREAMS": {
     "expires_in_version": "never",
     "kind": "exponential",
