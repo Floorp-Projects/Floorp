@@ -13,6 +13,8 @@
 #include "nsINode.h"
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
+#include "nsStyleStruct.h"
+#include "StyleStructContext.h"
 
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
@@ -148,6 +150,31 @@ Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
 {
   aNode->SetServoNodeData(aData);
 }
+
+#define STYLE_STRUCT(name, checkdata_cb)                                      \
+                                                                              \
+void                                                                          \
+Gecko_Construct_nsStyle##name(nsStyle##name* ptr)                             \
+{                                                                             \
+  new (ptr) nsStyle##name(StyleStructContext::ServoContext());                \
+}                                                                             \
+                                                                              \
+void                                                                          \
+Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,                         \
+                                  const nsStyle##name* other)                 \
+{                                                                             \
+  new (ptr) nsStyle##name(*other);                                            \
+}                                                                             \
+                                                                              \
+void                                                                          \
+Gecko_Destroy_nsStyle##name(nsStyle##name* ptr)                               \
+{                                                                             \
+  ptr->~nsStyle##name();                                                      \
+}
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT
 
 #ifndef MOZ_STYLO
 void

@@ -2,4 +2,5 @@ sphinx
 sphinx_rtd_theme
 
 # Required by Readthedocs to install the firefox-puppeteer package
--e .
+-e testing/puppeteer/firefox
+

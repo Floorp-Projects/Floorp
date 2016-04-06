@@ -69,6 +69,8 @@ public final class GeckoProfile {
     // Used to "lock" the guest profile, so that we'll always restart in it
     private static final String LOCK_FILE_NAME = ".active_lock";
     public static final String DEFAULT_PROFILE = "default";
+    // Profile is using a custom directory outside of the Mozilla directory.
+    public static final String CUSTOM_PROFILE = "";
     public static final String GUEST_PROFILE = "guest";
 
     private static final HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
@@ -78,8 +80,6 @@ public final class GeckoProfile {
     private static File sGuestDir;
     private static GeckoProfile sGuestProfile;
     private static boolean sShouldCheckForGuestProfile = true;
-
-    public static boolean sIsUsingCustomProfile;
 
     private final String mName;
     private final File mMozillaDir;
@@ -111,12 +111,15 @@ public final class GeckoProfile {
     };
 
     /**
-     * Warning: has a side-effect of setting sIsUsingCustomProfile.
      * Can return null.
      */
     public static GeckoProfile getFromArgs(final Context context, final String args) {
         if (args == null) {
             return null;
+        }
+
+        if (GuestSession.shouldUse(context, args)) {
+            return GeckoProfile.getOrCreateGuestProfile(context);
         }
 
         String profileName = null;
@@ -135,12 +138,6 @@ public final class GeckoProfile {
             if (m.find()) {
                 profilePath =  m.group(1);
             }
-
-            if (profileName == null) {
-                profileName = GeckoProfile.DEFAULT_PROFILE;
-            }
-
-            GeckoProfile.sIsUsingCustomProfile = true;
         }
 
         if (profileName == null && profilePath == null) {
@@ -150,60 +147,19 @@ public final class GeckoProfile {
         return GeckoProfile.get(context, profileName, profilePath);
     }
 
-    public static GeckoProfile get(Context context) {
-        boolean isGeckoApp = false;
+    public static GeckoProfile getDefaultProfile(Context context) {
         try {
-            isGeckoApp = context instanceof GeckoApp;
-        } catch (NoClassDefFoundError ex) {}
+            return get(context, getDefaultProfileName(context));
 
-        if (isGeckoApp) {
-            // Check for a cached profile on this context already
-            // TODO: We should not be caching profile information on the Activity context
-            final GeckoApp geckoApp = (GeckoApp) context;
-            if (geckoApp.mProfile != null) {
-                return geckoApp.mProfile;
-            }
+        } catch (final NoMozillaDirectoryException e) {
+            // If this failed, we're screwed.
+            Log.wtf(LOGTAG, "Unable to get default profile name.", e);
+            throw new RuntimeException(e);
         }
+    }
 
-        final String args;
-        if (context instanceof Activity) {
-            args = ContextUtils.getStringExtra(((Activity) context).getIntent(), "args");
-        } else {
-            args = null;
-        }
-
-        if (GuestSession.shouldUse(context, args)) {
-            final GeckoProfile p = GeckoProfile.getOrCreateGuestProfile(context);
-            if (isGeckoApp) {
-                ((GeckoApp) context).mProfile = p;
-            }
-            return p;
-        }
-
-        final GeckoProfile fromArgs = GeckoProfile.getFromArgs(context, args);
-        if (fromArgs != null) {
-            if (isGeckoApp) {
-                ((GeckoApp) context).mProfile = fromArgs;
-            }
-            return fromArgs;
-        }
-
-        if (isGeckoApp) {
-            final GeckoApp geckoApp = (GeckoApp) context;
-            String defaultProfileName;
-            try {
-                defaultProfileName = geckoApp.getDefaultProfileName();
-            } catch (NoMozillaDirectoryException e) {
-                // If this failed, we're screwed. But there are so many callers that
-                // we'll just throw a RuntimeException.
-                Log.wtf(LOGTAG, "Unable to get default profile name.", e);
-                throw new RuntimeException(e);
-            }
-            // Otherwise, get the default profile for the Activity.
-            return get(context, defaultProfileName);
-        }
-
-        return get(context, "");
+    public static GeckoProfile get(Context context) {
+        return get(context, null, null, null);
     }
 
     public static GeckoProfile get(Context context, String profileName) {
@@ -256,15 +212,39 @@ public final class GeckoProfile {
             throw new IllegalArgumentException("context must be non-null");
         }
 
-        // If no profile was passed in, look for the default profile listed in profiles.ini.
-        // If that doesn't exist, look for a profile called 'default'.
-        if (TextUtils.isEmpty(profileName) && profileDir == null) {
-            try {
-                profileName = GeckoProfile.getDefaultProfileName(context);
-            } catch (NoMozillaDirectoryException e) {
-                // We're unable to do anything sane here.
-                throw new RuntimeException(e);
+        // Null name? | Null dir? | Returned profile
+        // ------------------------------------------
+        //     Yes    |    Yes    | Active profile or default profile.
+        //     No     |    Yes    | Profile with specified name at default dir.
+        //     Yes    |    No     | Custom (anonymous) profile with specified dir.
+        //     No     |    No     | Profile with specified name at specified dir.
+
+        if (profileName == null && profileDir == null) {
+            // If no profile info was passed in, look for the active profile or a default profile.
+            final GeckoProfile profile = GeckoThread.getActiveProfile();
+            if (profile != null) {
+                return profile;
             }
+
+            final String args;
+            if (context instanceof Activity) {
+                args = ContextUtils.getStringExtra(((Activity) context).getIntent(), "args");
+            } else {
+                args = null;
+            }
+
+            final GeckoProfile fromArgs = GeckoProfile.getFromArgs(context, args);
+            if (fromArgs != null) {
+                return fromArgs;
+            }
+
+            // Otherwise, get the default profile for the Activity.
+            return getDefaultProfile(context);
+
+        } else if (profileName == null) {
+            // If only profile dir was passed in, use custom (anonymous) profile.
+            profileName = CUSTOM_PROFILE;
+
         } else if (AppConstants.DEBUG_BUILD) {
             Log.v(LOGTAG, "Fetching profile: '" + profileName + "', '" + profileDir + "'");
         }
@@ -279,6 +259,7 @@ public final class GeckoProfile {
                     // We're unable to do anything sane here.
                     throw new RuntimeException(e);
                 }
+
                 sProfileCache.put(profileName, profile);
                 return profile;
             }
@@ -288,12 +269,15 @@ public final class GeckoProfile {
                 return profile;
             }
 
-            if (profile.getDir().equals(profileDir)) {
-                // Great! We're consistent.
-                return profile;
+            try {
+                if (profile.getDir().getCanonicalPath().equals(profileDir.getCanonicalPath())) {
+                    // Great! We're consistent.
+                    return profile;
+                }
+            } catch (final IOException e) {
             }
 
-            if (sAcceptDirectoryChanges) {
+            if (sAcceptDirectoryChanges && profileDir.isDirectory()) {
                 if (AppConstants.RELEASE_BUILD) {
                     Log.e(LOGTAG, "Release build trying to switch out profile dir. This is an error, but let's do what we can.");
                 }
@@ -452,17 +436,19 @@ public final class GeckoProfile {
     }
 
     private GeckoProfile(Context context, String profileName, File profileDir, BrowserDB.Factory dbFactory) throws NoMozillaDirectoryException {
-        if (TextUtils.isEmpty(profileName)) {
+        if (profileName == null) {
             throw new IllegalArgumentException("Unable to create GeckoProfile for empty profile name.");
+        } else if (CUSTOM_PROFILE.equals(profileName) && profileDir == null) {
+            throw new IllegalArgumentException("Custom profile must have a directory");
         }
 
         mApplicationContext = context.getApplicationContext();
         mName = profileName;
         mMozillaDir = GeckoProfileDirectories.getMozillaDirectory(context);
 
-        // This apes the behavior of setDir.
-        if (profileDir != null && profileDir.exists() && profileDir.isDirectory()) {
-            mProfileDir = profileDir;
+        mProfileDir = profileDir;
+        if (profileDir != null && !profileDir.isDirectory()) {
+            throw new IllegalArgumentException("Profile directory must exist if specified.");
         }
 
         // N.B., mProfileDir can be null at this point.
@@ -563,6 +549,10 @@ public final class GeckoProfile {
 
     public String getName() {
         return mName;
+    }
+
+    public boolean isCustomProfile() {
+        return CUSTOM_PROFILE.equals(mName);
     }
 
     public synchronized File getDir() {
@@ -958,10 +948,18 @@ public final class GeckoProfile {
     }
 
     private File findProfileDir() throws NoSuchProfileException {
+        if (isCustomProfile()) {
+            return mProfileDir;
+        }
         return GeckoProfileDirectories.findProfileDir(mMozillaDir, mName);
     }
 
     private File createProfileDir() throws IOException {
+        if (isCustomProfile()) {
+            // Custom profiles must already exist.
+            return mProfileDir;
+        }
+
         INIParser parser = GeckoProfileDirectories.getProfilesINI(mMozillaDir);
 
         // Salt the name of our requested profile

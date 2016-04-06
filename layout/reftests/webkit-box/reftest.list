@@ -19,6 +19,19 @@ fails == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
 == webkit-box-align-horiz-1b.html webkit-box-align-horiz-1-ref.html
 == webkit-box-align-vert-1.html webkit-box-align-vert-1-ref.html
 
+# Tests for "-webkit-box-flex" (flexibility of items)
+== webkit-box-flex-1.html webkit-box-flex-1-ref.html
+
+# Tests for "-webkit-box-ordinal-group"
+== webkit-box-ordinal-group-1.html webkit-box-ordinal-group-1-ref.html
+# XXXdholbert The following test fails because we accept "0" as a valid value
+# for -webkit-box-ordinal-group (unlike Chrome/Blink), because that's simply
+# how its aliased property (-moz-box-ordinal-group) behaves. This shouldn't
+# matter in practice; it could only cause trouble if sites accidentally depend
+# on the "0" value being rejected.
+fails == webkit-box-ordinal-group-2.html webkit-box-ordinal-group-2-ref.html
+== webkit-box-ordinal-group-3.html webkit-box-ordinal-group-3-ref.html
+
 # Tests for "-webkit-box-pack" (main-axis alignment):
 == webkit-box-pack-horiz-1a.html webkit-box-pack-horiz-1-ref.html
 == webkit-box-pack-horiz-1b.html webkit-box-pack-horiz-1-ref.html

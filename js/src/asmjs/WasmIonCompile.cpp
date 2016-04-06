@@ -1258,20 +1258,30 @@ class FunctionCompiler
         if (!addControlFlowPatch(table, defaultDepth, defaultIndex))
             return false;
 
+        typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>
+            IndexToCaseMap;
+
+        IndexToCaseMap indexToCase;
+        if (!indexToCase.init() || !indexToCase.put(defaultDepth, defaultIndex))
+            return false;
+
         for (size_t i = 0; i < numCases; i++) {
             uint32_t depth = depths[i];
-            if (depth == defaultDepth) {
-                if (!table->addCase(defaultIndex))
-                    return false;
-                continue;
-            }
 
             size_t caseIndex;
-            if (!table->addSuccessor(nullptr, &caseIndex))
-                return false;
+            IndexToCaseMap::AddPtr p = indexToCase.lookupForAdd(depth);
+            if (!p) {
+                if (!table->addSuccessor(nullptr, &caseIndex))
+                    return false;
+                if (!addControlFlowPatch(table, depth, caseIndex))
+                    return false;
+                if (!indexToCase.add(p, depth, caseIndex))
+                    return false;
+            } else {
+                caseIndex = p->value();
+            }
+
             if (!table->addCase(caseIndex))
-                return false;
-            if (!addControlFlowPatch(table, depth, caseIndex))
                 return false;
         }
 

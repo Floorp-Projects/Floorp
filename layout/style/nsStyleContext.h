@@ -172,6 +172,16 @@ public:
                      mozilla::NonOwningStyleContextSource aSourceIfVisited,
                      bool aRelevantLinkVisited);
 
+  /**
+   * Get the color that should be used to fill text: either
+   * the current foreground color, or a separately-specified text fill color.
+   */
+  nscolor GetTextFillColor() {
+    const nsStyleText* textStyle = StyleText();
+    return textStyle->mWebkitTextFillColorForeground
+           ? StyleColor()->mColor : textStyle->mWebkitTextFillColor;
+  }
+
   // Does this style context or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests

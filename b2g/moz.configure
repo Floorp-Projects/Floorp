@@ -6,9 +6,19 @@
 
 option('--with-gonk', nargs=1, help='Path to the gonk base directory')
 
-@depends('--with-gonk')
+@depends_if('--with-gonk')
 def gonkdir(value):
-    return value[0] if value else ''
+    return value[0]
+
+add_old_configure_assignment('gonkdir', gonkdir)
+set_config('ANDROID_NDK',
+           depends_if(gonkdir)(lambda x: os.path.join(x, 'ndk')))
+
+@depends_if('--with-gonk')
+def gonk_toolkit(_):
+    return 'cairo-gonk'
+
+imply_option('--enable-default-toolkit', gonk_toolkit)
 
 
 option('--with-gonk-toolchain-prefix', nargs=1,

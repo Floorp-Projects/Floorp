@@ -93,7 +93,7 @@ private:
   /**
    * I/O buffer for received data
    */
-  nsAutoPtr<UnixSocketRawData> mBuffer;
+  UniquePtr<UnixSocketRawData> mBuffer;
 };
 
 RilSocketIO::RilSocketIO(WorkerCrossThreadDispatcher* aDispatcher,
@@ -170,7 +170,7 @@ RilSocketIO::QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer)
   MOZ_ASSERT(aBuffer);
 
   if (!mBuffer) {
-    mBuffer = new UnixSocketRawData(MAX_READ_SIZE);
+    mBuffer = MakeUnique<UnixSocketRawData>(MAX_READ_SIZE);
   }
   *aBuffer = mBuffer.get();
 
@@ -212,13 +212,13 @@ public:
 
 private:
   RilSocketIO* mIO;
-  nsAutoPtr<UnixSocketBuffer> mBuffer;
+  UniquePtr<UnixSocketBuffer> mBuffer;
 };
 
 void
 RilSocketIO::ConsumeBuffer()
 {
-  RefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.forget());
+  RefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.release());
   NS_WARN_IF(!mDispatcher->PostTask(task));
 }
 
@@ -342,7 +342,7 @@ RilSocket::~RilSocket()
 
 void
 RilSocket::ReceiveSocketData(JSContext* aCx,
-                             nsAutoPtr<UnixSocketBuffer>& aBuffer)
+                             UniquePtr<UnixSocketBuffer>& aBuffer)
 {
   mConsumer->ReceiveSocketData(aCx, mIndex, aBuffer);
 }

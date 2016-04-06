@@ -23,6 +23,14 @@ FINAL_TARGET_FILES += ['blocklist.xml']
 FINAL_TARGET_FILES.defaults.profile += ['profile/prefs.js']
 FINAL_TARGET_FILES.defaults += ['permissions']
 
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+    FINAL_TARGET_FILES.icons += ['!/dist/branding/mozicon128.png']
+    FINAL_TARGET_FILES.chrome.icons.default += [
+        '!/dist/branding/default16.png',
+        '!/dist/branding/default32.png',
+        '!/dist/branding/default48.png',
+    ]
+
 DEFINES['APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 
 LOCAL_INCLUDES += [

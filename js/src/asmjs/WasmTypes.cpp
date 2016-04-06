@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmTypes.h"
 
+#include "fdlibm.h"
+
 #include "jslibmath.h"
 #include "jsmath.h"
 
@@ -241,23 +243,23 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::TanD:
         return FuncCast<double (double)>(tan, Args_Double_Double);
       case SymbolicAddress::ASinD:
-        return FuncCast<double (double)>(asin, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::asin, Args_Double_Double);
       case SymbolicAddress::ACosD:
-        return FuncCast<double (double)>(acos, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::acos, Args_Double_Double);
       case SymbolicAddress::ATanD:
-        return FuncCast<double (double)>(atan, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::atan, Args_Double_Double);
       case SymbolicAddress::CeilD:
-        return FuncCast<double (double)>(ceil, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::ceil, Args_Double_Double);
       case SymbolicAddress::CeilF:
-        return FuncCast<float (float)>(ceilf, Args_Float32_Float32);
+        return FuncCast<float (float)>(fdlibm::ceilf, Args_Float32_Float32);
       case SymbolicAddress::FloorD:
-        return FuncCast<double (double)>(floor, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::floor, Args_Double_Double);
       case SymbolicAddress::FloorF:
-        return FuncCast<float (float)>(floorf, Args_Float32_Float32);
+        return FuncCast<float (float)>(fdlibm::floorf, Args_Float32_Float32);
       case SymbolicAddress::ExpD:
-        return FuncCast<double (double)>(exp, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::exp, Args_Double_Double);
       case SymbolicAddress::LogD:
-        return FuncCast<double (double)>(log, Args_Double_Double);
+        return FuncCast<double (double)>(fdlibm::log, Args_Double_Double);
       case SymbolicAddress::PowD:
         return FuncCast(ecmaPow, Args_Double_DoubleDouble);
       case SymbolicAddress::ATan2D:

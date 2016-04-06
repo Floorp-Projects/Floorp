@@ -54,14 +54,13 @@ def checking(what, callback=None):
                     ret = func(*args, **kwargs)
                 except FatalCheckError as e:
                     error = e.message
-                if callback:
-                    log.info(callback(ret))
-                elif ret is True:
+                display_ret = callback(ret) if callback else ret
+                if display_ret is True:
                     log.info('yes')
-                elif ret is False:
+                elif display_ret is False or display_ret is None:
                     log.info('no')
                 else:
-                    log.info(ret)
+                    log.info(display_ret)
                 if error:
                     die(error)
             return ret

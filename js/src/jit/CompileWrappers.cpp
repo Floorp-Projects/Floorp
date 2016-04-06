@@ -263,9 +263,9 @@ CompileCompartment::jitCompartment()
 }
 
 bool
-CompileCompartment::hasObjectMetadataCallback()
+CompileCompartment::hasAllocationMetadataBuilder()
 {
-    return compartment()->hasObjectMetadataCallback();
+    return compartment()->hasAllocationMetadataBuilder();
 }
 
 // Note: This function is thread-safe because setSingletonAsValue sets a boolean

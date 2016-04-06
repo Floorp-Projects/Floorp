@@ -1938,7 +1938,7 @@ static const ClassSpec TypedArrayObjectClassSpecs[Scalar::MaxTypedArrayViewType]
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |             \
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array) |                         \
-    JSCLASS_DELAY_METADATA_CALLBACK,                                           \
+    JSCLASS_DELAY_METADATA_BUILDER,                                            \
     nullptr,                 /* addProperty */                                 \
     nullptr,                 /* delProperty */                                 \
     nullptr,                 /* getProperty */                                 \

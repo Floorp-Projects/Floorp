@@ -19,6 +19,7 @@
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/Utility.h"
 
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) < (limit)))
@@ -313,6 +314,7 @@ JS_DefineFunctionsWithHelp(JSContext* cx, JS::HandleObject obj, const JSFunction
 
 namespace js {
 
+extern JS_FRIEND_DATA(const js::ClassExtension) ProxyClassExtension;
 extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
 
 /*
@@ -321,19 +323,18 @@ extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
  * NB: The macro invocation must be surrounded by braces, so as to
  *     allow for potential JSClass extensions.
  */
-#define PROXY_MAKE_EXT(isWrappedNative, objectMoved)                    \
+#define PROXY_MAKE_EXT(objectMoved)                                     \
     {                                                                   \
-        isWrappedNative,                                                \
         js::proxy_WeakmapKeyDelegate,                                   \
         objectMoved                                                     \
     }
 
-#define PROXY_CLASS_WITH_EXT(name, flags, ext)                                          \
+#define PROXY_CLASS_WITH_EXT(name, flags, extPtr)                                       \
     {                                                                                   \
         name,                                                                           \
         js::Class::NON_NATIVE |                                                         \
             JSCLASS_IS_PROXY |                                                          \
-            JSCLASS_DELAY_METADATA_CALLBACK |                                           \
+            JSCLASS_DELAY_METADATA_BUILDER |                                            \
             flags,                                                                      \
         nullptr,                 /* addProperty */                                      \
         nullptr,                 /* delProperty */                                      \
@@ -348,16 +349,12 @@ extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
         nullptr,                 /* construct   */                                      \
         js::proxy_Trace,         /* trace       */                                      \
         JS_NULL_CLASS_SPEC,                                                             \
-        ext,                                                                            \
+        extPtr,                                                                         \
         &js::ProxyObjectOps                                                             \
     }
 
-#define PROXY_CLASS_DEF(name, flags)                                    \
-  PROXY_CLASS_WITH_EXT(name, flags,                                     \
-                       PROXY_MAKE_EXT(                                  \
-                         false,   /* isWrappedNative */                 \
-                         js::proxy_ObjectMoved                          \
-                       ))
+#define PROXY_CLASS_DEF(name, flags) \
+  PROXY_CLASS_WITH_EXT(name, flags, &js::ProxyClassExtension)
 
 /*
  * Proxy stubs, similar to JS_*Stub, for embedder proxy class definitions.
@@ -2665,8 +2662,23 @@ class MOZ_RAII JS_FRIEND_API(AutoCTypesActivityCallback) {
     }
 };
 
-typedef JSObject*
-(* ObjectMetadataCallback)(JSContext* cx, JS::HandleObject obj);
+// Abstract base class for objects that build allocation metadata for JavaScript
+// values.
+struct AllocationMetadataBuilder {
+    AllocationMetadataBuilder() { }
+
+    // Return a metadata object for the newly constructed object |obj|, or
+    // nullptr if there's no metadata to attach.
+    //
+    // Implementations should treat all errors as fatal; there is no way to
+    // report errors from this callback. In particular, the caller provides an
+    // oomUnsafe for overriding implementations to use.
+    virtual JSObject* build(JSContext* cx, JS::HandleObject obj,
+                            AutoEnterOOMUnsafeRegion& oomUnsafe) const
+    {
+        return nullptr;
+    }
+};
 
 /**
  * Specify a callback to invoke when creating each JS object in the current
@@ -2674,11 +2686,11 @@ typedef JSObject*
  * object.
  */
 JS_FRIEND_API(void)
-SetObjectMetadataCallback(JSContext* cx, ObjectMetadataCallback callback);
+SetAllocationMetadataBuilder(JSContext* cx, const AllocationMetadataBuilder *callback);
 
 /** Get the metadata associated with an object. */
 JS_FRIEND_API(JSObject*)
-GetObjectMetadata(JSObject* obj);
+GetAllocationMetadata(JSObject* obj);
 
 JS_FRIEND_API(bool)
 GetElementsWithAdder(JSContext* cx, JS::HandleObject obj, JS::HandleObject receiver,

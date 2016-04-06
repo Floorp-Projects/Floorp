@@ -103,7 +103,6 @@ if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
-    ANDROID_NDK="${ANDROID_SOURCE}/ndk"
     dnl Default to ICS
     ANDROID_VERSION=15
     if test -n "${PLATFORM_SDK_VERSION}"; then
@@ -1469,8 +1468,10 @@ case "$target" in
         # that behavior) that it's better to turn it off.
         # MSVC warning C4819 warns some UTF-8 characters (e.g. copyright sign)
         # on non-Western system locales even if it is in a comment.
+        # MSVC warning wd4595 warns non-member operator new or delete functions
+        # may not be declared inline, as of VS2015 Update 2.
         CFLAGS="$CFLAGS -wd4244 -wd4267 -wd4819"
-        CXXFLAGS="$CXXFLAGS -wd4251 -wd4244 -wd4267 -wd4345 -wd4351 -wd4800 -wd4819"
+        CXXFLAGS="$CXXFLAGS -wd4251 -wd4244 -wd4267 -wd4345 -wd4351 -wd4800 -wd4819 -wd4595"
         if test -n "$CLANG_CL"; then
             # XXX We should combine some of these with our generic GCC-style
             # warning checks.
@@ -2743,7 +2744,6 @@ MOZ_WEBRTC_ASSERT_ALWAYS=1
 MOZ_WEBRTC_HARDWARE_AEC_NS=
 MOZ_SCTP=
 MOZ_ANDROID_OMX=
-MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
@@ -3023,16 +3023,6 @@ dnl ========================================================
 if test -z "$gonkdir" ; then
     case "$MOZ_BUILD_APP" in
     mobile/android)
-        case "$target" in
-        *-android*|*-linuxandroid*)
-            :
-            ;;
-        *)
-            AC_MSG_ERROR([You must specify --target=arm-linux-androideabi (or some other valid android target) when building with --enable-application=mobile/android.
-             See https://wiki.mozilla.org/Mobile/Fennec/Android#Setup_Fennec_mozconfig for more information about the necessary options])
-            ;;
-        esac
-
         MOZ_ANDROID_SDK(23, 23.0.1)
         ;;
     esac
@@ -4001,18 +3991,6 @@ MOZ_ARG_ENABLE_BOOL(android-omx,
 
 if test -n "$MOZ_ANDROID_OMX"; then
   AC_DEFINE(MOZ_ANDROID_OMX)
-fi
-
-dnl ========================================================
-dnl = Enable getUserMedia support
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(media-navigator,
-[  --enable-media-navigator  Enable support for getUserMedia],
-    MOZ_MEDIA_NAVIGATOR=1,
-    MOZ_MEDIA_NAVIGATOR=)
-
-if test -n "$MOZ_MEDIA_NAVIGATOR"; then
-  AC_DEFINE(MOZ_MEDIA_NAVIGATOR)
 fi
 
 dnl ========================================================
@@ -7006,7 +6984,6 @@ AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_HELP_VIEWER)
-AC_SUBST(TOOLCHAIN_PREFIX)
 
 AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
@@ -7589,7 +7566,6 @@ AC_DEFINE(NO_NSPR_10_SUPPORT)
 MOZ_CREATE_CONFIG_STATUS()
 
 if test "$COMPILE_ENVIRONMENT"; then
-  MOZ_SUBCONFIGURE_ICU()
   MOZ_SUBCONFIGURE_FFI()
   MOZ_SUBCONFIGURE_JEMALLOC()
 fi

@@ -17,15 +17,11 @@ enum DownloadState {
   "finalized"
 };
 
-//
-// XXXTODO: When we have a generic way to do feature detection in marketplace
-//          we will *STOP* using the pref and use CheckAnyPermissions like 
-//          DOMDownload and DownloadEvent.
-//
 [NoInterfaceObject,
  NavigatorProperty="mozDownloadManager",
  JSImplementation="@mozilla.org/downloads/manager;1",
- Pref="dom.mozDownloads.enabled"]
+ Pref="dom.mozDownloads.enabled",
+ CheckAnyPermissions="downloads"]
 interface DOMDownloadManager : EventTarget {
   // This promise returns an array of downloads with all the current
   // download objects.

@@ -111,8 +111,8 @@ js::WeakMap_delete(JSContext* cx, unsigned argc, Value* vp)
 static bool
 TryPreserveReflector(JSContext* cx, HandleObject obj)
 {
-    if (obj->getClass()->ext.isWrappedNative ||
-        (obj->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
+    if (obj->getClass()->isWrappedNative() ||
+        obj->getClass()->isDOMClass() ||
         (obj->is<ProxyObject>() &&
          obj->as<ProxyObject>().handler()->family() == GetDOMProxyHandlerFamily()))
     {
@@ -147,7 +147,7 @@ SetWeakMapEntryInternal(JSContext* cx, Handle<WeakMapObject*> mapObj,
     if (!TryPreserveReflector(cx, key))
         return false;
 
-    if (JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp) {
+    if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp()) {
         RootedObject delegate(cx, op(key));
         if (delegate && !TryPreserveReflector(cx, delegate))
             return false;

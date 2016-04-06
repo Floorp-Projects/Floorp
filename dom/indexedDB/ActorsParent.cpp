@@ -11550,7 +11550,9 @@ ConnectionPool::Start(const nsID& aBackgroundChildLoggingId,
                                   /* aFromQueuedTransactions */ false);
   }
 
-  if (!databaseInfoIsNew && mIdleDatabases.RemoveElement(dbInfo)) {
+  if (!databaseInfoIsNew &&
+      (mIdleDatabases.RemoveElement(dbInfo) ||
+       mDatabasesPerformingIdleMaintenance.RemoveElement(dbInfo))) {
     AdjustIdleTimer();
   }
 
@@ -12417,7 +12419,7 @@ IdleConnectionRunnable::Run()
   RefPtr<ConnectionPool> connectionPool = mDatabaseInfo->mConnectionPool;
   MOZ_ASSERT(connectionPool);
 
-  if (mDatabaseInfo->mClosing) {
+  if (mDatabaseInfo->mClosing || mDatabaseInfo->TotalTransactionCount()) {
     MOZ_ASSERT(!connectionPool->
                  mDatabasesPerformingIdleMaintenance.Contains(mDatabaseInfo));
   } else {
@@ -12425,9 +12427,7 @@ IdleConnectionRunnable::Run()
       connectionPool->
         mDatabasesPerformingIdleMaintenance.RemoveElement(mDatabaseInfo));
 
-    if (!mDatabaseInfo->TotalTransactionCount()) {
-      connectionPool->NoteIdleDatabase(mDatabaseInfo);
-    }
+    connectionPool->NoteIdleDatabase(mDatabaseInfo);
   }
 
   return NS_OK;

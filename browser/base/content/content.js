@@ -1072,11 +1072,11 @@ var PageInfoListener = {
 
       // Goes through all the elements on the doc. imageViewRows takes only the media elements.
       while (iterator.nextNode()) {
-        let mediaNode = this.getMediaNode(document, strings, iterator.currentNode);
+        let mediaItems = this.getMediaItems(document, strings, iterator.currentNode);
 
-        if (mediaNode) {
+        if (mediaItems.length) {
           sendAsyncMessage("PageInfo:mediaData",
-                           {imageViewRow: mediaNode, isComplete: false});
+                           {mediaItems, isComplete: false});
         }
 
         if (++nodeCount % 500 == 0) {
@@ -1089,15 +1089,17 @@ var PageInfoListener = {
     sendAsyncMessage("PageInfo:mediaData", {isComplete: true});
   },
 
-  getMediaNode: function(document, strings, elem)
+  getMediaItems: function(document, strings, elem)
   {
-    // Check for images defined in CSS (e.g. background, borders), any node may have multiple.
+    // Check for images defined in CSS (e.g. background, borders)
     let computedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
-    let mediaElement = null;
+    // A node can have multiple media items associated with it - for example,
+    // multiple background images.
+    let mediaItems = [];
 
     let addImage = (url, type, alt, elem, isBg) => {
       let element = this.serializeElementInfo(document, url, type, alt, elem, isBg);
-      mediaElement = [url, type, alt, element, isBg];
+      mediaItems.push([url, type, alt, element, isBg]);
     };
 
     if (computedStyle) {
@@ -1165,7 +1167,7 @@ var PageInfoListener = {
       addImage(elem.src, strings.mediaEmbed, "", elem, false);
     }
 
-    return mediaElement;
+    return mediaItems;
   },
 
   /**

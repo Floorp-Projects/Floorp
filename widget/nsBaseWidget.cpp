@@ -1364,7 +1364,7 @@ nsBaseWidget::CleanupRemoteDrawing()
 already_AddRefed<mozilla::gfx::DrawTarget>
 nsBaseWidget::CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
                                          const LayoutDeviceIntRect& aRect,
-                                         const bool aInitModeClear)
+                                         const LayoutDeviceIntRect& aClearRect)
 {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
@@ -1380,8 +1380,9 @@ nsBaseWidget::CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget
       mLastBackBuffer->GetSize() <= clientSize) {
     target = mLastBackBuffer;
     target->SetTransform(gfx::Matrix());
-    if (aInitModeClear) {
-      target->ClearRect(gfx::Rect(0, 0, size.width, size.height));
+    if (!aClearRect.IsEmpty()) {
+      gfx::IntRect clearRect = aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
+      target->ClearRect(gfx::Rect(clearRect.x, clearRect.y, clearRect.width, clearRect.height));
     }
   } else {
     target = aScreenTarget->CreateSimilarDrawTarget(size, format);

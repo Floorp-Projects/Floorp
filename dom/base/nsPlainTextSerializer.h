@@ -128,15 +128,6 @@ private:
   uint32_t         mHeadLevel;
   bool             mAtFirstColumn;
 
-  // Handling of quoted text (for mail):
-  // Quotes need to be wrapped differently from non-quoted text,
-  // because quoted text has a few extra characters (e.g. ">> ")
-  // which makes the line length longer.
-  // Mail can represent quotes in different ways:
-  // Not wrapped in any special tag (if mail.compose.wrap_to_window_width)
-  // or in a <span>.
-  bool             mDontWrapAnyQuotes;  // no special quote markers
-
   bool             mStructs;            // Output structs (pref)
 
   // If we've just written out a cite blockquote, we need to remember it

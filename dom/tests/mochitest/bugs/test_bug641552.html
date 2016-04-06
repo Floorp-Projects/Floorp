@@ -22,8 +22,6 @@ SimpleTest.waitForExplicitFinish();
 var contractId = "@mozilla.org/xmlextras/xmlhttprequest;1";
 var categoryEntries = [
   {category: "JavaScript-global-property", entry: "randomname", contractId: contractId},
-  {category: "JavaScript-navigator-property", entry: "randomname1", contractId: contractId},
-  {category: "JavaScript-navigator-property", entry: "randomname2", contractId: contractId},
 ];
 
 function addCategoryEntries(func) {
@@ -43,14 +41,10 @@ function removeCategoryEntries(func) {
 
 function checkNamesPresent() {
   ok(window.randomname, "window.randomname should return an object");
-  is(typeof(window.navigator.randomname1), 'object', "navigator.randomname1 should return an object");
-  is(typeof(window.navigator.randomname2), 'object', "navigator.randomname1 should return an object");
 }
 
 function checkNamesAbsent() {
   ok(!window.randomname, "window.randomname should return undefined");
-  is(typeof(window.navigator.randomname1), 'undefined', "navigator.randomname1 should return undefined");
-  is(typeof(window.navigator.randomname2), 'undefined', "navigator.randomname1 should return undefined");
 }
 
 // Ensure the initial state
@@ -58,12 +52,8 @@ checkNamesAbsent();
 
 addCategoryEntries(function test1() {
   ok(window.randomname, "window.randomname should return an object");
-  is(typeof(window.navigator.randomname1), 'object', "navigator.randomname1 should return an object");
-  is(typeof(window.navigator.randomname2), 'object', "navigator.randomname1 should return an object");
 
   delete window.randomname;
-  delete window.navigator.randomname1;
-  delete window.navigator.randomname2;
 
   // The delete opertor should have no effect as long as the category entry is registered.
   checkNamesPresent();
@@ -76,8 +66,6 @@ function test2() {
   checkNamesPresent();
 
   delete window.randomname;
-  delete window.navigator.randomname1;
-  delete window.navigator.randomname2;
 
   // Now the delete opertor should have the effect.
   checkNamesAbsent();

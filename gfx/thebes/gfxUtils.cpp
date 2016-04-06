@@ -1554,7 +1554,8 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
 
 /* static */ bool
 gfxUtils::DumpDisplayList() {
-  return gfxPrefs::LayoutDumpDisplayList();
+  return gfxPrefs::LayoutDumpDisplayList() ||
+         (gfxPrefs::LayoutDumpDisplayListContent() && XRE_IsContentProcess());
 }
 
 FILE *gfxUtils::sDumpPaintFile = stderr;

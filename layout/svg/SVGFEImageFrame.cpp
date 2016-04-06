@@ -156,6 +156,7 @@ SVGFEImageFrame::OnVisibilityChange(Visibility aNewVisibility,
     do_QueryInterface(SVGFEImageFrameBase::mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
+    SVGFEImageFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 

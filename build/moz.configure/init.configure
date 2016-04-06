@@ -735,22 +735,4 @@ def js_option(*args, **kwargs):
     add_old_configure_arg(js_option)
 
 
-# This is overridden in b2g/moz.configure with an option. No other project
-# needs the option directly, but it's used to influence some other things in
-# toolkit/moz.configure (and possibly top-level moz.configure later on), so
-# define a dummy default here.
-@depends('--help')
-def gonkdir(help):
-    return ''
-
-
 include(include_project_configure)
-
-# By now, gonkdir is either the dummy function above or a real function
-# depending on --with-gonk from b2g/moz.configure.
-@depends(gonkdir)
-def gonkdir_for_old_configure(value):
-    if value:
-        return value
-
-add_old_configure_assignment('gonkdir', gonkdir_for_old_configure)

@@ -70,6 +70,11 @@ SimpleGlobal_moved(JSObject *obj, const JSObject *old)
   globalObject->UpdateWrapper(obj, old);
 }
 
+static const js::ClassExtension SimpleGlobalClassExtension = {
+  nullptr,
+  SimpleGlobal_moved
+};
+
 const js::Class SimpleGlobalClass = {
     "",
     JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
@@ -85,11 +90,9 @@ const js::Class SimpleGlobalClass = {
     nullptr,
     nullptr,
     JS_GlobalObjectTraceHook,
-    JS_NULL_CLASS_SPEC, {
-      false,
-      nullptr,
-      SimpleGlobal_moved
-    }, JS_NULL_OBJECT_OPS
+    JS_NULL_CLASS_SPEC,
+    &SimpleGlobalClassExtension,
+    JS_NULL_OBJECT_OPS
 };
 
 // static

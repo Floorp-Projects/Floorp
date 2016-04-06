@@ -101,3 +101,30 @@ wasmEvalText(`(module (func
   (i32.const 3)
  )
 ))`);
+
+wasmEvalText(`(module (func
+ (block $return
+  (block $beforeReturn
+   (loop $out $in
+    (block $otherTable
+      (br_table
+       $return
+       $return
+       $otherTable
+       $beforeReturn
+       (i32.const 0)
+      )
+    )
+    (block $backTop
+     (br_table
+      $backTop
+      $backTop
+      $beforeReturn
+      (i32.const 0)
+     )
+    )
+    (br $in)
+   )
+  )
+ )
+))`);

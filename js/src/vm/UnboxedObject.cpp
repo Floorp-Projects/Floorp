@@ -924,7 +924,7 @@ const Class UnboxedPlainObject::class_ = {
     js_Object_str,
     Class::NON_NATIVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
-    JSCLASS_DELAY_METADATA_CALLBACK,
+    JSCLASS_DELAY_METADATA_BUILDER,
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
     nullptr,        /* getProperty */
@@ -1591,6 +1591,11 @@ UnboxedArrayObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector&
     return true;
 }
 
+static const ClassExtension UnboxedArrayObjectClassExtension = {
+    nullptr,    /* weakmapKeyDelegateOp */
+    UnboxedArrayObject::objectMoved
+};
+
 static const ObjectOps UnboxedArrayObjectObjectOps = {
     UnboxedArrayObject::obj_lookupProperty,
     UnboxedArrayObject::obj_defineProperty,
@@ -1624,11 +1629,7 @@ const Class UnboxedArrayObject::class_ = {
     nullptr,        /* construct   */
     UnboxedArrayObject::trace,
     JS_NULL_CLASS_SPEC,
-    {
-        false,      /* isWrappedNative */
-        nullptr,    /* weakmapKeyDelegateOp */
-        UnboxedArrayObject::objectMoved
-    },
+    &UnboxedArrayObjectClassExtension,
     &UnboxedArrayObjectObjectOps
 };
 

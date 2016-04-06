@@ -225,7 +225,7 @@ class Configuration:
             elif key == 'isJSImplemented':
                 getter = lambda x: x.interface.isJSImplemented()
             elif key == 'isNavigatorProperty':
-                getter = lambda x: x.interface.getNavigatorProperty() is not None
+                getter = lambda x: x.interface.isNavigatorProperty()
             elif key == 'isExposedInAnyWorker':
                 getter = lambda x: x.interface.isExposedInAnyWorker()
             elif key == 'isExposedInWorkerDebugger':
@@ -585,6 +585,13 @@ class Descriptor(DescriptorProvider):
             for attribute in ['implicitJSContext']:
                 addExtendedAttribute(attribute, desc.get(attribute, {}))
 
+        if self.interface.identifier.name == 'Navigator':
+            for m in self.interface.members:
+                if m.isAttr() and m.navigatorObjectGetter:
+                    # These getters call ConstructNavigatorObject to construct
+                    # the value, and ConstructNavigatorObject needs a JSContext.
+                    self.extendedAttributes['all'].setdefault(m.identifier.name, []).append('implicitJSContext')
+
         self._binaryNames = desc.get('binaryNames', {})
         self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
         self._binaryNames.setdefault('__stringifier', 'Stringify')
@@ -637,13 +644,10 @@ class Descriptor(DescriptorProvider):
                 if (self.interface.getExtendedAttribute("CheckAnyPermissions") or
                     self.interface.getExtendedAttribute("CheckAllPermissions") or
                     self.interface.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
-                    if self.interface.getNavigatorProperty():
-                        self.featureDetectibleThings.add("Navigator.%s" % self.interface.getNavigatorProperty())
-                    else:
-                        iface = self.interface.identifier.name
-                        self.featureDetectibleThings.add(iface)
-                        for m in self.interface.members:
-                            self.featureDetectibleThings.add("%s.%s" % (iface, m.identifier.name))
+                    iface = self.interface.identifier.name
+                    self.featureDetectibleThings.add(iface)
+                    for m in self.interface.members:
+                        self.featureDetectibleThings.add("%s.%s" % (iface, m.identifier.name))
 
                 for m in self.interface.members:
                     if (m.getExtendedAttribute("CheckAnyPermissions") or

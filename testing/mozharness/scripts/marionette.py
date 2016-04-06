@@ -140,6 +140,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         ["--e10s"],
         {"action": "store_true",
          "dest": "e10s",
+         "default": False,
          "help": "Run tests with multiple processes. (Desktop builds only)",
         }
      ]] + copy.deepcopy(testing_config_options) \
@@ -418,8 +419,8 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             if self.config.get('app_arg'):
                 config_fmt_args['app_arg'] = self.config['app_arg']
 
-            if self.config.get('e10s'):
-                cmd.append('--e10s')
+            if not self.config['e10s']:
+                cmd.append('--disable-e10s')
 
             cmd.append('--gecko-log=%s' % os.path.join(dirs["abs_blob_upload_dir"],
                                                        'gecko.log'))

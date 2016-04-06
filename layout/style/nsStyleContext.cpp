@@ -505,12 +505,12 @@ nsStyleContext::CreateEmptyStyleData(const nsStyleStructID& aSID)
   void* result;
   nsPresContext* presContext = PresContext();
   switch (aSID) {
-#define UNIQUE_CASE(c_, ...) \
+#define UNIQUE_CASE(c_) \
     case eStyleStruct_##c_: \
-      result = new (presContext) nsStyle##c_(__VA_ARGS__); \
+      result = new (presContext) nsStyle##c_(presContext); \
       break;
 
-  UNIQUE_CASE(Border, presContext)
+  UNIQUE_CASE(Border)
   UNIQUE_CASE(Padding)
 
 #undef UNIQUE_CASE

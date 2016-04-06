@@ -152,8 +152,12 @@ static JSObject* GetKeyDelegate(JSObject* obj)
 
 JSObject* newKey()
 {
+    static const js::ClassExtension keyClassExtension = {
+        GetKeyDelegate
+    };
+
     static const js::Class keyClass = {
-        "keyWithDelgate",
+        "keyWithDelegate",
         JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
         nullptr, /* addProperty */
         nullptr, /* delProperty */
@@ -168,10 +172,7 @@ JSObject* newKey()
         nullptr, /* construct */
         nullptr, /* trace */
         JS_NULL_CLASS_SPEC,
-        {
-            false,
-            GetKeyDelegate
-        },
+        &keyClassExtension,
         JS_NULL_OBJECT_OPS
     };
 
@@ -206,6 +207,11 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
 
 JSObject* newDelegate()
 {
+    static const js::ClassExtension delegateClassExtension = {
+        nullptr,
+        DelegateObjectMoved
+    };
+
     static const js::Class delegateClass = {
         "delegate",
         JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_RESERVED_SLOTS(1),
@@ -222,11 +228,7 @@ JSObject* newDelegate()
         nullptr, /* construct */
         JS_GlobalObjectTraceHook,
         JS_NULL_CLASS_SPEC,
-        {
-            false,
-            nullptr,
-            DelegateObjectMoved
-        },
+        &delegateClassExtension,
         JS_NULL_OBJECT_OPS
     };
 

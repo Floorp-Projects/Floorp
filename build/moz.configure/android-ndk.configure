@@ -1,0 +1,77 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+js_option('--with-android-ndk', nargs=1,
+          help='location where the Android NDK can be found')
+
+js_option('--with-android-toolchain', nargs=1,
+          help='location of the Android toolchain')
+
+js_option('--with-android-gnu-compiler-version', nargs=1,
+          help='GNU compiler version to use')
+
+@depends('--with-android-ndk', build_project)
+def ndk(value, build_project):
+    if build_project == 'mobile/android' and not value:
+        die('You must specify --with-android-ndk=/path/to/ndk when '
+            'building mobile/android')
+    if value:
+        return value[0]
+
+set_config('ANDROID_NDK', ndk)
+add_old_configure_assignment('android_ndk', ndk)
+
+@depends(target, host, ndk, '--with-android-toolchain',
+         '--with-android-gnu-compiler-version')
+@checking('for the Android toolchain directory', lambda x: x or 'not found')
+@imports(_from='mozbuild.shellutil', _import='quote')
+def android_toolchain(target, host, ndk, toolchain, gnu_compiler_version):
+    if not ndk:
+        return
+    if toolchain:
+        return toolchain[0]
+    else:
+        if target.cpu == 'arm' and target.endianness == 'little':
+            target_base = 'arm-linux-androideabi'
+        elif target.cpu == 'x86':
+            target_base = 'x86'
+        elif target.cpu == 'mips' and target.endianness == 'little':
+            target_base = 'mipsel-linux-android'
+        else:
+            die('Target cpu is not supported.')
+
+        toolchain_format = '%s/toolchains/%s-%s/prebuilt/%s-%s'
+
+        for version in gnu_compiler_version or ['4.9', '4.8', '4.7']:
+            toolchain = toolchain_format % (ndk, target_base, version,
+                                            host.kernel.lower(), host.cpu)
+            log.debug('Trying %s' % quote(toolchain))
+            if not os.path.isdir(toolchain) and host.cpu == 'x86_64':
+                toolchain = toolchain_format % (ndk, target_base, version,
+                                                host.kernel.lower(), 'x86')
+                log.debug('Trying %s' % quote(toolchain))
+            if os.path.isdir(toolchain):
+                return toolchain
+        else:
+            if gnu_compiler_version:
+                die('Your --with-android-gnu-compiler-version may be wrong')
+            die('You have to specify --with-android-toolchain='
+                '/path/to/ndk/toolchain.')
+
+set_config('ANDROID_TOOLCHAIN', android_toolchain)
+
+@depends(target, android_toolchain)
+def android_toolchain_prefix(target, toolchain):
+    if toolchain:
+        if target.cpu == 'x86':
+            # Ideally, the --target should just have the right x86 variant
+            # in the first place.
+            return '%s/bin/i686-linux-android-' % toolchain
+        return '%s/bin/%s-' % (toolchain, target.toolchain)
+
+imply_option('--with-toolchain-prefix', android_toolchain_prefix,
+             reason='--with-android-ndk')

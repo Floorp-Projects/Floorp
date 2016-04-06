@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Reference: Bug 1248913 - Keep background-attachment:fixed image fixed under APZ scrolling even when a background-blend-mode is applied.</title>
+
+<style>
+
+html {
+  background: radial-gradient(circle 200px at 400px 400px, lime 100px, transparent 0) scroll,
+              radial-gradient(circle 200px at 400px 300px, blue 100px, transparent 0) scroll
+               white no-repeat;
+  background-blend-mode: multiply;
+  height: 100%;
+}
+
+</style>
+
+<div></div>

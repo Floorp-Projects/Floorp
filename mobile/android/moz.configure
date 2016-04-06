@@ -4,5 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+@depends(target)
+def check_target(target):
+    if target.os != 'Android':
+        log.error('You must specify --target=arm-linux-androideabi (or some '
+                  'other valid Android target) when building mobile/android.')
+        die('See https://developer.mozilla.org/docs/Mozilla/Developer_guide/'
+            'Build_Instructions/Simple_Firefox_for_Android_build '
+            'for more information about the necessary options.')
+
 include('../../toolkit/moz.configure')
 include('gradle.configure')

@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="reftest-wait"
-      reftest-displayport-x="0"
-      reftest-displayport-y="0"
-      reftest-displayport-w="800"
-      reftest-displayport-h="1000">
+<html lang="en" class="reftest-wait" reftest-async-scroll>
 <meta charset="utf-8">
 <title>Bug 1164227 - Testcase for the invalid region simplification bug</title>
 
@@ -47,7 +43,11 @@
 }
 </style>
 
-<div id="scrollbox">
+<div id="scrollbox"
+     reftest-displayport-x="0"
+     reftest-displayport-y="0"
+     reftest-displayport-w="400"
+     reftest-displayport-h="500">
 
   <div class="contents">
 

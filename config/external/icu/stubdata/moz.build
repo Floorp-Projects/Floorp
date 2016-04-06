@@ -1,0 +1,15 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This builds the ICU stubdata library, since we are shipping ICU
+# data in a separate data file. ICU needs a data symbol to link against
+# even if you're loading its data from a file.
+
+Library('icustubdata')
+
+LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
+
+SOURCES += ['/intl/icu/source/stubdata/stubdata.c']

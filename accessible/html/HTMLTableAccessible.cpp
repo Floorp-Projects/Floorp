@@ -912,7 +912,7 @@ HTMLTableAccessible::HasDescendant(const nsAString& aTagName, bool aAllowEmpty)
   // performance problems only. Note, currently 'aAllowEmpty' flag is used for
   // caption element only. On another hand we create accessible object for
   // the first entry of caption element (see
-  // HTMLTableAccessible::CacheChildren).
+  // HTMLTableAccessible::InsertChildAt).
   return !!elements->Item(1);
 }
 
