@@ -464,13 +464,11 @@ public:
     : mContentParent(aParent)
     , mPrincipalInfo(aPrincipalInfo)
     , mOrigin(aOrigin)
-    , mBackgroundThread(NS_GetCurrentThread())
   {
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
 
     MOZ_ASSERT(mContentParent);
-    MOZ_ASSERT(mBackgroundThread);
   }
 
   NS_IMETHODIMP Run()
@@ -522,7 +520,6 @@ private:
   RefPtr<ContentParent> mContentParent;
   PrincipalInfo mPrincipalInfo;
   nsCString mOrigin;
-  nsCOMPtr<nsIThread> mBackgroundThread;
 };
 
 } // namespace
