@@ -711,12 +711,8 @@ sec_PKCS7Encrypt (sec_PKCS7CipherObject *obj, unsigned char *output,
     }
 
     if (final) {
-        if (padsize) {
-	    padlen = padsize - (pcount % padsize);
-	    PORT_Memset (pbuf + pcount, padlen, padlen);
-        } else {
-	    padlen = 0;
-        }
+	padlen = padsize ? padsize - (pcount % padsize) : 0;
+	PORT_Memset (pbuf + pcount, padlen, padlen);
 	rv = (* obj->doit) (obj->cx, output, &ofraglen, max_output_len,
 			    pbuf, pcount+padlen);
 	if (rv != SECSuccess)

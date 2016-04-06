@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#ifndef PK11TEST_H
+#define PK11TEST_H
+
+#define REP_SYMKEY_MECHANISM CKM_DES_KEY_GEN
+
+/* symmetric key size in bytes */
+#define REP_SYMKEY_SIZE 8
+
+#define REP_PK_KEY_SIZE 1024
+#define REP_PLAINTEXT_LEN 8
+#define REP_MECHANISM mechanism[testId/2/2%46]
+#define REP_USE_CORRECT_PIN UseCorrectPin[testId%2]
+#define REP_KEYGEN_ON_TARGET KeyGenOnTarget[testId/2%2]
+#define CKM_NO_OP 0x80001111
+
+int testId = 0;
+
+PRBool UseCorrectPin[] = {
+	PR_TRUE,
+	PR_FALSE
+};
+
+PRBool KeyGenOnTarget[] = {
+	PR_TRUE,
+	PR_FALSE
+};
+
+CK_MECHANISM_TYPE mechanism[] = {
+	CKM_NO_OP,
+	CKM_RSA_PKCS,
+	CKM_RSA_9796,
+	CKM_RSA_X_509,
+	CKM_MD2_RSA_PKCS,
+	CKM_MD5_RSA_PKCS,
+	CKM_SHA1_RSA_PKCS,
+	CKM_DSA,
+	CKM_DSA_SHA1,
+	CKM_ECDSA,
+	CKM_ECDSA_SHA1,
+	CKM_RC2_ECB,
+	CKM_RC2_CBC,
+	CKM_RC4,
+	CKM_RC5_ECB,
+	CKM_RC5_CBC,
+	CKM_DES_ECB,
+	CKM_DES_CBC,
+	CKM_DES3_ECB,
+	CKM_DES3_CBC,
+	CKM_CAST_ECB,
+	CKM_CAST_CBC,
+	CKM_CAST3_ECB,
+	CKM_CAST3_CBC,
+	CKM_CAST5_ECB,
+	CKM_CAST5_CBC,
+	CKM_IDEA_ECB,
+	CKM_IDEA_CBC,
+	CKM_CDMF_ECB,
+	CKM_CDMF_CBC,
+	CKM_SKIPJACK_ECB64,
+	CKM_SKIPJACK_CBC64,
+	CKM_SKIPJACK_OFB64,
+	CKM_SKIPJACK_CFB64,
+	CKM_SKIPJACK_CFB32,
+	CKM_SKIPJACK_CFB16,
+	CKM_SKIPJACK_CFB8,
+	CKM_BATON_ECB128,
+	CKM_BATON_ECB96,
+	CKM_BATON_CBC128,
+	CKM_BATON_COUNTER,
+	CKM_BATON_SHUFFLE,
+	CKM_JUNIPER_ECB128,
+	CKM_JUNIPER_CBC128,
+	CKM_JUNIPER_COUNTER,
+	CKM_JUNIPER_SHUFFLE
+};
+
+
+
+#endif

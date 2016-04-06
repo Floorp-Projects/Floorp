@@ -21,12 +21,10 @@ endif
 ifeq (,$(filter-out i%86,$(CPU_ARCH)))
 ifdef USE_64
 CC              += -arch x86_64
-CCC             += -arch x86_64
 override CPU_ARCH	= x86_64
 else
 OS_REL_CFLAGS	= -Di386
 CC              += -arch i386
-CCC             += -arch i386
 override CPU_ARCH	= x86
 endif
 else
@@ -35,7 +33,6 @@ ifeq (arm,$(CPU_ARCH))
 else
 OS_REL_CFLAGS	= -Dppc
 CC              += -arch ppc
-CCC             += -arch ppc
 endif
 endif
 
@@ -139,6 +136,3 @@ ifeq (3,$(SYS_SQLITE3_VERSION_MAJOR))
         NSS_USE_SYSTEM_SQLITE = 1
     endif
 endif
-
-include $(CORE_DEPTH)/coreconf/sanitizers.mk
-DARWIN_SDK_SHLIBFLAGS += $(SANITIZER_LDFLAGS)

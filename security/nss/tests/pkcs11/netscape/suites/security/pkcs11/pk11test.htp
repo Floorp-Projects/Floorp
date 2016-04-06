@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#ifndef PK11TEST_H
+#define PK11TEST_H
+
+#define REP_SYMKEY_MECHANISM CKM_DES_KEY_GEN
+
+/* symmetric key size in bytes */
+#define REP_SYMKEY_SIZE 8
+
+#define REP_PK_KEY_SIZE 1024
+#define REP_PLAINTEXT_LEN 8
+#define REP_MECHANISM $[mechanism]
+#define REP_USE_CORRECT_PIN $[UseCorrectPin]
+#define REP_KEYGEN_ON_TARGET $[KeyGenOnTarget]
+#define CKM_NO_OP 0x80001111
+
+$[DATA-TO-TEST]
+
+#endif

@@ -31,6 +31,7 @@ CSRCS = \
 	sslerrstrs.c \
 	sslinit.c \
 	ssl3ext.c \
+	sslgathr.c \
 	sslmutex.c \
 	sslnonce.c \
 	sslreveal.c \

@@ -120,45 +120,50 @@ static SECStatus
 SEC_ReadPKCS7Certs(SECItem *pkcs7Item, CERTImportCertificateFunc f, void *arg)
 {
     ContentInfo contentInfo;
-    SECStatus rv = SECFailure;
+    SECStatus rv;
     SECItem **certs;
     int count;
     PLArenaPool *arena;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( arena == NULL ) {
-        return rv;
+	return SECFailure;
     }
 
     PORT_Memset(&contentInfo, 0, sizeof(contentInfo));
-    if ( SEC_ASN1DecodeItem(arena, &contentInfo, ContentInfoTemplate,
-                            pkcs7Item) != SECSuccess ) {
-        goto done;
+    rv = SEC_ASN1DecodeItem(arena, &contentInfo, ContentInfoTemplate,
+			    pkcs7Item);
+    if ( rv != SECSuccess ) {
+	goto loser;
     }
 
     if ( GetContentTypeTag(&contentInfo) != SEC_OID_PKCS7_SIGNED_DATA ) {
-        goto done;
+	goto loser;
     }
-
-    rv = SECSuccess;
 
     certs = contentInfo.content.signedData->certificates;
     if ( certs ) {
-        count = 0;
-
-        while ( *certs ) {
-            count++;
-            certs++;
-        }
-        rv = (* f)(arg, contentInfo.content.signedData->certificates, count);
+	count = 0;
+	
+	while ( *certs ) {
+	    count++;
+	    certs++;
+	}
+	rv = (* f)(arg, contentInfo.content.signedData->certificates, count);
     }
-
+    
+    rv = SECSuccess;
+    
+    goto done;
+loser:
+    rv = SECFailure;
+    
 done:
     if ( arena ) {
-        PORT_FreeArena(arena, PR_FALSE);
+	PORT_FreeArena(arena, PR_FALSE);
     }
 
-    return rv;
+    return(rv);
 }
 
 const SEC_ASN1Template SEC_CertSequenceTemplate[] = {
@@ -168,7 +173,7 @@ const SEC_ASN1Template SEC_CertSequenceTemplate[] = {
 static SECStatus
 SEC_ReadCertSequence(SECItem *certsItem, CERTImportCertificateFunc f, void *arg)
 {
-    SECStatus rv = SECFailure;
+    SECStatus rv;
     SECItem **certs;
     int count;
     SECItem **rawCerts = NULL;
@@ -177,43 +182,50 @@ SEC_ReadCertSequence(SECItem *certsItem, CERTImportCertificateFunc f, void *arg)
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( arena == NULL ) {
-        return rv;
+	return SECFailure;
     }
 
     PORT_Memset(&contentInfo, 0, sizeof(contentInfo));
-    if ( SEC_ASN1DecodeItem(arena, &contentInfo, ContentInfoTemplate,
-                            certsItem) != SECSuccess ) {
-        goto done;
+    rv = SEC_ASN1DecodeItem(arena, &contentInfo, ContentInfoTemplate,
+			    certsItem);
+    if ( rv != SECSuccess ) {
+	goto loser;
     }
 
     if ( GetContentTypeTag(&contentInfo) != SEC_OID_NS_TYPE_CERT_SEQUENCE ) {
-        goto done;
+	goto loser;
     }
 
-    if ( SEC_QuickDERDecodeItem(arena, &rawCerts, SEC_CertSequenceTemplate,
-                                contentInfo.content.data) != SECSuccess ) {
-        goto done;
-    }
+    rv = SEC_QuickDERDecodeItem(arena, &rawCerts, SEC_CertSequenceTemplate,
+		    contentInfo.content.data);
 
-    rv = SECSuccess;
+    if (rv != SECSuccess) {
+	goto loser;
+    }
 
     certs = rawCerts;
     if ( certs ) {
-        count = 0;
-
-        while ( *certs ) {
-            count++;
-            certs++;
-        }
-        rv = (* f)(arg, rawCerts, count);
+	count = 0;
+	
+	while ( *certs ) {
+	    count++;
+	    certs++;
+	}
+	rv = (* f)(arg, rawCerts, count);
     }
-
+    
+    rv = SECSuccess;
+    
+    goto done;
+loser:
+    rv = SECFailure;
+    
 done:
     if ( arena ) {
-        PORT_FreeArena(arena, PR_FALSE);
+	PORT_FreeArena(arena, PR_FALSE);
     }
-
-    return rv;
+    
+    return(rv);
 }
 
 CERTCertificate *
@@ -280,7 +292,7 @@ CERT_DecodeCertPackage(char *certbuf,
     if ( ( *cp  & 0x1f ) == SEC_ASN1_SEQUENCE ) {
 	SECItem certitem;
 	SECItem *pcertitem = &certitem;
-	PRUint64 seqLen, seqLenLen;
+	int seqLen, seqLenLen;
 
 	cp++;
 	
@@ -319,8 +331,8 @@ CERT_DecodeCertPackage(char *certbuf,
 
 	/* check entire length if definite length */
 	if ( seqLen || seqLenLen ) {
-	    if ( certlen != ( seqLen + seqLenLen + 2L ) ) {
-		if (certlen > ( seqLen + seqLenLen + 2L ))
+	    if ( certlen != ( seqLen + seqLenLen + 2 ) ) {
+		if (certlen > ( seqLen + seqLenLen + 2 ))
 		    PORT_SetError(SEC_ERROR_EXTRA_INPUT);
 		else 
 		    PORT_SetError(SEC_ERROR_INPUT_LEN);
