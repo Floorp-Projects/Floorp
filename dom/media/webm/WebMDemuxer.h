@@ -234,6 +234,7 @@ private:
   TrackInfo::TrackType mType;
   UniquePtr<TrackInfo> mInfo;
   Maybe<media::TimeUnit> mNextKeyframeTime;
+  bool mNeedKeyframe;
 
   // Queued samples extracted by the demuxer, but not yet returned.
   MediaRawDataQueue mSamples;

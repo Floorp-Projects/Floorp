@@ -785,6 +785,7 @@ WebMTrackDemuxer::WebMTrackDemuxer(WebMDemuxer* aParent,
                                    uint32_t aTrackNumber)
   : mParent(aParent)
   , mType(aType)
+  , mNeedKeyframe(true)
 {
   mInfo = mParent->GetTrackInfo(aType, aTrackNumber);
   MOZ_ASSERT(mInfo);
@@ -811,6 +812,7 @@ WebMTrackDemuxer::Seek(media::TimeUnit aTime)
   mSamples.Reset();
   mParent->SeekInternal(aTime);
   mParent->GetNextPacket(mType, &mSamples);
+  mNeedKeyframe = true;
 
   // Check what time we actually seeked to.
   if (mSamples.GetSize() > 0) {
@@ -846,6 +848,10 @@ WebMTrackDemuxer::GetSamples(int32_t aNumSamples)
     if (!sample) {
       break;
     }
+    if (mNeedKeyframe && !sample->mKeyframe) {
+      continue;
+    }
+    mNeedKeyframe = false;
     samples->mSamples.AppendElement(sample);
     aNumSamples--;
   }
@@ -922,6 +928,7 @@ WebMTrackDemuxer::Reset()
 {
   mSamples.Reset();
   media::TimeIntervals buffered = GetBuffered();
+  mNeedKeyframe = true;
   if (buffered.Length()) {
     WEBM_DEBUG("Seek to start point: %f", buffered.Start(0).ToSeconds());
     mParent->SeekInternal(buffered.Start(0));
