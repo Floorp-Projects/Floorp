@@ -195,6 +195,15 @@ TextureClientRecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
 }
 
 void
+TextureClientRecycleAllocator::ShrinkToMinimumSize()
+{
+  MutexAutoLock lock(mLock);
+  while (!mPooledClients.empty()) {
+    mPooledClients.pop();
+  }
+}
+
+void
 TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
 {
   // Clearing the recycle allocator drops a reference, so make sure we stay alive

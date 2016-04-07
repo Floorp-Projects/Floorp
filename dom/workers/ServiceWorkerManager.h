@@ -47,7 +47,6 @@ namespace workers {
 class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
-class ServiceWorkerJob;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
@@ -81,12 +80,6 @@ public:
   RefPtr<ServiceWorkerInfo> mInstallingWorker;
 
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
-
-  // According to the spec, Soft Update shouldn't queue an update job
-  // if the registration queue is not empty. Because our job queue
-  // works slightly different, we use a flag to determine if the registration
-  // is already updating.
-  bool mUpdating;
 
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
@@ -327,13 +320,10 @@ class ServiceWorkerManager final
   friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
-  friend class ServiceWorkerJobQueue;
-  friend class ServiceWorkerInstallJob;
-  friend class ServiceWorkerRegisterJob;
-  friend class ServiceWorkerJobBase;
-  friend class ServiceWorkerScriptJobBase;
+  friend class ServiceWorkerJob;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
+  friend class ServiceWorkerUpdateJob;
   friend class UpdateTimerCallback;
 
 public:
@@ -512,7 +502,7 @@ private:
   void
   Init();
 
-  ServiceWorkerJobQueue*
+  already_AddRefed<ServiceWorkerJobQueue>
   GetOrCreateJobQueue(const nsACString& aOriginSuffix,
                       const nsACString& aScope);
 
@@ -627,8 +617,6 @@ private:
   };
 
   void AppendPendingOperation(nsIRunnable* aRunnable);
-  void AppendPendingOperation(ServiceWorkerJobQueue* aQueue,
-                              ServiceWorkerJob* aJob);
 
   bool HasBackgroundActor() const
   {
@@ -646,8 +634,7 @@ private:
 
   RefPtr<ServiceWorkerManagerChild> mActor;
 
-  struct PendingOperation;
-  nsTArray<PendingOperation> mPendingOperations;
+  nsTArray<nsCOMPtr<nsIRunnable>> mPendingOperations;
 
   bool mShuttingDown;
 
@@ -677,6 +664,9 @@ private:
 
   void
   UpdateTimerFired(nsIPrincipal* aPrincipal, const nsACString& aScope);
+
+  void
+  MaybeSendUnregister(nsIPrincipal* aPrincipal, const nsACString& aScope);
 };
 
 } // namespace workers

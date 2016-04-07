@@ -217,6 +217,9 @@ class PerfherderOutput(Output):
                         if test.test_config.get('lower_is_better') is not None:
                             subtest['lowerIsBetter'] = \
                                 test.test_config['lower_is_better']
+                        if test.test_config.get('alert_threshold') is not None:
+                            subtest['alertThreshold'] = \
+                                test.test_config['alert_threshold']
                         if test.test_config.get('unit'):
                             subtest['unit'] = test.test_config['unit']
 
@@ -227,6 +230,9 @@ class PerfherderOutput(Output):
                 if test.test_config.get('lower_is_better') is not None:
                     suite['lowerIsBetter'] = \
                         test.test_config['lower_is_better']
+                if test.test_config.get('alert_threshold') is not None:
+                    suite['alertThreshold'] = \
+                        test.test_config['alert_threshold']
 
             # counters results_aux data
             counter_subtests = []

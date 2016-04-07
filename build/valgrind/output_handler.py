@@ -106,7 +106,7 @@ class OutputHandler(object):
                              'location': self.curr_location},
                              'TEST-UNEXPECTED-FAIL | valgrind-test | {error} at {location}')
                 for b in self.buffered_lines:
-                    self.log(line)
+                    self.log(b)
                 self.curr_error = None
                 self.curr_location = None
                 self.buffered_lines = None

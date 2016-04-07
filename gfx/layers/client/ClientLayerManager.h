@@ -299,6 +299,8 @@ private:
 
   void ClearLayer(Layer* aLayer);
 
+  void HandleMemoryPressureLayer(Layer* aLayer);
+
   bool EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags);
@@ -385,6 +387,10 @@ public:
   }
 
   virtual void ClearCachedResources() { }
+
+  // Shrink memory usage.
+  // Called when "memory-pressure" is observed.
+  virtual void HandleMemoryPressure() { }
 
   virtual void RenderLayer() = 0;
   virtual void RenderLayerWithReadback(ReadbackProcessor *aReadback) { RenderLayer(); }

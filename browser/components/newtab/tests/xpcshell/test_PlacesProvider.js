@@ -170,7 +170,7 @@ add_task(function* test_Links_onLinkChanged() {
   yield linkChangedPromise;
 
   yield PlacesTestUtils.clearHistory();
-  provider.destroy();
+  provider.uninit();
 });
 
 add_task(function* test_Links_onClearHistory() {
@@ -194,7 +194,7 @@ add_task(function* test_Links_onClearHistory() {
   }
   yield PlacesTestUtils.clearHistory();
   yield clearHistoryPromise;
-  provider.destroy();
+  provider.uninit();
 });
 
 add_task(function* test_Links_onDeleteURI() {
@@ -217,7 +217,7 @@ add_task(function* test_Links_onDeleteURI() {
   yield PlacesTestUtils.addVisits(testURI);
   yield PlacesUtils.history.remove(testURL);
   yield deleteURIPromise;
-  provider.destroy();
+  provider.uninit();
 });
 
 add_task(function* test_Links_onManyLinksChanged() {
@@ -243,7 +243,7 @@ add_task(function* test_Links_onManyLinksChanged() {
     observe(null, "idle-daily", "");
 
   yield promise;
-  provider.destroy();
+  provider.uninit();
 });
 
 add_task(function* test_Links_execute_query() {

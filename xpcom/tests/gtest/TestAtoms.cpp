@@ -61,7 +61,7 @@ TEST(Atoms, BufferSharing)
   EXPECT_EQ(unique.get(), atom->GetUTF16String());
 }
 
-TEST(Atoms, NUll)
+TEST(Atoms, Null)
 {
   nsAutoString str(NS_LITERAL_STRING("string with a \0 char"));
   nsDependentString strCut(str.get());
@@ -153,11 +153,11 @@ TEST(Atoms, Table)
 {
   nsrefcnt count = NS_GetNumberOfAtoms();
 
-  nsCOMPtr<nsIAtom> thirdNonPerm = NS_Atomize(THIRD_ATOM_STR);
+  nsCOMPtr<nsIAtom> thirdDynamic = NS_Atomize(THIRD_ATOM_STR);
 
-  EXPECT_FALSE(isStaticAtom(thirdNonPerm));
+  EXPECT_FALSE(isStaticAtom(thirdDynamic));
 
-  EXPECT_TRUE(thirdNonPerm);
+  EXPECT_TRUE(thirdDynamic);
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 1);
 
   NS_RegisterStaticAtoms(sAtoms_info);
@@ -172,7 +172,7 @@ TEST(Atoms, Table)
   EXPECT_TRUE(sAtom3->Equals(NS_LITERAL_STRING(THIRD_ATOM_STR)));
   EXPECT_TRUE(isStaticAtom(sAtom3));
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 3);
-  EXPECT_EQ(thirdNonPerm, sAtom3);
+  EXPECT_EQ(thirdDynamic, sAtom3);
 }
 
 }

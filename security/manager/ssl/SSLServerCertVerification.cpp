@@ -935,9 +935,9 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
     return;
   }
 
-  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   CERTGeneralName* subjectAltNames =
-    CERT_DecodeAltNameExtension(arena, &altNameExtension);
+    CERT_DecodeAltNameExtension(arena.get(), &altNameExtension);
   // CERT_FindCertExtension takes a pointer to a SECItem and allocates memory
   // in its data field. This is a bad way to do this because we can't use a
   // ScopedSECItem and neither is that memory tracked by an arena. We have to

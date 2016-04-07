@@ -347,10 +347,18 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
         data: []
       };
 
+      let principal = null;
+      if (this.typeName === "indexedDB") {
+        // We only acquire principal when the type of the storage is indexedDB
+        // because the principal only matters the indexedDB.
+        let win = this.storageActor.getWindowFromHost(host);
+        principal = win.document.nodePrincipal;
+      }
+
       if (names) {
         for (let name of names) {
           let values =
-            yield this.getValuesForHost(host, name, options, this.hostVsStores);
+            yield this.getValuesForHost(host, name, options, this.hostVsStores, principal);
 
           let {result, objectStores} = values;
 
@@ -380,7 +388,7 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
         }
       } else {
         let obj = yield this.getValuesForHost(host, undefined, undefined,
-                                              this.hostVsStores);
+                                              this.hostVsStores, principal);
         if (obj.dbs) {
           obj = obj.dbs;
         }
@@ -1551,9 +1559,11 @@ StorageActors.createActor({
   populateStoresForHost: Task.async(function*(host) {
     let storeMap = new Map();
     let {names} = yield this.getDBNamesForHost(host);
+    let win = this.storageActor.getWindowFromHost(host);
+    let principal = win.document.nodePrincipal;
 
     for (let name of names) {
-      let metadata = yield this.getDBMetaData(host, name);
+      let metadata = yield this.getDBMetaData(host, principal, name);
 
       metadata = indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
       storeMap.set(name, metadata);
@@ -1617,7 +1627,7 @@ StorageActors.createActor({
         return args[1];
       };
       this.getDBMetaData = indexedDBHelpers.getDBMetaData;
-      this.openWithOrigin = indexedDBHelpers.openWithOrigin;
+      this.openWithPrincipal = indexedDBHelpers.openWithPrincipal;
       this.getDBNamesForHost = indexedDBHelpers.getDBNamesForHost;
       this.getSanitizedHost = indexedDBHelpers.getSanitizedHost;
       this.getNameFromDatabaseFile = indexedDBHelpers.getNameFromDatabaseFile;
@@ -1686,11 +1696,11 @@ var indexedDBHelpers = {
 
   /**
    * Fetches and stores all the metadata information for the given database
-   * `name` for the given `host`. The stored metadata information is of
-   * `DatabaseMetadata` type.
+   * `name` for the given `host` with its `principal`. The stored metadata
+   * information is of `DatabaseMetadata` type.
    */
-  getDBMetaData: Task.async(function*(host, name) {
-    let request = this.openWithOrigin(host, name);
+  getDBMetaData: Task.async(function*(host, principal, name) {
+    let request = this.openWithPrincipal(principal, name);
     let success = promise.defer();
 
     request.onsuccess = event => {
@@ -1712,19 +1722,9 @@ var indexedDBHelpers = {
   }),
 
   /**
-   * Opens an indexed db connection for the given `host` and database `name`.
+   * Opens an indexed db connection for the given `principal` and database `name`.
    */
-  openWithOrigin: function(host, name) {
-    let principal;
-
-    if (/^(about:|chrome:)/.test(host)) {
-      principal = Services.scriptSecurityManager.getSystemPrincipal();
-    } else {
-      let uri = Services.io.newURI(host, null, null);
-      principal = Services.scriptSecurityManager
-                          .createCodebasePrincipal(uri, {});
-    }
-
+  openWithPrincipal: function(principal, name) {
     return require("indexedDB").openForPrincipal(principal, name);
   },
 
@@ -1820,7 +1820,7 @@ var indexedDBHelpers = {
   }),
 
   getValuesForHost:
-  Task.async(function*(host, name = "null", options, hostVsStores) {
+  Task.async(function*(host, name = "null", options, hostVsStores, principal) {
     name = JSON.parse(name);
     if (!name || !name.length) {
       // This means that details about the db in this particular host are
@@ -1854,7 +1854,7 @@ var indexedDBHelpers = {
       return this.backToChild("getValuesForHost", {objectStores: objectStores});
     }
     // Get either all entries from the object store, or a particular id
-    let result = yield this.getObjectStoreData(host, db2, objectStore, id,
+    let result = yield this.getObjectStoreData(host, principal, db2, objectStore, id,
                                                options.index, options.size);
     return this.backToChild("getValuesForHost", {result: result});
   }),
@@ -1865,6 +1865,8 @@ var indexedDBHelpers = {
    *
    * @param {string} host
    *        The given host.
+   * @param {nsIPrincipal} principal
+   *        The principal of the given document.
    * @param {string} dbName
    *        The name of the indexed db from the above host.
    * @param {string} objectStore
@@ -1881,8 +1883,8 @@ var indexedDBHelpers = {
    *        The intended size of the entries to be fetched.
    */
   getObjectStoreData:
-  function(host, dbName, objectStore, id, index, offset, size) {
-    let request = this.openWithOrigin(host, dbName);
+  function(host, principal, dbName, objectStore, id, index, offset, size) {
+    let request = this.openWithPrincipal(principal, dbName);
     let success = promise.defer();
     let data = [];
     let db;
@@ -1986,20 +1988,24 @@ var indexedDBHelpers = {
     let args = msg.data.args;
 
     switch (msg.json.method) {
-      case "getDBMetaData":
+      case "getDBMetaData": {
         host = args[0];
-        name = args[1];
-        return indexedDBHelpers.getDBMetaData(host, name);
+        let principal = args[1];
+        name = args[2];
+        return indexedDBHelpers.getDBMetaData(host, principal, name);
+      }
       case "getDBNamesForHost":
         host = args[0];
         return indexedDBHelpers.getDBNamesForHost(host);
-      case "getValuesForHost":
+      case "getValuesForHost": {
         host = args[0];
         name = args[1];
         let options = args[2];
         let hostVsStores = args[3];
+        let principal = args[4];
         return indexedDBHelpers.getValuesForHost(host, name, options,
-                                                 hostVsStores);
+                                                 hostVsStores, principal);
+      }
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
         throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
@@ -2169,6 +2175,18 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
                    .getInterface(Ci.nsIDOMWindowUtils)
                    .currentInnerWindowID;
       if (id == innerID) {
+        return win;
+      }
+    }
+    return null;
+  },
+
+  getWindowFromHost: function(host) {
+    for (let win of this.childWindowPool.values()) {
+      let origin = win.document
+                      .nodePrincipal
+                      .originNoSuffix;
+      if (origin === host) {
         return win;
       }
     }

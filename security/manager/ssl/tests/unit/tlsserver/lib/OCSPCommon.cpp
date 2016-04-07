@@ -40,10 +40,16 @@ CreateTestKeyPairFromCert(CERTCertificate& cert)
   return CreateTestKeyPair(RSA_PKCS1(), *publicKey, privateKey.release());
 }
 
-SECItemArray *
-GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
-                       PLArenaPool *aArena, const char *aAdditionalCertName)
+SECItemArray*
+GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
+                       const UniquePLArenaPool& aArena,
+                       const char* aAdditionalCertName)
 {
+  MOZ_ASSERT(aArena.get());
+  MOZ_ASSERT(aCert);
+  // Note: |aAdditionalCertName| may or may not need to be non-null depending
+  //       on the |aORT| value given.
+
   if (aORT == ORTNone) {
     if (gDebugLevel >= DEBUG_WARNINGS) {
       fprintf(stderr, "GetOCSPResponseForType called with type ORTNone, "
@@ -53,7 +59,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   }
 
   if (aORT == ORTEmpty) {
-    SECItemArray* arr = SECITEM_AllocArray(aArena, nullptr, 1);
+    SECItemArray* arr = SECITEM_AllocArray(aArena.get(), nullptr, 1);
     arr->items[0].data = nullptr;
     arr->items[0].len = 0;
     return arr;
@@ -206,5 +212,5 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     static_cast<unsigned int>(response.length())
   };
   SECItemArray arr = { &item, 1 };
-  return SECITEM_DupArray(aArena, &arr);
+  return SECITEM_DupArray(aArena.get(), &arr);
 }
