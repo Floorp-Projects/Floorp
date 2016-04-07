@@ -27,6 +27,11 @@ protected:
   bool PushEvent(AccEvent* aEvent);
 
   /**
+   * Puts a name change event into the queue, if needed.
+   */
+  bool PushNameChange(Accessible* aTarget);
+
+  /**
    * Process events from the queue and fires events.
    */
   void ProcessEventQueue();
@@ -53,23 +58,7 @@ private:
                                AccSelChangeEvent* aThisEvent,
                                uint32_t aThisIndex);
 
-  /**
-   * Coalesce text change events caused by sibling hide events.
-   */
-  void CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
-                                   AccHideEvent* aThisEvent);
-  void CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
-                                   AccShowEvent* aThisEvent);
-
-  /**
-    * Create text change event caused by hide or show event. When a node is
-    * hidden/removed or shown/appended, the text in an ancestor hyper text will
-    * lose or get new characters.
-    */
-   void CreateTextChangeEventFor(AccMutationEvent* aEvent);
-
 protected:
-
   /**
    * The document accessible reference owning this queue.
    */
@@ -79,7 +68,7 @@ protected:
    * Pending events array. Don't make this an AutoTArray; we use
    * SwapElements() on it.
    */
-  nsTArray<RefPtr<AccEvent> > mEvents;
+  nsTArray<RefPtr<AccEvent>> mEvents;
 };
 
 } // namespace a11y
