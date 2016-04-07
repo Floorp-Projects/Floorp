@@ -166,7 +166,18 @@ class MachCommands(MachCommandBase):
                 try:
                     binary = which.which('eslint')
                 except which.WhichError:
-                    pass
+                    npmPath = self.getNodeOrNpmPath("npm")
+                    if npmPath:
+                        try:
+                            output = subprocess.check_output([npmPath, "bin", "-g"],
+                                                             stderr=subprocess.STDOUT)
+                            if minversion:
+                                base = output.split("\n").strip()
+                                binary = os.path.join(base, "eslint")
+                                if not os.path.is_file(binary):
+                                    binary = None
+                        except (subprocess.CalledProcessError, WindowsError):
+                            pass
 
         if not binary:
             print(ESLINT_NOT_FOUND_MESSAGE)
