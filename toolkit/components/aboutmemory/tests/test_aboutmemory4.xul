@@ -161,7 +161,7 @@ End of Other-only process\n\
   // This is the output for a malformed data file.
   let expectedBad =
 "\
-Error: Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
+Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
 
   let frames = [
     // This loads a pre-existing file that is valid.
