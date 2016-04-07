@@ -79,7 +79,7 @@ function test() {
         yield verifyView({ disabled: false });
 
         executeSoon(() => gDebugger.gThreadClient.resume());
-        yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
+        yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6);
         yield verifyView({ disabled: false });
       });
     }
@@ -94,7 +94,7 @@ function test() {
         yield verifyView({ disabled: false });
 
         executeSoon(() => gDebugger.gThreadClient.resume());
-        yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
+        yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6);
         yield verifyView({ disabled: false });
       });
     }
