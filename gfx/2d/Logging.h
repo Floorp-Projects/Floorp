@@ -135,6 +135,7 @@ enum class LogReason : int {
   PAllocTextureBackendMismatch,
   GetFontFileDataFailed,
   MessageChannelCloseFailure,
+  TextureAliveAfterShutdown,
   // End
   MustBeLessThanThis = 101,
 };

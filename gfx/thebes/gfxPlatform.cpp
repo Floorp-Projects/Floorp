@@ -874,20 +874,31 @@ gfxPlatform::ShutdownLayersIPC()
     }
     sLayersIPCIsUp = false;
 
-    if (XRE_IsParentProcess())
-    {
-      // This must happen after the shutdown of media and widgets, which
-      // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
-      gfx::VRManagerChild::ShutDown();
-      layers::ImageBridgeChild::ShutDown();
+    if (XRE_IsContentProcess()) {
+
+        gfx::VRManagerChild::ShutDown();
+        // cf bug 1215265.
+        if (gfxPrefs::ChildProcessShutdown()) {
+          layers::ImageBridgeChild::ShutDown();
+          layers::CompositorBridgeChild::ShutDown();
+        }
+
+    } else if (XRE_IsParentProcess()) {
+
+        gfx::VRManagerChild::ShutDown();
+        layers::ImageBridgeChild::ShutDown();
+        layers::CompositorBridgeChild::ShutDown();
+
 #ifdef MOZ_WIDGET_GONK
-      layers::SharedBufferManagerChild::ShutDown();
+        layers::SharedBufferManagerChild::ShutDown();
 #endif
 
-      layers::CompositorBridgeParent::ShutDown();
-	} else if (XRE_GetProcessType() == GeckoProcessType_Content) {
-		gfx::VRManagerChild::ShutDown();
-	}
+        // This has to happen after shutting down the child protocols.
+        layers::CompositorBridgeParent::ShutDown();
+    } else {
+      // TODO: There are other kind of processes and we should make sure gfx
+      // stuff is either not created there or shut down properly.
+    }
 }
 
 gfxPlatform::~gfxPlatform()

@@ -44,13 +44,7 @@ class ClientLayerManager final : public LayerManager
 public:
   explicit ClientLayerManager(nsIWidget* aWidget);
 
-  virtual void Destroy() override
-  {
-    // It's important to call ClearCachedResource before Destroy because the
-    // former will early-return if the later has already run.
-    ClearCachedResources();
-    LayerManager::Destroy();
-  }
+  virtual void Destroy() override;
 
 protected:
   virtual ~ClientLayerManager();

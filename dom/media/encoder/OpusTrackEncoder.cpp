@@ -129,6 +129,7 @@ OpusTrackEncoder::OpusTrackEncoder()
   , mEncoder(nullptr)
   , mLookahead(0)
   , mResampler(nullptr)
+  , mOutputTimeStamp(0)
 {
 }
 
@@ -229,6 +230,8 @@ OpusTrackEncoder::GetMetadata()
   }
 
   RefPtr<OpusMetadata> meta = new OpusMetadata();
+  meta->mChannels = mChannels;
+  meta->mSamplingFrequency = mSamplingRate;
 
   mLookahead = 0;
   int error = opus_encoder_ctl(mEncoder, OPUS_GET_LOOKAHEAD(&mLookahead));
@@ -437,6 +440,9 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   }
 
   audiodata->SwapInFrameData(frameData);
+  mOutputTimeStamp += FramesToUsecs(GetPacketDuration(), kOpusSamplingRate).value();
+  audiodata->SetTimeStamp(mOutputTimeStamp);
+  LOG("[Opus] mOutputTimeStamp %lld.",mOutputTimeStamp);
   aData.AppendEncodedFrame(audiodata);
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }

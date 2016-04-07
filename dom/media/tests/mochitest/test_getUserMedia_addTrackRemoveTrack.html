@@ -10,8 +10,7 @@
 
   createHTML({
     title: "MediaStream's addTrack() and removeTrack() with getUserMedia streams Test",
-    bug: "1103188",
-    visible: true
+    bug: "1103188"
   });
 
   runTest(() => Promise.resolve()
@@ -115,35 +114,37 @@
       var audioTrack10k = osc10k.getTracks()[0];
 
       var stream = osc1k;
-      var analyser = new AudioStreamAnalyser(ac, stream);
-      analyser.enableDebugCanvas();
       return Promise.resolve().then(() => {
         info("Analysing audio output with original 1k track");
+        var analyser = new AudioStreamAnalyser(ac, stream);
         return analyser.waitForAnalysisSuccess(array =>
                  array[analyser.binIndexForFrequency(50)] < 50 &&
                  array[analyser.binIndexForFrequency(1000)] > 200 &&
                  array[analyser.binIndexForFrequency(5000)] < 50 &&
                  array[analyser.binIndexForFrequency(10000)] < 50);
       }).then(() => {
+        info("Analysing audio output with removed original 1k track and added 5k track");
         stream.removeTrack(audioTrack1k);
         stream.addTrack(audioTrack5k);
-        info("Analysing audio output with removed original 1k track and added 5k track");
+        var analyser = new AudioStreamAnalyser(ac, stream);
         return analyser.waitForAnalysisSuccess(array =>
                  array[analyser.binIndexForFrequency(1000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] > 200 &&
                  array[analyser.binIndexForFrequency(10000)] < 50);
       }).then(() => {
+        info("Analysing audio output with removed 5k track and added 10k track");
         stream.removeTrack(audioTrack5k);
         stream.addTrack(audioTrack10k);
-        info("Analysing audio output with removed 5k track and added 10k track");
+        var analyser = new AudioStreamAnalyser(ac, stream);
         return analyser.waitForAnalysisSuccess(array =>
                  array[analyser.binIndexForFrequency(1000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] < 50 &&
                  array[analyser.binIndexForFrequency(10000)] > 200);
       }).then(() => {
+        info("Analysing audio output with re-added 1k, 5k and added 10k tracks");
         stream.addTrack(audioTrack1k);
         stream.addTrack(audioTrack5k);
-        info("Analysing audio output with re-added 1k, 5k and added 10k tracks");
+        var analyser = new AudioStreamAnalyser(ac, stream);
         return analyser.waitForAnalysisSuccess(array =>
                  array[analyser.binIndexForFrequency(50)] < 50 &&
                  array[analyser.binIndexForFrequency(1000)] > 200 &&

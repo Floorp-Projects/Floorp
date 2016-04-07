@@ -254,9 +254,9 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
-    var gQueue = null;
-    //gA11yEventDumpID = "eventdump"; // debug stuff
+    gA11yEventDumpToConsole = true; // debugging
 
+    var gQueue = null;
     function doTests()
     {
       gQueue = new eventQueue();
@@ -327,7 +327,6 @@
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
-  <div id="eventdump"></div>
 
   <p id="p"><span><span>333</span><span>22</span></span>1111</p>
   <div id="div">hello<div>hello</div>hello</div>

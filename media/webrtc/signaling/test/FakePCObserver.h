@@ -88,8 +88,8 @@ public:
                                       void* = nullptr) = 0;
   virtual NS_IMETHODIMP OnAddStream(mozilla::DOMMediaStream &stream, ER&) = 0;
   virtual NS_IMETHODIMP OnRemoveStream(mozilla::DOMMediaStream &stream, ER&) = 0;
-  virtual NS_IMETHODIMP OnAddTrack(mozilla::MediaStreamTrack &track, ER&) = 0;
-  virtual NS_IMETHODIMP OnRemoveTrack(mozilla::MediaStreamTrack &track, ER&) = 0;
+  virtual NS_IMETHODIMP OnAddTrack(mozilla::dom::MediaStreamTrack &track, ER&) = 0;
+  virtual NS_IMETHODIMP OnRemoveTrack(mozilla::dom::MediaStreamTrack &track, ER&) = 0;
   virtual NS_IMETHODIMP OnReplaceTrackSuccess(ER&) = 0;
   virtual NS_IMETHODIMP OnReplaceTrackError(uint32_t code, const char *msg, ER&) = 0;
   virtual NS_IMETHODIMP OnAddIceCandidateSuccess(ER&) = 0;

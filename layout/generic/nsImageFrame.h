@@ -428,21 +428,13 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
 
-  virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
-                                       nsDisplayListBuilder* aBuilder) override;
-
-  /**
-   * Returns an ImageContainer for this image if the image type
-   * supports it (TYPE_RASTER only).
-   */
-  virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
-                                                        nsDisplayListBuilder* aBuilder) override;
+  virtual already_AddRefed<imgIContainer> GetImage() override;
 
   /**
    * @return The dest rect we'll use when drawing this image, in app units.
    *         Not necessarily contained in this item's bounds.
    */
-  nsRect GetDestRect(bool* aSnap = nullptr);
+  virtual nsRect GetDestRect() override;
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -467,13 +459,6 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
-
-  /**
-   * Configure an ImageLayer for this display item.
-   * Set the required filter and scaling transform.
-   */
-  virtual void ConfigureLayer(ImageLayer* aLayer,
-                              const ContainerLayerParameters& aParameters) override;
 
   NS_DISPLAY_DECL_NAME("Image", TYPE_IMAGE)
 private:

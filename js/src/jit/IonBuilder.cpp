@@ -9500,6 +9500,15 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
     return pushTypeBarrier(load, types, barrier);
 }
 
+MInstruction*
+IonBuilder::addArrayBufferByteLength(MDefinition* obj)
+{
+    MLoadFixedSlot* ins = MLoadFixedSlot::New(alloc(), obj, ArrayBufferObject::BYTE_LENGTH_SLOT);
+    current->add(ins);
+    ins->setResultType(MIRType_Int32);
+    return ins;
+}
+
 void
 IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
                                        BoundsChecking checking,

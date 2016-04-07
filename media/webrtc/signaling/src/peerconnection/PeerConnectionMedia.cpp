@@ -23,6 +23,16 @@
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepTransport.h"
 
+#ifdef USE_FAKE_STREAMS
+#include "DOMMediaStream.h"
+#include "FakeMediaStreams.h"
+#else
+#include "MediaSegment.h"
+#ifdef MOZILLA_INTERNAL_API
+#include "MediaStreamGraph.h"
+#endif
+#endif
+
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -55,7 +65,7 @@ static const char* logTag = "PeerConnectionMedia";
 nsresult
 PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
                                   const std::string& aOldTrackId,
-                                  DOMMediaStream* aNewStream,
+                                  MediaStreamTrack& aNewTrack,
                                   const std::string& aNewStreamId,
                                   const std::string& aNewTrackId)
 {
@@ -66,7 +76,8 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = AddTrack(aNewStream, aNewStreamId, aNewTrackId);
+  nsresult rv = AddTrack(*aNewTrack.mOwningStream, aNewStreamId,
+                         aNewTrack, aNewTrackId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<LocalSourceStreamInfo> newInfo(GetLocalStreamById(aNewStreamId));
@@ -77,7 +88,7 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
     return NS_ERROR_FAILURE;
   }
 
-  rv = newInfo->TakePipelineFrom(oldInfo, aOldTrackId, aNewTrackId);
+  rv = newInfo->TakePipelineFrom(oldInfo, aOldTrackId, aNewTrack, aNewTrackId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RemoveLocalTrack(aOldStreamId, aOldTrackId);
@@ -91,7 +102,7 @@ static void
 PipelineDetachTransport_s(RefPtr<MediaPipeline> pipeline,
                           nsCOMPtr<nsIThread> mainThread)
 {
-  pipeline->ShutdownTransport_s();
+  pipeline->DetachTransport_s();
   mainThread->Dispatch(
       // Make sure we let go of our reference before dispatching
       // If the dispatch fails, well, we're hosed anyway.
@@ -121,7 +132,7 @@ void SourceStreamInfo::DetachTransport_s()
   // walk through all the MediaPipelines and call the shutdown
   // transport functions. Must be on the STS thread.
   for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
-    it->second->ShutdownTransport_s();
+    it->second->DetachTransport_s();
   }
 }
 
@@ -672,28 +683,24 @@ PeerConnectionMedia::EnsureIceGathering_s() {
 }
 
 nsresult
-PeerConnectionMedia::AddTrack(DOMMediaStream* aMediaStream,
+PeerConnectionMedia::AddTrack(DOMMediaStream& aMediaStream,
                               const std::string& streamId,
+                              MediaStreamTrack& aTrack,
                               const std::string& trackId)
 {
   ASSERT_ON_THREAD(mMainThread);
 
-  if (!aMediaStream) {
-    CSFLogError(logTag, "%s - aMediaStream is NULL", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-
-  CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, aMediaStream);
+  CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, &aMediaStream);
 
   RefPtr<LocalSourceStreamInfo> localSourceStream =
     GetLocalStreamById(streamId);
 
   if (!localSourceStream) {
-    localSourceStream = new LocalSourceStreamInfo(aMediaStream, this, streamId);
+    localSourceStream = new LocalSourceStreamInfo(&aMediaStream, this, streamId);
     mLocalSourceStreams.AppendElement(localSourceStream);
   }
 
-  localSourceStream->AddTrack(trackId);
+  localSourceStream->AddTrack(trackId, &aTrack);
   return NS_OK;
 }
 
@@ -743,7 +750,7 @@ PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
 
 nsresult
 PeerConnectionMedia::GetRemoteTrackId(const std::string streamId,
-                                      TrackID numericTrackId,
+                                      const MediaStreamTrack& track,
                                       std::string* trackId) const
 {
   auto* ncThis = const_cast<PeerConnectionMedia*>(this);
@@ -755,7 +762,7 @@ PeerConnectionMedia::GetRemoteTrackId(const std::string streamId,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return info->GetTrackId(numericTrackId, trackId);
+  return info->GetTrackId(track, trackId);
 }
 
 void
@@ -855,6 +862,19 @@ PeerConnectionMedia::GetLocalStreamById(const std::string& id)
   return nullptr;
 }
 
+LocalSourceStreamInfo*
+PeerConnectionMedia::GetLocalStreamByTrackId(const std::string& id)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (RefPtr<LocalSourceStreamInfo>& info : mLocalSourceStreams) {
+    if (info->HasTrack(id)) {
+      return info;
+    }
+  }
+
+  return nullptr;
+}
+
 RemoteSourceStreamInfo*
 PeerConnectionMedia::GetRemoteStreamByIndex(size_t aIndex)
 {
@@ -875,6 +895,20 @@ PeerConnectionMedia::GetRemoteStreamById(const std::string& id)
 
   return nullptr;
 }
+
+RemoteSourceStreamInfo*
+PeerConnectionMedia::GetRemoteStreamByTrackId(const std::string& id)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (RefPtr<RemoteSourceStreamInfo>& info : mRemoteSourceStreams) {
+    if (info->HasTrack(id)) {
+      return info;
+    }
+  }
+
+  return nullptr;
+}
+
 
 nsresult
 PeerConnectionMedia::AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo)
@@ -1128,6 +1162,7 @@ PeerConnectionMedia::ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow)
 nsresult
 LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
                                         const std::string& oldTrackId,
+                                        MediaStreamTrack& aNewTrack,
                                         const std::string& newTrackId)
 {
   if (mPipelines.count(newTrackId)) {
@@ -1147,8 +1182,7 @@ LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
   }
 
   nsresult rv =
-    static_cast<MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(
-        mMediaStream, newTrackId);
+    static_cast<MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(aNewTrack);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mPipelines[newTrackId] = pipeline;
@@ -1172,10 +1206,13 @@ PeerConnectionMedia::AnyLocalStreamHasPeerIdentity() const
   ASSERT_ON_THREAD(mMainThread);
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
-    // check if we should be asking for a private call for this stream
     DOMMediaStream* stream = mLocalSourceStreams[u]->GetMediaStream();
-    if (stream->GetPeerIdentity()) {
-      return true;
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
+    stream->GetTracks(tracks);
+    for (const RefPtr<MediaStreamTrack>& track : tracks) {
+      if (track->GetPeerIdentity() != nullptr) {
+        return true;
+      }
     }
   }
   return false;
@@ -1192,33 +1229,46 @@ PeerConnectionMedia::UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal)
 }
 
 void
-PeerConnectionMedia::UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
+PeerConnectionMedia::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
+                                          nsIPrincipal* aPrincipal,
                                           const PeerIdentity* aSinkIdentity)
 {
   ASSERT_ON_THREAD(mMainThread);
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
-    mLocalSourceStreams[u]->UpdateSinkIdentity_m(aPrincipal, aSinkIdentity);
+    mLocalSourceStreams[u]->UpdateSinkIdentity_m(aTrack, aPrincipal,
+                                                 aSinkIdentity);
   }
 }
 
 void
-LocalSourceStreamInfo::UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
+LocalSourceStreamInfo::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
+                                            nsIPrincipal* aPrincipal,
                                             const PeerIdentity* aSinkIdentity)
 {
   for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
     MediaPipelineTransmit* pipeline =
       static_cast<MediaPipelineTransmit*>((*it).second.get());
-    pipeline->UpdateSinkIdentity_m(aPrincipal, aSinkIdentity);
+    pipeline->UpdateSinkIdentity_m(aTrack, aPrincipal, aSinkIdentity);
   }
 }
 
 void RemoteSourceStreamInfo::UpdatePrincipal_m(nsIPrincipal* aPrincipal)
 {
-  // this blasts away the existing principal
-  // we only do this when we become certain that the stream is safe to make
-  // accessible to the script principal
-  mMediaStream->SetPrincipal(aPrincipal);
+  // This blasts away the existing principal.
+  // We only do this when we become certain that the all tracks are safe to make
+  // accessible to the script principal.
+  for (auto& trackPair : mTracks) {
+    MOZ_RELEASE_ASSERT(trackPair.second);
+    RemoteTrackSource& source =
+      static_cast<RemoteTrackSource&>(trackPair.second->GetSource());
+    source.SetPrincipal(aPrincipal);
+
+    RefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackPair.first);
+    MOZ_ASSERT(pipeline->direction() == MediaPipeline::RECEIVE);
+    static_cast<MediaPipelineReceive*>(pipeline.get())
+      ->SetPrincipalHandle_m(MakePrincipalHandle(aPrincipal));
+  }
 }
 #endif // MOZILLA_INTERNAL_API
 

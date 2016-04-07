@@ -15,11 +15,7 @@
 #include "OggWriter.h"
 #include "OpusTrackEncoder.h"
 
-#ifdef MOZ_VORBIS
-#include "VorbisTrackEncoder.h"
-#endif
 #ifdef MOZ_WEBM_ENCODER
-#include "VorbisTrackEncoder.h"
 #include "VP8TrackEncoder.h"
 #include "WebMWriter.h"
 #endif
@@ -95,7 +91,8 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
           // after Resume(), so it'll get added to one of the DirectListener frames
           VideoSegment segment;
           gfx::IntSize size(0,0);
-          segment.AppendFrame(nullptr, aQueuedMedia.GetDuration(), size);
+          segment.AppendFrame(nullptr, aQueuedMedia.GetDuration(), size,
+                              PRINCIPAL_HANDLE_NONE);
           mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
                                                   aTrackOffset, aTrackEvents,
                                                   segment);
@@ -144,8 +141,9 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint32_t aAudioBitrate,
   else if (MediaEncoder::IsWebMEncoderEnabled() &&
           (aMIMEType.EqualsLiteral(VIDEO_WEBM) ||
           (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK))) {
-    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
-      audioEncoder = new VorbisTrackEncoder();
+    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK
+        && MediaDecoder::IsOpusEnabled()) {
+      audioEncoder = new OpusTrackEncoder();
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
     videoEncoder = new VP8TrackEncoder();

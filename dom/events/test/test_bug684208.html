@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=684208
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 684208</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 684208 **/
+
+  function checkDispatchReturnValue(targetOrUndefined) {
+    var target = targetOrUndefined ? targetOrUndefined : self;
+    function createEvent() {
+      if ("MouseEvent" in this) {
+        return new MouseEvent("click", {cancelable: true});
+      }
+      return new Event("dummy", {cancelable: true});
+    }
+
+    function postSelfMessage(msg) {
+      try {
+        self.postMessage(msg);
+      } catch(ex) {
+        self.postMessage(msg, "*");
+      }
+    }
+
+    function passiveListener(e) {
+      e.target.removeEventListener(e.type, passiveListener);
+    }
+    var event = createEvent();
+    target.addEventListener(event.type, passiveListener);
+    postSelfMessage(target.dispatchEvent(event) == true);
+
+    function cancellingListener(e) {
+      e.target.removeEventListener(e.type, cancellingListener);
+      e.preventDefault();
+    }
+    event = createEvent();
+    target.addEventListener(event.type, cancellingListener);
+    postSelfMessage(target.dispatchEvent(event) == false);
+  }
+
+  function test() {
+    var expectedEvents = 6;
+    function messageHandler(e) {
+      ok(e.data, "All the dispatchEvent calls should pass.");
+      --expectedEvents;
+      if (!expectedEvents) {
+        window.onmessage = null;
+        window.worker.onmessage = null;
+        SimpleTest.finish();
+      }
+    }
+    window.onmessage = messageHandler;
+    checkDispatchReturnValue();
+    checkDispatchReturnValue(document.getElementById("link"));
+    window.worker =
+      new Worker(URL.createObjectURL(new Blob(["(" + checkDispatchReturnValue.toString() + ")();"])));
+    window.worker.onmessage = messageHandler;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  </script>
+</head>
+<body onload="test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=684208">Mozilla Bug 684208</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<a id="link" href="#foo">foo</a>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

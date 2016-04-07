@@ -840,23 +840,9 @@ class TypedArrayMethods
         return true;
     }
 
-    static bool
-    setFromArrayLike(JSContext* cx, Handle<SomeTypedArray*> target, HandleObject source, uint32_t len,
-                     uint32_t offset = 0)
-    {
-        MOZ_ASSERT(offset <= target->length());
-        MOZ_ASSERT(len <= target->length() - offset);
-
-        if (source->is<TypedArrayObject>())
-            return setFromTypedArray(cx, target, source, offset);
-
-        return setFromNonTypedArray(cx, target, source, len, offset);
-    }
-
-  private:
      static bool
      setFromTypedArray(JSContext* cx, Handle<SomeTypedArray*> target, HandleObject source,
-                       uint32_t offset)
+                       uint32_t offset = 0)
      {
          MOZ_ASSERT(source->is<TypedArrayObject>(), "use setFromNonTypedArray");
 
@@ -910,7 +896,7 @@ class TypedArrayMethods
 
     static bool
     setFromNonTypedArray(JSContext* cx, Handle<SomeTypedArray*> target, HandleObject source,
-                         uint32_t len, uint32_t offset)
+                         uint32_t len, uint32_t offset = 0)
     {
         MOZ_ASSERT(!source->is<TypedArrayObject>(), "use setFromTypedArray");
 

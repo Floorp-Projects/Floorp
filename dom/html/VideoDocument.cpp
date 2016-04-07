@@ -33,7 +33,8 @@ protected:
   // Sets document <title> to reflect the file name and description.
   void UpdateTitle(nsIChannel* aChannel);
 
-  nsresult CreateSyntheticVideoDocument();
+  nsresult CreateSyntheticVideoDocument(nsIChannel* aChannel,
+                                        nsIStreamListener** aListener);
 
   RefPtr<MediaDocumentStreamListener> mStreamListener;
 };
@@ -53,6 +54,12 @@ VideoDocument::StartDocumentLoad(const char*         aCommand,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStreamListener = new MediaDocumentStreamListener(this);
+
+  // Create synthetic document
+  rv = CreateSyntheticVideoDocument(aChannel,
+      getter_AddRefs(mStreamListener->mNextStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   NS_ADDREF(*aDocListener = mStreamListener);
   return rv;
 }
@@ -65,15 +72,6 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
-    if (!GetRootElement()) {
-      // Create synthetic document
-#ifdef DEBUG
-      nsresult rv =
-#endif
-        CreateSyntheticVideoDocument();
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic video document");
-    }
-
     if (!nsContentUtils::IsChildOfSameType(this) &&
         GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
       LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
@@ -85,7 +83,8 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 }
 
 nsresult
-VideoDocument::CreateSyntheticVideoDocument()
+VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
+                                            nsIStreamListener** aListener)
 {
   // make our generic document
   nsresult rv = MediaDocument::CreateSyntheticDocument();
@@ -110,9 +109,8 @@ VideoDocument::CreateSyntheticVideoDocument()
     return NS_ERROR_OUT_OF_MEMORY;
   element->SetAutoplay(true);
   element->SetControls(true);
-  element->LoadWithChannel(mChannel,
-                           getter_AddRefs(mStreamListener->mNextStream));
-  UpdateTitle(mChannel);
+  element->LoadWithChannel(aChannel, aListener);
+  UpdateTitle(aChannel);
 
   if (nsContentUtils::IsChildOfSameType(this)) {
     // Video documents that aren't toplevel should fill their frames and

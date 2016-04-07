@@ -14,9 +14,6 @@ SimpleTest.waitForExplicitFinish();
 function test() {
   var audio = new Audio("small-shot.ogg");
   var context = new AudioContext();
-  var node = context.createMediaStreamSource(audio.mozCaptureStreamUntilEnded());
-  var sp = context.createScriptProcessor(2048, 1, 0);
-  node.connect(sp);
   var expectedMinNonzeroSampleCount;
   var expectedMaxNonzeroSampleCount;
   var nonzeroSampleCount = 0;
@@ -58,7 +55,10 @@ function test() {
     }
   }
 
-  audio.oncanplaythrough = function() {
+  audio.onloadedmetadata = function() {
+    var node = context.createMediaStreamSource(audio.mozCaptureStreamUntilEnded());
+    var sp = context.createScriptProcessor(2048, 1, 0);
+    node.connect(sp);
     // Use a fuzz factor of 100 to account for samples that just happen to be zero
     expectedMinNonzeroSampleCount = Math.floor(audio.duration*context.sampleRate) - 100;
     expectedMaxNonzeroSampleCount = Math.floor(audio.duration*context.sampleRate) + 500;

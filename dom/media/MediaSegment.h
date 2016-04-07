@@ -7,6 +7,8 @@
 #define MOZILLA_MEDIASEGMENT_H_
 
 #include "nsTArray.h"
+#include "nsIPrincipal.h"
+#include "nsProxyRelease.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
 #endif
@@ -55,6 +57,50 @@ typedef MediaTime GraphTime;
 const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
 
 /**
+ * We pass the principal through the MediaStreamGraph by wrapping it in a thread
+ * safe nsMainThreadPtrHandle, since it cannot be used directly off the main
+ * thread. We can compare two PrincipalHandles to each other on any thread, but
+ * they can only be created and converted back to nsIPrincipal* on main thread.
+ */
+typedef nsMainThreadPtrHandle<nsIPrincipal> PrincipalHandle;
+
+inline PrincipalHandle MakePrincipalHandle(nsIPrincipal* aPrincipal)
+{
+  RefPtr<nsMainThreadPtrHolder<nsIPrincipal>> holder =
+    new nsMainThreadPtrHolder<nsIPrincipal>(aPrincipal);
+  return PrincipalHandle(holder);
+}
+
+const PrincipalHandle PRINCIPAL_HANDLE_NONE(nullptr);
+
+inline nsIPrincipal* GetPrincipalFromHandle(PrincipalHandle& aPrincipalHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return aPrincipalHandle.get();
+}
+
+inline bool PrincipalHandleMatches(PrincipalHandle& aPrincipalHandle,
+                                   nsIPrincipal* aOther)
+{
+  if (!aOther) {
+    return false;
+  }
+
+  nsIPrincipal* principal = GetPrincipalFromHandle(aPrincipalHandle);
+  if (!principal) {
+    return false;
+  }
+
+  bool result;
+  if (NS_FAILED(principal->Equals(aOther, &result))) {
+    NS_ERROR("Principal check failed");
+    return false;
+  }
+
+  return result;
+}
+
+/**
  * A MediaSegment is a chunk of media data sequential in time. Different
  * types of data have different subclasses of MediaSegment, all inheriting
  * from MediaSegmentBase.
@@ -84,6 +130,19 @@ public:
    */
   StreamTime GetDuration() const { return mDuration; }
   Type GetType() const { return mType; }
+
+  /**
+   * Gets the last principal id that was appended to this segment.
+   */
+  PrincipalHandle GetLastPrincipalHandle() const { return mLastPrincipalHandle; }
+  /**
+   * Called by the MediaStreamGraph as it appends a chunk with a different
+   * principal id than the current one.
+   */
+  void SetLastPrincipalHandle(PrincipalHandle aLastPrincipalHandle)
+  {
+    mLastPrincipalHandle = aLastPrincipalHandle;
+  }
 
   /**
    * Create a MediaSegment of the same type.
@@ -134,13 +193,18 @@ public:
   }
 
 protected:
-  explicit MediaSegment(Type aType) : mDuration(0), mType(aType)
+  explicit MediaSegment(Type aType)
+    : mDuration(0), mType(aType), mLastPrincipalHandle(PRINCIPAL_HANDLE_NONE)
   {
     MOZ_COUNT_CTOR(MediaSegment);
   }
 
   StreamTime mDuration; // total of mDurations of all chunks
   Type mType;
+
+  // The latest principal handle that the MediaStreamGraph has processed for
+  // this segment.
+  PrincipalHandle mLastPrincipalHandle;
 };
 
 /**

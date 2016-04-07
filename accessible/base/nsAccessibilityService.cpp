@@ -580,8 +580,9 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eTree)) {
     logging::MsgBegin("TREE", "content removed");
-    logging::Node("container", aChildNode->GetFlattenedTreeParent());
-    logging::Node("content", aChildNode);
+    logging::Node("container node", aChildNode->GetFlattenedTreeParent());
+    logging::Node("content node", aChildNode);
+    logging::MsgEnd();
   }
 #endif
 

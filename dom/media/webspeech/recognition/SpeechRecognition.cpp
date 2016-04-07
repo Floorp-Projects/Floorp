@@ -160,7 +160,7 @@ bool
 SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal)
 {
   nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(aGlobal);
-  
+
   nsresult rv;
   nsCOMPtr<nsIPermissionManager> mgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -934,7 +934,8 @@ SpeechRecognition::CreateAudioSegment(nsTArray<RefPtr<SharedBuffer>>& aChunks)
 
     AutoTArray<const int16_t*, 1> channels;
     channels.AppendElement(chunkData);
-    segment->AppendFrames(buffer.forget(), channels, mAudioSamplesPerChunk);
+    segment->AppendFrames(buffer.forget(), channels, mAudioSamplesPerChunk,
+                          PRINCIPAL_HANDLE_NONE);
   }
 
   return segment;

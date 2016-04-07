@@ -5,6 +5,7 @@
 
 #include "EbmlComposer.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Endian.h"
 #include "libmkv/EbmlIDs.h"
 #include "libmkv/EbmlWriter.h"
 #include "libmkv/WebMElement.h"
@@ -48,8 +49,17 @@ void EbmlComposer::GenerateHeader()
           }
           // Audio
           if (mCodecPrivateData.Length() > 0) {
-            writeAudioTrack(&ebml, 0x2, 0x0, "A_VORBIS", mSampleFreq,
-                            mChannels, mCodecPrivateData.Elements(),
+            // Extract the pre-skip from mCodecPrivateData
+            // then convert it to nanoseconds.
+            // Details in OpusTrackEncoder.cpp.
+            mCodecDelay =
+              (uint64_t)LittleEndian::readUint16(mCodecPrivateData.Elements() + 10)
+              * PR_NSEC_PER_SEC / 48000;
+            // Fixed 80ms, convert into nanoseconds.
+            uint64_t seekPreRoll = 80 * PR_NSEC_PER_MSEC;
+            writeAudioTrack(&ebml, 0x2, 0x0, "A_OPUS", mSampleFreq,
+                            mChannels, mCodecDelay, seekPreRoll,
+                            mCodecPrivateData.Elements(),
                             mCodecPrivateData.Length());
           }
         }
@@ -135,9 +145,12 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
     mFlushState |= FLUSH_CLUSTER;
   }
 
-  bool isVorbis = (frameType == EncodedFrame::FrameType::VORBIS_AUDIO_FRAME);
+  bool isOpus = (frameType == EncodedFrame::FrameType::OPUS_AUDIO_FRAME);
   short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC - mClusterTimecode;
-  writeSimpleBlock(&ebml, isVorbis ? 0x2 : 0x1, timeCode, isVP8IFrame,
+  if (isOpus) {
+    timeCode += mCodecDelay / PR_NSEC_PER_MSEC;
+  }
+  writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, timeCode, isVP8IFrame,
                    0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
                    aFrame->GetFrameData().Length());
   MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE +
@@ -164,14 +177,11 @@ EbmlComposer::SetVideoConfig(uint32_t aWidth, uint32_t aHeight,
 }
 
 void
-EbmlComposer::SetAudioConfig(uint32_t aSampleFreq, uint32_t aChannels,
-                             uint32_t aBitDepth)
+EbmlComposer::SetAudioConfig(uint32_t aSampleFreq, uint32_t aChannels)
 {
   MOZ_ASSERT(aSampleFreq > 0, "SampleFreq should > 0");
-  MOZ_ASSERT(aBitDepth > 0, "BitDepth should > 0");
   MOZ_ASSERT(aChannels > 0, "Channels should > 0");
   mSampleFreq = aSampleFreq;
-  mBitDepth = aBitDepth;
   mChannels = aChannels;
 }
 
@@ -199,12 +209,12 @@ EbmlComposer::EbmlComposer()
   : mFlushState(FLUSH_NONE)
   , mClusterHeaderIndex(0)
   , mClusterLengthLoc(0)
+  , mCodecDelay(0)
   , mClusterTimecode(0)
   , mWidth(0)
   , mHeight(0)
   , mFrameRate(0)
   , mSampleFreq(0)
-  , mBitDepth(0)
   , mChannels(0)
 {}
 

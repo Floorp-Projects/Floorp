@@ -18,6 +18,7 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
+#include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/EventDispatcher.h"
@@ -672,17 +673,17 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
     return nullptr;
   }
 
-  RefPtr<nsIPrincipal> principal = NodePrincipal();
-  stream->CombineWithPrincipal(principal);
-
   TrackID videoTrackId = 1;
-  nsresult rv = stream->Init(aFrameRate, videoTrackId);
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
+  nsresult rv =
+    stream->Init(aFrameRate, videoTrackId, principal);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
   }
 
-  stream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO, nsString());
+  stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
+                         new BasicUnstoppableTrackSource(principal));
 
   rv = RegisterFrameCaptureListener(stream->FrameCaptureListener());
   if (NS_FAILED(rv)) {

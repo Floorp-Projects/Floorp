@@ -267,6 +267,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                   "MediaDecoderStateMachine::mPreservesPitch (Mirror)"),
   mSameOriginMedia(mTaskQueue, false,
                    "MediaDecoderStateMachine::mSameOriginMedia (Mirror)"),
+  mMediaPrincipalHandle(mTaskQueue, PRINCIPAL_HANDLE_NONE,
+                        "MediaDecoderStateMachine::mMediaPrincipalHandle (Mirror)"),
   mPlaybackBytesPerSecond(mTaskQueue, 0.0,
                           "MediaDecoderStateMachine::mPlaybackBytesPerSecond (Mirror)"),
   mPlaybackRateReliable(mTaskQueue, true,
@@ -355,6 +357,7 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mLogicalPlaybackRate.Connect(aDecoder->CanonicalPlaybackRate());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
+  mMediaPrincipalHandle.Connect(aDecoder->CanonicalMediaPrincipalHandle());
   mPlaybackBytesPerSecond.Connect(aDecoder->CanonicalPlaybackBytesPerSecond());
   mPlaybackRateReliable.Connect(aDecoder->CanonicalPlaybackRateReliable());
   mDecoderPosition.Connect(aDecoder->CanonicalDecoderPosition());
@@ -394,7 +397,8 @@ MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
 {
   RefPtr<media::MediaSink> audioSink = aAudioCaptured
     ? new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue,
-                        mOutputStreamManager, mSameOriginMedia.Ref())
+                        mOutputStreamManager, mSameOriginMedia.Ref(),
+                        mMediaPrincipalHandle.Ref())
     : CreateAudioSink();
 
   RefPtr<media::MediaSink> mediaSink =
@@ -2154,6 +2158,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mLogicalPlaybackRate.DisconnectIfConnected();
   mPreservesPitch.DisconnectIfConnected();
   mSameOriginMedia.DisconnectIfConnected();
+  mMediaPrincipalHandle.DisconnectIfConnected();
   mPlaybackBytesPerSecond.DisconnectIfConnected();
   mPlaybackRateReliable.DisconnectIfConnected();
   mDecoderPosition.DisconnectIfConnected();

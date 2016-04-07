@@ -14,15 +14,29 @@ namespace dom {
 
 class VideoStreamTrack : public MediaStreamTrack {
 public:
-  VideoStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel)
-    : MediaStreamTrack(aStream, aTrackID, aLabel) {}
+  VideoStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
+                   TrackID aInputTrackID,
+                   MediaStreamTrackSource* aSource)
+    : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource) {}
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   VideoStreamTrack* AsVideoStreamTrack() override { return this; }
 
+  const VideoStreamTrack* AsVideoStreamTrack() const override { return this; }
+
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
+
+protected:
+  already_AddRefed<MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream,
+                                                   TrackID aTrackID) override
+  {
+    return do_AddRef(new VideoStreamTrack(aOwningStream,
+                                          aTrackID,
+                                          mInputTrackID,
+                                          mSource));
+  }
 };
 
 } // namespace dom
