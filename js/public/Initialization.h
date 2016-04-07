@@ -62,6 +62,14 @@ extern JS_PUBLIC_API(bool)
 JS_Init(void);
 
 /**
+ * A variant of JS_Init. On success it returns nullptr. On failure it returns a
+ * pointer to a string literal that describes how initialization failed, which
+ * can be useful for debugging purposes.
+ */
+extern JS_PUBLIC_API(const char*)
+JS_InitWithFailureDiagnostic(void);
+
+/**
  * Destroy free-standing resources allocated by SpiderMonkey, not associated
  * with any runtime, context, or other structure.
  *
