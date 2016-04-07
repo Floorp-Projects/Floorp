@@ -194,9 +194,9 @@ TextureClientPool::ShrinkToMaximumSize()
     } else {
       if (!mTextureClients.size()) {
         // Getting here means we're over our desired number of TextureClients
-        // with none in the pool. This can happen for pathological cases, or
-        // it could mean that mMaxTextureClients needs adjusting for whatever
-        // device we're running on.
+        // with none in the pool. This can happen during shutdown, or for
+        // pathological cases, or it could mean that mMaxTextureClients needs
+        // adjusting for whatever device we're running on.
         TCP_LOG("TexturePool %p encountering pathological case!\n", this);
         break;
       }
@@ -267,6 +267,12 @@ TextureClientPool::Clear()
         this, mTextureClientsDeferred.top().get());
     mTextureClientsDeferred.pop();
   }
+}
+
+void TextureClientPool::Destroy()
+{
+  Clear();
+  mMaxTextureClients = 0;
 }
 
 } // namespace layers
