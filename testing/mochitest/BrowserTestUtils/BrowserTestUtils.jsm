@@ -1045,4 +1045,24 @@ this.BrowserTestUtils = {
       });
     });
   },
+
+  /**
+   * Returns a Promise that will resolve once MozAfterPaint
+   * has been fired in the content of a browser.
+   *
+   * @param browser (<xul:browser>)
+   *        The browser for which we're waiting for the MozAfterPaint
+   *        event to occur in.
+   * @returns Promise
+   */
+  contentPainted(browser) {
+    return ContentTask.spawn(browser, null, function*() {
+      return new Promise((resolve) => {
+        addEventListener("MozAfterPaint", function onPaint() {
+          removeEventListener("MozAfterPaint", onPaint);
+          resolve();
+        })
+      });
+    });
+  },
 };
