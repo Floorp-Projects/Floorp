@@ -7,13 +7,6 @@
 const URL = require("URL");
 
 /*
- * Returns the directory name of the path
- */
-exports.dirname = path => {
-  return new URL(".", new URL(path)).href;
-}
-
-/*
  * Join all the arguments together and normalize the resulting URI.
  * The initial path must be an full URI with a protocol (i.e. http://).
  */
