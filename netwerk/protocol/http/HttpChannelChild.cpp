@@ -1089,6 +1089,14 @@ HttpChannelChild::FailedAsyncOpen(const nsresult& status)
 
   // We're already being called from IPDL, therefore already "async"
   HandleAsyncAbort();
+
+  if (mIPCOpen) {
+    PHttpChannelChild::Send__delete__(this);
+  }
+  // WARNING:  DO NOT RELY ON |THIS| EXISTING ANY MORE! 
+  // 
+  // NeckoChild::DeallocPHttpChannelChild() may have been called, which deletes 
+  // |this| if IPDL holds the last reference.
 }
 
 void
@@ -1099,10 +1107,6 @@ HttpChannelChild::DoNotifyListenerCleanup()
   if (mInterceptListener) {
     mInterceptListener->Cleanup();
     mInterceptListener = nullptr;
-  }
-
-  if (mIPCOpen) {
-    PHttpChannelChild::Send__delete__(this);
   }
 }
 
