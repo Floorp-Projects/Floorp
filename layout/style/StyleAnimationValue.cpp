@@ -467,6 +467,7 @@ StyleAnimationValue::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_None:
     case eUnit_Normal:
     case eUnit_UnparsedString:
+    case eUnit_URL:
       return false;
 
     case eUnit_Enumerated:
@@ -2002,6 +2003,7 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
     case eUnit_None:
     case eUnit_Normal:
     case eUnit_UnparsedString:
+    case eUnit_URL:
       return false;
 
     case eUnit_Enumerated:
@@ -2819,13 +2821,15 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
       aSpecifiedValue.SetColorValue(aComputedValue.GetColorValue());
       break;
     case eUnit_Calc:
-    case eUnit_ObjectPosition: {
+    case eUnit_ObjectPosition:
+    case eUnit_URL: {
       nsCSSValue* val = aComputedValue.GetCSSValueValue();
       // Sanity-check that the underlying unit in the nsCSSValue is what we
       // expect for our StyleAnimationValue::Unit:
       MOZ_ASSERT((unit == eUnit_Calc && val->GetUnit() == eCSSUnit_Calc) ||
                  (unit == eUnit_ObjectPosition &&
-                  val->GetUnit() == eCSSUnit_Array),
+                  val->GetUnit() == eCSSUnit_Array) ||
+                 (unit == eUnit_URL && val->GetUnit() == eCSSUnit_URL),
                  "unexpected unit");
       aSpecifiedValue = *val;
       break;
@@ -3872,6 +3876,7 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       break;
     case eUnit_Calc:
     case eUnit_ObjectPosition:
+    case eUnit_URL:
       MOZ_ASSERT(IsCSSValueUnit(mUnit),
                  "This clause is for handling nsCSSValue-backed units");
       MOZ_ASSERT(aOther.mValue.mCSSValue, "values may not be null");
@@ -4119,6 +4124,7 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
       return mValue.mColor == aOther.mValue.mColor;
     case eUnit_Calc:
     case eUnit_ObjectPosition:
+    case eUnit_URL:
       MOZ_ASSERT(IsCSSValueUnit(mUnit),
                  "This clause is for handling nsCSSValue-backed units");
       return *mValue.mCSSValue == *aOther.mValue.mCSSValue;
