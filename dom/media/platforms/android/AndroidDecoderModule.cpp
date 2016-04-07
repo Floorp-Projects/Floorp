@@ -355,10 +355,11 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
   NS_ENSURE_SUCCESS(rv = ResetInputBuffers(), rv);
   NS_ENSURE_SUCCESS(rv = ResetOutputBuffers(), rv);
 
-  NS_NewNamedThread("MC Decoder", getter_AddRefs(mThread),
-                    NS_NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop));
+  rv = NS_NewNamedThread(
+      "MC Decoder", getter_AddRefs(mThread),
+      NS_NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop));
 
-  return NS_OK;
+  return rv;
 }
 
 // This is in usec, so that's 10ms.
@@ -648,18 +649,27 @@ MediaCodecDataDecoder::State() const
   return mState;
 }
 
-void
+bool
 MediaCodecDataDecoder::State(ModuleState aState)
 {
-  LOG("%s -> %s", ModuleStateStr(mState), ModuleStateStr(aState));
+  bool ok = true;
 
-  if (aState == kDrainDecoder) {
-    MOZ_ASSERT(mState == kDrainQueue);
+  if (mState == kShutdown) {
+    ok = false;
+  } else if (mState == kStopping) {
+    ok = aState == kShutdown;
+  } else if (aState == kDrainDecoder) {
+    ok = mState == kDrainQueue;
   } else if (aState == kDrainWaitEOS) {
-    MOZ_ASSERT(mState == kDrainDecoder);
+    ok = mState == kDrainDecoder;
   }
 
-  mState = aState;
+  if (ok) {
+    LOG("%s -> %s", ModuleStateStr(mState), ModuleStateStr(aState));
+    mState = aState;
+  }
+
+  return ok;
 }
 
 template<typename T>
@@ -705,7 +715,9 @@ nsresult
 MediaCodecDataDecoder::Flush()
 {
   MonitorAutoLock lock(mMonitor);
-  State(kFlushing);
+  if (!State(kFlushing)) {
+    return NS_OK;
+  }
   lock.Notify();
 
   while (State() == kFlushing) {
@@ -735,15 +747,10 @@ MediaCodecDataDecoder::Shutdown()
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (State() == kStopping) {
-    // Already shutdown or in the process of doing so
-    return NS_OK;
-  }
-
   State(kStopping);
   lock.Notify();
 
-  while (mThread && State() == kStopping) {
+  while (mThread && State() != kShutdown) {
     lock.Wait();
   }
 
