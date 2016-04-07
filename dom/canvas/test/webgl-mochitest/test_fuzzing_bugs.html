@@ -7,6 +7,23 @@
 <body>
 <script>
 
+// Test the framebufferTexture2D() call with a unbound texture.
+function framebufferTexture2D_bug1257593() {
+  var canvas = document.createElement('canvas');
+
+  var gl = null;
+  gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) {
+    todo(false, 'WebGL framebufferTexture2D test, webgl is unavailable.');
+    return;
+  }
+
+  var texture = gl.createTexture(); // only createTexture(), but no bindBuffer()
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, texture, 0);
+
+  ok(true, 'WebGL framebufferTexture2D with unbound texture');
+}
+
 // Test to call ClearBufferXXX() during context lost.
 function webGL2ClearBufferXXX_bug1252414() {
   var canvas = document.createElement('canvas');
@@ -38,6 +55,7 @@ function webGL2ClearBufferXXX_bug1252414() {
 
 function run() {
   webGL2ClearBufferXXX_bug1252414();
+  framebufferTexture2D_bug1257593();
 
   SimpleTest.finish();
 }
