@@ -2327,8 +2327,8 @@ public:
 
   already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                 nsDisplayListBuilder* aBuilder);
-  virtual void ConfigureLayer(ImageLayer* aLayer,
-                              const ContainerLayerParameters& aParameters) = 0;
+  void ConfigureLayer(ImageLayer* aLayer,
+                      const ContainerLayerParameters& aParameters);
 
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
 
@@ -2724,8 +2724,6 @@ public:
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
   virtual nsRect GetDestRect() override;
-  virtual void ConfigureLayer(ImageLayer* aLayer,
-                              const ContainerLayerParameters& aParameters) override;
 
   static nsRegion GetInsideClipRegion(nsDisplayItem* aItem, uint8_t aClip,
                                       const nsRect& aRect);
