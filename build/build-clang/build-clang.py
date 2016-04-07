@@ -118,7 +118,7 @@ def build_and_use_libgcc(env, clang_dir):
     with updated_env(env):
         tempdir = tempfile.mkdtemp()
         gcc_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "..", "build-gcc")
+                               "..", "unix", "build-gcc")
         run_in(gcc_dir, ["./build-gcc.sh", tempdir, "libgcc"])
         run_in(tempdir, ["tar", "-xf", "gcc.tar.xz"])
         libgcc_dir = glob.glob(os.path.join(tempdir,
