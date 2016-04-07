@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Newtab WebChannel test</title>
+  </head>
+  <body>
+    <script>
+      window.addEventListener("WebChannelMessageToContent", function(e) {
+        if (e.detail.message) {
+          let reply;
+          switch (e.detail.message.type) {
+            case "RECEIVE_FRECENT":
+              reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                detail: {
+                  id: "newtab",
+                  message: JSON.stringify({type: "numItemsAck", data: e.detail.message.data.length}),
+                }
+              });
+              window.dispatchEvent(reply);
+              break;
+            case "RECEIVE_PLACES_CHANGE":
+              if (e.detail.message.data.type === "clearHistory") {
+                reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                  detail: {
+                    id: "newtab",
+                    message: JSON.stringify({type: "clearHistoryAck", data: e.detail.message.data.type}),
+                  }
+                });
+                window.dispatchEvent(reply);
+              }
+              break;
+          }
+        }
+      }, true);
+
+      document.onreadystatechange = function () {
+        if (document.readyState === "complete") {
+          let msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_FRECENT"}),
+            }
+          });
+          window.dispatchEvent(msg);
+        }
+      }
+    </script>
+  </body>
+</html>

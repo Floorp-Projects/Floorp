@@ -672,7 +672,7 @@ CompositorD3D9::FailedToResetDevice() {
   if (mFailedResetAttempts > 10) {
     mFailedResetAttempts = 0;
     gfxWindowsPlatform::GetPlatform()->D3D9DeviceReset();
-    gfxWarning() << "[D3D9] Unable to get a working D3D9 Compositor";
+    gfxCriticalNote << "[D3D9] Unable to get a working D3D9 Compositor";
   }
 }
 

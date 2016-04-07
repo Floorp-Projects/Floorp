@@ -942,7 +942,10 @@ HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
     nsChannelClassifier::SetBlockedTrackingContent(this);
   }
 
+  MOZ_ASSERT(!mOnStopRequestCalled,
+             "We should not call OnStopRequest twice");
   mListener->OnStopRequest(aRequest, aContext, mStatus);
+  mOnStopRequestCalled = true;
 
   mListener = 0;
   mListenerContext = 0;

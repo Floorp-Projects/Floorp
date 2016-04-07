@@ -60,6 +60,13 @@ protected:
     DestroyBackBuffer();
   }
 
+  virtual void HandleMemoryPressure() override
+  {
+    if (mImageClient) {
+      mImageClient->HandleMemoryPressure();
+    }
+  }
+
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
   {
     aAttrs = ImageLayerAttributes(mFilter, mScaleToSize, mScaleMode);

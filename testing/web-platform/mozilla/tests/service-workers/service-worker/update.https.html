@@ -2,6 +2,7 @@
 <title>Service Worker: Registration update()</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="resources/testharness-helpers.js"></script>
 <script src="resources/test-helpers.sub.js"></script>
 <script>
 promise_test(function(t) {
@@ -108,19 +109,16 @@ promise_test(function(t) {
       .then(function(frame) {
           iframe = frame;
 
-          return Promise.all([registration.unregister(),
-                              registration.update()]);
+          return assert_promise_rejects(
+              Promise.all([registration.unregister(), registration.update()]),
+              new TypeError(),
+              'Calling update() while the uninstalling flag is set' +
+              'should return a promise that rejects with an ' +
+              'InvalidStateError.');
         })
-      .then(
-        unreached_fulfillment(t),
-        function(e) {
-          assert_throws('InvalidStateError', function() { throw e; },
-                        'Calling update() while the uninstalling flag is set' +
-                        'should return a promise that rejects with an ' +
-                        'InvalidStateError.');
-
-          iframe.remove();
-          return t.done();
+      .then(function() {
+        iframe.remove();
+        return t.done();
         });
   }, 'Update a registration.');
 </script>

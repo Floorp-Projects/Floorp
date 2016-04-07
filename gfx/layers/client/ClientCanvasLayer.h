@@ -62,6 +62,13 @@ public:
     }
   }
 
+  virtual void HandleMemoryPressure() override
+  {
+    if (mCanvasClient) {
+      mCanvasClient->HandleMemoryPressure();
+    }
+  }
+
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
   {
     aAttrs = CanvasLayerAttributes(mFilter, mBounds);

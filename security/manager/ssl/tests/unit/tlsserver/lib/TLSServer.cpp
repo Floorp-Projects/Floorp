@@ -432,7 +432,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
     // utility function, so we must create it ourselves. This consists
     // of creating an arena, allocating space for the CERTCertificateList,
     // and then transferring ownership of the arena to that list.
-    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
     if (!arena) {
       PrintPRError("PORT_NewArena failed");
       return SECFailure;
@@ -443,7 +443,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
       PrintPRError("PORT_ArenaAlloc failed");
       return SECFailure;
     }
-    certList->arena = arena.forget();
+    certList->arena = arena.release();
     // We also have to manually copy the certificates we care about to the
     // list, because there aren't any utility functions for that either.
     certList->certs = reinterpret_cast<SECItem*>(

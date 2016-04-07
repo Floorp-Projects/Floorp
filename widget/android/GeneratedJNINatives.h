@@ -329,6 +329,10 @@ public:
                 mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEvent_t, Impl>
                 ::template Wrap<&Impl::HandleMotionEvent>),
 
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMotionEventVelocity_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEventVelocity_t, Impl>
+                ::template Wrap<&Impl::HandleMotionEventVelocity>),
+
         mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMouseEvent_t>(
                 mozilla::jni::NativeStub<NativePanZoomController::HandleMouseEvent_t, Impl>
                 ::template Wrap<&Impl::HandleMouseEvent>),

@@ -6259,9 +6259,6 @@ PresShell::Paint(nsView*        aViewToPaint,
   // we only want to do that when we have real content to paint.
   // See Bug 798245
   if (mIsFirstPaint && !mPaintingSuppressed) {
-#ifdef MOZ_WIDGET_ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "GeckoBug1151102", "PresShell doing a first-paint");
-#endif
     layerManager->SetIsFirstPaint();
     mIsFirstPaint = false;
   }

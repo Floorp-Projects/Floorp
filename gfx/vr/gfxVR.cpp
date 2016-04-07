@@ -53,7 +53,6 @@ VRHMDManager::AllocateDeviceID()
 }
 
 VRHMDRenderingSupport::RenderTargetSet::RenderTargetSet()
-  : currentRenderTarget(0)
 {
 }
 
