@@ -9,7 +9,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 function test(url, pattern) {
   let uri = Services.io.newURI(url, null, null);
   let m = new MatchGlobs(pattern);
-  return m.matches(uri);
+  return m.matches(uri.spec);
 }
 
 function pass({url, pattern}) {

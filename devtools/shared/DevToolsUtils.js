@@ -292,8 +292,17 @@ exports.defineLazyGetter(this, "AppConstants", () => {
  */
 exports.noop = function () { };
 
+let assertionFailureCount = 0;
+
+Object.defineProperty(exports, "assertionFailureCount", {
+  get() {
+    return assertionFailureCount;
+  }
+});
+
 function reallyAssert(condition, message) {
   if (!condition) {
+    assertionFailureCount++;
     const err = new Error("Assertion failure: " + message);
     exports.reportException("DevToolsUtils.assert", err);
     throw err;
