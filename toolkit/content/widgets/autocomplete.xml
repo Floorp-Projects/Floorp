@@ -1249,6 +1249,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                   invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
                   (item.getAttribute("url") == url ||
                    this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
+                item.handleOverUnderflow();
                 item.collapsed = false;
                 this._currentIndex++;
                 continue;
@@ -1803,10 +1804,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          this._titleText.style.removeProperty("max-width");
-          this._tagsText.style.removeProperty("max-width");
-          this._urlText.style.removeProperty("max-width");
-          this._actionText.style.removeProperty("max-width");
+          this._removeMaxWidths();
 
           let title = this.getAttribute("title");
 
@@ -1990,6 +1988,17 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
+      <method name="_removeMaxWidths">
+        <body>
+          <![CDATA[
+          this._titleText.style.removeProperty("max-width");
+          this._tagsText.style.removeProperty("max-width");
+          this._urlText.style.removeProperty("max-width");
+          this._actionText.style.removeProperty("max-width");
+          ]]>
+        </body>
+      </method>
+
       <!-- This method truncates the displayed strings as necessary. -->
       <method name="_handleOverflow">
         <body><![CDATA[
@@ -2055,6 +2064,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this._actionText.style.maxWidth = urlActionMaxWidth + "px";
           }
         ]]></body>
+      </method>
+
+      <method name="handleOverUnderflow">
+        <body>
+          <![CDATA[
+          this._removeMaxWidths();
+          this._handleOverflow();
+          ]]>
+        </body>
       </method>
 
       <method name="_parseActionUrl">
