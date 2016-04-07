@@ -78,7 +78,7 @@ actions.SET_CENSUS_DISPLAY = "set-census-display";
 actions.SET_DOMINATOR_TREE_DISPLAY = "set-dominator-tree-display";
 
 // Fired to set a tree map display
-actions.SET_TREEMAP_DISPLAY = "set-treemap-display";
+actions.SET_TREE_MAP_DISPLAY = "set-tree-map-display";
 
 // Fired when changing between census or dominators view.
 actions.CHANGE_VIEW = "change-view";

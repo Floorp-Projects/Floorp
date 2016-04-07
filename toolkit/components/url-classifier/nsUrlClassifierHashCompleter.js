@@ -338,6 +338,7 @@ HashCompleterRequest.prototype = {
     // channel.
     if (this._channel && this._channel.isPending()) {
       dump("hashcompleter: cancelling request to " + this.gethashUrl + "\n");
+      Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT").add(1);
       this._channel.cancel(Cr.NS_BINDING_ABORTED);
     }
   },
@@ -548,6 +549,7 @@ HashCompleterRequest.prototype = {
     let histogram =
       Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS");
     histogram.add(httpStatusToBucket(httpStatus));
+    Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT").add(0);
 
     // Notify the RequestBackoff once a response is received.
     this._completer.finishRequest(this.gethashUrl, httpStatus);
