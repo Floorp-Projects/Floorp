@@ -190,6 +190,12 @@ class StubUrlAnnotations implements UrlAnnotations {
 
     @Override
     public void insertFeedUrl(ContentResolver cr, String originUrl, String feedUrl) {}
+
+    @Override
+    public void insertReaderViewUrl(ContentResolver cr, String pageURL) {}
+
+    @Override
+    public void deleteReaderViewUrl(ContentResolver cr, String pageURL) {}
 }
 
 /*
