@@ -14,3 +14,15 @@ if CONFIG['ENABLE_TESTS']:
     USE_STATIC_LIBS = True
 
 NO_PGO = True
+
+if CONFIG['WIN32_REDIST_DIR']:
+    for f in ['MSVC_C_RUNTIME_DLL', 'MSVC_CXX_RUNTIME_DLL']:
+        FINAL_TARGET_FILES += [
+            '%%%s/%s' % (CONFIG['WIN32_REDIST_DIR'], CONFIG[f])
+        ]
+
+if CONFIG['WIN_UCRT_REDIST_DIR']:
+    for f in ['api-ms-win-*.dll', 'ucrtbase.dll']:
+        FINAL_TARGET_FILES += [
+            '%%%s/%s' % (CONFIG['WIN_UCRT_REDIST_DIR'], f)
+        ]
