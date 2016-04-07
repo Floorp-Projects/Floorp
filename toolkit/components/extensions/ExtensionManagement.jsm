@@ -180,7 +180,7 @@ var Service = {
   extensionURILoadableByAnyone(uri) {
     let uuid = uri.host;
     let extension = this.uuidMap.get(uuid);
-    if (!extension) {
+    if (!extension || !extension.webAccessibleResources) {
       return false;
     }
 
@@ -188,7 +188,7 @@ var Service = {
     if (path.length > 0 && path[0] == "/") {
       path = path.substr(1);
     }
-    return extension.webAccessibleResources.has(path);
+    return extension.webAccessibleResources.matches(path);
   },
 
   // Checks whether a given extension can load this URI (typically via

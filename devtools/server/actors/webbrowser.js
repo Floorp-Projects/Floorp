@@ -894,7 +894,6 @@ TabActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      assert(this.threadActor, "threadActor should exist when creating sources.");
       this._sources = new TabSources(this.threadActor);
     }
     return this._sources;

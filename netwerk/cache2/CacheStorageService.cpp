@@ -766,6 +766,11 @@ NS_IMETHODIMP CacheStorageService::Clear()
   nsresult rv;
 
   if (CacheObserver::UseNewCache()) {
+    // Tell the index to block notification to AsyncGetDiskConsumption.
+    // Will be allowed again from CacheFileContextEvictor::EvictEntries()
+    // when all the context have been removed from disk.
+    CacheIndex::OnAsyncEviction(true);
+
     {
       mozilla::MutexAutoLock lock(mLock);
 
