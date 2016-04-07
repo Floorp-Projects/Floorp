@@ -198,7 +198,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
             addView(mAutoCompleteList);
         }
-        
+
         AutoCompleteListAdapter adapter = new AutoCompleteListAdapter(mContext, R.layout.autocomplete_list_item);
         adapter.populateSuggestionsList(suggestions);
         mAutoCompleteList.setAdapter(adapter);

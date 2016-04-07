@@ -214,8 +214,8 @@ public class TelemetryUploadService extends BackgroundService {
      */
     @WorkerThread
     private long getProfileCreationDate(final GeckoProfile profile) {
-        final long profileMillis = profile.getProfileCreationDate();
-        // TODO (bug 1246816): Remove this work-around when finishing bug. getProfileCreationDate can return -1,
+        final long profileMillis = profile.getAndPersistProfileCreationDate(this);
+        // getAndPersistProfileCreationDate can return -1,
         // and we don't want to truncate (-1 / MILLIS) to 0.
         if (profileMillis < 0) {
             return profileMillis;

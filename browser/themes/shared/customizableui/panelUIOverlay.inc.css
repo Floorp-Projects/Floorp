@@ -675,8 +675,15 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
 }
 
+#PanelUI-remotetabs {
+  --panel-ui-sync-illustration-height: 157.5px;
+}
+
 .PanelUI-remotetabs-instruction-label,
 #PanelUI-remotetabs-mobile-promo {
+  /* If you change the margin here, the min-height of the synced tabs panel
+    (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
+    need adjusting (see bug 1248506) */
   margin: 15px;
   text-align: center;
   text-shadow: none;
@@ -687,6 +694,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 /* The boxes with "instructions" get extra top and bottom padding for space
    around the illustration and buttons */
 .PanelUI-remotetabs-instruction-box {
+  /* If you change the padding here, the min-height of the synced tabs panel
+    (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
+    need adjusting (see bug 1248506) */
   padding-bottom: 30px;
   padding-top: 15px;
 }
@@ -698,6 +708,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
      is used for buttons in the toolbox overrides. See bug 1238531 for details */
   color: white !important;
   border-radius: 2px;
+  /* If you change the margin or padding below, the min-height of the synced tabs
+     panel (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
+     etc) may need adjusting (see bug 1248506) */
   margin-top: 10px;
   margin-bottom: 10px;
   padding: 8px;
@@ -721,7 +734,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 .fxaSyncIllustration {
-  width: 180px;
+  height: var(--panel-ui-sync-illustration-height);
   list-style-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
 }
 
@@ -742,7 +755,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-reauthsync,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-tabsdisabledpane {
-  min-height: 33em;
+  min-height: calc(var(--panel-ui-sync-illustration-height) +
+                   20px + /* margin of .PanelUI-remotetabs-prefs-button */
+                   16px + /* padding of .PanelUI-remotetabs-prefs-button */
+                   30px + /* margin of .PanelUI-remotetabs-instruction-label */
+                   30px + 15px + /* padding of .PanelUI-remotetabs-instruction-box */
+                   11em);
 }
 
 #PanelUI-remotetabs-tabslist > label[itemtype="client"] {

@@ -201,16 +201,25 @@ body {
 }
 
 /**
+ * Viewport Content
+ */
+
+.viewport-content.resizing {
+  pointer-events: none;
+}
+
+/**
  * Viewport Browser
  */
+
+.browser-container {
+  width: inherit;
+  height: inherit;
+}
 
 .browser {
   display: block;
   border: 0;
-}
-
-.browser.resizing {
-  pointer-events: none;
 }
 
 /**

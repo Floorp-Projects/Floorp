@@ -11,7 +11,7 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 
-public class GeckoSubMenu extends GeckoMenu 
+public class GeckoSubMenu extends GeckoMenu
                           implements SubMenu {
     private static final String LOGTAG = "GeckoSubMenu";
 
@@ -65,7 +65,7 @@ public class GeckoSubMenu extends GeckoMenu
     }
 
     @Override
-    public SubMenu setHeaderView(View view) { 
+    public SubMenu setHeaderView(View view) {
         return this;
     }
 

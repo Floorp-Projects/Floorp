@@ -13,12 +13,12 @@ let gWhitelist = [{
     key: "searchForSomethingWith",
     type: "single-quote"
   }, {
-    file: "aboutCertError.dtd",
-    key: "certerror.introPara",
-    type: "single-quote"
-  }, {
     file: "browser.dtd",
     key: "social.activated.description",
+    type: "single-quote"
+  }, {
+    file: "netError.dtd",
+    key: "certerror.introPara",
     type: "single-quote"
   }, {
     file: "netError.dtd",

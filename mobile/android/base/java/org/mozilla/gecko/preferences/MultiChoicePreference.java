@@ -59,7 +59,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
     public void setEntries(CharSequence[] entries) {
         mEntries = entries.clone();
     }
-    
+
     /**
      * @param entriesResId The entries array as a resource.
      */
@@ -108,7 +108,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
 
     /**
      * The list of translated strings corresponding to each preference.
-     * 
+     *
      * @return The array of entries.
      */
     public CharSequence[] getEntries() {
@@ -117,7 +117,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
 
     /**
      * The list of values corresponding to each preference.
-     * 
+     *
      * @return The array of values.
      */
     public CharSequence[] getEntryValues() {
@@ -127,7 +127,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
     /**
      * The list of initial values for each preference. Each string in this list
      * should be either "true" or "false".
-     * 
+     *
      * @return The array of initial values.
      */
     public CharSequence[] getInitialValues() {
@@ -142,7 +142,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
     /**
      * The list of values for each preference. These values are updated after
      * the dialog has been displayed.
-     * 
+     *
      * @return The array of values.
      */
     public Set<String> getValues() {

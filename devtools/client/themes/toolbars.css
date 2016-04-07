@@ -796,6 +796,16 @@
   margin: 0;
 }
 
+.toolbox-panel {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  visibility: collapse;
+}
+
+.toolbox-panel[selected] {
+  visibility: visible;
+}
+
 .devtools-tab {
   -moz-appearance: none;
   -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");

@@ -3,9 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- Preferences screen for pre-v11 Android devices that do not support
-     PreferenceFragment or ActionBar. Preference changes here should be mirrored
-     to xml-v11/preferences.xml. -->
+<!-- See xml-v11/preference_headers.xml for tablet layout. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
@@ -13,76 +11,53 @@
 
     <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
                                                   android:title="@string/pref_sync"
-                                                  android:summary="@string/pref_sync_summary"
                                                   android:icon="@drawable/sync_avatar_default"
+                                                  android:summary="@string/pref_sync_summary"
                                                   android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_general"
                       android:summary="@string/pref_category_general_summary"
-                      android:key="android.not_a_preference.general_screen">
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_general" />
-        </intent>
+                      android:key="android.not_a_preference.general_screen"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_general"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_search"
                       android:summary="@string/pref_category_search_summary"
-                      android:key="android.not_a_preference.search_screen">
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_search" />
-        </intent>
+                      android:key="android.not_a_preference.search_screen"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_search"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_privacy_short"
-                      android:summary="@string/pref_category_privacy_summary" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_privacy" />
-        </intent>
+                      android:summary="@string/pref_category_privacy_summary"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_privacy" />
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_accessibility"
-                      android:summary="@string/pref_category_accessibility_summary" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                    android:name="resource"
-                    android:value="preferences_accessibility" />
-        </intent>
+                      android:summary="@string/pref_category_accessibility_summary"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_accessibility" />
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_notifications">
-        <intent android:action="android.intent.action.VIEW"
-            android:targetPackage="@string/android_package_name"
-            android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_notifications" />
-        </intent>
+    <PreferenceScreen android:title="@string/pref_category_notifications"
+        android:summary="@string/pref_category_notifications_summary"
+        android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment">
+        <extra android:name="resource"
+            android:value="preferences_notifications"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_advanced"
                       android:summary="@string/pref_category_advanced_summary"
-                      android:key="android.not_a_preference.advanced.enabled" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                    android:name="resource"
-                    android:value="preferences_advanced" />
-        </intent>
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+                      android:key="android.not_a_preference.advanced_screen" >
+        <extra android:name="resource"
+               android:value="preferences_advanced"/>
     </PreferenceScreen>
 
     <org.mozilla.gecko.preferences.PrivateDataPreference
@@ -96,14 +71,10 @@
             gecko:initialValues="@array/pref_private_data_defaults" />
 
     <PreferenceScreen android:title="@string/pref_category_vendor"
-                      android:summary="@string/pref_category_vendor_summary" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_vendor" />
-        </intent>
+                      android:summary="@string/pref_category_vendor_summary"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_vendor"/>
     </PreferenceScreen>
 
 </PreferenceScreen>

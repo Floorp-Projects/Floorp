@@ -155,3 +155,9 @@
      shown in the inspector contextual-menu for the item that lets users
      duplicate the currently selected node. -->
 <!ENTITY inspectorDuplicateNode.label       "Duplicate Node">
+
+<!-- LOCALIZATION NOTE (inspectorAddNode.label): This is the label shown in
+     the inspector toolbar for the button that lets users add elements to the
+     DOM (as children of the currently selected element). -->
+<!ENTITY inspectorAddNode.label       "Create New Node">
+<!ENTITY inspectorAddNode.accesskey   "C">

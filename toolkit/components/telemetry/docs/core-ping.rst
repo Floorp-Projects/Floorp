@@ -25,7 +25,7 @@ ping”, not total for the whole application lifetime.
 Structure::
 
     {
-      "v": 2, // ping format version
+      "v": 3, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -80,11 +80,23 @@ If the plugins fail to create a search engine instance, this field is also
 
 profileDate
 ~~~~~~~~~~~
+On Android, this value is created at profile creation time and retrieved or,
+for legacy profiles, taken from the package install time (note: this is not the
+same exact metric as profile creation time but we compromised in favor of ease
+of implementation).
 
-This field may be missing if `times.json` does not exist or could not be read from the profile.
-`Bug 1246816 <https://bugzilla.mozilla.org/show_bug.cgi?id=1246816>`_ will fix that with a fallback mechanism.
+Additionally on Android, this field may be ``null`` in the unlikely event that
+all of the following events occur:
+
+#. The times.json file does not exist
+#. The package install date could not be persisted to disk
+
+The reason we don't just return the package install time even if the date could
+not be persisted to disk is to ensure the value doesn't change once we start
+sending it: we only want to send consistent values.
 
 Version history
 ---------------
+* v3: ``profileDate`` will return package install time when times.json is not available
 * v2: added ``defaultSearch``
 * v1: initial version

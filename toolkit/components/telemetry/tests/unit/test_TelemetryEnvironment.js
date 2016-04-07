@@ -1336,6 +1336,7 @@ add_task(function* test_defaultSearchEngine() {
   let expectedSearchEngineData = {
     name: "telemetrySearchIdentifier",
     loadPath: "jar:[other]/searchTest.jar!testsearchplugin/telemetrySearchIdentifier.xml",
+    origin: "default",
     submissionURL: "http://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB?search=&sourceid=Mozilla-search"
   };
   Assert.deepEqual(data.settings.defaultSearchEngineData, expectedSearchEngineData);
@@ -1376,10 +1377,56 @@ add_task(function* test_defaultSearchEngine() {
 
   const EXPECTED_SEARCH_ENGINE_DATA = {
     name: "telemetry_default",
-    loadPath: null
+    loadPath: null,
+    origin: "unverified"
   };
   Assert.deepEqual(data.settings.defaultSearchEngineData, EXPECTED_SEARCH_ENGINE_DATA);
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
+
+  // Cleanly install an engine from an xml file, and check if origin is
+  // recorded as "verified".
+  gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
+  let promise = new Promise(resolve => {
+    TelemetryEnvironment.registerChangeListener("testWatch_SearchDefault", resolve);
+  });
+  let engine = yield new Promise((resolve, reject) => {
+    Services.obs.addObserver(function obs(subject, topic, data) {
+      try {
+        let engine = subject.QueryInterface(Ci.nsISearchEngine);
+        do_print("Observed " + data + " for " + engine.name);
+        if (data != "engine-added" || engine.name != "engine-telemetry") {
+          return;
+        }
+
+        Services.obs.removeObserver(obs, "browser-search-engine-modified");
+        resolve(engine);
+      } catch (ex) {
+        reject(ex);
+      }
+    }, "browser-search-engine-modified", false);
+    Services.search.addEngine("file://" + do_get_cwd().path + "/engine.xml",
+                              null, null, false);
+  });
+  Services.search.defaultEngine = engine;
+  yield promise;
+  TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.deepEqual(data.settings.defaultSearchEngineData,
+                   {"name":"engine-telemetry","loadPath":"[other]/engine.xml","origin":"verified"});
+
+  // Now break this engine's load path hash.
+  gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
+  promise = new Promise(resolve => {
+    TelemetryEnvironment.registerChangeListener("testWatch_SearchDefault", resolve);
+  });
+  engine.wrappedJSObject.setAttr("loadPathHash", "broken");
+  Services.obs.notifyObservers(null, "browser-search-engine-modified", "engine-current");
+  yield promise;
+  TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
+  data = TelemetryEnvironment.currentEnvironment;
+  Assert.equal(data.settings.defaultSearchEngineData.origin, "invalid");
+  Services.search.removeEngine(engine);
 
   // Define and reset the test preference.
   const PREF_TEST = "toolkit.telemetry.test.pref1";
