@@ -1409,14 +1409,6 @@ public abstract class GeckoApp
         mDoorHangerPopup = new DoorHangerPopup(this);
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
-
-        if (mCameraView == null) {
-            // Pre-ICS devices need the camera surface in a visible layout.
-            if (Versions.preICS) {
-                mCameraView = new SurfaceView(this);
-                ((SurfaceView)mCameraView).getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-            }
-        }
     }
 
     /**
@@ -2700,10 +2692,6 @@ public abstract class GeckoApp
     }
 
     private void setSystemUiVisible(final boolean visible) {
-        if (Versions.preICS) {
-            return;
-        }
-
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
