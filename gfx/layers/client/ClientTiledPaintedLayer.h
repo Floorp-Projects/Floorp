@@ -73,6 +73,13 @@ public:
 
   virtual void ClearCachedResources() override;
 
+  virtual void HandleMemoryPressure() override
+  {
+    if (mContentClient) {
+      mContentClient->HandleMemoryPressure();
+    }
+  }
+
   /**
    * Helper method to find the nearest ancestor layers which
    * scroll and have a displayport. The parameters are out-params

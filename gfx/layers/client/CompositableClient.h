@@ -196,6 +196,12 @@ public:
   virtual void ClearCachedResources();
 
   /**
+   * Shrink memory usage.
+   * Called when "memory-pressure" is observed.
+   */
+  virtual void HandleMemoryPressure();
+
+  /**
    * Should be called when deataching a TextureClient from a Compositable, because
    * some platforms need to do some extra book keeping when this happens (for
    * example to properly keep track of fences on Gonk).
