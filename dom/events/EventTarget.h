@@ -50,7 +50,7 @@ public:
                                    EventListener* aCallback,
                                    bool aCapture,
                                    ErrorResult& aRv);
-  bool DispatchEvent(Event& aEvent, ErrorResult& aRv);
+  bool DispatchEvent(JSContext* aCx, Event& aEvent, ErrorResult& aRv);
 
   // Note, this takes the type in onfoo form!
   EventHandlerNonNull* GetEventHandler(const nsAString& aType)

@@ -63,5 +63,15 @@ EventTarget::HasApzAwareListeners() const
   return elm && elm->HasApzAwareListeners();
 }
 
+bool
+EventTarget::DispatchEvent(JSContext* aCx,
+                           Event& aEvent,
+                           ErrorResult& aRv)
+{
+  bool result = false;
+  aRv = DispatchEvent(&aEvent, &result);
+  return !aEvent.DefaultPrevented(aCx);
+}
+
 } // namespace dom
 } // namespace mozilla
