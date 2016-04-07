@@ -563,6 +563,11 @@ public class BrowserContract {
 
             public int getDBValue() { return dbValue; }
         }
+
+        /**
+         * Value used to indicate that a reader view item is saved. We use the
+         */
+        public static final String READER_VIEW_SAVED_VALUE = "true";
     }
 
     public static final class Numbers {

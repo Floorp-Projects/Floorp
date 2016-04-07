@@ -1255,6 +1255,14 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     public void onOpen(SQLiteDatabase db) {
         debug("Opening browser.db: " + db.getPath());
 
+        // Force explicit readercache loading - we won't access readercache state for bookmarks
+        // until we actually know what our bookmarks are. Bookmarks are stored in the DB, hence
+        // it is sufficient to ensure that the readercache is loaded before the DB can be accessed.
+        // Note, this takes ~4-6ms to load on an N4 (compared to 20-50ms for most DB queries), and
+        // is only done once, hence this shouldn't have noticeable impact on performance. Moreover
+        // this is run on a background thread and therefore won't block UI code during startup.
+        SavedReaderViewHelper.getSavedReaderViewHelper(mContext).loadItems();
+
         Cursor cursor = null;
         try {
             cursor = db.rawQuery("PRAGMA foreign_keys=ON", null);

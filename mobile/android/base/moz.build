@@ -525,6 +525,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'prompts/TabInput.java',
     'reader/ReaderModeUtils.java',
     'reader/ReadingListHelper.java',
+    'reader/SavedReaderViewHelper.java',
     'RemoteClientsDialogFragment.java',
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
