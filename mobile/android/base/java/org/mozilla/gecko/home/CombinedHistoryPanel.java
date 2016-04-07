@@ -341,11 +341,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                 if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
                     emptyHint.setVisibility(View.GONE);
                 }
-                mEmptyView.setVisibility(View.VISIBLE);
-            } else {
-                if (mEmptyView != null) {
-                    mEmptyView.setVisibility(View.GONE);
-                }
+            }
+            mEmptyView.setVisibility(View.VISIBLE);
+        } else {
+            if (mEmptyView != null) {
+                mEmptyView.setVisibility(View.GONE);
             }
         }
     }
