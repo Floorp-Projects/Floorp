@@ -25,6 +25,24 @@ re = new Proxy(/a/, {
     return that[name];
   }
 });
+assertEq(RegExp(re), re);
+re = new Proxy(/a/, {
+  get(that, name) {
+    if (name == "constructor") {
+      return function() {};
+    }
+    return that[name];
+  }
+});
+assertEq(RegExp(re) === re, false);
+re = new Proxy(/a/, {
+  get(that, name) {
+    if (name == Symbol.match) {
+      return undefined;
+    }
+    return that[name];
+  }
+});
 assertEq(RegExp(re) === re, false);
 
 re = new Proxy(g.eval(`/a/`), {

@@ -63,9 +63,17 @@ is(target2.dispatchEvent(e), false,
    "beforeunload event should be prevented!");
 is(handledCount, 5, "Wrong event count!");
 window.testReturnValue = false;
+is(target.dispatchEvent(e), false,
+   "beforeunload event on random element should be prevented because the event was already cancelled!");
+is(handledCount, 5, "Wrong event count; handler should not have run! (2)");
+
+e = document.createEvent("BeforeUnloadEvent");
+e.initEvent("beforeunload", true, true);
+window.testReturnValue = false;
 is(target.dispatchEvent(e), true,
    "beforeunload event on random element should not be prevented (2)!");
 is(handledCount, 5, "Wrong event count; handler should not have run! (2)");
+
 is(target2.dispatchEvent(e), false,
    "beforeunload event should be prevented (2)!");
 is(handledCount, 6, "Wrong event count!");

@@ -361,8 +361,8 @@
     function showHiddenParentOfVisibleChild()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("c4_child")),
         new invokerChecker(EVENT_SHOW, getNode("c4_middle")),
+        new invokerChecker(EVENT_HIDE, getNode("c4_child")),
         new invokerChecker(EVENT_REORDER, getNode("c4"))
       ];
 
@@ -415,7 +415,7 @@
     }
 
     //gA11yEventDumpToConsole = true; // debug stuff
-    //enableLogging("tree,verbose");
+    //enableLogging("events,verbose");
 
     /**
      * Do tests.

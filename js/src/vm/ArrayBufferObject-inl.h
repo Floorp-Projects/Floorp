@@ -27,6 +27,14 @@ ArrayBufferObjectMaybeShared::dataPointerEither()
     return buf->as<SharedArrayBufferObject>().dataPointerShared();
 }
 
+inline bool
+ArrayBufferObjectMaybeShared::isDetached() const
+{
+    if (this->is<ArrayBufferObject>())
+        return this->as<ArrayBufferObject>().isDetached();
+    return false;
+}
+
 inline uint32_t
 AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf)
 {

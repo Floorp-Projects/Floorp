@@ -31,6 +31,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
+#include "PrincipalChangeObserver.h"
 #include "StreamBuffer.h"
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -41,9 +42,6 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsIPrincipal.h"
 #include "mozilla/PeerIdentity.h"
-#ifndef USE_FAKE_MEDIA_STREAMS
-#include "DOMMediaStream.h"
-#endif
 #endif
 
 namespace test {
@@ -71,7 +69,6 @@ class MediaPipeline;
 
 #ifdef USE_FAKE_MEDIA_STREAMS
 typedef Fake_DOMMediaStream DOMMediaStream;
-typedef Fake_MediaStreamTrack MediaStreamTrack;
 #else
 class DOMMediaStream;
 #endif
@@ -247,7 +244,7 @@ class RTCStatsQuery {
 class PeerConnectionImpl final : public nsISupports,
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
                                  public mozilla::DataChannelConnection::DataConnectionListener,
-                                 public DOMMediaStream::PrincipalChangeObserver,
+                                 public dom::PrincipalChangeObserver<dom::MediaStreamTrack>,
 #endif
                                  public sigslot::has_slots<>
 {
@@ -388,6 +385,10 @@ public:
   {
     rv = SetLocalDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
   }
+
+  nsresult CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco);
+
+  void RemoveOldRemoteTracks(RefPtr<PeerConnectionObserver>& aPco);
 
   NS_IMETHODIMP SetRemoteDescription (int32_t aAction, const char* aSDP);
 
@@ -643,12 +644,12 @@ public:
 
   static nsresult ExecuteStatsQuery_s(RTCStatsQuery *query);
 
-  // for monitoring changes in stream ownership
+  // for monitoring changes in track ownership
   // PeerConnectionMedia can't do it because it doesn't know about principals
-  virtual void PrincipalChanged(DOMMediaStream* aMediaStream) override;
+  virtual void PrincipalChanged(dom::MediaStreamTrack* aTrack) override;
 
   nsresult GetRemoteTrackId(const std::string streamId,
-                            TrackID numericTrackId,
+                            const dom::MediaStreamTrack& track,
                             std::string* trackId) const;
 #endif
 
@@ -767,7 +768,7 @@ private:
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // The entity on the other end of the peer-to-peer connection;
   // void if they are not yet identified, and no identity setting has been set
-  nsAutoPtr<PeerIdentity> mPeerIdentity;
+  RefPtr<PeerIdentity> mPeerIdentity;
   // The certificate we are using.
   RefPtr<mozilla::dom::RTCCertificate> mCertificate;
 #else

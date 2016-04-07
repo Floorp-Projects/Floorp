@@ -265,38 +265,39 @@ function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
     callFunction(ArrayForEach, list, callbackfn, T);
 }
 
-/* ES5 15.4.4.19. */
+/* ES 2016 draft Mar 25, 2016 22.1.3.15. */
 function ArrayMap(callbackfn/*, thisArg*/) {
     /* Step 1. */
     var O = ToObject(this);
 
-    /* Step 2-3. */
+    /* Step 2. */
+    /* FIXME: Array operations should use ToLength (bug 924058). */
     var len = TO_UINT32(O.length);
 
-    /* Step 4. */
+    /* Step 3. */
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.map');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    /* Step 5. */
+    /* Step 4. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
-    /* Step 6. */
-    var A = std_Array(len);
+    /* Steps 5. */
+    var A = ArraySpeciesCreate(O, len);
 
-    /* Step 7-8. */
-    /* Step a (implicit), and d. */
+    /* Steps 6-7. */
+    /* Steps 7.a (implicit), and 7.d. */
     for (var k = 0; k < len; k++) {
-        /* Step b */
+        /* Steps 7.b-c. */
         if (k in O) {
-            /* Step c.i-iii. */
+            /* Steps 7.c.i-iii. */
             var mappedValue = callContentFunction(callbackfn, T, O[k], k, O);
             _DefineDataProperty(A, k, mappedValue);
         }
     }
 
-    /* Step 9. */
+    /* Step 8. */
     return A;
 }
 
@@ -309,42 +310,42 @@ function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
     return callFunction(ArrayMap, list, callbackfn, T);
 }
 
-/* ES2015 22.1.3.7 Array.prototype.filter. */
+/* ES 2016 draft Mar 25, 2016 22.1.3.7 Array.prototype.filter. */
 function ArrayFilter(callbackfn/*, thisArg*/) {
-    /* Steps 1-2. */
+    /* Step 1. */
     var O = ToObject(this);
 
-    /* Steps 3-4. */
+    /* Step 2. */
     var len = ToInteger(O.length);
 
-    /* Step 5. */
+    /* Step 3. */
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.filter');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    /* Step 6. */
+    /* Step 4. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
-    /* Step 7. */
-    var A = [];
+    /* Step 5. */
+    var A = ArraySpeciesCreate(O, 0);
 
-    /* Steps 8-11. */
-    /* Steps 11.a (implicit), and 11.e. */
+    /* Steps 6-8. */
+    /* Steps 8.a (implicit), and 8.d. */
     for (var k = 0, to = 0; k < len; k++) {
-        /* Steps 11.b-c. */
+        /* Steps 8.b-c. */
         if (k in O) {
-            /* Steps 11.c.i-ii. */
+            /* Step 8.c.i. */
             var kValue = O[k];
-            /* Steps 11.c.iii-iv. */
+            /* Step 8.c.ii. */
             var selected = callContentFunction(callbackfn, T, kValue, k, O);
-            /* Step 11.c.v. */
+            /* Step 8.c.iii. */
             if (selected)
                 _DefineDataProperty(A, to++, kValue);
         }
     }
 
-    /* Step 12. */
+    /* Step 9. */
     return A;
 }
 
@@ -868,4 +869,143 @@ function ArrayToString() {
     if (!IsCallable(func))
         return callFunction(std_Object_toString, array);
     return callContentFunction(func, array);
+}
+
+// ES 2016 draft Mar 25, 2016 22.1.2.5.
+function ArraySpecies() {
+    // Step 1.
+    return this;
+}
+
+// ES 2016 draft Mar 25, 2016 9.4.2.3.
+function ArraySpeciesCreate(originalArray, length) {
+    // Step 1.
+    assert(typeof length == "number", "length should be a number");
+    assert(length >= 0, "length should be a non-negative number");
+
+    // Step 2.
+    if (length === -0)
+        length = 0;
+
+    // Step 4, 6.
+    if (!IsArray(originalArray))
+        return std_Array(length);
+
+    // Step 5.a.
+    var C = originalArray.constructor;
+
+    // Step 5.b.
+    if (IsConstructor(C) && IsWrappedArrayConstructor(C))
+        return std_Array(length);
+
+    // Step 5.c.
+    if (IsObject(C)) {
+        // Step 5.c.i.
+        C = C[std_species];
+
+        // Optimized path for an ordinary Array.
+        if (C === GetBuiltinConstructor("Array"))
+            return std_Array(length);
+
+        // Step 5.c.ii.
+        if (C === null)
+            return std_Array(length);
+    }
+
+    // Step 6.
+    if (C === undefined)
+        return std_Array(length);
+
+    // Step 7.
+    if (!IsConstructor(C))
+        ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "constructor property");
+
+    // Step 8.
+    return new C(length);
+}
+
+// ES 2016 draft Mar 25, 2016 22.1.3.1.
+// Note: Array.prototype.concat.length is 1.
+function ArrayConcat(arg1) {
+    // Step 1.
+    var O = ToObject(this);
+
+    // Step 2.
+    var A = ArraySpeciesCreate(O, 0);
+
+    // Step 3.
+    var n = 0;
+
+    // Step 4 (implicit in |arguments|).
+
+    // Step 5.
+    var i = 0, argsLen = arguments.length;
+
+    // Step 5.a (first element).
+    var E = O;
+
+    var k, len;
+    while (true) {
+        // Steps 5.b-c.
+        // IsArray should be replaced with IsConcatSpreadable (bug 1041586).
+        if (IsArray(E)) {
+            // Step 5.c.ii.
+            len = ToLength(E.length);
+
+            // Step 5.c.iii.
+            if (n + len > MAX_NUMERIC_INDEX)
+                ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
+
+            if (IsPackedArray(E)) {
+                // Step 5.c.i, 5.c.iv, and 5.c.iv.5.
+                for (k = 0; k < len; k++) {
+                    // Steps 5.c.iv.1-3.
+                    // IsPackedArray(E) ensures that |k in E| is always true.
+                    _DefineDataProperty(A, n, E[k]);
+
+                    // Step 5.c.iv.4.
+                    n++;
+                }
+            } else {
+                // Step 5.c.i, 5.c.iv, and 5.c.iv.5.
+                for (k = 0; k < len; k++) {
+                    // Steps 5.c.iv.1-3.
+                    if (k in E)
+                        _DefineDataProperty(A, n, E[k]);
+
+                    // Step 5.c.iv.4.
+                    n++;
+                }
+            }
+        } else {
+            // Step 5.d.i.
+            if (n >= MAX_NUMERIC_INDEX)
+                ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
+
+            // Step 5.d.ii.
+            _DefineDataProperty(A, n, E);
+
+            // Step 5.d.iii.
+            n++;
+        }
+
+        if (i >= argsLen)
+            break;
+        // Step 5.a (subsequent elements).
+        E = arguments[i];
+        i++;
+    }
+
+    // Step 6.
+    A.length = n;
+
+    // Step 7.
+    return A;
+}
+
+function ArrayStaticConcat(arr, arg1) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.concat');
+    var args = callFunction(std_Array_slice, arguments, 1);
+    return callFunction(std_Function_apply, ArrayConcat, arr, args);
 }

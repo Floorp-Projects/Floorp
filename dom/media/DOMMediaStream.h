@@ -13,16 +13,9 @@
 #include "StreamBuffer.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrincipal.h"
-#include "mozilla/PeerIdentity.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/CORSMode.h"
+#include "PrincipalChangeObserver.h"
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
-// currentTime getter.
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See dom/media/webaudio/AudioContext.h for more fun!
 #ifdef CurrentTime
@@ -33,9 +26,10 @@ namespace mozilla {
 
 class DOMHwMediaStream;
 class DOMLocalMediaStream;
+class DOMMediaStream;
 class MediaStream;
-class MediaEngineSource;
 class MediaInputPort;
+class MediaStreamDirectListener;
 class MediaStreamGraph;
 class ProcessedMediaStream;
 
@@ -43,6 +37,7 @@ namespace dom {
 class AudioNode;
 class HTMLCanvasElement;
 class MediaStreamTrack;
+class MediaStreamTrackSource;
 class AudioStreamTrack;
 class VideoStreamTrack;
 class AudioTrack;
@@ -58,11 +53,46 @@ class ImageContainer;
 class OverlayImage;
 } // namespace layers
 
-class MediaStreamDirectListener;
+namespace media {
+template<typename V, typename E> class Pledge;
+} // namespace media
 
 #define NS_DOMMEDIASTREAM_IID \
 { 0x8cb65468, 0x66c0, 0x444e, \
   { 0x89, 0x9f, 0x89, 0x1d, 0x9e, 0xd2, 0xbe, 0x7c } }
+
+class OnTracksAvailableCallback {
+public:
+  virtual ~OnTracksAvailableCallback() {}
+  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
+};
+
+/**
+ * Interface through which a DOMMediaStream can query its producer for a
+ * MediaStreamTrackSource. This will be used whenever a track occurs in the
+ * DOMMediaStream's owned stream that has not yet been created on the main
+ * thread (see DOMMediaStream::CreateOwnDOMTrack).
+ */
+class MediaStreamTrackSourceGetter : public nsISupports
+{
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackSourceGetter)
+
+public:
+  MediaStreamTrackSourceGetter()
+  {
+    MOZ_COUNT_CTOR(MediaStreamTrackSourceGetter);
+  }
+
+  virtual already_AddRefed<dom::MediaStreamTrackSource>
+  GetMediaStreamTrackSource(TrackID aInputTrackID) = 0;
+
+protected:
+  virtual ~MediaStreamTrackSourceGetter()
+  {
+    MOZ_COUNT_DTOR(MediaStreamTrackSourceGetter);
+  }
+};
 
 /**
  * DOM wrapper for MediaStreams.
@@ -171,12 +201,15 @@ class MediaStreamDirectListener;
  *                    ----> t2 ------------> t2     <- MediaStreamTrack Z'
  *                                                     (pointing to t2 in A')
  */
-class DOMMediaStream : public DOMEventTargetHelper
+class DOMMediaStream : public DOMEventTargetHelper,
+                       public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
   friend class DOMLocalMediaStream;
+  friend class dom::MediaStreamTrack;
   typedef dom::MediaStreamTrack MediaStreamTrack;
   typedef dom::AudioStreamTrack AudioStreamTrack;
   typedef dom::VideoStreamTrack VideoStreamTrack;
+  typedef dom::MediaStreamTrackSource MediaStreamTrackSource;
   typedef dom::AudioTrack AudioTrack;
   typedef dom::VideoTrack VideoTrack;
   typedef dom::AudioTrackList AudioTrackList;
@@ -186,9 +219,9 @@ public:
   typedef dom::MediaTrackConstraints MediaTrackConstraints;
 
   class TrackListener {
-    NS_INLINE_DECL_REFCOUNTING(TrackListener)
-
   public:
+    virtual ~TrackListener() {}
+
     /**
      * Called when the DOMMediaStream has a new track added, either by
      * JS (addTrack()) or the source creating one.
@@ -202,9 +235,6 @@ public:
      */
     virtual void
     NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) {};
-
-  protected:
-    virtual ~TrackListener() {}
   };
 
   /**
@@ -270,9 +300,10 @@ public:
 
     /**
      * Blocks aTrackId from going into mInputPort unless the port has been
-     * destroyed.
+     * destroyed. Returns a pledge that gets resolved when the MediaStreamGraph
+     * has applied the block in the playback stream.
      */
-    void BlockTrackId(TrackID aTrackId);
+    already_AddRefed<media::Pledge<bool, nsresult>> BlockTrackId(TrackID aTrackId);
 
   private:
     RefPtr<MediaInputPort> mInputPort;
@@ -283,7 +314,8 @@ public:
     const InputPortOwnership mOwnership;
   };
 
- DOMMediaStream();
+  DOMMediaStream(nsPIDOMWindowInner* aWindow,
+                 MediaStreamTrackSourceGetter* aTrackSourceGetter);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
@@ -323,7 +355,28 @@ public:
   void AddTrack(MediaStreamTrack& aTrack);
   void RemoveTrack(MediaStreamTrack& aTrack);
 
+  /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
+  already_AddRefed<DOMMediaStream> Clone();
+
   // NON-WebIDL
+
+  /**
+   * Option to provide to CloneInternal() of which tracks should be forwarded
+   * from the source stream (`this`) to the returned stream clone.
+   *
+   * CURRENT forwards the tracks currently in the source stream's track set.
+   * ALL     forwards like EXPLICIT plus any and all future tracks originating
+   *         from the same input stream as the source DOMMediaStream (`this`).
+   */
+  enum class TrackForwardingOption {
+    CURRENT,
+    ALL
+  };
+  already_AddRefed<DOMMediaStream> CloneInternal(TrackForwardingOption aForwarding);
+
+  MediaStreamTrack* GetTrackById(const nsString& aId);
+
+  MediaStreamTrack* GetOwnedTrackById(const nsString& aId);
 
   /**
    * Returns true if this DOMMediaStream has aTrack in its mPlaybackStream.
@@ -337,13 +390,23 @@ public:
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mOwnedStream.
+   * aInputTrackID should match the track's TrackID in its input stream.
    */
-  MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const;
+  MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aInputStream,
+                                      TrackID aInputTrackID) const;
+
+  /**
+   * Returns the TrackPort connecting aTrack's input stream to mOwnedStream,
+   * or nullptr if aTrack is not owned by this DOMMediaStream.
+   */
+  TrackPort* FindOwnedTrackPort(const MediaStreamTrack& aTrack) const;
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mPlaybackStream.
+   * aInputTrackID should match the track's TrackID in its owned stream.
    */
-  MediaStreamTrack* FindPlaybackDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const;
+  MediaStreamTrack* FindPlaybackDOMTrack(MediaStream* aInputStream,
+                                         TrackID aInputTrackID) const;
 
   /**
    * Returns the TrackPort connecting mOwnedStream to mPlaybackStream for aTrack.
@@ -361,25 +424,11 @@ public:
   virtual MediaStream* GetCameraStream() const { return nullptr; }
 
   /**
-   * Overridden in DOMLocalMediaStreams to allow getUserMedia to pass
-   * data directly to RTCPeerConnection without going through graph queuing.
-   * Returns a bool to let us know if direct data will be delivered.
+   * Allows users to get access to media data without going through graph
+   * queuing. Returns a bool to let us know if direct data will be delivered.
    */
-  virtual bool AddDirectListener(MediaStreamDirectListener *aListener) { return false; }
-  virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) {}
-
-  /**
-   * Overridden in DOMLocalMediaStreams to allow getUserMedia to disable
-   * media at the SourceMediaStream.
-   */
-  virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
-
-  virtual void StopTrack(TrackID aTrackID);
-
-  virtual already_AddRefed<dom::Promise>
-  ApplyConstraintsToTrack(TrackID aTrackID,
-                          const MediaTrackConstraints& aConstraints,
-                          ErrorResult &aRv);
+  bool AddDirectListener(MediaStreamDirectListener *aListener);
+  void RemoveDirectListener(MediaStreamDirectListener *aListener);
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
@@ -390,46 +439,32 @@ public:
    * can only be accessed by principals subsuming this principal.
    */
   nsIPrincipal* GetPrincipal() { return mPrincipal; }
-  mozilla::CORSMode GetCORSMode();
-  void SetCORSMode(mozilla::CORSMode aCORSMode);
 
   /**
-   * These are used in WebRTC.  A peerIdentity constrained MediaStream cannot be sent
-   * across the network to anything other than a peer with the provided identity.
-   * If this is set, then mPrincipal should be an instance of nsNullPrincipal.
+   * Returns a principal indicating who may access video data of this stream.
+   * The video principal will be a combination of all live video tracks.
    */
-  PeerIdentity* GetPeerIdentity() const { return mPeerIdentity; }
-  void SetPeerIdentity(PeerIdentity* aPeerIdentity)
-  {
-    mPeerIdentity = aPeerIdentity;
-  }
+  nsIPrincipal* GetVideoPrincipal() { return mVideoPrincipal; }
+
+  // From PrincipalChangeObserver<MediaStreamTrack>.
+  void PrincipalChanged(MediaStreamTrack* aTrack) override;
 
   /**
-   * Indicate that data will be contributed to this stream from origin aPrincipal.
-   * If aPrincipal is null, this is ignored. Otherwise, from now on the contents
-   * of this stream can only be accessed by principals that subsume aPrincipal.
-   * Returns true if the stream's principal changed.
+   * Add a PrincipalChangeObserver to this stream.
+   *
+   * Returns true if it was successfully added.
+   *
+   * Ownership of the PrincipalChangeObserver remains with the caller, and it's
+   * the caller's responsibility to remove the observer before it dies.
    */
-  bool CombineWithPrincipal(nsIPrincipal* aPrincipal);
+  bool AddPrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
 
   /**
-   * This is used in WebRTC to move from a protected state (nsNullPrincipal) to
-   * one where the stream is accessible to script.  Don't call this.
-   * CombineWithPrincipal is almost certainly more appropriate.
+   * Remove an added PrincipalChangeObserver from this stream.
+   *
+   * Returns true if it was successfully removed.
    */
-  void SetPrincipal(nsIPrincipal* aPrincipal);
-
-  /**
-   * Used to learn about dynamic changes in principal occur.
-   * Operations relating to these observers must be confined to the main thread.
-   */
-  class PrincipalChangeObserver
-  {
-  public:
-    virtual void PrincipalChanged(DOMMediaStream* aMediaStream) = 0;
-  };
-  bool AddPrincipalChangeObserver(PrincipalChangeObserver* aObserver);
-  bool RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver);
+  bool RemovePrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
 
   /**
    * Called when this stream's MediaStreamGraph has been shut down. Normally
@@ -449,21 +484,25 @@ public:
   /**
    * Create a DOMMediaStream whose underlying input stream is a SourceMediaStream.
    */
-  static already_AddRefed<DOMMediaStream>
-  CreateSourceStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream> CreateSourceStream(nsPIDOMWindowInner* aWindow,
+                                                             MediaStreamGraph* aGraph,
+                                                             MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create a DOMMediaStream whose underlying input stream is a TrackUnionStream.
    */
-  static already_AddRefed<DOMMediaStream>
-  CreateTrackUnionStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
+                                                                 MediaStreamGraph* aGraph,
+                                                                 MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create an DOMMediaStream whose underlying input stream is an
    * AudioCaptureStream.
    */
   static already_AddRefed<DOMMediaStream>
-  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
+                           nsIPrincipal* aPrincipal,
+                           MediaStreamGraph* aGraph);
 
   void SetLogicalStreamStartTime(StreamTime aTime)
   {
@@ -476,13 +515,17 @@ public:
    *
    * Creates a MediaStreamTrack, adds it to mTracks and returns it.
    */
-  MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, const nsString& aLabel);
+  MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
+                                   MediaStreamTrackSource* aSource);
 
-  class OnTracksAvailableCallback {
-  public:
-    virtual ~OnTracksAvailableCallback() {}
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
-  };
+  /**
+   * Creates a MediaStreamTrack cloned from aTrack, adds it to mTracks and
+   * returns it.
+   * aCloneTrackID is the TrackID the new track will get in mOwnedStream.
+   */
+  already_AddRefed<MediaStreamTrack> CloneDOMTrack(MediaStreamTrack& aTrack,
+                                                   TrackID aCloneTrackID);
+
   // When the initial set of tracks has been added, run
   // aCallback->NotifyTracksAvailable.
   // It is allowed to do anything, including run script.
@@ -504,16 +547,23 @@ public:
     }
   }
 
+  // Registers a track listener to this MediaStream, for listening to changes
+  // to our track set. The caller must call UnregisterTrackListener before
+  // being destroyed, so we don't hold on to a dead pointer. Main thread only.
   void RegisterTrackListener(TrackListener* aListener);
+
+  // Unregisters a track listener from this MediaStream. The caller must call
+  // UnregisterTrackListener before being destroyed, so we don't hold on to
+  // a dead pointer. Main thread only.
   void UnregisterTrackListener(TrackListener* aListener);
 
 protected:
   virtual ~DOMMediaStream();
 
   void Destroy();
-  void InitSourceStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
-  void InitTrackUnionStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
-  void InitAudioCaptureStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  void InitSourceStream(MediaStreamGraph* aGraph);
+  void InitTrackUnionStream(MediaStreamGraph* aGraph);
+  void InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGraph* aGraph);
 
   // Sets up aStream as mInputStream. A producer may append data to a
   // SourceMediaStream input stream, or connect another stream to a
@@ -553,6 +603,24 @@ protected:
   // XXX Bug 1124630. Remove with CameraPreviewMediaStream.
   void CreateAndAddPlaybackStreamListener(MediaStream*);
 
+  /**
+   * Block a track in our playback stream. Calls NotifyPlaybackTrackBlocked()
+   * after the MediaStreamGraph has applied the block and the track is no longer
+   * live.
+   */
+  void BlockPlaybackTrack(TrackPort* aTrack);
+
+  /**
+   * Called on main thread after MediaStreamGraph has applied a track block in
+   * our playback stream.
+   */
+  void NotifyPlaybackTrackBlocked();
+
+  // Recomputes the current principal of this stream based on the set of tracks
+  // it currently contains. PrincipalChangeObservers will be notified only if
+  // the principal changes.
+  void RecomputePrincipal();
+
   // StreamTime at which the currentTime attribute would return 0.
   StreamTime mLogicalStreamStartTime;
 
@@ -588,6 +656,14 @@ protected:
   // MediaStreamTracks corresponding to tracks in our mPlaybackStream.
   AutoTArray<RefPtr<TrackPort>, 2> mTracks;
 
+  // Number of MediaStreamTracks that have been removed on main thread but are
+  // waiting to be removed on MediaStreamGraph thread.
+  size_t mTracksPendingRemoval;
+
+  // The interface through which we can query the stream producer for
+  // track sources.
+  RefPtr<MediaStreamTrackSourceGetter> mTrackSourceGetter;
+
   RefPtr<OwnedStreamListener> mOwnedListener;
   RefPtr<PlaybackStreamListener> mPlaybackListener;
 
@@ -604,18 +680,17 @@ protected:
   bool mNotifiedOfMediaStreamGraphShutdown;
 
   // The track listeners subscribe to changes in this stream's track set.
-  nsTArray<RefPtr<TrackListener>> mTrackListeners;
+  nsTArray<TrackListener*> mTrackListeners;
 
 private:
   void NotifyPrincipalChanged();
-
-  // Principal identifying who may access the contents of this stream.
+  // Principal identifying who may access the collected contents of this stream.
   // If null, this stream can be used by anyone because it has no content yet.
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsTArray<PrincipalChangeObserver*> mPrincipalChangeObservers;
-  // this is used in gUM and WebRTC to identify peers that this stream
-  // is allowed to be sent to
-  nsAutoPtr<PeerIdentity> mPeerIdentity;
+  // Video principal is used by video element as access is requested to its
+  // image data.
+  nsCOMPtr<nsIPrincipal> mVideoPrincipal;
+  nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;
   CORSMode mCORSMode;
 };
 
@@ -629,7 +704,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream,
 class DOMLocalMediaStream : public DOMMediaStream
 {
 public:
-  DOMLocalMediaStream() {}
+  explicit DOMLocalMediaStream(nsPIDOMWindowInner* aWindow,
+                               MediaStreamTrackSourceGetter* aTrackSourceGetter)
+    : DOMMediaStream(aWindow, aTrackSourceGetter) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMLOCALMEDIASTREAM_IID)
@@ -638,28 +715,21 @@ public:
 
   void Stop();
 
-  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) { return nullptr; }
-
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
   CreateSourceStream(nsPIDOMWindowInner* aWindow,
-                     MediaStreamGraph* aGraph);
+                     MediaStreamGraph* aGraph,
+                     MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
   CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
-                         MediaStreamGraph* aGraph);
-
-  /**
-   * Create an nsDOMLocalMediaStream whose underlying stream is an
-   * AudioCaptureStream. */
-  static already_AddRefed<DOMLocalMediaStream>
-  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
-                           MediaStreamGraph* aGraph);
+                         MediaStreamGraph* aGraph,
+                         MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
 protected:
   virtual ~DOMLocalMediaStream();
@@ -674,7 +744,7 @@ class DOMAudioNodeMediaStream : public DOMMediaStream
 {
   typedef dom::AudioNode AudioNode;
 public:
-  explicit DOMAudioNodeMediaStream(AudioNode* aNode);
+  DOMAudioNodeMediaStream(nsPIDOMWindowInner* aWindow, AudioNode* aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
@@ -705,7 +775,7 @@ class DOMHwMediaStream : public DOMLocalMediaStream
 #endif
 
 public:
-  DOMHwMediaStream();
+  explicit DOMHwMediaStream(nsPIDOMWindowInner* aWindow);
 
   static already_AddRefed<DOMHwMediaStream> CreateHwStream(nsPIDOMWindowInner* aWindow,
                                                            OverlayImage* aImage = nullptr);
@@ -726,6 +796,7 @@ private:
   const int DEFAULT_IMAGE_WIDTH = 400;
   const int DEFAULT_IMAGE_HEIGHT = 300;
   RefPtr<OverlayImage> mOverlayImage;
+  PrincipalID mPrincipalHandle;
 #endif
 };
 

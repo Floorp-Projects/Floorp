@@ -2309,32 +2309,33 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   : nsDisplayImageContainer(aBuilder, aFrame)
   , mBackgroundStyle(aBackgroundStyle)
   , mLayer(aLayer)
+  , mIsRasterImage(false)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
   mBounds = GetBoundsInternal(aBuilder);
-  mDestArea = GetDestAreaInternal(aBuilder);
   if (ShouldFixToViewport(aBuilder)) {
     mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
   }
-}
-
-nsRect
-nsDisplayBackgroundImage::GetDestAreaInternal(nsDisplayListBuilder* aBuilder)
-{
-  if (!mBackgroundStyle) {
-    return nsRect();
-  }
-
+  
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  const nsStyleImageLayers::Layer& layer = mBackgroundStyle->mImage.mLayers[mLayer];
+  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
 
   nsBackgroundLayerState state =
     nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
                                       borderArea, borderArea, layer);
-  return state.mDestArea;
+
+  mFillRect = state.mFillArea;
+  mDestRect = state.mDestArea;
+
+  nsImageRenderer* imageRenderer = &state.mImageRenderer;
+  // We only care about images here, not gradients.
+  if (imageRenderer->IsRasterImage()) {
+    mIsRasterImage = true;
+    mImage = imageRenderer->GetImage();
+  }
 }
 
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
@@ -2566,24 +2567,16 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
   if (mBackgroundStyle->mImage.mLayers.Length() != 1)
     return false;
 
-  nsPresContext* presContext = mFrame->PresContext();
-  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
-
   if (layer.mAttachment != NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED)
     return false;
 
-  nsBackgroundLayerState state =
-    nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
-                                           borderArea, aClipRect, layer);
-  nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
-  if (!imageRenderer->IsRasterImage())
+  if (!mIsRasterImage)
     return false;
 
-  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  *aDestRect = nsLayoutUtils::RectToGfxRect(state.mFillArea, appUnitsPerDevPixel);
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  *aDestRect = nsLayoutUtils::RectToGfxRect(mFillRect, appUnitsPerDevPixel);
 
   return true;
 }
@@ -2618,75 +2611,35 @@ nsDisplayBackgroundImage::CanOptimizeToImageLayer(LayerManager* aManager,
     return false;
   }
 
-  nsPresContext* presContext = mFrame->PresContext();
-  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
-
-  nsBackgroundLayerState state =
-    nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
-                                           borderArea, borderArea, layer);
-  nsImageRenderer* imageRenderer = &state.mImageRenderer;
-  // We only care about images here, not gradients.
-  if (!imageRenderer->IsRasterImage()) {
-    return false;
-  }
-
-  if (!imageRenderer->IsContainerAvailable(aManager, aBuilder)) {
-    // The image is not ready to be made into a layer yet.
-    return false;
-  }
-
   // We currently can't handle tiled backgrounds.
-  if (!state.mDestArea.Contains(state.mFillArea)) {
+  if (!mDestRect.Contains(mFillRect)) {
     return false;
   }
 
   // For 'contain' and 'cover', we allow any pixel of the image to be sampled
   // because there isn't going to be any spriting/atlasing going on.
+  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
   bool allowPartialImages =
     (layer.mSize.mWidthType == nsStyleImageLayers::Size::eContain ||
      layer.mSize.mWidthType == nsStyleImageLayers::Size::eCover);
-  if (!allowPartialImages && !state.mFillArea.Contains(state.mDestArea)) {
+  if (!allowPartialImages && !mFillRect.Contains(mDestRect)) {
     return false;
   }
 
-  // XXX Ignoring state.mAnchor. ImageLayer drawing snaps mDestArea edges to
-  // layer pixel boundaries. This should be OK for now.
-
-  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  mImageLayerDestRect =
-    LayoutDeviceRect::FromAppUnits(state.mDestArea, appUnitsPerDevPixel);
-
-  // Ok, we can turn this into a layer if needed.
-  mImage = imageRenderer->GetImage();
-  MOZ_ASSERT(mImage);
-
-  return true;
+  return nsDisplayImageContainer::CanOptimizeToImageLayer(aManager, aBuilder);
 }
 
-already_AddRefed<ImageContainer>
-nsDisplayBackgroundImage::GetContainer(LayerManager* aManager,
-                                       nsDisplayListBuilder *aBuilder)
+nsRect
+nsDisplayBackgroundImage::GetDestRect()
 {
-  if (!mImage) {
-    MOZ_ASSERT_UNREACHABLE("Must call CanOptimizeToImage() and get true "
-                           "before calling GetContainer()");
-    return nullptr;
-  }
+  return mDestRect;
+}
 
-  if (!mImageContainer) {
-    // We don't have an ImageContainer yet; get it from mImage.
-
-    uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                   ? imgIContainer::FLAG_SYNC_DECODE
-                   : imgIContainer::FLAG_NONE;
-
-    mImageContainer = mImage->GetImageContainer(aManager, flags);
-  }
-
-  RefPtr<ImageContainer> container = mImageContainer;
-  return container.forget();
+already_AddRefed<imgIContainer>
+nsDisplayBackgroundImage::GetImage()
+{
+  nsCOMPtr<imgIContainer> image = mImage;
+  return image.forget();
 }
 
 nsDisplayBackgroundImage::ImageLayerization
@@ -2747,8 +2700,11 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     mImage->GetWidth(&imageWidth);
     mImage->GetHeight(&imageHeight);
     NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+  
+    int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+    LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(GetDestRect(), appUnitsPerDevPixel);
 
-    const LayerRect destLayerRect = mImageLayerDestRect * aParameters.Scale();
+    const LayerRect destLayerRect = destRect * aParameters.Scale();
 
     // Calculate the scaling factor for the frame.
     const gfxSize scale = gfxSize(destLayerRect.width / imageWidth,
@@ -2782,51 +2738,6 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetContainer(imageContainer);
   ConfigureLayer(layer, aParameters);
   return layer.forget();
-}
-
-void
-nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer,
-                                         const ContainerLayerParameters& aParameters)
-{
-  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
-
-  MOZ_ASSERT(mImage);
-  int32_t imageWidth;
-  int32_t imageHeight;
-  mImage->GetWidth(&imageWidth);
-  mImage->GetHeight(&imageHeight);
-  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
-
-  if (imageWidth > 0 && imageHeight > 0) {
-    // We're actually using the ImageContainer. Let our frame know that it
-    // should consider itself to have painted successfully.
-    nsDisplayBackgroundGeometry::UpdateDrawResult(this,
-                                                  image::DrawResult::SUCCESS);
-  }
-
-  // XXX(seth): Right now we ignore aParameters.Scale() and
-  // aParameters.Offset(), because FrameLayerBuilder already applies
-  // aParameters.Scale() via the layer's post-transform, and
-  // aParameters.Offset() is always zero.
-  MOZ_ASSERT(aParameters.Offset() == LayerIntPoint(0,0));
-
-  // It's possible (for example, due to downscale-during-decode) that the
-  // ImageContainer this ImageLayer is holding has a different size from the
-  // intrinsic size of the image. For this reason we compute the transform using
-  // the ImageContainer's size rather than the image's intrinsic size.
-  // XXX(seth): In reality, since the size of the ImageContainer may change
-  // asynchronously, this is not enough. Bug 1183378 will provide a more
-  // complete fix, but this solution is safe in more cases than simply relying
-  // on the intrinsic size.
-  IntSize containerSize = aLayer->GetContainer()
-                        ? aLayer->GetContainer()->GetCurrentSize()
-                        : IntSize(imageWidth, imageHeight);
-
-  const LayoutDevicePoint p = mImageLayerDestRect.TopLeft();
-  Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.PreScale(mImageLayerDestRect.width / containerSize.width,
-                     mImageLayerDestRect.height / containerSize.height);
-  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
 }
 
 void
@@ -3022,7 +2933,7 @@ void nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* a
     }
     return;
   }
-  if (!mDestArea.IsEqualInterior(geometry->mDestArea)) {
+  if (!mDestRect.IsEqualInterior(geometry->mDestRect)) {
     // Dest area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
@@ -3246,6 +3157,118 @@ nsDisplayThemedBackground::GetBoundsInternal() {
       GetWidgetOverflow(presContext->DeviceContext(), mFrame,
                         mFrame->StyleDisplay()->mAppearance, &r);
   return r + ToReferenceFrame();
+}
+
+void
+nsDisplayImageContainer::ConfigureLayer(ImageLayer* aLayer,
+                                        const ContainerLayerParameters& aParameters)
+{
+  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
+
+  nsCOMPtr<imgIContainer> image = GetImage();
+  MOZ_ASSERT(image);
+  int32_t imageWidth;
+  int32_t imageHeight;
+  image->GetWidth(&imageWidth);
+  image->GetHeight(&imageHeight);
+  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+
+  if (imageWidth > 0 && imageHeight > 0) {
+    // We're actually using the ImageContainer. Let our frame know that it
+    // should consider itself to have painted successfully.
+    nsDisplayBackgroundGeometry::UpdateDrawResult(this,
+                                                  image::DrawResult::SUCCESS);
+  }
+
+  // XXX(seth): Right now we ignore aParameters.Scale() and
+  // aParameters.Offset(), because FrameLayerBuilder already applies
+  // aParameters.Scale() via the layer's post-transform, and
+  // aParameters.Offset() is always zero.
+  MOZ_ASSERT(aParameters.Offset() == LayerIntPoint(0,0));
+
+  // It's possible (for example, due to downscale-during-decode) that the
+  // ImageContainer this ImageLayer is holding has a different size from the
+  // intrinsic size of the image. For this reason we compute the transform using
+  // the ImageContainer's size rather than the image's intrinsic size.
+  // XXX(seth): In reality, since the size of the ImageContainer may change
+  // asynchronously, this is not enough. Bug 1183378 will provide a more
+  // complete fix, but this solution is safe in more cases than simply relying
+  // on the intrinsic size.
+  IntSize containerSize = aLayer->GetContainer()
+                        ? aLayer->GetContainer()->GetCurrentSize()
+                        : IntSize(imageWidth, imageHeight);
+  
+  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  const LayoutDeviceRect destRect =
+    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
+
+  const LayoutDevicePoint p = destRect.TopLeft();
+  Matrix transform = Matrix::Translation(p.x, p.y);
+  transform.PreScale(destRect.width / containerSize.width,
+                     destRect.height / containerSize.height);
+  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
+}
+
+already_AddRefed<ImageContainer>
+nsDisplayImageContainer::GetContainer(LayerManager* aManager,
+                                      nsDisplayListBuilder *aBuilder)
+{
+  nsCOMPtr<imgIContainer> image = GetImage();
+  if (!image) {
+    MOZ_ASSERT_UNREACHABLE("Must call CanOptimizeToImage() and get true "
+                           "before calling GetContainer()");
+    return nullptr;
+  }
+
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  return image->GetImageContainer(aManager, flags);
+}
+
+bool
+nsDisplayImageContainer::CanOptimizeToImageLayer(LayerManager* aManager,
+                                                 nsDisplayListBuilder* aBuilder)
+{
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  nsCOMPtr<imgIContainer> image = GetImage();
+  if (!image) {
+    return false;
+  }
+
+  if (!image->IsImageContainerAvailable(aManager, flags)) {
+    return false;
+  }
+
+  int32_t imageWidth;
+  int32_t imageHeight;
+  image->GetWidth(&imageWidth);
+  image->GetHeight(&imageHeight);
+
+  if (imageWidth == 0 || imageHeight == 0) {
+    NS_ASSERTION(false, "invalid image size");
+    return false;
+  }
+
+  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  const LayoutDeviceRect destRect =
+    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
+
+  // Calculate the scaling factor for the frame.
+  const gfxSize scale = gfxSize(destRect.width / imageWidth,
+                                destRect.height / imageHeight);
+
+  if (scale.width < 0.34 || scale.height < 0.34) {
+    // This would look awful as long as we can't use high-quality downscaling
+    // for image layers (bug 803703), so don't turn this into an image layer.
+    return false;
+  }
+
+  return true;
 }
 
 void

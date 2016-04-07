@@ -19,7 +19,10 @@
     macro(apply, apply, "apply") \
     macro(arguments, arguments, "arguments") \
     macro(as, as, "as") \
+    macro(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies") \
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
+    macro(ArraySpecies, ArraySpecies, "ArraySpecies") \
+    macro(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate") \
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
@@ -93,6 +96,7 @@
     macro(era, era, "era") \
     macro(escape, escape, "escape") \
     macro(eval, eval, "eval") \
+    macro(exec, exec, "exec") \
     macro(false, false_, "false") \
     macro(fieldOffsets, fieldOffsets, "fieldOffsets") \
     macro(fieldTypes, fieldTypes, "fieldTypes") \
@@ -235,6 +239,7 @@
     macro(shape, shape, "shape") \
     macro(size, size, "size") \
     macro(source, source, "source") \
+    macro(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor") \
     macro(stack, stack, "stack") \
     macro(star, star, "*") \
     macro(starDefaultStar, starDefaultStar, "*default*") \
@@ -306,7 +311,10 @@
      * enum JS::SymbolCode in jsapi.h. */ \
     macro(iterator, iterator, "iterator") \
     macro(match, match, "match") \
+    macro(replace, replace, "replace") \
+    macro(search, search, "search") \
     macro(species, species, "species") \
+    macro(split, split, "split") \
     macro(toPrimitive, toPrimitive, "toPrimitive") \
     macro(unscopables, unscopables, "unscopables") \
     /* Same goes for the descriptions of the well-known symbols. */ \
@@ -314,7 +322,10 @@
     macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
     macro(Symbol_iterator, Symbol_iterator, "Symbol.iterator") \
     macro(Symbol_match,    Symbol_match,    "Symbol.match") \
+    macro(Symbol_replace,  Symbol_replace,  "Symbol.replace") \
+    macro(Symbol_search,   Symbol_search,   "Symbol.search") \
     macro(Symbol_species,  Symbol_species,  "Symbol.species") \
+    macro(Symbol_split,    Symbol_split,    "Symbol.split") \
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
     /* Function names for properties named by symbols. */ \

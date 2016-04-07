@@ -5404,21 +5404,6 @@ nsImageRenderer::IsAnimatedImage()
   return false;
 }
 
-bool
-nsImageRenderer::IsContainerAvailable(LayerManager* aManager,
-                                      nsDisplayListBuilder* aBuilder)
-{
-  if (mType != eStyleImageType_Image || !mImageContainer) {
-    return false;
-  }
-
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
-
-  return mImageContainer->IsImageContainerAvailable(aManager, flags);
-}
-
 already_AddRefed<imgIContainer>
 nsImageRenderer::GetImage()
 {

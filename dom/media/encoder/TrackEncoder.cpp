@@ -263,6 +263,7 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
         mRawSegment.AppendFrame(image.forget(),
                                 mTotalFrameDuration,
                                 chunk.mFrame.GetIntrinsicSize(),
+                                PRINCIPAL_HANDLE_NONE,
                                 chunk.mFrame.GetForceBlack());
         mTotalFrameDuration = 0;
       }

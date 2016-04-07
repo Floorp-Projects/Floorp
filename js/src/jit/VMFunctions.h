@@ -613,7 +613,6 @@ bool StringsEqual(JSContext* cx, HandleString left, HandleString right, bool* re
 bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length);
 bool ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);
-JSObject* ArrayConcatDense(JSContext* cx, HandleObject obj1, HandleObject obj2, HandleObject res);
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
 
 bool CharCodeAt(JSContext* cx, HandleString str, int32_t index, uint32_t* code);
@@ -694,8 +693,6 @@ bool ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t 
 
 bool Recompile(JSContext* cx);
 bool ForcedRecompile(JSContext* cx);
-JSString* RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp,
-                        HandleString repl);
 JSString* StringReplace(JSContext* cx, HandleString string, HandleString pattern,
                         HandleString repl);
 
@@ -734,6 +731,7 @@ IonMarkFunction(MIRType type)
 }
 
 bool ObjectIsCallable(JSObject* obj);
+bool ObjectIsConstructor(JSObject* obj);
 
 bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber);
 bool BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);

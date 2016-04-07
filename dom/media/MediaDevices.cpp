@@ -28,7 +28,7 @@ public:
   NS_IMETHOD
   OnSuccess(nsISupports* aStream) override
   {
-    RefPtr<DOMLocalMediaStream> stream = do_QueryObject(aStream);
+    RefPtr<DOMMediaStream> stream = do_QueryObject(aStream);
     if (!stream) {
       return NS_ERROR_FAILURE;
     }

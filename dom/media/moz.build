@@ -130,6 +130,7 @@ EXPORTS += [
     'MP3Demuxer.h',
     'MP3FrameParser.h',
     'nsIDocumentActivity.h',
+    'PrincipalChangeObserver.h',
     'QueueObject.h',
     'RtspMediaResource.h',
     'SeekTarget.h',

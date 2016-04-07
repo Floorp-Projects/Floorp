@@ -4,21 +4,53 @@
   <meta charset="utf-8">
   <title>Test for recipes overriding login fields</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="pwmgr_common.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<script type="application/javascript;version=1.8">
-SimpleTest.waitForExplicitFinish();
+<script>
+var chromeScript = runChecksAfterCommonInit();
 
-const PWMGR_COMMON_URL = SimpleTest.getTestFileURL("pwmgr_common.js");
-let pwmgrCommonScript = SpecialPowers.loadChromeScript(PWMGR_COMMON_URL);
+let fillPromiseResolvers = [];
 
-// Tell the parent to setup test logins.
-pwmgrCommonScript.sendAsyncMessage("setupParent", { selfFilling: true });
+function waitForFills(fillCount) {
+  let promises = [];
+  while (fillCount--) {
+    let promise = new Promise(resolve => fillPromiseResolvers.push(resolve));
+    promises.push(promise);
+  }
 
-// When the setup is done, load a recipe for this test.
-pwmgrCommonScript.addMessageListener("doneSetup", function doneSetup() {
-  pwmgrCommonScript.sendAsyncMessage("loadRecipes", {
+  return Promise.all(promises);
+}
+
+add_task(function* setup() {
+  if (document.readyState !== "complete") {
+    yield new Promise((resolve) => {
+      document.onreadystatechange = () => {
+        if (document.readyState !== "complete") {
+          return;
+        }
+        document.onreadystatechange = null;
+        resolve();
+      };
+    });
+  }
+
+  document.getElementById("content")
+  .addEventListener("input", function handleInputEvent(evt) {
+    let resolve = fillPromiseResolvers.shift();
+    if (!resolve) {
+      ok(false, "Too many fills");
+      return;
+    }
+
+    resolve(evt.target);
+  });
+});
+
+add_task(function* loadUsernamePasswordSelectorRecipes() {
+  yield loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       usernameSelector: "input[name='uname1']",
@@ -27,39 +59,80 @@ pwmgrCommonScript.addMessageListener("doneSetup", function doneSetup() {
   });
 });
 
-pwmgrCommonScript.addMessageListener("loadedRecipes", function loadedRecipes() {
-  // Append the form dynamically so autofill is triggered after setup above.
-  document.getElementById("content").innerHTML += `
-<!-- form with recipe for the username and password -->
-  <form id="form1">
-    <input type="text"     name="uname1" oninput="reportFill(this, true)">
-    <input type="text"     name="uname2" oninput="reportFill(this, false)">
-    <input type="password" name="pword1" oninput="reportFill(this, false)">
-    <input type="password" name="pword2" oninput="reportFill(this, true)">
-  </form>`;
+add_task(function* testOverriddingFields() {
+  // Insert the form dynamically so autofill is triggered after setup above.
+  document.getElementById("content").innerHTML = `
+    <!-- form with recipe for the username and password -->
+      <form id="form1">
+        <input type="text"     name="uname1" data-expected="true">
+        <input type="text"     name="uname2" data-expected="false">
+        <input type="password" name="pword1" data-expected="false">
+        <input type="password" name="pword2" data-expected="true">
+      </form>`;
+
+  let elements = yield waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
 });
 
-const EXPECTED_FILLS = 4;
-let fillCount = 0;
+add_task(function* testDefaultHeuristics() {
+  // Insert the form dynamically so autofill is triggered after setup above.
+  document.getElementById("content").innerHTML = `
+    <!-- Fallback to the default heuristics since the selectors don't match -->
+    <form id="form2">
+      <input type="text"     name="uname3" data-expected="false">
+      <input type="text"     name="uname4" data-expected="true">
+      <input type="password" name="pword3" data-expected="true">
+      <input type="password" name="pword4" data-expected="false">
+    </form>`;
 
-function reportFill(element, expected) {
-  ok(expected, `${element.name} was filled`);
-  if (++fillCount == EXPECTED_FILLS) {
-    pwmgrCommonScript.destroy();
-    SimpleTest.finish();
-  } else if (fillCount == 2) {
-    document.getElementById("content").innerHTML = `
-  <!-- Fallback to the default heuristics since the selectors don't match -->
-  <form id="form2">
-    <input type="text"     name="uname3" oninput="reportFill(this, false)">
-    <input type="text"     name="uname4" oninput="reportFill(this, true)">
-    <input type="password" name="pword3" oninput="reportFill(this, true)">
-    <input type="password" name="pword4" oninput="reportFill(this, false)">
-  </form>`;
-  } else if (fillCount > EXPECTED_FILLS) {
-    ok(false, "Too many fills");
+  let elements = yield waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
   }
-}
+});
+
+add_task(function* loadNotUsernameSelectorRecipes() {
+  yield resetRecipes();
+  yield loadRecipes({
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      notUsernameSelector: "input[name='not_uname1']"
+    }],
+  });
+});
+
+add_task(function* testNotUsernameField() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notUsernameSelector should be skipped -->
+    <form id="form3">
+      <input type="text"     name="uname5" data-expected="true">
+      <input type="text"     name="not_uname1" data-expected="false">
+      <input type="password" name="pword5" data-expected="true">
+    </form>`;
+
+  let elements = yield waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(function* testNotUsernameFieldNoUsername() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notUsernameSelector should be skipped.
+         No username field should be found and filled in this case -->
+    <form id="form4">
+      <input type="text"     name="not_uname1" data-expected="false">
+      <input type="password" name="pword6" data-expected="true">
+    </form>`;
+
+  let elements = yield waitForFills(1);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
 </script>
 
 <p id="display"></p>

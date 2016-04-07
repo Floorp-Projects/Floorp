@@ -130,7 +130,7 @@ protected:
   RefPtr<Accessible> mAccessible;
 
   friend class EventQueue;
-  friend class AccReorderEvent;
+  friend class EventTree;
 };
 
 
@@ -201,8 +201,7 @@ private:
   bool mIsInserted;
   nsString mModifiedText;
 
-  friend class EventQueue;
-  friend class AccReorderEvent;
+  friend class EventTree;
 };
 
 
@@ -239,7 +238,7 @@ protected:
   RefPtr<Accessible> mParent;
   RefPtr<AccTextChangeEvent> mTextChangeEvent;
 
-  friend class EventQueue;
+  friend class EventTree;
 };
 
 
@@ -269,7 +268,7 @@ protected:
   RefPtr<Accessible> mNextSibling;
   RefPtr<Accessible> mPrevSibling;
 
-  friend class EventQueue;
+  friend class EventTree;
 };
 
 
@@ -312,37 +311,6 @@ public:
   {
     return AccEvent::GetEventGroups() | (1U << eReorderEvent);
   }
-
-  /**
-   * Get connected with mutation event.
-   */
-  void AddSubMutationEvent(AccMutationEvent* aEvent)
-    { mDependentEvents.AppendElement(aEvent); }
-
-  /**
-   * Do not emit the reorder event and its connected mutation events.
-   */
-  void DoNotEmitAll()
-  {
-    mEventRule = AccEvent::eDoNotEmit;
-    uint32_t eventsCount = mDependentEvents.Length();
-    for (uint32_t idx = 0; idx < eventsCount; idx++)
-      mDependentEvents[idx]->mEventRule = AccEvent::eDoNotEmit;
-  }
-
-  /**
-   * Return true if the given accessible is a target of connected mutation
-   * event.
-   */
-  uint32_t IsShowHideEventTarget(const Accessible* aTarget) const;
-
-protected:
-  /**
-   * Show and hide events causing this reorder event.
-   */
-  nsTArray<AccMutationEvent*> mDependentEvents;
-
-  friend class EventQueue;
 };
 
 

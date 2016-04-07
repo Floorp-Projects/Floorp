@@ -7,16 +7,16 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nestegg/nestegg.h"
-#include "VorbisTrackEncoder.h"
+#include "OpusTrackEncoder.h"
 #include "VP8TrackEncoder.h"
 #include "WebMWriter.h"
 
 using namespace mozilla;
 
-class WebMVorbisTrackEncoder : public VorbisTrackEncoder
+class WebMOpusTrackEncoder : public OpusTrackEncoder
 {
 public:
-  bool TestVorbisCreation(int aChannels, int aSamplingRate)
+  bool TestOpusCreation(int aChannels, int aSamplingRate)
   {
     if (NS_SUCCEEDED(Init(aChannels, aSamplingRate))) {
       return true;
@@ -50,11 +50,11 @@ public:
     mTimestamp(0)
   {}
 
-  void SetVorbisMetadata(int aChannels, int aSampleRate) {
-    WebMVorbisTrackEncoder vorbisEncoder;
-    EXPECT_TRUE(vorbisEncoder.TestVorbisCreation(aChannels, aSampleRate));
-    RefPtr<TrackMetadataBase> vorbisMeta = vorbisEncoder.GetMetadata();
-    SetMetadata(vorbisMeta);
+  void SetOpusMetadata(int aChannels, int aSampleRate) {
+    WebMOpusTrackEncoder opusEncoder;
+    EXPECT_TRUE(opusEncoder.TestOpusCreation(aChannels, aSampleRate));
+    RefPtr<TrackMetadataBase> opusMeta = opusEncoder.GetMetadata();
+    SetMetadata(opusMeta);
   }
   void SetVP8Metadata(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                       int32_t aDisplayHeight,TrackRate aTrackRate) {
@@ -108,10 +108,10 @@ TEST(WebMWriter, Metadata)
   writer.GetContainerData(&encodedBuf, ContainerWriter::FLUSH_NEEDED);
   EXPECT_TRUE(encodedBuf.Length() == 0);
 
-  // Set vorbis metadata.
+  // Set opus metadata.
   int channel = 1;
   int sampleRate = 44100;
-  writer.SetVorbisMetadata(channel, sampleRate);
+  writer.SetOpusMetadata(channel, sampleRate);
 
   // No output data since we didn't set both audio/video
   // metadata in writer.
@@ -137,10 +137,10 @@ TEST(WebMWriter, Cluster)
 {
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
-  // Set vorbis metadata.
+  // Set opus metadata.
   int channel = 1;
   int sampleRate = 48000;
-  writer.SetVorbisMetadata(channel, sampleRate);
+  writer.SetOpusMetadata(channel, sampleRate);
   // Set vp8 metadata
   int32_t width = 320;
   int32_t height = 240;
@@ -180,10 +180,10 @@ TEST(WebMWriter, FLUSH_NEEDED)
 {
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
-  // Set vorbis metadata.
+  // Set opus metadata.
   int channel = 2;
   int sampleRate = 44100;
-  writer.SetVorbisMetadata(channel, sampleRate);
+  writer.SetOpusMetadata(channel, sampleRate);
   // Set vp8 metadata
   int32_t width = 176;
   int32_t height = 352;
@@ -305,10 +305,10 @@ TEST(WebMWriter, bug970774_aspect_ratio)
 {
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
-  // Set vorbis metadata.
+  // Set opus metadata.
   int channel = 1;
   int sampleRate = 44100;
-  writer.SetVorbisMetadata(channel, sampleRate);
+  writer.SetOpusMetadata(channel, sampleRate);
   // Set vp8 metadata
   int32_t width = 640;
   int32_t height = 480;

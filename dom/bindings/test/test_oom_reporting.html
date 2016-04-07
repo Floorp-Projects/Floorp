@@ -13,10 +13,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   /** Test for Bug  **/
   SimpleTest.waitForExplicitFinish();
 
-  window.length = 0xffffffff;
-
   SimpleTest.expectUncaughtException();
-  setTimeout(Array.prototype.splice, 0, undefined);
+  setTimeout(function() {
+    SpecialPowers.Cu.getJSTestingFunctions().throwOutOfMemory();
+  }, 0);
 
   addEventListener("error", function(e) {
     is(e.type, "error", "Should have an error event");

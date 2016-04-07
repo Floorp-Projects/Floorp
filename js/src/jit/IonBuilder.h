@@ -623,6 +623,8 @@ class IonBuilder
 
     enum BoundsChecking { DoBoundsCheck, SkipBoundsCheck };
 
+    MInstruction* addArrayBufferByteLength(MDefinition* obj);
+
     // Add instructions to compute a typed array's length and data.  Also
     // optionally convert |*index| into a bounds-checked definition, if
     // requested.
@@ -786,7 +788,6 @@ class IonBuilder
     InliningStatus inlineArrayIsArray(CallInfo& callInfo);
     InliningStatus inlineArrayPopShift(CallInfo& callInfo, MArrayPopShift::Mode mode);
     InliningStatus inlineArrayPush(CallInfo& callInfo);
-    InliningStatus inlineArrayConcat(CallInfo& callInfo);
     InliningStatus inlineArraySlice(CallInfo& callInfo);
     InliningStatus inlineArrayJoin(CallInfo& callInfo);
     InliningStatus inlineArraySplice(CallInfo& callInfo);
@@ -810,18 +811,23 @@ class IonBuilder
 
     // String natives.
     InliningStatus inlineStringObject(CallInfo& callInfo);
-    InliningStatus inlineConstantStringSplit(CallInfo& callInfo);
-    InliningStatus inlineStringSplit(CallInfo& callInfo);
     InliningStatus inlineStrCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineConstantCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo& callInfo);
     InliningStatus inlineStrCharAt(CallInfo& callInfo);
-    InliningStatus inlineStrReplace(CallInfo& callInfo);
+
+    // String intrinsics.
+    InliningStatus inlineStringReplaceString(CallInfo& callInfo);
+    InliningStatus inlineConstantStringSplitString(CallInfo& callInfo);
+    InliningStatus inlineStringSplitString(CallInfo& callInfo);
 
     // RegExp intrinsics.
     InliningStatus inlineRegExpMatcher(CallInfo& callInfo);
+    InliningStatus inlineRegExpSearcher(CallInfo& callInfo);
     InliningStatus inlineRegExpTester(CallInfo& callInfo);
     InliningStatus inlineIsRegExpObject(CallInfo& callInfo);
+    InliningStatus inlineRegExpPrototypeOptimizable(CallInfo& callInfo);
+    InliningStatus inlineRegExpInstanceOptimizable(CallInfo& callInfo);
 
     // Object natives and intrinsics.
     InliningStatus inlineObjectCreate(CallInfo& callInfo);
@@ -842,6 +848,10 @@ class IonBuilder
 
     // Map intrinsics.
     InliningStatus inlineGetNextMapEntryForIterator(CallInfo& callInfo);
+
+    // ArrayBuffer intrinsics.
+    InliningStatus inlineArrayBufferByteLength(CallInfo& callInfo);
+    InliningStatus inlinePossiblyWrappedArrayBufferByteLength(CallInfo& callInfo);
 
     // TypedArray intrinsics.
     enum WrappingBehavior { AllowWrappedTypedArrays, RejectWrappedTypedArrays };
@@ -901,8 +911,10 @@ class IonBuilder
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo& callInfo);
+    InliningStatus inlineIsConstructor(CallInfo& callInfo);
     InliningStatus inlineIsObject(CallInfo& callInfo);
     InliningStatus inlineToObject(CallInfo& callInfo);
+    InliningStatus inlineIsWrappedArrayConstructor(CallInfo& callInfo);
     InliningStatus inlineToInteger(CallInfo& callInfo);
     InliningStatus inlineToString(CallInfo& callInfo);
     InliningStatus inlineDump(CallInfo& callInfo);
@@ -912,6 +924,7 @@ class IonBuilder
                                   const Class* clasp4 = nullptr);
     InliningStatus inlineIsConstructing(CallInfo& callInfo);
     InliningStatus inlineSubstringKernel(CallInfo& callInfo);
+    InliningStatus inlineObjectHasPrototype(CallInfo& callInfo);
 
     // Testing functions.
     InliningStatus inlineBailout(CallInfo& callInfo);

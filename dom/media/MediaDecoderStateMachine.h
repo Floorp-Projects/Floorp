@@ -1087,6 +1087,10 @@ private:
   // passed to MediaStreams when this is true.
   Mirror<bool> mSameOriginMedia;
 
+  // An identifier for the principal of the media. Used to track when
+  // main-thread induced principal changes get reflected on MSG thread.
+  Mirror<PrincipalHandle> mMediaPrincipalHandle;
+
   // Estimate of the current playback rate (bytes/second).
   Mirror<double> mPlaybackBytesPerSecond;
 
