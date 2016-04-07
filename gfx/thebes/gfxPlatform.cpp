@@ -877,8 +877,11 @@ gfxPlatform::ShutdownLayersIPC()
     if (XRE_IsContentProcess()) {
 
         gfx::VRManagerChild::ShutDown();
-        layers::ImageBridgeChild::ShutDown();
-        layers::CompositorBridgeChild::ShutDown();
+        // cf bug 1215265.
+        if (gfxPrefs::ChildProcessShutdown()) {
+          layers::ImageBridgeChild::ShutDown();
+          layers::CompositorBridgeChild::ShutDown();
+        }
 
     } else if (XRE_IsParentProcess()) {
 
