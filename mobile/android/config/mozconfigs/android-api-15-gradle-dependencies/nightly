@@ -10,6 +10,7 @@ MOZ_AUTOMATION_UPLOAD=0
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 
 NO_CACHE=1
+NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
@@ -18,10 +19,10 @@ ac_add_options --with-gradle
 # We want to use (and populate!) the local Nexus repository.
 export GRADLE_MAVEN_REPOSITORY="http://localhost:8081/nexus/content/repositories/central/"
 
+# From here on, just like ../android-api-15-frontend/nightly.
+
 ac_add_options --disable-compile-environment
 ac_add_options --disable-tests
-
-# From here on, like ../android-api-15/nightly.
 
 ac_add_options --enable-profiling
 
