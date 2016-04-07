@@ -69,6 +69,8 @@ public class testFilterOpenTab extends ContentProviderTest {
     }
 
     public void testFilterOpenTab() throws Exception {
+        blockForGeckoReady();
+
         for (int i = 0; i < mTests.size(); i++) {
             Runnable test = mTests.get(i);
 
