@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>engine-telemetry</ShortName>
+<Url type="text/html" method="GET" template="http://www.example.com/search">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+</SearchPlugin>

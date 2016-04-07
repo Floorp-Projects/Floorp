@@ -67,7 +67,7 @@ public class TextureGenerator {
             Log.e(LOGTAG, String.format("Failed to generate textures: %#x", error), new Exception());
             return;
         }
-        
+
         for (int i = 0; i < numNeeded; i++) {
             mTextureIds.offer(textures[i]);
         }

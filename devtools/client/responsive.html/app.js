@@ -31,8 +31,20 @@ let App = createClass({
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
   },
 
+  onBrowserMounted() {
+    window.postMessage({ type: "browser-mounted" }, "*");
+  },
+
   onChangeViewportDevice(id, device) {
     this.props.dispatch(changeDevice(id, device));
+  },
+
+  onContentResize({ width, height }) {
+    window.postMessage({
+      type: "content-resize",
+      width,
+      height,
+    }, "*");
   },
 
   onExit() {
@@ -60,7 +72,9 @@ let App = createClass({
     } = this.props;
 
     let {
+      onBrowserMounted,
       onChangeViewportDevice,
+      onContentResize,
       onExit,
       onResizeViewport,
       onRotateViewport,
@@ -81,7 +95,9 @@ let App = createClass({
         location,
         screenshot,
         viewports,
+        onBrowserMounted,
         onChangeViewportDevice,
+        onContentResize,
         onRotateViewport,
         onResizeViewport,
       })

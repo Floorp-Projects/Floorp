@@ -664,6 +664,10 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         return super.getOverScrollMode();
     }
 
+    public float getZoomFactor() {
+        return getLayerClient().getViewportMetrics().zoomFactor;
+    }
+
     @Override
     public void onFocusChanged (boolean gainFocus, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);

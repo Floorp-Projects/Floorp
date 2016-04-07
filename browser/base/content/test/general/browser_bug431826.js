@@ -22,11 +22,11 @@ add_task(function* () {
   let advancedDiv, advancedDivVisibility, technicalDivCollapsed;
 
   yield remote(() => {
-    let div = content.document.getElementById("advancedPanel");
+    let div = content.document.getElementById("badCertAdvancedPanel");
     // Confirm that the expert section is collapsed
     Assert.ok(div, "Advanced content div should exist");
-    Assert.equal(div.ownerDocument.defaultView.getComputedStyle(div, "").visibility,
-      "hidden", "Advanced content should not be visible by default");
+    Assert.equal(div.ownerDocument.defaultView.getComputedStyle(div, "").display,
+      "none", "Advanced content should not be visible by default");
   });
 
   // Tweak the expert mode pref
@@ -39,10 +39,10 @@ add_task(function* () {
   yield promise;
 
   yield remote(() => {
-    let div = content.document.getElementById("advancedPanel");
+    let div = content.document.getElementById("badCertAdvancedPanel");
     Assert.ok(div, "Advanced content div should exist");
-    Assert.equal(div.ownerDocument.defaultView.getComputedStyle(div, "").visibility,
-      "visible", "Advanced content should be visible by default");
+    Assert.equal(div.ownerDocument.defaultView.getComputedStyle(div, "").display,
+      "block", "Advanced content should be visible by default");
   });
 
   // Clean up

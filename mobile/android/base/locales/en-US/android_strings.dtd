@@ -166,6 +166,7 @@
 <!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_advanced_summary2 "Restore tabs, plugins, developer tools">
 <!ENTITY pref_category_notifications "Notifications">
+<!ENTITY pref_category_notifications_summary "New features, website updates">
 <!ENTITY pref_content_notifications "Website updates">
 <!ENTITY pref_content_notifications_summary2 "Discover new content from supported sites">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">

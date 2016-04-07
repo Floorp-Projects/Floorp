@@ -53,7 +53,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
 
     private float mLeft;
     private float mTop;
-    private boolean mIsRTL; 
+    private boolean mIsRTL;
     private PointF mGeckoPoint;
     private PointF mTouchStart;
 

@@ -39,6 +39,7 @@ import org.mozilla.gecko.util.INISection;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
@@ -91,7 +92,7 @@ public final class GeckoProfile {
      * Access to this member should be synchronized to avoid
      * races during creation -- particularly between getDir and GeckoView#init.
      *
-     * Not final because this is lazily computed. 
+     * Not final because this is lazily computed.
      */
     private File mProfileDir;
 
@@ -535,6 +536,7 @@ public final class GeckoProfile {
         return false;
     }
 
+    @RobocopTarget
     public boolean inGuestMode() {
         return mInGuestMode;
     }
@@ -547,6 +549,7 @@ public final class GeckoProfile {
         }
     }
 
+    @RobocopTarget
     public String getName() {
         return mName;
     }
@@ -555,6 +558,7 @@ public final class GeckoProfile {
         return CUSTOM_PROFILE.equals(mName);
     }
 
+    @RobocopTarget
     public synchronized File getDir() {
         forceCreate();
         return mProfileDir;
@@ -680,15 +684,38 @@ public final class GeckoProfile {
     }
 
     /**
-     * @return the profile creation date in the format returned by {@link System#currentTimeMillis()} or -1 if the value
-     *         was not found.
+     * Gets the profile creation date and persists it if it had to be generated.
+     *
+     * To get this value, we first look in times.json. If that could not be accessed, we
+     * return the package's first install date. This is not a perfect solution because a
+     * user may have large gap between install time and first use.
+     *
+     * A more correct algorithm could be the one performed by the JS code in ProfileAge.jsm
+     * getOldestProfileTimestamp: walk the tree and return the oldest timestamp on the files
+     * within the profile. However, since times.json will only not exist for the small
+     * number of really old profiles, we're okay with the package install date compromise for
+     * simplicity.
+     *
+     * @return the profile creation date in the format returned by {@link System#currentTimeMillis()}
+     *         or -1 if the value could not be persisted.
      */
     @WorkerThread
-    public long getProfileCreationDate() {
+    public long getAndPersistProfileCreationDate(final Context context) {
         try {
             return getProfileCreationDateFromTimesFile();
         } catch (final IOException e) {
-            return getAndPersistProfileCreationDateFromFilesystem();
+            Log.d(LOGTAG, "Unable to retrieve profile creation date from times.json. Getting from system...");
+            final long packageInstallMillis = org.mozilla.gecko.util.ContextUtils.getPackageInstallTime(context);
+            try {
+                persistProfileCreationDateToTimesFile(packageInstallMillis);
+            } catch (final IOException ioEx) {
+                // We return -1 to ensure the profileCreationDate
+                // will either be an error (-1) or a consistent value.
+                Log.w(LOGTAG, "Unable to persist profile creation date - returning -1");
+                return -1;
+            }
+
+            return packageInstallMillis;
         }
     }
 
@@ -703,14 +730,17 @@ public final class GeckoProfile {
         }
     }
 
-    /**
-     * TODO (bug 1246816): Implement ProfileAge.jsm - getOldestProfileTimestamp. Persist results to times.json.
-     * Update comment in getProfileCreationDate too.
-     * @return -1 until implemented.
-     */
     @WorkerThread
-    private long getAndPersistProfileCreationDateFromFilesystem() {
-        return -1;
+    private void persistProfileCreationDateToTimesFile(final long profileCreationMillis) throws IOException {
+        final JSONObject obj = new JSONObject();
+        try {
+            obj.put(PROFILE_CREATION_DATE_JSON_ATTR, profileCreationMillis);
+        } catch (final JSONException e) {
+            // Don't log to avoid leaking data in JSONObject.
+            throw new IOException("Unable to persist profile creation date to times file");
+        }
+        Log.d(LOGTAG, "Attempting to write new profile creation date");
+        writeFile(TIMES_PATH, obj.toString()); // Ideally we'd throw here too.
     }
 
     /**

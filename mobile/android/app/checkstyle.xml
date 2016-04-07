@@ -38,8 +38,13 @@
     <module name="FileTabCharacter"> <!-- No tabs! -->
         <property name="eachLine" value="true"/>
     </module>
+    <module name="RegexpSingleline"> <!-- excess whitespace -->
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Trailing whitespace"/>
+    </module>
 
     <module name="TreeWalker">
+        <module name="GenericWhitespace"/> <!-- whitespace for generics -->
         <module name="NoLineWrap">
             <property name="tokens" value="IMPORT,PACKAGE_DEF"/>
         </module>

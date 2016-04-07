@@ -6,6 +6,7 @@
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../../framework/test/shared-head.js */
 /* import-globals-from ../../../framework/test/shared-redux-head.js */
+/* import-globals-from ../../../commandline/test/helpers.js */
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
@@ -14,9 +15,15 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
+// Import the GCLI test helper
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
+  this);
+
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.html/test/browser/";
 
 SimpleTest.requestCompleteLog();
+SimpleTest.waitForExplicitFinish();
 
 DevToolsUtils.testing = true;
 Services.prefs.setCharPref("devtools.devices.url",
@@ -47,7 +54,7 @@ var openRDM = Task.async(function*(tab) {
 var closeRDM = Task.async(function*(tab) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
-  manager.closeIfNeeded(window, tab);
+  yield manager.closeIfNeeded(window, tab);
   info("Responsive design mode closed");
 });
 
@@ -78,12 +85,43 @@ function addRDMTask(url, generator) {
   });
 }
 
-var waitForFrameLoad = Task.async(function*(frame, targetURL) {
-  let window = frame.contentWindow;
-  if ((window.document.readyState == "complete" ||
-       window.document.readyState == "interactive") &&
-      window.location.href == targetURL) {
-    return;
+function spawnViewportTask(ui, args, task) {
+  return ContentTask.spawn(ui.getViewportMessageManager(), args, task);
+}
+
+function waitForFrameLoad(ui, targetURL) {
+  return spawnViewportTask(ui, { targetURL }, function*(args) {
+    if ((content.document.readyState == "complete" ||
+         content.document.readyState == "interactive") &&
+        content.location.href == args.targetURL) {
+      return;
+    }
+    yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
+  });
+}
+
+function waitForViewportResizeTo(ui, width, height) {
+  return new Promise(resolve => {
+    let onResize = (_, data) => {
+      if (data.width != width || data.height != height) {
+        return;
+      }
+      ui.off("content-resize", onResize);
+      info(`Got content-resize to ${width} x ${height}`);
+      resolve();
+    };
+    info(`Waiting for content-resize to ${width} x ${height}`);
+    ui.on("content-resize", onResize);
+  });
+}
+
+var setViewportSize = Task.async(function*(ui, manager, width, height) {
+  let size = ui.getViewportSize();
+  info(`Current size: ${size.width} x ${size.height}, ` +
+       `set to: ${width} x ${height}`);
+  if (size.width != width || size.height != height) {
+    let resized = waitForViewportResizeTo(ui, width, height);
+    ui.setViewportSize(width, height);
+    yield resized;
   }
-  yield once(frame, "load");
 });

@@ -92,12 +92,10 @@ public class TelemetryPingGenerator {
         ping.put(CorePing.OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
         ping.put(CorePing.SEQ, seq);
         ping.putArray(CorePing.EXPERIMENTS, Experiments.getActiveExperiments(context));
-        // TODO (bug 1246816): Remove this "optional" parameter work-around when
-        // GeckoProfile.getAndPersistProfileCreationDateFromFilesystem is implemented. That method returns -1
-        // while it's not implemented so we don't include the parameter in the ping if that's the case.
-        if (profileCreationDate >= 0) {
-            ping.put(CorePing.PROFILE_CREATION_DATE, profileCreationDate);
-        }
+
+        // `null` indicates failure more clearly than < 0.
+        final Long finalProfileCreationDate = (profileCreationDate < 0) ? null : profileCreationDate;
+        ping.put(CorePing.PROFILE_CREATION_DATE, finalProfileCreationDate);
         return ping;
     }
 }
