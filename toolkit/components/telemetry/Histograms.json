@@ -10408,5 +10408,12 @@
     "kind": "count",
     "bug_numbers": [1237198],
     "description": "Count tiny plugin content"
+  },
+  "SANDBOX_BROKER_INITIALIZED": {
+    "alert_emails": ["bowen@mozilla.com"],
+    "bug_numbers": [1256992],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "description": "Result of call to SandboxBroker::Initialize"
   }
 }
