@@ -2,18 +2,17 @@
 {
 "version": "gcc 4.9.3",
 "size": 102421980,
-"visibility": "public",
 "digest": "f25292aa93dc449e0472eee511c0ac15b5f1a4272ab76cf53ce5d20dc57f29e83da49ae1a9d9e994192647f75e13ae60f75ba2ac3cb9d26d5f5d6cabf88de921",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz",
 "unpack": true
 },
 {
-"hg_id" : "ec7b7d2442e8",
+"hg_id" : "cd93f15a30ce",
 "algorithm" : "sha512",
-"digest" : "49627d734df52cb9e7319733da5a6be1812b9373355dc300ee5600b431122570e00d380d50c7c5b5003c462c2c2cb022494b42c4ad00f8eba01c2259cbe6e502",
+"digest" : "541eb3842ab6b91bd87223cad7a5e4387ef3e496e5b580c8047b8b586bc7eb69fecf3c9eb8c45a1e0deebb53554f0e8acedfe1b4ca64d93b6d008f3f2eb11389",
 "filename" : "sixgill.tar.xz",
-"size" : 2628868,
+"size" : 2626640,
 "unpack" : true
 },
 {
