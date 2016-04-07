@@ -70,6 +70,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
+    static final String VIEW_BOOKMARKS_WITH_ANNOTATIONS = Bookmarks.VIEW_WITH_ANNOTATIONS;
     static final String VIEW_HISTORY_WITH_FAVICONS = History.VIEW_WITH_FAVICONS;
     static final String VIEW_COMBINED_WITH_FAVICONS = Combined.VIEW_WITH_FAVICONS;
 
@@ -1001,10 +1002,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
 
-                if (hasFaviconsInProjection(projection))
+                if (hasFaviconsInProjection(projection)) {
                     qb.setTables(VIEW_BOOKMARKS_WITH_FAVICONS);
-                else
+                } else if (selection.contains(Bookmarks.ANNOTATION_KEY)) {
+                    qb.setTables(VIEW_BOOKMARKS_WITH_ANNOTATIONS);
+
+                    groupBy = uri.getQueryParameter(BrowserContract.PARAM_GROUP_BY);
+                } else {
                     qb.setTables(TABLE_BOOKMARKS);
+                }
 
                 break;
             }
