@@ -10142,5 +10142,12 @@
     "bug_numbers": [1255934],
     "kind": "count",
     "description": "Remote JAR protocol usage"
+  },
+  "SANDBOX_BROKER_INITIALIZED": {
+    "alert_emails": ["bowen@mozilla.com"],
+    "bug_numbers": [1256992],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "description": "Result of call to SandboxBroker::Initialize"
   }
 }
