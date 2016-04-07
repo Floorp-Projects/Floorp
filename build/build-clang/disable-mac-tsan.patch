@@ -1,0 +1,11 @@
+--- a/compiler-rt/cmake/config-ix.cmake
++++ b/compiler-rt/cmake/config-ix.cmake
+@@ -617,7 +617,7 @@
+ endif()
+ 
+ if (COMPILER_RT_HAS_SANITIZER_COMMON AND TSAN_SUPPORTED_ARCH AND
+-    OS_NAME MATCHES "Darwin|Linux|FreeBSD")
++    OS_NAME MATCHES "Linux|FreeBSD")
+   set(COMPILER_RT_HAS_TSAN TRUE)
+ else()
+   set(COMPILER_RT_HAS_TSAN FALSE)
