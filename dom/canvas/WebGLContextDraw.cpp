@@ -841,19 +841,34 @@ WebGLContext::FakeBlackTexture::FakeBlackTexture(gl::GLContext* gl, TexTarget ta
     const webgl::DriverUnpackInfo dui = {texFormat, texFormat, LOCAL_GL_UNSIGNED_BYTE};
     UniqueBuffer zeros = moz_xcalloc(1, 16); // Infallible allocation.
 
+    MOZ_ASSERT(gl->IsCurrent());
     if (target == LOCAL_GL_TEXTURE_CUBE_MAP) {
         for (int i = 0; i < 6; ++i) {
             const TexImageTarget curTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
             const GLenum error = DoTexImage(mGL, curTarget.get(), 0, &dui, 1, 1, 1,
                                             zeros.get());
-            if (error)
-                MOZ_CRASH("Unexpected error during FakeBlack creation.");
+            if (error) {
+                const nsPrintfCString text("DoTexImage failed with `error`: 0x%04x, "
+                                           "for `curTarget`: 0x%04x, "
+                                           "`dui`: {0x%04x, 0x%04x, 0x%04x}.",
+                                           error, curTarget.get(), dui.internalFormat,
+                                           dui.unpackFormat, dui.unpackType);
+                gfxCriticalError() << text.BeginReading();
+                MOZ_CRASH("Unexpected error during cube map FakeBlack creation.");
+            }
         }
     } else {
         const GLenum error = DoTexImage(mGL, target.get(), 0, &dui, 1, 1, 1,
                                         zeros.get());
-        if (error)
+        if (error) {
+            const nsPrintfCString text("DoTexImage failed with `error`: 0x%04x, "
+                                       "for `target`: 0x%04x, "
+                                       "`dui`: {0x%04x, 0x%04x, 0x%04x}.",
+                                       error, target.get(), dui.internalFormat,
+                                       dui.unpackFormat, dui.unpackType);
+            gfxCriticalError() << text.BeginReading();
             MOZ_CRASH("Unexpected error during FakeBlack creation.");
+        }
     }
 }
 

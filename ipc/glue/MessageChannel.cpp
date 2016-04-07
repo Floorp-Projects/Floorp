@@ -14,11 +14,12 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Logging.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
-#include "mozilla/Snprintf.h"
 
 // Undo the damage done by mozzconf.h
 #undef compress
@@ -521,6 +522,11 @@ MessageChannel::~MessageChannel()
     IPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 #ifdef OS_WIN
     BOOL ok = CloseHandle(mEvent);
+    if (!ok) {
+        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelCloseFailure) <<
+            "MessageChannel failed to close. GetLastError: " <<
+            GetLastError();
+    }
     MOZ_RELEASE_ASSERT(ok);
 #endif
     Clear();

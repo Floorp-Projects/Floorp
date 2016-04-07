@@ -71,12 +71,16 @@ AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)
 }
 
 Result
-DoOCSPRequest(PLArenaPool* arena, const char* url,
+DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
               const SECItem* encodedRequest, PRIntervalTime timeout,
               bool useGET,
       /*out*/ SECItem*& encodedResponse)
 {
-  if (!arena || !url || !encodedRequest || !encodedRequest->data) {
+  MOZ_ASSERT(arena.get());
+  MOZ_ASSERT(url);
+  MOZ_ASSERT(encodedRequest);
+  MOZ_ASSERT(encodedRequest->data);
+  if (!arena.get() || !url || !encodedRequest || !encodedRequest->data) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
   uint32_t urlLen = PL_strlen(url);
@@ -200,7 +204,7 @@ DoOCSPRequest(PLArenaPool* arena, const char* url,
     return Result::ERROR_OCSP_SERVER_ERROR;
   }
 
-  encodedResponse = SECITEM_AllocItem(arena, nullptr, httpResponseDataLen);
+  encodedResponse = SECITEM_AllocItem(arena.get(), nullptr, httpResponseDataLen);
   if (!encodedResponse) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }

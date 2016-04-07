@@ -889,22 +889,24 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
     uint64_t layersId = 0;
     bool success = false;
     RenderFrameParent* renderFrame = nullptr;
-    // If TabParent is initialized by parent side then the RenderFrame must also
-    // be created here. If TabParent is initialized by child side,
-    // child side will create RenderFrame.
-    MOZ_ASSERT(!GetRenderFrame());
     if (IsInitedByParent()) {
+        // If TabParent is initialized by parent side then the RenderFrame must also
+        // be created here. If TabParent is initialized by child side,
+        // child side will create RenderFrame.
+        MOZ_ASSERT(!GetRenderFrame());
         RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
         if (frameLoader) {
-          renderFrame =
-              new RenderFrameParent(frameLoader,
-                                    &textureFactoryIdentifier,
-                                    &layersId,
-                                    &success);
+          renderFrame = new RenderFrameParent(frameLoader, &success);
           MOZ_ASSERT(success);
+          layersId = renderFrame->GetLayersId();
+          renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
           AddTabParentToTable(layersId, this);
           Unused << SendPRenderFrameConstructor(renderFrame);
         }
+    } else {
+      // Otherwise, the child should have constructed the RenderFrame,
+      // and we should already know about it.
+      MOZ_ASSERT(GetRenderFrame());
     }
 
     nsCOMPtr<nsISupports> container = mFrameElement->OwnerDoc()->GetContainer();
@@ -2559,16 +2561,14 @@ TabParent::AllocPRenderFrameParent()
 {
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  TextureFactoryIdentifier textureFactoryIdentifier;
   uint64_t layersId = 0;
   bool success = false;
 
   PRenderFrameParent* renderFrame =
-    new RenderFrameParent(frameLoader,
-                          &textureFactoryIdentifier,
-                          &layersId,
-                          &success);
+    new RenderFrameParent(frameLoader, &success);
   if (success) {
+    RenderFrameParent* rfp = static_cast<RenderFrameParent*>(renderFrame);
+    layersId = rfp->GetLayersId();
     AddTabParentToTable(layersId, this);
   }
   return renderFrame;
@@ -2582,19 +2582,46 @@ TabParent::DeallocPRenderFrameParent(PRenderFrameParent* aFrame)
 }
 
 bool
-TabParent::RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
-                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                  uint64_t* aLayersId)
+TabParent::SetRenderFrame(PRenderFrameParent* aRFParent)
 {
-  RenderFrameParent* renderFrame = static_cast<RenderFrameParent*>(aRenderFrame);
-  renderFrame->GetTextureFactoryIdentifier(aTextureFactoryIdentifier);
-  *aLayersId = renderFrame->GetLayersId();
+  if (IsInitedByParent()) {
+    return false;
+  }
+
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+
+  if (!frameLoader) {
+    return false;
+  }
+
+  RenderFrameParent* renderFrame = static_cast<RenderFrameParent*>(aRFParent);
+  bool success = renderFrame->Init(frameLoader);
+  if (!success) {
+    return false;
+  }
+
+  uint64_t layersId = renderFrame->GetLayersId();
+  AddTabParentToTable(layersId, this);
 
   if (mNeedLayerTreeReadyNotification) {
     RequestNotifyLayerTreeReady();
     mNeedLayerTreeReadyNotification = false;
   }
 
+  return true;
+}
+
+bool
+TabParent::GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                              uint64_t* aLayersId)
+{
+  RenderFrameParent* rfp = GetRenderFrame();
+  if (!rfp) {
+    return false;
+  }
+
+  *aLayersId = rfp->GetLayersId();
+  rfp->GetTextureFactoryIdentifier(aTextureFactoryIdentifier);
   return true;
 }
 
@@ -2704,14 +2731,18 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
 
 bool
 TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
+                                      PRenderFrameParent* aRenderFrame,
                                       const nsString& aURL,
                                       const nsString& aName,
                                       const nsString& aFeatures,
-                                      bool* aOutWindowOpened)
+                                      bool* aOutWindowOpened,
+                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                      uint64_t* aLayersId)
 {
   BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(TabParent::GetFrom(aOpener),
-                                        this, aURL, aName, aFeatures);
+                                        this, aRenderFrame, aURL, aName, aFeatures,
+                                        aTextureFactoryIdentifier, aLayersId);
   *aOutWindowOpened = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   return true;
 }
@@ -2921,7 +2952,7 @@ bool
 TabParent::RequestNotifyLayerTreeReady()
 {
   RenderFrameParent* frame = GetRenderFrame();
-  if (!frame) {
+  if (!frame || !frame->IsInitted()) {
     mNeedLayerTreeReadyNotification = true;
   } else {
     CompositorBridgeParent::RequestNotifyLayerTreeReady(

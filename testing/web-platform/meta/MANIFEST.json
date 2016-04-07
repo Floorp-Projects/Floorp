@@ -28430,6 +28430,10 @@
         "url": "/web-animations/animation-timeline/idlharness.html"
       },
       {
+        "path": "web-animations/animation/cancel.html",
+        "url": "/web-animations/animation/cancel.html"
+      },
+      {
         "path": "web-animations/animation/constructor.html",
         "url": "/web-animations/animation/constructor.html"
       },
@@ -28438,8 +28442,16 @@
         "url": "/web-animations/animation/finish.html"
       },
       {
+        "path": "web-animations/animation/play.html",
+        "url": "/web-animations/animation/play.html"
+      },
+      {
         "path": "web-animations/animation/playbackRate.html",
         "url": "/web-animations/animation/playbackRate.html"
+      },
+      {
+        "path": "web-animations/animation/playState.html",
+        "url": "/web-animations/animation/playState.html"
       },
       {
         "path": "web-animations/keyframe-effect/constructor.html",

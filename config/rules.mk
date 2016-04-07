@@ -29,8 +29,16 @@ include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
 
 ifdef REBUILD_CHECK
 REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
+REPORT_BUILD_VERBOSE = $(REPORT_BUILD)
 else
 REPORT_BUILD = $(info $(notdir $@))
+
+ifdef BUILD_VERBOSE_LOG
+REPORT_BUILD_VERBOSE = $(REPORT_BUILD)
+else
+REPORT_BUILD_VERBOSE =
+endif
+
 endif
 
 EXEC			= exec
@@ -859,46 +867,46 @@ $(OBJS) $(HOST_OBJS) $(PROGOBJS) $(HOST_PROGOBJS): $(GLOBAL_DEPS)
 
 # Rules for building native targets must come first because of the host_ prefix
 $(HOST_COBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(HOST_CPPOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(HOST_CMOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(HOST_CMMOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 $(COBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
 # 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
 $(filter moc_%.cpp,$(CPPSRCS)): moc_%.cpp: %.h
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
 $(filter moc_%.cc,$(CPPSRCS)): moc_%.cc: %.cc
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
 $(filter qrc_%.cpp,$(CPPSRCS)): qrc_%.cpp: %.qrc
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(RCC) -name $* $< $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 $(ASOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $($(notdir $<)_FLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
@@ -906,7 +914,7 @@ ifdef MOZ_RUST
 # Assume any system libraries rustc links against are already
 # in the target's LIBS.
 $(RSOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(RUSTC) $(RUSTFLAGS) --crate-type staticlib --emit dep-info=$(MDDEPDIR)/$(call mk_libname,$<).pp,link=$(call mk_libname,$<) $(_VPATH_SRCS)
 endif
 
@@ -915,32 +923,32 @@ $(SOBJS):
 	$(AS) -o $@ $(ASFLAGS) $($(notdir $<)_FLAGS) $(LOCAL_INCLUDES) $(TARGET_LOCAL_INCLUDES) -c $<
 
 $(CPPOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(CMMOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(CMOBJS):
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(filter %.s,$(CPPSRCS:%.cpp=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(filter %.s,$(CPPSRCS:%.cc=%.s)): %.s: %.cc $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(filter %.s,$(CPPSRCS:%.cxx=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(filter %.s,$(CSRCS:%.c=%.s)): %.s: %.c $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(CC) -S $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 ifneq (,$(filter %.i,$(MAKECMDGOALS)))
@@ -967,27 +975,27 @@ VPATH += $(addprefix $(srcdir)/,$(sort $(dir $(CPPSRCS) $(CSRCS) $(CMMSRCS))))
 .PHONY: $(_PREPROCESSED_CPP_FILES) $(_PREPROCESSED_CC_FILES) $(_PREPROCESSED_CXX_FILES) $(_PREPROCESSED_C_FILES) $(_PREPROCESSED_CMM_FILES)
 
 $(_PREPROCESSED_CPP_FILES): %.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
 	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(_PREPROCESSED_CC_FILES): %.i: %.cc $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
 	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(_PREPROCESSED_CXX_FILES): %.i: %.cxx $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
 	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(_PREPROCESSED_C_FILES): %.i: %.c $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
 	$(CC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(_PREPROCESSED_CMM_FILES): %.i: %.mm $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD)
+	$(REPORT_BUILD_VERBOSE)
 	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
 	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 

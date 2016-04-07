@@ -8,6 +8,7 @@
 #ifndef OCSPCommon_h
 #define OCSPCommon_h
 
+#include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "seccomon.h"
 
@@ -51,8 +52,9 @@ struct OCSPHost
   const char *mServerCertName;
 };
 
-SECItemArray *
-GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
-                       PLArenaPool *aArena, const char *aAdditionalCertName);
+SECItemArray*
+GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
+                       const mozilla::UniquePLArenaPool& aArena,
+                       const char* aAdditionalCertName);
 
 #endif // OCSPCommon_h

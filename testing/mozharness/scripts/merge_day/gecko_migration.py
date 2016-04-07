@@ -370,6 +370,12 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             staging beta user repo migrations.
             """
         dirs = self.query_abs_dirs()
+        # Reset display_version.txt
+        for f in self.config["copy_files"]:
+            self.copyfile(
+                os.path.join(dirs['abs_to_dir'], f["src"]),
+                os.path.join(dirs['abs_to_dir'], f["dst"]))
+
         self.apply_replacements()
         if self.config.get("remove_locales"):
             self.remove_locales(

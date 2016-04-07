@@ -163,7 +163,7 @@ struct ParamTraits<GMPVideoCodec>
   {
     WriteParam(aMsg, aParam.mGMPApiVersion);
     WriteParam(aMsg, aParam.mCodecType);
-    WriteParam(aMsg, nsAutoCString(aParam.mPLName));
+    WriteParam(aMsg, static_cast<const nsCString&>(nsDependentCString(aParam.mPLName)));
     WriteParam(aMsg, aParam.mPLType);
     WriteParam(aMsg, aParam.mWidth);
     WriteParam(aMsg, aParam.mHeight);

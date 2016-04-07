@@ -8,56 +8,50 @@
 <script>
 'use strict';
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
-
   var animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'pending');
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.playState, 'running');
-    t.done();
-  }));
+  });
 }, 'Animation returns correct playState when running');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-
   var animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'pending');
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.playState, 'paused');
-    t.done();
-  }));
+  });
 }, 'Animation returns correct playState when paused');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
-
   var animation = div.getAnimations()[0];
   animation.pause();
   assert_equals(animation.playState, 'pending');
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_equals(animation.playState, 'paused');
-    t.done();
-  }));
+  });
 }, 'Animation.playState updates when paused by script');
 
 test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
-
   var animation = div.getAnimations()[0];
   div.style.animationPlayState = 'running';
+
   // This test also checks that calling playState flushes style
   assert_equals(animation.playState, 'pending',
                 'Animation.playState reports pending after updating'
@@ -67,22 +61,10 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim 1000s';
-
   var animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(animation.playState, 'idle');
 }, 'Animation returns correct playState when cancelled');
-
-test(function(t) {
-  var div = addDiv(t);
-  div.style.animation = 'anim 1000s';
-
-  var animation = div.getAnimations()[0];
-  animation.cancel();
-  animation.currentTime = 50 * 1000;
-  assert_equals(animation.playState, 'paused',
-                'After seeking an idle animation, it is effectively paused');
-}, 'After cancelling an animation, seeking it makes it paused');
 
 done();
 </script>

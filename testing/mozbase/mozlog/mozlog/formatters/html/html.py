@@ -110,17 +110,29 @@ class HTMLFormatter(base.BaseFormatter):
         self.test_count[status_name] += 1
 
         if status in ['SKIP', 'FAIL', 'ERROR']:
-            for image_name in ['screenshot', 'image1', 'image2']:
-                if debug.get(image_name):
-                    screenshot = '%s' % debug[image_name]
-                    # screenshot from gaia unit test doesn't has the datatype
-                    # string
-                    if not screenshot.startswith('data:image/png;base64,'):
-                        screenshot = 'data:image/png;base64,' + screenshot
-
+            if debug.get('differences'):
+                images = [
+                    ('image1','Image 1 (test)'),
+                    ('image2','Image 2 (reference)')
+                ]
+                for title, description in images:
+                    screenshot = '%s' % debug[title]
                     additional_html.append(html.div(
                         html.a(html.img(src=screenshot), href="#"),
+                        html.br(),
+                        html.a(
+                            description,
+                            href=screenshot,
+                            target='_blank'),
                         class_='screenshot'))
+
+            if debug.get('screenshot'):
+                screenshot = '%s' % debug['screenshot']
+                screenshot = 'data:image/png;base64,' + screenshot
+
+                additional_html.append(html.div(
+                    html.a(html.img(src=screenshot), href="#"),
+                    class_='screenshot'))
 
             for name, content in debug.items():
                 if name in ['screenshot', 'image1', 'image2']:

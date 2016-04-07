@@ -780,7 +780,6 @@ TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
     return;
   }
   MOZ_DIAGNOSTIC_ASSERT(mCurrentTask && mCurrentTask->GetType() == SourceBufferTask::Type::AppendBuffer);
-  MOZ_DIAGNOSTIC_ASSERT(mSourceBufferAttributes);
 
   mCurrentTask->As<AppendBufferTask>()->mPromise.Reject(aRejectValue, __func__);
   mSourceBufferAttributes = nullptr;
