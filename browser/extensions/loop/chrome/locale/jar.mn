@@ -25,7 +25,7 @@
 #define zh_CN zh-CN
 #define zh_TW zh-TW
 
-[.] @AB_CD@.jar:
+[features/loop@mozilla.org] @AB_CD@.jar:
 % locale loop @AB_CD@ %locale/@AB_CD@/
   # For locales we support, include the file from the locale's directory in the
   # source tree.
