@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #if defined(__linux__) && defined(__ELF__)
-.section .note.GNU-stack,"",@progbits
+.section .note.GNU-stack,"",%progbits
 #endif
 .global ICU_DATA_SYMBOL
 .data
