@@ -135,12 +135,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
     // variant), and stick it in a Rooted before it can go gray again.
     // Nothing before us in this function can trigger a CC, so it's safe to wait
-    // until here it do the unmark. This allows us to order the following two
-    // operations _after_ the Push() above, which lets us take advantage of the
-    // JSAutoRequest embedded in the pusher.
-    //
-    // We can do this even though we're not in the right compartment yet, because
-    // Rooted<> does not care about compartments.
+    // until here it do the unmark. This allows us to construct mRootedCallable
+    // with the cx from mAutoEntryScript, avoiding the cost of finding another
+    // JSContext. (Rooted<> does not care about requests or compartments.)
     mRootedCallable.emplace(cx, aCallback->Callback());
   }
 
