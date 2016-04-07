@@ -34,4 +34,4 @@ task:
       level-{{level}}-{{project}}-emulator-l-x86-opt-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-x86-l'
-      TOOLTOOL_MANIFEST: 'b2g/config/emulator-x86-l/releng-emulator-l.tt'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-x86-l/releng-emulator-l.manifest'
