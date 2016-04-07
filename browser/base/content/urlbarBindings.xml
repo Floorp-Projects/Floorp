@@ -1360,9 +1360,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           var popupDirection = aElement.ownerDocument.defaultView.getComputedStyle(aElement).direction;
           this.style.direction = popupDirection;
 
-          // Move left margin to the window border.
+          // Make the popup's starting margin negaxtive so that the start of the
+          // popup aligns with the window border.
           let elementRect = aElement.getBoundingClientRect();
-          this.style.marginLeft = "-" + (elementRect.left - rect.left) + "px";
+          if (popupDirection == "rtl") {
+            let offset = elementRect.right - rect.right
+            this.style.marginRight = offset + "px";
+          } else {
+            let offset = rect.left - elementRect.left;
+            this.style.marginLeft = offset + "px";
+          }
 
           // Position the popup below the navbar.  To get the y-coordinate,
           // which is an offset from the bottom of the input, subtract the
