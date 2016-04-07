@@ -431,7 +431,6 @@ var DebuggerView = {
 
     this.editor.clearDebugLocation();
     this.editor.clearHistory();
-    this.editor.setCursor({ line: 0, ch: 0});
     this.editor.removeBreakpoints();
 
     // Only set editor's text and mode if it is a new document
