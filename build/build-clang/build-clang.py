@@ -196,8 +196,10 @@ def build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
         run_cmake = False
 
     cmake_args = ["-GNinja",
-                  "-DCMAKE_C_COMPILER=%s" % cc,
-                  "-DCMAKE_CXX_COMPILER=%s" % cxx,
+                  "-DCMAKE_C_COMPILER=%s" % cc[0],
+                  "-DCMAKE_CXX_COMPILER=%s" % cxx[0],
+                  "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
+                  "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
                   "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
                   "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
@@ -343,29 +345,29 @@ if __name__ == "__main__":
     final_stage_dir = stage1_dir
 
     if is_darwin():
-        extra_cflags = ""
-        extra_cxxflags = "-stdlib=libc++"
-        extra_cflags2 = ""
-        extra_cxxflags2 = "-stdlib=libc++"
+        extra_cflags = []
+        extra_cxxflags = ["-stdlib=libc++"]
+        extra_cflags2 = []
+        extra_cxxflags2 = ["-stdlib=libc++"]
     elif is_linux():
-        extra_cflags = "-static-libgcc"
-        extra_cxxflags = "-static-libgcc -static-libstdc++"
-        extra_cflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
-        extra_cxxflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
+        extra_cflags = ["-static-libgcc"]
+        extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
+        extra_cflags2 = ["-fPIC", "--gcc-toolchain=%s" % gcc_dir]
+        extra_cxxflags2 = ["-fPIC", "--gcc-toolchain=%s" % gcc_dir]
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
         else:
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
     elif is_windows():
-        extra_cflags = ""
-        extra_cxxflags = ""
-        extra_cflags2 = ""
-        extra_cxxflags2 = ""
+        extra_cflags = []
+        extra_cxxflags = []
+        extra_cflags2 = []
+        extra_cxxflags2 = []
 
     build_one_stage(
-        cc + " %s" % extra_cflags,
-        cxx + " %s" % extra_cxxflags,
+        [cc] + extra_cflags,
+        [cxx] + extra_cxxflags,
         llvm_source_dir, stage1_dir, build_libcxx,
         build_type, assertions, python_path)
 
@@ -374,10 +376,10 @@ if __name__ == "__main__":
         stage2_inst_dir = stage2_dir + '/clang'
         final_stage_dir = stage2_dir
         build_one_stage(
-            stage1_inst_dir + "/bin/%s%s %s" %
-                (cc_name, exe_ext, extra_cflags2),
-            stage1_inst_dir + "/bin/%s%s %s" %
-                (cxx_name, exe_ext, extra_cxxflags2),
+            [stage1_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_cflags2,
+            [stage1_inst_dir + "/bin/%s%s" %
+                (cxx_name, exe_ext)] + extra_cxxflags2,
             llvm_source_dir, stage2_dir, build_libcxx,
             build_type, assertions, python_path)
 
@@ -385,18 +387,18 @@ if __name__ == "__main__":
             stage3_dir = build_dir + '/stage3'
             final_stage_dir = stage3_dir
             build_one_stage(
-                stage2_inst_dir + "/bin/%s%s %s" %
-                    (cc_name, exe_ext, extra_cflags2),
-                stage2_inst_dir + "/bin/%s%s %s" %
-                    (cxx_name, exe_ext, extra_cxxflags2),
+                [stage2_inst_dir + "/bin/%s%s" %
+                    (cc_name, exe_ext)] + extra_cflags2,
+                [stage2_inst_dir + "/bin/%s%s" %
+                    (cxx_name, exe_ext)] + extra_cxxflags2,
                 llvm_source_dir, stage3_dir, build_libcxx,
                 build_type, assertions, python_path)
 
     if is_linux():
         final_stage_inst_dir = final_stage_dir + '/clang'
         build_and_use_libgcc(
-            {"CC": cc + " %s" % extra_cflags,
-             "CXX": cxx + " %s" % extra_cxxflags},
+            {"CC": cc + " %s" % ' '.join(extra_cflags),
+             "CXX": cxx + " %s" % ' '.join(extra_cxxflags)},
             final_stage_inst_dir)
 
     if is_darwin() or is_windows():
