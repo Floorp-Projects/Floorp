@@ -248,8 +248,8 @@ SessionStore.prototype = {
         // until the main content and all frames are loaded before trying to
         // restore the text data.
         let browser = aEvent.currentTarget;
-        if (browser.__SS_restore_data) {
-          this._restoreTextData(browser.__SS_restore_data, browser);
+        if (browser.__SS_restore_text_data) {
+          this._restoreTextData(browser.__SS_data.formdata, browser);
         }
         break;
       }
@@ -412,8 +412,26 @@ SessionStore.prototype = {
     }
     let data = { entries: entries, index: index };
 
+    let formdata;
+    if (aBrowser.__SS_data) {
+      formdata = aBrowser.__SS_data.formdata;
+    }
     delete aBrowser.__SS_data;
+
     this._collectTabData(aWindow, aBrowser, data);
+    if (aBrowser.__SS_restore_text_data) {
+      // If the tab has been freshly restored and the "load" event
+      // hasn't yet fired, we need to restore any form data that
+      // might have been present.
+      aBrowser.__SS_data.formdata = formdata;
+    } else {
+      // When navigating via the forward/back buttons, Gecko restores
+      // the form data all by itself and doesn't invoke any input events.
+      // As _collectTabData() doesn't save any form data, we need to manually
+      // capture it to bridge the time until the next input event arrives.
+      this.onTabInput(aWindow, aBrowser);
+    }
+
     this.saveStateDelayed();
 
     this._updateCrashReportURL(aWindow);
@@ -1017,8 +1035,7 @@ SessionStore.prototype = {
 
     // Restoring the text data requires waiting for the content to load. So
     // we set a flag and delay this until the "load" event.
-    //this._restoreTextData(aTabData, aBrowser);
-    aBrowser.__SS_restore_data = aTabData;
+    aBrowser.__SS_restore_text_data = true;
   },
 
   /**
@@ -1058,12 +1075,11 @@ SessionStore.prototype = {
   /**
   * Takes serialized form text data and restores it into the given browser.
   */
-  _restoreTextData: function ss_restoreTextData(aTabData, aBrowser) {
-    let formdata = aTabData.formdata;
-    if (formdata) {
-      FormData.restoreTree(aBrowser.contentWindow, formdata);
+  _restoreTextData: function ss_restoreTextData(aFormData, aBrowser) {
+    if (aFormData) {
+      FormData.restoreTree(aBrowser.contentWindow, aFormData);
     }
-    delete aBrowser.__SS_restore_data;
+    delete aBrowser.__SS_restore_text_data;
   },
 
   getBrowserState: function ss_getBrowserState() {
