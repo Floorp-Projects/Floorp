@@ -251,7 +251,7 @@ class Pickle {
   // the header: new_capacity = sizeof(Header) + desired_payload_capacity.
   // A realloc() failure will cause a Resize failure... and caller should check
   // the return result for true (i.e., successful resizing).
-  bool Resize(uint32_t new_capacity);
+  void Resize(uint32_t new_capacity);
 
   // Round 'bytes' up to the next multiple of 'alignment'.  'alignment' must be
   // a power of 2.

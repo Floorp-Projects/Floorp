@@ -147,10 +147,7 @@ Pickle::Pickle(const Pickle& other)
       capacity_(0),
       variable_buffer_offset_(other.variable_buffer_offset_) {
   uint32_t payload_size = header_size_ + other.header_->payload_size;
-  bool resized = Resize(payload_size);
-  if (!resized) {
-    NS_ABORT_OOM(payload_size);
-  }
+  Resize(payload_size);
   memcpy(header_, other.header_, payload_size);
 }
 
@@ -175,10 +172,7 @@ Pickle& Pickle::operator=(const Pickle& other) {
     header_ = NULL;
     header_size_ = other.header_size_;
   }
-  bool resized = Resize(other.header_size_ + other.header_->payload_size);
-  if (!resized) {
-    NS_ABORT_OOM(other.header_size_ + other.header_->payload_size);
-  }
+  Resize(other.header_size_ + other.header_->payload_size);
   memcpy(header_, other.header_, header_size_ + other.header_->payload_size);
   variable_buffer_offset_ = other.variable_buffer_offset_;
   return *this;
@@ -505,8 +499,9 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
   uint32_t new_size = offset + padding + AlignInt(length);
   uint32_t needed_size = header_size_ + new_size;
 
-  if (needed_size > capacity_ && !Resize(std::max(capacity_ * 2, needed_size)))
-    return NULL;
+  if (needed_size > capacity_) {
+    Resize(std::max(capacity_ * 2, needed_size));
+  }
 
   DCHECK(intptr_t(header_) % alignment == 0);
 
@@ -616,16 +611,13 @@ void Pickle::TrimWriteData(int new_length) {
   *cur_length = new_length;
 }
 
-bool Pickle::Resize(uint32_t new_capacity) {
+void Pickle::Resize(uint32_t new_capacity) {
   new_capacity = ConstantAligner<kPayloadUnit>::align(new_capacity);
 
-  void* p = realloc(header_, new_capacity);
-  if (!p)
-    return false;
+  void* p = moz_xrealloc(header_, new_capacity);
 
   header_ = reinterpret_cast<Header*>(p);
   capacity_ = new_capacity;
-  return true;
 }
 
 // static

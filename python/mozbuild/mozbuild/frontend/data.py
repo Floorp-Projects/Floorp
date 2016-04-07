@@ -912,16 +912,16 @@ class GeneratedFile(ContextDerived):
     __slots__ = (
         'script',
         'method',
-        'output',
+        'outputs',
         'inputs',
         'flags',
     )
 
-    def __init__(self, context, script, method, output, inputs, flags=()):
+    def __init__(self, context, script, method, outputs, inputs, flags=()):
         ContextDerived.__init__(self, context)
         self.script = script
         self.method = method
-        self.output = output
+        self.outputs = outputs if isinstance(outputs, tuple) else (outputs,)
         self.inputs = inputs
         self.flags = flags
 

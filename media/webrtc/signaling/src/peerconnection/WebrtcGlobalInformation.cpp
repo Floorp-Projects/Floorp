@@ -664,7 +664,11 @@ static bool sLastAECDebug = false;
 void
 WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel)
 {
-  StartWebRtcLog(webrtc::TraceLevel(aLevel));
+  if (aLevel) {
+    StartWebRtcLog(webrtc::TraceLevel(aLevel));
+  } else {
+    StopWebRtcLog();
+  }
   sLastSetLevel = aLevel;
 
   for (auto& cp : WebrtcContentParents::GetAll()){
@@ -898,7 +902,11 @@ bool
 WebrtcGlobalChild::RecvSetDebugMode(const int& aLevel)
 {
   if (!mShutdown) {
-    StartWebRtcLog(webrtc::TraceLevel(aLevel));
+    if (aLevel) {
+      StartWebRtcLog(webrtc::TraceLevel(aLevel));
+    } else {
+      StopWebRtcLog();
+    }
   }
   return true;
 }

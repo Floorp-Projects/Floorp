@@ -63,7 +63,12 @@ class PJavaScriptParent;
 namespace layers {
 class PCompositorBridgeParent;
 class PSharedBufferManagerParent;
+struct TextureFactoryIdentifier;
 } // namespace layers
+
+namespace layout {
+class PRenderFrameParent;
+} // namespace layout
 
 namespace dom {
 
@@ -497,6 +502,7 @@ public:
 
   virtual bool RecvCreateWindow(PBrowserParent* aThisTabParent,
                                 PBrowserParent* aOpener,
+                                layout::PRenderFrameParent* aRenderFrame,
                                 const uint32_t& aChromeFlags,
                                 const bool& aCalledFromJS,
                                 const bool& aPositionSpecified,
@@ -510,7 +516,9 @@ public:
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                                nsCString* aURLToLoad) override;
+                                nsCString* aURLToLoad,
+                                layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                uint64_t* aLayersId) override;
 
   static bool AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId);
 

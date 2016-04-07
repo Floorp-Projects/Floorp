@@ -2303,8 +2303,8 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
-  event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
-  event.delta = aDelta;
+  event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
+  event.mDelta = aDelta;
   event.inputSource = aEvent->inputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2343,8 +2343,8 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
   event.buttons = aEvent->buttons;
-  event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
-  event.delta = aPixelDelta;
+  event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
+  event.mDelta = aPixelDelta;
   event.inputSource = aEvent->inputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -4517,6 +4517,13 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   // Finally dispatch the event to the frame
   if (aTargetFrame)
     aTargetFrame->HandleEvent(aPresContext, &event, &status);
+
+  if (aMessage == eDragExit && IsRemoteTarget(aTargetContent)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    WidgetDragEvent remoteEvent(aDragEvent->IsTrusted(), aMessage, aDragEvent->widget);
+    remoteEvent.AssignDragEventData(*aDragEvent, true);
+    HandleCrossProcessEvent(&remoteEvent, &status);
+  }
 }
 
 void

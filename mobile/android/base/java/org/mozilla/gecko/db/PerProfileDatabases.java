@@ -62,7 +62,7 @@ public class PerProfileDatabases<T extends SQLiteOpenHelper> {
 
     public T getDatabaseHelperForProfile(String profile, boolean isTest) {
         // Always fall back to default profile if none has been provided.
-        if (TextUtils.isEmpty(profile)) {
+        if (profile == null) {
             profile = GeckoProfile.get(mContext).getName();
         }
 

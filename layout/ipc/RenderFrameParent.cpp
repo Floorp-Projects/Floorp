@@ -86,51 +86,55 @@ GetFrom(nsFrameLoader* aFrameLoader)
   return nsContentUtils::LayerManagerForDocument(doc);
 }
 
-RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
-                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                     uint64_t* aId,
-                                     bool* aSuccess)
+RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess)
   : mLayersId(0)
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mAsyncPanZoomEnabled(false)
+  , mInitted(false)
 {
-  *aId = 0;
-  *aSuccess = false;
-  if (!mFrameLoader) {
-    return;
+  mInitted = Init(aFrameLoader);
+  *aSuccess = mInitted;
+}
+
+RenderFrameParent::~RenderFrameParent()
+{}
+
+bool
+RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
+{
+  if (mInitted || !aFrameLoader) {
+    return false;
   }
+
+  mFrameLoader = aFrameLoader;
 
   RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
 
   mAsyncPanZoomEnabled = lm && lm->AsyncPanZoomEnabled();
 
-  // Perhaps the document containing this frame currently has no presentation?
-  if (lm && lm->AsClientLayerManager()) {
-    *aTextureFactoryIdentifier = lm->AsClientLayerManager()->GetTextureFactoryIdentifier();
-  } else {
-    *aTextureFactoryIdentifier = TextureFactoryIdentifier();
-  }
-
   TabParent* browser = TabParent::GetFrom(mFrameLoader);
   if (XRE_IsParentProcess()) {
     // Our remote frame will push layers updates to the compositor,
     // and we'll keep an indirect reference to that tree.
-    browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, aId);
-    mLayersId = *aId;
+    browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, &mLayersId);
     if (lm && lm->AsClientLayerManager()) {
       lm->AsClientLayerManager()->GetRemoteRenderer()->SendNotifyChildCreated(mLayersId);
     }
   } else if (XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), aId);
-    mLayersId = *aId;
+    ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
     CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
   }
-  *aSuccess = true;
+
+  mInitted = true;
+  return true;
 }
 
-RenderFrameParent::~RenderFrameParent()
-{}
+bool
+RenderFrameParent::IsInitted()
+{
+  return mInitted;
+}
 
 void
 RenderFrameParent::Destroy()

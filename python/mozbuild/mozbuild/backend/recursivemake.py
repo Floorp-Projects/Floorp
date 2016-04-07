@@ -509,16 +509,20 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, GeneratedFile):
             tier = 'misc' if any(isinstance(f, ObjDirPath) for f in obj.inputs) else 'export'
             self._no_skip[tier].add(backend_file.relobjdir)
-            dep_file = "%s.pp" % obj.output
-            backend_file.write('%s:: %s\n' % (tier, obj.output))
-            backend_file.write('GARBAGE += %s\n' % obj.output)
+            first_output = obj.outputs[0]
+            dep_file = "%s.pp" % first_output
+            backend_file.write('%s:: %s\n' % (tier, first_output))
+            for output in obj.outputs:
+                if output != first_output:
+                    backend_file.write('%s: %s ;\n' % (output, first_output))
+                backend_file.write('GARBAGE += %s\n' % output)
             backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
             if obj.script:
                 backend_file.write("""{output}: {script}{inputs}{backend}
 \t$(REPORT_BUILD)
 \t$(call py_action,file_generate,{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs}{flags})
 
-""".format(output=obj.output,
+""".format(output=first_output,
            dep_file=dep_file,
            inputs=' ' + ' '.join([f.full_path for f in obj.inputs]) if obj.inputs else '',
            flags=' ' + ' '.join(obj.flags) if obj.flags else '',

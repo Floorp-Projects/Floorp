@@ -17,62 +17,55 @@
 <script>
 'use strict';
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: translateAnim 100s' });
-
   var animation = div.getAnimations()[0];
-  animation.ready.then(t.step_func(function() {
+
+  return animation.ready.then(function() {
     assert_not_equals(getComputedStyle(div).transform, 'none',
                       'transform style is animated before cancelling');
     animation.cancel();
     assert_equals(getComputedStyle(div).transform, 'none',
                   'transform style is no longer animated after cancelling');
-    t.done();
-  }));
+  });
 }, 'Animated style is cleared after cancelling a running CSS animation');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: translateAnim 100s forwards' });
-
   var animation = div.getAnimations()[0];
   animation.finish();
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_not_equals(getComputedStyle(div).transform, 'none',
                       'transform style is filling before cancelling');
     animation.cancel();
     assert_equals(getComputedStyle(div).transform, 'none',
                   'fill style is cleared after cancelling');
-    t.done();
-  }));
+  });
 }, 'Animated style is cleared after cancelling a filling CSS animation');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, { style: 'animation: translateAnim 100s' });
   var animation = div.getAnimations()[0];
-
   div.addEventListener('animationend', t.step_func(function() {
     assert_unreached('Got unexpected end event on cancelled animation');
   }));
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     // Seek to just before the end then cancel
     animation.currentTime = 99.9 * 1000;
     animation.cancel();
 
     // Then wait a couple of frames and check that no event was dispatched
     return waitForAnimationFrames(2);
-  })).then(t.step_func(function() {
-    t.done();
-  }));
+  });
 }, 'Cancelled CSS animations do not dispatch events');
 
 test(function(t) {
   var div = addDiv(t, { style: 'animation: marginLeftAnim 100s linear' });
-
   var animation = div.getAnimations()[0];
-
   animation.cancel();
+
   assert_equals(getComputedStyle(div).marginLeft, '0px',
                 'margin-left style is not animated after cancelling');
 
@@ -82,12 +75,12 @@ test(function(t) {
                 + ' seeked');
 }, 'After cancelling an animation, it can still be seeked');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
-
   var animation = div.getAnimations()[0];
-  animation.ready.then(t.step_func(function() {
+
+  return animation.ready.then(function() {
     animation.cancel();
     assert_equals(getComputedStyle(div).marginLeft, '0px',
                   'margin-left style is not animated after cancelling');
@@ -95,17 +88,15 @@ async_test(function(t) {
     assert_equals(getComputedStyle(div).marginLeft, '100px',
                   'margin-left style is animated after re-starting animation');
     return animation.ready;
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.playState, 'running',
                   'Animation succeeds in running after being re-started');
-    t.done();
-  }));
+  });
 }, 'After cancelling an animation, it can still be re-used');
 
 test(function(t) {
   var div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
-
   var animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
@@ -126,7 +117,6 @@ test(function(t) {
 test(function(t) {
   var div =
     addDiv(t, { style: 'animation: marginLeftAnim100To200 100s linear' });
-
   var animation = div.getAnimations()[0];
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',

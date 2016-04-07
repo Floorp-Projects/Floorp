@@ -153,6 +153,10 @@ from its prototype:
     environment enclosing the function when it was created. If the referent
     is a function proxy or not debuggee code, this is `undefined`.
 
+`errorMessageName`
+:  If the referent is an error created with an engine internal message template
+   this is a string which is the name of the template; `undefined` otherwise.
+
 `isBoundFunction`
 :   `true` if the referent is a bound function; `false` otherwise.
 
@@ -634,9 +638,3 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
 <code>forceLexicalInitializationByName(<i>binding</i>)</code>
 :  If <i>binding</i> is in an uninitialized state initialize it to undefined
    and return true, otherwise do nothing and return false.
-
-<code>getErrorMessageName(<i>errorObject</i>)</code>
-:  If <i>errorObject</i> was created with an engine internal message template
-   the name of the template is returned as a string. Because they are stable
-   and unique these message names may be used to identify particular kinds of
-   engine produced errors.

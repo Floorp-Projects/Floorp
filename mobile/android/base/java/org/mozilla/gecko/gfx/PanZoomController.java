@@ -36,6 +36,7 @@ public interface PanZoomController {
     public boolean onTouchEvent(MotionEvent event);
     public boolean onMotionEvent(MotionEvent event);
     public boolean onKeyEvent(KeyEvent event);
+    public void onMotionEventVelocity(final long aEventTime, final float aSpeedY);
     public void notifyDefaultActionPrevented(boolean prevented);
 
     public boolean getRedrawHint();
