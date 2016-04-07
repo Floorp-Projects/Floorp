@@ -127,7 +127,8 @@ let censusModel = exports.censusModel = PropTypes.shape({
   // If present, the currently cached report's filter string used for pruning
   // the tree items.
   filter: PropTypes.string,
-  // The Set<CensusTreeNode.id> of expanded node ids in the report tree.
+  // The Immutable.Set<CensusTreeNode.id> of expanded node ids in the report
+  // tree.
   expanded: catchAndIgnore(function (census) {
     if (census.report) {
       assert(census.expanded,

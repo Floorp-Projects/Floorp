@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
+                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -872,7 +874,7 @@ this.Extension = function(addonData) {
 
   this.permissions = new Set();
   this.whiteListedHosts = null;
-  this.webAccessibleResources = new Set();
+  this.webAccessibleResources = null;
 
   this.emitter = new EventEmitter();
 };
@@ -1114,7 +1116,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       resourceURL: this.addonData.resourceURI.spec,
       baseURL: this.baseURI.spec,
       content_scripts: this.manifest.content_scripts || [],  // eslint-disable-line camelcase
-      webAccessibleResources: this.webAccessibleResources,
+      webAccessibleResources: this.webAccessibleResources.serialize(),
       whiteListedHosts: this.whiteListedHosts.serialize(),
       localeData: this.localeData.serialize(),
     };
@@ -1140,7 +1142,6 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
   runManifest(manifest) {
     let permissions = manifest.permissions || [];
-    let webAccessibleResources = manifest.web_accessible_resources || [];
 
     let whitelist = [];
     for (let perm of permissions) {
@@ -1151,11 +1152,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     }
     this.whiteListedHosts = new MatchPattern(whitelist);
 
-    let resources = new Set();
-    for (let url of webAccessibleResources) {
-      resources.add(url);
-    }
-    this.webAccessibleResources = resources;
+    this.webAccessibleResources = new MatchGlobs(manifest.web_accessible_resources || []);
 
     for (let directive in manifest) {
       if (manifest[directive] !== null) {

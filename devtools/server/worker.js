@@ -56,6 +56,8 @@ this.addEventListener("message",  function (event) {
     let sources = null;
 
     let parent = {
+      actorID: packet.id,
+
       makeDebugger: makeDebugger.bind(null, {
         findDebuggees: () => {
           return [this.global];

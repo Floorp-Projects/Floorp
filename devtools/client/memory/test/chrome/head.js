@@ -14,6 +14,15 @@ var { require } = BrowserLoader({
 });
 var Services = require("Services");
 
+var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
+
+SimpleTest.registerCleanupFunction(function() {
+  if (DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
+    ok(false, "Should have had the expected number of DevToolsUtils.assert() failures. Expected " +
+       EXPECTED_DTU_ASSERT_FAILURE_COUNT + ", got " + DevToolsUtils.assertionFailureCount);
+  }
+});
+
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;
 var { immutableUpdate } = DevToolsUtils;
@@ -35,6 +44,7 @@ const {
 
 var models = require("devtools/client/memory/models");
 
+var Immutable = require("devtools/client/shared/vendor/immutable");
 var React = require("devtools/client/shared/vendor/react");
 var ReactDOM = require("devtools/client/shared/vendor/react-dom");
 var Heap = React.createFactory(require("devtools/client/memory/components/heap"));
