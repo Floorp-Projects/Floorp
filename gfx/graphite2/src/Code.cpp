@@ -97,7 +97,7 @@ private:
     opcode      fetch_opcode(const byte * bc);
     void        analyse_opcode(const opcode, const int8 * const dp) throw();
     bool        emit_opcode(opcode opc, const byte * & bc);
-    bool        validate_opcode(const opcode opc, const byte * const bc);
+    bool        validate_opcode(const byte opc, const byte * const bc);
     bool        valid_upto(const uint16 limit, const uint16 x) const throw();
     bool        test_context() const throw();
     bool        test_ref(int8 index) const throw();
@@ -266,13 +266,13 @@ bool Machine::Code::decoder::load(const byte * bc, const byte * bc_end)
 
 opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
 {
-    const opcode opc = opcode(*bc++);
+    const byte opc = *bc++;
 
     // Do some basic sanity checks based on what we know about the opcode
     if (!validate_opcode(opc, bc))  return MAX_OPCODE;
 
     // And check it's arguments as far as possible
-    switch (opc)
+    switch (opcode(opc))
     {
         case NOP :
             break;
@@ -470,7 +470,7 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
             break;
     }
 
-    return bool(_code) ? opc : MAX_OPCODE;
+    return bool(_code) ? opcode(opc) : MAX_OPCODE;
 }
 
 
@@ -629,7 +629,7 @@ void Machine::Code::decoder::apply_analysis(instr * const code, instr * code_end
 
 
 inline
-bool Machine::Code::decoder::validate_opcode(const opcode opc, const byte * const bc)
+bool Machine::Code::decoder::validate_opcode(const byte opc, const byte * const bc)
 {
     if (opc >= MAX_OPCODE)
     {
@@ -667,7 +667,17 @@ bool Machine::Code::decoder::valid_upto(const uint16 limit, const uint16 x) cons
 inline
 bool Machine::Code::decoder::test_ref(int8 index) const throw()
 {
-    return valid_upto(_max.rule_length, _slotref + _max.pre_context + index);
+    if (_code._constraint && !_in_ctxt_item)
+    {
+        if (index > 0 || -index > _max.pre_context)
+        {
+            failure(out_of_range_data);
+            return false;
+        }
+    }
+    else
+        return valid_upto(_max.rule_length, _slotref + _max.pre_context + index);
+    return true;
 }
 
 bool Machine::Code::decoder::test_context() const throw()
