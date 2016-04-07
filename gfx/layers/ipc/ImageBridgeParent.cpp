@@ -58,7 +58,7 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   : mMessageLoop(aLoop)
   , mTransport(aTransport)
   , mSetChildThreadPriority(false)
-  , mStopped(false)
+  , mClosed(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   sMainLoop = MessageLoop::current();
@@ -71,6 +71,8 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   CompositableMap::Create();
   sImageBridges[aChildProcessId] = this;
   SetOtherProcessId(aChildProcessId);
+  // DeferredDestroy clears mSelfRef.
+  mSelfRef = this;
 }
 
 ImageBridgeParent::~ImageBridgeParent()
@@ -95,9 +97,19 @@ ImageBridgeParent::~ImageBridgeParent()
 void
 ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  // Can't alloc/dealloc shmems from now on.
+  mClosed = true;
+
   MessageLoop::current()->PostTask(
     FROM_HERE,
     NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy));
+
+  // It is very important that this method gets called at shutdown (be it a clean
+  // or an abnormal shutdown), because DeferredDestroy is what clears mSelfRef.
+  // If mSelfRef is not null and ActorDestroy is not called, the ImageBridgeParent
+  // is leaked which causes the CompositorThreadHolder to be leaked and
+  // CompsoitorParent's shutdown ends up spinning the event loop forever, waiting
+  // for the compositor thread to terminate.
 }
 
 bool
@@ -186,14 +198,13 @@ ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId)
 {
   MessageLoop* loop = CompositorBridgeParent::CompositorLoop();
   RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
-  bridge->mSelfRef = bridge;
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,
                                      bridge.get(), aTransport, aChildProcessId));
   return bridge.get();
 }
 
-bool ImageBridgeParent::RecvWillStop()
+bool ImageBridgeParent::RecvWillClose()
 {
   // If there is any texture still alive we have to force it to deallocate the
   // device data (GL textures, etc.) now because shortly after SenStop() returns
@@ -205,31 +216,6 @@ bool ImageBridgeParent::RecvWillStop()
     RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
     tex->DeallocateDeviceData();
   }
-  return true;
-}
-
-static void
-ReleaseImageBridgeParent(ImageBridgeParent* aImageBridgeParent)
-{
-  RELEASE_MANUALLY(aImageBridgeParent);
-}
-
-bool ImageBridgeParent::RecvStop()
-{
-  // This message mostly serves as synchronization between the
-  // child and parent threads during shutdown.
-
-  // Can't alloc/dealloc shmems from now on.
-  mStopped = true;
-
-  // There is one thing that we need to do here: temporarily addref, so that
-  // the handling of this sync message can't race with the destruction of
-  // the ImageBridgeParent, which would trigger the dreaded "mismatched CxxStackFrames"
-  // assertion of MessageChannel.
-  ADDREF_MANUALLY(this);
-  MessageLoop::current()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&ReleaseImageBridgeParent, this));
   return true;
 }
 
@@ -353,9 +339,8 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& a
 void
 ImageBridgeParent::DeferredDestroy()
 {
-  MOZ_ASSERT(mCompositorThreadHolder);
   mCompositorThreadHolder = nullptr;
-  mSelfRef = nullptr;
+  mSelfRef = nullptr; // "this" ImageBridge may get deleted here.
 }
 
 ImageBridgeParent*
@@ -398,7 +383,7 @@ ImageBridgeParent::AllocShmem(size_t aSize,
                       ipc::SharedMemory::SharedMemoryType aType,
                       ipc::Shmem* aShmem)
 {
-  if (mStopped) {
+  if (mClosed) {
     return false;
   }
   return PImageBridgeParent::AllocShmem(aSize, aType, aShmem);
@@ -409,7 +394,7 @@ ImageBridgeParent::AllocUnsafeShmem(size_t aSize,
                       ipc::SharedMemory::SharedMemoryType aType,
                       ipc::Shmem* aShmem)
 {
-  if (mStopped) {
+  if (mClosed) {
     return false;
   }
   return PImageBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
@@ -418,7 +403,7 @@ ImageBridgeParent::AllocUnsafeShmem(size_t aSize,
 void
 ImageBridgeParent::DeallocShmem(ipc::Shmem& aShmem)
 {
-  if (mStopped) {
+  if (mClosed) {
     return;
   }
   PImageBridgeParent::DeallocShmem(aShmem);

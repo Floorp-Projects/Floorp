@@ -40,7 +40,9 @@
 #include "mozilla/dom/File.h"
 
 using namespace mozilla;
+using mozilla::dom::Blob;
 using mozilla::dom::EncodingUtils;
+using mozilla::dom::File;
 
 static void
 SendJSWarning(nsIDocument* aDocument,

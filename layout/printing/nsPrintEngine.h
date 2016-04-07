@@ -203,10 +203,6 @@ public:
     mDisallowSelectionPrint = aDisallowSelectionPrint;
   }
 
-  void SetNoMarginBoxes(bool aNoMarginBoxes) {
-    mNoMarginBoxes = aNoMarginBoxes;
-  }
-
 protected:
   ~nsPrintEngine();
 
@@ -278,7 +274,6 @@ protected:
   bool mDidLoadDataForPrinting;
   bool mIsDestroying;
   bool mDisallowSelectionPrint;
-  bool mNoMarginBoxes;
 
   nsresult AfterNetworkPrint(bool aHandleError);
 

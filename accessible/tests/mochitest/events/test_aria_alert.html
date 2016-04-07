@@ -56,10 +56,10 @@
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
+    //gA11yEventDumpToConsole = true; // debuging
+    //enableLogging("tree,events,verbose");
+
     var gQueue = null;
-
-    //gA11yEventDumpID = "eventdump";
-
     function doTests()
     {
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_ALERT);
@@ -87,7 +87,6 @@
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
-  <div id="eventdump"></div>
 
 </body>
 </html>

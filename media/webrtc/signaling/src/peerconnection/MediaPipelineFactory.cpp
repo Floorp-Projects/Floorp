@@ -9,6 +9,7 @@
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
 #include "MediaPipelineFactory.h"
+#include "MediaPipelineFilter.h"
 #include "transportflow.h"
 #include "transportlayer.h"
 #include "transportlayerdtls.h"
@@ -438,11 +439,15 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
                           " has moved from level " << pipeline->level() <<
                           " to level " << level <<
                           ". This requires re-creating the MediaPipeline.");
+    RefPtr<dom::MediaStreamTrack> domTrack =
+      stream->GetTrackById(aTrack.GetTrackId());
+    MOZ_ASSERT(domTrack, "MediaPipeline existed for a track, but no MediaStreamTrack");
+
     // Since we do not support changing the conduit on a pre-existing
     // MediaPipeline
     pipeline = nullptr;
     stream->RemoveTrack(aTrack.GetTrackId());
-    stream->AddTrack(aTrack.GetTrackId());
+    stream->AddTrack(aTrack.GetTrackId(), domTrack);
   }
 
   if (pipeline) {
@@ -490,7 +495,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   RefPtr<MediaPipelineReceive> pipeline;
 
   TrackID numericTrackId = stream->GetNumericTrackId(aTrack.GetTrackId());
-  MOZ_ASSERT(numericTrackId != TRACK_INVALID);
+  MOZ_ASSERT(IsTrackIDExplicit(numericTrackId));
 
   bool queue_track = stream->ShouldQueueTracks();
 
@@ -502,7 +507,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         mPC->GetHandle(),
         mPC->GetMainThread().get(),
         mPC->GetSTSThread(),
-        stream->GetMediaStream()->GetInputStream(),
+        stream->GetMediaStream()->GetInputStream()->AsSourceStream(),
         aTrack.GetTrackId(),
         numericTrackId,
         aLevel,
@@ -516,7 +521,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         mPC->GetHandle(),
         mPC->GetMainThread().get(),
         mPC->GetSTSThread(),
-        stream->GetMediaStream()->GetInputStream(),
+        stream->GetMediaStream()->GetInputStream()->AsSourceStream(),
         aTrack.GetTrackId(),
         numericTrackId,
         aLevel,
@@ -566,15 +571,18 @@ MediaPipelineFactory::CreateMediaPipelineSending(
   RefPtr<LocalSourceStreamInfo> stream =
       mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
+  dom::MediaStreamTrack* track =
+    stream->GetTrackById(aTrack.GetTrackId());
+  MOZ_ASSERT(track);
+
   // Now we have all the pieces, create the pipeline
   RefPtr<MediaPipelineTransmit> pipeline = new MediaPipelineTransmit(
       mPC->GetHandle(),
       mPC->GetMainThread().get(),
       mPC->GetSTSThread(),
-      stream->GetMediaStream(),
+      track,
       aTrack.GetTrackId(),
       aLevel,
-      aTrack.GetMediaType() == SdpMediaSection::kVideo,
       aConduit,
       aRtpFlow,
       aRtcpFlow,
@@ -584,7 +592,8 @@ MediaPipelineFactory::CreateMediaPipelineSending(
   // implement checking for peerIdentity (where failure == black/silence)
   nsIDocument* doc = mPC->GetWindow()->GetExtantDoc();
   if (doc) {
-    pipeline->UpdateSinkIdentity_m(doc->NodePrincipal(),
+    pipeline->UpdateSinkIdentity_m(track,
+                                   doc->NodePrincipal(),
                                    mPC->GetPeerIdentity());
   } else {
     MOZ_MTLOG(ML_ERROR, "Cannot initialize pipeline without attached doc");
@@ -849,10 +858,7 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
     return NS_OK;
   }
 
-  MediaEngineSource *engine =
-    domLocalStream->GetMediaEngine(videotrack->GetTrackID());
-
-  dom::MediaSourceEnum source = engine->GetMediaSource();
+  dom::MediaSourceEnum source = videotrack->GetSource().GetMediaSource();
   webrtc::VideoCodecMode mode = webrtc::kRealtimeVideo;
   switch (source) {
     case dom::MediaSourceEnum::Browser:

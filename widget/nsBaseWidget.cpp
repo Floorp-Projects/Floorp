@@ -270,12 +270,14 @@ void nsBaseWidget::DestroyCompositor()
     RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
     RefPtr<CompositorBridgeParent> compositorParent = mCompositorBridgeParent;
     mCompositorBridgeChild->Destroy();
+    mCompositorBridgeChild = nullptr;
   }
 
   // Can have base widgets that are things like tooltips
   // which don't have CompositorVsyncDispatchers
   if (mCompositorVsyncDispatcher) {
     mCompositorVsyncDispatcher->Shutdown();
+    mCompositorVsyncDispatcher = nullptr;
   }
 }
 
@@ -3062,7 +3064,7 @@ nsBaseWidget::debug_WantPaintFlashing()
 nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               nsIWidget *           aWidget,
                               WidgetGUIEvent*       aGuiEvent,
-                              const nsAutoCString & aWidgetName,
+                              const char*           aWidgetName,
                               int32_t               aWindowID)
 {
   if (aGuiEvent->mMessage == eMouseMove) {
@@ -3086,7 +3088,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
           _GetPrintCount(),
           tempString.get(),
           (void *) aWidget,
-          aWidgetName.get(),
+          aWidgetName,
           aWindowID,
           aGuiEvent->refPoint.x,
           aGuiEvent->refPoint.y);
@@ -3096,7 +3098,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRegion &   aRegion,
-                                   const nsAutoCString & aWidgetName,
+                                   const char *          aWidgetName,
                                    int32_t               aWindowID)
 {
   NS_ASSERTION(nullptr != aFileOut,"cmon, null output FILE");
@@ -3110,7 +3112,7 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
           "%4d PAINT      widget=%p name=%-12s id=0x%-6x bounds-rect=%3d,%-3d %3d,%-3d",
           _GetPrintCount(),
           (void *) aWidget,
-          aWidgetName.get(),
+          aWidgetName,
           aWindowID,
           rect.x, rect.y, rect.width, rect.height
     );
@@ -3122,7 +3124,7 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpInvalidate(FILE* aFileOut,
                                    nsIWidget* aWidget,
                                    const LayoutDeviceIntRect* aRect,
-                                   const nsAutoCString& aWidgetName,
+                                   const char* aWidgetName,
                                    int32_t aWindowID)
 {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping"))
@@ -3135,7 +3137,7 @@ nsBaseWidget::debug_DumpInvalidate(FILE* aFileOut,
           "%4d Invalidate widget=%p name=%-12s id=0x%-6x",
           _GetPrintCount(),
           (void *) aWidget,
-          aWidgetName.get(),
+          aWidgetName,
           aWindowID);
 
   if (aRect) {

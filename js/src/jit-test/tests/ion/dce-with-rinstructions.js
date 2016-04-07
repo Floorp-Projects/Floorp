@@ -909,7 +909,11 @@ function rregexp_y_replace(i) {
 
     var res = "str00123456789".replace(re, "abc");
 
-    // replace will not zero the lastIndex field, if sticky flag is set
+    assertEq(re.lastIndex, 0);
+
+    assertEq(res, "str00123456789");
+
+    res = "str00123456789".replace(re, "abc");
     assertEq(re.lastIndex == 0, false);
 
     if (uceFault_regexp_y_replace(i) || uceFault_regexp_y_replace(i))
@@ -926,6 +930,11 @@ function rregexp_y_literal_replace(i) {
 
     var res = "str00123456789".replace(re, "abc");
 
+    assertEq(re.lastIndex, 0);
+
+    assertEq(res, "str00123456789");
+
+    res = "str00123456789".replace(re, "abc");
     assertEq(re.lastIndex == 0, false);
 
     if (uceFault_regexp_y_literal_replace(i) || uceFault_regexp_y_literal_replace(i))
@@ -1054,7 +1063,7 @@ function rstring_replace_y(i) {
     if (uceFault_string_replace_y(i) || uceFault_string_replace_y(i))
         assertEq(res, "abc");
     assertRecoveredOnBailout(res, false);
-    assertEq(re.lastIndex == 0, true);
+    assertEq(re.lastIndex == 0, false);
     return i;
 }
 

@@ -18,13 +18,11 @@ interface nsICertTreeItem : nsISupports {
 
 [scriptable, uuid(55d5ad6b-5572-47fe-941c-f01fe723659e)]
 interface nsICertTree : nsITreeView {
-
   void loadCerts(in unsigned long type);
   void loadCertsFromCache(in nsIX509CertList cache, in unsigned long type);
 
   nsIX509Cert getCert(in unsigned long index);
   nsICertTreeItem getTreeItem(in unsigned long index);
-  boolean isHostPortOverride(in unsigned long index);
 
   void deleteEntryObject(in unsigned long index);
 };
@@ -37,4 +35,3 @@ interface nsICertTree : nsITreeView {
 #define NS_CERTTREE_CONTRACTID "@mozilla.org/security/nsCertTree;1"
 
 %}
-

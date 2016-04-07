@@ -688,7 +688,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   }
 
   // Check security.
-  nsCOMPtr<nsIPrincipal> principal = aVideoEl.GetCurrentPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = aVideoEl.GetCurrentVideoPrincipal();
   bool CORSUsed = aVideoEl.GetCORSMode() != CORS_NONE;
   if (!CheckSecurityForHTMLElements(false, CORSUsed, principal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);

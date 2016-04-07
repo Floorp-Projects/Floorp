@@ -782,6 +782,10 @@ protected:
   // passed to MediaStreams when this is true.
   Canonical<bool> mSameOriginMedia;
 
+  // An identifier for the principal of the media. Used to track when
+  // main-thread induced principal changes get reflected on MSG thread.
+  Canonical<PrincipalHandle> mMediaPrincipalHandle;
+
   // Estimate of the current playback rate (bytes/second).
   Canonical<double> mPlaybackBytesPerSecond;
 
@@ -828,6 +832,9 @@ public:
   }
   AbstractCanonical<bool>* CanonicalSameOriginMedia() {
     return &mSameOriginMedia;
+  }
+  AbstractCanonical<PrincipalHandle>* CanonicalMediaPrincipalHandle() {
+    return &mMediaPrincipalHandle;
   }
   AbstractCanonical<double>* CanonicalPlaybackBytesPerSecond() {
     return &mPlaybackBytesPerSecond;

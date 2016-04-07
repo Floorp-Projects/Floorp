@@ -77,9 +77,10 @@ nsDataHandler::NewURI(const nsACString &aSpec,
         rv = uri->SetRef(spec);
     } else {
         // Otherwise, we'll assume |spec| is a fully-specified data URI
-        nsAutoCString contentType, contentCharset, dataBuffer, hashRef;
+        nsAutoCString contentType;
         bool base64;
-        rv = ParseURI(spec, contentType, contentCharset, base64, dataBuffer, hashRef);
+        rv = ParseURI(spec, contentType, /* contentCharset = */ nullptr,
+                      base64, /* dataBuffer = */ nullptr);
         if (NS_FAILED(rv))
             return rv;
 
@@ -153,10 +154,10 @@ nsDataHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
 nsresult
 nsDataHandler::ParseURI(nsCString& spec,
                         nsCString& contentType,
-                        nsCString& contentCharset,
+                        nsCString* contentCharset,
                         bool&    isBase64,
-                        nsCString& dataBuffer,
-                        nsCString& hashRef) {
+                        nsCString* dataBuffer)
+{
     isBase64 = false;
 
     // move past "data:"
@@ -192,25 +193,32 @@ nsDataHandler::ParseURI(nsCString& spec,
     if (comma == buffer) {
         // nothing but data
         contentType.AssignLiteral("text/plain");
-        contentCharset.AssignLiteral("US-ASCII");
+        if (contentCharset) {
+            contentCharset->AssignLiteral("US-ASCII");
+        }
     } else {
         // everything else is content type
         char *semiColon = (char *) strchr(buffer, ';');
         if (semiColon)
             *semiColon = '\0';
-        
+
         if (semiColon == buffer || base64 == buffer) {
             // there is no content type, but there are other parameters
             contentType.AssignLiteral("text/plain");
         } else {
             contentType = buffer;
             ToLowerCase(contentType);
+            contentType.StripWhitespace();
         }
 
         if (semiColon) {
-            char *charset = PL_strcasestr(semiColon + 1, "charset=");
-            if (charset)
-                contentCharset = charset + sizeof("charset=") - 1;
+            if (contentCharset) {
+                char *charset = PL_strcasestr(semiColon + 1, "charset=");
+                if (charset) {
+                    contentCharset->Assign(charset + sizeof("charset=") - 1);
+                    contentCharset->StripWhitespace();
+                }
+            }
 
             *semiColon = ';';
         }
@@ -220,17 +228,15 @@ nsDataHandler::ParseURI(nsCString& spec,
     if (isBase64)
         *base64 = ';';
 
-    contentType.StripWhitespace();
-    contentCharset.StripWhitespace();
-
-    // Split encoded data from terminal "#ref" (if present)
-    char *data = comma + 1;
-    if (!hash) {
-        dataBuffer.Assign(data);
-        hashRef.Truncate();
-    } else {
-        dataBuffer.Assign(data, hash - data);
-        hashRef.Assign(hash);
+    if (dataBuffer) {
+        // Split encoded data from terminal "#ref" (if present)
+        char *data = comma + 1;
+        bool ok = !hash
+                ? dataBuffer->Assign(data, mozilla::fallible)
+                : dataBuffer->Assign(data, hash - data, mozilla::fallible);
+        if (!ok) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
 
     return NS_OK;

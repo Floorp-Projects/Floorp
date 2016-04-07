@@ -857,19 +857,6 @@ nsCertTree::GetTreeItem(uint32_t aIndex, nsICertTreeItem **_treeitem)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCertTree::IsHostPortOverride(uint32_t aIndex, bool *_retval)
-{
-  NS_ENSURE_ARG(_retval);
-
-  RefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(aIndex));
-  if (!certdi)
-    return NS_ERROR_FAILURE;
-
-  *_retval = (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override);
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsCertTree::GetRowCount(int32_t *aRowCount)
 {

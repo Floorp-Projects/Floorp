@@ -271,7 +271,10 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   for (nsTArray<RefPtr<Image>>::size_type i = 0; i < images.Length(); i++)
   {
     RefPtr<Image> image = images[i];
-    segment.AppendFrame(image.forget(), mozilla::StreamTime(90000), generator.GetSize());
+    segment.AppendFrame(image.forget(),
+                        mozilla::StreamTime(90000),
+                        generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE);
   }
 
   // track change notification.

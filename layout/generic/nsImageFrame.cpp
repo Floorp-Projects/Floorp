@@ -1524,64 +1524,18 @@ nsDisplayImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   nsDisplayImageContainer::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
 }
 
-bool
-nsDisplayImage::CanOptimizeToImageLayer(LayerManager* aManager,
-                                        nsDisplayListBuilder* aBuilder)
+already_AddRefed<imgIContainer>
+nsDisplayImage::GetImage()
 {
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
-
-  if (!mImage->IsImageContainerAvailable(aManager, flags)) {
-    return false;
-  }
-
-  int32_t imageWidth;
-  int32_t imageHeight;
-  mImage->GetWidth(&imageWidth);
-  mImage->GetHeight(&imageHeight);
-
-  if (imageWidth == 0 || imageHeight == 0) {
-    NS_ASSERTION(false, "invalid image size");
-    return false;
-  }
-
-  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect =
-    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
-
-  // Calculate the scaling factor for the frame.
-  const gfxSize scale = gfxSize(destRect.width / imageWidth,
-                                destRect.height / imageHeight);
-
-  if (scale.width < 0.2 || scale.height < 0.2) {
-    // This would look awful as long as we can't use high-quality downscaling
-    // for image layers (bug 803703), so don't turn this into an image layer.
-    return false;
-  }
-
-  return true;
-}
-
-already_AddRefed<ImageContainer>
-nsDisplayImage::GetContainer(LayerManager* aManager,
-                             nsDisplayListBuilder* aBuilder)
-{
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
-
-  return mImage->GetImageContainer(aManager, flags);
+  nsCOMPtr<imgIContainer> image = mImage;
+  return image.forget();
 }
 
 nsRect
-nsDisplayImage::GetDestRect(bool* aSnap)
+nsDisplayImage::GetDestRect()
 {
   bool snap = true;
   const nsRect frameContentBox = GetBounds(&snap);
-  if (aSnap) {
-    *aSnap = snap;
-  }
 
   nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
   return imageFrame->PredictedDestRect(frameContentBox);
@@ -1680,54 +1634,6 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetContainer(container);
   ConfigureLayer(layer, aParameters);
   return layer.forget();
-}
-
-void
-nsDisplayImage::ConfigureLayer(ImageLayer* aLayer,
-                               const ContainerLayerParameters& aParameters)
-{
-  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
-
-  int32_t imageWidth;
-  int32_t imageHeight;
-  mImage->GetWidth(&imageWidth);
-  mImage->GetHeight(&imageHeight);
-
-  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
-  if (imageWidth > 0 && imageHeight > 0) {
-    // We're actually using the ImageContainer. Let our frame know that it
-    // should consider itself to have painted successfully.
-    nsDisplayItemGenericImageGeometry::UpdateDrawResult(this,
-                                                        DrawResult::SUCCESS);
-  }
-
-  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect =
-    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
-
-  // XXX(seth): Right now we ignore aParameters.Scale() and
-  // aParameters.Offset(), because FrameLayerBuilder already applies
-  // aParameters.Scale() via the layer's post-transform, and
-  // aParameters.Offset() is always zero.
-  MOZ_ASSERT(aParameters.Offset() == LayerIntPoint(0,0));
-
-  // It's possible (for example, due to downscale-during-decode) that the
-  // ImageContainer this ImageLayer is holding has a different size from the
-  // intrinsic size of the image. For this reason we compute the transform using
-  // the ImageContainer's size rather than the image's intrinsic size.
-  // XXX(seth): In reality, since the size of the ImageContainer may change
-  // asynchronously, this is not enough. Bug 1183378 will provide a more
-  // complete fix, but this solution is safe in more cases than simply relying
-  // on the intrinsic size.
-  IntSize containerSize = aLayer->GetContainer()
-                        ? aLayer->GetContainer()->GetCurrentSize()
-                        : IntSize(imageWidth, imageHeight);
-
-  const LayoutDevicePoint p = destRect.TopLeft();
-  Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.PreScale(destRect.Width() / containerSize.width,
-                     destRect.Height() / containerSize.height);
-  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
 }
 
 DrawResult

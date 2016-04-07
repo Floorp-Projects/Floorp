@@ -211,7 +211,7 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
     MOZ_ASSERT(aInput <= UINT16_MAX, "Unexpected large input port number");
     MOZ_ASSERT(aOutput <= UINT16_MAX, "Unexpected large output port number");
     input->mStreamPort = destinationStream->
-      AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK,
+      AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK, TRACK_ANY,
                         static_cast<uint16_t>(aInput),
                         static_cast<uint16_t>(aOutput));
   }
@@ -256,7 +256,7 @@ AudioNode::Connect(AudioParam& aDestination, uint32_t aOutput,
     // Setup our stream as an input to the AudioParam's stream
     MOZ_ASSERT(aOutput <= UINT16_MAX, "Unexpected large output port number");
     input->mStreamPort =
-      ps->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK,
+      ps->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK, TRACK_ANY,
                             0, static_cast<uint16_t>(aOutput));
   }
 }

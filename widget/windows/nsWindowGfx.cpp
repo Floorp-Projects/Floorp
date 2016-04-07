@@ -314,7 +314,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     debug_DumpPaintEvent(stdout,
                          this,
                          region,
-                         nsAutoCString("noname"),
+                         "noname",
                          (int32_t) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 

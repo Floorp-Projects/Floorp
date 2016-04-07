@@ -7,6 +7,7 @@
 #define mozilla_a11y_NotificationController_h_
 
 #include "EventQueue.h"
+#include "EventTree.h"
 
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Tuple.h"
@@ -104,13 +105,36 @@ public:
   void Shutdown();
 
   /**
-   * Put an accessible event into the queue to process it later.
+   * Add an accessible event into the queue to process it later.
    */
   void QueueEvent(AccEvent* aEvent)
   {
-    if (PushEvent(aEvent))
+    if (PushEvent(aEvent)) {
       ScheduleProcessing();
+    }
   }
+
+  /**
+   * Creates and adds a name change event into the queue for a container of
+   * the given accessible, if the accessible is a part of name computation of
+   * the container.
+   */
+  void QueueNameChange(Accessible* aChangeTarget)
+  {
+    if (PushNameChange(aChangeTarget)) {
+      ScheduleProcessing();
+    }
+  }
+
+  /**
+   * Returns existing event tree for the given the accessible or creates one if
+   * it doesn't exists yet.
+   */
+  EventTree* QueueMutation(Accessible* aContainer);
+
+#ifdef A11Y_LOG
+  const EventTree& RootEventTree() const { return mEventTree; };
+#endif
 
   /**
    * Schedule binding the child document to the tree of this document.
@@ -291,6 +315,11 @@ private:
    * Holds all scheduled relocations.
    */
   nsTArray<RefPtr<Accessible> > mRelocations;
+
+  /**
+   * Holds all mutation events.
+   */
+  EventTree mEventTree;
 };
 
 } // namespace a11y

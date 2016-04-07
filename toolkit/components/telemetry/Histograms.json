@@ -1467,6 +1467,14 @@
     "n_values": 48,
     "description": "HTTP: Protocol Version Used on Response from nsHttp.h"
   },
+  "HTTP_09_INFO": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "HTTP 09 Response Breakdown: lowbit subresource, high bit nonstd port",
+    "bug_numbers": [1262572],
+    "alert_emails": ["necko@mozilla.com"]
+  },
   "SPDY_PARALLEL_STREAMS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -10472,5 +10480,12 @@
     "n_buckets": 50,
     "keyed": true,
     "description": "Measures the size of message manager messages by message name"
+  },
+  "SANDBOX_BROKER_INITIALIZED": {
+    "alert_emails": ["bowen@mozilla.com"],
+    "bug_numbers": [1256992],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "description": "Result of call to SandboxBroker::Initialize"
   }
 }
