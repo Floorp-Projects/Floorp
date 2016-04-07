@@ -107,7 +107,8 @@ protected:
                          widget::sdk::MediaFormat::Param aFormat,
                          int32_t aStatus);
   ModuleState State() const;
-  void State(ModuleState aState);
+  // Sets decoder state and returns whether the new state has become effective.
+  bool State(ModuleState aState);
   void DecoderLoop();
 
   virtual void ClearQueue();
