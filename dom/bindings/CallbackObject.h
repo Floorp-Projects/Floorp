@@ -255,8 +255,6 @@ protected:
     Maybe<AutoEntryScript> mAutoEntryScript;
     Maybe<AutoIncumbentScript> mAutoIncumbentScript;
 
-    // Constructed the rooter within the scope of mCxPusher above, so that it's
-    // always within a request during its lifetime.
     Maybe<JS::Rooted<JSObject*> > mRootedCallable;
 
     // Members which are used to set the async stack.
