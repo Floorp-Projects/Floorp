@@ -265,7 +265,7 @@ protected:
 
 /**
  * This is a base class for media graph thread listener direct callbacks
- * from within AppendToTrack().  Note that your regular listener will
+ * from within AppendToTrack(). Note that your regular listener will
  * still get NotifyQueuedTrackChanges() callbacks from the MSG thread, so
  * you must be careful to ignore them if AddDirectListener was successful.
  */
@@ -311,13 +311,12 @@ public:
   /*
    * This will be called on any MediaStreamTrackDirectListener added to a
    * SourceMediaStream when AppendToTrack() is called for the listener's bound
-   * track. The MediaSegment will be the RawSegment (unresampled) if available
-   * in AppendToTrack().
+   * track, using the thread of the AppendToTrack() caller. The MediaSegment
+   * will be the RawSegment (unresampled) if available in AppendToTrack().
    * If the track is enabled at the source but has been disabled in one of the
    * streams in between the source and where it was originally added, aMedia
    * will be a disabled version of the one passed to AppendToTrack() as well.
-   * Note that NotifyQueuedTrackChanges() calls will also
-   * still occur.
+   * Note that NotifyQueuedTrackChanges() calls will also still occur.
    */
   virtual void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
                                        StreamTime aTrackOffset,
@@ -495,8 +494,8 @@ struct TrackBound
  * wrapper; the DOM wrappers own their associated MediaStreams. When a DOM
  * wrapper is destroyed, it sends a Destroy message for the associated
  * MediaStream and clears its reference (the last main-thread reference to
- * the object). When the Destroy message is processed on the graph
- * manager thread we immediately release the affected objects (disentangling them
+ * the object). When the Destroy message is processed on the graph manager
+ * thread we immediately release the affected objects (disentangling them
  * from other objects as necessary).
  *
  * This could cause problems for media processing if a MediaStream is

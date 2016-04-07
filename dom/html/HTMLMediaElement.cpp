@@ -3933,16 +3933,16 @@ HTMLMediaElement::UpdateReadyStateInternal()
   }
 
   if (mSrcStream && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    bool hasAudio = !AudioTracks()->IsEmpty();
-    bool hasVideo = !VideoTracks()->IsEmpty();
+    bool hasAudioTracks = !AudioTracks()->IsEmpty();
+    bool hasVideoTracks = !VideoTracks()->IsEmpty();
 
-    if (!hasAudio && !hasVideo) {
+    if (!hasAudioTracks && !hasVideoTracks) {
       LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                             "Stream with no tracks", this));
       return;
     }
 
-    if (IsVideo() && hasVideo && !HasVideo()) {
+    if (IsVideo() && hasVideoTracks && !HasVideo()) {
       LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                             "Stream waiting for video", this));
       return;
@@ -3956,10 +3956,10 @@ HTMLMediaElement::UpdateReadyStateInternal()
     // We are playing a stream that has video and a video frame is now set.
     // This means we have all metadata needed to change ready state.
     MediaInfo mediaInfo = mMediaInfo;
-    if (hasAudio) {
+    if (hasAudioTracks) {
       mediaInfo.EnableAudio();
     }
-    if (hasVideo) {
+    if (hasVideoTracks) {
       mediaInfo.EnableVideo();
     }
     MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
