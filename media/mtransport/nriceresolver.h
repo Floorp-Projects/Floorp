@@ -95,8 +95,7 @@ class NrIceResolver
         thread_(thread),
         port_(port),
         transport_(transport),
-        cb_(cb), cb_arg_(cb_arg),
-        canceled_ (false) {}
+        cb_(cb), cb_arg_(cb_arg) {}
     NS_IMETHOD OnLookupComplete(nsICancelable *request, nsIDNSRecord *record,
                                 nsresult status) override;
     int cancel();
@@ -110,7 +109,6 @@ class NrIceResolver
     int transport_;
     int (*cb_)(void *cb_arg, nr_transport_addr *addr);
     void *cb_arg_;
-    bool canceled_;
   };
 
   nr_resolver_vtbl* vtbl_;
