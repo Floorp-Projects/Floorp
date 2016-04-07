@@ -150,6 +150,8 @@ public class BrowserContract {
 
         public static final String VIEW_WITH_FAVICONS = "bookmarks_with_favicons";
 
+        public static final String VIEW_WITH_ANNOTATIONS = "bookmarks_with_annotations";
+
         public static final int FIXED_ROOT_ID = 0;
         public static final int FAKE_DESKTOP_FOLDER_ID = -1;
         public static final int FIXED_READING_LIST_ID = -2;
@@ -186,6 +188,9 @@ public class BrowserContract {
         public static final String TAGS = "tags";
         public static final String DESCRIPTION = "description";
         public static final String KEYWORD = "keyword";
+
+        public static final String ANNOTATION_KEY = "annotation_key";
+        public static final String ANNOTATION_VALUE = "annotation_value";
     }
 
     @RobocopTarget
