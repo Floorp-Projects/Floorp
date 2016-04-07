@@ -57,7 +57,8 @@ class VideoPuppeteer(object):
         timeout - The amount of time to wait until the video starts.
     """
     def __init__(self, marionette, url, video_selector='video', interval=1,
-                 set_duration=0, stall_wait_time=0, timeout=60):
+                 set_duration=0, stall_wait_time=0, timeout=60,
+                 autostart=True):
         self.marionette = marionette
         self.test_url = url
         self.interval = interval
@@ -87,13 +88,17 @@ class VideoPuppeteer(object):
                 return
             self.video = videos_found[0]
             self.marionette.execute_script("log('video element obtained');")
-            # To get an accurate expected_duration, playback must have started
-            wait = Wait(self, timeout=self.timeout)
-            verbose_until(wait, self, lambda v: v.current_time > 0,
-                          "Check if video current_time > 0")
-            self._start_time = self.current_time
-            self._start_wall_time = clock()
-            self.update_expected_duration()
+            if autostart:
+                self.start();
+
+    def start(self):
+        # To get an accurate expected_duration, playback must have started
+        wait = Wait(self, timeout=self.timeout)
+        verbose_until(wait, self, lambda v: v.current_time > 0,
+                      "Check if video current_time > 0")
+        self._start_time = self.current_time
+        self._start_wall_time = clock()
+        self.update_expected_duration()
 
     def update_expected_duration(self):
         """
