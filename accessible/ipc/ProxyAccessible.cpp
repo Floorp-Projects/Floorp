@@ -43,10 +43,6 @@ ProxyAccessible::Shutdown()
     mChildren[0]->AsDoc()->Unbind();
   }
 
-  if (FocusMgr()->FocusedRemoteAccessible() == this) {
-    FocusMgr()->ResetFocusedAccessible();
-  }
-
   mChildren.Clear();
   ProxyDestroyed(this);
   mDoc->RemoveAccessible(this);
