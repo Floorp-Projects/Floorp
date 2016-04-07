@@ -18,7 +18,6 @@
 #endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 #include "gfxVROculus050.h"
-#include "gfxVROSVR.h"
 #endif
 #include "gfxVRCardboard.h"
 
@@ -68,12 +67,6 @@ VRManager::VRManager()
       mManagers.AppendElement(mgr);
     }
   }
-  // OSVR is cross platform compatible
-  mgr = VRHMDManagerOSVR::Create();
-  if (mgr){
-      mManagers.AppendElement(mgr);
-  }
-
 #endif
 
   mgr = VRHMDManagerCardboard::Create();
