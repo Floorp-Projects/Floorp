@@ -431,13 +431,6 @@ public:
   virtual already_AddRefed<imgIContainer> GetImage() override;
 
   /**
-   * Returns an ImageContainer for this image if the image type
-   * supports it (TYPE_RASTER only).
-   */
-  virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
-                                                        nsDisplayListBuilder* aBuilder) override;
-
-  /**
    * @return The dest rect we'll use when drawing this image, in app units.
    *         Not necessarily contained in this item's bounds.
    */
