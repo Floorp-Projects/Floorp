@@ -31,7 +31,7 @@ class HTMLMediaElement;
  * confusing.
  */
 class VideoFrameContainer {
-  B2G_ACL_EXPORT ~VideoFrameContainer();
+  ~VideoFrameContainer();
 
 public:
   typedef layers::ImageContainer ImageContainer;
@@ -50,7 +50,7 @@ public:
   // aFrameID is ignored if aPrincipalHandle already is our pending principalHandle.
   void UpdatePrincipalHandleForFrameID(const PrincipalHandle& aPrincipalHandle,
                                        const ImageContainer::FrameID& aFrameID);
-  B2G_ACL_EXPORT void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
+  void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
                        const TimeStamp& aTargetTime);
   void SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
                         const nsTArray<ImageContainer::NonOwningImage>& aImages);
@@ -82,8 +82,8 @@ public:
     INVALIDATE_FORCE
   };
   void Invalidate() { InvalidateWithFlags(INVALIDATE_DEFAULT); }
-  B2G_ACL_EXPORT void InvalidateWithFlags(uint32_t aFlags);
-  B2G_ACL_EXPORT ImageContainer* GetImageContainer();
+  void InvalidateWithFlags(uint32_t aFlags);
+  ImageContainer* GetImageContainer();
   void ForgetElement() { mElement = nullptr; }
 
   uint32_t GetDroppedImageCount() { return mImageContainer->GetDroppedImageCount(); }
