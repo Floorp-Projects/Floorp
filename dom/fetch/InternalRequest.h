@@ -335,6 +335,9 @@ public:
   void
   SetContentPolicyType(nsContentPolicyType aContentPolicyType);
 
+  void
+  OverrideContentPolicyType(nsContentPolicyType aContentPolicyType);
+
   RequestContext
   Context() const
   {
@@ -428,6 +431,12 @@ public:
   void
   MaybeSkipCacheIfPerformingRevalidation();
 
+  bool
+  IsContentPolicyTypeOverridden() const
+  {
+    return mContentPolicyTypeOverridden;
+  }
+
   static RequestMode
   MapChannelToRequestMode(nsIChannel* aChannel);
 
@@ -481,6 +490,10 @@ private:
   // use it to check if Service Workers are simply fetching intercepted Request
   // objects without modifying them.
   bool mCreatedByFetchEvent = false;
+  // This is only set when Request.overrideContentPolicyType() has been set.
+  // It is illegal to pass such a Request object to a fetch() method unless
+  // if the caller has chrome privileges.
+  bool mContentPolicyTypeOverridden = false;
 };
 
 } // namespace dom
