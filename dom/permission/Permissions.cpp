@@ -56,7 +56,7 @@ CreatePushPermissionStatus(JSContext* aCx,
     return nullptr;
   }
 
-  if (permission.mUserVisible) {
+  if (permission.mUserVisibleOnly) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return nullptr;
   }
