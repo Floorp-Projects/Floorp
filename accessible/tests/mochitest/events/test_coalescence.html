@@ -323,13 +323,39 @@
       this.initSequence();
     }
 
+    /**
+     * Remove children and parent
+     */
+    function removeGrandChildrenNHideParent(aChild1Id, aChild2Id, aParentId)
+    {
+      this.child1 = getNode(aChild1Id);
+      this.child2 = getNode(aChild2Id);
+      this.parent = getNode(aParentId);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getAccessible(aParentId)),
+        new invokerChecker(EVENT_REORDER, getNode(aParentId).parentNode)
+      ];
+
+      this.invoke = function removeGrandChildrenNHideParent_invoke()
+      {
+        this.child1.parentNode.removeChild(this.child1);
+        this.child2.parentNode.removeChild(this.child2);
+        this.parent.hidden = true;
+      }
+
+      this.getID = function removeGrandChildrenNHideParent_getID() {
+        return "remove grand children of different parents and then hide their grand parent";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
-    var gQueue = null;
     //gA11yEventDumpToConsole = true; // debug stuff
-    //enableLogging("tree");
+    //enableLogging("events,tree,eventTree,verbose");
 
+    var gQueue = null;
     function doTests()
     {
       gQueue = new eventQueue();
@@ -349,6 +375,8 @@
       gQueue.push(new showParentNChild("select10", "option10", true));
       gQueue.push(new showParentNAddChild("select11", false));
       gQueue.push(new showParentNAddChild("select12", true));
+
+      gQueue.push(new removeGrandChildrenNHideParent("t1_child1", "t1_child2", "t1_parent"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -411,6 +439,13 @@
     </select>
     <select id="select11" style="display: none"></select>
     <select id="select12" style="display: none"></select>
+  </div>
+
+  <div id="testContainer2">
+    <div id="t1_parent">
+      <div id="t1_mid1"><div id="t1_child1"></div></div>
+      <div id="t1_mid2"><div id="t1_child2"></div></div>
+    </div>
   </div>
 </body>
 </html>

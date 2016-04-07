@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"

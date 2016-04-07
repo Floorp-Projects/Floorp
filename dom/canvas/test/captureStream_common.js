@@ -66,6 +66,10 @@ CaptureStreamTestHelper.prototype = {
     offsetY = offsetY || 0; // Set to 0 if not passed in.
     width = width || 0; // Set to 0 if not passed in.
     height = height || 0; // Set to 0 if not passed in.
+
+    // Avoids old values in case of a transparent image.
+    CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
+
     var ctxout = this.cout.getContext('2d');
     if (width != 0 || height != 0) {
       ctxout.drawImage(video, 0, 0, width, height);
@@ -105,7 +109,6 @@ CaptureStreamTestHelper.prototype = {
   waitForPixel: function (video, offsetX, offsetY, test, timeout, width, height) {
     return new Promise(resolve => {
       const startTime = video.currentTime;
-      CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
       var ontimeupdate = () => {
         var pixelMatch = false;
         try {

@@ -81,8 +81,8 @@
       this.menu = null;
 
       this.eventSeq = [
-        new invokerChecker(EVENT_MENUPOPUP_END, getMenu, this),
         new invokerChecker(EVENT_HIDE, getMenu, this),
+        new invokerChecker(EVENT_MENUPOPUP_END, getMenu, this),
         new invokerChecker(EVENT_REORDER, getNode(aParentMenuID))
       ];
 
@@ -150,11 +150,10 @@
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
-    var gQueue = null;
-
     //gA11yEventDumpToConsole = true; // debuging
-    //enableLogging("tree,verbose");
+    //enableLogging("tree,events,verbose");
 
+    var gQueue = null;
     function doTests()
     {
       gQueue = new eventQueue();
@@ -257,7 +256,8 @@
   <div id="mb3-mi-outside" role="menuitem" tabindex="0">Outside</div>
 
   <div id="menubar4" role="menubar">
-    <div role="menuitem" aria-haspopup="true" aria-owns="mb4-menu">Item</div>
+    <div id="mb4_topitem" role="menuitem" aria-haspopup="true"
+         aria-owns="mb4-menu">Item</div>
   </div>
   <div id="mb4-menu" role="menu" style="display:none;">
     <div role="menuitem" id="mb4-item1" tabindex="0">Item 1.1</div>

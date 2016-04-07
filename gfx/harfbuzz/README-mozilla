@@ -1,20 +1,24 @@
-gfx/harfbuzz status as of 2015-04-25:
+gfx/harfbuzz status as of 2016-04-07:
 
 This directory contains the harfbuzz source from the 'master' branch of
 https://github.com/behdad/harfbuzz.
+
+Current version: 1.2.2
+Plus cherry-picked commit 6dd80faf0dcb3e8a8915c3a25da44e2a67cb0cd8 to fix
+broken mark filter set support.
+
 
 UPDATING:
 
 Note that gfx/harfbuzz/src/hb-version.h is not present in the upstream Git
 repository. It is created at build time by the harfbuzz build system;
 but as we don't use that build system in mozilla, it is necessary to refresh
-this files when updating harfbuzz, and check them into the mozilla tree.
+this file when updating harfbuzz, and check it into the mozilla tree.
 
 The normal approach to updating harfbuzz, therefore, is to pull the latest HB
 source into a scratch directory and do a local build; then copy the original
-sources AND the generated headers mentioned above from the build directory into
+sources AND the generated header mentioned above from the build directory into
 the mozilla tree.
 
-In addition, the src/Makefile.in file here is NOT from upstream, nor is it
-generated from src/Makefile.am (the original harfbuzz version); it is a mozilla-
-specific makefile that is maintained by hand.
+If the collection of source files changes, manual updates to moz.build may be
+needed, as we don't use the upstream makefiles.

@@ -19,6 +19,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 #include "jsprf.h"
+#include "jsstr.h"
 
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
@@ -38,6 +39,7 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "vm/MatchPairs.h"
+#include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
 #include "vm/Unicode.h"
@@ -1465,7 +1467,8 @@ CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind, size_t nDynamic
 
 static void
 CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
-                          Register object, Register temp2, Register temp5, ArrayObject* templateObj, Label* fail)
+                          Register object, Register temp2, Register temp5,
+                          ArrayObject* templateObj, Label* fail)
 {
     MOZ_ASSERT(templateObj->group()->clasp() == &ArrayObject::class_);
 
@@ -1825,6 +1828,160 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     masm.freeStack(RegExpReservedStack);
 }
 
+static const int32_t RegExpSearcherResultNotFound = -1;
+static const int32_t RegExpSearcherResultFailed = -2;
+
+JitCode*
+JitCompartment::generateRegExpSearcherStub(JSContext* cx)
+{
+    Register regexp = RegExpTesterRegExpReg;
+    Register input = RegExpTesterStringReg;
+    Register lastIndex = RegExpTesterLastIndexReg;
+    Register sticky = RegExpTesterStickyReg;
+    Register result = ReturnReg;
+
+    // We are free to clobber all registers, as LRegExpSearcher is a call instruction.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(input);
+    regs.take(regexp);
+    regs.take(lastIndex);
+    regs.take(sticky);
+
+    Register temp1 = regs.takeAny();
+    Register temp2 = regs.takeAny();
+    Register temp3 = regs.takeAny();
+
+    MacroAssembler masm(cx);
+
+    // The InputOutputData is placed above the return address on the stack.
+    size_t inputOutputDataStartOffset = sizeof(void*);
+
+    Label notFound, oolEntry;
+    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, sticky,
+                                 temp1, temp2, temp3, inputOutputDataStartOffset,
+                                 RegExpShared::Normal, &notFound, &oolEntry))
+    {
+        return nullptr;
+    }
+
+    size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
+    Address stringIndexAddress(masm.getStackPointer(),
+                               pairsVectorStartOffset + offsetof(MatchPair, start));
+    Address stringLimitAddress(masm.getStackPointer(),
+                               pairsVectorStartOffset + offsetof(MatchPair, limit));
+
+    masm.load32(stringIndexAddress, result);
+    masm.load32(stringLimitAddress, input);
+    masm.lshiftPtr(Imm32(15), input);
+    masm.or32(input, result);
+    masm.ret();
+
+    masm.bind(&notFound);
+    masm.move32(Imm32(RegExpSearcherResultNotFound), result);
+    masm.ret();
+
+    masm.bind(&oolEntry);
+    masm.move32(Imm32(RegExpSearcherResultFailed), result);
+    masm.ret();
+
+    Linker linker(masm);
+    AutoFlushICache afc("RegExpSearcherStub");
+    JitCode* code = linker.newCode<CanGC>(cx, OTHER_CODE);
+    if (!code)
+        return nullptr;
+
+#ifdef JS_ION_PERF
+    writePerfSpewerJitCodeProfile(code, "RegExpSearcherStub");
+#endif
+
+    if (cx->zone()->needsIncrementalBarrier())
+        code->togglePreBarriers(true, DontReprotect);
+
+    return code;
+}
+
+class OutOfLineRegExpSearcher : public OutOfLineCodeBase<CodeGenerator>
+{
+    LRegExpSearcher* lir_;
+
+  public:
+    explicit OutOfLineRegExpSearcher(LRegExpSearcher* lir)
+      : lir_(lir)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineRegExpSearcher(this);
+    }
+
+    LRegExpSearcher* lir() const {
+        return lir_;
+    }
+};
+
+typedef bool (*RegExpSearcherRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
+                                    int32_t lastIndex, bool sticky,
+                                    MatchPairs* pairs, int32_t* result);
+static const VMFunction RegExpSearcherRawInfo = FunctionInfo<RegExpSearcherRawFn>(RegExpSearcherRaw);
+
+void
+CodeGenerator::visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool)
+{
+    LRegExpSearcher* lir = ool->lir();
+    Register sticky = ToRegister(lir->sticky());
+    Register lastIndex = ToRegister(lir->lastIndex());
+    Register input = ToRegister(lir->string());
+    Register regexp = ToRegister(lir->regexp());
+
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(sticky);
+    regs.take(lastIndex);
+    regs.take(input);
+    regs.take(regexp);
+    Register temp = regs.takeAny();
+
+    masm.computeEffectiveAddress(Address(masm.getStackPointer(),
+        sizeof(irregexp::InputOutputData)), temp);
+
+    pushArg(temp);
+    pushArg(sticky);
+    pushArg(lastIndex);
+    pushArg(input);
+    pushArg(regexp);
+
+    // We are not using oolCallVM because we are in a Call, and that live
+    // registers are already saved by the the register allocator.
+    callVM(RegExpSearcherRawInfo, lir);
+
+    masm.jump(ool->rejoin());
+}
+
+void
+CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir)
+{
+    MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpTesterRegExpReg);
+    MOZ_ASSERT(ToRegister(lir->string()) == RegExpTesterStringReg);
+    MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
+    MOZ_ASSERT(ToRegister(lir->sticky()) == RegExpTesterStickyReg);
+    MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
+
+    MOZ_ASSERT(RegExpTesterRegExpReg != ReturnReg);
+    MOZ_ASSERT(RegExpTesterStringReg != ReturnReg);
+    MOZ_ASSERT(RegExpTesterLastIndexReg != ReturnReg);
+    MOZ_ASSERT(RegExpTesterStickyReg != ReturnReg);
+
+    masm.reserveStack(RegExpReservedStack);
+
+    OutOfLineRegExpSearcher* ool = new(alloc()) OutOfLineRegExpSearcher(lir);
+    addOutOfLineCode(ool, lir->mir());
+
+    JitCode* regExpSearcherStub = gen->compartment->jitCompartment()->regExpSearcherStubNoBarrier();
+    masm.call(regExpSearcherStub);
+    masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpSearcherResultFailed), ool->entry());
+    masm.bind(ool->rejoin());
+
+    masm.freeStack(RegExpReservedStack);
+}
+
 static const int32_t RegExpTesterResultNotFound = -1;
 static const int32_t RegExpTesterResultFailed = -2;
 
@@ -1964,25 +2121,144 @@ CodeGenerator::visitRegExpTester(LRegExpTester* lir)
     masm.bind(ool->rejoin());
 }
 
-typedef JSString* (*RegExpReplaceFn)(JSContext*, HandleString, HandleObject, HandleString);
-static const VMFunction RegExpReplaceInfo = FunctionInfo<RegExpReplaceFn>(RegExpReplace);
+class OutOfLineRegExpPrototypeOptimizable : public OutOfLineCodeBase<CodeGenerator>
+{
+    LRegExpPrototypeOptimizable* ins_;
+
+  public:
+    explicit OutOfLineRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
+      : ins_(ins)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineRegExpPrototypeOptimizable(this);
+    }
+    LRegExpPrototypeOptimizable* ins() const {
+        return ins_;
+    }
+};
 
 void
-CodeGenerator::visitRegExpReplace(LRegExpReplace* lir)
+CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
 {
-    if (lir->replacement()->isConstant())
-        pushArg(ImmGCPtr(lir->replacement()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->replacement()));
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
 
-    pushArg(ToRegister(lir->pattern()));
+    OutOfLineRegExpPrototypeOptimizable* ool = new(alloc()) OutOfLineRegExpPrototypeOptimizable(ins);
+    addOutOfLineCode(ool, ins->mir());
 
-    if (lir->string()->isConstant())
-        pushArg(ImmGCPtr(lir->string()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->string()));
+    masm.loadJSContext(temp);
+    masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
+    masm.loadPtr(Address(temp, JSCompartment::offsetOfRegExps()), temp);
+    masm.loadPtr(Address(temp, RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape()),
+                 temp);
 
-    callVM(RegExpReplaceInfo, lir);
+    masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
+    masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
+    masm.move32(Imm32(0x1), output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(OutOfLineRegExpPrototypeOptimizable* ool)
+{
+    LRegExpPrototypeOptimizable* ins = ool->ins();
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    saveVolatile(output);
+
+    masm.reserveStack(sizeof(void*));
+    masm.moveStackPtrTo(temp);
+
+    masm.setupUnalignedABICall(output);
+    masm.loadJSContext(output);
+    masm.passABIArg(output);
+    masm.passABIArg(object);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpPrototypeOptimizableRaw));
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    masm.load8ZeroExtend(Address(masm.getStackPointer(), 0), output);
+    masm.freeStack(sizeof(void*));
+
+    restoreVolatile(output);
+
+    masm.jump(ool->rejoin());
+}
+
+class OutOfLineRegExpInstanceOptimizable : public OutOfLineCodeBase<CodeGenerator>
+{
+    LRegExpInstanceOptimizable* ins_;
+
+  public:
+    explicit OutOfLineRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
+      : ins_(ins)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineRegExpInstanceOptimizable(this);
+    }
+    LRegExpInstanceOptimizable* ins() const {
+        return ins_;
+    }
+};
+
+void
+CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
+{
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    OutOfLineRegExpInstanceOptimizable* ool = new(alloc()) OutOfLineRegExpInstanceOptimizable(ins);
+    addOutOfLineCode(ool, ins->mir());
+
+    masm.loadJSContext(temp);
+    masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
+    masm.loadPtr(Address(temp, JSCompartment::offsetOfRegExps()), temp);
+    masm.loadPtr(Address(temp, RegExpCompartment::offsetOfOptimizableRegExpInstanceShape()),
+                 temp);
+
+    masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
+    masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
+    masm.move32(Imm32(0x1), output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOptimizable* ool)
+{
+    LRegExpInstanceOptimizable* ins = ool->ins();
+    Register object = ToRegister(ins->object());
+    Register proto = ToRegister(ins->proto());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    saveVolatile(output);
+
+    masm.reserveStack(sizeof(void*));
+    masm.moveStackPtrTo(temp);
+
+    masm.setupUnalignedABICall(output);
+    masm.loadJSContext(output);
+    masm.passABIArg(output);
+    masm.passABIArg(object);
+    masm.passABIArg(proto);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpInstanceOptimizableRaw));
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    masm.load8ZeroExtend(Address(masm.getStackPointer(), 0), output);
+    masm.freeStack(sizeof(void*));
+
+    restoreVolatile(output);
+
+    masm.jump(ool->rejoin());
 }
 
 typedef JSString* (*StringReplaceFn)(JSContext*, HandleString, HandleString, HandleString);
@@ -7111,12 +7387,13 @@ CodeGenerator::visitSinCos(LSinCos *lir)
     masm.freeStack(sizeof(double) * 2);
 }
 
-typedef JSObject* (*StringSplitFn)(JSContext*, HandleObjectGroup, HandleString, HandleString);
+typedef JSObject* (*StringSplitFn)(JSContext*, HandleObjectGroup, HandleString, HandleString, uint32_t);
 static const VMFunction StringSplitInfo = FunctionInfo<StringSplitFn>(js::str_split_string);
 
 void
 CodeGenerator::visitStringSplit(LStringSplit* lir)
 {
+    pushArg(Imm32(INT32_MAX));
     pushArg(ToRegister(lir->separator()));
     pushArg(ToRegister(lir->string()));
     pushArg(ImmGCPtr(lir->mir()->group()));
@@ -7974,55 +8251,6 @@ CodeGenerator::visitArrayPushT(LArrayPushT* lir)
     else
         value = TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value()));
     emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
-}
-
-typedef JSObject* (*ArrayConcatDenseFn)(JSContext*, HandleObject, HandleObject, HandleObject);
-static const VMFunction ArrayConcatDenseInfo = FunctionInfo<ArrayConcatDenseFn>(ArrayConcatDense);
-
-void
-CodeGenerator::visitArrayConcat(LArrayConcat* lir)
-{
-    Register lhs = ToRegister(lir->lhs());
-    Register rhs = ToRegister(lir->rhs());
-    Register temp1 = ToRegister(lir->temp1());
-    Register temp2 = ToRegister(lir->temp2());
-
-    // If 'length == initializedLength' for both arrays we try to allocate an object
-    // inline and pass it to the stub. Else, we just pass nullptr and the stub falls
-    // back to a slow path.
-    Label fail, call;
-    if (lir->mir()->unboxedThis()) {
-        masm.load32(Address(lhs, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), temp1);
-        masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp1);
-        masm.branch32(Assembler::NotEqual, Address(lhs, UnboxedArrayObject::offsetOfLength()), temp1, &fail);
-    } else {
-        masm.loadPtr(Address(lhs, NativeObject::offsetOfElements()), temp1);
-        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
-        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
-    }
-    if (lir->mir()->unboxedArg()) {
-        masm.load32(Address(rhs, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), temp1);
-        masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp1);
-        masm.branch32(Assembler::NotEqual, Address(rhs, UnboxedArrayObject::offsetOfLength()), temp1, &fail);
-    } else {
-        masm.loadPtr(Address(rhs, NativeObject::offsetOfElements()), temp1);
-        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
-        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
-    }
-
-    // Try to allocate an object.
-    masm.createGCObject(temp1, temp2, lir->mir()->templateObj(), lir->mir()->initialHeap(), &fail);
-    masm.jump(&call);
-    {
-        masm.bind(&fail);
-        masm.movePtr(ImmPtr(nullptr), temp1);
-    }
-    masm.bind(&call);
-
-    pushArg(temp1);
-    pushArg(ToRegister(lir->rhs()));
-    pushArg(ToRegister(lir->lhs()));
-    callVM(ArrayConcatDenseInfo, lir);
 }
 
 typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
@@ -10499,6 +10727,76 @@ CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool)
     masm.setupUnalignedABICall(output);
     masm.passABIArg(object);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsCallable));
+    masm.storeCallResult(output);
+    // C++ compilers like to only use the bottom byte for bools, but we need to maintain the entire
+    // register.
+    masm.and32(Imm32(0xFF), output);
+    restoreVolatile(output);
+    masm.jump(ool->rejoin());
+}
+
+class OutOfLineIsConstructor : public OutOfLineCodeBase<CodeGenerator>
+{
+    LIsConstructor* ins_;
+
+  public:
+    explicit OutOfLineIsConstructor(LIsConstructor* ins)
+      : ins_(ins)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineIsConstructor(this);
+    }
+    LIsConstructor* ins() const {
+        return ins_;
+    }
+};
+
+void
+CodeGenerator::visitIsConstructor(LIsConstructor* ins)
+{
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+
+    OutOfLineIsConstructor* ool = new(alloc()) OutOfLineIsConstructor(ins);
+    addOutOfLineCode(ool, ins->mir());
+
+    Label notFunction, notConstructor, done;
+    masm.loadObjClass(object, output);
+
+    // Just skim proxies off. Their notion of isConstructor() is more complicated.
+    masm.branchTestClassIsProxy(true, output, ool->entry());
+
+    // An object is constructor iff
+    //  ((is<JSFunction>() && as<JSFunction>().isConstructor) ||
+    //   getClass()->construct).
+    masm.branchPtr(Assembler::NotEqual, output, ImmPtr(&JSFunction::class_), &notFunction);
+    masm.load16ZeroExtend(Address(object, JSFunction::offsetOfFlags()), output);
+    masm.and32(Imm32(JSFunction::CONSTRUCTOR), output);
+    masm.branchTest32(Assembler::Zero, output, output, &notConstructor);
+    masm.move32(Imm32(1), output);
+    masm.jump(&done);
+    masm.bind(&notConstructor);
+    masm.move32(Imm32(0), output);
+    masm.jump(&done);
+
+    masm.bind(&notFunction);
+    masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::Class, construct)), ImmPtr(nullptr), output);
+    masm.bind(&done);
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool)
+{
+    LIsConstructor* ins = ool->ins();
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+
+    saveVolatile(output);
+    masm.setupUnalignedABICall(output);
+    masm.passABIArg(object);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsConstructor));
     masm.storeCallResult(output);
     // C++ compilers like to only use the bottom byte for bools, but we need to maintain the entire
     // register.

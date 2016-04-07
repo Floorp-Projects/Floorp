@@ -267,7 +267,10 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     InfallibleTArray<PCompositableChild*> compositables;
     sImageBridgeChildSingleton->ManagedPCompositableChild(compositables);
     for (int i = compositables.Length() - 1; i >= 0; --i) {
-      CompositableClient::FromIPDLActor(compositables[i])->Destroy();
+      auto compositable = CompositableClient::FromIPDLActor(compositables[i]);
+      if (compositable) {
+        compositable->Destroy();
+      }
     }
     InfallibleTArray<PTextureChild*> textures;
     sImageBridgeChildSingleton->ManagedPTextureChild(textures);
@@ -279,7 +282,7 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     }
     sImageBridgeChildSingleton->FallbackDestroyActors();
 
-    sImageBridgeChildSingleton->SendWillStop();
+    sImageBridgeChildSingleton->SendWillClose();
     sImageBridgeChildSingleton->MarkShutDown();
     // From now on, no message can be sent through the image bridge from the
     // client side except the final Stop message.
@@ -297,7 +300,7 @@ static void ImageBridgeShutdownStep2(ReentrantMonitor *aBarrier, bool *aDone)
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
 
-  sImageBridgeChildSingleton->SendStop();
+  sImageBridgeChildSingleton->Close();
 
   *aDone = true;
   aBarrier->NotifyAll();

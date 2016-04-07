@@ -134,6 +134,11 @@ const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
     JS_FS_END
 };
 
+const JSPropertySpec ArrayBufferObject::jsstaticprops[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "ArrayBufferSpecies", 0),
+    JS_PS_END
+};
+
 bool
 js::IsArrayBuffer(HandleValue v)
 {
@@ -1443,6 +1448,9 @@ js::InitArrayBufferClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     if (!JS_DefineFunctions(cx, ctor, ArrayBufferObject::jsstaticfuncs))
+        return nullptr;
+
+    if (!JS_DefineProperties(cx, ctor, ArrayBufferObject::jsstaticprops))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))

@@ -343,8 +343,7 @@ ProtocolErrorBreakpoint(const char* aMsg)
 }
 
 void
-FatalError(const char* aProtocolName, const char* aMsg,
-           ProcessId aOtherPid, bool aIsParent)
+FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
 {
   ProtocolErrorBreakpoint(aMsg);
 
@@ -370,6 +369,12 @@ FatalError(const char* aProtocolName, const char* aMsg,
     formattedMessage.AppendLiteral("\". abort()ing as a result.");
     NS_RUNTIMEABORT(formattedMessage.get());
   }
+}
+
+void
+LogicError(const char* aMsg)
+{
+  NS_RUNTIMEABORT(aMsg);
 }
 
 } // namespace ipc

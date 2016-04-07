@@ -106,6 +106,8 @@ enum mkv {
   CodecID = 0x86,
   CodecPrivate = 0x63A2,
   CodecName = 0x258688,
+  CodecDelay = 0x56AA,
+  SeekPreRoll = 0x56BB,
 /* AttachmentLink = 0x7446, */
 /* CodecSettings = 0x3A9697, */
 /* CodecInfoURL = 0x3B4040, */

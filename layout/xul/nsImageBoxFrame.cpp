@@ -444,125 +444,52 @@ nsDisplayXULImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   nsDisplayImageContainer::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
 }
 
-void
-nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer,
-                                  const ContainerLayerParameters& aParameters)
+bool
+nsDisplayXULImage::CanOptimizeToImageLayer(LayerManager* aManager,
+                                           nsDisplayListBuilder* aBuilder)
 {
-  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+  if (!imageFrame->CanOptimizeToImageLayer()) {
+    return false;
+  }
 
+  return nsDisplayImageContainer::CanOptimizeToImageLayer(aManager, aBuilder);
+}
+
+already_AddRefed<imgIContainer>
+nsDisplayXULImage::GetImage()
+{
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+  if (!imageFrame->mImageRequest) {
+    return nullptr;
+  }
+
+  nsCOMPtr<imgIContainer> imgCon;
+  imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
+  
+  return imgCon.forget();
+}
+
+nsRect
+nsDisplayXULImage::GetDestRect()
+{
   nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
 
   nsRect clientRect;
   imageFrame->GetClientRect(clientRect);
 
-  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect =
-    LayoutDeviceRect::FromAppUnits(clientRect + ToReferenceFrame(), factor);
-
-  nsCOMPtr<imgIContainer> imgCon;
-  imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
-  int32_t imageWidth;
-  int32_t imageHeight;
-  imgCon->GetWidth(&imageWidth);
-  imgCon->GetHeight(&imageHeight);
-
-  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
-  if (imageWidth > 0 && imageHeight > 0) {
-    // We're actually using the ImageContainer. Let our frame know that it
-    // should consider itself to have painted successfully.
-    nsDisplayItemGenericImageGeometry::UpdateDrawResult(this,
-                                                        DrawResult::SUCCESS);
-  }
-
-  // XXX(seth): Right now we ignore aParameters.Scale() and
-  // aParameters.Offset(), because FrameLayerBuilder already applies
-  // aParameters.Scale() via the layer's post-transform, and
-  // aParameters.Offset() is always zero.
-  MOZ_ASSERT(aParameters.Offset() == LayerIntPoint(0,0));
-
-  // It's possible (for example, due to downscale-during-decode) that the
-  // ImageContainer this ImageLayer is holding has a different size from the
-  // intrinsic size of the image. For this reason we compute the transform using
-  // the ImageContainer's size rather than the image's intrinsic size.
-  // XXX(seth): In reality, since the size of the ImageContainer may change
-  // asynchronously, this is not enough. Bug 1183378 will provide a more
-  // complete fix, but this solution is safe in more cases than simply relying
-  // on the intrinsic size.
-  IntSize containerSize = aLayer->GetContainer()
-                        ? aLayer->GetContainer()->GetCurrentSize()
-                        : IntSize(imageWidth, imageHeight);
-
-  const LayoutDevicePoint p = destRect.TopLeft();
-  Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.PreScale(destRect.Width() / containerSize.width,
-                     destRect.Height() / containerSize.height);
-  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
+  return clientRect + ToReferenceFrame();
 }
 
 bool
-nsDisplayXULImage::CanOptimizeToImageLayer(LayerManager* aManager,
-                                           nsDisplayListBuilder* aBuilder)
-{
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
-
-  return static_cast<nsImageBoxFrame*>(mFrame)
-    ->IsImageContainerAvailable(aManager, flags);
-}
-
-bool
-nsImageBoxFrame::IsImageContainerAvailable(LayerManager* aManager,
-                                           uint32_t aFlags)
+nsImageBoxFrame::CanOptimizeToImageLayer()
 {
   bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-  if (hasSubRect || !mImageRequest) {
+  if (hasSubRect) {
     return false;
   }
-
-  nsCOMPtr<imgIContainer> imgCon;
-  mImageRequest->GetImage(getter_AddRefs(imgCon));
-  if (!imgCon) {
-    return false;
-  }
-  
-  return imgCon->IsImageContainerAvailable(aManager, aFlags);
+  return true;
 }
-
-already_AddRefed<ImageContainer>
-nsDisplayXULImage::GetContainer(LayerManager* aManager,
-                                nsDisplayListBuilder* aBuilder)
-{
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
-
-  return static_cast<nsImageBoxFrame*>(mFrame)->GetContainer(aManager, flags);
-}
-
-already_AddRefed<ImageContainer>
-nsImageBoxFrame::GetContainer(LayerManager* aManager, uint32_t aFlags)
-{
-  MOZ_ASSERT(IsImageContainerAvailable(aManager, aFlags),
-             "Should call IsImageContainerAvailable and get true before "
-             "calling GetContainer");
-  if (!mImageRequest) {
-    MOZ_ASSERT_UNREACHABLE("mImageRequest should be available if "
-                           "IsImageContainerAvailable returned true");
-    return nullptr;
-  }
-
-  nsCOMPtr<imgIContainer> imgCon;
-  mImageRequest->GetImage(getter_AddRefs(imgCon));
-  if (!imgCon) {
-    MOZ_ASSERT_UNREACHABLE("An imgIContainer should be available if "
-                           "IsImageContainerAvailable returned true");
-    return nullptr;
-  }
-
-  return imgCon->GetImageContainer(aManager, aFlags);
-}
-
 
 //
 // DidSetStyleContext

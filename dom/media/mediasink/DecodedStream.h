@@ -37,7 +37,8 @@ public:
                 MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue,
                 OutputStreamManager* aOutputStreamManager,
-                const bool& aSameOrigin);
+                const bool& aSameOrigin,
+                const PrincipalHandle& aPrincipalHandle);
 
   // MediaSink functions.
   const PlaybackParams& GetPlaybackParams() const override;
@@ -68,8 +69,8 @@ protected:
 private:
   void DestroyData(UniquePtr<DecodedStreamData> aData);
   void AdvanceTracks();
-  void SendAudio(double aVolume, bool aIsSameOrigin);
-  void SendVideo(bool aIsSameOrigin);
+  void SendAudio(double aVolume, bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
+  void SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
   void SendData();
 
   void AssertOwnerThread() const {
@@ -95,6 +96,8 @@ private:
 
   bool mPlaying;
   const bool& mSameOrigin; // valid until Shutdown() is called.
+  const PrincipalHandle& mPrincipalHandle; // valid until Shutdown() is called.
+
   PlaybackParams mParams;
 
   Maybe<int64_t> mStartTime;

@@ -8,8 +8,8 @@
 
 #include "nsIAccessiblePivot.h"
 
-#include "AccEvent.h"
 #include "HyperTextAccessibleWrap.h"
+#include "AccEvent.h"
 
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -187,9 +187,7 @@ public:
    */
   void FireDelayedEvent(AccEvent* aEvent);
   void FireDelayedEvent(uint32_t aEventType, Accessible* aTarget);
-  void FireEventsOnInsertion(Accessible* aContainer,
-                             AccReorderEvent* aReorderEvent,
-                             uint32_t aUpdateFlags);
+  void FireEventsOnInsertion(Accessible* aContainer, uint32_t aUpdateFlags);
 
   /**
    * Fire value change event on the given accessible if applicable.
@@ -373,6 +371,11 @@ public:
   bool RelocateARIAOwnedIfNeeded(nsIContent* aEl);
 
   /**
+   * Return a notification controller associated with the document.
+   */
+  NotificationController* Controller() const { return mNotificationController; }
+
+  /**
    * If this document is in a content process return the object responsible for
    * communicating with the main process for it.
    */
@@ -522,9 +525,7 @@ protected:
     eAccessible = 1,
     eAlertAccessible = 2
   };
-
-  uint32_t UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
-                              AccReorderEvent* aReorderEvent);
+  uint32_t UpdateTreeInternal(Accessible* aChild, bool aIsInsert);
 
   /**
    * Validates all aria-owns connections and updates the tree accordingly.
@@ -703,7 +704,7 @@ protected:
    * Used to process notification from core and accessible events.
    */
   RefPtr<NotificationController> mNotificationController;
-  friend class EventQueue;
+  friend class EventTree;
   friend class NotificationController;
 
 private:

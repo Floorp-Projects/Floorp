@@ -20,10 +20,12 @@ gc/bug-1246593.js
 gc/bug-906236.js
 gc/bug-906241.js
 ion/bug787921.js
+ion/bug977966.js
 parallel/alloc-many-objs.js
 parallel/alloc-too-many-objs.js
 saved-stacks/bug-1006876-too-much-recursion.js
 self-test/assertDeepEq.js
+sunspider/check-string-unpack-code.js
 v8-v5/check-earley-boyer.js
 v8-v5/check-raytrace.js
 v8-v5/check-regexp.js

@@ -6,6 +6,7 @@
 
 #include "builtin/RegExp.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jscntxt.h"
@@ -23,6 +24,7 @@
 using namespace js;
 using namespace js::unicode;
 
+using mozilla::CheckedInt;
 using mozilla::ArrayLength;
 using mozilla::Maybe;
 
@@ -99,6 +101,17 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
     return true;
 }
 
+static int32_t
+CreateRegExpSearchResult(JSContext* cx, const MatchPairs& matches)
+{
+    /* Fit the start and limit of match into a int32_t. */
+    uint32_t position = matches[0].start;
+    uint32_t lastIndex = matches[0].limit;
+    MOZ_ASSERT(position < 0x8000);
+    MOZ_ASSERT(lastIndex < 0x8000);
+    return position | (lastIndex << 15);
+}
+
 /* ES6 21.2.5.2.2 steps 3, 14-17, except 15.a.i-ii, 15.c.i.1-2. */
 static RegExpRunStatus
 ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res, RegExpShared& re, HandleLinearString input,
@@ -152,49 +165,88 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, RegExpObject& reobj,
     return CreateRegExpMatchResult(cx, input, matches, rval);
 }
 
+enum RegExpSharedUse {
+    UseRegExpShared,
+    DontUseRegExpShared
+};
+
 /*
- * ES6 21.2.3.2.2.  Because this function only ever returns |obj| in the spec,
- * provided by the user, we omit it and just return the usual success/failure.
+ * ES 2016 draft Mar 25, 2016 21.2.3.2.2.
+ * Because this function only ever returns |obj| in the spec, provided by the
+ * user, we omit it and just return the usual success/failure.
  */
 static bool
 RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
-                                  HandleValue patternValue, HandleValue flagsValue)
+                                  HandleValue patternValue, HandleValue flagsValue,
+                                  RegExpSharedUse sharedUse = DontUseRegExpShared)
 {
     RootedAtom pattern(cx);
     if (patternValue.isUndefined()) {
         /* Step 1. */
         pattern = cx->names().empty;
     } else {
-        /* Steps 2-3. */
+        /* Step 2. */
         pattern = ToAtom<CanGC>(cx, patternValue);
         if (!pattern)
             return false;
     }
 
-    /* Step 4. */
+    /* Step 3. */
     RegExpFlag flags = RegExpFlag(0);
     if (!flagsValue.isUndefined()) {
-        /* Steps 5-6. */
+        /* Step 4. */
         RootedString flagStr(cx, ToString<CanGC>(cx, flagsValue));
         if (!flagStr)
             return false;
 
-        /* Step 7. */
+        /* Step 5. */
         if (!ParseRegExpFlags(cx, flagStr, &flags))
             return false;
     }
 
-    /* Steps 8-10. */
-    CompileOptions options(cx);
-    frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
-                                      flags & UnicodeFlag))
-    {
-        return false;
+    if (sharedUse == UseRegExpShared) {
+        /* Steps 7-8. */
+        RegExpGuard re(cx);
+        if (!cx->compartment()->regExps.get(cx, pattern, flags, &re))
+            return false;
+
+        /* Steps 9-12. */
+        obj->initIgnoringLastIndex(pattern, flags);
+
+        obj->setShared(*re);
+    } else {
+        /* Steps 7-8. */
+        CompileOptions options(cx);
+        frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+        if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+                                          flags & UnicodeFlag))
+        {
+            return false;
+        }
+
+        /* Steps 9-12. */
+        obj->initIgnoringLastIndex(pattern, flags);
     }
 
-    /* Steps 11-13. */
-    obj->initIgnoringLastIndex(pattern, flags);
+    return true;
+}
+
+/* ES 2016 draft Mar 25, 2016 21.2.3.2.3. */
+bool
+js::RegExpCreate(JSContext* cx, HandleValue patternValue, HandleValue flagsValue,
+                 MutableHandleValue rval)
+{
+    /* Step 1. */
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, nullptr));
+    if (!regexp)
+         return false;
+
+    /* Step 2. */
+    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, patternValue, flagsValue, UseRegExpShared))
+        return false;
+    regexp->zeroLastIndex(cx);
+
+    rval.setObject(*regexp);
     return true;
 }
 
@@ -605,6 +657,10 @@ const JSFunctionSpec js::regexp_methods[] = {
     JS_FN("compile",        regexp_compile,     2,0),
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1,0),
     JS_SELF_HOSTED_FN("test", "RegExpTest" ,    1,0),
+    JS_SELF_HOSTED_SYM_FN(match, "RegExpMatch", 1,0),
+    JS_SELF_HOSTED_SYM_FN(replace, "RegExpReplace", 2,0),
+    JS_SELF_HOSTED_SYM_FN(search, "RegExpSearch", 1,0),
+    JS_SELF_HOSTED_SYM_FN(split, "RegExpSplit", 2,0),
     JS_FS_END
 };
 
@@ -703,6 +759,7 @@ const JSPropertySpec js::regexp_static_props[] = {
     JS_PSG("$+", static_lastParen_getter, JSPROP_PERMANENT),
     JS_PSG("$`", static_leftContext_getter, JSPROP_PERMANENT),
     JS_PSG("$'", static_rightContext_getter, JSPROP_PERMANENT),
+    JS_SELF_HOSTED_SYM_GET(species, "RegExpSpecies", 0),
     JS_PS_END
 };
 
@@ -872,8 +929,10 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
                              UpdateRegExpStatics, args.rval());
 }
 
-/* Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code. */
+/*
+ * Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code.
+ */
 bool
 js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
                      uint32_t lastIndex, bool sticky,
@@ -887,6 +946,86 @@ js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
         return CreateRegExpMatchResult(cx, input, *maybeMatches, output);
     return RegExpMatcherImpl(cx, regexp, input, lastIndex, sticky,
                              UpdateRegExpStatics, output);
+}
+
+/*
+ * ES6 21.2.5.2.2 steps 3, 11-29, except 15.a.i-ii, 15.c.i.1-2, 18.
+ * This code is inlined in CodeGenerator.cpp generateRegExpSearcherStub,
+ * changes to this code need to get reflected in there too.
+ */
+static bool
+RegExpSearcherImpl(JSContext* cx, HandleObject regexp, HandleString string,
+                  int32_t lastIndex, bool sticky,
+                  RegExpStaticsUpdate staticsUpdate, int32_t* result)
+{
+    /* Execute regular expression and gather matches. */
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+
+    /* Steps 3, 11-17, except 15.a.i-ii, 15.c.i.1-2. */
+    RegExpRunStatus status = ExecuteRegExp(cx, regexp, string, lastIndex, sticky,
+                                           &matches, nullptr, staticsUpdate);
+    if (status == RegExpRunStatus_Error)
+        return false;
+
+    /* Steps 15.a, 15.c. */
+    if (status == RegExpRunStatus_Success_NotFound) {
+        *result = -1;
+        return true;
+    }
+
+    /* Steps 19-29 */
+    *result = CreateRegExpSearchResult(cx, matches);
+    return true;
+}
+
+/* ES6 21.2.5.2.2 steps 3, 11-29, except 15.a.i-ii, 15.c.i.1-2, 18. */
+bool
+js::RegExpSearcher(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 4);
+    MOZ_ASSERT(IsRegExpObject(args[0]));
+    MOZ_ASSERT(args[1].isString());
+    MOZ_ASSERT(args[2].isNumber());
+    MOZ_ASSERT(args[3].isBoolean());
+
+    RootedObject regexp(cx, &args[0].toObject());
+    RootedString string(cx, args[1].toString());
+    RootedValue lastIndexVal(cx, args[2]);
+    bool sticky = ToBoolean(args[3]);
+
+    int32_t lastIndex = 0;
+    if (!ToInt32(cx, lastIndexVal, &lastIndex))
+        return false;
+
+    /* Steps 3, 11-29, except 15.a.i-ii, 15.c.i.1-2, 18. */
+    int32_t result = 0;
+    if (!RegExpSearcherImpl(cx, regexp, string, lastIndex, sticky, UpdateRegExpStatics, &result))
+        return false;
+
+    args.rval().setInt32(result);
+    return true;
+}
+
+/*
+ * Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code.
+ */
+bool
+js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
+                      int32_t lastIndex, bool sticky,
+                      MatchPairs* maybeMatches, int32_t* result)
+{
+    MOZ_ASSERT(lastIndex <= INT32_MAX);
+
+    // The MatchPairs will always be passed in, but RegExp execution was
+    // successful only if the pairs have actually been filled in.
+    if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0) {
+        *result = CreateRegExpSearchResult(cx, *maybeMatches);
+        return true;
+    }
+    return RegExpSearcherImpl(cx, regexp, input, lastIndex, sticky,
+                              UpdateRegExpStatics, result);
 }
 
 bool
@@ -942,8 +1081,10 @@ js::RegExpTester(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code. */
+/*
+ * Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code.
+ */
 bool
 js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
                     uint32_t lastIndex, bool sticky, int32_t* endIndex)
@@ -983,4 +1124,402 @@ js::regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp)
                                            nullptr, &ignored, DontUpdateRegExpStatics);
     args.rval().setBoolean(status == RegExpRunStatus_Success);
     return status != RegExpRunStatus_Error;
+}
+
+static void
+GetParen(JSLinearString* matched, JS::Value capture, JSSubString* out)
+{
+    if (capture.isUndefined()) {
+        out->initEmpty(matched);
+        return;
+    }
+    JSLinearString& captureLinear = capture.toString()->asLinear();
+    out->init(&captureLinear, 0, captureLinear.length());
+}
+
+template <typename CharT>
+static bool
+InterpretDollar(JSLinearString* matched, JSLinearString* string, size_t position, size_t tailPos,
+                AutoValueVector& captures, JSLinearString* replacement,
+                const CharT* replacementBegin, const CharT* currentDollar,
+                const CharT* replacementEnd,
+                JSSubString* out, size_t* skip)
+{
+    MOZ_ASSERT(*currentDollar == '$');
+
+    /* If there is only a dollar, bail now. */
+    if (currentDollar + 1 >= replacementEnd)
+        return false;
+
+    /* ES 2016 draft Mar 25, 2016 Table 46. */
+    char16_t c = currentDollar[1];
+    if (JS7_ISDEC(c)) {
+        /* $n, $nn */
+        unsigned num = JS7_UNDEC(c);
+        if (num > captures.length()) {
+            // The result is implementation-defined, do not substitute.
+            return false;
+        }
+
+        const CharT* currentChar = currentDollar + 2;
+        if (currentChar < replacementEnd && (c = *currentChar, JS7_ISDEC(c))) {
+            unsigned tmpNum = 10 * num + JS7_UNDEC(c);
+            // If num > captures.length(), the result is implementation-defined.
+            // Consume next character only if num <= captures.length().
+            if (tmpNum <= captures.length()) {
+                currentChar++;
+                num = tmpNum;
+            }
+        }
+        if (num == 0) {
+            // The result is implementation-defined.
+            // Do not substitute.
+            return false;
+        }
+
+        *skip = currentChar - currentDollar;
+
+        MOZ_ASSERT(num <= captures.length());
+
+        GetParen(matched, captures[num -1], out);
+        return true;
+    }
+
+    *skip = 2;
+    switch (c) {
+      default:
+        return false;
+      case '$':
+        out->init(replacement, currentDollar - replacementBegin, 1);
+        break;
+      case '&':
+        out->init(matched, 0, matched->length());
+        break;
+      case '+':
+        // SpiderMonkey extension
+        GetParen(matched, captures[captures.length() - 1], out);
+        break;
+      case '`':
+        out->init(string, 0, position);
+        break;
+      case '\'':
+        out->init(string, tailPos, string->length() - tailPos);
+        break;
+    }
+    return true;
+}
+
+template <typename CharT>
+static bool
+FindReplaceLengthString(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                        size_t position, size_t tailPos, AutoValueVector& captures,
+                        HandleLinearString replacement, size_t firstDollarIndex, size_t* sizep)
+{
+    CheckedInt<uint32_t> replen = replacement->length();
+
+    JS::AutoCheckCannotGC nogc;
+    MOZ_ASSERT(firstDollarIndex < replacement->length());
+    const CharT* replacementBegin = replacement->chars<CharT>(nogc);
+    const CharT* currentDollar = replacementBegin + firstDollarIndex;
+    const CharT* replacementEnd = replacementBegin + replacement->length();
+    do {
+        JSSubString sub;
+        size_t skip;
+        if (InterpretDollar(matched, string, position, tailPos, captures, replacement,
+                            replacementBegin, currentDollar, replacementEnd, &sub, &skip))
+        {
+            if (sub.length > skip)
+                replen += sub.length - skip;
+            else
+                replen -= skip - sub.length;
+            currentDollar += skip;
+        } else {
+            currentDollar++;
+        }
+
+        currentDollar = js_strchr_limit(currentDollar, '$', replacementEnd);
+    } while (currentDollar);
+
+    if (!replen.isValid()) {
+        ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    *sizep = replen.value();
+    return true;
+}
+
+static bool
+FindReplaceLength(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                  size_t position, size_t tailPos, AutoValueVector& captures,
+                  HandleLinearString replacement, size_t firstDollarIndex, size_t* sizep)
+{
+    return replacement->hasLatin1Chars()
+           ? FindReplaceLengthString<Latin1Char>(cx, matched, string, position, tailPos, captures,
+                                                 replacement, firstDollarIndex, sizep)
+           : FindReplaceLengthString<char16_t>(cx, matched, string, position, tailPos, captures,
+                                               replacement, firstDollarIndex, sizep);
+}
+
+/*
+ * Precondition: |sb| already has necessary growth space reserved (as
+ * derived from FindReplaceLength), and has been inflated to TwoByte if
+ * necessary.
+ */
+template <typename CharT>
+static void
+DoReplace(HandleLinearString matched, HandleLinearString string,
+          size_t position, size_t tailPos, AutoValueVector& captures,
+          HandleLinearString replacement, size_t firstDollarIndex, StringBuffer &sb)
+{
+    JS::AutoCheckCannotGC nogc;
+    const CharT* replacementBegin = replacement->chars<CharT>(nogc);
+    const CharT* currentChar = replacementBegin;
+
+    MOZ_ASSERT(firstDollarIndex < replacement->length());
+    const CharT* currentDollar = replacementBegin + firstDollarIndex;
+    const CharT* replacementEnd = replacementBegin + replacement->length();
+    do {
+        /* Move one of the constant portions of the replacement value. */
+        size_t len = currentDollar - currentChar;
+        sb.infallibleAppend(currentChar, len);
+        currentChar = currentDollar;
+
+        JSSubString sub;
+        size_t skip;
+        if (InterpretDollar(matched, string, position, tailPos, captures, replacement,
+                            replacementBegin, currentDollar, replacementEnd, &sub, &skip))
+        {
+            sb.infallibleAppendSubstring(sub.base, sub.offset, sub.length);
+            currentChar += skip;
+            currentDollar += skip;
+        } else {
+            currentDollar++;
+        }
+
+        currentDollar = js_strchr_limit(currentDollar, '$', replacementEnd);
+    } while (currentDollar);
+    sb.infallibleAppend(currentChar, replacement->length() - (currentChar - replacementBegin));
+}
+
+/* ES 2016 draft Mar 25, 2016 21.1.3.14.1. */
+bool
+js::RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                          size_t position, HandleObject capturesObj, HandleLinearString replacement,
+                          size_t firstDollarIndex, MutableHandleValue rval)
+{
+    MOZ_ASSERT(firstDollarIndex < replacement->length());
+
+    // Step 1 (skipped).
+
+    // Step 2.
+    size_t matchLength = matched->length();
+
+    // Steps 3-5 (skipped).
+
+    // Step 6.
+    MOZ_ASSERT(position <= string->length());
+
+    // Step 10 (reordered).
+    uint32_t nCaptures;
+    if (!GetLengthProperty(cx, capturesObj, &nCaptures))
+        return false;
+
+    AutoValueVector captures(cx);
+    if (!captures.reserve(nCaptures))
+        return false;
+
+    // Step 7.
+    RootedValue capture(cx);
+    for (uint32_t i = 0; i < nCaptures; i++) {
+        if (!GetElement(cx, capturesObj, capturesObj, i, &capture))
+            return false;
+
+        if (capture.isUndefined()) {
+            captures.infallibleAppend(capture);
+            continue;
+        }
+
+        MOZ_ASSERT(capture.isString());
+        RootedLinearString captureLinear(cx, capture.toString()->ensureLinear(cx));
+        if (!captureLinear)
+            return false;
+        captures.infallibleAppend(StringValue(captureLinear));
+    }
+
+    // Step 8 (skipped).
+
+    // Step 9.
+    CheckedInt<uint32_t> checkedTailPos(0);
+    checkedTailPos += position;
+    checkedTailPos += matchLength;
+    if (!checkedTailPos.isValid()) {
+        ReportAllocationOverflow(cx);
+        return false;
+    }
+    uint32_t tailPos = checkedTailPos.value();
+
+    // Step 11.
+    size_t reserveLength;
+    if (!FindReplaceLength(cx, matched, string, position, tailPos, captures, replacement,
+                           firstDollarIndex, &reserveLength))
+    {
+        return false;
+    }
+
+    StringBuffer result(cx);
+    if (string->hasTwoByteChars() || replacement->hasTwoByteChars()) {
+        if (!result.ensureTwoByteChars())
+            return false;
+    }
+
+    if (!result.reserve(reserveLength))
+        return false;
+
+    if (replacement->hasLatin1Chars()) {
+        DoReplace<Latin1Char>(matched, string, position, tailPos, captures,
+                              replacement, firstDollarIndex, result);
+    } else {
+        DoReplace<char16_t>(matched, string, position, tailPos, captures,
+                            replacement, firstDollarIndex, result);
+    }
+
+    // Step 12.
+    JSString* resultString = result.finishString();
+    if (!resultString)
+        return false;
+
+    rval.setString(resultString);
+    return true;
+}
+
+bool
+js::RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp)
+{
+    // This can only be called from self-hosted code.
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    uint8_t result = false;
+    if (!RegExpPrototypeOptimizableRaw(cx, &args[0].toObject(), &result))
+        return false;
+
+    args.rval().setBoolean(result);
+    return true;
+}
+
+bool
+js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* result)
+{
+    JS::AutoCheckCannotGC nogc;
+    if (!proto->isNative()) {
+        *result = false;
+        return true;
+    }
+
+    NativeObject* nproto = static_cast<NativeObject*>(proto);
+
+    Shape* shape = cx->compartment()->regExps.getOptimizableRegExpPrototypeShape();
+    if (shape == nproto->lastProperty()) {
+        *result = true;
+        return true;
+    }
+
+    JSNative globalGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().global), &globalGetter))
+        return false;
+
+    if (globalGetter != regexp_global) {
+        *result = false;
+        return true;
+    }
+
+    JSNative stickyGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().sticky), &stickyGetter))
+        return false;
+
+    if (stickyGetter != regexp_sticky) {
+        *result = false;
+        return true;
+    }
+
+    // Check if @@match, @@search, and exec are own data properties,
+    // those values should be tested in selfhosted JS.
+    bool has = false;
+    if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().match), &has))
+        return false;
+    if (!has) {
+        *result = false;
+        return true;
+    }
+
+    if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().search), &has))
+        return false;
+    if (!has) {
+        *result = false;
+        return true;
+    }
+
+    if (!HasOwnDataPropertyPure(cx, proto, NameToId(cx->names().exec), &has))
+        return false;
+    if (!has) {
+        *result = false;
+        return true;
+    }
+
+    cx->compartment()->regExps.setOptimizableRegExpPrototypeShape(nproto->lastProperty());
+    *result = true;
+    return true;
+}
+
+bool
+js::RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp)
+{
+    // This can only be called from self-hosted code.
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    uint8_t result = false;
+    if (!RegExpInstanceOptimizableRaw(cx, &args[0].toObject(), &args[1].toObject(), &result))
+        return false;
+
+    args.rval().setBoolean(result);
+    return true;
+}
+
+bool
+js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, uint8_t* result)
+{
+    JS::AutoCheckCannotGC nogc;
+    if (!rx->isNative()) {
+        *result = false;
+        return true;
+    }
+
+    NativeObject* nobj = static_cast<NativeObject*>(rx);
+
+    Shape* shape = cx->compartment()->regExps.getOptimizableRegExpInstanceShape();
+    if (shape == nobj->lastProperty()) {
+        *result = true;
+        return true;
+    }
+
+    if (rx->hasLazyPrototype()) {
+        *result = false;
+        return true;
+    }
+
+    if (rx->getTaggedProto().toObjectOrNull() != proto) {
+        *result = false;
+        return true;
+    }
+
+    if (!RegExpObject::isInitialShape(nobj)) {
+        *result = false;
+        return true;
+    }
+
+    cx->compartment()->regExps.setOptimizableRegExpInstanceShape(nobj->lastProperty());
+    *result = true;
+    return true;
 }

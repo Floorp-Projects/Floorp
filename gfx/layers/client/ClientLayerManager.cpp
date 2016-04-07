@@ -108,6 +108,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   mMemoryPressureObserver = new MemoryPressureObserver(this);
 }
 
+
 ClientLayerManager::~ClientLayerManager()
 {
   if (mTransactionIdAllocator) {
@@ -126,6 +127,18 @@ ClientLayerManager::~ClientLayerManager()
   mRoot = nullptr;
 
   MOZ_COUNT_DTOR(ClientLayerManager);
+}
+
+void
+ClientLayerManager::Destroy()
+{
+  // It's important to call ClearCachedResource before Destroy because the
+  // former will early-return if the later has already run.
+  ClearCachedResources();
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->Destroy();
+  }
+  LayerManager::Destroy();
 }
 
 int32_t
@@ -707,6 +720,8 @@ ClientLayerManager::SetIsFirstPaint()
 TextureClientPool*
 ClientLayerManager::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
+
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
     if (mTexturePools[i]->GetFormat() == aFormat &&
         mTexturePools[i]->GetFlags() == aFlags) {

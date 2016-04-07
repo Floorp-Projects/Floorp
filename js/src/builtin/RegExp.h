@@ -49,6 +49,14 @@ RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
                  MatchPairs* maybeMatches, MutableHandleValue output);
 
 extern bool
+RegExpSearcher(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
+                  int32_t lastIndex, bool sticky,
+                  MatchPairs* maybeMatches, int32_t* result);
+
+extern bool
 RegExpTester(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
@@ -87,6 +95,26 @@ regexp_construct_self_hosting(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 IsRegExp(JSContext* cx, HandleValue value, bool* result);
+
+extern bool
+RegExpCreate(JSContext* cx, HandleValue pattern, HandleValue flags, MutableHandleValue rval);
+
+extern bool
+RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* result);
+
+extern bool
+RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, uint8_t* result);
+
+extern bool
+RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                      size_t position, HandleObject capturesObj, HandleLinearString replacement,
+                      size_t firstDollarIndex, MutableHandleValue rval);
 
 // RegExp ClassSpec members used in RegExpObject.cpp.
 extern bool

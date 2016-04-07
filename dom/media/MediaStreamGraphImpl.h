@@ -258,6 +258,21 @@ public:
    */
   void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime);
   /**
+   * Process chunks for all streams and raise events for properties that have
+   * changed, such as principalId.
+   */
+  void ProcessChunkMetadata(GraphTime aPrevCurrentTime);
+  /**
+   * Process chunks for the given stream and interval, and raise events for
+   * properties that have changed, such as principalId.
+   */
+  template<typename C, typename Chunk>
+  void ProcessChunkMetadataForInterval(MediaStream* aStream,
+                                       TrackID aTrackID,
+                                       C& aSegment,
+                                       StreamTime aStart,
+                                       StreamTime aEnd);
+  /**
    * Process graph messages in mFrontMessageQueue.
    */
   void RunMessagesInQueue();

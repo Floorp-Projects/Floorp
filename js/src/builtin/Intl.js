@@ -106,7 +106,7 @@ function removeUnicodeExtensions(locale) {
     var extensions;
     var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
     while ((extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, left)) !== null) {
-        left = callFunction(std_String_replace, left, extensions[0], "");
+        left = callFunction(String_replace, left, extensions[0], "");
         unicodeLocaleExtensionSequenceRE.lastIndex = 0;
     }
 
@@ -378,7 +378,7 @@ function CanonicalizeLanguageTag(locale) {
     if (callFunction(std_Object_hasOwnProperty, langTagMappings, locale))
         return langTagMappings[locale];
 
-    var subtags = callFunction(std_String_split, locale, "-");
+    var subtags = callFunction(String_split, locale, "-");
     var i = 0;
 
     // Handle the standard part: All subtags before the first singleton or "x".
@@ -837,7 +837,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
         extensionIndex = r.extensionIndex;
 
         // Steps 5.d-e.
-        extensionSubtags = callFunction(std_String_split, extension, "-");
+        extensionSubtags = callFunction(String_split, extension, "-");
         extensionSubtagsLength = extensionSubtags.length;
     }
 
