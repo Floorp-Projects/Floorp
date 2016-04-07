@@ -71,8 +71,12 @@ Test that we show a message when the census results are empty.
                  parent: undefined,
                  children: undefined,
                },
-               expanded: new Set(),
+               parentMap: Object.create(null),
                display: censusDisplays.allocationStack,
+               filter: null,
+               expanded: new Immutable.Set(),
+               focused: null,
+               state: censusState.SAVED,
              };
 
              yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {

@@ -31,18 +31,23 @@ html, body {
   height: 100%;
 }
 
-body {
-  /* Only allow horizontal scrolling when more viewports are added */
-  overflow-y: hidden;
+#root {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #app {
-  height: 100%;
   /* Center the viewports container */
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+
+  /* Snap to the top of the app when there isn't enough vertical space anymore
+     to center the viewports (so we don't lose the global toolbar) */
+  position: sticky;
+  top: 0;
 }
 
 /**
@@ -114,13 +119,10 @@ body {
 
 
 #viewports {
-  /* Snap to the top of the app when there isn't enough vertical space anymore
-     to center the viewports (so we don't loose the toolbar) */
-  position: sticky;
-  top: 0;
   /* Make sure left-most viewport is visible when there's horizontal overflow.
      That is, when the horizontal space become smaller than the viewports and a
      scrollbar appears, then the first viewport will still be visible */
+  position: sticky;
   left: 0;
   /* Individual viewports are inline elements, make sure they stay on a single
      line */

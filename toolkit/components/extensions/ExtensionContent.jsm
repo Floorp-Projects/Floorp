@@ -170,12 +170,12 @@ Script.prototype = {
     }
 
     if (this.options.include_globs != null) {
-      if (!this.include_globs_.matches(uri)) {
+      if (!this.include_globs_.matches(uri.spec)) {
         return false;
       }
     }
 
-    if (this.exclude_globs_.matches(uri)) {
+    if (this.exclude_globs_.matches(uri.spec)) {
       return false;
     }
 
@@ -659,7 +659,7 @@ function BrowserExtensionContent(data) {
   this.uuid = data.uuid;
   this.data = data;
   this.scripts = data.content_scripts.map(scriptData => new Script(scriptData));
-  this.webAccessibleResources = data.webAccessibleResources;
+  this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
   this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
 
   this.localeData = new LocaleData(data.localeData);

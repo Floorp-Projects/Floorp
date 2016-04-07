@@ -2,11 +2,12 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=671993
+https://bugzilla.mozilla.org/show_bug.cgi?id=1261225
 Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 671993</title>
+  <title>Test for Bugs 671993, 1261225</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
@@ -197,10 +198,78 @@ add_task(function* test_formdata2() {
   gBrowserApp.closeTab(gBrowserApp.getTabForBrowser(browser));
 });
 
+/**
+ * This test ensures that form data collection restores correctly even after
+ * navigating to a different page and then returning via hitting back.
+ */
+add_task(function* test_formdata_navigation() {
+  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/session_formdata_sample.html";
+  const otherURL = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
+
+  const OUTER_VALUE = "browser_formdata_" + Math.random();
+  const INNER_VALUE = "browser_formdata_" + Math.random();
+
+  // Creates a tab, loads a page with some form fields, modifies their values,
+  // navigates to a different page and back again and closes the tab.
+  function createNavigateAndRemoveTab() {
+    return Task.spawn(function () {
+      // Create a new tab.
+      let tab = gBrowserApp.addTab(URL);
+      let browser = tab.browser;
+      yield promiseBrowserEvent(browser, "load");
+
+      // Modify form data.
+      setInputValue(browser, {id: "txt", value: OUTER_VALUE});
+      setInputValue(browser, {id: "txt", value: INNER_VALUE, frame: 0});
+
+      // Visit a different page.
+      gBrowserApp.loadURI(otherURL, browser);
+      yield promiseBrowserEvent(browser, "DOMContentLoaded");
+      is(browser.currentURI.spec, otherURL, "navigated to a different page");
+
+      // Go back.
+      is(browser.canGoBack, true, "can go back");
+      browser.goBack();
+      yield promiseTabEvent(gBrowserApp.deck, "pageshow");
+      is(browser.currentURI.spec, URL, "navigated back to form data page");
+
+      // Make sure form data is still present.
+      is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value present after navigation");
+      is(getInputValue(browser, {id: "txt", frame: 0}), INNER_VALUE, "inner value present after navigation");
+
+      // Allow the session store a bit of time to actually capture the form data.
+      yield sleep(CLOSE_TAB_WAIT);
+
+      // Remove the tab.
+      gBrowserApp.closeTab(tab);
+      yield sleep(CLOSE_TAB_WAIT);
+    });
+  }
+
+  yield createNavigateAndRemoveTab();
+  let state = ss.getClosedTabs(gChromeWin);
+  let [{formdata}] = state;
+  is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
+  is(formdata.children[0].id.txt, INNER_VALUE, "inner value is correct");
+
+  // Restore the closed tab.
+  let closedTabData = ss.getClosedTabs(gChromeWin)[0];
+  let browser = ss.undoCloseTab(gChromeWin, closedTabData);
+  yield promiseBrowserEvent(browser, "load");
+
+  // Check the form data.
+  is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value restored correctly");
+  is(getInputValue(browser, {id: "txt", frame: 0}), INNER_VALUE, "inner value restored correctly");
+
+  // Remove the tab.
+  gBrowserApp.closeTab(gBrowserApp.getTabForBrowser(browser));
+});
+
   </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=671993">Mozilla Bug 671993</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1261225">Mozilla Bug 1261225</a>
 <br>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1184186">Migrated from Robocop testSessionFormData</a>
 <p id="display"></p>

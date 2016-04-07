@@ -9,7 +9,6 @@ const {
   getSnapshot,
   createSnapshot,
   dominatorTreeIsComputed,
-  canTakeCensus
 } = require("../utils");
 const {
   actions,
@@ -40,6 +39,10 @@ const takeSnapshotAndCensus = exports.takeSnapshotAndCensus = function (front, h
     }
 
     yield dispatch(readSnapshot(heapWorker, id));
+    if (getSnapshot(getState(), id).state !== states.READ) {
+      return;
+    }
+
     yield dispatch(computeSnapshotData(heapWorker, id));
   };
 };
@@ -62,7 +65,8 @@ const computeSnapshotData = exports.computeSnapshotData = function(heapWorker, i
     const censusTaker = getCurrentCensusTaker(getState().view);
     yield dispatch(censusTaker(heapWorker, id));
 
-    if (getState().view === viewState.DOMINATOR_TREE) {
+    if (getState().view === viewState.DOMINATOR_TREE &&
+        !getSnapshot(getState(), id).dominatorTree) {
       yield dispatch(computeAndFetchDominatorTree(heapWorker, id));
     }
   };
@@ -160,7 +164,7 @@ const readSnapshot = exports.readSnapshot = function readSnapshot (heapWorker, i
  * @param {errorAction} Action to send if a snapshot has an error.
  */
 function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
-                              endAction, errorAction }) {
+                              endAction, errorAction, canTakeCensus }) {
   /**
    * @param {HeapAnalysesClient} heapWorker
    * @param {snapshotId} id
@@ -172,10 +176,15 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
   return function (heapWorker, id) {
     return function *(dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
-      // Assert that snapshot is in a valid state
+      if (!snapshot) {
+        return;
+      }
 
+      // Assert that snapshot is in a valid state
       assert(canTakeCensus(snapshot),
-        `Attempting to take a census when the snapshot is not in a ready state.`);
+             `Attempting to take a census when the snapshot is not in a ready
+             state. snapshot.state = ${snapshot.state},
+             census.state = ${(getCensus(snapshot) || {}).state}`);
 
       let report, parentMap;
       let display = getDisplay(getState());
@@ -243,7 +252,10 @@ const takeCensus = exports.takeCensus = makeTakeCensusTask({
   getCensus: (snapshot) => snapshot.census,
   beginAction: actions.TAKE_CENSUS_START,
   endAction: actions.TAKE_CENSUS_END,
-  errorAction: actions.TAKE_CENSUS_ERROR
+  errorAction: actions.TAKE_CENSUS_ERROR,
+  canTakeCensus: snapshot =>
+    snapshot.state === states.READ &&
+    (!snapshot.census || snapshot.census.state === censusState.SAVED),
 });
 
 /**
@@ -255,7 +267,10 @@ const takeTreeMap = exports.takeTreeMap = makeTakeCensusTask({
   getCensus: (snapshot) => snapshot.treeMap,
   beginAction: actions.TAKE_TREE_MAP_START,
   endAction: actions.TAKE_TREE_MAP_END,
-  errorAction: actions.TAKE_TREE_MAP_ERROR
+  errorAction: actions.TAKE_TREE_MAP_ERROR,
+  canTakeCensus: snapshot =>
+    snapshot.state === states.READ &&
+    (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED),
 });
 
 /**
@@ -293,6 +308,9 @@ const getCurrentCensusTaker = exports.getCurrentCensusTaker = function (currentV
 const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWorker) {
   return function*(dispatch, getState) {
     let snapshot = getState().snapshots.find(s => s.selected);
+    if (!snapshot || snapshot.state !== states.READ) {
+      return;
+    }
 
     // Intermediate snapshot states will get handled by the task action that is
     // orchestrating them. For example, if the snapshot census's state is
@@ -300,8 +318,7 @@ const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWork
     // the inverted property matches the inverted state. If the snapshot is
     // still in the process of being saved or read, the takeSnapshotAndCensus
     // task action will follow through and ensure that a census is taken.
-    if (snapshot &&
-        (snapshot.census && snapshot.census.state === censusState.SAVED) ||
+    if ((snapshot.census && snapshot.census.state === censusState.SAVED) ||
         !snapshot.census) {
       yield dispatch(takeCensus(heapWorker, snapshot.id));
     }

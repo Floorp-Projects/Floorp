@@ -92,15 +92,14 @@ public class SwitchBoard {
         String serverUrl = defaultServerUrl;
 
         final URL requestUrl = buildConfigRequestUrl(c, uuid, serverUrl);
+        if (DEBUG) Log.d(TAG, "Request URL: " + requestUrl);
         if (requestUrl == null) {
             return;
         }
 
-        if (DEBUG) Log.d(TAG, requestUrl.toString());
 
         final String result = readFromUrlGET(requestUrl);
-        if (DEBUG) Log.d(TAG, result);
-
+        if (DEBUG) Log.d(TAG, "Result: " + result);
         if (result == null) {
             return;
         }
@@ -186,11 +185,11 @@ public class SwitchBoard {
 
         try {
             final JSONObject experiment = new JSONObject(config).getJSONObject(experimentName);
-            if(DEBUG) Log.d(TAG, "experiment " + experimentName + " JSON object: " + experiment.toString());
-
             return experiment != null && experiment.getBoolean(IS_EXPERIMENT_ACTIVE);
         } catch (JSONException e) {
-            Log.e(TAG, "Error getting experiment from config", e);
+            // If the experiment name is not found in the JSON, just return false.
+            // There is no need to log an error, since we don't really care if an
+            // inactive experiment is missing from the config.
             return false;
         }
     }
@@ -264,8 +263,6 @@ public class SwitchBoard {
      * @return Returns String from server or null when failed.
      */
     @Nullable private static String readFromUrlGET(URL url) {
-        if (DEBUG) Log.d(TAG, "readFromUrl(): " + url);
-
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -274,15 +271,12 @@ public class SwitchBoard {
             InputStream is = connection.getInputStream();
             InputStreamReader inputStreamReader = new InputStreamReader(is);
             BufferedReader bufferReader = new BufferedReader(inputStreamReader, 8192);
-            String line = "";
+            String line;
             StringBuilder resultContent = new StringBuilder();
             while ((line = bufferReader.readLine()) != null) {
-                if(DEBUG) Log.d(TAG, line);
                 resultContent.append(line);
             }
             bufferReader.close();
-
-            if(DEBUG) Log.d(TAG, "readFromUrl() result: " + resultContent.toString());
 
             return resultContent.toString();
         } catch (IOException e) {

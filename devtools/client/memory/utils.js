@@ -315,8 +315,8 @@ exports.censusIsUpToDate = function (filter, display, census) {
  */
 exports.canTakeCensus = function (snapshot) {
   return snapshot.state === states.READ &&
-    (!snapshot.census || snapshot.census.state === censusState.SAVED) &&
-    (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED);
+    ((!snapshot.census || snapshot.census.state === censusState.SAVED) ||
+     (!snapshot.treeMap || snapshot.treeMap.state === treeMapState.SAVED));
 };
 
 /**
