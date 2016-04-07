@@ -4,16 +4,14 @@
 
 package org.mozilla.gecko;
 
-import android.content.res.Resources;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.BitmapUtils.BitmapLoader;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
-import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
-import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -21,7 +19,6 @@ import org.mozilla.gecko.ActionModeCompat.Callback;
 import org.mozilla.gecko.AppConstants.Versions;
 
 import android.content.Context;
-import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,8 +33,7 @@ import java.util.TimerTask;
 import android.util.Log;
 import android.view.View;
 
-class TextSelection extends Layer implements GeckoEventListener,
-                                             LayerView.DynamicToolbarListener {
+class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventListener, LayerView.DynamicToolbarListener {
     private static final String LOGTAG = "GeckoTextSelection";
     private static final int SHUTDOWN_DELAY_MS = 250;
 
@@ -74,9 +70,9 @@ class TextSelection extends Layer implements GeckoEventListener,
     };
     private ActionModeTimerTask mActionModeTimerTask;
 
-    TextSelection(TextSelectionHandle anchorHandle,
-                  TextSelectionHandle caretHandle,
-                  TextSelectionHandle focusHandle) {
+    ActionBarTextSelection(TextSelectionHandle anchorHandle,
+                           TextSelectionHandle caretHandle,
+                           TextSelectionHandle focusHandle) {
         this.anchorHandle = anchorHandle;
         this.caretHandle = caretHandle;
         this.focusHandle = focusHandle;
@@ -89,7 +85,10 @@ class TextSelection extends Layer implements GeckoEventListener,
                 }
             }
         };
+    }
 
+    @Override
+    public void create() {
         // Only register listeners if we have valid start/middle/end handles
         if (anchorHandle == null || caretHandle == null || focusHandle == null) {
             Log.e(LOGTAG, "Failed to initialize text selection because at least one handle is null");
@@ -106,7 +105,14 @@ class TextSelection extends Layer implements GeckoEventListener,
         }
     }
 
-    void destroy() {
+    @Override
+    public boolean dismiss() {
+        // We do not call endActionMode() here because this is already handled by the activity.
+        return false;
+    }
+
+    @Override
+    public void destroy() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "TextSelection:ActionbarInit",
             "TextSelection:ActionbarStatus",
@@ -159,8 +165,8 @@ class TextSelection extends Layer implements GeckoEventListener,
                         LayerView layerView = GeckoAppShell.getLayerView();
                         if (layerView != null) {
                             layerView.addDrawListener(mDrawListener);
-                            layerView.addLayer(TextSelection.this);
-                            layerView.getDynamicToolbarAnimator().addTranslationListener(TextSelection.this);
+                            layerView.addLayer(ActionBarTextSelection.this);
+                            layerView.getDynamicToolbarAnimator().addTranslationListener(ActionBarTextSelection.this);
                         }
 
                         if (handles.length() > 1)
@@ -174,8 +180,8 @@ class TextSelection extends Layer implements GeckoEventListener,
                         LayerView layerView = GeckoAppShell.getLayerView();
                         if (layerView != null) {
                             layerView.removeDrawListener(mDrawListener);
-                            layerView.removeLayer(TextSelection.this);
-                            layerView.getDynamicToolbarAnimator().removeTranslationListener(TextSelection.this);
+                            layerView.removeLayer(ActionBarTextSelection.this);
+                            layerView.getDynamicToolbarAnimator().removeTranslationListener(ActionBarTextSelection.this);
                         }
 
                         mActionModeTimerTask = new ActionModeTimerTask();
@@ -303,7 +309,7 @@ class TextSelection extends Layer implements GeckoEventListener,
     private class TextSelectionActionModeCallback implements Callback {
         private JSONArray mItems;
         private ActionModeCompat mActionMode;
-    
+
         public TextSelectionActionModeCallback(JSONArray items) {
             mItems = items;
         }

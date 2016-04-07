@@ -21,7 +21,6 @@
 
 <resources>
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
-  <string name="android_package_name">@ANDROID_PACKAGE_NAME@</string>
   <string name="content_authority_db_browser">@ANDROID_PACKAGE_NAME@.db.browser</string>
   <string name="moz_android_shared_fxaccount_type">@ANDROID_PACKAGE_NAME@_fxaccount</string>
   <string name="android_package_name_for_ui">@ANDROID_PACKAGE_NAME@</string>
@@ -166,6 +165,7 @@
   <string name="pref_developer_remotedebugging_wifi_disabled_summary">&pref_developer_remotedebugging_wifi_disabled_summary;</string>
 
   <string name="pref_category_notifications">&pref_category_notifications;</string>
+  <string name="pref_category_notifications_summary">&pref_category_notifications_summary;</string>
   <string name="pref_content_notifications">&pref_content_notifications;</string>
   <string name="pref_content_notifications_summary">&pref_content_notifications_summary2;</string>
 

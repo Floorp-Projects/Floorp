@@ -218,6 +218,7 @@ body {
   /* min-height because there is a browser min-height on panel */
   min-height: 53px;
   padding-top: 4px;
+  transition: opacity .2s ease-in-out .2s;
 }
 
 .room-list-empty {
@@ -257,6 +258,12 @@ body {
 /* Adds margin to the last room-entry to make gradient fade disappear for last item */
 .room-list-add-space > .room-entry:last-child {
   margin-bottom: 8px;
+}
+
+/* Disable interacting with the room list when creating */
+.room-list-pending-creation {
+  opacity: .5;
+  pointer-events: none;
 }
 
 .room-list > .room-entry > h2 {

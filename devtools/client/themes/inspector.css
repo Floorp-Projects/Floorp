@@ -38,6 +38,12 @@
   }
 }
 
+/* Add element toolbar button */
+
+#inspector-element-add-button {
+  list-style-image: url("chrome://devtools/skin/images/add.svg");
+}
+
 /* Tooltip: Events */
 
 #devtools-tooltip-events-container {

@@ -15,6 +15,7 @@ const { require } = BrowserLoader({
 });
 const { GetDevices } = require("devtools/client/shared/devices");
 const Telemetry = require("devtools/client/shared/telemetry");
+const { loadSheet } = require("sdk/stylesheet/utils");
 
 const { createFactory, createElement } =
   require("devtools/client/shared/vendor/react");
@@ -25,8 +26,7 @@ const App = createFactory(require("./app"));
 const Store = require("./store");
 const { addDevice, addDeviceType } = require("./actions/devices");
 const { changeLocation } = require("./actions/location");
-const { addViewport } = require("./actions/viewports");
-const { loadSheet } = require("sdk/stylesheet/utils");
+const { addViewport, resizeViewport } = require("./actions/viewports");
 
 let bootstrap = {
 
@@ -43,7 +43,6 @@ let bootstrap = {
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let provider = createElement(Provider, { store }, App());
-
     ReactDOM.render(provider, document.querySelector("#root"));
     this.initDevices();
     window.postMessage({ type: "init" }, "*");
@@ -114,4 +113,33 @@ window.addInitialViewport = contentURI => {
   } catch (e) {
     console.error(e);
   }
+};
+
+/**
+ * Called by manager.js when tests want to check the viewport size.
+ */
+window.getViewportSize = () => {
+  let { width, height } = bootstrap.store.getState().viewports[0];
+  return { width, height };
+};
+
+/**
+ * Called by manager.js to set viewport size from GCLI.
+ */
+window.setViewportSize = (width, height) => {
+  try {
+    bootstrap.dispatch(resizeViewport(0, width, height));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+/**
+ * Called by manager.js when tests want to use the viewport's message manager.
+ * It is packed into an object because this is the format most easily usable
+ * with ContentTask.spawn().
+ */
+window.getViewportMessageManager = () => {
+  let { messageManager } = document.querySelector("iframe.browser").frameLoader;
+  return { messageManager };
 };

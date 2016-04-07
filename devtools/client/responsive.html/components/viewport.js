@@ -20,7 +20,9 @@ module.exports = createClass({
     location: Types.location.isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
+    onBrowserMounted: PropTypes.func.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
+    onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
@@ -58,6 +60,8 @@ module.exports = createClass({
       location,
       screenshot,
       viewport,
+      onContentResize,
+      onBrowserMounted,
     } = this.props;
 
     let {
@@ -75,7 +79,9 @@ module.exports = createClass({
         location,
         screenshot,
         viewport,
+        onBrowserMounted,
         onChangeViewportDevice,
+        onContentResize,
         onResizeViewport,
         onRotateViewport,
       }),
