@@ -603,7 +603,7 @@ private:
    * Here goes the shut-down code that uses virtual methods.
    * Must only be called by Release().
    */
-  B2G_ACL_EXPORT void Finalize() {}
+  void Finalize() {}
 
   friend class AtomicRefCountedWithFinalize<TextureClient>;
   friend class gl::SharedSurface_Gralloc;
