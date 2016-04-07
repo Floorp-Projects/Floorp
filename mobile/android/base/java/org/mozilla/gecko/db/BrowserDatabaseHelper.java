@@ -6,11 +6,18 @@
 package org.mozilla.gecko.db;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
@@ -20,6 +27,8 @@ import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.FileUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
@@ -44,7 +53,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 30; // Bug 946857
+    public static final int DATABASE_VERSION = 31; // Bug 1234315
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -59,15 +68,21 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     static final String TABLE_LOGINS = BrowserContract.Logins.TABLE_LOGINS;
     static final String TABLE_DELETED_LOGINS = BrowserContract.DeletedLogins.TABLE_DELETED_LOGINS;
     static final String TABLE_DISABLED_HOSTS = BrowserContract.LoginsDisabledHosts.TABLE_DISABLED_HOSTS;
+    static final String TABLE_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
+    static final String VIEW_BOOKMARKS_WITH_ANNOTATIONS = Bookmarks.VIEW_WITH_ANNOTATIONS;
     static final String VIEW_HISTORY_WITH_FAVICONS = History.VIEW_WITH_FAVICONS;
     static final String VIEW_COMBINED_WITH_FAVICONS = Combined.VIEW_WITH_FAVICONS;
 
     static final String TABLE_BOOKMARKS_JOIN_FAVICONS = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
             TABLE_FAVICONS + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.FAVICON_ID) + " = " +
             qualifyColumn(TABLE_FAVICONS, Favicons._ID);
+
+    static final String TABLE_BOOKMARKS_JOIN_ANNOTATIONS = TABLE_BOOKMARKS + " JOIN " +
+            TABLE_ANNOTATIONS + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn(TABLE_ANNOTATIONS, UrlAnnotations.URL);
 
     static final String TABLE_HISTORY_JOIN_FAVICONS = TABLE_HISTORY + " LEFT OUTER JOIN " +
             TABLE_FAVICONS + " ON " + qualifyColumn(TABLE_HISTORY, History.FAVICON_ID) + " = " +
@@ -172,6 +187,16 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 ", " + qualifyColumn(TABLE_FAVICONS, Favicons.DATA) + " AS " + Bookmarks.FAVICON +
                 ", " + qualifyColumn(TABLE_FAVICONS, Favicons.URL) + " AS " + Bookmarks.FAVICON_URL +
                 " FROM " + TABLE_BOOKMARKS_JOIN_FAVICONS);
+    }
+
+    private void createBookmarksWithAnnotationsView(SQLiteDatabase db) {
+        debug("Creating " + VIEW_BOOKMARKS_WITH_ANNOTATIONS + " view");
+
+        db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_ANNOTATIONS + " AS " +
+                   "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
+                   ", " + qualifyColumn(TABLE_ANNOTATIONS, UrlAnnotations.KEY) + " AS " + Bookmarks.ANNOTATION_KEY +
+                   ", " + qualifyColumn(TABLE_ANNOTATIONS, UrlAnnotations.VALUE) + " AS " + Bookmarks.ANNOTATION_VALUE +
+                   " FROM " + TABLE_BOOKMARKS_JOIN_ANNOTATIONS);
     }
 
     private void createHistoryWithFaviconsView(SQLiteDatabase db) {
@@ -415,8 +440,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
         createOrUpdateAllSpecialFolders(db);
         createSearchHistoryTable(db);
-        createReadingListTable(db, TABLE_READING_LIST);
-        createReadingListIndices(db, TABLE_READING_LIST);
         createUrlAnnotationsTable(db);
         createNumbersTable(db);
 
@@ -424,6 +447,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createDisabledHostsTable(db, TABLE_DISABLED_HOSTS);
         createLoginsTable(db, TABLE_LOGINS);
         createLoginsTableIndices(db, TABLE_LOGINS);
+
+        createBookmarksWithAnnotationsView(db);
     }
 
     /**
@@ -1138,6 +1163,163 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createLoginsTableIndices(db, TABLE_LOGINS);
     }
 
+    // Get the cache path for a URL, based on the storage format in place during the 27to28 transition.
+    // This is a reimplementation of _toHashedPath from ReaderMode.jsm - given that we're likely
+    // to migrate the SavedReaderViewHelper implementation at some point, it seems safest to have a local
+    // implementation here - moreover this is probably faster than calling into JS.
+    private static String getReaderCacheFileNameForURL(String url) {
+        try {
+            // On KitKat and above we can use java.nio.charset.StandardCharsets.UTF_8 in place of "UTF8"
+            // which avoids having to handle UnsupportedCodingException
+            byte[] utf8 = url.getBytes("UTF8");
+
+            final MessageDigest digester = MessageDigest.getInstance("MD5");
+            byte[] hash = digester.digest(utf8);
+
+            final String hashString = new Base32().encodeAsString(hash);
+            return hashString.substring(0, hashString.indexOf('=')) + ".json";
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen
+            throw new IllegalStateException("UTF8 encoding not available - can't process readercache filename");
+        } catch (NoSuchAlgorithmException e) {
+            // This should also never happen
+            throw new IllegalStateException("MD5 digester unavailable - can't process readercache filename");
+        }
+    }
+
+    /*
+     * Moves reading list items from the 'reading_list' table back into the 'bookmarks' table. This time the
+     * reading list items are placed into a "Reading List" folder, which is a subfolder of the mobile-bookmarks table.
+     */
+    private void upgradeDatabaseFrom30to31(SQLiteDatabase db) {
+        // We only need to do the migration if reading-list items already exist. We could do a query of count(*) on
+        // TABLE_READING_LIST, however if we are doing the migration, we'll need to query all items in the reading-list,
+        // hence we might as well just query all items, and proceed with the migration if cursor.count > 0.
+
+        // We try to retain the original ordering below. Our LocalReadingListAccessor actually coalesced
+        // SERVER_STORED_ON with ADDED_ON to determine positioning, however reading list syncing was never
+        // implemented hence SERVER_STORED will have always been null.
+        final Cursor readingListCursor = db.query(TABLE_READING_LIST,
+                                     new String[] {
+                                             ReadingListItems.URL,
+                                             ReadingListItems.TITLE,
+                                             ReadingListItems.ADDED_ON,
+                                             ReadingListItems.CLIENT_LAST_MODIFIED
+                                     },
+                                     ReadingListItems.IS_DELETED + " = 0",
+                                     null,
+                                     null,
+                                     null,
+                                     ReadingListItems.ADDED_ON + " DESC");
+
+        // We'll want to walk the cache directory, so that we can (A) bookkeep readercache items
+        // that we want and (B) delete unneeded readercache items. (B) shouldn't actually happen, but
+        // is possible if there were bugs in our reader-caching code.
+        // We need to construct this here since we populate this map while walking the DB cursor,
+        // and use the map later when walking the cache.
+        final Map<String, String> fileToURLMap = new HashMap<>();
+
+
+        try {
+            if (!readingListCursor.moveToFirst()) {
+                return;
+            }
+
+            final Integer mobileBookmarksID = getMobileFolderId(db);
+
+            if (mobileBookmarksID == null) {
+                // This folder is created either on DB creation or during the 3-4 or 6-7 migrations.
+                throw new IllegalStateException("mobile bookmarks folder must already exist");
+            }
+
+            final long now = System.currentTimeMillis();
+
+            // We try to retain the same order as the reading-list would show. We should hopefully be reading the
+            // items in the order they are displayed on screen (final param of db.query above), by providing
+            // a position we should obtain the same ordering in the bookmark folder.
+            long position = 0;
+
+            final int titleColumnID = readingListCursor.getColumnIndexOrThrow(ReadingListItems.TITLE);
+            final int createdColumnID = readingListCursor.getColumnIndexOrThrow(ReadingListItems.ADDED_ON);
+
+            // This isn't the most efficient implementation, but the migration is one-off, and this
+            // also more maintainable than the SQL equivalent (generating the guids correctly is
+            // difficult in SQLite).
+            do {
+                final ContentValues readingListItemValues = new ContentValues();
+
+                final String url = readingListCursor.getString(readingListCursor.getColumnIndexOrThrow(ReadingListItems.URL));
+
+                readingListItemValues.put(Bookmarks.PARENT, mobileBookmarksID);
+                readingListItemValues.put(Bookmarks.GUID, Utils.generateGuid());
+                readingListItemValues.put(Bookmarks.URL, url);
+                // Title may be null, however we're expecting a String - we can generate an empty string if needed:
+                if (!readingListCursor.isNull(titleColumnID)) {
+                    readingListItemValues.put(Bookmarks.TITLE, readingListCursor.getString(titleColumnID));
+                } else {
+                    readingListItemValues.put(Bookmarks.TITLE, "");
+                }
+                readingListItemValues.put(Bookmarks.DATE_CREATED, readingListCursor.getLong(createdColumnID));
+                readingListItemValues.put(Bookmarks.DATE_MODIFIED, now);
+                readingListItemValues.put(Bookmarks.POSITION, position);
+
+                db.insert(TABLE_BOOKMARKS,
+                          null,
+                          readingListItemValues);
+
+                final String cacheFileName = getReaderCacheFileNameForURL(url);
+                fileToURLMap.put(cacheFileName, url);
+
+                position++;
+            } while (readingListCursor.moveToNext());
+
+        } finally {
+            readingListCursor.close();
+            // We need to do this work here since we might be returning (we return early if the
+            // reading-list table is empty).
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_READING_LIST);
+            createBookmarksWithAnnotationsView(db);
+        }
+
+        final File profileDir = GeckoProfile.get(mContext).getDir();
+        final File cacheDir = new File(profileDir, "readercache");
+
+        // At the time of this migration the SavedReaderViewHelper becomes a 1:1 mirror of reader view
+        // url-annotations. This may change in future implementations, however currently we only need to care
+        // about standard bookmarks (untouched during this migration) and bookmarks with a reader
+        // view annotation (which we're creating here, and which are guaranteed to be saved offline).
+        //
+        // This is why we have to migrate the cache items (instead of cleaning the cache
+        // and rebuilding it). We simply don't support uncached reader view bookmarks, and we would
+        // break existing reading list items (they would convert into plain bookmarks without
+        // reader view). This helps ensure that offline content isn't lost during the migration.
+        if (cacheDir.exists() && cacheDir.isDirectory()) {
+            SavedReaderViewHelper savedReaderViewHelper = SavedReaderViewHelper.getSavedReaderViewHelper(mContext);
+
+            // Usually we initialise the helper during onOpen(). However onUpgrade() is run before
+            // onOpen() hence we need to manually initialise it at this stage.
+            savedReaderViewHelper.loadItems();
+
+            for (File cacheFile : cacheDir.listFiles()) {
+                if (fileToURLMap.containsKey(cacheFile.getName())) {
+                    final String url = fileToURLMap.get(cacheFile.getName());
+                    final String path = cacheFile.getAbsolutePath();
+                    long size = cacheFile.length();
+
+                    savedReaderViewHelper.put(url, path, size);
+                } else {
+                    // This should never happen, but we don't actually know whether or not orphaned
+                    // items happened in the wild.
+                    boolean deleted = cacheFile.delete();
+
+                    if (!deleted) {
+                        Log.w(LOGTAG, "Failed to delete orphaned saved reader view file.");
+                    }
+                }
+            }
+        }
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1234,6 +1416,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 30:
                     upgradeDatabaseFrom29to30(db);
+                    break;
+
+                case 31:
+                    upgradeDatabaseFrom30to31(db);
                     break;
             }
         }
