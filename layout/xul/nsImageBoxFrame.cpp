@@ -539,22 +539,6 @@ nsImageBoxFrame::CanOptimizeToImageLayer()
   return true;
 }
 
-already_AddRefed<ImageContainer>
-nsDisplayXULImage::GetContainer(LayerManager* aManager,
-                                nsDisplayListBuilder* aBuilder)
-{
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
-
-  nsCOMPtr<imgIContainer> image = GetImage();
-  if (image) {
-    return image->GetImageContainer(aManager, flags);
-  }
-  return nullptr;
-}
-
-
 //
 // DidSetStyleContext
 //
