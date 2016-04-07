@@ -193,6 +193,10 @@ protected:
     }
   }
 
+  // mCallback is not unwrapped, so it can be a cross-compartment-wrapper.
+  // This is done to ensure that, if JS code can't call a callback f(), or get
+  // its members, directly itself, this code won't call f(), or get its members,
+  // on the code's behalf.
   JS::Heap<JSObject*> mCallback;
   JS::Heap<JSObject*> mCreationStack;
   // Ideally, we'd just hold a reference to the nsIGlobalObject, since that's
