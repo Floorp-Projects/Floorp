@@ -408,19 +408,27 @@ public:
   nsresult GetNSPRFileDesc(PRFileDesc** aNSPRFileDesc);
 
 protected:
-  const uint8_t * mFileData; /* pointer to mmaped file */
-  uint32_t        mLen;      /* length of file and memory mapped area */
+  const uint8_t * mFileData; /* pointer to zip data */
+  uint32_t        mLen;      /* length of zip data */
   mozilla::FileLocation mFile; /* source file if any, for logging */
 
 private:
   nsZipHandle();
   ~nsZipHandle();
 
+  void findDataStart();
+
   PRFileMap *                       mMap;    /* nspr datastructure for mmap */
   mozilla::AutoFDClose              mNSPRFileDesc;
   nsAutoPtr<nsZipItemPtr<uint8_t> > mBuf;
   mozilla::ThreadSafeAutoRefCnt     mRefCnt; /* ref count */
   NS_DECL_OWNINGTHREAD
+
+  const uint8_t * mFileStart; /* pointer to mmaped file */
+  uint32_t        mTotalLen;  /* total length of the mmaped file */
+
+  /* Magic number for CRX type expressed in Big Endian since it is a literal */
+  static const uint32_t kCRXMagic = 0x34327243;
 };
 
 nsresult gZlibInit(z_stream *zs);
