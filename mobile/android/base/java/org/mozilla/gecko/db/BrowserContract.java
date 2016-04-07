@@ -50,6 +50,7 @@ public class BrowserContract {
     public static final String PARAM_INCREMENT_VISITS = "increment_visits";
     public static final String PARAM_EXPIRE_PRIORITY = "priority";
     public static final String PARAM_DATASET_ID = "dataset_id";
+    public static final String PARAM_GROUP_BY = "group_by";
 
     static public enum ExpirePriority {
         NORMAL,
@@ -157,6 +158,7 @@ public class BrowserContract {
         public static final int FIXED_READING_LIST_ID = -2;
         public static final int FIXED_PINNED_LIST_ID = -3;
         public static final int FIXED_SCREENSHOT_FOLDER_ID = -4;
+        public static final int FAKE_READINGLIST_SMARTFOLDER_ID = -5;
 
         public static final String MOBILE_FOLDER_GUID = "mobile";
         public static final String PLACES_FOLDER_GUID = "places";
@@ -167,6 +169,7 @@ public class BrowserContract {
         public static final String FAKE_DESKTOP_FOLDER_GUID = "desktop";
         public static final String PINNED_FOLDER_GUID = "pinned";
         public static final String SCREENSHOT_FOLDER_GUID = "screenshots";
+        public static final String FAKE_READINGLIST_SMARTFOLDER_GUID = "readinglist";
 
         public static final int TYPE_FOLDER = 0;
         public static final int TYPE_BOOKMARK = 1;

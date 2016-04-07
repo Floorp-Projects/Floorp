@@ -67,6 +67,7 @@
      the user takes. The folder we store these links in is located in the bookmarks list
      and is labeled by this String. -->
 <!ENTITY screenshot_folder_label_in_bookmarks "Screenshots">
+<!ENTITY readinglist_smartfolder_label_in_bookmarks "Reading List">
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">

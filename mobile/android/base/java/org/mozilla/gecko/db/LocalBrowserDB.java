@@ -778,11 +778,38 @@ public class LocalBrowserDB implements BrowserDB {
         }
     }
 
+    /**
+     * Retrieve the list of reader-view bookmarks, i.e. the equivalent of the former reading-list.
+     * This is the result of a join of bookmarks with reader-view annotations (as stored in
+     * UrlAnnotations).
+     */
+    private Cursor getReadingListBookmarks(ContentResolver cr) {
+        // group by URL to avoid having duplicate bookmarks listed. It's possible to have multiple
+        // bookmarks pointing to the same URL (this would most commonly happen by manually
+        // copying bookmarks on desktop, followed by syncing with mobile), and we don't want
+        // to show the same URL multiple times in the reading list folder.
+        final Uri bookmarksGroupedByUri = mBookmarksUriWithProfile.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_GROUP_BY, Bookmarks.URL)
+                .build();
+
+        return cr.query(bookmarksGroupedByUri,
+                DEFAULT_BOOKMARK_COLUMNS,
+                Bookmarks.ANNOTATION_KEY + " == ? AND " +
+                Bookmarks.ANNOTATION_VALUE + " == ? AND " +
+                "(" + Bookmarks.TYPE + " = ? AND " + Bookmarks.URL + " IS NOT NULL)",
+                new String[] {
+                        BrowserContract.UrlAnnotations.Key.READER_VIEW.getDbValue(),
+                        BrowserContract.UrlAnnotations.READER_VIEW_SAVED_VALUE,
+                        String.valueOf(Bookmarks.TYPE_BOOKMARK) },
+                null);
+    }
+
     @Override
     @RobocopTarget
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         final boolean addDesktopFolder;
         final boolean addScreenshotsFolder;
+        final boolean addReadingListFolder;
 
         // We always want to show mobile bookmarks in the root view.
         if (folderId == Bookmarks.FIXED_ROOT_ID) {
@@ -792,12 +819,16 @@ public class LocalBrowserDB implements BrowserDB {
             // bookmarks exist, so that the user can still access non-mobile bookmarks.
             addDesktopFolder = desktopBookmarksExist(cr);
             addScreenshotsFolder = AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED;
+            addReadingListFolder = true;
         } else {
             addDesktopFolder = false;
             addScreenshotsFolder = false;
+            addReadingListFolder = false;
         }
 
         final Cursor c;
+
+        // (You can't switch on a long in Java, hence the if statements)
         if (folderId == Bookmarks.FAKE_DESKTOP_FOLDER_ID) {
             // Since the "Desktop Bookmarks" folder doesn't actually exist, we
             // just fake it by querying specifically certain known desktop folders.
@@ -812,6 +843,8 @@ public class LocalBrowserDB implements BrowserDB {
                          null);
         } else if (folderId == Bookmarks.FIXED_SCREENSHOT_FOLDER_ID) {
             c = getUrlAnnotations().getScreenshots(cr);
+        } else if (folderId == Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID) {
+            c = getReadingListBookmarks(cr);
         } else {
             // Right now, we only support showing folder and bookmark type of
             // entries. We should add support for other types though (bug 737024)
@@ -826,7 +859,7 @@ public class LocalBrowserDB implements BrowserDB {
                          null);
         }
 
-        final List<Cursor> cursorsToMerge = getSpecialFoldersCursorList(addDesktopFolder, addScreenshotsFolder);
+        final List<Cursor> cursorsToMerge = getSpecialFoldersCursorList(addDesktopFolder, addScreenshotsFolder, addReadingListFolder);
         if (cursorsToMerge.size() >= 1) {
             cursorsToMerge.add(c);
             final Cursor[] arr = (Cursor[]) Array.newInstance(Cursor.class, cursorsToMerge.size());
@@ -837,20 +870,25 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @CheckResult
-    private ArrayList<Cursor> getSpecialFoldersCursorList(final boolean addDesktopFolder, final boolean addScreenshotsFolder) {
-        if (addDesktopFolder || addScreenshotsFolder) {
+    private ArrayList<Cursor> getSpecialFoldersCursorList(final boolean addDesktopFolder,
+            final boolean addScreenshotsFolder, final boolean addReadingListFolder) {
+        if (addDesktopFolder || addScreenshotsFolder || addReadingListFolder) {
             // Avoid calling this twice.
             assertDefaultBookmarkColumnOrdering();
         }
 
         // Capacity is number of cursors added below plus one for non-special data.
-        final ArrayList<Cursor> out = new ArrayList<>(3);
+        final ArrayList<Cursor> out = new ArrayList<>(4);
         if (addDesktopFolder) {
             out.add(getSpecialFolderCursor(Bookmarks.FAKE_DESKTOP_FOLDER_ID, Bookmarks.FAKE_DESKTOP_FOLDER_GUID));
         }
 
         if (addScreenshotsFolder) {
             out.add(getSpecialFolderCursor(Bookmarks.FIXED_SCREENSHOT_FOLDER_ID, Bookmarks.SCREENSHOT_FOLDER_GUID));
+        }
+
+        if (addReadingListFolder) {
+            out.add(getSpecialFolderCursor(Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID, Bookmarks.FAKE_READINGLIST_SMARTFOLDER_GUID));
         }
 
         return out;
