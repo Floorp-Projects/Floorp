@@ -211,6 +211,8 @@ GlyphCache::~GlyphCache()
 
 const GlyphFace *GlyphCache::glyph(unsigned short glyphid) const      //result may be changed by subsequent call with a different glyphid
 { 
+    if (glyphid >= numGlyphs())
+        return _glyphs[0];
     const GlyphFace * & p = _glyphs[glyphid];
     if (p == 0 && _glyph_loader)
     {
@@ -389,12 +391,14 @@ const GlyphFace * GlyphCache::Loader::read_glyph(unsigned short glyphid, GlyphFa
             gloce = be::peek<uint16>(gloc);
         }
 
-        if (glocs + 1 >= m_pGlat.size() || gloce > m_pGlat.size())
+        if (glocs >= m_pGlat.size() - 1 || gloce > m_pGlat.size())
             return 0;
 
         const uint32 glat_version = be::peek<uint32>(m_pGlat);
         if (glat_version >= 0x00030000)
         {
+            if (glocs >= gloce)
+                return 0;
             const byte * p = m_pGlat + glocs;
             uint16 bmap = be::read<uint16>(p);
             int num = bit_set_count((uint32)bmap);

@@ -829,9 +829,9 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
     // Calculate the height of the glyph and how many horizontal slices to use.
     if (_maxy >= 1e37f)
     {
-        _maxy = ymax;
-        _miny = ymin;
         _sliceWidth = margin / 1.5f;
+        _maxy = ymax + margin;
+        _miny = ymin - margin;
         numSlices = int((_maxy - _miny + 2) / (_sliceWidth / 1.5f) + 1.f);  // +2 helps with rounding errors
         _edges.clear();
         _edges.insert(_edges.begin(), numSlices, (dir & 1) ? 1e38f : -1e38f);
@@ -841,7 +841,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
     {
         if (_miny != ymin)
         {
-            numSlices = int((ymin - _miny) / _sliceWidth - 1);
+            numSlices = int((ymin - margin - _miny) / _sliceWidth - 1);
             _miny += numSlices * _sliceWidth;
             if (numSlices < 0)
                 _edges.insert(_edges.begin(), -numSlices, (dir & 1) ? 1e38f : -1e38f);
@@ -855,7 +855,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
         }
         if (_maxy != ymax)
         {
-            numSlices = int((ymax - _miny) / _sliceWidth + 1);
+            numSlices = int((ymax + margin - _miny) / _sliceWidth + 1);
             _maxy = numSlices * _sliceWidth + _miny;
             if (numSlices > (int)_edges.size())
                 _edges.insert(_edges.end(), numSlices - _edges.size(), (dir & 1) ? 1e38f : -1e38f);
@@ -935,28 +935,33 @@ bool KernCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift
         return false;
     const Rect &bb = seg->theGlyphBBoxTemporary(slot->gid());
     const float sx = slot->origin().x + currShift.x;
-    float x = sx + (rtl > 0 ? bb.tr.x : bb.bl.x);
+    float x = (sx + (rtl > 0 ? bb.tr.x : bb.bl.x)) * rtl;
     // this isn't going to reduce _mingap so skip
-    if ((rtl > 0 && x < _xbound - _mingap - currSpace) || (rtl <= 0 && x > _xbound + _mingap + currSpace))
+    if (x < rtl * (_xbound - _mingap - currSpace))
         return false;
 
     const float sy = slot->origin().y + currShift.y;
-    int smin = max(0, int((bb.bl.y + (1 - _miny + sy)) / _sliceWidth + 1));
-    int smax = min((int)_edges.size() - 1, int((bb.tr.y + (1 - _miny + sy)) / _sliceWidth + 1));
+    int smin = max(1, int((bb.bl.y + (1 - _miny + sy)) / _sliceWidth + 1)) - 1;
+    int smax = min((int)_edges.size() - 2, int((bb.tr.y + (1 - _miny + sy)) / _sliceWidth + 1)) + 1;
+    if (smin > smax)
+        return false;
     bool collides = false;
+    float below = smin > 0 ? _edges[smin-1] * rtl : 1e38f;
+    float here = _edges[smin] * rtl;
+    float above = smin < (int)_edges.size() - 1 ? _edges[smin+1] * rtl : 1e38f;
 
     for (int i = smin; i <= smax; ++i)
     {
         float t;
         float y = (float)(_miny - 1 + (i + .5f) * _sliceWidth);  // vertical center of slice
-        if (x * rtl > _edges[i] * rtl - _mingap - currSpace)
+        if (    (x > here - _mingap - currSpace)
+             || (x > below - _mingap - currSpace)
+             || (x > above - _mingap - currSpace))
         {
             // 2 * currSpace to account for the space that is already separating them and the space we want to add
-            float m = get_edge(seg, slot, currShift, y, _sliceWidth, rtl > 0) + 2 * rtl * currSpace;
-            t = rtl * (_edges[i] - m);
+            float m = get_edge(seg, slot, currShift, y, _sliceWidth, rtl > 0) * rtl + 2 * currSpace;
             // Check slices above and below (if any).
-            if (i < (int)_edges.size() - 1) t = min(t, rtl * (_edges[i+1] - m));
-            if (i > 0) t = min(t, rtl * (_edges[i-1] - m));
+            t = min(min(here, below), above) - m;
             // _mingap is positive to shrink
             if (t < _mingap)
             {
@@ -965,13 +970,15 @@ bool KernCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift
             }
 #if !defined GRAPHITE2_NTRACING
             // Debugging - remember the closest neighboring edge for this slice.
-            if (rtl * m > rtl * _nearEdges[i])
+            if (m > rtl * _nearEdges[i])
             {
                 _slotNear[i] = slot;
-                _nearEdges[i] = m;
+                _nearEdges[i] = m * rtl;
             }
 #endif
         }
+        below = here; here = above;
+        above = i < (int)_edges.size() - 2 ? _edges[i+2] * rtl : 1e38f;
     }
     return collides;   // note that true is not a necessarily reliable value
     
