@@ -4,10 +4,10 @@ Date:   Thu Sep 24 11:36:08 2015 -0400
 
     Return an empty string when a symbol isn't mangled
 
-diff --git a/llvm/tools/clang/tools/libclang/CIndex.cpp b/llvm/tools/clang/tools/libclang/CIndex.cpp
+diff --git a/clang/tools/libclang/CIndex.cpp b/clang/tools/libclang/CIndex.cpp
 index 9fa18d3..1253832 100644
---- a/llvm/tools/clang/tools/libclang/CIndex.cpp
-+++ b/llvm/tools/clang/tools/libclang/CIndex.cpp
+--- a/clang/tools/libclang/CIndex.cpp
++++ b/clang/tools/libclang/CIndex.cpp
 @@ -3891,6 +3891,10 @@ CXString clang_Cursor_getMangling(CXCursor C) {
    ASTContext &Ctx = ND->getASTContext();
    std::unique_ptr<MangleContext> MC(Ctx.createMangleContext());

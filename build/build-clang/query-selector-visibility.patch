@@ -4,10 +4,10 @@ Date:   Mon Sep 14 17:47:21 2015 -0400
 
     Add support for querying the visibility of a cursor
 
-diff --git a/llvm/tools/clang/include/clang-c/Index.h b/llvm/tools/clang/include/clang-c/Index.h
+diff --git a/clang/include/clang-c/Index.h b/clang/include/clang-c/Index.h
 index fad9cfa..311bfcb 100644
---- a/llvm/tools/clang/include/clang-c/Index.h
-+++ b/llvm/tools/clang/include/clang-c/Index.h
+--- a/clang/include/clang-c/Index.h
++++ b/clang/include/clang-c/Index.h
 @@ -2440,6 +2440,24 @@ enum CXLinkageKind {
  CINDEX_LINKAGE enum CXLinkageKind clang_getCursorLinkage(CXCursor cursor);
  
@@ -33,10 +33,10 @@ index fad9cfa..311bfcb 100644
   * \brief Determine the availability of the entity that this cursor refers to,
   * taking the current target platform into account.
   *
-diff --git a/llvm/tools/clang/tools/libclang/CIndex.cpp b/llvm/tools/clang/tools/libclang/CIndex.cpp
+diff --git a/clang/tools/libclang/CIndex.cpp b/clang/tools/libclang/CIndex.cpp
 index 8225a6c..9fa18d3 100644
---- a/llvm/tools/clang/tools/libclang/CIndex.cpp
-+++ b/llvm/tools/clang/tools/libclang/CIndex.cpp
+--- a/clang/tools/libclang/CIndex.cpp
++++ b/clang/tools/libclang/CIndex.cpp
 @@ -6361,6 +6361,27 @@ CXLinkageKind clang_getCursorLinkage(CXCursor cursor) {
  } // end: extern "C"
  
@@ -65,10 +65,10 @@ index 8225a6c..9fa18d3 100644
  // Operations for querying language of a cursor.
  //===----------------------------------------------------------------------===//
  
-diff --git a/llvm/tools/clang/tools/libclang/libclang.exports b/llvm/tools/clang/tools/libclang/libclang.exports
+diff --git a/clang/tools/libclang/libclang.exports b/clang/tools/libclang/libclang.exports
 index f6a7175..a919a8e 100644
---- a/llvm/tools/clang/tools/libclang/libclang.exports
-+++ b/llvm/tools/clang/tools/libclang/libclang.exports
+--- a/clang/tools/libclang/libclang.exports
++++ b/clang/tools/libclang/libclang.exports
 @@ -173,6 +173,7 @@ clang_getCursorSemanticParent
  clang_getCursorSpelling
  clang_getCursorType
