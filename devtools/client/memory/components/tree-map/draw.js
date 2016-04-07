@@ -37,7 +37,7 @@ const TEXT_LIGHT_COLOR = "rgba(0,0,0,0.5)";
 const LINE_WIDTH = 1;
 const FONT_SIZE = 10;
 const FONT_LINE_HEIGHT = 2;
-const PADDING = [5, 5, 5, 5];
+const PADDING = [5 + FONT_SIZE, 5, 5, 5];
 const COUNT_LABEL = L10N.getStr("tree-map.node-count");
 
 /**
@@ -83,10 +83,15 @@ const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
   let window = canvas.ownerDocument.defaultView;
   let ratio = window.devicePixelRatio;
   let treemap = window.d3.layout.treemap()
-    .size([canvas.width, canvas.height])
+    .size([
+      // The d3 layout includes the padding around everything, add some
+      // extra padding to the size to compensate for thi
+      canvas.width + (PADDING[1] + PADDING[3]) * ratio,
+      canvas.height + (PADDING[0] + PADDING[2]) * ratio
+    ])
     .sticky(true)
     .padding([
-      (PADDING[0] + FONT_SIZE) * ratio,
+      PADDING[0] * ratio,
       PADDING[1] * ratio,
       PADDING[2] * ratio,
       PADDING[3] * ratio,
@@ -156,11 +161,11 @@ const drawTruncatedName = exports.drawTruncatedName = function(ctx, x, y,
  * @param  {CanvasRenderingContext2D} ctx
  * @param  {Object} node
  * @param  {Number} borderWidth
- * @param  {Number} ratio
  * @param  {Object} dragZoom
+ * @param  {Array}  padding
  */
 const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
-                                              dragZoom) {
+                                              dragZoom, padding) {
   let { dx, dy, name, totalBytes, totalCount } = node;
   let scale = dragZoom.zoom + 1;
   dx *= scale;
@@ -170,8 +175,8 @@ const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
   // common case of lots of small leaf nodes
   if (FONT_SIZE * FONT_LINE_HEIGHT < dy) {
     let margin = borderWidth(node) * 1.5 + ratio * TEXT_MARGIN;
-    let x = margin + node.x * scale - dragZoom.offsetX;
-    let y = margin + node.y * scale - dragZoom.offsetY;
+    let x = margin + (node.x - padding[0]) * scale - dragZoom.offsetX;
+    let y = margin + (node.y - padding[1]) * scale - dragZoom.offsetY;
     let innerWidth = dx - margin * 2;
     let nameSize = ctx.measureText(name).width;
 
@@ -213,16 +218,18 @@ const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
  * @param  {Number} borderWidth
  * @param  {Number} ratio
  * @param  {Object} dragZoom
+ * @param  {Array}  padding
  */
-const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom) {
+const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom,
+                                           padding) {
   let border = borderWidth(node);
   let fillHSL = colorCoarseType(node);
   let strokeHSL = [fillHSL[0], fillHSL[1], fillHSL[2] * 0.5];
   let scale = 1 + dragZoom.zoom;
 
   // Offset the draw so that box strokes don't overlap
-  let x = scale * node.x - dragZoom.offsetX + border / 2;
-  let y = scale * node.y - dragZoom.offsetY + border / 2;
+  let x = scale * (node.x - padding[0]) - dragZoom.offsetX + border / 2;
+  let y = scale * (node.y - padding[1]) - dragZoom.offsetY + border / 2;
   let dx = scale * node.dx - border;
   let dy = scale * node.dy - border;
 
@@ -247,6 +254,9 @@ const drawTreemap = exports.drawTreemap = function({canvas, ctx}, nodes,
   let window = canvas.ownerDocument.defaultView;
   let ratio = window.devicePixelRatio;
   let canvasArea = canvas.width * canvas.height;
+  // Subtract the outer padding from the tree map layout.
+  let padding = [PADDING[3] * ratio, PADDING[0] * ratio];
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font = `${FONT_SIZE * ratio}px sans-serif`;
   ctx.textBaseline = "top";
@@ -262,8 +272,8 @@ const drawTreemap = exports.drawTreemap = function({canvas, ctx}, nodes,
       continue;
     }
 
-    drawBox(ctx, node, borderWidth, dragZoom);
-    drawText(ctx, node, borderWidth, ratio, dragZoom);
+    drawBox(ctx, node, borderWidth, dragZoom, padding);
+    drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
   }
 };
 
