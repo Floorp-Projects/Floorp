@@ -122,7 +122,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                     remoteClients.add(null);
                 } else {
                     // Update "hidden clients" item because number of hidden clients changed.
-                    notifyItemChanged(getRemoteClientsHiddenItemsIndex());
+                    notifyItemChanged(remoteClients.size() - 1);
                 }
                 break;
             case HISTORY:
@@ -141,34 +141,18 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
             hiddenClients.remove(client);
         }
 
-        final int insertIndex = getRemoteClientsHiddenItemsIndex();
+        final int insertIndex = remoteClients.size() - 1;
 
         remoteClients.addAll(insertIndex, selectedClients);
         notifyItemRangeInserted(insertIndex, selectedClients.size());
 
         if (hiddenClients.isEmpty()) {
             // No more hidden clients, remove "unhide" item.
-            remoteClients.remove(getRemoteClientsHiddenItemsIndex());
+            remoteClients.remove(remoteClients.size() - 1);
         } else {
             // Update "hidden clients" item because number of hidden clients changed.
-            notifyItemChanged(getRemoteClientsHiddenItemsIndex());
+            notifyItemChanged(remoteClients.size() - 1);
         }
-    }
-
-    /**
-     * Get the position of the "N devices hidden" item in the remoteClients List.
-     *
-     * This is the last item in the remoteClients list, if any items are hidden.
-     * <code>hiddenClients</code> must be in a consistent state with <code>remoteClients</code>
-     * (e.g. each client should be in exactly one of the two lists).
-     *
-     * @return index of the "N devices hidden" item, or -1 if it doesn't exist.
-     */
-    private int getRemoteClientsHiddenItemsIndex() {
-        if (hiddenClients.isEmpty()) {
-            return -1;
-        }
-        return remoteClients.size() - 1;
     }
 
     public List<RemoteClient> getHiddenClients() {
