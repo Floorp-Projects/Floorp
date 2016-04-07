@@ -1102,8 +1102,17 @@ protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
   void SysColorChangedInternal();
+
+  // update device context's resolution from the widget
   void UIResolutionChangedInternal();
 
+  // if aScale > 0.0, use it as resolution scale factor to the device context
+  // (otherwise get it from the widget)
+  void UIResolutionChangedInternalScale(double aScale);
+
+  // aData here is a pointer to a double that holds the CSS to device-pixel
+  // scale factor from the parent, which will be applied to the subdocument's
+  // device context instead of retrieving a scale from the widget.
   static bool
   UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument, void* aData);
 
