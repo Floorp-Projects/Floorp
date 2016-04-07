@@ -527,6 +527,16 @@ public:
     {
       return mChannelMap;
     }
+    // Calculate the mapping table from the current layout to aOther such that
+    // one can easily go from one layout to the other by doing:
+    // out[channel] = in[map[channel]].
+    // Returns true if the reordering is possible or false otherwise.
+    // If true, then aMap, if set, will be updated to contain the mapping table
+    // allowing conversion from the current layout to aOther.
+    // If aMap is nullptr, then MappingTable can be used to simply determine if
+    // the current layout can be easily reordered to aOther.
+    // aMap must be an array of size MAX_AUDIO_CHANNELS.
+    bool MappingTable(const ChannelLayout& aOther, uint8_t* aMap = nullptr) const;
     bool IsValid() const {
       return mValid;
     }
