@@ -2815,15 +2815,6 @@ nsINode::GetAttributes()
   return AsElement()->Attributes();
 }
 
-bool
-EventTarget::DispatchEvent(Event& aEvent,
-                           ErrorResult& aRv)
-{
-  bool result = false;
-  aRv = DispatchEvent(&aEvent, &result);
-  return result;
-}
-
 Element*
 nsINode::GetParentElementCrossingShadowRoot() const
 {
