@@ -92,15 +92,14 @@ public class SwitchBoard {
         String serverUrl = defaultServerUrl;
 
         final URL requestUrl = buildConfigRequestUrl(c, uuid, serverUrl);
+        if (DEBUG) Log.d(TAG, "Request URL: " + requestUrl);
         if (requestUrl == null) {
             return;
         }
 
-        if (DEBUG) Log.d(TAG, requestUrl.toString());
 
         final String result = readFromUrlGET(requestUrl);
-        if (DEBUG) Log.d(TAG, result);
-
+        if (DEBUG) Log.d(TAG, "Result: " + result);
         if (result == null) {
             return;
         }
