@@ -181,7 +181,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       }
     }
     finished = aStream->mUpdateFinished;
-    bool notifiedTrackCreated = false;
+    bool shouldNotifyTrackCreated = false;
     for (int32_t i = aStream->mUpdateTracks.Length() - 1; i >= 0; --i) {
       SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
       aStream->ApplyTrackDisabling(data->mID, data->mData);
@@ -212,7 +212,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         // data->mData with an empty clone.
         data->mData = segment->CreateEmptyClone();
         data->mCommands &= ~SourceMediaStream::TRACK_CREATE;
-        notifiedTrackCreated = true;
+        shouldNotifyTrackCreated = true;
       } else if (data->mData->GetDuration() > 0) {
         MediaSegment* dest = aStream->mTracks.FindTrack(data->mID)->GetSegment();
         STREAM_LOG(LogLevel::Verbose, ("SourceMediaStream %p track %d, advancing end from %lld to %lld",
@@ -227,7 +227,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         aStream->mUpdateTracks.RemoveElementAt(i);
       }
     }
-    if (notifiedTrackCreated) {
+    if (shouldNotifyTrackCreated) {
       for (MediaStreamListener* l : aStream->mListeners) {
         l->NotifyFinishedTrackCreation(this);
       }
