@@ -1218,7 +1218,20 @@ LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** objp
                    Shape** propp);
 
 bool
+LookupOwnPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Shape** propp,
+                      bool* isTypedArrayOutOfRange = nullptr);
+
+bool
 GetPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Value* vp);
+
+bool
+GetGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp);
+
+bool
+GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id, JSNative* native);
+
+bool
+HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result);
 
 bool
 GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
@@ -1335,6 +1348,9 @@ FreezeObject(JSContext* cx, HandleObject obj)
  */
 extern bool
 TestIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level, bool* resultp);
+
+extern bool
+SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor);
 
 }  /* namespace js */
 

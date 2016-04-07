@@ -28,8 +28,8 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
-        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
+        // no hide for t1_subdiv because it is contained by hidden t1_checkbox
         new invokerChecker(EVENT_HIDE, getNode("t1_checkbox")),
         new invokerChecker(EVENT_SHOW, getNode("t1_checkbox")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
@@ -73,10 +73,10 @@
     function removeARIAOwns()
     {
       this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
         new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
-        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
       ];
 
@@ -107,9 +107,9 @@
     function setARIAOwns()
     {
       this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
-        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
         new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
       ];
@@ -142,8 +142,8 @@
     function addIdToARIAOwns()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("t1_group")),
         new invokerChecker(EVENT_SHOW, getNode("t1_group")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_group")),
         new invokerChecker(EVENT_REORDER, document)
       ];
 
@@ -275,8 +275,8 @@
     function setId()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("t1_grouptmp")),
         new invokerChecker(EVENT_SHOW, getNode("t1_grouptmp")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_grouptmp")),
         new invokerChecker(EVENT_REORDER, document)
       ];
 
@@ -515,7 +515,7 @@
     ////////////////////////////////////////////////////////////////////////////
 
     //gA11yEventDumpToConsole = true;
-    //enableLogging("tree,verbose"); // debug stuff
+    //enableLogging("tree,eventTree,verbose"); // debug stuff
 
     var gQueue = null;
 

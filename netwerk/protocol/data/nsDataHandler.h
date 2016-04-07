@@ -30,12 +30,12 @@ public:
     // Parse a data: URI and return the individual parts
     // (the given spec will temporarily be modified but will be returned
     //  to the original before returning)
+    // contentCharset and dataBuffer can be nullptr if they are not needed.
     static nsresult ParseURI(nsCString& spec,
-                                         nsCString& contentType,
-                                         nsCString& contentCharset,
-                                         bool&    isBase64,
-                                         nsCString& dataBuffer,
-                                         nsCString& hashRef);
+                             nsCString& contentType,
+                             nsCString* contentCharset,
+                             bool& isBase64,
+                             nsCString* dataBuffer);
 };
 
 #endif /* nsDataHandler_h___ */

@@ -27,12 +27,27 @@ def assert_eq(actual, expected):
 expected: %r
 actual:   %r""" % (expected, actual))
 
+# Assert that |expected| regex matches |actual| result; if not, complain in a helpful way.
+def assert_match(actual, expected):
+    if re.match(expected, actual, re.MULTILINE) == None:
+        raise AssertionError("""Unexpected result:
+expected pattern: %r
+actual:           %r""" % (expected, actual))
+
 # Assert that |value|'s pretty-printed form is |form|. If |value| is a
 # string, then evaluate it with gdb.parse_and_eval to produce a value.
 def assert_pretty(value, form):
     if isinstance(value, str):
         value = gdb.parse_and_eval(value)
     assert_eq(str(value), form)
+
+# Assert that |value|'s pretty-printed form match the pattern |pattern|. If
+# |value| is a string, then evaluate it with gdb.parse_and_eval to produce a
+# value.
+def assert_regexp_pretty(value, form):
+    if isinstance(value, str):
+        value = gdb.parse_and_eval(value)
+    assert_match(str(value), form)
 
 # Check that the list of registered pretty-printers includes one named
 # |printer|, with a subprinter named |subprinter|.

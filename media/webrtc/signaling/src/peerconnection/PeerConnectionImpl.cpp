@@ -172,14 +172,14 @@ private:
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
+class TracksAvailableCallback : public OnTracksAvailableCallback
 {
 public:
   TracksAvailableCallback(size_t numNewAudioTracks,
                           size_t numNewVideoTracks,
                           const std::string& pcHandle,
                           RefPtr<PeerConnectionObserver> aObserver)
-  : DOMMediaStream::OnTracksAvailableCallback()
+  : OnTracksAvailableCallback()
   , mObserver(aObserver)
   , mPcHandle(pcHandle)
   {}
@@ -215,13 +215,12 @@ public:
       // track id from the start, but we're stuck doing this fixup after the
       // fact.
       nsresult rv = wrapper.impl()->GetRemoteTrackId(streamId,
-                                                     tracks[i]->GetTrackID(),
+                                                     *tracks[i],
                                                      &trackId);
 
       if (NS_FAILED(rv)) {
-        CSFLogError(logTag, "%s: Failed to get string track id for %u, rv = %u",
-                            __FUNCTION__,
-                            static_cast<unsigned>(tracks[i]->GetTrackID()),
+        CSFLogError(logTag, "%s: Failed to get string track id for %p, rv = %u",
+                            __FUNCTION__, tracks[i].get(),
                             static_cast<unsigned>(rv));
         MOZ_ASSERT(false);
         continue;
@@ -495,23 +494,6 @@ PeerConnectionImpl::MakeMediaStream()
 
   RefPtr<DOMMediaStream> stream =
     DOMMediaStream::CreateSourceStream(GetWindow(), graph);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  // Make the stream data (audio/video samples) accessible to the receiving page.
-  // We're only certain that privacy hasn't been requested if we're connected.
-  if (mDtlsConnected && !PrivacyRequested()) {
-    nsIDocument* doc = GetWindow()->GetExtantDoc();
-    if (!doc) {
-      return nullptr;
-    }
-    stream->CombineWithPrincipal(doc->NodePrincipal());
-  } else {
-    // we're either certain that we need isolation for the streams, OR
-    // we're not sure and we can fix the stream in SetDtlsConnected
-    nsCOMPtr<nsIPrincipal> principal =
-      do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
-    stream->CombineWithPrincipal(principal);
-  }
-#endif
 
   CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetInputStream());
 
@@ -1736,6 +1718,176 @@ static void DeferredSetRemote(const std::string& aPcHandle,
   }
 }
 
+nsresult
+PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
+{
+  JSErrorResult jrv;
+
+  std::vector<RefPtr<JsepTrack>> newTracks =
+    mJsepSession->GetRemoteTracksAdded();
+
+  // Group new tracks by stream id
+  std::map<std::string, std::vector<RefPtr<JsepTrack>>> tracksByStreamId;
+  for (auto i = newTracks.begin(); i != newTracks.end(); ++i) {
+    RefPtr<JsepTrack> track = *i;
+
+    if (track->GetMediaType() == mozilla::SdpMediaSection::kApplication) {
+      // Ignore datachannel
+      continue;
+    }
+
+    tracksByStreamId[track->GetStreamId()].push_back(track);
+  }
+
+  for (auto i = tracksByStreamId.begin(); i != tracksByStreamId.end(); ++i) {
+    std::string streamId = i->first;
+    std::vector<RefPtr<JsepTrack>>& tracks = i->second;
+
+    RefPtr<RemoteSourceStreamInfo> info =
+      mMedia->GetRemoteStreamById(streamId);
+    if (!info) {
+      nsresult nrv = CreateRemoteSourceStreamInfo(&info, streamId);
+      if (NS_FAILED(nrv)) {
+        aPco->OnSetRemoteDescriptionError(
+            kInternalError,
+            ObString("CreateRemoteSourceStreamInfo failed"),
+            jrv);
+        return nrv;
+      }
+
+      nrv = mMedia->AddRemoteStream(info);
+      if (NS_FAILED(nrv)) {
+        aPco->OnSetRemoteDescriptionError(
+            kInternalError,
+            ObString("AddRemoteStream failed"),
+            jrv);
+        return nrv;
+      }
+
+      CSFLogDebug(logTag, "Added remote stream %s", info->GetId().c_str());
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+      info->GetMediaStream()->AssignId(NS_ConvertUTF8toUTF16(streamId.c_str()));
+#else
+      info->GetMediaStream()->AssignId((streamId));
+#endif
+    }
+
+    size_t numNewAudioTracks = 0;
+    size_t numNewVideoTracks = 0;
+    size_t numPreexistingTrackIds = 0;
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+      // Set the principal used for creating the tracks. This makes the stream
+      // data (audio/video samples) accessible to the receiving page. We're
+      // only certain that privacy hasn't been requested if we're connected.
+      nsCOMPtr<nsIPrincipal> principal;
+      if (mDtlsConnected && !PrivacyRequested()) {
+        nsIDocument* doc = GetWindow()->GetExtantDoc();
+        MOZ_ASSERT(doc);
+        if (doc) {
+          principal = doc->NodePrincipal();
+        }
+      } else {
+        // we're either certain that we need isolation for the streams, OR
+        // we're not sure and we can fix the stream in SetDtlsConnected
+        principal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
+      }
+#endif
+
+    for (auto j = tracks.begin(); j != tracks.end(); ++j) {
+      RefPtr<JsepTrack> track = *j;
+      if (!info->HasTrack(track->GetTrackId())) {
+        if (track->GetMediaType() == SdpMediaSection::kAudio) {
+          ++numNewAudioTracks;
+        } else if (track->GetMediaType() == SdpMediaSection::kVideo) {
+          ++numNewVideoTracks;
+        } else {
+          MOZ_ASSERT(false);
+          continue;
+        }
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+        RefPtr<RemoteTrackSource> source =
+          new RemoteTrackSource(principal, nsString());
+#else
+        RefPtr<MediaStreamTrackSource> source = new MediaStreamTrackSource();
+#endif
+        TrackID trackID = info->GetNextAvailableNumericTrackId();
+        RefPtr<MediaStreamTrack> domTrack;
+        if (track->GetMediaType() == SdpMediaSection::kAudio) {
+          domTrack =
+            info->GetMediaStream()->CreateDOMTrack(trackID,
+                                                   MediaSegment::AUDIO,
+                                                   source);
+        } else {
+          domTrack =
+            info->GetMediaStream()->CreateDOMTrack(trackID,
+                                                   MediaSegment::VIDEO,
+                                                   source);
+        }
+        info->AddTrack(track->GetTrackId(), domTrack);
+        CSFLogDebug(logTag, "Added remote track %s/%s",
+                    info->GetId().c_str(), track->GetTrackId().c_str());
+      } else {
+        ++numPreexistingTrackIds;
+      }
+    }
+
+    // Now that the streams are all set up, notify about track availability.
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+    TracksAvailableCallback* tracksAvailableCallback =
+      new TracksAvailableCallback(numNewAudioTracks,
+                                  numNewVideoTracks,
+                                  mHandle,
+                                  aPco);
+    info->GetMediaStream()->OnTracksAvailable(tracksAvailableCallback);
+#else
+    if (!numPreexistingTrackIds) {
+      aPco->OnAddStream(*info->GetMediaStream(), jrv);
+    }
+#endif
+  }
+  return NS_OK;
+}
+
+void
+PeerConnectionImpl::RemoveOldRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
+{
+  JSErrorResult jrv;
+
+  std::vector<RefPtr<JsepTrack>> removedTracks =
+    mJsepSession->GetRemoteTracksRemoved();
+
+  for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
+    const std::string& streamId = (*i)->GetStreamId();
+    const std::string& trackId = (*i)->GetTrackId();
+
+    RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
+    if (!info) {
+      MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "
+                        "This is a bug.");
+      continue;
+    }
+
+    mMedia->RemoveRemoteTrack(streamId, trackId);
+
+    DOMMediaStream* stream = info->GetMediaStream();
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
+    stream->GetTracks(tracks);
+    for (auto& track : tracks) {
+      if (PeerConnectionImpl::GetTrackId(*track) == trackId) {
+        aPco->OnRemoveTrack(*track, jrv);
+        break;
+      }
+    }
+
+    // We might be holding the last ref, but that's ok.
+    if (!info->GetTrackCount()) {
+      aPco->OnRemoveStream(*stream, jrv);
+    }
+  }
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
 {
@@ -1814,124 +1966,13 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
     pco->OnSetRemoteDescriptionError(error, ObString(errorString.c_str()), jrv);
   } else {
-    std::vector<RefPtr<JsepTrack>> newTracks =
-      mJsepSession->GetRemoteTracksAdded();
-
-    // Group new tracks by stream id
-    std::map<std::string, std::vector<RefPtr<JsepTrack>>> tracksByStreamId;
-    for (auto i = newTracks.begin(); i != newTracks.end(); ++i) {
-      RefPtr<JsepTrack> track = *i;
-
-      if (track->GetMediaType() == mozilla::SdpMediaSection::kApplication) {
-        // Ignore datachannel
-        continue;
-      }
-
-      tracksByStreamId[track->GetStreamId()].push_back(track);
+    nrv = CreateNewRemoteTracks(pco);
+    if (NS_FAILED(nrv)) {
+      // aPco was already notified, just return early.
+      return NS_OK;
     }
 
-    for (auto i = tracksByStreamId.begin(); i != tracksByStreamId.end(); ++i) {
-      std::string streamId = i->first;
-      std::vector<RefPtr<JsepTrack>>& tracks = i->second;
-
-      RefPtr<RemoteSourceStreamInfo> info =
-        mMedia->GetRemoteStreamById(streamId);
-      if (!info) {
-        nsresult nrv = CreateRemoteSourceStreamInfo(&info, streamId);
-        if (NS_FAILED(nrv)) {
-          pco->OnSetRemoteDescriptionError(
-              kInternalError,
-              ObString("CreateRemoteSourceStreamInfo failed"),
-              jrv);
-          return NS_OK;
-        }
-
-        nrv = mMedia->AddRemoteStream(info);
-        if (NS_FAILED(nrv)) {
-          pco->OnSetRemoteDescriptionError(
-              kInternalError,
-              ObString("AddRemoteStream failed"),
-              jrv);
-          return NS_OK;
-        }
-        CSFLogDebug(logTag, "Added remote stream %s", info->GetId().c_str());
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-        info->GetMediaStream()->AssignId(NS_ConvertUTF8toUTF16(streamId.c_str()));
-#else
-        info->GetMediaStream()->AssignId((streamId));
-#endif
-      }
-
-      size_t numNewAudioTracks = 0;
-      size_t numNewVideoTracks = 0;
-      size_t numPreexistingTrackIds = 0;
-
-      for (auto j = tracks.begin(); j != tracks.end(); ++j) {
-        RefPtr<JsepTrack> track = *j;
-        if (!info->HasTrack(track->GetTrackId())) {
-          if (track->GetMediaType() == SdpMediaSection::kAudio) {
-            ++numNewAudioTracks;
-          } else if (track->GetMediaType() == SdpMediaSection::kVideo) {
-            ++numNewVideoTracks;
-          } else {
-            MOZ_ASSERT(false);
-            continue;
-          }
-          info->AddTrack(track->GetTrackId());
-          CSFLogDebug(logTag, "Added remote track %s/%s",
-                      info->GetId().c_str(), track->GetTrackId().c_str());
-        } else {
-          ++numPreexistingTrackIds;
-        }
-      }
-
-      // Now that the streams are all set up, notify about track availability.
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-      TracksAvailableCallback* tracksAvailableCallback =
-        new TracksAvailableCallback(numNewAudioTracks,
-                                    numNewVideoTracks,
-                                    mHandle,
-                                    pco);
-      info->GetMediaStream()->OnTracksAvailable(tracksAvailableCallback);
-#else
-      if (!numPreexistingTrackIds) {
-        pco->OnAddStream(*info->GetMediaStream(), jrv);
-      }
-#endif
-    }
-
-    std::vector<RefPtr<JsepTrack>> removedTracks =
-      mJsepSession->GetRemoteTracksRemoved();
-
-    for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
-      const std::string& streamId = (*i)->GetStreamId();
-      const std::string& trackId = (*i)->GetTrackId();
-
-      RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
-      if (!info) {
-        MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "
-                          "This is a bug.");
-        continue;
-      }
-
-      mMedia->RemoveRemoteTrack(streamId, trackId);
-
-      DOMMediaStream* stream = info->GetMediaStream();
-      nsTArray<RefPtr<MediaStreamTrack>> tracks;
-      stream->GetTracks(tracks);
-      for (auto& track : tracks) {
-        if (PeerConnectionImpl::GetTrackId(*track) == trackId) {
-          pco->OnRemoveTrack(*track, jrv);
-          break;
-        }
-      }
-
-      // We might be holding the last ref, but that's ok.
-      if (!info->GetTrackCount()) {
-        pco->OnRemoveStream(*stream, jrv);
-      }
-    }
+    RemoveOldRemoteTracks(pco);
 
     pco->OnSetRemoteDescriptionSuccess(jrv);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -2098,7 +2139,8 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity)
       CSFLogInfo(logTag, "Can't update principal on streams; document gone");
       return NS_ERROR_FAILURE;
     }
-    mMedia->UpdateSinkIdentity_m(doc->NodePrincipal(), mPeerIdentity);
+    MediaStreamTrack* allTracks = nullptr;
+    mMedia->UpdateSinkIdentity_m(allTracks, doc->NodePrincipal(), mPeerIdentity);
   }
   return NS_OK;
 }
@@ -2131,10 +2173,10 @@ PeerConnectionImpl::SetDtlsConnected(bool aPrivacyRequested)
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 void
-PeerConnectionImpl::PrincipalChanged(DOMMediaStream* aMediaStream) {
+PeerConnectionImpl::PrincipalChanged(MediaStreamTrack* aTrack) {
   nsIDocument* doc = GetWindow()->GetExtantDoc();
   if (doc) {
-    mMedia->UpdateSinkIdentity_m(doc->NodePrincipal(), mPeerIdentity);
+    mMedia->UpdateSinkIdentity_m(aTrack, doc->NodePrincipal(), mPeerIdentity);
   } else {
     CSFLogInfo(logTag, "Can't update sink principal; document gone");
   }
@@ -2144,14 +2186,14 @@ PeerConnectionImpl::PrincipalChanged(DOMMediaStream* aMediaStream) {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 nsresult
 PeerConnectionImpl::GetRemoteTrackId(const std::string streamId,
-                                     TrackID numericTrackId,
+                                     const MediaStreamTrack& aTrack,
                                      std::string* trackId) const
 {
   if (IsClosed()) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return mMedia->GetRemoteTrackId(streamId, numericTrackId, trackId);
+  return mMedia->GetRemoteTrackId(streamId, aTrack, trackId);
 }
 #endif
 
@@ -2212,11 +2254,10 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
     CSFLogError(logTag, "%s: Track is not in owned stream (Bug 1259236)", __FUNCTION__);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  uint32_t num = mMedia->LocalStreamsLength();
 
   std::string streamId = PeerConnectionImpl::GetStreamId(aMediaStream);
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  nsresult res = mMedia->AddTrack(&aMediaStream, streamId, trackId);
+  nsresult res = mMedia->AddTrack(aMediaStream, streamId, aTrack, trackId);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -2224,9 +2265,10 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
   CSFLogDebug(logTag, "Added track (%s) to stream %s",
                       trackId.c_str(), streamId.c_str());
 
-  if (num != mMedia->LocalStreamsLength()) {
-    aMediaStream.AddPrincipalChangeObserver(this);
-  }
+  aTrack.AddPrincipalChangeObserver(this);
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  PrincipalChanged(&aTrack);
+#endif
 
   if (aTrack.AsAudioStreamTrack()) {
     res = AddTrackToJsepSession(SdpMediaSection::kAudio, streamId, trackId);
@@ -2277,22 +2319,13 @@ NS_IMETHODIMP
 PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  DOMMediaStream* stream = aTrack.GetStream();
-
-  if (!stream) {
-    CSFLogError(logTag, "%s: Track has no stream", __FUNCTION__);
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  std::string streamId = PeerConnectionImpl::GetStreamId(*stream);
-  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamById(streamId);
+  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
+  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
 
   if (!info) {
     CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
     return NS_ERROR_INVALID_ARG;
   }
-
-  std::string trackId(PeerConnectionImpl::GetTrackId(aTrack));
 
   nsresult rv =
     mJsepSession->RemoveTrack(info->GetId(), trackId);
@@ -2306,6 +2339,8 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   }
 
   media()->RemoveLocalTrack(info->GetId(), trackId);
+
+  aTrack.RemovePrincipalChangeObserver(this);
 
   OnNegotiationNeeded();
 
@@ -2352,10 +2387,16 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
   std::string origTrackId = PeerConnectionImpl::GetTrackId(aThisTrack);
   std::string newTrackId = PeerConnectionImpl::GetTrackId(aWithTrack);
 
-  std::string origStreamId =
-    PeerConnectionImpl::GetStreamId(*aThisTrack.GetStream());
+  RefPtr<LocalSourceStreamInfo> info =
+    media()->GetLocalStreamByTrackId(origTrackId);
+  if (!info) {
+    CSFLogError(logTag, "Could not find stream from trackId");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  std::string origStreamId = info->GetId();
   std::string newStreamId =
-    PeerConnectionImpl::GetStreamId(*aWithTrack.GetStream());
+    PeerConnectionImpl::GetStreamId(*aWithTrack.mOwningStream);
 
   nsresult rv = mJsepSession->ReplaceTrack(origStreamId,
                                            origTrackId,
@@ -2374,7 +2415,7 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
 
   rv = media()->ReplaceTrack(origStreamId,
                              origTrackId,
-                             aWithTrack.GetStream(),
+                             aWithTrack,
                              newStreamId,
                              newTrackId);
 
@@ -2390,6 +2431,12 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
     }
     return NS_OK;
   }
+  aThisTrack.RemovePrincipalChangeObserver(this);
+  aWithTrack.AddPrincipalChangeObserver(this);
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  PrincipalChanged(&aWithTrack);
+#endif
+
   pco->OnReplaceTrackSuccess(jrv);
   if (jrv.Failed()) {
     CSFLogError(logTag, "Error firing replaceTrack success callback");
@@ -2429,7 +2476,12 @@ PeerConnectionImpl::SetParameters(
     const std::vector<JsepTrack::JsConstraints>& aConstraints)
 {
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
+  if (!info) {
+    CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
+    return NS_ERROR_INVALID_ARG;
+  }
+  std::string streamId = info->GetId();
 
   return mJsepSession->SetParameters(streamId, trackId, aConstraints);
 }
@@ -2463,7 +2515,12 @@ PeerConnectionImpl::GetParameters(
     std::vector<JsepTrack::JsConstraints>* aOutConstraints)
 {
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
+  if (!info) {
+    CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
+    return NS_ERROR_INVALID_ARG;
+  }
+  std::string streamId = info->GetId();
 
   return mJsepSession->GetParameters(streamId, trackId, aOutConstraints);
 }
@@ -2743,10 +2800,12 @@ PeerConnectionImpl::ShutdownMedia()
     return;
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  // before we destroy references to local streams, detach from them
+  // before we destroy references to local tracks, detach from them
   for(uint32_t i = 0; i < media()->LocalStreamsLength(); ++i) {
     LocalSourceStreamInfo *info = media()->GetLocalStreamByIndex(i);
-    info->GetMediaStream()->RemovePrincipalChangeObserver(this);
+    for (const auto& pair : info->GetMediaStreamTracks()) {
+      pair.second->RemovePrincipalChangeObserver(this);
+    }
   }
 
   // End of call to be recorded in Telemetry

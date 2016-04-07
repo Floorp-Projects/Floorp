@@ -66,7 +66,7 @@ public:
 
   static CompositorBridgeChild* Get();
 
-  static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
+  static bool ChildProcessHasCompositorBridge();
 
   void AddOverfillObserver(ClientLayerManager* aLayerManager);
 
@@ -112,7 +112,7 @@ public:
   // send a message) and forward the call to the super-class's equivalent method.
   // This means that it is correct to call directly the super-class methods, but
   // you won't get the extra safety provided here.
-  bool SendWillStop();
+  bool SendWillClose();
   bool SendPause();
   bool SendResume();
   bool SendNotifyHidden(const uint64_t& id);
@@ -129,6 +129,9 @@ public:
   bool SendClearApproximatelyVisibleRegions(uint64_t aLayersId, uint32_t aPresShellId);
   bool SendNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                             const mozilla::CSSIntRegion& aRegion);
+  bool IsSameProcess() const;
+
+  static void ShutDown();
 
 private:
   // Private destructor, to discourage deletion outside of Release():
@@ -189,11 +192,6 @@ private:
   // The ViewID of the FrameMetrics is used as the key for this hash table.
   // While this should be safe to use since the ViewID is unique
   nsClassHashtable<nsUint64HashKey, SharedFrameMetricsData> mFrameMetricsTable;
-
-  // When we're in a child process, this is the process-global
-  // compositor that we use to forward transactions directly to the
-  // compositor context in another process.
-  static CompositorBridgeChild* sCompositor;
 
   // Weakly hold the TabChild that made a request to be alerted when
   // the transaction has been received.

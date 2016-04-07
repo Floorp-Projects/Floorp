@@ -97,6 +97,17 @@ NotificationController::Shutdown()
   mNotifications.Clear();
   mEvents.Clear();
   mRelocations.Clear();
+  mEventTree.Clear();
+}
+
+EventTree*
+NotificationController::QueueMutation(Accessible* aContainer)
+{
+  EventTree* tree = mEventTree.FindOrInsert(aContainer);
+  if (tree) {
+    ScheduleProcessing();
+  }
+  return tree;
 }
 
 void
@@ -387,6 +398,9 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // process it synchronously.  However we do not want to reenter if fireing
   // events causes script to run.
   mObservingState = eRefreshProcessing;
+
+  mEventTree.Process();
+  mEventTree.Clear();
 
   ProcessEventQueue();
 

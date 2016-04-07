@@ -105,6 +105,11 @@ public:
   gfx::SurfaceFormat GetFormat() { return mFormat; }
   TextureFlags GetFlags() const { return mFlags; }
 
+  /**
+   * Clear the pool and put it in a state where it won't recycle any new texture.
+   */
+  void Destroy();
+
 private:
   // The minimum size of the pool (the number of tiles that will be kept after
   // shrinking).

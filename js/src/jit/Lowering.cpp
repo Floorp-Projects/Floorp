@@ -2187,15 +2187,6 @@ MustCloneRegExpForCall(MCall* call, uint32_t useIndex)
     if (!target || !target->isNative())
         return true;
 
-    if (useIndex == MCall::IndexOfArgument(0) &&
-        (target->native() == str_split ||
-         target->native() == str_replace ||
-         target->native() == str_match ||
-         target->native() == str_search))
-    {
-        return false;
-    }
-
     return true;
 }
 
@@ -2217,6 +2208,13 @@ MustCloneRegExp(MRegExp* regexp)
         MDefinition* def = node->toDefinition();
         if (def->isRegExpMatcher()) {
             MRegExpMatcher* test = def->toRegExpMatcher();
+            if (test->indexOf(*iter) == 1) {
+                // Optimized RegExp.prototype.exec.
+                MOZ_ASSERT(test->regexp() == regexp);
+                continue;
+            }
+        } else if (def->isRegExpSearcher()) {
+            MRegExpSearcher* test = def->toRegExpSearcher();
             if (test->indexOf(*iter) == 1) {
                 // Optimized RegExp.prototype.exec.
                 MOZ_ASSERT(test->regexp() == regexp);
@@ -2270,6 +2268,22 @@ LIRGenerator::visitRegExpMatcher(MRegExpMatcher* ins)
 }
 
 void
+LIRGenerator::visitRegExpSearcher(MRegExpSearcher* ins)
+{
+    MOZ_ASSERT(ins->regexp()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->string()->type() == MIRType_String);
+    MOZ_ASSERT(ins->lastIndex()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->sticky()->type() == MIRType_Boolean);
+
+    LRegExpSearcher* lir = new(alloc()) LRegExpSearcher(useFixedAtStart(ins->regexp(), RegExpTesterRegExpReg),
+                                                        useFixedAtStart(ins->string(), RegExpTesterStringReg),
+                                                        useFixedAtStart(ins->lastIndex(), RegExpTesterLastIndexReg),
+                                                        useFixedAtStart(ins->sticky(), RegExpTesterStickyReg));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitRegExpTester(MRegExpTester* ins)
 {
     MOZ_ASSERT(ins->regexp()->type() == MIRType_Object);
@@ -2286,17 +2300,25 @@ LIRGenerator::visitRegExpTester(MRegExpTester* ins)
 }
 
 void
-LIRGenerator::visitRegExpReplace(MRegExpReplace* ins)
+LIRGenerator::visitRegExpPrototypeOptimizable(MRegExpPrototypeOptimizable* ins)
 {
-    MOZ_ASSERT(ins->pattern()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->string()->type() == MIRType_String);
-    MOZ_ASSERT(ins->replacement()->type() == MIRType_String);
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType_Boolean);
+    LRegExpPrototypeOptimizable* lir = new(alloc()) LRegExpPrototypeOptimizable(useRegister(ins->object()),
+                                                                                temp());
+    define(lir, ins);
+}
 
-    LRegExpReplace* lir = new(alloc()) LRegExpReplace(useRegisterOrConstantAtStart(ins->string()),
-                                                      useRegisterAtStart(ins->pattern()),
-                                                      useRegisterOrConstantAtStart(ins->replacement()));
-    defineReturn(lir, ins);
-    assignSafepoint(lir, ins);
+void
+LIRGenerator::visitRegExpInstanceOptimizable(MRegExpInstanceOptimizable* ins)
+{
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->proto()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType_Boolean);
+    LRegExpInstanceOptimizable* lir = new(alloc()) LRegExpInstanceOptimizable(useRegister(ins->object()),
+                                                                              useRegister(ins->proto()),
+                                                                              temp());
+    define(lir, ins);
 }
 
 void
@@ -3187,21 +3209,6 @@ LIRGenerator::visitArrayPush(MArrayPush* ins)
 }
 
 void
-LIRGenerator::visitArrayConcat(MArrayConcat* ins)
-{
-    MOZ_ASSERT(ins->type() == MIRType_Object);
-    MOZ_ASSERT(ins->lhs()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->rhs()->type() == MIRType_Object);
-
-    LArrayConcat* lir = new(alloc()) LArrayConcat(useFixed(ins->lhs(), CallTempReg1),
-                                                  useFixed(ins->rhs(), CallTempReg2),
-                                                  tempFixed(CallTempReg3),
-                                                  tempFixed(CallTempReg4));
-    defineReturn(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitArraySlice(MArraySlice* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
@@ -3989,6 +3996,14 @@ LIRGenerator::visitIsCallable(MIsCallable* ins)
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
     MOZ_ASSERT(ins->type() == MIRType_Boolean);
     define(new(alloc()) LIsCallable(useRegister(ins->object())), ins);
+}
+
+void
+LIRGenerator::visitIsConstructor(MIsConstructor* ins)
+{
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType_Boolean);
+    define(new(alloc()) LIsConstructor(useRegister(ins->object())), ins);
 }
 
 static bool

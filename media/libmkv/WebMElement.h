@@ -25,6 +25,7 @@ void writeVideoTrack(EbmlGlobal *ebml, unsigned int trackNumber, int flagLacing,
                      double frameRate);
 void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
                      const char *codecId, double samplingFrequency, unsigned int channels,
+                     uint64_t codecDelay, uint64_t seekPreRoll,
                      unsigned char *private_, unsigned long privateSize);
 
 void writeSimpleBlock(EbmlGlobal *ebml, unsigned char trackNumber, short timeCode,

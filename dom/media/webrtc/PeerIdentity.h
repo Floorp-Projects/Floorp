@@ -27,9 +27,11 @@ namespace mozilla {
  *
  * See: http://tools.ietf.org/html/draft-ietf-rtcweb-security-arch-09#section-5.6.5.3.3.1
  */
-class PeerIdentity final
+class PeerIdentity final : public RefCounted<PeerIdentity>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(PeerIdentity)
+
   explicit PeerIdentity(const nsAString& aPeerIdentity)
     : mPeerIdentity(aPeerIdentity) {}
   ~PeerIdentity() {}

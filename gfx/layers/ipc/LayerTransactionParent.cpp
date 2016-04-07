@@ -179,6 +179,8 @@ LayerTransactionParent::Destroy()
   }
   InfallibleTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
+  // We expect all textures to be destroyed by now.
+  MOZ_DIAGNOSTIC_ASSERT(textures.Length() == 0);
   for (unsigned int i = 0; i < textures.Length(); ++i) {
     RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
     tex->DeallocateDeviceData();

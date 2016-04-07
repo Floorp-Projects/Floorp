@@ -371,25 +371,6 @@ ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
     return true;
 }
 
-JSObject*
-ArrayConcatDense(JSContext* cx, HandleObject obj1, HandleObject obj2, HandleObject objRes)
-{
-    if (objRes) {
-        // Fast path if we managed to allocate an object inline.
-        if (!js::array_concat_dense(cx, obj1, obj2, objRes))
-            return nullptr;
-        return objRes;
-    }
-
-    JS::AutoValueArray<3> argv(cx);
-    argv[0].setUndefined();
-    argv[1].setObject(*obj1);
-    argv[2].setObject(*obj2);
-    if (!js::array_concat(cx, 1, argv.begin()))
-        return nullptr;
-    return &argv[0].toObject();
-}
-
 JSString*
 ArrayJoin(JSContext* cx, HandleObject array, HandleString sep)
 {
@@ -1085,15 +1066,6 @@ CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
 }
 
 JSString*
-RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp, HandleString repl)
-{
-    MOZ_ASSERT(string);
-    MOZ_ASSERT(repl);
-
-    return str_replace_regexp_raw(cx, string, regexp.as<RegExpObject>(), repl);
-}
-
-JSString*
 StringReplace(JSContext* cx, HandleString string, HandleString pattern, HandleString repl)
 {
     MOZ_ASSERT(string);
@@ -1255,6 +1227,12 @@ bool
 ObjectIsCallable(JSObject* obj)
 {
     return obj->isCallable();
+}
+
+bool
+ObjectIsConstructor(JSObject* obj)
+{
+    return obj->isConstructor();
 }
 
 void

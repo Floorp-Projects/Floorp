@@ -6,6 +6,7 @@
 #include "WebMWriter.h"
 #include "EbmlComposer.h"
 #include "GeckoProfiler.h"
+#include "OpusTrackEncoder.h"
 
 namespace mozilla {
 
@@ -64,8 +65,16 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_VORBIS) {
     VorbisMetadata* meta = static_cast<VorbisMetadata*>(aMetadata);
     MOZ_ASSERT(meta, "Cannot find vorbis encoder metadata");
-    mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels, meta->mBitDepth);
+    mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
     mEbmlComposer->SetAudioCodecPrivateData(meta->mData);
+    mMetadataRequiredFlag = mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
+  }
+
+  if (aMetadata->GetKind() == TrackMetadataBase::METADATA_OPUS) {
+    OpusMetadata* meta = static_cast<OpusMetadata*>(aMetadata);
+    MOZ_ASSERT(meta, "Cannot find Opus encoder metadata");
+    mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
+    mEbmlComposer->SetAudioCodecPrivateData(meta->mIdHeader);
     mMetadataRequiredFlag = mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
   }
 

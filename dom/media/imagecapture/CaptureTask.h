@@ -7,19 +7,20 @@
 #ifndef CAPTURETASK_H
 #define CAPTURETASK_H
 
-#include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
+#include "PrincipalChangeObserver.h"
 
 namespace mozilla {
 
 namespace dom {
 class Blob;
 class ImageCapture;
+class MediaStreamTrack;
 } // namespace dom
 
 /**
  * CaptureTask retrieves image from MediaStream and encodes the image to jpeg in
- * ImageEncoder. The whole procedures start at AttachStream(), it will add this
+ * ImageEncoder. The whole procedures start at AttachTrack(), it will add this
  * class into MediaStream and retrieves an image in MediaStreamGraph thread.
  * Once the image is retrieved, it will be sent to ImageEncoder and the encoded
  * blob will be sent out via encoder callback in main thread.
@@ -27,23 +28,19 @@ class ImageCapture;
  * CaptureTask holds a reference of ImageCapture to ensure ImageCapture won't be
  * released during the period of the capturing process described above.
  */
-class CaptureTask : public MediaStreamListener,
-                    public DOMMediaStream::PrincipalChangeObserver
+class CaptureTask : public MediaStreamTrackListener,
+                    public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
 public:
-  // MediaStreamListener methods.
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia,
-                                MediaStream* aInputStream,
-                                TrackID aInputTrackID) override;
+  // MediaStreamTrackListener methods.
+  void NotifyQueuedChanges(MediaStreamGraph* aGraph,
+                           StreamTime aTrackOffset,
+                           const MediaSegment& aQueuedMedia) override;
 
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent aEvent) override;
+  void NotifyEnded() override;
 
-  // DOMMediaStream::PrincipalChangeObserver method.
-  void PrincipalChanged(DOMMediaStream* aMediaStream) override;
+  // PrincipalChangeObserver<MediaStreamTrack> method.
+  void PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack) override;
 
   // CaptureTask methods.
 
@@ -54,18 +51,17 @@ public:
   //   this function should be called on main thread.
   nsresult TaskComplete(already_AddRefed<dom::Blob> aBlob, nsresult aRv);
 
-  // Add listeners into MediaStream and PrincipalChangeObserver. It should be on
-  // main thread only.
-  void AttachStream();
+  // Add listeners into MediaStreamTrack and PrincipalChangeObserver.
+  // It should be on main thread only.
+  void AttachTrack();
 
-  // Remove listeners from MediaStream and PrincipalChangeObserver. It should be
-  // on main thread only.
-  void DetachStream();
+  // Remove listeners from MediaStreamTrack and PrincipalChangeObserver.
+  // It should be on main thread only.
+  void DetachTrack();
 
   // CaptureTask should be created on main thread.
-  CaptureTask(dom::ImageCapture* aImageCapture, TrackID aTrackID)
+  explicit CaptureTask(dom::ImageCapture* aImageCapture)
     : mImageCapture(aImageCapture)
-    , mTrackID(aTrackID)
     , mImageGrabbedOrTrackEnd(false)
     , mPrincipalChanged(false) {}
 
@@ -81,14 +77,12 @@ protected:
   // event to script.
   RefPtr<dom::ImageCapture> mImageCapture;
 
-  TrackID mTrackID;
-
   // True when an image is retrieved from MediaStreamGraph or MediaStreamGraph
   // sends a track finish, end, or removed event.
   bool mImageGrabbedOrTrackEnd;
 
-  // True when MediaStream principal is changed in the period of taking photo
-  // and it causes a NS_ERROR_DOM_SECURITY_ERR error to script.
+  // True after MediaStreamTrack principal changes while waiting for a photo
+  // to finish and we should raise a security error.
   bool mPrincipalChanged;
 };
 

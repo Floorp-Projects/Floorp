@@ -45,8 +45,12 @@ class OutOfLineUpdateCache;
 class OutOfLineCallPostWriteBarrier;
 class OutOfLineCallPostWriteElementBarrier;
 class OutOfLineIsCallable;
+class OutOfLineIsConstructor;
 class OutOfLineRegExpMatcher;
+class OutOfLineRegExpSearcher;
 class OutOfLineRegExpTester;
+class OutOfLineRegExpPrototypeOptimizable;
+class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineLambdaArrow;
 
 class CodeGenerator : public CodeGeneratorSpecific
@@ -110,9 +114,14 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitRegExp(LRegExp* lir);
     void visitRegExpMatcher(LRegExpMatcher* lir);
     void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);
+    void visitRegExpSearcher(LRegExpSearcher* lir);
+    void visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool);
     void visitRegExpTester(LRegExpTester* lir);
     void visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool);
-    void visitRegExpReplace(LRegExpReplace* lir);
+    void visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* lir);
+    void visitOutOfLineRegExpPrototypeOptimizable(OutOfLineRegExpPrototypeOptimizable* ool);
+    void visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* lir);
+    void visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOptimizable* ool);
     void visitStringReplace(LStringReplace* lir);
     void emitSharedStub(ICStub::Kind kind, LInstruction* lir);
     void visitBinarySharedStub(LBinarySharedStub* lir);
@@ -297,7 +306,6 @@ class CodeGenerator : public CodeGeneratorSpecific
                        ConstantOrRegister value, Register elementsTemp, Register length);
     void visitArrayPushV(LArrayPushV* lir);
     void visitArrayPushT(LArrayPushT* lir);
-    void visitArrayConcat(LArrayConcat* lir);
     void visitArraySlice(LArraySlice* lir);
     void visitArrayJoin(LArrayJoin* lir);
     void visitLoadUnboxedScalar(LLoadUnboxedScalar* lir);
@@ -344,6 +352,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitCallBindVar(LCallBindVar* lir);
     void visitIsCallable(LIsCallable* lir);
     void visitOutOfLineIsCallable(OutOfLineIsCallable* ool);
+    void visitIsConstructor(LIsConstructor* lir);
+    void visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool);
     void visitIsObject(LIsObject* lir);
     void visitIsObjectAndBranch(LIsObjectAndBranch* lir);
     void visitHasClass(LHasClass* lir);

@@ -987,7 +987,7 @@ RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedObjectGroup group(cx, iter.read().toObject().group());
     RootedValue result(cx);
 
-    JSObject* res = str_split_string(cx, group, str, sep);
+    JSObject* res = str_split_string(cx, group, str, sep, INT32_MAX);
     if (!res)
         return false;
 
@@ -1024,6 +1024,35 @@ RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MRegExpSearcher::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpSearcher));
+    return true;
+}
+
+RRegExpSearcher::RRegExpSearcher(CompactBufferReader& reader)
+{}
+
+bool
+RRegExpSearcher::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedObject regexp(cx, &iter.read().toObject());
+    RootedString input(cx, iter.read().toString());
+    int32_t lastIndex = iter.read().toInt32();
+    bool sticky = iter.read().toBoolean();
+
+    int32_t result;
+    if (!RegExpSearcherRaw(cx, regexp, input, lastIndex, sticky, nullptr, &result))
+        return false;
+
+    RootedValue resultVal(cx);
+    resultVal.setInt32(result);
+    iter.storeInstructionResult(resultVal);
+    return true;
+}
+
+bool
 MRegExpTester::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -1049,32 +1078,6 @@ RRegExpTester::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedValue result(cx);
     result.setInt32(endIndex);
     iter.storeInstructionResult(result);
-    return true;
-}
-
-bool
-MRegExpReplace::writeRecoverData(CompactBufferWriter& writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpReplace));
-    return true;
-}
-
-RRegExpReplace::RRegExpReplace(CompactBufferReader& reader)
-{ }
-
-bool
-RRegExpReplace::recover(JSContext* cx, SnapshotIterator& iter) const
-{
-    RootedString string(cx, iter.read().toString());
-    Rooted<RegExpObject*> regexp(cx, &iter.read().toObject().as<RegExpObject>());
-    RootedString repl(cx, iter.read().toString());
-
-    JSString* result = js::str_replace_regexp_raw(cx, string, regexp, repl);
-    if (!result)
-        return false;
-
-    iter.storeInstructionResult(StringValue(result));
     return true;
 }
 

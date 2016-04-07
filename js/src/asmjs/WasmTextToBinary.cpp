@@ -211,8 +211,8 @@ enum class WasmAstExprKind
     SetLocal,
     Store,
     TernaryOperator,
-    Trap,
     UnaryOperator,
+    Unreachable
 };
 
 class WasmAstExpr : public WasmAstNode
@@ -241,10 +241,10 @@ struct WasmAstNop : WasmAstExpr
     {}
 };
 
-struct WasmAstTrap : WasmAstExpr
+struct WasmAstUnreachable : WasmAstExpr
 {
-    WasmAstTrap()
-      : WasmAstExpr(WasmAstExprKind::Trap)
+    WasmAstUnreachable()
+      : WasmAstExpr(WasmAstExprKind::Unreachable)
     {}
 };
 
@@ -831,9 +831,9 @@ class WasmToken
         Table,
         TernaryOpcode,
         Text,
-        Trap,
         Type,
         UnaryOpcode,
+        Unreachable,
         ValueType
     };
   private:
@@ -1996,8 +1996,11 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::Table, begin, cur_);
         if (consume(MOZ_UTF16("type")))
             return WasmToken(WasmToken::Type, begin, cur_);
-        if (consume(MOZ_UTF16("trap")))
-            return WasmToken(WasmToken::Trap, begin, cur_);
+        break;
+
+      case 'u':
+        if (consume(MOZ_UTF16("unreachable")))
+            return WasmToken(WasmToken::Unreachable, begin, cur_);
         break;
 
       default:
@@ -2772,8 +2775,8 @@ ParseExprInsideParens(WasmParseContext& c)
     switch (token.kind()) {
       case WasmToken::Nop:
         return new(c.lifo) WasmAstNop;
-      case WasmToken::Trap:
-        return new(c.lifo) WasmAstTrap;
+      case WasmToken::Unreachable:
+        return new(c.lifo) WasmAstUnreachable;
       case WasmToken::BinaryOpcode:
         return ParseBinaryOperator(c, token.expr());
       case WasmToken::Block:
@@ -3491,7 +3494,7 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
       case WasmAstExprKind::Nop:
-      case WasmAstExprKind::Trap:
+      case WasmAstExprKind::Unreachable:
         return true;
       case WasmAstExprKind::BinaryOperator:
         return ResolveBinaryOperator(r, expr.as<WasmAstBinaryOperator>());
@@ -3833,7 +3836,7 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
     switch (expr.kind()) {
       case WasmAstExprKind::Nop:
         return e.writeExpr(Expr::Nop);
-      case WasmAstExprKind::Trap:
+      case WasmAstExprKind::Unreachable:
         return e.writeExpr(Expr::Unreachable);
       case WasmAstExprKind::BinaryOperator:
         return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());

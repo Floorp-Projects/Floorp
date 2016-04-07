@@ -68,7 +68,6 @@ struct PrintData {
   int32_t duplex;
   bool isInitializedFromPrinter;
   bool isInitializedFromPrefs;
-  bool persistMarginBoxSettings;
   int32_t optionFlags;
 
   /* Windows-specific things */
