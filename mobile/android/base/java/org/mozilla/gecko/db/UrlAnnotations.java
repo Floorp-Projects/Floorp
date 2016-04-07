@@ -25,4 +25,7 @@ public interface UrlAnnotations {
     void insertFeedSubscription(ContentResolver cr, FeedSubscription subscription);
     boolean hasFeedUrlForWebsite(ContentResolver cr, String websiteUrl);
     void insertFeedUrl(ContentResolver cr, String originUrl, String feedUrl);
+
+    void insertReaderViewUrl(ContentResolver cr, String pageURL);
+    void deleteReaderViewUrl(ContentResolver cr, String pageURL);
 }

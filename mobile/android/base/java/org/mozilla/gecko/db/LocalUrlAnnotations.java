@@ -206,4 +206,14 @@ public class LocalUrlAnnotations implements UrlAnnotations {
     public void insertScreenshot(final ContentResolver cr, final String pageUrl, final String screenshotPath) {
         insertAnnotation(cr, pageUrl, Key.SCREENSHOT.getDbValue(), screenshotPath);
     }
+
+    @Override
+    public void insertReaderViewUrl(final ContentResolver cr, final String pageUrl) {
+        insertAnnotation(cr, pageUrl, Key.READER_VIEW.getDbValue(), BrowserContract.UrlAnnotations.READER_VIEW_SAVED_VALUE);
+    }
+
+    @Override
+    public void deleteReaderViewUrl(ContentResolver cr, String pageURL) {
+        deleteAnnotation(cr, pageURL, Key.READER_VIEW);
+    }
 }
