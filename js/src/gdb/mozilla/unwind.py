@@ -221,7 +221,14 @@ class UnwinderState(object):
             return not self.text_address_claimed(pc)
 
         ptd = self.get_tls_per_thread_data()
-        jitRuntime = ptd['runtime_']['jitRuntime_']
+        runtime = ptd['runtime_']
+        if runtime == 0:
+            return False
+
+        jitRuntime = runtime['jitRuntime_']
+        if jitRuntime == 0:
+            return False
+
         execAllocators = [jitRuntime['execAlloc_'], jitRuntime['backedgeExecAlloc_']]
         for execAlloc in execAllocators:
             for pool in jsjitExecutableAllocator(execAlloc, self.typecache):
