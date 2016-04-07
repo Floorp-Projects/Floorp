@@ -323,7 +323,6 @@ class ConfigureSandbox(dict):
         if not args:
             raise ConfigureError('@depends needs at least one argument')
 
-        resolved_args = []
         dependencies = []
         for arg in args:
             if isinstance(arg, types.StringTypes):
@@ -337,18 +336,13 @@ class ConfigureSandbox(dict):
                 arg = self._options[name]
                 self._seen.add(arg)
                 dependencies.append(arg)
-                assert arg in self._option_values or self._help
-                resolved_arg = self._option_values.get(arg)
             elif isinstance(arg, DependsFunction):
                 assert arg in self._depends
                 dependencies.append(arg)
-                arg, _ = self._depends[arg]
-                resolved_arg = self._results.get(arg)
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
                     % type(arg).__name__)
-            resolved_args.append(resolved_arg)
         dependencies = tuple(dependencies)
 
         def decorator(func):
@@ -360,7 +354,7 @@ class ConfigureSandbox(dict):
             self._depends[dummy] = func, dependencies
             with_help = self._help_option in dependencies
             if with_help:
-                for arg in args:
+                for arg in dependencies:
                     if isinstance(arg, DependsFunction):
                         _, deps = self._depends[arg]
                         if self._help_option not in deps:
@@ -370,6 +364,15 @@ class ConfigureSandbox(dict):
                                 % (func.__name__, arg.__name__, arg.__name__))
 
             if not self._help or with_help:
+                resolved_args = []
+                for arg in dependencies:
+                    if isinstance(arg, Option):
+                        assert arg in self._option_values
+                        resolved_args.append(self._option_values.get(arg))
+                    elif isinstance(arg, DependsFunction):
+                        arg, _ = self._depends[arg]
+                        resolved_args.append(self._results.get(arg))
+
                 self._results[func] = func(*resolved_args)
 
             return dummy
