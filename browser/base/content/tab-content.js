@@ -853,3 +853,8 @@ addEventListener("unload", () => {
   ExtensionContent.uninit(this);
   RefreshBlocker.uninit();
 });
+
+addEventListener("MozAfterPaint", function onFirstPaint() {
+  removeEventListener("MozAfterPaint", onFirstPaint);
+  sendAsyncMessage("Browser:FirstPaint");
+});
