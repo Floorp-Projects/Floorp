@@ -13,9 +13,11 @@
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
 #include "ApplicationAccessible.h"
+#include "NotificationController.h"
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "DocAccessibleChild.h"
+#include "EventTree.h"
 #include "Logging.h"
 #include "Relation.h"
 #include "Role.h"
@@ -2119,6 +2121,11 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
              "No move, same index");
   MOZ_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
 
+  EventTree* eventTree = mDoc->Controller()->QueueMutation(this);
+  if (eventTree) {
+    eventTree->Hidden(aChild, false);
+  }
+
   mEmbeddedObjCollector = nullptr;
   mChildren.RemoveElementAt(aChild->mIndexInParent);
 
@@ -2127,7 +2134,6 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
   // If the child is moved after its current position.
   if (static_cast<uint32_t>(aChild->mIndexInParent) < aNewIndex) {
     startIdx = aChild->mIndexInParent;
-
     if (aNewIndex == mChildren.Length() + 1) {
       // The child is moved to the end.
       mChildren.AppendElement(aChild);
@@ -2147,6 +2153,11 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
     mChildren[idx]->mIndexInParent = idx;
     mChildren[idx]->mStateFlags |= eGroupInfoDirty;
     mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
+  }
+
+  if (eventTree) {
+    eventTree->Shown(aChild);
+    mDoc->Controller()->QueueNameChange(aChild);
   }
 }
 
@@ -2790,35 +2801,4 @@ KeyBinding::ToAtkFormat(nsAString& aValue) const
       aValue.AppendLiteral("<Meta>");
 
   aValue.Append(mKey);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// AutoTreeMutation class
-
-void
-AutoTreeMutation::Done()
-{
-  MOZ_ASSERT(mParent->mStateFlags & Accessible::eKidsMutating,
-             "The parent is not in mutating state.");
-  mParent->mStateFlags &= ~Accessible::eKidsMutating;
-
-  uint32_t length = mParent->mChildren.Length();
-#ifdef DEBUG
-  for (uint32_t idx = 0; idx < mStartIdx && idx < length; idx++) {
-    MOZ_ASSERT(mParent->mChildren[idx]->mIndexInParent == static_cast<int32_t>(idx),
-               "Wrong index detected");
-  }
-#endif
-
-  for (uint32_t idx = mStartIdx; idx < length; idx++) {
-    mParent->mChildren[idx]->mIndexInParent = idx;
-    mParent->mChildren[idx]->mStateFlags |= Accessible::eGroupInfoDirty;
-  }
-
-  if (mStartIdx < mParent->mChildren.Length() - 1) {
-    mParent->mEmbeddedObjCollector = nullptr;
-  }
-
-  mParent->mStateFlags |= mStateFlagsCopy & Accessible::eKidsMutating;
 }

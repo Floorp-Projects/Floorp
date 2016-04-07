@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     'Asserts.cpp',
     'DocManager.cpp',
     'EventQueue.cpp',
+    'EventTree.cpp',
     'Filters.cpp',
     'FocusManager.cpp',
     'NotificationController.cpp',
