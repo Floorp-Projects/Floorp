@@ -1896,6 +1896,11 @@ Accessible::Shutdown()
   mDoc = nullptr;
   if (SelectionMgr() && SelectionMgr()->AccessibleWithCaret(nullptr) == this)
     SelectionMgr()->ResetCaretOffset();
+
+  if (FocusMgr()->IsFocused(this)) {
+    FocusMgr()->ResetFocusedAccessible();
+  }
+
 }
 
 // Accessible protected

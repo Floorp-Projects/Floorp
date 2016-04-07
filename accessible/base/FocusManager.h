@@ -5,6 +5,7 @@
 #ifndef mozilla_a11y_FocusManager_h_
 #define mozilla_a11y_FocusManager_h_
 
+#include "mozilla/a11y/Accessible.h"
 #include "nsAutoPtr.h"
 
 class nsINode;
@@ -15,7 +16,6 @@ namespace mozilla {
 namespace a11y {
 
 class AccEvent;
-class Accessible;
 class ProxyAccessible;
 class DocAccessible;
 
@@ -37,6 +37,14 @@ public:
    */
   ProxyAccessible* FocusedRemoteAccessible() const { return mFocusedProxy; }
 
+  /**
+  * Set focused accessible to null.
+  */
+  void ResetFocusedAccessible()
+  {
+    mFocusedAcc = nullptr;
+    mFocusedProxy = nullptr;
+  }
   /**
    * Return true if given accessible is focused.
    */
