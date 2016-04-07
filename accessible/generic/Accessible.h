@@ -33,6 +33,7 @@ class AccGroupInfo;
 class ApplicationAccessible;
 class DocAccessible;
 class EmbeddedObjCollector;
+class EventTree;
 class HTMLImageMapAccessible;
 class HTMLLIAccessible;
 class HyperTextAccessible;
@@ -1112,7 +1113,7 @@ protected:
 
   friend class DocAccessible;
   friend class xpcAccessible;
-  friend class AutoTreeMutation;
+  friend class TreeMutation;
 
   nsAutoPtr<mozilla::a11y::EmbeddedObjCollector> mEmbeddedObjCollector;
   union {
@@ -1202,43 +1203,6 @@ private:
 
   uint32_t mKey;
   uint32_t mModifierMask;
-};
-
-
-/**
- * This class makes sure required tasks are done before and after tree
- * mutations. Currently this only includes group info invalidation. You must
- * have an object of this class on the stack when calling methods that mutate
- * the accessible tree.
- */
-class AutoTreeMutation
-{
-public:
-  explicit AutoTreeMutation(Accessible* aParent) :
-    mParent(aParent), mStartIdx(UINT32_MAX),
-    mStateFlagsCopy(mParent->mStateFlags)
-  {
-    mParent->mStateFlags |= Accessible::eKidsMutating;
-  }
-
-  void AfterInsertion(const Accessible* aChild) {
-    if (static_cast<uint32_t>(aChild->IndexInParent()) < mStartIdx) {
-      mStartIdx = aChild->IndexInParent() + 1;
-    }
-  }
-
-  void BeforeRemoval(const Accessible* aChild) {
-    if (static_cast<uint32_t>(aChild->IndexInParent()) < mStartIdx) {
-      mStartIdx = aChild->IndexInParent();
-    }
-  }
-
-  void Done();
-
-private:
-  Accessible* mParent;
-  uint32_t mStartIdx;
-  uint32_t mStateFlagsCopy;
 };
 
 } // namespace a11y

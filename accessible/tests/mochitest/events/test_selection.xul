@@ -25,12 +25,20 @@
   <script type="application/javascript">
     function advanceTab(aTabsID, aDirection, aNextTabID)
     {
-      this.eventSeq = [
+      var eventSeq1 = [
         new invokerChecker(EVENT_SELECTION, aNextTabID)
+      ]
+      defineScenario(this, eventSeq1);
+
+      var eventSeq2 = [
+        new invokerChecker(EVENT_HIDE, getAccessible(aNextTabID)),
+        new invokerChecker(EVENT_SHOW, aNextTabID)
       ];
+      defineScenario(this, eventSeq2);
 
       this.invoke = function advanceTab_invoke()
       {
+        todo(false, "No accessible recreation should happen, just selection event");
         getNode(aTabsID).advanceSelectedTab(aDirection, true);
       }
 
@@ -148,6 +156,7 @@
      */
     var gQueue = null;
 
+    //enableLogging("events");
     //gA11yEventDumpToConsole = true; // debuggin
 
     function doTests()

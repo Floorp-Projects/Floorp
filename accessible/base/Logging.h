@@ -34,18 +34,19 @@ enum EModules {
   eDocLifeCycle = eDocLoad | eDocCreate | eDocDestroy,
 
   eEvents = 1 << 3,
-  ePlatforms = 1 << 4,
-  eText = 1 << 5,
-  eTree = 1 << 6,
+  eEventTree = 1 << 4,
+  ePlatforms = 1 << 5,
+  eText = 1 << 6,
+  eTree = 1 << 7,
 
-  eDOMEvents = 1 << 7,
-  eFocus = 1 << 8,
-  eSelection = 1 << 9,
+  eDOMEvents = 1 << 8,
+  eFocus = 1 << 9,
+  eSelection = 1 << 10,
   eNotifications = eDOMEvents | eSelection | eFocus,
 
   // extras
-  eStack = 1 << 10,
-  eVerbose = 1 << 11
+  eStack = 1 << 11,
+  eVerbose = 1 << 12
 };
 
 /**

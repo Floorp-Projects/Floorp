@@ -44,6 +44,7 @@ static ModuleRep sModuleMap[] = {
   { "doclifecycle", logging::eDocLifeCycle },
 
   { "events", logging::eEvents },
+  { "eventTree", logging::eEventTree },
   { "platforms", logging::ePlatforms },
   { "text", logging::eText },
   { "tree", logging::eTree },
