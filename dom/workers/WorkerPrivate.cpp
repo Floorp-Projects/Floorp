@@ -102,6 +102,7 @@
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerFeature.h"
+#include "WorkerNavigator.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "WorkerThread.h"
@@ -5898,8 +5899,10 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
     newInfo->mTimeoutString = aStringHandler;
   }
   else {
-    JS_ReportError(aCx, "Useless %s call (missing quotes around argument?)",
-                   aIsInterval ? "setInterval" : "setTimeout");
+    NS_NAMED_LITERAL_STRING(kSetInterval, "setInterval");
+    NS_NAMED_LITERAL_STRING(kSetTimeout, "setTimeout");
+    aRv.ThrowTypeError<MSG_USELESS_SETTIMEOUT>(aIsInterval ? kSetInterval
+                                                           : kSetTimeout);
     return 0;
   }
 

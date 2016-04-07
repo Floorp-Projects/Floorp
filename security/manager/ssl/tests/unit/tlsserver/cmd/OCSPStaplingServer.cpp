@@ -94,7 +94,7 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
     return 0;
   }
 
-  PLArenaPool *arena = PORT_NewArena(1024);
+  UniquePLArenaPool arena(PORT_NewArena(1024));
   if (!arena) {
     PrintPRError("PORT_NewArena failed");
     return SSL_SNI_SEND_ALERT;
@@ -104,13 +104,11 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   SECItemArray *response = GetOCSPResponseForType(host->mORT, cert, arena,
                                                   host->mAdditionalCertName);
   if (!response) {
-    PORT_FreeArena(arena, PR_FALSE);
     return SSL_SNI_SEND_ALERT;
   }
 
   // SSL_SetStapledOCSPResponses makes a deep copy of response
   SECStatus st = SSL_SetStapledOCSPResponses(aFd, response, certKEA);
-  PORT_FreeArena(arena, PR_FALSE);
   if (st != SECSuccess) {
     PrintPRError("SSL_SetStapledOCSPResponses failed");
     return SSL_SNI_SEND_ALERT;

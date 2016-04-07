@@ -9,6 +9,7 @@
 nsHtml5Atom::nsHtml5Atom(const nsAString& aString)
 {
   mLength = aString.Length();
+  mIsStatic = false;
   RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
   if (buf) {
     mString = static_cast<char16_t*>(buf->Data());
@@ -68,15 +69,17 @@ nsHtml5Atom::ToUTF8String(nsACString& aReturn)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP_(bool)
-nsHtml5Atom::IsStaticAtom()
-{
-  return false;
-}
-
 NS_IMETHODIMP
 nsHtml5Atom::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
   NS_NOTREACHED("Should not call ScriptableEquals.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP_(size_t)
+nsHtml5Atom::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  NS_NOTREACHED("Should not call SizeOfIncludingThis.");
+  return 0;
+}
+

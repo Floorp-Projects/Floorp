@@ -31,6 +31,7 @@ class Test(object):
     desktop = True
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     lower_is_better = True
+    alert_threshold = 2.0
 
     @classmethod
     def name(cls):
@@ -235,7 +236,8 @@ class PageloaderTest(Test):
             'timeout', 'shutdown', 'responsiveness', 'profile_path',
             'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'filters', 'preferences', 'extensions', 'setup', 'cleanup',
-            'test_name_extension', 'lower_is_better', 'unit']
+            'test_name_extension', 'lower_is_better', 'alert_threshold',
+            'unit']
 
 
 @register_test()
@@ -564,6 +566,7 @@ class dromaeo(PageloaderTest):
     """abstract base class for dramaeo tests"""
     filters = filter.dromaeo.prepare()
     lower_is_better = False
+    alert_threshold = 5.0
 
 
 @register_test()
@@ -681,3 +684,4 @@ class a11yr(PageloaderTest):
     tpmozafterpaint = True
     preferences = {'dom.send_after_paint_to_content': False}
     unit = 'ms'
+    alert_threshold = 5.0

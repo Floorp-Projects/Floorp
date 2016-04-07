@@ -409,9 +409,11 @@ parent:
      *
      * @param opener the PBrowser whose content called window.open.
      */
-    sync BrowserFrameOpenWindow(PBrowser opener, nsString aURL,
-                                nsString aName, nsString aFeatures)
-      returns (bool windowOpened);
+    sync BrowserFrameOpenWindow(PBrowser opener, PRenderFrame renderFrame,
+                                nsString aURL, nsString aName, nsString aFeatures)
+      returns (bool windowOpened,
+               TextureFactoryIdentifier textureFactoryIdentifier,
+               uint64_t layersId);
 
     /**
      * Tells the containing widget whether the given input block results in a
@@ -482,10 +484,6 @@ parent:
      * @see RequestNotifyAfterRemotePaint
      */
     async RemotePaintIsReady();
-
-    sync GetRenderFrameInfo(PRenderFrame aRenderFrame)
-        returns (TextureFactoryIdentifier textureFactoryIdentifier,
-                 uint64_t layersId);
 
     /**
      * Sent by the child to the parent to inform it that an update to the

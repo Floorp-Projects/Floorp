@@ -21,7 +21,7 @@ def main(header, propFile):
   header.write("// This is a generated file. Please do not edit.\n")
   header.write("// Please edit the corresponding .properties file instead.\n")
 
-  entries = ['{ "%s", "%s", (const char*)NS_INT32_TO_PTR(%d) }'
+  entries = ['{ "%s", "%s", %d }'
              % (key, mappings[key], len(mappings[key])) for key in keys]
   header.write(',\n'.join(entries) + '\n')
 

@@ -133,6 +133,8 @@ enum class LogReason : int {
   IncompatibleBasicTexturedEffect,
   InvalidFont,
   PAllocTextureBackendMismatch,
+  GetFontFileDataFailed,
+  MessageChannelCloseFailure,
   // End
   MustBeLessThanThis = 101,
 };
