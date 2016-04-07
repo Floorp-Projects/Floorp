@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1182856
+-->
+<head>
+  <title>Test for Bug 1182856</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #display {
+    background: blue;
+    height: 10px;
+    width: 10px;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1182856">Mozilla Bug 1182856</a>
+
+<div id="display"></div>
+<pre id="test"></pre>
+
+<script type="application/javascript">
+'use strict';
+
+function TestDisplayNoneTurnOffTransitions(elem, cs, elemToDisplayNone, name) {
+  var ended = false;
+  var markEnded = function () {
+    ended = true;
+  };
+  elem.addEventListener('transitionend', markEnded, false);
+
+  cs.marginLeft; // flush
+  elem.style.marginLeft = "100px"; // start transition
+  is(cs.marginLeft, "0px", name + ": margin-left at 0s");
+
+  advance_clock(1000);
+  is(cs.marginLeft, "10px", name + ": margin-left at 1s");
+
+  elemToDisplayNone.style.display = "none";
+  is(cs.marginLeft, "100px", name + ": margin-left after display:none");
+
+  advance_clock(10000);
+  ok(!ended, name + ": Should not get transitionend");
+}
+
+advance_clock(0);
+
+// Set display:none on the target.
+var [div, cs] = new_div("margin-left: 0px; transition: margin-left 10s linear");
+TestDisplayNoneTurnOffTransitions(div, cs, div, "Set display:none on target");
+done_div();
+
+// Set display:none on the ancestor of the target.
+var [div, cs] = new_div("margin-left: 0px; transition: margin-left 10s linear");
+var ancestor = document.createElement("div");
+div.parentNode.insertBefore(ancestor, div);
+ancestor.appendChild(div);
+TestDisplayNoneTurnOffTransitions(div, cs, ancestor,
+                                  "Set display:none on ancestor");
+ancestor.parentNode.insertBefore(div, ancestor);
+ancestor.remove();
+done_div();
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</body>
+</html>
