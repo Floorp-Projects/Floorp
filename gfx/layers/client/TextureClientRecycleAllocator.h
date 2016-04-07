@@ -86,6 +86,8 @@ public:
   already_AddRefed<TextureClient>
   CreateOrRecycle(ITextureClientAllocationHelper& aHelper);
 
+  void ShrinkToMinimumSize();
+
 protected:
   virtual already_AddRefed<TextureClient>
   Allocate(gfx::SurfaceFormat aFormat,

@@ -236,7 +236,6 @@ public:
     RefPtr<layers::Compositor> compositor;
     IntSize size;
     nsTArray<RefPtr<layers::CompositingRenderTarget>> renderTargets;
-    int32_t currentRenderTarget;
 
     virtual already_AddRefed<layers::CompositingRenderTarget> GetNextRenderTarget() = 0;
   protected:

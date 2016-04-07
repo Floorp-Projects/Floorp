@@ -20,14 +20,16 @@ function setUsePrivateBrowsing(browser, val) {
 
 
 function promiseMessage(aMessage) {
-  return new Promise(function(resolve, reject) {
-    content.addEventListener("message", function messageListener(event) {
-      content.removeEventListener("message", messageListener);
-      is(event.data, aMessage, "received " + aMessage);
-      if (event.data == aMessage)
-        resolve();
-      else
-        reject();
+  return ContentTask.spawn(gBrowser.selectedBrowser, aMessage, function* (aMessage) {
+    yield new Promise((resolve, reject) => {
+      content.addEventListener("message", function messageListener(event) {
+        content.removeEventListener("message", messageListener);
+        is(event.data, aMessage, "received " + aMessage);
+        if (event.data == aMessage)
+          resolve();
+        else
+          reject();
+      });
     });
   });
 }

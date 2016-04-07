@@ -807,6 +807,14 @@ public:
         return true;
     }
 
+    void HandleMotionEventVelocity(int64_t aTime, float aSpeedY)
+    {
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        if (controller) {
+            controller->ProcessTouchVelocity((uint32_t)aTime, aSpeedY);
+        }
+    }
+
     void UpdateOverscrollVelocity(const float x, const float y)
     {
         mNPZC->UpdateOverscrollVelocity(x, y);

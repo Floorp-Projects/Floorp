@@ -26,6 +26,8 @@
 namespace mozilla {
 namespace dom {
 
+using namespace mozilla::dom::workers;
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerNavigator)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)

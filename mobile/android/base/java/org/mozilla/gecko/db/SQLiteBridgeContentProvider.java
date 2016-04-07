@@ -187,7 +187,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
      *         not possible to retrieve a valid SQLiteBridge
      */
     private SQLiteBridge getDatabaseForProfile(String profile) {
-        if (TextUtils.isEmpty(profile)) {
+        if (profile == null) {
             profile = GeckoProfile.get(mContext).getName();
             Log.d(mLogTag, "No profile provided, using '" + profile + "'");
         }

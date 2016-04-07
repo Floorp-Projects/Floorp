@@ -88,6 +88,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
+#include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Move.h"
@@ -303,6 +304,7 @@ using namespace mozilla::gmp;
 using namespace mozilla::hal;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
+using namespace mozilla::layout;
 using namespace mozilla::net;
 using namespace mozilla::jsipc;
 using namespace mozilla::psm;
@@ -5332,6 +5334,7 @@ ContentParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumen
 bool
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
+                                PRenderFrameParent* aRenderFrame,
                                 const uint32_t& aChromeFlags,
                                 const bool& aCalledFromJS,
                                 const bool& aPositionSpecified,
@@ -5345,7 +5348,9 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                                nsCString* aURLToLoad)
+                                nsCString* aURLToLoad,
+                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                uint64_t* aLayersId)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -5457,6 +5462,13 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     }
 
     newTab->SwapFrameScriptsFrom(*aFrameScripts);
+
+    RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
+    if (!newTab->SetRenderFrame(rfp) ||
+        !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
+      *aResult = NS_ERROR_FAILURE;
+    }
+
     return true;
   }
 
@@ -5536,6 +5548,13 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   MOZ_ASSERT(TabParent::GetFrom(newRemoteTab) == newTab);
 
   newTab->SwapFrameScriptsFrom(*aFrameScripts);
+
+  RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
+  if (!newTab->SetRenderFrame(rfp) ||
+      !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
+    *aResult = NS_ERROR_FAILURE;
+  }
+
   return true;
 }
 

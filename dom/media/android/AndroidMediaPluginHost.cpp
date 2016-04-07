@@ -174,27 +174,8 @@ static const char* GetOmxLibraryName()
   if (version >= 17) {
     return "libomxpluginkk.so";
   }
-  else if (version == 13 || version == 12 || version == 11) {
-    return "libomxpluginhc.so";
-  }
-  else if (version == 10 && release_version >= NS_LITERAL_STRING("2.3.6")) {
-    // Gingerbread versions from 2.3.6 and above have a different DataSource
-    // layout to those on 2.3.5 and below.
-    return "libomxplugingb.so";
-  }
-  else if (version == 10 && release_version >= NS_LITERAL_STRING("2.3.4") &&
-           device.Find("HTC") == 0) {
-    // HTC devices running Gingerbread 2.3.4+ (HTC Desire HD, HTC Evo Design, etc) seem to
-    // use a newer version of Gingerbread libstagefright than other 2.3.4 devices.
-    return "libomxplugingb.so";
-  }
-  else if (version == 9 || (version == 10 && release_version <= NS_LITERAL_STRING("2.3.5"))) {
-    // Gingerbread versions from 2.3.5 and below have a different DataSource
-    // than 2.3.6 and above.
-    return "libomxplugingb235.so";
-  }
-  else if (version < 9) {
-    // Below Gingerbread not supported
+  else if (version < 14) {
+    // Below Honeycomb not supported
     return nullptr;
   }
 
