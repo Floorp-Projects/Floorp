@@ -147,14 +147,6 @@ DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
     return true;
   }
 
-  switch(aEventType) {
-      case nsIAccessibleEvent::EVENT_FOCUS:
-          FocusMgr()->RemoteFocusChanged(proxy);
-          break;
-      default:
-        break;
-  }
-
   ProxyEvent(proxy, aEventType);
 
   if (!nsCoreUtils::AccEventObserversExist()) {

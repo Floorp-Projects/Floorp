@@ -242,6 +242,8 @@ child:
     returns(uint32_t childIdx);
   prio(high) sync EmbeddedChildAt(uint64_t aID, uint32_t aChildIdx)
     returns(uint64_t aChild);
+  prio(high) sync FocusedChild(uint64_t aID)
+    returns(uint64_t aChild, bool aOk);
 
   prio(high) sync Language(uint64_t aID) returns(nsString aLocale);
   prio(high) sync DocType(uint64_t aID) returns(nsString aType);

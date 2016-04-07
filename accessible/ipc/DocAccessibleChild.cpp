@@ -1889,6 +1889,24 @@ DocAccessibleChild::RecvEmbeddedChildAt(const uint64_t& aID,
 }
 
 bool
+DocAccessibleChild::RecvFocusedChild(const uint64_t& aID,
+                                       uint64_t* aChild,
+                                       bool* aOk)
+{
+  *aChild = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    Accessible* child = acc->FocusedChild();
+    if (child) {
+      *aChild = reinterpret_cast<uint64_t>(child->UniqueID());
+      *aOk = true;
+    }
+  }
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvLanguage(const uint64_t& aID,
                                  nsString* aLocale)
 {
