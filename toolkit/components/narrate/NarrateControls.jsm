@@ -190,7 +190,7 @@ NarrateControls.prototype = {
     let startStopButton = this._doc.getElementById("narrate-start-stop");
     startStopButton.classList.toggle("speaking", speaking);
     startStopButton.title =
-      gStrings.GetStringFromName(speaking ? "start" : "stop");
+      gStrings.GetStringFromName(speaking ? "stop" : "start");
 
     this._doc.getElementById("narrate-skip-previous").disabled = !speaking;
     this._doc.getElementById("narrate-skip-next").disabled = !speaking;

@@ -47,6 +47,8 @@ this.NarrateTestUtils = {
     ok($(this.FORWARD).disabled, "forward button is disabled");
     ok(!!$(this.START), "start button is showing");
     ok(!$(this.STOP), "stop button is hidden");
+    // This checks for a localized label. Not the best...
+    ok($(this.START).title == "Start", "Button tooltip is correct");
   },
 
   isStartedState: function(window, ok) {
@@ -55,6 +57,8 @@ this.NarrateTestUtils = {
     ok(!$(this.FORWARD).disabled, "forward button is enabled");
     ok(!$(this.START), "start button is hidden");
     ok(!!$(this.STOP), "stop button is showing");
+    // This checks for a localized label. Not the best...
+    ok($(this.STOP).title == "Stop", "Button tooltip is correct");
   },
 
   selectVoice: function(window, voiceUri) {
