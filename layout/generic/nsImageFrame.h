@@ -428,8 +428,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
 
-  virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
-                                       nsDisplayListBuilder* aBuilder) override;
+  virtual already_AddRefed<imgIContainer> GetImage() override;
 
   /**
    * Returns an ImageContainer for this image if the image type
@@ -442,7 +441,7 @@ public:
    * @return The dest rect we'll use when drawing this image, in app units.
    *         Not necessarily contained in this item's bounds.
    */
-  nsRect GetDestRect(bool* aSnap = nullptr);
+  virtual nsRect GetDestRect() override;
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
