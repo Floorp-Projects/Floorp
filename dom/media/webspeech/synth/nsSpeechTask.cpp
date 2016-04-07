@@ -332,7 +332,8 @@ nsSpeechTask::SendAudioImpl(RefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aD
   AudioSegment segment;
   AutoTArray<const int16_t*, 1> channelData;
   channelData.AppendElement(static_cast<int16_t*>(aSamples->Data()));
-  segment.AppendFrames(aSamples.forget(), channelData, aDataLen);
+  segment.AppendFrames(aSamples.forget(), channelData, aDataLen,
+                       PRINCIPAL_HANDLE_NONE);
   mStream->AppendToTrack(1, &segment);
   mStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 }

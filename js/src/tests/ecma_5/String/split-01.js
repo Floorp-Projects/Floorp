@@ -25,7 +25,7 @@ var o1 = { toString: function() { order += "b"; return "-"; }};
 var o2 = { valueOf:  function() { order += "a"; return 1; }};
 var res = "xyz-xyz".split(o1, o2);
 
-assertEq(order, "ab");
+assertEq(order, "ba");
 assertEqArr(res, ["xyz"]);
 
 assertEqArr("".split(/.?/), []);

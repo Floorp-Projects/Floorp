@@ -663,10 +663,17 @@ var LoginManagerContent = {
       // already logged in to the site.
       for (var i = pwFields[0].index - 1; i >= 0; i--) {
         var element = form.elements[i];
-        if (LoginHelper.isUsernameFieldType(element)) {
-          usernameField = element;
-          break;
+        if (!LoginHelper.isUsernameFieldType(element)) {
+          continue;
         }
+
+        if (fieldOverrideRecipe && fieldOverrideRecipe.notUsernameSelector &&
+            element.matches(fieldOverrideRecipe.notUsernameSelector)) {
+          continue;
+        }
+
+        usernameField = element;
+        break;
       }
     }
 

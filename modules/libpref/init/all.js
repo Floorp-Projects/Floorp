@@ -4414,6 +4414,7 @@ pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
 pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
+pref("layers.child-process-shutdown", true);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
 // If this is set the tile size will only be treated as a suggestion.
@@ -4484,6 +4485,9 @@ pref("layers.prefer-opengl", false);
 pref("layers.prefer-d3d9", false);
 pref("layers.d3d11.force-warp", false);
 pref("layers.d3d11.disable-warp", true);
+
+// cf. Bug 1215265
+pref("layers.child-process-shutdown", false);
 #endif
 
 // Force all possible layers to be always active layers

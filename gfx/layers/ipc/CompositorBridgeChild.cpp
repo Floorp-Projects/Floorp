@@ -34,7 +34,7 @@ using mozilla::Unused;
 namespace mozilla {
 namespace layers {
 
-/*static*/ CompositorBridgeChild* CompositorBridgeChild::sCompositor;
+static StaticRefPtr<CompositorBridgeChild> sCompositorBridge;
 
 Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 
@@ -54,12 +54,20 @@ CompositorBridgeChild::~CompositorBridgeChild()
   }
 }
 
+bool
+CompositorBridgeChild::IsSameProcess() const
+{
+  return OtherPid() == base::GetCurrentProcId();
+}
+
 static void DeferredDestroyCompositor(RefPtr<CompositorBridgeParent> aCompositorBridgeParent,
                                       RefPtr<CompositorBridgeChild> aCompositorBridgeChild)
 {
-    // Bug 848949 needs to be fixed before
-    // we can close the channel properly
-    //aCompositorBridgeChild->Close();
+  aCompositorBridgeChild->Close();
+
+  if (sCompositorBridge == aCompositorBridgeChild) {
+    sCompositorBridge = nullptr;
+  }
 }
 
 void
@@ -72,23 +80,10 @@ CompositorBridgeChild::Destroy()
     return;
   }
 
-  mCanSend = false;
-
   // Destroying the layer manager may cause all sorts of things to happen, so
   // let's make sure there is still a reference to keep this alive whatever
   // happens.
   RefPtr<CompositorBridgeChild> selfRef = this;
-
-  SendWillStop();
-  // The call just made to SendWillStop can result in IPC from the
-  // CompositorBridgeParent to the CompositorBridgeChild (e.g. caused by the destruction
-  // of shared memory). We need to ensure this gets processed by the
-  // CompositorBridgeChild before it gets destroyed. It suffices to ensure that
-  // events already in the MessageLoop get processed before the
-  // CompositorBridgeChild is destroyed, so we add a task to the MessageLoop to
-  // handle compositor desctruction.
-
-  // From now on the only message we can send is Stop.
 
   if (mLayerManager) {
     mLayerManager->Destroy();
@@ -103,12 +98,33 @@ CompositorBridgeChild::Destroy()
     layers->Destroy();
   }
 
-  SendStop();
+  SendWillClose();
+  mCanSend = false;
 
-  // The DeferredDestroyCompositor task takes ownership of compositorParent and
-  // will release them when it runs.
+
+  // The call just made to SendWillClose can result in IPC from the
+  // CompositorBridgeParent to the CompositorBridgeChild (e.g. caused by the destruction
+  // of shared memory). We need to ensure this gets processed by the
+  // CompositorBridgeChild before it gets destroyed. It suffices to ensure that
+  // events already in the MessageLoop get processed before the
+  // CompositorBridgeChild is destroyed, so we add a task to the MessageLoop to
+  // handle compositor desctruction.
+
+  // From now on we can't send any message message.
   MessageLoop::current()->PostTask(FROM_HERE,
              NewRunnableFunction(DeferredDestroyCompositor, mCompositorBridgeParent, selfRef));
+}
+
+// static
+void
+CompositorBridgeChild::ShutDown()
+{
+  if (sCompositorBridge) {
+    sCompositorBridge->Destroy();
+    do {
+      NS_ProcessNextEvent(nullptr, true);
+    } while (sCompositorBridge);
+  }
 }
 
 bool
@@ -127,7 +143,7 @@ CompositorBridgeChild::LookupCompositorFrameMetrics(const FrameMetrics::ViewID a
 CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
 {
   // There's only one compositor per child process.
-  MOZ_ASSERT(!sCompositor);
+  MOZ_ASSERT(!sCompositorBridge);
 
   RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr));
   if (!child->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(), ipc::ChildSide)) {
@@ -137,16 +153,15 @@ CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
 
   child->mCanSend = true;
 
-  // We release this ref in ActorDestroy().
-  sCompositor = child.forget().take();
+  // We release this ref in DeferredDestroyCompositor.
+  sCompositorBridge = child;
 
   int32_t width;
   int32_t height;
-  sCompositor->SendGetTileSize(&width, &height);
+  sCompositorBridge->SendGetTileSize(&width, &height);
   gfxPlatform::GetPlatform()->SetTileSize(width, height);
 
-  // We release this ref in ActorDestroy().
-  return sCompositor;
+  return sCompositorBridge;
 }
 
 bool
@@ -166,7 +181,14 @@ CompositorBridgeChild::Get()
 {
   // This is only expected to be used in child processes.
   MOZ_ASSERT(!XRE_IsParentProcess());
-  return sCompositor;
+  return sCompositorBridge;
+}
+
+// static
+bool
+CompositorBridgeChild::ChildProcessHasCompositorBridge()
+{
+  return sCompositorBridge != nullptr;
 }
 
 PLayerTransactionChild*
@@ -419,8 +441,6 @@ CompositorBridgeChild::RecvClearCachedResources(const uint64_t& aId)
 void
 CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MOZ_ASSERT(sCompositor == this);
-
   if (aWhy == AbnormalShutdown) {
 #ifdef MOZ_B2G
   // Due to poor lifetime management of gralloc (and possibly shmems) we will
@@ -433,12 +453,8 @@ CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
     // If the parent side runs into a problem then the actor will be destroyed.
     // There is nothing we can do in the child side, here sets mCanSend as false.
     mCanSend = false;
-    gfxCriticalNote << "Receive IPC close with reason=" << aWhy;
+    gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
   }
-
-  MessageLoop::current()->PostTask(
-    FROM_HERE,
-    NewRunnableMethod(this, &CompositorBridgeChild::Release));
 }
 
 bool
@@ -573,9 +589,13 @@ CompositorBridgeChild::CancelNotifyAfterRemotePaint(TabChild* aTabChild)
 }
 
 bool
-CompositorBridgeChild::SendWillStop()
+CompositorBridgeChild::SendWillClose()
 {
-  return PCompositorBridgeChild::SendWillStop();
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorBridgeChild::SendWillClose();
 }
 
 bool

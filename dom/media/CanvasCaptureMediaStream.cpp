@@ -24,10 +24,12 @@ class OutputStreamDriver::StreamListener : public MediaStreamListener
 public:
   explicit StreamListener(OutputStreamDriver* aDriver,
                           TrackID aTrackId,
+                          PrincipalHandle aPrincipalHandle,
                           SourceMediaStream* aSourceStream)
     : mEnded(false)
     , mSourceStream(aSourceStream)
     , mTrackId(aTrackId)
+    , mPrincipalHandle(aPrincipalHandle)
     , mMutex("CanvasCaptureMediaStream OutputStreamDriver::StreamListener")
     , mImage(nullptr)
   {
@@ -55,7 +57,7 @@ public:
       RefPtr<Image> image = mImage;
       IntSize size = image ? image->GetSize() : IntSize(0, 0);
       VideoSegment segment;
-      segment.AppendFrame(image.forget(), delta, size);
+      segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
 
       mSourceStream->AppendToTrack(mTrackId, &segment);
     }
@@ -72,6 +74,7 @@ private:
   Atomic<bool> mEnded;
   const RefPtr<SourceMediaStream> mSourceStream;
   const TrackID mTrackId;
+  const PrincipalHandle mPrincipalHandle;
 
   Mutex mMutex;
   // The below members are protected by mMutex.
@@ -79,10 +82,12 @@ private:
 };
 
 OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
-                                       const TrackID& aTrackId)
+                                       const TrackID& aTrackId,
+                                       const PrincipalHandle& aPrincipalHandle)
   : FrameCaptureListener()
   , mSourceStream(aSourceStream)
-  , mStreamListener(new StreamListener(this, aTrackId, aSourceStream))
+  , mStreamListener(new StreamListener(this, aTrackId, aPrincipalHandle,
+                                       aSourceStream))
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSourceStream);
@@ -120,8 +125,9 @@ class TimerDriver : public OutputStreamDriver
 public:
   explicit TimerDriver(SourceMediaStream* aSourceStream,
                        const double& aFPS,
-                       const TrackID& aTrackId)
-    : OutputStreamDriver(aSourceStream, aTrackId)
+                       const TrackID& aTrackId,
+                       const PrincipalHandle& aPrincipalHandle)
+    : OutputStreamDriver(aSourceStream, aTrackId, aPrincipalHandle)
     , mFPS(aFPS)
     , mTimer(nullptr)
   {
@@ -178,8 +184,9 @@ class AutoDriver : public OutputStreamDriver
 {
 public:
   explicit AutoDriver(SourceMediaStream* aSourceStream,
-                      const TrackID& aTrackId)
-    : OutputStreamDriver(aSourceStream, aTrackId) {}
+                      const TrackID& aTrackId,
+                      const PrincipalHandle& aPrincipalHandle)
+    : OutputStreamDriver(aSourceStream, aTrackId, aPrincipalHandle) {}
 
   void NewFrame(already_AddRefed<Image> aImage) override
   {
@@ -207,8 +214,10 @@ NS_IMPL_RELEASE_INHERITED(CanvasCaptureMediaStream, DOMMediaStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CanvasCaptureMediaStream)
 NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
-CanvasCaptureMediaStream::CanvasCaptureMediaStream(HTMLCanvasElement* aCanvas)
-  : mCanvas(aCanvas)
+CanvasCaptureMediaStream::CanvasCaptureMediaStream(nsPIDOMWindowInner* aWindow,
+                                                   HTMLCanvasElement* aCanvas)
+  : DOMMediaStream(aWindow, nullptr)
+  , mCanvas(aCanvas)
   , mOutputStreamDriver(nullptr)
 {
 }
@@ -237,18 +246,21 @@ CanvasCaptureMediaStream::RequestFrame()
 
 nsresult
 CanvasCaptureMediaStream::Init(const dom::Optional<double>& aFPS,
-                               const TrackID& aTrackId)
+                               const TrackID& aTrackId,
+                               nsIPrincipal* aPrincipal)
 {
+  PrincipalHandle principalHandle = MakePrincipalHandle(aPrincipal);
+
   if (!aFPS.WasPassed()) {
     mOutputStreamDriver =
-      new AutoDriver(GetInputStream()->AsSourceStream(), aTrackId);
+      new AutoDriver(GetInputStream()->AsSourceStream(), aTrackId, principalHandle);
   } else if (aFPS.Value() < 0) {
     return NS_ERROR_ILLEGAL_VALUE;
   } else {
     // Cap frame rate to 60 FPS for sanity
     double fps = std::min(60.0, aFPS.Value());
     mOutputStreamDriver =
-      new TimerDriver(GetInputStream()->AsSourceStream(), fps, aTrackId);
+      new TimerDriver(GetInputStream()->AsSourceStream(), fps, aTrackId, principalHandle);
   }
   return NS_OK;
 }
@@ -257,11 +269,11 @@ already_AddRefed<CanvasCaptureMediaStream>
 CanvasCaptureMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                              HTMLCanvasElement* aCanvas)
 {
-  RefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aCanvas);
+  RefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aWindow, aCanvas);
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
                                   AudioChannel::Normal);
-  stream->InitSourceStream(aWindow, graph);
+  stream->InitSourceStream(graph);
   return stream.forget();
 }
 

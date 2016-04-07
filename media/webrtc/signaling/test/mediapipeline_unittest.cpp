@@ -192,7 +192,7 @@ class TestAgent {
     audio_rtcp_transport_.Shutdown();
     bundle_transport_.Shutdown();
     if (audio_pipeline_)
-      audio_pipeline_->ShutdownTransport_s();
+      audio_pipeline_->DetachTransport_s();
   }
 
   void Shutdown() {
@@ -251,6 +251,11 @@ class TestAgentSend : public TestAgent {
 
   virtual void CreatePipelines_s(bool aIsRtcpMux) {
     audio_ = new Fake_DOMMediaStream(new Fake_AudioStreamSource());
+    audio_->SetHintContents(Fake_DOMMediaStream::HINT_CONTENTS_AUDIO);
+
+    nsTArray<RefPtr<Fake_MediaStreamTrack>> tracks;
+    audio_->GetAudioTracks(tracks);
+    ASSERT_EQ(1U, tracks.Length());
 
     mozilla::MediaConduitErrorCode err =
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
@@ -275,10 +280,9 @@ class TestAgentSend : public TestAgent {
         test_pc,
         nullptr,
         test_utils->sts_target(),
-        audio_,
+        tracks[0],
         "audio_track_fake_uuid",
         1,
-        false,
         audio_conduit_,
         rtp,
         rtcp,
@@ -326,7 +330,7 @@ class TestAgentReceive : public TestAgent {
         test_pc,
         nullptr,
         test_utils->sts_target(),
-        audio_->GetStream(), "audio_track_fake_uuid", 1, 1,
+        audio_->GetStream()->AsSourceStream(), "audio_track_fake_uuid", 1, 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
         audio_rtp_transport_.flow_,
         audio_rtcp_transport_.flow_,

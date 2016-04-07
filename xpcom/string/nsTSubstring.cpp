@@ -308,9 +308,15 @@ nsTSubstring_CharT::Assign(char_type aChar, const fallible_t&)
 void
 nsTSubstring_CharT::Assign(const char_type* aData)
 {
-  if (!Assign(aData, size_type(-1), mozilla::fallible)) {
+  if (!Assign(aData, mozilla::fallible)) {
     AllocFailed(char_traits::length(aData));
   }
+}
+
+bool
+nsTSubstring_CharT::Assign(const char_type* aData, const fallible_t&)
+{
+  return Assign(aData, size_type(-1), mozilla::fallible);
 }
 
 void

@@ -402,6 +402,10 @@ CompositorVsyncScheduler::CancelSetDisplayTask()
 void
 CompositorVsyncScheduler::Destroy()
 {
+  if (!mVsyncObserver) {
+    // Destroy was already called on this object.
+    return;
+  }
   MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
   UnobserveVsync();
   mVsyncObserver->Destroy();
@@ -643,6 +647,9 @@ void CompositorBridgeParent::ShutDown()
   while (!sFinishedCompositorShutDown) {
     NS_ProcessNextEvent(nullptr, true);
   }
+
+  // TODO: this should be empty by now...
+  sIndirectLayerTrees.clear();
 }
 
 MessageLoop* CompositorBridgeParent::CompositorLoop()
@@ -726,6 +733,9 @@ CompositorBridgeParent::CompositorBridgeParent(nsIWidget* aWidget,
 
   mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget);
   LayerScope::SetPixelScale(mWidget->GetDefaultScale().scale);
+
+  // mSelfRef is cleared in DeferredDestroy.
+  mSelfRef = this;
 }
 
 bool
@@ -747,40 +757,13 @@ CompositorBridgeParent::~CompositorBridgeParent()
 }
 
 void
-CompositorBridgeParent::Destroy()
-{
-  MOZ_ASSERT(ManagedPLayerTransactionParent().Count() == 0,
-             "CompositorBridgeParent destroyed before managed PLayerTransactionParent");
-
-  MOZ_ASSERT(mPaused); // Ensure RecvWillStop was called
-  // Ensure that the layer manager is destructed on the compositor thread.
-  mLayerManager = nullptr;
-  if (mCompositor) {
-    mCompositor->Destroy();
-  }
-  mCompositor = nullptr;
-
-  mCompositionManager = nullptr;
-  if (mApzcTreeManager) {
-    mApzcTreeManager->ClearTree();
-    mApzcTreeManager = nullptr;
-  }
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    sIndirectLayerTrees.erase(mRootLayerTreeID);
-  }
-
-  mCompositorScheduler->Destroy();
-}
-
-void
 CompositorBridgeParent::ForceIsFirstPaint()
 {
   mCompositionManager->ForceIsFirstPaint();
 }
 
 bool
-CompositorBridgeParent::RecvWillStop()
+CompositorBridgeParent::RecvWillClose()
 {
   mPaused = true;
   RemoveCompositor(mCompositorID);
@@ -798,6 +781,10 @@ CompositorBridgeParent::RecvWillStop()
     mCompositionManager = nullptr;
   }
 
+  if (mCompositor) {
+    mCompositor->DetachWidget();
+  }
+
   return true;
 }
 
@@ -806,22 +793,7 @@ void CompositorBridgeParent::DeferredDestroy()
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(mCompositorThreadHolder);
   mCompositorThreadHolder = nullptr;
-  Release();
-}
-
-bool
-CompositorBridgeParent::RecvStop()
-{
-  Destroy();
-  // There are chances that the ref count reaches zero on the main thread shortly
-  // after this function returns while some ipdl code still needs to run on
-  // this thread.
-  // We must keep the compositor parent alive untill the code handling message
-  // reception is finished on this thread.
-  this->AddRef(); // Corresponds to DeferredDestroy's Release
-  MessageLoop::current()->PostTask(FROM_HERE,
-                                   NewRunnableMethod(this,&CompositorBridgeParent::DeferredDestroy));
-  return true;
+  mSelfRef = nullptr;
 }
 
 bool
@@ -987,11 +959,32 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
     mLayerManager = nullptr;
     { // scope lock
       MonitorAutoLock lock(*sIndirectLayerTreesLock);
-      sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
+      sIndirectLayerTrees.erase(mRootLayerTreeID);
     }
-    mCompositionManager = nullptr;
+  }
+
+  if (mCompositor) {
+    mCompositor->Destroy();
     mCompositor = nullptr;
   }
+
+  mCompositionManager = nullptr;
+
+  if (mApzcTreeManager) {
+    mApzcTreeManager->ClearTree();
+    mApzcTreeManager = nullptr;
+  }
+
+  mCompositorScheduler->Destroy();
+
+  // There are chances that the ref count reaches zero on the main thread shortly
+  // after this function returns while some ipdl code still needs to run on
+  // this thread.
+  // We must keep the compositor parent alive untill the code handling message
+  // reception is finished on this thread.
+  mSelfRef = this;
+  MessageLoop::current()->PostTask(FROM_HERE,
+                                   NewRunnableMethod(this,&CompositorBridgeParent::DeferredDestroy));
 }
 
 
@@ -1919,6 +1912,7 @@ public:
   explicit CrossProcessCompositorBridgeParent(Transport* aTransport)
     : mTransport(aTransport)
     , mNotifyAfterRemotePaint(false)
+    , mDestroyCalled(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -1933,8 +1927,7 @@ public:
 
   // FIXME/bug 774388: work out what shutdown protocol we need.
   virtual bool RecvRequestOverfill() override { return true; }
-  virtual bool RecvWillStop() override { return true; }
-  virtual bool RecvStop() override { return true; }
+  virtual bool RecvWillClose() override { return true; }
   virtual bool RecvPause() override { return true; }
   virtual bool RecvResume() override { return true; }
   virtual bool RecvNotifyHidden(const uint64_t& id) override;
@@ -2057,6 +2050,7 @@ private:
   // If true, we should send a RemotePaintIsReady message when the layer transaction
   // is received
   bool mNotifyAfterRemotePaint;
+  bool mDestroyCalled;
 };
 
 PCompositorBridgeParent*
@@ -2273,10 +2267,10 @@ CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
   lru->Remove(this);
-
-  MessageLoop::current()->PostTask(
-    FROM_HERE,
-    NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy));
+  // We must keep this object alive untill the code handling message
+  // reception is finished on this thread.
+  MessageLoop::current()->PostTask(FROM_HERE,
+      NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy));
 }
 
 PLayerTransactionParent*
@@ -2725,7 +2719,6 @@ CrossProcessCompositorBridgeParent::RecvAcknowledgeCompositorUpdate(const uint64
 void
 CrossProcessCompositorBridgeParent::DeferredDestroy()
 {
-  MOZ_ASSERT(mCompositorThreadHolder);
   mCompositorThreadHolder = nullptr;
   mSelfRef = nullptr;
 }

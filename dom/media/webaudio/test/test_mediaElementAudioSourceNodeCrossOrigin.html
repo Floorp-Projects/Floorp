@@ -39,14 +39,24 @@ tests.forEach(function(e) {
     a.crossOrigin = e.cors;
   }
   a.src = e.url;
-  var measn = e.ac.createMediaElementSource(a);
-  var sp = e.ac.createScriptProcessor(2048, 1);
-  // Set a couple expandos to track the status of the test
-  sp.seenSound = false;
-
-  measn.connect(sp);
-  a.play();
   document.body.appendChild(a);
+
+  a.onloadedmetadata = () => {
+    // Wait for "loadedmetadata" before capturing since tracks are then known
+    // directly. If we set up the capture before "loadedmetadata" we
+    // (internally) have to wait an extra async jump for tracks to become known
+    // to main thread, before setting up audio data forwarding to the node.
+    // As that happens, the audio resource may have already ended on slow test
+    // machines, causing failures.
+    a.onloadedmetadata = null;
+    var measn = e.ac.createMediaElementSource(a);
+    var sp = e.ac.createScriptProcessor(2048, 1);
+    sp.seenSound = false;
+    sp.onaudioprocess = checkBufferSilent;
+
+    measn.connect(sp);
+    a.play();
+  };
 
   function checkFinished(sp) {
     if (a.ended) {
@@ -77,8 +87,6 @@ tests.forEach(function(e) {
     checkFinished(e.target);
     return silent;
   }
-
-  sp.onaudioprocess = checkBufferSilent;
 });
 </script>
 </pre>

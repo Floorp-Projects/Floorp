@@ -167,34 +167,34 @@ function GetBuiltinPrototype(builtinName) {
     return (_builtinCtorsCache[builtinName] || GetBuiltinConstructor(builtinName)).prototype;
 }
 
-// ES6 draft 20150317 7.3.20.
+// ES 2016 draft Mar 25, 2016 7.3.20.
 function SpeciesConstructor(obj, defaultConstructor) {
     // Step 1.
     assert(IsObject(obj), "not passed an object");
 
-    // Steps 2-3.
+    // Step 2.
     var ctor = obj.constructor;
 
-    // Step 4.
+    // Step 3.
     if (ctor === undefined)
         return defaultConstructor;
 
-    // Step 5.
+    // Step 4.
     if (!IsObject(ctor))
         ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "object's 'constructor' property");
 
-    // Steps 6-7.
+    // Steps 5.
     var s = ctor[std_species];
 
-    // Step 8.
+    // Step 6.
     if (s === undefined || s === null)
         return defaultConstructor;
 
-    // Step 9.
+    // Step 7.
     if (IsConstructor(s))
         return s;
 
-    // Step 10.
+    // Step 8.
     ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "@@species property of object's constructor");
 }
 

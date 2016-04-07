@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  "use strict";
+
+  createHTML({
+    title: "MediaStreamTrack.clone()",
+    bug: "1208371"
+  });
+
+  var testSingleTrackClonePlayback = constraints =>
+      getUserMedia(constraints).then(stream => {
+    info("Test clone()ing an " + constraints + " gUM track");
+    var track = stream.getTracks()[0];
+    var clone = track.clone();
+
+    checkMediaStreamTrackCloneAgainstOriginal(clone, track);
+
+    info("Stopping original track");
+    track.stop();
+
+    info("Creating new stream for clone");
+    var cloneStream = new MediaStream([clone]);
+    checkMediaStreamContains(cloneStream, [clone]);
+
+    info("Testing playback of track clone");
+    var test = createMediaElement('video', 'testClonePlayback');
+    var playback = new MediaStreamPlayback(test, cloneStream);
+    return playback.playMediaWithMediaStreamTracksStop(false);
+  });
+
+  runTest(() => Promise.resolve()
+    .then(() => testSingleTrackClonePlayback({audio: true}))
+    .then(() => testSingleTrackClonePlayback({video: true}))
+    .then(() => getUserMedia({video: true})).then(stream => {
+      info("Test cloning a track into inception");
+      var track = stream.getTracks()[0];
+      var inceptionClone = track.clone().clone().clone().clone().clone()
+                                .clone().clone().clone().clone().clone();
+      checkMediaStreamTrackCloneAgainstOriginal(inceptionClone, track);
+
+      var cloneStream = new MediaStream();
+      cloneStream.addTrack(inceptionClone);
+
+      // cloneStream is now essentially the same as stream.clone();
+      checkMediaStreamCloneAgainstOriginal(cloneStream, stream);
+
+      var test = createMediaElement('video', 'testClonePlayback');
+      var playback = new MediaStreamPlayback(test, cloneStream);
+      return playback.playMediaWithMediaStreamTracksStop(false);
+    })
+    .then(() => getUserMedia({audio: true, video: true})).then(stream => {
+      info("Test adding many track clones to the original stream");
+
+      const LOOPS = 3;
+      for (var i = 0; i < LOOPS; i++) {
+        stream.getTracks().forEach(t => stream.addTrack(t.clone()));
+      }
+      is(stream.getVideoTracks().length, Math.pow(2, LOOPS),
+         "The original track should contain the original video track and all the video clones");
+      stream.getTracks().forEach(t1 => is(stream.getTracks()
+                                                .filter(t2 => t1.id == t2.id)
+                                                .length,
+                                          1, "Each track should be unique"));
+
+      var test = createMediaElement('video', 'testClonePlayback');
+      var playback = new MediaStreamPlayback(test, stream);
+      return playback.playMediaWithMediaStreamTracksStop(false);
+    })
+    .then(() => {
+      info("Testing audio content routing with MediaStreamTrack.clone()");
+      var ac = new AudioContext();
+
+      var osc1kOriginal = createOscillatorStream(ac, 1000);
+      var audioTrack1kOriginal = osc1kOriginal.getTracks()[0];
+      var audioTrack1kClone = audioTrack1kOriginal.clone();
+
+      var osc5kOriginal = createOscillatorStream(ac, 5000);
+      var audioTrack5kOriginal = osc5kOriginal.getTracks()[0];
+      var audioTrack5kClone = audioTrack5kOriginal.clone();
+
+      return Promise.resolve().then(() => {
+        info("Analysing audio output of 1k original and 5k clone.");
+        var stream = new MediaStream();
+        stream.addTrack(audioTrack1kOriginal);
+        stream.addTrack(audioTrack5kClone);
+
+        var analyser = new AudioStreamAnalyser(ac, stream);
+        return analyser.waitForAnalysisSuccess(array =>
+                 array[analyser.binIndexForFrequency(50)] < 50 &&
+                 array[analyser.binIndexForFrequency(1000)] > 200 &&
+                 array[analyser.binIndexForFrequency(3000)] < 50 &&
+                 array[analyser.binIndexForFrequency(5000)] > 200 &&
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => {
+            info("Waiting for original tracks to stop");
+            stream.getTracks().forEach(t => t.stop());
+            return analyser.waitForAnalysisSuccess(array =>
+                     array[analyser.binIndexForFrequency(50)] < 50 &&
+                     // WebAudioDestination streams do not handle stop()
+                     // XXX Should they? Plan to resolve that in bug 1208384.
+                     // array[analyser.binIndexForFrequency(1000)] < 50 &&
+                     array[analyser.binIndexForFrequency(3000)] < 50 &&
+                     // array[analyser.binIndexForFrequency(5000)] < 50 &&
+                     array[analyser.binIndexForFrequency(10000)] < 50);
+          }).then(() => analyser.disconnect());
+      }).then(() => {
+        info("Analysing audio output of clones of clones (1kx2 + 5kx5)");
+        var stream = new MediaStream([audioTrack1kClone.clone(),
+                                      audioTrack5kClone.clone().clone().clone().clone()]);
+
+        var analyser = new AudioStreamAnalyser(ac, stream);
+        return analyser.waitForAnalysisSuccess(array =>
+                 array[analyser.binIndexForFrequency(50)] < 50 &&
+                 array[analyser.binIndexForFrequency(1000)] > 200 &&
+                 array[analyser.binIndexForFrequency(3000)] < 50 &&
+                 array[analyser.binIndexForFrequency(5000)] > 200 &&
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disconnect());
+      }).then(() => {
+        info("Analysing audio output enabled and disabled tracks that don't affect each other");
+        audioTrack1kOriginal.enabled = true;
+        audioTrack5kOriginal.enabled = false;
+
+        audioTrack1kClone.enabled = false;
+        audioTrack5kClone.enabled = true;
+
+        var analyser =
+          new AudioStreamAnalyser(ac, new MediaStream([audioTrack1kOriginal,
+                                                      audioTrack5kOriginal]));
+        return analyser.waitForAnalysisSuccess(array =>
+                 array[analyser.binIndexForFrequency(50)] < 50 &&
+                 array[analyser.binIndexForFrequency(1000)] > 200 &&
+                 array[analyser.binIndexForFrequency(3000)] < 50 &&
+                 array[analyser.binIndexForFrequency(5000)] < 50)
+          .then(() => analyser.disconnect())
+          .then(() => {
+            var cloneAnalyser =
+              new AudioStreamAnalyser(ac, new MediaStream([audioTrack1kClone,
+                                                           audioTrack5kClone]));
+            return cloneAnalyser.waitForAnalysisSuccess(array =>
+                     array[cloneAnalyser.binIndexForFrequency(1000)] < 50 &&
+                     array[cloneAnalyser.binIndexForFrequency(3000)] < 50 &&
+                     array[cloneAnalyser.binIndexForFrequency(5000)] > 200 &&
+                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50)
+              .then(() => cloneAnalyser.disconnect());
+          })
+          // Restore original tracks
+          .then(() => [audioTrack1kOriginal,
+                       audioTrack5kOriginal,
+                       audioTrack1kClone,
+                       audioTrack5kClone].forEach(t => t.enabled = true));
+      });
+    }));
+</script>
+</pre>
+</body>
+</html>

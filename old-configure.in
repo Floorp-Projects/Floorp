@@ -4173,13 +4173,10 @@ fi
 
 if test -n "$MOZ_TREMOR"; then
     AC_DEFINE(MOZ_TREMOR)
-    # Tremor doesn't have an encoder.
-    MOZ_WEBM_ENCODER=
 fi
 
-if test -n "$MOZ_WEBM_ENCODER"; then
-    AC_DEFINE(MOZ_WEBM_ENCODER)
-fi
+MOZ_WEBM_ENCODER=1
+AC_DEFINE(MOZ_WEBM_ENCODER)
 AC_SUBST(MOZ_WEBM_ENCODER)
 
 dnl ==================================

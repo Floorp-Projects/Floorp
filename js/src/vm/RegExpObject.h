@@ -326,6 +326,23 @@ class RegExpCompartment
      */
     ReadBarriered<ArrayObject*> matchResultTemplateObject_;
 
+    /*
+     * The shape of RegExp.prototype object that satisfies following:
+     *   * RegExp.prototype.global getter is not modified
+     *   * RegExp.prototype.sticky getter is not modified
+     *   * RegExp.prototype.exec is an own data property
+     *   * RegExp.prototype[@@match] is an own data property
+     *   * RegExp.prototype[@@search] is an own data property
+     */
+    ReadBarriered<Shape*> optimizableRegExpPrototypeShape_;
+
+    /*
+     * The shape of RegExp instance that satisfies following:
+     *   * lastProperty is lastIndex
+     *   * prototype is RegExp.prototype
+     */
+    ReadBarriered<Shape*> optimizableRegExpInstanceShape_;
+
     ArrayObject* createMatchResultTemplateObject(JSContext* cx);
 
   public:
@@ -347,6 +364,26 @@ class RegExpCompartment
         if (matchResultTemplateObject_)
             return matchResultTemplateObject_;
         return createMatchResultTemplateObject(cx);
+    }
+
+    Shape* getOptimizableRegExpPrototypeShape() {
+        return optimizableRegExpPrototypeShape_;
+    }
+    void setOptimizableRegExpPrototypeShape(Shape* shape) {
+        optimizableRegExpPrototypeShape_ = shape;
+    }
+    Shape* getOptimizableRegExpInstanceShape() {
+        return optimizableRegExpInstanceShape_;
+    }
+    void setOptimizableRegExpInstanceShape(Shape* shape) {
+        optimizableRegExpInstanceShape_ = shape;
+    }
+
+    static size_t offsetOfOptimizableRegExpPrototypeShape() {
+        return offsetof(RegExpCompartment, optimizableRegExpPrototypeShape_);
+    }
+    static size_t offsetOfOptimizableRegExpInstanceShape() {
+        return offsetof(RegExpCompartment, optimizableRegExpInstanceShape_);
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -387,6 +424,15 @@ class RegExpObject : public NativeObject
     /* Accessors. */
 
     static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
+
+    static bool isInitialShape(NativeObject* nobj) {
+        Shape* shape = nobj->lastProperty();
+        if (!shape->hasSlot())
+            return false;
+        if (shape->maybeSlot() != LAST_INDEX_SLOT)
+            return false;
+        return true;
+    }
 
     const Value& getLastIndex() const { return getSlot(LAST_INDEX_SLOT); }
 
@@ -455,10 +501,6 @@ class RegExpObject : public NativeObject
     void setPrivate(void* priv) = delete;
 };
 
-JSString*
-str_replace_regexp_raw(JSContext* cx, HandleString string, Handle<RegExpObject*> regexp,
-                       HandleString replacement);
-
 /*
  * Parse regexp flags. Report an error and return false if an invalid
  * sequence of flags is encountered (repeat/invalid flag).
@@ -485,8 +527,20 @@ XDRScriptRegExpObject(XDRState<mode>* xdr, MutableHandle<RegExpObject*> objp);
 extern JSObject*
 CloneScriptRegExpObject(JSContext* cx, RegExpObject& re);
 
-JSAtom*
+/* Escape all slashes and newlines in the given string. */
+extern JSAtom*
 EscapeRegExpPattern(JSContext* cx, HandleAtom src);
+
+template <typename CharT>
+extern bool
+HasRegExpMetaChars(const CharT* chars, size_t length);
+
+extern bool
+StringHasRegExpMetaChars(JSLinearString* str);
+
+/* Escape all meta chars in given string. */
+extern JSString*
+RegExpEscapeMetaChars(JSContext* cx, HandleString src);
 
 } /* namespace js */
 

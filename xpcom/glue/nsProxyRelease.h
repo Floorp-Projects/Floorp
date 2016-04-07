@@ -272,6 +272,10 @@ public:
     }
     return *mPtr == *aOther.mPtr;
   }
+  bool operator!=(const nsMainThreadPtrHandle<T>& aOther) const
+  {
+    return !operator==(aOther);
+  }
   bool operator!() const {
     return !mPtr || !*mPtr;
   }

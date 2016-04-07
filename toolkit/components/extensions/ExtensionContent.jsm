@@ -296,13 +296,18 @@ class ExtensionContext extends BaseContext {
     let contentPrincipal = contentWindow.document.nodePrincipal;
     let ssm = Services.scriptSecurityManager;
 
-    let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, {addonId: extensionId});
+    // copy origin attributes from the content window origin attributes to
+    // preserve the user context id. overwrite the addonId.
+    let attrs = contentPrincipal.originAttributes;
+    attrs.addonId = extensionId;
+    let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
     Object.defineProperty(this, "principal",
                           {value: extensionPrincipal, enumerable: true, configurable: true});
 
     if (ssm.isSystemPrincipal(contentPrincipal)) {
       // Make sure we don't hand out the system principal by accident.
-      prin = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+      // also make sure that the null principal has the right origin attributes
+      prin = ssm.createNullPrincipal(attrs);
     } else {
       prin = [contentPrincipal, extensionPrincipal];
     }

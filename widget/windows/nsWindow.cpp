@@ -2926,7 +2926,7 @@ NS_METHOD nsWindow::Invalidate(bool aEraseBackground,
   debug_DumpInvalidate(stdout,
                        this,
                        nullptr,
-                       nsAutoCString("noname"),
+                       "noname",
                        (int32_t) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 
@@ -2953,7 +2953,7 @@ NS_METHOD nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
     debug_DumpInvalidate(stdout,
                          this,
                          &aRect,
-                         nsAutoCString("noname"),
+                         "noname",
                          (int32_t) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 
@@ -3868,7 +3868,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
   debug_DumpEvent(stdout,
                   event->widget,
                   event,
-                  nsAutoCString("something"),
+                  "something",
                   (int32_t) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 

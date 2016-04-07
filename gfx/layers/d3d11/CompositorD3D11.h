@@ -47,6 +47,7 @@ public:
 
   virtual bool Initialize() override;
   virtual void Destroy() override {}
+  virtual void DetachWidget() override { mWidget = nullptr; }
 
   virtual TextureFactoryIdentifier
     GetTextureFactoryIdentifier() override;

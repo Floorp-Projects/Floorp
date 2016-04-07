@@ -27,9 +27,9 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
                       const nsString& aDeviceId,
                       const nsACString& aOrigin) override;
     nsresult Deallocate() override;
-    nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID) override;
+    nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID, const mozilla::PrincipalHandle&) override;
     void SetDirectListeners(bool aHasDirectListeners) override {};
-    void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime) override;
+    void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime, const mozilla::PrincipalHandle& aPrincipalHandle) override;
     nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
     nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
                      const mozilla::MediaEnginePrefs& aPrefs,
@@ -45,7 +45,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
       return 0;
     }
 
-    nsresult TakePhoto(PhotoCallback* aCallback) override
+    nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override
     {
       return NS_ERROR_NOT_IMPLEMENTED;
     }

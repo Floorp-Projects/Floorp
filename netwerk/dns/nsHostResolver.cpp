@@ -408,7 +408,8 @@ HostDB_MatchEntry(const PLDHashEntryHdr *entry,
     const nsHostDBEnt *he = static_cast<const nsHostDBEnt *>(entry);
     const nsHostKey *hk = static_cast<const nsHostKey *>(key); 
 
-    return !strcmp(he->rec->host, hk->host) &&
+    return !strcmp(he->rec->host ? he->rec->host : "",
+                   hk->host ? hk->host : "") &&
             RES_KEY_FLAGS (he->rec->flags) == RES_KEY_FLAGS(hk->flags) &&
             he->rec->af == hk->af &&
             !strcmp(he->rec->netInterface, hk->netInterface);

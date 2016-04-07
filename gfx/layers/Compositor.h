@@ -200,6 +200,7 @@ public:
 
   virtual bool Initialize() = 0;
   virtual void Destroy() = 0;
+  virtual void DetachWidget() {}
 
   /**
    * Return true if the effect type is supported.
