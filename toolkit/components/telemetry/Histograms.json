@@ -10465,5 +10465,12 @@
     "n_buckets": 50,
     "keyed": true,
     "description": "Measures the size of message manager messages by message name"
+  },
+  "SANDBOX_BROKER_INITIALIZED": {
+    "alert_emails": ["bowen@mozilla.com"],
+    "bug_numbers": [1256992],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "description": "Result of call to SandboxBroker::Initialize"
   }
 }
