@@ -4990,9 +4990,17 @@ nsImageRenderer::ComputeConstrainedSize(const nsSize& aConstrainingSize,
     size.width = aConstrainingSize.width;
     size.height = NSCoordSaturatingNonnegativeMultiply(
                     aIntrinsicRatio.height, scaleX);
+    // If we're reducing the size by less than one css pixel, then just use the
+    // constraining size.
+    if (aFitType == CONTAIN && aConstrainingSize.height - size.height < nsPresContext::AppUnitsPerCSSPixel()) {
+      size.height = aConstrainingSize.height;
+    }
   } else {
     size.width = NSCoordSaturatingNonnegativeMultiply(
                    aIntrinsicRatio.width, scaleY);
+    if (aFitType == CONTAIN && aConstrainingSize.width - size.width < nsPresContext::AppUnitsPerCSSPixel()) {
+      size.width = aConstrainingSize.width;
+    }
     size.height = aConstrainingSize.height;
   }
   return size;
