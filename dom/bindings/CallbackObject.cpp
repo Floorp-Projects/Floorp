@@ -70,52 +70,36 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     webIDLCallerPrincipal = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
   }
 
-  // We need to produce a useful JSContext here.  Ideally one that the callback
-  // is in some sense associated with, so that we can sort of treat it as a
-  // "script entry point".  Though once we actually have script entry points,
-  // we'll need to do the script entry point bits once we have an actual
-  // callable.
-
   // First, find the real underlying callback.
   JSObject* realCallback = js::UncheckedUnwrap(aCallback->CallbackPreserveColor());
-  JSContext* cx = nullptr;
   nsIGlobalObject* globalObject = nullptr;
 
+  JSContext* cx;
   {
     // Bug 955660: we cannot do "proper" rooting here because we need the
     // global to get a context. Everything here is simple getters that cannot
     // GC, so just paper over the necessary dataflow inversion.
     JS::AutoSuppressGCAnalysis nogc;
     if (mIsMainThread) {
-      // Now get the global and JSContext for this callback.  Note that for the
-      // case of JS-implemented WebIDL we never have a window here.
+      // Now get the global for this callback. Note that for the case of
+      // JS-implemented WebIDL we never have a window here.
       nsGlobalWindow* win =
         aIsJSImplementedWebIDL ? nullptr : xpc::WindowGlobalOrNull(realCallback);
       if (win) {
-        // Make sure that if this is a window it has an active document, since
-        // the nsIScriptContext and hence JSContext are associated with the
-        // outer window.  Which means that if someone holds on to a function
-        // from a now-unloaded document we'd have the new document as the
-        // script entry point...
         MOZ_ASSERT(win->IsInnerWindow());
+        // We don't want to run script in windows that have been navigated away
+        // from.
         if (!win->AsInner()->HasActiveDocument()) {
-          // Just bail out from here
           return;
         }
-        cx = win->GetContext() ? win->GetContext()->GetNativeContext()
-                               // This happens - Removing it causes
-                               // test_bug293235.xul to go orange.
-                               : nsContentUtils::GetSafeJSContext();
         globalObject = win;
       } else {
-        // No DOM Window. Store the global and use the SafeJSContext.
+        // No DOM Window. Store the global.
         JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
         globalObject = xpc::NativeGlobal(glob);
         MOZ_ASSERT(globalObject);
-        cx = nsContentUtils::GetSafeJSContext();
       }
     } else {
-      cx = workers::GetCurrentThreadJSContext();
       JSObject *global = js::GetGlobalForObjectCrossCompartment(realCallback);
       globalObject = workers::GetGlobalObjectForGlobal(global);
       MOZ_ASSERT(globalObject);
@@ -128,8 +112,10 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       return;
     }
 
-    mAutoEntryScript.emplace(globalObject, aExecutionReason,
-                             mIsMainThread, cx);
+    // Off the main thread, AutoEntryScript expects us to pass a JSContext.
+    mAutoEntryScript.emplace(globalObject, aExecutionReason, mIsMainThread,
+                             mIsMainThread ? nullptr
+                                           : workers::GetCurrentThreadJSContext());
     mAutoEntryScript->SetWebIDLCallerPrincipal(webIDLCallerPrincipal);
     nsIGlobalObject* incumbent = aCallback->IncumbentGlobalOrNull();
     if (incumbent) {
@@ -143,6 +129,8 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       }
       mAutoIncumbentScript.emplace(incumbent);
     }
+
+    cx = mAutoEntryScript->cx();
 
     // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
     // variant), and stick it in a Rooted before it can go gray again.
