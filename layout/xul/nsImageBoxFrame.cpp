@@ -450,17 +450,10 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer,
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
-  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
-
-  nsRect clientRect;
-  imageFrame->GetClientRect(clientRect);
-
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect =
-    LayoutDeviceRect::FromAppUnits(clientRect + ToReferenceFrame(), factor);
+  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
 
-  nsCOMPtr<imgIContainer> imgCon;
-  imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
+  nsCOMPtr<imgIContainer> imgCon = GetImage();
   int32_t imageWidth;
   int32_t imageHeight;
   imgCon->GetWidth(&imageWidth);
@@ -503,30 +496,47 @@ bool
 nsDisplayXULImage::CanOptimizeToImageLayer(LayerManager* aManager,
                                            nsDisplayListBuilder* aBuilder)
 {
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+  if (!imageFrame->CanOptimizeToImageLayer()) {
+    return false;
+  }
 
-  return static_cast<nsImageBoxFrame*>(mFrame)
-    ->IsImageContainerAvailable(aManager, flags);
+  return nsDisplayImageContainer::CanOptimizeToImageLayer(aManager, aBuilder);
 }
 
-bool
-nsImageBoxFrame::IsImageContainerAvailable(LayerManager* aManager,
-                                           uint32_t aFlags)
+already_AddRefed<imgIContainer>
+nsDisplayXULImage::GetImage()
 {
-  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-  if (hasSubRect || !mImageRequest) {
-    return false;
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+  if (!imageFrame->mImageRequest) {
+    return nullptr;
   }
 
   nsCOMPtr<imgIContainer> imgCon;
-  mImageRequest->GetImage(getter_AddRefs(imgCon));
-  if (!imgCon) {
+  imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
+  
+  return imgCon.forget();
+}
+
+nsRect
+nsDisplayXULImage::GetDestRect()
+{
+  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
+
+  nsRect clientRect;
+  imageFrame->GetClientRect(clientRect);
+
+  return clientRect + ToReferenceFrame();
+}
+
+bool
+nsImageBoxFrame::CanOptimizeToImageLayer()
+{
+  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
+  if (hasSubRect) {
     return false;
   }
-  
-  return imgCon->IsImageContainerAvailable(aManager, aFlags);
+  return true;
 }
 
 already_AddRefed<ImageContainer>
@@ -537,30 +547,11 @@ nsDisplayXULImage::GetContainer(LayerManager* aManager,
                  ? imgIContainer::FLAG_SYNC_DECODE
                  : imgIContainer::FLAG_NONE;
 
-  return static_cast<nsImageBoxFrame*>(mFrame)->GetContainer(aManager, flags);
-}
-
-already_AddRefed<ImageContainer>
-nsImageBoxFrame::GetContainer(LayerManager* aManager, uint32_t aFlags)
-{
-  MOZ_ASSERT(IsImageContainerAvailable(aManager, aFlags),
-             "Should call IsImageContainerAvailable and get true before "
-             "calling GetContainer");
-  if (!mImageRequest) {
-    MOZ_ASSERT_UNREACHABLE("mImageRequest should be available if "
-                           "IsImageContainerAvailable returned true");
-    return nullptr;
+  nsCOMPtr<imgIContainer> image = GetImage();
+  if (image) {
+    return image->GetImageContainer(aManager, flags);
   }
-
-  nsCOMPtr<imgIContainer> imgCon;
-  mImageRequest->GetImage(getter_AddRefs(imgCon));
-  if (!imgCon) {
-    MOZ_ASSERT_UNREACHABLE("An imgIContainer should be available if "
-                           "IsImageContainerAvailable returned true");
-    return nullptr;
-  }
-
-  return imgCon->GetImageContainer(aManager, aFlags);
+  return nullptr;
 }
 
 

@@ -96,9 +96,7 @@ public:
                         const nsRect& aDirtyRect,
                         nsPoint aPt, uint32_t aFlags);
 
-  bool IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags);
-  already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
-                                                uint32_t aFlags);
+  bool CanOptimizeToImageLayer();
 
 protected:
   explicit nsImageBoxFrame(nsStyleContext* aContext);
@@ -146,6 +144,8 @@ public:
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                         nsDisplayListBuilder* aBuilder) override;
+  virtual already_AddRefed<imgIContainer> GetImage() override;
+  virtual nsRect GetDestRect() override;
   virtual void ConfigureLayer(ImageLayer* aLayer,
                               const ContainerLayerParameters& aParameters) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
