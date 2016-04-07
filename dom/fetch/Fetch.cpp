@@ -154,6 +154,14 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     return nullptr;
   }
 
+  // Double check that we have chrome privileges if the Request's content
+  // policy type has been overridden.  Note, we must do this before
+  // entering the global below.  Otherwise the IsCallerChrome() will
+  // always fail.
+  MOZ_ASSERT_IF(aInput.IsRequest() &&
+                aInput.GetAsRequest().IsContentPolicyTypeOverridden(),
+                nsContentUtils::IsCallerChrome());
+
   AutoJSAPI jsapi;
   jsapi.Init(aGlobal);
   JSContext* cx = jsapi.cx();
