@@ -404,21 +404,29 @@ GMPExtractor.prototype = {
       let entries = this._getZipEntries(zipReader);
       let extractedPaths = [];
 
+      let destDir = Cc["@mozilla.org/file/local;1"].
+                    createInstance(Ci.nsILocalFile);
+      destDir.initWithPath(this.installToDirPath);
+      // Make sure the destination exists
+      if(!destDir.exists()) {
+        destDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+      }
+
       // Extract each of the entries
       entries.forEach(entry => {
         // We don't need these types of files
-        if (entry.includes("__MACOSX")) {
+        if (entry.includes("__MACOSX") ||
+            entry == "_metadata/verified_contents.json" ||
+            entry == "imgs/icon-128x128.png") {
           return;
         }
-        let outFile = Cc["@mozilla.org/file/local;1"].
-                      createInstance(Ci.nsILocalFile);
-        outFile.initWithPath(this.installToDirPath);
-        outFile.appendRelativePath(entry);
+        let outFile = destDir.clone();
+        // Do not extract into directories. Extract all files to the same
+        // directory. DO NOT use |OS.Path.basename()| here, as in Windows it
+        // does not work properly with forward slashes (which we must use here).
+        let outBaseName = entry.slice(entry.lastIndexOf("/") + 1);
+        outFile.appendRelativePath(outBaseName);
 
-        // Make sure the directory hierarchy exists
-        if(!outFile.parent.exists()) {
-          outFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
-        }
         zipReader.extract(entry, outFile);
         extractedPaths.push(outFile.path);
         // Ensure files are writable and executable. Otherwise we may be unable to
