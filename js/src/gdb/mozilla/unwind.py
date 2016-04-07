@@ -4,6 +4,7 @@ import gdb
 from gdb.FrameDecorator import FrameDecorator
 import re
 import platform
+from mozilla.ExecutableAllocator import jsjitExecutableAllocatorCache, jsjitExecutableAllocator
 
 # For ease of use in Python 2, we use "long" instead of "int"
 # everywhere.
@@ -80,6 +81,7 @@ class UnwinderTypeCache(object):
         self.d['per_tls_data'] = gdb.lookup_global_symbol('js::TlsPerThreadData')
 
         self.d['void_starstar'] = gdb.lookup_type('void').pointer().pointer()
+        self.d['mod_ExecutableAllocator'] = jsjitExecutableAllocatorCache()
 
     # Compute maps related to jit frames.
     def compute_frame_info(self):
@@ -182,7 +184,11 @@ class UnwinderState(object):
         # selected thread for later verification.
         self.thread = gdb.selected_thread()
         self.frame_map = {}
-        self.proc_mappings = parse_proc_maps()
+        self.proc_mappings = None
+        try:
+            self.proc_mappings = parse_proc_maps()
+        except IOError:
+            pass
         self.typecache = typecache
 
     # If the given gdb.Frame was created by this unwinder, return the
@@ -207,6 +213,22 @@ class UnwinderState(object):
         for (start, end) in self.proc_mappings:
             if (pc >= start and pc <= end):
                 return True
+        return False
+
+    # See wether |pc| is claimed by the Jit.
+    def is_jit_address(self, pc):
+        if self.proc_mappings != None:
+            return not self.text_address_claimed(pc)
+
+        ptd = self.get_tls_per_thread_data()
+        jitRuntime = ptd['runtime_']['jitRuntime_']
+        execAllocators = [jitRuntime['execAlloc_'], jitRuntime['backedgeExecAlloc_']]
+        for execAlloc in execAllocators:
+            for pool in jsjitExecutableAllocator(execAlloc, self.typecache):
+                pages = pool['m_allocation']['pages']
+                size = pool['m_allocation']['size']
+                if pages <= pc and pc < pages + size:
+                    return True
         return False
 
     # Check whether |self| is valid for the selected thread.
@@ -325,10 +347,9 @@ class UnwinderState(object):
     def unwind(self, pending_frame):
         pc = pending_frame.read_register(self.PC_REGISTER)
 
-        # If some shared library claims this address, bail.  GDB
-        # defers to our unwinder by default, but we don't really want
-        # that kind of power.
-        if self.text_address_claimed(long(pc)):
+        # If the jit does not claim this address, bail.  GDB defers to our
+        # unwinder by default, but we don't really want that kind of power.
+        if not self.is_jit_address(long(pc)):
             return None
 
         if self.next_sp is not None:
