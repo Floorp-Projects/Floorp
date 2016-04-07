@@ -503,8 +503,6 @@ html, body, #app, #memory-tool {
   height: 100%;
   position: relative;
   overflow: hidden;
-  margin-top: -1em;
-  padding-bottom: 1em;
 }
 
 /**
