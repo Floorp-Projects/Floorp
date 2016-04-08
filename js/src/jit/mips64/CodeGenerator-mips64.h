@@ -40,13 +40,13 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
   public:
-    virtual void visitCompareB(LCompareB* lir);
-    virtual void visitCompareBAndBranch(LCompareBAndBranch* lir);
-    virtual void visitCompareBitwise(LCompareBitwise* lir);
-    virtual void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
-    virtual void visitAsmSelectI64(LAsmSelectI64* ins);
-    virtual void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
-    virtual void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
+    void visitCompareB(LCompareB* lir);
+    void visitCompareBAndBranch(LCompareBAndBranch* lir);
+    void visitCompareBitwise(LCompareBitwise* lir);
+    void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
+    void visitAsmSelectI64(LAsmSelectI64* ins);
+    void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
+    void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
