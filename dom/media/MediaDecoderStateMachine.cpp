@@ -2511,10 +2511,7 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
   }
   uint32_t frames = audio->mFrames - static_cast<uint32_t>(framesToPrune.value());
   uint32_t channels = audio->mChannels;
-  AlignedAudioBuffer audioData(frames * channels);
-  if (!audioData) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  auto audioData = MakeUnique<AudioDataValue[]>(frames * channels);
   memcpy(audioData.get(),
          audio->mAudioData.get() + (framesToPrune.value() * channels),
          frames * channels * sizeof(AudioDataValue));

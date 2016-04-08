@@ -352,7 +352,7 @@ public:
             int64_t aTime,
             int64_t aDuration,
             uint32_t aFrames,
-            AlignedAudioBuffer&& aData,
+            UniquePtr<AudioDataValue[]> aData,
             uint32_t aChannels,
             uint32_t aRate)
     : MediaData(sType, aOffset, aTime, aDuration, aFrames)
@@ -387,7 +387,7 @@ public:
   // mChannels channels, each with mFrames frames
   RefPtr<SharedBuffer> mAudioBuffer;
   // mFrames frames, each with mChannels values
-  AlignedAudioBuffer mAudioData;
+  UniquePtr<AudioDataValue[]> mAudioData;
 
 protected:
   ~AudioData() {}
