@@ -401,5 +401,54 @@ this.LoginHelper = {
       return;
     }
     Services.logins.addLogin(login);
+  },
+
+  /**
+   * Convert an array of nsILoginInfo to vanilla JS objects suitable for
+   * sending over IPC.
+   *
+   * NB: All members of nsILoginInfo and nsILoginMetaInfo are strings.
+   */
+  loginsToVanillaObjects(logins) {
+    return logins.map(this.loginToVanillaObject);
+  },
+
+  /**
+   * Same as above, but for a single login.
+   */
+  loginToVanillaObject(login) {
+    let obj = {};
+    for (let i in login) {
+      if (typeof login[i] !== 'function') {
+        obj[i] = login[i];
+      }
+    }
+
+    login.QueryInterface(Ci.nsILoginMetaInfo);
+    obj.guid = login.guid;
+    return obj;
+  },
+
+  /**
+   * Convert an object received from IPC into an nsILoginInfo (with guid).
+   */
+  vanillaObjectToLogin(login) {
+    var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                  createInstance(Ci.nsILoginInfo);
+    formLogin.init(login.hostname, login.formSubmitURL,
+                   login.httpRealm, login.username,
+                   login.password, login.usernameField,
+                   login.passwordField);
+
+    formLogin.QueryInterface(Ci.nsILoginMetaInfo);
+    formLogin.guid = login.guid;
+    return formLogin;
+  },
+
+  /**
+   * As above, but for an array of objects.
+   */
+  vanillaObjectsToLogins(logins) {
+    return logins.map(this.vanillaObjectToLogin);
   }
 };

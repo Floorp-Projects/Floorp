@@ -463,9 +463,9 @@ LoginManager.prototype = {
     let rect = BrowserUtils.getElementBoundingScreenRect(aElement);
     LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
                                                  aElement, rect)
-                       .then(function(logins) {
+                       .then(function({ logins, messageManager }) {
                          let results =
-                             new UserAutoCompleteResult(aSearchString, logins);
+                             new UserAutoCompleteResult(aSearchString, logins, messageManager);
                          aCallback.onSearchCompletion(results);
                        })
                        .then(null, Cu.reportError);
