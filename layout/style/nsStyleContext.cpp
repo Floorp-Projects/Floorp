@@ -1316,7 +1316,8 @@ ExtractColor(nsCSSProperty aProperty,
 {
   StyleAnimationValue val;
   ExtractAnimationValue(aProperty, aStyleContext, val);
-  return val.GetColorValue();
+  return val.GetUnit() == StyleAnimationValue::eUnit_CurrentColor
+    ? aStyleContext->StyleColor()->mColor : val.GetColorValue();
 }
 
 static nscolor
@@ -1327,6 +1328,8 @@ ExtractColorLenient(nsCSSProperty aProperty,
   ExtractAnimationValue(aProperty, aStyleContext, val);
   if (val.GetUnit() == StyleAnimationValue::eUnit_Color) {
     return val.GetColorValue();
+  } else if (val.GetUnit() == StyleAnimationValue::eUnit_CurrentColor) {
+    return aStyleContext->StyleColor()->mColor;
   }
   return NS_RGBA(0, 0, 0, 0);
 }
