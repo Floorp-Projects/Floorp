@@ -1407,6 +1407,33 @@ var BookmarkingUI = {
     }
     root.containerOpen = false;
     aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
+
+    // Update the menu when a bookmark is being removed.
+    // The native menubar on Mac doesn't support live update, so this won't
+    // work there.
+    let observer = {
+      onItemAdded() {},
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onItemRemoved() {
+        removeObserver();
+        BookmarkingUI._updateRecentBookmarks(aHeaderItem, extraCSSClass);
+      },
+      onItemChanged() {},
+      onItemVisited() {},
+      onItemMoved() {}
+    };
+    PlacesUtils.bookmarks.addObserver(observer, false);
+
+    let popup = aHeaderItem.parentNode;
+    let removeObserver = function (event) {
+      if (event && event.target != popup) {
+        return;
+      }
+      PlacesUtils.bookmarks.removeObserver(observer);
+      popup.removeEventListener("popuphidden", removeObserver);
+    };
+    popup.addEventListener("popuphidden", removeObserver);
   },
 
   /**
