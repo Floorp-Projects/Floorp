@@ -20,6 +20,7 @@ TextLeafAccessible::
   LinkableAccessible(aContent, aDoc)
 {
   mType = eTextLeafType;
+  mGenericTypes |= eText;
   mStateFlags |= eNoKidsFromDOM;
 }
 

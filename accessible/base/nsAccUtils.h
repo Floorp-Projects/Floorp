@@ -204,17 +204,6 @@ public:
   static uint32_t TextLength(Accessible* aAccessible);
 
   /**
-   * Return true if the given accessible is embedded object.
-   */
-  static bool IsEmbeddedObject(Accessible* aAcc)
-  {
-    uint32_t role = aAcc->Role();
-    return role != roles::TEXT_LEAF &&
-           role != roles::WHITESPACE &&
-           role != roles::STATICTEXT;
-  }
-
-  /**
    * Transform nsIAccessibleStates constants to internal state constant.
    */
   static inline uint64_t To64State(uint32_t aState1, uint32_t aState2)

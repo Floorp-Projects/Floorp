@@ -53,6 +53,5 @@ filters::GetCell(Accessible* aAccessible)
 uint32_t
 filters::GetEmbeddedObject(Accessible* aAccessible)
 {
-  return nsAccUtils::IsEmbeddedObject(aAccessible) ?
-    eMatch | eSkipSubtree : eSkipSubtree;
+  return aAccessible->IsText() ? eSkipSubtree : eMatch | eSkipSubtree;
 }
