@@ -11,6 +11,8 @@ let LOGIN_FILL_ITEMS = [
     ], null,
 ];
 
+let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
+
 add_task(function* test_setup() {
   const example_base = "http://example.com/browser/browser/base/content/test/general/";
   const url = example_base + "subtst_contextmenu.html";
@@ -38,6 +40,7 @@ add_task(function* test_plaintext() {
                          "context-bookmarkpage", true], null,
                     "---",                  null,
                     "context-savepage",     true,
+                    ...(hasPocket ? ["context-pocket", true] : []),
                     "---",                  null,
                     "context-viewbgimage",  false,
                     "context-selectall",    true,
@@ -56,6 +59,7 @@ add_task(function* test_link() {
      "---",                   null,
      "context-bookmarklink",  true,
      "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
      "context-searchselect",  true
     ]
@@ -196,6 +200,7 @@ add_task(function* test_iframe() {
           "context-bookmarkpage", true], null,
      "---",                  null,
      "context-savepage",     true,
+     ...(hasPocket ? ["context-pocket", true] : []),
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -460,6 +465,7 @@ add_task(function* test_pagemenu() {
           "+Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}], null,
      "---",                  null,
      "context-savepage",     true,
+     ...(hasPocket ? ["context-pocket", true] : []),
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -490,6 +496,7 @@ add_task(function* test_dom_full_screen() {
      "context-leave-dom-fullscreen", true,
      "---",                          null,
      "context-savepage",             true,
+     ...(hasPocket ? ["context-pocket", true] : []),
      "---",                          null,
      "context-viewbgimage",          false,
      "context-selectall",            true,
@@ -535,6 +542,7 @@ add_task(function* test_pagemenu2() {
           "context-bookmarkpage", true], null,
      "---",                  null,
      "context-savepage",     true,
+     ...(hasPocket ? ["context-pocket", true] : []),
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -603,6 +611,7 @@ add_task(function* test_imagelink() {
      "---",                   null,
      "context-bookmarklink",  true,
      "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
      "---",                   null,
      "context-viewimage",            true,
@@ -701,6 +710,7 @@ add_task(function* test_click_to_play_blocked_plugin() {
      "context-ctp-hide",     true,
      "---",                  null,
      "context-savepage",     true,
+     ...(hasPocket ? ["context-pocket", true] : []),
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -744,6 +754,7 @@ add_task(function* test_srcdoc() {
           "context-bookmarkpage", true], null,
      "---",                  null,
      "context-savepage",     true,
+     ...(hasPocket ? ["context-pocket", true] : []),
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
