@@ -155,7 +155,7 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
                     getter_AddRefs(childProcPath));
     // We need to use an App Bundle on OS X so that we can hide
     // the dock icon. See Bug 557225.
-    childProcPath->AppendNative(NS_LITERAL_CSTRING("firefox-webcontent.app"));
+    childProcPath->AppendNative(NS_LITERAL_CSTRING("plugin-container.app"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("Contents"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
     nsCString tempCPath;
@@ -186,13 +186,7 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
 
   exePath = exePath.AppendASCII(processName);
 #else
-#ifdef OS_WIN
-  if (XRE_GetProcessType() == GeckoProcessType_Plugin ||
-      XRE_GetProcessType() == GeckoProcessType_GMPlugin) {
-    exePath = exePath.AppendASCII(MOZ_PLUGIN_PROCESS_NAME);
-  } else
-#endif
-    exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
 #endif
 }
 
