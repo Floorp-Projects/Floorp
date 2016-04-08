@@ -10,6 +10,7 @@ import collections
 import json
 import multiprocessing
 import os
+import platform
 import re
 import shutil
 import signal
@@ -282,6 +283,11 @@ class RefTest(object):
         if options.e10s:
             prefs['browser.tabs.remote.autostart'] = True
             prefs['extensions.e10sBlocksEnabling'] = False
+
+        # Bug 1262954: For winXP + e10s disable acceleration
+        if platform.system() in ("Windows", "Microsoft") and \
+           '5.1' in platform.version() and options.e10s:
+            prefs['layers.acceleration.disabled'] = True
 
         if options.marionette:
             port = options.marionette.split(':')[1]
