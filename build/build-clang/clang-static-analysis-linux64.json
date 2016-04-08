@@ -8,8 +8,8 @@
     "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
     "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
     "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
-    "python_path": "/usr/local/bin/python2.7",
-    "gcc_dir": "/tools/gcc-4.7.3-0moz1",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/home/worker/workspace/build/src/gcc",
     "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
     "cxx": "/home/worker/workspace/build/src/gcc/bin/g++",
     "patches": {

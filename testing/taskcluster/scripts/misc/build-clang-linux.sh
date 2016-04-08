@@ -20,7 +20,7 @@ $HOME_DIR/tooltool.py -m browser/config/tooltool-manifests/linux64/releng.manife
 set +x
 
 cd build/build-clang
-./build-clang.py -c clang-static-analysis-linux64-centos6.json
+./build-clang.py -c clang-static-analysis-linux64.json
 
 set -x
 
