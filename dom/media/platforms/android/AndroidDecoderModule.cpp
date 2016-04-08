@@ -218,10 +218,7 @@ public:
 #endif
 
     const int32_t numFrames = numSamples / numChannels;
-    AlignedAudioBuffer audio(numSamples);
-    if (!audio) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    auto audio = MakeUnique<AudioDataValue[]>(numSamples);
 
     const uint8_t* bufferStart = static_cast<uint8_t*>(aBuffer) + offset;
     PodCopy(audio.get(), reinterpret_cast<const AudioDataValue*>(bufferStart),

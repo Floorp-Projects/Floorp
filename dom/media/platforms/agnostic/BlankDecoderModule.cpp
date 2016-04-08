@@ -11,6 +11,8 @@
 #include "mozilla/mozalloc.h" // for operator new, and new (fallible)
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsRect.h"
 #include "PlatformDecoderModule.h"
 #include "TimeUnits.h"
@@ -192,7 +194,8 @@ public:
         frames.value() > (UINT32_MAX / mChannelCount)) {
       return nullptr;
     }
-    AlignedAudioBuffer samples(frames.value() * mChannelCount);
+    auto samples =
+      MakeUniqueFallible<AudioDataValue[]>(frames.value() * mChannelCount);
     if (!samples) {
       return nullptr;
     }
