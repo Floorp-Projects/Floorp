@@ -38,8 +38,11 @@ class SdpHelper {
                                  const SdpMediaSection& source,
                                  SdpMediaSection* dest);
     bool AreOldTransportParamsValid(const Sdp& oldAnswer,
+                                    const Sdp& offerersPreviousSdp,
                                     const Sdp& newOffer,
                                     size_t level);
+    bool IceCredentialsDiffer(const SdpMediaSection& msection1,
+                              const SdpMediaSection& msection2);
 
     bool MsectionIsDisabled(const SdpMediaSection& msection) const;
     static void DisableMsection(Sdp* sdp, SdpMediaSection* msection);

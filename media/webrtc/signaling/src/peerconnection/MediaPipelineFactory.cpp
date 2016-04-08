@@ -189,8 +189,9 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
 {
   TransportLayerIce* ice =
       static_cast<TransportLayerIce*>(aLayerList->values.front());
-  ice->SetParameters(
-      aPCMedia->ice_ctx(), aPCMedia->ice_media_stream(aLevel), aIsRtcp ? 2 : 1);
+  ice->SetParameters(aPCMedia->ice_ctx(),
+                     aPCMedia->ice_media_stream(aLevel),
+                     aIsRtcp ? 2 : 1);
   nsAutoPtr<std::queue<TransportLayer*> > layerQueue(
       new std::queue<TransportLayer*>);
   for (auto i = aLayerList->values.begin(); i != aLayerList->values.end();
@@ -199,6 +200,19 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
   }
   aLayerList->values.clear();
   (void)aFlow->PushLayers(layerQueue); // TODO(bug 854518): Process errors.
+}
+
+static void
+AddNewIceStreamForRestart_s(RefPtr<PeerConnectionMedia> aPCMedia,
+                            RefPtr<TransportFlow> aFlow,
+                            size_t aLevel,
+                            bool aIsRtcp)
+{
+  TransportLayerIce* ice =
+      static_cast<TransportLayerIce*>(aFlow->GetLayer("ice"));
+  ice->SetParameters(aPCMedia->ice_ctx(),
+                     aPCMedia->ice_media_stream(aLevel),
+                     aIsRtcp ? 2 : 1);
 }
 
 nsresult
@@ -213,6 +227,21 @@ MediaPipelineFactory::CreateOrGetTransportFlow(
 
   flow = mPCMedia->GetTransportFlow(aLevel, aIsRtcp);
   if (flow) {
+    if (mPCMedia->ice_ctx_hdlr()->IsRestarting()) {
+      MOZ_MTLOG(ML_INFO, "Flow[" << flow->id() << "]: "
+                                 << "detected ICE restart - level: "
+                                 << aLevel << " rtcp: " << aIsRtcp);
+
+      rv = mPCMedia->GetSTSThread()->Dispatch(
+          WrapRunnableNM(AddNewIceStreamForRestart_s,
+                         mPCMedia, flow, aLevel, aIsRtcp),
+          NS_DISPATCH_NORMAL);
+      if (NS_FAILED(rv)) {
+        MOZ_MTLOG(ML_ERROR, "Failed to dispatch AddNewIceStreamForRestart_s");
+        return rv;
+      }
+    }
+
     *aFlowOutparam = flow;
     return NS_OK;
   }

@@ -192,6 +192,7 @@ class NrIceProxyServer {
 class TestNat;
 
 class NrIceCtx {
+ friend class NrIceCtxHandler;
  public:
   enum ConnectionState { ICE_CTX_INIT,
                          ICE_CTX_CHECKING,
@@ -213,12 +214,17 @@ class NrIceCtx {
                 ICE_POLICY_ALL
   };
 
-  static void InitializeCryptoAndLogging(bool allow_loopback = false,
-                                         bool tcp_enabled = true,
-                                         bool allow_link_local = false);
+  // initialize ICE globals, crypto, and logging
+  static void InitializeGlobals(bool allow_loopback = false,
+                                bool tcp_enabled = true,
+                                bool allow_link_local = false);
+  static std::string GetNewUfrag();
+  static std::string GetNewPwd();
 
-  static bool Initialize(NrIceCtx* ice_ctx,
-                         bool hide_non_default);
+  bool Initialize(bool hide_non_default);
+  bool Initialize(bool hide_non_default,
+                  const std::string& ufrag,
+                  const std::string& pwd);
 
   int SetNat(const RefPtr<TestNat>& aNat);
 
@@ -324,14 +330,13 @@ class NrIceCtx {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
- protected:
-  virtual ~NrIceCtx();
-
+private:
   NrIceCtx(const std::string& name,
            bool offerer,
            Policy policy);
 
- private:
+  virtual ~NrIceCtx();
+
   DISALLOW_COPY_ASSIGN(NrIceCtx);
 
   // Callbacks for nICEr
@@ -360,7 +365,6 @@ class NrIceCtx {
   // Set the state
   void SetGatheringState(GatheringState state);
 
-protected:
   ConnectionState connection_state_;
   GatheringState gathering_state_;
   const std::string name_;
