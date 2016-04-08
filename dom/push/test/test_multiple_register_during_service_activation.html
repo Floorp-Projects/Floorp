@@ -57,15 +57,19 @@ http://creativecommons.org/licenses/publicdomain/
 
   function setupMultipleSubscriptions(swr) {
     // We need to do this to restart service so that a queue will be formed.
-    teardownMockPushSocket();
+    let promiseTeardown = teardownMockPushSocket();
     setupMockPushSocket(new MockWebSocket());
 
+    var pushSubscription;
     return Promise.all([
       subscribe(swr),
       subscribe(swr)
     ]).then(a => {
       ok(a[0].endpoint == a[1].endpoint, "setupMultipleSubscriptions - Got the same endpoint back.");
-      return a[0];
+      pushSubscription = a[0];
+      return promiseTeardown;
+    }).then(_ => {
+      return pushSubscription;
     }, err => {
       ok(false, "could not register for push notification");
       throw err;
