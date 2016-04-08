@@ -456,7 +456,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
         std::string((char *)"stun.services.mozilla.com"), 3478));
     stun_servers.push_back(*server);
-    EXPECT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
+    EXPECT_TRUE(NS_SUCCEEDED(ice_ctx_->ctx()->SetStunServers(stun_servers)));
 
     dtls_->SetIdentity(identity_);
     dtls_->SetRole(name == "P2" ?
@@ -599,7 +599,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     nsresult res;
 
     // Attach our slots
-    ice_ctx_->SignalGatheringStateChange.
+    ice_ctx_->ctx()->SignalGatheringStateChange.
         connect(this, &TransportTestPeer::GatheringStateChange);
 
     char name[100];
@@ -611,7 +611,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         ice_ctx_->CreateStream(static_cast<char *>(name), 1);
 
     ASSERT_TRUE(stream != nullptr);
-    ice_ctx_->SetStream(streams_.size(), stream);
+    ice_ctx_->ctx()->SetStream(streams_.size(), stream);
     streams_.push_back(stream);
 
     // Listen for candidates
@@ -620,7 +620,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Create the transport layer
     ice_ = new TransportLayerIce(name);
-    ice_->SetParameters(ice_ctx_, stream, 1);
+    ice_->SetParameters(ice_ctx_->ctx(), stream, 1);
 
     // Assemble the stack
     nsAutoPtr<std::queue<mozilla::TransportLayer *> > layers(
@@ -640,7 +640,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Start gathering
     test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering),
+        WrapRunnableRet(&res, ice_ctx_->ctx(), &NrIceCtx::StartGathering),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -680,9 +680,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // First send attributes
     test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&res, peer_->ice_ctx_,
+      WrapRunnableRet(&res, peer_->ice_ctx_->ctx(),
                       &NrIceCtx::ParseGlobalAttributes,
-                      ice_ctx_->GetGlobalAttributes()),
+                      ice_ctx_->ctx()->GetGlobalAttributes()),
       NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
@@ -696,7 +696,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Start checks on the other peer.
     test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::StartChecks),
+      WrapRunnableRet(&res, peer_->ice_ctx_->ctx(), &NrIceCtx::StartChecks),
       NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }

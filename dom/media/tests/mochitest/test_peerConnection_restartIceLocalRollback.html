@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "906986",
+    title: "Renegotiation: restart ice, local rollback"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+
+    addRenegotiation(test.chain,
+      [
+        // causes a full, normal ice restart
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: true });
+        },
+        // causes an ice restart and then rolls it back
+        // (does not result in sending an offer)
+        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+          test.pcLocal.setupIceCandidateHandler(test);
+          if (test.testOptions.steeplechase) {
+            test.pcLocal.endOfTrickleIce.then(() => {
+              send_message({"type": "end_of_trickle_ice"});
+            });
+          }
+        },
+        function PC_LOCAL_CREATE_AND_SET_OFFER(test) {
+          return test.createOffer(test.pcLocal).then(offer => {
+            return test.setLocalDescription(test.pcLocal,
+                                            offer,
+                                            HAVE_LOCAL_OFFER);
+          });
+        },
+        function PC_LOCAL_EXPECT_ICE_CONNECTED(test) {
+          test.pcLocal.iceCheckingIceRollbackExpected = true;
+        },
+        function PC_LOCAL_ROLLBACK(test) {
+          return test.setLocalDescription(
+              test.pcLocal,
+              new RTCSessionDescription({ type: "rollback",
+                                          sdp: ""}),
+              STABLE);
+        },
+        // Rolling back should shut down gathering
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
+        },
+        function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
+          test.pcLocal.iceCheckingRestartExpected = true;
+        },
+        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
+          test.pcRemote.iceCheckingRestartExpected = true;
+        }
+      ]
+    );
+
+    // for now, only use one stream, because rollback doesn't seem to
+    // like multiple streams.  See bug 1259465.
+    test.setMediaConstraints([{audio: true}],
+                             [{audio: true}]);
+    test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>
