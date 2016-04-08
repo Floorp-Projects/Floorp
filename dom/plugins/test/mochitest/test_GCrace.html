@@ -15,10 +15,6 @@
     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
     function start() {
-      if (navigator.platform.startsWith("Win")) {
-        SimpleTest.expectAssertions(0, 350);
-      }
-
       setTimeout(checkGCRace, 1000);
     }
 
