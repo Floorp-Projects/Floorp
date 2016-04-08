@@ -414,7 +414,7 @@ def get_browser_config(config):
                 'extra_args', 'buildid', 'env', 'init_url', 'webserver')
     optional = {'bcontroller_config': '${talos}/bcontroller.json',
                 'branch_name': '',
-                'child_process': 'firefox-webcontent',
+                'child_process': 'plugin-container',
                 'develop': False,
                 'e10s': False,
                 'process': '',

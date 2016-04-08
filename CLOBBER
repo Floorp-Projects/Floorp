@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1114647 - Renamed the content process
+Bug 1186060 - Switch Windows compiler from VS2013 to VS2015
