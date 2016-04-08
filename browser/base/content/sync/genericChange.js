@@ -147,6 +147,7 @@ var Change = {
         return this.doChangePassword();
         break;
     }
+    return undefined;
   },
 
   doGeneratePassphrase: function () {

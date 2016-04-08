@@ -10,7 +10,7 @@
 const SEARCH = "doc_urls_clickable.css: url";
 const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
   let {inspector, view} = yield openRuleView();
   yield selectNode(".relative1", inspector);

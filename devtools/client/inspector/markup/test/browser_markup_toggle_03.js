@@ -9,7 +9,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");

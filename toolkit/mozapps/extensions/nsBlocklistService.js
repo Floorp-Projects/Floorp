@@ -380,6 +380,7 @@ Blocklist.prototype = {
       default:
         throw new Error("Unknown blocklist message received from content: " + aMsg.name);
     }
+    return undefined;
   },
 
   /* See nsIBlocklistService */

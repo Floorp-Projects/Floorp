@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Test XBL anonymous content in the markupview
 const TEST_URL = "chrome://devtools/content/scratchpad/scratchpad.xul";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   let toolbarbutton = yield getNodeFront("toolbarbutton", inspector);

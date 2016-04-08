@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = "about:logo";
 
-addRDMTask(TEST_URL, function*({ ui, manager }) {
+addRDMTask(TEST_URL, function* ({ ui, manager }) {
   ok(ui, "An instance of the RDM should be attached to the tab.");
   yield setViewportSize(ui, manager, 110, 500);
 
@@ -19,7 +19,7 @@ addRDMTask(TEST_URL, function*({ ui, manager }) {
   yield checkScreenProps(ui);
 
   info("Setting docShell.deviceSizeIsPageSize to false");
-  yield ContentTask.spawn(ui.getViewportMessageManager(), {}, function*() {
+  yield ContentTask.spawn(ui.getViewportMessageManager(), {}, function* () {
     let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIDocShell);
@@ -53,7 +53,7 @@ function* checkScreenProps2(ui) {
 }
 
 function grabContentInfo(ui) {
-  return ContentTask.spawn(ui.getViewportMessageManager(), {}, function*() {
+  return ContentTask.spawn(ui.getViewportMessageManager(), {}, function* () {
     return {
       screen: {
         width: content.screen.width,

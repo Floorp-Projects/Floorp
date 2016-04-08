@@ -10,7 +10,7 @@ const TESTCASE_URI = "data:text/html;charset=utf-8," +
                      "<div id=\"testdiv\" style=\"font-size:10px;\">" +
                      "Test div!</div>";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TESTCASE_URI);
 
   info("Opening the rule view and selecting the test node");

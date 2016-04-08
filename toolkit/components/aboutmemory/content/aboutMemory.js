@@ -1166,7 +1166,7 @@ TreeNode.prototype = {
       case UNITS_COUNT_CUMULATIVE: return formatInt(this._amount);
       case UNITS_PERCENTAGE:       return formatPercentage(this._amount);
       default:
-        assertInput(false, "bad units in TreeNode.toString");
+        throw "Invalid memory report(s): bad units in TreeNode.toString";
     }
   }
 };

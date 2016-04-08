@@ -105,9 +105,12 @@
 
 /* Sidebar & recording items */
 
+#recordings-pane {
+  border-inline-end: 1px solid var(--theme-splitter-color);
+}
+
 #recordings-list {
   max-width: 300px;
-  border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
 .recording-item {
@@ -166,11 +169,7 @@
   display: none;
 }
 
-#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
-  display: initial;
-  opacity: 0.5;
-
-}
+#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message,
 #performance-view[e10s="unsupported"] .realtime-disabled-message {
   display: initial;
   opacity: 0.5;

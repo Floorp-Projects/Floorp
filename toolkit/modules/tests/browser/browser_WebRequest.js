@@ -51,6 +51,7 @@ function onBeforeRequest(details)
   if (details.url.indexOf("_bad.") != -1) {
     return {cancel: true};
   }
+  return undefined;
 }
 
 var sendHeaders = [];
@@ -70,6 +71,7 @@ function onBeforeSendHeaders(details)
   if (details.url.indexOf("_redirect.") != -1) {
     return {redirectUrl: details.url.replace("_redirect.", "_good.")};
   }
+  return undefined;
 }
 
 var beforeRedirect = [];

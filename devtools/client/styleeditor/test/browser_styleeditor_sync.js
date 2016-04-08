@@ -29,7 +29,7 @@ function* closeAndReopenToolbox() {
   return newui;
 }
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TESTCASE_URI);
   let { inspector, view } = yield openRuleView();
   yield selectNode("#testid", inspector);
@@ -67,7 +67,7 @@ add_task(function*() {
   // For the time being, the actor does not update the style's owning
   // node's textContent.  See bug 1205380.
   let textContent = yield ContentTask.spawn(gBrowser.selectedBrowser, null,
-    function*() {
+    function* () {
       return content.document.querySelector("style").textContent;
     });
 

@@ -62,7 +62,7 @@ AnimationDetails.prototype = {
    * @return {Object} A list of tracks, one per animated property, each
    * with a list of keyframes
    */
-  getTracks: Task.async(function*() {
+  getTracks: Task.async(function* () {
     let tracks = {};
 
     /*
@@ -112,7 +112,7 @@ AnimationDetails.prototype = {
     return tracks;
   }),
 
-  render: Task.async(function*(animation) {
+  render: Task.async(function* (animation) {
     this.unrender();
 
     if (!animation) {

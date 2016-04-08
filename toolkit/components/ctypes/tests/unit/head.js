@@ -74,7 +74,8 @@ function structural_check_eq(a, b) {
   } catch (x) {
   }
   if (finished) {
-    return do_check_eq(asource, bsource);
+    do_check_eq(asource, bsource);
+    return;
   }
 
   // 2. Otherwise, perform slower comparison

@@ -11,7 +11,7 @@
 const TEST_URL = `data:text/html;charset=utf8,
                   <div class='test-class'></div>Text node`;
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
   let {walker} = inspector;
 

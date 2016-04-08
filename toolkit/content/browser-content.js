@@ -294,6 +294,7 @@ var PopupBlocking = {
       case "pagehide":
         return this.onPageHide(ev);
     }
+    return undefined;
   },
 
   onPopupBlocked: function(ev) {
@@ -659,6 +660,7 @@ var FindBar = {
       event.preventDefault();
       return false;
     }
+    return undefined;
   },
 
   _onMouseup(event) {

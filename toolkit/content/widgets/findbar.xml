@@ -791,6 +791,7 @@
 
             return false;
           }
+          return undefined;
         ]]></body>
       </method>
 
@@ -811,6 +812,7 @@
               return this._onBrowserKeypress(aMessage.data.fakeEvent,
                                              aMessage.data.shouldFastFind);
           }
+          return undefined;
         ]]></body>
       </method>
 
@@ -1110,6 +1112,7 @@
           else
             this._findAgain(aFindPrevious);
 
+          return undefined;
         ]]></body>
       </method>
 

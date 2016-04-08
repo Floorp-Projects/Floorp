@@ -188,14 +188,14 @@ abstract class Axis {
     private final SubdocumentScrollHelper mSubscroller;
 
     private int mOverscrollMode; /* Default to only overscrolling if we're allowed to scroll in a direction */
-    private float mFirstTouchPos;           /* Position of the first touch event on the current drag. */
-    private float mTouchPos;                /* Position of the most recent touch event on the current drag. */
-    private float mLastTouchPos;            /* Position of the touch event before touchPos. */
-    private float mVelocity;                /* Velocity in this direction; pixels per animation frame. */
-    private final float[] mRecentVelocities;/* Circular buffer of recent velocities since last touch start. */
-    private int mRecentVelocityCount;       /* Number of values put into mRecentVelocities (unbounded). */
-    private boolean mScrollingDisabled;     /* Whether movement on this axis is locked. */
-    private boolean mDisableSnap;           /* Whether overscroll snapping is disabled. */
+    private float mFirstTouchPos;            /* Position of the first touch event on the current drag. */
+    private float mTouchPos;                 /* Position of the most recent touch event on the current drag. */
+    private float mLastTouchPos;             /* Position of the touch event before touchPos. */
+    private float mVelocity;                 /* Velocity in this direction; pixels per animation frame. */
+    private final float[] mRecentVelocities; /* Circular buffer of recent velocities since last touch start. */
+    private int mRecentVelocityCount;        /* Number of values put into mRecentVelocities (unbounded). */
+    private boolean mScrollingDisabled;      /* Whether movement on this axis is locked. */
+    private boolean mDisableSnap;            /* Whether overscroll snapping is disabled. */
     private float mDisplacement;
     private long mLastFlingTime;
     private float mLastFlingVelocity;
