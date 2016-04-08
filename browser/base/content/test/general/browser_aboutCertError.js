@@ -7,6 +7,7 @@
 
 const GOOD_PAGE = "https://example.com/";
 const BAD_CERT = "https://expired.example.com/";
+const UNKNOWN_ISSUER = "https://self-signed.example.com ";
 const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
 const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
@@ -46,7 +47,7 @@ add_task(function* checkReturnToAboutHome() {
   is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
   is(gBrowser.currentURI.spec, "about:home", "Went back");
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(function* checkReturnToPreviousPage() {
@@ -81,7 +82,7 @@ add_task(function* checkReturnToPreviousPage() {
   is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
   is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(function* checkBadStsCert() {
@@ -101,7 +102,7 @@ add_task(function* checkBadStsCert() {
   });
   ok(exceptionButtonHidden, "Exception button is hidden");
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(function* checkAdvancedDetails() {
@@ -161,7 +162,7 @@ add_task(function* checkAdvancedDetails() {
   let certChain = getCertChain(message.securityInfoAsString);
   ok(message.text.includes(certChain), "Found certificate chain");
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(function* checkAdvancedDetailsForHSTS() {
@@ -233,7 +234,29 @@ add_task(function* checkAdvancedDetailsForHSTS() {
   let certChain = getCertChain(message.securityInfoAsString);
   ok(message.text.includes(certChain), "Found certificate chain");
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(function* checkUnknownIssuerLearnMoreLink() {
+  info("Loading a cert error for self-signed pages and checking the correct link is shown");
+  let browser;
+  let certErrorLoaded;
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = gBrowser.addTab(UNKNOWN_ISSUER);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = waitForCertErrorLoad(browser);
+  }, false);
+
+  info("Loading and waiting for the cert error");
+  yield certErrorLoaded;
+
+  let href = yield ContentTask.spawn(browser, null, function* () {
+    let learnMoreLink = content.document.getElementById("learnMoreLink");
+    return learnMoreLink.href;
+  });
+  is(href, "https://support.mozilla.org/kb/troubleshoot-SEC_ERROR_UNKNOWN_ISSUER");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 function waitForCertErrorLoad(browser) {
