@@ -7788,6 +7788,14 @@
     "n_buckets": 20,
     "description": "The amount of time spent in a specific performance tool view, keyed by view name (waterfall, js-calltree, js-flamegraph, etc)."
   },
+  "DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED": {
+    "alert_emails": ["mphillips@mozilla.com"],
+    "bug_numbers": [1255133],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "Measures whether a particular JavaScript error has been displayed in the webconsole."
+  },
   "VIEW_SOURCE_IN_BROWSER_OPENED_BOOLEAN": {
     "alert_emails": ["mozilla-dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
     "expires_in_version": "53",
