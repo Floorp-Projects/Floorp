@@ -7293,6 +7293,28 @@ AddonWrapper.prototype = {
     }
   },
 
+  reload: function() {
+    return new Promise(resolve => {
+      if (this.appDisabled) {
+        throw new Error(
+          "cannot reload add-on because it is disabled by the application");
+      }
+
+      const addon = addonFor(this);
+      const isReloadable = (!XPIProvider.enableRequiresRestart(addon) &&
+                            !XPIProvider.disableRequiresRestart(addon));
+      if (!isReloadable) {
+        throw new Error(
+          "cannot reload add-on because it requires a browser restart");
+      }
+
+      this.userDisabled = true;
+      flushStartupCache();
+      this.userDisabled = false;
+      resolve();
+    });
+  },
+
   /**
    * Returns a URI to the selected resource or to the add-on bundle if aPath
    * is null. URIs to the bundle will always be file: URIs. URIs to resources
