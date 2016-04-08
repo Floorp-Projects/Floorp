@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1262339 - Appcache manifest doesn't use URL classifier.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+  const PREF = "browser.safebrowsing.malware.enabled";
+  const appcache_url = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/appcache.html";
+  const manifest_path = "tests/toolkit/components/url-classifier/tests/mochitest/cacheManifest.sjs"
+  var win;
+
+  function testLoadNonBlacklistManifest() {
+    updateManifest(function() {
+      SpecialPowers.setBoolPref(PREF, true);
+      win = window.open(appcache_url);
+    });
+
+    return new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        is(e.data, "success", "Manifest not in blacklist should be loaded");
+
+        win.close();
+        resolve();
+      }
+    });
+  }
+
+  function testLoadBlacklistManifestSafebrowsingOff() {
+    updateManifest(function() {
+      SpecialPowers.setBoolPref(PREF, false);
+
+      // url should be added to malware table while running this testcase
+      win = window.open(appcache_url);
+    });
+
+    return new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        is(e.data, "success", "Manifest in blacklist should be loaded when safebrowsing is off");
+
+        win.close();
+        resolve();
+      }
+    });
+  }
+
+  function testLoadBlacklistManifestSafebrowsingOn() {
+    updateManifest(function() {
+      SpecialPowers.setBoolPref(PREF, true);
+
+      // url should be added to malware table while running this testcase
+      win = window.open(appcache_url);
+    });
+
+    return new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        is(e.data, "fail", "Manifest in blacklist shouldn't be loaded when safebrowsing is on");
+
+        win.close();
+        resolve();
+      }
+    });
+  }
+
+  // Call this before each testcase starts to ensure that manifest will be downloaded again.
+  function updateManifest(callback) {
+    var req = new XMLHttpRequest();
+    req.open("GET", "http://mochi.test:8888/" + manifest_path + "?update=true");
+    req.onreadystatechange = function () {
+      if (req.readyState === XMLHttpRequest.DONE) {
+        callback();
+      }
+    };
+    req.send();
+  }
+
+  function cleanup() {
+    SpecialPowers.clearUserPref(PREF);
+  }
+
+  function addManifestToBlackList() {
+    return new Promise(function(resolve, reject) {
+      // Add some URLs to the malware database.
+      var testData = "example.com/" + manifest_path;
+      var testUpdate =
+        "n:1000\ni:test-malware-simple\nad:1\n" +
+        "a:524:32:" + testData.length + "\n" +
+        testData;
+
+      const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
+      let classifierCommonScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
+
+      classifierCommonScript.addMessageListener("loadTestFrame", () => {
+        resolve();
+      });
+
+      classifierCommonScript.addMessageListener("updateError", ({ errorCode }) => {
+        ok(false, "Couldn't update classifier. Error code: " + errorCode);
+        // Abort test.
+        SimpleTest.finish();
+      });
+
+      classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+    });
+  }
+
+  function runTest() {
+    Promise.resolve()
+      .then(testLoadNonBlacklistManifest)
+      .then(addManifestToBlackList)
+      .then(testLoadBlacklistManifestSafebrowsingOff)
+      .then(testLoadBlacklistManifestSafebrowsingOn)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.registerCleanupFunction(cleanup);
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
+  ]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>
