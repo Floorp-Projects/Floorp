@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+#outer {
+  font-size: 52px;
+  transition: all 100s step-start;
+  color: transparent;
+}
+#outer.red {
+  color: red;
+}
+#outer.red > #inner {
+  color: green;
+}
+</style>
+<!--
+This is testing that -webkit-text-fill-color should inherit currentcolor
+keyword value, rather than the computed value of color (used value of
+-webkit-text-fill-color) from the transition.
+-->
+<p>Test passes if the block below is green.</p>
+<div id="outer"><span id="inner">&#x2588;</span></div>
+<script>
+window.addEventListener("load", () => {
+  // Wait for the second frame to ensure that we will
+  // actually start the transition.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      let outer = document.getElementById("outer");
+      outer.className = "red";
+      document.documentElement.className = "";
+    });
+  });
+});
+</script>
