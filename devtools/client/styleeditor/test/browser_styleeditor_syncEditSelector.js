@@ -22,7 +22,7 @@ const expectedText = `
   }
   `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TESTCASE_URI);
   let { inspector, view } = yield openRuleView();
   yield selectNode("#testid", inspector);

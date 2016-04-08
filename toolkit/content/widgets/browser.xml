@@ -989,6 +989,7 @@
               this.audioPlaybackStopped();
               break;
           }
+          return undefined;
         ]]></body>
       </method>
 

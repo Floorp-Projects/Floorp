@@ -256,6 +256,7 @@ this.AutoCompleteE10S = {
         AutoCompleteE10SView.clearResults();
         break;
     }
+    return undefined;
   },
 
   handleEnter: function(aIsPopupSelection) {

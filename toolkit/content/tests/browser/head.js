@@ -11,8 +11,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
  */
 function closeFindbarAndWait(findbar) {
   return new Promise((resolve) => {
-    if (findbar.hidden)
-      return resolve();
+    if (findbar.hidden) {
+      resolve();
+      return;
+    }
     findbar.addEventListener("transitionend", function cont(aEvent) {
       if (aEvent.propertyName != "visibility") {
         return;

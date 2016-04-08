@@ -17,7 +17,7 @@ const TEST_URI = `
 
 var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
-add_task(function*() {
+add_task(function* () {
   info("Starting the test with the pref set to true before toolbox is opened");
   Services.prefs.setBoolPref(PREF_UA_STYLES, true);
 

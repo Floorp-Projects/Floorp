@@ -7,7 +7,7 @@
 
 const TEST_URL = URL_ROOT + "doc_filter.html";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URL);
   let {view} = yield openRuleView();
 

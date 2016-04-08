@@ -15,7 +15,7 @@ const TEST_URI = `
   <div id='testid' class='testclass'>Styled Node</div>
 `;
 
-add_task(function*() {
+add_task(function* () {
   let TESTS = [
     {name: "hex", result: "#0f0"},
     {name: "rgb", result: "rgb(0, 255, 0)"}

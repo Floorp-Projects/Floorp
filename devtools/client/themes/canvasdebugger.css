@@ -8,11 +8,21 @@
   --checkerboard-pattern: linear-gradient(45deg, rgba(128,128,128,0.2) 25%, transparent 25%, transparent 75%, rgba(128,128,128,0.2) 75%, rgba(128,128,128,0.2)),
                           linear-gradient(45deg, rgba(128,128,128,0.2) 25%, transparent 25%, transparent 75%, rgba(128,128,128,0.2) 75%, rgba(128,128,128,0.2));
 }
+
+:root.theme-dark {
+  --draw-call-background: rgba(112,191,83,0.15);
+  --interesting-call-background: rgba(223,128,255,0.15);
+}
+
+:root.theme-light {
+  --draw-call-background: rgba(44,187,15,0.1);
+  --interesting-call-background: rgba(184,46,229,0.1);
+}
+
 /* Reload and waiting notices */
 
 .notice-container {
   margin-top: -50vh;
-  background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color-alt);
 }
 
@@ -33,9 +43,8 @@
 
 /* Snapshots pane */
 
-#snapshots-pane > tabs,
-#snapshots-pane .devtools-toolbar {
-  -moz-border-end: 1px solid var(--theme-splitter-color);
+#snapshots-pane {
+  border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
 #record-snapshot {
@@ -61,7 +70,7 @@
 }
 
 .snapshot-item-details {
-  -moz-padding-start: 6px;
+  padding-inline-start: 6px;
 }
 
 .snapshot-item-calls {
@@ -134,7 +143,7 @@
 }
 
 #calls-slider {
-  -moz-padding-end: 24px;
+  padding-inline-end: 24px;
 }
 
 #calls-slider .scale-slider {
@@ -154,44 +163,24 @@
   background: transparent;
 }
 
-#calls-list .side-menu-widget-item {
-  padding: 0;
-}
-
 /* Calls list items */
 
-.theme-dark #calls-list .side-menu-widget-item {
-  border-color: #111;
+#calls-list .side-menu-widget-item {
+  padding: 0;
+  border-color: var(--theme-splitter-color);
   border-bottom-color: transparent;
 }
 
-.theme-light #calls-list .side-menu-widget-item {
-  border-color: #eee;
-  border-bottom-color: transparent;
+.call-item-view:hover {
+  background-color: rgba(128,128,128,0.05);
 }
 
-.theme-dark .call-item-view:hover {
-  background-color: rgba(255,255,255,.025);
+.call-item-view[draw-call] {
+  background-color: var(--draw-call-background);
 }
 
-.theme-light .call-item-view:hover {
-  background-color: rgba(0,0,0,.025);
-}
-
-.theme-dark .call-item-view[draw-call] {
-  background-color: rgba(112,191,83,0.15);
-}
-
-.theme-light .call-item-view[draw-call] {
-  background-color: rgba(44,187,15,0.1);
-}
-
-.theme-dark .call-item-view[interesting-call] {
-  background-color: rgba(223,128,255,0.15);
-}
-
-.theme-light .call-item-view[interesting-call] {
-  background-color: rgba(184,46,229,0.1);
+.call-item-view[interesting-call] {
+  background-color: var(--interesting-call-background);
 }
 
 .call-item-gutter {
@@ -200,8 +189,10 @@
   padding-inline-end: 4px;
   padding-top: 2px;
   padding-bottom: 2px;
-  -moz-border-end: 1px solid;
-  -moz-margin-end: 6px;
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  margin-inline-end: 6px;
+  background-color: var(--theme-sidebar-background);
+  color: var(--theme-content-color3);
 }
 
 .selected .call-item-gutter {
@@ -217,12 +208,6 @@
   }
 }
 
-.call-item-gutter {
-  background-color: var(--theme-sidebar-background);
-  color: var(--theme-content-color3);
-  border-color: var(--theme-splitter-color);
-}
-
 .call-item-index {
   text-align: end;
 }
@@ -236,11 +221,12 @@
 }
 
 .call-item-location {
-  -moz-padding-start: 2px;
-  -moz-padding-end: 6px;
+  padding-inline-start: 2px;
+  padding-inline-end: 6px;
   text-align: end;
   cursor: pointer;
   color: var(--theme-highlight-bluegrey);
+  border-color: var(--theme-splitter-color);
 }
 
 .call-item-location:hover {
@@ -252,16 +238,8 @@
   text-decoration: underline;
 }
 
-.theme-dark .call-item-location {
-  border-color: #111;
-}
-
-.theme-light .call-item-location {
-  border-color: #eee;
-}
-
 .call-item-stack {
-  -moz-padding-start: calc(var(--gutter-width) + var(--gutter-padding-start));
+  padding-inline-start: calc(var(--gutter-width) + var(--gutter-padding-start));
   padding-bottom: 10px;
 }
 
@@ -279,8 +257,8 @@
 }
 
 .call-item-stack-fn-location {
-  -moz-padding-start: 2px;
-  -moz-padding-end: 6px;
+  padding-inline-start: 2px;
+  padding-inline-end: 6px;
   text-align: end;
   cursor: pointer;
   text-decoration: underline;

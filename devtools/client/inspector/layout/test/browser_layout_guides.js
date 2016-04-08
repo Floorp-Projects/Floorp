@@ -17,7 +17,7 @@ const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
 var highlightedNodeFront, highlighterOptions;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URL);
   let {toolbox, inspector, view} = yield openLayoutView();
   yield selectNode("div", inspector);

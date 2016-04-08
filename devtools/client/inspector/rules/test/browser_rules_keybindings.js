@@ -7,7 +7,7 @@
 // Test that focus doesn't leave the style editor when adding a property
 // (bug 719916)
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
   let {inspector, view} = yield openRuleView();
   yield selectNode("h1", inspector);

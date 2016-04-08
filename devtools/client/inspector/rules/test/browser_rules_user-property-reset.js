@@ -12,7 +12,7 @@ const TEST_URI = `
   <p id='id2' style='width:100px;'>element 2</p>
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view, testActor} = yield openRuleView();
 
@@ -75,6 +75,7 @@ function* getContainerStyleAttrValue(id, {walker, markup}) {
     }
     attrIndex++;
   }
+  return undefined;
 }
 
 function* assertRuleAndMarkupViewWidth(id, value, ruleView, inspector) {

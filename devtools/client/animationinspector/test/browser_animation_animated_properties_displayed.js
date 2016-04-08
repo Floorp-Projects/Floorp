@@ -21,7 +21,7 @@ const EXPECTED_PROPERTIES = [
   "width"
 ].sort();
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_keyframes.html");
   let {panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;

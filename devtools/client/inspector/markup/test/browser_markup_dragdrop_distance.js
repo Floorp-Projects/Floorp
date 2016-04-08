@@ -14,7 +14,7 @@ const TEST_NODE = "#test";
 // Keep this in sync with DRAG_DROP_MIN_INITIAL_DISTANCE in markup-view.js
 const MIN_DISTANCE = 10;
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Drag the test node by half of the minimum distance");

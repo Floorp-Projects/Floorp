@@ -9,7 +9,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_xul.xul";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   let panelFront = yield getNodeFront("#test", inspector);

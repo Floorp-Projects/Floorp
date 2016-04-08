@@ -192,6 +192,6 @@ const TEST_DATA = [ // eslint-disable-line
   },
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield runEventPopupTests(TEST_URL, TEST_DATA);
 });

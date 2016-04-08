@@ -20,7 +20,7 @@ const CONTENT = `
 const STRINGS = Services.strings
   .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("data:text/html;charset=utf-8," + CONTENT);
 
   let testActor = yield getTestActorWithoutToolbox(tab);

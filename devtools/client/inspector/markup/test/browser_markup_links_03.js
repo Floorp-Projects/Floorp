@@ -8,7 +8,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Adding a contextmenu attribute to the body node via the content");

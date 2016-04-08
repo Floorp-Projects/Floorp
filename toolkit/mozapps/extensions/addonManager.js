@@ -175,6 +175,7 @@ amManager.prototype = {
           payload.hashes, payload.names, payload.icons, callback);
       }
     }
+    return undefined;
   },
 
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),

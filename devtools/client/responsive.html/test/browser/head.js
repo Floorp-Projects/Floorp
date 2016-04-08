@@ -40,7 +40,7 @@ const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsive
 /**
  * Open responsive design mode for the given tab.
  */
-var openRDM = Task.async(function*(tab) {
+var openRDM = Task.async(function* (tab) {
   info("Opening responsive design mode");
   let manager = ResponsiveUIManager;
   let ui = yield manager.openIfNeeded(window, tab);
@@ -51,7 +51,7 @@ var openRDM = Task.async(function*(tab) {
 /**
  * Close responsive design mode for the given tab.
  */
-var closeRDM = Task.async(function*(tab) {
+var closeRDM = Task.async(function* (tab) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
   yield manager.closeIfNeeded(window, tab);
@@ -70,7 +70,7 @@ var closeRDM = Task.async(function*(tab) {
  *   });
  */
 function addRDMTask(url, generator) {
-  add_task(function*() {
+  add_task(function* () {
     const tab = yield addTab(url);
     const results = yield openRDM(tab);
 
@@ -90,7 +90,7 @@ function spawnViewportTask(ui, args, task) {
 }
 
 function waitForFrameLoad(ui, targetURL) {
-  return spawnViewportTask(ui, { targetURL }, function*(args) {
+  return spawnViewportTask(ui, { targetURL }, function* (args) {
     if ((content.document.readyState == "complete" ||
          content.document.readyState == "interactive") &&
         content.location.href == args.targetURL) {
@@ -115,7 +115,7 @@ function waitForViewportResizeTo(ui, width, height) {
   });
 }
 
-var setViewportSize = Task.async(function*(ui, manager, width, height) {
+var setViewportSize = Task.async(function* (ui, manager, width, height) {
   let size = ui.getViewportSize();
   info(`Current size: ${size.width} x ${size.height}, ` +
        `set to: ${width} x ${height}`);

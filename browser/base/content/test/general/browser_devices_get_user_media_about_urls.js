@@ -58,37 +58,8 @@ function loadPage(aUrl) {
   return deferred.promise;
 }
 
-// A fake about module to map get_user_media.html to different about urls.
-function fakeLoopAboutModule() {
-}
-
-fakeLoopAboutModule.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
-  newChannel: function (aURI, aLoadInfo) {
-    let rootDir = getRootDirectory(gTestPath);
-    let uri = Services.io.newURI(rootDir + "get_user_media.html", null, null);
-    let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
-
-    chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
-    return chan;
-  },
-  getURIFlags: function (aURI) {
-    return Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
-           Ci.nsIAboutModule.ALLOW_SCRIPT |
-           Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD |
-           Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
-  }
-};
-
-var factory = XPCOMUtils._getFactory(fakeLoopAboutModule);
-var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-
-var classIDLoopconversation, classIDEvil;
-
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
-  registrar.unregisterFactory(classIDLoopconversation, factory);
-  registrar.unregisterFactory(classIDEvil, factory);
 });
 
 const permissionError = "error: SecurityError: The operation is insecure.";
@@ -181,19 +152,46 @@ function test() {
 
   gTab.linkedBrowser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
 
-  classIDLoopconversation = Cc["@mozilla.org/uuid-generator;1"]
-                              .getService(Ci.nsIUUIDGenerator).generateUUID();
-  registrar.registerFactory(classIDLoopconversation, "",
-                            "@mozilla.org/network/protocol/about;1?what=loopconversation",
-                            factory);
-
-  classIDEvil = Cc["@mozilla.org/uuid-generator;1"]
-                  .getService(Ci.nsIUUIDGenerator).generateUUID();
-  registrar.registerFactory(classIDEvil, "",
-                            "@mozilla.org/network/protocol/about;1?what=evil",
-                            factory);
-
   Task.spawn(function () {
+    yield ContentTask.spawn(gBrowser.selectedBrowser,
+                            getRootDirectory(gTestPath) + "get_user_media.html",
+                            function* (url) {
+      const Ci = Components.interfaces;
+      Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+      Components.utils.import("resource://gre/modules/Services.jsm");
+
+      /* A fake about module to map get_user_media.html to different about urls. */
+      function fakeLoopAboutModule() {
+      }
+
+      fakeLoopAboutModule.prototype = {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+        newChannel: function (aURI, aLoadInfo) {
+          let uri = Services.io.newURI(url, null, null);
+          let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
+          chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
+          return chan;
+        },
+        getURIFlags: function (aURI) {
+          return Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
+                 Ci.nsIAboutModule.ALLOW_SCRIPT |
+                 Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD |
+                 Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
+        }
+      };
+
+      var factory = XPCOMUtils._getFactory(fakeLoopAboutModule);
+      var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+      let UUIDGenerator = Components.classes["@mozilla.org/uuid-generator;1"]
+                                    .getService(Ci.nsIUUIDGenerator);
+      registrar.registerFactory(UUIDGenerator.generateUUID(), "",
+                                "@mozilla.org/network/protocol/about;1?what=loopconversation",
+                                factory);
+      registrar.registerFactory(UUIDGenerator.generateUUID(), "",
+                                "@mozilla.org/network/protocol/about;1?what=evil",
+                                factory);
+    });
+
     yield new Promise(resolve => SpecialPowers.pushPrefEnv({
       "set": [[PREF_PERMISSION_FAKE, true],
               ["media.getusermedia.screensharing.enabled", true]],
@@ -206,6 +204,19 @@ function test() {
       // Cleanup before the next test
       expectNoObserverCalled();
     }
+
+    yield ContentTask.spawn(gBrowser.selectedBrowser, null,
+                            function* () {
+      const Ci = Components.interfaces;
+      const Cc = Components.classes;
+      var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+      let cid = Cc["@mozilla.org/network/protocol/about;1?what=loopconversation"];
+      registrar.unregisterFactory(cid,
+                                  registrar.getClassObject(cid, Ci.nsIFactory));
+      cid = Cc["@mozilla.org/network/protocol/about;1?what=evil"];
+      registrar.unregisterFactory(cid,
+                                  registrar.getClassObject(cid, Ci.nsIFactory));
+    });
   }).then(finish, ex => {
     ok(false, "Unexpected Exception: " + ex);
     finish();

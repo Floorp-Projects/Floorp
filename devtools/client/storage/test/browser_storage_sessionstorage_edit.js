@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-sessionstorage.html");
 
   yield selectTreeItem(["sessionStorage", "http://test1.example.org"]);

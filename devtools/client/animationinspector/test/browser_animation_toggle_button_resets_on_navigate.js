@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 // Test that a page navigation resets the state of the global toggle button.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 

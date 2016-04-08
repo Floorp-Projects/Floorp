@@ -30,15 +30,15 @@ import android.util.TypedValue;
 
 public class BasicColorPicker extends ListView {
     private final static String LOGTAG = "GeckoBasicColorPicker";
-    private final static List<Integer> DEFAULT_COLORS = Arrays.asList(Color.rgb(215,57,32),
-                                                                      Color.rgb(255,134,5),
-                                                                      Color.rgb(255,203,19),
-                                                                      Color.rgb(95,173,71),
-                                                                      Color.rgb(84,201,168),
-                                                                      Color.rgb(33,161,222),
-                                                                      Color.rgb(16,36,87),
-                                                                      Color.rgb(91,32,103),
-                                                                      Color.rgb(212,221,228),
+    private final static List<Integer> DEFAULT_COLORS = Arrays.asList(Color.rgb(215, 57, 32),
+                                                                      Color.rgb(255, 134, 5),
+                                                                      Color.rgb(255, 203, 19),
+                                                                      Color.rgb(95, 173, 71),
+                                                                      Color.rgb(84, 201, 168),
+                                                                      Color.rgb(33, 161, 222),
+                                                                      Color.rgb(16, 36, 87),
+                                                                      Color.rgb(91, 32, 103),
+                                                                      Color.rgb(212, 221, 228),
                                                                       Color.BLACK);
 
     private static Drawable mCheckDrawable;

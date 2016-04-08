@@ -9,7 +9,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
-add_task(function*() {
+add_task(function* () {
   let isEditTagNameCalled = false;
 
   let {inspector} = yield openInspectorForURL(TEST_URL);

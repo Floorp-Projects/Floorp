@@ -8,7 +8,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
