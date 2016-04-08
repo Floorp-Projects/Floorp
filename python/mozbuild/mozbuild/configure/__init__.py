@@ -640,12 +640,31 @@ class ConfigureSandbox(dict):
             log=self.log_impl,
         )
         self._apply_imports(func, glob)
+
+        # The execution model in the sandbox doesn't guarantee the execution
+        # order will always be the same for a given function, and if it uses
+        # variables from a closure that are changed after the function is
+        # declared, depending when the function is executed, the value of the
+        # variable can differ. For consistency, we force the function to use
+        # the value from the earliest it can be run, which is at declaration.
+        # Note this is not entirely bullet proof (if the value is e.g. a list,
+        # the list contents could have changed), but covers the bases.
+        closure = None
+        if func.func_closure:
+            def makecell(content):
+                def f():
+                    content
+                return f.func_closure[0]
+
+            closure = tuple(makecell(cell.cell_contents)
+                            for cell in func.func_closure)
+
         func = wraps(func)(types.FunctionType(
             func.func_code,
             glob,
             func.__name__,
             func.func_defaults,
-            func.func_closure
+            closure
         ))
         self._prepared_functions.add(func)
         return func, glob
