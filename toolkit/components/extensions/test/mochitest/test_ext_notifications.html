@@ -20,7 +20,7 @@ add_task(function* test_notification() {
       message: "Carry on",
     };
 
-    browser.notifications.create("", opts).then(id => {
+    browser.notifications.create(opts).then(id => {
       browser.test.sendMessage("running", id);
       browser.test.notifyPass("background test passed");
     });

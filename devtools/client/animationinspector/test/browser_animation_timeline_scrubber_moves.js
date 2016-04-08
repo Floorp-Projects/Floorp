@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // measures the position of the scrubber once, then waits for some time to pass
 // and measures its position again.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
 

@@ -1822,6 +1822,7 @@ Experiments.ExperimentEntry.prototype = {
           this._log.error("_installAddon() - onInstallStarted, wrong addon type");
           return false;
         }
+        return undefined;
       },
 
       onInstallEnded: install => {

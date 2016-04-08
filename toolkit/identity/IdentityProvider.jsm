@@ -80,6 +80,8 @@ IdentityProviderService.prototype = {
     if (typeof aErrBack === 'function') {
       aErrBack(err);
     }
+
+    return undefined;
   },
 
   shutdown: function RP_shutdown() {

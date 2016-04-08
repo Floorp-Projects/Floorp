@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
 
   let $ = id => gPanelWindow.document.querySelector(id);
@@ -200,7 +200,7 @@ add_task(function*() {
   // Clearing items. Bug 1233497 makes it so that we can no longer yield
   // CPOWs from Tasks. We work around this by calling clear via a ContentTask
   // instead.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     return Task.spawn(content.wrappedJSObject.clear);
   });
 

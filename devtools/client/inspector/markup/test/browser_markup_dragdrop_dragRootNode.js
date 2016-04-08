@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 const TEST_DATA = ["html", "head", "body"];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let selector of TEST_DATA) {

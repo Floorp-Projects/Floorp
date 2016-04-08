@@ -9,7 +9,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-add_task(function*() {
+add_task(function* () {
   let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Select a node with a cssresource attribute");

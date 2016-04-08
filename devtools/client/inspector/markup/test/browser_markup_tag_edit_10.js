@@ -8,7 +8,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
   yield inspector.markup.expandAll();
   yield selectNode("div", inspector);

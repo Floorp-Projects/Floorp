@@ -9,7 +9,7 @@
 
 const { ANIMATION_TYPES } = require("devtools/server/actors/animation");
 
-add_task(function*() {
+add_task(function* () {
   yield new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.animations-api.core.enabled", true]

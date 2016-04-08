@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "osString", function() {
 
 const TEST_URI = URL_ROOT + "doc_copystyles.html";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
   let { inspector, view } = yield openRuleView();
   let contextmenu = view._contextmenu;
@@ -144,7 +144,7 @@ add_task(function*() {
       }
     },
     {
-      setup: function*() {
+      setup: function* () {
         yield disableProperty(view, 0);
       },
       desc: "Test Copy Rule with Disabled Property",
@@ -167,7 +167,7 @@ add_task(function*() {
       }
     },
     {
-      setup: function*() {
+      setup: function* () {
         yield disableProperty(view, 4);
       },
       desc: "Test Copy Rule with Disabled Property with Comment",

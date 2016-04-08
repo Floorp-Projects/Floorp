@@ -400,7 +400,7 @@ StyleInspectorMenu.prototype = {
    * Retrieve the image data for the selected image url and copy it to the
    * clipboard
    */
-  _onCopyImageDataUrl: Task.async(function*() {
+  _onCopyImageDataUrl: Task.async(function* () {
     if (!this._clickedNodeInfo) {
       return;
     }

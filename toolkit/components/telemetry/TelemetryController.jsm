@@ -795,6 +795,7 @@ var Impl = {
       return this.setupContentTelemetry();
       break;
     }
+    return undefined;
   },
 
   get clientID() {

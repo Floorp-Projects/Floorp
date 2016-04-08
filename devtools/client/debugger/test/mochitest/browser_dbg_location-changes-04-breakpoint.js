@@ -152,10 +152,7 @@ function test() {
       is(gEditor.getBreakpoints().length, 1,
          "One breakpoint should be shown for the first source.");
 
-      //yield waitForTime(2000);
-      yield ensureCaretAt(gPanel, 1, 1, true);
-
-      //yield waitForTime(50000);
+      yield ensureCaretAt(gPanel, 6, 1, true);
       resumeDebuggerThenCloseAndFinish(gPanel);
     });
 

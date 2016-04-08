@@ -20,7 +20,7 @@ function onLoad()
   window.setCursor("wait");
 
   var obs = {
-    observe : function keygenListenerObserve(subject, topic, data) {
+    observe: function keygenListenerObserve(subject, topic, data) {
       if (topic == "keygen-finished") {
         window.close();
       }

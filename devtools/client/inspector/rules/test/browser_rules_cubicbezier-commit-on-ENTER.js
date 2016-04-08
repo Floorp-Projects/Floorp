@@ -15,7 +15,7 @@ const TEST_URI = `
   </style>
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
 
@@ -39,7 +39,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   widget.coordinates = [0.1, 2, 0.9, -1];
   let expected = "cubic-bezier(0.1, 2, 0.9, -1)";
 
-  yield waitForSuccess(function*() {
+  yield waitForSuccess(function* () {
     let func = yield getComputedStyleProperty("body", null,
                                               "transition-timing-function");
     return func === expected;

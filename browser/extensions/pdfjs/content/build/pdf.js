@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.4.185';
-var pdfjsBuild = 'a250c15';
+var pdfjsVersion = '1.4.213';
+var pdfjsBuild = '1c253e6';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -613,6 +613,17 @@ function isLittleEndian() {
   return (buffer16[0] === 1);
 }
 
+// Checks if it's possible to eval JS expressions.
+function isEvalSupported() {
+  try {
+    /* jshint evil: true */
+    new Function('');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 
 var IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 
@@ -867,7 +878,7 @@ var Util = (function UtilClosure() {
 /**
  * PDF page viewport created based on scale, rotation and offset.
  * @class
- * @alias PDFJS.PageViewport
+ * @alias PageViewport
  */
 var PageViewport = (function PageViewportClosure() {
   /**
@@ -943,13 +954,13 @@ var PageViewport = (function PageViewportClosure() {
     this.height = height;
     this.fontScale = scale;
   }
-  PageViewport.prototype = /** @lends PDFJS.PageViewport.prototype */ {
+  PageViewport.prototype = /** @lends PageViewport.prototype */ {
     /**
      * Clones viewport with additional properties.
      * @param args {Object} (optional) If specified, may contain the 'scale' or
      * 'rotation' properties to override the corresponding properties in
      * the cloned viewport.
-     * @returns {PDFJS.PageViewport} Cloned viewport.
+     * @returns {PageViewport} Cloned viewport.
      */
     clone: function PageViewPort_clone(args) {
       args = args || {};
@@ -1079,7 +1090,7 @@ function isArrayBuffer(v) {
 
 /**
  * Creates a promise capability object.
- * @alias PDFJS.createPromiseCapability
+ * @alias createPromiseCapability
  *
  * @return {PromiseCapability} A capability object contains:
  * - a Promise, resolve and reject methods.
@@ -1443,6 +1454,7 @@ exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
 exports.isValidUrl = isValidUrl;
 exports.isLittleEndian = isLittleEndian;
+exports.isEvalSupported = isEvalSupported;
 exports.loadJpegStream = loadJpegStream;
 exports.log2 = log2;
 exports.readInt8 = readInt8;
@@ -1462,88 +1474,12 @@ exports.warn = warn;
 
 (function (root, factory) {
   {
-    factory((root.pdfjsDisplayGlobal = {}), root.pdfjsSharedUtil);
+    factory((root.pdfjsDisplayDOMUtils = {}), root.pdfjsSharedUtil);
   }
 }(this, function (exports, sharedUtil) {
 
-  var globalScope = sharedUtil.globalScope;
-
-  var isWorker = (typeof window === 'undefined');
-
-  // The global PDFJS object exposes the API
-  // In production, it will be declared outside a global wrapper
-  // In development, it will be declared here
-  if (!globalScope.PDFJS) {
-    globalScope.PDFJS = {};
-  }
-  var PDFJS = globalScope.PDFJS;
-
-  if (typeof pdfjsVersion !== 'undefined') {
-    PDFJS.version = pdfjsVersion;
-  }
-  if (typeof pdfjsBuild !== 'undefined') {
-    PDFJS.build = pdfjsBuild;
-  }
-
-  PDFJS.pdfBug = false;
-
-  if (PDFJS.verbosity !== undefined) {
-    sharedUtil.setVerbosityLevel(PDFJS.verbosity);
-  }
-  delete PDFJS.verbosity;
-  Object.defineProperty(PDFJS, 'verbosity', {
-    get: function () { return sharedUtil.getVerbosityLevel(); },
-    set: function (level) { sharedUtil.setVerbosityLevel(level); },
-    enumerable: true,
-    configurable: true
-  });
-
-  PDFJS.VERBOSITY_LEVELS = sharedUtil.VERBOSITY_LEVELS;
-  PDFJS.OPS = sharedUtil.OPS;
-  PDFJS.UNSUPPORTED_FEATURES = sharedUtil.UNSUPPORTED_FEATURES;
-  PDFJS.isValidUrl = sharedUtil.isValidUrl;
-  PDFJS.shadow = sharedUtil.shadow;
-  PDFJS.createBlob = sharedUtil.createBlob;
-  PDFJS.createObjectURL = function PDFJS_createObjectURL(data, contentType) {
-    return sharedUtil.createObjectURL(data, contentType,
-                                      PDFJS.disableCreateObjectURL);
-  };
-  Object.defineProperty(PDFJS, 'isLittleEndian', {
-    configurable: true,
-    get: function PDFJS_isLittleEndian() {
-      var value = sharedUtil.isLittleEndian();
-      return sharedUtil.shadow(PDFJS, 'isLittleEndian', value);
-    }
-  });
-  PDFJS.removeNullCharacters = sharedUtil.removeNullCharacters;
-  PDFJS.PasswordResponses = sharedUtil.PasswordResponses;
-  PDFJS.PasswordException = sharedUtil.PasswordException;
-  PDFJS.UnknownErrorException = sharedUtil.UnknownErrorException;
-  PDFJS.InvalidPDFException = sharedUtil.InvalidPDFException;
-  PDFJS.MissingPDFException = sharedUtil.MissingPDFException;
-  PDFJS.UnexpectedResponseException = sharedUtil.UnexpectedResponseException;
-  PDFJS.Util = sharedUtil.Util;
-  PDFJS.PageViewport = sharedUtil.PageViewport;
-  PDFJS.createPromiseCapability = sharedUtil.createPromiseCapability;
-
-  exports.globalScope = globalScope;
-  exports.isWorker = isWorker;
-  exports.PDFJS = globalScope.PDFJS;
-}));
-
-
-(function (root, factory) {
-  {
-    factory((root.pdfjsDisplayDOMUtils = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayGlobal);
-  }
-}(this, function (exports, sharedUtil, displayGlobal) {
-
-var deprecated = sharedUtil.deprecated;
 var removeNullCharacters = sharedUtil.removeNullCharacters;
-var shadow = sharedUtil.shadow;
 var warn = sharedUtil.warn;
-var PDFJS = displayGlobal.PDFJS;
 
 /**
  * Optimised CSS custom property getter/setter.
@@ -1599,9 +1535,7 @@ var CustomStyle = (function CustomStyleClosure() {
   return CustomStyle;
 })();
 
-PDFJS.CustomStyle = CustomStyle;
-
-  PDFJS.hasCanvasTypedArrays = true;
+  function hasCanvasTypedArrays() { return true; }
 
 var LinkTarget = {
   NONE: 0, // Default value.
@@ -1611,8 +1545,6 @@ var LinkTarget = {
   TOP: 4,
 };
 
-PDFJS.LinkTarget = LinkTarget;
-
 var LinkTargetStringMap = [
   '',
   '_self',
@@ -1621,42 +1553,37 @@ var LinkTargetStringMap = [
   '_top'
 ];
 
-function isExternalLinkTargetSet() {
-  switch (PDFJS.externalLinkTarget) {
-    case LinkTarget.NONE:
-      return false;
-    case LinkTarget.SELF:
-    case LinkTarget.BLANK:
-    case LinkTarget.PARENT:
-    case LinkTarget.TOP:
-      return true;
-  }
-  warn('PDFJS.externalLinkTarget is invalid: ' + PDFJS.externalLinkTarget);
-  // Reset the external link target, to suppress further warnings.
-  PDFJS.externalLinkTarget = LinkTarget.NONE;
-  return false;
-}
-PDFJS.isExternalLinkTargetSet = isExternalLinkTargetSet;
+/**
+ * @typedef ExternalLinkParameters
+ * @typedef {Object} ExternalLinkParameters
+ * @property {string} url
+ * @property {LinkTarget} target
+ * @property {string} rel
+ */
 
 /**
  * Adds various attributes (href, title, target, rel) to hyperlinks.
  * @param {HTMLLinkElement} link - The link element.
- * @param {Object} params - An object with the properties:
- * @param {string} params.url - An absolute URL.
+ * @param {ExternalLinkParameters} params - An object with the properties.
  */
 function addLinkAttributes(link, params) {
   var url = params && params.url;
   link.href = link.title = (url ? removeNullCharacters(url) : '');
 
   if (url) {
-    if (isExternalLinkTargetSet()) {
-      link.target = LinkTargetStringMap[PDFJS.externalLinkTarget];
+    var target = params.target;
+    if (typeof target === 'undefined') {
+      target = getDefaultSetting('externalLinkTarget');
     }
+    link.target = LinkTargetStringMap[target];
     // Strip referrer from the URL.
-    link.rel = PDFJS.externalLinkRel;
+    var rel = params.rel;
+    if (typeof rel === 'undefined') {
+      rel = getDefaultSetting('externalLinkRel');
+    }
+    link.rel = rel;
   }
 }
-PDFJS.addLinkAttributes = addLinkAttributes;
 
 // Gets the file name from a given URL.
 function getFilenameFromUrl(url) {
@@ -1667,32 +1594,102 @@ function getFilenameFromUrl(url) {
     query > 0 ? query : url.length);
   return url.substring(url.lastIndexOf('/', end) + 1, end);
 }
-PDFJS.getFilenameFromUrl = getFilenameFromUrl;
+
+function getDefaultSetting(id) {
+  // The list of the settings and their default is maintained for backward
+  // compatibility and shall not be extended or modified. See also global.js.
+  var globalSettings = sharedUtil.globalScope.PDFJS;
+  switch (id) {
+    case 'pdfBug':
+      return globalSettings ? globalSettings.pdfBug : false;
+    case 'disableAutoFetch':
+      return globalSettings ? globalSettings.disableAutoFetch : false;
+    case 'disableStream':
+      return globalSettings ? globalSettings.disableStream : false;
+    case 'disableRange':
+      return globalSettings ? globalSettings.disableRange : false;
+    case 'disableFontFace':
+      return globalSettings ? globalSettings.disableFontFace : false;
+    case 'disableCreateObjectURL':
+      return globalSettings ? globalSettings.disableCreateObjectURL : false;
+    case 'disableWebGL':
+      return globalSettings ? globalSettings.disableWebGL : true;
+    case 'cMapUrl':
+      return globalSettings ? globalSettings.cMapUrl : null;
+    case 'cMapPacked':
+      return globalSettings ? globalSettings.cMapPacked : false;
+    case 'postMessageTransfers':
+      return globalSettings ? globalSettings.postMessageTransfers : true;
+    case 'workerSrc':
+      return globalSettings ? globalSettings.workerSrc : null;
+    case 'disableWorker':
+      return globalSettings ? globalSettings.disableWorker : false;
+    case 'maxImageSize':
+      return globalSettings ? globalSettings.maxImageSize : -1;
+    case 'imageResourcesPath':
+      return globalSettings ? globalSettings.imageResourcesPath : '';
+    case 'isEvalSupported':
+      return globalSettings ? globalSettings.isEvalSupported : true;
+    case 'externalLinkTarget':
+      if (!globalSettings) {
+        return LinkTarget.NONE;
+      }
+      switch (globalSettings.externalLinkTarget) {
+        case LinkTarget.NONE:
+        case LinkTarget.SELF:
+        case LinkTarget.BLANK:
+        case LinkTarget.PARENT:
+        case LinkTarget.TOP:
+          return globalSettings.externalLinkTarget;
+      }
+      warn('PDFJS.externalLinkTarget is invalid: ' +
+           globalSettings.externalLinkTarget);
+      // Reset the external link target, to suppress further warnings.
+      globalSettings.externalLinkTarget = LinkTarget.NONE;
+      return LinkTarget.NONE;
+    case 'externalLinkRel':
+      return globalSettings ? globalSettings.externalLinkRel : 'noreferrer';
+    case 'enableStats':
+      return !!(globalSettings && globalSettings.enableStats);
+    default:
+      throw new Error('Unknown default setting: ' + id);
+  }
+}
+
+function isExternalLinkTargetSet() {
+  var externalLinkTarget = getDefaultSetting('externalLinkTarget');
+  switch (externalLinkTarget) {
+    case LinkTarget.NONE:
+      return false;
+    case LinkTarget.SELF:
+    case LinkTarget.BLANK:
+    case LinkTarget.PARENT:
+    case LinkTarget.TOP:
+      return true;
+  }
+}
 
 exports.CustomStyle = CustomStyle;
 exports.addLinkAttributes = addLinkAttributes;
 exports.isExternalLinkTargetSet = isExternalLinkTargetSet;
 exports.getFilenameFromUrl = getFilenameFromUrl;
 exports.LinkTarget = LinkTarget;
+exports.hasCanvasTypedArrays = hasCanvasTypedArrays;
+exports.getDefaultSetting = getDefaultSetting;
 }));
 
 
 (function (root, factory) {
   {
-    factory((root.pdfjsDisplayFontLoader = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayGlobal);
+    factory((root.pdfjsDisplayFontLoader = {}), root.pdfjsSharedUtil);
   }
-}(this, function (exports, sharedUtil, displayGlobal) {
+}(this, function (exports, sharedUtil) {
 
 var assert = sharedUtil.assert;
 var bytesToString = sharedUtil.bytesToString;
 var string32 = sharedUtil.string32;
 var shadow = sharedUtil.shadow;
 var warn = sharedUtil.warn;
-
-var PDFJS = displayGlobal.PDFJS;
-var globalScope = displayGlobal.globalScope;
-var isWorker = displayGlobal.isWorker;
 
 function FontLoader(docId) {
   this.docId = docId;
@@ -1720,8 +1717,6 @@ FontLoader.prototype = {
     }
   },
   bind: function fontLoaderBind(fonts, callback) {
-    assert(!isWorker, 'bind() shall be called from main thread');
-  
     for (var i = 0, ii = fonts.length; i < ii; i++) {
       var font = fonts[i];
       if (font.attached) {
@@ -1739,29 +1734,21 @@ FontLoader.prototype = {
   }
 };
 
+var IsEvalSupportedCached = {
+  get value() {
+    return shadow(this, 'value', sharedUtil.isEvalSupported());
+  }
+};
+
 var FontFaceObject = (function FontFaceObjectClosure() {
-  function FontFaceObject(translatedData) {
+  function FontFaceObject(translatedData, options) {
     this.compiledGlyphs = Object.create(null);
     // importing translated data
     for (var i in translatedData) {
       this[i] = translatedData[i];
     }
+    this.options = options;
   }
-  Object.defineProperty(FontFaceObject, 'isEvalSupported', {
-    get: function () {
-      var evalSupport = false;
-      if (PDFJS.isEvalSupported) {
-        try {
-          /* jshint evil: true */
-          new Function('');
-          evalSupport = true;
-        } catch (e) {}
-      }
-      return shadow(this, 'isEvalSupported', evalSupport);
-    },
-    enumerable: true,
-    configurable: true
-  });
   FontFaceObject.prototype = {
 
     createFontFaceRule: function FontFaceObject_createFontFaceRule() {
@@ -1769,7 +1756,7 @@ var FontFaceObject = (function FontFaceObjectClosure() {
         return null;
       }
 
-      if (PDFJS.disableFontFace) {
+      if (this.options.disableFontFace) {
         this.disableFontFace = true;
         return null;
       }
@@ -1778,13 +1765,11 @@ var FontFaceObject = (function FontFaceObjectClosure() {
       var fontName = this.loadedName;
 
       // Add the font-face rule to the document
-      var url = ('url(data:' + this.mimetype + ';base64,' +
-                 window.btoa(data) + ');');
+      var url = ('url(data:' + this.mimetype + ';base64,' + btoa(data) + ');');
       var rule = '@font-face { font-family:"' + fontName + '";src:' + url + '}';
 
-      if (PDFJS.pdfBug && 'FontInspector' in globalScope &&
-          globalScope['FontInspector'].enabled) {
-        globalScope['FontInspector'].fontAdded(this, url);
+      if (this.options.fontRegistry) {
+        this.options.fontRegistry.registerFont(this, url);
       }
 
       return rule;
@@ -1797,7 +1782,7 @@ var FontFaceObject = (function FontFaceObjectClosure() {
         var current, i, len;
 
         // If we can, compile cmds into JS for MAXIMUM SPEED
-        if (FontFaceObject.isEvalSupported) {
+        if (this.options.isEvalSupported && IsEvalSupportedCached.value) {
           var args, js = '';
           for (i = 0, len = cmds.length; i < len; i++) {
             current = cmds[i];
@@ -1841,15 +1826,12 @@ exports.FontLoader = FontLoader;
 
 (function (root, factory) {
   {
-    factory((root.pdfjsDisplayMetadata = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayGlobal);
+    factory((root.pdfjsDisplayMetadata = {}), root.pdfjsSharedUtil);
   }
-}(this, function (exports, sharedUtil, displayGlobal) {
+}(this, function (exports, sharedUtil) {
 
 var error = sharedUtil.error;
-var PDFJS = displayGlobal.PDFJS;
 
-var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   function fixMetadata(meta) {
     return meta.replace(/>\\376\\377([^<]+)/g, function(all, codes) {
       var bytes = codes.replace(/\\([0-3])([0-7])([0-7])/g,
@@ -1926,441 +1908,15 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
     }
   };
 
-  return Metadata;
-})();
-
 exports.Metadata = Metadata;
 }));
 
 
 (function (root, factory) {
   {
-    factory((root.pdfjsDisplayWebGL = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayGlobal);
+    factory((root.pdfjsDisplaySVG = {}), root.pdfjsSharedUtil);
   }
-}(this, function (exports, sharedUtil, displayGlobal) {
-
-var shadow = sharedUtil.shadow;
-var PDFJS = displayGlobal.PDFJS;
-
-var WebGLUtils = (function WebGLUtilsClosure() {
-  function loadShader(gl, code, shaderType) {
-    var shader = gl.createShader(shaderType);
-    gl.shaderSource(shader, code);
-    gl.compileShader(shader);
-    var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (!compiled) {
-      var errorMsg = gl.getShaderInfoLog(shader);
-      throw new Error('Error during shader compilation: ' + errorMsg);
-    }
-    return shader;
-  }
-  function createVertexShader(gl, code) {
-    return loadShader(gl, code, gl.VERTEX_SHADER);
-  }
-  function createFragmentShader(gl, code) {
-    return loadShader(gl, code, gl.FRAGMENT_SHADER);
-  }
-  function createProgram(gl, shaders) {
-    var program = gl.createProgram();
-    for (var i = 0, ii = shaders.length; i < ii; ++i) {
-      gl.attachShader(program, shaders[i]);
-    }
-    gl.linkProgram(program);
-    var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if (!linked) {
-      var errorMsg = gl.getProgramInfoLog(program);
-      throw new Error('Error during program linking: ' + errorMsg);
-    }
-    return program;
-  }
-  function createTexture(gl, image, textureId) {
-    gl.activeTexture(textureId);
-    var texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-    // Upload the image into the texture.
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    return texture;
-  }
-
-  var currentGL, currentCanvas;
-  function generateGL() {
-    if (currentGL) {
-      return;
-    }
-    currentCanvas = document.createElement('canvas');
-    currentGL = currentCanvas.getContext('webgl',
-      { premultipliedalpha: false });
-  }
-
-  var smaskVertexShaderCode = '\
-  attribute vec2 a_position;                                    \
-  attribute vec2 a_texCoord;                                    \
-                                                                \
-  uniform vec2 u_resolution;                                    \
-                                                                \
-  varying vec2 v_texCoord;                                      \
-                                                                \
-  void main() {                                                 \
-    vec2 clipSpace = (a_position / u_resolution) * 2.0 - 1.0;   \
-    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);          \
-                                                                \
-    v_texCoord = a_texCoord;                                    \
-  }                                                             ';
-
-  var smaskFragmentShaderCode = '\
-  precision mediump float;                                      \
-                                                                \
-  uniform vec4 u_backdrop;                                      \
-  uniform int u_subtype;                                        \
-  uniform sampler2D u_image;                                    \
-  uniform sampler2D u_mask;                                     \
-                                                                \
-  varying vec2 v_texCoord;                                      \
-                                                                \
-  void main() {                                                 \
-    vec4 imageColor = texture2D(u_image, v_texCoord);           \
-    vec4 maskColor = texture2D(u_mask, v_texCoord);             \
-    if (u_backdrop.a > 0.0) {                                   \
-      maskColor.rgb = maskColor.rgb * maskColor.a +             \
-                      u_backdrop.rgb * (1.0 - maskColor.a);     \
-    }                                                           \
-    float lum;                                                  \
-    if (u_subtype == 0) {                                       \
-      lum = maskColor.a;                                        \
-    } else {                                                    \
-      lum = maskColor.r * 0.3 + maskColor.g * 0.59 +            \
-            maskColor.b * 0.11;                                 \
-    }                                                           \
-    imageColor.a *= lum;                                        \
-    imageColor.rgb *= imageColor.a;                             \
-    gl_FragColor = imageColor;                                  \
-  }                                                             ';
-
-  var smaskCache = null;
-
-  function initSmaskGL() {
-    var canvas, gl;
-
-    generateGL();
-    canvas = currentCanvas;
-    currentCanvas = null;
-    gl = currentGL;
-    currentGL = null;
-
-    // setup a GLSL program
-    var vertexShader = createVertexShader(gl, smaskVertexShaderCode);
-    var fragmentShader = createFragmentShader(gl, smaskFragmentShaderCode);
-    var program = createProgram(gl, [vertexShader, fragmentShader]);
-    gl.useProgram(program);
-
-    var cache = {};
-    cache.gl = gl;
-    cache.canvas = canvas;
-    cache.resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-    cache.positionLocation = gl.getAttribLocation(program, 'a_position');
-    cache.backdropLocation = gl.getUniformLocation(program, 'u_backdrop');
-    cache.subtypeLocation = gl.getUniformLocation(program, 'u_subtype');
-
-    var texCoordLocation = gl.getAttribLocation(program, 'a_texCoord');
-    var texLayerLocation = gl.getUniformLocation(program, 'u_image');
-    var texMaskLocation = gl.getUniformLocation(program, 'u_mask');
-
-    // provide texture coordinates for the rectangle.
-    var texCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      0.0,  0.0,
-      1.0,  0.0,
-      0.0,  1.0,
-      0.0,  1.0,
-      1.0,  0.0,
-      1.0,  1.0]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(texCoordLocation);
-    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
-
-    gl.uniform1i(texLayerLocation, 0);
-    gl.uniform1i(texMaskLocation, 1);
-
-    smaskCache = cache;
-  }
-
-  function composeSMask(layer, mask, properties) {
-    var width = layer.width, height = layer.height;
-
-    if (!smaskCache) {
-      initSmaskGL();
-    }
-    var cache = smaskCache,canvas = cache.canvas, gl = cache.gl;
-    canvas.width = width;
-    canvas.height = height;
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.uniform2f(cache.resolutionLocation, width, height);
-
-    if (properties.backdrop) {
-      gl.uniform4f(cache.resolutionLocation, properties.backdrop[0],
-                   properties.backdrop[1], properties.backdrop[2], 1);
-    } else {
-      gl.uniform4f(cache.resolutionLocation, 0, 0, 0, 0);
-    }
-    gl.uniform1i(cache.subtypeLocation,
-                 properties.subtype === 'Luminosity' ? 1 : 0);
-
-    // Create a textures
-    var texture = createTexture(gl, layer, gl.TEXTURE0);
-    var maskTexture = createTexture(gl, mask, gl.TEXTURE1);
-
-
-    // Create a buffer and put a single clipspace rectangle in
-    // it (2 triangles)
-    var buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      0, 0,
-      width, 0,
-      0, height,
-      0, height,
-      width, 0,
-      width, height]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(cache.positionLocation);
-    gl.vertexAttribPointer(cache.positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    // draw
-    gl.clearColor(0, 0, 0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    gl.flush();
-
-    gl.deleteTexture(texture);
-    gl.deleteTexture(maskTexture);
-    gl.deleteBuffer(buffer);
-
-    return canvas;
-  }
-
-  var figuresVertexShaderCode = '\
-  attribute vec2 a_position;                                    \
-  attribute vec3 a_color;                                       \
-                                                                \
-  uniform vec2 u_resolution;                                    \
-  uniform vec2 u_scale;                                         \
-  uniform vec2 u_offset;                                        \
-                                                                \
-  varying vec4 v_color;                                         \
-                                                                \
-  void main() {                                                 \
-    vec2 position = (a_position + u_offset) * u_scale;          \
-    vec2 clipSpace = (position / u_resolution) * 2.0 - 1.0;     \
-    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);          \
-                                                                \
-    v_color = vec4(a_color / 255.0, 1.0);                       \
-  }                                                             ';
-
-  var figuresFragmentShaderCode = '\
-  precision mediump float;                                      \
-                                                                \
-  varying vec4 v_color;                                         \
-                                                                \
-  void main() {                                                 \
-    gl_FragColor = v_color;                                     \
-  }                                                             ';
-
-  var figuresCache = null;
-
-  function initFiguresGL() {
-    var canvas, gl;
-
-    generateGL();
-    canvas = currentCanvas;
-    currentCanvas = null;
-    gl = currentGL;
-    currentGL = null;
-
-    // setup a GLSL program
-    var vertexShader = createVertexShader(gl, figuresVertexShaderCode);
-    var fragmentShader = createFragmentShader(gl, figuresFragmentShaderCode);
-    var program = createProgram(gl, [vertexShader, fragmentShader]);
-    gl.useProgram(program);
-
-    var cache = {};
-    cache.gl = gl;
-    cache.canvas = canvas;
-    cache.resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-    cache.scaleLocation = gl.getUniformLocation(program, 'u_scale');
-    cache.offsetLocation = gl.getUniformLocation(program, 'u_offset');
-    cache.positionLocation = gl.getAttribLocation(program, 'a_position');
-    cache.colorLocation = gl.getAttribLocation(program, 'a_color');
-
-    figuresCache = cache;
-  }
-
-  function drawFigures(width, height, backgroundColor, figures, context) {
-    if (!figuresCache) {
-      initFiguresGL();
-    }
-    var cache = figuresCache, canvas = cache.canvas, gl = cache.gl;
-
-    canvas.width = width;
-    canvas.height = height;
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.uniform2f(cache.resolutionLocation, width, height);
-
-    // count triangle points
-    var count = 0;
-    var i, ii, rows;
-    for (i = 0, ii = figures.length; i < ii; i++) {
-      switch (figures[i].type) {
-        case 'lattice':
-          rows = (figures[i].coords.length / figures[i].verticesPerRow) | 0;
-          count += (rows - 1) * (figures[i].verticesPerRow - 1) * 6;
-          break;
-        case 'triangles':
-          count += figures[i].coords.length;
-          break;
-      }
-    }
-    // transfer data
-    var coords = new Float32Array(count * 2);
-    var colors = new Uint8Array(count * 3);
-    var coordsMap = context.coords, colorsMap = context.colors;
-    var pIndex = 0, cIndex = 0;
-    for (i = 0, ii = figures.length; i < ii; i++) {
-      var figure = figures[i], ps = figure.coords, cs = figure.colors;
-      switch (figure.type) {
-        case 'lattice':
-          var cols = figure.verticesPerRow;
-          rows = (ps.length / cols) | 0;
-          for (var row = 1; row < rows; row++) {
-            var offset = row * cols + 1;
-            for (var col = 1; col < cols; col++, offset++) {
-              coords[pIndex] = coordsMap[ps[offset - cols - 1]];
-              coords[pIndex + 1] = coordsMap[ps[offset - cols - 1] + 1];
-              coords[pIndex + 2] = coordsMap[ps[offset - cols]];
-              coords[pIndex + 3] = coordsMap[ps[offset - cols] + 1];
-              coords[pIndex + 4] = coordsMap[ps[offset - 1]];
-              coords[pIndex + 5] = coordsMap[ps[offset - 1] + 1];
-              colors[cIndex] = colorsMap[cs[offset - cols - 1]];
-              colors[cIndex + 1] = colorsMap[cs[offset - cols - 1] + 1];
-              colors[cIndex + 2] = colorsMap[cs[offset - cols - 1] + 2];
-              colors[cIndex + 3] = colorsMap[cs[offset - cols]];
-              colors[cIndex + 4] = colorsMap[cs[offset - cols] + 1];
-              colors[cIndex + 5] = colorsMap[cs[offset - cols] + 2];
-              colors[cIndex + 6] = colorsMap[cs[offset - 1]];
-              colors[cIndex + 7] = colorsMap[cs[offset - 1] + 1];
-              colors[cIndex + 8] = colorsMap[cs[offset - 1] + 2];
-
-              coords[pIndex + 6] = coords[pIndex + 2];
-              coords[pIndex + 7] = coords[pIndex + 3];
-              coords[pIndex + 8] = coords[pIndex + 4];
-              coords[pIndex + 9] = coords[pIndex + 5];
-              coords[pIndex + 10] = coordsMap[ps[offset]];
-              coords[pIndex + 11] = coordsMap[ps[offset] + 1];
-              colors[cIndex + 9] = colors[cIndex + 3];
-              colors[cIndex + 10] = colors[cIndex + 4];
-              colors[cIndex + 11] = colors[cIndex + 5];
-              colors[cIndex + 12] = colors[cIndex + 6];
-              colors[cIndex + 13] = colors[cIndex + 7];
-              colors[cIndex + 14] = colors[cIndex + 8];
-              colors[cIndex + 15] = colorsMap[cs[offset]];
-              colors[cIndex + 16] = colorsMap[cs[offset] + 1];
-              colors[cIndex + 17] = colorsMap[cs[offset] + 2];
-              pIndex += 12;
-              cIndex += 18;
-            }
-          }
-          break;
-        case 'triangles':
-          for (var j = 0, jj = ps.length; j < jj; j++) {
-            coords[pIndex] = coordsMap[ps[j]];
-            coords[pIndex + 1] = coordsMap[ps[j] + 1];
-            colors[cIndex] = colorsMap[cs[j]];
-            colors[cIndex + 1] = colorsMap[cs[j] + 1];
-            colors[cIndex + 2] = colorsMap[cs[j] + 2];
-            pIndex += 2;
-            cIndex += 3;
-          }
-          break;
-      }
-    }
-
-    // draw
-    if (backgroundColor) {
-      gl.clearColor(backgroundColor[0] / 255, backgroundColor[1] / 255,
-                    backgroundColor[2] / 255, 1.0);
-    } else {
-      gl.clearColor(0, 0, 0, 0);
-    }
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    var coordsBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, coords, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(cache.positionLocation);
-    gl.vertexAttribPointer(cache.positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    var colorsBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(cache.colorLocation);
-    gl.vertexAttribPointer(cache.colorLocation, 3, gl.UNSIGNED_BYTE, false,
-                           0, 0);
-
-    gl.uniform2f(cache.scaleLocation, context.scaleX, context.scaleY);
-    gl.uniform2f(cache.offsetLocation, context.offsetX, context.offsetY);
-
-    gl.drawArrays(gl.TRIANGLES, 0, count);
-
-    gl.flush();
-
-    gl.deleteBuffer(coordsBuffer);
-    gl.deleteBuffer(colorsBuffer);
-
-    return canvas;
-  }
-
-  function cleanup() {
-    if (smaskCache && smaskCache.canvas) {
-      smaskCache.canvas.width = 0;
-      smaskCache.canvas.height = 0;
-    }
-    if (figuresCache && figuresCache.canvas) {
-      figuresCache.canvas.width = 0;
-      figuresCache.canvas.height = 0;
-    }
-    smaskCache = null;
-    figuresCache = null;
-  }
-
-  return {
-    get isEnabled() {
-      if (PDFJS.disableWebGL) {
-        return false;
-      }
-      var enabled = false;
-      try {
-        generateGL();
-        enabled = !!currentGL;
-      } catch (e) { }
-      return shadow(this, 'isEnabled', enabled);
-    },
-    composeSMask: composeSMask,
-    drawFigures: drawFigures,
-    clear: cleanup
-  };
-})();
-
-exports.WebGLUtils = WebGLUtils;
+}(this, function (exports, sharedUtil) {
 }));
 
 
@@ -2378,6 +1934,7 @@ var addLinkAttributes = displayDOMUtils.addLinkAttributes;
 var getFilenameFromUrl = displayDOMUtils.getFilenameFromUrl;
 var warn = sharedUtil.warn;
 var CustomStyle = displayDOMUtils.CustomStyle;
+var getDefaultSetting = displayDOMUtils.getDefaultSetting;
 
 /**
  * @typedef {Object} AnnotationElementParameters
@@ -2450,6 +2007,7 @@ var AnnotationElement = (function AnnotationElementClosure() {
     this.viewport = parameters.viewport;
     this.linkService = parameters.linkService;
     this.downloadManager = parameters.downloadManager;
+    this.imageResourcesPath = parameters.imageResourcesPath;
 
     if (isRenderable) {
       this.container = this._createContainer();
@@ -2706,7 +2264,7 @@ var TextAnnotationElement = (function TextAnnotationElementClosure() {
       var image = document.createElement('img');
       image.style.height = this.container.style.height;
       image.style.width = this.container.style.width;
-      image.src = PDFJS.imageResourcesPath + 'annotation-' +
+      image.src = this.imageResourcesPath + 'annotation-' +
         this.data.name.toLowerCase() + '.svg';
       image.alt = '[{{type}} Annotation]';
       image.dataset.l10nId = 'text_annotation_type';
@@ -3181,6 +2739,7 @@ var FileAttachmentAnnotationElement = (
  * @property {Array} annotations
  * @property {PDFPage} page
  * @property {IPDFLinkService} linkService
+ * @property {string} imageResourcesPath
  */
 
 /**
@@ -3211,7 +2770,9 @@ var AnnotationLayer = (function AnnotationLayerClosure() {
           page: parameters.page,
           viewport: parameters.viewport,
           linkService: parameters.linkService,
-          downloadManager: parameters.downloadManager
+          downloadManager: parameters.downloadManager,
+          imageResourcesPath: parameters.imageResourcesPath ||
+                              getDefaultSetting('imageResourcesPath')
         };
         var element = annotationElementFactory.create(properties);
         if (element.isRenderable) {
@@ -3242,9 +2803,671 @@ var AnnotationLayer = (function AnnotationLayerClosure() {
   };
 })();
 
-PDFJS.AnnotationLayer = AnnotationLayer;
-
 exports.AnnotationLayer = AnnotationLayer;
+}));
+
+
+(function (root, factory) {
+  {
+    factory((root.pdfjsDisplayTextLayer = {}), root.pdfjsSharedUtil,
+      root.pdfjsDisplayDOMUtils);
+  }
+}(this, function (exports, sharedUtil, displayDOMUtils) {
+
+var Util = sharedUtil.Util;
+var createPromiseCapability = sharedUtil.createPromiseCapability;
+var CustomStyle = displayDOMUtils.CustomStyle;
+var getDefaultSetting = displayDOMUtils.getDefaultSetting;
+var PageViewport = sharedUtil.PageViewport;
+
+/**
+ * Text layer render parameters.
+ *
+ * @typedef {Object} TextLayerRenderParameters
+ * @property {TextContent} textContent - Text content to render (the object is
+ *   returned by the page's getTextContent() method).
+ * @property {HTMLElement} container - HTML element that will contain text runs.
+ * @property {PageViewport} viewport - The target viewport to properly
+ *   layout the text runs.
+ * @property {Array} textDivs - (optional) HTML elements that are correspond
+ *   the text items of the textContent input. This is output and shall be
+ *   initially be set to empty array.
+ * @property {number} timeout - (optional) Delay in milliseconds before
+ *   rendering of the text  runs occurs.
+ */
+var renderTextLayer = (function renderTextLayerClosure() {
+  var MAX_TEXT_DIVS_TO_RENDER = 100000;
+
+  var NonWhitespaceRegexp = /\S/;
+
+  function isAllWhitespace(str) {
+    return !NonWhitespaceRegexp.test(str);
+  }
+
+  function appendText(textDivs, viewport, geom, styles) {
+    var style = styles[geom.fontName];
+    var textDiv = document.createElement('div');
+    textDivs.push(textDiv);
+    if (isAllWhitespace(geom.str)) {
+      textDiv.dataset.isWhitespace = true;
+      return;
+    }
+    var tx = Util.transform(viewport.transform, geom.transform);
+    var angle = Math.atan2(tx[1], tx[0]);
+    if (style.vertical) {
+      angle += Math.PI / 2;
+    }
+    var fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
+    var fontAscent = fontHeight;
+    if (style.ascent) {
+      fontAscent = style.ascent * fontAscent;
+    } else if (style.descent) {
+      fontAscent = (1 + style.descent) * fontAscent;
+    }
+
+    var left;
+    var top;
+    if (angle === 0) {
+      left = tx[4];
+      top = tx[5] - fontAscent;
+    } else {
+      left = tx[4] + (fontAscent * Math.sin(angle));
+      top = tx[5] - (fontAscent * Math.cos(angle));
+    }
+    textDiv.style.left = left + 'px';
+    textDiv.style.top = top + 'px';
+    textDiv.style.fontSize = fontHeight + 'px';
+    textDiv.style.fontFamily = style.fontFamily;
+
+    textDiv.textContent = geom.str;
+    // |fontName| is only used by the Font Inspector. This test will succeed
+    // when e.g. the Font Inspector is off but the Stepper is on, but it's
+    // not worth the effort to do a more accurate test.
+    if (getDefaultSetting('pdfBug')) {
+      textDiv.dataset.fontName = geom.fontName;
+    }
+    // Storing into dataset will convert number into string.
+    if (angle !== 0) {
+      textDiv.dataset.angle = angle * (180 / Math.PI);
+    }
+    // We don't bother scaling single-char text divs, because it has very
+    // little effect on text highlighting. This makes scrolling on docs with
+    // lots of such divs a lot faster.
+    if (geom.str.length > 1) {
+      if (style.vertical) {
+        textDiv.dataset.canvasWidth = geom.height * viewport.scale;
+      } else {
+        textDiv.dataset.canvasWidth = geom.width * viewport.scale;
+      }
+    }
+  }
+
+  function render(task) {
+    if (task._canceled) {
+      return;
+    }
+    var textLayerFrag = task._container;
+    var textDivs = task._textDivs;
+    var capability = task._capability;
+    var textDivsLength = textDivs.length;
+
+    // No point in rendering many divs as it would make the browser
+    // unusable even after the divs are rendered.
+    if (textDivsLength > MAX_TEXT_DIVS_TO_RENDER) {
+      capability.resolve();
+      return;
+    }
+
+    var canvas = document.createElement('canvas');
+    canvas.mozOpaque = true;
+    var ctx = canvas.getContext('2d', {alpha: false});
+
+    var lastFontSize;
+    var lastFontFamily;
+    for (var i = 0; i < textDivsLength; i++) {
+      var textDiv = textDivs[i];
+      if (textDiv.dataset.isWhitespace !== undefined) {
+        continue;
+      }
+
+      var fontSize = textDiv.style.fontSize;
+      var fontFamily = textDiv.style.fontFamily;
+
+      // Only build font string and set to context if different from last.
+      if (fontSize !== lastFontSize || fontFamily !== lastFontFamily) {
+        ctx.font = fontSize + ' ' + fontFamily;
+        lastFontSize = fontSize;
+        lastFontFamily = fontFamily;
+      }
+
+      var width = ctx.measureText(textDiv.textContent).width;
+      if (width > 0) {
+        textLayerFrag.appendChild(textDiv);
+        var transform;
+        if (textDiv.dataset.canvasWidth !== undefined) {
+          // Dataset values come of type string.
+          var textScale = textDiv.dataset.canvasWidth / width;
+          transform = 'scaleX(' + textScale + ')';
+        } else {
+          transform = '';
+        }
+        var rotation = textDiv.dataset.angle;
+        if (rotation) {
+          transform = 'rotate(' + rotation + 'deg) ' + transform;
+        }
+        if (transform) {
+          CustomStyle.setProp('transform' , textDiv, transform);
+        }
+      }
+    }
+    capability.resolve();
+  }
+
+  /**
+   * Text layer rendering task.
+   *
+   * @param {TextContent} textContent
+   * @param {HTMLElement} container
+   * @param {PageViewport} viewport
+   * @param {Array} textDivs
+   * @private
+   */
+  function TextLayerRenderTask(textContent, container, viewport, textDivs) {
+    this._textContent = textContent;
+    this._container = container;
+    this._viewport = viewport;
+    textDivs = textDivs || [];
+    this._textDivs = textDivs;
+    this._canceled = false;
+    this._capability = createPromiseCapability();
+    this._renderTimer = null;
+  }
+  TextLayerRenderTask.prototype = {
+    get promise() {
+      return this._capability.promise;
+    },
+
+    cancel: function TextLayer_cancel() {
+      this._canceled = true;
+      if (this._renderTimer !== null) {
+        clearTimeout(this._renderTimer);
+        this._renderTimer = null;
+      }
+      this._capability.reject('canceled');
+    },
+
+    _render: function TextLayer_render(timeout) {
+      var textItems = this._textContent.items;
+      var styles = this._textContent.styles;
+      var textDivs = this._textDivs;
+      var viewport = this._viewport;
+      for (var i = 0, len = textItems.length; i < len; i++) {
+        appendText(textDivs, viewport, textItems[i], styles);
+      }
+
+      if (!timeout) { // Render right away
+        render(this);
+      } else { // Schedule
+        var self = this;
+        this._renderTimer = setTimeout(function() {
+          render(self);
+          self._renderTimer = null;
+        }, timeout);
+      }
+    }
+  };
+
+
+  /**
+   * Starts rendering of the text layer.
+   *
+   * @param {TextLayerRenderParameters} renderParameters
+   * @returns {TextLayerRenderTask}
+   */
+  function renderTextLayer(renderParameters) {
+    var task = new TextLayerRenderTask(renderParameters.textContent,
+                                       renderParameters.container,
+                                       renderParameters.viewport,
+                                       renderParameters.textDivs);
+    task._render(renderParameters.timeout);
+    return task;
+  }
+
+  return renderTextLayer;
+})();
+
+exports.renderTextLayer = renderTextLayer;
+}));
+
+
+(function (root, factory) {
+  {
+    factory((root.pdfjsDisplayWebGL = {}), root.pdfjsSharedUtil,
+      root.pdfjsDisplayDOMUtils);
+  }
+}(this, function (exports, sharedUtil, displayDOMUtils) {
+
+var shadow = sharedUtil.shadow;
+var getDefaultSetting = displayDOMUtils.getDefaultSetting;
+
+var WebGLUtils = (function WebGLUtilsClosure() {
+  function loadShader(gl, code, shaderType) {
+    var shader = gl.createShader(shaderType);
+    gl.shaderSource(shader, code);
+    gl.compileShader(shader);
+    var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (!compiled) {
+      var errorMsg = gl.getShaderInfoLog(shader);
+      throw new Error('Error during shader compilation: ' + errorMsg);
+    }
+    return shader;
+  }
+  function createVertexShader(gl, code) {
+    return loadShader(gl, code, gl.VERTEX_SHADER);
+  }
+  function createFragmentShader(gl, code) {
+    return loadShader(gl, code, gl.FRAGMENT_SHADER);
+  }
+  function createProgram(gl, shaders) {
+    var program = gl.createProgram();
+    for (var i = 0, ii = shaders.length; i < ii; ++i) {
+      gl.attachShader(program, shaders[i]);
+    }
+    gl.linkProgram(program);
+    var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (!linked) {
+      var errorMsg = gl.getProgramInfoLog(program);
+      throw new Error('Error during program linking: ' + errorMsg);
+    }
+    return program;
+  }
+  function createTexture(gl, image, textureId) {
+    gl.activeTexture(textureId);
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Set the parameters so we can render any size image.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    // Upload the image into the texture.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    return texture;
+  }
+
+  var currentGL, currentCanvas;
+  function generateGL() {
+    if (currentGL) {
+      return;
+    }
+    currentCanvas = document.createElement('canvas');
+    currentGL = currentCanvas.getContext('webgl',
+      { premultipliedalpha: false });
+  }
+
+  var smaskVertexShaderCode = '\
+  attribute vec2 a_position;                                    \
+  attribute vec2 a_texCoord;                                    \
+                                                                \
+  uniform vec2 u_resolution;                                    \
+                                                                \
+  varying vec2 v_texCoord;                                      \
+                                                                \
+  void main() {                                                 \
+    vec2 clipSpace = (a_position / u_resolution) * 2.0 - 1.0;   \
+    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);          \
+                                                                \
+    v_texCoord = a_texCoord;                                    \
+  }                                                             ';
+
+  var smaskFragmentShaderCode = '\
+  precision mediump float;                                      \
+                                                                \
+  uniform vec4 u_backdrop;                                      \
+  uniform int u_subtype;                                        \
+  uniform sampler2D u_image;                                    \
+  uniform sampler2D u_mask;                                     \
+                                                                \
+  varying vec2 v_texCoord;                                      \
+                                                                \
+  void main() {                                                 \
+    vec4 imageColor = texture2D(u_image, v_texCoord);           \
+    vec4 maskColor = texture2D(u_mask, v_texCoord);             \
+    if (u_backdrop.a > 0.0) {                                   \
+      maskColor.rgb = maskColor.rgb * maskColor.a +             \
+                      u_backdrop.rgb * (1.0 - maskColor.a);     \
+    }                                                           \
+    float lum;                                                  \
+    if (u_subtype == 0) {                                       \
+      lum = maskColor.a;                                        \
+    } else {                                                    \
+      lum = maskColor.r * 0.3 + maskColor.g * 0.59 +            \
+            maskColor.b * 0.11;                                 \
+    }                                                           \
+    imageColor.a *= lum;                                        \
+    imageColor.rgb *= imageColor.a;                             \
+    gl_FragColor = imageColor;                                  \
+  }                                                             ';
+
+  var smaskCache = null;
+
+  function initSmaskGL() {
+    var canvas, gl;
+
+    generateGL();
+    canvas = currentCanvas;
+    currentCanvas = null;
+    gl = currentGL;
+    currentGL = null;
+
+    // setup a GLSL program
+    var vertexShader = createVertexShader(gl, smaskVertexShaderCode);
+    var fragmentShader = createFragmentShader(gl, smaskFragmentShaderCode);
+    var program = createProgram(gl, [vertexShader, fragmentShader]);
+    gl.useProgram(program);
+
+    var cache = {};
+    cache.gl = gl;
+    cache.canvas = canvas;
+    cache.resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    cache.positionLocation = gl.getAttribLocation(program, 'a_position');
+    cache.backdropLocation = gl.getUniformLocation(program, 'u_backdrop');
+    cache.subtypeLocation = gl.getUniformLocation(program, 'u_subtype');
+
+    var texCoordLocation = gl.getAttribLocation(program, 'a_texCoord');
+    var texLayerLocation = gl.getUniformLocation(program, 'u_image');
+    var texMaskLocation = gl.getUniformLocation(program, 'u_mask');
+
+    // provide texture coordinates for the rectangle.
+    var texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0.0,  0.0,
+      1.0,  0.0,
+      0.0,  1.0,
+      0.0,  1.0,
+      1.0,  0.0,
+      1.0,  1.0]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(texCoordLocation);
+    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+    gl.uniform1i(texLayerLocation, 0);
+    gl.uniform1i(texMaskLocation, 1);
+
+    smaskCache = cache;
+  }
+
+  function composeSMask(layer, mask, properties) {
+    var width = layer.width, height = layer.height;
+
+    if (!smaskCache) {
+      initSmaskGL();
+    }
+    var cache = smaskCache,canvas = cache.canvas, gl = cache.gl;
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.uniform2f(cache.resolutionLocation, width, height);
+
+    if (properties.backdrop) {
+      gl.uniform4f(cache.resolutionLocation, properties.backdrop[0],
+                   properties.backdrop[1], properties.backdrop[2], 1);
+    } else {
+      gl.uniform4f(cache.resolutionLocation, 0, 0, 0, 0);
+    }
+    gl.uniform1i(cache.subtypeLocation,
+                 properties.subtype === 'Luminosity' ? 1 : 0);
+
+    // Create a textures
+    var texture = createTexture(gl, layer, gl.TEXTURE0);
+    var maskTexture = createTexture(gl, mask, gl.TEXTURE1);
+
+
+    // Create a buffer and put a single clipspace rectangle in
+    // it (2 triangles)
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0, 0,
+      width, 0,
+      0, height,
+      0, height,
+      width, 0,
+      width, height]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(cache.positionLocation);
+    gl.vertexAttribPointer(cache.positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // draw
+    gl.clearColor(0, 0, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    gl.flush();
+
+    gl.deleteTexture(texture);
+    gl.deleteTexture(maskTexture);
+    gl.deleteBuffer(buffer);
+
+    return canvas;
+  }
+
+  var figuresVertexShaderCode = '\
+  attribute vec2 a_position;                                    \
+  attribute vec3 a_color;                                       \
+                                                                \
+  uniform vec2 u_resolution;                                    \
+  uniform vec2 u_scale;                                         \
+  uniform vec2 u_offset;                                        \
+                                                                \
+  varying vec4 v_color;                                         \
+                                                                \
+  void main() {                                                 \
+    vec2 position = (a_position + u_offset) * u_scale;          \
+    vec2 clipSpace = (position / u_resolution) * 2.0 - 1.0;     \
+    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);          \
+                                                                \
+    v_color = vec4(a_color / 255.0, 1.0);                       \
+  }                                                             ';
+
+  var figuresFragmentShaderCode = '\
+  precision mediump float;                                      \
+                                                                \
+  varying vec4 v_color;                                         \
+                                                                \
+  void main() {                                                 \
+    gl_FragColor = v_color;                                     \
+  }                                                             ';
+
+  var figuresCache = null;
+
+  function initFiguresGL() {
+    var canvas, gl;
+
+    generateGL();
+    canvas = currentCanvas;
+    currentCanvas = null;
+    gl = currentGL;
+    currentGL = null;
+
+    // setup a GLSL program
+    var vertexShader = createVertexShader(gl, figuresVertexShaderCode);
+    var fragmentShader = createFragmentShader(gl, figuresFragmentShaderCode);
+    var program = createProgram(gl, [vertexShader, fragmentShader]);
+    gl.useProgram(program);
+
+    var cache = {};
+    cache.gl = gl;
+    cache.canvas = canvas;
+    cache.resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    cache.scaleLocation = gl.getUniformLocation(program, 'u_scale');
+    cache.offsetLocation = gl.getUniformLocation(program, 'u_offset');
+    cache.positionLocation = gl.getAttribLocation(program, 'a_position');
+    cache.colorLocation = gl.getAttribLocation(program, 'a_color');
+
+    figuresCache = cache;
+  }
+
+  function drawFigures(width, height, backgroundColor, figures, context) {
+    if (!figuresCache) {
+      initFiguresGL();
+    }
+    var cache = figuresCache, canvas = cache.canvas, gl = cache.gl;
+
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.uniform2f(cache.resolutionLocation, width, height);
+
+    // count triangle points
+    var count = 0;
+    var i, ii, rows;
+    for (i = 0, ii = figures.length; i < ii; i++) {
+      switch (figures[i].type) {
+        case 'lattice':
+          rows = (figures[i].coords.length / figures[i].verticesPerRow) | 0;
+          count += (rows - 1) * (figures[i].verticesPerRow - 1) * 6;
+          break;
+        case 'triangles':
+          count += figures[i].coords.length;
+          break;
+      }
+    }
+    // transfer data
+    var coords = new Float32Array(count * 2);
+    var colors = new Uint8Array(count * 3);
+    var coordsMap = context.coords, colorsMap = context.colors;
+    var pIndex = 0, cIndex = 0;
+    for (i = 0, ii = figures.length; i < ii; i++) {
+      var figure = figures[i], ps = figure.coords, cs = figure.colors;
+      switch (figure.type) {
+        case 'lattice':
+          var cols = figure.verticesPerRow;
+          rows = (ps.length / cols) | 0;
+          for (var row = 1; row < rows; row++) {
+            var offset = row * cols + 1;
+            for (var col = 1; col < cols; col++, offset++) {
+              coords[pIndex] = coordsMap[ps[offset - cols - 1]];
+              coords[pIndex + 1] = coordsMap[ps[offset - cols - 1] + 1];
+              coords[pIndex + 2] = coordsMap[ps[offset - cols]];
+              coords[pIndex + 3] = coordsMap[ps[offset - cols] + 1];
+              coords[pIndex + 4] = coordsMap[ps[offset - 1]];
+              coords[pIndex + 5] = coordsMap[ps[offset - 1] + 1];
+              colors[cIndex] = colorsMap[cs[offset - cols - 1]];
+              colors[cIndex + 1] = colorsMap[cs[offset - cols - 1] + 1];
+              colors[cIndex + 2] = colorsMap[cs[offset - cols - 1] + 2];
+              colors[cIndex + 3] = colorsMap[cs[offset - cols]];
+              colors[cIndex + 4] = colorsMap[cs[offset - cols] + 1];
+              colors[cIndex + 5] = colorsMap[cs[offset - cols] + 2];
+              colors[cIndex + 6] = colorsMap[cs[offset - 1]];
+              colors[cIndex + 7] = colorsMap[cs[offset - 1] + 1];
+              colors[cIndex + 8] = colorsMap[cs[offset - 1] + 2];
+
+              coords[pIndex + 6] = coords[pIndex + 2];
+              coords[pIndex + 7] = coords[pIndex + 3];
+              coords[pIndex + 8] = coords[pIndex + 4];
+              coords[pIndex + 9] = coords[pIndex + 5];
+              coords[pIndex + 10] = coordsMap[ps[offset]];
+              coords[pIndex + 11] = coordsMap[ps[offset] + 1];
+              colors[cIndex + 9] = colors[cIndex + 3];
+              colors[cIndex + 10] = colors[cIndex + 4];
+              colors[cIndex + 11] = colors[cIndex + 5];
+              colors[cIndex + 12] = colors[cIndex + 6];
+              colors[cIndex + 13] = colors[cIndex + 7];
+              colors[cIndex + 14] = colors[cIndex + 8];
+              colors[cIndex + 15] = colorsMap[cs[offset]];
+              colors[cIndex + 16] = colorsMap[cs[offset] + 1];
+              colors[cIndex + 17] = colorsMap[cs[offset] + 2];
+              pIndex += 12;
+              cIndex += 18;
+            }
+          }
+          break;
+        case 'triangles':
+          for (var j = 0, jj = ps.length; j < jj; j++) {
+            coords[pIndex] = coordsMap[ps[j]];
+            coords[pIndex + 1] = coordsMap[ps[j] + 1];
+            colors[cIndex] = colorsMap[cs[j]];
+            colors[cIndex + 1] = colorsMap[cs[j] + 1];
+            colors[cIndex + 2] = colorsMap[cs[j] + 2];
+            pIndex += 2;
+            cIndex += 3;
+          }
+          break;
+      }
+    }
+
+    // draw
+    if (backgroundColor) {
+      gl.clearColor(backgroundColor[0] / 255, backgroundColor[1] / 255,
+                    backgroundColor[2] / 255, 1.0);
+    } else {
+      gl.clearColor(0, 0, 0, 0);
+    }
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    var coordsBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, coords, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(cache.positionLocation);
+    gl.vertexAttribPointer(cache.positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    var colorsBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(cache.colorLocation);
+    gl.vertexAttribPointer(cache.colorLocation, 3, gl.UNSIGNED_BYTE, false,
+                           0, 0);
+
+    gl.uniform2f(cache.scaleLocation, context.scaleX, context.scaleY);
+    gl.uniform2f(cache.offsetLocation, context.offsetX, context.offsetY);
+
+    gl.drawArrays(gl.TRIANGLES, 0, count);
+
+    gl.flush();
+
+    gl.deleteBuffer(coordsBuffer);
+    gl.deleteBuffer(colorsBuffer);
+
+    return canvas;
+  }
+
+  function cleanup() {
+    if (smaskCache && smaskCache.canvas) {
+      smaskCache.canvas.width = 0;
+      smaskCache.canvas.height = 0;
+    }
+    if (figuresCache && figuresCache.canvas) {
+      figuresCache.canvas.width = 0;
+      figuresCache.canvas.height = 0;
+    }
+    smaskCache = null;
+    figuresCache = null;
+  }
+
+  return {
+    get isEnabled() {
+      if (getDefaultSetting('disableWebGL')) {
+        return false;
+      }
+      var enabled = false;
+      try {
+        generateGL();
+        enabled = !!currentGL;
+      } catch (e) { }
+      return shadow(this, 'isEnabled', enabled);
+    },
+    composeSMask: composeSMask,
+    drawFigures: drawFigures,
+    clear: cleanup
+  };
+})();
+
+exports.WebGLUtils = WebGLUtils;
 }));
 
 
@@ -3673,240 +3896,6 @@ exports.TilingPattern = TilingPattern;
 
 (function (root, factory) {
   {
-    factory((root.pdfjsDisplayTextLayer = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayDOMUtils, root.pdfjsDisplayGlobal);
-  }
-}(this, function (exports, sharedUtil, displayDOMUtils, displayGlobal) {
-
-var Util = sharedUtil.Util;
-var createPromiseCapability = sharedUtil.createPromiseCapability;
-var CustomStyle = displayDOMUtils.CustomStyle;
-var PDFJS = displayGlobal.PDFJS;
-
-/**
- * Text layer render parameters.
- *
- * @typedef {Object} TextLayerRenderParameters
- * @property {TextContent} textContent - Text content to render (the object is
- *   returned by the page's getTextContent() method).
- * @property {HTMLElement} container - HTML element that will contain text runs.
- * @property {PDFJS.PageViewport} viewport - The target viewport to properly
- *   layout the text runs.
- * @property {Array} textDivs - (optional) HTML elements that are correspond
- *   the text items of the textContent input. This is output and shall be
- *   initially be set to empty array.
- * @property {number} timeout - (optional) Delay in milliseconds before
- *   rendering of the text  runs occurs.
- */
-var renderTextLayer = (function renderTextLayerClosure() {
-  var MAX_TEXT_DIVS_TO_RENDER = 100000;
-
-  var NonWhitespaceRegexp = /\S/;
-
-  function isAllWhitespace(str) {
-    return !NonWhitespaceRegexp.test(str);
-  }
-
-  function appendText(textDivs, viewport, geom, styles) {
-    var style = styles[geom.fontName];
-    var textDiv = document.createElement('div');
-    textDivs.push(textDiv);
-    if (isAllWhitespace(geom.str)) {
-      textDiv.dataset.isWhitespace = true;
-      return;
-    }
-    var tx = Util.transform(viewport.transform, geom.transform);
-    var angle = Math.atan2(tx[1], tx[0]);
-    if (style.vertical) {
-      angle += Math.PI / 2;
-    }
-    var fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
-    var fontAscent = fontHeight;
-    if (style.ascent) {
-      fontAscent = style.ascent * fontAscent;
-    } else if (style.descent) {
-      fontAscent = (1 + style.descent) * fontAscent;
-    }
-
-    var left;
-    var top;
-    if (angle === 0) {
-      left = tx[4];
-      top = tx[5] - fontAscent;
-    } else {
-      left = tx[4] + (fontAscent * Math.sin(angle));
-      top = tx[5] - (fontAscent * Math.cos(angle));
-    }
-    textDiv.style.left = left + 'px';
-    textDiv.style.top = top + 'px';
-    textDiv.style.fontSize = fontHeight + 'px';
-    textDiv.style.fontFamily = style.fontFamily;
-
-    textDiv.textContent = geom.str;
-    // |fontName| is only used by the Font Inspector. This test will succeed
-    // when e.g. the Font Inspector is off but the Stepper is on, but it's
-    // not worth the effort to do a more accurate test.
-    if (PDFJS.pdfBug) {
-      textDiv.dataset.fontName = geom.fontName;
-    }
-    // Storing into dataset will convert number into string.
-    if (angle !== 0) {
-      textDiv.dataset.angle = angle * (180 / Math.PI);
-    }
-    // We don't bother scaling single-char text divs, because it has very
-    // little effect on text highlighting. This makes scrolling on docs with
-    // lots of such divs a lot faster.
-    if (geom.str.length > 1) {
-      if (style.vertical) {
-        textDiv.dataset.canvasWidth = geom.height * viewport.scale;
-      } else {
-        textDiv.dataset.canvasWidth = geom.width * viewport.scale;
-      }
-    }
-  }
-
-  function render(task) {
-    if (task._canceled) {
-      return;
-    }
-    var textLayerFrag = task._container;
-    var textDivs = task._textDivs;
-    var capability = task._capability;
-    var textDivsLength = textDivs.length;
-
-    // No point in rendering many divs as it would make the browser
-    // unusable even after the divs are rendered.
-    if (textDivsLength > MAX_TEXT_DIVS_TO_RENDER) {
-      capability.resolve();
-      return;
-    }
-
-    var canvas = document.createElement('canvas');
-    canvas.mozOpaque = true;
-    var ctx = canvas.getContext('2d', {alpha: false});
-
-    var lastFontSize;
-    var lastFontFamily;
-    for (var i = 0; i < textDivsLength; i++) {
-      var textDiv = textDivs[i];
-      if (textDiv.dataset.isWhitespace !== undefined) {
-        continue;
-      }
-
-      var fontSize = textDiv.style.fontSize;
-      var fontFamily = textDiv.style.fontFamily;
-
-      // Only build font string and set to context if different from last.
-      if (fontSize !== lastFontSize || fontFamily !== lastFontFamily) {
-        ctx.font = fontSize + ' ' + fontFamily;
-        lastFontSize = fontSize;
-        lastFontFamily = fontFamily;
-      }
-
-      var width = ctx.measureText(textDiv.textContent).width;
-      if (width > 0) {
-        textLayerFrag.appendChild(textDiv);
-        var transform;
-        if (textDiv.dataset.canvasWidth !== undefined) {
-          // Dataset values come of type string.
-          var textScale = textDiv.dataset.canvasWidth / width;
-          transform = 'scaleX(' + textScale + ')';
-        } else {
-          transform = '';
-        }
-        var rotation = textDiv.dataset.angle;
-        if (rotation) {
-          transform = 'rotate(' + rotation + 'deg) ' + transform;
-        }
-        if (transform) {
-          CustomStyle.setProp('transform' , textDiv, transform);
-        }
-      }
-    }
-    capability.resolve();
-  }
-
-  /**
-   * Text layer rendering task.
-   *
-   * @param {TextContent} textContent
-   * @param {HTMLElement} container
-   * @param {PDFJS.PageViewport} viewport
-   * @param {Array} textDivs
-   * @private
-   */
-  function TextLayerRenderTask(textContent, container, viewport, textDivs) {
-    this._textContent = textContent;
-    this._container = container;
-    this._viewport = viewport;
-    textDivs = textDivs || [];
-    this._textDivs = textDivs;
-    this._canceled = false;
-    this._capability = createPromiseCapability();
-    this._renderTimer = null;
-  }
-  TextLayerRenderTask.prototype = {
-    get promise() {
-      return this._capability.promise;
-    },
-
-    cancel: function TextLayer_cancel() {
-      this._canceled = true;
-      if (this._renderTimer !== null) {
-        clearTimeout(this._renderTimer);
-        this._renderTimer = null;
-      }
-      this._capability.reject('canceled');
-    },
-
-    _render: function TextLayer_render(timeout) {
-      var textItems = this._textContent.items;
-      var styles = this._textContent.styles;
-      var textDivs = this._textDivs;
-      var viewport = this._viewport;
-      for (var i = 0, len = textItems.length; i < len; i++) {
-        appendText(textDivs, viewport, textItems[i], styles);
-      }
-
-      if (!timeout) { // Render right away
-        render(this);
-      } else { // Schedule
-        var self = this;
-        this._renderTimer = setTimeout(function() {
-          render(self);
-          self._renderTimer = null;
-        }, timeout);
-      }
-    }
-  };
-
-
-  /**
-   * Starts rendering of the text layer.
-   *
-   * @param {TextLayerRenderParameters} renderParameters
-   * @returns {TextLayerRenderTask}
-   */
-  function renderTextLayer(renderParameters) {
-    var task = new TextLayerRenderTask(renderParameters.textContent,
-                                       renderParameters.container,
-                                       renderParameters.viewport,
-                                       renderParameters.textDivs);
-    task._render(renderParameters.timeout);
-    return task;
-  }
-
-  return renderTextLayer;
-})();
-
-PDFJS.renderTextLayer = renderTextLayer;
-
-exports.renderTextLayer = renderTextLayer;
-}));
-
-
-(function (root, factory) {
-  {
     factory((root.pdfjsDisplayCanvas = {}), root.pdfjsSharedUtil,
       root.pdfjsDisplayDOMUtils, root.pdfjsDisplayPatternHelper,
       root.pdfjsDisplayWebGL);
@@ -3925,12 +3914,14 @@ var assert = sharedUtil.assert;
 var info = sharedUtil.info;
 var isNum = sharedUtil.isNum;
 var isArray = sharedUtil.isArray;
+var isLittleEndian = sharedUtil.isLittleEndian;
 var error = sharedUtil.error;
 var shadow = sharedUtil.shadow;
 var warn = sharedUtil.warn;
 var TilingPattern = displayPatternHelper.TilingPattern;
 var getShadingPatternFromIR = displayPatternHelper.getShadingPatternFromIR;
 var WebGLUtils = displayWebGL.WebGLUtils;
+var hasCanvasTypedArrays = displayDOMUtils.hasCanvasTypedArrays;
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -3948,6 +3939,18 @@ var COMPILE_TYPE3_GLYPHS = true;
 var MAX_SIZE_TO_COMPILE = 1000;
 
 var FULL_CHUNK_HEIGHT = 16;
+
+var HasCanvasTypedArraysCached = {
+  get value() {
+    return shadow(HasCanvasTypedArraysCached, 'value', hasCanvasTypedArrays());
+  }
+};
+
+var IsLittleEndianCached = {
+  get value() {
+    return shadow(IsLittleEndianCached, 'value', isLittleEndian());
+  }
+};
 
 function createScratchCanvas(width, height) {
   var canvas = document.createElement('canvas');
@@ -4387,13 +4390,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     if (imgData.kind === ImageKind.GRAYSCALE_1BPP) {
       // Grayscale, 1 bit per pixel (i.e. black-and-white).
       var srcLength = src.byteLength;
-      var dest32 = PDFJS.hasCanvasTypedArrays ? new Uint32Array(dest.buffer) :
-        new Uint32ArrayView(dest);
+      var dest32 = HasCanvasTypedArraysCached.value ?
+        new Uint32Array(dest.buffer) : new Uint32ArrayView(dest);
       var dest32DataLength = dest32.length;
       var fullSrcDiff = (width + 7) >> 3;
       var white = 0xFFFFFFFF;
-      var black = (PDFJS.isLittleEndian || !PDFJS.hasCanvasTypedArrays) ?
-        0xFF000000 : 0x000000FF;
+      var black = (IsLittleEndianCached.value ||
+                   !HasCanvasTypedArraysCached.value) ? 0xFF000000 : 0x000000FF;
       for (i = 0; i < totalChunks; i++) {
         thisChunkHeight =
           (i < fullChunks) ? FULL_CHUNK_HEIGHT : partialChunkHeight;
@@ -6127,15 +6130,15 @@ exports.createScratchCanvas = createScratchCanvas;
   {
     factory((root.pdfjsDisplayAPI = {}), root.pdfjsSharedUtil,
       root.pdfjsDisplayFontLoader, root.pdfjsDisplayCanvas,
-      root.pdfjsDisplayMetadata, root.pdfjsDisplayDOMUtils,
-      root.pdfjsDisplayGlobal);
+      root.pdfjsDisplayMetadata, root.pdfjsDisplayDOMUtils);
   }
 }(this, function (exports, sharedUtil, displayFontLoader, displayCanvas,
-                  displayMetadata, displayDOMUtils, displayGlobal, amdRequire) {
+                  displayMetadata, displayDOMUtils, amdRequire) {
 
 var InvalidPDFException = sharedUtil.InvalidPDFException;
 var MessageHandler = sharedUtil.MessageHandler;
 var MissingPDFException = sharedUtil.MissingPDFException;
+var PageViewport = sharedUtil.PageViewport;
 var PasswordResponses = sharedUtil.PasswordResponses;
 var PasswordException = sharedUtil.PasswordException;
 var StatTimer = sharedUtil.StatTimer;
@@ -6152,195 +6155,22 @@ var isArrayBuffer = sharedUtil.isArrayBuffer;
 var isSameOrigin = sharedUtil.isSameOrigin;
 var loadJpegStream = sharedUtil.loadJpegStream;
 var stringToBytes = sharedUtil.stringToBytes;
+var globalScope = sharedUtil.globalScope;
 var warn = sharedUtil.warn;
 var FontFaceObject = displayFontLoader.FontFaceObject;
 var FontLoader = displayFontLoader.FontLoader;
 var CanvasGraphics = displayCanvas.CanvasGraphics;
 var createScratchCanvas = displayCanvas.createScratchCanvas;
 var Metadata = displayMetadata.Metadata;
-var PDFJS = displayGlobal.PDFJS;
-var globalScope = displayGlobal.globalScope;
+var getDefaultSetting = displayDOMUtils.getDefaultSetting;
 
 var DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 
+var isWorkerDisabled = false;
+var workerSrc;
+var isPostMessageTransfersDisabled = false;
+
   var fakeWorkerFilesLoader = null;
-
-/**
- * The maximum allowed image size in total pixels e.g. width * height. Images
- * above this value will not be drawn. Use -1 for no limit.
- * @var {number}
- */
-PDFJS.maxImageSize = (PDFJS.maxImageSize === undefined ?
-                      -1 : PDFJS.maxImageSize);
-
-/**
- * The url of where the predefined Adobe CMaps are located. Include trailing
- * slash.
- * @var {string}
- */
-PDFJS.cMapUrl = (PDFJS.cMapUrl === undefined ? null : PDFJS.cMapUrl);
-
-/**
- * Specifies if CMaps are binary packed.
- * @var {boolean}
- */
-PDFJS.cMapPacked = PDFJS.cMapPacked === undefined ? false : PDFJS.cMapPacked;
-
-/**
- * By default fonts are converted to OpenType fonts and loaded via font face
- * rules. If disabled, the font will be rendered using a built in font renderer
- * that constructs the glyphs with primitive path commands.
- * @var {boolean}
- */
-PDFJS.disableFontFace = (PDFJS.disableFontFace === undefined ?
-                         false : PDFJS.disableFontFace);
-
-/**
- * Path for image resources, mainly for annotation icons. Include trailing
- * slash.
- * @var {string}
- */
-PDFJS.imageResourcesPath = (PDFJS.imageResourcesPath === undefined ?
-                            '' : PDFJS.imageResourcesPath);
-
-/**
- * Disable the web worker and run all code on the main thread. This will happen
- * automatically if the browser doesn't support workers or sending typed arrays
- * to workers.
- * @var {boolean}
- */
-PDFJS.disableWorker = (PDFJS.disableWorker === undefined ?
-                       false : PDFJS.disableWorker);
-
-/**
- * Path and filename of the worker file. Required when the worker is enabled in
- * development mode. If unspecified in the production build, the worker will be
- * loaded based on the location of the pdf.js file. It is recommended that
- * the workerSrc is set in a custom application to prevent issues caused by
- * third-party frameworks and libraries.
- * @var {string}
- */
-PDFJS.workerSrc = (PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc);
-
-/**
- * Disable range request loading of PDF files. When enabled and if the server
- * supports partial content requests then the PDF will be fetched in chunks.
- * Enabled (false) by default.
- * @var {boolean}
- */
-PDFJS.disableRange = (PDFJS.disableRange === undefined ?
-                      false : PDFJS.disableRange);
-
-/**
- * Disable streaming of PDF file data. By default PDF.js attempts to load PDF
- * in chunks. This default behavior can be disabled.
- * @var {boolean}
- */
-PDFJS.disableStream = (PDFJS.disableStream === undefined ?
-                       false : PDFJS.disableStream);
-
-/**
- * Disable pre-fetching of PDF file data. When range requests are enabled PDF.js
- * will automatically keep fetching more data even if it isn't needed to display
- * the current page. This default behavior can be disabled.
- *
- * NOTE: It is also necessary to disable streaming, see above,
- *       in order for disabling of pre-fetching to work correctly.
- * @var {boolean}
- */
-PDFJS.disableAutoFetch = (PDFJS.disableAutoFetch === undefined ?
-                          false : PDFJS.disableAutoFetch);
-
-/**
- * Enables special hooks for debugging PDF.js.
- * @var {boolean}
- */
-PDFJS.pdfBug = (PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug);
-
-/**
- * Enables transfer usage in postMessage for ArrayBuffers.
- * @var {boolean}
- */
-PDFJS.postMessageTransfers = (PDFJS.postMessageTransfers === undefined ?
-                              true : PDFJS.postMessageTransfers);
-
-/**
- * Disables URL.createObjectURL usage.
- * @var {boolean}
- */
-PDFJS.disableCreateObjectURL = (PDFJS.disableCreateObjectURL === undefined ?
-                                false : PDFJS.disableCreateObjectURL);
-
-/**
- * Disables WebGL usage.
- * @var {boolean}
- */
-PDFJS.disableWebGL = (PDFJS.disableWebGL === undefined ?
-                      true : PDFJS.disableWebGL);
-
-/**
- * Disables fullscreen support, and by extension Presentation Mode,
- * in browsers which support the fullscreen API.
- * @var {boolean}
- */
-PDFJS.disableFullscreen = (PDFJS.disableFullscreen === undefined ?
-                           false : PDFJS.disableFullscreen);
-
-/**
- * Enables CSS only zooming.
- * @var {boolean}
- */
-PDFJS.useOnlyCssZoom = (PDFJS.useOnlyCssZoom === undefined ?
-                        false : PDFJS.useOnlyCssZoom);
-
-/**
- * The maximum supported canvas size in total pixels e.g. width * height.
- * The default value is 4096 * 4096. Use -1 for no limit.
- * @var {number}
- */
-PDFJS.maxCanvasPixels = (PDFJS.maxCanvasPixels === undefined ?
-                         16777216 : PDFJS.maxCanvasPixels);
-
-/**
- * (Deprecated) Opens external links in a new window if enabled.
- * The default behavior opens external links in the PDF.js window.
- *
- * NOTE: This property has been deprecated, please use
- *       `PDFJS.externalLinkTarget = PDFJS.LinkTarget.BLANK` instead.
- * @var {boolean}
- */
-PDFJS.openExternalLinksInNewWindow = (
-  PDFJS.openExternalLinksInNewWindow === undefined ?
-    false : PDFJS.openExternalLinksInNewWindow);
-
-/**
- * Specifies the |target| attribute for external links.
- * The constants from PDFJS.LinkTarget should be used:
- *  - NONE [default]
- *  - SELF
- *  - BLANK
- *  - PARENT
- *  - TOP
- * @var {number}
- */
-PDFJS.externalLinkTarget = (PDFJS.externalLinkTarget === undefined ?
-                            PDFJS.LinkTarget.NONE : PDFJS.externalLinkTarget);
-
-/**
- * Specifies the |rel| attribute for external links. Defaults to stripping
- * the referrer.
- * @var {string}
- */
-PDFJS.externalLinkRel = (PDFJS.externalLinkRel === undefined ?
-                         'noreferrer' : PDFJS.externalLinkRel);
-
-/**
-  * Determines if we can eval strings as JS. Primarily used to improve
-  * performance for font rendering.
-  * @var {boolean}
-  */
-PDFJS.isEvalSupported = (PDFJS.isEvalSupported === undefined ?
-                         true : PDFJS.isEvalSupported);
 
 /**
  * Document initialization / loading parameters object.
@@ -6401,10 +6231,8 @@ PDFJS.isEvalSupported = (PDFJS.isEvalSupported === undefined ?
  *
  * @return {PDFDocumentLoadingTask}
  */
-PDFJS.getDocument = function getDocument(src,
-                                         pdfDataRangeTransport,
-                                         passwordCallback,
-                                         progressCallback) {
+function getDocument(src, pdfDataRangeTransport,
+                     passwordCallback, progressCallback) {
   var task = new PDFDocumentLoadingTask();
 
   // Support of the obsolete arguments (for compatibility with API v1.0)
@@ -6505,7 +6333,7 @@ PDFJS.getDocument = function getDocument(src,
   }).catch(task._capability.reject);
 
   return task;
-};
+}
 
 /**
  * Starts fetching of specified PDF document/data.
@@ -6522,8 +6350,8 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
 
-  source.disableAutoFetch = PDFJS.disableAutoFetch;
-  source.disableStream = PDFJS.disableStream;
+  source.disableAutoFetch = getDefaultSetting('disableAutoFetch');
+  source.disableStream = getDefaultSetting('disableStream');
   source.chunkedViewerLoading = !!pdfDataRangeTransport;
   if (pdfDataRangeTransport) {
     source.length = pdfDataRangeTransport.length;
@@ -6532,13 +6360,14 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
     source: source,
-    disableRange: PDFJS.disableRange,
-    maxImageSize: PDFJS.maxImageSize,
-    cMapUrl: PDFJS.cMapUrl,
-    cMapPacked: PDFJS.cMapPacked,
-    disableFontFace: PDFJS.disableFontFace,
-    disableCreateObjectURL: PDFJS.disableCreateObjectURL,
-    postMessageTransfers: PDFJS.postMessageTransfers,
+    disableRange: getDefaultSetting('disableRange'),
+    maxImageSize: getDefaultSetting('maxImageSize'),
+    cMapUrl: getDefaultSetting('cMapUrl'),
+    cMapPacked: getDefaultSetting('cMapPacked'),
+    disableFontFace: getDefaultSetting('disableFontFace'),
+    disableCreateObjectURL: getDefaultSetting('disableCreateObjectURL'),
+    postMessageTransfers: getDefaultSetting('postMessageTransfers') &&
+                          !isPostMessageTransfersDisabled,
   }).then(function (workerId) {
     if (worker.destroyed) {
       throw new Error('Worker was destroyed');
@@ -6589,7 +6418,7 @@ var PDFDocumentLoadingTask = (function PDFDocumentLoadingTaskClosure() {
 
     /**
      * Callback to when unsupported feature is used. The callback receives
-     * an {PDFJS.UNSUPPORTED_FEATURES} argument.
+     * an {UNSUPPORTED_FEATURES} argument.
      */
     this.onUnsupportedFeature = null;
   }
@@ -6641,7 +6470,7 @@ var PDFDocumentLoadingTask = (function PDFDocumentLoadingTaskClosure() {
 /**
  * Abstract class to support range requests file loading.
  * @class
- * @alias PDFJS.PDFDataRangeTransport
+ * @alias PDFDataRangeTransport
  * @param {number} length
  * @param {Uint8Array} initialData
  */
@@ -6712,8 +6541,6 @@ var PDFDataRangeTransport = (function pdfDataRangeTransportClosure() {
   };
   return PDFDataRangeTransport;
 })();
-
-PDFJS.PDFDataRangeTransport = PDFDataRangeTransport;
 
 /**
  * Proxy to a PDFDocument in the worker thread. Also, contains commonly used
@@ -6917,7 +6744,7 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
  *
  * @typedef {Object} RenderParameters
  * @property {Object} canvasContext - A 2D context of a DOM Canvas object.
- * @property {PDFJS.PageViewport} viewport - Rendering viewport obtained by
+ * @property {PageViewport} viewport - Rendering viewport obtained by
  *                                calling of PDFPage.getViewport method.
  * @property {string} intent - Rendering intent, can be 'display' or 'print'
  *                    (default value is 'display').
@@ -6951,7 +6778,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     this.pageInfo = pageInfo;
     this.transport = transport;
     this.stats = new StatTimer();
-    this.stats.enabled = !!globalScope.PDFJS.enableStats;
+    this.stats.enabled = getDefaultSetting('enableStats');
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
     this.cleanupAfterRender = false;
@@ -6990,14 +6817,14 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      * @param {number} scale The desired scale of the viewport.
      * @param {number} rotate Degrees to rotate the viewport. If omitted this
      * defaults to the page rotation.
-     * @return {PDFJS.PageViewport} Contains 'width' and 'height' properties
+     * @return {PageViewport} Contains 'width' and 'height' properties
      * along with transforms required for rendering.
      */
     getViewport: function PDFPageProxy_getViewport(scale, rotate) {
       if (arguments.length < 2) {
         rotate = this.rotate;
       }
-      return new PDFJS.PageViewport(this.view, scale, rotate, 0, 0);
+      return new PageViewport(this.view, scale, rotate, 0, 0);
     },
     /**
      * @param {GetAnnotationsParameters} params - Annotation parameters.
@@ -7285,8 +7112,11 @@ var PDFWorker = (function PDFWorkerClosure() {
   var nextFakeWorkerId = 0;
 
   function getWorkerSrc() {
-    if (PDFJS.workerSrc) {
-      return PDFJS.workerSrc;
+    if (typeof workerSrc !== 'undefined') {
+      return workerSrc;
+    }
+    if (getDefaultSetting('workerSrc')) {
+      return getDefaultSetting('workerSrc');
     }
     error('No PDFJS.workerSrc specified');
   }
@@ -7349,7 +7179,8 @@ var PDFWorker = (function PDFWorkerClosure() {
       // all requirements to run parts of pdf.js in a web worker.
       // Right now, the requirement is, that an Uint8Array is still an
       // Uint8Array as it arrives on the worker. (Chrome added this with v.15.)
-      if (!globalScope.PDFJS.disableWorker && typeof Worker !== 'undefined') {
+      if (!isWorkerDisabled && !getDefaultSetting('disableWorker') &&
+          typeof Worker !== 'undefined') {
         var workerSrc = getWorkerSrc();
 
         try {
@@ -7357,11 +7188,32 @@ var PDFWorker = (function PDFWorkerClosure() {
           // https://bugzilla.mozilla.org/show_bug.cgi?id=683280
           var worker = new Worker(workerSrc);
           var messageHandler = new MessageHandler('main', 'worker', worker);
-          messageHandler.on('test', function PDFWorker_test(data) {
+          var terminateEarly = function() {
+            worker.removeEventListener('error', onWorkerError);
+            messageHandler.destroy();
+            worker.terminate();
             if (this.destroyed) {
               this._readyCapability.reject(new Error('Worker was destroyed'));
-              messageHandler.destroy();
-              worker.terminate();
+            } else {
+              // Fall back to fake worker if the termination is caused by an
+              // error (e.g. NetworkError / SecurityError).
+              this._setupFakeWorker();
+            }
+          }.bind(this);
+
+          var onWorkerError = function(event) {
+            if (!this._webWorker) {
+              // Worker failed to initialize due to an error. Clean up and fall
+              // back to the fake worker.
+              terminateEarly();
+            }
+          }.bind(this);
+          worker.addEventListener('error', onWorkerError);
+
+          messageHandler.on('test', function PDFWorker_test(data) {
+            worker.removeEventListener('error', onWorkerError);
+            if (this.destroyed) {
+              terminateEarly();
               return; // worker was destroyed
             }
             var supportTypedArray = data && data.supportTypedArray;
@@ -7370,10 +7222,10 @@ var PDFWorker = (function PDFWorkerClosure() {
               this._port = worker;
               this._webWorker = worker;
               if (!data.supportTransfers) {
-                PDFJS.postMessageTransfers = false;
+                isPostMessageTransfersDisabled = true;
               }
               this._readyCapability.resolve();
-              // Send global PDFJS setting, e.g. verbosity level.
+              // Send global setting, e.g. verbosity level.
               messageHandler.send('configure', {
                 verbosity: getVerbosityLevel()
               });
@@ -7392,10 +7244,9 @@ var PDFWorker = (function PDFWorkerClosure() {
           });
 
           messageHandler.on('ready', function (data) {
+            worker.removeEventListener('error', onWorkerError);
             if (this.destroyed) {
-              this._readyCapability.reject(new Error('Worker was destroyed'));
-              messageHandler.destroy();
-              worker.terminate();
+              terminateEarly();
               return; // worker was destroyed
             }
             try {
@@ -7407,8 +7258,10 @@ var PDFWorker = (function PDFWorkerClosure() {
           }.bind(this));
 
           var sendTest = function () {
-            var testObj = new Uint8Array(
-              [PDFJS.postMessageTransfers ? 255 : 0]);
+            var postMessageTransfers =
+              getDefaultSetting('postMessageTransfers') &&
+              !isPostMessageTransfersDisabled;
+            var testObj = new Uint8Array([postMessageTransfers ? 255 : 0]);
             // Some versions of Opera throw a DATA_CLONE_ERR on serializing the
             // typed array. Also, checking if we can use transfers.
             try {
@@ -7436,9 +7289,9 @@ var PDFWorker = (function PDFWorkerClosure() {
     },
 
     _setupFakeWorker: function PDFWorker_setupFakeWorker() {
-      if (!globalScope.PDFJS.disableWorker) {
+      if (!isWorkerDisabled && !getDefaultSetting('disableWorker')) {
         warn('Setting up fake worker.');
-        globalScope.PDFJS.disableWorker = true;
+        isWorkerDisabled = true;
       }
 
       setupFakeWorkerGlobal().then(function (WorkerMessageHandler) {
@@ -7501,7 +7354,6 @@ var PDFWorker = (function PDFWorkerClosure() {
 
   return PDFWorker;
 })();
-PDFJS.PDFWorker = PDFWorker;
 
 /**
  * For internal use only.
@@ -7701,7 +7553,20 @@ var WorkerTransport = (function WorkerTransportClosure() {
               this.commonObjs.resolve(id, error);
               break;
             } else {
-              font = new FontFaceObject(exportedData);
+              var fontRegistry = null;
+              if (getDefaultSetting('pdfBug') && globalScope.FontInspector &&
+                  globalScope['FontInspector'].enabled) {
+                fontRegistry = {
+                  registerFont: function (font, url) {
+                    globalScope['FontInspector'].fontAdded(font, url);
+                  }
+                };
+              }
+              font = new FontFaceObject(exportedData, {
+                isEvalSuported: getDefaultSetting('isEvalSupported'),
+                disableFontFace: getDefaultSetting('disableFontFace'),
+                fontRegistry: fontRegistry
+              });
             }
 
             this.fontLoader.bind(
@@ -7801,7 +7666,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
         if (loadingTask.onUnsupportedFeature) {
           loadingTask.onUnsupportedFeature(featureId);
         }
-        PDFJS.UnsupportedManager.notify(featureId);
+        _UnsupportedManager.notify(featureId);
       }, this);
 
       messageHandler.on('JpegDecode', function(data) {
@@ -8140,7 +8005,7 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
       if (this.cancelled) {
         return;
       }
-      if (PDFJS.pdfBug && 'StepperManager' in globalScope &&
+      if (getDefaultSetting('pdfBug') && globalScope.StepperManager &&
           globalScope.StepperManager.enabled) {
         this.stepper = globalScope.StepperManager.create(this.pageNumber - 1);
         this.stepper.init(this.operatorList);
@@ -8196,7 +8061,7 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
     },
 
     _scheduleNext: function InternalRenderTask__scheduleNext() {
-      if (this.useRequestAnimationFrame) {
+      if (this.useRequestAnimationFrame && typeof window !== 'undefined') {
         window.requestAnimationFrame(this._nextBound);
       } else {
         Promise.resolve(undefined).then(this._nextBound);
@@ -8229,7 +8094,7 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
  * (Deprecated) Global observer of unsupported feature usages. Use
  * onUnsupportedFeature callback of the {PDFDocumentLoadingTask} instance.
  */
-PDFJS.UnsupportedManager = (function UnsupportedManagerClosure() {
+var _UnsupportedManager = (function UnsupportedManagerClosure() {
   var listeners = [];
   return {
     listen: function (cb) {
@@ -8245,19 +8110,282 @@ PDFJS.UnsupportedManager = (function UnsupportedManagerClosure() {
   };
 })();
 
-exports.getDocument = PDFJS.getDocument;
+if (typeof pdfjsVersion !== 'undefined') {
+  exports.version = pdfjsVersion;
+}
+if (typeof pdfjsBuild !== 'undefined') {
+  exports.build = pdfjsBuild;
+}
+
+exports.getDocument = getDocument;
 exports.PDFDataRangeTransport = PDFDataRangeTransport;
+exports.PDFWorker = PDFWorker;
 exports.PDFDocumentProxy = PDFDocumentProxy;
 exports.PDFPageProxy = PDFPageProxy;
+exports._UnsupportedManager = _UnsupportedManager;
+}));
+
+
+(function (root, factory) {
+  {
+    factory((root.pdfjsDisplayGlobal = {}), root.pdfjsSharedUtil,
+      root.pdfjsDisplayDOMUtils, root.pdfjsDisplayAPI,
+      root.pdfjsDisplayAnnotationLayer, root.pdfjsDisplayTextLayer,
+      root.pdfjsDisplayMetadata, root.pdfjsDisplaySVG);
+  }
+}(this, function (exports, sharedUtil, displayDOMUtils, displayAPI,
+                  displayAnnotationLayer, displayTextLayer, displayMetadata,
+                  displaySVG) {
+
+  var globalScope = sharedUtil.globalScope;
+  var deprecated = sharedUtil.deprecated;
+  var warn = sharedUtil.warn;
+  var LinkTarget = displayDOMUtils.LinkTarget;
+
+  var isWorker = (typeof window === 'undefined');
+
+  // The global PDFJS object is now deprecated and will not be supported in
+  // the future. The members below are maintained for backward  compatibility
+  // and shall not be extended or modified. If the global.js is included as
+  // a module, we will create a global PDFJS object instance or use existing.
+  if (!globalScope.PDFJS) {
+    globalScope.PDFJS = {};
+  }
+  var PDFJS = globalScope.PDFJS;
+
+  if (typeof pdfjsVersion !== 'undefined') {
+    PDFJS.version = pdfjsVersion;
+  }
+  if (typeof pdfjsBuild !== 'undefined') {
+    PDFJS.build = pdfjsBuild;
+  }
+
+  PDFJS.pdfBug = false;
+
+  if (PDFJS.verbosity !== undefined) {
+    sharedUtil.setVerbosityLevel(PDFJS.verbosity);
+  }
+  delete PDFJS.verbosity;
+  Object.defineProperty(PDFJS, 'verbosity', {
+    get: function () { return sharedUtil.getVerbosityLevel(); },
+    set: function (level) { sharedUtil.setVerbosityLevel(level); },
+    enumerable: true,
+    configurable: true
+  });
+
+  PDFJS.VERBOSITY_LEVELS = sharedUtil.VERBOSITY_LEVELS;
+  PDFJS.OPS = sharedUtil.OPS;
+  PDFJS.UNSUPPORTED_FEATURES = sharedUtil.UNSUPPORTED_FEATURES;
+  PDFJS.isValidUrl = sharedUtil.isValidUrl;
+  PDFJS.shadow = sharedUtil.shadow;
+  PDFJS.createBlob = sharedUtil.createBlob;
+  PDFJS.createObjectURL = function PDFJS_createObjectURL(data, contentType) {
+    return sharedUtil.createObjectURL(data, contentType,
+                                      PDFJS.disableCreateObjectURL);
+  };
+  Object.defineProperty(PDFJS, 'isLittleEndian', {
+    configurable: true,
+    get: function PDFJS_isLittleEndian() {
+      var value = sharedUtil.isLittleEndian();
+      return sharedUtil.shadow(PDFJS, 'isLittleEndian', value);
+    }
+  });
+  PDFJS.removeNullCharacters = sharedUtil.removeNullCharacters;
+  PDFJS.PasswordResponses = sharedUtil.PasswordResponses;
+  PDFJS.PasswordException = sharedUtil.PasswordException;
+  PDFJS.UnknownErrorException = sharedUtil.UnknownErrorException;
+  PDFJS.InvalidPDFException = sharedUtil.InvalidPDFException;
+  PDFJS.MissingPDFException = sharedUtil.MissingPDFException;
+  PDFJS.UnexpectedResponseException = sharedUtil.UnexpectedResponseException;
+  PDFJS.Util = sharedUtil.Util;
+  PDFJS.PageViewport = sharedUtil.PageViewport;
+  PDFJS.createPromiseCapability = sharedUtil.createPromiseCapability;
+
+  /**
+   * The maximum allowed image size in total pixels e.g. width * height. Images
+   * above this value will not be drawn. Use -1 for no limit.
+   * @var {number}
+   */
+  PDFJS.maxImageSize = (PDFJS.maxImageSize === undefined ?
+                        -1 : PDFJS.maxImageSize);
+
+  /**
+   * The url of where the predefined Adobe CMaps are located. Include trailing
+   * slash.
+   * @var {string}
+   */
+  PDFJS.cMapUrl = (PDFJS.cMapUrl === undefined ? null : PDFJS.cMapUrl);
+
+  /**
+   * Specifies if CMaps are binary packed.
+   * @var {boolean}
+   */
+  PDFJS.cMapPacked = PDFJS.cMapPacked === undefined ? false : PDFJS.cMapPacked;
+
+  /**
+   * By default fonts are converted to OpenType fonts and loaded via font face
+   * rules. If disabled, the font will be rendered using a built in font
+   * renderer that constructs the glyphs with primitive path commands.
+   * @var {boolean}
+   */
+  PDFJS.disableFontFace = (PDFJS.disableFontFace === undefined ?
+                           false : PDFJS.disableFontFace);
+
+  /**
+   * Path for image resources, mainly for annotation icons. Include trailing
+   * slash.
+   * @var {string}
+   */
+  PDFJS.imageResourcesPath = (PDFJS.imageResourcesPath === undefined ?
+                              '' : PDFJS.imageResourcesPath);
+
+  /**
+   * Disable the web worker and run all code on the main thread. This will
+   * happen automatically if the browser doesn't support workers or sending
+   * typed arrays to workers.
+   * @var {boolean}
+   */
+  PDFJS.disableWorker = (PDFJS.disableWorker === undefined ?
+                         false : PDFJS.disableWorker);
+
+  /**
+   * Path and filename of the worker file. Required when the worker is enabled
+   * in development mode. If unspecified in the production build, the worker
+   * will be loaded based on the location of the pdf.js file. It is recommended
+   * that the workerSrc is set in a custom application to prevent issues caused
+   * by third-party frameworks and libraries.
+   * @var {string}
+   */
+  PDFJS.workerSrc = (PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc);
+
+  /**
+   * Disable range request loading of PDF files. When enabled and if the server
+   * supports partial content requests then the PDF will be fetched in chunks.
+   * Enabled (false) by default.
+   * @var {boolean}
+   */
+  PDFJS.disableRange = (PDFJS.disableRange === undefined ?
+                        false : PDFJS.disableRange);
+
+  /**
+   * Disable streaming of PDF file data. By default PDF.js attempts to load PDF
+   * in chunks. This default behavior can be disabled.
+   * @var {boolean}
+   */
+  PDFJS.disableStream = (PDFJS.disableStream === undefined ?
+                         false : PDFJS.disableStream);
+
+  /**
+   * Disable pre-fetching of PDF file data. When range requests are enabled
+   * PDF.js will automatically keep fetching more data even if it isn't needed
+   * to display the current page. This default behavior can be disabled.
+   *
+   * NOTE: It is also necessary to disable streaming, see above,
+   *       in order for disabling of pre-fetching to work correctly.
+   * @var {boolean}
+   */
+  PDFJS.disableAutoFetch = (PDFJS.disableAutoFetch === undefined ?
+                            false : PDFJS.disableAutoFetch);
+
+  /**
+   * Enables special hooks for debugging PDF.js.
+   * @var {boolean}
+   */
+  PDFJS.pdfBug = (PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug);
+
+  /**
+   * Enables transfer usage in postMessage for ArrayBuffers.
+   * @var {boolean}
+   */
+  PDFJS.postMessageTransfers = (PDFJS.postMessageTransfers === undefined ?
+                                true : PDFJS.postMessageTransfers);
+
+  /**
+   * Disables URL.createObjectURL usage.
+   * @var {boolean}
+   */
+  PDFJS.disableCreateObjectURL = (PDFJS.disableCreateObjectURL === undefined ?
+                                  false : PDFJS.disableCreateObjectURL);
+
+  /**
+   * Disables WebGL usage.
+   * @var {boolean}
+   */
+  PDFJS.disableWebGL = (PDFJS.disableWebGL === undefined ?
+                        true : PDFJS.disableWebGL);
+
+  /**
+   * Specifies the |target| attribute for external links.
+   * The constants from PDFJS.LinkTarget should be used:
+   *  - NONE [default]
+   *  - SELF
+   *  - BLANK
+   *  - PARENT
+   *  - TOP
+   * @var {number}
+   */
+  PDFJS.externalLinkTarget = (PDFJS.externalLinkTarget === undefined ?
+                              LinkTarget.NONE : PDFJS.externalLinkTarget);
+
+  /**
+   * Specifies the |rel| attribute for external links. Defaults to stripping
+   * the referrer.
+   * @var {string}
+   */
+  PDFJS.externalLinkRel = (PDFJS.externalLinkRel === undefined ?
+                           'noreferrer' : PDFJS.externalLinkRel);
+
+  /**
+    * Determines if we can eval strings as JS. Primarily used to improve
+    * performance for font rendering.
+    * @var {boolean}
+    */
+  PDFJS.isEvalSupported = (PDFJS.isEvalSupported === undefined ?
+                           true : PDFJS.isEvalSupported);
+
+
+  PDFJS.getDocument = displayAPI.getDocument;
+  PDFJS.PDFDataRangeTransport = displayAPI.PDFDataRangeTransport;
+  PDFJS.PDFWorker = displayAPI.PDFWorker;
+
+  Object.defineProperty(PDFJS, 'hasCanvasTypedArrays', {
+    configurable: true,
+    get: function PDFJS_hasCanvasTypedArrays() {
+      var value = displayDOMUtils.hasCanvasTypedArrays();
+      return sharedUtil.shadow(PDFJS, 'hasCanvasTypedArrays', value);
+    }
+  });
+  PDFJS.CustomStyle = displayDOMUtils.CustomStyle;
+  PDFJS.LinkTarget = LinkTarget;
+  PDFJS.addLinkAttributes = displayDOMUtils.addLinkAttributes;
+  PDFJS.getFilenameFromUrl = displayDOMUtils.getFilenameFromUrl;
+  PDFJS.isExternalLinkTargetSet = displayDOMUtils.isExternalLinkTargetSet;
+
+  PDFJS.AnnotationLayer = displayAnnotationLayer.AnnotationLayer;
+
+  PDFJS.renderTextLayer = displayTextLayer.renderTextLayer;
+
+  PDFJS.Metadata = displayMetadata.Metadata;
+
+  PDFJS.SVGGraphics = displaySVG.SVGGraphics;
+
+  PDFJS.UnsupportedManager = displayAPI._UnsupportedManager;
+
+  exports.globalScope = globalScope;
+  exports.isWorker = isWorker;
+  exports.PDFJS = globalScope.PDFJS;
 }));
 
 
   }).call(pdfjsLibs);
 
   exports.PDFJS = pdfjsLibs.pdfjsDisplayGlobal.PDFJS;
+  exports.build = pdfjsLibs.pdfjsDisplayAPI.build;
+  exports.version = pdfjsLibs.pdfjsDisplayAPI.version;
   exports.getDocument = pdfjsLibs.pdfjsDisplayAPI.getDocument;
   exports.PDFDataRangeTransport =
     pdfjsLibs.pdfjsDisplayAPI.PDFDataRangeTransport;
+  exports.PDFWorker = pdfjsLibs.pdfjsDisplayAPI.PDFWorker;
   exports.renderTextLayer = pdfjsLibs.pdfjsDisplayTextLayer.renderTextLayer;
   exports.AnnotationLayer =
     pdfjsLibs.pdfjsDisplayAnnotationLayer.AnnotationLayer;
@@ -8265,8 +8393,19 @@ exports.PDFPageProxy = PDFPageProxy;
   exports.PasswordResponses = pdfjsLibs.pdfjsSharedUtil.PasswordResponses;
   exports.InvalidPDFException = pdfjsLibs.pdfjsSharedUtil.InvalidPDFException;
   exports.MissingPDFException = pdfjsLibs.pdfjsSharedUtil.MissingPDFException;
+  exports.SVGGraphics = pdfjsLibs.pdfjsDisplaySVG.SVGGraphics;
   exports.UnexpectedResponseException =
     pdfjsLibs.pdfjsSharedUtil.UnexpectedResponseException;
+  exports.OPS = pdfjsLibs.pdfjsSharedUtil.OPS;
+  exports.UNSUPPORTED_FEATURES = pdfjsLibs.pdfjsSharedUtil.UNSUPPORTED_FEATURES;
+  exports.isValidUrl = pdfjsLibs.pdfjsSharedUtil.isValidUrl;
+  exports.createObjectURL = pdfjsLibs.pdfjsSharedUtil.createObjectURL;
+  exports.removeNullCharacters = pdfjsLibs.pdfjsSharedUtil.removeNullCharacters;
+  exports.shadow = pdfjsLibs.pdfjsSharedUtil.shadow;
+  exports.createBlob = pdfjsLibs.pdfjsSharedUtil.createBlob;
+  exports.getFilenameFromUrl =
+    pdfjsLibs.pdfjsDisplayDOMUtils.getFilenameFromUrl;
+  exports.addLinkAttributes = pdfjsLibs.pdfjsDisplayDOMUtils.addLinkAttributes;
 }));
 
 

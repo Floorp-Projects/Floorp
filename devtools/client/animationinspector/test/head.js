@@ -17,7 +17,7 @@ const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-u
 const TAB_NAME = "animationinspector";
 
 // Auto clean-up when a test ends
-registerCleanupFunction(function*() {
+registerCleanupFunction(function* () {
   yield closeAnimationInspector();
 
   while (gBrowser.tabs.length > 1) {
@@ -75,7 +75,7 @@ function* reloadTab(inspector) {
            and animations of its subtree are properly displayed.
  */
 var selectNodeAndWaitForAnimations = Task.async(
-  function*(data, inspector, reason = "test") {
+  function* (data, inspector, reason = "test") {
     yield selectNode(data, inspector, reason);
 
     // We want to make sure the rest of the test waits for the animations to
@@ -107,7 +107,7 @@ function assertAnimationsDisplayed(panel, nbAnimations, msg = "") {
  * @param {InspectorPanel} inspector
  * @return {Promise}
  */
-var waitForAnimationInspectorReady = Task.async(function*(inspector) {
+var waitForAnimationInspectorReady = Task.async(function* (inspector) {
   let win = inspector.sidebar.getWindowForTab(TAB_NAME);
   let updated = inspector.once("inspector-updated");
 
@@ -127,7 +127,7 @@ var waitForAnimationInspectorReady = Task.async(function*(inspector) {
  * sidebar selected.
  * @return a promise that resolves when the inspector is ready.
  */
-var openAnimationInspector = Task.async(function*() {
+var openAnimationInspector = Task.async(function* () {
   let {inspector, toolbox} = yield openInspectorSidebarTab(TAB_NAME);
 
   info("Waiting for the inspector and sidebar to be ready");
@@ -161,7 +161,7 @@ var openAnimationInspector = Task.async(function*() {
  * Close the toolbox.
  * @return a promise that resolves when the toolbox has closed.
  */
-var closeAnimationInspector = Task.async(function*() {
+var closeAnimationInspector = Task.async(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 });
@@ -214,8 +214,8 @@ function executeInContent(name, data = {}, objects = {},
 /**
  * Get the current playState of an animation player on a given node.
  */
-var getAnimationPlayerState = Task.async(function*(selector,
-                                                   animationIndex = 0) {
+var getAnimationPlayerState = Task.async(function* (selector,
+                                                    animationIndex = 0) {
   let playState = yield executeInContent("Test:GetAnimationPlayerState",
                                          {selector, animationIndex});
   return playState;
@@ -236,7 +236,7 @@ function isNodeVisible(node) {
  * @param {AnimationsPanel} panel
  * @return {Array} all AnimationTargetNode instances
  */
-var waitForAllAnimationTargets = Task.async(function*(panel) {
+var waitForAllAnimationTargets = Task.async(function* (panel) {
   let targets = panel.animationsTimelineComponent.targetNodes;
   yield promise.all(targets.map(t => {
     if (!t.previewer.nodeFront) {
@@ -265,7 +265,9 @@ function* assertScrubberMoving(panel, isMoving) {
     // If instead we expect the scrubber to remain at its position, just wait
     // for some time and make sure timeline-data-changed isn't emitted.
     let hasMoved = false;
-    timeline.once("timeline-data-changed", () => hasMoved = true);
+    timeline.once("timeline-data-changed", () => {
+      hasMoved = true;
+    });
     yield new Promise(r => setTimeout(r, 500));
     ok(!hasMoved, "The scrubber is not moving");
   }

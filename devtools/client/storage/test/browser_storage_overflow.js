@@ -2,7 +2,7 @@
 // inspector table.
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-overflow.html");
 
   let $ = id => gPanelWindow.document.querySelector(id);

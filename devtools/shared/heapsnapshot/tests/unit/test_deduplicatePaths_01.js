@@ -104,12 +104,10 @@ function run_test() {
         pathEntry(f, "f->g"),
       ],
     ],
-    expectedNodes: [a, b, f, g],
+    expectedNodes: [a, b, g],
     expectedEdges: [
       edge(a, b, "a->b"),
       edge(b, g, "b->g"),
-      edge(g, f, "g->f"),
-      edge(f, g, "f->g"),
     ]
   });
 }

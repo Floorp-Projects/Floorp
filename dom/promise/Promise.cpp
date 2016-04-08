@@ -2635,15 +2635,22 @@ Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
 
   mSettlementTimestamp = TimeStamp::Now();
 
-  SetResult(aValue);
-  SetState(aState);
-
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
   JS::RootedObject wrapper(cx, GetWrapper());
   MOZ_ASSERT(wrapper); // We preserved it
   JSAutoCompartment ac(cx, wrapper);
+
+  JS::Rooted<JS::Value> value(cx, aValue);
+
+  if (!JS_WrapValue(cx, &value)) {
+    JS_ClearPendingException(cx);
+    value = JS::UndefinedValue();
+  }
+  SetResult(value);
+  SetState(aState);
+
   JS::dbg::onPromiseSettled(cx, wrapper);
 
   if (aState == PromiseState::Rejected &&

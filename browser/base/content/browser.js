@@ -3387,7 +3387,7 @@ const DOMLinkHandler = {
   addSearch: function(aBrowser, aEngine, aURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab)
-      return false;
+      return;
 
     BrowserSearch.addEngine(aBrowser, aEngine, makeURI(aURL));
   },

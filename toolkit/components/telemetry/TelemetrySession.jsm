@@ -412,6 +412,7 @@ var TelemetryScheduler = {
         return this._onSchedulerTick();
         break;
     }
+    return undefined;
   },
 
   /**
@@ -1885,6 +1886,7 @@ var Impl = {
       TelemetryController.addPendingPing(getPingType(payload), payload, options);
       break;
     }
+    return undefined;
   },
 
   /**

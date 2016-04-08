@@ -12,7 +12,7 @@ const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, window} = yield openAnimationInspector();
   let {document} = window;

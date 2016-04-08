@@ -24,7 +24,6 @@
 #include "nsPrintSession.h"
 #include "nsDeviceContextAndroid.h"
 #include "nsHTMLFormatConverter.h"
-#include "nsIMEPicker.h"
 #include "nsXULAppAPI.h"
 #include "nsAndroidProtocolHandler.h"
 
@@ -38,7 +37,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsAndroid, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMEPicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAndroidBridge)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAndroidProtocolHandler)
 
@@ -62,7 +60,6 @@ NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
-NS_DEFINE_NAMED_CID(NS_IMEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 NS_DEFINE_NAMED_CID(NS_ANDROIDBRIDGE_CID);
 NS_DEFINE_NAMED_CID(NS_ANDROIDPROTOCOLHANDLER_CID);
@@ -80,7 +77,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecAndroidConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
-  { &kNS_IMEPICKER_CID, false, nullptr, nsIMEPickerConstructor },
   { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
   { &kNS_ANDROIDBRIDGE_CID, false, nullptr, nsAndroidBridgeConstructor },
   { &kNS_ANDROIDPROTOCOLHANDLER_CID, false, nullptr, nsAndroidProtocolHandlerConstructor },
@@ -100,7 +96,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
   { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
-  { "@mozilla.org/imepicker;1", &kNS_IMEPICKER_CID },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
   { "@mozilla.org/android/bridge;1", &kNS_ANDROIDBRIDGE_CID },
   { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "android", &kNS_ANDROIDPROTOCOLHANDLER_CID },

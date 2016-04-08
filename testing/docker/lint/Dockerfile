@@ -6,9 +6,9 @@ WORKDIR /home/worker
 
 # install necessary npm packages
 RUN           npm install -g taskcluster-vcs@2.3.12
-RUN           npm install -g eslint@1.10.3
-RUN           npm install -g eslint-plugin-html@1.1.0
-RUN           npm install -g eslint-plugin-react@3.13.1
+RUN           npm install -g eslint@2.7.0
+RUN           npm install -g eslint-plugin-html@1.4.0
+RUN           npm install -g eslint-plugin-react@4.2.3
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual

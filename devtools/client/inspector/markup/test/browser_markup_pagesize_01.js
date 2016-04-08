@@ -37,7 +37,7 @@ const TEST_DATA = [{
   expected: "*more*uvwxy*more*"
 }];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Start iterating through the test data");
