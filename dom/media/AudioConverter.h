@@ -116,6 +116,12 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == mOut.Format() && mIn.Format() == Type);
     return Process(aBuffer.Data(), aBuffer.Data(), aBuffer.Size());
   }
+  template <typename Value>
+  size_t Process(Value* aBuffer, size_t aSamples)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == mOut.Format());
+    return Process(aBuffer, aBuffer, aSamples * AudioConfig::SampleSize(mIn.Format()));
+  }
   bool CanWorkInPlace() const;
   bool CanReorderAudio() const
   {
@@ -137,6 +143,7 @@ private:
    */
   size_t Process(void* aOut, const void* aIn, size_t aBytes);
   void ReOrderInterleavedChannels(void* aOut, const void* aIn, size_t aDataSize) const;
+  size_t DownmixAudio(void* aOut, const void* aIn, size_t aDataSize) const;
 };
 
 } // namespace mozilla
