@@ -23,13 +23,13 @@ module.exports = createClass({
   render() {
     let { target, debugDisabled } = this.props;
 
-    return dom.div({ className: "target" },
+    return dom.div({ className: "target-container" },
       dom.img({
         className: "target-icon",
         role: "presentation",
         src: target.icon
       }),
-      dom.div({ className: "target-details" },
+      dom.div({ className: "target" },
         dom.div({ className: "target-name" }, target.name)
       ),
       dom.button({

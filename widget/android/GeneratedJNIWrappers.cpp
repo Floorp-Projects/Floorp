@@ -677,14 +677,6 @@ auto GeckoAppShell::ShowAlertNotificationWrapper(mozilla::jni::String::Param a0,
     return mozilla::jni::Method<ShowAlertNotificationWrapper_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5);
 }
 
-constexpr char GeckoAppShell::ShowInputMethodPicker_t::name[];
-constexpr char GeckoAppShell::ShowInputMethodPicker_t::signature[];
-
-auto GeckoAppShell::ShowInputMethodPicker() -> void
-{
-    return mozilla::jni::Method<ShowInputMethodPicker_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
 constexpr char GeckoAppShell::StartMonitoringGamepad_t::name[];
 constexpr char GeckoAppShell::StartMonitoringGamepad_t::signature[];
 

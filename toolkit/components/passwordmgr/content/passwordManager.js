@@ -270,6 +270,7 @@ function getColumnByName(column) {
     case "timesUsed":
       return document.getElementById("timesUsedCol");
   }
+  return undefined;
 }
 
 var lastSignonSortColumn = "hostname";

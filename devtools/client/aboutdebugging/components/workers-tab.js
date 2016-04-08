@@ -7,12 +7,13 @@
 const { Ci } = require("chrome");
 const { createClass, createFactory, DOM: dom } =
   require("devtools/client/shared/vendor/react");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { getWorkerForms } = require("../modules/worker");
 const Services = require("Services");
 
 const TabHeader = createFactory(require("./tab-header"));
 const TargetList = createFactory(require("./target-list"));
 const WorkerTarget = createFactory(require("./worker-target"));
+const ServiceWorkerTarget = createFactory(require("./service-worker-target"));
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -50,7 +51,6 @@ module.exports = createClass({
   render() {
     let { client } = this.props;
     let { workers } = this.state;
-    let targetClass = WorkerTarget;
 
     return dom.div({
       id: "tab-workers",
@@ -67,21 +67,21 @@ module.exports = createClass({
         client,
         id: "service-workers",
         name: Strings.GetStringFromName("serviceWorkers"),
-        targetClass,
+        targetClass: ServiceWorkerTarget,
         targets: workers.service
       }),
       TargetList({
         client,
         id: "shared-workers",
         name: Strings.GetStringFromName("sharedWorkers"),
-        targetClass,
+        targetClass: WorkerTarget,
         targets: workers.shared
       }),
       TargetList({
         client,
         id: "other-workers",
         name: Strings.GetStringFromName("otherWorkers"),
-        targetClass,
+        targetClass: WorkerTarget,
         targets: workers.other
       })
     ));
@@ -90,7 +90,7 @@ module.exports = createClass({
   update() {
     let workers = this.getInitialState().workers;
 
-    this.getWorkerForms().then(forms => {
+    getWorkerForms(this.props.client).then(forms => {
       forms.registrations.forEach(form => {
         workers.service.push({
           icon: WorkerIcon,
@@ -136,40 +136,5 @@ module.exports = createClass({
 
       this.setState({ workers });
     });
-  },
-
-  getWorkerForms: Task.async(function*() {
-    let client = this.props.client;
-    let registrations = [];
-    let workers = [];
-
-    try {
-      // List service worker registrations
-      ({ registrations } =
-        yield client.mainRoot.listServiceWorkerRegistrations());
-
-      // List workers from the Parent process
-      ({ workers } = yield client.mainRoot.listWorkers());
-
-      // And then from the Child processes
-      let { processes } = yield client.mainRoot.listProcesses();
-      for (let process of processes) {
-        // Ignore parent process
-        if (process.parent) {
-          continue;
-        }
-        let { form } = yield client.getProcess(process.id);
-        let processActor = form.actor;
-        let response = yield client.request({
-          to: processActor,
-          type: "listWorkers"
-        });
-        workers = workers.concat(response.workers);
-      }
-    } catch (e) {
-      // Something went wrong, maybe our client is disconnected?
-    }
-
-    return { registrations, workers };
-  }),
+  }
 });

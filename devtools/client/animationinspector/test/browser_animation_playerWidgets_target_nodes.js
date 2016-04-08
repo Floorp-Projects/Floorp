@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 // Test that player widgets display information about target nodes
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 

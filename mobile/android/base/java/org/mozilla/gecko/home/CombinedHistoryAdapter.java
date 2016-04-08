@@ -254,7 +254,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 return CombinedHistoryPanel.populateHistoryInfoFromCursor(info, historyCursor);
             case CLIENT:
                 final int clientPosition = transformAdapterPositionForDataStructure(ItemType.CLIENT, position);
-                info = new CombinedHistoryPanel.RemoteTabsClientContextMenuInfo(view, position,-1, remoteClients.get(clientPosition));
+                info = new CombinedHistoryPanel.RemoteTabsClientContextMenuInfo(view, position, -1, remoteClients.get(clientPosition));
                 return info;
         }
         return null;

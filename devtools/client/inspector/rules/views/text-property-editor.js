@@ -251,6 +251,7 @@ TextPropertyEditor.prototype = {
     if (domRule) {
       return domRule.href || domRule.nodeHref;
     }
+    return undefined;
   },
 
   /**

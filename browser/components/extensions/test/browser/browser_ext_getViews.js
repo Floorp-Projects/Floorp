@@ -140,12 +140,12 @@ add_task(function* () {
   // short timeout seems to consistently fix it.
   yield new Promise(resolve => win1.setTimeout(resolve, 10));
 
-  yield triggerPopup(win1, function*() {
+  yield triggerPopup(win1, function* () {
     yield checkViews("background", 2, 1);
     yield checkViews("popup", 2, 1);
   });
 
-  yield triggerPopup(win2, function*() {
+  yield triggerPopup(win2, function* () {
     yield checkViews("background", 2, 1);
     yield checkViews("popup", 2, 1);
   });
@@ -165,7 +165,7 @@ add_task(function* () {
 
   info("opening win1 popup");
 
-  yield triggerPopup(win1, function*() {
+  yield triggerPopup(win1, function* () {
     yield checkViews("background", 1, 1);
     yield checkViews("tab", 1, 1);
     yield checkViews("popup", 1, 1);
@@ -173,7 +173,7 @@ add_task(function* () {
 
   info("opening win2 popup");
 
-  yield triggerPopup(win2, function*() {
+  yield triggerPopup(win2, function* () {
     yield checkViews("background", 1, 1);
     yield checkViews("tab", 1, 1);
     yield checkViews("popup", 1, 1);

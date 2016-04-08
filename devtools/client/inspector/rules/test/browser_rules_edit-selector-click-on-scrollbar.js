@@ -34,7 +34,7 @@ const TEST_URI = `
   <div class="testclass a b c d e f">Styled Node</div>
 `;
 
-add_task(function*() {
+add_task(function* () {
   info("Toolbox height should be small enough to force scrollbars to appear");
   yield new Promise(done => {
     let options = {"set": [

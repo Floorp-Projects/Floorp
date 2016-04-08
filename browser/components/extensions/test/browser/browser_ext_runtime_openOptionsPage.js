@@ -226,3 +226,34 @@ add_task(function* test_tab_options() {
 
   yield BrowserTestUtils.removeTab(tab);
 });
+
+add_task(function* test_options_no_manifest() {
+  let extension = yield loadExtension({
+    manifest: {},
+
+    background: function() {
+      browser.test.log("Try to open options page when not specified in the manifest.");
+
+      browser.runtime.openOptionsPage().then(
+        () => {
+          browser.test.fail("Opening options page without one specified in the manifest generated an error");
+          browser.test.notifyFail("options-no-manifest");
+        },
+        error => {
+          let expected = "No `options_ui` declared";
+          browser.test.assertTrue(
+            error.message.includes(expected),
+            `Got expected error (got: '${error.message}', expected: '${expected}'`);
+        }
+      ).then(() => {
+        browser.test.notifyPass("options-no-manifest");
+      }).catch(error => {
+        browser.test.log(`Error: ${error} :: ${error.stack}`);
+        browser.test.notifyFail("options-no-manifest");
+      });
+    },
+  });
+
+  yield extension.awaitFinish("options-no-manifest");
+  yield extension.unload();
+});

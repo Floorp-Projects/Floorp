@@ -32,7 +32,7 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor, tab} = yield openInspectorForURL(TEST_URL);
   let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   let pageLoaded = waitForLinkedBrowserEvent(tab, "load");

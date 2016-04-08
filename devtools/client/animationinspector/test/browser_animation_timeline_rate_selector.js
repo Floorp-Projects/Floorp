@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 // all have the same rate, or that it displays the empty value in case they
 // have mixed rates.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {panel, controller, inspector, toolbox} = yield openAnimationInspector();

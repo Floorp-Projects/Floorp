@@ -325,6 +325,7 @@ Finder.prototype = {
     delete result._framesToCount;
 
     this._notifyMatchesCount(result);
+    return undefined;
   },
 
   /**

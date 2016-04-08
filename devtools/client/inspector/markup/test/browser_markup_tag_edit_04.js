@@ -48,7 +48,7 @@ const TEST_DATA = [{
   key: "back_space",
   focusedSelector: "#second"
 }, {
-  setup: function*(inspector, testActor) {
+  setup: function* (inspector, testActor) {
     // Removing the siblings of #first in order to test with an only child.
     let mutated = inspector.once("markupmutation");
     yield testActor.eval(`
@@ -67,7 +67,7 @@ const TEST_DATA = [{
   focusedSelector: "#parent"
 }];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   for (let {setup, selector, key, focusedSelector} of TEST_DATA) {

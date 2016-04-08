@@ -16,7 +16,7 @@ requestLongerTimeout(2);
 // And test that clicking the button once the scrubber has reached the end of
 // the timeline does the right thing.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {panel, inspector} = yield openAnimationInspector();

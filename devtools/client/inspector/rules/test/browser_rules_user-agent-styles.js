@@ -57,7 +57,7 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function*() {
+add_task(function* () {
   requestLongerTimeout(2);
 
   info("Starting the test with the pref set to true before toolbox is opened");

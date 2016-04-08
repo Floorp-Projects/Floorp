@@ -11,7 +11,7 @@
 // of which may have a different rate than others. Those that have had their
 // rate changed have a delay = delay/rate and a duration = duration/rate.
 
-add_task(function*() {
+add_task(function* () {
   yield new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.animations-api.core.enabled", true]

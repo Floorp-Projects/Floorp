@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Check that the timeline displays animations' duration, delay iteration
 // counts and iteration start in tooltips.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel, controller} = yield openAnimationInspector();
 

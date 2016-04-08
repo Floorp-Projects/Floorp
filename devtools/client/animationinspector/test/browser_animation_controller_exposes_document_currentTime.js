@@ -7,7 +7,7 @@
 // Test that the controller provides the document.timeline currentTime (at least
 // the last known version since new animations were added).
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel, controller} = yield openAnimationInspector();
 

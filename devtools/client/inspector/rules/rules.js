@@ -261,7 +261,7 @@ CssRuleView.prototype = {
    *
    * @return {Promise} Resolves to the instance of the highlighter.
    */
-  getSelectorHighlighter: Task.async(function*() {
+  getSelectorHighlighter: Task.async(function* () {
     let utils = this.inspector.toolbox.highlighterUtils;
     if (!utils.supportsCustomHighlighters()) {
       return null;
@@ -319,7 +319,7 @@ CssRuleView.prototype = {
     }, Cu.reportError);
   },
 
-  highlightSelector: Task.async(function*(selector) {
+  highlightSelector: Task.async(function* (selector) {
     let node = this.inspector.selection.nodeFront;
 
     let highlighter = yield this.getSelectorHighlighter();
@@ -334,7 +334,7 @@ CssRuleView.prototype = {
     });
   }),
 
-  unhighlightSelector: Task.async(function*() {
+  unhighlightSelector: Task.async(function* () {
     let highlighter = yield this.getSelectorHighlighter();
     if (!highlighter) {
       return;
@@ -874,6 +874,7 @@ CssRuleView.prototype = {
       if (this._elementStyle === elementStyle) {
         return this._populate();
       }
+      return undefined;
     }).then(() => {
       if (this._elementStyle === elementStyle) {
         if (!refresh) {

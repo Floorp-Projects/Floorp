@@ -14,7 +14,7 @@ const TEST_DATA = [
     selector: "#badMarkup1",
     oldHTML: "<div id=\"badMarkup1\">badMarkup1</div>",
     newHTML: "<div id=\"badMarkup1\">badMarkup1</div> hanging</div>",
-    validate: function*({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let textNodeName = yield testActor.eval(`
@@ -32,7 +32,7 @@ const TEST_DATA = [
     oldHTML: "<div id=\"badMarkup2\">badMarkup2</div>",
     newHTML: "<div id=\"badMarkup2\">badMarkup2</div> hanging<div></div>" +
              "</div></div></body>",
-    validate: function*({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let textNodeName = yield testActor.eval(`
@@ -50,7 +50,7 @@ const TEST_DATA = [
     oldHTML: "<div id=\"badMarkup3\">badMarkup3</div>",
     newHTML: "<div id=\"badMarkup3\">badMarkup3 <em>Emphasized <strong> " +
              "and strong</div>",
-    validate: function*({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let emText = yield testActor.getProperty("#badMarkup3 em", "textContent");
@@ -64,7 +64,7 @@ const TEST_DATA = [
     selector: "#badMarkup4",
     oldHTML: "<div id=\"badMarkup4\">badMarkup4</div>",
     newHTML: "<div id=\"badMarkup4\">badMarkup4</p>",
-    validate: function*({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let divText = yield testActor.getProperty("#badMarkup4", "textContent");
@@ -83,7 +83,7 @@ const TEST_DATA = [
     selector: "#badMarkup5",
     oldHTML: "<p id=\"badMarkup5\">badMarkup5</p>",
     newHTML: "<p id=\"badMarkup5\">badMarkup5 <div>with a nested div</div></p>",
-    validate: function*({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let num = yield testActor.getNumberOfElementMatches("#badMarkup5 div");
@@ -112,7 +112,7 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
   yield runEditOuterHTMLTests(TEST_DATA, inspector, testActor);

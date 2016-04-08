@@ -275,7 +275,7 @@ End of Main Process (pid NNN)\n\
   // This is the output for a malformed data file.
   let expectedBad =
 "\
-Invalid memory report(s): missing 'hasMozMallocUsableSize' property\
+Error: Invalid memory report(s): missing 'hasMozMallocUsableSize' property\
 ";
 
   // This is the output for a non-verbose diff.

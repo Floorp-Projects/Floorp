@@ -41,7 +41,7 @@ AnimationTargetNode.prototype = {
     this.isDestroyed = true;
   },
 
-  render: Task.async(function*(playerFront) {
+  render: Task.async(function* (playerFront) {
     // Get the nodeFront from the cache if it was stored previously.
     let nodeFront = nodeFronts.get(playerFront);
 

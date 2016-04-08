@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 // reset to 0, and that the scrubber stops moving and is positioned to the
 // start.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {panel, controller} = yield openAnimationInspector();

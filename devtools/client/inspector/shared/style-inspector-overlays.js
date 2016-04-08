@@ -406,6 +406,8 @@ TooltipsOverlay.prototype = {
       return this.previewTooltip.setFontFamilyContent(nodeInfo.value.value,
         inspector.selection.nodeFront);
     }
+
+    return undefined;
   },
 
   _onNewSelection: function() {

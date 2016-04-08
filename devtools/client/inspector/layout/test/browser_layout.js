@@ -126,7 +126,7 @@ var res2 = [
   },
 ];
 
-add_task(function*() {
+add_task(function* () {
   let style = "div { position: absolute; top: 42px; left: 42px; " +
               "height: 100.111px; width: 100px; border: 10px solid black; " +
               "padding: 20px; margin: 30px auto;}";

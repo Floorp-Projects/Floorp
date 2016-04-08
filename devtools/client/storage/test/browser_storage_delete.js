@@ -17,7 +17,7 @@ const TEST_CASES = [
     "c1", "name"]
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   let contextMenu = gPanelWindow.document.getElementById("storage-table-popup");

@@ -212,7 +212,7 @@ function test() {
 
       return finished.then(() => promise.all([
         ensureSourceIs(gPanel, "-01.js"),
-        ensureCaretAt(gPanel, 1),
+        ensureCaretAt(gPanel, 2, 9),
         verifyContents({ itemCount: 2, hidden: false })
       ]));
     }

@@ -204,7 +204,7 @@ add_task(function* test_downloads() {
 });
 
 // check for leftover files in the download directory
-add_task(function*() {
+add_task(function* () {
   let entries = downloadDir.directoryEntries;
   while (entries.hasMoreElements()) {
     let entry = entries.getNext().QueryInterface(Ci.nsIFile);

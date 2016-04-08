@@ -961,7 +961,7 @@ public abstract class GeckoApp
                     SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_LONG);
                     return;
                 }
-                String path = Media.insertImage(getContentResolver(),image, null, null);
+                String path = Media.insertImage(getContentResolver(), image, null, null);
                 if (path == null) {
                     SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_LONG);
                     return;
@@ -2236,12 +2236,12 @@ public abstract class GeckoApp
     }
 
     public void addEnvToIntent(Intent intent) {
-        Map<String,String> envMap = System.getenv();
-        Set<Map.Entry<String,String>> envSet = envMap.entrySet();
-        Iterator<Map.Entry<String,String>> envIter = envSet.iterator();
+        Map<String, String> envMap = System.getenv();
+        Set<Map.Entry<String, String>> envSet = envMap.entrySet();
+        Iterator<Map.Entry<String, String>> envIter = envSet.iterator();
         int c = 0;
         while (envIter.hasNext()) {
-            Map.Entry<String,String> entry = envIter.next();
+            Map.Entry<String, String> entry = envIter.next();
             intent.putExtra("env" + c, entry.getKey() + "="
                             + entry.getValue());
             c++;

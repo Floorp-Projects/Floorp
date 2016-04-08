@@ -6,6 +6,7 @@
 
 DIRS += [
     'components',
+    'modules',
 ]
 
 BROWSER_CHROME_MANIFESTS += [

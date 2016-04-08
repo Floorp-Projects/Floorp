@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 // state.
 // Finally, also check that the scrubber can be moved using the scrubber handle.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {panel} = yield openAnimationInspector();

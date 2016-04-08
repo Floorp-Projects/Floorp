@@ -111,6 +111,7 @@ var ServerLoggerMonitor = {
         return this.onDetachChild(msg);
       default:
         trace.log("Unknown method name: ", method);
+        return undefined;
     }
   },
 
