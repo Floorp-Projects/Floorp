@@ -50,6 +50,7 @@
         </module>
         <module name="OuterTypeFilename"/> <!-- `class Lol` only in Lol.java -->
         <module name="WhitespaceAfter">
+            <!-- TODO: (bug 1263059) Remove specific tokens to enable CAST check. -->
             <property name="tokens" value="COMMA, SEMI"/>
         </module>
     </module>
