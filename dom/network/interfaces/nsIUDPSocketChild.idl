@@ -32,7 +32,8 @@ interface nsIUDPSocketChild : nsISupports
   // Tell the chrome process to bind the UDP socket to a given local host and port
   void bind(in nsIUDPSocketInternal socket, in nsIPrincipal principal,
             in AUTF8String host, in unsigned short port,
-            in bool addressReuse, in bool loopback, in uint32_t recvBufferSize);
+            in bool addressReuse, in bool loopback, in uint32_t recvBufferSize,
+            in uint32_t sendBufferSize);
 
   // Tell the chrome process to connect the UDP socket to a given remote host and port
   void connect(in nsIUDPSocketInternal socket, in AUTF8String host, in unsigned short port);
