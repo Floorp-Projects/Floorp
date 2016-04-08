@@ -679,6 +679,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   --panel-ui-sync-illustration-height: 157.5px;
 }
 
+.PanelUI-remotetabs-instruction-title,
 .PanelUI-remotetabs-instruction-label,
 #PanelUI-remotetabs-mobile-promo {
   /* If you change the margin here, the min-height of the synced tabs panel
@@ -689,6 +690,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   text-shadow: none;
   max-width: 15em;
   color: GrayText;
+}
+
+.PanelUI-remotetabs-instruction-title {
+  font-size: 1.3em;
 }
 
 /* The boxes with "instructions" get extra top and bottom padding for space
@@ -773,6 +778,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-remotetabs-deck:not([selectedIndex="2"]) > #PanelUI-remotetabs-fetching,
 #PanelUI-remotetabs-deck:not([selectedIndex="3"]) > #PanelUI-remotetabs-nodevicespane {
   visibility: collapse;
+}
+
+#PanelUI-remotetabs-main[devices-status="single"] > #PanelUI-remotetabs-buttons {
+  display: none;
 }
 
 #PanelUI-fxa-icon[syncstatus="active"] {
