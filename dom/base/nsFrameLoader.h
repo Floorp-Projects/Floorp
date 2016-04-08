@@ -375,6 +375,9 @@ private:
   // forwards some input events to out-of-process content.
   uint32_t mEventMode;
 
+  // Holds the last known size of the frame.
+  mozilla::ScreenIntSize mLazySize;
+
   bool mIsPrerendered : 1;
   bool mDepthTooGreat : 1;
   bool mIsTopLevelContent : 1;
