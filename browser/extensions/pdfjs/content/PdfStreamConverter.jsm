@@ -1023,14 +1023,18 @@ PdfStreamConverter.prototype = {
     // Keep the URL the same so the browser sees it as the same.
     channel.originalURI = aRequest.URI;
     channel.loadGroup = aRequest.loadGroup;
+    channel.loadInfo.originAttributes = aRequest.loadInfo.originAttributes;
 
     // We can use resource principal when data is fetched by the chrome
+    // make sure we reuse the origin attributes from the request channel to keep
+    // isolation consistent.
     // e.g. useful for NoScript
     var ssm = Cc['@mozilla.org/scriptsecuritymanager;1']
                 .getService(Ci.nsIScriptSecurityManager);
     var uri = NetUtil.newURI(PDF_VIEWER_WEB_PAGE, null, null);
+    var attrs = aRequest.loadInfo.originAttributes;
     var resourcePrincipal;
-    resourcePrincipal = ssm.createCodebasePrincipal(uri, {});
+    resourcePrincipal = ssm.createCodebasePrincipal(uri, attrs);
     aRequest.owner = resourcePrincipal;
     channel.asyncOpen(proxy, aContext);
   },
