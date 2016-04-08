@@ -69,6 +69,10 @@
   background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):-moz-lwtheme {
+  background-image: linear-gradient(@toolbarHighlightLWT@, @toolbarHighlightLWT@);
+}
+
 #navigator-toolbox > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar):not(#TabsToolbar) {
   -moz-appearance: none;
   border-style: none;
@@ -106,6 +110,10 @@
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
   padding-top: 2px;
   padding-bottom: 2px;
+}
+
+#nav-bar:-moz-lwtheme {
+  box-shadow: 0 1px 0 @toolbarHighlightLWT@ inset;
 }
 
 #nav-bar-overflow-button {
