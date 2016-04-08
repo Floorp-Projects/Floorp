@@ -17,9 +17,11 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * @param {Object} options
  *        - emptyText {string}: text to display when no entries in the table.
  *        - defaultType {string}: The default type of the tree items. For ex.
- *        'js'
+ *          'js'
  *        - sorted {boolean}: Defaults to true. If true, tree items are kept in
- *        lexical order. If false, items will be kept in insertion order.
+ *          lexical order. If false, items will be kept in insertion order.
+ *        - contextMenuId {string}: ID of context menu to be displayed on
+ *          tree items.
  */
 function TreeWidget(node, options = {}) {
   EventEmitter.decorate(this);
@@ -31,6 +33,7 @@ function TreeWidget(node, options = {}) {
   this.emptyText = options.emptyText || "";
   this.defaultType = options.defaultType;
   this.sorted = options.sorted !== false;
+  this.contextMenuId = options.contextMenuId;
 
   this.setupRoot();
 
@@ -53,30 +56,31 @@ TreeWidget.prototype = {
   /**
    * Select any node in the tree.
    *
-   * @param {array} id
+   * @param {array} ids
    *        An array of ids leading upto the selected item
    */
-  set selectedItem(id) {
+  set selectedItem(ids) {
     if (this._selectedLabel) {
       this._selectedLabel.classList.remove("theme-selected");
     }
     let currentSelected = this._selectedLabel;
-    if (id == -1) {
+    if (ids == -1) {
       this._selectedLabel = this._selectedItem = null;
       return;
     }
-    if (!Array.isArray(id)) {
+    if (!Array.isArray(ids)) {
       return;
     }
-    this._selectedLabel = this.root.setSelectedItem(id);
+    this._selectedLabel = this.root.setSelectedItem(ids);
     if (!this._selectedLabel) {
       this._selectedItem = null;
     } else {
       if (currentSelected != this._selectedLabel) {
         this.ensureSelectedVisible();
       }
-      this._selectedItem =
-      JSON.parse(this._selectedLabel.parentNode.getAttribute("data-id"));
+      this._selectedItem = ids;
+      this.emit("select", this._selectedItem,
+        this.attachments.get(JSON.stringify(ids)));
     }
   },
 
@@ -120,9 +124,16 @@ TreeWidget.prototype = {
    */
   setupRoot: function() {
     this.root = new TreeItem(this.document);
+    if (this.contextMenuId) {
+      this.root.children.addEventListener("contextmenu", (event) => {
+        let menu = this.document.getElementById(this.contextMenuId);
+        menu.openPopupAtScreen(event.screenX, event.screenY, true);
+      });
+    }
+
     this._parent.appendChild(this.root.children);
 
-    this.root.children.addEventListener("click", e => this.onClick(e));
+    this.root.children.addEventListener("mousedown", e => this.onClick(e));
     this.root.children.addEventListener("keypress", e => this.onKeypress(e));
   },
 
@@ -315,21 +326,17 @@ TreeWidget.prototype = {
     if (!target) {
       return;
     }
+
     if (target.hasAttribute("expanded")) {
       target.removeAttribute("expanded");
     } else {
       target.setAttribute("expanded", "true");
     }
-    if (this._selectedLabel) {
-      this._selectedLabel.classList.remove("theme-selected");
-    }
+
     if (this._selectedLabel != target) {
       let ids = target.parentNode.getAttribute("data-id");
-      this._selectedItem = JSON.parse(ids);
-      this.emit("select", this._selectedItem, this.attachments.get(ids));
-      this._selectedLabel = target;
+      this.selectedItem = JSON.parse(ids);
     }
-    target.classList.add("theme-selected");
   },
 
   /**
@@ -337,7 +344,6 @@ TreeWidget.prototype = {
    * items, as well as collapsing and expanding any item.
    */
   onKeypress: function(event) {
-    let currentSelected = this._selectedLabel;
     switch (event.keyCode) {
       case event.DOM_VK_UP:
         this.selectPreviousItem();
@@ -367,11 +373,6 @@ TreeWidget.prototype = {
       default: return;
     }
     event.preventDefault();
-    if (this._selectedLabel != currentSelected) {
-      let ids = JSON.stringify(this._selectedItem);
-      this.emit("select", this._selectedItem, this.attachments.get(ids));
-      this.ensureSelectedVisible();
-    }
   },
 
   /**
