@@ -24,9 +24,9 @@ public class ColorPickerInput extends PromptInput {
     public ColorPickerInput(JSONObject obj) {
         super(obj);
         String init = obj.optString("value");
-        mInitialColor = Color.rgb(Integer.parseInt(init.substring(1,3), 16),
-                                  Integer.parseInt(init.substring(3,5), 16),
-                                  Integer.parseInt(init.substring(5,7), 16));
+        mInitialColor = Color.rgb(Integer.parseInt(init.substring(1, 3), 16),
+                                  Integer.parseInt(init.substring(3, 5), 16),
+                                  Integer.parseInt(init.substring(5, 7), 16));
     }
 
     @Override

@@ -50,7 +50,7 @@
         </module>
         <module name="OuterTypeFilename"/> <!-- `class Lol` only in Lol.java -->
         <module name="WhitespaceAfter">
-            <property name="tokens" value="SEMI"/>
+            <property name="tokens" value="COMMA, SEMI"/>
         </module>
     </module>
 

@@ -67,7 +67,7 @@ public class ToolbarProgressView extends ThemedImageView {
     }
 
     private void init(Context ctx) {
-        mBounds = new Rect(0,0,0,0);
+        mBounds = new Rect(0, 0, 0, 0);
         mTargetProgress = 0;
 
         mPrivateBrowsingColorFilter = new PorterDuffColorFilter(
