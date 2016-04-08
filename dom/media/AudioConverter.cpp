@@ -27,7 +27,24 @@ AudioConverter::AudioConverter(const AudioConfig& aIn, const AudioConfig& aOut)
                         aIn.Interleaved() == aOut.Interleaved(),
                         "Only channel reordering is supported at this stage");
   MOZ_DIAGNOSTIC_ASSERT(aOut.Interleaved(), "planar audio format not supported");
-  mIn.Layout().MappingTable(mOut.Layout(), mChannelOrderMap);
+  InitChannelMap();
+}
+
+bool
+AudioConverter::InitChannelMap()
+{
+  if (!CanReorderAudio()) {
+    return false;
+  }
+  for (uint32_t i = 0; i < mIn.Layout().Count(); i++) {
+    for (uint32_t j = 0; j < mIn.Layout().Count(); j++) {
+      if (mOut.Layout()[j] == mIn.Layout()[i]) {
+        mChannelOrderMap[j] = i;
+        break;
+      }
+    }
+  }
+  return true;
 }
 
 bool
@@ -56,7 +73,7 @@ template <class AudioDataType>
 void
 _ReOrderInterleavedChannels(AudioDataType* aOut, const AudioDataType* aIn,
                             uint32_t aFrames, uint32_t aChannels,
-                            const uint8_t* aChannelOrderMap)
+                            const uint32_t* aChannelOrderMap)
 {
   MOZ_DIAGNOSTIC_ASSERT(aChannels <= MAX_AUDIO_CHANNELS);
   AudioDataType val[MAX_AUDIO_CHANNELS];

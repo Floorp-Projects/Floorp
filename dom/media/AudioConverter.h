@@ -119,13 +119,15 @@ public:
   bool CanWorkInPlace() const;
   bool CanReorderAudio() const
   {
-    return mIn.Layout().MappingTable(mOut.Layout());
+    return mIn.Layout().IsValid() && mOut.Layout().IsValid() &&
+      mIn.Layout().Map() == mOut.Layout().Map();
   }
 
 private:
   const AudioConfig mIn;
   const AudioConfig mOut;
-  uint8_t mChannelOrderMap[MAX_AUDIO_CHANNELS];
+  uint32_t mChannelOrderMap[MAX_AUDIO_CHANNELS];
+  bool InitChannelMap();
   /**
    * Process
    * Parameters:
