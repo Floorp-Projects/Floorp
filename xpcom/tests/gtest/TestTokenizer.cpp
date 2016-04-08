@@ -655,3 +655,29 @@ TEST(Tokenizer, IntegerReading)
     EXPECT_FALSE(p.CheckEOF());
   }
 }
+
+TEST(Tokenizer, ReadUntil)
+{
+  Tokenizer p("Hello;test 4,");
+  nsDependentCSubstring f;
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Char(';'), f));
+  EXPECT_TRUE(f == "Hello");
+  p.Rollback();
+
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Char(';'), f, Tokenizer::INCLUDE_LAST));
+  EXPECT_TRUE(f == "Hello;");
+  p.Rollback();
+
+  EXPECT_FALSE(p.ReadUntil(Tokenizer::Token::Char('!'), f));
+  EXPECT_TRUE(f == "Hello;test 4,");
+  p.Rollback();
+
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Word(NS_LITERAL_CSTRING("test")), f));
+  EXPECT_TRUE(f == "Hello;");
+  p.Rollback();
+
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Word(NS_LITERAL_CSTRING("test")), f, Tokenizer::INCLUDE_LAST));
+  EXPECT_TRUE(f == "Hello;test");
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Char(','), f));
+  EXPECT_TRUE(f == " 4");
+}
