@@ -164,9 +164,7 @@ class ConfigureSandbox(dict):
         self._help_option = self.option_impl('--help',
                                              help='print this message')
         self._seen.add(self._help_option)
-        # self._option_impl('--help') will have set this if --help was on the
-        # command line.
-        if self._option_values[self._help_option]:
+        if self._value_for(self._help_option):
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
         elif moz_logger:
@@ -256,14 +254,23 @@ class ConfigureSandbox(dict):
         if isinstance(arg, DependsFunction):
             assert arg in self._depends
             func, deps = self._depends[arg]
-            assert not inspect.isgeneratorfunction(func)
-            assert func in self._results
             if need_help_dependency and self._help_option not in deps:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
-            result = self._results[func]
-            return result
+            return self._value_for(arg)
         return arg
+
+    def _value_for(self, obj):
+        if isinstance(obj, DependsFunction):
+            assert obj in self._depends
+            func, deps = self._depends[obj]
+            assert not inspect.isgeneratorfunction(func)
+            assert func in self._results
+            return self._results[func]
+        elif isinstance(obj, Option):
+            assert obj in self._option_values
+            return self._option_values.get(obj)
+        assert False
 
     def option_impl(self, *args, **kwargs):
         '''Implementation of option()
@@ -364,15 +371,7 @@ class ConfigureSandbox(dict):
                                 % (func.__name__, arg.__name__, arg.__name__))
 
             if not self._help or with_help:
-                resolved_args = []
-                for arg in dependencies:
-                    if isinstance(arg, Option):
-                        assert arg in self._option_values
-                        resolved_args.append(self._option_values.get(arg))
-                    elif isinstance(arg, DependsFunction):
-                        arg, _ = self._depends[arg]
-                        resolved_args.append(self._results.get(arg))
-
+                resolved_args = [self._value_for(d) for d in dependencies]
                 self._results[func] = func(*resolved_args)
 
             return dummy
