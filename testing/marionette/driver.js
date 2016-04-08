@@ -2285,8 +2285,8 @@ GeckoDriver.prototype.deleteAllCookies = function*(cmd, resp) {
         cookie.host,
         cookie.name,
         cookie.path,
-        false,
-        cookie.originAttributes);
+        cookie.originAttributes,
+        false);
     return true;
   };
   this.mm.addMessageListener("Marionette:deleteCookie", cb);
@@ -2303,8 +2303,8 @@ GeckoDriver.prototype.deleteCookie = function*(cmd, resp) {
         cookie.host,
         cookie.name,
         cookie.path,
-        false,
-        cookie.originAttributes);
+        cookie.originAttributes,
+        false);
     return true;
   };
   this.mm.addMessageListener("Marionette:deleteCookie", cb);
