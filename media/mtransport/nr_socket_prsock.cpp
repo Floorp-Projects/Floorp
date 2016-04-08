@@ -607,20 +607,48 @@ int NrSocket::create(nr_transport_addr *addr) {
       }
 #ifdef XP_WIN
       if (!mozilla::IsWin8OrLater()) {
-        PRSocketOptionData opt_rcvbuf;
-        opt_rcvbuf.option = PR_SockOpt_RecvBufferSize;
-        // Increase default receive buffer size on <= Win7 to be able to
-        // receive an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
+        // Increase default send and receive buffer sizes on <= Win7 to be able to
+        // receive and send an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
         // stream without losing packets.
         // Manual testing showed that 100K buffer size was not enough and the
         // packet loss dis-appeared with 256K buffer size.
         // See bug 1252769 for future improvements of this.
-        opt_rcvbuf.value.recv_buffer_size = 256 * 1024;
-        status = PR_SetSocketOption(fd_, &opt_rcvbuf);
-        if (status != PR_SUCCESS) {
+        PRSize min_buffer_size = 256 * 1024;
+        PRSocketOptionData opt_rcvbuf;
+        opt_rcvbuf.option = PR_SockOpt_RecvBufferSize;
+        if ((status = PR_GetSocketOption(fd_, &opt_rcvbuf)) == PR_SUCCESS) {
+          if (opt_rcvbuf.value.recv_buffer_size < min_buffer_size) {
+            opt_rcvbuf.value.recv_buffer_size = min_buffer_size;
+            if ((status = PR_SetSocketOption(fd_, &opt_rcvbuf)) != PR_SUCCESS) {
+              r_log(LOG_GENERIC, LOG_CRIT,
+                "Couldn't set socket receive buffer size: %d", status);
+            }
+          } else {
+            r_log(LOG_GENERIC, LOG_INFO,
+              "Socket receive buffer size is already: %d",
+              opt_rcvbuf.value.recv_buffer_size);
+          }
+        } else {
           r_log(LOG_GENERIC, LOG_CRIT,
-            "Couldn't set receive buffer size socket option: %d", status);
-          ABORT(R_INTERNAL);
+            "Couldn't get socket receive buffer size: %d", status);
+        }
+        PRSocketOptionData opt_sndbuf;
+        opt_sndbuf.option = PR_SockOpt_SendBufferSize;
+        if ((status = PR_GetSocketOption(fd_, &opt_sndbuf)) == PR_SUCCESS) {
+          if (opt_sndbuf.value.recv_buffer_size < min_buffer_size) {
+            opt_sndbuf.value.recv_buffer_size = min_buffer_size;
+            if ((status = PR_SetSocketOption(fd_, &opt_sndbuf)) != PR_SUCCESS) {
+              r_log(LOG_GENERIC, LOG_CRIT,
+                "Couldn't set socket send buffer size: %d", status);
+            }
+          } else {
+            r_log(LOG_GENERIC, LOG_INFO,
+              "Socket send buffer size is already: %d",
+              opt_sndbuf.value.recv_buffer_size);
+          }
+        } else {
+          r_log(LOG_GENERIC, LOG_CRIT,
+            "Couldn't get socket send buffer size: %d", status);
         }
       }
 #endif
@@ -1482,7 +1510,7 @@ int NrUdpSocketIpc::accept(nr_transport_addr *addrp, nr_socket **sockp) {
 void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
   ASSERT_ON_THREAD(io_thread_);
 
-  uint32_t recvBuffSize = 0;
+  uint32_t minBuffSize = 0;
   nsresult rv;
   nsCOMPtr<nsIUDPSocketChild> socketChild = do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
   if (NS_FAILED(rv)) {
@@ -1513,20 +1541,21 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
 
 #ifdef XP_WIN
   if (!mozilla::IsWin8OrLater()) {
-    // Increase default receive buffer size on <= Win7 to be able to
-    // receive an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
+    // Increase default receive and send buffer size on <= Win7 to be able to
+    // receive and send an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
     // stream without losing packets.
     // Manual testing showed that 100K buffer size was not enough and the
     // packet loss dis-appeared with 256K buffer size.
     // See bug 1252769 for future improvements of this.
-    recvBuffSize = 256 * 1024;
+    minBuffSize = 256 * 1024;
   }
 #endif
   // XXX bug 1126232 - don't use null Principal!
   if (NS_FAILED(socket_child_->Bind(proxy, nullptr, host, port,
                                     /* reuse = */ false,
                                     /* loopback = */ false,
-                                    /* recv buffer size */ recvBuffSize))) {
+                                    /* recv buffer size */ minBuffSize,
+                                    /* send buffer size */ minBuffSize))) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDP socket");
     mon.NotifyAll();
