@@ -15,17 +15,17 @@
     "title": "my-int"
   },
   {
+    "name": "sayHello",
+    "type": "control",
+    "label": "Click me!",
+    "title": "hello"
+  },
+  {
     "name": "myHiddenInt",
     "type": "integer",
     "hidden": true,
     "value": 5,
     "title": "hidden-int"
-  },
-  {
-    "name": "sayHello",
-    "type": "control",
-    "label": "Click me!",
-    "title": "hello"
   }],
   "main": "./lib/main.js",
   "version": "0.0.1"
