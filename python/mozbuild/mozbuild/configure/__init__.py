@@ -28,6 +28,7 @@ from mozbuild.configure.util import (
     LineIO,
 )
 from mozbuild.util import (
+    memoize,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
@@ -119,8 +120,6 @@ class ConfigureSandbox(dict):
         self._options = OrderedDict()
         # Store the raw values returned by @depends functions
         self._results = {}
-        # Store values for each Option, as per returned by Option.get_value
-        self._option_values = {}
         # Store raw option (as per command line or environment) for each Option
         self._raw_options = {}
 
@@ -204,7 +203,22 @@ class ConfigureSandbox(dict):
         consistency of the executed script.'''
         self.exec_file(path)
 
-        # All command line arguments should have been removed (handled) by now.
+        for option in self._options.itervalues():
+            # All options must be referenced by some @depends function
+            if option not in self._seen:
+                raise ConfigureError(
+                    'Option `%s` is not handled ; reference it with a @depends'
+                    % option.option
+                )
+
+            # When running with --help, few options are handled but we still
+            # want to find the unknown ones below, so handle them all now. We
+            # however don't run any of the @depends function that depend on
+            # them.
+            if self._help:
+                self._helper.handle(option)
+
+        # All options should have been removed (handled) by now.
         for arg in self._helper:
             without_value = arg.split('=', 1)[0]
             if arg in self._implied_options:
@@ -213,14 +227,6 @@ class ConfigureSandbox(dict):
                     '`%s`, emitted from `%s` line %d, is unknown.'
                     % (without_value, frameinfo[1], frameinfo[2]))
             raise InvalidOptionError('Unknown option: %s' % without_value)
-
-        # All options must be referenced by some @depends function
-        for option in self._options.itervalues():
-            if option not in self._seen:
-                raise ConfigureError(
-                    'Option `%s` is not handled ; reference it with a @depends'
-                    % option.option
-                )
 
         if self._help:
             with LineIO(self.log_impl.info) as out:
@@ -268,9 +274,25 @@ class ConfigureSandbox(dict):
             assert func in self._results
             return self._results[func]
         elif isinstance(obj, Option):
-            assert obj in self._option_values
-            return self._option_values.get(obj)
+            return self._value_for_option(obj)
+
         assert False
+
+    @memoize
+    def _value_for_option(self, option):
+        try:
+            value, option_string = self._helper.handle(option)
+        except ConflictingOptionError as e:
+            frameinfo, reason = self._implied_options[e.arg]
+            reason = self._raw_options.get(reason) or reason.option
+            raise InvalidOptionError(
+                "'%s' implied by '%s' conflicts with '%s' from the %s"
+                % (e.arg, reason, e.old_arg, e.old_origin))
+
+        self._raw_options[option] = (option_string.split('=', 1)[0]
+                                     if option_string else option_string)
+
+        return value
 
     def option_impl(self, *args, **kwargs):
         '''Implementation of option()
@@ -293,21 +315,11 @@ class ConfigureSandbox(dict):
         if option.env:
             self._options[option.env] = option
 
-        try:
-            value, option_string = self._helper.handle(option)
-        except ConflictingOptionError as e:
-            frameinfo, reason = self._implied_options[e.arg]
-            reason = self._raw_options.get(reason) or reason.option
-            raise InvalidOptionError(
-                "'%s' implied by '%s' conflicts with '%s' from the %s"
-                % (e.arg, reason, e.old_arg, e.old_origin))
-
         if self._help:
             self._help.add(option)
 
-        self._option_values[option] = value
-        self._raw_options[option] = (option_string.split('=', 1)[0]
-                                     if option_string else option_string)
+        self._value_for(option)
+
         return option
 
     def depends_impl(self, *args):
