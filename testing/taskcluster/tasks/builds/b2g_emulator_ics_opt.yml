@@ -31,4 +31,4 @@ task:
 
     env:
       TARGET: 'emulator'
-      TOOLTOOL_MANIFEST: 'b2g/config/emulator-ics/releng-emulator-ics.tt'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-ics/releng-emulator-ics.manifest'

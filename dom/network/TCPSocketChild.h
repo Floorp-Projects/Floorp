@@ -76,9 +76,11 @@ public:
   virtual bool RecvRequestDelete() override;
   virtual bool RecvUpdateBufferedAmount(const uint32_t& aBufferred,
                                         const uint32_t& aTrackingNumber) override;
+  nsresult SetFilterName(const nsACString& aFilterName);
 private:
   nsString mHost;
   uint16_t mPort;
+  nsCString mFilterName;
 };
 
 } // namespace dom

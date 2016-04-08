@@ -14,11 +14,13 @@
 
 #define PEERCONNECTION_CONTRACTID "@mozilla.org/peerconnection;1"
 
-#include "stun_udp_socket_filter.h"
+#include "stun_socket_filter.h"
 
 NS_DEFINE_NAMED_CID(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CID)
+NS_DEFINE_NAMED_CID(NS_STUN_TCP_SOCKET_FILTER_HANDLER_CID)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStunUDPSocketFilterHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStunTCPSocketFilterHandler)
 
 
 namespace mozilla
@@ -33,12 +35,14 @@ NS_DEFINE_NAMED_CID(PEERCONNECTION_CID);
 static const mozilla::Module::CIDEntry kCIDs[] = {
   { &kPEERCONNECTION_CID, false, nullptr, mozilla::PeerConnectionImplConstructor },
   { &kNS_STUN_UDP_SOCKET_FILTER_HANDLER_CID, false, nullptr, nsStunUDPSocketFilterHandlerConstructor },
+  { &kNS_STUN_TCP_SOCKET_FILTER_HANDLER_CID, false, nullptr, nsStunTCPSocketFilterHandlerConstructor },
   { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
   { PEERCONNECTION_CONTRACTID, &kPEERCONNECTION_CID },
   { NS_STUN_UDP_SOCKET_FILTER_HANDLER_CONTRACTID, &kNS_STUN_UDP_SOCKET_FILTER_HANDLER_CID },
+  { NS_STUN_TCP_SOCKET_FILTER_HANDLER_CONTRACTID, &kNS_STUN_TCP_SOCKET_FILTER_HANDLER_CID },
   { nullptr }
 };
 

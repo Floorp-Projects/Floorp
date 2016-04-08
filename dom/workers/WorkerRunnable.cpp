@@ -288,7 +288,7 @@ WorkerRunnable::Run()
 
     JSObject* global = JS::CurrentGlobalOrNull(cx);
     if (global) {
-      globalObject = GetGlobalObjectForGlobal(global);
+      globalObject = xpc::NativeGlobal(global);
     } else {
       globalObject = DefaultGlobalObject();
     }

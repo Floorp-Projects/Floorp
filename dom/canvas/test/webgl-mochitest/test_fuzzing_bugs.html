@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<title>WebGL fuzzy bugs</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<body>
+<script>
+
+// Test the framebufferTexture2D() call with a unbound texture.
+function framebufferTexture2D_bug1257593() {
+  var canvas = document.createElement('canvas');
+
+  var gl = null;
+  gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) {
+    todo(false, 'WebGL framebufferTexture2D test, webgl is unavailable.');
+    return;
+  }
+
+  var texture = gl.createTexture(); // only createTexture(), but no bindBuffer()
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, texture, 0);
+
+  ok(true, 'WebGL framebufferTexture2D with unbound texture');
+}
+
+// Test to call ClearBufferXXX() during context lost.
+function webGL2ClearBufferXXX_bug1252414() {
+  var canvas = document.createElement('canvas');
+
+  var gl = canvas.getContext('webgl2');
+  if (!gl) {
+    todo(false, 'WebGL2 is not supported');
+    return;
+  }
+
+  var ext = gl.getExtension('WEBGL_lose_context');
+  if (!ext) {
+    todo(false, 'WebGL ClearBufferXXX test, ext WEBGL_lose_context is unavailable.');
+    return;
+  }
+
+  // Force to lose context.
+  ext.loseContext();
+
+  // Even thought the context is lost, all clearBuffer* function should still
+  // work without crash.
+  gl.clearBufferiv(gl.COLOR, 0, new Int32Array(10));
+  gl.clearBufferuiv(gl.COLOR, 0, new Uint32Array(10));
+  gl.clearBufferfv(gl.DEPTH, 0, new Float32Array(10));
+  gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 0.0, 0);
+
+  ok(true, 'WebGL2 clearBufferXXX call during loseContext');
+}
+
+function run() {
+  webGL2ClearBufferXXX_bug1252414();
+  framebufferTexture2D_bug1257593();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+try {
+  var prefArrArr = [
+    ['webgl.force-enabled', true],
+    ['webgl.enable-prototype-webgl2', true],
+  ];
+  var prefEnv = {'set': prefArrArr};
+  SpecialPowers.pushPrefEnv(prefEnv, run);
+} catch (e) {
+  warning('No SpecialPowers, but trying WebGL2 anyway...');
+  run();
+}
+</script>
+

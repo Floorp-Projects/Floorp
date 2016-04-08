@@ -30,4 +30,4 @@ task:
       level-{{level}}-{{project}}-emulator-kk-opt-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-kk'
-      TOOLTOOL_MANIFEST: 'b2g/config/emulator-kk/releng-emulator-kk.tt'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-kk/releng-emulator-kk.manifest'

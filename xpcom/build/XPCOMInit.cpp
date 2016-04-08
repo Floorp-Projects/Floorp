@@ -704,8 +704,9 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 #endif
 
   // Initialize the JS engine.
-  if (!JS_Init()) {
-    NS_RUNTIMEABORT("JS_Init failed");
+  const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
+  if (jsInitFailureReason) {
+    NS_RUNTIMEABORT(jsInitFailureReason);
   }
 
   rv = nsComponentManagerImpl::gComponentManager->Init();
