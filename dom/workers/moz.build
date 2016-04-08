@@ -23,9 +23,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
-    'ServiceWorkerInfo.h',
     'ServiceWorkerManager.h',
-    'ServiceWorkerRegistrationInfo.h',
     'WorkerDebuggerManager.h',
     'Workers.h',
 ]
@@ -68,7 +66,6 @@ UNIFIED_SOURCES += [
     'ServiceWorkerClients.cpp',
     'ServiceWorkerContainer.cpp',
     'ServiceWorkerEvents.cpp',
-    'ServiceWorkerInfo.cpp',
     'ServiceWorkerJob.cpp',
     'ServiceWorkerJobQueue.cpp',
     'ServiceWorkerManager.cpp',
@@ -80,7 +77,6 @@ UNIFIED_SOURCES += [
     'ServiceWorkerRegisterJob.cpp',
     'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
-    'ServiceWorkerRegistrationInfo.cpp',
     'ServiceWorkerScriptCache.cpp',
     'ServiceWorkerUnregisterJob.cpp',
     'ServiceWorkerUpdateJob.cpp',
