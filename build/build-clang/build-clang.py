@@ -139,12 +139,6 @@ def svn_update(directory, revision):
     run_in(directory, ["svn", "update", "-r", revision])
 
 
-def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
-                    build_type, assertions, python_path):
-    build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
-                        build_type, assertions, python_path)
-
-
 def get_platform():
     p = platform.system()
     if p == "Darwin":
@@ -175,8 +169,8 @@ def is_windows():
     return platform.system() == "Windows"
 
 
-def build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
-                        build_type, assertions, python_path):
+def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
+                    build_type, assertions, python_path, gcc_dir):
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -201,6 +195,10 @@ def build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
                   "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
                   src_dir];
     build_package(build_dir, run_cmake, cmake_args)
+
+    if is_linux():
+        install_libgcc(gcc_dir, inst_dir)
+
 
 if __name__ == "__main__":
     # The directories end up in the debug info, so the easy way of getting
@@ -344,8 +342,8 @@ if __name__ == "__main__":
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
-        extra_cflags2 = ["-fPIC", "--gcc-toolchain=%s" % gcc_dir]
-        extra_cxxflags2 = ["-fPIC", "--gcc-toolchain=%s" % gcc_dir]
+        extra_cflags2 = ["-fPIC"]
+        extra_cxxflags2 = ["-fPIC"]
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
@@ -361,7 +359,7 @@ if __name__ == "__main__":
         [cc] + extra_cflags,
         [cxx] + extra_cxxflags,
         llvm_source_dir, stage1_dir, build_libcxx,
-        build_type, assertions, python_path)
+        build_type, assertions, python_path, gcc_dir)
 
     if stages > 1:
         stage2_dir = build_dir + '/stage2'
@@ -373,21 +371,18 @@ if __name__ == "__main__":
             [stage1_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
             llvm_source_dir, stage2_dir, build_libcxx,
-            build_type, assertions, python_path)
+            build_type, assertions, python_path, gcc_dir)
 
-        if stages > 2:
-            stage3_dir = build_dir + '/stage3'
-            final_stage_dir = stage3_dir
-            build_one_stage(
-                [stage2_inst_dir + "/bin/%s%s" %
-                    (cc_name, exe_ext)] + extra_cflags2,
-                [stage2_inst_dir + "/bin/%s%s" %
-                    (cxx_name, exe_ext)] + extra_cxxflags2,
-                llvm_source_dir, stage3_dir, build_libcxx,
-                build_type, assertions, python_path)
-
-    if is_linux():
-        install_libgcc(gcc_dir, final_stage_dir + '/clang')
+    if stages > 2:
+        stage3_dir = build_dir + '/stage3'
+        final_stage_dir = stage3_dir
+        build_one_stage(
+            [stage2_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_cflags2,
+            [stage2_inst_dir + "/bin/%s%s" %
+                (cxx_name, exe_ext)] + extra_cxxflags2,
+            llvm_source_dir, stage3_dir, build_libcxx,
+            build_type, assertions, python_path, gcc_dir)
 
     if is_darwin() or is_windows():
         build_tar_package("tar", "clang.tar.bz2", final_stage_dir, "clang")
