@@ -290,10 +290,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     return S_OK;
   }
 
-  AlignedAudioBuffer audioData(numSamples);
-  if (!audioData) {
-    return E_OUTOFMEMORY;
-  }
+  auto audioData = MakeUnique<AudioDataValue[]>(numSamples);
 
   int16_t* pcm = (int16_t*)data;
   for (int32_t i = 0; i < numSamples; ++i) {

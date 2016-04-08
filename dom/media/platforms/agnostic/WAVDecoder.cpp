@@ -99,10 +99,7 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 
   int32_t frames = aLength * 8 / mInfo.mBitDepth / mInfo.mChannels;
 
-  AlignedAudioBuffer buffer(frames * mInfo.mChannels);
-  if (!buffer) {
-    return false;
-  }
+  auto buffer = MakeUnique<AudioDataValue[]>(frames * mInfo.mChannels);
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mInfo.mChannels; ++j) {
       if (mInfo.mProfile == 6) {                              //ALAW Data
