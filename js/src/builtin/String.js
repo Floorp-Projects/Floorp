@@ -44,7 +44,7 @@ function String_match(regexp) {
     var flags = undefined;
     if (arguments.length > 1) {
         if (IsMatchFlagsArgumentEnabled())
-            flags = arguments[1];
+            flags = ToString(arguments[1]);
         WarnOnceAboutFlagsArgument();
     } else {
         if (isPatternString && IsStringMatchOptimizable()) {
@@ -166,7 +166,7 @@ function String_replace(searchValue, replaceValue) {
     if (arguments.length > 2) {
         WarnOnceAboutFlagsArgument();
         if (IsMatchFlagsArgumentEnabled()) {
-            flags = arguments[2];
+            flags = ToString(arguments[2]);
             var rx = RegExpCreate(RegExpEscapeMetaChars(searchString), flags);
 
             return callContentFunction(GetMethod(rx, std_replace), rx, string, replaceValue);
@@ -257,7 +257,7 @@ function String_search(regexp) {
     var flags = undefined;
     if (arguments.length > 1) {
         if (IsMatchFlagsArgumentEnabled())
-            flags = arguments[1];
+            flags = ToString(arguments[1]);
         WarnOnceAboutFlagsArgument();
     } else {
         if (isPatternString && IsStringSearchOptimizable()) {
