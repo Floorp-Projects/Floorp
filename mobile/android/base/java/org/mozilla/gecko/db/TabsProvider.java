@@ -328,7 +328,7 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
                 // Use a subquery to quietly exclude stale duplicate client records.
                 qb.setTables(excludeStaleClientsTable + " AS " + TABLE_CLIENTS + " LEFT OUTER JOIN " + TABLE_TABS +
                         " ON (" + projectColumn(TABLE_CLIENTS, Clients.GUID) +
-                        " = " + projectColumn(TABLE_TABS,Tabs.CLIENT_GUID) + ")");
+                        " = " + projectColumn(TABLE_TABS, Tabs.CLIENT_GUID) + ")");
                 groupBy = projectColumn(TABLE_CLIENTS, Clients.GUID);
                 break;
 

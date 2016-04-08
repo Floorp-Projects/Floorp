@@ -122,7 +122,7 @@ public class DateTimePicker extends FrameLayout {
                     setTempDate(Calendar.WEEK_OF_YEAR, old, newVal, 0, maxWeekOfYear);
                 } else if (picker == mYearSpinner && mYearEnabled) {
                     int month = mTempDate.get(Calendar.MONTH);
-                    mTempDate.set(Calendar.YEAR,newVal);
+                    mTempDate.set(Calendar.YEAR, newVal);
                     // Changing the year shouldn't change the month. (in case of non-leap year a Feb 29)
                     // change the day instead;
                     if (month != mTempDate.get(Calendar.MONTH)) {
@@ -139,12 +139,12 @@ public class DateTimePicker extends FrameLayout {
                 } else if (picker == mMinuteSpinner && mMinuteEnabled) {
                     setTempDate(Calendar.MINUTE, oldVal, newVal, 0, 59);
                 } else if (picker == mAMPMSpinner && mHourEnabled) {
-                    mTempDate.set(Calendar.AM_PM,newVal);
+                    mTempDate.set(Calendar.AM_PM, newVal);
                 } else {
                     throw new IllegalArgumentException();
                 }
             } else {
-                if (DEBUG) Log.d(LOGTAG,"Sdk version < 10, using old behavior");
+                if (DEBUG) Log.d(LOGTAG, "Sdk version < 10, using old behavior");
                 if (picker == mDaySpinner && mDayEnabled){
                     mTempDate.set(Calendar.DAY_OF_MONTH, newVal);
                 } else if (picker == mMonthSpinner && mMonthEnabled){
@@ -325,13 +325,13 @@ public class DateTimePicker extends FrameLayout {
             mScreenWidth >= SCREEN_SIZE_THRESHOLD) {
 
             if (DEBUG) {
-                Log.d(LOGTAG,"SDK > 10 and screen wide enough, displaying calendar");
+                Log.d(LOGTAG, "SDK > 10 and screen wide enough, displaying calendar");
             }
 
             mCalendar = new CalendarView(context);
             mCalendar.setVisibility(GONE);
 
-            LayoutParams layoutParams = new LayoutParams(250,280);
+            LayoutParams layoutParams = new LayoutParams(250, 280);
             mCalendar.setLayoutParams(layoutParams);
             mCalendar.setFocusable(true);
             mCalendar.setFocusableInTouchMode(true);
