@@ -29,6 +29,8 @@ struct CubebDestroyPolicy
 
 class AudioStream;
 class FrameHistory;
+class AudioConfig;
+class AudioConverter;
 
 class AudioClock
 {
@@ -367,10 +369,12 @@ private:
 
   StreamState mState;
   bool mIsFirst;
-  // Get this value from the preferece, if true, we would downmix the stereo.
+  // Get this value from the preference, if true, we would downmix the stereo.
   bool mIsMonoAudioEnabled;
 
   DataSource& mDataSource;
+
+  UniquePtr<AudioConverter> mAudioConverter;
 };
 
 } // namespace mozilla
