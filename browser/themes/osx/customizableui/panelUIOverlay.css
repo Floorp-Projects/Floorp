@@ -4,6 +4,10 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
+:root {
+  --panel-separator-color: hsla(210,4%,10%,.15);
+}
+
 .panel-subviews {
   background-color: hsla(0,0%,100%,.97);
 }
