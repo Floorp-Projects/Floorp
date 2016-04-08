@@ -304,7 +304,7 @@ pref("browser.urlbar.matchBehavior", 1);
 pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
-pref("browser.urlbar.maxRichResults", 12);
+pref("browser.urlbar.maxRichResults", 10);
 // The amount of time (ms) to wait after the user has stopped typing
 // before starting to perform autocomplete.  50 is the default set in
 // autocomplete.xml.
