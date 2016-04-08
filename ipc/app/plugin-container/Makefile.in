@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifndef MOZ_WINCONSOLE
-ifdef MOZ_DEBUG
-MOZ_WINCONSOLE = 1
-else
-MOZ_WINCONSOLE = 0
-endif
-endif
-
 # This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
 # # shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
 NSDISTMODE = copy
@@ -21,7 +13,7 @@ include $(topsrcdir)/config/rules.mk
 ifeq ($(OS_ARCH),WINNT) #{
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
-EXTRA_DEPS += plugin-container.exe.manifest
+EXTRA_DEPS += firefox-plugin-container.exe.manifest
 endif #}
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{

@@ -3,7 +3,7 @@
 <assemblyIdentity
         version="1.0.0.0"
         processorArchitecture="*"
-        name="plugin-container"
+        name="firefox-plugin-container"
         type="win32"
 />
 <description>Firefox Runtime</description>

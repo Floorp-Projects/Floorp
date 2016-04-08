@@ -7086,6 +7086,27 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_MACBUNDLE_ID,$MOZ_MACBUNDLE_ID)
 AC_SUBST(MOZ_MACBUNDLE_ID)
 
+dnl ========================================================
+dnl = Child Process Name for IPC
+dnl ========================================================
+if test "$MOZ_WIDGET_TOOLKIT" != "android"; then
+  MOZ_CHILD_PROCESS_NAME="firefox-webcontent${BIN_SUFFIX}"
+  MOZ_PLUGIN_PROCESS_NAME="firefox-plugin-container${BIN_SUFFIX}"
+else
+  # We want to let Android unpack the file at install time, but it only does
+  # so if the file is named libsomething.so. The lib/ path is also required
+  # because the unpacked file will be under the lib/ subdirectory and will
+  # need to be executed from that path.
+  MOZ_CHILD_PROCESS_NAME="libfirefox-webcontent.so"
+  MOZ_CHILD_PROCESS_NAME_PIE="libplugin-container-pie.so"
+  AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
+fi
+MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
+
+AC_SUBST(MOZ_CHILD_PROCESS_NAME)
+AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
+AC_SUBST(MOZ_PLUGIN_PROCESS_NAME)
+
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
 # - MOZ_APP_VENDOR: Used for application.ini's "Vendor" field, which also
@@ -7135,27 +7156,6 @@ fi
 if test -z "$ANDROID_PACKAGE_NAME" ; then
    ANDROID_PACKAGE_NAME="org.mozilla.$MOZ_APP_NAME"
 fi
-
-dnl ========================================================
-dnl = Child Process Name for IPC
-dnl ========================================================
-if test "$MOZ_WIDGET_TOOLKIT" != "android"; then
-  MOZ_CHILD_PROCESS_NAME="${MOZ_APP_NAME}-webcontent${BIN_SUFFIX}"
-  MOZ_PLUGIN_PROCESS_NAME="plugin-container${BIN_SUFFIX}"
-else
-  # We want to let Android unpack the file at install time, but it only does
-  # so if the file is named libsomething.so. The lib/ path is also required
-  # because the unpacked file will be under the lib/ subdirectory and will
-  # need to be executed from that path.
-  MOZ_CHILD_PROCESS_NAME="libfirefox-webcontent.so"
-  MOZ_CHILD_PROCESS_NAME_PIE="libplugin-container-pie.so"
-  AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
-fi
-MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
-
-AC_SUBST(MOZ_CHILD_PROCESS_NAME)
-AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
-AC_SUBST(MOZ_PLUGIN_PROCESS_NAME)
 
 # Mozilla released Firefox for Android {Release,Beta} and {Aurora,Nightly} to
 # the public with specific common shared IDs and we need to keep them
