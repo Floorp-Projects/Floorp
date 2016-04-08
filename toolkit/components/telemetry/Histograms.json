@@ -526,6 +526,20 @@
     "kind": "boolean",
     "description": "Geolocation on OS X is either MLS or CoreLocation"
   },
+  "GEOLOCATION_GETCURRENTPOSITION_VISIBLE": {
+    "alert_emails": ["michelangelo@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "bug_numbers": [1255198],
+    "description": "This metric is recorded every time a navigator.geolocation.getCurrentPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
+  },
+  "GEOLOCATION_WATCHPOSITION_VISIBLE": {
+    "alert_emails": ["michelangelo@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "boolean",
+    "bug_numbers": [1255198],
+    "description": "This metric is recorded every time a navigator.geolocation.watchPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",

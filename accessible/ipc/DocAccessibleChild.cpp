@@ -40,6 +40,10 @@ InterfacesFor(Accessible* aAcc)
   if (aAcc->IsImage())
     interfaces |= Interfaces::IMAGE;
 
+  if (aAcc->IsTable()) {
+    interfaces |= Interfaces::TABLE;
+  }
+
   if (aAcc->IsTableCell())
     interfaces |= Interfaces::TABLECELL;
 

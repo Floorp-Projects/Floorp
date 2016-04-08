@@ -79,28 +79,26 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
                                      RequestType aType)
 {
   EME_LOG("MediaKeySystemAccessManager::Request %s", NS_ConvertUTF16toUTF8(aKeySystem).get());
+
+  // Parse keysystem, split it out into keySystem prefix, and version suffix.
+  nsAutoString keySystem;
+  int32_t minCdmVersion = NO_CDM_VERSION;
+  if (!ParseKeySystem(aKeySystem, keySystem, minCdmVersion)) {
+    // Not to inform user, because nothing to do if the keySystem is not
+    // supported.
+    aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                          NS_LITERAL_CSTRING("Key system string is invalid,"
+                                             " or key system is unsupported"));
+    return;
+  }
+
   if (!Preferences::GetBool("media.eme.enabled", false)) {
-    // EME disabled by user, send notification to chrome so UI can
-    // inform user.
+    // EME disabled by user, send notification to chrome so UI can inform user.
     MediaKeySystemAccess::NotifyObservers(mWindow,
                                           aKeySystem,
                                           MediaKeySystemStatus::Api_disabled);
     aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
                           NS_LITERAL_CSTRING("EME has been preffed off"));
-    return;
-  }
-
-  // Parse keysystem, split it out into keySystem prefix, and version suffix.
-  nsAutoString keySystem;
-  int32_t minCdmVersion = NO_CDM_VERSION;
-  if (!ParseKeySystem(aKeySystem,
-                      keySystem,
-                      minCdmVersion)) {
-    // Invalid keySystem string, or unsupported keySystem. Send notification
-    // to chrome to show a failure notice.
-    MediaKeySystemAccess::NotifyObservers(mWindow, aKeySystem, MediaKeySystemStatus::Cdm_not_supported);
-    aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          NS_LITERAL_CSTRING("Key system string is invalid, or key system is unsupported"));
     return;
   }
 
@@ -168,9 +166,10 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     aPromise->MaybeResolve(access);
     return;
   }
-
+  // Not to inform user, because nothing to do if the corresponding keySystem
+  // configuration is not supported.
   aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                        NS_LITERAL_CSTRING("Key system is not supported"));
+                        NS_LITERAL_CSTRING("Key system configuration is not supported"));
 }
 
 MediaKeySystemAccessManager::PendingRequest::PendingRequest(DetailedPromise* aPromise,

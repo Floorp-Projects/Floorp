@@ -59,8 +59,8 @@ CheckMessageParameterCounts()
 }
 #endif /* DEBUG */
 
-JS_PUBLIC_API(bool)
-JS_Init(void)
+JS_PUBLIC_API(const char*)
+JS_InitWithFailureDiagnostic(void)
 {
     MOZ_ASSERT(libraryInitState == InitState::Uninitialized,
                "must call JS_Init once before any JSAPI operation except "
@@ -76,18 +76,18 @@ JS_Init(void)
 
     using js::TlsPerThreadData;
     if (!TlsPerThreadData.init())
-        return false;
+        return "JS_InitWithFailureDiagnostic: TlsPerThreadData.init() failed";
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     if (!js::oom::InitThreadType())
-        return false;
+        return "JS_InitWithFailureDiagnostic: js::oom::InitThreadType() failed";
     js::oom::SetThreadType(js::oom::THREAD_TYPE_MAIN);
 #endif
 
     js::jit::ExecutableAllocator::initStatic();
 
     if (!js::jit::InitializeIon())
-        return false;
+        return "JS_InitWithFailureDiagnostic: js::jit::InitializeIon() failed";
 
     js::DateTimeInfo::init();
 
@@ -95,20 +95,27 @@ JS_Init(void)
     UErrorCode err = U_ZERO_ERROR;
     u_init(&err);
     if (U_FAILURE(err))
-        return false;
+        return "JS_InitWithFailureDiagnostic: u_init() failed";
 #endif // EXPOSE_INTL_API
 
     if (!js::CreateHelperThreadsState())
-        return false;
+        return "JS_InitWithFailureDiagnostic: js::CreateHelperThreadState() failed";
 
     if (!FutexRuntime::initialize())
-        return false;
+        return "JS_InitWithFailureDiagnostic: FutexRuntime::initialize() failed";
 
     if (!js::gcstats::Statistics::initialize())
-        return false;
+        return "JS_InitWithFailureDiagnostic: js::gcstats::Statistics::initialize() failed";
 
     libraryInitState = InitState::Running;
-    return true;
+    return nullptr;
+}
+
+JS_PUBLIC_API(bool)
+JS_Init(void)
+{
+    const char* failure = JS_InitWithFailureDiagnostic();
+    return !failure;
 }
 
 JS_PUBLIC_API(void)

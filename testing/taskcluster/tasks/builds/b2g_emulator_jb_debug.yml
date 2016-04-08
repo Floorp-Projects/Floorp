@@ -30,7 +30,7 @@ task:
     env:
       TARGET: 'emulator-jb'
       B2G_DEBUG: 1
-      TOOLTOOL_MANIFEST: 'b2g/config/emulator-jb/releng-emulator-jb.tt'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-jb/releng-emulator-jb.manifest'
       # This setting is to offset the number of arugments passsed into docker run
       # for https://github.com/docker/docker/issues/14203
       DOCKER_OVERRIDE: 1

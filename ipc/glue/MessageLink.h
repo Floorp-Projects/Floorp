@@ -204,7 +204,7 @@ class ProcessLink
     // These methods acquire the monitor and forward to the
     // similarly named methods in AsyncChannel below
     // (OnMessageReceivedFromLink(), etc)
-    virtual void OnMessageReceived(const Message& msg) override;
+    virtual void OnMessageReceived(Message&& msg) override;
     virtual void OnChannelConnected(int32_t peer_pid) override;
     virtual void OnChannelError() override;
 
