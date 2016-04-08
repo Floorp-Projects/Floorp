@@ -12,6 +12,7 @@
 #endif
 #include "VideoUtils.h"
 #include "ImageContainer.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>

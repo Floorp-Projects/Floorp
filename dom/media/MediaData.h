@@ -14,10 +14,7 @@
 #include "SharedBuffer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "nsTArray.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/PodOperations.h"
 
 namespace mozilla {
 
@@ -28,231 +25,6 @@ class ImageContainer;
 
 class MediaByteBuffer;
 class SharedTrackInfo;
-
-// AlignedBuffer:
-// Memory allocations are fallibles. Methods return a boolean indicating if
-// memory allocations were successful. Return values should always be checked.
-// AlignedBuffer::mData will be nullptr if no memory has been allocated or if
-// an error occurred during construction.
-// Existing data is only ever modified if new memory allocation has succeeded
-// and preserved if not.
-//
-// The memory referenced by mData will always be Alignment bytes aligned and the
-// underlying buffer will always have a size such that Alignment bytes blocks
-// can be used to read the content, regardless of the mSize value. Buffer is
-// zeroed on creation, elements are not individually constructed.
-// An Alignment value of 0 means that the data isn't aligned.
-//
-// Type must be trivially copyable.
-//
-// AlignedBuffer can typically be used in place of UniquePtr<Type[]> however
-// care must be taken as all memory allocations are fallible.
-// Example:
-// auto buffer = MakeUniqueFallible<float[]>(samples)
-// becomes: AlignedFloatBuffer buffer(samples)
-//
-// auto buffer = MakeUnique<float[]>(samples)
-// becomes:
-// AlignedFloatBuffer buffer(samples);
-// if (!buffer) { return NS_ERROR_OUT_OF_MEMORY; }
-
-template <typename Type, int Alignment = 0>
-class AlignedBuffer
-{
-public:
-  AlignedBuffer()
-    : mData(nullptr)
-    , mLength(0)
-    , mBuffer(nullptr)
-    , mCapacity(0)
-  {}
-
-  explicit AlignedBuffer(size_t aLength)
-    : mData(nullptr)
-    , mLength(0)
-    , mBuffer(nullptr)
-    , mCapacity(0)
-  {
-    if (EnsureCapacity(aLength)) {
-      mLength = aLength;
-    }
-  }
-
-  AlignedBuffer(const Type* aData, size_t aLength)
-    : AlignedBuffer(aLength)
-  {
-    if (!mData) {
-      return;
-    }
-    PodCopy(mData, aData, aLength);
-  }
-
-  AlignedBuffer(const AlignedBuffer& aOther)
-    : AlignedBuffer(aOther.Data(), aOther.Length())
-  {}
-
-  AlignedBuffer(AlignedBuffer&& aOther)
-    : mData(aOther.mData)
-    , mLength(aOther.mLength)
-    , mBuffer(Move(aOther.mBuffer))
-    , mCapacity(aOther.mCapacity)
-  {
-    aOther.mData = nullptr;
-    aOther.mLength = 0;
-    aOther.mCapacity = 0;
-  }
-
-  AlignedBuffer& operator=(AlignedBuffer&& aOther)
-  {
-    this->~AlignedBuffer();
-    new (this) AlignedBuffer(Move(aOther));
-    return *this;
-  }
-
-  Type* Data() const { return mData; }
-  size_t Length() const { return mLength; }
-  size_t Size() const { return mLength * sizeof(Type); }
-  Type& operator[](size_t aIndex)
-  {
-    MOZ_ASSERT(aIndex < mLength);
-    return mData[aIndex];
-  }
-  const Type& operator[](size_t aIndex) const
-  {
-    MOZ_ASSERT(aIndex < mLength);
-    return mData[aIndex];
-  }
-  // Set length of buffer, allocating memory as required.
-  // If length is increased, new buffer area is filled with 0.
-  bool SetLength(size_t aLength)
-  {
-    if (aLength > mLength && !EnsureCapacity(aLength)) {
-      return false;
-    }
-    mLength = aLength;
-    return true;
-  }
-  // Add aData at the beginning of buffer.
-  bool Prepend(const Type* aData, size_t aLength)
-  {
-    if (!EnsureCapacity(aLength + mLength)) {
-      return false;
-    }
-
-    // Shift the data to the right by aLength to leave room for the new data.
-    PodMove(mData + aLength, mData, mLength);
-    PodCopy(mData, aData, aLength);
-
-    mLength += aLength;
-    return true;
-  }
-  // Add aData at the end of buffer.
-  bool Append(const Type* aData, size_t aLength)
-  {
-    if (!EnsureCapacity(aLength + mLength)) {
-      return false;
-    }
-
-    PodCopy(mData + mLength, aData, aLength);
-
-    mLength += aLength;
-    return true;
-  }
-  // Replace current content with aData.
-  bool Replace(const Type* aData, size_t aLength)
-  {
-    // If aLength is smaller than our current length, we leave the buffer as is,
-    // only adjusting the reported length.
-    if (!EnsureCapacity(aLength)) {
-      return false;
-    }
-
-    PodCopy(mData, aData, aLength);
-    mLength = aLength;
-    return true;
-  }
-  // Clear the memory buffer. Will set target mData and mLength to 0.
-  void Clear()
-  {
-    mLength = 0;
-    mData = nullptr;
-  }
-
-  // Methods for reporting memory.
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
-    size_t size = aMallocSizeOf(this);
-    size += aMallocSizeOf(mBuffer.get());
-    return size;
-  }
-  // AlignedBuffer is typically allocated on the stack. As such, you likely
-  // want to use SizeOfExcludingThis
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
-    return aMallocSizeOf(mBuffer.get());
-  }
-  size_t ComputedSizeOfExcludingThis() const
-  {
-    return mCapacity;
-  }
-
-  // For backward compatibility with UniquePtr<Type[]>
-  Type* get() const { return mData; }
-  explicit operator bool() const { return mData != nullptr; }
-
-private:
-  size_t AlignmentOffset() const
-  {
-    return Alignment ? Alignment - 1 : 0;
-  }
-
-  // Ensure that the backend buffer can hold aLength data. Will update mData.
-  // Will enforce that the start of allocated data is always Alignment bytes
-  // aligned and that it has sufficient end padding to allow for Alignment bytes
-  // block read as required by some data decoders.
-  // Returns false if memory couldn't be allocated.
-  bool EnsureCapacity(size_t aLength)
-  {
-    const CheckedInt<size_t> sizeNeeded =
-      CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentOffset() * 2;
-
-    if (!sizeNeeded.isValid()) {
-      // overflow.
-      return false;
-    }
-    if (mData && mCapacity >= sizeNeeded.value()) {
-      return true;
-    }
-    auto newBuffer = MakeUniqueFallible<uint8_t[]>(sizeNeeded.value());
-    if (!newBuffer) {
-      return false;
-    }
-
-    // Find alignment address.
-    const uintptr_t alignmask = AlignmentOffset();
-    Type* newData = reinterpret_cast<Type*>(
-      (reinterpret_cast<uintptr_t>(newBuffer.get()) + alignmask) & ~alignmask);
-    MOZ_ASSERT(uintptr_t(newData) % (AlignmentOffset()+1) == 0);
-
-    PodZero(newData + mLength, aLength - mLength);
-    PodCopy(newData, mData, mLength);
-
-    mBuffer = Move(newBuffer);
-    mCapacity = sizeNeeded.value();
-    mData = newData;
-
-    return true;
-  }
-  Type* mData;
-  size_t mLength;
-  UniquePtr<uint8_t[]> mBuffer;
-  size_t mCapacity;
-};
-
-typedef AlignedBuffer<uint8_t> AlignedByteBuffer;
-typedef AlignedBuffer<float> AlignedFloatBuffer;
-typedef AlignedBuffer<int16_t> AlignedShortBuffer;
-typedef AlignedBuffer<AudioDataValue> AlignedAudioBuffer;
 
 // Container that holds media samples.
 class MediaData {
@@ -566,11 +338,12 @@ public:
   nsTArray<nsCString> mSessionIds;
 };
 
+
 // MediaRawData is a MediaData container used to store demuxed, still compressed
 // samples.
 // Use MediaRawData::CreateWriter() to obtain a MediaRawDataWriter object that
 // provides methods to modify and manipulate the data.
-// Memory allocations are fallible. Methods return a boolean indicating if
+// Memory allocations are fallibles. Methods return a boolean indicating if
 // memory allocations were successful. Return values should always be checked.
 // MediaRawData::mData will be nullptr if no memory has been allocated or if
 // an error occurred during construction.
