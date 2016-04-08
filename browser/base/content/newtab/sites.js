@@ -125,7 +125,7 @@ Site.prototype = {
   _newTabString: function(str, substrArr) {
     let regExp = /%[0-9]\$S/g;
     let matches;
-    while (matches = regExp.exec(str)) {
+    while ((matches = regExp.exec(str))) {
       let match = matches[0];
       let index = match.charAt(1); // Get the digit in the regExp.
       str = str.replace(match, substrArr[index - 1]);
