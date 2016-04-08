@@ -37,11 +37,7 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
 
   size_t numFrames = aPCM.Length() / aChannels;
   MOZ_ASSERT((aPCM.Length() % aChannels) == 0);
-  AlignedAudioBuffer audioData(aPCM.Length());
-  if (!audioData) {
-    mCallback->Error();
-    return;
-  }
+  auto audioData = MakeUnique<AudioDataValue[]>(aPCM.Length());
 
   for (size_t i = 0; i < aPCM.Length(); ++i) {
     audioData[i] = AudioSampleToFloat(aPCM[i]);
