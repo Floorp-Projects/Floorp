@@ -420,9 +420,6 @@ namespace {
 bool
 MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
 {
-#ifdef MOZ_WEBRTC
-  bool shouldAEC = false;
-#endif
   bool audioTrackPresent = false;
   for (uint32_t i = 0; i < mStreams.Length() && audioTrackPresent == false; ++i) {
     MediaStream* stream = mStreams[i];
@@ -458,13 +455,10 @@ MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
     NS_WARNING("No audio tracks, but full-duplex audio is enabled!!!!!");
     audioTrackPresent = true;
 #ifdef MOZ_WEBRTC
-    shouldAEC = true;
+    aNeedsAEC = true;
 #endif
   }
 
-#ifdef MOZ_WEBRTC
-  aNeedsAEC = shouldAEC;
-#endif
   return audioTrackPresent;
 }
 
