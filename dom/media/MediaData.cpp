@@ -486,17 +486,35 @@ VideoData::Create(const VideoInfo& aInfo,
 }
 #endif  // MOZ_OMX_DECODER
 
+// Alignment value - 1. 0 means that data isn't aligned.
+// For 32-bytes aligned, use 31U.
+#define RAW_DATA_ALIGNMENT 31U
+
 MediaRawData::MediaRawData()
   : MediaData(RAW_DATA, 0)
   , mCrypto(mCryptoInternal)
+  , mData(nullptr)
+  , mSize(0)
+  , mBuffer(nullptr)
+  , mCapacity(0)
 {
 }
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
   : MediaData(RAW_DATA, 0)
   , mCrypto(mCryptoInternal)
-  , mBuffer(aData, aSize)
+  , mData(nullptr)
+  , mSize(0)
+  , mBuffer(nullptr)
+  , mCapacity(0)
 {
+  if (!EnsureCapacity(aSize)) {
+    return;
+  }
+
+  // We ensure sufficient capacity above so this shouldn't fail.
+  memcpy(mData, aData, aSize);
+  mSize = aSize;
 }
 
 already_AddRefed<MediaRawData>
@@ -511,10 +529,44 @@ MediaRawData::Clone() const
   s->mExtraData = mExtraData;
   s->mCryptoInternal = mCryptoInternal;
   s->mTrackInfo = mTrackInfo;
-  if (!s->mBuffer.Append(mBuffer.Data(), mBuffer.Length())) {
-    return nullptr;
+  if (mSize) {
+    if (!s->EnsureCapacity(mSize)) {
+      return nullptr;
+    }
+
+    memcpy(s->mData, mData, mSize);
+    s->mSize = mSize;
   }
   return s.forget();
+}
+
+// EnsureCapacity ensures that the buffer is big enough to hold
+// aSize. It doesn't set the mSize. It's up to the caller to adjust it.
+bool
+MediaRawData::EnsureCapacity(size_t aSize)
+{
+  const size_t sizeNeeded = aSize + RAW_DATA_ALIGNMENT * 2;
+
+  if (mData && mCapacity >= sizeNeeded) {
+    return true;
+  }
+  auto newBuffer = MakeUniqueFallible<uint8_t[]>(sizeNeeded);
+  if (!newBuffer) {
+    return false;
+  }
+
+  // Find alignment address.
+  const uintptr_t alignmask = RAW_DATA_ALIGNMENT;
+  uint8_t* newData = reinterpret_cast<uint8_t*>(
+    (reinterpret_cast<uintptr_t>(newBuffer.get()) + alignmask) & ~alignmask);
+  MOZ_ASSERT(uintptr_t(newData) % (RAW_DATA_ALIGNMENT+1) == 0);
+  memcpy(newData, mData, mSize);
+
+  mBuffer = Move(newBuffer);
+  mCapacity = sizeNeeded;
+  mData = newData;
+
+  return true;
 }
 
 MediaRawData::~MediaRawData()
@@ -525,7 +577,7 @@ size_t
 MediaRawData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t size = aMallocSizeOf(this);
-  size += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+  size += aMallocSizeOf(mBuffer.get());
   return size;
 }
 
@@ -542,33 +594,68 @@ MediaRawDataWriter::MediaRawDataWriter(MediaRawData* aMediaRawData)
 }
 
 bool
+MediaRawDataWriter::EnsureSize(size_t aSize)
+{
+  if (aSize <= mTarget->mSize) {
+    return true;
+  }
+  if (!mTarget->EnsureCapacity(aSize)) {
+    return false;
+  }
+  return true;
+}
+
+bool
 MediaRawDataWriter::SetSize(size_t aSize)
 {
-  return mTarget->mBuffer.SetLength(aSize);
+  if (aSize > mTarget->mSize && !EnsureSize(aSize)) {
+    return false;
+  }
+
+  mTarget->mSize = aSize;
+  return true;
 }
 
 bool
 MediaRawDataWriter::Prepend(const uint8_t* aData, size_t aSize)
 {
-  return mTarget->mBuffer.Prepend(aData, aSize);
+  if (!EnsureSize(aSize + mTarget->mSize)) {
+    return false;
+  }
+
+  // Shift the data to the right by aSize to leave room for the new data.
+  memmove(mTarget->mData + aSize, mTarget->mData, mTarget->mSize);
+  memcpy(mTarget->mData, aData, aSize);
+
+  mTarget->mSize += aSize;
+  return true;
 }
 
 bool
 MediaRawDataWriter::Replace(const uint8_t* aData, size_t aSize)
 {
-  return mTarget->mBuffer.Replace(aData, aSize);
+  // If aSize is smaller than our current size, we leave the buffer as is,
+  // only adjusting the reported size.
+  if (!EnsureSize(aSize)) {
+    return false;
+  }
+
+  memcpy(mTarget->mData, aData, aSize);
+  mTarget->mSize = aSize;
+  return true;
 }
 
 void
 MediaRawDataWriter::Clear()
 {
-  mTarget->mBuffer.Clear();
+  mTarget->mSize = 0;
+  mTarget->mData = nullptr;
 }
 
 uint8_t*
 MediaRawDataWriter::Data()
 {
-  return mTarget->mBuffer.Data();
+  return mTarget->mData;
 }
 
 size_t

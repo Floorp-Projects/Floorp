@@ -623,12 +623,12 @@ public:
   MediaRawData(const uint8_t* aData, size_t mSize);
 
   // Pointer to data or null if not-yet allocated
-  const uint8_t* Data() const { return mBuffer.Data(); }
+  const uint8_t* Data() const { return mData; }
   // Size of buffer.
-  size_t Size() const { return mBuffer.Length(); }
+  size_t Size() const { return mSize; }
   size_t ComputedSizeOfIncludingThis() const
   {
-    return sizeof(*this) + mBuffer.ComputedSizeOfExcludingThis();
+    return sizeof(*this) + mCapacity;
   }
 
   const CryptoSample& mCrypto;
@@ -648,7 +648,16 @@ protected:
 
 private:
   friend class MediaRawDataWriter;
-  AlignedByteBuffer mBuffer;
+  // Ensure that the backend buffer can hold aSize data. Will update mData.
+  // Will enforce that the start of allocated data is always 32 bytes
+  // aligned and that it has sufficient end padding to allow for 32 bytes block
+  // read as required by some data decoders.
+  // Returns false if memory couldn't be allocated.
+  bool EnsureCapacity(size_t aSize);
+  uint8_t* mData;
+  size_t mSize;
+  UniquePtr<uint8_t[]> mBuffer;
+  uint32_t mCapacity;
   CryptoSample mCryptoInternal;
   MediaRawData(const MediaRawData&); // Not implemented
 };
