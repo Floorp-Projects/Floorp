@@ -297,6 +297,7 @@ class ConfigureSandbox(dict):
             value, option_string = self._helper.handle(option)
         except ConflictingOptionError as e:
             frameinfo, reason = self._implied_options[e.arg]
+            reason = self._raw_options.get(reason) or reason.option
             raise InvalidOptionError(
                 "'%s' implied by '%s' conflicts with '%s' from the %s"
                 % (e.arg, reason, e.old_arg, e.old_origin))
@@ -591,8 +592,7 @@ class ConfigureSandbox(dict):
             possible_reasons = [d for d in deps if d != self._help_option]
             if len(possible_reasons) == 1:
                 if isinstance(possible_reasons[0], Option):
-                    reason = (self._raw_options.get(possible_reasons[0]) or
-                              possible_reasons[0].option)
+                    reason = possible_reasons[0]
 
         if not reason:
             raise ConfigureError(
