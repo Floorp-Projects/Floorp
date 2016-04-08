@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'nsClipboard.cpp',
     'nsDeviceContextAndroid.cpp',
     'nsIdleServiceAndroid.cpp',
-    'nsIMEPicker.cpp',
     'nsLookAndFeel.cpp',
     'nsPrintOptionsAndroid.cpp',
     'nsScreenManagerAndroid.cpp',

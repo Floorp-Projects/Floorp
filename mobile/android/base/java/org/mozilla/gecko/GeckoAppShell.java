@@ -1071,13 +1071,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    public static void showInputMethodPicker() {
-        InputMethodManager imm = (InputMethodManager)
-            getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showInputMethodPicker();
-    }
-
-    @WrapForJNI
     public static void setKeepScreenOn(final boolean on) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
