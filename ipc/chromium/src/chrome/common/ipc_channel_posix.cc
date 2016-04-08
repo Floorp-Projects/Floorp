@@ -263,18 +263,7 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
 
 void Channel::ChannelImpl::ClearAndShrinkInputOverflowBuf()
 {
-  // If input_overflow_buf_ has grown, shrink it back to its normal size.
-  static size_t previousCapacityAfterClearing = 0;
-  if (input_overflow_buf_.capacity() > previousCapacityAfterClearing) {
-    // This swap trick is the closest thing C++ has to a guaranteed way
-    // to shrink the capacity of a string.
-    std::string tmp;
-    tmp.reserve(Channel::kReadBufferSize);
-    input_overflow_buf_.swap(tmp);
-    previousCapacityAfterClearing = input_overflow_buf_.capacity();
-  } else {
-    input_overflow_buf_.clear();
-  }
+  input_overflow_buf_.clear();
 }
 
 bool Channel::ChannelImpl::Connect() {
@@ -396,9 +385,23 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         CHROMIUM_LOG(ERROR) << "IPC message is too big";
         return false;
       }
+
       input_overflow_buf_.append(input_buf_, bytes_read);
       overflowp = p = input_overflow_buf_.data();
       end = p + input_overflow_buf_.size();
+
+      // If we've received the entire header, then we know the message
+      // length. In that case, reserve enough space to hold the entire
+      // message. This is more efficient than repeatedly enlarging the buffer as
+      // more data comes in.
+      uint32_t length = Message::GetLength(p, end);
+      if (length) {
+        input_overflow_buf_.reserve(length + kReadBufferSize);
+
+        // Recompute these pointers in case the buffer moved.
+        overflowp = p = input_overflow_buf_.data();
+        end = p + input_overflow_buf_.size();
+      }
     }
 
     // A pointer to an array of |num_fds| file descriptors which includes any
@@ -423,7 +426,31 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       const char* message_tail = Message::FindNext(p, end);
       if (message_tail) {
         int len = static_cast<int>(message_tail - p);
-        Message m(p, len);
+        char* buf;
+
+        // The Message |m| allocated below needs to own its data. We can either
+        // copy the data out of the buffer or else steal the buffer and move the
+        // remaining data elsewhere. If len is large enough, we steal. Otherwise
+        // we copy.
+        if (len > kMaxCopySize) {
+          // Since len > kMaxCopySize > kReadBufferSize, we know that we must be
+          // using the overflow buffer. And since we always shift everything to
+          // the left at the end of a read, we must be at the start of the
+          // overflow buffer.
+          MOZ_RELEASE_ASSERT(p == overflowp);
+          buf = input_overflow_buf_.trade_bytes(len);
+
+          // At this point the remaining data is at the front of
+          // input_overflow_buf_. p will get fixed up at the end of the
+          // loop. Set it to null here to make sure no one uses it.
+          p = nullptr;
+          overflowp = message_tail = input_overflow_buf_.data();
+          end = overflowp + input_overflow_buf_.size();
+        } else {
+          buf = (char*)malloc(len);
+          memcpy(buf, p, len);
+        }
+        Message m(buf, len, Message::OWNS);
         if (m.header()->num_fds) {
           // the message has file descriptors
           const char* error = NULL;
@@ -492,7 +519,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
           CloseDescriptors(m.fd_cookie());
 #endif
         } else {
-          listener_->OnMessageReceived(m);
+          listener_->OnMessageReceived(mozilla::Move(m));
         }
         p = message_tail;
       } else {

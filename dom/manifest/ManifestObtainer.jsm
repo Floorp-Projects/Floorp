@@ -66,7 +66,12 @@ this.ManifestObtainer = { // jshint ignore:line
     if (!aContent || isXULBrowser(aContent)) {
       throw new TypeError("Invalid input. Expected a DOM Window.");
     }
-    const manifest = yield fetchManifest(aContent);
+    let manifest;
+    try {
+      manifest = yield fetchManifest(aContent);
+    } catch (err) {
+      throw err;
+    }
     return manifest;
   }
 )};
@@ -134,42 +139,22 @@ const fetchManifest = Task.async(function* (aWindow) {
   }
   // Throws on malformed URLs
   const manifestURL = new aWindow.URL(elem.href, elem.baseURI);
-  if (!canLoadManifest(elem)) {
-    let msg = `Content Security Policy: The page's settings blocked the `;
-    msg += `loading of a resource at ${elem.href}`;
-    throw new Error(msg);
-  }
   const reqInit = {
     mode: "cors"
   };
   if (elem.crossOrigin === "use-credentials") {
     reqInit.credentials = "include";
   }
-  const req = new aWindow.Request(manifestURL, reqInit);
-  req.setContentPolicyType(Ci.nsIContentPolicy.TYPE_WEB_MANIFEST);
-  const response = yield aWindow.fetch(req);
+  const request = new aWindow.Request(manifestURL, reqInit);
+  request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_WEB_MANIFEST);
+  let response;
+  try {
+    response = yield aWindow.fetch(request);
+  } catch (err) {
+    throw err;
+  }
   const manifest = yield processResponse(response, aWindow);
   return manifest;
 });
-
-/**
- * Checks against security manager if we can load the web manifest.
- * @param  {HTMLLinkElement} aElem The HTML element to security check.
- * @return {Boolean} True if it can, false if it can't.
- */
-function canLoadManifest(aElem) {
-  const contentPolicy = Cc["@mozilla.org/layout/content-policy;1"]
-    .getService(Ci.nsIContentPolicy);
-  const mimeType = aElem.type || "application/manifest+json";
-  const elemURI = BrowserUtils.makeURI(
-    aElem.href, aElem.ownerDocument.characterSet
-  );
-  const shouldLoad = contentPolicy.shouldLoad(
-    Ci.nsIContentPolicy.TYPE_WEB_MANIFEST, elemURI,
-    aElem.ownerDocument.documentURIObject,
-    aElem, mimeType, null
-  );
-  return shouldLoad === Ci.nsIContentPolicy.ACCEPT;
-}
 
 this.EXPORTED_SYMBOLS = ["ManifestObtainer"]; // jshint ignore:line

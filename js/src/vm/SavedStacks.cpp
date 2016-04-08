@@ -1069,6 +1069,7 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsi
 
     if (creatingSavedFrame ||
         cx->isExceptionPending() ||
+        !cx->global() ||
         !cx->global()->isStandardClassResolved(JSProto_Object))
     {
         frame.set(nullptr);
