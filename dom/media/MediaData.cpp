@@ -46,8 +46,7 @@ AudioData::EnsureAudioBuffer()
 size_t
 AudioData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  size_t size =
-    aMallocSizeOf(this) + mAudioData.SizeOfExcludingThis(aMallocSizeOf);
+  size_t size = aMallocSizeOf(this) + aMallocSizeOf(mAudioData.get());
   if (mAudioBuffer) {
     size += mAudioBuffer->SizeOfIncludingThis(aMallocSizeOf);
   }

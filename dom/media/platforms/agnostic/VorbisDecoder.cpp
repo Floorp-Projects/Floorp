@@ -184,16 +184,13 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                                     aTstampUsecs,
                                     0,
                                     0,
-                                    AlignedAudioBuffer(),
+                                    nullptr,
                                     mVorbisDsp.vi->channels,
                                     mVorbisDsp.vi->rate));
   }
   while (frames > 0) {
     uint32_t channels = mVorbisDsp.vi->channels;
-    AlignedAudioBuffer buffer(frames*channels);
-    if (!buffer) {
-      return -1;
-    }
+    auto buffer = MakeUnique<AudioDataValue[]>(frames*channels);
     for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
