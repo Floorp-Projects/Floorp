@@ -3093,7 +3093,6 @@ ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
   NS_ASSERTION(aChildId, "Expected child hwnd value for remote plugin instance.");
   mozilla::plugins::PluginInstanceParent* parentInstance =
   mozilla::plugins::PluginInstanceParent::LookupPluginInstanceByID(aChildId);
-  NS_ASSERTION(parentInstance, "Expected matching plugin instance");
   if (parentInstance) {
   // sync! update call to the plugin instance that forces the
   // plugin to paint its child window.
