@@ -118,8 +118,6 @@ class ConfigureSandbox(dict):
         self._imports = {}
 
         self._options = OrderedDict()
-        # Store the raw values returned by @depends functions
-        self._results = {}
         # Store raw option (as per command line or environment) for each Option
         self._raw_options = {}
 
@@ -268,15 +266,31 @@ class ConfigureSandbox(dict):
 
     def _value_for(self, obj):
         if isinstance(obj, DependsFunction):
-            assert obj in self._depends
-            func, deps = self._depends[obj]
-            assert not inspect.isgeneratorfunction(func)
-            assert func in self._results
-            return self._results[func]
+            return self._value_for_depends(obj)
+
         elif isinstance(obj, Option):
             return self._value_for_option(obj)
 
         assert False
+
+    @memoize
+    def _value_for_depends(self, obj):
+        assert obj in self._depends
+        func, dependencies = self._depends[obj]
+        assert not inspect.isgeneratorfunction(func)
+        with_help = self._help_option in dependencies
+        if with_help:
+            for arg in dependencies:
+                if isinstance(arg, DependsFunction):
+                    _, deps = self._depends[arg]
+                    if self._help_option not in deps:
+                        raise ConfigureError(
+                            "`%s` depends on '--help' and `%s`. "
+                            "`%s` must depend on '--help'"
+                            % (func.__name__, arg.__name__, arg.__name__))
+
+        resolved_args = [self._value_for(d) for d in dependencies]
+        return func(*resolved_args)
 
     @memoize
     def _value_for_option(self, option):
@@ -372,20 +386,8 @@ class ConfigureSandbox(dict):
             func, glob = self._prepare_function(func)
             dummy = wraps(func)(DependsFunction())
             self._depends[dummy] = func, dependencies
-            with_help = self._help_option in dependencies
-            if with_help:
-                for arg in dependencies:
-                    if isinstance(arg, DependsFunction):
-                        _, deps = self._depends[arg]
-                        if self._help_option not in deps:
-                            raise ConfigureError(
-                                "`%s` depends on '--help' and `%s`. "
-                                "`%s` must depend on '--help'"
-                                % (func.__name__, arg.__name__, arg.__name__))
-
-            if not self._help or with_help:
-                resolved_args = [self._value_for(d) for d in dependencies]
-                self._results[func] = func(*resolved_args)
+            if not self._help or self._help_option in dependencies:
+                self._value_for(dummy)
 
             return dummy
 
