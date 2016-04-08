@@ -273,7 +273,7 @@ var PocketContextMenu = {
         "accesskey": gPocketBundle.GetStringFromName("saveLinkToPocketCmd.accesskey"),
         "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.linkURL);"
       });
-      sibling = document.getElementById("context-savelink");
+      let sibling = document.getElementById("context-savelink");
       if (sibling.nextSibling) {
         sibling.parentNode.insertBefore(menu, sibling.nextSibling);
       } else {
@@ -360,6 +360,7 @@ function pktUIGetter(prop, window) {
     get: function() {
       // delete any getters for properties loaded from main.js so we only load main.js once
       delete window.pktUI;
+      delete window.pktApi;
       delete window.pktUIMessaging;
       Services.scriptloader.loadSubScript("chrome://pocket/content/main.js", window);
       return window[prop];
@@ -402,6 +403,7 @@ var PocketOverlay = {
       this.removeStyles(window);
       // remove script getters/objects
       delete window.Pocket;
+      delete window.pktApi;
       delete window.pktUI;
       delete window.pktUIMessaging;
     }
@@ -421,6 +423,7 @@ var PocketOverlay = {
                                       "chrome://pocket/content/Pocket.jsm");
     // Can't use XPCOMUtils for these because the scripts try to define the variables
     // on window, and so the defineProperty inside defineLazyGetter fails.
+    Object.defineProperty(window, "pktApi", pktUIGetter("pktApi", window));
     Object.defineProperty(window, "pktUI", pktUIGetter("pktUI", window));
     Object.defineProperty(window, "pktUIMessaging", pktUIGetter("pktUIMessaging", window));
   },
