@@ -9,6 +9,8 @@
 
 #include "mozilla/Move.h"
 
+#include <algorithm>
+
 #include "jsapi.h"
 
 #include "js/UbiNode.h"
@@ -125,11 +127,31 @@ class CountBase {
     ~CountBase() { }
 
   public:
-    explicit CountBase(CountType& type) : type(type), total_(0) { }
+    explicit CountBase(CountType& type)
+      : type(type)
+      , total_(0)
+      , smallestNodeIdCounted_(SIZE_MAX)
+    { }
 
     // Categorize and count |node| as appropriate for this count's type.
     bool count(mozilla::MallocSizeOf mallocSizeOf, const Node& node) {
-        return type.count(*this, mallocSizeOf, node);
+        total_++;
+
+        auto id = node.identifier();
+        if (id < smallestNodeIdCounted_) {
+            smallestNodeIdCounted_ = id;
+        }
+
+#ifdef DEBUG
+        size_t oldTotal = total_;
+#endif
+
+        bool ret = type.count(*this, mallocSizeOf, node);
+
+        MOZ_ASSERT(total_ == oldTotal,
+                   "CountType::count should not increment total_, CountBase::count handles that");
+
+        return ret;
     }
 
     // Construct a JavaScript object reporting the counts recorded in this
@@ -147,6 +169,10 @@ class CountBase {
     void trace(JSTracer* trc) { type.traceCount(*this, trc); }
 
     size_t total_;
+
+    // The smallest JS::ubi::Node::identifier() passed to this instance's
+    // count() method. This provides a stable way to sort sets.
+    Node::Id smallestNodeIdCounted_;
 };
 
 class RootedCount : JS::CustomAutoRooter {
