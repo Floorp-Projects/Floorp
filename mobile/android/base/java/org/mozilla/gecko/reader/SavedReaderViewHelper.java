@@ -12,6 +12,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -164,6 +165,7 @@ public class SavedReaderViewHelper {
         });
     }
 
+    @RobocopTarget
     public synchronized int size() {
         assertItemsLoaded();
         return mItems.length();
