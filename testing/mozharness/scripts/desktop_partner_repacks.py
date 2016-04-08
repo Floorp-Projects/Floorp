@@ -181,7 +181,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
         python = self.query_exe("python2.7")
         repack_cmd = [python, "partner-repacks.py",
                       "-v", self.config['version'],
-                      "-n", self.config['build_number']]
+                      "-n", str(self.config['build_number'])]
         if self.config.get('platform'):
             repack_cmd.extend(["--platform", self.config['platform']])
         if self.config.get('partner'):
