@@ -49,6 +49,9 @@
             <property name="tokens" value="IMPORT,PACKAGE_DEF"/>
         </module>
         <module name="OuterTypeFilename"/> <!-- `class Lol` only in Lol.java -->
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="SEMI"/>
+        </module>
     </module>
 
 </module>
