@@ -316,9 +316,11 @@ const CustomizableWidgets = [
         link.className = "text-link remotetabs-promo-link";
         return link.outerHTML;
       });
-      // Put it all together...
-      let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo", formatArgs);
       let promoParentElt = doc.getElementById("PanelUI-remotetabs-mobile-promo");
+      let fxAccountsBrand = promoParentElt.getAttribute("fxAccountsBrand");
+      formatArgs.push(fxAccountsBrand);
+      // Put it all together...
+      let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo.text", formatArgs);
       promoParentElt.innerHTML = contents;
       // We manually manage the "click" event to open the promo links because
       // allowing the "text-link" widget handle it has 2 problems: (1) it only
