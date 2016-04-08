@@ -9,7 +9,7 @@
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref(PSEUDO_PREF, true);
 
   yield addTab(TEST_URI);

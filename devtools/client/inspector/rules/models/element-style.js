@@ -130,6 +130,8 @@ ElementStyle.prototype = {
           r.editor.destroy();
         }
       }
+
+      return undefined;
     }).then(null, e => {
       // populate is often called after a setTimeout,
       // the connection may already be closed.

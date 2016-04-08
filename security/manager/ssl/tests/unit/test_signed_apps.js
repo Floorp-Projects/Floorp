@@ -167,7 +167,7 @@ add_test(function () {
 
 add_test(function () {
   var tampered = tampered_app_path("missing_rsa");
-  tamper(original_app_path("valid_app_1"), tampered, { "META-INF/A.RSA" : removeEntry }, []);
+  tamper(original_app_path("valid_app_1"), tampered, { "META-INF/A.RSA": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
     check_open_result("missing_rsa", Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED));
@@ -175,7 +175,7 @@ add_test(function () {
 
 add_test(function () {
   var tampered = tampered_app_path("missing_sf");
-  tamper(original_app_path("valid_app_1"), tampered, { "META-INF/A.SF" : removeEntry }, []);
+  tamper(original_app_path("valid_app_1"), tampered, { "META-INF/A.SF": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
     check_open_result("missing_sf", Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
@@ -183,7 +183,7 @@ add_test(function () {
 
 add_test(function () {
   var tampered = tampered_app_path("missing_manifest_mf");
-  tamper(original_app_path("valid_app_1"), tampered, { "META-INF/MANIFEST.MF" : removeEntry }, []);
+  tamper(original_app_path("valid_app_1"), tampered, { "META-INF/MANIFEST.MF": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
     check_open_result("missing_manifest_mf",
@@ -192,7 +192,7 @@ add_test(function () {
 
 add_test(function () {
   var tampered = tampered_app_path("missing_entry");
-  tamper(original_app_path("valid_app_1"), tampered, { "manifest.webapp" : removeEntry }, []);
+  tamper(original_app_path("valid_app_1"), tampered, { "manifest.webapp": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
     check_open_result("missing_entry", Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING));
@@ -200,7 +200,7 @@ add_test(function () {
 
 add_test(function () {
   var tampered = tampered_app_path("truncated_entry");
-  tamper(original_app_path("valid_app_1"), tampered, { "manifest.webapp" : truncateEntry }, []);
+  tamper(original_app_path("valid_app_1"), tampered, { "manifest.webapp": truncateEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
     check_open_result("truncated_entry", Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY));

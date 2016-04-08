@@ -1,6 +1,8 @@
 "use strict";
 
 let contextMenu;
+let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
+
 add_task(function* test_setup() {
   const example_base = "http://example.com/browser/browser/base/content/test/general/";
   const url = example_base + "subtst_contextmenu_input.html";
@@ -187,6 +189,7 @@ add_task(function* test_date_time_color_range_input() {
             "context-bookmarkpage", true], null,
        "---",                  null,
        "context-savepage",     true,
+       ...(hasPocket ? ["context-pocket", true] : []),
        "---",                  null,
        "context-viewbgimage",  false,
        "context-selectall",    null,

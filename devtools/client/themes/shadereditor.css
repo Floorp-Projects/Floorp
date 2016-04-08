@@ -6,7 +6,6 @@
 
 .notice-container {
   margin-top: -50vh;
-  background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color-alt);
 }
 
@@ -22,10 +21,6 @@
 
 #shaders-pane {
   min-width: 150px;
-}
-
-#shaders-pane + .devtools-side-splitter {
-  border-color: transparent;
 }
 
 .program-item {

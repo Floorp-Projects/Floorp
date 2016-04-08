@@ -660,6 +660,7 @@ var LightweightThemeListener = {
         if (sheet.href == "chrome://browser/skin/browser-lightweightTheme.css")
           return sheet;
       }
+      return undefined;
     });
 
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);

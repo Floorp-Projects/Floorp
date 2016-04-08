@@ -15,6 +15,8 @@ function is_selected(index) {
   is(gURLBar.popup.richlistbox.selectedIndex, index, `Item ${index + 1} should be selected`);
 }
 
+let gMaxResults;
+
 add_task(function*() {
   registerCleanupFunction(function* () {
     yield PlacesTestUtils.clearHistory();
@@ -23,8 +25,10 @@ add_task(function*() {
   yield PlacesTestUtils.clearHistory();
   let tabCount = gBrowser.tabs.length;
 
+  gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
+
   let visits = [];
-  repeat(10, i => {
+  repeat(gMaxResults, i => {
     visits.push({
       uri: makeURI("http://example.com/autocomplete/?" + i),
     });
@@ -44,7 +48,8 @@ function* do_test() {
 
   let popup = gURLBar.popup;
   let results = popup.richlistbox.children;
-  is(results.length, 11, "Should get 11 results");
+  is(results.length, gMaxResults,
+     "Should get gMaxResults=" + gMaxResults + " results");
 
   let initiallySelected = gURLBar.popup.richlistbox.selectedIndex;
 

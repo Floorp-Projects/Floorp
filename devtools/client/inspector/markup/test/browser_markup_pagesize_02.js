@@ -13,7 +13,7 @@ const TEST_URL = URL_ROOT + "doc_markup_pagesize_02.html";
 // Make sure nodes are hidden when there are more than 5 in a row
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Selecting the UL node");

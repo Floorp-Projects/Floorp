@@ -7,7 +7,7 @@
 
 const TEST_URL = "data:text/html;charset=utf8,<img src=\"about:logo\" /><div>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
   let {markup} = inspector;
 

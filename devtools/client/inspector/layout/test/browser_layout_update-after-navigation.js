@@ -10,7 +10,7 @@
 const IFRAME1 = URL_ROOT + "doc_layout_iframe1.html";
 const IFRAME2 = URL_ROOT + "doc_layout_iframe2.html";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(IFRAME1);
   let {inspector, view, testActor} = yield openLayoutView();
 

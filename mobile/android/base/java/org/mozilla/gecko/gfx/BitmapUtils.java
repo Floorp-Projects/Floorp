@@ -278,7 +278,7 @@ public final class BitmapUtils {
 
     public static int getDominantColor(Bitmap source, boolean applyThreshold) {
       if (source == null)
-        return Color.argb(255,255,255,255);
+        return Color.argb(255, 255, 255, 255);
 
       // Keep track of how many times a hue in a given bin appears in the image.
       // Hue values range [0 .. 360), so dividing by 10, we get 36 bins.
@@ -331,7 +331,7 @@ public final class BitmapUtils {
 
       // maxBin may never get updated if the image holds only transparent and/or black/white pixels.
       if (maxBin < 0)
-        return Color.argb(255,255,255,255);
+        return Color.argb(255, 255, 255, 255);
 
       // Return a color with the average hue/saturation/value of the bin with the most colors.
       hsv[0] = sumHue[maxBin]/colorBins[maxBin];

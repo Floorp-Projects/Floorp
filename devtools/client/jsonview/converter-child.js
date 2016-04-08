@@ -132,6 +132,7 @@ let Converter = Class({
           return jsonViewStrings.GetStringFromName(key);
         } catch (err) {
           Cu.reportError(err);
+          return undefined;
         }
       }
     };

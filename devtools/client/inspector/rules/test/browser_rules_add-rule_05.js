@@ -32,7 +32,7 @@ const TEST_DATA = [
   { node: "h2", expected: "#asd\\@\\@\\@a\\!\\!2a" }
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view, testActor} = yield openRuleView();
 
@@ -59,12 +59,11 @@ function* addNewRuleFromContextMenu(inspector, view) {
 
   ok(!view._contextmenu.menuitemAddRule.hidden, "Add rule is visible");
 
-  info("Adding the new rule");
+  info("Adding the new rule and expecting a ruleview-changed event");
+  let onRuleViewChanged = view.once("ruleview-changed");
   view._contextmenu.menuitemAddRule.click();
   view._contextmenu._menupopup.hidePopup();
-
-  info("Waiting for rule view to change");
-  yield view.once("ruleview-changed");
+  yield onRuleViewChanged;
 }
 
 function* testNewRule(view, expected, index) {

@@ -632,7 +632,8 @@ this.AddonRepository = {
     // Completely remove cache if caching is not enabled
     if (!this.cacheEnabled) {
       logger.debug("Clearing cache because it is disabled");
-      return this._clearCache();
+      yield this._clearCache();
+      return;
     }
 
     let ids = allAddons.map(a => a.id);
@@ -644,7 +645,8 @@ this.AddonRepository = {
     // Completely remove cache if there are no add-ons to cache
     if (addonsToCache.length == 0) {
       logger.debug("Clearing cache because 0 add-ons were requested");
-      return this._clearCache();
+      yield this._clearCache();
+      return;
     }
 
     yield new Promise((resolve, reject) =>

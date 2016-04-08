@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Verify that if the animation's duration, iterations or delay change in
 // content, then the widget reflects the changes.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel, controller, inspector} = yield openAnimationInspector();
 

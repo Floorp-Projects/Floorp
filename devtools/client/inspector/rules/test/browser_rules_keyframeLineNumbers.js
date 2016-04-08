@@ -9,7 +9,7 @@
 
 const TESTCASE_URI = URL_ROOT + "doc_keyframeLineNumbers.html";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TESTCASE_URI);
   let { inspector, view } = yield openRuleView();
   yield selectNode("#outer", inspector);

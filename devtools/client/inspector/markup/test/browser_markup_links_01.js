@@ -102,7 +102,7 @@ const TEST_DATA = [{
 
 requestLongerTimeout(2);
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let {selector, attributes} of TEST_DATA) {

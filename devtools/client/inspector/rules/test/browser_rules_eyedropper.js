@@ -46,7 +46,7 @@ const EXPECTED_COLOR = "rgb(255, 255, 85)";
 // Test opening the eyedropper from the color picker. Pressing escape
 // to close it, and clicking the page to select a color.
 
-add_task(function*() {
+add_task(function* () {
   // clear telemetry so we can get accurate counts
   clearTelemetry();
 

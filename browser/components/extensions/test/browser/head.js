@@ -78,10 +78,8 @@ function getBrowserActionPopup(extension, win = window) {
 
   if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
     return win.document.getElementById("customizationui-widget-panel");
-  } else {
-    return win.PanelUI.panel;
   }
-  return null;
+  return win.PanelUI.panel;
 }
 
 var clickBrowserAction = Task.async(function* (extension, win = window) {

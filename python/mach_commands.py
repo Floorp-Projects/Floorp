@@ -166,7 +166,18 @@ class MachCommands(MachCommandBase):
                 try:
                     binary = which.which('eslint')
                 except which.WhichError:
-                    pass
+                    npmPath = self.getNodeOrNpmPath("npm")
+                    if npmPath:
+                        try:
+                            output = subprocess.check_output([npmPath, "bin", "-g"],
+                                                             stderr=subprocess.STDOUT)
+                            if minversion:
+                                base = output.split("\n").strip()
+                                binary = os.path.join(base, "eslint")
+                                if not os.path.is_file(binary):
+                                    binary = None
+                        except (subprocess.CalledProcessError, WindowsError):
+                            pass
 
         if not binary:
             print(ESLINT_NOT_FOUND_MESSAGE)
@@ -213,7 +224,7 @@ class MachCommands(MachCommandBase):
         # Note that that's the version currently compatible with the mozilla
         # eslint plugin.
         success = self.callProcess("eslint",
-                                   [npmPath, "install", "eslint@1.10.3", "-g"])
+                                   [npmPath, "install", "eslint@2.7.0", "-g"])
         if not success:
             return 1
 
@@ -226,13 +237,13 @@ class MachCommands(MachCommandBase):
 
         # Install eslint-plugin-html.
         success = self.callProcess("eslint-plugin-html",
-                                   [npmPath, "install", "eslint-plugin-html", "-g"])
+                                   [npmPath, "install", "eslint-plugin-html@1.4.0", "-g"])
         if not success:
             return 1
 
         # Install eslint-plugin-react.
         success = self.callProcess("eslint-plugin-react",
-                                   [npmPath, "install", "eslint-plugin-react", "-g"])
+                                   [npmPath, "install", "eslint-plugin-react@4.2.3", "-g"])
         if not success:
             return 1
 

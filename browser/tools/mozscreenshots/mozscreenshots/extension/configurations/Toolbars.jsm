@@ -37,6 +37,7 @@ this.Toolbars = {
         if (browserWindow.fullScreen) {
           return Promise.reject("The bookmark toolbar and menubar are not shown in fullscreen.");
         }
+        return undefined;
       }),
     },
 

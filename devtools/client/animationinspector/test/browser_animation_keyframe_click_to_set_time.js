@@ -7,7 +7,7 @@
 // Test that animated properties' keyframes can be clicked, and that doing so
 // sets the current time in the timeline.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_keyframes.html");
   let {panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
