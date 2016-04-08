@@ -1,4 +1,4 @@
-/* Copyright 2012 Mozilla Foundation
+/* Copyright 2016 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,20 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals PDFJS, PDFBug, FirefoxCom, Stats, ProgressBar, DownloadManager,
-           getPDFFileNameFromURL, PDFHistory, Preferences, SidebarView,
-           ViewHistory, Stats, PDFThumbnailViewer, URL, noContextMenuHandler,
-           SecondaryToolbar, PasswordPrompt, PDFPresentationMode, PDFSidebar,
-           PDFDocumentProperties, HandTool, Promise, PDFLinkService,
-           PDFOutlineViewer, PDFAttachmentViewer, OverlayManager,
-           PDFFindController, PDFFindBar, PDFViewer, PDFRenderingQueue,
-           PresentationModeState, parseQueryString, RenderingStates,
-           UNKNOWN_SCALE, DEFAULT_SCALE_VALUE,
-           IGNORE_CURRENT_POSITION_ON_ZOOM: true */
+/*globals require, parseQueryString, chrome, PDFViewerApplication */
 
 'use strict';
 
 var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
+
+
 var DEFAULT_SCALE_DELTA = 1.1;
 var MIN_SCALE = 0.25;
 var MAX_SCALE = 10.0;
@@ -41,8 +34,6 @@ function configure(PDFJS) {
   PDFJS.cMapPacked = true;
 }
 
-var mozL10n = document.mozL10n || document.webL10n;
-
 
 var CSS_UNITS = 96.0 / 72.0;
 var DEFAULT_SCALE_VALUE = 'auto';
@@ -51,6 +42,56 @@ var UNKNOWN_SCALE = 0;
 var MAX_AUTO_SCALE = 1.25;
 var SCROLLBAR_PADDING = 40;
 var VERTICAL_PADDING = 5;
+
+var mozL10n = document.mozL10n || document.webL10n;
+
+if (typeof PDFJS === 'undefined') {
+  (typeof window !== 'undefined' ? window : this).PDFJS = {};
+}
+
+/**
+ * Disables fullscreen support, and by extension Presentation Mode,
+ * in browsers which support the fullscreen API.
+ * @var {boolean}
+ */
+PDFJS.disableFullscreen = (PDFJS.disableFullscreen === undefined ?
+                           false : PDFJS.disableFullscreen);
+
+/**
+ * Enables CSS only zooming.
+ * @var {boolean}
+ */
+PDFJS.useOnlyCssZoom = (PDFJS.useOnlyCssZoom === undefined ?
+                        false : PDFJS.useOnlyCssZoom);
+
+/**
+ * The maximum supported canvas size in total pixels e.g. width * height.
+ * The default value is 4096 * 4096. Use -1 for no limit.
+ * @var {number}
+ */
+PDFJS.maxCanvasPixels = (PDFJS.maxCanvasPixels === undefined ?
+                         16777216 : PDFJS.maxCanvasPixels);
+
+/**
+ * Disables saving of the last position of the viewed PDF.
+ * @var {boolean}
+ */
+PDFJS.disableHistory = (PDFJS.disableHistory === undefined ?
+                        false : PDFJS.disableHistory);
+
+/**
+ * Disables creation of the text layer that used for text selection and search.
+ * @var {boolean}
+ */
+PDFJS.disableTextLayer = (PDFJS.disableTextLayer === undefined ?
+                          false : PDFJS.disableTextLayer);
+
+/**
+ * Disables maintaining the current position in the document when zooming.
+ */
+PDFJS.ignoreCurrentPositionOnZoom = (PDFJS.ignoreCurrentPositionOnZoom ===
+  undefined ? false : PDFJS.ignoreCurrentPositionOnZoom);
+
 
 /**
  * Returns scale factor for the canvas. It makes sense for the HiDPI displays.
@@ -585,9 +626,6 @@ var Preferences = {
 
 
 
-
-
-
 var FirefoxCom = (function FirefoxComClosure() {
   return {
     /**
@@ -659,7 +697,7 @@ var DownloadManager = (function DownloadManagerClosure() {
 
     downloadData: function DownloadManager_downloadData(data, filename,
                                                         contentType) {
-      var blobUrl = PDFJS.createObjectURL(data, contentType);
+      var blobUrl = pdfjsLib.createObjectURL(data, contentType, false);
 
       FirefoxCom.request('download', {
         blobUrl: blobUrl,
@@ -3000,7 +3038,7 @@ var PasswordPrompt = {
       var promptString = mozL10n.get('password_label', null,
         'Enter the password to open this PDF file.');
 
-      if (this.reason === PDFJS.PasswordResponses.INCORRECT_PASSWORD) {
+      if (this.reason === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) {
         promptString = mozL10n.get('password_invalid', null,
           'Invalid password. Please try again.');
       }
@@ -3241,7 +3279,6 @@ var PresentationModeState = {
   FULLSCREEN: 3,
 };
 
-var IGNORE_CURRENT_POSITION_ON_ZOOM = false;
 var DEFAULT_CACHE_SIZE = 10;
 
 
@@ -3552,19 +3589,18 @@ var PDFPageView = (function PDFPageViewClosure() {
       });
 
       var isScalingRestricted = false;
-      if (this.canvas && PDFJS.maxCanvasPixels > 0) {
+      if (this.canvas && pdfjsLib.PDFJS.maxCanvasPixels > 0) {
         var outputScale = this.outputScale;
         var pixelsInViewport = this.viewport.width * this.viewport.height;
-        var maxScale = Math.sqrt(PDFJS.maxCanvasPixels / pixelsInViewport);
         if (((Math.floor(this.viewport.width) * outputScale.sx) | 0) *
             ((Math.floor(this.viewport.height) * outputScale.sy) | 0) >
-            PDFJS.maxCanvasPixels) {
+            pdfjsLib.PDFJS.maxCanvasPixels) {
           isScalingRestricted = true;
         }
       }
 
       if (this.canvas) {
-        if (PDFJS.useOnlyCssZoom ||
+        if (pdfjsLib.PDFJS.useOnlyCssZoom ||
             (this.hasRestrictedScaling && isScalingRestricted)) {
           this.cssTransform(this.canvas, true);
 
@@ -3598,7 +3634,7 @@ var PDFPageView = (function PDFPageViewClosure() {
     },
 
     cssTransform: function PDFPageView_transform(canvas, redrawAnnotations) {
-      var CustomStyle = PDFJS.CustomStyle;
+      var CustomStyle = pdfjsLib.CustomStyle;
 
       // Scale canvas, canvas wrapper, and page container.
       var width = this.viewport.width;
@@ -3718,7 +3754,7 @@ var PDFPageView = (function PDFPageViewClosure() {
       var outputScale = getOutputScale(ctx);
       this.outputScale = outputScale;
 
-      if (PDFJS.useOnlyCssZoom) {
+      if (pdfjsLib.PDFJS.useOnlyCssZoom) {
         var actualSizeViewport = viewport.clone({scale: CSS_UNITS});
         // Use a scale that will make the canvas be the original intended size
         // of the page.
@@ -3727,9 +3763,10 @@ var PDFPageView = (function PDFPageViewClosure() {
         outputScale.scaled = true;
       }
 
-      if (PDFJS.maxCanvasPixels > 0) {
+      if (pdfjsLib.PDFJS.maxCanvasPixels > 0) {
         var pixelsInViewport = viewport.width * viewport.height;
-        var maxScale = Math.sqrt(PDFJS.maxCanvasPixels / pixelsInViewport);
+        var maxScale =
+          Math.sqrt(pdfjsLib.PDFJS.maxCanvasPixels / pixelsInViewport);
         if (outputScale.sx > maxScale || outputScale.sy > maxScale) {
           outputScale.sx = maxScale;
           outputScale.sy = maxScale;
@@ -3896,7 +3933,7 @@ var PDFPageView = (function PDFPageViewClosure() {
     },
 
     beforePrint: function PDFPageView_beforePrint() {
-      var CustomStyle = PDFJS.CustomStyle;
+      var CustomStyle = pdfjsLib.CustomStyle;
       var pdfPage = this.pdfPage;
 
       var viewport = pdfPage.getViewport(1);
@@ -4020,7 +4057,7 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
 
       this.textDivs = [];
       var textLayerFrag = document.createDocumentFragment();
-      this.textLayerRenderTask = PDFJS.renderTextLayer({
+      this.textLayerRenderTask = pdfjsLib.renderTextLayer({
         textContent: this.textContent,
         container: textLayerFrag,
         viewport: this.viewport,
@@ -4323,7 +4360,7 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
         if (self.div) {
           // If an annotationLayer already exists, refresh its children's
           // transformation matrices.
-          PDFJS.AnnotationLayer.update(parameters);
+          pdfjsLib.AnnotationLayer.update(parameters);
         } else {
           // Create an annotation layer div and render the annotations
           // if there is at least one annotation.
@@ -4336,7 +4373,7 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
           self.pageDiv.appendChild(self.div);
           parameters.div = self.div;
 
-          PDFJS.AnnotationLayer.render(parameters);
+          pdfjsLib.AnnotationLayer.render(parameters);
           if (typeof mozL10n !== 'undefined') {
             mozL10n.translate(self.div);
           }
@@ -4628,7 +4665,7 @@ var PDFViewer = (function pdfViewer() {
         var viewport = pdfPage.getViewport(scale * CSS_UNITS);
         for (var pageNum = 1; pageNum <= pagesCount; ++pageNum) {
           var textLayerFactory = null;
-          if (!PDFJS.disableTextLayer) {
+          if (!pdfjsLib.PDFJS.disableTextLayer) {
             textLayerFactory = this;
           }
           var pageView = new PDFPageView({
@@ -4650,7 +4687,7 @@ var PDFViewer = (function pdfViewer() {
         // starts to create the correct size canvas. Wait until one page is
         // rendered so we don't tie up too many resources early on.
         onePageRendered.then(function () {
-          if (!PDFJS.disableAutoFetch) {
+          if (!pdfjsLib.PDFJS.disableAutoFetch) {
             var getPagesLeft = pagesCount;
             for (var pageNum = 1; pageNum <= pagesCount; ++pageNum) {
               pdfDocument.getPage(pageNum).then(function (pageNum, pdfPage) {
@@ -4740,7 +4777,7 @@ var PDFViewer = (function pdfViewer() {
 
       if (!noScroll) {
         var page = this._currentPageNumber, dest;
-        if (this._location && !IGNORE_CURRENT_POSITION_ON_ZOOM &&
+        if (this._location && !pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom &&
             !(this.isInPresentationMode || this.isChangingPresentationMode)) {
           page = this._location.pageNumber;
           dest = [null, { name: 'XYZ' }, this._location.left,
@@ -6074,7 +6111,7 @@ var PDFOutlineViewer = (function PDFOutlineViewerClosure() {
      */
     _bindLink: function PDFOutlineViewer_bindLink(element, item) {
       if (item.url) {
-        PDFJS.addLinkAttributes(element, { url: item.url });
+        pdfjsLib.addLinkAttributes(element, { url: item.url });
         return;
       }
       var linkService = this.linkService;
@@ -6183,7 +6220,7 @@ var PDFOutlineViewer = (function PDFOutlineViewerClosure() {
           this._bindLink(element, item);
           this._setStyles(element, item);
           element.textContent =
-            PDFJS.removeNullCharacters(item.title) || DEFAULT_TITLE;
+            pdfjsLib.removeNullCharacters(item.title) || DEFAULT_TITLE;
 
           div.appendChild(element);
 
@@ -6297,12 +6334,12 @@ var PDFAttachmentViewer = (function PDFAttachmentViewerClosure() {
 
       for (var i = 0; i < attachmentsCount; i++) {
         var item = attachments[names[i]];
-        var filename = PDFJS.getFilenameFromUrl(item.filename);
+        var filename = pdfjsLib.getFilenameFromUrl(item.filename);
         var div = document.createElement('div');
         div.className = 'attachmentsItem';
         var button = document.createElement('button');
         this._bindLink(button, item.content, filename);
-        button.textContent = PDFJS.removeNullCharacters(filename);
+        button.textContent = pdfjsLib.removeNullCharacters(filename);
         div.appendChild(button);
         this.container.appendChild(div);
       }
@@ -6355,6 +6392,8 @@ var PDFViewerApplication = {
 
   // called once when the document is loaded
   initialize: function pdfViewInitialize() {
+    configure(pdfjsLib.PDFJS);
+
     var pdfRenderingQueue = new PDFRenderingQueue();
     pdfRenderingQueue.onIdle = this.cleanup.bind(this);
     this.pdfRenderingQueue = pdfRenderingQueue;
@@ -6508,6 +6547,7 @@ var PDFViewerApplication = {
     this.pdfSidebar.onToggled = this.forceRendering.bind(this);
 
     var self = this;
+    var PDFJS = pdfjsLib.PDFJS;
     var initializedPromise = Promise.all([
       Preferences.get('enableWebGL').then(function resolved(value) {
         PDFJS.disableWebGL = !value;
@@ -6574,6 +6614,10 @@ var PDFViewerApplication = {
     });
   },
 
+  run: function pdfViewRun() {
+    this.initialize().then(webViewerInitialized);
+  },
+
   zoomIn: function pdfViewZoomIn(ticks) {
     var newScale = this.pdfViewer.currentScale;
     do {
@@ -6610,7 +6654,7 @@ var PDFViewerApplication = {
     var canvas = document.createElement('canvas');
     var value = 'mozPrintCallback' in canvas;
 
-    return PDFJS.shadow(this, 'supportsPrinting', value);
+    return pdfjsLib.shadow(this, 'supportsPrinting', value);
   },
 
   get supportsFullscreen() {
@@ -6624,38 +6668,38 @@ var PDFViewerApplication = {
         document.msFullscreenEnabled === false) {
       support = false;
     }
-    if (support && PDFJS.disableFullscreen === true) {
+    if (support && pdfjsLib.PDFJS.disableFullscreen === true) {
       support = false;
     }
 
-    return PDFJS.shadow(this, 'supportsFullscreen', support);
+    return pdfjsLib.shadow(this, 'supportsFullscreen', support);
   },
 
   get supportsIntegratedFind() {
     var support = false;
     support = FirefoxCom.requestSync('supportsIntegratedFind');
 
-    return PDFJS.shadow(this, 'supportsIntegratedFind', support);
+    return pdfjsLib.shadow(this, 'supportsIntegratedFind', support);
   },
 
   get supportsDocumentFonts() {
     var support = true;
     support = FirefoxCom.requestSync('supportsDocumentFonts');
 
-    return PDFJS.shadow(this, 'supportsDocumentFonts', support);
+    return pdfjsLib.shadow(this, 'supportsDocumentFonts', support);
   },
 
   get supportsDocumentColors() {
     var support = true;
     support = FirefoxCom.requestSync('supportsDocumentColors');
 
-    return PDFJS.shadow(this, 'supportsDocumentColors', support);
+    return pdfjsLib.shadow(this, 'supportsDocumentColors', support);
   },
 
   get loadingBar() {
     var bar = new ProgressBar('#loadingBar', {});
 
-    return PDFJS.shadow(this, 'loadingBar', bar);
+    return pdfjsLib.shadow(this, 'loadingBar', bar);
   },
 
   get supportedMouseWheelZoomModifierKeys() {
@@ -6665,15 +6709,16 @@ var PDFViewerApplication = {
     };
     support = FirefoxCom.requestSync('supportedMouseWheelZoomModifierKeys');
 
-    return PDFJS.shadow(this, 'supportedMouseWheelZoomModifierKeys', support);
+    return pdfjsLib.shadow(this, 'supportedMouseWheelZoomModifierKeys',
+                           support);
   },
 
   initPassiveLoading: function pdfViewInitPassiveLoading() {
     function FirefoxComDataRangeTransport(length, initialData) {
-      PDFJS.PDFDataRangeTransport.call(this, length, initialData);
+      pdfjsLib.PDFDataRangeTransport.call(this, length, initialData);
     }
     FirefoxComDataRangeTransport.prototype =
-      Object.create(PDFJS.PDFDataRangeTransport.prototype);
+      Object.create(pdfjsLib.PDFDataRangeTransport.prototype);
     FirefoxComDataRangeTransport.prototype.requestDataRange =
         function FirefoxComDataRangeTransport_requestDataRange(begin, end) {
       FirefoxCom.request('requestDataRange', { begin: begin, end: end });
@@ -6738,7 +6783,8 @@ var PDFViewerApplication = {
   setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
     this.url = url;
     try {
-      this.setTitle(decodeURIComponent(PDFJS.getFilenameFromUrl(url)) || url);
+      this.setTitle(decodeURIComponent(
+        pdfjsLib.getFilenameFromUrl(url)) || url);
     } catch (e) {
       // decodeURIComponent may throw URIError,
       // fall back to using the unprocessed url in that case
@@ -6849,7 +6895,7 @@ var PDFViewerApplication = {
     var self = this;
     self.downloadComplete = false;
 
-    var loadingTask = PDFJS.getDocument(parameters);
+    var loadingTask = pdfjsLib.getDocument(parameters);
     this.pdfLoadingTask = loadingTask;
 
     loadingTask.onPassword = function passwordNeeded(updatePassword, reason) {
@@ -6874,15 +6920,15 @@ var PDFViewerApplication = {
         var loadingErrorMessage = mozL10n.get('loading_error', null,
           'An error occurred while loading the PDF.');
 
-        if (exception instanceof PDFJS.InvalidPDFException) {
+        if (exception instanceof pdfjsLib.InvalidPDFException) {
           // change error message also for other builds
           loadingErrorMessage = mozL10n.get('invalid_file_error', null,
                                             'Invalid or corrupted PDF file.');
-        } else if (exception instanceof PDFJS.MissingPDFException) {
+        } else if (exception instanceof pdfjsLib.MissingPDFException) {
           // special message for missing PDF's
           loadingErrorMessage = mozL10n.get('missing_file_error', null,
                                             'Missing PDF file.');
-        } else if (exception instanceof PDFJS.UnexpectedResponseException) {
+        } else if (exception instanceof pdfjsLib.UnexpectedResponseException) {
           loadingErrorMessage = mozL10n.get('unexpected_response_error', null,
                                             'Unexpected server response.');
         }
@@ -6928,7 +6974,7 @@ var PDFViewerApplication = {
 
     this.pdfDocument.getData().then(
       function getDataSuccess(data) {
-        var blob = PDFJS.createBlob(data, 'application/pdf');
+        var blob = pdfjsLib.createBlob(data, 'application/pdf');
         downloadManager.download(blob, url, filename);
       },
       downloadByUrl // Error occurred try downloading with just the url.
@@ -6961,7 +7007,7 @@ var PDFViewerApplication = {
    */
   error: function pdfViewError(message, moreInfo) {
     var moreInfoText = mozL10n.get('error_version_info',
-      {version: PDFJS.version || '?', build: PDFJS.build || '?'},
+      {version: pdfjsLib.version || '?', build: pdfjsLib.build || '?'},
       'PDF.js v{{version}} (build: {{build}})') + '\n';
     if (moreInfo) {
       moreInfoText +=
@@ -7003,7 +7049,7 @@ var PDFViewerApplication = {
       // the loading bar will not be completely filled, nor will it be hidden.
       // To prevent displaying a partially filled loading bar permanently, we
       // hide it when no data has been loaded during a certain amount of time.
-      if (PDFJS.disableAutoFetch && percent) {
+      if (pdfjsLib.PDFJS.disableAutoFetch && percent) {
         if (this.disableAutoFetchLoadingBarTimeout) {
           clearTimeout(this.disableAutoFetchLoadingBarTimeout);
           this.disableAutoFetchLoadingBarTimeout = null;
@@ -7063,7 +7109,7 @@ var PDFViewerApplication = {
 
       self.loadingBar.setWidth(document.getElementById('viewer'));
 
-      if (!PDFJS.disableHistory && !self.isViewerEmbedded) {
+      if (!pdfjsLib.PDFJS.disableHistory && !self.isViewerEmbedded) {
         // The browsing history is only enabled when the viewer is standalone,
         // i.e. not when it is embedded in a web page.
         if (!self.preferenceShowPreviousViewOnLoad) {
@@ -7136,7 +7182,7 @@ var PDFViewerApplication = {
         pdfDocument.getJavaScript().then(function(javaScript) {
           if (javaScript.length) {
             console.warn('Warning: JavaScript is not supported');
-            self.fallback(PDFJS.UNSUPPORTED_FEATURES.javaScript);
+            self.fallback(pdfjsLib.UNSUPPORTED_FEATURES.javaScript);
           }
           // Hack to support auto printing.
           var regex = /\bprint\s*\(/;
@@ -7173,8 +7219,8 @@ var PDFViewerApplication = {
       console.log('PDF ' + pdfDocument.fingerprint + ' [' +
                   info.PDFFormatVersion + ' ' + (info.Producer || '-').trim() +
                   ' / ' + (info.Creator || '-').trim() + ']' +
-                  ' (PDF.js: ' + (PDFJS.version || '-') +
-                  (!PDFJS.disableWebGL ? ' [WebGL]' : '') + ')');
+                  ' (PDF.js: ' + (pdfjsLib.version || '-') +
+                  (!pdfjsLib.PDFJS.disableWebGL ? ' [WebGL]' : '') + ')');
 
       var pdfTitle;
       if (metadata && metadata.has('dc:title')) {
@@ -7195,7 +7241,7 @@ var PDFViewerApplication = {
 
       if (info.IsAcroFormPresent) {
         console.warn('Warning: AcroForm/XFA is not supported');
-        self.fallback(PDFJS.UNSUPPORTED_FEATURES.forms);
+        self.fallback(pdfjsLib.UNSUPPORTED_FEATURES.forms);
       }
 
       var versionId = String(info.PDFFormatVersion).slice(-1) | 0;
@@ -7398,18 +7444,13 @@ var PDFViewerApplication = {
 };
 
 
-
-function webViewerLoad(evt) {
-    configure(PDFJS);
-    PDFViewerApplication.initialize().then(webViewerInitialized);
-}
-
 function webViewerInitialized() {
   var file = window.location.href.split('#')[0];
 
   document.getElementById('openFile').setAttribute('hidden', 'true');
   document.getElementById('secondaryOpenFile').setAttribute('hidden', 'true');
 
+  var PDFJS = pdfjsLib.PDFJS;
 
   if (PDFViewerApplication.preferencePdfBugEnabled) {
     // Special debugging flags in the hash section of the URL.
@@ -7444,7 +7485,7 @@ function webViewerInitialized() {
       PDFJS.verbosity = hashParams['verbosity'] | 0;
     }
     if ('ignorecurrentpositiononzoom' in hashParams) {
-      IGNORE_CURRENT_POSITION_ON_ZOOM =
+      PDFJS.ignoreCurrentPositionOnZoom =
         (hashParams['ignorecurrentpositiononzoom'] === 'true');
     }
     if ('textlayer' in hashParams) {
@@ -7565,8 +7606,6 @@ function webViewerInitialized() {
 
 }
 
-document.addEventListener('DOMContentLoaded', webViewerLoad, true);
-
 document.addEventListener('pagerendered', function (e) {
   var pageNumber = e.detail.pageNumber;
   var pageIndex = pageNumber - 1;
@@ -7579,7 +7618,7 @@ document.addEventListener('pagerendered', function (e) {
     thumbnailView.setImage(pageView);
   }
 
-  if (PDFJS.pdfBug && Stats.enabled && pageView.stats) {
+  if (pdfjsLib.PDFJS.pdfBug && Stats.enabled && pageView.stats) {
     Stats.add(pageNumber, pageView.stats);
   }
 
@@ -7830,7 +7869,7 @@ window.addEventListener('pagechange', function pagechange(evt) {
   document.getElementById('lastPage').disabled = (page >= numPages);
 
   // we need to update stats
-  if (PDFJS.pdfBug && Stats.enabled) {
+  if (pdfjsLib.PDFJS.pdfBug && Stats.enabled) {
     var pageView = PDFViewerApplication.pdfViewer.getPageView(page - 1);
     if (pageView.stats) {
       Stats.add(page, pageView.stats);
@@ -7838,6 +7877,7 @@ window.addEventListener('pagechange', function pagechange(evt) {
   }
 }, true);
 
+var zoomDisabled = false, zoomDisabledTimeout;
 function handleMouseWheel(evt) {
   var MOUSE_WHEEL_DELTA_FACTOR = 40;
   var ticks = (evt.type === 'DOMMouseScroll') ? -evt.detail :
@@ -7857,6 +7897,10 @@ function handleMouseWheel(evt) {
     }
     // Only zoom the pages, not the entire viewer.
     evt.preventDefault();
+    // NOTE: this check must be placed *after* preventDefault.
+    if (zoomDisabled) {
+      return;
+    }
 
     var previousScale = pdfViewer.currentScale;
 
@@ -7874,6 +7918,12 @@ function handleMouseWheel(evt) {
       pdfViewer.container.scrollLeft += dx * scaleCorrectionFactor;
       pdfViewer.container.scrollTop += dy * scaleCorrectionFactor;
     }
+  } else {
+    zoomDisabled = true;
+    clearTimeout(zoomDisabledTimeout);
+    zoomDisabledTimeout = setTimeout(function () {
+      zoomDisabled = false;
+    }, 1000);
   }
 }
 
@@ -8137,4 +8187,13 @@ window.addEventListener('afterprint', function afterPrint(evt) {
     window.requestAnimationFrame(resolve);
   });
 })();
+
+
+
+function webViewerLoad() {
+  window.pdfjsLib = window.pdfjsDistBuildPdf;
+  PDFViewerApplication.run();
+}
+
+document.addEventListener('DOMContentLoaded', webViewerLoad, true);
 

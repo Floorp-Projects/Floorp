@@ -277,6 +277,8 @@ function* runTest() {
       removePopupListener("popupshown", unexpectedPopup, false);
       tester.next();
     }, 100);
+
+    return undefined;
   }
 
   // We use this function when we're trying to prove that something doesn't

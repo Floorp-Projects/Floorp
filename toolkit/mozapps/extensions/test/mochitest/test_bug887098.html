@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887098
 
   /** Test for Bug 887098 **/
   SimpleTest.waitForExplicitFinish();
+  /* globals $,evalRef */
 
   function loaded() {
     var iwin = $('ifr').contentWindow;

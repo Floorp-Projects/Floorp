@@ -119,11 +119,11 @@ add_task(function* test_tabwise_case_sensitive() {
  * process into the parent process or the other way around.
  * This test ensures that findbar properly handles such a change.
  */
-add_task(function * test_reinitialization_at_remoteness_change() {
+add_task(function* test_reinitialization_at_remoteness_change() {
   // This test only makes sence in e10s evironment.
   if (!gMultiProcessBrowser) {
     info("Skipping this test because of non-e10s environment.");
-    return true;
+    return;
   }
 
   info("Ensure findbar re-initialization at remoteness change.");
@@ -166,7 +166,7 @@ add_task(function* () {
   // This test only makes sence in e10s evironment.
   if (!gMultiProcessBrowser) {
     info("Skipping this test because of non-e10s environment.");
-    return true;
+    return;
   }
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);

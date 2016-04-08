@@ -71,7 +71,7 @@
     // Enforce one true comma style.
     "comma-style": [2, "last"],
     // Warn about cyclomatic complexity in functions.
-    "complexity": 2,
+    "complexity": [2, 35],
     // Require return statements to either always or never specify values.
     "consistent-return": 2,
     // Don't warn for inconsistent naming when capturing this (not so important
@@ -177,8 +177,6 @@
     "no-empty": 2,
     // Disallow the use of empty character classes in regular expressions.
     "no-empty-character-class": 2,
-    // Disallow use of labels for anything other then loops and switches.
-    "no-empty-label": 2,
     // Disallow use of eval(). We have other APIs to evaluate code in content.
     "no-eval": 2,
     // Disallow assigning to the exception in a catch block.
@@ -324,8 +322,8 @@
     "sort-vars": 0,
     // Deprecated, will be removed in 1.0.
     "space-after-function-name": 0,
-    // Require a space after keywords.
-    "space-after-keywords": [2, "always"],
+    // Require a space around all keywords.
+    "keyword-spacing": 2,
     // Require a space before the start brace of a block.
     "space-before-blocks": [2, "always"],
     // Deprecated, will be removed in 1.0.
@@ -340,8 +338,6 @@
     "space-in-parens": [2, "never"],
     // Require spaces around operators, except for a|0.
     "space-infix-ops": [2, {"int32Hint": true}],
-    // Require a space after return, throw, and case.
-    "space-return-throw-case": 2,
     // Require spaces before/after unary operators (words on by default,
     // nonwords off by default).
     "space-unary-ops": [2, { "words": true, "nonwords": false }],
@@ -396,7 +392,7 @@
     // disallow labels that share a name with a variable
     "no-label-var": 0,
     // disallow use of labeled statements
-    "no-labels": 0,
+    "no-labels": 2,
     // disallow unnecessary nested blocks
     "no-lone-blocks": 0,
     // disallow creation of functions within loops

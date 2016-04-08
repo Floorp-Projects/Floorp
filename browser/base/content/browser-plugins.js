@@ -11,7 +11,6 @@ var gPluginHandler = {
     "PluginContent:RemoveNotification",
     "PluginContent:UpdateHiddenPluginUI",
     "PluginContent:HideNotificationBar",
-    "PluginContent:ShowInstallNotification",
     "PluginContent:InstallSinglePlugin",
     "PluginContent:ShowPluginCrashedNotification",
     "PluginContent:SubmitReport",
@@ -56,8 +55,6 @@ var gPluginHandler = {
       case "PluginContent:HideNotificationBar":
         this.hideNotificationBar(msg.target, msg.data.name);
         break;
-      case "PluginContent:ShowInstallNotification":
-        return this.showInstallNotification(msg.target, msg.data.pluginInfo);
       case "PluginContent:InstallSinglePlugin":
         this.installSinglePlugin(msg.data.pluginInfo);
         break;

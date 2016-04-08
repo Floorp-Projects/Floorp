@@ -17,7 +17,7 @@ const CanvasUtils = require("./canvas-utils");
  * @param  {Number} debounceRate
  */
 module.exports = function startVisualization(parentEl, report,
-                                              debounceRate = 100) {
+                                              debounceRate = 60) {
   let window = parentEl.ownerDocument.defaultView;
   let canvases = new CanvasUtils(parentEl, debounceRate);
   let dragZoom = new DragZoom(canvases.container, debounceRate,

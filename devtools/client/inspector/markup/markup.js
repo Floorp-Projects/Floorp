@@ -468,6 +468,8 @@ MarkupView.prototype = {
       // and decision to show or not the tooltip
       return container.isImagePreviewTarget(target, this.tooltip);
     }
+
+    return undefined;
   },
 
   /**
@@ -534,6 +536,7 @@ MarkupView.prototype = {
 
       // Make sure the new selection receives focus so the keyboard can be used.
       this.maybeFocusNewSelection();
+      return undefined;
     }).catch(e => {
       if (!this._destroyer) {
         console.error(e);
@@ -707,6 +710,7 @@ MarkupView.prototype = {
           this.cancelDragging();
           break;
         }
+        // falls through
       }
       default:
         handled = false;
@@ -2009,7 +2013,7 @@ MarkupContainer.prototype = {
   /**
    * On mouse up, stop dragging.
    */
-  _onMouseUp: Task.async(function*() {
+  _onMouseUp: Task.async(function* () {
     this._isPreDragging = false;
 
     if (this.isDragging) {
@@ -2298,6 +2302,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
       });
       return true;
     }
+    return undefined;
   },
 
   /**
@@ -2327,7 +2332,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
       Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
 
     // Fetch the preview from the server.
-    this.tooltipDataPromise = Task.spawn(function*() {
+    this.tooltipDataPromise = Task.spawn(function* () {
       let preview = yield this.node.getImageData(maxDim);
       let data = yield preview.data.string();
 

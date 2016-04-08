@@ -21,7 +21,7 @@ const TEST_DATA = [
   {selector: "#visibility-hidden", isDisplayed: true}
 ];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let {selector, isDisplayed} of TEST_DATA) {

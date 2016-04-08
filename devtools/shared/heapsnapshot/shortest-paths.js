@@ -48,8 +48,20 @@ exports.deduplicatePaths = function (target, paths) {
     nameSet.add(name);
   }
 
-  for (let path of paths) {
+  outer: for (let path of paths) {
     const pathLength = path.length;
+
+    // Check for duplicate predecessors in the path, and skip paths that contain
+    // them.
+    const predecessorsSeen = new Set();
+    predecessorsSeen.add(target);
+    for (let i = 0; i < pathLength; i++) {
+      if (predecessorsSeen.has(path[i].predecessor)) {
+        continue outer;
+      }
+      predecessorsSeen.add(path[i].predecessor);
+    }
+
     for (let i = 0; i < pathLength - 1; i++) {
       insert(path[i].predecessor, path[i + 1].predecessor, path[i].edge);
     }

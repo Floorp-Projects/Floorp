@@ -35,43 +35,44 @@ add_task(function*() {
     zoom: 0
   };
   let fillTextValues = [];
+  let padding = [10, 10];
 
-  drawText(ctx, node, borderWidth, ratio, dragZoom);
-  deepEqual(fillTextValues[0], ["Example Node", 21.5, 31.5],
+  drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
+  deepEqual(fillTextValues[0], ["Example Node", 11.5,21.5],
     "Fills in the full node name");
-  deepEqual(fillTextValues[1], ["1KiB 100 count", 151.5, 31.5],
+  deepEqual(fillTextValues[1], ["1KiB 100 count", 141.5,21.5],
     "Includes the full byte and count information");
 
   fillTextValues = [];
   node.dx = 250;
-  drawText(ctx, node, borderWidth, ratio, dragZoom);
+  drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
 
-  deepEqual(fillTextValues[0], ["Example Node", 21.5, 31.5],
+  deepEqual(fillTextValues[0], ["Example Node", 11.5,21.5],
     "Fills in the full node name");
   deepEqual(fillTextValues[1], undefined,
     "Drops off the byte and count information if not enough room");
 
   fillTextValues = [];
   node.dx = 100;
-  drawText(ctx, node, borderWidth, ratio, dragZoom);
+  drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
 
-  deepEqual(fillTextValues[0], ["Exampl...", 21.5, 31.5],
+  deepEqual(fillTextValues[0], ["Exampl...", 11.5,21.5],
     "Cuts the name with ellipsis");
   deepEqual(fillTextValues[1], undefined,
     "Drops off the byte and count information if not enough room");
 
   fillTextValues = [];
   node.dx = 40;
-  drawText(ctx, node, borderWidth, ratio, dragZoom);
+  drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
 
-  deepEqual(fillTextValues[0], ["...", 21.5, 31.5],
+  deepEqual(fillTextValues[0], ["...", 11.5,21.5],
     "Shows only ellipsis when smaller");
   deepEqual(fillTextValues[1], undefined,
     "Drops off the byte and count information if not enough room");
 
   fillTextValues = [];
   node.dx = 20;
-  drawText(ctx, node, borderWidth, ratio, dragZoom);
+  drawText(ctx, node, borderWidth, ratio, dragZoom, padding);
 
   deepEqual(fillTextValues[0], undefined,
     "Draw nothing when not enough room");

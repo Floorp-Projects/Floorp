@@ -209,6 +209,8 @@ this.PlacesBackups = {
             this._backupFiles.push(filePath);
           }
         }
+
+        return undefined;
       }.bind(this));
       iterator.close();
 

@@ -51,7 +51,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *         Resolved to the ResponsiveUI instance for this tab when opening is
    *         complete.
    */
-  openIfNeeded: Task.async(function*(window, tab) {
+  openIfNeeded: Task.async(function* (window, tab) {
     if (!this.isActiveForTab(tab)) {
       let ui = new ResponsiveUI(window, tab);
       this.activeTabs.set(tab, ui);
@@ -71,7 +71,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    * @return Promise
    *         Resolved (with no value) when closing is complete.
    */
-  closeIfNeeded: Task.async(function*(window, tab) {
+  closeIfNeeded: Task.async(function* (window, tab) {
     if (this.isActiveForTab(tab)) {
       yield this.activeTabs.get(tab).destroy();
       this.activeTabs.delete(tab);
@@ -191,7 +191,7 @@ ResponsiveUI.prototype = {
    * state.  Platform discussions are in progress to make this happen.  See
    * bug 1238160 about <iframe mozbrowser> for more details.
    */
-  init: Task.async(function*() {
+  init: Task.async(function* () {
     let tabBrowser = this.tab.linkedBrowser;
     let contentURI = tabBrowser.documentURI.spec;
     tabBrowser.loadURI(TOOL_URL);
@@ -203,7 +203,7 @@ ResponsiveUI.prototype = {
     yield waitForMessage(toolWindow, "browser-mounted");
   }),
 
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     let tabBrowser = this.tab.linkedBrowser;
     let browserWindow = this.browserWindow;
     this.browserWindow = null;
@@ -242,7 +242,7 @@ ResponsiveUI.prototype = {
     return this.toolWindow.getViewportSize();
   },
 
-  setViewportSize: Task.async(function*(width, height) {
+  setViewportSize: Task.async(function* (width, height) {
     yield this.inited;
     this.toolWindow.setViewportSize(width, height);
   }),

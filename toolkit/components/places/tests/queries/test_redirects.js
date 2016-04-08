@@ -63,6 +63,7 @@ function check_results_callback(aSequence) {
       if (visits[i].uri == aEntry.uri)
         return i;
     }
+    return undefined;
   }
   function comparator(a, b) {
     if (sortingMode == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)

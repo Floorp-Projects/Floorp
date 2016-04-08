@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // animations have been paused (including inside iframes) because there's an
 // actor test in /devtools/server/tests/browser/ that does this.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
 

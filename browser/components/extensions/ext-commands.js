@@ -195,11 +195,11 @@ CommandList.prototype = {
    */
   getModifiersAttribute(chromeModifiers) {
     let modifiersMap = {
-      "Alt"     : "alt",
-      "Command" : "accel",
-      "Ctrl"    : "accel",
-      "MacCtrl" : "control",
-      "Shift"   : "shift",
+      "Alt": "alt",
+      "Command": "accel",
+      "Ctrl": "accel",
+      "MacCtrl": "control",
+      "Shift": "shift",
     };
     return Array.from(chromeModifiers, modifier => {
       return modifiersMap[modifier];

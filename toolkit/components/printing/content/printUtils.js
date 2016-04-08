@@ -154,6 +154,7 @@ var PrintUtils = {
     Deprecated.warning(msg, url);
 
     this.printWindow(windowID, browser);
+    return undefined;
   },
 
   /**
@@ -420,6 +421,7 @@ var PrintUtils = {
         break;
       }
     }
+    return undefined;
   },
 
   setPrinterDefaultsForSelectedPrinter: function (aPSSVC, aPrintSettings)

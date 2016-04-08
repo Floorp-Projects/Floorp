@@ -31,7 +31,7 @@ const TEST_DATA = [
   {escape: true, value: "inline", expected: "block"}
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);

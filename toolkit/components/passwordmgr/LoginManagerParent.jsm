@@ -99,6 +99,8 @@ var LoginManagerParent = {
         break;
       }
     }
+
+    return undefined;
   },
 
   /**

@@ -265,6 +265,7 @@ add_task(function* ()
       let result = results[0];
       return [result.timesUsed, result.firstUsed, result.lastUsed, result.guid];
     }
+    return undefined;
   }
 
   results = yield promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],

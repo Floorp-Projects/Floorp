@@ -350,7 +350,8 @@ Logger.prototype = {
       throw "An action is required when logging a structured message.";
     }
     if (!params) {
-      return this.log(this.level, undefined, {"action": action});
+      this.log(this.level, undefined, {"action": action});
+      return;
     }
     if (typeof(params) != "object") {
       throw "The params argument is required to be an object.";
@@ -575,6 +576,7 @@ BasicFormatter.prototype = {
       }
       return textParts.join(': ');
     }
+    return undefined;
   },
 
   format: function BF_format(message) {
@@ -899,6 +901,7 @@ FileAppender.prototype = {
         if (this._file) {
           return this._file.write(array);
         }
+        return undefined;
       });
     }
   },
@@ -942,6 +945,7 @@ BoundedFileAppender.prototype = {
       this._removeFilePromise = null;
       this.doAppend(formatted);
     });
+    return undefined;
   },
 
   reset: function () {

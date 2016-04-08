@@ -42,6 +42,7 @@ this.BrowserUtils = {
       return undefined;
     }
     appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+    return undefined;
   },
 
   /**

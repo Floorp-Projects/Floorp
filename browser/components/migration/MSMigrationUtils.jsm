@@ -872,6 +872,7 @@ WindowsVaultFormPasswords.prototype = {
     if (aOnlyCheckExists) {
       return false;
     }
+    return undefined;
   }
 };
 

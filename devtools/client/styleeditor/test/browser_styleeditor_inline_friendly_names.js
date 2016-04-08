@@ -10,7 +10,7 @@ const FIRST_TEST_PAGE = TEST_BASE_HTTP + "inline-1.html";
 const SECOND_TEST_PAGE = TEST_BASE_HTTP + "inline-2.html";
 const SAVE_PATH = "test.css";
 
-add_task(function*() {
+add_task(function* () {
   let { ui } = yield openStyleEditorForURL(FIRST_TEST_PAGE);
 
   testIndentifierGeneration(ui);

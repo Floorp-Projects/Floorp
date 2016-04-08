@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // Also check that negative delays do not overflow the UI, and are shown like
 // positive delays.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 

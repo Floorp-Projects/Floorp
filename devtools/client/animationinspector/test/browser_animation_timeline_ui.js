@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 // Check that the timeline contains the right elements.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
 

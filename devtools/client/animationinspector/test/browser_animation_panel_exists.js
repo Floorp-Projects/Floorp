@@ -6,7 +6,7 @@
 
 // Test that the animation panel sidebar exists
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,welcome to the animation panel");
   let {panel, controller} = yield openAnimationInspector();
 

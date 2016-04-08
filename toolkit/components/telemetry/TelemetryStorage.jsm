@@ -665,6 +665,7 @@ var TelemetryStorageImpl = {
     });
 
     Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SESSION_PING_COUNT").add();
+    return undefined;
   }),
 
   /**
@@ -1026,6 +1027,7 @@ var TelemetryStorageImpl = {
     } finally {
       this._enforcePendingPingsQuotaTask = null;
     }
+    return undefined;
   }),
 
   /**
@@ -1402,6 +1404,7 @@ var TelemetryStorageImpl = {
     } finally {
       this._removePendingPingsTask = null;
     }
+    return undefined;
   }),
 
   removePendingPings: Task.async(function*() {

@@ -47,20 +47,22 @@ button {
 /* Targets */
 
 .targets {
-  margin-bottom: 25px;
+  margin-bottom: 35px;
 }
 
-.target {
+.target-container {
   margin-top: 5px;
   min-height: 34px;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: baseline;
 }
 
 .target-icon {
   height: 24px;
-  margin-right: 5px;
+  margin: 6px 5px 0 0;
+  /* override the icon alignment and center it using margin-top */
+  align-self: flex-start;
 }
 
 .target-icon:not([src]) {
@@ -71,13 +73,53 @@ button {
   filter: invert(30%);
 }
 
-.target-details {
+.target {
   flex: 1;
+}
+
+.target-details {
+  margin: 0;
+  padding: 0;
+  list-style-type: none
+}
+
+.target-detail {
+  font-size: 12px;
+  margin-top: 7px;
+}
+
+.target-detail a {
+  cursor: pointer;
+}
+
+.target-detail > :not(:first-child) {
+  margin-left: 8px;
 }
 
 .addons-controls {
   display: flex;
   flex-direction: row;
+}
+
+.addons-install-error {
+  background-color: #f3b0b0;
+  padding: 5px 10px;
+  margin: 5px 4px 5px 0px;
+}
+
+.addons-install-error .warning {
+  background-image: url(chrome://devtools/skin/images/alerticon-warning.png);
+  background-size: 13px 12px;
+  margin-right: 10px;
+  display: inline-block;
+  width: 13px;
+  height: 12px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .addons-install-error .warning {
+    background-image: url(chrome://devtools/skin/images/alerticon-warning@2x.png);
+  }
 }
 
 .addons-options {

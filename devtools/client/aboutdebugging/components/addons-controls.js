@@ -11,9 +11,11 @@ loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
 const { Cc, Ci } = require("chrome");
-const { createClass, DOM: dom } =
+const { createFactory, createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
+
+const AddonsInstallError = createFactory(require("./addons-install-error"));
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -24,10 +26,17 @@ const MORE_INFO_URL = "https://developer.mozilla.org/docs/Tools" +
 module.exports = createClass({
   displayName: "AddonsControls",
 
+  getInitialState() {
+    return {
+      installError: null,
+    };
+  },
+
   render() {
     let { debugDisabled } = this.props;
 
-    return dom.div({ className: "addons-controls" },
+    return dom.div({ className: "addons-top" },
+      dom.div({ className: "addons-controls" },
         dom.div({ className: "addons-options" },
           dom.input({
             id: "enable-addon-debugging",
@@ -49,7 +58,8 @@ module.exports = createClass({
           id: "load-addon-from-file",
           onClick: this.loadAddonFromFile,
         }, Strings.GetStringFromName("loadTemporaryAddon"))
-      );
+      ),
+      AddonsInstallError({ error: this.state.installError }));
   },
 
   onEnableAddonDebuggingChange(event) {
@@ -59,6 +69,7 @@ module.exports = createClass({
   },
 
   loadAddonFromFile() {
+    this.setState({ installError: null });
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window,
       Strings.GetStringFromName("selectAddonFromFile2"),
@@ -73,11 +84,10 @@ module.exports = createClass({
     if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
       file = file.parent;
     }
-    try {
-      AddonManager.installTemporaryAddon(file);
-    } catch (e) {
-      window.alert("Error while installing the addon:\n" + e.message + "\n");
-      throw e;
-    }
+
+    AddonManager.installTemporaryAddon(file)
+      .catch(e => {
+        this.setState({ installError: e.message });
+      });
   },
 });

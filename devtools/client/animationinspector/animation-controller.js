@@ -35,7 +35,7 @@ var gToolbox, gInspector;
  * Startup the animationinspector controller and view, called by the sidebar
  * widget when loading/unloading the iframe into the tab.
  */
-var startup = Task.async(function*(inspector) {
+var startup = Task.async(function* (inspector) {
   gInspector = inspector;
   gToolbox = inspector.toolbox;
 
@@ -56,7 +56,7 @@ var startup = Task.async(function*(inspector) {
  * Shutdown the animationinspector controller and view, called by the sidebar
  * widget when loading/unloading the iframe into the tab.
  */
-var shutdown = Task.async(function*() {
+var shutdown = Task.async(function* () {
   yield AnimationsController.destroy();
   // Don't assume that AnimationsPanel is defined here, it's in another file.
   if (typeof AnimationsPanel !== "undefined") {
@@ -79,7 +79,7 @@ function destroy() {
  * @param {Target} target The current toolbox target.
  * @return {Object} An object with boolean properties.
  */
-var getServerTraits = Task.async(function*(target) {
+var getServerTraits = Task.async(function* (target) {
   let config = [
     { name: "hasToggleAll", actor: "animations",
       method: "toggleAll" },
@@ -135,7 +135,7 @@ var AnimationsController = {
   PLAYERS_UPDATED_EVENT: "players-updated",
   ALL_ANIMATIONS_TOGGLED_EVENT: "all-animations-toggled",
 
-  initialize: Task.async(function*() {
+  initialize: Task.async(function* () {
     if (this.initialized) {
       yield this.initialized.promise;
       return;
@@ -169,7 +169,7 @@ var AnimationsController = {
     this.initialized.resolve();
   }),
 
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     if (!this.initialized) {
       return;
     }
@@ -215,13 +215,13 @@ var AnimationsController = {
            gInspector.sidebar.getCurrentTabID() == "animationinspector";
   },
 
-  onPanelVisibilityChange: Task.async(function*() {
+  onPanelVisibilityChange: Task.async(function* () {
     if (this.isPanelVisible()) {
       this.onNewNodeFront();
     }
   }),
 
-  onNewNodeFront: Task.async(function*() {
+  onNewNodeFront: Task.async(function* () {
     // Ignore if the panel isn't visible or the node selection hasn't changed.
     if (!this.isPanelVisible() ||
         this.nodeFront === gInspector.selection.nodeFront) {
@@ -265,7 +265,7 @@ var AnimationsController = {
    * if they should be played.
    * @return {Promise} Resolves when the playState has been changed.
    */
-  toggleCurrentAnimations: Task.async(function*(shouldPause) {
+  toggleCurrentAnimations: Task.async(function* (shouldPause) {
     if (this.traits.hasToggleSeveral) {
       yield this.animationsFront.toggleSeveral(this.animationPlayers,
                                                shouldPause);
@@ -288,7 +288,7 @@ var AnimationsController = {
    * @param {Boolean} shouldPause Should the animations be paused too.
    * @return {Promise} Resolves when the current time has been set.
    */
-  setCurrentTimeAll: Task.async(function*(time, shouldPause) {
+  setCurrentTimeAll: Task.async(function* (time, shouldPause) {
     if (this.traits.hasSetCurrentTimes) {
       yield this.animationsFront.setCurrentTimes(this.animationPlayers, time,
                                                  shouldPause);
@@ -309,7 +309,7 @@ var AnimationsController = {
    * @param {Number} rate.
    * @return {Promise} Resolves when the rate has been set.
    */
-  setPlaybackRateAll: Task.async(function*(rate) {
+  setPlaybackRateAll: Task.async(function* (rate) {
     if (this.traits.hasSetPlaybackRates) {
       // If the backend can set all playback rates at the same time, use that.
       yield this.animationsFront.setPlaybackRates(this.animationPlayers, rate);
@@ -327,7 +327,7 @@ var AnimationsController = {
   // called again.
   animationPlayers: [],
 
-  refreshAnimationPlayers: Task.async(function*(nodeFront) {
+  refreshAnimationPlayers: Task.async(function* (nodeFront) {
     this.destroyAnimationPlayers();
 
     this.animationPlayers = yield this.animationsFront
