@@ -97,9 +97,9 @@ add_task(function* test_inline_options() {
         browser.test.assertEq("about:addons", tab.url, "Tab contains AddonManager");
 
         browser.test.log("Ping options page.");
-        return new Promise(resolve => browser.tabs.sendMessage(optionsTab, "ping", resolve));
-      }).then(() => {
-        browser.test.log("Got pong.");
+        return browser.runtime.sendMessage("ping");
+      }).then((pong) => {
+        browser.test.assertEq("pong", pong, "Got pong.");
 
         browser.test.log("Remove options tab.");
         return browser.tabs.remove(optionsTab);
