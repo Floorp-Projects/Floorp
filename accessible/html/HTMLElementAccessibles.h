@@ -36,6 +36,7 @@ public:
     LeafAccessible(aContent, aDoc)
   {
     mType = eHTMLBRType;
+    mGenericTypes |= eText;
   }
 
   // Accessible
