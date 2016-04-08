@@ -81,37 +81,43 @@ var pushService = Cc["@mozilla.org/push/Service;1"].
                   getService(Ci.nsIPushService).
                   wrappedJSObject;
 
-var mockWebSocket;
+var mockSocket;
+var serverMsgs = [];
 
 addMessageListener("socket-setup", function () {
-  mockWebSocket = new Promise((resolve, reject) => {
-    var mockSocket = null;
-    pushService.replaceServiceBackend({
-      serverURI: "wss://push.example.org/",
-      networkInfo: new MockNetworkInfo(),
-      makeWebSocket(uri) {
-        if (!mockSocket) {
-          mockSocket = new MockWebSocketParent(uri);
-          resolve(mockSocket);
-        }
-
-        return mockSocket;
+  pushService.replaceServiceBackend({
+    serverURI: "wss://push.example.org/",
+    networkInfo: new MockNetworkInfo(),
+    makeWebSocket(uri) {
+      mockSocket = new MockWebSocketParent(uri);
+      while (serverMsgs.length > 0) {
+        let msg = serverMsgs.shift();
+        mockSocket.serverSendMsg(msg);
       }
-    });
+      return mockSocket;
+    }
   });
 });
 
-addMessageListener("socket-teardown", function () {
-  mockWebSocket.then(socket => {
-    socket.close();
-    pushService.restoreServiceBackend();
-  });
+addMessageListener("socket-teardown", function (msg) {
+  pushService.restoreServiceBackend().then(_ => {
+    serverMsgs.length = 0;
+    if (mockSocket) {
+      mockSocket.close();
+      mockSocket = null;
+    }
+    sendAsyncMessage("socket-server-teardown");
+  }).catch(error => {
+    Cu.reportError(`Error restoring service backend: ${error}`);
+  })
 });
 
 addMessageListener("socket-server-msg", function (msg) {
-  mockWebSocket.then(socket => {
-    socket.serverSendMsg(msg);
-  });
+  if (mockSocket) {
+    mockSocket.serverSendMsg(msg);
+  } else {
+    serverMsgs.push(msg);
+  }
 });
 
 var MockService = {
