@@ -53,11 +53,16 @@ class TransportLayerIce : public TransportLayer {
  private:
   DISALLOW_COPY_ASSIGN(TransportLayerIce);
   void PostSetup();
+  void ResetOldStream(); // called after successful ice restart
+  void RestoreOldStream(); // called after unsuccessful ice restart
 
   const std::string name_;
   RefPtr<NrIceCtx> ctx_;
   RefPtr<NrIceMediaStream> stream_;
   int component_;
+
+  // used to hold the old stream
+  RefPtr<NrIceMediaStream> old_stream_;
 };
 
 }  // close namespace

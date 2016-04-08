@@ -1,5 +1,7 @@
 #include <sstream>
 
+#include "logging.h"
+
 // nICEr includes
 extern "C" {
 #include "nr_api.h"
@@ -12,10 +14,16 @@ extern "C" {
 
 namespace mozilla {
 
-NrIceCtxHandler::~NrIceCtxHandler()
+MOZ_MTLOG_MODULE("mtransport")
+
+NrIceCtxHandler::NrIceCtxHandler(const std::string& name,
+                                 bool offerer,
+                                 NrIceCtx::Policy policy)
+  : current_ctx(new NrIceCtx(name, offerer, policy)),
+    old_ctx(nullptr),
+    restart_count(0)
 {
 }
-
 
 RefPtr<NrIceCtxHandler>
 NrIceCtxHandler::Create(const std::string& name,
@@ -24,17 +32,16 @@ NrIceCtxHandler::Create(const std::string& name,
                         bool tcp_enabled,
                         bool allow_link_local,
                         bool hide_non_default,
-                        Policy policy)
+                        NrIceCtx::Policy policy)
 {
-  // InitializeCryptoAndLogging only executes once
-  NrIceCtx::InitializeCryptoAndLogging(allow_loopback,
-                                       tcp_enabled,
-                                       allow_link_local);
+  // InitializeGlobals only executes once
+  NrIceCtx::InitializeGlobals(allow_loopback, tcp_enabled, allow_link_local);
 
   RefPtr<NrIceCtxHandler> ctx = new NrIceCtxHandler(name, offerer, policy);
 
-  if (!NrIceCtx::Initialize(ctx,
-                            hide_non_default)) {
+  if (ctx == nullptr ||
+      ctx->current_ctx == nullptr ||
+      !ctx->current_ctx->Initialize(hide_non_default)) {
     return nullptr;
   }
 
@@ -45,7 +52,79 @@ NrIceCtxHandler::Create(const std::string& name,
 RefPtr<NrIceMediaStream>
 NrIceCtxHandler::CreateStream(const std::string& name, int components)
 {
-  return NrIceMediaStream::Create(this, name, components);
+  // To make tracking NrIceMediaStreams easier during ICE restart
+  // prepend an int to the name that increments with each ICE restart
+  std::ostringstream os;
+  os << restart_count << "-" << name;
+  return NrIceMediaStream::Create(this->current_ctx, os.str(), components);
+}
+
+
+RefPtr<NrIceCtx>
+NrIceCtxHandler::CreateCtx(bool hide_non_default) const
+{
+  return CreateCtx(NrIceCtx::GetNewUfrag(),
+                   NrIceCtx::GetNewPwd(),
+                   hide_non_default);
+}
+
+
+RefPtr<NrIceCtx>
+NrIceCtxHandler::CreateCtx(const std::string& ufrag,
+                           const std::string& pwd,
+                           bool hide_non_default) const
+{
+  RefPtr<NrIceCtx> new_ctx = new NrIceCtx(this->current_ctx->name(),
+                                          true, // offerer (hardcoded per bwc)
+                                          this->current_ctx->policy());
+  if (new_ctx == nullptr) {
+    return nullptr;
+  }
+
+  if (!new_ctx->Initialize(hide_non_default, ufrag, pwd)) {
+    return nullptr;
+  }
+
+  return new_ctx;
+}
+
+
+bool
+NrIceCtxHandler::BeginIceRestart(RefPtr<NrIceCtx> new_ctx)
+{
+  MOZ_ASSERT(!old_ctx, "existing ice restart in progress");
+  if (old_ctx) {
+    MOZ_MTLOG(ML_ERROR, "Existing ice restart in progress");
+    return false; // ice restart already in progress
+  }
+
+  if (new_ctx == nullptr) {
+    return false;
+  }
+
+  ++restart_count;
+  old_ctx = current_ctx;
+  current_ctx = new_ctx;
+  return true;
+}
+
+
+void
+NrIceCtxHandler::FinalizeIceRestart()
+{
+  // no harm calling this even if we're not in the middle of restarting
+  old_ctx = nullptr;
+}
+
+
+void
+NrIceCtxHandler::RollbackIceRestart()
+{
+  if (old_ctx == nullptr) {
+    return;
+  }
+  current_ctx = old_ctx;
+  old_ctx = nullptr;
 }
 
 

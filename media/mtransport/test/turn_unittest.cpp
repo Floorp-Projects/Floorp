@@ -102,7 +102,7 @@ class TurnClient : public MtransportTest {
   }
 
   static void SetUpTestCase() {
-    NrIceCtx::InitializeCryptoAndLogging(false, false, false);
+    NrIceCtx::InitializeGlobals(false, false, false);
   }
 
   void SetTcp() {
