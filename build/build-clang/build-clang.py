@@ -114,29 +114,21 @@ def mkdir_p(path):
             raise
 
 
-def build_and_use_libgcc(env, clang_dir):
-    with updated_env(env):
-        tempdir = tempfile.mkdtemp()
-        gcc_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "..", "unix", "build-gcc")
-        run_in(gcc_dir, ["./build-gcc.sh", tempdir, "libgcc"])
-        run_in(tempdir, ["tar", "-xf", "gcc.tar.xz"])
-        libgcc_dir = glob.glob(os.path.join(tempdir,
-                                            "gcc", "lib", "gcc",
-                                            "x86_64-unknown-linux-gnu",
+def install_libgcc(gcc_dir, clang_dir):
+        libgcc_dir = glob.glob(os.path.join(gcc_dir, "lib", "gcc",
+                                            "x86_64-*linux-gnu",
                                             "[0-9]*"))[0]
         clang_lib_dir = os.path.join(clang_dir, "lib", "gcc",
                                      "x86_64-unknown-linux-gnu",
                                      os.path.basename(libgcc_dir))
         mkdir_p(clang_lib_dir)
         copy_dir_contents(libgcc_dir, clang_lib_dir)
-        libgcc_dir = os.path.join(tempdir, "gcc", "lib64")
+        libgcc_dir = os.path.join(gcc_dir, "lib64")
         clang_lib_dir = os.path.join(clang_dir, "lib")
         copy_dir_contents(libgcc_dir, clang_lib_dir)
-        include_dir = os.path.join(tempdir, "gcc", "include")
+        include_dir = os.path.join(gcc_dir, "include")
         clang_include_dir = os.path.join(clang_dir, "include")
         copy_dir_contents(include_dir, clang_include_dir)
-        shutil.rmtree(tempdir)
 
 
 def svn_co(source_dir, url, directory, revision):
@@ -395,11 +387,7 @@ if __name__ == "__main__":
                 build_type, assertions, python_path)
 
     if is_linux():
-        final_stage_inst_dir = final_stage_dir + '/clang'
-        build_and_use_libgcc(
-            {"CC": cc + " %s" % ' '.join(extra_cflags),
-             "CXX": cxx + " %s" % ' '.join(extra_cxxflags)},
-            final_stage_inst_dir)
+        install_libgcc(gcc_dir, final_stage_dir + '/clang')
 
     if is_darwin() or is_windows():
         build_tar_package("tar", "clang.tar.bz2", final_stage_dir, "clang")
