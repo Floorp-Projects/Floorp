@@ -11,13 +11,20 @@ function checkElements(expectPresent, l) {
   }
 }
 
-add_task(function*() {
-  let enabledOnStartup = yield promisePocketEnabled();
+add_task(function* test_setup() {
+  let clearValue = Services.prefs.prefHasUserValue("extensions.pocket.enabled");
+  let enabledOnStartup = Services.prefs.getBoolPref("extensions.pocket.enabled");
   registerCleanupFunction(() => {
-    // Extra insurance that this is disabled again, but it should have been set
-    // in promisePocketReset.
-    Services.prefs.setBoolPref("extensions.pocket.enabled", enabledOnStartup);
+    if (clearValue) {
+      Services.prefs.clearUserPref("extensions.pocket.enabled");
+    } else {
+      Services.prefs.setBoolPref("extensions.pocket.enabled", enabledOnStartup);
+    }
   });
+});
+
+add_task(function*() {
+  yield promisePocketEnabled();
 
   checkWindowProperties(true, ["Pocket", "pktUI", "pktUIMessaging"]);
   checkElements(true, ["pocket-button", "panelMenu_pocket", "menu_pocket", "BMB_pocket",
