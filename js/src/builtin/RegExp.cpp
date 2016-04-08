@@ -1197,7 +1197,10 @@ InterpretDollar(JSLinearString* matched, JSLinearString* string, size_t position
         break;
       case '+':
         // SpiderMonkey extension
-        GetParen(matched, captures[captures.length() - 1], out);
+        if (captures.length() == 0)
+            out->initEmpty(matched);
+        else
+            GetParen(matched, captures[captures.length() - 1], out);
         break;
       case '`':
         out->init(string, 0, position);
