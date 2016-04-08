@@ -2439,7 +2439,19 @@ notification[value="translation"] {
 %include ../shared/fullscreen/warning.inc.css
 %include ../../../devtools/client/themes/responsivedesign.inc.css
 %include ../../../devtools/client/themes/commandline.inc.css
+
 %include ../shared/plugin-doorhanger.inc.css
+
+notification.pluginVulnerable > .notification-inner > .messageCloseButton {
+  list-style-image: url("chrome://global/skin/icons/close-inverted.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  notification.pluginVulnerable > .notification-inner > .messageCloseButton {
+    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
+  }
+}
+
 %include ../shared/login-doorhanger.inc.css
 
 %include downloads/indicator.css

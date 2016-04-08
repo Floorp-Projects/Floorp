@@ -1748,7 +1748,13 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 %include ../shared/fullscreen/warning.inc.css
 %include ../../../devtools/client/themes/responsivedesign.inc.css
 %include ../../../devtools/client/themes/commandline.inc.css
+
 %include ../shared/plugin-doorhanger.inc.css
+
+notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:hover) {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
+}
+
 %include ../shared/login-doorhanger.inc.css
 
 %include downloads/indicator.css
