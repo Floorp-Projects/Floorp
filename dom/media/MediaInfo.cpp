@@ -99,28 +99,6 @@ AudioConfig::ChannelLayout::SMPTEDefault(uint32_t aChannels) const
   }
 }
 
-bool
-AudioConfig::ChannelLayout::MappingTable(const ChannelLayout& aOther,
-                                         uint8_t* aMap) const
-{
-  if (!IsValid() || !aOther.IsValid() ||
-      Map() != aOther.Map()) {
-    return false;
-  }
-  if (!aMap) {
-    return true;
-  }
-  for (uint32_t i = 0; i < Count(); i++) {
-    for (uint32_t j = 0; j < Count(); j++) {
-      if (aOther[j] == mChannels[i]) {
-        aMap[j] = i;
-        break;
-      }
-    }
-  }
-  return true;
-}
-
 /**
  * AudioConfig::ChannelConfig
  */
