@@ -85,7 +85,7 @@ class WinCounterManager(CounterManager):
 
     def __init__(self, process_name, process, counters,
                  childProcess="firefox-webcontent",
-                 pluginProcess="plugin-container"):
+                 pluginProcess="firefox-plugin-container"):
         CounterManager.__init__(self)
         self.childProcess = childProcess
         self.pluginProcess = pluginProcess

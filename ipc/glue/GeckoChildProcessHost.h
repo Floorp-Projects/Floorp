@@ -189,7 +189,7 @@ private:
   bool RunPerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
 			     base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
 
-  static void GetPathToBinary(FilePath& exePath, GeckoProcessType processType);
+  static void GetPathToBinary(FilePath& exePath);
 
   void SetChildLogName(const char* varName, const char* origLogName);
 

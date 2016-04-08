@@ -478,7 +478,7 @@ Section "-Application" APP_IDX
   ${CreateRegKey} "$TmpVal" "$0" 0
   StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\firefox-webcontent.exe"
   ${CreateRegKey} "$TmpVal" "$0" 0
-  StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\plugin-container.exe"
+  StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\firefox-plugin-container.exe"
   ${CreateRegKey} "$TmpVal" "$0" 0
 
   ${If} $TmpVal == "HKLM"
