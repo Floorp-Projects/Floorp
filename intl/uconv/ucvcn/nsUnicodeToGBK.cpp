@@ -53,7 +53,7 @@ nsresult nsUnicodeToGB18030::Try4BytesEncoder(char16_t aChar,
   nsresult res = nsUnicodeEncodeHelper::ConvertByTable(
     &aChar, &len, aOut, aOutLen, u4BytesGB18030Charset, nullptr,
     (uMappingTable*) &g_uf_gb18030_4bytes);
-  MOZ_ASSERT(NS_FAILED(res) || ((1 == len) && (4 == *aOutLen)),
+  MOZ_ASSERT((res != NS_OK) || ((1 == len) && (4 == *aOutLen)),
              "unexpect conversion length");
   return res;
 }
