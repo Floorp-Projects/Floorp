@@ -138,19 +138,14 @@ GetDirectoryListingTask::GetSuccessRequestResult(ErrorResult& aRv) const
   nsTArray<FileSystemDirectoryListingResponseData> inputs;
 
   for (unsigned i = 0; i < mTargetData.Length(); i++) {
-    if (mTargetData[i].mType == Directory::BlobImplOrDirectoryPath::eBlobImpl) {
-      BlobParent* blobParent = GetBlobParent(mTargetData[i].mBlobImpl);
-      if (!blobParent) {
-        continue;
-      }
-
-      FileSystemDirectoryListingResponseBlob blobData;
-      blobData.blobParent() = blobParent;
-      inputs.AppendElement(blobData);
+    if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eFilePath) {
+      FileSystemDirectoryListingResponseFile fileData;
+      fileData.fileRealPath() = mTargetData[i].mPath;
+      inputs.AppendElement(fileData);
     } else {
-      MOZ_ASSERT(mTargetData[i].mType == Directory::BlobImplOrDirectoryPath::eDirectoryPath);
+      MOZ_ASSERT(mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath);
       FileSystemDirectoryListingResponseDirectory directoryData;
-      directoryData.directoryRealPath() = mTargetData[i].mDirectoryPath;
+      directoryData.directoryRealPath() = mTargetData[i].mPath;
       inputs.AppendElement(directoryData);
     }
   }
@@ -172,18 +167,16 @@ GetDirectoryListingTask::SetSuccessRequestResult(const FileSystemResponseValue& 
   for (uint32_t i = 0; i < r.data().Length(); ++i) {
     const FileSystemDirectoryListingResponseData& data = r.data()[i];
 
-    Directory::BlobImplOrDirectoryPath element;
+    Directory::FileOrDirectoryPath element;
 
-    if (data.type() == FileSystemDirectoryListingResponseData::TFileSystemDirectoryListingResponseBlob) {
-      PBlobChild* blob = data.get_FileSystemDirectoryListingResponseBlob().blobChild();
-
-      element.mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
-      element.mBlobImpl = static_cast<BlobChild*>(blob)->GetBlobImpl();
+    if (data.type() == FileSystemDirectoryListingResponseData::TFileSystemDirectoryListingResponseFile) {
+      element.mType = Directory::FileOrDirectoryPath::eFilePath;
+      element.mPath = data.get_FileSystemDirectoryListingResponseFile().fileRealPath();
     } else {
       MOZ_ASSERT(data.type() == FileSystemDirectoryListingResponseData::TFileSystemDirectoryListingResponseDirectory);
 
-      element.mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
-      element.mDirectoryPath = data.get_FileSystemDirectoryListingResponseDirectory().directoryRealPath();
+      element.mType = Directory::FileOrDirectoryPath::eDirectoryPath;
+      element.mPath = data.get_FileSystemDirectoryListingResponseDirectory().directoryRealPath();
     }
 
     if (!mTargetData.AppendElement(element, fallible)) {
@@ -292,21 +285,15 @@ GetDirectoryListingTask::Work()
       }
     }
 
-    Directory::BlobImplOrDirectoryPath element;
-    if (isDir) {
-      nsAutoString path;
-      if (NS_WARN_IF(NS_FAILED(currFile->GetPath(path)))) {
-        continue;
-      }
-
-      element.mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
-      element.mDirectoryPath = path;
-    } else {
-      BlobImplFile* impl = new BlobImplFile(currFile);
-
-      element.mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
-      element.mBlobImpl = impl;
+    nsAutoString path;
+    if (NS_WARN_IF(NS_FAILED(currFile->GetPath(path)))) {
+      continue;
     }
+
+    Directory::FileOrDirectoryPath element;
+    element.mPath = path;
+    element.mType = isDir ? Directory::FileOrDirectoryPath::eDirectoryPath
+                          : Directory::FileOrDirectoryPath::eFilePath;
 
     if (!mTargetData.AppendElement(element, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -341,44 +328,45 @@ GetDirectoryListingTask::HandlerCallback()
   }
 
   for (unsigned i = 0; i < count; i++) {
-    if (mTargetData[i].mType == Directory::BlobImplOrDirectoryPath::eDirectoryPath) {
-      nsCOMPtr<nsIFile> directoryPath;
-      NS_ConvertUTF16toUTF8 path(mTargetData[i].mDirectoryPath);
-      nsresult rv = NS_NewNativeLocalFile(path, true,
-                                          getter_AddRefs(directoryPath));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mPromise->MaybeReject(rv);
-        mPromise = nullptr;
-        return;
-      }
+    nsCOMPtr<nsIFile> path;
+    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i].mPath);
+    nsresult rv = NS_NewNativeLocalFile(fullPath, true, getter_AddRefs(path));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeReject(rv);
+      mPromise = nullptr;
+      return;
+    }
 
 #ifdef DEBUG
-      nsCOMPtr<nsIFile> rootPath;
-      rv = NS_NewLocalFile(mFileSystem->LocalOrDeviceStorageRootPath(), false,
-                           getter_AddRefs(rootPath));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mPromise->MaybeReject(rv);
-        mPromise = nullptr;
-        return;
-      }
+    nsCOMPtr<nsIFile> rootPath;
+    rv = NS_NewLocalFile(mFileSystem->LocalOrDeviceStorageRootPath(), false,
+                         getter_AddRefs(rootPath));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeReject(rv);
+      mPromise = nullptr;
+      return;
+    }
 
-      MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, directoryPath));
+    MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, path));
 #endif
 
+    if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath) {
       RefPtr<Directory> directory =
-        Directory::Create(mFileSystem->GetParentObject(),
-                          directoryPath,
-                          Directory::eNotDOMRootDirectory,
-                          mFileSystem);
+        Directory::Create(mFileSystem->GetParentObject(), path,
+                          Directory::eNotDOMRootDirectory, mFileSystem);
       MOZ_ASSERT(directory);
 
       // Propogate mFilter onto sub-Directory object:
       directory->SetContentFilters(mFilters);
       listing[i].SetAsDirectory() = directory;
     } else {
-      MOZ_ASSERT(mTargetData[i].mType == Directory::BlobImplOrDirectoryPath::eBlobImpl);
-      listing[i].SetAsFile() =
-        File::Create(mFileSystem->GetParentObject(), mTargetData[i].mBlobImpl);
+      MOZ_ASSERT(mTargetData[i].mType == Directory::FileOrDirectoryPath::eFilePath);
+
+      RefPtr<File> file =
+        File::CreateFromFile(mFileSystem->GetParentObject(), path);
+      MOZ_ASSERT(file);
+
+      listing[i].SetAsFile() = file;
     }
   }
 

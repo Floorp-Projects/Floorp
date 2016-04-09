@@ -183,13 +183,14 @@ FileSystemResponseValue
 CreateFileTask::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  BlobParent* actor = GetBlobParent(mTargetBlobImpl);
-  if (!actor) {
-    return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
+
+  nsAutoString path;
+  aRv = mTargetPath->GetPath(path);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return FileSystemDirectoryResponse();
   }
-  FileSystemFileResponse response;
-  response.blobParent() = actor;
-  return response;
+
+  return FileSystemFileResponse(path);
 }
 
 void
@@ -198,8 +199,12 @@ CreateFileTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemFileResponse r = aValue;
-  BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-  mTargetBlobImpl = actor->GetBlobImpl();
+
+  NS_ConvertUTF16toUTF8 path(r.realPath());
+  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(mTargetPath));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 }
 
 nsresult
@@ -312,7 +317,6 @@ CreateFileTask::Work()
       return NS_ERROR_FAILURE;
     }
 
-    mTargetBlobImpl = new BlobImplFile(mTargetPath);
     return NS_OK;
   }
 
@@ -331,7 +335,6 @@ CreateFileTask::Work()
     return NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR;
   }
 
-  mTargetBlobImpl = new BlobImplFile(mTargetPath);
   return NS_OK;
 }
 
@@ -352,9 +355,9 @@ CreateFileTask::HandlerCallback()
     return;
   }
 
-  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetParentObject(),
-                                   mTargetBlobImpl);
-  mPromise->MaybeResolve(blob);
+  RefPtr<File> file = File::CreateFromFile(mFileSystem->GetParentObject(),
+                                           mTargetPath);
+  mPromise->MaybeResolve(file);
   mPromise = nullptr;
   mBlobData = nullptr;
 }

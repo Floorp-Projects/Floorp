@@ -146,6 +146,13 @@ Directory::Create(nsISupports* aParent, nsIFile* aFile,
   bool isDir;
   nsresult rv = aFile->IsDirectory(&isDir);
   MOZ_ASSERT(NS_SUCCEEDED(rv) && isDir);
+
+  if (aType == eNotDOMRootDirectory) {
+    RefPtr<nsIFile> parent;
+    rv = aFile->GetParent(getter_AddRefs(parent));
+    // We must have a parent if this is not the root directory.
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && parent);
+  }
 #endif
 
   RefPtr<Directory> directory =
@@ -319,7 +326,6 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
 {
   nsresult error = NS_OK;
   nsCOMPtr<nsIFile> realPath;
-  RefPtr<BlobImpl> blob;
 
   // Check and get the target path.
 
@@ -328,25 +334,38 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
     return nullptr;
   }
 
+  // If this is a File
   if (aPath.IsFile()) {
-    blob = aPath.GetAsFile().Impl();
+    if (!fs->GetRealPath(aPath.GetAsFile().Impl(),
+                         getter_AddRefs(realPath))) {
+      error = NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+  // If this is a string
   } else if (aPath.IsString()) {
     error = DOMPathToRealPath(aPath.GetAsString(), getter_AddRefs(realPath));
-  } else if (!fs->IsSafeDirectory(&aPath.GetAsDirectory())) {
-    error = NS_ERROR_DOM_SECURITY_ERR;
+
+  // Directory
   } else {
-    realPath = aPath.GetAsDirectory().mFile;
-    // The target must be a descendant of this directory.
-    if (!FileSystemUtils::IsDescendantPath(mFile, realPath)) {
-      error = NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
+    MOZ_ASSERT(aPath.IsDirectory());
+    if (!fs->IsSafeDirectory(&aPath.GetAsDirectory())) {
+      error = NS_ERROR_DOM_SECURITY_ERR;
+    } else {
+      realPath = aPath.GetAsDirectory().mFile;
     }
   }
 
+  // The target must be a descendant of this directory.
+  if (!FileSystemUtils::IsDescendantPath(mFile, realPath)) {
+    error = NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
+  }
+
   RefPtr<RemoveTask> task =
-    RemoveTask::Create(fs, mFile, blob, realPath, aRecursive, aRv);
+    RemoveTask::Create(fs, mFile, realPath, aRecursive, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
