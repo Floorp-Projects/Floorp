@@ -124,8 +124,9 @@ Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<GetFileOrDirectoryTask> task =
-    GetFileOrDirectoryTask::Create(aFileSystem, path, eDOMRootDirectory, true, aRv);
+  RefPtr<GetFileOrDirectoryTaskChild> task =
+    GetFileOrDirectoryTaskChild::Create(aFileSystem, path, eDOMRootDirectory,
+                                        true, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -252,8 +253,9 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
     return nullptr;
   }
 
-  RefPtr<CreateFileTask> task =
-    CreateFileTask::Create(fs, realPath, blobData, arrayData, replace, aRv);
+  RefPtr<CreateFileTaskChild> task =
+    CreateFileTaskChild::Create(fs, realPath, blobData, arrayData, replace,
+                                aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -274,8 +276,8 @@ Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<CreateDirectoryTask> task =
-    CreateDirectoryTask::Create(fs, realPath, aRv);
+  RefPtr<CreateDirectoryTaskChild> task =
+    CreateDirectoryTaskChild::Create(fs, realPath, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -296,9 +298,9 @@ Directory::Get(const nsAString& aPath, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<GetFileOrDirectoryTask> task =
-    GetFileOrDirectoryTask::Create(fs, realPath, eNotDOMRootDirectory, false,
-                                   aRv);
+  RefPtr<GetFileOrDirectoryTaskChild> task =
+    GetFileOrDirectoryTaskChild::Create(fs, realPath, eNotDOMRootDirectory,
+                                        false, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -360,8 +362,8 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
     error = NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  RefPtr<RemoveTask> task =
-    RemoveTask::Create(fs, mFile, realPath, aRecursive, aRv);
+  RefPtr<RemoveTaskChild> task =
+    RemoveTaskChild::Create(fs, mFile, realPath, aRecursive, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -409,8 +411,8 @@ Directory::GetFilesAndDirectories(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<GetDirectoryListingTask> task =
-    GetDirectoryListingTask::Create(fs, mFile, mType, mFilters, aRv);
+  RefPtr<GetDirectoryListingTaskChild> task =
+    GetDirectoryListingTaskChild::Create(fs, mFile, mType, mFilters, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

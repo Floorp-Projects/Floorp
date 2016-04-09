@@ -37,48 +37,50 @@ class PBlobParent;
  *        | (1)
  *  ______|_______________________     |     __________________________________
  * |      |                       |    |    |                                  |
- * |      V                       |   IPC   | PBackground thread on            |
- * | [new FileSystemTaskBase()]   |    |    | the parent process               |
- * |       |                      |    |    |                                  |
- * |       | (2)                  |    |    |                                  |
- * |       V                      |    |    |                                  |
+ * |      |                          |   |   |                                 |
+ * |      V                          |  IPC  | PBackground thread on           |
+ * | [new FileSystemTaskChildBase()] |   |   | the parent process              |
+ * |       |                         |   |   |                                 |
+ * |       | (2)                     |   |   |                                 |
+ * |       V                         |   |   |                                 |
  * | [FileSystemPermissionRequest------------------\                           |
  * |  ::RequestForTask()] <------------------------/                           |
- * |         |                    |    |    |                                  |
- * |         | (3)                |         |                                  |
- * |         V                    |   (4)   |                                  |
+ * |         |                      |    |    |                                |
+ * |         | (3)                  |         |                                |
+ * |         V                      |   (4)   |                                |
  * |    [GetRequestParams]------------------->[new FileSystemTaskParentBase()] |
- * |                              |         |          |                       |
- * |                              |    |    |          | (5)   _____________   |
- * |                              |    |    |          |      |             |  |
- * |                              |    |    |          |      | I/O Thread  |  |
- * |                              |    |    |          |      |             |  |
- * |                              |    |    |          ---------> [IOWork]  |  |
- * |                              |   IPC   |                 |     |       |  |
- * |                              |    |    |                 |     | (6)   |  |
- * |                              |    |    |          --------------       |  |
- * |                              |    |    |          |      |_____________|  |
- * |                              |    |    |          |                       |
- * |                              |    |    |          V                       |
- * |                              |    |    |     [HandleResult]               |
- * |                              |    |    |          |                       |
- * |                              |         |          | (7)                   |
- * |                              |   (8)   |          V                       |
- * |   [SetRequestResult]<--------------------[GetRequestResult]               |
- * |       |                      |         |                                  |
- * |       | (9)                  |    |    |                                  |
- * |       V                      |    |    |                                  |
- * |[HandlerCallback]             |   IPC   |                                  |
- * |_______|______________________|    |    |__________________________________|
- *         |                           |
+ * |                                 |       |          |                      |
+ * |                                 |   |   |          | (5)   _____________  |
+ * |                                 |   |   |          |      |             | |
+ * |                                 |   |   |          |      | I/O Thread  | |
+ * |                                 |   |   |          |      |             | |
+ * |                                 |   |   |          ---------> [IOWork]  | |
+ * |                                 |  IPC  |                 |     |       | |
+ * |                                 |   |   |                 |     | (6)   | |
+ * |                                 |   |   |          --------------       | |
+ * |                                 |   |   |          |      |_____________| |
+ * |                                 |   |   |          |                      |
+ * |                                 |   |   |          V                      |
+ * |                                 |   |   |     [HandleResult]              |
+ * |                                 |   |   |          |                      |
+ * |                                 |       |          | (7)                  |
+ * |                                 |  (8)  |          V                      |
+ * |   [SetRequestResult]<---------------------[GetRequestResult]              |
+ * |       |                         |       |                                 |
+ * |       | (9)                     |   |   |                                 |
+ * |       V                         |   |   |                                 |
+ * |[HandlerCallback]                |  IPC  |                                 |
+ * |_______|_________________________|   |   |_________________________________|
+ *         |                             |
  *         V
  *        Page
  *
  * 1. From the process that is handling the request
  * Child/Parent (it can be in any process):
  *   (1) Call FileSystem API from content page with JS. Create a task and run.
- *   The base constructor [FileSystemTaskBase()] of the task should be called.
- *   (2) The FileSystemTaskBase object is given to
+ *   The base constructor [FileSystemTaskChildBase()] of the task should be
+ *   called.
+ *   (2) The FileSystemTaskChildBase object is given to
  *   [FileSystemPermissionRequest::RequestForTask()] that will perform a
  *   permission check step if needed (See ePermissionCheckType enum). The real
  *   operation is done on the parent process but it's hidden by
@@ -102,7 +104,8 @@ class PBlobParent;
  *   result back to the child process though the IPC.
  *   (7) Call [GetRequestResult] request result to prepare the parameters of the
  *   IPC. Because the formats of the error result for different task are the
- *   same, FileSystemTaskBase can handle the error message without interfering.
+ *   same, FileSystemTaskChildBase can handle the error message without
+ *   interfering.
  *   Each task only needs to implement its specific success result preparation
  *   function -[GetSuccessRequestResult].
  * Child/Parent:
@@ -111,10 +114,10 @@ class PBlobParent;
  *   parsing function [SetSuccessRequestResult] to get the success result.
  *   (9) Call [HandlerCallback] to send the task result to the content page.
  */
-class FileSystemTaskBase : public PFileSystemRequestChild
+class FileSystemTaskChildBase : public PFileSystemRequestChild
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(FileSystemTaskBase)
+  NS_INLINE_DECL_REFCOUNTING(FileSystemTaskChildBase)
 
   /*
    * Start the task. It will dispatch all the information to the parent process,
@@ -154,10 +157,10 @@ protected:
   /*
    * To create a task to handle the page content request.
    */
-  explicit FileSystemTaskBase(FileSystemBase* aFileSystem);
+  explicit FileSystemTaskChildBase(FileSystemBase* aFileSystem);
 
   virtual
-  ~FileSystemTaskBase();
+  ~FileSystemTaskChildBase();
 
   /*
    * Wrap the task parameter to FileSystemParams for sending it through IPC.
@@ -198,7 +201,8 @@ private:
   SetRequestResult(const FileSystemResponseValue& aValue);
 };
 
-// This class is the 'alter ego' of FileSystemTaskBase in the PBackground world.
+// This class is the 'alter ego' of FileSystemTaskChildBase in the PBackground
+// world.
 class FileSystemTaskParentBase : public nsRunnable
 {
 public:

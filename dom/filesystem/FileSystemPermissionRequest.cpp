@@ -22,7 +22,7 @@ NS_IMPL_ISUPPORTS(FileSystemPermissionRequest, nsIRunnable,
                   nsIIPCBackgroundChildCreateCallback)
 
 /* static */ void
-FileSystemPermissionRequest::RequestForTask(FileSystemTaskBase* aTask)
+FileSystemPermissionRequest::RequestForTask(FileSystemTaskChildBase* aTask)
 {
   MOZ_ASSERT(aTask, "aTask should not be null!");
   MOZ_ASSERT(NS_IsMainThread());
@@ -32,7 +32,7 @@ FileSystemPermissionRequest::RequestForTask(FileSystemTaskBase* aTask)
   NS_DispatchToCurrentThread(request);
 }
 
-FileSystemPermissionRequest::FileSystemPermissionRequest(FileSystemTaskBase* aTask)
+FileSystemPermissionRequest::FileSystemPermissionRequest(FileSystemTaskChildBase* aTask)
   : mTask(aTask)
 {
   MOZ_ASSERT(mTask, "aTask should not be null!");

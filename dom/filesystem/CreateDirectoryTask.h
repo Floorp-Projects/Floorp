@@ -19,16 +19,16 @@ namespace dom {
 class FileSystemCreateDirectoryParams;
 class Promise;
 
-class CreateDirectoryTask final : public FileSystemTaskBase
+class CreateDirectoryTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<CreateDirectoryTask>
+  static already_AddRefed<CreateDirectoryTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aTargetPath,
          ErrorResult& aRv);
 
   virtual
-  ~CreateDirectoryTask();
+  ~CreateDirectoryTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
@@ -50,8 +50,8 @@ protected:
 
 
 private:
-  CreateDirectoryTask(FileSystemBase* aFileSystem,
-                      nsIFile* aTargetPath);
+  CreateDirectoryTaskChild(FileSystemBase* aFileSystem,
+                           nsIFile* aTargetPath);
 
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
