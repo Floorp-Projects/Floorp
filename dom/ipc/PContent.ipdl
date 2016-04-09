@@ -1207,8 +1207,8 @@ parent:
     async NotifyBenchmarkResult(nsString aCodecName, uint32_t aDecodeFPS);
 
 both:
-     async AsyncMessage(nsString aMessage, ClonedMessageData aData,
-                        CpowEntry[] aCpows, Principal aPrincipal);
+     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
+                        Principal aPrincipal, ClonedMessageData aData);
 };
 
 }
