@@ -103,6 +103,7 @@
 #include "NSSCertDBTrustDomain.h"
 #include "PSMRunnable.h"
 #include "RootCertificateTelemetryUtils.h"
+#include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "mozilla/Assertions.h"
@@ -905,8 +906,7 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
   if (!cert) {
     return;
   }
-  UniquePtr<char, void(&)(void*)>
-    commonName(CERT_GetCommonName(&cert->subject), PORT_Free);
+  UniquePORTString commonName(CERT_GetCommonName(&cert->subject));
   // This only applies to certificates issued by authorities in our root
   // program.
   CERTCertificate* rootCert = rootNode->cert;
