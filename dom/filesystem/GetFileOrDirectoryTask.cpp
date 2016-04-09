@@ -23,21 +23,22 @@ namespace mozilla {
 namespace dom {
 
 /**
- * GetFileOrDirectoryTask
+ * GetFileOrDirectoryTaskChild
  */
 
-/* static */ already_AddRefed<GetFileOrDirectoryTask>
-GetFileOrDirectoryTask::Create(FileSystemBase* aFileSystem,
-                               nsIFile* aTargetPath,
-                               Directory::DirectoryType aType,
-                               bool aDirectoryOnly,
-                               ErrorResult& aRv)
+/* static */ already_AddRefed<GetFileOrDirectoryTaskChild>
+GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
+                                    nsIFile* aTargetPath,
+                                    Directory::DirectoryType aType,
+                                    bool aDirectoryOnly,
+                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 
-  RefPtr<GetFileOrDirectoryTask> task =
-    new GetFileOrDirectoryTask(aFileSystem, aTargetPath, aType, aDirectoryOnly);
+  RefPtr<GetFileOrDirectoryTaskChild> task =
+    new GetFileOrDirectoryTaskChild(aFileSystem, aTargetPath, aType,
+                                    aDirectoryOnly);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -56,11 +57,11 @@ GetFileOrDirectoryTask::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-GetFileOrDirectoryTask::GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
-                                               nsIFile* aTargetPath,
-                                               Directory::DirectoryType aType,
-                                               bool aDirectoryOnly)
-  : FileSystemTaskBase(aFileSystem)
+GetFileOrDirectoryTaskChild::GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
+                                                         nsIFile* aTargetPath,
+                                                         Directory::DirectoryType aType,
+                                                         bool aDirectoryOnly)
+  : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
   , mIsDirectory(aDirectoryOnly)
   , mType(aType)
@@ -69,21 +70,21 @@ GetFileOrDirectoryTask::GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aFileSystem);
 }
 
-GetFileOrDirectoryTask::~GetFileOrDirectoryTask()
+GetFileOrDirectoryTaskChild::~GetFileOrDirectoryTaskChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<Promise>
-GetFileOrDirectoryTask::GetPromise()
+GetFileOrDirectoryTaskChild::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
-GetFileOrDirectoryTask::GetRequestParams(const nsString& aSerializedDOMPath,
-                                         ErrorResult& aRv) const
+GetFileOrDirectoryTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
+                                              ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -98,8 +99,8 @@ GetFileOrDirectoryTask::GetRequestParams(const nsString& aSerializedDOMPath,
 }
 
 void
-GetFileOrDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                                                ErrorResult& aRv)
+GetFileOrDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                                                     ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   switch (aValue.type()) {
@@ -135,7 +136,7 @@ GetFileOrDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& a
 }
 
 void
-GetFileOrDirectoryTask::HandlerCallback()
+GetFileOrDirectoryTaskChild::HandlerCallback()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   if (mFileSystem->IsShutdown()) {
@@ -168,7 +169,7 @@ GetFileOrDirectoryTask::HandlerCallback()
 }
 
 void
-GetFileOrDirectoryTask::GetPermissionAccessType(nsCString& aAccess) const
+GetFileOrDirectoryTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
   aAccess.AssignLiteral(GET_FILE_OR_DIRECTORY_PERMISSION);
 }

@@ -24,21 +24,21 @@ namespace mozilla {
 namespace dom {
 
 /**
- * GetDirectoryListingTask
+ * GetDirectoryListingTaskChild
  */
 
-/* static */ already_AddRefed<GetDirectoryListingTask>
-GetDirectoryListingTask::Create(FileSystemBase* aFileSystem,
-                                nsIFile* aTargetPath,
-                                Directory::DirectoryType aType,
-                                const nsAString& aFilters,
-                                ErrorResult& aRv)
+/* static */ already_AddRefed<GetDirectoryListingTaskChild>
+GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
+                                     nsIFile* aTargetPath,
+                                     Directory::DirectoryType aType,
+                                     const nsAString& aFilters,
+                                     ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 
-  RefPtr<GetDirectoryListingTask> task =
-    new GetDirectoryListingTask(aFileSystem, aTargetPath, aType, aFilters);
+  RefPtr<GetDirectoryListingTaskChild> task =
+    new GetDirectoryListingTaskChild(aFileSystem, aTargetPath, aType, aFilters);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -57,11 +57,11 @@ GetDirectoryListingTask::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
-                                                 nsIFile* aTargetPath,
-                                                 Directory::DirectoryType aType,
-                                                 const nsAString& aFilters)
-  : FileSystemTaskBase(aFileSystem)
+GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(FileSystemBase* aFileSystem,
+                                                           nsIFile* aTargetPath,
+                                                           Directory::DirectoryType aType,
+                                                           const nsAString& aFilters)
+  : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
   , mFilters(aFilters)
   , mType(aType)
@@ -70,21 +70,21 @@ GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aFileSystem);
 }
 
-GetDirectoryListingTask::~GetDirectoryListingTask()
+GetDirectoryListingTaskChild::~GetDirectoryListingTaskChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<Promise>
-GetDirectoryListingTask::GetPromise()
+GetDirectoryListingTaskChild::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
-GetDirectoryListingTask::GetRequestParams(const nsString& aSerializedDOMPath,
-                                          ErrorResult& aRv) const
+GetDirectoryListingTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
+                                               ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -100,8 +100,8 @@ GetDirectoryListingTask::GetRequestParams(const nsString& aSerializedDOMPath,
 }
 
 void
-GetDirectoryListingTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                                                 ErrorResult& aRv)
+GetDirectoryListingTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                                                      ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aValue.type() ==
@@ -131,7 +131,7 @@ GetDirectoryListingTask::SetSuccessRequestResult(const FileSystemResponseValue& 
 }
 
 void
-GetDirectoryListingTask::HandlerCallback()
+GetDirectoryListingTaskChild::HandlerCallback()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   if (mFileSystem->IsShutdown()) {
@@ -203,7 +203,7 @@ GetDirectoryListingTask::HandlerCallback()
 }
 
 void
-GetDirectoryListingTask::GetPermissionAccessType(nsCString& aAccess) const
+GetDirectoryListingTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
   aAccess.AssignLiteral(GET_DIRECTORY_LISTING_PERMISSION);
 }

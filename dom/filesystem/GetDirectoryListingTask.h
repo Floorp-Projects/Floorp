@@ -17,10 +17,10 @@ namespace dom {
 
 class BlobImpl;
 
-class GetDirectoryListingTask final : public FileSystemTaskBase
+class GetDirectoryListingTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<GetDirectoryListingTask>
+  static already_AddRefed<GetDirectoryListingTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aTargetPath,
          Directory::DirectoryType aType,
@@ -28,7 +28,7 @@ public:
          ErrorResult& aRv);
 
   virtual
-  ~GetDirectoryListingTask();
+  ~GetDirectoryListingTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
@@ -38,10 +38,10 @@ public:
 
 private:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
-  GetDirectoryListingTask(FileSystemBase* aFileSystem,
-                          nsIFile* aTargetPath,
-                          Directory::DirectoryType aType,
-                          const nsAString& aFilters);
+  GetDirectoryListingTaskChild(FileSystemBase* aFileSystem,
+                               nsIFile* aTargetPath,
+                               Directory::DirectoryType aType,
+                               const nsAString& aFilters);
 
   virtual FileSystemParams
   GetRequestParams(const nsString& aSerializedDOMPath,

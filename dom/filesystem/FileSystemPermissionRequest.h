@@ -18,7 +18,7 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class FileSystemTaskBase;
+class FileSystemTaskChildBase;
 
 class FileSystemPermissionRequest final
   : public nsIContentPermissionRequest
@@ -28,7 +28,7 @@ class FileSystemPermissionRequest final
 public:
   // Request permission for the given task.
   static void
-  RequestForTask(FileSystemTaskBase* aTask);
+  RequestForTask(FileSystemTaskChildBase* aTask);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
@@ -36,7 +36,7 @@ public:
   NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
 
 private:
-  explicit FileSystemPermissionRequest(FileSystemTaskBase* aTask);
+  explicit FileSystemPermissionRequest(FileSystemTaskChildBase* aTask);
 
   ~FileSystemPermissionRequest();
 
@@ -48,7 +48,7 @@ private:
 
   nsCString mPermissionType;
   nsCString mPermissionAccess;
-  RefPtr<FileSystemTaskBase> mTask;
+  RefPtr<FileSystemTaskChildBase> mTask;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;

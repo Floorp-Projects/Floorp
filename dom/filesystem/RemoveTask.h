@@ -19,10 +19,10 @@ namespace dom {
 class BlobImpl;
 class Promise;
 
-class RemoveTask final : public FileSystemTaskBase
+class RemoveTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<RemoveTask>
+  static already_AddRefed<RemoveTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aDirPath,
          nsIFile* aTargetPath,
@@ -30,7 +30,7 @@ public:
          ErrorResult& aRv);
 
   virtual
-  ~RemoveTask();
+  ~RemoveTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
@@ -51,10 +51,10 @@ protected:
   HandlerCallback() override;
 
 private:
-  RemoveTask(FileSystemBase* aFileSystem,
-             nsIFile* aDirPath,
-             nsIFile* aTargetPath,
-             bool aRecursive);
+  RemoveTaskChild(FileSystemBase* aFileSystem,
+                  nsIFile* aDirPath,
+                  nsIFile* aTargetPath,
+                  bool aRecursive);
 
   RefPtr<Promise> mPromise;
 
