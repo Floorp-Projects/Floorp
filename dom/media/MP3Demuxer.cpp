@@ -347,7 +347,7 @@ MP3TrackDemuxer::Duration() const {
 
   int64_t numFrames = 0;
   const auto numAudioFrames = mParser.VBRInfo().NumAudioFrames();
-  if (numAudioFrames) {
+  if (mParser.VBRInfo().IsValid()) {
     // VBR headers don't include the VBR header frame.
     numFrames = numAudioFrames.value() + 1;
   } else {
