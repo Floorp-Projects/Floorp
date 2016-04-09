@@ -36,22 +36,22 @@ namespace mozilla {
 namespace dom {
 
 /**
- *CreateFileTask
+ *CreateFileTaskChild
  */
 
-/* static */ already_AddRefed<CreateFileTask>
-CreateFileTask::Create(FileSystemBase* aFileSystem,
-                       nsIFile* aTargetPath,
-                       Blob* aBlobData,
-                       InfallibleTArray<uint8_t>& aArrayData,
-                       bool aReplace,
-                       ErrorResult& aRv)
+/* static */ already_AddRefed<CreateFileTaskChild>
+CreateFileTaskChild::Create(FileSystemBase* aFileSystem,
+                            nsIFile* aTargetPath,
+                            Blob* aBlobData,
+                            InfallibleTArray<uint8_t>& aArrayData,
+                            bool aReplace,
+                            ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 
-  RefPtr<CreateFileTask> task =
-    new CreateFileTask(aFileSystem, aTargetPath, aReplace);
+  RefPtr<CreateFileTaskChild> task =
+    new CreateFileTaskChild(aFileSystem, aTargetPath, aReplace);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -76,10 +76,10 @@ CreateFileTask::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
-                               nsIFile* aTargetPath,
-                               bool aReplace)
-  : FileSystemTaskBase(aFileSystem)
+CreateFileTaskChild::CreateFileTaskChild(FileSystemBase* aFileSystem,
+                                         nsIFile* aTargetPath,
+                                         bool aReplace)
+  : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
   , mReplace(aReplace)
 {
@@ -87,21 +87,21 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aFileSystem);
 }
 
-CreateFileTask::~CreateFileTask()
+CreateFileTaskChild::~CreateFileTaskChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<Promise>
-CreateFileTask::GetPromise()
+CreateFileTaskChild::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
-CreateFileTask::GetRequestParams(const nsString& aSerializedDOMPath,
-                                 ErrorResult& aRv) const
+CreateFileTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
+                                      ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemCreateFileParams param;
@@ -135,8 +135,8 @@ CreateFileTask::GetRequestParams(const nsString& aSerializedDOMPath,
 }
 
 void
-CreateFileTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                                        ErrorResult& aRv)
+CreateFileTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                                             ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -150,7 +150,7 @@ CreateFileTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
 }
 
 void
-CreateFileTask::HandlerCallback()
+CreateFileTaskChild::HandlerCallback()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -172,7 +172,7 @@ CreateFileTask::HandlerCallback()
 }
 
 void
-CreateFileTask::GetPermissionAccessType(nsCString& aAccess) const
+CreateFileTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
   GET_PERMISSION_ACCESS_TYPE(aAccess)
 }

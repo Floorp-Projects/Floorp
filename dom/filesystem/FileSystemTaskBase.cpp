@@ -81,7 +81,7 @@ DispatchToIOThread(nsIRunnable* aRunnable)
  * FileSystemTaskBase class
  */
 
-FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem)
+FileSystemTaskChildBase::FileSystemTaskChildBase(FileSystemBase* aFileSystem)
   : mErrorValue(NS_OK)
   , mFileSystem(aFileSystem)
 {
@@ -89,26 +89,26 @@ FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem)
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
 }
 
-FileSystemTaskBase::~FileSystemTaskBase()
+FileSystemTaskChildBase::~FileSystemTaskChildBase()
 {
   mFileSystem->AssertIsOnOwningThread();
 }
 
 FileSystemBase*
-FileSystemTaskBase::GetFileSystem() const
+FileSystemTaskChildBase::GetFileSystem() const
 {
   mFileSystem->AssertIsOnOwningThread();
   return mFileSystem.get();
 }
 
 void
-FileSystemTaskBase::Start()
+FileSystemTaskChildBase::Start()
 {
   mFileSystem->AssertIsOnOwningThread();
 
   if (HasError()) {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &FileSystemTaskBase::HandlerCallback);
+      NS_NewRunnableMethod(this, &FileSystemTaskChildBase::HandlerCallback);
     NS_DispatchToMainThread(runnable);
     return;
   }
@@ -142,7 +142,7 @@ FileSystemTaskBase::Start()
 }
 
 void
-FileSystemTaskBase::SetRequestResult(const FileSystemResponseValue& aValue)
+FileSystemTaskChildBase::SetRequestResult(const FileSystemResponseValue& aValue)
 {
   mFileSystem->AssertIsOnOwningThread();
 
@@ -157,7 +157,7 @@ FileSystemTaskBase::SetRequestResult(const FileSystemResponseValue& aValue)
 }
 
 bool
-FileSystemTaskBase::Recv__delete__(const FileSystemResponseValue& aValue)
+FileSystemTaskChildBase::Recv__delete__(const FileSystemResponseValue& aValue)
 {
   mFileSystem->AssertIsOnOwningThread();
 
@@ -167,7 +167,7 @@ FileSystemTaskBase::Recv__delete__(const FileSystemResponseValue& aValue)
 }
 
 void
-FileSystemTaskBase::SetError(const nsresult& aErrorValue)
+FileSystemTaskChildBase::SetError(const nsresult& aErrorValue)
 {
   mErrorValue = FileSystemErrorFromNsError(aErrorValue);
 }

@@ -119,7 +119,7 @@ public:
   }
 
   // IPC initialization
-  // See how these 2 methods are used in FileSystemTaskBase.
+  // See how these 2 methods are used in FileSystemTaskChildBase.
 
   virtual bool
   NeedToGoToMainThread() const { return false; }
@@ -140,7 +140,7 @@ protected:
   // The local path of the root (i.e. the OS path, with OS path separators, of
   // the OS directory that acts as the root of this OSFileSystem).
   // This path must be set by the FileSystem implementation immediately
-  // because it will be used for the validation of any FileSystemTaskBase.
+  // because it will be used for the validation of any FileSystemTaskChildBase.
   // The concept of this path is that, any task will never go out of it and this
   // must be considered the OS 'root' of the current FileSystem. Different
   // Directory object can have different OS 'root' path.

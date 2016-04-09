@@ -22,19 +22,19 @@ using namespace ipc;
 namespace dom {
 
 /**
- * CreateDirectoryTask
+ * CreateDirectoryTaskChild
  */
 
-/* static */ already_AddRefed<CreateDirectoryTask>
-CreateDirectoryTask::Create(FileSystemBase* aFileSystem,
-                            nsIFile* aTargetPath,
-                            ErrorResult& aRv)
+/* static */ already_AddRefed<CreateDirectoryTaskChild>
+CreateDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
+                                 nsIFile* aTargetPath,
+                                 ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 
-  RefPtr<CreateDirectoryTask> task =
-    new CreateDirectoryTask(aFileSystem, aTargetPath);
+  RefPtr<CreateDirectoryTaskChild> task =
+    new CreateDirectoryTaskChild(aFileSystem, aTargetPath);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -53,30 +53,30 @@ CreateDirectoryTask::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-CreateDirectoryTask::CreateDirectoryTask(FileSystemBase* aFileSystem,
-                                         nsIFile* aTargetPath)
-  : FileSystemTaskBase(aFileSystem)
+CreateDirectoryTaskChild::CreateDirectoryTaskChild(FileSystemBase* aFileSystem,
+                                                   nsIFile* aTargetPath)
+  : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 }
 
-CreateDirectoryTask::~CreateDirectoryTask()
+CreateDirectoryTaskChild::~CreateDirectoryTaskChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<Promise>
-CreateDirectoryTask::GetPromise()
+CreateDirectoryTaskChild::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
-CreateDirectoryTask::GetRequestParams(const nsString& aSerializedDOMPath,
-                                      ErrorResult& aRv) const
+CreateDirectoryTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
+                                           ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -90,8 +90,8 @@ CreateDirectoryTask::GetRequestParams(const nsString& aSerializedDOMPath,
 }
 
 void
-CreateDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                                             ErrorResult& aRv)
+CreateDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                                                  ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -104,7 +104,7 @@ CreateDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& aVal
 }
 
 void
-CreateDirectoryTask::HandlerCallback()
+CreateDirectoryTaskChild::HandlerCallback()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   if (mFileSystem->IsShutdown()) {
@@ -129,7 +129,7 @@ CreateDirectoryTask::HandlerCallback()
 }
 
 void
-CreateDirectoryTask::GetPermissionAccessType(nsCString& aAccess) const
+CreateDirectoryTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
   aAccess.AssignLiteral(CREATE_DIRECTORY_TASK_PERMISSION);
 }

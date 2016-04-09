@@ -463,8 +463,8 @@ BackgroundChildImpl::DeallocPFileSystemRequestChild(PFileSystemRequestChild* aAc
 {
   // The reference is increased in FileSystemTaskBase::Start of
   // FileSystemTaskBase.cpp. We should decrease it after IPC.
-  RefPtr<dom::FileSystemTaskBase> child =
-    dont_AddRef(static_cast<dom::FileSystemTaskBase*>(aActor));
+  RefPtr<dom::FileSystemTaskChildBase> child =
+    dont_AddRef(static_cast<dom::FileSystemTaskChildBase*>(aActor));
   return true;
 }
 

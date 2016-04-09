@@ -20,23 +20,23 @@ namespace mozilla {
 namespace dom {
 
 /**
- * RemoveTask
+ * RemoveTaskChild
  */
 
-/* static */ already_AddRefed<RemoveTask>
-RemoveTask::Create(FileSystemBase* aFileSystem,
-                   nsIFile* aDirPath,
-                   nsIFile* aTargetPath,
-                   bool aRecursive,
-                   ErrorResult& aRv)
+/* static */ already_AddRefed<RemoveTaskChild>
+RemoveTaskChild::Create(FileSystemBase* aFileSystem,
+                        nsIFile* aDirPath,
+                        nsIFile* aTargetPath,
+                        bool aRecursive,
+                        ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
   MOZ_ASSERT(aDirPath);
   MOZ_ASSERT(aTargetPath);
 
-  RefPtr<RemoveTask> task =
-    new RemoveTask(aFileSystem, aDirPath, aTargetPath, aRecursive);
+  RefPtr<RemoveTaskChild> task =
+    new RemoveTaskChild(aFileSystem, aDirPath, aTargetPath, aRecursive);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -55,11 +55,11 @@ RemoveTask::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
-                       nsIFile* aDirPath,
-                       nsIFile* aTargetPath,
-                       bool aRecursive)
-  : FileSystemTaskBase(aFileSystem)
+RemoveTaskChild::RemoveTaskChild(FileSystemBase* aFileSystem,
+                                 nsIFile* aDirPath,
+                                 nsIFile* aTargetPath,
+                                 bool aRecursive)
+  : FileSystemTaskChildBase(aFileSystem)
   , mDirPath(aDirPath)
   , mTargetPath(aTargetPath)
   , mRecursive(aRecursive)
@@ -71,21 +71,21 @@ RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aTargetPath);
 }
 
-RemoveTask::~RemoveTask()
+RemoveTaskChild::~RemoveTaskChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<Promise>
-RemoveTask::GetPromise()
+RemoveTaskChild::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
-RemoveTask::GetRequestParams(const nsString& aSerializedDOMPath,
-                             ErrorResult& aRv) const
+RemoveTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
+                                  ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemRemoveParams param;
@@ -110,8 +110,8 @@ RemoveTask::GetRequestParams(const nsString& aSerializedDOMPath,
 }
 
 void
-RemoveTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                                    ErrorResult& aRv)
+RemoveTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                                         ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -120,7 +120,7 @@ RemoveTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
 }
 
 void
-RemoveTask::HandlerCallback()
+RemoveTaskChild::HandlerCallback()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
@@ -140,7 +140,7 @@ RemoveTask::HandlerCallback()
 }
 
 void
-RemoveTask::GetPermissionAccessType(nsCString& aAccess) const
+RemoveTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
   aAccess.AssignLiteral(REMOVE_TASK_PERMISSION);
 }

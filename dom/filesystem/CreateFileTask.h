@@ -20,10 +20,10 @@ class Blob;
 class BlobImpl;
 class Promise;
 
-class CreateFileTask final : public FileSystemTaskBase
+class CreateFileTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<CreateFileTask>
+  static already_AddRefed<CreateFileTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aFile,
          Blob* aBlobData,
@@ -32,7 +32,7 @@ public:
          ErrorResult& aRv);
 
   virtual
-  ~CreateFileTask();
+  ~CreateFileTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
@@ -53,9 +53,9 @@ protected:
   HandlerCallback() override;
 
 private:
-  CreateFileTask(FileSystemBase* aFileSystem,
-                 nsIFile* aFile,
-                 bool aReplace);
+  CreateFileTaskChild(FileSystemBase* aFileSystem,
+                      nsIFile* aFile,
+                      bool aReplace);
 
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
