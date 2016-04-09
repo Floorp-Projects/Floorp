@@ -1006,10 +1006,9 @@ LoadLoadableRoots(/*optional*/ const char* dir, const char* modNameUTF8)
     return SECFailure;
   }
 
-  UniquePtr<char, void(&)(void*)>
-    escaped_fullLibraryPath(nss_addEscape(fullLibraryPath.get(), '\"'),
-                            PORT_Free);
-  if (!escaped_fullLibraryPath) {
+  UniquePORTString escapedFullLibraryPath(nss_addEscape(fullLibraryPath.get(),
+                                                        '\"'));
+  if (!escapedFullLibraryPath) {
     return SECFailure;
   }
 
@@ -1019,7 +1018,7 @@ LoadLoadableRoots(/*optional*/ const char* dir, const char* modNameUTF8)
 
   UniquePtr<char, void(&)(char*)>
     pkcs11ModuleSpec(PR_smprintf("name=\"%s\" library=\"%s\"", modNameUTF8,
-                                 escaped_fullLibraryPath.get()),
+                                 escapedFullLibraryPath.get()),
                      PR_smprintf_free);
   if (!pkcs11ModuleSpec) {
     return SECFailure;

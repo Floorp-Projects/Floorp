@@ -207,11 +207,10 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 
   if (ascii)
   {
-    char *asciiData = BTOA_DataToAscii(buffer, hashLen);
+    UniquePORTString asciiData(BTOA_DataToAscii(buffer, hashLen));
     NS_ENSURE_TRUE(asciiData, NS_ERROR_OUT_OF_MEMORY);
 
-    _retval.Assign(asciiData);
-    PORT_Free(asciiData);
+    _retval.Assign(asciiData.get());
   }
   else
   {
@@ -403,7 +402,7 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 
   if (!mHMACContext)
     return NS_ERROR_NOT_INITIALIZED;
-  
+
   uint32_t hashLen = 0;
   unsigned char buffer[HASH_LENGTH_MAX];
   unsigned char* pbuffer = buffer;
@@ -411,11 +410,10 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
   PK11_DigestFinal(mHMACContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
   if (aASCII)
   {
-    char *asciiData = BTOA_DataToAscii(buffer, hashLen);
+    UniquePORTString asciiData(BTOA_DataToAscii(buffer, hashLen));
     NS_ENSURE_TRUE(asciiData, NS_ERROR_OUT_OF_MEMORY);
 
-    _retval.Assign(asciiData);
-    PORT_Free(asciiData);
+    _retval.Assign(asciiData.get());
   }
   else
   {

@@ -2112,10 +2112,9 @@ GetCertFingerprintByOidTag(CERTCertificate* nsscert,
                                  nsscert->derCert.len);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char *tmpstr = CERT_Hexify(const_cast<SECItem*>(&digest.get()), 1);
+  UniquePORTString tmpstr(CERT_Hexify(const_cast<SECItem*>(&digest.get()), 1));
   NS_ENSURE_TRUE(tmpstr, NS_ERROR_OUT_OF_MEMORY);
 
-  fp.Assign(tmpstr);
-  PORT_Free(tmpstr);
+  fp.Assign(tmpstr.get());
   return NS_OK;
 }
