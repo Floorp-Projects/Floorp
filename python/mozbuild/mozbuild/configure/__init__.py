@@ -123,8 +123,8 @@ class ConfigureSandbox(dict):
 
         # Store options added with `imply_option`, and the reason they were
         # added (which can either have been given to `imply_option`, or
-        # inferred.
-        self._implied_options = {}
+        # inferred. Their order matters, so use a list.
+        self._implied_options = []
 
         # Store all results from _prepare_function
         self._prepared_functions = set()
@@ -216,14 +216,16 @@ class ConfigureSandbox(dict):
             if self._help:
                 self._helper.handle(option)
 
+        # All implied options should exist.
+        for implied_option in self._implied_options:
+            raise ConfigureError(
+                '`%s`, emitted from `%s` line %d, is unknown.'
+                % (implied_option.option, implied_option.caller[1],
+                   implied_option.caller[2]))
+
         # All options should have been removed (handled) by now.
         for arg in self._helper:
             without_value = arg.split('=', 1)[0]
-            if arg in self._implied_options:
-                frameinfo, reason = self._implied_options[arg]
-                raise ConfigureError(
-                    '`%s`, emitted from `%s` line %d, is unknown.'
-                    % (without_value, frameinfo[1], frameinfo[2]))
             raise InvalidOptionError('Unknown option: %s' % without_value)
 
         if self._help:
@@ -294,10 +296,38 @@ class ConfigureSandbox(dict):
 
     @memoize
     def _value_for_option(self, option):
+        implied = {}
+        for implied_option in self._implied_options[:]:
+            if implied_option.name not in (option.name, option.env):
+                continue
+            self._implied_options.remove(implied_option)
+
+            value = self._resolve(implied_option.value,
+                                  need_help_dependency=False)
+
+            if value is not None:
+                if isinstance(value, OptionValue):
+                    pass
+                elif value is True:
+                    value = PositiveOptionValue()
+                elif value is False or value == ():
+                    value = NegativeOptionValue()
+                elif isinstance(value, types.StringTypes):
+                    value = PositiveOptionValue((value,))
+                elif isinstance(value, tuple):
+                    value = PositiveOptionValue(value)
+                else:
+                    raise TypeError("Unexpected type: '%s'"
+                                    % type(value).__name__)
+
+                opt = value.format(implied_option.option)
+                self._helper.add(opt, 'implied')
+                implied[opt] = implied_option
+
         try:
             value, option_string = self._helper.handle(option)
         except ConflictingOptionError as e:
-            frameinfo, reason = self._implied_options[e.arg]
+            reason = implied[e.arg].reason
             reason = self._raw_options.get(reason) or reason.option
             raise InvalidOptionError(
                 "'%s' implied by '%s' conflicts with '%s' from the %s"
@@ -614,24 +644,18 @@ class ConfigureSandbox(dict):
                 "the `imply_option` call."
                 % option)
 
-        value = self._resolve(value, need_help_dependency=False)
-        if value is not None:
-            if isinstance(value, OptionValue):
-                pass
-            elif value is True:
-                value = PositiveOptionValue()
-            elif value is False or value == ():
-                value = NegativeOptionValue()
-            elif isinstance(value, types.StringTypes):
-                value = PositiveOptionValue((value,))
-            elif isinstance(value, tuple):
-                value = PositiveOptionValue(value)
-            else:
-                raise TypeError("Unexpected type: '%s'" % type(value).__name__)
+        prefix, name, values = Option.split_option(option)
+        if values != ():
+            raise ConfigureError("Implied option must not contain an '='")
 
-            option = value.format(option)
-            self._helper.add(option, 'implied')
-            self._implied_options[option] = inspect.stack()[1], reason
+        self._implied_options.append(ReadOnlyNamespace(
+            option=option,
+            prefix=prefix,
+            name=name,
+            value=value,
+            caller=inspect.stack()[1],
+            reason=reason,
+        ))
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground
