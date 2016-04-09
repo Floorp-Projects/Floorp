@@ -281,8 +281,14 @@ protected:
                     nsAutoPtr<PrefFontList>,
                     PrefFontList*> mGenericMappings;
 
-    // caching family lookups as found by FindFamily after resolving substitutions
-    nsRefPtrHashtable<nsCStringHashKey, gfxFontFamily> mFcSubstituteCache;
+    // Caching family lookups as found by FindAndAddFamilies after resolving
+    // substitutions. The gfxFontFamily objects cached here are owned by the
+    // gfxFcPlatformFontList via its mFamilies table; note that if the main
+    // font list is rebuilt (e.g. due to a fontconfig configuration change),
+    // these pointers will be invalidated. InitFontList() flushes the cache
+    // in this case.
+    nsDataHashtable<nsCStringHashKey,
+                    nsTArray<gfxFontFamily*>> mFcSubstituteCache;
 
     nsCOMPtr<nsITimer> mCheckFontUpdatesTimer;
     nsCountedRef<FcConfig> mLastConfig;
