@@ -11,6 +11,8 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
 
+#define REMOVE_TASK_PERMISSION "write"
+
 namespace mozilla {
 namespace dom {
 
@@ -27,12 +29,6 @@ public:
          bool aRecursive,
          ErrorResult& aRv);
 
-  static already_AddRefed<RemoveTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemRemoveParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
-
   virtual
   ~RemoveTask();
 
@@ -47,15 +43,9 @@ protected:
   GetRequestParams(const nsString& aSerializedDOMPath,
                    ErrorResult& aRv) const override;
 
-  virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
-
   virtual void
   SetSuccessRequestResult(const FileSystemResponseValue& aValue,
                           ErrorResult& aRv) override;
-
-  virtual nsresult
-  Work() override;
 
   virtual void
   HandlerCallback() override;
@@ -66,11 +56,41 @@ private:
              nsIFile* aTargetPath,
              bool aRecursive);
 
-  RemoveTask(FileSystemBase* aFileSystem,
-             const FileSystemRemoveParams& aParam,
-             FileSystemRequestParent* aParent);
-
   RefPtr<Promise> mPromise;
+
+  // This path is the Directory::mFile.
+  nsCOMPtr<nsIFile> mDirPath;
+
+  // This is what we want to remove. mTargetPath is discendant path of mDirPath.
+  nsCOMPtr<nsIFile> mTargetPath;
+
+  bool mRecursive;
+  bool mReturnValue;
+};
+
+class RemoveTaskParent final : public FileSystemTaskParentBase
+{
+public:
+  static already_AddRefed<RemoveTaskParent>
+  Create(FileSystemBase* aFileSystem,
+         const FileSystemRemoveParams& aParam,
+         FileSystemRequestParent* aParent,
+         ErrorResult& aRv);
+
+  virtual void
+  GetPermissionAccessType(nsCString& aAccess) const override;
+
+protected:
+  virtual FileSystemResponseValue
+  GetSuccessRequestResult(ErrorResult& aRv) const override;
+
+  virtual nsresult
+  IOWork() override;
+
+private:
+  RemoveTaskParent(FileSystemBase* aFileSystem,
+                   const FileSystemRemoveParams& aParam,
+                   FileSystemRequestParent* aParent);
 
   // This path is the Directory::mFile.
   nsCOMPtr<nsIFile> mDirPath;

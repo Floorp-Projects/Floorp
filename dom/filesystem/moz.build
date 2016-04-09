@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 IPDL_SOURCES += [
+    'PFileSystemParams.ipdlh',
     'PFileSystemRequest.ipdl',
 ]
 

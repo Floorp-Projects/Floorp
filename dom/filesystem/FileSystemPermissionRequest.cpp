@@ -8,6 +8,8 @@
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentPermissionHelper.h"
@@ -16,14 +18,15 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS(FileSystemPermissionRequest, nsIRunnable,
-                  nsIContentPermissionRequest)
+                  nsIContentPermissionRequest,
+                  nsIIPCBackgroundChildCreateCallback)
 
-// static
-void
+/* static */ void
 FileSystemPermissionRequest::RequestForTask(FileSystemTaskBase* aTask)
 {
   MOZ_ASSERT(aTask, "aTask should not be null!");
   MOZ_ASSERT(NS_IsMainThread());
+
   RefPtr<FileSystemPermissionRequest> request =
     new FileSystemPermissionRequest(aTask);
   NS_DispatchToCurrentThread(request);
@@ -98,7 +101,7 @@ FileSystemPermissionRequest::Cancel()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mTask->SetError(NS_ERROR_DOM_SECURITY_ERR);
-  mTask->Start();
+  ScheduleTask();
   return NS_OK;
 }
 
@@ -107,7 +110,7 @@ FileSystemPermissionRequest::Allow(JS::HandleValue aChoices)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChoices.isUndefined());
-  mTask->Start();
+  ScheduleTask();
   return NS_OK;
 }
 
@@ -122,7 +125,13 @@ FileSystemPermissionRequest::Run()
     return NS_OK;
   }
 
-  if (!filesystem->RequiresPermissionChecks()) {
+  if (filesystem->PermissionCheckType() == FileSystemBase::ePermissionCheckNotRequired) {
+    Allow(JS::UndefinedHandleValue);
+    return NS_OK;
+  }
+
+  if (filesystem->PermissionCheckType() == FileSystemBase::ePermissionCheckByTestingPref &&
+      mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
     Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
@@ -144,6 +153,33 @@ FileSystemPermissionRequest::GetRequester(nsIContentPermissionRequester** aReque
   nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
   requester.forget(aRequester);
   return NS_OK;
+}
+
+void
+FileSystemPermissionRequest::ActorFailed()
+{
+  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+}
+
+void
+FileSystemPermissionRequest::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
+{
+  mTask->Start();
+}
+
+void
+FileSystemPermissionRequest::ScheduleTask()
+{
+  PBackgroundChild* actor =
+    mozilla::ipc::BackgroundChild::GetForCurrentThread();
+  if (actor) {
+    ActorCreated(actor);
+  } else {
+    if (NS_WARN_IF(
+        !mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread(this))) {
+      MOZ_CRASH();
+    }
+  }
 }
 
 } /* namespace dom */

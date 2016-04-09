@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+
+namespace mozilla {
+namespace dom {
+
+struct FileSystemCreateDirectoryParams
+{
+  nsString filesystem;
+  nsString realPath;
+};
+
+union FileSystemFileDataValue
+{
+  uint8_t[];
+  PBlob;
+};
+
+struct FileSystemCreateFileParams
+{
+  nsString filesystem;
+  nsString realPath;
+  FileSystemFileDataValue data;
+  bool replace;
+};
+
+struct FileSystemGetDirectoryListingParams
+{
+  nsString filesystem;
+  nsString realPath;
+  bool isRoot;
+  // 'filters' could be an array rather than a semicolon separated string
+  // (we'd then use InfallibleTArray<nsString> internally), but that is
+  // wasteful.  E10s requires us to pass the filters over as a string anyway,
+  // so avoiding using an array avoids serialization on the side passing the
+  // filters.  Since an nsString can share its buffer when copied,
+  // using that instead of InfallibleTArray<nsString> makes copying the filters
+  // around in any given process a bit more efficient too, since copying a
+  // single nsString is cheaper than copying InfallibleTArray member data and
+  // each nsString that it contains.
+  nsString filters;
+};
+
+struct FileSystemGetFileOrDirectoryParams
+{
+  nsString filesystem;
+  nsString realPath;
+  bool isRoot;
+};
+
+struct FileSystemRemoveParams
+{
+  nsString filesystem;
+  nsString directory;
+  nsString targetDirectory;
+  bool recursive;
+};
+
+union FileSystemParams
+{
+  FileSystemCreateDirectoryParams;
+  FileSystemCreateFileParams;
+  FileSystemGetDirectoryListingParams;
+  FileSystemGetFileOrDirectoryParams;
+  FileSystemRemoveParams;
+};
+
+} // dom namespace
+} // mozilla namespace
