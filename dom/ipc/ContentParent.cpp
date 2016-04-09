@@ -4429,12 +4429,12 @@ ContentParent::RecvRpcMessage(const nsString& aMsg,
 
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg,
-                                const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal)
+                                const IPC::Principal& aPrincipal,
+                                const ClonedMessageData& aData)
 {
-  return nsIContentParent::RecvAsyncMessage(aMsg, aData, Move(aCpows),
-                                            aPrincipal);
+  return nsIContentParent::RecvAsyncMessage(aMsg, Move(aCpows), aPrincipal,
+                                            aData);
 }
 
 bool
@@ -4678,7 +4678,7 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
     // Nuwa won't receive frame messages after it is frozen.
     return NS_OK;
   }
-  if (!SendAsyncMessage(nsString(aMessage), data, cpows, Principal(aPrincipal))) {
+  if (!SendAsyncMessage(nsString(aMessage), cpows, Principal(aPrincipal), data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

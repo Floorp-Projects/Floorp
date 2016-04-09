@@ -84,12 +84,12 @@ ContentBridgeParent::RecvSyncMessage(const nsString& aMsg,
 
 bool
 ContentBridgeParent::RecvAsyncMessage(const nsString& aMsg,
-                                      const ClonedMessageData& aData,
                                       InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                      const IPC::Principal& aPrincipal)
+                                      const IPC::Principal& aPrincipal,
+                                      const ClonedMessageData& aData)
 {
-  return nsIContentParent::RecvAsyncMessage(aMsg, aData, Move(aCpows),
-                                            aPrincipal);
+  return nsIContentParent::RecvAsyncMessage(aMsg, Move(aCpows),
+                                            aPrincipal, aData);
 }
 
 PBlobParent*
