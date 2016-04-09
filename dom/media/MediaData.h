@@ -200,8 +200,14 @@ public:
   Type* get() const { return mData; }
   explicit operator bool() const { return mData != nullptr; }
 
+  // Size in bytes of extra space allocated for padding.
+  static size_t AlignmentPaddingSize()
+  {
+    return AlignmentOffset() * 2;
+  }
+
 private:
-  size_t AlignmentOffset() const
+  static size_t AlignmentOffset()
   {
     return Alignment ? Alignment - 1 : 0;
   }
@@ -214,7 +220,7 @@ private:
   bool EnsureCapacity(size_t aLength)
   {
     const CheckedInt<size_t> sizeNeeded =
-      CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentOffset() * 2;
+      CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentPaddingSize();
 
     if (!sizeNeeded.isValid()) {
       // overflow.
