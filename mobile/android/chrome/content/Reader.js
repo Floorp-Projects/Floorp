@@ -76,8 +76,16 @@ var Reader = {
         break;
       }
 
-      case "Reader:Removed": {
+      case "Reader:RemoveFromCache": {
         ReaderMode.removeArticleFromCache(aData).catch(e => Cu.reportError("Error removing article from cache: " + e));
+        break;
+      }
+
+      case "Reader:AddToCache": {
+        // If the article is coming from reader mode, we must have fetched it already.
+        this._getArticle(aData).then((article) => {
+          ReaderMode.storeArticleInCache(article);
+        }).catch(e => Cu.reportError("Error storing article in cache: " + e));
         break;
       }
     }

@@ -50,7 +50,9 @@ this.FakeGUIDService = function FakeGUIDService() {
   let latestGUID = 0;
 
   Utils.makeGUID = function makeGUID() {
-    return "fake-guid-" + latestGUID++;
+    // ensure that this always returns a unique 12 character string
+    let nextGUID = "fake-guid-" + String(latestGUID++).padStart(2, "0");
+    return nextGUID.slice(nextGUID.length-12, nextGUID.length);
   };
 }
 

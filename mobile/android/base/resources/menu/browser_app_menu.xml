@@ -29,9 +29,6 @@
     <item android:id="@+id/share"
           android:title="@string/share" />
 
-    <item android:id="@+id/reading_list"
-          android:title="@string/overlay_share_reading_list_btn_label" />
-
     <item android:id="@+id/find_in_page"
           android:title="@string/find_in_page" />
 

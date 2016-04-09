@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -26,6 +27,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -41,6 +43,7 @@ public class TwoLinePageRow extends LinearLayout
     private int mSwitchToTabIconId;
 
     private final FaviconView mFavicon;
+    private final View mReaderCached;
 
     private boolean mShowIcons;
     private int mLoadFaviconJobId = Favicons.NOT_LOADING;
@@ -81,6 +84,8 @@ public class TwoLinePageRow extends LinearLayout
     // The URL for the page corresponding to this view.
     private String mPageUrl;
 
+    private boolean mHasReaderCacheItem;
+
     public TwoLinePageRow(Context context) {
         this(context, null);
     }
@@ -103,6 +108,8 @@ public class TwoLinePageRow extends LinearLayout
 
         mFavicon = (FaviconView) findViewById(R.id.icon);
         mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
+
+        mReaderCached = findViewById(R.id.is_reader_cached);
     }
 
     @Override
@@ -189,8 +196,9 @@ public class TwoLinePageRow extends LinearLayout
      * Stores the page URL, so that we can use it to replace "Switch to tab" if the open
      * tab changes or is closed.
      */
-    private void updateDisplayedUrl(String url) {
+    private void updateDisplayedUrl(String url, boolean hasReaderCacheItem) {
         mPageUrl = url;
+        mHasReaderCacheItem = hasReaderCacheItem;
         updateDisplayedUrl();
     }
 
@@ -201,7 +209,14 @@ public class TwoLinePageRow extends LinearLayout
      */
     protected void updateDisplayedUrl() {
         boolean isPrivate = Tabs.getInstance().getSelectedTab().isPrivate();
-        Tab tab = Tabs.getInstance().getFirstTabForUrl(mPageUrl, isPrivate);
+
+        // We always want to display the underlying page url, however for readermode pages
+        // we navigate to the about:reader equivalent, hence we need to use that url when finding
+        // existing tabs
+        final String navigationUrl = mHasReaderCacheItem ? ReaderModeUtils.getAboutReaderForUrl(mPageUrl) : mPageUrl;
+        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isPrivate);
+
+
         if (!mShowIcons || tab == null) {
             setUrl(mPageUrl);
             setSwitchToTabIcon(NO_ICON);
@@ -224,10 +239,10 @@ public class TwoLinePageRow extends LinearLayout
      * @param url to display.
      */
     public void update(String title, String url) {
-        update(title, url, 0);
+        update(title, url, 0, false);
     }
 
-    protected void update(String title, String url, long bookmarkId) {
+    protected void update(String title, String url, long bookmarkId, boolean hasReaderCacheItem) {
         if (mShowIcons) {
             // The bookmark id will be 0 (null in database) when the url
             // is not a bookmark.
@@ -256,7 +271,9 @@ public class TwoLinePageRow extends LinearLayout
             ReaderModeUtils.getUrlFromAboutReader(url) : url;
         mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
 
-        updateDisplayedUrl(url);
+        updateDisplayedUrl(url, hasReaderCacheItem);
+
+        mReaderCached.setVisibility(hasReaderCacheItem ? View.VISIBLE : View.INVISIBLE);
     }
 
     /**
@@ -285,6 +302,9 @@ public class TwoLinePageRow extends LinearLayout
             bookmarkId = 0;
         }
 
-        update(title, url, bookmarkId);
+        SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(getContext());
+        final boolean hasReaderCacheItem = rch.isURLCached(url);
+
+        update(title, url, bookmarkId, hasReaderCacheItem);
     }
 }

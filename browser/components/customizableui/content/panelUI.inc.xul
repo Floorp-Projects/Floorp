@@ -108,16 +108,18 @@
         <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
         <!-- When Sync is ready to sync -->
         <vbox id="PanelUI-remotetabs-main" observes="sync-syncnow-state">
-          <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
-                         class="subviewbutton"
-                         observes="viewTabsSidebar"
-                         label="&appMenuRemoteTabs.sidebar.label;"/>
-          <toolbarbutton id="PanelUI-remotetabs-syncnow"
-                         observes="sync-status"
-                         class="subviewbutton"
-                         oncommand="gSyncUI.doSync();"
-                         closemenu="none"/>
-          <menuseparator id="PanelUI-remotetabs-separator"/>
+          <vbox id="PanelUI-remotetabs-buttons">
+            <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
+                           class="subviewbutton"
+                           observes="viewTabsSidebar"
+                           label="&appMenuRemoteTabs.sidebar.label;"/>
+            <toolbarbutton id="PanelUI-remotetabs-syncnow"
+                           observes="sync-status"
+                           class="subviewbutton"
+                           oncommand="gSyncUI.doSync();"
+                           closemenu="none"/>
+            <menuseparator id="PanelUI-remotetabs-separator"/>
+          </vbox>
           <deck id="PanelUI-remotetabs-deck">
             <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
             <vbox id="PanelUI-remotetabs-tabspane">
@@ -149,9 +151,10 @@
                 <hbox pack="center">
                   <image class="fxaSyncIllustration" alt=""/>
                 </hbox>
-                <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.noclients.label;</label>
+                <label class="PanelUI-remotetabs-instruction-title">&appMenuRemoteTabs.noclients.title;</label>
+                <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.noclients.subtitle;</label>
                 <!-- The inner HTML for PanelUI-remotetabs-mobile-promo is built at runtime -->
-                <label id="PanelUI-remotetabs-mobile-promo"/>
+                <label id="PanelUI-remotetabs-mobile-promo" fxAccountsBrand="&syncBrand.fxAccount.label;"/>
               </vbox>
             </hbox>
           </deck>
