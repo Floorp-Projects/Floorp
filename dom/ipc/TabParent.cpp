@@ -1730,9 +1730,9 @@ TabParent::RecvRpcMessage(const nsString& aMessage,
 
 bool
 TabParent::RecvAsyncMessage(const nsString& aMessage,
-                            const ClonedMessageData& aData,
                             InfallibleTArray<CpowEntry>&& aCpows,
-                            const IPC::Principal& aPrincipal)
+                            const IPC::Principal& aPrincipal,
+                            const ClonedMessageData& aData)
 {
   // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;

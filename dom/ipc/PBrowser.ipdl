@@ -107,8 +107,8 @@ prio(normal upto urgent) sync protocol PBrowser
     manages PPluginWidget;
 
 both:
-    async AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
-                       Principal aPrincipal);
+    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
+                       Principal aPrincipal, ClonedMessageData aData);
 
     /**
      * Create a layout frame (encapsulating a remote layer tree) for

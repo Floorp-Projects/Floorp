@@ -2251,9 +2251,9 @@ TabChild::RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalSco
 
 bool
 TabChild::RecvAsyncMessage(const nsString& aMessage,
-                           const ClonedMessageData& aData,
                            InfallibleTArray<CpowEntry>&& aCpows,
-                           const IPC::Principal& aPrincipal)
+                           const IPC::Principal& aPrincipal,
+                           const ClonedMessageData& aData)
 {
   if (mTabChildGlobal) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
@@ -2776,8 +2776,8 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
   if (aCpows && !Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (!SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
-                        Principal(aPrincipal))) {
+  if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows,
+                        Principal(aPrincipal), data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
