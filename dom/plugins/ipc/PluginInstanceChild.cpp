@@ -56,10 +56,11 @@ using namespace std;
 #undef KeyPress
 #undef KeyRelease
 #elif defined(OS_WIN)
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL     0x020E
-#endif
 
+#include <windows.h>
+#include <windowsx.h>
+
+#include "mozilla/widget/WinMessages.h"
 #include "nsWindowsDllInterceptor.h"
 
 typedef BOOL (WINAPI *User32TrackPopupMenu)(HMENU hMenu,
@@ -93,9 +94,6 @@ static PluginInstanceChild* sCurrentPluginInstance = nullptr;
 static const HIMC sHookIMC = (const HIMC)0xefefefef;
 
 using mozilla::gfx::SharedDIB;
-
-#include <windows.h>
-#include <windowsx.h>
 
 // Flash WM_USER message delay time for PostDelayedTask. Borrowed
 // from Chromium's web plugin delegate src. See 'flash msg throttling

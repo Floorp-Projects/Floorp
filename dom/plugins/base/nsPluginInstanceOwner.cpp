@@ -73,13 +73,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifdef XP_WIN
 #include <wtypes.h>
 #include <winuser.h>
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL (0x020E)
-#endif
-#ifndef SPI_GETWHEELSCROLLCHARS
-#define SPI_GETWHEELSCROLLCHARS (0x006C)
-#endif
-#endif
+#include "mozilla/widget/WinMessages.h"
+#endif // #ifdef XP_WIN
 
 #ifdef XP_MACOSX
 #include "ComplexTextInputPanel.h"
