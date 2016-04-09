@@ -269,9 +269,9 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
 
 bool
 nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
-                                   const ClonedMessageData& aData,
                                    InfallibleTArray<CpowEntry>&& aCpows,
-                                   const IPC::Principal& aPrincipal)
+                                   const IPC::Principal& aPrincipal,
+                                   const ClonedMessageData& aData)
 {
   // FIXME Permission check in Content process
   nsIPrincipal* principal = aPrincipal;

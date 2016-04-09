@@ -110,9 +110,9 @@ protected: // IPDL methods
                               const IPC::Principal& aPrincipal,
                               nsTArray<ipc::StructuredCloneData>* aRetvals);
   virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                const ClonedMessageData& aData,
                                 InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal);
+                                const IPC::Principal& aPrincipal,
+                                const ClonedMessageData& aData);
 
 protected: // members
   RefPtr<nsFrameMessageManager> mMessageManager;
