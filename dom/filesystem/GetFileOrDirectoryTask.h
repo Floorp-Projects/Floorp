@@ -76,10 +76,6 @@ private:
   // Whether we get a directory.
   bool mIsDirectory;
   Directory::DirectoryType mType;
-
-  // This cannot be a File bacause this object is created on a different
-  // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
 };
 
 } // namespace dom

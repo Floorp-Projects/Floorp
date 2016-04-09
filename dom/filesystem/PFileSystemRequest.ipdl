@@ -12,7 +12,7 @@ namespace dom {
 
 struct FileSystemFileResponse
 {
-  PBlob blob;
+  nsString realPath;
 };
 
 struct FileSystemDirectoryResponse
@@ -20,9 +20,10 @@ struct FileSystemDirectoryResponse
   nsString realPath;
 };
 
-struct FileSystemDirectoryListingResponseBlob
+struct FileSystemDirectoryListingResponseFile
 {
-  PBlob blob;
+  // This is the full real path for the file that we are sending via IPC.
+  nsString fileRealPath;
 };
 
 struct FileSystemDirectoryListingResponseDirectory
@@ -33,7 +34,7 @@ struct FileSystemDirectoryListingResponseDirectory
 
 union FileSystemDirectoryListingResponseData
 {
-  FileSystemDirectoryListingResponseBlob;
+  FileSystemDirectoryListingResponseFile;
   FileSystemDirectoryListingResponseDirectory;
 };
 

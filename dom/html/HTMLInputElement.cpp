@@ -254,7 +254,7 @@ class HTMLInputElementState final : public nsISupports
                           nsTArray<OwningFileOrDirectory>& aResult) const
     {
       for (uint32_t i = 0; i < mBlobImplsOrDirectoryPaths.Length(); ++i) {
-        if (mBlobImplsOrDirectoryPaths[i].mType == Directory::BlobImplOrDirectoryPath::eBlobImpl) {
+        if (mBlobImplsOrDirectoryPaths[i].mType == BlobImplOrDirectoryPath::eBlobImpl) {
           RefPtr<File> file =
             File::Create(aWindow,
                          mBlobImplsOrDirectoryPaths[i].mBlobImpl);
@@ -263,7 +263,7 @@ class HTMLInputElementState final : public nsISupports
           OwningFileOrDirectory* element = aResult.AppendElement();
           element->SetAsFile() = file;
         } else {
-          MOZ_ASSERT(mBlobImplsOrDirectoryPaths[i].mType == Directory::BlobImplOrDirectoryPath::eDirectoryPath);
+          MOZ_ASSERT(mBlobImplsOrDirectoryPaths[i].mType == BlobImplOrDirectoryPath::eDirectoryPath);
 
           nsCOMPtr<nsIFile> file;
           NS_ConvertUTF16toUTF8 path(mBlobImplsOrDirectoryPaths[i].mDirectoryPath);
@@ -287,11 +287,10 @@ class HTMLInputElementState final : public nsISupports
       mBlobImplsOrDirectoryPaths.Clear();
       for (uint32_t i = 0; i < aArray.Length(); ++i) {
         if (aArray[i].IsFile()) {
-          Directory::BlobImplOrDirectoryPath* data =
-            mBlobImplsOrDirectoryPaths.AppendElement();
+          BlobImplOrDirectoryPath* data = mBlobImplsOrDirectoryPaths.AppendElement();
 
           data->mBlobImpl = aArray[i].GetAsFile()->Impl();
-          data->mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
+          data->mType = BlobImplOrDirectoryPath::eBlobImpl;
         } else {
           MOZ_ASSERT(aArray[i].IsDirectory());
           nsAutoString fullPath;
@@ -300,11 +299,11 @@ class HTMLInputElementState final : public nsISupports
             continue;
           }
 
-          Directory::BlobImplOrDirectoryPath* data =
+          BlobImplOrDirectoryPath* data =
             mBlobImplsOrDirectoryPaths.AppendElement();
 
           data->mDirectoryPath = fullPath;
-          data->mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
+          data->mType = BlobImplOrDirectoryPath::eDirectoryPath;
         }
       }
     }
@@ -320,7 +319,18 @@ class HTMLInputElementState final : public nsISupports
 
     nsString mValue;
 
-    nsTArray<Directory::BlobImplOrDirectoryPath> mBlobImplsOrDirectoryPaths;
+    struct BlobImplOrDirectoryPath
+    {
+      RefPtr<BlobImpl> mBlobImpl;
+      nsString mDirectoryPath;
+
+      enum {
+        eBlobImpl,
+        eDirectoryPath
+      } mType;
+    };
+
+    nsTArray<BlobImplOrDirectoryPath> mBlobImplsOrDirectoryPaths;
 
     bool mChecked;
     bool mCheckedSet;
