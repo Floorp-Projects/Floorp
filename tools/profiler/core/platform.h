@@ -59,9 +59,9 @@
 #include <vector>
 #include "StackTop.h"
 
-// We need a definition of gettid(), but glibc doesn't provide a
-// wrapper for it.
-#if defined(__GLIBC__)
+// We need a definition of gettid(), but Linux libc implementations don't
+// provide a wrapper for it.
+#if defined(__linux__)
 #include <unistd.h>
 #include <sys/syscall.h>
 static inline pid_t gettid()
