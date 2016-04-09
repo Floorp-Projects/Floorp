@@ -894,8 +894,8 @@ var cookieHelpers = {
           cookie.host,
           cookie.name,
           cookie.path,
-          false,
-          cookie.originAttributes
+          cookie.originAttributes,
+          false
         );
       }
     }

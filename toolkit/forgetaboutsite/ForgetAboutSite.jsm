@@ -77,7 +77,7 @@ this.ForgetAboutSite = {
     let enumerator = cm.getCookiesFromHost(aDomain);
     while (enumerator.hasMoreElements()) {
       let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-      cm.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+      cm.remove(cookie.host, cookie.name, cookie.path, cookie.originAttributes, false);
     }
 
     // EME
