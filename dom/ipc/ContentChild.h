@@ -429,9 +429,9 @@ public:
   virtual bool RecvLoadProcessScript(const nsString& aURL) override;
 
   virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal) override;
+                                const IPC::Principal& aPrincipal,
+                                const ClonedMessageData& aData) override;
 
   virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere) override;
 
