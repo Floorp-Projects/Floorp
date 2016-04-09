@@ -71,6 +71,12 @@ interface Element : Node {
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
 
+  [Throws, Pure]
+  Element? insertAdjacentElement(DOMString where, Element element); // historical
+
+  [Throws]
+  void insertAdjacentText(DOMString where, DOMString data); // historical
+
   /**
    * The ratio of font-size-inflated text font size to computed font
    * size for this element. This will query the element for its primary frame,

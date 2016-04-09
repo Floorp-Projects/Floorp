@@ -418,9 +418,9 @@ BackgroundParentImpl::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
   // we have a filter, we can safely skip the Dispatch and just invoke Init()
   // to install the filter.
 
-  // For mtransport, this will always be "stun", which doesn't allow outbound packets if
-  // they aren't STUN packets until a STUN response is seen.
-  if (!aFilter.EqualsASCII("stun")) {
+  // For mtransport, this will always be "stun", which doesn't allow outbound
+  // packets if they aren't STUN packets until a STUN response is seen.
+  if (!aFilter.EqualsASCII(NS_NETWORK_SOCKET_FILTER_HANDLER_STUN_SUFFIX)) {
     return false;
   }
 

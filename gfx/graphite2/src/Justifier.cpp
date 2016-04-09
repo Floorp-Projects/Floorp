@@ -100,7 +100,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
     int numLevels = silf()->numJustLevels();
     if (!numLevels)
     {
-        for (s = pSlot; s != end; s = s->next())
+        for (s = pSlot; s && s != end; s = s->nextSibling())
         {
             CharInfo *c = charinfo(s->before());
             if (isWhitespace(c->unicodeChar()))
@@ -113,7 +113,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
         }
         if (!icount)
         {
-            for (s = pSlot; s != end; s = s->nextSibling())
+            for (s = pSlot; s && s != end; s = s->nextSibling())
             {
                 s->setJustify(this, 0, 3, 1);
                 s->setJustify(this, 0, 2, 1);
@@ -124,7 +124,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
     }
 
     Vector<JustifyTotal> stats(numLevels);
-    for (s = pFirst; s != end; s = s->nextSibling())
+    for (s = pFirst; s && s != end; s = s->nextSibling())
     {
         float w = s->origin().x / scale + s->advance() - base;
         if (w > currWidth) currWidth = w;
@@ -139,13 +139,14 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
         float error = 0.;
         float diffpw;
         int tWeight = stats[i].weight();
+        if (tWeight == 0) continue;
 
         do {
             error = 0.;
             diff = width - currWidth;
             diffpw = diff / tWeight;
             tWeight = 0;
-            for (s = pFirst; s != end; s = s->nextSibling()) // don't include final glyph
+            for (s = pFirst; s && s != end; s = s->nextSibling()) // don't include final glyph
             {
                 int w = s->getJustify(this, i, 3);
                 float pref = diffpw * w + error;

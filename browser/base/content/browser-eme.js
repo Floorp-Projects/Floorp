@@ -64,11 +64,6 @@ var gEMEHandler = {
         params = [this.getLearnMoreLink(notificationId)];
         break;
 
-      case "cdm-not-supported":
-        notificationId = "drmContentCDMNotSupported";
-        params = [this._brandShortName, this.getLearnMoreLink(notificationId)];
-        break;
-
       case "cdm-insufficient-version":
         notificationId = "drmContentCDMInsufficientVersion";
         params = [this._brandShortName];
@@ -79,6 +74,9 @@ var gEMEHandler = {
         params = [this._brandShortName];
         break;
 
+      case "cdm-not-supported":
+        // Not to pop up user-level notification because they cannot do anything
+        // about it.
       case "error":
         // Fall through and do the same for unknown messages:
       default:
@@ -97,16 +95,6 @@ var gEMEHandler = {
 
     let msgPrefix = "emeNotifications." + notificationId + ".";
     let msgId = msgPrefix + "message";
-
-    // Special-case Adobe's CDM message on unsupported platforms to be more informative:
-    if (notificationId == "drmContentCDMNotSupported" &&
-        keySystem.startsWith("com.adobe")) {
-      let os = Services.appinfo.OS.toLowerCase();
-      if (os.startsWith("linux") || os.startsWith("darwin")) {
-        msgId = msgPrefix + "unsupportedOS.message";
-        labelParams.splice(1, 0, os.startsWith("linux") ? "Linux" : "Mac OS X");
-      }
-    }
 
     let message = labelParams.length ?
                   gNavigatorBundle.getFormattedString(msgId, labelParams) :
@@ -140,7 +128,6 @@ var gEMEHandler = {
     // We're playing EME content! Remove any "we can't play because..." messages.
     var box = gBrowser.getNotificationBox(browser);
     ["drmContentDisabled",
-     "drmContentCDMNotSupported",
      "drmContentCDMInsufficientVersion",
      "drmContentCDMInstalling"
      ].forEach(function (value) {
