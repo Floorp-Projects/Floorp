@@ -14,6 +14,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
+#include "mozilla/dom/FileSystemBase.h"
+#include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/MessagePortParent.h"
@@ -29,9 +31,11 @@
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "mozilla/layout/VsyncParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
+#include "mozilla/Preferences.h"
 #include "nsIAppsService.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsProxyRelease.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
@@ -49,10 +53,12 @@ using mozilla::dom::asmjscache::PAsmJSCacheEntryParent;
 using mozilla::dom::cache::PCacheParent;
 using mozilla::dom::cache::PCacheStorageParent;
 using mozilla::dom::cache::PCacheStreamControlParent;
+using mozilla::dom::FileSystemBase;
+using mozilla::dom::FileSystemRequestParent;
 using mozilla::dom::MessagePortParent;
+using mozilla::dom::NuwaParent;
 using mozilla::dom::PMessagePortParent;
 using mozilla::dom::PNuwaParent;
-using mozilla::dom::NuwaParent;
 using mozilla::dom::UDPSocketParent;
 
 namespace {
@@ -455,6 +461,20 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
 
 namespace {
 
+struct MOZ_STACK_CLASS NullifyContentParentRAII
+{
+  explicit NullifyContentParentRAII(RefPtr<ContentParent>& aContentParent)
+    : mContentParent(aContentParent)
+  {}
+
+  ~NullifyContentParentRAII()
+  {
+    mContentParent = nullptr;
+  }
+
+  RefPtr<ContentParent>& mContentParent;
+};
+
 class CheckPrincipalRunnable final : public nsRunnable
 {
 public:
@@ -475,21 +495,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    struct MOZ_STACK_CLASS RunRAII
-    {
-      explicit RunRAII(RefPtr<ContentParent>& aContentParent)
-        : mContentParent(aContentParent)
-      {}
-
-      ~RunRAII()
-      {
-        mContentParent = nullptr;
-      }
-
-      RefPtr<ContentParent>& mContentParent;
-    };
-
-    RunRAII raii(mContentParent);
+    NullifyContentParentRAII raii(mContentParent);
 
     nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
     AssertAppPrincipal(mContentParent, principal);
@@ -520,6 +526,87 @@ private:
   RefPtr<ContentParent> mContentParent;
   PrincipalInfo mPrincipalInfo;
   nsCString mOrigin;
+};
+
+class CheckPermissionRunnable final : public nsRunnable
+{
+public:
+  CheckPermissionRunnable(already_AddRefed<ContentParent> aParent,
+                          FileSystemRequestParent* aActor,
+                          FileSystemBase::ePermissionCheckType aPermissionCheckType,
+                          const nsCString& aPermissionName)
+    : mContentParent(aParent)
+    , mActor(aActor)
+    , mPermissionCheckType(aPermissionCheckType)
+    , mPermissionName(aPermissionName)
+    , mBackgroundEventTarget(NS_GetCurrentThread())
+  {
+    AssertIsInMainProcess();
+    AssertIsOnBackgroundThread();
+
+    MOZ_ASSERT(mContentParent);
+    MOZ_ASSERT(mBackgroundEventTarget);
+    MOZ_ASSERT(mPermissionCheckType == FileSystemBase::ePermissionCheckRequired ||
+               mPermissionCheckType == FileSystemBase::ePermissionCheckByTestingPref);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    if (NS_IsMainThread()) {
+      NullifyContentParentRAII raii(mContentParent);
+
+      // If the permission is granted, we go back to the background thread to
+      // dispatch this task.
+      if (CheckPermission()) {
+        return mBackgroundEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+      }
+
+      return NS_OK;
+    }
+
+    AssertIsOnBackgroundThread();
+
+    // It can happen that this actor has been destroyed in the meantime we were
+    // on the main-thread.
+    if (!mActor->Destroyed()) {
+      mActor->Start();
+    }
+
+    return NS_OK;
+  }
+
+private:
+  ~CheckPermissionRunnable()
+  {
+     NS_ProxyRelease(mBackgroundEventTarget, mActor.forget());
+  }
+
+  bool
+  CheckPermission()
+  {
+    if (mPermissionCheckType == FileSystemBase::ePermissionCheckByTestingPref &&
+        mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
+      return true;
+    }
+
+    if (!AssertAppProcessPermission(mContentParent.get(),
+                                    mPermissionName.get())) {
+      mContentParent->KillHard("PBackground actor killed: permission denied.");
+      return false;
+    }
+
+    return true;
+  }
+
+  RefPtr<ContentParent> mContentParent;
+
+  RefPtr<FileSystemRequestParent> mActor;
+
+  FileSystemBase::ePermissionCheckType mPermissionCheckType;
+  nsCString mPermissionName;
+
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };
 
 } // namespace
@@ -734,6 +821,73 @@ BackgroundParentImpl::DeallocPQuotaParent(PQuotaParent* aActor)
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::quota::DeallocPQuotaParent(aActor);
+}
+
+dom::PFileSystemRequestParent*
+BackgroundParentImpl::AllocPFileSystemRequestParent(
+                                                const FileSystemParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<FileSystemRequestParent> result = new FileSystemRequestParent();
+
+  if (NS_WARN_IF(!result->Initialize(aParams))) {
+    return nullptr;
+  }
+
+  return result.forget().take();
+}
+
+bool
+BackgroundParentImpl::RecvPFileSystemRequestConstructor(
+                                               PFileSystemRequestParent* aActor,
+                                               const FileSystemParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<FileSystemRequestParent> actor = static_cast<FileSystemRequestParent*>(aActor);
+
+  if (actor->PermissionCheckType() == FileSystemBase::ePermissionCheckNotRequired) {
+    actor->Start();
+    return true;
+  }
+
+  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+
+  // If the ContentParent is null we are dealing with a same-process actor.
+  if (!parent) {
+    actor->Start();
+    return true;
+  }
+
+  const nsCString& permissionName = actor->PermissionName();
+  MOZ_ASSERT(!permissionName.IsEmpty());
+
+  // At this point we should have the right permission but we do the last check
+  // with this runnable. If the app doesn't have the permission, we kill the
+  // child process.
+  RefPtr<CheckPermissionRunnable> runnable =
+    new CheckPermissionRunnable(parent.forget(), actor,
+                                actor->PermissionCheckType(), permissionName);
+
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+
+  return true;
+}
+
+bool
+BackgroundParentImpl::DeallocPFileSystemRequestParent(
+                                              PFileSystemRequestParent* aDoomed)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  RefPtr<FileSystemRequestParent> parent =
+    dont_AddRef(static_cast<FileSystemRequestParent*>(aDoomed));
+  return true;
 }
 
 } // namespace ipc

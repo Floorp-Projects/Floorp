@@ -47,7 +47,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
-#include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #ifdef MOZ_EME
 #include "mozilla/dom/MediaKeySystemAccess.h"
@@ -3517,24 +3516,6 @@ bool
 ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* doomed)
 {
   DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
-  NS_RELEASE(parent);
-  return true;
-}
-
-PFileSystemRequestParent*
-ContentParent::AllocPFileSystemRequestParent(const FileSystemParams& aParams)
-{
-  RefPtr<FileSystemRequestParent> result = new FileSystemRequestParent();
-  if (!result->Dispatch(this, aParams)) {
-    return nullptr;
-  }
-  return result.forget().take();
-}
-
-bool
-ContentParent::DeallocPFileSystemRequestParent(PFileSystemRequestParent* doomed)
-{
-  FileSystemRequestParent* parent = static_cast<FileSystemRequestParent*>(doomed);
   NS_RELEASE(parent);
   return true;
 }

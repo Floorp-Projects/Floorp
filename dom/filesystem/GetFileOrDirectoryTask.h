@@ -27,12 +27,6 @@ public:
          bool aDirectoryOnly,
          ErrorResult& aRv);
 
-  static already_AddRefed<GetFileOrDirectoryTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemGetFileOrDirectoryParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
-
   virtual
   ~GetFileOrDirectoryTask();
 
@@ -41,21 +35,15 @@ public:
 
   virtual void
   GetPermissionAccessType(nsCString& aAccess) const override;
+
 protected:
   virtual FileSystemParams
   GetRequestParams(const nsString& aSerializedDOMPath,
                    ErrorResult& aRv) const override;
 
-  virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
-
   virtual void
   SetSuccessRequestResult(const FileSystemResponseValue& aValue,
                           ErrorResult& aRv) override;
-
-  virtual nsresult
-  Work() override;
-
   virtual void
   HandlerCallback() override;
 
@@ -66,11 +54,38 @@ private:
                          Directory::DirectoryType aType,
                          bool aDirectoryOnly);
 
-  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
-                         const FileSystemGetFileOrDirectoryParams& aParam,
-                         FileSystemRequestParent* aParent);
-
   RefPtr<Promise> mPromise;
+  nsCOMPtr<nsIFile> mTargetPath;
+
+  // Whether we get a directory.
+  bool mIsDirectory;
+  Directory::DirectoryType mType;
+};
+
+class GetFileOrDirectoryTaskParent final : public FileSystemTaskParentBase
+{
+public:
+  static already_AddRefed<GetFileOrDirectoryTaskParent>
+  Create(FileSystemBase* aFileSystem,
+         const FileSystemGetFileOrDirectoryParams& aParam,
+         FileSystemRequestParent* aParent,
+         ErrorResult& aRv);
+
+  virtual void
+  GetPermissionAccessType(nsCString& aAccess) const override;
+
+protected:
+  virtual FileSystemResponseValue
+  GetSuccessRequestResult(ErrorResult& aRv) const override;
+
+  virtual nsresult
+  IOWork() override;
+
+private:
+  GetFileOrDirectoryTaskParent(FileSystemBase* aFileSystem,
+                               const FileSystemGetFileOrDirectoryParams& aParam,
+                               FileSystemRequestParent* aParent);
+
   nsCOMPtr<nsIFile> mTargetPath;
 
   // Whether we get a directory.

@@ -11,14 +11,21 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/dom/PFileSystemParams.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
+#define GET_DIRECTORY_LISTING_PERMISSION "read"
+
 namespace mozilla {
 namespace dom {
+
+/**
+ * GetDirectoryListingTask
+ */
 
 /* static */ already_AddRefed<GetDirectoryListingTask>
 GetDirectoryListingTask::Create(FileSystemBase* aFileSystem,
@@ -50,30 +57,6 @@ GetDirectoryListingTask::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-/* static */ already_AddRefed<GetDirectoryListingTask>
-GetDirectoryListingTask::Create(FileSystemBase* aFileSystem,
-                                const FileSystemGetDirectoryListingParams& aParam,
-                                FileSystemRequestParent* aParent,
-                                ErrorResult& aRv)
-{
-  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFileSystem);
-
-  RefPtr<GetDirectoryListingTask> task =
-    new GetDirectoryListingTask(aFileSystem, aParam, aParent);
-
-  NS_ConvertUTF16toUTF8 path(aParam.realPath());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  task->mType = aParam.isRoot()
-                  ? Directory::eDOMRootDirectory : Directory::eNotDOMRootDirectory;
-  return task.forget();
-}
-
 GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
                                                  nsIFile* aTargetPath,
                                                  Directory::DirectoryType aType,
@@ -87,21 +70,9 @@ GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aFileSystem);
 }
 
-GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
-                                                 const FileSystemGetDirectoryListingParams& aParam,
-                                                 FileSystemRequestParent* aParent)
-  : FileSystemTaskBase(aFileSystem, aParam, aParent)
-  , mFilters(aParam.filters())
-{
-  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFileSystem);
-}
-
 GetDirectoryListingTask::~GetDirectoryListingTask()
 {
-  MOZ_ASSERT(!mPromise || NS_IsMainThread(),
-             "mPromise should be released on main thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<Promise>
@@ -126,33 +97,6 @@ GetDirectoryListingTask::GetRequestParams(const nsString& aSerializedDOMPath,
   return FileSystemGetDirectoryListingParams(aSerializedDOMPath, path,
                                              mType == Directory::eDOMRootDirectory,
                                              mFilters);
-}
-
-FileSystemResponseValue
-GetDirectoryListingTask::GetSuccessRequestResult(ErrorResult& aRv) const
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-
-  InfallibleTArray<PBlobParent*> blobs;
-
-  nsTArray<FileSystemDirectoryListingResponseData> inputs;
-
-  for (unsigned i = 0; i < mTargetData.Length(); i++) {
-    if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eFilePath) {
-      FileSystemDirectoryListingResponseFile fileData;
-      fileData.fileRealPath() = mTargetData[i].mPath;
-      inputs.AppendElement(fileData);
-    } else {
-      MOZ_ASSERT(mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath);
-      FileSystemDirectoryListingResponseDirectory directoryData;
-      directoryData.directoryRealPath() = mTargetData[i].mPath;
-      inputs.AppendElement(directoryData);
-    }
-  }
-
-  FileSystemDirectoryListingResponse response;
-  response.data().SwapElements(inputs);
-  return response;
 }
 
 void
@@ -186,8 +130,152 @@ GetDirectoryListingTask::SetSuccessRequestResult(const FileSystemResponseValue& 
   }
 }
 
+void
+GetDirectoryListingTask::HandlerCallback()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  if (mFileSystem->IsShutdown()) {
+    mPromise = nullptr;
+    return;
+  }
+
+  if (HasError()) {
+    mPromise->MaybeReject(mErrorValue);
+    mPromise = nullptr;
+    return;
+  }
+
+  size_t count = mTargetData.Length();
+
+  Sequence<OwningFileOrDirectory> listing;
+
+  if (!listing.SetLength(count, mozilla::fallible_t())) {
+    mPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+    mPromise = nullptr;
+    return;
+  }
+
+  for (unsigned i = 0; i < count; i++) {
+    nsCOMPtr<nsIFile> path;
+    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i].mPath);
+    nsresult rv = NS_NewNativeLocalFile(fullPath, true, getter_AddRefs(path));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeReject(rv);
+      mPromise = nullptr;
+      return;
+    }
+
+#ifdef DEBUG
+    nsCOMPtr<nsIFile> rootPath;
+    rv = NS_NewLocalFile(mFileSystem->LocalOrDeviceStorageRootPath(), false,
+                         getter_AddRefs(rootPath));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeReject(rv);
+      mPromise = nullptr;
+      return;
+    }
+
+    MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, path));
+#endif
+
+    if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath) {
+      RefPtr<Directory> directory =
+        Directory::Create(mFileSystem->GetParentObject(), path,
+                          Directory::eNotDOMRootDirectory, mFileSystem);
+      MOZ_ASSERT(directory);
+
+      // Propogate mFilter onto sub-Directory object:
+      directory->SetContentFilters(mFilters);
+      listing[i].SetAsDirectory() = directory;
+    } else {
+      MOZ_ASSERT(mTargetData[i].mType == Directory::FileOrDirectoryPath::eFilePath);
+
+      RefPtr<File> file =
+        File::CreateFromFile(mFileSystem->GetParentObject(), path);
+      MOZ_ASSERT(file);
+
+      listing[i].SetAsFile() = file;
+    }
+  }
+
+  mPromise->MaybeResolve(listing);
+  mPromise = nullptr;
+}
+
+void
+GetDirectoryListingTask::GetPermissionAccessType(nsCString& aAccess) const
+{
+  aAccess.AssignLiteral(GET_DIRECTORY_LISTING_PERMISSION);
+}
+
+/**
+ * GetDirectoryListingTaskParent
+ */
+
+/* static */ already_AddRefed<GetDirectoryListingTaskParent>
+GetDirectoryListingTaskParent::Create(FileSystemBase* aFileSystem,
+                                      const FileSystemGetDirectoryListingParams& aParam,
+                                      FileSystemRequestParent* aParent,
+                                      ErrorResult& aRv)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aFileSystem);
+
+  RefPtr<GetDirectoryListingTaskParent> task =
+    new GetDirectoryListingTaskParent(aFileSystem, aParam, aParent);
+
+  NS_ConvertUTF16toUTF8 path(aParam.realPath());
+  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  task->mType = aParam.isRoot()
+                  ? Directory::eDOMRootDirectory : Directory::eNotDOMRootDirectory;
+  return task.forget();
+}
+
+GetDirectoryListingTaskParent::GetDirectoryListingTaskParent(FileSystemBase* aFileSystem,
+                                                             const FileSystemGetDirectoryListingParams& aParam,
+                                                             FileSystemRequestParent* aParent)
+  : FileSystemTaskParentBase(aFileSystem, aParam, aParent)
+  , mFilters(aParam.filters())
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aFileSystem);
+}
+
+FileSystemResponseValue
+GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
+{
+  AssertIsOnBackgroundThread();
+
+  InfallibleTArray<PBlobParent*> blobs;
+
+  nsTArray<FileSystemDirectoryListingResponseData> inputs;
+
+  for (unsigned i = 0; i < mTargetData.Length(); i++) {
+    if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eFilePath) {
+      FileSystemDirectoryListingResponseFile fileData;
+      fileData.fileRealPath() = mTargetData[i].mPath;
+      inputs.AppendElement(fileData);
+    } else {
+      MOZ_ASSERT(mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath);
+      FileSystemDirectoryListingResponseDirectory directoryData;
+      directoryData.directoryRealPath() = mTargetData[i].mPath;
+      inputs.AppendElement(directoryData);
+    }
+  }
+
+  FileSystemDirectoryListingResponse response;
+  response.data().SwapElements(inputs);
+  return response;
+}
+
 nsresult
-GetDirectoryListingTask::Work()
+GetDirectoryListingTaskParent::IOWork()
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
@@ -303,81 +391,9 @@ GetDirectoryListingTask::Work()
 }
 
 void
-GetDirectoryListingTask::HandlerCallback()
+GetDirectoryListingTaskParent::GetPermissionAccessType(nsCString& aAccess) const
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  if (mFileSystem->IsShutdown()) {
-    mPromise = nullptr;
-    return;
-  }
-
-  if (HasError()) {
-    mPromise->MaybeReject(mErrorValue);
-    mPromise = nullptr;
-    return;
-  }
-
-  size_t count = mTargetData.Length();
-
-  Sequence<OwningFileOrDirectory> listing;
-
-  if (!listing.SetLength(count, mozilla::fallible_t())) {
-    mPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    mPromise = nullptr;
-    return;
-  }
-
-  for (unsigned i = 0; i < count; i++) {
-    nsCOMPtr<nsIFile> path;
-    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i].mPath);
-    nsresult rv = NS_NewNativeLocalFile(fullPath, true, getter_AddRefs(path));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
-      mPromise = nullptr;
-      return;
-    }
-
-#ifdef DEBUG
-    nsCOMPtr<nsIFile> rootPath;
-    rv = NS_NewLocalFile(mFileSystem->LocalOrDeviceStorageRootPath(), false,
-                         getter_AddRefs(rootPath));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
-      mPromise = nullptr;
-      return;
-    }
-
-    MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, path));
-#endif
-
-    if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath) {
-      RefPtr<Directory> directory =
-        Directory::Create(mFileSystem->GetParentObject(), path,
-                          Directory::eNotDOMRootDirectory, mFileSystem);
-      MOZ_ASSERT(directory);
-
-      // Propogate mFilter onto sub-Directory object:
-      directory->SetContentFilters(mFilters);
-      listing[i].SetAsDirectory() = directory;
-    } else {
-      MOZ_ASSERT(mTargetData[i].mType == Directory::FileOrDirectoryPath::eFilePath);
-
-      RefPtr<File> file =
-        File::CreateFromFile(mFileSystem->GetParentObject(), path);
-      MOZ_ASSERT(file);
-
-      listing[i].SetAsFile() = file;
-    }
-  }
-
-  mPromise->MaybeResolve(listing);
-  mPromise = nullptr;
-}
-
-void
-GetDirectoryListingTask::GetPermissionAccessType(nsCString& aAccess) const
-{
-  aAccess.AssignLiteral("read");
+  aAccess.AssignLiteral(GET_DIRECTORY_LISTING_PERMISSION);
 }
 
 } // namespace dom

@@ -191,12 +191,6 @@ public:
   virtual bool
   DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild*) override;
 
-  virtual PFileSystemRequestChild*
-  AllocPFileSystemRequestChild(const FileSystemParams&) override;
-
-  virtual bool
-  DeallocPFileSystemRequestChild(PFileSystemRequestChild*) override;
-
   virtual PBlobChild*
   AllocPBlobChild(const BlobConstructorParams& aParams) override;
 

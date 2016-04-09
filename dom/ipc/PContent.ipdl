@@ -21,7 +21,6 @@ include protocol PHandlerService;
 include protocol PDeviceStorageRequest;
 include protocol PFileDescriptorSet;
 include protocol PFMRadio;
-include protocol PFileSystemRequest;
 include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
 include protocol PIcc;
@@ -267,67 +266,6 @@ union FMRadioRequestParams
   FMRadioRequestCancelSeekParams;
 };
 
-struct FileSystemCreateDirectoryParams
-{
-  nsString filesystem;
-  nsString realPath;
-};
-
-union FileSystemFileDataValue
-{
-  uint8_t[];
-  PBlob;
-};
-
-struct FileSystemCreateFileParams
-{
-  nsString filesystem;
-  nsString realPath;
-  FileSystemFileDataValue data;
-  bool replace;
-};
-
-struct FileSystemGetDirectoryListingParams
-{
-  nsString filesystem;
-  nsString realPath;
-  bool isRoot;
-  // 'filters' could be an array rather than a semicolon separated string
-  // (we'd then use InfallibleTArray<nsString> internally), but that is
-  // wasteful.  E10s requires us to pass the filters over as a string anyway,
-  // so avoiding using an array avoids serialization on the side passing the
-  // filters.  Since an nsString can share its buffer when copied,
-  // using that instead of InfallibleTArray<nsString> makes copying the filters
-  // around in any given process a bit more efficient too, since copying a
-  // single nsString is cheaper than copying InfallibleTArray member data and
-  // each nsString that it contains.
-  nsString filters;
-};
-
-struct FileSystemGetFileOrDirectoryParams
-{
-  nsString filesystem;
-  nsString realPath;
-  bool isRoot;
-};
-
-struct FileSystemRemoveParams
-{
-  nsString filesystem;
-  nsString directory;
-  nsString targetDirectory;
-  bool recursive;
-};
-
-union FileSystemParams
-{
-  FileSystemCreateDirectoryParams;
-  FileSystemCreateFileParams;
-  FileSystemGetDirectoryListingParams;
-  FileSystemGetFileOrDirectoryParams;
-  FileSystemRemoveParams;
-};
-
 union PrefValue {
   nsCString;
   int32_t;
@@ -474,7 +412,6 @@ prio(normal upto urgent) sync protocol PContent
     manages PCrashReporter;
     manages PCycleCollectWithLogs;
     manages PDeviceStorageRequest;
-    manages PFileSystemRequest;
     manages PPSMContentDownloader;
     manages PExternalHelperApp;
     manages PFileDescriptorSet;
@@ -824,8 +761,6 @@ parent:
 
     async PRemoteSpellcheckEngine();
     async PDeviceStorageRequest(DeviceStorageParams params);
-
-    async PFileSystemRequest(FileSystemParams params);
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
