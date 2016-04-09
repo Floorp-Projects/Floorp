@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/widget/WinModifierKeyState.h"
 #include <windows.h>
 
 #define NS_NUM_OF_KEYS          70
@@ -54,43 +55,6 @@ static const uint32_t sModifierKeyMap[][3] = {
 };
 
 class KeyboardLayout;
-
-class ModifierKeyState
-{
-public:
-  ModifierKeyState();
-  ModifierKeyState(bool aIsShiftDown, bool aIsControlDown, bool aIsAltDown);
-  ModifierKeyState(Modifiers aModifiers);
-
-  void Update();
-
-  void Unset(Modifiers aRemovingModifiers);
-  void Set(Modifiers aAddingModifiers);
-
-  void InitInputEvent(WidgetInputEvent& aInputEvent) const;
-
-  bool IsShift() const;
-  bool IsControl() const;
-  bool IsAlt() const;
-  bool IsAltGr() const;
-  bool IsWin() const;
-
-  bool IsCapsLocked() const;
-  bool IsNumLocked() const;
-  bool IsScrollLocked() const;
-
-  MOZ_ALWAYS_INLINE Modifiers GetModifiers() const
-  {
-    return mModifiers;
-  }
-
-private:
-  Modifiers mModifiers;
-
-  MOZ_ALWAYS_INLINE void EnsureAltGr();
-
-  void InitMouseEvent(WidgetInputEvent& aMouseEvent) const;
-};
 
 struct UniCharsAndModifiers
 {
