@@ -449,7 +449,7 @@ button.warning {
 }
 
 .name-container {
-  font-size: 150%;
+  font-size: 1.3rem;
   font-weight: bold;
   -moz-box-align: end;
   -moz-box-flex: 1;
@@ -462,6 +462,7 @@ button.warning {
 .description-container {
   -moz-margin-start: 6px;
   -moz-box-align: center;
+  font-size: 1.25rem;
 }
 
 .description {
@@ -664,7 +665,7 @@ button.warning {
 .detail-view-container {
   -moz-padding-end: 2em;
   padding-bottom: 2em;
-  font-size: 110%;
+  font-size: 1.25rem;
   color: #333;
 }
 
@@ -695,7 +696,8 @@ button.warning {
 }
 
 #detail-name-container {
-  font-size: 200%;
+  font-size: 2.5rem;
+  font-weight: normal;
 }
 
 #detail-screenshot-box {
@@ -807,7 +809,6 @@ setting {
   border-top: 1px solid #c1c1c1;
   -moz-box-align: center;
   min-height: 35px;
-  font-size: 1.25rem;
   line-height: 20px;
   text-shadow: 0 1px 1px #fefffe;
 }
