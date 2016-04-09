@@ -410,9 +410,9 @@ public:
                                     const bool& aRunInGlobalScope) override;
 
   virtual bool RecvAsyncMessage(const nsString& aMessage,
-                                const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal) override;
+                                const IPC::Principal& aPrincipal,
+                                const ClonedMessageData& aData) override;
 
   virtual bool RecvAppOfflineStatus(const uint32_t& aId,
                                     const bool& aOffline) override;
