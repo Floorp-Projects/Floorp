@@ -67,7 +67,8 @@ of the License or (at your option) any later version.
 // #define NOT_IMPLEMENTED     assert(false)
 #define NOT_IMPLEMENTED
 
-#define binop(op)           const int32 a = pop(); *sp = int32(*sp) op a
+#define binop(op)           const uint32 a = pop(); *sp = uint32(*sp) op a
+#define sbinop(op)          const int32 a = pop(); *sp = int32(*sp) op a
 #define use_params(n)       dp += n
 
 #define declare_params(n)   const byte * param = dp; \
@@ -130,7 +131,7 @@ ENDOP
 
 STARTOP(div_)
     if (*sp == 0) DIE;
-    binop(/);
+    sbinop(/);
 ENDOP
 
 STARTOP(min_)
@@ -181,19 +182,19 @@ STARTOP(not_eq_)
 ENDOP
 
 STARTOP(less)
-    binop(<);
+    sbinop(<);
 ENDOP
 
 STARTOP(gtr)
-    binop(>);
+    sbinop(>);
 ENDOP
 
 STARTOP(less_eq)
-    binop(<=);
+    sbinop(<=);
 ENDOP
 
 STARTOP(gtr_eq)
-    binop(>=);
+    sbinop(>=);
 ENDOP
 
 STARTOP(next)

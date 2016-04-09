@@ -117,7 +117,7 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
     esac
   fi
 
-  if [ "$UNAME_M" != "arm" ] && [ -n "$AUTOMATION" ]; then
+  if [ -n "$AUTOMATION" ]; then
     export CC=$GCCDIR/bin/gcc
     export CXX=$GCCDIR/bin/g++
     if $USE_64BIT; then

@@ -58,7 +58,7 @@ class ChildThread : public IPC::Channel::Listener,
 
  private:
   // IPC::Channel::Listener implementation:
-  virtual void OnMessageReceived(const IPC::Message& msg);
+  virtual void OnMessageReceived(IPC::Message&& msg);
   virtual void OnChannelError();
 
 #ifdef MOZ_NUWA_PROCESS

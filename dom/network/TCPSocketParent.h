@@ -11,6 +11,7 @@
 #include "mozilla/net/PTCPSocketParent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
+#include "nsISocketFilter.h"
 #include "js/TypeDecls.h"
 #include "mozilla/net/OfflineObserver.h"
 
@@ -57,7 +58,8 @@ public:
                             const nsCString& aLocalAddr,
                             const uint16_t& aLocalPort,
                             const bool&     aUseSSL,
-                            const bool& aUseArrayBuffers) override;
+                            const bool& aUseArrayBuffers,
+                            const nsCString& aFilter) override;
 
   virtual bool RecvStartTLS() override;
   virtual bool RecvSuspend() override;
@@ -82,6 +84,9 @@ public:
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState);
+  nsresult SetFilter(const nsCString& aFilter);
+
+  nsCOMPtr<nsISocketFilter> mFilter;
 };
 
 } // namespace dom

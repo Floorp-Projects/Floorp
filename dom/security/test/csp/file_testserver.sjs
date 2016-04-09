@@ -1,53 +1,50 @@
 // SJS file for CSP mochitests
-
+"use strict";
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
   // append to get to the actual path of the file.
-  var testHTMLFile =
+  const testHTMLFile =
     Components.classes["@mozilla.org/file/directory_service;1"].
     getService(Components.interfaces.nsIProperties).
     get("CurWorkD", Components.interfaces.nsILocalFile);
-  var dirs = path.split("/");
-  for (var i = 0; i < dirs.length; i++) {
-    testHTMLFile.append(dirs[i]);
-  }
-  var testHTMLFileStream =
+
+  const testHTMLFileStream =
     Components.classes["@mozilla.org/network/file-input-stream;1"].
     createInstance(Components.interfaces.nsIFileInputStream);
+
+  path
+    .split("/")
+    .filter(path => path)
+    .reduce((file, path) => {
+      testHTMLFile.append(path)
+      return testHTMLFile;
+    }, testHTMLFile);
   testHTMLFileStream.init(testHTMLFile, -1, 0, 0);
-  var testHTML = NetUtil.readInputStreamToString(testHTMLFileStream, testHTMLFileStream.available());
-  return testHTML;
+  const isAvailable = testHTMLFileStream.available();
+  return NetUtil.readInputStreamToString(testHTMLFileStream, isAvailable);
 }
 
-
-function handleRequest(request, response)
-{
-  var query = {};
-  request.queryString.split('&').forEach(function (val) {
-    var [name, value] = val.split('=');
-    query[name] = unescape(value);
-  });
-
-  var csp = (query['csp']) ? unescape(query['csp']) : "";
-  var file = unescape(query['file']);
-  var cors = unescape(query['cors']);
+function handleRequest(request, response) {
+  const query = new URLSearchParams(request.queryString);
 
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  // Deliver the CSP policy encoded in the URI
-  if(csp){
-    response.setHeader("Content-Security-Policy", csp, false);
+  // Deliver the CSP policy encoded in the URL
+  if(query.has("csp")){
+    response.setHeader("Content-Security-Policy", query.get("csp"), false);
   }
-  // Deliver the CORS header in the URI
-  if(cors){
-    response.setHeader("Access-Control-Allow-Origin", cors, false);
+
+  // Deliver the CORS header in the URL
+  if(query.has("cors")){
+    response.setHeader("Access-Control-Allow-Origin", query.get("cors"), false);
   }
+
   // Send HTML to test allowed/blocked behaviors
   response.setHeader("Content-Type", "text/html", false);
-
-  response.write(loadHTMLFromFile(file));
+  response.write(loadHTMLFromFile(query.get("file")));
 }

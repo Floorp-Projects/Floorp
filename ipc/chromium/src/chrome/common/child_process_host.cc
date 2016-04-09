@@ -154,13 +154,13 @@ ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
 }
 
 void ChildProcessHost::ListenerHook::OnMessageReceived(
-    const IPC::Message& msg) {
+    IPC::Message&& msg) {
 
   bool msg_is_ok = true;
   bool handled = false;
 
   if (!handled) {
-      host_->OnMessageReceived(msg);
+      host_->OnMessageReceived(mozilla::Move(msg));
   }
 
   if (!msg_is_ok)

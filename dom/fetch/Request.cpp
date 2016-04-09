@@ -282,6 +282,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     }
 
     request = inputReq->GetInternalRequest();
+
   } else {
     request = new InternalRequest();
   }

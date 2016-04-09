@@ -785,7 +785,11 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
       ->Then(OwnerThread(), __func__,
              [self] (MediaData::Type aType) -> void {
                self->WaitRequestRef(aType).Complete();
-               self->DispatchDecodeTasksIfNeeded();
+               if (aType == MediaData::AUDIO_DATA) {
+                 self->EnsureAudioDecodeTaskQueued();
+               } else {
+                 self->EnsureVideoDecodeTaskQueued();
+               }
              },
              [self] (WaitForDataRejectValue aRejection) -> void {
                self->WaitRequestRef(aRejection.mType).Complete();
@@ -806,7 +810,11 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   }
 
   if (aReason == MediaDecoderReader::CANCELED) {
-    DispatchDecodeTasksIfNeeded();
+    if (isAudio) {
+      EnsureAudioDecodeTaskQueued();
+    } else {
+      EnsureVideoDecodeTaskQueued();
+    }
     return;
   }
 
