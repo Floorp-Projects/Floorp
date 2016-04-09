@@ -17,6 +17,9 @@ namespace dom {
 already_AddRefed<FileSystemBase>
 FileSystemBase::DeserializeDOMPath(const nsAString& aString)
 {
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
+  AssertIsOnBackgroundThread();
+
   if (StringBeginsWith(aString, NS_LITERAL_STRING("devicestorage-"))) {
     // The string representation of devicestorage file system is of the format:
     // devicestorage-StorageType-StorageName
@@ -39,34 +42,41 @@ FileSystemBase::DeserializeDOMPath(const nsAString& aString)
     return f.forget();
   }
 
-  return RefPtr<OSFileSystem>(new OSFileSystem(aString)).forget();
+  return RefPtr<OSFileSystemParent>(new OSFileSystemParent(aString)).forget();
 }
 
 FileSystemBase::FileSystemBase()
   : mShutdown(false)
-  , mRequiresPermissionChecks(true)
+  , mPermissionCheckType(eNotSet)
+#ifdef DEBUG
+  , mOwningThread(PR_GetCurrentThread())
+#endif
 {
 }
 
 FileSystemBase::~FileSystemBase()
 {
+  AssertIsOnOwningThread();
 }
 
 void
 FileSystemBase::Shutdown()
 {
+  AssertIsOnOwningThread();
   mShutdown = true;
 }
 
 nsISupports*
 FileSystemBase::GetParentObject() const
 {
+  AssertIsOnOwningThread();
   return nullptr;
 }
 
 bool
 FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aFile, "aFile Should not be null.");
   MOZ_ASSERT(aPath);
 
@@ -89,12 +99,14 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
 bool
 FileSystemBase::IsSafeFile(nsIFile* aFile) const
 {
+  AssertIsOnOwningThread();
   return false;
 }
 
 bool
 FileSystemBase::IsSafeDirectory(Directory* aDir) const
 {
+  AssertIsOnOwningThread();
   return false;
 }
 
@@ -104,6 +116,7 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
                            nsAString& aRetval,
                            ErrorResult& aRv) const
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aFile);
 
   if (aType == Directory::eDOMRootDirectory) {
@@ -169,6 +182,13 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
     aRetval.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
     aRetval.Append(parts[i]);
   }
+}
+
+void
+FileSystemBase::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
 }
 
 } // namespace dom

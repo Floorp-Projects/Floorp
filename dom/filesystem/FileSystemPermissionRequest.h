@@ -10,6 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "nsIContentPermissionPrompt.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsString.h"
 
 class nsPIDOMWindowInner;
@@ -22,6 +23,7 @@ class FileSystemTaskBase;
 class FileSystemPermissionRequest final
   : public nsIContentPermissionRequest
   , public nsIRunnable
+  , public nsIIPCBackgroundChildCreateCallback
 {
 public:
   // Request permission for the given task.
@@ -31,11 +33,18 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+
 private:
   explicit FileSystemPermissionRequest(FileSystemTaskBase* aTask);
 
-  virtual
   ~FileSystemPermissionRequest();
+
+  // Once the permission check has been done, we must run the task using IPC and
+  // PBackground. This method checks if the PBackground thread is ready to
+  // receive the task and in case waits for ActorCreated() to be called.
+  void
+  ScheduleTask();
 
   nsCString mPermissionType;
   nsCString mPermissionAccess;
