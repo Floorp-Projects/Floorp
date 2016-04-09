@@ -1210,7 +1210,7 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
         mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
         PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
         if (prefFonts && !prefFonts->IsEmpty()) {
-            aOutput->AppendElement((*prefFonts)[0]);
+            aOutput->AppendElements(*prefFonts);
             return true;
         }
         return false;
@@ -1231,14 +1231,18 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     // Nimbus Sans L as alternatives for Helvetica.
 
     // Because the FcConfigSubstitute call is quite expensive, we cache the
-    // actual font family found via this process. So check the cache first:
+    // actual font families found via this process. So check the cache first:
     NS_ConvertUTF16toUTF8 familyToFind(familyName);
-    gfxFontFamily* cached = mFcSubstituteCache.GetWeak(familyToFind);
-    if (cached) {
-        aOutput->AppendElement(cached);
+    AutoTArray<gfxFontFamily*,10> cachedFamilies;
+    if (mFcSubstituteCache.Get(familyToFind, &cachedFamilies)) {
+        if (cachedFamilies.IsEmpty()) {
+            return false;
+        }
+        aOutput->AppendElements(cachedFamilies);
         return true;
     }
 
+    // It wasn't in the cache, so we need to ask fontconfig...
     const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
     FcChar8* sentinelFirstFamily = nullptr;
     nsAutoRef<FcPattern> sentinelSubst(FcPatternCreate());
@@ -1253,7 +1257,7 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
     FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
 
-    // iterate through substitutions until hitting the sentinel
+    // Add all font family matches until reaching the sentinel.
     FcChar8* substName = nullptr;
     for (int i = 0;
          FcPatternGetString(fontWithSentinel, FC_FAMILY,
@@ -1265,20 +1269,17 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
             FcStrCmp(substName, sentinelFirstFamily) == 0) {
             break;
         }
-        // We can't use gfxPlatformFontList::FindFamily() here, even though
-        // we only expect a single result, because that would call back into
-        // this method, resulting in infinite recursion.
-        AutoTArray<gfxFontFamily*,1> foundFamilies;
-        if (gfxPlatformFontList::FindAndAddFamilies(subst, &foundFamilies)) {
-            // We've figured out what family the given name maps to, after any
-            // fontconfig subsitutions. Cache it to speed up future lookups.
-            mFcSubstituteCache.Put(familyToFind, foundFamilies[0]);
-            aOutput->AppendElement(foundFamilies[0]);
-            return true;
-        }
+        gfxPlatformFontList::FindAndAddFamilies(subst, &cachedFamilies);
     }
 
-    return false;
+    // Cache the resulting list, so we don't have to do this again.
+    mFcSubstituteCache.Put(familyToFind, cachedFamilies);
+
+    if (cachedFamilies.IsEmpty()) {
+        return false;
+    }
+    aOutput->AppendElements(cachedFamilies);
+    return true;
 }
 
 bool
