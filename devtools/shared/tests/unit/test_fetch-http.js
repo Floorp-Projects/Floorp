@@ -33,7 +33,7 @@ do_register_cleanup(() => {
 
 add_task(function* test_normal() {
   yield DevToolsUtils.fetch(NORMAL_URL).then(({content}) => {
-    ok(content.contains("The content looks correct."),
+    ok(content.includes("The content looks correct."),
       "The content looks correct.");
   });
 });
