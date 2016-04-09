@@ -5,6 +5,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 
 <window id="451540test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -13,62 +14,58 @@
         title="451540 test">
 
   <script type="application/javascript"><![CDATA[
-    const Ci = Components.interfaces;
-    const Cc = Components.classes;
-    const Cr = Components.results;
+    const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+    Cu.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
     const SEARCH_TEXT = "minefield";
 
-    var gFindBar = null;
-    var gBrowser;
+    let gFindBar = null;
+    let gBrowser;
 
-    var sendCtrl = true;
-    var sendMeta = false;
+    let sendCtrl = true;
+    let sendMeta = false;
     if (navigator.platform.indexOf("Mac") >= 0) {
       sendCtrl = false;
       sendMeta = true;
     }
 
-    var imports = [ "SimpleTest", "ok"];
-      for (var name of imports) {
-        window[name] = window.opener.wrappedJSObject[name];
-      }
-
-
-    function finishTest() {
-      window.close();
-      SimpleTest.finish();
+    let imports = [ "SimpleTest", "ok", "is", "info"];
+    for (let name of imports) {
+      window[name] = window.opener.wrappedJSObject[name];
     }
+
+    SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
       gFindBar = document.getElementById("FindToolbar");
       gBrowser = document.getElementById("content");
       gBrowser.addEventListener("pageshow", onPageShow, false);
-      var data = 'data:text/html,<input id="inp" type="text" />';
-      data +='<textarea id="tarea"/>'
+      let data = `data:text/html,<input id="inp" type="text" />
+                                 <textarea id="tarea"/>`;
       gBrowser.loadURI(data);
     }
 
-    function goToStartOfLine(aElement) {
-      if (navigator.platform.indexOf("Mac") >= 0) {
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      false, false, true);
-      } else {
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_HOME,
-                      false, false, false);
-      }
-    }
-
-    function resetForNextTest(aElement, aText) {
+    function* resetForNextTest(elementId, aText) {
       if (!aText)
         aText = SEARCH_TEXT;
 
       // Turn off highlighting
-      var highlightButton = gFindBar.getElement("highlight");
+      let highlightButton = gFindBar.getElement("highlight");
       if (highlightButton.checked)
         highlightButton.click();
 
       // Initialise input
-      aElement.value = aText;
+      info(`setting element value to ${aText}`);
+      yield ContentTask.spawn(gBrowser, {elementId, aText}, function*(args) {
+        let {elementId, aText} = args;
+        let doc = content.document;
+        let element = doc.getElementById(elementId);
+        element.value = aText;
+        element.focus();
+      });
+      info(`just set element value to ${aText}`);
       gFindBar._findField.value = SEARCH_TEXT;
 
       // Perform search and turn on highlighting
@@ -76,192 +73,160 @@
       highlightButton.click();
 
       // Move caret to start of element
-      aElement.focus();
-      goToStartOfLine(aElement);
+      info(`focusing element`);
+      yield ContentTask.spawn(gBrowser, elementId, function*(elementId) {
+        let doc = content.document;
+        let element = doc.getElementById(elementId);
+        element.focus();
+      });
+      info(`focused element`);
+      if (navigator.platform.indexOf("Mac") >= 0) {
+        yield BrowserTestUtils.synthesizeKey("VK_LEFT", { metaKey: true }, gBrowser);
+      } else {
+        yield BrowserTestUtils.synthesizeKey("VK_HOME", {}, gBrowser);
+      }
     }
 
-    function synthesizeKey(target, isKeyCode, key, ctlKey, shiftKey, metaKey) {
-      try {
-        var event = document.createEvent("KeyEvents");
-        if (isKeyCode) {
-          event.initKeyEvent("keypress", true, true, null, ctlKey, false,
-                             shiftKey, metaKey, key, 0);
-        } else {
-          event.initKeyEvent("keypress", true, true, null, ctlKey, false,
-                             shiftKey, metaKey, 0, key);
-        }
-        target.dispatchEvent(event);
-      } catch (e) {}
+    function* testSelection(elementId, expectedRangeCount, message) {
+      yield ContentTask.spawn(gBrowser, {elementId, expectedRangeCount, message}, function*(args) {
+        let {elementId, expectedRangeCount, message} = args;
+        let doc = content.document;
+        let element = doc.getElementById(elementId);
+        let controller = element.editor.selectionController;
+        let selection = controller.getSelection(controller.SELECTION_FIND);
+        Assert.equal(selection.rangeCount, expectedRangeCount, message);
+      });
     }
 
-    function testInput(aElement, aTestTypeText) {
-      // Initialise the findbar
-      var matchCase = gFindBar.getElement("find-case-sensitive");
+    function* testInput(elementId, testTypeText) {
+      let isEditableElement = yield ContentTask.spawn(gBrowser, elementId, function*(elementId) {
+        let doc = content.document;
+        let element = doc.getElementById(elementId);
+        return element instanceof Ci.nsIDOMNSEditableElement;
+      });
+      if (!isEditableElement) {
+        return;
+      }
+
+      // Initialize the findbar
+      let matchCase = gFindBar.getElement("find-case-sensitive");
       if (matchCase.checked)
         matchCase.doCommand();
 
       // First check match has been correctly highlighted
-      resetForNextTest(aElement);
-      if (aElement instanceof Ci.nsIDOMNSEditableElement) {
-        var controller = aElement.editor.selectionController;
-        var selection = controller.getSelection(controller.SELECTION_FIND);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " correctly highlighted match");
+      yield resetForNextTest(elementId);
 
-        // Test 2: check highlight removed when text added within the highlight
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, false, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
-                      false, false, false);
-        ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed highlight on text insertion");
+      yield testSelection(elementId, 1, testTypeText + " correctly highlighted match");
 
-        // Test 3: check highlighting remains when text added before highlight
-        resetForNextTest(aElement);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
-                      false, false, false);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " highlight correctly remained on text insertion at start");
+      // Test 2: check highlight removed when text added within the highlight
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
 
-        //  Test 4: check highlighting remains when text added after highlight
-        resetForNextTest(aElement);
-        for (var x = 0; x < SEARCH_TEXT.length; x++)
-          synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                        false, false, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
-                      false, false, false);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " highlight correctly remained on text insertion at end");
+      yield testSelection(elementId, 0, testTypeText + " correctly removed highlight on text insertion");
 
-        // Test 5: deleting text within the highlight
-        resetForNextTest(aElement);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, false, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
-                      false, false, false);
-        ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed highlight on text deletion");
-        
-        // Test 6: deleting text at end of highlight
-        resetForNextTest(aElement, SEARCH_TEXT+"A");
-        for (var x = 0; x < aElement.value.length; x++)
-          synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                        false, false, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
-                      false, false, false);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " highlight correctly remained on text deletion at end");
+      // Test 3: check highlighting remains when text added before highlight
+      yield resetForNextTest(elementId);
+      yield BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " highlight correctly remained on text insertion at start");
 
-        // Test 7: deleting text at start of highlight
-        resetForNextTest(aElement, "A"+SEARCH_TEXT);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, false, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
-                      false, false, false);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " highlight correctly remained on text deletion at start");
-
-        // Test 8: deleting selection
-        resetForNextTest(aElement);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, true, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, true, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_X,
-                      sendCtrl, false, sendMeta);
-        ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed highlight on selection deletion");
-
-        // Test 9: Multiple matches within one editor (part 1)
-        // Check second match remains highlighted after inserting text into
-        // first match, and that its highlighting gets removed when the
-        // second match is edited
-        resetForNextTest(aElement, SEARCH_TEXT + " " + SEARCH_TEXT);
-        ok(selection.rangeCount == 2, aTestTypeText +
-             " correctly highlighted both matches");
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, false, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
-                      false, false, false);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " correctly removed only the first highlight on text insertion");
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                    sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                    sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      false, false, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_A,
-                      false, false, false);
-        ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed second highlight on text insertion");
-
-        // Test 10: Multiple matches within one editor (part 2)
-        // Check second match remains highlighted after deleting text in
-        // first match, and that its highlighting gets removed when the
-        // second match is edited
-        resetForNextTest(aElement, SEARCH_TEXT + " " + SEARCH_TEXT);
-        ok(selection.rangeCount == 2, aTestTypeText +
-             " correctly highlighted both matches");
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, false, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
-                      false, false, false);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " correctly removed only the first highlight on text deletion");
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                    sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                    sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      false, false, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_BACK_SPACE,
-                      false, false, false);
-        ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed second highlight on text deletion");
-
-        // Test 11: Multiple matches within one editor (part 3)
-        // Check second match remains highlighted after deleting selection
-        // in first match, and that second match highlighting gets correctly
-        // removed when it has a selection deleted from it
-        resetForNextTest(aElement, SEARCH_TEXT + " " + SEARCH_TEXT);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, true, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                      false, true, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_X,
-                      sendCtrl, false, sendMeta);
-        ok(selection.rangeCount == 1, aTestTypeText +
-             " correctly removed only first highlight on selection deletion");
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                    sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_RIGHT,
-                    sendCtrl, false, sendMeta);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      false, true, false);
-        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                      false, true, false);
-        synthesizeKey(aElement, false, KeyEvent.DOM_VK_X,
-                      sendCtrl, false, sendMeta);
-        ok(selection.rangeCount == 0, aTestTypeText +
-             " correctly removed second highlight on selection deletion");
+      //  Test 4: check highlighting remains when text added after highlight
+      yield resetForNextTest(elementId);
+      for (let x = 0; x < SEARCH_TEXT.length; x++) {
+        yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
       }
+      yield BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " highlight correctly remained on text insertion at end");
+
+      // Test 5: deleting text within the highlight
+      yield resetForNextTest(elementId);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      yield testSelection(elementId, 0, testTypeText + " correctly removed highlight on text deletion");
+
+      // Test 6: deleting text at end of highlight
+      yield resetForNextTest(elementId, SEARCH_TEXT + "A");
+      for (let x = 0; x < (SEARCH_TEXT + "A").length; x++) {
+        yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      }
+      yield BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " highlight correctly remained on text deletion at end");
+
+      // Test 7: deleting text at start of highlight
+      yield resetForNextTest(elementId, "A" + SEARCH_TEXT);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " highlight correctly remained on text deletion at start");
+
+      // Test 8: deleting selection
+      yield resetForNextTest(elementId);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield testSelection(elementId, 0, testTypeText + " correctly removed highlight on selection deletion");
+
+      // Test 9: Multiple matches within one editor (part 1)
+      // Check second match remains highlighted after inserting text into
+      // first match, and that its highlighting gets removed when the
+      // second match is edited
+      yield resetForNextTest(elementId, SEARCH_TEXT + " " + SEARCH_TEXT);
+      yield testSelection(elementId, 2, testTypeText + " correctly highlighted both matches");
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " correctly removed only the first highlight on text insertion");
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_LEFT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
+      yield testSelection(elementId, 0, testTypeText + " correctly removed second highlight on text insertion");
+
+      // Test 10: Multiple matches within one editor (part 2)
+      // Check second match remains highlighted after deleting text in
+      // first match, and that its highlighting gets removed when the
+      // second match is edited
+      yield resetForNextTest(elementId, SEARCH_TEXT + " " + SEARCH_TEXT);
+      yield testSelection(elementId, 2, testTypeText + " correctly highlighted both matches");
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " correctly removed only the first highlight on text deletion");
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_LEFT", {}, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      yield testSelection(elementId, 0, testTypeText + " correctly removed second highlight on text deletion");
+
+      // Test 11: Multiple matches within one editor (part 3)
+      // Check second match remains highlighted after deleting selection
+      // in first match, and that second match highlighting gets correctly
+      // removed when it has a selection deleted from it
+      yield resetForNextTest(elementId, SEARCH_TEXT + " " + SEARCH_TEXT);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield testSelection(elementId, 1, testTypeText + " correctly removed only first highlight on selection deletion");
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_LEFT", { shiftKey: true }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("VK_LEFT", { shiftKey: true }, gBrowser);
+      yield BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      yield testSelection(elementId, 0, testTypeText + " correctly removed second highlight on selection deletion");
     }
 
     function onPageShow() {
       gBrowser.removeEventListener("load", onPageShow, true);
-      gBrowser.contentWindow.focus();
-      gFindBar.open();
-      var input = gBrowser.contentDocument.getElementById("inp");
-      testInput(input, "Input:");
-      var textarea = gBrowser.contentDocument.getElementById("tarea");
-      testInput(textarea, "Textarea:");
-      finishTest();
+      Task.spawn(function*() {
+        gFindBar.open();
+        yield testInput("inp", "Input:");
+        yield testInput("tarea", "Textarea:");
+      }).then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
     }
 
     SimpleTest.waitForFocus(startTest, window);
   ]]></script>
 
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <browser type="content-primary" flex="1" id="content-remote" remote="true" src="about:blank"/>
   <findbar id="FindToolbar" browserid="content"/>
 </window>
