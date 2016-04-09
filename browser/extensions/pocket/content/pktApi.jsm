@@ -612,7 +612,7 @@ var pktApi = (function() {
      */
     function getSignupAB() {
         var setting = getSetting('signupAB');
-        if (!setting || setting.contains('hero'))
+        if (!setting || setting.includes('hero'))
         {
             var rand = (Math.floor(Math.random()*100+1));
             if (rand > 90)
