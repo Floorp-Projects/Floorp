@@ -75,7 +75,9 @@ WinWifiScanner::WinWifiScanner()
   // spurious LoadLibrary calls in the common case rather than load the
   // WLAN API in the edge case.
   mWlanLibrary = WinWLANLibrary::Load();
-  MOZ_ASSERT(mWlanLibrary);
+  if (!mWlanLibrary) {
+    NS_WARNING("Could not initialize Windows Wi-Fi scanner");
+  }
 }
 
 WinWifiScanner::~WinWifiScanner()

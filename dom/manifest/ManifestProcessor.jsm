@@ -87,9 +87,6 @@ this.ManifestProcessor = { // jshint ignore:line
       'icons': imgObjProcessor.process(
         rawManifest, manifestURL, 'icons'
       ),
-      'splash_screens': imgObjProcessor.process(
-        rawManifest, manifestURL, 'splash_screens'
-      ),
       'short_name': processShortNameMember(),
       'theme_color': processThemeColorMember(),
       'background_color': processBackgroundColorMember(),

@@ -46,7 +46,7 @@ addEventListener("Social:Notification", function(event) {
 
 // Error handling class used to listen for network errors in the social frames
 // and replace them with a social-specific error page
-SocialErrorListener = {
+const SocialErrorListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
                                          Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference,

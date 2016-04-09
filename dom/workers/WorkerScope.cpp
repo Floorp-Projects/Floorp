@@ -863,26 +863,6 @@ WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
   }
 }
 
-nsIGlobalObject*
-GetGlobalObjectForGlobal(JSObject* global)
-{
-  nsIGlobalObject* globalObject = nullptr;
-  UNWRAP_WORKER_OBJECT(WorkerGlobalScope, global, globalObject);
-
-  if (!globalObject) {
-    UNWRAP_OBJECT(WorkerDebuggerGlobalScope, global, globalObject);
-
-    if (!globalObject) {
-      MOZ_ASSERT(IsDebuggerSandbox(global));
-      globalObject = static_cast<SimpleGlobalObject*>(JS_GetPrivate(global));
-
-      MOZ_ASSERT(globalObject);
-    }
-  }
-
-  return globalObject;
-}
-
 bool
 IsWorkerGlobal(JSObject* object)
 {

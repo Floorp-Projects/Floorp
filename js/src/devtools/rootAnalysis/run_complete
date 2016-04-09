@@ -250,6 +250,11 @@ sub run_build
 	$ENV{"XGILL_CONFIG"} = Cwd::abs_path($config_file);
 
         # update the PATH so that the build will see the wrappers.
+        if (exists $ENV{CC}) {
+            $ENV{PATH} = dirname($ENV{CC}) . ":$ENV{PATH}";
+            delete $ENV{CC};
+            delete $ENV{CXX};
+        }
         $ENV{"PATH"} = "$wrap_dir:" . $ENV{"PATH"};
 
         # do the build, cleaning if necessary.

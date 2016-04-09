@@ -637,13 +637,6 @@ SourceSurfaceImage::GetTextureClient(CompositableClient *aClient)
     return nullptr;
   }
 
-
-// XXX windows' TextureClients do not hold ISurfaceAllocator,
-// recycler does not work on windows.
-#ifndef XP_WIN
-
-// XXX only gonk ensure when TextureClient is recycled,
-// TextureHost is not used by CompositableHost.
 #ifdef MOZ_WIDGET_GONK
   RefPtr<TextureClientRecycleAllocator> recycler =
     aClient->GetTextureClientRecycler();
@@ -654,8 +647,6 @@ SourceSurfaceImage::GetTextureClient(CompositableClient *aClient)
                                 BackendSelector::Content,
                                 aClient->GetTextureFlags());
   }
-#endif
-
 #endif
   if (!textureClient) {
     // gfx::BackendType::NONE means default to content backend

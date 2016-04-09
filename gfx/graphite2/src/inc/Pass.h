@@ -81,7 +81,7 @@ private:
     bool    collisionFinish(Segment *seg, GR_MAYBE_UNUSED json * const dbgout) const;
     bool    resolveCollisions(Segment *seg, Slot *slot, Slot *start, ShiftCollider &coll, bool isRev,
                      int dir, bool &moved, bool &hasCol, json * const dbgout) const;
-    float   resolveKern(Segment *seg, Slot *slot, Slot *start, KernCollider &coll, int dir,
+    float   resolveKern(Segment *seg, Slot *slot, Slot *start, int dir,
                      float &ymin, float &ymax, json *const dbgout) const;
 
     const Silf        * m_silf;

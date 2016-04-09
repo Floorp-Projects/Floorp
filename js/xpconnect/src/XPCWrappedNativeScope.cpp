@@ -334,11 +334,12 @@ GetScopeForXBLExecution(JSContext* cx, HandleObject contentScope, JSAddonId* add
 
     JSAutoCompartment ac(cx, contentScope);
     XPCWrappedNativeScope* nativeScope = CompartmentPrivate::Get(contentScope)->scope;
+    bool isSystem = nsContentUtils::IsSystemPrincipal(nativeScope->GetPrincipal());
 
     RootedObject scope(cx);
     if (nativeScope->UseContentXBLScope())
         scope = nativeScope->EnsureContentXBLScope(cx);
-    else if (addonId && CompartmentPerAddon())
+    else if (addonId && CompartmentPerAddon() && isSystem)
         scope = nativeScope->EnsureAddonScope(cx, addonId);
     else
         scope = global;

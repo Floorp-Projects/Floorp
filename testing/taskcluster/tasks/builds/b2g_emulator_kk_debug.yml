@@ -29,7 +29,7 @@ task:
       level-{{level}}-{{project}}-emulator-kk-debug-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-kk'
-      TOOLTOOL_MANIFEST: 'b2g/config/emulator-kk/releng-emulator-kk.tt'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-kk/releng-emulator-kk.manifest'
       B2G_DEBUG: 1
       # This setting is to offset the number of arugments passsed into docker run
       # for https://github.com/docker/docker/issues/14203

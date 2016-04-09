@@ -104,6 +104,43 @@ var Profiler;
         _profiler.StopProfiler();
       }
     },
+    finishTestAsync: function Profiler__finishTest () {
+      if (!(_profiler && enabled)) {
+        return;
+      }
+      return new Promise((resolve, reject) => {
+        Services.profiler.getProfileDataAsync().then((profile) => {
+          let profileFile = profiler_dir + "/" + currentTest + ".sps";
+
+          Components.utils.import("resource://gre/modules/NetUtil.jsm");
+          Components.utils.import("resource://gre/modules/FileUtils.jsm");
+
+          var file = Components.classes["@mozilla.org/file/local;1"].
+           createInstance(Components.interfaces.nsILocalFile);
+          file.initWithPath(profileFile);
+
+          var ostream = FileUtils.openSafeFileOutputStream(file);
+
+          var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
+              createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+          converter.charset = "UTF-8";
+          var istream = converter.convertToInputStream(JSON.stringify(profile));
+
+          // The last argument (the callback) is optional.
+          NetUtil.asyncCopy(istream, ostream, function(status) {
+            if (!Components.isSuccessCode(status)) {
+              reject();
+              return;
+            }
+
+            resolve();
+          });
+        }, (error) => {
+          Cu.reportError("Failed to gather profile: " + error);
+          reject();
+        });
+      });
+    },
     finishStartupProfiling: function Profiler__finishStartupProfiling () {
       if (_profiler && enabled) {
         _profiler.dumpProfileToFile(profiler_dir + "/startup.sps");

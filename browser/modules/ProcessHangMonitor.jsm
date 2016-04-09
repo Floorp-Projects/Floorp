@@ -22,18 +22,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 var ProcessHangMonitor = {
   /**
-   * If a hang hasn't been reported for more than 10 seconds, assume the
-   * content process has gotten unstuck (and hide the hang notification).
-   */
-  get HANG_EXPIRATION_TIME() {
-    try {
-      return Services.prefs.getIntPref("browser.hangNotification.expiration");
-    } catch (ex) {
-      return 10000;
-    }
-  },
-
-  /**
    * This timeout is the wait period applied after a user selects "Wait" in
    * an existing notification.
    */
@@ -47,15 +35,14 @@ var ProcessHangMonitor = {
 
   /**
    * Collection of hang reports that haven't expired or been dismissed
-   * by the user. The keys are nsIHangReports and values keys are
-   * timers. Each time the hang is reported, the timer is refreshed so
-   * it expires after HANG_EXPIRATION_TIME.
+   * by the user. These are nsIHangReports.
    */
-  _activeReports: new Map(),
+  _activeReports: new Set(),
 
   /**
-   * Collection of hang reports that have been suppressed for a
-   * short period of time.
+   * Collection of hang reports that have been suppressed for a short
+   * period of time. Value is an nsITimer for when the wait time
+   * expires.
    */
   _pausedReports: new Map(),
 
@@ -64,6 +51,7 @@ var ProcessHangMonitor = {
    */
   init: function() {
     Services.obs.addObserver(this, "process-hang-report", false);
+    Services.obs.addObserver(this, "clear-hang-report", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     Services.ww.registerNotification(this);
   },
@@ -132,7 +120,7 @@ var ProcessHangMonitor = {
     if (!report) {
       return;
     }
-    // Remove the report from the active list and cancel its timer.
+    // Remove the report from the active list.
     this.removeActiveReport(report);
 
     // NOTE, we didn't call userCanceled on nsIHangReport here. This insures
@@ -147,17 +135,10 @@ var ProcessHangMonitor = {
         if (otherTimer === timer) {
           this.removePausedReport(stashedReport);
 
-          // Create a new notification display timeout timer
-          let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          timer.initWithCallback(this, this.HANG_EXPIRATION_TIME, timer.TYPE_ONE_SHOT);
-
-          // Store the timer in the active reports map. If we receive a new
-          // observer notification for this hang, we'll redisplay the browser
-          // notification in reportHang below. If we do not receive a new
-          // observer, timer will take care fo cleaning up resources associated
-          // with this hang. The observer for active hangs fires about once
-          // a second.
-          this._activeReports.set(report, timer);
+          // We're still hung, so move the report back to the active
+          // list and update the UI.
+          this._activeReports.add(report);
+          this.updateWindows();
           break;
         }
       }
@@ -189,11 +170,16 @@ var ProcessHangMonitor = {
       case "xpcom-shutdown":
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, "process-hang-report");
+        Services.obs.removeObserver(this, "clear-hang-report");
         Services.ww.unregisterNotification(this);
         break;
 
       case "process-hang-report":
         this.reportHang(subject.QueryInterface(Ci.nsIHangReport));
+        break;
+
+      case "clear-hang-report":
+        this.clearHang(subject.QueryInterface(Ci.nsIHangReport));
         break;
 
       case "domwindowopened":
@@ -214,7 +200,7 @@ var ProcessHangMonitor = {
    */
   findActiveReport: function(browser) {
     let frameLoader = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-    for (let [report, timer] of this._activeReports) {
+    for (let report of this._activeReports) {
       if (report.isReportForBrowser(frameLoader)) {
         return report;
       }
@@ -240,10 +226,6 @@ var ProcessHangMonitor = {
    * associated with it.
    */
   removeActiveReport: function(report) {
-    let timer = this._activeReports.get(report);
-    if (timer) {
-      timer.cancel();
-    }
     this._activeReports.delete(report);
     this.updateWindows();
   },
@@ -382,9 +364,6 @@ var ProcessHangMonitor = {
   reportHang: function(report) {
     // If this hang was already reported reset the timer for it.
     if (this._activeReports.has(report)) {
-      let timer = this._activeReports.get(report);
-      timer.cancel();
-      timer.initWithCallback(this, this.HANG_EXPIRATION_TIME, timer.TYPE_ONE_SHOT);
       // if this report is in active but doesn't have a notification associated
       // with it, display a notification.
       this.updateWindows();
@@ -407,24 +386,13 @@ var ProcessHangMonitor = {
       Services.telemetry.getHistogramById("PLUGIN_HANG_NOTICE_COUNT").add();
     }
 
-    // Otherwise create a new timer and display the report.
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(this, this.HANG_EXPIRATION_TIME, timer.TYPE_ONE_SHOT);
-
-    this._activeReports.set(report, timer);
+    this._activeReports.add(report);
     this.updateWindows();
   },
 
-  /**
-   * Callback for when HANG_EXPIRATION_TIME has elapsed.
-   */
-  notify: function(timer) {
-    for (let [otherReport, otherTimer] of this._activeReports) {
-      if (otherTimer === timer) {
-        this.removeActiveReport(otherReport);
-        otherReport.userCanceled();
-        break;
-      }
-    }
+  clearHang: function(report) {
+    this.removeActiveReport(report);
+    this.removePausedReport(report);
+    report.userCanceled();
   },
 };
