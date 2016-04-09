@@ -193,8 +193,8 @@ BrowserStreamParent::Write(int32_t offset,
     len = kSendDataChunk;
 
   return SendWrite(offset,
-                   nsCString(static_cast<char*>(buffer), len),
-                   mStream->end) ?
+                   mStream->end,
+                   nsCString(static_cast<char*>(buffer), len)) ?
     len : -1;
 }
 
