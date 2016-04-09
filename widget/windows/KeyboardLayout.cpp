@@ -345,6 +345,26 @@ ModifierKeyState::IsWin() const
 }
 
 bool
+ModifierKeyState::MaybeMatchShortcutKey() const
+{
+  // If Windows key is pressed, even if both Ctrl key and Alt key are pressed,
+  // it's possible to match a shortcut key.
+  if (IsWin()) {
+    return true;
+  }
+  // Otherwise, when both Ctrl key and Alt key are pressed, it shouldn't be
+  // a shortcut key for Windows since it means pressing AltGr key on
+  // some keyboard layouts.
+  if (IsControl() ^ IsAlt()) {
+    return true;
+  }
+  // If no modifier key is active except a lockable modifier nor Shift key,
+  // the key shouldn't match any shortcut keys (there are Space and
+  // Shift+Space, though, let's ignore these special case...).
+  return false;
+}
+
+bool
 ModifierKeyState::IsCapsLocked() const
 {
   return (mModifiers & MODIFIER_CAPSLOCK) != 0;

@@ -15,6 +15,7 @@ EXPORTS += [
 EXPORTS.mozilla.widget += [
     'AudioSession.h',
     'WinMessages.h',
+    'WinModifierKeyState.h',
 ]
 
 UNIFIED_SOURCES += [
