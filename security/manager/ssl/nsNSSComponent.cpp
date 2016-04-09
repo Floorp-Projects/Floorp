@@ -10,6 +10,7 @@
 
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
+#include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "certdb.h"
@@ -19,7 +20,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/UniquePtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCertVerificationThread.h"
@@ -685,8 +685,7 @@ MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
     return NS_ERROR_FAILURE;
   }
   // Looking for a certificate with the common name 'Microsoft Family Safety'
-  UniquePtr<char, void(&)(void*)> subjectName(
-    CERT_GetCommonName(&nssCertificate->subject), PORT_Free);
+  UniquePORTString subjectName(CERT_GetCommonName(&nssCertificate->subject));
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("subject name is '%s'", subjectName.get()));
   if (nsCRT::strcmp(subjectName.get(), "Microsoft Family Safety") == 0) {
