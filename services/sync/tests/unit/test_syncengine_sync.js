@@ -172,7 +172,7 @@ add_test(function test_syncStartup_syncIDMismatchResetsClient() {
   try {
 
     // Confirm initial environment
-    do_check_eq(engine.syncID, 'fake-guid-0');
+    do_check_eq(engine.syncID, 'fake-guid-00');
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
 
     engine.lastSync = Date.now() / 1000;

@@ -75,64 +75,70 @@ function run_test() {
     store._orderChildren();
     delete store._childrenToOrder;
   }
-
+  let id10 = "10_aaaaaaaaa";
   _("basic add first bookmark");
-  apply(bookmark("10", ""));
-  check(["10"]);
-
+  apply(bookmark(id10, ""));
+  check([id10]);
+  let id20 = "20_aaaaaaaaa";
   _("basic append behind 10");
-  apply(bookmark("20", ""));
-  check(["10", "20"]);
+  apply(bookmark(id20, ""));
+  check([id10, id20]);
 
+  let id31 = "31_aaaaaaaaa";
+  let id30 = "f30_aaaaaaaa";
   _("basic create in folder");
-  apply(bookmark("31", "f30"));
-  let f30 = folder("f30", "", ["31"]);
+  apply(bookmark(id31, id30));
+  let f30 = folder(id30, "", [id31]);
   apply(f30);
-  check(["10", "20", ["31"]]);
+  check([id10, id20, [id31]]);
 
+  let id41 = "41_aaaaaaaaa";
+  let id40 = "f40_aaaaaaaa";
   _("insert missing parent -> append to unfiled");
-  apply(bookmark("41", "f40"));
-  check(["10", "20", ["31"], "41"]);
+  apply(bookmark(id41, id40));
+  check([id10, id20, [id31], id41]);
+
+  let id42 = "42_aaaaaaaaa";
 
   _("insert another missing parent -> append");
-  apply(bookmark("42", "f40"));
-  check(["10", "20", ["31"], "41", "42"]);
+  apply(bookmark(id42, id40));
+  check([id10, id20, [id31], id41, id42]);
 
   _("insert folder -> move children and followers");
-  let f40 = folder("f40", "", ["41", "42"]);
+  let f40 = folder(id40, "", [id41, id42]);
   apply(f40);
-  check(["10", "20", ["31"], ["41", "42"]]);
+  check([id10, id20, [id31], [id41, id42]]);
 
   _("Moving 41 behind 42 -> update f40");
-  f40.children = ["42", "41"];
+  f40.children = [id42, id41];
   apply(f40);
-  check(["10", "20", ["31"], ["42", "41"]]);
+  check([id10, id20, [id31], [id42, id41]]);
 
   _("Moving 10 back to front -> update 10, 20");
-  f40.children = ["41", "42"];
+  f40.children = [id41, id42];
   apply(f40);
-  check(["10", "20", ["31"], ["41", "42"]]);
+  check([id10, id20, [id31], [id41, id42]]);
 
   _("Moving 20 behind 42 in f40 -> update 50");
-  apply(bookmark("20", "f40"));
-  check(["10", ["31"], ["41", "42", "20"]]);
+  apply(bookmark(id20, id40));
+  check([id10, [id31], [id41, id42, id20]]);
 
   _("Moving 10 in front of 31 in f30 -> update 10, f30");
-  apply(bookmark("10", "f30"));
-  f30.children = ["10", "31"];
+  apply(bookmark(id10, id30));
+  f30.children = [id10, id31];
   apply(f30);
-  check([["10", "31"], ["41", "42", "20"]]);
+  check([[id10, id31], [id41, id42, id20]]);
 
   _("Moving 20 from f40 to f30 -> update 20, f30");
-  apply(bookmark("20", "f30"));
-  f30.children = ["10", "20", "31"];
+  apply(bookmark(id20, id30));
+  f30.children = [id10, id20, id31];
   apply(f30);
-  check([["10", "20", "31"], ["41", "42"]]);
+  check([[id10, id20, id31], [id41, id42]]);
 
   _("Move 20 back to front -> update 20, f30");
-  apply(bookmark("20", ""));
-  f30.children = ["10", "31"];
+  apply(bookmark(id20, ""));
+  f30.children = [id10, id31];
   apply(f30);
-  check([["10", "31"], ["41", "42"], "20"]);
+  check([[id10, id31], [id41, id42], id20]);
 
 }

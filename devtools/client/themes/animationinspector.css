@@ -339,10 +339,6 @@ body {
   background-color: var(--timeline-background-color);
 }
 
-.animation-timeline .animation .iterations.infinite {
-  border-right-width: 0;
-}
-
 .animation-timeline .animation .iterations.infinite::before,
 .animation-timeline .animation .iterations.infinite::after {
   content: "";

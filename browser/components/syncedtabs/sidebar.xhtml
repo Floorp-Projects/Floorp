@@ -10,6 +10,9 @@
   <!ENTITY % globalDTD
     SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
+  <!ENTITY % syncBrandDTD
+    SYSTEM "chrome://browser/locale/syncBrand.dtd">
+  %syncBrandDTD;
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -77,8 +80,9 @@
           <p><a href="#" class="sync-prefs text-link">&fxaSignIn.label;</a></p>
         </div>
         <div class="singleDeviceInfo sync-state">
-          <p>&syncedTabs.sidebar.noclients.label;</p>
-          <p class="device-promo"></p>
+          <p>&syncedTabs.sidebar.noclients.title;</p>
+          <p>&syncedTabs.sidebar.noclients.subtitle;</p>
+          <p class="device-promo" fxAccountsBrand="&syncBrand.fxAccount.label;"></p>
         </div>
         <div class="tabs-disabled sync-state">
           <p>&syncedTabs.sidebar.tabsnotsyncing.label;</p>

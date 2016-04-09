@@ -57,6 +57,7 @@ import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
@@ -182,7 +183,6 @@ public class BrowserApp extends GeckoApp
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
-                                   ReadingListHelper.OnReadingListEventListener,
                                    AnchoredPopup.OnVisibilityChangeListener,
                                    ActionModeCompat.Presenter,
                                    LayoutInflater.Factory {
@@ -363,12 +363,6 @@ public class BrowserApp extends GeckoApp
             case BOOKMARK_REMOVED:
                 showBookmarkRemovedSnackbar();
                 break;
-            case READING_LIST_ADDED:
-                onAddedToReadingList(tab.getURL());
-                break;
-            case READING_LIST_REMOVED:
-                onRemovedFromReadingList(tab.getURL());
-                break;
 
             case UNSELECTED:
                 // We receive UNSELECTED immediately after the SELECTED listeners run
@@ -445,38 +439,6 @@ public class BrowserApp extends GeckoApp
 
     private void showBookmarkRemovedSnackbar() {
         SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_LONG);
-    }
-
-    private void showSwitchToReadingListSnackbar(String message) {
-        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
-            @Override
-            public void onClick(View v) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "reading_list");
-
-                final String aboutPageUrl = AboutPages.getURLForBuiltinPanelType(PanelType.READING_LIST);
-                Tabs.getInstance().loadUrlInTab(aboutPageUrl);
-            }
-        };
-
-        SnackbarHelper.showSnackbarWithAction(this,
-                message,
-                Snackbar.LENGTH_LONG,
-                getResources().getString(R.string.switch_button_message),
-                callback);
-    }
-
-    public void onAddedToReadingList(String url) {
-        showSwitchToReadingListSnackbar(getResources().getString(R.string.reading_list_added));
-    }
-
-    public void onAlreadyInReadingList(String url) {
-        showSwitchToReadingListSnackbar(getResources().getString(R.string.reading_list_duplicate));
-    }
-
-    public void onRemovedFromReadingList(String url) {
-        SnackbarHelper.showSnackbar(this,
-                getResources().getString(R.string.reading_list_removed),
-                Snackbar.LENGTH_LONG);
     }
 
     @Override
@@ -735,7 +697,7 @@ public class BrowserApp extends GeckoApp
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
-        mReadingListHelper = new ReadingListHelper(appContext, getProfile(), this);
+        mReadingListHelper = new ReadingListHelper(appContext, getProfile());
         mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
         final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
@@ -1781,7 +1743,6 @@ public class BrowserApp extends GeckoApp
             final ContentResolver cr = getContentResolver();
             Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
             Telemetry.addToHistogram("FENNEC_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
-            Telemetry.addToHistogram("FENNEC_READING_LIST_COUNT", db.getReadingListAccessor().getCount(cr));
             Telemetry.addToHistogram("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
             Telemetry.addToHistogram("FENNEC_CUSTOM_HOMEPAGE", (TextUtils.isEmpty(getHomepage()) ? 0 : 1));
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
@@ -3187,7 +3148,6 @@ public class BrowserApp extends GeckoApp
         Tab tab = Tabs.getInstance().getSelectedTab();
         // Unlike other menu items, the bookmark star is not tinted. See {@link ThemedImageButton#setTintedDrawable}.
         final MenuItem bookmark = aMenu.findItem(R.id.bookmark);
-        final MenuItem reader = aMenu.findItem(R.id.reading_list);
         final MenuItem back = aMenu.findItem(R.id.back);
         final MenuItem forward = aMenu.findItem(R.id.forward);
         final MenuItem share = aMenu.findItem(R.id.share);
@@ -3215,7 +3175,6 @@ public class BrowserApp extends GeckoApp
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
-            reader.setEnabled(false);
             back.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
@@ -3239,24 +3198,14 @@ public class BrowserApp extends GeckoApp
 
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
 
-        final boolean isAboutReader = AboutPages.isAboutReader(tab.getURL());
-        bookmark.setEnabled(!isAboutReader);
         bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
         bookmark.setTitle(resolveBookmarkTitleID(tab.isBookmark()));
 
-        reader.setEnabled(isAboutReader || !AboutPages.isAboutPage(tab.getURL()));
-        reader.setVisible(!inGuestMode);
-        reader.setCheckable(true);
-        final boolean isPageInReadingList = tab.isInReadingList();
-        reader.setChecked(isPageInReadingList);
-        reader.setTitle(resolveReadingListTitleID(isPageInReadingList));
-
         if (Versions.feature11Plus) {
             // We don't use icons on GB builds so not resolving icons might conserve resources.
             bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
-            reader.setIcon(resolveReadingListIconID(isPageInReadingList));
         }
 
         back.setEnabled(tab.canDoBack());
@@ -3435,14 +3384,6 @@ public class BrowserApp extends GeckoApp
         return (isBookmark ? R.string.bookmark_remove : R.string.bookmark);
     }
 
-    private int resolveReadingListIconID(final boolean isInReadingList) {
-        return (isInReadingList ? R.drawable.ic_menu_reader_remove : R.drawable.ic_menu_reader_add);
-    }
-
-    private int resolveReadingListTitleID(final boolean isInReadingList) {
-        return (isInReadingList ? R.string.reading_list_remove : R.string.overlay_share_reading_list_btn_label);
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
@@ -3479,30 +3420,6 @@ public class BrowserApp extends GeckoApp
                     if (Versions.feature11Plus) {
                         // We don't use icons on GB builds so not resolving icons might conserve resources.
                         item.setIcon(resolveBookmarkIconID(true));
-                    }
-                }
-            }
-            return true;
-        }
-
-        if (itemId == R.id.reading_list) {
-            tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                if (item.isChecked()) {
-                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "reading_list");
-                    tab.removeFromReadingList();
-                    item.setTitle(resolveReadingListTitleID(false));
-                    if (Versions.feature11Plus) {
-                        // We don't use icons on GB builds so not resolving icons might conserve resources.
-                        item.setIcon(resolveReadingListIconID(false));
-                    }
-                } else {
-                    Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "reading_list");
-                    tab.addToReadingList();
-                    item.setTitle(resolveReadingListTitleID(true));
-                    if (Versions.feature11Plus) {
-                        // We don't use icons on GB builds so not resolving icons might conserve resources.
-                        item.setIcon(resolveReadingListIconID(true));
                     }
                 }
             }
@@ -3886,9 +3803,13 @@ public class BrowserApp extends GeckoApp
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(url));
             startActivity(intent);
-        } else if (!maybeSwitchToTab(url, flags)) {
-            openUrlAndStopEditing(url);
-            clearSelectedTabApplicationId();
+        } else {
+            final String pageURL = SavedReaderViewHelper.getReaderURLIfCached(getContext(), url);
+
+            if (!maybeSwitchToTab(pageURL, flags)) {
+                openUrlAndStopEditing(pageURL);
+                clearSelectedTabApplicationId();
+            }
         }
     }
 
@@ -3902,6 +3823,10 @@ public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("flags must not be null");
         }
 
+        // We only use onUrlOpenInBackgroundListener for the homepanel context menus, hence
+        // we should always be checking whether we want the readermode version
+        final String pageURL = SavedReaderViewHelper.getReaderURLIfCached(getContext(), url);
+
         final boolean isPrivate = flags.contains(OnUrlOpenInBackgroundListener.Flags.PRIVATE);
 
         int loadFlags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
@@ -3909,7 +3834,7 @@ public class BrowserApp extends GeckoApp
             loadFlags |= Tabs.LOADURL_PRIVATE;
         }
 
-        final Tab newTab = Tabs.getInstance().loadUrl(url, loadFlags);
+        final Tab newTab = Tabs.getInstance().loadUrl(pageURL, loadFlags);
 
         // We switch to the desired tab by unique ID, which closes any window
         // for a race between opening the tab and closing it, and switching to

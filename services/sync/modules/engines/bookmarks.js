@@ -740,14 +740,14 @@ BookmarksStore.prototype = {
       record._parent = kSpecialIds.unfiled;
     }
 
-    let newId;
     switch (record.type) {
     case "bookmark":
     case "query":
     case "microsummary": {
       let uri = Utils.makeURI(record.bmkUri);
-      newId = PlacesUtils.bookmarks.insertBookmark(
-        record._parent, uri, PlacesUtils.bookmarks.DEFAULT_INDEX, record.title);
+      let newId = PlacesUtils.bookmarks.insertBookmark(
+        record._parent, uri, PlacesUtils.bookmarks.DEFAULT_INDEX, record.title,
+        record.id);
       this._log.debug("created bookmark " + newId + " under " + record._parent
                       + " as " + record.title + " " + record.bmkUri);
 
@@ -775,9 +775,10 @@ BookmarksStore.prototype = {
       }
 
     } break;
-    case "folder":
-      newId = PlacesUtils.bookmarks.createFolder(
-        record._parent, record.title, PlacesUtils.bookmarks.DEFAULT_INDEX);
+    case "folder": {
+      let newId = PlacesUtils.bookmarks.createFolder(
+        record._parent, record.title, PlacesUtils.bookmarks.DEFAULT_INDEX,
+        record.id);
       this._log.debug("created folder " + newId + " under " + record._parent
                       + " as " + record.title);
 
@@ -788,7 +789,7 @@ BookmarksStore.prototype = {
       }
 
       // record.children will be dealt with in _orderChildren.
-      break;
+    } break;
     case "livemark":
       let siteURI = null;
       if (!record.feedUri) {
@@ -833,11 +834,11 @@ BookmarksStore.prototype = {
                       livemark.feedURI.spec + ", GUID " +
                       livemark.guid);
       break;
-    case "separator":
-      newId = PlacesUtils.bookmarks.insertSeparator(
-        record._parent, PlacesUtils.bookmarks.DEFAULT_INDEX);
+    case "separator": {
+      let newId = PlacesUtils.bookmarks.insertSeparator(
+        record._parent, PlacesUtils.bookmarks.DEFAULT_INDEX, record.id);
       this._log.debug("created separator " + newId + " under " + record._parent);
-      break;
+    } break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
       return;
@@ -846,12 +847,6 @@ BookmarksStore.prototype = {
       return;
     }
 
-    if (newId) {
-      // Livemarks can set the GUID through the API, so there's no need to
-      // do that here.
-      this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
-      this._setGUID(newId, record.id);
-    }
   },
 
   // Factored out of `remove` to avoid redundant DB queries when the Places ID

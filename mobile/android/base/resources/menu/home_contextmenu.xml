@@ -29,12 +29,6 @@
     <item android:id="@+id/home_edit_bookmark"
           android:title="@string/contextmenu_edit_bookmark"/>
 
-    <item android:id="@+id/mark_read"
-          android:title="@string/contextmenu_mark_read" />
-
-    <item android:id="@+id/mark_unread"
-        android:title="@string/contextmenu_mark_unread" />
-
     <item android:id="@+id/home_remove"
           android:title="@string/contextmenu_remove"/>
 

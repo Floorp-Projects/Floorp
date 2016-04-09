@@ -153,7 +153,7 @@ var lazilyLoadedObserverScripts = [
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
-  ["Reader", ["Reader:FetchContent", "Reader:Removed"], "chrome://browser/content/Reader.js"],
+  ["Reader", ["Reader:FetchContent", "Reader:AddToCache", "Reader:RemoveFromCache"], "chrome://browser/content/Reader.js"],
   ["PrintHelper", ["Print:PDF"], "chrome://browser/content/PrintHelper.js"],
 ];
 if (AppConstants.NIGHTLY_BUILD) {
@@ -189,6 +189,8 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
 // Lazily-loaded browser scripts that use message listeners.
 [
   ["Reader", [
+    ["Reader:AddToCache", false],
+    ["Reader:RemoveFromCache", false],
     ["Reader:ArticleGet", false],
     ["Reader:DropdownClosed", true], // 'true' allows us to survive mid-air cycle-collection.
     ["Reader:DropdownOpened", false],
@@ -637,20 +639,6 @@ var BrowserApp = {
           });
         });
     }
-
-    NativeWindow.contextmenus.add(stringGetter("contextmenu.addToReadingList"),
-      NativeWindow.contextmenus.linkOpenableContext,
-      function(aTarget) {
-        UITelemetry.addEvent("action.1", "contextmenu", null, "web_reading_list");
-        UITelemetry.addEvent("save.1", "contextmenu", null, "reading_list");
-
-        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        Messaging.sendRequestForResult({
-            type: "Reader:AddToList",
-            title: truncate(url, MAX_TITLE_LENGTH),
-            url: truncate(url, MAX_URI_LENGTH),
-        }).catch(Cu.reportError);
-      });
 
     NativeWindow.contextmenus.add(stringGetter("contextmenu.copyLink"),
       NativeWindow.contextmenus.linkCopyableContext,
@@ -3473,16 +3461,19 @@ Tab.prototype = {
 
     Services.obs.addObserver(this, "before-first-paint", false);
 
+    // Always intialise new tabs with basic session store data to avoid
+    // problems with functions that always expect it to be present
+    this.browser.__SS_data = {
+      entries: [{
+        url: aURL,
+        title: truncate(title, MAX_TITLE_LENGTH)
+      }],
+      index: 1
+    };
+
     if (aParams.delayLoad) {
-      // If this is a zombie tab, attach restore data so the tab will be
-      // restored when selected
-      this.browser.__SS_data = {
-        entries: [{
-          url: aURL,
-          title: truncate(title, MAX_TITLE_LENGTH)
-        }],
-        index: 1
-      };
+      // If this is a zombie tab, mark the browser for delay loading, which will
+      // restore the tab when selected using the session data added above
       this.browser.__SS_restore = true;
     } else {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;

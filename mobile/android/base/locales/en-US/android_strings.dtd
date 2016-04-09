@@ -24,6 +24,10 @@
 
 <!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
+<!ENTITY  reading_list_migration_title "Reading List connected">
+<!ENTITY  reading_list_migration_subtext "Your Reading List items will now be added to your Bookmarks">
+<!ENTITY  reading_list_migration_goto_bookmarks "Go to Bookmarks">
+
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
 <!ENTITY  bookmarks_title "Bookmarks">
@@ -63,6 +67,7 @@
      the user takes. The folder we store these links in is located in the bookmarks list
      and is labeled by this String. -->
 <!ENTITY screenshot_folder_label_in_bookmarks "Screenshots">
+<!ENTITY readinglist_smartfolder_label_in_bookmarks "Reading List">
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
@@ -124,9 +129,7 @@
      used in the share overlay menu to select an action. It is the verb
      "to bookmark", not the noun "a bookmark". -->
 <!ENTITY overlay_share_bookmark_btn_label "Bookmark">
-<!ENTITY overlay_share_reading_list_btn_label "Add to Reading List">
 <!ENTITY overlay_share_bookmark_btn_label_already "Already bookmarked">
-<!ENTITY overlay_share_reading_list_btn_label_already "Already in Reading List">
 <!ENTITY overlay_share_send_other "Send to other devices">
 
 <!-- Localization note (overlay_share_send_tab_btn_label) : Used on the
@@ -450,8 +453,6 @@ size. -->
 <!ENTITY contextmenu_top_sites_pin "Pin Site">
 <!ENTITY contextmenu_top_sites_unpin "Unpin Site">
 <!ENTITY contextmenu_add_search_engine "Add a Search Engine">
-<!ENTITY contextmenu_mark_read "Mark as read">
-<!ENTITY contextmenu_mark_unread "Mark as unread">
 
 <!-- Localization note (doorhanger_login_no_username): This string is used in the save-login doorhanger
      where normally a username would be displayed. In this case, no username was found, and this placeholder
@@ -497,15 +498,6 @@ size. -->
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
 
-<!-- Localization note (reading_list_added3) : Used in a toast, please keep as short
-     as possible. -->
-<!ENTITY reading_list_added3 "Added to Reading List">
-<!ENTITY reading_list_removed "Page removed from your Reading List">
-<!-- Localization note (reading_list_remove) : Used to remove the currently open page from
-     the user's reading list. The opposite of overlay_share_reading_list_btn_label. -->
-<!ENTITY reading_list_remove "Remove from Reading List">
-<!ENTITY reading_list_duplicate "Page already in your Reading List">
-
 <!-- Localization note : These strings are used as alternate text for accessibility.
      They are not visible in the UI. -->
 <!ENTITY page_action_dropmarker_description "Additional Actions">
@@ -546,7 +538,6 @@ size. -->
 <!-- Localization note (home_most_recent_emptyhint2): "Psst" is a sound that might be used to attract someone's attention unobtrusively, and intended to hint at Private Browsing to the user.
      The placeholders &formatS1; and &formatS2; are used to mark the location of text underlining. -->
 <!ENTITY home_most_recent_emptyhint2 "Psst: using a &formatS1;New Private Tab&formatS2; won\'t save your history.">
-<!ENTITY home_reading_list_empty "Articles you save for later show up here.">
 
 <!-- Localization note (home_default_empty): This string is used as the default text when there
      is no data to show in an about:home panel that was created by an add-on. -->
