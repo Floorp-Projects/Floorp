@@ -15,5 +15,5 @@ add_task(function* () {
 
   yield promiseRemoveTab(tab);
   let closedTabData = ss.getClosedTabData(window);
-  ok(!closedTabData.contains(r), "tab not stored in _closedTabs");
+  ok(!closedTabData.includes(r), "tab not stored in _closedTabs");
 });
