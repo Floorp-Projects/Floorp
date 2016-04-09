@@ -54,8 +54,7 @@ public:
         JS::Rooted<JSObject*> asyncStack(aCx, mAsyncStack.toObjectOrNull());
         JS::Rooted<JSString*> asyncCause(aCx, mAsyncCause.toString());
         JS::Rooted<JSObject*> parentFrame(aCx);
-        if (JS::IsSavedFrame(asyncStack) &&
-            !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, 0)) {
+        if (!JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, 0)) {
           JS_ClearPendingException(aCx);
         } else {
           stackFrame.mAsyncParent = parentFrame;
