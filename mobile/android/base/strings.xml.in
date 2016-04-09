@@ -56,6 +56,9 @@
   <string name="reading_list_title">&reading_list_title;</string>
   <string name="recent_tabs_title">&recent_tabs_title;</string>
 
+  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/reading-list -->
+  <string name="migrated_reading_list_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/reading-list</string>
+
   <string name="switch_to_tab">&switch_to_tab;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
@@ -94,6 +97,7 @@
   <string name="bookmark_options">&bookmark_options;</string>
   <string name="screenshot_added_to_bookmarks">&screenshot_added_to_bookmarks;</string>
   <string name="screenshot_folder_label_in_bookmarks">&screenshot_folder_label_in_bookmarks;</string>
+  <string name="readinglist_smartfolder_label_in_bookmarks">&readinglist_smartfolder_label_in_bookmarks;</string>
 
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
@@ -123,9 +127,7 @@
   <string name="overlay_share_send_other">&overlay_share_send_other;</string>
   <string name="overlay_share_label">&overlay_share_label;</string>
   <string name="overlay_share_bookmark_btn_label">&overlay_share_bookmark_btn_label;</string>
-  <string name="overlay_share_reading_list_btn_label">&overlay_share_reading_list_btn_label;</string>
   <string name="overlay_share_bookmark_btn_label_already">&overlay_share_bookmark_btn_label_already;</string>
-  <string name="overlay_share_reading_list_btn_label_already">&overlay_share_reading_list_btn_label_already;</string>
   <string name="overlay_share_send_tab_btn_label">&overlay_share_send_tab_btn_label;</string>
   <string name="overlay_share_no_url">&overlay_share_no_url;</string>
   <string name="overlay_share_select_device">&overlay_share_select_device;</string>
@@ -361,10 +363,9 @@
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
 
-  <string name="reading_list_added">&reading_list_added3;</string>
-  <string name="reading_list_removed">&reading_list_removed;</string>
-  <string name="reading_list_remove">&reading_list_remove;</string>
-  <string name="reading_list_duplicate">&reading_list_duplicate;</string>
+  <string name="reading_list_migration_title">&reading_list_migration_title;</string>
+  <string name="reading_list_migration_subtext">&reading_list_migration_subtext;</string>
+  <string name="reading_list_migration_goto_bookmarks">&reading_list_migration_goto_bookmarks;</string>
 
   <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
 
@@ -383,8 +384,6 @@
   <string name="contextmenu_top_sites_pin">&contextmenu_top_sites_pin;</string>
   <string name="contextmenu_top_sites_unpin">&contextmenu_top_sites_unpin;</string>
   <string name="contextmenu_add_search_engine">&contextmenu_add_search_engine;</string>
-  <string name="contextmenu_mark_read">&contextmenu_mark_read;</string>
-  <string name="contextmenu_mark_unread">&contextmenu_mark_unread;</string>
 
   <string name="doorhanger_login_no_username">&doorhanger_login_no_username;</string>
   <string name="doorhanger_login_edit_title">&doorhanger_login_edit_title;</string>
@@ -441,7 +440,6 @@
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_selected_empty">&home_selected_empty;</string>
   <string name="home_most_recent_emptyhint">&home_most_recent_emptyhint2;</string>
-  <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_default_empty">&home_default_empty;</string>
   <string name="home_move_back_to_filter">&home_move_back_to_filter;</string>
   <string name="home_remote_tabs_title">&home_remote_tabs_title;</string>

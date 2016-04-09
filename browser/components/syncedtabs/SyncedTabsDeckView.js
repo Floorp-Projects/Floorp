@@ -73,9 +73,12 @@ SyncedTabsDeckView.prototype = {
       link.setAttribute("href", "#");
       return link.outerHTML;
     });
+    let promoParentElt = this.container.querySelector(".device-promo");
+    let fxAccountsBrand = promoParentElt.getAttribute("fxAccountsBrand");
+    formatArgs.push(fxAccountsBrand);
     // Put it all together...
-    let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo", formatArgs);
-    this.container.querySelector(".device-promo").innerHTML = contents;
+    let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo.text", formatArgs);
+    promoParentElt.innerHTML = contents;
   },
 
   destroy() {
