@@ -40,13 +40,12 @@ class Directory final
   , public nsWrapperCache
 {
 public:
-  struct BlobImplOrDirectoryPath
+  struct FileOrDirectoryPath
   {
-    RefPtr<BlobImpl> mBlobImpl;
-    nsString mDirectoryPath;
+    nsString mPath;
 
     enum {
-      eBlobImpl,
+      eFilePath,
       eDirectoryPath
     } mType;
   };

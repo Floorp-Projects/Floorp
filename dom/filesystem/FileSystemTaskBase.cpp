@@ -201,36 +201,6 @@ FileSystemTaskBase::Recv__delete__(const FileSystemResponseValue& aValue)
   return true;
 }
 
-BlobParent*
-FileSystemTaskBase::GetBlobParent(BlobImpl* aFile) const
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFile);
-
-  // Load the lazy dom file data from the parent before sending to the child.
-  nsString mimeType;
-  aFile->GetType(mimeType);
-
-  // We call GetSize and GetLastModified to prepopulate the value in the
-  // BlobImpl.
-  {
-    ErrorResult rv;
-    aFile->GetSize(rv);
-    rv.SuppressException();
-  }
-
-  {
-    ErrorResult rv;
-    aFile->GetLastModified(rv);
-    rv.SuppressException();
-  }
-
-  ContentParent* cp = static_cast<ContentParent*>(mRequestParent->Manager());
-  return cp->GetOrCreateActorForBlobImpl(aFile);
-}
-
 void
 FileSystemTaskBase::SetError(const nsresult& aErrorValue)
 {

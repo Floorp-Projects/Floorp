@@ -23,7 +23,6 @@ public:
   static already_AddRefed<RemoveTask>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aDirPath,
-         BlobImpl* aTargetBlob,
          nsIFile* aTargetPath,
          bool aRecursive,
          ErrorResult& aRv);
@@ -64,7 +63,6 @@ protected:
 private:
   RemoveTask(FileSystemBase* aFileSystem,
              nsIFile* aDirPath,
-             BlobImpl* aTargetBlob,
              nsIFile* aTargetPath,
              bool aRecursive);
 
@@ -73,12 +71,13 @@ private:
              FileSystemRequestParent* aParent);
 
   RefPtr<Promise> mPromise;
+
+  // This path is the Directory::mFile.
   nsCOMPtr<nsIFile> mDirPath;
 
-  // This cannot be a File because this object will be used on a different
-  // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
+  // This is what we want to remove. mTargetPath is discendant path of mDirPath.
   nsCOMPtr<nsIFile> mTargetPath;
+
   bool mRecursive;
   bool mReturnValue;
 };

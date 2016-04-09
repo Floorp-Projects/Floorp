@@ -67,9 +67,8 @@ FileSystemBase::GetParentObject() const
 bool
 FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
 {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Should be on parent process!");
   MOZ_ASSERT(aFile, "aFile Should not be null.");
+  MOZ_ASSERT(aPath);
 
   nsAutoString filePath;
   ErrorResult rv;

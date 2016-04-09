@@ -130,23 +130,17 @@ FileSystemResponseValue
 GetFileOrDirectoryTask::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  if (mIsDirectory) {
-    nsAutoString path;
-    aRv = mTargetPath->GetPath(path);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return FileSystemDirectoryResponse();
-    }
+  nsAutoString path;
+  aRv = mTargetPath->GetPath(path);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return FileSystemDirectoryResponse();
+  }
 
+  if (mIsDirectory) {
     return FileSystemDirectoryResponse(path);
   }
 
-  BlobParent* actor = GetBlobParent(mTargetBlobImpl);
-  if (!actor) {
-    return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
-  }
-  FileSystemFileResponse response;
-  response.blobParent() = actor;
-  return response;
+  return FileSystemFileResponse(path);
 }
 
 void
@@ -157,8 +151,13 @@ GetFileOrDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& a
   switch (aValue.type()) {
     case FileSystemResponseValue::TFileSystemFileResponse: {
       FileSystemFileResponse r = aValue;
-      BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-      mTargetBlobImpl = actor->GetBlobImpl();
+
+      NS_ConvertUTF16toUTF8 path(r.realPath());
+      aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(mTargetPath));
+      if (NS_WARN_IF(aRv.Failed())) {
+        return;
+      }
+
       mIsDirectory = false;
       break;
     }
@@ -242,8 +241,6 @@ GetFileOrDirectoryTask::Work()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  mTargetBlobImpl = new BlobImplFile(mTargetPath);
-
   return NS_OK;
 }
 
@@ -274,9 +271,9 @@ GetFileOrDirectoryTask::HandlerCallback()
     return;
   }
 
-  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetParentObject(),
-                                   mTargetBlobImpl);
-  mPromise->MaybeResolve(blob);
+  RefPtr<File> file = File::CreateFromFile(mFileSystem->GetParentObject(),
+                                           mTargetPath);
+  mPromise->MaybeResolve(file);
   mPromise = nullptr;
 }
 

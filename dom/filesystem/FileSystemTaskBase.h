@@ -205,9 +205,6 @@ protected:
   virtual bool
   Recv__delete__(const FileSystemResponseValue& value) override;
 
-  BlobParent*
-  GetBlobParent(BlobImpl* aBlob) const;
-
   nsresult mErrorValue;
 
   RefPtr<FileSystemBase> mFileSystem;

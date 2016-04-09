@@ -86,10 +86,6 @@ private:
   nsCOMPtr<nsIInputStream> mBlobStream;
   InfallibleTArray<uint8_t> mArrayData;
   bool mReplace;
-
-  // This cannot be a File because this object is created on a different
-  // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
 };
 
 } // namespace dom
