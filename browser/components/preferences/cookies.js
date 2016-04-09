@@ -591,7 +591,7 @@ var gCookiesWindow = {
     for (var i = 0; i < deleteItems.length; ++i) {
       var item = deleteItems[i];
       this._cm.remove(item.host, item.name, item.path,
-                      blockFutureCookies, item.originAttributes);
+                      item.originAttributes, blockFutureCookies);
     }
   },
 
