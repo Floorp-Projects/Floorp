@@ -70,10 +70,7 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
   this.front = front;
 
   let treeNode = this._panelDoc.getElementById("storage-tree");
-  this.tree = new TreeWidget(treeNode, {
-    defaultType: "dir",
-    contextMenuId: "storage-tree-popup"
-  });
+  this.tree = new TreeWidget(treeNode, {defaultType: "dir"});
   this.onHostSelect = this.onHostSelect.bind(this);
   this.tree.on("select", this.onHostSelect);
 
@@ -114,34 +111,14 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
   this.handleKeypress = this.handleKeypress.bind(this);
   this._panelDoc.addEventListener("keypress", this.handleKeypress);
 
-  this.onTreePopupShowing = this.onTreePopupShowing.bind(this);
-  this._treePopup = this._panelDoc.getElementById("storage-tree-popup");
-  this._treePopup.addEventListener("popupshowing", this.onTreePopupShowing);
-
-  this.onTablePopupShowing = this.onTablePopupShowing.bind(this);
+  this.onPopupShowing = this.onPopupShowing.bind(this);
   this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
-  this._tablePopup.addEventListener("popupshowing", this.onTablePopupShowing);
+  this._tablePopup.addEventListener("popupshowing", this.onPopupShowing, false);
 
   this.onRemoveItem = this.onRemoveItem.bind(this);
-  this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
-  this.onRemoveAll = this.onRemoveAll.bind(this);
-
   this._tablePopupDelete = this._panelDoc.getElementById(
     "storage-table-popup-delete");
-  this._tablePopupDelete.addEventListener("command", this.onRemoveItem);
-
-  this._tablePopupDeleteAllFrom = this._panelDoc.getElementById(
-    "storage-table-popup-delete-all-from");
-  this._tablePopupDeleteAllFrom.addEventListener("command",
-    this.onRemoveAllFrom);
-
-  this._tablePopupDeleteAll = this._panelDoc.getElementById(
-    "storage-table-popup-delete-all");
-  this._tablePopupDeleteAll.addEventListener("command", this.onRemoveAll);
-
-  this._treePopupDeleteAll = this._panelDoc.getElementById(
-    "storage-tree-popup-delete-all");
-  this._treePopupDeleteAll.addEventListener("command", this.onRemoveAll);
+  this._tablePopupDelete.addEventListener("command", this.onRemoveItem, false);
 };
 
 exports.StorageUI = StorageUI;
@@ -149,6 +126,7 @@ exports.StorageUI = StorageUI;
 StorageUI.prototype = {
 
   storageTypes: null,
+  shouldResetColumns: true,
   shouldLoadMoreItems: true,
 
   set animationsEnabled(value) {
@@ -167,16 +145,8 @@ StorageUI.prototype = {
     this.searchBox.removeEventListener("input", this.filterItems);
     this.searchBox = null;
 
-    this._treePopup.removeEventListener("popupshowing",
-      this.onTreePopupShowing);
-    this._treePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
-
-    this._tablePopup.removeEventListener("popupshowing",
-      this.onTablePopupShowing);
+    this._tablePopup.removeEventListener("popupshowing", this.onPopupShowing);
     this._tablePopupDelete.removeEventListener("command", this.onRemoveItem);
-    this._tablePopupDeleteAllFrom.removeEventListener("command",
-      this.onRemoveAllFrom);
-    this._tablePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
   },
 
   /**
@@ -421,10 +391,10 @@ StorageUI.prototype = {
         this.emit("store-objects-updated");
         return;
       }
-      if (reason === REASON.POPULATE) {
+      if (this.shouldResetColumns) {
         this.resetColumns(data[0], type);
-        this.table.host = host;
       }
+      this.table.host = host;
       this.populateTable(data, reason);
       this.emit("store-objects-updated");
 
@@ -467,6 +437,7 @@ StorageUI.prototype = {
             this.tree.add([type, host, ...names]);
             if (!this.tree.selectedItem) {
               this.tree.selectedItem = [type, host, names[0], names[1]];
+              this.fetchStorageObjects(type, host, [name], REASON.POPULATE);
             }
           } catch (ex) {
             // Do Nothing
@@ -474,6 +445,7 @@ StorageUI.prototype = {
         }
         if (!this.tree.selectedItem) {
           this.tree.selectedItem = [type, host];
+          this.fetchStorageObjects(type, host, null, REASON.POPULATE);
         }
       }
     }
@@ -653,6 +625,7 @@ StorageUI.prototype = {
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
     }
+    this.shouldResetColumns = true;
     this.fetchStorageObjects(type, host, names, REASON.POPULATE);
     this.itemOffset = 0;
   },
@@ -684,6 +657,7 @@ StorageUI.prototype = {
     }
     this.table.setColumns(columns, null, HIDDEN_COLUMNS);
     this.table.datatype = type;
+    this.shouldResetColumns = false;
     this.hideSidebar();
   },
 
@@ -783,54 +757,23 @@ StorageUI.prototype = {
    * If the current storage actor doesn't support removing items, prevent
    * showing the menu.
    */
-  onTablePopupShowing: function(event) {
+  onPopupShowing: function(event) {
     if (!this.getCurrentActor().removeItem) {
       event.preventDefault();
       return;
     }
 
-    const maxLen = ITEM_NAME_MAX_LENGTH;
-    let [type] = this.tree.selectedItem;
     let rowId = this.table.contextMenuRowId;
     let data = this.table.items.get(rowId);
     let name = data[this.table.uniqueId];
 
+    const maxLen = ITEM_NAME_MAX_LENGTH;
     if (name.length > maxLen) {
       name = name.substr(0, maxLen) + L10N.ellipsis;
     }
 
     this._tablePopupDelete.setAttribute("label",
       L10N.getFormatStr("storage.popupMenu.deleteLabel", name));
-
-    if (type === "cookies") {
-      let host = data.host;
-      if (host.length > maxLen) {
-        host = host.substr(0, maxLen) + L10N.ellipsis;
-      }
-
-      this._tablePopupDeleteAllFrom.hidden = false;
-      this._tablePopupDeleteAllFrom.setAttribute("label",
-        L10N.getFormatStr("storage.popupMenu.deleteAllFromLabel", host));
-    } else {
-      this._tablePopupDeleteAllFrom.hidden = true;
-    }
-  },
-
-  onTreePopupShowing: function(event) {
-    let showMenu = false;
-    let selectedItem = this.tree.selectedItem;
-    // Never show menu on the 1st level item
-    if (selectedItem && selectedItem.length > 1) {
-      // this.currentActor() would return wrong value here
-      let actor = this.storageTypes[selectedItem[0]];
-      if (actor.removeAll) {
-        showMenu = true;
-      }
-    }
-
-    if (!showMenu) {
-      event.preventDefault();
-    }
   },
 
   /**
@@ -843,31 +786,5 @@ StorageUI.prototype = {
     let data = this.table.items.get(rowId);
 
     actor.removeItem(host, data[this.table.uniqueId]);
-  },
-
-  /**
-   * Handles removing all items from the storage
-   */
-  onRemoveAll: function() {
-    // Cannot use this.currentActor() if the handler is called from the
-    // tree context menu: it returns correct value only after the table
-    // data from server are successfully fetched (and that's async).
-    let [type, host] = this.tree.selectedItem;
-    let actor = this.storageTypes[type];
-
-    actor.removeAll(host);
-  },
-
-  /**
-   * Handles removing all cookies with exactly the same domain as the
-   * cookie in the selected row.
-   */
-  onRemoveAllFrom: function() {
-    let [, host] = this.tree.selectedItem;
-    let actor = this.getCurrentActor();
-    let rowId = this.table.contextMenuRowId;
-    let data = this.table.items.get(rowId);
-
-    actor.removeAll(host, data.host);
   },
 };
