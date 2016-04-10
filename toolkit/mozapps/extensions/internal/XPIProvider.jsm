@@ -7338,7 +7338,8 @@ function defineAddonWrapperProperty(name, getter) {
  "strictCompatibility", "compatibilityOverrides", "updateURL",
  "getDataDirectory", "multiprocessCompatible", "signedState"].forEach(function(aProp) {
    defineAddonWrapperProperty(aProp, function() {
-     return addonFor(this)[aProp];
+     let addon = addonFor(this);
+     return (aProp in addon) ? addon[aProp] : undefined;
    });
 });
 

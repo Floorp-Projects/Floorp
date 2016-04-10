@@ -427,7 +427,7 @@ PluginContent.prototype = {
         shouldShowNotification = true;
         let pluginRect = plugin.getBoundingClientRect();
         if (pluginRect.width <= 5 && pluginRect.height <= 5) {
-          Services.telemetry.getKeyedHistogramById('PLUGIN_TINY_CONTENT').add(key);
+          Services.telemetry.getHistogramById('PLUGIN_TINY_CONTENT').add(1);
         }
         break;
     }

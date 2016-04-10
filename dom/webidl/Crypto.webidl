@@ -7,12 +7,12 @@
  * https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html#crypto-interface
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject, Exposed=(Window,Worker)]
 interface GlobalCrypto {
   [Throws] readonly attribute Crypto crypto;
 };
 
-//[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Crypto {
   readonly attribute SubtleCrypto subtle;
 

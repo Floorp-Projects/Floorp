@@ -286,6 +286,7 @@ TestArray.addTest(
                   .get(dbkey);
       req.onerror = error(that);
       req.onsuccess = complete(that, function(e) {
+        db.close();
         return hasKeyFields(e.target.result.val);
       });
     }
@@ -992,6 +993,11 @@ TestArray.addTest(
 TestArray.addTest(
   "Test that we're using the right globals when creating objects",
   function() {
+    // This test isn't supported in workers.
+    if (window.importScripts) {
+      return this.complete(true);
+    }
+
     var that = this;
     var data = crypto.getRandomValues(new Uint8Array(10));
     var hmacAlg = {name: "HMAC", length: 256, hash: "SHA-1"};

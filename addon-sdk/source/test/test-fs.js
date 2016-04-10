@@ -510,12 +510,12 @@ exports["test fs.chmod"] = function (assert, done) {
     testPerm("0755")()
       .then(testPerm("0777"))
       .then(testPerm("0666"))
-      .then(testPerm(parseInt("0511", 8)))
-      .then(testPerm(parseInt("0200", 8)))
+      .then(testPerm(0o511))
+      .then(testPerm(0o200))
       .then(testPerm("0040"))
       .then(testPerm("0000"))
-      .then(testPermSync(parseInt("0777", 8)))
-      .then(testPermSync(parseInt("0666", 8)))
+      .then(testPermSync(0o777))
+      .then(testPermSync(0o666))
       .then(testPermSync("0511"))
       .then(testPermSync("0200"))
       .then(testPermSync("0040"))
@@ -524,20 +524,20 @@ exports["test fs.chmod"] = function (assert, done) {
         assert.pass("Successful chmod passes");
       }, assert.fail)
       // Test invalid paths
-      .then(() => chmod("not-a-valid-file", parseInt("0755", 8)))
+      .then(() => chmod("not-a-valid-file", 0o755))
       .then(assert.fail, (err) => {
         checkPermError(err, "not-a-valid-file");
       })
-      .then(() => chmod("not-a-valid-file", parseInt("0755", 8), "sync"))
+      .then(() => chmod("not-a-valid-file", 0o755, "sync"))
       .then(assert.fail, (err) => {
         checkPermError(err, "not-a-valid-file");
       })
       // Test invalid files
-      .then(() => chmod("resource://not-a-real-file", parseInt("0755", 8)))
+      .then(() => chmod("resource://not-a-real-file", 0o755))
       .then(assert.fail, (err) => {
         checkPermError(err, "resource://not-a-real-file");
       })
-      .then(() => chmod("resource://not-a-real-file", parseInt("0755", 8), 'sync'))
+      .then(() => chmod("resource://not-a-real-file", 0o755, 'sync'))
       .then(assert.fail, (err) => {
         checkPermError(err, "resource://not-a-real-file");
       })
@@ -603,8 +603,8 @@ exports["test fs.chmod"] = function (assert, done) {
     if (!isWindows)
       return mode;
 
-    var ANY_READ = parseInt("0444", 8);
-    var ANY_WRITE = parseInt("0222", 8);
+    var ANY_READ = 0o444;
+    var ANY_WRITE = 0o222;
     var winMode = 0;
 
     // On Windows, if WRITE is true, then READ is also true

@@ -18,18 +18,22 @@ namespace mozilla {
 namespace dom {
 
 FileSystemRequestParent::FileSystemRequestParent()
+  : mDestroyed(false)
 {
+  AssertIsOnBackgroundThread();
 }
 
 FileSystemRequestParent::~FileSystemRequestParent()
 {
+  AssertIsOnBackgroundThread();
 }
 
 #define FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(name)                         \
     case FileSystemParams::TFileSystem##name##Params: {                        \
       const FileSystem##name##Params& p = aParams;                             \
       mFileSystem = FileSystemBase::DeserializeDOMPath(p.filesystem());        \
-      task = name##Task::Create(mFileSystem, p, this, rv);                     \
+      MOZ_ASSERT(mFileSystem);                                                 \
+      mTask = name##TaskParent::Create(mFileSystem, p, this, rv);              \
       if (NS_WARN_IF(rv.Failed())) {                                           \
         return false;                                                          \
       }                                                                        \
@@ -37,11 +41,10 @@ FileSystemRequestParent::~FileSystemRequestParent()
     }
 
 bool
-FileSystemRequestParent::Dispatch(ContentParent* aParent,
-                                  const FileSystemParams& aParams)
+FileSystemRequestParent::Initialize(const FileSystemParams& aParams)
 {
-  MOZ_ASSERT(aParent, "aParent should not be null.");
-  RefPtr<FileSystemTaskBase> task;
+  AssertIsOnBackgroundThread();
+
   ErrorResult rv;
 
   switch (aParams.type()) {
@@ -58,39 +61,47 @@ FileSystemRequestParent::Dispatch(ContentParent* aParent,
     }
   }
 
-  if (NS_WARN_IF(!task || !mFileSystem)) {
+  if (NS_WARN_IF(!mTask || !mFileSystem)) {
     // Should never reach here.
     return false;
   }
 
-  if (mFileSystem->RequiresPermissionChecks()) {
-    // Check the content process permission.
+  if (mFileSystem->PermissionCheckType() != FileSystemBase::ePermissionCheckNotRequired) {
+    nsAutoCString access;
+    mTask->GetPermissionAccessType(access);
 
-    nsCString access;
-    task->GetPermissionAccessType(access);
-
-    nsAutoCString permissionName;
-    permissionName = mFileSystem->GetPermission();
-    permissionName.Append('-');
-    permissionName.Append(access);
-
-    if (!AssertAppProcessPermission(aParent, permissionName.get())) {
-      return false;
-    }
+    mPermissionName = mFileSystem->GetPermission();
+    mPermissionName.Append('-');
+    mPermissionName.Append(access);
   }
 
-  task->Start();
   return true;
 }
 
 void
-FileSystemRequestParent::ActorDestroy(ActorDestroyReason why)
+FileSystemRequestParent::Start()
 {
+  MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(mFileSystem);
+  MOZ_ASSERT(mTask);
+
+  mTask->Start();
+}
+
+void
+FileSystemRequestParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mDestroyed);
+
   if (!mFileSystem) {
     return;
   }
+
   mFileSystem->Shutdown();
   mFileSystem = nullptr;
+  mTask = nullptr;
+  mDestroyed = true;
 }
 
 } // namespace dom

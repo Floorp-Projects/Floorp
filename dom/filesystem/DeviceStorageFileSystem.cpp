@@ -23,15 +23,21 @@ namespace dom {
 
 DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
                                                  const nsAString& aStorageName)
-  : mWindowId(0)
+  : mStorageType(aStorageType)
+  , mStorageName(aStorageName)
+  , mWindowId(0)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  mPermissionCheckType = ePermissionCheckByTestingPref;
 
-  mStorageType = aStorageType;
-  mStorageName = aStorageName;
-
-  mRequiresPermissionChecks =
-    !mozilla::Preferences::GetBool("device.storage.prompt.testing", false);
+  if (NS_IsMainThread()) {
+    if (mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
+      mPermissionCheckType = ePermissionCheckNotRequired;
+    } else {
+      mPermissionCheckType = ePermissionCheckRequired;
+    }
+  } else {
+    AssertIsOnBackgroundThread();
+  }
 
   // Get the permission name required to access the file system.
   nsresult rv =
@@ -53,18 +59,23 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
   // DeviceStorageTypeChecker is a singleton object and must be initialized on
   // the main thread. We initialize it here so that we can use it on the worker
   // thread.
-  DebugOnly<DeviceStorageTypeChecker*> typeChecker
-    = DeviceStorageTypeChecker::CreateOrGet();
-  MOZ_ASSERT(typeChecker);
+  if (NS_IsMainThread()) {
+    DebugOnly<DeviceStorageTypeChecker*> typeChecker =
+      DeviceStorageTypeChecker::CreateOrGet();
+    MOZ_ASSERT(typeChecker);
+  }
 }
 
 DeviceStorageFileSystem::~DeviceStorageFileSystem()
 {
+  AssertIsOnOwningThread();
 }
 
 already_AddRefed<FileSystemBase>
 DeviceStorageFileSystem::Clone()
 {
+  AssertIsOnOwningThread();
+
   RefPtr<DeviceStorageFileSystem> fs =
     new DeviceStorageFileSystem(mStorageType, mStorageName);
 
@@ -77,7 +88,9 @@ void
 DeviceStorageFileSystem::Init(nsDOMDeviceStorage* aDeviceStorage)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aDeviceStorage);
+
   nsCOMPtr<nsPIDOMWindowInner> window = aDeviceStorage->GetOwner();
   MOZ_ASSERT(window->IsInnerWindow());
   mWindowId = window->WindowID();
@@ -86,7 +99,7 @@ DeviceStorageFileSystem::Init(nsDOMDeviceStorage* aDeviceStorage)
 void
 DeviceStorageFileSystem::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  AssertIsOnOwningThread();
   mShutdown = true;
 }
 
@@ -94,6 +107,8 @@ nsISupports*
 DeviceStorageFileSystem::GetParentObject() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  AssertIsOnOwningThread();
+
   nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
   MOZ_ASSERT_IF(!mShutdown, window);
   return window ? window->AsInner() : nullptr;
@@ -102,14 +117,15 @@ DeviceStorageFileSystem::GetParentObject() const
 void
 DeviceStorageFileSystem::GetRootName(nsAString& aRetval) const
 {
+  AssertIsOnOwningThread();
   aRetval = mStorageName;
 }
 
 bool
 DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
 {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Should be on parent process!");
+  MOZ_ASSERT(XRE_IsParentProcess(), "Should be on parent process!");
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aFile);
 
   nsCOMPtr<nsIFile> rootPath;
@@ -134,7 +150,7 @@ DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
 bool
 DeviceStorageFileSystem::IsSafeDirectory(Directory* aDir) const
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aDir);
 
   ErrorResult rv;
@@ -157,11 +173,24 @@ DeviceStorageFileSystem::IsSafeDirectory(Directory* aDir) const
 void
 DeviceStorageFileSystem::SerializeDOMPath(nsAString& aString) const
 {
+  AssertIsOnOwningThread();
+
   // Generate the string representation of the file system.
   aString.AssignLiteral("devicestorage-");
   aString.Append(mStorageType);
   aString.Append('-');
   aString.Append(mStorageName);
+}
+
+nsresult
+DeviceStorageFileSystem::MainThreadWork()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  DebugOnly<DeviceStorageTypeChecker*> typeChecker =
+    DeviceStorageTypeChecker::CreateOrGet();
+  MOZ_ASSERT(typeChecker);
+  return NS_OK;
 }
 
 } // namespace dom

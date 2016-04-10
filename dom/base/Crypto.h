@@ -54,9 +54,6 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  static uint8_t*
-  GetRandomValues(uint32_t aLength);
-
 private:
   nsCOMPtr<nsIGlobalObject> mParent;
   RefPtr<SubtleCrypto> mSubtle;

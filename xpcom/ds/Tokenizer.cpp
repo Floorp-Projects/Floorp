@@ -192,6 +192,35 @@ Tokenizer::ReadWord(nsDependentCSubstring& aValue)
   return true;
 }
 
+bool
+Tokenizer::ReadUntil(Token const& aToken, nsACString& aResult, ClaimInclusion aInclude)
+{
+  nsDependentCSubstring substring;
+  bool rv = ReadUntil(aToken, substring, aInclude);
+  aResult.Assign(substring);
+  return rv;
+}
+
+bool
+Tokenizer::ReadUntil(Token const& aToken, nsDependentCSubstring& aResult, ClaimInclusion aInclude)
+{
+  Record();
+  nsACString::const_char_iterator rollback = mCursor;
+
+  bool found = false;
+  Token t;
+  while (Next(t)) {
+    if (aToken.Equals(t)) {
+      found = true;
+      break;
+    }
+  }
+
+  Claim(aResult, aInclude);
+  mRollback = rollback;
+  return found;
+}
+
 void
 Tokenizer::Rollback()
 {

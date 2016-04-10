@@ -12,6 +12,7 @@ include protocol PCache;
 include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
+include protocol PFileSystemRequest;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PNuwa;
@@ -23,6 +24,7 @@ include protocol PVsync;
 include DOMTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
+include PFileSystemParams;
 
 include "mozilla/dom/cache/IPCUtils.h";
 
@@ -50,6 +52,7 @@ sync protocol PBackground
   manages PCacheStorage;
   manages PCacheStreamControl;
   manages PFileDescriptorSet;
+  manages PFileSystemRequest;
   manages PMessagePort;
   manages PCameras;
   manages PNuwa;
@@ -94,6 +97,8 @@ parent:
                          PrincipalInfo principalInfo);
 
   async PQuota();
+
+  async PFileSystemRequest(FileSystemParams params);
 
 child:
   async PCache();
