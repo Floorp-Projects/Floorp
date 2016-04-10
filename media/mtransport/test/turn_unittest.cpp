@@ -77,7 +77,7 @@ extern "C" {
 }
 
 #include "nricemediastream.h"
-#include "nricectx.h"
+#include "nricectxhandler.h"
 
 
 using namespace mozilla;
@@ -102,7 +102,7 @@ class TurnClient : public MtransportTest {
   }
 
   static void SetUpTestCase() {
-    NrIceCtx::Init(false, false, false);
+    NrIceCtx::InitializeGlobals(false, false, false);
   }
 
   void SetTcp() {

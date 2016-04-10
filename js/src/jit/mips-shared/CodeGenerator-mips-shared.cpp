@@ -6,6 +6,7 @@
 
 #include "jit/mips-shared/CodeGenerator-mips-shared.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jscntxt.h"
@@ -29,6 +30,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DebugOnly;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 using JS::GenericNaN;
@@ -1941,6 +1943,32 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
             MOZ_CRASH("unhandled type in visitAsmSelect!");
 
         masm.bind(&done);
+    }
+}
+
+void
+CodeGeneratorMIPSShared::visitAsmReinterpret(LAsmReinterpret* lir)
+{
+    MOZ_ASSERT(gen->compilingAsmJS());
+    MAsmReinterpret* ins = lir->mir();
+
+    MIRType to = ins->type();
+    DebugOnly<MIRType> from = ins->input()->type();
+
+    switch (to) {
+      case MIRType_Int32:
+        MOZ_ASSERT(from == MIRType_Float32);
+        masm.as_mfc1(ToRegister(lir->output()), ToFloatRegister(lir->input()));
+        break;
+      case MIRType_Float32:
+        MOZ_ASSERT(from == MIRType_Int32);
+        masm.as_mtc1(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+        break;
+      case MIRType_Double:
+      case MIRType_Int64:
+        MOZ_CRASH("not handled by this LIR opcode");
+      default:
+        MOZ_CRASH("unexpected AsmReinterpret");
     }
 }
 

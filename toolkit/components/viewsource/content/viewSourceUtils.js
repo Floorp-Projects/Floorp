@@ -129,7 +129,7 @@ var gViewSourceUtils = {
       else {
         let docUrl = null;
         window.openDialog("chrome://global/content/viewPartialSource.xul",
-                          "_blank", "scrollbars,resizable,chrome,dialog=no",
+                          "_blank", "all,dialog=no",
                           {
                             URI: message.data.uri,
                             drawSelection: message.data.drawSelection,

@@ -33,6 +33,8 @@ transferable.setTransferData("text/unicode", document, 4);
 
 clipboard.setData(transferable, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
 
+transferable.setTransferData("text/unicode", null, 0);
+
 SimpleTest.ok(true, "Didn't crash setting non-text data for text/unicode type");
 </script>
 </window>

@@ -8,7 +8,7 @@ ifdef MOZ_SIGN_CMD
   ifeq ($(OS_ARCH),WINNT)
     # The argument to this macro is the directory where plugin-container.exe
     # exists, and where voucher.bin will be generated.
-    MAKE_SIGN_EME_VOUCHER = $(PYTHON) $(MOZILLA_DIR)/python/eme/gen-eme-voucher.py -input $(1)/$(MOZ_PLUGIN_PROCESS_NAME) -output $(1)/voucher.bin && \
+    MAKE_SIGN_EME_VOUCHER = $(PYTHON) $(MOZILLA_DIR)/python/eme/gen-eme-voucher.py -input $(1)/plugin-container.exe -output $(1)/voucher.bin && \
       $(MOZ_SIGN_CMD) -f emevoucher "$(1)/voucher.bin"
   endif
 endif

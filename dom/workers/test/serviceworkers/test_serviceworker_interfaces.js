@@ -89,6 +89,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Clients",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "Crypto",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "CustomEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DataStore", b2g: true },
@@ -192,6 +194,8 @@ var interfaceNamesInGlobalScope =
     "ServiceWorkerGlobalScope",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ServiceWorkerRegistration",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SubtleCrypto",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",
 // IMPORTANT: Do not change this list without review from a DOM peer!

@@ -85,7 +85,12 @@ namespace mozilla {
 MOZ_MTLOG_MODULE("mtransport")
 
 TransportLayerIce::TransportLayerIce(const std::string& name)
-    : name_(name), ctx_(nullptr), stream_(nullptr), component_(0) {}
+    : name_(name),
+      ctx_(nullptr), stream_(nullptr), component_(0),
+      old_stream_(nullptr)
+{
+  // setup happens later
+}
 
 TransportLayerIce::~TransportLayerIce() {
   // No need to do anything here, since we use smart pointers
@@ -94,6 +99,19 @@ TransportLayerIce::~TransportLayerIce() {
 void TransportLayerIce::SetParameters(RefPtr<NrIceCtx> ctx,
                                       RefPtr<NrIceMediaStream> stream,
                                       int component) {
+  // If SetParameters is called and we already have a stream_, this means
+  // we're handling an ICE restart.  We need to hold the old stream until
+  // we know the new stream is working.
+  if (stream_ && !old_stream_) {
+    MOZ_ASSERT(stream_ != stream); // make sure we're getting a different stream
+
+    // Here we leave the old stream's signals connected until we don't need
+    // it anymore.  They will be disconnected if ice restart is successful.
+    old_stream_ = stream_;
+    MOZ_MTLOG(ML_INFO, LAYER_INFO << "SetParameters save old stream("
+                                  << old_stream_->name() << ")");
+  }
+
   ctx_ = ctx;
   stream_ = stream;
   component_ = component;
@@ -113,10 +131,49 @@ void TransportLayerIce::PostSetup() {
   }
 }
 
+void TransportLayerIce::ResetOldStream() {
+  if (old_stream_ == nullptr) {
+    return; // no work to do
+  }
+  // ICE restart successful on the new stream, we can forget the old stream now
+  MOZ_MTLOG(ML_INFO, LAYER_INFO << "ResetOldStream(" << old_stream_->name()
+                                << ")");
+  old_stream_->SignalReady.disconnect(this);
+  old_stream_->SignalFailed.disconnect(this);
+  old_stream_->SignalPacketReceived.disconnect(this);
+  old_stream_ = nullptr;
+}
+
+void TransportLayerIce::RestoreOldStream() {
+  if (old_stream_ == nullptr) {
+    return; // no work to do
+  }
+  // ICE restart rollback, we need to restore the old stream
+  MOZ_MTLOG(ML_INFO, LAYER_INFO << "RestoreOldStream(" << old_stream_->name()
+                                << ")");
+  stream_->SignalReady.disconnect(this);
+  stream_->SignalFailed.disconnect(this);
+  stream_->SignalPacketReceived.disconnect(this);
+  stream_ = old_stream_;
+  old_stream_ = nullptr;
+
+  if (stream_->state() == NrIceMediaStream::ICE_OPEN) {
+    IceReady(stream_);
+  } else if (stream_->state() == NrIceMediaStream::ICE_CLOSED) {
+    IceFailed(stream_);
+  }
+  // No events are fired when the stream is ICE_CONNECTING.  If the
+  // restored stream is ICE_CONNECTING, IceReady/IceFailed will fire
+  // later.
+}
+
 TransportResult TransportLayerIce::SendPacket(const unsigned char *data,
                                               size_t len) {
   CheckThread();
-  nsresult res = stream_->SendPacket(component_, data, len);
+  // use old_stream_ until stream_ is ready
+  nsresult res = (old_stream_?old_stream_:stream_)->SendPacket(component_,
+                                                               data,
+                                                               len);
 
   if (!NS_SUCCEEDED(res)) {
     return (res == NS_BASE_STREAM_WOULD_BLOCK) ?
@@ -136,11 +193,23 @@ void TransportLayerIce::IceCandidate(NrIceMediaStream *stream,
 
 void TransportLayerIce::IceReady(NrIceMediaStream *stream) {
   CheckThread();
+  // only handle the current stream (not the old stream during restart)
+  if (stream != stream_) {
+    return;
+  }
+  MOZ_MTLOG(ML_INFO, LAYER_INFO << "ICE Ready(" << stream->name() << ","
+    << component_ << ")");
   TL_SET_STATE(TS_OPEN);
 }
 
 void TransportLayerIce::IceFailed(NrIceMediaStream *stream) {
   CheckThread();
+  // only handle the current stream (not the old stream during restart)
+  if (stream != stream_) {
+    return;
+  }
+  MOZ_MTLOG(ML_INFO, LAYER_INFO << "ICE Failed(" << stream->name() << ","
+    << component_ << ")");
   TL_SET_STATE(TS_ERROR);
 }
 

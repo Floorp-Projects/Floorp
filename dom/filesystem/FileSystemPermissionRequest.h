@@ -10,6 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "nsIContentPermissionPrompt.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsString.h"
 
 class nsPIDOMWindowInner;
@@ -17,29 +18,37 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class FileSystemTaskBase;
+class FileSystemTaskChildBase;
 
 class FileSystemPermissionRequest final
   : public nsIContentPermissionRequest
   , public nsIRunnable
+  , public nsIIPCBackgroundChildCreateCallback
 {
 public:
   // Request permission for the given task.
   static void
-  RequestForTask(FileSystemTaskBase* aTask);
+  RequestForTask(FileSystemTaskChildBase* aTask);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
   NS_DECL_NSIRUNNABLE
-private:
-  explicit FileSystemPermissionRequest(FileSystemTaskBase* aTask);
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
 
-  virtual
+private:
+  explicit FileSystemPermissionRequest(FileSystemTaskChildBase* aTask);
+
   ~FileSystemPermissionRequest();
+
+  // Once the permission check has been done, we must run the task using IPC and
+  // PBackground. This method checks if the PBackground thread is ready to
+  // receive the task and in case waits for ActorCreated() to be called.
+  void
+  ScheduleTask();
 
   nsCString mPermissionType;
   nsCString mPermissionAccess;
-  RefPtr<FileSystemTaskBase> mTask;
+  RefPtr<FileSystemTaskChildBase> mTask;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;

@@ -200,6 +200,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
 
     void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
     void visitAsmSelect(LAsmSelect* ins);
+    void visitAsmReinterpret(LAsmReinterpret* ins);
 
     void visitMemoryBarrier(LMemoryBarrier* ins);
     void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);

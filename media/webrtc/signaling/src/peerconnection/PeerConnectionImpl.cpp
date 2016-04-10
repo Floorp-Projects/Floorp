@@ -1505,6 +1505,7 @@ PeerConnectionImpl::CreateOffer(const RTCOfferOptions& aOptions)
 {
   JsepOfferOptions options;
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  // convert the RTCOfferOptions to JsepOfferOptions
   if (aOptions.mOfferToReceiveAudio.WasPassed()) {
     options.mOfferToReceiveAudio =
       mozilla::Some(size_t(aOptions.mOfferToReceiveAudio.Value()));
@@ -1514,6 +1515,8 @@ PeerConnectionImpl::CreateOffer(const RTCOfferOptions& aOptions)
     options.mOfferToReceiveVideo =
         mozilla::Some(size_t(aOptions.mOfferToReceiveVideo.Value()));
   }
+
+  options.mIceRestart = mozilla::Some(aOptions.mIceRestart);
 
   if (aOptions.mMozDontOfferDataChannel.WasPassed()) {
     options.mDontOfferDataChannel =
@@ -1541,6 +1544,12 @@ NS_IMETHODIMP
 PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 {
   PC_AUTO_ENTER_API_CALL(true);
+  bool restartIce = aOptions.mIceRestart.isSome() && *(aOptions.mIceRestart);
+  if (!restartIce &&
+      mMedia->GetIceRestartState() ==
+          PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
+    RollbackIceRestart();
+  }
 
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
@@ -1557,7 +1566,33 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 
   CSFLogDebug(logTag, "CreateOffer()");
 
-  nsresult nrv = ConfigureJsepSessionCodecs();
+  nsresult nrv;
+  if (restartIce) {
+    // If restart is requested and a restart is already in progress, we
+    // need to make room for the restart request so we either rollback
+    // or finalize to "clear" the previous restart.
+    if (mMedia->GetIceRestartState() ==
+            PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
+      // we're mid-restart and can rollback
+      RollbackIceRestart();
+    } else if (mMedia->GetIceRestartState() ==
+                   PeerConnectionMedia::ICE_RESTART_COMMITTED) {
+      // we're mid-restart and can't rollback, finalize restart even
+      // though we're not really ready yet
+      FinalizeIceRestart();
+    }
+
+    CSFLogInfo(logTag, "Offerer restarting ice");
+    nrv = SetupIceRestart();
+    if (NS_FAILED(nrv)) {
+      CSFLogError(logTag, "%s: SetupIceRestart failed, res=%u",
+                           __FUNCTION__,
+                           static_cast<unsigned>(nrv));
+      return nrv;
+    }
+  }
+
+  nrv = ConfigureJsepSessionCodecs();
   if (NS_FAILED(nrv)) {
     CSFLogError(logTag, "Failed to configure codecs");
     return nrv;
@@ -1602,13 +1637,31 @@ PeerConnectionImpl::CreateAnswer()
   }
 
   CSFLogDebug(logTag, "CreateAnswer()");
+
+  nsresult nrv;
+  if (mJsepSession->RemoteIceIsRestarting()) {
+    if (mMedia->GetIceRestartState() ==
+            PeerConnectionMedia::ICE_RESTART_COMMITTED) {
+      FinalizeIceRestart();
+    } else if (!mMedia->IsIceRestarting()) {
+      CSFLogInfo(logTag, "Answerer restarting ice");
+      nrv = SetupIceRestart();
+      if (NS_FAILED(nrv)) {
+        CSFLogError(logTag, "%s: SetupIceRestart failed, res=%u",
+                             __FUNCTION__,
+                             static_cast<unsigned>(nrv));
+        return nrv;
+      }
+    }
+  }
+
   STAMP_TIMECARD(mTimeCard, "Create Answer");
   // TODO(bug 1098015): Once RTCAnswerOptions is standardized, we'll need to
   // add it as a param to CreateAnswer, and convert it here.
   JsepAnswerOptions options;
   std::string answer;
 
-  nsresult nrv = mJsepSession->CreateAnswer(options, &answer);
+  nrv = mJsepSession->CreateAnswer(options, &answer);
   JSErrorResult rv;
   if (NS_FAILED(nrv)) {
     Error error;
@@ -1631,6 +1684,68 @@ PeerConnectionImpl::CreateAnswer()
   UpdateSignalingState();
 
   return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::SetupIceRestart()
+{
+  if (mMedia->IsIceRestarting()) {
+    CSFLogError(logTag, "%s: ICE already restarting",
+                         __FUNCTION__);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  std::string ufrag = mMedia->ice_ctx()->GetNewUfrag();
+  std::string pwd = mMedia->ice_ctx()->GetNewPwd();
+  if (ufrag.empty() || pwd.empty()) {
+    CSFLogError(logTag, "%s: Bad ICE credentials (ufrag:'%s'/pwd:'%s')",
+                         __FUNCTION__,
+                         ufrag.c_str(), pwd.c_str());
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // hold on to the current ice creds in case of rollback
+  mPreviousIceUfrag = mJsepSession->GetUfrag();
+  mPreviousIcePwd = mJsepSession->GetPwd();
+  mMedia->BeginIceRestart(ufrag, pwd);
+
+  nsresult nrv = mJsepSession->SetIceCredentials(ufrag, pwd);
+  if (NS_FAILED(nrv)) {
+    CSFLogError(logTag, "%s: Couldn't set ICE credentials, res=%u",
+                         __FUNCTION__,
+                         static_cast<unsigned>(nrv));
+    return nrv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::RollbackIceRestart()
+{
+  mMedia->RollbackIceRestart();
+  // put back the previous ice creds
+  nsresult nrv = mJsepSession->SetIceCredentials(mPreviousIceUfrag,
+                                                 mPreviousIcePwd);
+  if (NS_FAILED(nrv)) {
+    CSFLogError(logTag, "%s: Couldn't set ICE credentials, res=%u",
+                         __FUNCTION__,
+                         static_cast<unsigned>(nrv));
+    return nrv;
+  }
+  mPreviousIceUfrag = "";
+  mPreviousIcePwd = "";
+
+  return NS_OK;
+}
+
+void
+PeerConnectionImpl::FinalizeIceRestart()
+{
+  mMedia->FinalizeIceRestart();
+  // clear the previous ice creds since they are no longer needed
+  mPreviousIceUfrag = "";
+  mPreviousIcePwd = "";
 }
 
 NS_IMETHODIMP
@@ -2843,6 +2958,15 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
 
   bool fireNegotiationNeeded = false;
   if (mSignalingState == PCImplSignalingState::SignalingStable) {
+    if (mMedia->GetIceRestartState() ==
+            PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
+      if (rollback) {
+        RollbackIceRestart();
+      } else {
+        mMedia->CommitIceRestart();
+      }
+    }
+
     // Either negotiation is done, or we've rolled back. In either case, we
     // need to re-evaluate whether further negotiation is required.
     mNegotiationNeeded = false;
@@ -3133,6 +3257,14 @@ void PeerConnectionImpl::IceConnectionStateChange(
 #endif
 
   mIceConnectionState = domState;
+
+  if (mIceConnectionState == PCImplIceConnectionState::Connected ||
+      mIceConnectionState == PCImplIceConnectionState::Completed ||
+      mIceConnectionState == PCImplIceConnectionState::Failed) {
+    if (mMedia->IsIceRestarting()) {
+      FinalizeIceRestart();
+    }
+  }
 
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...

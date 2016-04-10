@@ -49,10 +49,10 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
                   "Wrong usage of TextAttrsMgr!");
 
   // Embedded objects are combined into own range with empty attributes set.
-  if (mOffsetAcc && nsAccUtils::IsEmbeddedObject(mOffsetAcc)) {
+  if (mOffsetAcc && !mOffsetAcc->IsText()) {
     for (int32_t childIdx = mOffsetAccIdx - 1; childIdx >= 0; childIdx--) {
       Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
-      if (!nsAccUtils::IsEmbeddedObject(currAcc))
+      if (currAcc->IsText())
         break;
 
       (*aStartOffset)--;
@@ -62,7 +62,7 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
     for (uint32_t childIdx = mOffsetAccIdx + 1; childIdx < childCount;
          childIdx++) {
       Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
-      if (!nsAccUtils::IsEmbeddedObject(currAcc))
+      if (currAcc->IsText())
         break;
 
       (*aEndOffset)++;
@@ -162,7 +162,7 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
 
     // Stop on embedded accessible since embedded accessibles are combined into
     // own range.
-    if (nsAccUtils::IsEmbeddedObject(currAcc))
+    if (!currAcc->IsText())
       break;
 
     bool offsetFound = false;
@@ -184,7 +184,7 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
   uint32_t childLen = mHyperTextAcc->ChildCount();
   for (uint32_t childIdx = mOffsetAccIdx + 1; childIdx < childLen; childIdx++) {
     Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
-    if (nsAccUtils::IsEmbeddedObject(currAcc))
+    if (!currAcc->IsText())
       break;
 
     bool offsetFound = false;

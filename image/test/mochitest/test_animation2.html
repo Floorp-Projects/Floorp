@@ -20,12 +20,12 @@ Mozilla Bug 705580: Test animated GIFs that are converted to ImageLayers
 
 <div id="content">
   <!--
-  Use an opacity of almost-1 to force a ContainerLayer with opacity, and the img as the sole item in the PaintedLayer. It should then
+  Use will-change: opacity to force a ContainerLayer, and the img as the sole item in the PaintedLayer. It should then
   be promoted to an ImageLayer.
   -->
   <div id="referenceDiv" style="height: 40px; width: 40px;
                                 display: none; background: #2aff00;"></div>
-  <div id="animatedImage" style="opacity: 0.9999;">
+  <div id="animatedImage" style="will-change: opacity;">
     <img id="animatedGif" src="animated-gif.gif" style="display: none;">
       <div id="text-descr"></div>
   </div>

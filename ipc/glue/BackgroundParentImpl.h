@@ -186,6 +186,17 @@ protected:
 
   virtual bool
   DeallocPQuotaParent(PQuotaParent* aActor) override;
+
+  virtual PFileSystemRequestParent*
+  AllocPFileSystemRequestParent(const FileSystemParams&) override;
+
+  virtual bool
+  RecvPFileSystemRequestConstructor(PFileSystemRequestParent* aActor,
+                                    const FileSystemParams& aParams) override;
+
+  virtual bool
+  DeallocPFileSystemRequestParent(PFileSystemRequestParent*) override;
+
 };
 
 } // namespace ipc

@@ -10,6 +10,7 @@
 
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
+#include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "certdb.h"
@@ -17,8 +18,8 @@
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/UniquePtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCertVerificationThread.h"
@@ -86,8 +87,30 @@ bool EnsureNSSInitializedChromeOrContent()
     return true;
   }
 
+  // If this is a content process and not the main thread (i.e. probably a
+  // worker) then forward this call to the main thread.
   if (!NS_IsMainThread()) {
-    return false;
+    static Atomic<bool> initialized(false);
+
+    // Cache the result to dispatch to the main thread only once per worker.
+    if (initialized) {
+      return true;
+    }
+
+    nsCOMPtr<nsIThread> mainThread;
+    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    // Forward to the main thread synchronously.
+    mozilla::SyncRunnable::DispatchToThread(mainThread,
+      new SyncRunnable(NS_NewRunnableFunction([]() {
+        initialized = EnsureNSSInitializedChromeOrContent();
+      }))
+    );
+
+    return initialized;
   }
 
   if (NSS_IsInitialized()) {
@@ -662,8 +685,7 @@ MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
     return NS_ERROR_FAILURE;
   }
   // Looking for a certificate with the common name 'Microsoft Family Safety'
-  UniquePtr<char, void(&)(void*)> subjectName(
-    CERT_GetCommonName(&nssCertificate->subject), PORT_Free);
+  UniquePORTString subjectName(CERT_GetCommonName(&nssCertificate->subject));
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("subject name is '%s'", subjectName.get()));
   if (nsCRT::strcmp(subjectName.get(), "Microsoft Family Safety") == 0) {

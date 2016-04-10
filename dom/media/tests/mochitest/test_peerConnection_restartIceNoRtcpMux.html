@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "906986",
+    title: "Renegotiation: restart ice, with disabled RTCP-Mux"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    options = options || { };
+    options.rtcpmux = false;
+    test = new PeerConnectionTest(options);
+
+    addRenegotiation(test.chain,
+      [
+        // causes a full, normal ice restart
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: true });
+        },
+        function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
+          test.pcLocal.iceCheckingRestartExpected = true;
+        },
+        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
+          test.pcRemote.iceCheckingRestartExpected = true;
+        }
+      ]
+    );
+
+    test.setMediaConstraints([{audio: true}, {video: true}],
+                             [{audio: true}, {video: true}]);
+    test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

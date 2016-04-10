@@ -19,6 +19,7 @@ namespace dom {
 
 class AnyCallback;
 class Console;
+class Crypto;
 class Function;
 class IDBFactory;
 class Promise;
@@ -48,6 +49,7 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   typedef mozilla::dom::IDBFactory IDBFactory;
 
   RefPtr<Console> mConsole;
+  RefPtr<Crypto> mCrypto;
   RefPtr<WorkerLocation> mLocation;
   RefPtr<WorkerNavigator> mNavigator;
   RefPtr<Performance> mPerformance;
@@ -93,6 +95,9 @@ public:
   {
     return mConsole;
   }
+
+  Crypto*
+  GetCrypto(ErrorResult& aError);
 
   already_AddRefed<WorkerLocation>
   Location();

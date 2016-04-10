@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "906986",
+    title: "Renegotiation: restart ice, local and remote rollback"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    var firstNegotiationSize = test.chain.commands.length;
+
+    addRenegotiation(test.chain,
+      [
+        // causes a full, normal ice restart
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: true });
+        }
+      ]
+    );
+
+    test.chain.replaceAfter('PC_REMOTE_CREATE_ANSWER',
+      [
+        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+          test.pcLocal.setupIceCandidateHandler(test);
+          if (test.testOptions.steeplechase) {
+            test.pcLocal.endOfTrickleIce.then(() => {
+              send_message({"type": "end_of_trickle_ice"});
+            });
+          }
+        },
+        function PC_REMOTE_SETUP_ICE_HANDLER(test) {
+          test.pcRemote.setupIceCandidateHandler(test);
+          if (test.testOptions.steeplechase) {
+            test.pcRemote.endOfTrickleIce.then(() => {
+              send_message({"type": "end_of_trickle_ice"});
+            });
+          }
+        },
+
+        function PC_LOCAL_EXPECT_ICE_CONNECTED(test) {
+          test.pcLocal.iceCheckingIceRollbackExpected = true;
+        },
+        function PC_REMOTE_EXPECT_ICE_CONNECTED(test) {
+          test.pcRemote.iceCheckingIceRollbackExpected = true;
+        },
+
+        function PC_REMOTE_ROLLBACK(test) {
+          return test.setRemoteDescription(
+              test.pcRemote,
+              new RTCSessionDescription({ type: "rollback" }),
+              STABLE);
+        },
+
+        function PC_LOCAL_ROLLBACK(test) {
+          // We haven't negotiated the new stream yet.
+          test.pcLocal.expectNegotiationNeeded();
+          return test.setLocalDescription(
+              test.pcLocal,
+              new RTCSessionDescription({ type: "rollback", sdp: ""}),
+              STABLE);
+        },
+
+        // Rolling back should shut down gathering
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
+        },
+        function PC_REMOTE_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcRemote.endOfTrickleIce;
+        },
+
+        function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
+          test.pcLocal.iceCheckingRestartExpected = true;
+        },
+        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
+          test.pcRemote.iceCheckingRestartExpected = true;
+        }
+      ],
+      firstNegotiationSize // Replaces after second PC_REMOTE_CREATE_ANSWER
+    );
+    test.chain.append(commandsPeerConnectionOfferAnswer);
+
+    // for now, only use one stream, because rollback doesn't seem to
+    // like multiple streams.  See bug 1259465.
+    test.setMediaConstraints([{audio: true}],
+                             [{audio: true}]);
+    test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

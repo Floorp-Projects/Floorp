@@ -111,23 +111,23 @@ function SameValueZero(x, y) {
     return x === y || (x !== x && y !== y);
 }
 
-/* Spec: ECMAScript Draft, 6th edition Dec 24, 2014, 7.3.8 */
-function GetMethod(O, P) {
+// ES 2017 draft (April 6, 2016) 7.3.9
+function GetMethod(V, P) {
     // Step 1.
     assert(IsPropertyKey(P), "Invalid property key");
 
-    // Steps 2-3.
-    var func = ToObject(O)[P];
+    // Step 2.
+    var func = V[P];
 
-    // Step 4.
+    // Step 3.
     if (func === undefined || func === null)
         return undefined;
 
-    // Step 5.
+    // Step 4.
     if (!IsCallable(func))
         ThrowTypeError(JSMSG_NOT_FUNCTION, typeof func);
 
-    // Step 6.
+    // Step 5.
     return func;
 }
 

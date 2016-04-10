@@ -395,10 +395,6 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
   }
 
   if (aTag == SCTAG_DOM_WEBCRYPTO_KEY) {
-    if (!NS_IsMainThread()) {
-      return nullptr;
-    }
-
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
     if (!global) {
       return nullptr;
@@ -511,7 +507,6 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
   {
     CryptoKey* key = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, aObj, key))) {
-      MOZ_ASSERT(NS_IsMainThread());
       return JS_WriteUint32Pair(aWriter, SCTAG_DOM_WEBCRYPTO_KEY, 0) &&
              key->WriteStructuredClone(aWriter);
     }

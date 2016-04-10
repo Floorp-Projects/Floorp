@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <dbus/dbus.h>
 #include "base/message_loop.h"
 #include "nsThreadUtils.h"
 #include "RawDBusConnection.h"
@@ -272,6 +271,11 @@ bool RawDBusConnection::Watch()
   NS_ENSURE_TRUE(success == TRUE, false);
 
   return true;
+}
+
+DBusConnection* RawDBusConnection::ScopedDBusConnectionPtrTraits::empty()
+{
+  return nullptr;
 }
 
 void RawDBusConnection::ScopedDBusConnectionPtrTraits::release(DBusConnection* ptr)

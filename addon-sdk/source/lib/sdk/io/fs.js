@@ -41,7 +41,7 @@ const { REOPEN_ON_REWIND, DEFER_OPEN } = Ci.nsIFileInputStream;
 const { DIRECTORY_TYPE, NORMAL_FILE_TYPE } = Ci.nsIFile;
 const { NS_SEEK_SET, NS_SEEK_CUR, NS_SEEK_END } = Ci.nsISeekableStream;
 
-const FILE_PERMISSION = parseInt("0666", 8);
+const FILE_PERMISSION = 0o666;
 const PR_UINT32_MAX = 0xfffffff;
 // Values taken from:
 // http://mxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prio.h#615

@@ -66,8 +66,9 @@ TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
     int32_t endIdx = mStartContainer->GetChildIndexAtOffset(mEndOffset);
     for (int32_t idx = startIdx; idx <= endIdx; idx++) {
       Accessible* child = mStartContainer->GetChildAt(idx);
-      if (nsAccUtils::IsEmbeddedObject(child))
+      if (!child->IsText()) {
         aChildren->AppendElement(child);
+      }
     }
     return;
   }
@@ -87,8 +88,9 @@ TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
     uint32_t childCount = parent->ChildCount();
     for (uint32_t childIdx = child->IndexInParent(); childIdx < childCount; childIdx++) {
       Accessible* next = parent->GetChildAt(childIdx);
-      if (nsAccUtils::IsEmbeddedObject(next))
+      if (!next->IsText()) {
         aChildren->AppendElement(next);
+      }
     }
   }
 
@@ -97,8 +99,9 @@ TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
   int32_t childIdx = parents1[pos1 - 1]->IndexInParent() + 1;
   for (; childIdx < endIdx; childIdx++) {
     Accessible* next = container->GetChildAt(childIdx);
-    if (nsAccUtils::IsEmbeddedObject(next))
+    if (!next->IsText()) {
       aChildren->AppendElement(next);
+    }
   }
 
   // Traverse down from the container to end point.
@@ -108,8 +111,9 @@ TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
     int32_t endIdx = child->IndexInParent();
     for (int32_t childIdx = 0; childIdx < endIdx; childIdx++) {
       Accessible* next = parent->GetChildAt(childIdx);
-      if (nsAccUtils::IsEmbeddedObject(next))
+      if (!next->IsText()) {
         aChildren->AppendElement(next);
+      }
     }
   }
 }

@@ -125,6 +125,7 @@ HTMLListBulletAccessible::
   HTMLListBulletAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   LeafAccessible(aContent, aDoc)
 {
+  mGenericTypes |= eText;
   mStateFlags |= eSharedNode;
 }
 

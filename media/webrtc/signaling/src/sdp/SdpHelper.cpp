@@ -67,6 +67,7 @@ SdpHelper::CopyTransportParams(size_t numComponents,
 
 bool
 SdpHelper::AreOldTransportParamsValid(const Sdp& oldAnswer,
+                                      const Sdp& offerersPreviousSdp,
                                       const Sdp& newOffer,
                                       size_t level)
 {
@@ -90,10 +91,27 @@ SdpHelper::AreOldTransportParamsValid(const Sdp& oldAnswer,
     return false;
   }
 
-  // TODO(bug 906986): Check for ICE restart (will need to pass the offerer's
-  // old SDP to compare it against |newOffer|)
+  if (IceCredentialsDiffer(newOffer.GetMediaSection(level),
+                           offerersPreviousSdp.GetMediaSection(level))) {
+    return false;
+  }
 
   return true;
+}
+
+bool
+SdpHelper::IceCredentialsDiffer(const SdpMediaSection& msection1,
+                                const SdpMediaSection& msection2)
+{
+  const SdpAttributeList& attrs1(msection1.GetAttributeList());
+  const SdpAttributeList& attrs2(msection2.GetAttributeList());
+
+  if ((attrs1.GetIceUfrag() != attrs2.GetIceUfrag()) ||
+      (attrs1.GetIcePwd() != attrs2.GetIcePwd())) {
+    return true;
+  }
+
+  return false;
 }
 
 nsresult

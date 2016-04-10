@@ -16,6 +16,7 @@
 #include "prenv.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace gl {
@@ -687,7 +688,7 @@ GLContextProviderWGL::CreateOffscreen(const IntSize& size,
     return gl.forget();
 }
 
-static RefPtr<GLContextWGL> gGlobalContext;
+static StaticRefPtr<GLContextWGL> gGlobalContext;
 
 /*static*/ GLContext*
 GLContextProviderWGL::GetGlobalContext()

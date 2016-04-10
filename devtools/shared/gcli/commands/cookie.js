@@ -133,7 +133,7 @@ exports.items = [
         if (isCookieAtHost(cookie, host)) {
           if (cookie.name == args.name) {
             cookieMgr.remove(cookie.host, cookie.name, cookie.path,
-                             cookie.originAttributes, false);
+                             false, cookie.originAttributes);
           }
         }
       }

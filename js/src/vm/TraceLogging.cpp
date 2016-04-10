@@ -535,10 +535,14 @@ TraceLoggerThread::log(uint32_t id)
         return;
 
     MOZ_ASSERT(traceLoggerState);
-    if (!events.hasSpaceForAdd()) {
+
+    // We request for 3 items to add, since if we don't have enough room
+    // we record the time it took to make more place. To log this information
+    // we need 2 extra free entries.
+    if (!events.hasSpaceForAdd(3)) {
         uint64_t start = rdtsc() - traceLoggerState->startupTime;
 
-        if (!events.ensureSpaceBeforeAdd()) {
+        if (!events.ensureSpaceBeforeAdd(3)) {
             if (graph.get())
                 graph->log(events);
 
@@ -570,7 +574,7 @@ TraceLoggerThread::log(uint32_t id)
         // Log the time it took to flush the events as being from the
         // Tracelogger.
         if (graph.get()) {
-            MOZ_ASSERT(events.capacity() > 2);
+            MOZ_ASSERT(events.hasSpaceForAdd(2));
             EventEntry& entryStart = events.pushUninitialized();
             entryStart.time = start;
             entryStart.textId = TraceLogger_Internal;

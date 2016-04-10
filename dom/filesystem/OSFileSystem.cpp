@@ -20,10 +20,7 @@ namespace dom {
 OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 {
   mLocalOrDeviceStorageRootPath = aRootDir;
-
-  // Non-mobile devices don't have the concept of separate permissions to
-  // access different parts of devices storage like Pictures, or Videos, etc.
-  mRequiresPermissionChecks = false;
+  mPermissionCheckType = ePermissionCheckNotRequired;
 
 #ifdef DEBUG
   mPermission.AssignLiteral("never-used");
@@ -33,6 +30,8 @@ OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 already_AddRefed<FileSystemBase>
 OSFileSystem::Clone()
 {
+  AssertIsOnOwningThread();
+
   RefPtr<OSFileSystem> fs = new OSFileSystem(mLocalOrDeviceStorageRootPath);
   if (mParent) {
     fs->Init(mParent);
@@ -44,9 +43,11 @@ OSFileSystem::Clone()
 void
 OSFileSystem::Init(nsISupports* aParent)
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(!mParent, "No duple Init() calls");
   MOZ_ASSERT(aParent);
+
   mParent = aParent;
 
 #ifdef DEBUG
@@ -58,6 +59,7 @@ OSFileSystem::Init(nsISupports* aParent)
 nsISupports*
 OSFileSystem::GetParentObject() const
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return mParent;
 }
@@ -65,6 +67,7 @@ OSFileSystem::GetParentObject() const
 void
 OSFileSystem::GetRootName(nsAString& aRetval) const
 {
+  AssertIsOnOwningThread();
   aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
 }
 
@@ -91,12 +94,18 @@ OSFileSystem::IsSafeDirectory(Directory* aDir) const
 void
 OSFileSystem::Unlink()
 {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+
   mParent = nullptr;
 }
 
 void
 OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+
   OSFileSystem* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent);
 }
@@ -104,7 +113,22 @@ OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
 void
 OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
 {
+  AssertIsOnOwningThread();
   aOutput = mLocalOrDeviceStorageRootPath;
+}
+
+/**
+ * OSFileSystemParent
+ */
+
+OSFileSystemParent::OSFileSystemParent(const nsAString& aRootDir)
+{
+  mLocalOrDeviceStorageRootPath = aRootDir;
+  mPermissionCheckType = ePermissionCheckNotRequired;
+
+#ifdef DEBUG
+  mPermission.AssignLiteral("never-used");
+#endif
 }
 
 } // namespace dom

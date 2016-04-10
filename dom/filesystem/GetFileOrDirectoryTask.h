@@ -17,58 +17,42 @@ namespace dom {
 
 class BlobImpl;
 
-class GetFileOrDirectoryTask final : public FileSystemTaskBase
+class GetFileOrDirectoryTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<GetFileOrDirectoryTask>
+  static already_AddRefed<GetFileOrDirectoryTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aTargetPath,
          Directory::DirectoryType aType,
          bool aDirectoryOnly,
          ErrorResult& aRv);
 
-  static already_AddRefed<GetFileOrDirectoryTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemGetFileOrDirectoryParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
-
   virtual
-  ~GetFileOrDirectoryTask();
+  ~GetFileOrDirectoryTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
 
   virtual void
   GetPermissionAccessType(nsCString& aAccess) const override;
+
 protected:
   virtual FileSystemParams
   GetRequestParams(const nsString& aSerializedDOMPath,
                    ErrorResult& aRv) const override;
 
-  virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
-
   virtual void
   SetSuccessRequestResult(const FileSystemResponseValue& aValue,
                           ErrorResult& aRv) override;
-
-  virtual nsresult
-  Work() override;
-
   virtual void
   HandlerCallback() override;
 
 private:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
-  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
-                         nsIFile* aTargetPath,
-                         Directory::DirectoryType aType,
-                         bool aDirectoryOnly);
-
-  GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
-                         const FileSystemGetFileOrDirectoryParams& aParam,
-                         FileSystemRequestParent* aParent);
+  GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
+                              nsIFile* aTargetPath,
+                              Directory::DirectoryType aType,
+                              bool aDirectoryOnly);
 
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
@@ -76,10 +60,37 @@ private:
   // Whether we get a directory.
   bool mIsDirectory;
   Directory::DirectoryType mType;
+};
 
-  // This cannot be a File bacause this object is created on a different
-  // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
+class GetFileOrDirectoryTaskParent final : public FileSystemTaskParentBase
+{
+public:
+  static already_AddRefed<GetFileOrDirectoryTaskParent>
+  Create(FileSystemBase* aFileSystem,
+         const FileSystemGetFileOrDirectoryParams& aParam,
+         FileSystemRequestParent* aParent,
+         ErrorResult& aRv);
+
+  virtual void
+  GetPermissionAccessType(nsCString& aAccess) const override;
+
+protected:
+  virtual FileSystemResponseValue
+  GetSuccessRequestResult(ErrorResult& aRv) const override;
+
+  virtual nsresult
+  IOWork() override;
+
+private:
+  GetFileOrDirectoryTaskParent(FileSystemBase* aFileSystem,
+                               const FileSystemGetFileOrDirectoryParams& aParam,
+                               FileSystemRequestParent* aParent);
+
+  nsCOMPtr<nsIFile> mTargetPath;
+
+  // Whether we get a directory.
+  bool mIsDirectory;
+  Directory::DirectoryType mType;
 };
 
 } // namespace dom
