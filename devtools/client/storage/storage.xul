@@ -23,8 +23,15 @@
   <commandset id="editMenuCommands"/>
 
   <popupset id="storagePopupSet">
+    <menupopup id="storage-tree-popup">
+      <menuitem id="storage-tree-popup-delete-all"
+                label="&storage.popupMenu.deleteAllLabel;"/>
+    </menupopup>
     <menupopup id="storage-table-popup">
       <menuitem id="storage-table-popup-delete"/>
+      <menuitem id="storage-table-popup-delete-all-from"/>
+      <menuitem id="storage-table-popup-delete-all"
+                label="&storage.popupMenu.deleteAllLabel;"/>
     </menupopup>
   </popupset>
 
