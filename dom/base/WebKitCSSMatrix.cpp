@@ -8,8 +8,10 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WebKitCSSMatrixBinding.h"
+#include "mozilla/Preferences.h"
 #include "nsCSSParser.h"
 #include "nsStyleTransformMatrix.h"
+#include "RuleNodeCacheConditions.h"
 
 namespace mozilla {
 namespace dom {
