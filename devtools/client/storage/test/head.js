@@ -509,17 +509,13 @@ function matchVariablesViewProperty(prop, rule) {
  *        The array id of the item in the tree
  */
 function* selectTreeItem(ids) {
-  // Expand tree as some/all items could be collapsed leading to click on an
-  // incorrect tree item
-  gUI.tree.expandAll();
-
-  let selector = "[data-id='" + JSON.stringify(ids) + "'] > .tree-widget-item";
-  let target = gPanelWindow.document.querySelector(selector);
-  ok(target, "tree item found with ids " + JSON.stringify(ids));
+  /* If this item is already selected, return */
+  if (gUI.tree.isSelected(ids)) {
+    return;
+  }
 
   let updated = gUI.once("store-objects-updated");
-
-  yield click(target);
+  gUI.tree.selectedItem = ids;
   yield updated;
 }
 
@@ -845,8 +841,35 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
   popup.addEventListener("popupshown", onPopupShown);
 
   info("wait for the context menu to open");
+  button.scrollIntoView();
   let eventDetails = {type: "contextmenu", button: 2};
   EventUtils.synthesizeMouse(button, 2, 2, eventDetails,
                              button.ownerDocument.defaultView);
   return deferred.promise;
+}
+
+/**
+ * Verify the storage inspector state: check that given type/host exists
+ * in the tree, and that the table contains rows with specified names.
+ *
+ * @param {Array} state Array of state specifications. For example,
+ *        [["cookies", "example.com"], ["c1", "c2"]] means to select the
+ *        "example.com" host in cookies and then verify there are "c1" and "c2"
+ *        cookies (and no other ones).
+ */
+function* checkState(state) {
+  for (let [store, names] of state) {
+    let storeName = store.join(" > ");
+    info(`Selecting tree item ${storeName}`);
+    yield selectTreeItem(store);
+
+    let items = gUI.table.items;
+
+    is(items.size, names.length,
+      `There is correct number of rows in ${storeName}`);
+    for (let name of names) {
+      ok(items.has(name),
+        `There is item with name '${name}' in ${storeName}`);
+    }
+  }
 }
