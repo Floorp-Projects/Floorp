@@ -686,8 +686,18 @@ StorageActors.createActor({
     this.removeCookie(host, name);
   }), {
     request: {
-      host: Arg(0),
-      name: Arg(1),
+      host: Arg(0, "string"),
+      name: Arg(1, "string"),
+    },
+    response: {}
+  }),
+
+  removeAll: method(Task.async(function*(host, domain) {
+    this.removeAllCookies(host, domain);
+  }), {
+    request: {
+      host: Arg(0, "string"),
+      domain: Arg(1, "nullable:string")
     },
     response: {}
   }),
@@ -696,11 +706,18 @@ StorageActors.createActor({
     cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
 
     if (!DebuggerServer.isInChildProcess) {
-      this.getCookiesFromHost = cookieHelpers.getCookiesFromHost;
-      this.addCookieObservers = cookieHelpers.addCookieObservers;
-      this.removeCookieObservers = cookieHelpers.removeCookieObservers;
-      this.editCookie = cookieHelpers.editCookie;
-      this.removeCookie = cookieHelpers.removeCookie;
+      this.getCookiesFromHost =
+        cookieHelpers.getCookiesFromHost.bind(cookieHelpers);
+      this.addCookieObservers =
+        cookieHelpers.addCookieObservers.bind(cookieHelpers);
+      this.removeCookieObservers =
+        cookieHelpers.removeCookieObservers.bind(cookieHelpers);
+      this.editCookie =
+        cookieHelpers.editCookie.bind(cookieHelpers);
+      this.removeCookie =
+        cookieHelpers.removeCookie.bind(cookieHelpers);
+      this.removeAllCookies =
+        cookieHelpers.removeAllCookies.bind(cookieHelpers);
       return;
     }
 
@@ -722,6 +739,8 @@ StorageActors.createActor({
       callParentProcess.bind(null, "editCookie");
     this.removeCookie =
       callParentProcess.bind(null, "removeCookie");
+    this.removeAllCookies =
+      callParentProcess.bind(null, "removeAllCookies");
 
     addMessageListener("storage:storage-cookie-request-child",
                        cookieHelpers.handleParentRequest);
@@ -875,7 +894,7 @@ var cookieHelpers = {
     );
   },
 
-  removeCookie: function(host, name) {
+  _removeCookies: function(host, opts = {}) {
     function hostMatches(cookieHost, matchHost) {
       if (cookieHost == null) {
         return matchHost == null;
@@ -889,7 +908,9 @@ var cookieHelpers = {
     let enumerator = Services.cookies.getCookiesFromHost(host);
     while (enumerator.hasMoreElements()) {
       let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-      if (hostMatches(cookie.host, host) && cookie.name === name) {
+      if (hostMatches(cookie.host, host) &&
+          (!opts.name || cookie.name === opts.name) &&
+          (!opts.domain || cookie.host === opts.domain)) {
         Services.cookies.remove(
           cookie.host,
           cookie.name,
@@ -899,6 +920,16 @@ var cookieHelpers = {
         );
       }
     }
+  },
+
+  removeCookie: function(host, name) {
+    if (name !== undefined) {
+      this._removeCookies(host, { name });
+    }
+  },
+
+  removeAllCookies: function(host, domain) {
+    this._removeCookies(host, { domain });
   },
 
   addCookieObservers: function() {
@@ -968,6 +999,11 @@ var cookieHelpers = {
         let host = msg.data.args[0];
         let name = msg.data.args[1];
         return cookieHelpers.removeCookie(host, name);
+      }
+      case "removeAllCookies": {
+        let host = msg.data.args[0];
+        let domain = msg.data.args[1];
+        return cookieHelpers.removeAllCookies(host, domain);
       }
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
@@ -1177,6 +1213,16 @@ function getObjectForLocalOrSessionStorage(type) {
       request: {
         host: Arg(0),
         name: Arg(1),
+      },
+      response: {}
+    }),
+
+    removeAll: method(Task.async(function*(host) {
+      let storage = this.hostVsStores.get(host);
+      storage.clear();
+    }), {
+      request: {
+        host: Arg(0)
       },
       response: {}
     }),
@@ -2078,7 +2124,7 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
       data: Arg(0, "json")
     },
     "stores-reloaded": {
-      type: "storesRelaoded",
+      type: "storesReloaded",
       data: Arg(0, "json")
     }
   },
@@ -2310,11 +2356,13 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
       this.boundUpdate[action][storeType] = {};
     }
     for (let host in data) {
-      if (!this.boundUpdate[action][storeType][host] || action == "deleted") {
-        this.boundUpdate[action][storeType][host] = data[host];
-      } else {
-        this.boundUpdate[action][storeType][host] =
-        this.boundUpdate[action][storeType][host].concat(data[host]);
+      if (!this.boundUpdate[action][storeType][host]) {
+        this.boundUpdate[action][storeType][host] = [];
+      }
+      for (let name of data[host]) {
+        if (!this.boundUpdate[action][storeType][host].includes(name)) {
+          this.boundUpdate[action][storeType][host].push(name);
+        }
       }
     }
     if (action == "added") {
