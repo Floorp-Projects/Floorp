@@ -123,8 +123,8 @@ RestyleTracker::DoProcessRestyles()
   bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
-  // stop animations on elements that have no frame at the end of the
-  // restyling process.
+  // stop animations and transitions on elements that have no frame at the end
+  // of the restyling process.
   RestyleManager::AnimationsWithDestroyedFrame
     animationsWithDestroyedFrame(mRestyleManager);
 
