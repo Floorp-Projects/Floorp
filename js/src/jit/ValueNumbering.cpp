@@ -720,6 +720,31 @@ ValueNumberer::visitDefinition(MDefinition* def)
             return true;
         }
 
+        // The Nop is introduced to capture the result and make sure the operands
+        // are not live anymore when there are no further uses. Though when
+        // all operands are still needed the Nop doesn't decrease the liveness
+        // and can get removed.
+        MResumePoint* rp = nop->resumePoint();
+        if (rp && rp->numOperands() > 0 &&
+            rp->getOperand(rp->numOperands() - 1) == prev &&
+            !nop->block()->lastIns()->isThrow())
+        {
+            size_t numOperandsLive = 0;
+            for (size_t j = 0; j < prev->numOperands(); j++) {
+                for (size_t i = 0; i < rp->numOperands(); i++) {
+                    if (prev->getOperand(j) == rp->getOperand(i)) {
+                        numOperandsLive++;
+                        break;
+                    }
+                }
+            }
+
+            if (numOperandsLive == prev->numOperands()) {
+                JitSpew(JitSpew_GVN, "      Removing Nop%u", nop->id());
+                block->discard(nop);
+            }
+        }
+
         return true;
     }
 

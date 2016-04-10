@@ -7,14 +7,13 @@
 #include "mozilla/dom/FileSystemTaskBase.h"
 
 #include "nsNetCID.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/unused.h"
 #include "nsProxyRelease.h"
 
@@ -23,28 +22,66 @@ namespace dom {
 
 namespace {
 
-class FileSystemReleaseRunnable final : public nsRunnable
+nsresult
+FileSystemErrorFromNsError(const nsresult& aErrorValue)
 {
-public:
-  explicit FileSystemReleaseRunnable(RefPtr<FileSystemBase>& aDoomed)
-    : mDoomed(nullptr)
-  {
-    aDoomed.swap(mDoomed);
+  uint16_t module = NS_ERROR_GET_MODULE(aErrorValue);
+  if (module == NS_ERROR_MODULE_DOM_FILESYSTEM ||
+      module == NS_ERROR_MODULE_DOM_FILE ||
+      module == NS_ERROR_MODULE_DOM) {
+    return aErrorValue;
   }
 
-  NS_IMETHOD Run()
-  {
-    mDoomed->Release();
-    return NS_OK;
-  }
+  switch (aErrorValue) {
+    case NS_OK:
+      return NS_OK;
 
-private:
-  FileSystemBase* MOZ_OWNING_REF mDoomed;
-};
+    case NS_ERROR_FILE_INVALID_PATH:
+    case NS_ERROR_FILE_UNRECOGNIZED_PATH:
+      return NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
+
+    case NS_ERROR_FILE_DESTINATION_NOT_DIR:
+      return NS_ERROR_DOM_FILESYSTEM_INVALID_MODIFICATION_ERR;
+
+    case NS_ERROR_FILE_ACCESS_DENIED:
+    case NS_ERROR_FILE_DIR_NOT_EMPTY:
+      return NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
+
+    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+    case NS_ERROR_NOT_AVAILABLE:
+      return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
+
+    case NS_ERROR_FILE_ALREADY_EXISTS:
+      return NS_ERROR_DOM_FILESYSTEM_PATH_EXISTS_ERR;
+
+    case NS_ERROR_FILE_NOT_DIRECTORY:
+      return NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR;
+
+    case NS_ERROR_UNEXPECTED:
+    default:
+      return NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR;
+  }
+}
+
+nsresult
+DispatchToIOThread(nsIRunnable* aRunnable)
+{
+  MOZ_ASSERT(aRunnable);
+
+  nsCOMPtr<nsIEventTarget> target
+    = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(target);
+
+  return target->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+}
 
 } // anonymous namespace
 
-FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem)
+/**
+ * FileSystemTaskBase class
+ */
+
+FileSystemTaskChildBase::FileSystemTaskChildBase(FileSystemBase* aFileSystem)
   : mErrorValue(NS_OK)
   , mFileSystem(aFileSystem)
 {
@@ -52,56 +89,30 @@ FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem)
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
 }
 
-FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem,
-                                       const FileSystemParams& aParam,
-                                       FileSystemRequestParent* aParent)
-  : mErrorValue(NS_OK)
-  , mFileSystem(aFileSystem)
-  , mRequestParent(aParent)
+FileSystemTaskChildBase::~FileSystemTaskChildBase()
 {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
-}
-
-FileSystemTaskBase::~FileSystemTaskBase()
-{
-  if (!NS_IsMainThread()) {
-    RefPtr<FileSystemReleaseRunnable> runnable =
-      new FileSystemReleaseRunnable(mFileSystem);
-    MOZ_ASSERT(!mFileSystem);
-    NS_DispatchToMainThread(runnable);
-  }
+  mFileSystem->AssertIsOnOwningThread();
 }
 
 FileSystemBase*
-FileSystemTaskBase::GetFileSystem() const
+FileSystemTaskChildBase::GetFileSystem() const
 {
+  mFileSystem->AssertIsOnOwningThread();
   return mFileSystem.get();
 }
 
 void
-FileSystemTaskBase::Start()
+FileSystemTaskChildBase::Start()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  mFileSystem->AssertIsOnOwningThread();
 
   if (HasError()) {
-    NS_DispatchToMainThread(this);
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &FileSystemTaskChildBase::HandlerCallback);
+    NS_DispatchToMainThread(runnable);
     return;
   }
 
-  if (XRE_IsParentProcess()) {
-    // Run in parent process.
-    // Start worker thread.
-    nsCOMPtr<nsIEventTarget> target
-      = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    NS_ASSERTION(target, "Must have stream transport service.");
-    target->Dispatch(this, NS_DISPATCH_NORMAL);
-    return;
-  }
-
-  // Run in child process.
   if (mFileSystem->IsShutdown()) {
     return;
   }
@@ -117,72 +128,24 @@ FileSystemTaskBase::Start()
 
   // Retain a reference so the task object isn't deleted without IPDL's
   // knowledge. The reference will be released by
-  // mozilla::dom::ContentChild::DeallocPFileSystemRequestChild.
+  // mozilla::ipc::BackgroundChildImpl::DeallocPFileSystemRequestChild.
   NS_ADDREF_THIS();
 
-  ContentChild::GetSingleton()->SendPFileSystemRequestConstructor(this,
-                                                                  params);
-}
+  // If we are here, PBackground must be up and running, because Start() is
+  // called only by FileSystemPermissionRequest, and that class takes care of
+  // PBackground initialization.
+  PBackgroundChild* actor =
+    mozilla::ipc::BackgroundChild::GetForCurrentThread();
+  MOZ_ASSERT(actor);
 
-NS_IMETHODIMP
-FileSystemTaskBase::Run()
-{
-  if (!NS_IsMainThread()) {
-    // Run worker thread tasks
-    nsresult rv = Work();
-    if (NS_FAILED(rv)) {
-      SetError(rv);
-    }
-    // Dispatch itself to main thread
-    NS_DispatchToMainThread(this);
-    return NS_OK;
-  }
-
-  // Run main thread tasks
-  HandleResult();
-  return NS_OK;
+  actor->SendPFileSystemRequestConstructor(this, params);
 }
 
 void
-FileSystemTaskBase::HandleResult()
+FileSystemTaskChildBase::SetRequestResult(const FileSystemResponseValue& aValue)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  if (mFileSystem->IsShutdown()) {
-    return;
-  }
-  if (mRequestParent && mRequestParent->IsRunning()) {
-    Unused << mRequestParent->Send__delete__(mRequestParent,
-      GetRequestResult());
-  } else {
-    HandlerCallback();
-  }
-}
+  mFileSystem->AssertIsOnOwningThread();
 
-FileSystemResponseValue
-FileSystemTaskBase::GetRequestResult() const
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  if (!HasError()) {
-    ErrorResult rv;
-    FileSystemResponseValue value = GetSuccessRequestResult(rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return FileSystemErrorResponse(rv.StealNSResult());
-    }
-
-    return value;
-  }
-
-  return FileSystemErrorResponse(mErrorValue);
-}
-
-void
-FileSystemTaskBase::SetRequestResult(const FileSystemResponseValue& aValue)
-{
-  MOZ_ASSERT(!XRE_IsParentProcess(),
-             "Only call from child process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   if (aValue.type() == FileSystemResponseValue::TFileSystemErrorResponse) {
     FileSystemErrorResponse r = aValue;
     mErrorValue = r.error();
@@ -194,91 +157,172 @@ FileSystemTaskBase::SetRequestResult(const FileSystemResponseValue& aValue)
 }
 
 bool
-FileSystemTaskBase::Recv__delete__(const FileSystemResponseValue& aValue)
+FileSystemTaskChildBase::Recv__delete__(const FileSystemResponseValue& aValue)
 {
+  mFileSystem->AssertIsOnOwningThread();
+
   SetRequestResult(aValue);
   HandlerCallback();
   return true;
 }
 
-BlobParent*
-FileSystemTaskBase::GetBlobParent(BlobImpl* aFile) const
+void
+FileSystemTaskChildBase::SetError(const nsresult& aErrorValue)
+{
+  mErrorValue = FileSystemErrorFromNsError(aErrorValue);
+}
+
+/**
+ * FileSystemTaskParentBase class
+ */
+
+FileSystemTaskParentBase::FileSystemTaskParentBase(FileSystemBase* aFileSystem,
+                                                  const FileSystemParams& aParam,
+                                                  FileSystemRequestParent* aParent)
+  : mErrorValue(NS_OK)
+  , mFileSystem(aFileSystem)
+  , mRequestParent(aParent)
+  , mBackgroundEventTarget(NS_GetCurrentThread())
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFile);
+  MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(mBackgroundEventTarget);
+  AssertIsOnBackgroundThread();
+}
 
-  // Load the lazy dom file data from the parent before sending to the child.
-  nsString mimeType;
-  aFile->GetType(mimeType);
-
-  // We call GetSize and GetLastModified to prepopulate the value in the
-  // BlobImpl.
-  {
-    ErrorResult rv;
-    aFile->GetSize(rv);
-    rv.SuppressException();
-  }
-
-  {
-    ErrorResult rv;
-    aFile->GetLastModified(rv);
-    rv.SuppressException();
-  }
-
-  ContentParent* cp = static_cast<ContentParent*>(mRequestParent->Manager());
-  return cp->GetOrCreateActorForBlobImpl(aFile);
+FileSystemTaskParentBase::~FileSystemTaskParentBase()
+{
+  // This task can be released on different threads because we dispatch it (as
+  // runnable) to main-thread, I/O and then back to the PBackground thread.
+  NS_ProxyRelease(mBackgroundEventTarget, mFileSystem.forget());
+  NS_ProxyRelease(mBackgroundEventTarget, mRequestParent.forget());
 }
 
 void
-FileSystemTaskBase::SetError(const nsresult& aErrorValue)
+FileSystemTaskParentBase::Start()
 {
-  uint16_t module = NS_ERROR_GET_MODULE(aErrorValue);
-  if (module == NS_ERROR_MODULE_DOM_FILESYSTEM ||
-      module == NS_ERROR_MODULE_DOM_FILE ||
-      module == NS_ERROR_MODULE_DOM) {
-    mErrorValue = aErrorValue;
+  AssertIsOnBackgroundThread();
+  mFileSystem->AssertIsOnOwningThread();
+
+  if (NeedToGoToMainThread()) {
+    nsresult rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+    NS_WARN_IF(NS_FAILED(rv));
     return;
   }
 
-  switch (aErrorValue) {
-    case NS_OK:
-      mErrorValue = NS_OK;
-      return;
+  nsresult rv = DispatchToIOThread(this);
+  NS_WARN_IF(NS_FAILED(rv));
+}
 
-    case NS_ERROR_FILE_INVALID_PATH:
-    case NS_ERROR_FILE_UNRECOGNIZED_PATH:
-      mErrorValue = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
-      return;
+void
+FileSystemTaskParentBase::HandleResult()
+{
+  AssertIsOnBackgroundThread();
+  mFileSystem->AssertIsOnOwningThread();
 
-    case NS_ERROR_FILE_DESTINATION_NOT_DIR:
-      mErrorValue = NS_ERROR_DOM_FILESYSTEM_INVALID_MODIFICATION_ERR;
-      return;
-
-    case NS_ERROR_FILE_ACCESS_DENIED:
-    case NS_ERROR_FILE_DIR_NOT_EMPTY:
-      mErrorValue = NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
-      return;
-
-    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
-    case NS_ERROR_NOT_AVAILABLE:
-      mErrorValue = NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
-      return;
-
-    case NS_ERROR_FILE_ALREADY_EXISTS:
-      mErrorValue = NS_ERROR_DOM_FILESYSTEM_PATH_EXISTS_ERR;
-      return;
-
-    case NS_ERROR_FILE_NOT_DIRECTORY:
-      mErrorValue = NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR;
-      return;
-
-    case NS_ERROR_UNEXPECTED:
-    default:
-      mErrorValue = NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR;
-      return;
+  if (mFileSystem->IsShutdown()) {
+    return;
   }
+
+  MOZ_ASSERT(mRequestParent);
+  Unused << mRequestParent->Send__delete__(mRequestParent, GetRequestResult());
+}
+
+FileSystemResponseValue
+FileSystemTaskParentBase::GetRequestResult() const
+{
+  AssertIsOnBackgroundThread();
+  mFileSystem->AssertIsOnOwningThread();
+
+  if (HasError()) {
+    return FileSystemErrorResponse(mErrorValue);
+  }
+
+  ErrorResult rv;
+  FileSystemResponseValue value = GetSuccessRequestResult(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return FileSystemErrorResponse(rv.StealNSResult());
+  }
+
+  return value;
+}
+
+void
+FileSystemTaskParentBase::SetError(const nsresult& aErrorValue)
+{
+  mErrorValue = FileSystemErrorFromNsError(aErrorValue);
+}
+
+bool
+FileSystemTaskParentBase::NeedToGoToMainThread() const
+{
+  return mFileSystem->NeedToGoToMainThread();
+}
+
+nsresult
+FileSystemTaskParentBase::MainThreadWork()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mFileSystem->MainThreadWork();
+}
+
+NS_IMETHODIMP
+FileSystemTaskParentBase::Run()
+{
+  // This method can run in 3 different threads. Here why:
+  // 1. if we are on the main-thread it's because the task must do something
+  //    here. If no errors are returned we go the step 2.
+  // 2. We can be here directly if the task doesn't have nothing to do on the
+  //    main-thread. We are are on the I/O thread and we call IOWork().
+  // 3. Both step 1 (in case of error) and step 2 end up here where return the
+  //    value back to the PBackground thread.
+  if (NS_IsMainThread()) {
+    MOZ_ASSERT(NeedToGoToMainThread());
+
+    nsresult rv = MainThreadWork();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      SetError(rv);
+
+      // Something when wrong. Let's go to the Background thread directly
+      // skipping the I/O thread step.
+      rv = mBackgroundEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    // Next step must happen on the I/O thread.
+    rv = DispatchToIOThread(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  // Run I/O thread tasks
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = IOWork();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      SetError(rv);
+    }
+
+    // Let's go back to PBackground thread to finish the work.
+    rv = mBackgroundEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  // If we are here, it's because the I/O work has been done and we have to
+  // handle the result back via IPC.
+  AssertIsOnBackgroundThread();
+  HandleResult();
+  return NS_OK;
 }
 
 } // namespace dom

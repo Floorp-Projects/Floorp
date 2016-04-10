@@ -393,7 +393,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
     Accessible* childAtOffset = nullptr;
     for (int32_t i = tempStart; i < tempEnd; i++) {
       childAtOffset = text->GetChildAtOffset(i);
-      if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset)) {
+      if (childAtOffset && !childAtOffset->IsText()) {
         tempEnd = i;
         break;
       }
@@ -401,7 +401,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
     // If there's an embedded character at the very start of the range, we
     // instead want to traverse into it. So restart the movement with
     // the child as the starting point.
-    if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset) &&
+    if (childAtOffset && !childAtOffset->IsText() &&
         tempStart == static_cast<int32_t>(childAtOffset->StartOffset())) {
       tempPosition = childAtOffset;
       tempStart = tempEnd = -1;
@@ -524,7 +524,7 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
     Accessible* childAtOffset = nullptr;
     for (int32_t i = tempEnd - 1; i >= tempStart; i--) {
       childAtOffset = text->GetChildAtOffset(i);
-      if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset)) {
+      if (childAtOffset && !childAtOffset->IsText()) {
         tempStart = childAtOffset->EndOffset();
         break;
       }
@@ -532,7 +532,7 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
     // If there's an embedded character at the very end of the range, we
     // instead want to traverse into it. So restart the movement with
     // the child as the starting point.
-    if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset) &&
+    if (childAtOffset && !childAtOffset->IsText() &&
         tempEnd == static_cast<int32_t>(childAtOffset->EndOffset())) {
       tempPosition = childAtOffset;
       tempStart = tempEnd = childAtOffset->AsHyperText()->CharacterCount();

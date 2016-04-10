@@ -48,6 +48,12 @@ public:
   virtual void
   SerializeDOMPath(nsAString& aSerializedString) const override;
 
+  virtual bool
+  NeedToGoToMainThread() const override { return true; }
+
+  virtual nsresult
+  MainThreadWork() override;
+
 private:
   virtual
   ~DeviceStorageFileSystem();

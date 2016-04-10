@@ -291,12 +291,11 @@ const getCurrentCensusTaker = exports.getCurrentCensusTaker = function (currentV
   switch (currentView) {
     case viewState.TREE_MAP:
       return takeTreeMap;
-    break;
     case viewState.CENSUS:
       return takeCensus;
-    break;
+    default:
+      return defaultCensusTaker;
   }
-  return defaultCensusTaker;
 };
 
 /**

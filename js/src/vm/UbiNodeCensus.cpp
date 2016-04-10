@@ -85,7 +85,6 @@ bool
 SimpleCount::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
 {
     Count& count = static_cast<Count&>(countBase);
-    count.total_++;
     if (reportBytes)
         count.totalBytes_ += node.size(mallocSizeOf);
     return true;
@@ -262,7 +261,6 @@ bool
 ByCoarseType::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
 {
     Count& count = static_cast<Count&>(countBase);
-    count.total_++;
 
     switch (node.coarseType()) {
       case JS::ubi::CoarseType::Object:
@@ -313,17 +311,17 @@ ByCoarseType::report(JSContext* cx, CountBase& countBase, MutableHandleValue rep
 }
 
 
-// Comparison function for sorting hash table entries by total count. The
+// Comparison function for sorting hash table entries by the smallest node ID
+// they counted. Node IDs are stable and unique, which ensures ordering of
+// results never depends on hash table placement or sort algorithm vagaries. The
 // arguments are doubly indirect: they're pointers to elements in an array of
 // pointers to table entries.
 template<typename Entry>
 static int compareEntries(const void* lhsVoid, const void* rhsVoid) {
-    size_t lhs = (*static_cast<const Entry* const*>(lhsVoid))->value()->total_;
-    size_t rhs = (*static_cast<const Entry* const*>(rhsVoid))->value()->total_;
+    auto lhs = (*static_cast<const Entry* const*>(lhsVoid))->value()->smallestNodeIdCounted_;
+    auto rhs = (*static_cast<const Entry* const*>(rhsVoid))->value()->smallestNodeIdCounted_;
 
-    // qsort sorts in "ascending" order, so we should describe entries with
-    // smaller counts as being "greater than" entries with larger counts. We
-    // don't want to just subtract the counts, as they're unsigned.
+    // We don't want to just subtract the values, as they're unsigned.
     if (lhs < rhs)
         return 1;
     if (lhs > rhs)
@@ -457,7 +455,6 @@ bool
 ByObjectClass::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
 {
     Count& count = static_cast<Count&>(countBase);
-    count.total_++;
 
     const char* className = node.jsObjectClassName();
     if (!className)
@@ -551,7 +548,6 @@ bool
 ByUbinodeType::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
 {
     Count& count = static_cast<Count&>(countBase);
-    count.total_++;
 
     const char16_t* key = node.typeName();
     MOZ_ASSERT(key);
@@ -706,7 +702,6 @@ bool
 ByAllocationStack::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
 {
     Count& count = static_cast<Count&>(countBase);
-    count.total_++;
 
     // If we do have an allocation stack for this node, include it in the
     // count for that stack.
@@ -875,7 +870,6 @@ bool
 ByFilename::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
 {
     Count& count = static_cast<Count&>(countBase);
-    count.total_++;
 
     const char* filename = node.scriptFilename();
     if (!filename)

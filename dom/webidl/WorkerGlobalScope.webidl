@@ -47,6 +47,7 @@ readonly attribute CacheStorage caches;
 WorkerGlobalScope implements WindowTimers;
 WorkerGlobalScope implements WindowBase64;
 WorkerGlobalScope implements GlobalFetch;
+WorkerGlobalScope implements GlobalCrypto;
 WorkerGlobalScope implements IDBEnvironment;
 WorkerGlobalScope implements ImageBitmapFactories;
 

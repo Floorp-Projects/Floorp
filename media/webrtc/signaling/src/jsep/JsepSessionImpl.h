@@ -35,6 +35,7 @@ public:
         mWasOffererLastTime(false),
         mIceControlling(false),
         mRemoteIsIceLite(false),
+        mRemoteIceIsRestarting(false),
         mBundlePolicy(kBundleBalanced),
         mSessionId(0),
         mSessionVersion(0),
@@ -53,12 +54,20 @@ public:
 
   virtual nsresult SetIceCredentials(const std::string& ufrag,
                                      const std::string& pwd) override;
+  virtual const std::string& GetUfrag() const override { return mIceUfrag; }
+  virtual const std::string& GetPwd() const override { return mIcePwd; }
   nsresult SetBundlePolicy(JsepBundlePolicy policy) override;
 
   virtual bool
   RemoteIsIceLite() const override
   {
     return mRemoteIsIceLite;
+  }
+
+  virtual bool
+  RemoteIceIsRestarting() const override
+  {
+    return mRemoteIceIsRestarting;
   }
 
   virtual std::vector<std::string>
@@ -222,6 +231,7 @@ private:
   nsresult AddTransportAttributes(SdpMediaSection* msection,
                                   SdpSetupAttribute::Role dtlsRole);
   nsresult CopyPreviousTransportParams(const Sdp& oldAnswer,
+                                       const Sdp& offerersPreviousSdp,
                                        const Sdp& newOffer,
                                        Sdp* newLocal);
   nsresult SetupOfferMSections(const JsepOfferOptions& options, Sdp* sdp);
@@ -302,6 +312,7 @@ private:
   std::string mIceUfrag;
   std::string mIcePwd;
   bool mRemoteIsIceLite;
+  bool mRemoteIceIsRestarting;
   std::vector<std::string> mIceOptions;
   JsepBundlePolicy mBundlePolicy;
   std::vector<JsepDtlsFingerprint> mDtlsFingerprints;

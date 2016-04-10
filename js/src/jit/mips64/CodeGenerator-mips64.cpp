@@ -325,6 +325,22 @@ CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Double);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType_Int64);
+    masm.as_dmtc1(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+}
+
+void
+CodeGeneratorMIPS64::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Int64);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType_Double);
+    masm.as_dmfc1(ToRegister(lir->output()), ToFloatRegister(lir->input()));
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);

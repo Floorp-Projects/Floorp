@@ -712,6 +712,10 @@ private:
                                  const std::string& streamId,
                                  const std::string& trackId);
 
+  nsresult SetupIceRestart();
+  nsresult RollbackIceRestart();
+  void FinalizeIceRestart();
+
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   static void GetStatsForPCObserver_s(
       const std::string& pcHandle,
@@ -804,6 +808,8 @@ private:
   // The JSEP negotiation session.
   mozilla::UniquePtr<PCUuidGenerator> mUuidGen;
   mozilla::UniquePtr<mozilla::JsepSession> mJsepSession;
+  std::string mPreviousIceUfrag; // used during rollback of ice restart
+  std::string mPreviousIcePwd; // used during rollback of ice restart
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // Start time of ICE, used for telemetry

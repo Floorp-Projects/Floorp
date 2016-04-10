@@ -249,7 +249,8 @@ public:
 
   /**
    * Returns the read cursor position back as it was before the last call of any parsing
-   * method of Tokenizer (Next, Check*, Skip*) so that the last operation can be repeated.
+   * method of Tokenizer (Next, Check*, Skip*, Read*) so that the last operation
+   * can be repeated.
    * Rollback cannot be used multiple times, it only reverts the last successfull parse
    * operation.  It also cannot be used before any parsing operation has been called
    * on the Tokenizer.
@@ -286,6 +287,20 @@ public:
    */
   void Claim(nsACString& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
   void Claim(nsDependentCSubstring& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
+
+  /**
+   * If aToken is found, aResult is set to the substring between the current
+   * position and the position of aToken, potentially including aToken depending
+   * on aInclude.
+   * If aToken isn't found aResult is set to the substring between the current
+   * position and the end of the string.
+   * If aToken is found, the method returns true. Otherwise it returns false.
+   *
+   * Calling Rollback() after ReadUntil() will return the read cursor to the
+   * position it had before ReadUntil was called.
+   */
+  bool ReadUntil(Token const& aToken, nsDependentCSubstring& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
+  bool ReadUntil(Token const& aToken, nsACString& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
 
 protected:
   // false if we have already read the EOF token.

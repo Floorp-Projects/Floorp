@@ -7,10 +7,8 @@
 #ifndef mozilla_ipc_dbus_gonk_rawdbusconnection_h__
 #define mozilla_ipc_dbus_gonk_rawdbusconnection_h__
 
+#include <dbus/dbus.h>
 #include "mozilla/Scoped.h"
-
-struct DBusConnection;
-struct DBusMessage;
 
 namespace mozilla {
 namespace ipc {
@@ -19,8 +17,11 @@ typedef void (*DBusReplyCallback)(DBusMessage*, void*);
 
 class RawDBusConnection
 {
-  struct ScopedDBusConnectionPtrTraits : ScopedFreePtrTraits<DBusConnection>
+  struct ScopedDBusConnectionPtrTraits
   {
+    typedef DBusConnection* type;
+
+    static DBusConnection* empty();
     static void release(DBusConnection* ptr);
   };
 

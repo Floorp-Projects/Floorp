@@ -20,10 +20,10 @@ class Blob;
 class BlobImpl;
 class Promise;
 
-class CreateFileTask final : public FileSystemTaskBase
+class CreateFileTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<CreateFileTask>
+  static already_AddRefed<CreateFileTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aFile,
          Blob* aBlobData,
@@ -31,14 +31,8 @@ public:
          bool replace,
          ErrorResult& aRv);
 
-  static already_AddRefed<CreateFileTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemCreateFileParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
-
   virtual
-  ~CreateFileTask();
+  ~CreateFileTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
@@ -51,45 +45,71 @@ protected:
   GetRequestParams(const nsString& aSerializedDOMPath,
                    ErrorResult& aRv) const override;
 
-  virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
-
   virtual void
   SetSuccessRequestResult(const FileSystemResponseValue& aValue,
                           ErrorResult& aRv) override;
-
-  virtual nsresult
-  Work() override;
 
   virtual void
   HandlerCallback() override;
 
 private:
-  CreateFileTask(FileSystemBase* aFileSystem,
-                 nsIFile* aFile,
-                 bool aReplace);
+  CreateFileTaskChild(FileSystemBase* aFileSystem,
+                      nsIFile* aFile,
+                      bool aReplace);
 
-  CreateFileTask(FileSystemBase* aFileSystem,
-                 const FileSystemCreateFileParams& aParam,
-                 FileSystemRequestParent* aParent);
-
-  void
-  GetOutputBufferSize() const;
-
-  static uint32_t sOutputBufferSize;
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
 
-  // Not thread-safe and should be released on main thread.
-  RefPtr<Blob> mBlobData;
+  RefPtr<BlobImpl> mBlobImpl;
 
-  nsCOMPtr<nsIInputStream> mBlobStream;
+  // This is going to be the content of the file, received by createFile()
+  // params.
   InfallibleTArray<uint8_t> mArrayData;
-  bool mReplace;
 
-  // This cannot be a File because this object is created on a different
-  // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
+  bool mReplace;
+};
+
+class CreateFileTaskParent final : public FileSystemTaskParentBase
+{
+public:
+  static already_AddRefed<CreateFileTaskParent>
+  Create(FileSystemBase* aFileSystem,
+         const FileSystemCreateFileParams& aParam,
+         FileSystemRequestParent* aParent,
+         ErrorResult& aRv);
+
+  virtual bool
+  NeedToGoToMainThread() const override { return true; }
+
+  virtual nsresult
+  MainThreadWork() override;
+
+  virtual void
+  GetPermissionAccessType(nsCString& aAccess) const override;
+
+protected:
+  virtual FileSystemResponseValue
+  GetSuccessRequestResult(ErrorResult& aRv) const override;
+
+  virtual nsresult
+  IOWork() override;
+
+private:
+  CreateFileTaskParent(FileSystemBase* aFileSystem,
+                       const FileSystemCreateFileParams& aParam,
+                       FileSystemRequestParent* aParent);
+
+  static uint32_t sOutputBufferSize;
+
+  nsCOMPtr<nsIFile> mTargetPath;
+
+  RefPtr<BlobImpl> mBlobImpl;
+
+  // This is going to be the content of the file, received by createFile()
+  // params.
+  InfallibleTArray<uint8_t> mArrayData;
+
+  bool mReplace;
 };
 
 } // namespace dom

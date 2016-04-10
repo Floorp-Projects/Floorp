@@ -1591,12 +1591,14 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->height += border.top + border.bottom;
     }
     break;
+#if (MOZ_WIDGET_GTK == 3)
   case NS_THEME_NUMBER_INPUT:
   case NS_THEME_TEXTFIELD:
     {
       moz_gtk_get_entry_min_height(&aResult->height);
     }
     break;
+#endif
   case NS_THEME_TOOLBAR_SEPARATOR:
     {
       gint separator_width;

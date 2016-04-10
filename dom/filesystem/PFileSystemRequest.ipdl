@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBackground;
 include protocol PBlob;
-include protocol PContent;
 
 namespace mozilla {
 namespace dom {
 
 struct FileSystemFileResponse
 {
-  PBlob blob;
+  nsString realPath;
 };
 
 struct FileSystemDirectoryResponse
@@ -20,9 +20,10 @@ struct FileSystemDirectoryResponse
   nsString realPath;
 };
 
-struct FileSystemDirectoryListingResponseBlob
+struct FileSystemDirectoryListingResponseFile
 {
-  PBlob blob;
+  // This is the full real path for the file that we are sending via IPC.
+  nsString fileRealPath;
 };
 
 struct FileSystemDirectoryListingResponseDirectory
@@ -33,7 +34,7 @@ struct FileSystemDirectoryListingResponseDirectory
 
 union FileSystemDirectoryListingResponseData
 {
-  FileSystemDirectoryListingResponseBlob;
+  FileSystemDirectoryListingResponseFile;
   FileSystemDirectoryListingResponseDirectory;
 };
 
@@ -61,9 +62,9 @@ union FileSystemResponseValue
   FileSystemErrorResponse;
 };
 
-sync protocol PFileSystemRequest
+protocol PFileSystemRequest
 {
-  manager PContent;
+  manager PBackground;
 
 child:
   async __delete__(FileSystemResponseValue response);

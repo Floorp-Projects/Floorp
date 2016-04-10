@@ -24,7 +24,7 @@ extern "C" {
 
 #include "stunserver.h"
 
-#include "nricectx.h"
+#include "nricectxhandler.h"
 #include "nricemediastream.h"
 
 #define GTEST_HAS_RTTI 0
@@ -47,7 +47,7 @@ class MultiTcpSocketTest : public MtransportTest {
   void SetUp() {
     MtransportTest::SetUp();
 
-    ice_ctx_ = NrIceCtx::Create("stun", true);
+    ice_ctx_ = NrIceCtxHandler::Create("stun", true);
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
@@ -109,7 +109,7 @@ class MultiTcpSocketTest : public MtransportTest {
           stun_server_addr, stun_server_port, kNrIceTransportTcp));
       stun_servers.push_back(*server);
 
-      ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
+      ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->ctx()->SetStunServers(stun_servers)));
     }
 
     r = 1;
@@ -118,7 +118,7 @@ class MultiTcpSocketTest : public MtransportTest {
         (char *)"127.0.0.1", EnsureEphemeral(port_s++), IPPROTO_TCP, &local);
       ASSERT_EQ(0, r);
 
-      r = nr_socket_multi_tcp_create(ice_ctx_->ctx(),
+      r = nr_socket_multi_tcp_create(ice_ctx_->ctx()->ctx(),
           &local, tcp_type, 1, 2048, sock);
     }
 
@@ -348,7 +348,7 @@ class MultiTcpSocketTest : public MtransportTest {
   }
   std::vector<nr_socket *> socks;
   Atomic<bool> readable;
-  RefPtr<NrIceCtx> ice_ctx_;
+  RefPtr<NrIceCtxHandler> ice_ctx_;
 };
 }
 

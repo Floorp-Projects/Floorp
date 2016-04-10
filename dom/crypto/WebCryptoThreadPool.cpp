@@ -65,6 +65,8 @@ WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable)
   MutexAutoLock lock(mMutex);
 
   if (!mPool) {
+    NS_ENSURE_TRUE(EnsureNSSInitializedChromeOrContent(), NS_ERROR_FAILURE);
+
     nsCOMPtr<nsIThreadPool> pool(do_CreateInstance(NS_THREADPOOL_CONTRACTID));
     NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 

@@ -47,7 +47,71 @@ public:
 private:
   virtual ~OSFileSystem() {}
 
-   nsCOMPtr<nsISupports> mParent;
+  nsCOMPtr<nsISupports> mParent;
+};
+
+class OSFileSystemParent final : public FileSystemBase
+{
+public:
+  explicit OSFileSystemParent(const nsAString& aRootDir);
+
+  // Overrides FileSystemBase
+
+  virtual already_AddRefed<FileSystemBase>
+  Clone() override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+    return nullptr;
+  }
+
+  virtual nsISupports*
+  GetParentObject() const override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+    return nullptr;
+  }
+
+  virtual void
+  GetRootName(nsAString& aRetval) const override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+  }
+
+  virtual bool
+  IsSafeFile(nsIFile* aFile) const override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+    return true;
+  }
+
+  virtual bool
+  IsSafeDirectory(Directory* aDir) const override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+    return true;
+  }
+
+  virtual void
+  SerializeDOMPath(nsAString& aOutput) const override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+  }
+
+  // CC methods
+  virtual void
+  Unlink() override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+  }
+
+  virtual void
+  Traverse(nsCycleCollectionTraversalCallback &cb) override
+  {
+    MOZ_CRASH("This should not be called on the PBackground thread.");
+  }
+
+private:
+  virtual ~OSFileSystemParent() {}
 };
 
 } // namespace dom

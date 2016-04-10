@@ -47,7 +47,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
-#include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #ifdef MOZ_EME
 #include "mozilla/dom/MediaKeySystemAccess.h"
@@ -3521,24 +3520,6 @@ ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* d
   return true;
 }
 
-PFileSystemRequestParent*
-ContentParent::AllocPFileSystemRequestParent(const FileSystemParams& aParams)
-{
-  RefPtr<FileSystemRequestParent> result = new FileSystemRequestParent();
-  if (!result->Dispatch(this, aParams)) {
-    return nullptr;
-  }
-  return result.forget().take();
-}
-
-bool
-ContentParent::DeallocPFileSystemRequestParent(PFileSystemRequestParent* doomed)
-{
-  FileSystemRequestParent* parent = static_cast<FileSystemRequestParent*>(doomed);
-  NS_RELEASE(parent);
-  return true;
-}
-
 PBlobParent*
 ContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
 {
@@ -4266,25 +4247,6 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
 }
 
 bool
-ContentParent::RecvGetRandomValues(const uint32_t& length,
-                                   InfallibleTArray<uint8_t>* randomValues)
-{
-  uint8_t* buf = Crypto::GetRandomValues(length);
-  if (!buf) {
-    return true;
-  }
-
-  randomValues->SetCapacity(length);
-  randomValues->SetLength(length);
-
-  memcpy(randomValues->Elements(), buf, length);
-
-  free(buf);
-
-  return true;
-}
-
-bool
 ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
 {
   uint32_t memoryTotal = 0;
@@ -4448,12 +4410,12 @@ ContentParent::RecvRpcMessage(const nsString& aMsg,
 
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg,
-                                const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal)
+                                const IPC::Principal& aPrincipal,
+                                const ClonedMessageData& aData)
 {
-  return nsIContentParent::RecvAsyncMessage(aMsg, aData, Move(aCpows),
-                                            aPrincipal);
+  return nsIContentParent::RecvAsyncMessage(aMsg, Move(aCpows), aPrincipal,
+                                            aData);
 }
 
 bool
@@ -4697,7 +4659,7 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
     // Nuwa won't receive frame messages after it is frozen.
     return NS_OK;
   }
-  if (!SendAsyncMessage(nsString(aMessage), data, cpows, Principal(aPrincipal))) {
+  if (!SendAsyncMessage(nsString(aMessage), cpows, Principal(aPrincipal), data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

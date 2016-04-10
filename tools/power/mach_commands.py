@@ -77,7 +77,7 @@ class MachCommands(MachCommandBase):
         #
         #   org.mozilla.firefox
         #     firefox
-        #     firefox-webcontent
+        #     plugin-container
         #
         # When Safari runs from the dock:
         #
@@ -102,7 +102,7 @@ class MachCommands(MachCommandBase):
         #
         #  com.apple.Terminal
         #    firefox
-        #    firefox-webcontent
+        #    plugin-container
         #    <and possibly other, non-browser processes>
         #
         # Also, the WindowServer and kernel coalitions and processes are often
@@ -120,7 +120,7 @@ class MachCommands(MachCommandBase):
             #
             # - '^Name' is for the columns headings line.
             #
-            # - 'firefox' and 'firefox-webcontent' are for Firefox
+            # - 'firefox' and 'plugin-container' are for Firefox
             #
             # - 'Safari\b' and 'WebKit' are for Safari. The '\b' excludes
             #   SafariCloudHistoryPush, which is a process that always
@@ -136,7 +136,7 @@ class MachCommands(MachCommandBase):
             #
             # - 'kernel' is for the kernel.
             #
-            if re.search(r'(^Name|firefox|firefox-plugin-container|firefox-webcontent|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):
+            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):
                 print(line)
 
         return 0
