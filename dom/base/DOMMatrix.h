@@ -22,8 +22,6 @@ namespace dom {
 
 class GlobalObject;
 class DOMMatrix;
-class DOMPoint;
-class DOMPointInit;
 
 class DOMMatrixReadOnly : public nsWrapperCache
 {

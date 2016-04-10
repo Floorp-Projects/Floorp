@@ -14,7 +14,6 @@
 #include "nsThreadUtils.h"
 
 class nsGlobalWindow;
-class nsIDocument;
 class nsIPrincipal;
 
 namespace mozilla {
