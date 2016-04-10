@@ -823,3 +823,19 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     collection = nullptr;
   }
 }
+
+void
+nsTransitionManager::StopTransitionsForElement(
+  mozilla::dom::Element* aElement,
+  mozilla::CSSPseudoElementType aPseudoType)
+{
+  MOZ_ASSERT(aElement);
+  CSSTransitionCollection* collection =
+    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
+  if (!collection) {
+    return;
+  }
+
+  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
+  collection->Destroy();
+}
