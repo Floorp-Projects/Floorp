@@ -157,8 +157,10 @@ function backgroundScript() {
                   beforeRedirect: [],
                   sendHeaders: [],
                   responseStarted: [],
+                  responseStarted2: [],
                   error: [],
-                  completed: []};
+                  completed: [],
+                 };
   let testHeaders = {
     request: {
       added: {
@@ -417,6 +419,7 @@ function backgroundScript() {
   browser.webRequest.onBeforeRedirect.addListener(onBeforeRedirect, {urls: ["<all_urls>"]});
   browser.webRequest.onHeadersReceived.addListener(onHeadersReceived, {urls: ["<all_urls>"]}, ["blocking", "responseHeaders"]);
   browser.webRequest.onResponseStarted.addListener(checkIpAndRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
+  browser.webRequest.onResponseStarted.addListener(checkIpAndRecord.bind(null, "responseStarted2"), {urls: ["<all_urls>"]});
   browser.webRequest.onErrorOccurred.addListener(onErrorOccurred, {urls: ["<all_urls>"]});
   browser.webRequest.onCompleted.addListener(onCompleted, {urls: ["<all_urls>"]}, ["responseHeaders"]);
 
@@ -499,7 +502,7 @@ function* test_once(skipCompleted) {
   compareLists(recorded.responseStarted, expected_response, "responseStarted");
   compareLists(recorded.error, expected_error, "error");
   compareLists(recorded.completed, expected_complete, "completed");
-
+  compareLists(recorded.responseStarted2, recorded.responseStarted, "multiple non-blocking listeners");
   yield extension.unload();
   info("webrequest extension unloaded");
 }
