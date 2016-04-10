@@ -18,10 +18,13 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/EventDispatcher.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptError.h"
 #include "nsPresContext.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace dom {
