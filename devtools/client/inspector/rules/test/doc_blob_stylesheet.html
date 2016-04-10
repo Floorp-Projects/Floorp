@@ -1,0 +1,39 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+</html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Blob stylesheet sourcemap</title>
+</head>
+<body>
+<h1>Test</h1>
+<script>
+"use strict";
+
+var cssContent = `body {
+  background-color: black;
+}
+body > h1 {
+  color: white;
+}
+` +
+"/*# sourceMappingURL=data:application/json;base64,ewoidmVyc2lvbiI6IDMsCiJtYX" +
+"BwaW5ncyI6ICJBQUFBLElBQUs7RUFDSCxnQkFBZ0IsRUFBRSxLQUFLOztBQUN2QixTQUFPO0VBQ0" +
+"wsS0FBSyxFQUFFLEtBQUsiLAoic291cmNlcyI6IFsidGVzdC5zY3NzIl0sCiJzb3VyY2VzQ29udG" +
+"VudCI6IFsiYm9keSB7XG4gIGJhY2tncm91bmQtY29sb3I6IGJsYWNrO1xuICAmID4gaDEge1xuIC" +
+"AgIGNvbG9yOiB3aGl0ZTsgIFxuICB9XG59XG4iXSwKIm5hbWVzIjogW10sCiJmaWxlIjogInRlc3" +
+"QuY3NzIgp9Cg== */";
+var cssBlob = new Blob([cssContent], {type: "text/css"});
+var url = URL.createObjectURL(cssBlob);
+
+var head = document.querySelector("head");
+var link = document.createElement("link");
+link.rel = "stylesheet";
+link.type = "text/css";
+link.href = url;
+head.appendChild(link);
+</script>
+</body>
+</html>
