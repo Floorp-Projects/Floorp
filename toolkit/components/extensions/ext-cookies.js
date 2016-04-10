@@ -295,7 +295,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
 
       remove: function(details) {
         for (let cookie of query(details, ["url", "name", "storeId"], extension)) {
-          Services.cookies.remove(cookie.host, cookie.name, cookie.path, cookie.originAttributes, false);
+          Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
           // Todo: could there be multiple per subdomain?
           return Promise.resolve({
             url: details.url,
