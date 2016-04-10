@@ -678,6 +678,9 @@ private:
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();
 
+  // Returns true if this frame has any kind of CSS transitions.
+  bool HasCSSTransitions();
+
 #ifdef DEBUG_FRAME_DUMP
 public:
   /**
