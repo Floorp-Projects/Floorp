@@ -23,8 +23,10 @@ class AnimationEffectTimingReadOnly : public nsWrapperCache
 {
 public:
   AnimationEffectTimingReadOnly() = default;
-  explicit AnimationEffectTimingReadOnly(const TimingParams& aTiming)
-    : mTiming(aTiming) { }
+  AnimationEffectTimingReadOnly(nsISupports* aParent,
+                                const TimingParams& aTiming)
+    : mParent(aParent)
+    , mTiming(aTiming) { }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationEffectTimingReadOnly)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationEffectTimingReadOnly)
