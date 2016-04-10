@@ -803,9 +803,6 @@ TableWidget.prototype = {
     if (typeof item == "string") {
       item = this.items.get(item);
     }
-    if (!item) {
-      return;
-    }
     let removed = this.items.delete(item[this.uniqueId]);
 
     if (!removed) {

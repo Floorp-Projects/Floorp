@@ -28,10 +28,9 @@ add_task(function* () {
     yield selectTreeItem([store, host]);
 
     let row = getRowCells(rowName);
+
     ok(gUI.table.items.has(rowName),
       `There is a row '${rowName}' in ${store} > ${host}`);
-
-    let eventWait = gUI.once("store-objects-updated");
 
     yield waitForContextMenu(contextMenu, row[cellToClick], () => {
       info(`Opened context menu in ${store} > ${host}, row '${rowName}'`);
@@ -40,7 +39,7 @@ add_task(function* () {
         `Context menu item label contains '${rowName}'`);
     });
 
-    yield eventWait;
+    yield gUI.once("store-objects-updated");
 
     ok(!gUI.table.items.has(rowName),
       `There is no row '${rowName}' in ${store} > ${host} after deletion`);
