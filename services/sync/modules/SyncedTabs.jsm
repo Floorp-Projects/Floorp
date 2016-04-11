@@ -90,7 +90,7 @@ let SyncedTabsInternal = {
     return {
       id: client.id,
       type: "client",
-      name: client.clientName,
+      name: Weave.Service.clientsEngine.getClientName(client.id),
       icon:  this._getClientIcon(client.id),
       tabs: []
     };
