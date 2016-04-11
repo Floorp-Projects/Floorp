@@ -25,6 +25,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
@@ -112,6 +113,7 @@ void nsNotifyAddrListener::calculateNetworkId(void)
 {
     const char *kProcRoute = "/proc/net/route"; /* IPv4 routes */
     const char *kProcArp = "/proc/net/arp";
+    bool found = false;
 
     FILE *froute = fopen(kProcRoute, "r");
     if (froute) {
@@ -180,7 +182,16 @@ void nsNotifyAddrListener::calculateNetworkId(void)
                                                     SHA1Sum::kHashSize);
                                 Base64Encode(newString, output);
                                 LOG(("networkid: id %s\n", output.get()));
-                                mNetworkId = output;
+                                if (mNetworkId != output) {
+                                    // new id
+                                    Telemetry::Accumulate(Telemetry::NETWORK_ID, 1);
+                                    mNetworkId = output;
+                                }
+                                else {
+                                    // same id
+                                    Telemetry::Accumulate(Telemetry::NETWORK_ID, 2);
+                                }
+                                found = true;
                                 break;
                             }
                         }
@@ -190,6 +201,10 @@ void nsNotifyAddrListener::calculateNetworkId(void)
             } /* if (farp) */
         } /* if (gw) */
     } /* if (froute) */
+    if (!found) {
+        // no id
+        Telemetry::Accumulate(Telemetry::NETWORK_ID, 0);
+    }
 }
 
 //
