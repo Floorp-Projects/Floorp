@@ -53,7 +53,9 @@ interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSes
   /**
    * The following creation function will trigger |listener.onSessionTransport|
    * if the session transport is successfully built, |listener.onError| if some
-   * error occurs during creating session transport.
+   * error occurs during creating session transport. The |notifyOpened| of
+   * |aControlChannel| should be called before calling
+   * |buildDataChannelTransport|.
    */
   void buildDataChannelTransport(in uint8_t aType,
                                  in nsIDOMWindow aWindow,
