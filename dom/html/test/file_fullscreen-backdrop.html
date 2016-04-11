@@ -8,9 +8,18 @@
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <script type="text/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+    html {
+      overflow: hidden;
+    }
+    #placeholder {
+      height: 1000vh;
+    }
+  </style>
 </head>
 <body>
 <div id="fullscreen"></div>
+<div id="placeholder"></div>
 <script>
 
 const gStyle = document.getElementById("style");
@@ -75,6 +84,15 @@ function enterFullscreen() {
 
   gFullscreen.style.display = "none";
   info("The backdrop should disappear with the fullscreen element");
+  assertWindowPureColor(window, "white");
+
+  gFullscreen.style.display = "";
+  setBackdropStyle("position: absolute");
+  info("Changing position shouldn't immediately affect the view");
+  assertWindowPureColor(window, "black");
+
+  window.scroll(0, screen.height);
+  info("Scrolled up the absolutely-positioned element");
   assertWindowPureColor(window, "white");
 
   addFullscreenChangeContinuation("exit", exitFullscreen);
