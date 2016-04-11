@@ -1,42 +1,35 @@
-function test () {
+"use strict";
 
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    let doc = gBrowser.contentDocument;
-    let tooltip = document.getElementById("aHTMLTooltip");
-
-    ok(tooltip.fillInPageTooltip(doc.getElementById("svg1")), "should get title");
-    is(tooltip.getAttribute("label"), "This is a non-root SVG element title");
-
-    ok(tooltip.fillInPageTooltip(doc.getElementById("text1")), "should get title");
-    is(tooltip.getAttribute("label"), "\n\n\n    This            is a title\n\n    ");
-
-    ok(!tooltip.fillInPageTooltip(doc.getElementById("text2")), "should not get title");
-
-    ok(!tooltip.fillInPageTooltip(doc.getElementById("text3")), "should not get title");
-
-    ok(tooltip.fillInPageTooltip(doc.getElementById("link1")), "should get title");
-    is(tooltip.getAttribute("label"), "\n      This is a title\n    ");
-    ok(tooltip.fillInPageTooltip(doc.getElementById("text4")), "should get title");
-    is(tooltip.getAttribute("label"), "\n      This is a title\n    ");
-
-    ok(!tooltip.fillInPageTooltip(doc.getElementById("link2")), "should not get title");
-
-    ok(tooltip.fillInPageTooltip(doc.getElementById("link3")), "should get title");
-    isnot(tooltip.getAttribute("label"), "");
-
-    ok(tooltip.fillInPageTooltip(doc.getElementById("link4")), "should get title");
-    is(tooltip.getAttribute("label"), "This is an xlink:title attribute");
-
-    ok(!tooltip.fillInPageTooltip(doc.getElementById("text5")), "should not get title");
-
-    gBrowser.removeCurrentTab();
-    finish();
+add_task(function*() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "http://mochi.test:8888/browser/browser/base/content/test/general/title_test.svg",
+  }, function*(browser) {
+    yield ContentTask.spawn(browser, "", function() {
+      let tttp = Cc["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
+                 .getService(Ci.nsITooltipTextProvider);
+      function checkElement(id, expectedTooltipText) {
+        let el = content.document.getElementById(id);
+        let textObj = {};
+        let shouldHaveTooltip = expectedTooltipText !== null;
+        is(tttp.getNodeText(el, textObj, {}), shouldHaveTooltip,
+           "element " + id + " should " + (shouldHaveTooltip ? "" : "not ") + "have a tooltip");
+        if (shouldHaveTooltip) {
+          is(textObj.value, expectedTooltipText,
+             "element " + id + " should have the right tooltip text");
+        }
+      }
+      checkElement("svg1", "This is a non-root SVG element title");
+      checkElement("text1", "\n\n\n    This            is a title\n\n    ");
+      checkElement("text2", null);
+      checkElement("text3", null);
+      checkElement("link1", "\n      This is a title\n    ");
+      checkElement("text4", "\n      This is a title\n    ");
+      checkElement("link2", null);
+      checkElement("link3", "This is an xlink:title attribute");
+      checkElement("link4", "This is an xlink:title attribute");
+      checkElement("text5", null);
+    });
   });
-
-  gBrowser.loadURI(
-    "http://mochi.test:8888/browser/browser/base/content/test/general/title_test.svg"
-  );
-}
+});
 
