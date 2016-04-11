@@ -72,7 +72,7 @@ GetBRGADataSourceSurfaceSync(already_AddRefed<layers::Image> aImage)
   return helper->GetDataSurfaceSafe();
 }
 
-class EncodingCompleteEvent : public CancelableRunnable
+class EncodingCompleteEvent : public nsCancelableRunnable
 {
   virtual ~EncodingCompleteEvent() {}
 

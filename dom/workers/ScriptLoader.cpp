@@ -318,8 +318,7 @@ private:
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
           override;
 
-  nsresult
-  Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 
   void
   ShutdownScriptLoader(JSContext* aCx,
@@ -1893,7 +1892,7 @@ ScriptExecutorRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   }
 }
 
-nsresult
+NS_IMETHODIMP
 ScriptExecutorRunnable::Cancel()
 {
   if (mLastIndex == mScriptLoader.mLoadInfos.Length() - 1) {

@@ -39,7 +39,7 @@ static MessagePump::Delegate* gFirstDelegate;
 namespace mozilla {
 namespace ipc {
 
-class DoWorkRunnable final : public CancelableRunnable,
+class DoWorkRunnable final : public nsICancelableRunnable,
                              public nsITimerCallback
 {
 public:
@@ -49,10 +49,10 @@ public:
     MOZ_ASSERT(aPump);
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSITIMERCALLBACK
-  nsresult Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 
 private:
   ~DoWorkRunnable()
@@ -209,8 +209,8 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(DoWorkRunnable, CancelableRunnable,
-			    nsITimerCallback)
+NS_IMPL_ISUPPORTS(DoWorkRunnable, nsIRunnable, nsITimerCallback,
+                                  nsICancelableRunnable)
 
 NS_IMETHODIMP
 DoWorkRunnable::Run()
@@ -244,7 +244,7 @@ DoWorkRunnable::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 DoWorkRunnable::Cancel()
 {
   // Workers require cancelable runnables, but we can't really cancel cleanly
