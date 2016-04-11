@@ -87,6 +87,16 @@ public:
     static_assert(Format == AudioConfig::FORMAT_FLT,
                   "Conversion not implemented yet");
   }
+  AudioDataBuffer& operator=(AudioDataBuffer&& aOther)
+  {
+    mBuffer = Move(aOther.mBuffer);
+    return *this;
+  }
+  AudioDataBuffer& operator=(const AudioDataBuffer& aOther)
+  {
+    mBuffer = aOther.mBuffer;
+    return *this;
+  }
 
   Value* Data() const { return mBuffer.Data(); }
   size_t Length() const { return mBuffer.Length(); }
