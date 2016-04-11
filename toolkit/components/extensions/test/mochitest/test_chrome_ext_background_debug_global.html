@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+const {
+  utils: Cu,
+} = Components;
+
+Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm");
+
+/**
+ * This test is asserting that ext-backgroundPage.js successfully sets its
+ * debug global in the AddonWrapper provided by XPIProvider.jsm
+ *
+ * It does _not_ test any functionality in devtools and does not guarantee
+ * debugging is actually working correctly end-to-end.
+ */
+
+function backgroundScript() {
+  window.testThing = "test!";
+  browser.test.notifyPass("background script ran");
+}
+
+let extensionData = {
+  useAddonManager: true,
+  background: "(" + backgroundScript.toString() + ")()",
+  manifest: {},
+  files: {},
+};
+
+add_task(function* () {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+
+  yield extension.awaitFinish("background script ran");
+
+  yield new Promise(function(resolve) {
+    window.BrowserToolboxProcess.emit("connectionchange", "opened", {
+      setAddonOptions(id, options) {
+        if (id === extension.id) {
+          let context = Cu.waiveXrays(options.global);
+          ok(context.chrome, "global context has a chrome object");
+          ok(context.browser, "global context has a browser object");
+          is("test!", context.testThing, "global context is the background script context");
+          resolve();
+        }
+      },
+    });
+  });
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>
