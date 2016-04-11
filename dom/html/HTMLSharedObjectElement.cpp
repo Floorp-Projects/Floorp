@@ -20,8 +20,8 @@
 #ifdef XP_MACOSX
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/HTMLObjectElement.h"
 #endif
+#include "mozilla/dom/HTMLObjectElement.h"
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
@@ -85,7 +85,7 @@ HTMLSharedObjectElement::DoneAddingChildren(bool aHaveNotified)
     // If we're already in a document, we need to trigger the load
     // Otherwise, BindToTree takes care of that.
     if (IsInComposedDoc()) {
-      StartObjectLoad(aHaveNotified);
+      StartObjectLoad(aHaveNotified, false);
     }
   }
 }
@@ -322,7 +322,7 @@ HTMLSharedObjectElement::GetAttributeMappingFunction() const
 }
 
 void
-HTMLSharedObjectElement::StartObjectLoad(bool aNotify)
+HTMLSharedObjectElement::StartObjectLoad(bool aNotify, bool aForceLoad)
 {
   // BindToTree can call us asynchronously, and we may be removed from the tree
   // in the interim
@@ -331,7 +331,7 @@ HTMLSharedObjectElement::StartObjectLoad(bool aNotify)
     return;
   }
 
-  LoadObject(aNotify);
+  LoadObject(aNotify, aForceLoad);
   SetIsNetworkCreated(false);
 }
 
@@ -415,6 +415,15 @@ HTMLSharedObjectElement::BlockEmbedContentLoading()
   for (nsIContent* parent = GetParent(); parent; parent = parent->GetParent()) {
     if (parent->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio)) {
       return true;
+    }
+    // If we have an ancestor that is an object with a source, it'll have an
+    // associated displayed type. If that type is not null, don't load content
+    // for the embed.
+    if (HTMLObjectElement* object = HTMLObjectElement::FromContent(parent)) {
+      uint32_t type = object->DisplayedType();
+      if (type != eType_Null) {
+        return true;
+      }
     }
   }
   return false;
