@@ -8,7 +8,6 @@
 .controlsOverlay {
   -moz-box-pack: center;
   -moz-box-align: end;
-  padding: 20px;
   -moz-box-flex: 1;
   -moz-box-orient: horizontal;
 }
@@ -21,11 +20,13 @@
 
 .controlBar {
   -moz-box-flex: 1;
-  font-size: 16pt;
-  padding: 10px;
   background-color: rgba(50,50,50,0.8);
-  border-radius: 8px;
   width: 100%;
+}
+
+.buttonsBar {
+  -moz-box-flex: 1;
+  -moz-box-align: center;
 }
 
 .controlsSpacer {
@@ -38,17 +39,22 @@
 .castingButton,
 .muteButton {
   -moz-appearance: none;
-  min-height: 42px;
-  min-width: 42px;
+  padding: 2px;
   border: none !important;
+  min-height: 24px;
+  min-width: 24px;
 }
 
 .fullscreenButton {
   background: url("chrome://b2g/content/images/fullscreen-hdpi.png") no-repeat center;
+  background-size: contain;
+  background-origin: content-box;
 }
 
 .fullscreenButton[fullscreened="true"] {
   background: url("chrome://b2g/content/images/exitfullscreen-hdpi.png") no-repeat center;
+  background-size: contain;
+  background-origin: content-box;
 }
 
 .controlBar[fullscreen-unavailable] .fullscreenButton {
@@ -57,6 +63,8 @@
 
 .playButton {
   background: url("chrome://b2g/content/images/pause-hdpi.png") no-repeat center;
+  background-size: contain;
+  background-origin: content-box;
 }
 
 /*
@@ -71,6 +79,8 @@
 
 .playButton[paused="true"] {
   background: url("chrome://b2g/content/images/play-hdpi.png") no-repeat center;
+  background-size: contain;
+  background-origin: content-box;
 }
 
 .castingButton {
@@ -79,21 +89,24 @@
 
 .muteButton {
   background: url("chrome://b2g/content/images/mute-hdpi.png") no-repeat center;
+  background-size: contain;
+  background-origin: content-box;
 }
 
 .muteButton[muted="true"] {
   background: url("chrome://b2g/content/images/unmute-hdpi.png") no-repeat center;
+  background-size: contain;
+  background-origin: content-box;
 }
 
 /* bars */
 .scrubberStack {
-  width: 100%;
-  min-height: 32px;
-  max-height: 32px;
-  padding: 0px 8px;
-  margin: 0px;
+  -moz-box-flex: 1;
+  padding: 0px 18px;
 }
 
+.flexibleBar,
+.flexibleBar .progress-bar,
 .bufferBar,
 .bufferBar .progress-bar,
 .progressBar,
@@ -106,30 +119,44 @@
   padding: 0px;
   margin: 0px;
   background-color: transparent;
-  border-radius: 3px;
 }
 
-.bufferBar {
-  border: 1px solid #5e6166;
-}
-
+.flexibleBar,
 .bufferBar,
 .progressBar {
-  margin: 11px 0px 9px 0px;
-  height: 8px
+  height: 24px;
+  padding: 11px 0px;
+}
+
+.flexibleBar {
+  padding: 12px 0px;
+}
+
+.flexibleBar .progress-bar {
+  border: 1px #777777 solid;
+  border-radius: 1px;
 }
 
 .bufferBar .progress-bar {
-  background-color: #5e6166;
+  border: 2px #AFB1B3 solid;
+  border-radius: 2px;
 }
 
 .progressBar .progress-bar {
-  background-color: white;
+  border: 2px #FF9500 solid;
+  border-radius: 2px;
 }
 
+
 .scrubber {
-  margin-left: -16px;
-  margin-right: -16px;
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+.positionLabel, .durationLabel {
+  font-family: 'Roboto', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  color: white;
 }
 
 .scrubber .scale-thumb {
@@ -137,23 +164,9 @@
   margin: 0px !important;
   padding: 0px !important;
   background: url("chrome://b2g/content/images/scrubber-hdpi.png") no-repeat;
-  background-size: 32px 32px;
-  height: 32px;
-  width: 32px;
-}
-
-.durationBox {
-  -moz-box-orient: horizontal;
-  -moz-box-pack: start;
-  -moz-box-align: center;
-  color: white;
-  font-weight: bold;
-  padding: 0px 8px;
-  margin-top: -6px;
-}
-
-.positionLabel {
-  -moz-box-flex: 1;
+  background-size: 12px 12px;
+  height: 12px;
+  width: 12px;
 }
 
 .statusOverlay {
