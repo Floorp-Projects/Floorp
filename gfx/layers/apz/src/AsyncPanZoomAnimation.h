@@ -18,6 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class WheelScrollAnimation;
+class SmoothScrollAnimation;
 
 class AsyncPanZoomAnimation {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
@@ -50,6 +51,9 @@ public:
   }
 
   virtual WheelScrollAnimation* AsWheelScrollAnimation() {
+    return nullptr;
+  }
+  virtual SmoothScrollAnimation* AsSmoothScrollAnimation() {
     return nullptr;
   }
 

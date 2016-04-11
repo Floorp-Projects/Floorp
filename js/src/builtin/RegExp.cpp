@@ -935,10 +935,10 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
  */
 bool
 js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                     uint32_t lastIndex, bool sticky,
+                     int32_t lastIndex, bool sticky,
                      MatchPairs* maybeMatches, MutableHandleValue output)
 {
-    MOZ_ASSERT(lastIndex <= INT32_MAX);
+    MOZ_ASSERT(lastIndex >= 0);
 
     // The MatchPairs will always be passed in, but RegExp execution was
     // successful only if the pairs have actually been filled in.
@@ -1016,7 +1016,7 @@ js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
                       int32_t lastIndex, bool sticky,
                       MatchPairs* maybeMatches, int32_t* result)
 {
-    MOZ_ASSERT(lastIndex <= INT32_MAX);
+    MOZ_ASSERT(lastIndex >= 0);
 
     // The MatchPairs will always be passed in, but RegExp execution was
     // successful only if the pairs have actually been filled in.
@@ -1087,9 +1087,9 @@ js::RegExpTester(JSContext* cx, unsigned argc, Value* vp)
  */
 bool
 js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                    uint32_t lastIndex, bool sticky, int32_t* endIndex)
+                    int32_t lastIndex, bool sticky, int32_t* endIndex)
 {
-    MOZ_ASSERT(lastIndex <= INT32_MAX);
+    MOZ_ASSERT(lastIndex >= 0);
 
     size_t endIndexTmp = 0;
     RegExpRunStatus status = ExecuteRegExp(cx, regexp, input, lastIndex, sticky,

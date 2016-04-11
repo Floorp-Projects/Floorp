@@ -3132,7 +3132,8 @@ nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 
 // static
 nsresult
-nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
+nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
+                          nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
                           net::ReferrerPolicy aReferrerPolicy,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
@@ -3141,6 +3142,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           uint32_t aContentPolicyType)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
+  NS_PRECONDITION(aContext, "Must have a context");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
   NS_PRECONDITION(aLoadingPrincipal, "Must have a principal");
   NS_PRECONDITION(aRequest, "Null out param");
@@ -3170,6 +3172,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                               aLoadingPrincipal,    /* loading principal */
                               loadGroup,            /* loadgroup */
                               aObserver,            /* imgINotificationObserver */
+                              aContext,             /* loading context */
                               aLoadingDocument,     /* uniquification key */
                               aLoadFlags,           /* load flags */
                               nullptr,              /* cache key */

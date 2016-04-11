@@ -27,7 +27,7 @@ public:
   /**
    * Gets the raw destination of this axis at this moment.
    */
-  double GetDestination();
+  double GetDestination() const;
 
   /**
    * Sets the raw destination of this axis at this moment.

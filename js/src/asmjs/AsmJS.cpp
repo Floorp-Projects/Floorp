@@ -8162,7 +8162,7 @@ EstablishPreconditions(ExclusiveContext* cx, AsmJSParser& parser)
 
     switch (parser.options().asmJSOption) {
       case AsmJSOption::Disabled:
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by 'asmjs' runtime option");
       case AsmJSOption::DisabledByDebugger:
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
       case AsmJSOption::Enabled:
