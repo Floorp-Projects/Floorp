@@ -1,28 +1,24 @@
-function test() {
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    let doc = gBrowser.contentDocument;
-    let tooltip = document.getElementById("aHTMLTooltip");
-    let i = doc.getElementById("i");
+add_task(function*() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>",
+  }, function*(browser) {
+    yield ContentTask.spawn(browser, "", function() {
+      let tttp = Cc["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
+                 .getService(Ci.nsITooltipTextProvider);
+      let i = content.document.getElementById("i");
 
-    ok(!tooltip.fillInPageTooltip(i),
-       "No tooltip should be shown when @title is null");
+      ok(!tttp.getNodeText(i, {}, {}),
+         "No tooltip should be shown when @title is null");
 
-    i.title = "foo";
-    ok(tooltip.fillInPageTooltip(i),
-       "A tooltip should be shown when @title is not the empty string");
+      i.title = "foo";
+      ok(tttp.getNodeText(i, {}, {}),
+         "A tooltip should be shown when @title is not the empty string");
 
-    i.pattern = "bar";
-    ok(tooltip.fillInPageTooltip(i),
-       "A tooltip should be shown when @title is not the empty string");
-
-    gBrowser.removeCurrentTab();
-    finish();
+      i.pattern = "bar";
+      ok(tttp.getNodeText(i, {}, {}),
+         "A tooltip should be shown when @title is not the empty string");
+    });
   });
-
-  gBrowser.loadURI(
-    "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>"
-  );
-}
+});
 
