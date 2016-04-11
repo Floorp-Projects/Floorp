@@ -23,6 +23,10 @@ UNIFIED_SOURCES += [
     'ZeroPole.cpp',
 ]
 
+# Are we targeting x86 or x64?  If so, build SSE2 files.
+if CONFIG['INTEL_ARCHITECTURE']:
+    DEFINES['USE_SSE2'] = True
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
