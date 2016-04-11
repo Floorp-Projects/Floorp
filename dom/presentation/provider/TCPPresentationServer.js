@@ -489,7 +489,7 @@ TCPControlChannel.prototype = {
   onStopRequest: function(aRequest, aContext, aStatus) {
     DEBUG && log("TCPControlChannel - onStopRequest: " + aStatus
                  + " with role: " + this._direction);
-    this.close(aStatus);
+    this.close(Cr.NS_OK);
     this._notifyClosed(aStatus);
   },
 

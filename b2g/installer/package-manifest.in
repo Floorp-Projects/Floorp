@@ -421,8 +421,6 @@
 @RESPATH@/components/PresentationDeviceInfoManager.js
 @RESPATH@/components/BuiltinProviders.manifest
 @RESPATH@/components/TCPPresentationServer.js
-@BINPATH@/components/PresentationDataChannelSessionTransport.js
-@BINPATH@/components/PresentationDataChannelSessionTransport.manifest
 
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/ACEService.js
