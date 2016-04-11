@@ -157,10 +157,13 @@ protected:
   void SetSelectionDragState(bool aState) const;
   void SetSelectionDirection(nsDirection aDir) const;
 
-  // If aBackward is false, find the first node from the first range in current
-  // selection, and return the frame and the offset into that frame. If aBackward
-  // is true, find the last node from the last range instead.
-  nsIFrame* FindFirstNodeWithFrame(bool aBackward, int32_t* aOutOffset) const;
+  // If aDirection is eDirNext, get the frame for the range start in the first
+  // range from the current selection, and return the offset into that frame as
+  // well as the range start node and the node offset. Otherwise, get the frame
+  // and offset for the range end in the last range instead.
+  nsIFrame* GetFrameForFirstRangeStartOrLastRangeEnd(
+    nsDirection aDirection, int32_t* aOutOffset, nsINode** aOutNode = nullptr,
+    int32_t* aOutNodeOffset = nullptr) const;
 
   nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
@@ -179,11 +182,14 @@ protected:
   // be dragged. Returns the rect relative to aFrame.
   nsRect GetAllChildFrameRectsUnion(nsIFrame* aFrame) const;
 
-  // If we're dragging the first caret, we do not want to drag it over the
-  // previous character of the second caret. Same as the second caret. So we
-  // check if content offset exceeds the previous/next character of second/first
-  // caret base the active caret.
-  bool CompareRangeWithContentOffset(nsIFrame::ContentOffsets& aOffsets);
+  // Suppose the user is dragging the first caret. We do not want it to be
+  // dragged across the second caret, i.e. we want it to stop at the limit which
+  // is the previous character of the second caret. Same rule applies when
+  // dragging the second caret.
+  // @param aOffsets is the new position of the active caret, and it will be set
+  // to the limit if it's being dragged past the limit.
+  // @return true if the aOffsets is suitable for changing the selection.
+  bool RestrictCaretDraggingOffsets(nsIFrame::ContentOffsets& aOffsets);
 
   // Timeout in milliseconds to hide the AccessibleCaret under cursor mode while
   // no one touches it.
