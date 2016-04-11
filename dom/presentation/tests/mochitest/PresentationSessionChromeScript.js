@@ -198,7 +198,6 @@ const mockedDevicePrompt = {
 
 const mockedSessionTransport = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransport,
-                                         Ci.nsIPresentationTCPSessionTransportBuilder,
                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
@@ -215,19 +214,13 @@ const mockedSessionTransport = {
   get selfAddress() {
     return this._selfAddress;
   },
-  buildTCPSenderTransport: function(transport, listener) {
+  initWithSocketTransport: function(transport, callback) {
     sendAsyncMessage('data-transport-initialized');
-    this._listener = listener;
-    this._type = Ci.nsIPresentationSessionTransportBuilder.TYPE_SENDER;
-
-    this._listener.onSessionTransport(this);
-    this._listener = null;
-
+    this._callback = callback;
     this.simulateTransportReady();
   },
-  buildTCPReceiverTransport: function(description, listener) {
-    this._listener = listener;
-    this._type = Ci.nsIPresentationSessionTransportBuilder.TYPE_RECEIVER;
+  initWithChannelDescription: function(description, callback) {
+    this._callback = callback;
 
     var addresses = description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpAddress;
     this._selfAddress = {
@@ -236,9 +229,6 @@ const mockedSessionTransport = {
                 addresses.queryElementAt(0, Ci.nsISupportsCString).data : "",
       port: description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpPort,
     };
-
-    this._listener.onSessionTransport(this);
-    this._listener = null;
   },
   enableDataNotification: function() {
     sendAsyncMessage('data-transport-notification-enabled');
@@ -312,7 +302,7 @@ originalFactoryData.push(registerMockedFactory("@mozilla.org/presentation-device
 originalFactoryData.push(registerMockedFactory("@mozilla.org/network/server-socket;1",
                                                uuidGenerator.generateUUID(),
                                                mockedServerSocket));
-originalFactoryData.push(registerMockedFactory("@mozilla.org/presentation/presentationtcpsessiontransport;1",
+originalFactoryData.push(registerMockedFactory("@mozilla.org/presentation/presentationsessiontransport;1",
                                                uuidGenerator.generateUUID(),
                                                mockedSessionTransport));
 originalFactoryData.push(registerMockedFactory("@mozilla.org/network/manager;1",
