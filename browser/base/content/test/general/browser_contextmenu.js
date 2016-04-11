@@ -26,8 +26,16 @@ add_task(function* test_setup() {
     let doc = content.document;
     let videoIframe = doc.querySelector("#test-video-in-iframe");
     let video = videoIframe.contentDocument.querySelector("video");
+    let awaitPause = ContentTaskUtils.waitForEvent(video, "pause");
     video.pause();
-    yield ContentTaskUtils.waitForCondition(() => video.paused, "iframe video should be paused");
+    yield awaitPause;
+
+    let audioIframe = doc.querySelector("#test-audio-in-iframe");
+    // media documents always use a <video> tag.
+    let audio = audioIframe.contentDocument.querySelector("video");
+    awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
+    audio.pause();
+    yield awaitPause;
   });
 });
 
@@ -246,6 +254,36 @@ add_task(function* test_video_in_iframe() {
      "context-sendvideo",          true,
      "context-castvideo",          null,
        [], null,
+     "frame",                null,
+         ["context-showonlythisframe", true,
+          "context-openframeintab",    true,
+          "context-openframe",         true,
+          "---",                       null,
+          "context-reloadframe",       true,
+          "---",                       null,
+          "context-bookmarkframe",     true,
+          "context-saveframe",         true,
+          "---",                       null,
+          "context-printframe",        true,
+          "---",                       null,
+          "context-viewframeinfo",     true], null]
+  );
+});
+
+add_task(function* test_audio_in_iframe() {
+  yield test_contextmenu("#test-audio-in-iframe",
+    ["context-media-play",         true,
+     "context-media-mute",         true,
+     "context-media-playbackrate", null,
+         ["context-media-playbackrate-050x", true,
+          "context-media-playbackrate-100x", true,
+          "context-media-playbackrate-150x", true,
+          "context-media-playbackrate-200x", true], null,
+     "---",                        null,
+     "context-copyaudiourl",       true,
+     "---",                        null,
+     "context-saveaudio",          true,
+     "context-sendaudio",          true,
      "frame",                null,
          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
