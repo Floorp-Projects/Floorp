@@ -539,6 +539,7 @@ enum class SymbolicAddress
     HandleExecutionInterrupt,
     InvokeImport_Void,
     InvokeImport_I32,
+    InvokeImport_I64,
     InvokeImport_F64,
     CoerceInPlace_ToInt32,
     CoerceInPlace_ToNumber,
@@ -547,6 +548,10 @@ enum class SymbolicAddress
 
 void*
 AddressOf(SymbolicAddress imm, ExclusiveContext* cx);
+
+// Extracts low and high from an int64 object {low: int32, high: int32}, for
+// testing purposes mainly.
+bool ReadI64Object(JSContext* cx, HandleValue v, int64_t* val);
 
 // A wasm::JumpTarget represents one of a special set of stubs that can be
 // jumped to from any function. Because wasm modules can be larger than the

@@ -1287,6 +1287,13 @@ class ABIArg
         MOZ_ASSERT(kind() == GPR);
         return Register::FromCode(u.gpr_);
     }
+    Register64 gpr64() const {
+#ifdef JS_PUNBOX64
+        return Register64(gpr());
+#else
+        MOZ_CRASH("NYI");
+#endif
+    }
     Register evenGpr() const {
         MOZ_ASSERT(isGeneralRegPair());
         return Register::FromCode(u.gpr_);

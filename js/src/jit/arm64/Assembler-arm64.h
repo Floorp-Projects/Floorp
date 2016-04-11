@@ -55,6 +55,7 @@ static constexpr Register CallTempReg5 = { Registers::x14 };
 static constexpr Register PreBarrierReg = { Registers::x1 };
 
 static constexpr Register ReturnReg = { Registers::x0 };
+static constexpr Register64 ReturnReg64(ReturnReg);
 static constexpr Register JSReturnReg = { Registers::x2 };
 static constexpr Register FramePointer = { Registers::fp };
 static constexpr Register ZeroRegister = { Registers::sp };

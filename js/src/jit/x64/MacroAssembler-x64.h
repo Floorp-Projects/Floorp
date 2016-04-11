@@ -942,11 +942,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         uint8_t* target = globalData + globalDataOffset;
         ((int32_t*)nextInsn)[-1] = target - nextInsn;
     }
-    void memIntToValue(Address Source, Address Dest) {
-        ScratchRegisterScope scratch(asMasm());
-        load32(Source, scratch);
-        storeValue(JSVAL_TYPE_INT32, scratch, Dest);
-    }
 
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);
