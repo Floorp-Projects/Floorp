@@ -3,7 +3,7 @@ default-preferences pref(canvas.filters.enabled,true)
 == default-color.html ref.html
 == drop-shadow.html ref.html
 == drop-shadow-transformed.html ref.html
-== global-alpha.html global-alpha-ref.html
+fuzzy-if(azureSkia,1,1500) == global-alpha.html global-alpha-ref.html
 == global-composite-operation.html global-composite-operation-ref.html
 == liveness.html ref.html
 == multiple-drop-shadows.html shadow-ref.html

@@ -15,6 +15,7 @@
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/layers/ImageHost.h"   // for ImageHost
 #include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAString.h"
@@ -50,7 +51,7 @@ ImageLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
   switch (aHost->GetType()) {
     case CompositableType::IMAGE:
-      mImageHost = aHost;
+      mImageHost = static_cast<ImageHost*>(aHost);
       return true;
     default:
       return false;
@@ -76,6 +77,16 @@ Layer*
 ImageLayerComposite::GetLayer()
 {
   return this;
+}
+
+void
+ImageLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
+{
+  LayerComposite::SetLayerManager(aManager);
+  mManager = aManager;
+  if (mImageHost) {
+    mImageHost->SetCompositor(mCompositor);
+  }
 }
 
 void
@@ -141,6 +152,20 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransform
   }
 
   ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
+}
+
+bool
+ImageLayerComposite::IsOpaque()
+{
+  if (!mImageHost ||
+      !mImageHost->IsAttached()) {
+    return false;
+  }
+
+  if (mScaleMode == ScaleMode::STRETCH) {
+    return mImageHost->IsOpaque();
+  }
+  return false;
 }
 
 CompositableHost*
