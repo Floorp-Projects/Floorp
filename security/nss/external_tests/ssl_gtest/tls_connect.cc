@@ -5,9 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "tls_connect.h"
-extern "C" {
-#include "libssl_internals.h"
-}
 
 #include <iostream>
 
@@ -21,68 +18,26 @@ namespace nss_test {
 static const std::string kTlsModesStreamArr[] = {"TLS"};
 ::testing::internal::ParamGenerator<std::string>
   TlsConnectTestBase::kTlsModesStream = ::testing::ValuesIn(kTlsModesStreamArr);
-static const std::string kTlsModesDatagramArr[] = {"DTLS"};
-::testing::internal::ParamGenerator<std::string>
-TlsConnectTestBase::kTlsModesDatagram =
-      ::testing::ValuesIn(kTlsModesDatagramArr);
 static const std::string kTlsModesAllArr[] = {"TLS", "DTLS"};
 ::testing::internal::ParamGenerator<std::string>
   TlsConnectTestBase::kTlsModesAll = ::testing::ValuesIn(kTlsModesAllArr);
-
 static const uint16_t kTlsV10Arr[] = {SSL_LIBRARY_VERSION_TLS_1_0};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV10 = ::testing::ValuesIn(kTlsV10Arr);
 static const uint16_t kTlsV11Arr[] = {SSL_LIBRARY_VERSION_TLS_1_1};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV11 = ::testing::ValuesIn(kTlsV11Arr);
-static const uint16_t kTlsV10V11Arr[] = {SSL_LIBRARY_VERSION_TLS_1_0,
-                                         SSL_LIBRARY_VERSION_TLS_1_1};
-::testing::internal::ParamGenerator<uint16_t>
-  TlsConnectTestBase::kTlsV10V11 = ::testing::ValuesIn(kTlsV10V11Arr);
-static const uint16_t kTlsV10To12Arr[] = {SSL_LIBRARY_VERSION_TLS_1_0,
-                                         SSL_LIBRARY_VERSION_TLS_1_1,
-                                         SSL_LIBRARY_VERSION_TLS_1_2};
-::testing::internal::ParamGenerator<uint16_t>
-  TlsConnectTestBase::kTlsV10To12 = ::testing::ValuesIn(kTlsV10To12Arr);
 static const uint16_t kTlsV11V12Arr[] = {SSL_LIBRARY_VERSION_TLS_1_1,
                                          SSL_LIBRARY_VERSION_TLS_1_2};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV11V12 = ::testing::ValuesIn(kTlsV11V12Arr);
-
-static const uint16_t kTlsV11PlusArr[] = {
-#ifdef NSS_ENABLE_TLS_1_3
-  SSL_LIBRARY_VERSION_TLS_1_3,
-#endif
-  SSL_LIBRARY_VERSION_TLS_1_2,
-  SSL_LIBRARY_VERSION_TLS_1_1
-};
-::testing::internal::ParamGenerator<uint16_t>
-  TlsConnectTestBase::kTlsV11Plus = ::testing::ValuesIn(kTlsV11PlusArr);
-static const uint16_t kTlsV12PlusArr[] = {
-#ifdef NSS_ENABLE_TLS_1_3
-  SSL_LIBRARY_VERSION_TLS_1_3,
-#endif
-  SSL_LIBRARY_VERSION_TLS_1_2
-};
+// TODO: add TLS 1.3
+static const uint16_t kTlsV12PlusArr[] = {SSL_LIBRARY_VERSION_TLS_1_2};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV12Plus = ::testing::ValuesIn(kTlsV12PlusArr);
-#ifdef NSS_ENABLE_TLS_1_3
-static const uint16_t kTlsV13Arr[] = {
-  SSL_LIBRARY_VERSION_TLS_1_3
-};
+static const uint16_t kTlsV13Arr[] = {SSL_LIBRARY_VERSION_TLS_1_3};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV13 = ::testing::ValuesIn(kTlsV13Arr);
-#endif
-static const uint16_t kTlsVAllArr[] = {
-#ifdef NSS_ENABLE_TLS_1_3
-  SSL_LIBRARY_VERSION_TLS_1_3,
-#endif
-  SSL_LIBRARY_VERSION_TLS_1_2,
-  SSL_LIBRARY_VERSION_TLS_1_1,
-  SSL_LIBRARY_VERSION_TLS_1_0
-};
-::testing::internal::ParamGenerator<uint16_t>
-  TlsConnectTestBase::kTlsVAll = ::testing::ValuesIn(kTlsVAllArr);
 
 static std::string VersionString(uint16_t version) {
   switch(version) {
@@ -111,34 +66,20 @@ TlsConnectTestBase::TlsConnectTestBase(Mode mode, uint16_t version)
         expected_resumption_mode_(RESUME_NONE),
         session_ids_(),
         expect_extended_master_secret_(false) {
-  std::string v;
-  if (mode_ == DGRAM && version_ == SSL_LIBRARY_VERSION_TLS_1_1) {
-    v = "1.0";
-  } else {
-    v = VersionString(version_);
-  }
-  std::cerr << "Version: " << mode_ << " " << v << std::endl;
+  std::cerr << "Version: " << mode_ << " " << VersionString(version_) << std::endl;
 }
 
 TlsConnectTestBase::~TlsConnectTestBase() {
 }
 
-void TlsConnectTestBase::ClearStats() {
+void TlsConnectTestBase::SetUp() {
+  // Configure a fresh session cache.
+  SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
+
   // Clear statistics.
   SSL3Statistics* stats = SSL_GetStatistics();
   memset(stats, 0, sizeof(*stats));
-}
 
-void TlsConnectTestBase::ClearServerCache() {
-  SSL_ShutdownServerSessionIDCache();
-  SSLInt_ClearSessionTicketKey();
-  SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
-}
-
-void TlsConnectTestBase::SetUp() {
-  SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
-  SSLInt_ClearSessionTicketKey();
-  ClearStats();
   Init();
 }
 
@@ -147,7 +88,6 @@ void TlsConnectTestBase::TearDown() {
   delete server_;
 
   SSL_ClearSessionCache();
-  SSLInt_ClearSessionTicketKey();
   SSL_ShutdownServerSessionIDCache();
 }
 
@@ -310,11 +250,8 @@ void TlsConnectTestBase::CheckResumption(SessionResumptionMode expected) {
   EXPECT_EQ(stateless_ct, stats->hch_sid_stateless_resumes);
   EXPECT_EQ(stateless_ct, stats->hsh_sid_stateless_resumes);
 
-  if (resume_ct &&
-      client_->version() < SSL_LIBRARY_VERSION_TLS_1_3) {
+  if (resume_ct) {
     // Check that the last two session ids match.
-    // TLS 1.3 doesn't do session id-based resumption. It's all
-    // tickets.
     EXPECT_EQ(2U, session_ids_.size());
     EXPECT_EQ(session_ids_[session_ids_.size()-1],
               session_ids_[session_ids_.size()-2]);
