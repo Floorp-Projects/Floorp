@@ -67,7 +67,7 @@ const char kMemoryPressureObserverTopic[] = "memory-pressure";
 const char kWindowObserverTopic[] = "inner-window-destroyed";
 
 class CancelableRunnableWrapper final
-  : public CancelableRunnable
+  : public nsICancelableRunnable
 {
   nsCOMPtr<nsIRunnable> mRunnable;
 
@@ -79,12 +79,14 @@ public:
     MOZ_ASSERT(aRunnable);
   }
 
+  NS_DECL_ISUPPORTS
+
 private:
   ~CancelableRunnableWrapper()
   { }
 
   NS_DECL_NSIRUNNABLE
-  nsresult Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 };
 
 class DatabaseFile final
@@ -1273,6 +1275,8 @@ IDBDatabase::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return IDBDatabaseBinding::Wrap(aCx, this, aGivenProto);
 }
 
+NS_IMPL_ISUPPORTS(CancelableRunnableWrapper, nsIRunnable, nsICancelableRunnable)
+
 NS_IMETHODIMP
 CancelableRunnableWrapper::Run()
 {
@@ -1286,7 +1290,7 @@ CancelableRunnableWrapper::Run()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 CancelableRunnableWrapper::Cancel()
 {
   if (mRunnable) {

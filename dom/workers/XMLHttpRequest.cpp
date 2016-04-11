@@ -499,7 +499,7 @@ class LoadStartDetectionRunnable final : public nsRunnable,
       return true;
     }
 
-    nsresult
+    NS_IMETHOD
     Cancel() override
     {
       // This must run!

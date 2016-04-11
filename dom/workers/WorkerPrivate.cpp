@@ -213,11 +213,11 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
 // from the worker's EventTarget).
 class ExternalRunnableWrapper final : public WorkerRunnable
 {
-  nsCOMPtr<nsIRunnable> mWrappedRunnable;
+  nsCOMPtr<nsICancelableRunnable> mWrappedRunnable;
 
 public:
   ExternalRunnableWrapper(WorkerPrivate* aWorkerPrivate,
-                          nsIRunnable* aWrappedRunnable)
+                          nsICancelableRunnable* aWrappedRunnable)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
     mWrappedRunnable(aWrappedRunnable)
   {
@@ -244,14 +244,10 @@ private:
     return true;
   }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override
   {
-    nsresult rv;
-    nsCOMPtr<nsICancelableRunnable> cancelable =
-      do_QueryInterface(mWrappedRunnable);
-    MOZ_ASSERT(cancelable); // We checked this earlier!
-    rv = cancelable->Cancel();
+    nsresult rv = mWrappedRunnable->Cancel();
     nsresult rv2 = WorkerRunnable::Cancel();
     return NS_FAILED(rv) ? rv : rv2;
   }
@@ -628,7 +624,7 @@ private:
     return true;
   }
 
-  nsresult Cancel() override
+  NS_IMETHOD Cancel() override
   {
     // We need to run regardless.
     Run();
@@ -1349,7 +1345,7 @@ private:
     return true;
   }
 
-  nsresult Cancel() override
+  NS_IMETHOD Cancel() override
   {
     // We need to run regardless.
     Run();
@@ -1659,7 +1655,7 @@ private:
     return aWorkerPrivate->ConnectMessagePort(aCx, mPortIdentifier);
   }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override
   {
     MessagePort::ForceClose(mPortIdentifier);
@@ -2476,7 +2472,7 @@ WorkerPrivateParent<Derived>::MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunn
   }
 
   workerRunnable =
-    new ExternalRunnableWrapper(ParentAsWorkerPrivate(), runnable);
+    new ExternalRunnableWrapper(ParentAsWorkerPrivate(), cancelable);
   return workerRunnable.forget();
 }
 

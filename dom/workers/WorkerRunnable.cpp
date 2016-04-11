@@ -215,7 +215,7 @@ NS_IMPL_RELEASE(WorkerRunnable)
 NS_INTERFACE_MAP_BEGIN(WorkerRunnable)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
   NS_INTERFACE_MAP_ENTRY(nsICancelableRunnable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   // kWorkerRunnableIID is special in that it does not AddRef its result.
   if (aIID.Equals(kWorkerRunnableIID)) {
     *aInstancePtr = this;
@@ -402,7 +402,7 @@ WorkerRunnable::Run()
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
+NS_IMETHODIMP
 WorkerRunnable::Cancel()
 {
   uint32_t canceledCount = ++mCanceled;
@@ -477,7 +477,7 @@ StopSyncLoopRunnable::StopSyncLoopRunnable(
 #endif
 }
 
-nsresult
+NS_IMETHODIMP
 StopSyncLoopRunnable::Cancel()
 {
   nsresult rv = Run();
@@ -534,7 +534,7 @@ WorkerControlRunnable::WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
 }
 #endif
 
-nsresult
+NS_IMETHODIMP
 WorkerControlRunnable::Cancel()
 {
   if (NS_FAILED(Run())) {

@@ -1263,7 +1263,7 @@ HTMLCanvasElement::OnVisibilityChange()
   }
 
   if (mOffscreenCanvas) {
-    class Runnable final : public CancelableRunnable
+    class Runnable final : public nsCancelableRunnable
     {
     public:
       explicit Runnable(AsyncCanvasRenderer* aRenderer)
@@ -1305,7 +1305,7 @@ void
 HTMLCanvasElement::OnMemoryPressure()
 {
   if (mOffscreenCanvas) {
-    class Runnable final : public CancelableRunnable
+    class Runnable final : public nsCancelableRunnable
     {
     public:
       explicit Runnable(AsyncCanvasRenderer* aRenderer)
