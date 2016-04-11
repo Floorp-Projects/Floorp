@@ -23,6 +23,7 @@
 #include "nsIFrame.h"
 #include "nsIDocument.h"
 #include "nsDOMMutationObserver.h"
+#include <algorithm> // std::stable_sort
 #include <math.h>
 
 using namespace mozilla;
@@ -332,8 +333,9 @@ static void
 UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld,
     TimingParams& aNewTiming,
-    InfallibleTArray<AnimationProperty>& aNewProperties,
-    bool aNewIsStylePaused)
+    nsTArray<Keyframe>& aNewFrames,
+    bool aNewIsStylePaused,
+    nsStyleContext* aStyleContext)
 {
   bool animationChanged = false;
 
@@ -344,8 +346,7 @@ UpdateOldAnimationPropertiesWithNew(
     animationChanged =
       oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
-    animationChanged |=
-      oldEffect->UpdateProperties(aNewProperties);
+    oldEffect->SetFrames(Move(aNewFrames), aStyleContext);
   }
 
   // Handle changes in play state. If the animation is idle, however,
@@ -479,21 +480,6 @@ nsAnimationManager::StopAnimationsForElement(
   collection->Destroy();
 }
 
-struct KeyframeData {
-  float mKey;
-  uint32_t mIndex; // store original order since sort algorithm is not stable
-  nsCSSKeyframeRule *mRule;
-};
-
-struct KeyframeDataComparator {
-  bool Equals(const KeyframeData& A, const KeyframeData& B) const {
-    return A.mKey == B.mKey && A.mIndex == B.mIndex;
-  }
-  bool LessThan(const KeyframeData& A, const KeyframeData& B) const {
-    return A.mKey < B.mKey || (A.mKey == B.mKey && A.mIndex < B.mIndex);
-  }
-};
-
 class ResolvedStyleCache {
 public:
   ResolvedStyleCache() : mCache() {}
@@ -562,17 +548,31 @@ public:
         const nsCSSKeyframesRule* aRule);
 
 private:
-  void BuildAnimationProperties(nsPresContext* aPresContext,
-                                const StyleAnimation& aSrc,
-                                const nsCSSKeyframesRule* aRule,
-                                InfallibleTArray<AnimationProperty>& aResult);
-  bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
-                      aSegments,
-                    nsCSSProperty aProperty,
-                    const mozilla::StyleAnimation& aAnimation,
-                    float aFromKey, nsStyleContext* aFromContext,
-                    mozilla::css::Declaration* aFromDeclaration,
-                    float aToKey, nsStyleContext* aToContext);
+  nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
+                                          const StyleAnimation& aSrc,
+                                          const nsCSSKeyframesRule* aRule);
+  Maybe<ComputedTimingFunction> GetKeyframeTimingFunction(
+    nsPresContext* aPresContext,
+    nsCSSKeyframeRule* aKeyframeRule,
+    const Maybe<ComputedTimingFunction>& aInheritedTimingFunction);
+  nsTArray<PropertyValuePair> GetKeyframePropertyValues(
+    nsPresContext* aPresContext,
+    nsCSSKeyframeRule* aKeyframeRule,
+    nsCSSCompressedDataBlock* aDataBlock,
+    nsCSSPropertySet& aAnimatedProperties);
+  void FillInMissingKeyframeValues(
+    nsPresContext* aPresContext,
+    nsCSSPropertySet aAnimatedProperties,
+    nsCSSPropertySet aPropertiesSetAtStart,
+    nsCSSPropertySet aPropertiesSetAtEnd,
+    const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
+    nsTArray<Keyframe>& aKeyframes);
+  void AppendProperty(nsPresContext* aPresContext,
+                      nsCSSProperty aProperty,
+                      nsTArray<PropertyValuePair>& aPropertyValues);
+  void GetComputedValue(nsPresContext* aPresContext,
+                        nsCSSProperty aProperty,
+                        nsCSSValue& aResult);
 
   static TimingParams TimingParamsFrom(
     const StyleAnimation& aStyleAnimation)
@@ -599,6 +599,9 @@ private:
   nsAnimationManager::CSSAnimationCollection* mCollection;
 };
 
+static Maybe<ComputedTimingFunction>
+ConvertTimingFunction(const nsTimingFunction& aTimingFunction);
+
 already_AddRefed<CSSAnimation>
 CSSAnimationBuilder::Build(nsPresContext* aPresContext,
                            const StyleAnimation& aSrc,
@@ -609,8 +612,8 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
 
   TimingParams timing = TimingParamsFrom(aSrc);
 
-  InfallibleTArray<AnimationProperty> animationProperties;
-  BuildAnimationProperties(aPresContext, aSrc, aRule, animationProperties);
+  nsTArray<Keyframe> keyframes =
+    BuildAnimationFrames(aPresContext, aSrc, aRule);
 
   bool isStylePaused =
     aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
@@ -631,8 +634,9 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
     // In order to honor what the spec said, we'd copy more data over.
     UpdateOldAnimationPropertiesWithNew(*oldAnim,
                                         timing,
-                                        animationProperties,
-                                        isStylePaused);
+                                        keyframes,
+                                        isStylePaused,
+                                        mStyleContext);
     return oldAnim.forget();
   }
 
@@ -640,7 +644,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
     new KeyframeEffectReadOnly(aPresContext->Document(), mTarget,
                                mStyleContext->GetPseudoType(), timing);
 
-  effect->Properties() = Move(animationProperties);
+  effect->SetFrames(Move(keyframes), mStyleContext);
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
@@ -667,214 +671,388 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   return animation.forget();
 }
 
-void
-CSSAnimationBuilder::BuildAnimationProperties(
-  nsPresContext* aPresContext,
-  const StyleAnimation& aSrc,
-  const nsCSSKeyframesRule* aRule,
-  InfallibleTArray<AnimationProperty>& aResult)
+nsTArray<Keyframe>
+CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
+                                          const StyleAnimation& aSrc,
+                                          const nsCSSKeyframesRule* aRule)
 {
-  // While current drafts of css3-animations say that later keyframes
-  // with the same key entirely replace earlier ones (no cascading),
-  // this is a bad idea and contradictory to the rest of CSS.  So
-  // we're going to keep all the keyframes for each key and then do
-  // the replacement on a per-property basis rather than a per-rule
-  // basis, just like everything else in CSS.
+  // Ideally we'd like to build up a set of Keyframe objects that more-or-less
+  // reflects the keyframes as-specified in the @keyframes rule(s). However,
+  // that proves to be difficult because the way CSS declarations are processed
+  // differs from how we are able to represent keyframes as JavaScript objects.
+  //
+  // For example, in CSS the following rules differ in meaning:
+  //
+  //   { margin: 10px; margin-left: 20px }
+  //   { margin-left: 20px; margin: 10px }
+  //
+  // However, in JavaScript, since the order in which object properties are
+  // enumerated is not defined, Web Animations defines that shorthands are
+  // applied first and longhands are layered on top regardless of the order
+  // in which they are specified. As a result, we would need to represent the
+  // above as:
+  //
+  //   { margin: '10px', marginLeft: '20px' }
+  //   { margin: '10px' }
+  //
+  // Similarly, redundant declarations are permitted by CSS but not in
+  // JavaScript. As such,
+  //
+  //   { margin-left: 20px; margin-left: 30px }
+  //
+  // would be represented as:
+  //
+  //   { marginLeft: '30px' }
+  //
+  // In effect, we would need to manually apply the rules for CSS declaration
+  // processing in order to maintain the closest possibly mapping
+  // to the source and even then, the mapping would be unclear in some
+  // cases. Furthermore, @keyframes are defined to cascade so any
+  // correspondance to the source would be further obscured once we represent
+  // the result as a single array.
+  //
+  // Until there is specified behavior for preserving shorthands we simply
+  // expand all shorthands, apply regular declaration processing, then go and
+  // pick up the last value specified for each property at each offset.
 
-  AutoTArray<KeyframeData, 16> sortedKeyframes;
+  // FIXME: There is a pending spec change to make multiple @keyframes
+  // rules with the same name cascade but we don't support that yet.
 
-  for (uint32_t ruleIdx = 0, ruleEnd = aRule->StyleRuleCount();
+  Maybe<ComputedTimingFunction> inheritedTimingFunction =
+    ConvertTimingFunction(aSrc.GetTimingFunction());
+
+  // First, make up Keyframe objects for each rule
+  nsTArray<Keyframe> keyframes;
+  nsCSSPropertySet animatedProperties;
+
+  for (auto ruleIdx = 0, ruleEnd = aRule->StyleRuleCount();
        ruleIdx != ruleEnd; ++ruleIdx) {
     css::Rule* cssRule = aRule->GetStyleRuleAt(ruleIdx);
     MOZ_ASSERT(cssRule, "must have rule");
     MOZ_ASSERT(cssRule->GetType() == css::Rule::KEYFRAME_RULE,
-                "must be keyframe rule");
-    nsCSSKeyframeRule *kfRule = static_cast<nsCSSKeyframeRule*>(cssRule);
+               "must be keyframe rule");
+    nsCSSKeyframeRule* keyframeRule = static_cast<nsCSSKeyframeRule*>(cssRule);
+    nsCSSCompressedDataBlock* dataBlock =
+      keyframeRule->Declaration()->GetNormalBlock();
 
-    const nsTArray<float> &keys = kfRule->GetKeys();
-    for (uint32_t keyIdx = 0, keyEnd = keys.Length();
-         keyIdx != keyEnd; ++keyIdx) {
-      float key = keys[keyIdx];
-      // FIXME (spec):  The spec doesn't say what to do with
-      // out-of-range keyframes.  We'll ignore them.
-      if (0.0f <= key && key <= 1.0f) {
-        KeyframeData *data = sortedKeyframes.AppendElement();
-        data->mKey = key;
-        data->mIndex = ruleIdx;
-        data->mRule = kfRule;
+    const nsTArray<float>& keys = keyframeRule->GetKeys();
+    for (float key : keys) {
+      if (key < 0.0f || key > 1.0f) {
+        continue;
       }
+
+      Keyframe keyframe;
+      keyframe.mOffset.emplace(key);
+      keyframe.mTimingFunction =
+        GetKeyframeTimingFunction(aPresContext, keyframeRule,
+                                  inheritedTimingFunction);
+      keyframe.mPropertyValues =
+        GetKeyframePropertyValues(aPresContext, keyframeRule, dataBlock,
+                                  animatedProperties);
+
+      keyframes.AppendElement(Move(keyframe));
     }
   }
 
-  sortedKeyframes.Sort(KeyframeDataComparator());
+  // Next, stable sort by offset
+  std::stable_sort(keyframes.begin(), keyframes.end(),
+                   [](const Keyframe& a, const Keyframe& b)
+                   {
+                     return a.mOffset < b.mOffset;
+                   });
 
-  if (sortedKeyframes.Length() == 0) {
-    // no segments
-    return;
-  }
+  // Then walk backwards through the keyframes and drop overridden properties.
+  nsCSSPropertySet propertiesSetAtCurrentOffset;
+  nsCSSPropertySet propertiesSetAtStart;
+  nsCSSPropertySet propertiesSetAtEnd;
+  double currentOffset = -1.0;
+  for (size_t keyframeIdx = keyframes.Length();
+       keyframeIdx > 0;
+       --keyframeIdx) {
+    Keyframe& keyframe = keyframes[keyframeIdx - 1];
+    MOZ_ASSERT(keyframe.mOffset, "Should have filled in the offset");
 
-  // Record the properties that are present in any keyframe rules we
-  // are using.
-  nsCSSPropertySet properties;
+    if (keyframe.mOffset.value() != currentOffset) {
+      propertiesSetAtCurrentOffset.Empty();
+      currentOffset = keyframe.mOffset.value();
+    }
 
-  for (uint32_t kfIdx = 0, kfEnd = sortedKeyframes.Length();
-       kfIdx != kfEnd; ++kfIdx) {
-    css::Declaration *decl = sortedKeyframes[kfIdx].mRule->Declaration();
-    for (uint32_t propIdx = 0, propEnd = decl->Count();
-         propIdx != propEnd; ++propIdx) {
-      nsCSSProperty prop = decl->GetPropertyAt(propIdx);
-      if (prop != eCSSPropertyExtra_variable) {
-        // CSS Variables are not animatable
-        properties.AddProperty(prop);
+    // Get the set of properties from this keyframe that have not
+    // already been set at this offset.
+    nsTArray<PropertyValuePair> uniquePropertyValues;
+    uniquePropertyValues.SetCapacity(keyframe.mPropertyValues.Length());
+    for (const PropertyValuePair& pair : keyframe.mPropertyValues) {
+      if (!propertiesSetAtCurrentOffset.HasProperty(pair.mProperty)) {
+        uniquePropertyValues.AppendElement(pair);
+        propertiesSetAtCurrentOffset.AddProperty(pair.mProperty);
+
+        if (currentOffset == 0.0) {
+          propertiesSetAtStart.AddProperty(pair.mProperty);
+        } else if (currentOffset == 1.0) {
+          propertiesSetAtEnd.AddProperty(pair.mProperty);
+        }
       }
     }
+
+    // If we have a keyframe at the same offset with the same timing
+    // function we should merge our (unique) values into it.
+    // Otherwise, we should update the existing keyframe with only the
+    // unique properties.
+    //
+    // Bug 1216843: We should also match composite modes here.
+    Keyframe* existingKeyframe = nullptr;
+    // Don't bother searching for an existing keyframe if we don't
+    // have anything to contribute to it.
+    if (!uniquePropertyValues.IsEmpty()) {
+      for (size_t i = keyframeIdx; i < keyframes.Length(); i++) {
+        Keyframe& kf = keyframes[i];
+        if (kf.mOffset.value() != currentOffset) {
+          break;
+        }
+        if (kf.mTimingFunction == keyframe.mTimingFunction) {
+          existingKeyframe = &kf;
+          break;
+        }
+      }
+    }
+
+    if (existingKeyframe) {
+      existingKeyframe->
+        mPropertyValues.AppendElements(Move(uniquePropertyValues));
+      keyframe.mPropertyValues.Clear();
+    } else {
+      keyframe.mPropertyValues.SwapElements(uniquePropertyValues);
+    }
+
+    // Check for a now-empty keyframe
+    if (keyframe.mPropertyValues.IsEmpty()) {
+      keyframes.RemoveElementAt(keyframeIdx - 1);
+      // existingKeyframe might dangle now
+    }
   }
+
+  // Finally, we need to look for any animated properties that have an
+  // implicit 'to' or 'from' value and fill in the appropriate keyframe
+  // with the current computed style.
+  FillInMissingKeyframeValues(aPresContext, animatedProperties,
+                              propertiesSetAtStart, propertiesSetAtEnd,
+                              inheritedTimingFunction, keyframes);
+
+  return keyframes;
+}
+
+Maybe<ComputedTimingFunction>
+CSSAnimationBuilder::GetKeyframeTimingFunction(
+    nsPresContext* aPresContext,
+    nsCSSKeyframeRule* aKeyframeRule,
+    const Maybe<ComputedTimingFunction>& aInheritedTimingFunction)
+{
+  Maybe<ComputedTimingFunction> result;
+
+  if (aKeyframeRule->Declaration() &&
+      aKeyframeRule->Declaration()->HasProperty(
+        eCSSProperty_animation_timing_function)) {
+    RefPtr<nsStyleContext> keyframeRuleContext =
+      mResolvedStyles.Get(aPresContext, mStyleContext,
+                          aKeyframeRule->Declaration());
+    const nsTimingFunction& tf = keyframeRuleContext->StyleDisplay()->
+      mAnimations[0].GetTimingFunction();
+    result = ConvertTimingFunction(tf);
+  } else {
+    result = aInheritedTimingFunction;
+  }
+
+  return result;
+}
+
+static Maybe<ComputedTimingFunction>
+ConvertTimingFunction(const nsTimingFunction& aTimingFunction)
+{
+  Maybe<ComputedTimingFunction> result;
+
+  if (aTimingFunction.mType != nsTimingFunction::Type::Linear) {
+    result.emplace();
+    result->Init(aTimingFunction);
+  }
+
+  return result;
+}
+
+nsTArray<PropertyValuePair>
+CSSAnimationBuilder::GetKeyframePropertyValues(
+    nsPresContext* aPresContext,
+    nsCSSKeyframeRule* aKeyframeRule,
+    nsCSSCompressedDataBlock* aDataBlock,
+    nsCSSPropertySet& aAnimatedProperties)
+{
+  nsTArray<PropertyValuePair> result;
 
   for (nsCSSProperty prop = nsCSSProperty(0);
        prop < eCSSProperty_COUNT_no_shorthands;
        prop = nsCSSProperty(prop + 1)) {
-    if (!properties.HasProperty(prop) ||
-        nsCSSProps::kAnimTypeTable[prop] == eStyleAnimType_None) {
+    if (nsCSSProps::kAnimTypeTable[prop] == eStyleAnimType_None ||
+        !aKeyframeRule->Declaration()->HasNonImportantValueFor(prop)) {
       continue;
     }
 
-    // Build a list of the keyframes to use for this property.  This
-    // means we need every keyframe with the property in it, except
-    // for those keyframes where a later keyframe with the *same key*
-    // also has the property.
-    AutoTArray<uint32_t, 16> keyframesWithProperty;
-    float lastKey = 100.0f; // an invalid key
-    for (uint32_t kfIdx = 0, kfEnd = sortedKeyframes.Length();
-         kfIdx != kfEnd; ++kfIdx) {
-      KeyframeData &kf = sortedKeyframes[kfIdx];
-      if (!kf.mRule->Declaration()->HasProperty(prop)) {
-        continue;
-      }
-      if (kf.mKey == lastKey) {
-        // Replace previous occurrence of same key.
-        keyframesWithProperty[keyframesWithProperty.Length() - 1] = kfIdx;
-      } else {
-        keyframesWithProperty.AppendElement(kfIdx);
-      }
-      lastKey = kf.mKey;
+    PropertyValuePair pair;
+    pair.mProperty = prop;
+    pair.mValue = *aDataBlock->ValueFor(prop);
+
+    MOZ_ASSERT(pair.mValue.GetUnit() != eCSSUnit_Null,
+               "Not expecting to read invalid properties");
+
+    result.AppendElement(Move(pair));
+    aAnimatedProperties.AddProperty(prop);
+  }
+
+  return result;
+}
+
+// Utility function to walk through |aIter| to find the Keyframe with
+// matching offset and timing function but stopping as soon as the offset
+// differs from |aOffset| (i.e. it assumes a sorted iterator).
+//
+// If a matching Keyframe is found,
+//   Returns true and sets |aIndex| to the index of the matching Keyframe
+//   within |aIter|.
+//
+// If no matching Keyframe is found,
+//   Returns false and sets |aIndex| to the index in the iterator of the
+//   first Keyframe with an offset differing to |aOffset| or, if the end
+//   of the iterator is reached, sets |aIndex| to the index after the last
+//   Keyframe.
+template <class IterType>
+static bool
+FindMatchingKeyframe(
+    IterType&& aIter,
+    double aOffset,
+    const Maybe<ComputedTimingFunction>& aTimingFunctionToMatch,
+    size_t& aIndex)
+{
+  aIndex = 0;
+  for (Keyframe& keyframe : aIter) {
+    if (keyframe.mOffset.value() != aOffset) {
+      break;
+    }
+    if (keyframe.mTimingFunction == aTimingFunctionToMatch) {
+      return true;
+    }
+    ++aIndex;
+  }
+  return false;
+}
+
+void
+CSSAnimationBuilder::FillInMissingKeyframeValues(
+    nsPresContext* aPresContext,
+    nsCSSPropertySet aAnimatedProperties,
+    nsCSSPropertySet aPropertiesSetAtStart,
+    nsCSSPropertySet aPropertiesSetAtEnd,
+    const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
+    nsTArray<Keyframe>& aKeyframes)
+{
+  static const size_t kNotSet = static_cast<size_t>(-1);
+
+  // Find/create the keyframe to add start values to
+  size_t startKeyframeIndex = kNotSet;
+  if (!aAnimatedProperties.Equals(aPropertiesSetAtStart) &&
+      !FindMatchingKeyframe(aKeyframes, 0.0, aInheritedTimingFunction,
+                            startKeyframeIndex)) {
+    Keyframe newKeyframe;
+    newKeyframe.mOffset.emplace(0.0);
+    newKeyframe.mTimingFunction = aInheritedTimingFunction;
+    aKeyframes.InsertElementAt(startKeyframeIndex, Move(newKeyframe));
+  }
+
+  // Find/create the keyframe to add end values to
+  size_t endKeyframeIndex = kNotSet;
+  if (!aAnimatedProperties.Equals(aPropertiesSetAtEnd)) {
+    if (!FindMatchingKeyframe(Reversed(aKeyframes), 1.0,
+                              aInheritedTimingFunction, endKeyframeIndex)) {
+      Keyframe newKeyframe;
+      newKeyframe.mOffset.emplace(1.0);
+      newKeyframe.mTimingFunction = aInheritedTimingFunction;
+      aKeyframes.AppendElement(Move(newKeyframe));
+      endKeyframeIndex = aKeyframes.Length() - 1;
+    } else {
+      // endKeyframeIndex is currently a count from the end of the array
+      // so we need to reverse it.
+      endKeyframeIndex = aKeyframes.Length() - 1 - endKeyframeIndex;
+    }
+  }
+
+  if (startKeyframeIndex == kNotSet && endKeyframeIndex == kNotSet) {
+    return;
+  }
+
+  // Now that we have finished manipulating aKeyframes, it is safe to
+  // take pointers to its elements.
+  Keyframe* startKeyframe = startKeyframeIndex == kNotSet
+                            ? nullptr : &aKeyframes[startKeyframeIndex];
+  Keyframe* endKeyframe   = endKeyframeIndex == kNotSet
+                            ? nullptr : &aKeyframes[endKeyframeIndex];
+
+  // Iterate through all properties and fill-in missing values
+  for (nsCSSProperty prop = nsCSSProperty(0);
+       prop < eCSSProperty_COUNT_no_shorthands;
+       prop = nsCSSProperty(prop + 1)) {
+    if (!aAnimatedProperties.HasProperty(prop)) {
+      continue;
     }
 
-    AnimationProperty &propData = *aResult.AppendElement();
-    propData.mProperty = prop;
-
-    KeyframeData *fromKeyframe = nullptr;
-    RefPtr<nsStyleContext> fromContext;
-    bool interpolated = true;
-    for (uint32_t wpIdx = 0, wpEnd = keyframesWithProperty.Length();
-         wpIdx != wpEnd; ++wpIdx) {
-      uint32_t kfIdx = keyframesWithProperty[wpIdx];
-      KeyframeData &toKeyframe = sortedKeyframes[kfIdx];
-
-      RefPtr<nsStyleContext> toContext =
-        mResolvedStyles.Get(aPresContext, mStyleContext,
-                            toKeyframe.mRule->Declaration());
-
-      if (fromKeyframe) {
-        interpolated = interpolated &&
-          BuildSegment(propData.mSegments, prop, aSrc,
-                       fromKeyframe->mKey, fromContext,
-                       fromKeyframe->mRule->Declaration(),
-                       toKeyframe.mKey, toContext);
-      } else {
-        if (toKeyframe.mKey != 0.0f) {
-          // There's no data for this property at 0%, so use the
-          // cascaded value above us.
-          if (!mStyleWithoutAnimation) {
-            MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
-                       "ServoStyleSet should not use nsAnimationManager for "
-                       "animations");
-            mStyleWithoutAnimation = aPresContext->StyleSet()->AsGecko()->
-              ResolveStyleWithoutAnimation(mTarget, mStyleContext,
-                                           eRestyle_AllHintsWithAnimations);
-          }
-          interpolated = interpolated &&
-            BuildSegment(propData.mSegments, prop, aSrc,
-                         0.0f, mStyleWithoutAnimation, nullptr,
-                         toKeyframe.mKey, toContext);
-        }
-      }
-
-      fromContext = toContext;
-      fromKeyframe = &toKeyframe;
+    if (startKeyframe && !aPropertiesSetAtStart.HasProperty(prop)) {
+      AppendProperty(aPresContext, prop, startKeyframe->mPropertyValues);
     }
-
-    if (fromKeyframe->mKey != 1.0f) {
-      // There's no data for this property at 100%, so use the
-      // cascaded value above us.
-      if (!mStyleWithoutAnimation) {
-        MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
-                   "ServoStyleSet should not use nsAnimationManager for "
-                   "animations");
-        mStyleWithoutAnimation = aPresContext->StyleSet()->AsGecko()->
-          ResolveStyleWithoutAnimation(mTarget, mStyleContext,
-                                       eRestyle_AllHintsWithAnimations);
-      }
-      interpolated = interpolated &&
-        BuildSegment(propData.mSegments, prop, aSrc,
-                     fromKeyframe->mKey, fromContext,
-                     fromKeyframe->mRule->Declaration(),
-                     1.0f, mStyleWithoutAnimation);
-    }
-
-    // If we failed to build any segments due to inability to
-    // interpolate, remove the property from the animation.  (It's not
-    // clear if this is the right thing to do -- we could run some of
-    // the segments, but it's really not clear whether we should skip
-    // values (which?) or skip segments, so best to skip the whole
-    // thing for now.)
-    if (!interpolated) {
-      aResult.RemoveElementAt(aResult.Length() - 1);
+    if (endKeyframe && !aPropertiesSetAtEnd.HasProperty(prop)) {
+      AppendProperty(aPresContext, prop, endKeyframe->mPropertyValues);
     }
   }
 }
 
-bool
-CSSAnimationBuilder::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
-                                   aSegments,
-                                  nsCSSProperty aProperty,
-                                  const StyleAnimation& aAnimation,
-                                  float aFromKey, nsStyleContext* aFromContext,
-                                  mozilla::css::Declaration* aFromDeclaration,
-                                  float aToKey, nsStyleContext* aToContext)
+void
+CSSAnimationBuilder::AppendProperty(
+    nsPresContext* aPresContext,
+    nsCSSProperty aProperty,
+    nsTArray<PropertyValuePair>& aPropertyValues)
 {
-  StyleAnimationValue fromValue, toValue, dummyValue;
-  if (!CommonAnimationManager<CSSAnimation>::ExtractComputedValueForTransition(
-        aProperty, aFromContext, fromValue) ||
-      !CommonAnimationManager<CSSAnimation>::ExtractComputedValueForTransition(
-        aProperty, aToContext, toValue) ||
-      // Check that we can interpolate between these values
-      // (If this is ever a performance problem, we could add a
-      // CanInterpolate method, but it seems fine for now.)
-      !StyleAnimationValue::Interpolate(aProperty, fromValue, toValue,
-                                        0.5, dummyValue)) {
-    return false;
+  PropertyValuePair propertyValue;
+  propertyValue.mProperty = aProperty;
+  GetComputedValue(aPresContext, aProperty, propertyValue.mValue);
+
+  aPropertyValues.AppendElement(Move(propertyValue));
+}
+
+void
+CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
+                                      nsCSSProperty aProperty,
+                                      nsCSSValue& aResult)
+{
+  StyleAnimationValue computedValue;
+
+  if (!mStyleWithoutAnimation) {
+    MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
+               "ServoStyleSet should not use nsAnimationManager for "
+               "animations");
+    mStyleWithoutAnimation = aPresContext->StyleSet()->AsGecko()->
+      ResolveStyleWithoutAnimation(mTarget, mStyleContext,
+                                   eRestyle_AllHintsWithAnimations);
   }
 
-  AnimationPropertySegment &segment = *aSegments.AppendElement();
-
-  segment.mFromValue = fromValue;
-  segment.mToValue = toValue;
-  segment.mFromKey = aFromKey;
-  segment.mToKey = aToKey;
-  const nsTimingFunction *tf;
-  if (aFromDeclaration &&
-      aFromDeclaration->HasProperty(eCSSProperty_animation_timing_function)) {
-    tf = &aFromContext->StyleDisplay()->mAnimations[0].GetTimingFunction();
-  } else {
-    tf = &aAnimation.GetTimingFunction();
-  }
-  if (tf->mType != nsTimingFunction::Type::Linear) {
-    ComputedTimingFunction computedTimingFunction;
-    computedTimingFunction.Init(*tf);
-    segment.mTimingFunction = Some(computedTimingFunction);
+  if (CommonAnimationManager<CSSAnimation>::ExtractComputedValueForTransition(
+        aProperty, mStyleWithoutAnimation, computedValue) &&
+      StyleAnimationValue::UncomputeValue(
+        aProperty, Move(computedValue), aResult)) {
+    // If we hit this assertion or the MOZ_ASSERT_UNREACHABLE below, it
+    // probably means we are fetching a value from the computed style that
+    // we don't know how to represent as a StyleAnimationValue.
+    MOZ_ASSERT(aResult.GetUnit() != eCSSUnit_Null,
+               "Got null computed value");
+    return;
   }
 
-  return true;
+  MOZ_ASSERT_UNREACHABLE("Failed to get computed value");
+  aResult.Reset();
 }
 
 void

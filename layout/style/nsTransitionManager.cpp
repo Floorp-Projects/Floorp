@@ -63,13 +63,11 @@ ElementPropertyTransition::CurrentValuePortion() const
 
   MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
              "Got a null progress for a fill mode of 'both'");
-  MOZ_ASSERT(mProperties.Length() == 1,
-             "Should have one animation property for a transition");
-  MOZ_ASSERT(mProperties[0].mSegments.Length() == 1,
-             "Animation property should have one segment for a transition");
-  return ComputedTimingFunction::GetPortion(
-           mProperties[0].mSegments[0].mTimingFunction,
-           computedTiming.mProgress.Value(), computedTiming.mBeforeFlag);
+  MOZ_ASSERT(mFrames.Length() == 2,
+             "Should have two animation frames for a transition");
+  return ComputedTimingFunction::GetPortion(mFrames[0].mTimingFunction,
+                                            computedTiming.mProgress.Value(),
+                                            computedTiming.mBeforeFlag);
 }
 
 ////////////////////////// CSSTransition ////////////////////////////
@@ -176,6 +174,17 @@ CSSTransition::TransitionProperty() const
   MOZ_ASSERT(effect && effect->AsTransition(),
              "Transition should have a transition effect");
   return effect->AsTransition()->TransitionProperty();
+}
+
+StyleAnimationValue
+CSSTransition::ToValue() const
+{
+  // FIXME: Once we support replacing/removing the effect (bug 1049975)
+  // the following assertion will no longer hold.
+  dom::KeyframeEffectReadOnly* effect = GetEffect();
+  MOZ_ASSERT(effect && effect->AsTransition(),
+             "Transition should have a transition effect");
+  return effect->AsTransition()->ToValue();
 }
 
 bool
@@ -426,24 +435,18 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     do {
       --i;
       CSSTransition* anim = animations[i];
-      dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
-      MOZ_ASSERT(effect && effect->Properties().Length() == 1,
-                 "Should have one animation property for a transition");
-      MOZ_ASSERT(effect && effect->Properties()[0].mSegments.Length() == 1,
-                 "Animation property should have one segment for a transition");
-      const AnimationProperty& prop = effect->Properties()[0];
-      const AnimationPropertySegment& segment = prop.mSegments[0];
           // properties no longer in 'transition-property'
       if ((checkProperties &&
-           !allTransitionProperties.HasProperty(prop.mProperty)) ||
+           !allTransitionProperties.HasProperty(anim->TransitionProperty())) ||
           // properties whose computed values changed but for which we
           // did not start a new transition (because delay and
           // duration are both zero, or because the new value is not
-          // interpolable); a new transition would have segment.mToValue
+          // interpolable); a new transition would have anim->ToValue()
           // matching currentValue
-          !ExtractComputedValueForTransition(prop.mProperty, afterChangeStyle,
+          !ExtractComputedValueForTransition(anim->TransitionProperty(),
+                                             afterChangeStyle,
                                              currentValue) ||
-          currentValue != segment.mToValue) {
+          currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
           EffectSet* effectSet = EffectSet::GetEffectSet(aElement, pseudoType);
@@ -667,19 +670,9 @@ nsTransitionManager::ConsiderStartingTransition(
                                   aNewStyleContext->GetPseudoType(), timing,
                                   startForReversingTest, reversePortion);
 
-  AnimationProperty& prop = *pt->Properties().AppendElement();
-  prop.mProperty = aProperty;
-
-  AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
-  segment.mFromValue = startValue;
-  segment.mToValue = endValue;
-  segment.mFromKey = 0;
-  segment.mToKey = 1;
-  if (tf.mType != nsTimingFunction::Type::Linear) {
-    ComputedTimingFunction computedTimingFunction;
-    computedTimingFunction.Init(tf);
-    segment.mTimingFunction = Some(computedTimingFunction);
-  }
+  pt->SetFrames(GetTransitionKeyframes(aNewStyleContext, aProperty,
+                                       Move(startValue), Move(endValue), tf),
+                aNewStyleContext);
 
   MOZ_ASSERT(mPresContext->RestyleManager()->IsGecko(),
              "ServoRestyleManager should not use nsTransitionManager "
@@ -747,6 +740,43 @@ nsTransitionManager::ConsiderStartingTransition(
   aWhichStarted->AddProperty(aProperty);
 }
 
+static Keyframe&
+AppendKeyframe(double aOffset, nsCSSProperty aProperty,
+               StyleAnimationValue&& aValue, nsTArray<Keyframe>& aKeyframes)
+{
+  Keyframe& frame = *aKeyframes.AppendElement();
+  frame.mOffset.emplace(aOffset);
+  PropertyValuePair& pv = *frame.mPropertyValues.AppendElement();
+  pv.mProperty = aProperty;
+  DebugOnly<bool> uncomputeResult =
+    StyleAnimationValue::UncomputeValue(aProperty, Move(aValue), pv.mValue);
+  MOZ_ASSERT(uncomputeResult,
+              "Unable to get specified value from computed value");
+  return frame;
+}
+
+nsTArray<Keyframe>
+nsTransitionManager::GetTransitionKeyframes(
+    nsStyleContext* aStyleContext,
+    nsCSSProperty aProperty,
+    StyleAnimationValue&& aStartValue,
+    StyleAnimationValue&& aEndValue,
+    const nsTimingFunction& aTimingFunction)
+{
+  nsTArray<Keyframe> keyframes(2);
+
+  Keyframe& fromFrame = AppendKeyframe(0.0, aProperty, Move(aStartValue),
+                                       keyframes);
+  if (aTimingFunction.mType != nsTimingFunction::Type::Linear) {
+    fromFrame.mTimingFunction.emplace();
+    fromFrame.mTimingFunction->Init(aTimingFunction);
+  }
+
+  AppendKeyframe(1.0, aProperty, Move(aEndValue), keyframes);
+
+  return keyframes;
+}
+
 void
 nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                CSSPseudoElementType aPseudoType,
@@ -775,20 +805,13 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
       continue;
     }
 
-    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
-    MOZ_ASSERT(effect->Properties().Length() == 1,
-               "Should have one animation property for a transition");
-    MOZ_ASSERT(effect->Properties()[0].mSegments.Length() == 1,
-               "Animation property should have one segment for a transition");
-    const AnimationProperty& prop = effect->Properties()[0];
-    const AnimationPropertySegment& segment = prop.mSegments[0];
-
     // Since effect is a finished transition, we know it didn't
     // influence style.
     StyleAnimationValue currentValue;
-    if (!ExtractComputedValueForTransition(prop.mProperty, aNewStyleContext,
+    if (!ExtractComputedValueForTransition(anim->TransitionProperty(),
+                                           aNewStyleContext,
                                            currentValue) ||
-        currentValue != segment.mToValue) {
+        currentValue != anim->ToValue()) {
       anim->CancelFromStyle();
       animations.RemoveElementAt(i);
     }

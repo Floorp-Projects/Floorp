@@ -871,7 +871,11 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  nsresult rv = nsContentUtils::LoadImage(aNewURI, aDocument,
+  nsCOMPtr<nsINode> thisNode =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsresult rv = nsContentUtils::LoadImage(aNewURI,
+                                          thisNode,
+                                          aDocument,
                                           aDocument->NodePrincipal(),
                                           aDocument->GetDocumentURI(),
                                           referrerPolicy,

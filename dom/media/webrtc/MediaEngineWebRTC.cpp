@@ -79,6 +79,7 @@ void AudioInputCubeb::UpdateDeviceList()
         (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
          devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED ||
          (devices->device[i]->state == CUBEB_DEVICE_STATE_DISABLED &&
+          devices->device[i]->friendly_name &&
           strcmp(devices->device[i]->friendly_name, "Sine source at 440 Hz") == 0)))
     {
       auto j = mDeviceNames->IndexOf(devices->device[i]->device_id);
