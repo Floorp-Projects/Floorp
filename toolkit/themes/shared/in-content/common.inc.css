@@ -477,6 +477,7 @@ html|a:hover:active,
 html|input[type="checkbox"] {
   opacity: 0;
   width: 0;
+  pointer-events: none;
   position: absolute;
 }
 

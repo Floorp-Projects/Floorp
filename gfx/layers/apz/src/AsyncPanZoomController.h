@@ -1155,9 +1155,13 @@ private:
 
   // If |aEvent| should trigger scroll snapping, adjust |aDelta| to reflect
   // the snapping (that is, make it a delta that will take us to the desired
-  // snap point). Returns true iff. the delta was so adjusted.
-  bool MaybeAdjustDeltaForScrollSnapping(ParentLayerPoint& aDelta,
-                                         const ScrollWheelInput& aEvent);
+  // snap point). The delta is interpreted as being relative to
+  // |aStartPosition|, and if a target snap point is found, |aStartPosition|
+  // is also updated, to the value of the snap point.
+  // Returns true iff. a target snap point was found.
+  bool MaybeAdjustDeltaForScrollSnapping(const ScrollWheelInput& aEvent,
+                                         ParentLayerPoint& aDelta,
+                                         CSSPoint& aStartPosition);
 
   // Snap to a snap position nearby the current scroll position, if appropriate.
   void ScrollSnap();

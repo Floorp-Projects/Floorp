@@ -111,6 +111,14 @@ public:
   // posted because updates on the main thread are throttled.
   void PostRestyleForThrottledAnimations();
 
+  // Called when the style context on the specified (pseudo-) element might
+  // have changed so that any context-sensitive values stored within
+  // animation effects (e.g. em-based endpoints used in keyframe effects)
+  // can be re-resolved to computed values.
+  void UpdateEffectProperties(nsStyleContext* aStyleContext,
+                              dom::Element* aElement,
+                              CSSPseudoElementType aPseudoType);
+
   // Updates the animation rule stored on the EffectSet for the
   // specified (pseudo-)element for cascade level |aLevel|.
   // If the animation rule is not marked as needing an update,

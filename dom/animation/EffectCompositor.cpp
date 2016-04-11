@@ -222,6 +222,21 @@ EffectCompositor::PostRestyleForThrottledAnimations()
 }
 
 void
+EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
+                                         dom::Element* aElement,
+                                         CSSPseudoElementType aPseudoType)
+{
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    return;
+  }
+
+  for (KeyframeEffectReadOnly* effect : *effectSet) {
+    effect->UpdateProperties(aStyleContext);
+  }
+}
+
+void
 EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                                            CSSPseudoElementType aPseudoType,
                                            CascadeLevel aCascadeLevel)

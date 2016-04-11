@@ -1038,7 +1038,7 @@ class GCRuntime
     size_t maxMallocBytes;
 
     // An incrementing id used to assign unique ids to cells that require one.
-    mozilla::Atomic<uint64_t, mozilla::SequentiallyConsistent> nextCellUniqueId_;
+    mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> nextCellUniqueId_;
 
     /*
      * Number of the committed arenas in all GC chunks including empty chunks.
