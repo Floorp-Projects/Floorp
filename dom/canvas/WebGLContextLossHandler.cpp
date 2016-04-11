@@ -38,7 +38,7 @@ private:
     nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-class ContextLossWorkerRunnable final : public nsICancelableRunnable
+class ContextLossWorkerRunnable final : public nsCancelableRunnable
 {
 public:
     explicit ContextLossWorkerRunnable(nsIRunnable* aRunnable)
@@ -46,8 +46,7 @@ public:
     {
     }
 
-    NS_DECL_NSICANCELABLERUNNABLE
-    NS_DECL_THREADSAFE_ISUPPORTS
+    nsresult Cancel() override;
 
     NS_FORWARD_NSIRUNNABLE(mRunnable->)
 
@@ -84,10 +83,7 @@ ContextLossWorkerEventTarget::IsOnCurrentThread(bool* aResult)
     return mEventTarget->IsOnCurrentThread(aResult);
 }
 
-NS_IMPL_ISUPPORTS(ContextLossWorkerRunnable, nsICancelableRunnable,
-                  nsIRunnable)
-
-NS_IMETHODIMP
+nsresult
 ContextLossWorkerRunnable::Cancel()
 {
     mRunnable = nullptr;

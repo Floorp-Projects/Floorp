@@ -233,12 +233,13 @@ protected:
 };
 
 // This class is designed to be subclassed.
-class nsCancelableRunnable : public nsICancelableRunnable
+class nsCancelableRunnable : public nsRunnable,
+                             public nsICancelableRunnable
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-  NS_DECL_NSICANCELABLERUNNABLE
+  NS_DECL_ISUPPORTS_INHERITED
+  // nsICancelableRunnable
+  virtual nsresult Cancel() override;
 
   nsCancelableRunnable() {}
 
