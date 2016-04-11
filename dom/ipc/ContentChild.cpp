@@ -42,6 +42,7 @@
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
@@ -2229,14 +2230,14 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
 {
   if (AbnormalShutdown == why) {
     NS_WARNING("shutting down early because of crash!");
-    QuickExit();
+    ProcessChild::QuickExit();
   }
 
 #ifndef NS_FREE_PERMANENT_DATA
   // In release builds, there's no point in the content process
   // going through the full XPCOM shutdown path, because it doesn't
   // keep persistent state.
-  QuickExit();
+  ProcessChild::QuickExit();
 #else
   if (sFirstIdleTask) {
     sFirstIdleTask->Cancel();
@@ -2257,7 +2258,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
   if (IsNuwaProcess()) {
     // The Nuwa cannot go through the full XPCOM shutdown path or deadlock
     // will result.
-    QuickExit();
+    ProcessChild::QuickExit();
   }
 #endif
 
@@ -2296,21 +2297,6 @@ ContentChild::ProcessingError(Result aCode, const char* aReason)
   }
 #endif
   NS_RUNTIMEABORT("Content child abort due to IPC error");
-}
-
-void
-ContentChild::QuickExit()
-{
-  NS_WARNING("content process _exit()ing");
-
-#ifdef XP_WIN
-  // In bug 1254829, the destructor got called when dll got detached on windows,
-  // switch to TerminateProcess to bypass dll detach handler during the process
-  // termination.
-  TerminateProcess(GetCurrentProcess(), 0);
-#else
-  _exit(0);
-#endif
 }
 
 nsresult
