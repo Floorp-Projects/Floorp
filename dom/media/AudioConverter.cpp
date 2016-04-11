@@ -6,6 +6,7 @@
 
 #include "AudioConverter.h"
 #include <string.h>
+#include <speex/speex_resampler.h>
 
 /*
  *  Parts derived from MythTV AudioConvert Class
@@ -20,9 +21,9 @@ namespace mozilla {
 AudioConverter::AudioConverter(const AudioConfig& aIn, const AudioConfig& aOut)
   : mIn(aIn)
   , mOut(aOut)
+  , mResampler(nullptr)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aIn.Rate() == aOut.Rate() &&
-                        aIn.Format() == aOut.Format() &&
+  MOZ_DIAGNOSTIC_ASSERT(aIn.Format() == aOut.Format() &&
                         aIn.Interleaved() == aOut.Interleaved(),
                         "No format or rate conversion is supported at this stage");
   MOZ_DIAGNOSTIC_ASSERT((aIn.Channels() > aOut.Channels() && aOut.Channels() <= 2) ||
@@ -30,26 +31,57 @@ AudioConverter::AudioConverter(const AudioConfig& aIn, const AudioConfig& aOut)
                         "Only downmixing to mono or stereo is supported at this stage");
   MOZ_DIAGNOSTIC_ASSERT(aOut.Interleaved(), "planar audio format not supported");
   mIn.Layout().MappingTable(mOut.Layout(), mChannelOrderMap);
+  if (aIn.Rate() != aOut.Rate()) {
+    int error;
+    mResampler = speex_resampler_init(aOut.Channels(),
+                                      aIn.Rate(),
+                                      aOut.Rate(),
+                                      SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                      &error);
+
+    if (error == RESAMPLER_ERR_SUCCESS) {
+      speex_resampler_skip_zeros(mResampler);
+    } else {
+      NS_WARNING("Failed to initialize resampler.");
+      mResampler = nullptr;
+    }
+  }
+}
+
+AudioConverter::~AudioConverter()
+{
+  if (mResampler) {
+    speex_resampler_destroy(mResampler);
+    mResampler = nullptr;
+  }
 }
 
 bool
 AudioConverter::CanWorkInPlace() const
 {
-  return mIn.Channels() * mIn.Rate() * AudioConfig::SampleSize(mIn.Format()) >=
-    mOut.Channels() * mOut.Rate() * AudioConfig::SampleSize(mOut.Format());
+  bool needDownmix = mIn.Channels() > mOut.Channels();
+  bool canDownmixInPlace =
+    mIn.Channels() * AudioConfig::SampleSize(mIn.Format()) >=
+    mOut.Channels() * AudioConfig::SampleSize(mOut.Format());
+  bool needResample = mIn.Rate() != mOut.Rate();
+  bool canResampleInPlace = mIn.Rate() >= mOut.Rate();
+  // We should be able to work in place if 1s of audio input takes less space
+  // than 1s of audio output. However, as we downmix before resampling we can't
+  // perform any upsampling in place (e.g. if incoming rate >= outgoing rate)
+  return (!needDownmix || canDownmixInPlace) &&
+         (!needResample || canResampleInPlace);
 }
 
 size_t
-AudioConverter::Process(void* aOut, const void* aIn, size_t aBytes)
+AudioConverter::ProcessInternal(void* aOut, const void* aIn, size_t aBytes)
 {
-  if (!CanWorkInPlace()) {
-    return 0;
-  }
   if (mIn.Channels() > mOut.Channels()) {
     return DownmixAudio(aOut, aIn, aBytes);
   } else if (mIn.Layout() != mOut.Layout() &&
       CanReorderAudio()) {
     ReOrderInterleavedChannels(aOut, aIn, aBytes);
+  } else if (aIn != aOut) {
+    memmove(aOut, aIn, aBytes);
   }
   return aBytes;
 }
@@ -223,7 +255,41 @@ AudioConverter::DownmixAudio(void* aOut, const void* aIn, size_t aDataSize) cons
       MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
     }
   }
-  return frames * AudioConfig::SampleSize(mOut.Format()) * mOut.Channels();
+  return (size_t)frames * AudioConfig::SampleSize(mOut.Format()) * mOut.Channels();
+}
+
+size_t
+AudioConverter::ResampleAudio(void* aOut, const void* aIn, size_t aDataSize)
+{
+  if (!mResampler) {
+    return 0;
+  }
+  uint32_t frames =
+    aDataSize / AudioConfig::SampleSize(mOut.Format()) / mOut.Channels();
+  uint32_t outframes = ResampleRecipientFrames(frames);
+  uint32_t inframes = frames;
+
+  if (mOut.Format() == AudioConfig::FORMAT_FLT) {
+    const float* in = reinterpret_cast<const float*>(aIn);
+    float* out = reinterpret_cast<float*>(aOut);
+    speex_resampler_process_interleaved_float(mResampler, in, &inframes,
+                                              out, &outframes);
+  } else if (mOut.Format() == AudioConfig::FORMAT_S16) {
+    const int16_t* in = reinterpret_cast<const int16_t*>(aIn);
+    int16_t* out = reinterpret_cast<int16_t*>(aOut);
+    speex_resampler_process_interleaved_int(mResampler, in, &inframes,
+                                            out, &outframes);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
+  }
+  MOZ_ASSERT(inframes == frames, "Some frames will be dropped");
+  return (size_t)outframes * AudioConfig::SampleSize(mOut.Format()) * mOut.Channels();
+}
+
+size_t
+AudioConverter::ResampleRecipientFrames(size_t aFrames) const
+{
+  return (uint64_t)aFrames * mOut.Rate() / mIn.Rate() + 1;
 }
 
 } // namespace mozilla
