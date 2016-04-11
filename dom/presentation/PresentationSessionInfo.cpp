@@ -839,6 +839,8 @@ PresentationPresentingInfo::OnError(nsresult reason)
 nsresult
 PresentationPresentingInfo::InitTransportAndSendAnswer()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   uint8_t type = 0;
   nsresult rv = mRequesterDescription->GetType(&type);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -860,6 +862,9 @@ PresentationPresentingInfo::InitTransportAndSendAnswer()
   }
 
   if (type == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    if (!Preferences::GetBool("dom.presentation.session_transport.data_channel.enable")) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
     nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
       do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
 
