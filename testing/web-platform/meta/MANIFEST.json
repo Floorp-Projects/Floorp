@@ -28390,8 +28390,16 @@
         "url": "/web-animations/animatable/animate.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/delay.html",
+        "url": "/web-animations/animation-effect-timing/delay.html"
+      },
+      {
         "path": "web-animations/animation-effect-timing/direction.html",
         "url": "/web-animations/animation-effect-timing/direction.html"
+      },
+      {
+        "path": "web-animations/animation-model/keyframes/effect-value-context.html",
+        "url": "/web-animations/animation-model/keyframes/effect-value-context.html"
       },
       {
         "path": "web-animations/animation-effect-timing/duration.html",

@@ -467,6 +467,9 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
     CSSPseudoElementType aPseudoType,
     const nsTArray<Keyframe>& aFrames)
 {
+  MOZ_ASSERT(aStyleContext);
+  MOZ_ASSERT(aElement);
+
   nsTArray<KeyframeValueEntry> entries;
 
   for (const Keyframe& frame : aFrames) {

@@ -2191,6 +2191,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
       if (nsContentUtils::CanLoadImage(srcURI, mContent, doc,
                                        mContent->NodePrincipal())) {
         nsresult rv = nsContentUtils::LoadImage(srcURI,
+                                                mContent,
                                                 doc,
                                                 mContent->NodePrincipal(),
                                                 doc->GetDocumentURI(),

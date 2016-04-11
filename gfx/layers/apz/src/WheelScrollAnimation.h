@@ -32,6 +32,10 @@ public:
     return this;
   }
 
+  CSSPoint GetDestination() const {
+    return CSSPoint::FromAppUnits(mFinalDestination);
+  }
+
 private:
   void InitPreferences(TimeStamp aTime);
 
