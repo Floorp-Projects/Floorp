@@ -353,6 +353,17 @@ protected:
   typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
     OwningCSSTransitionPtrArray;
 
+  // Update the transitions. It'd start new, replace, or stop current
+  // transitions if need. aDisp and aElement shouldn't be nullptr.
+  // aElementTransitions is the collection of current transitions, and it
+  // could be a nullptr if we don't have any transitions.
+  bool
+  UpdateTransitions(const nsStyleDisplay* aDisp,
+                    mozilla::dom::Element* aElement,
+                    CSSTransitionCollection*& aElementTransitions,
+                    nsStyleContext* aOldStyleContext,
+                    nsStyleContext* aNewStyleContext);
+
   void
   ConsiderStartingTransition(nsCSSProperty aProperty,
                              const mozilla::StyleTransition& aTransition,
