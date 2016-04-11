@@ -1136,7 +1136,7 @@ PerformanceBase::CancelNotificationObservers()
   mPendingNotificationObserversTask = false;
 }
 
-class NotifyObserversTask final : public CancelableRunnable
+class NotifyObserversTask final : public nsCancelableRunnable
 {
 public:
   explicit NotifyObserversTask(PerformanceBase* aPerformance)
@@ -1152,7 +1152,7 @@ public:
     return NS_OK;
   }
 
-  nsresult Cancel() override
+  NS_IMETHOD Cancel() override
   {
     mPerformance->CancelNotificationObservers();
     mPerformance = nullptr;

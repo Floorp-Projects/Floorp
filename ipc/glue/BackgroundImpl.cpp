@@ -700,7 +700,7 @@ private:
 
 // Must be cancelable in order to dispatch on active worker threads
 class ChildImpl::AlreadyCreatedCallbackRunnable final :
-  public CancelableRunnable
+  public nsCancelableRunnable
 {
 public:
   AlreadyCreatedCallbackRunnable()
@@ -708,12 +708,14 @@ public:
     // May be created on any thread!
   }
 
+  NS_DECL_ISUPPORTS_INHERITED
+
 protected:
   virtual ~AlreadyCreatedCallbackRunnable()
   { }
 
   NS_DECL_NSIRUNNABLE
-  nsresult Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 };
 
 class ChildImpl::FailedCreateCallbackRunnable final : public nsRunnable
@@ -1812,6 +1814,9 @@ ChildImpl::GetNextCallback()
   return callback.forget();
 }
 
+NS_IMPL_ISUPPORTS_INHERITED0(ChildImpl::AlreadyCreatedCallbackRunnable,
+                             nsCancelableRunnable)
+
 NS_IMETHODIMP
 ChildImpl::AlreadyCreatedCallbackRunnable::Run()
 {
@@ -1839,7 +1844,7 @@ ChildImpl::AlreadyCreatedCallbackRunnable::Run()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 ChildImpl::AlreadyCreatedCallbackRunnable::Cancel()
 {
   // These are IPC infrastructure objects and need to run unconditionally.

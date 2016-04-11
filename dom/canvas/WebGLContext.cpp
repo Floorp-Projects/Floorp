@@ -1538,7 +1538,7 @@ WebGLContext::RunContextLossTimer()
     mContextLossHandler->RunTimer();
 }
 
-class UpdateContextLossStatusTask : public CancelableRunnable
+class UpdateContextLossStatusTask : public nsCancelableRunnable
 {
     RefPtr<WebGLContext> mWebGL;
 
@@ -1548,14 +1548,14 @@ public:
     {
     }
 
-    NS_IMETHOD Run() override {
+    NS_IMETHOD Run() {
         if (mWebGL)
             mWebGL->UpdateContextLossStatus();
 
         return NS_OK;
     }
 
-    nsresult Cancel() override {
+    NS_IMETHOD Cancel() {
         mWebGL = nullptr;
         return NS_OK;
     }

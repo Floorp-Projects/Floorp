@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace dom {
 
-class FlushRejections: public CancelableRunnable
+class FlushRejections: public nsCancelableRunnable
 {
 public:
   static void Init() {

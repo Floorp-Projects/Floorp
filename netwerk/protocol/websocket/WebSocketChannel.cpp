@@ -691,7 +691,7 @@ NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 // CallAcknowledge
 //-----------------------------------------------------------------------------
 
-class CallAcknowledge final : public CancelableRunnable
+class CallAcknowledge final : public nsCancelableRunnable
 {
 public:
   CallAcknowledge(WebSocketChannel* aChannel,

@@ -212,7 +212,7 @@ EventTargetIsOnCurrentThread(nsIEventTarget* aEventTarget)
 }
 
 class CancelableRunnableWrapper final
-  : public CancelableRunnable
+  : public nsCancelableRunnable
 {
   nsCOMPtr<nsIRunnable> mRunnable;
 #ifdef DEBUG
@@ -238,10 +238,10 @@ private:
   { }
 
   NS_DECL_NSIRUNNABLE
-  nsresult Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 };
 
-NS_IMPL_ISUPPORTS_INHERITED0(CancelableRunnableWrapper, CancelableRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(CancelableRunnableWrapper, nsCancelableRunnable)
 
 NS_IMETHODIMP
 CancelableRunnableWrapper::Run()
@@ -261,7 +261,7 @@ CancelableRunnableWrapper::Run()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 CancelableRunnableWrapper::Cancel()
 {
   DebugOnly<bool> onTarget;

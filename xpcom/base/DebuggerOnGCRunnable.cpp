@@ -37,7 +37,7 @@ DebuggerOnGCRunnable::Run()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 DebuggerOnGCRunnable::Cancel()
 {
   mGCData = nullptr;

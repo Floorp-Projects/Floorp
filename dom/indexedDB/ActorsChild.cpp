@@ -2530,10 +2530,8 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
  * BackgroundCursorChild
  ******************************************************************************/
 
-// Does not need to be threadsafe since this only runs on one thread, but
-// inheriting from CancelableRunnable is easy.
 class BackgroundCursorChild::DelayedActionRunnable final
-  : public CancelableRunnable
+  : public nsICancelableRunnable
 {
   using ActionFunc = void (BackgroundCursorChild::*)();
 
@@ -2554,12 +2552,15 @@ public:
     MOZ_ASSERT(mActionFunc);
   }
 
+  // Does not need to be threadsafe since this only runs on one thread.
+  NS_DECL_ISUPPORTS
+
 private:
   ~DelayedActionRunnable()
   { }
 
   NS_DECL_NSIRUNNABLE
-  nsresult Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 };
 
 BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
@@ -2996,6 +2997,10 @@ BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
   return true;
 }
 
+NS_IMPL_ISUPPORTS(BackgroundCursorChild::DelayedActionRunnable,
+                  nsIRunnable,
+                  nsICancelableRunnable)
+
 NS_IMETHODIMP
 BackgroundCursorChild::
 DelayedActionRunnable::Run()
@@ -3013,7 +3018,7 @@ DelayedActionRunnable::Run()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 BackgroundCursorChild::
 DelayedActionRunnable::Cancel()
 {

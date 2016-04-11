@@ -161,7 +161,7 @@ public:
     return true;
   }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override
   {
     Done(false);
@@ -378,7 +378,7 @@ public:
     return DispatchLifecycleEvent(aCx, aWorkerPrivate);
   }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override
   {
     mCallback->SetResult(false);
@@ -1264,7 +1264,7 @@ public:
     return DispatchFetchEvent(aCx, aWorkerPrivate);
   }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override
   {
     nsCOMPtr<nsIRunnable> runnable = new ResumeRequest(mInterceptedChannel);

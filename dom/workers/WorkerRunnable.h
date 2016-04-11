@@ -29,8 +29,7 @@ class WorkerPrivate;
 // Use this runnable to communicate from the worker to its parent or vice-versa.
 // The busy count must be taken into consideration and declared at construction
 // time.
-class WorkerRunnable : public nsIRunnable,
-                       public nsICancelableRunnable
+class WorkerRunnable : public nsICancelableRunnable
 {
 public:
   enum TargetAndBusyBehavior {
@@ -72,8 +71,7 @@ public:
   // If you override Cancel() then you'll need to either call the base class
   // Cancel() method or override IsCanceled() so that the Run() method bails out
   // appropriately.
-  nsresult
-  Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 
   // The return value is true if and only if both PreDispatch and
   // DispatchInternal return true.
@@ -279,8 +277,7 @@ public:
 
   // By default StopSyncLoopRunnables cannot be canceled since they could leave
   // a sync loop spinning forever.
-  nsresult
-  Cancel() override;
+  NS_DECL_NSICANCELABLERUNNABLE
 
 protected:
   virtual ~StopSyncLoopRunnable()
@@ -357,7 +354,7 @@ protected:
   virtual ~WorkerControlRunnable()
   { }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override;
 
 public:
