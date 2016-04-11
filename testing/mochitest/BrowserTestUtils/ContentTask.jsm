@@ -117,6 +117,8 @@ var ContentMessageListener = {
       ContentTask._testScope.ok(data.condition, data.name, null, data.stack);
     } else if (aMessage.name == "content-task:test-info") {
       ContentTask._testScope.info(aMessage.data.name);
+    } else if (aMessage.name == "content-task:test-todo") {
+      ContentTask._testScope.todo(aMessage.data.expr, aMessage.data.name);
     }
   },
 };
