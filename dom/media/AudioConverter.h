@@ -138,6 +138,9 @@ public:
     return mIn.Layout().MappingTable(mOut.Layout());
   }
 
+  const AudioConfig& InputConfig() const { return mIn; }
+  const AudioConfig& OutputConfig() const { return mOut; }
+
 private:
   const AudioConfig mIn;
   const AudioConfig mOut;
