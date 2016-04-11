@@ -35,6 +35,10 @@ addMessageListener("content-task:spawn", function (msg) {
   var is = Assert.equal.bind(Assert);
   var isnot = Assert.notEqual.bind(Assert);
 
+  function todo(expr, name) {
+    sendAsyncMessage("content-task:test-todo", {id, expr, name});
+  }
+
   function info(name) {
     sendAsyncMessage("content-task:test-info", {id, name});
   }
