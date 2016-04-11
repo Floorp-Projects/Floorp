@@ -402,7 +402,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
           rv = il->LoadImage(imageUri, nullptr, nullptr,
                              mozilla::net::RP_Default,
                              principal, nullptr,
-                             this, nullptr,
+                             this, nullptr, nullptr,
                              inPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
                                                  nsIRequest::LOAD_NORMAL,
                              nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,

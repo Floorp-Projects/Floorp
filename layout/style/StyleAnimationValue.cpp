@@ -2862,8 +2862,14 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
     case eUnit_Shadow:
     case eUnit_Filter:
     case eUnit_BackgroundPosition:
-      aSpecifiedValue.
-        SetDependentListValue(aComputedValue.GetCSSValueListValue());
+      {
+        nsCSSValueList* computedList = aComputedValue.GetCSSValueListValue();
+        if (computedList) {
+          aSpecifiedValue.SetDependentListValue(computedList);
+        } else {
+          aSpecifiedValue.SetNoneValue();
+        }
+      }
       break;
     case eUnit_Transform:
       aSpecifiedValue.
@@ -2875,6 +2881,41 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
       break;
     default:
       return false;
+  }
+  return true;
+}
+
+bool
+StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
+                                    StyleAnimationValue&& aComputedValue,
+                                    nsCSSValue& aSpecifiedValue)
+{
+  Unit unit = aComputedValue.GetUnit();
+  switch (unit) {
+    case eUnit_Dasharray:
+    case eUnit_Shadow:
+    case eUnit_Filter:
+    case eUnit_BackgroundPosition:
+      {
+        UniquePtr<nsCSSValueList> computedList =
+          aComputedValue.TakeCSSValueListValue();
+        if (computedList) {
+          aSpecifiedValue.AdoptListValue(computedList.release());
+        } else {
+          aSpecifiedValue.SetNoneValue();
+        }
+      }
+      break;
+    case eUnit_CSSValuePairList:
+      {
+        UniquePtr<nsCSSValuePairList> computedList =
+          aComputedValue.TakeCSSValuePairListValue();
+        MOZ_ASSERT(computedList, "Pair list should never be null");
+        aSpecifiedValue.AdoptPairListValue(computedList.release());
+      }
+      break;
+    default:
+      return UncomputeValue(aProperty, aComputedValue, aSpecifiedValue);
   }
   return true;
 }

@@ -32,6 +32,7 @@ if os_posix and not CONFIG['MOZ_SYSTEM_LIBEVENT']:
     DEFINES['HAVE_CONFIG_H'] = True
     LOCAL_INCLUDES += sorted([
         'libevent',
+        'libevent/compat',
         'libevent/include',
         'libevent/' + libevent_include_suffix,
     ])

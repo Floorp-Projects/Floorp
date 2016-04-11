@@ -6,5 +6,6 @@
 
 TEST_HARNESS_FILES.testing.mochitest.manifests += [
     'autophone-media.ini',
+    'autophone-webrtc.ini',
     'emulator-jb.ini',
 ]
