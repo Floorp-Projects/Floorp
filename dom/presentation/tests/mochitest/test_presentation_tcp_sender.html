@@ -4,12 +4,12 @@
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <head>
   <meta charset="utf-8">
-  <title>Test startWithDevice for B2G Presentation API at sender side</title>
+  <title>Test for B2G Presentation API at sender side</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1239242">Test startWithDevice for B2G Presentation API at sender side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for B2G Presentation API at sender side</a>
 <script type="application/javascript;version=1.8">
 
 'use strict';
@@ -41,13 +41,12 @@ function testSetup() {
   });
 }
 
-function testStartConnectionWithDevice() {
+function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      ok(false, "Device prompt should not be triggered.");
-      teardown();
-      aReject();
+      info("Device prompt is triggered.");
+      gScript.sendAsyncMessage('trigger-device-prompt-select');
     });
 
     gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
@@ -100,7 +99,7 @@ function testStartConnectionWithDevice() {
       }
     };
 
-    request.startWithDevice('id').then(
+    request.start().then(
       function(aConnection) {
         connection = aConnection;
         ok(connection, "Connection should be available.");
@@ -121,19 +120,48 @@ function testStartConnectionWithDevice() {
   });
 }
 
-function testStartConnectionWithDeviceNotFoundError() {
+function testSend() {
   return new Promise(function(aResolve, aReject) {
-    request.startWithDevice('').then(
-      function(aConnection) {
-        ok(false, "Should not establish connection to an unknown device");
-        teardown();
-        aReject();
-      },
-      function(aError) {
-        is(aError.name, 'NotFoundError', "Expect NotFoundError occurred when establishing a connection");
-        aResolve();
-      }
-    );
+    const outgoingMessage = "test outgoing message";
+
+    gScript.addMessageListener('message-sent', function messageSentHandler(aMessage) {
+      gScript.removeMessageListener('message-sent', messageSentHandler);
+      is(aMessage, outgoingMessage, "The message is sent out.");
+      aResolve();
+    });
+
+    connection.send(outgoingMessage);
+  });
+}
+
+function testIncomingMessage() {
+  return new Promise(function(aResolve, aReject) {
+    const incomingMessage = "test incoming message";
+
+    connection.addEventListener('message', function messageHandler(aEvent) {
+      connection.removeEventListener('message', messageHandler);
+      is(aEvent.data, incomingMessage, "An incoming message should be received.");
+      aResolve();
+    });
+
+    gScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
+  });
+}
+
+function testTerminateConnection() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+      info("The data transport is closed. " + aReason);
+    });
+
+    connection.onstatechange = function() {
+      connection.onstatechange = null;
+      is(connection.state, "terminated", "Connection should be terminated.");
+      aResolve();
+    };
+
+    connection.terminate();
   });
 }
 
@@ -151,19 +179,20 @@ function runTests() {
   ok(window.PresentationRequest, "PresentationRequest should be available.");
 
   testSetup().
-  then(testStartConnectionWithDevice).
-  then(testStartConnectionWithDeviceNotFoundError).
+  then(testStartConnection).
+  then(testSend).
+  then(testIncomingMessage).
+  then(testTerminateConnection).
   then(teardown);
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: true, context: document},
+  {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.test.enabled", true],
-                                      ["dom.presentation.test.stage", 0]]},
+                                      ["dom.presentation.session_transport.data_channel.enable", false]]},
                             runTests);
 });
 

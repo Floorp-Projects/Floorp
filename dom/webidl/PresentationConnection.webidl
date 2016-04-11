@@ -43,7 +43,7 @@ interface PresentationConnection : EventTarget {
    *
    * This function only works when the state is "connected".
    *
-   * TODO bug 1148307 Implement PresentationSessionTransport with DataChannel to
+   * TODO bug 1228474 Implement PresentationSessionTransport with DataChannel to
    * support other binary types.
    */
   [Throws]
