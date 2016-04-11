@@ -45,6 +45,15 @@ public:
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->OpenOutputStream(offset, _retval);
   }
+  NS_IMETHOD OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD OpenAlternativeInputStream(const nsACString & type, nsIInputStream * *_retval) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :

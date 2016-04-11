@@ -314,7 +314,8 @@ class StartRequestEvent : public ChannelEvent
                     const nsCString& aSecurityInfoSerialization,
                     const NetAddr& aSelfAddr,
                     const NetAddr& aPeerAddr,
-                    const uint32_t& aCacheKey)
+                    const uint32_t& aCacheKey,
+                    const nsCString& altDataType)
   : mChild(aChild)
   , mChannelStatus(aChannelStatus)
   , mResponseHead(aResponseHead)
@@ -328,6 +329,7 @@ class StartRequestEvent : public ChannelEvent
   , mSelfAddr(aSelfAddr)
   , mPeerAddr(aPeerAddr)
   , mCacheKey(aCacheKey)
+  , mAltDataType(altDataType)
   {}
 
   void Run()
@@ -337,7 +339,7 @@ class StartRequestEvent : public ChannelEvent
                            mRequestHeaders, mIsFromCache, mCacheEntryAvailable,
                            mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
-                           mCacheKey);
+                           mCacheKey, mAltDataType);
   }
  private:
   HttpChannelChild* mChild;
@@ -353,6 +355,7 @@ class StartRequestEvent : public ChannelEvent
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
   uint32_t mCacheKey;
+  nsCString mAltDataType;
 };
 
 bool
@@ -368,7 +371,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const NetAddr& selfAddr,
                                      const NetAddr& peerAddr,
                                      const int16_t& redirectCount,
-                                     const uint32_t& cacheKey)
+                                     const uint32_t& cacheKey,
+                                     const nsCString& altDataType)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -387,7 +391,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               cacheExpirationTime,
                                               cachedCharset,
                                               securityInfoSerialization,
-                                              selfAddr, peerAddr, cacheKey));
+                                              selfAddr, peerAddr, cacheKey,
+                                              altDataType));
   return true;
 }
 
@@ -403,7 +408,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const nsCString& securityInfoSerialization,
                                  const NetAddr& selfAddr,
                                  const NetAddr& peerAddr,
-                                 const uint32_t& cacheKey)
+                                 const uint32_t& cacheKey,
+                                 const nsCString& altDataType)
 {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -432,6 +438,10 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   mCachedCharset = cachedCharset;
   mSelfAddr = selfAddr;
   mPeerAddr = peerAddr;
+
+  mAvailableCachedAltDataType = altDataType;
+
+  mAfterOnStartRequestBegun = true;
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
@@ -912,6 +922,13 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   }
 
   ReleaseListeners();
+
+  // DocumentChannelCleanup actually nulls out mCacheEntry in the parent, which
+  // we might need later to open the Alt-Data output stream, so just return here
+  if (!mPreferredCachedAltDataType.IsEmpty()) {
+    mKeptAlive = true;
+    return;
+  }
 
   if (mLoadFlags & LOAD_DOCUMENT_URI) {
     // Keep IPDL channel open, but only for updating security info.
@@ -1905,6 +1922,7 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   mRequestHead.Method(openArgs.requestMethod());
+  openArgs.preferredAlternativeType() = mPreferredCachedAltDataType;
 
   nsTArray<mozilla::ipc::FileDescriptor> fds;
   SerializeInputStream(mUploadStream, openArgs.uploadStream(), fds);
@@ -2175,6 +2193,36 @@ HttpChannelChild::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent)
 {
   NS_ENSURE_ARG(aAllowStaleCacheContent);
   *aAllowStaleCacheContent = mAllowStaleCacheContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::PreferAlternativeDataType(const nsACString & aType)
+{
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+  mPreferredCachedAltDataType = aType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetAlternativeDataType(nsACString & aType)
+{
+  // Must be called during or after OnStartRequest
+  if (!mAfterOnStartRequestBegun) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aType = mAvailableCachedAltDataType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, nsIOutputStream * *_retval)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+  RefPtr<AltDataOutputStreamChild> stream =
+    static_cast<AltDataOutputStreamChild*>(gNeckoChild->SendPAltDataOutputStreamConstructor(nsCString(aType), this));
+  stream.forget(_retval);
   return NS_OK;
 }
 

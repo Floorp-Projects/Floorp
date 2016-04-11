@@ -121,7 +121,8 @@ protected:
                           const NetAddr& selfAddr,
                           const NetAddr& peerAddr,
                           const int16_t& redirectCount,
-                          const uint32_t& cacheKey) override;
+                          const uint32_t& cacheKey,
+                          const nsCString& altDataType) override;
   bool RecvOnTransportAndData(const nsresult& channelStatus,
                               const nsresult& status,
                               const uint64_t& progress,
@@ -261,7 +262,8 @@ private:
                       const nsCString& securityInfoSerialization,
                       const NetAddr& selfAddr,
                       const NetAddr& peerAddr,
-                      const uint32_t& cacheKey);
+                      const uint32_t& cacheKey,
+                      const nsCString& altDataType);
   void MaybeDivertOnData(const nsCString& data,
                          const uint64_t& offset,
                          const uint32_t& count);
