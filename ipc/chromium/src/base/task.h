@@ -6,12 +6,12 @@
 #ifndef BASE_TASK_H_
 #define BASE_TASK_H_
 
-#include "base/non_thread_safe.h"
 #include "base/revocable_store.h"
 #include "base/tracked.h"
 #include "base/tuple.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Tuple.h"
+#include "nsISupportsImpl.h"
 
 // Helper functions so that we can call a function a pass it arguments that come
 // from a Tuple.
@@ -128,7 +128,7 @@ class ScopedTaskFactory : public RevocableStore {
     return new TaskWrapper(this);
   }
 
-  class TaskWrapper : public TaskType, public NonThreadSafe {
+  class TaskWrapper : public TaskType {
    public:
     explicit TaskWrapper(RevocableStore* store) : revocable_(store) { }
 
@@ -137,8 +137,14 @@ class ScopedTaskFactory : public RevocableStore {
         TaskType::Run();
     }
 
+    ~TaskWrapper() {
+      NS_ASSERT_OWNINGTHREAD(TaskWrapper);
+    }
+
    private:
     Revocable revocable_;
+
+    NS_DECL_OWNINGTHREAD
 
     DISALLOW_EVIL_CONSTRUCTORS(TaskWrapper);
   };
