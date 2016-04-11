@@ -1577,16 +1577,18 @@
                 </box>
                 <vbox class="controlBar" hidden="true">
                     <hbox class="buttonsBar">
-                        <button class="castingButton" hidden="true"
-                                aria-label="&castingButton.castingLabel;"/>
-                        <button class="fullscreenButton"
-                            enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
-                            exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
-                        <spacer flex="1"/>
                         <button class="playButton"
                                 playlabel="&playButton.playLabel;"
                                 pauselabel="&playButton.pauseLabel;"/>
-                        <spacer flex="1"/>
+                        <label class="positionLabel" role="presentation"/>
+                        <stack class="scrubberStack">
+                            <box class="backgroundBar"/>
+                            <progressmeter class="flexibleBar" value="100"/>
+                            <progressmeter class="bufferBar"/>
+                            <progressmeter class="progressBar" max="10000"/>
+                            <scale class="scrubber" movetoclick="true"/>
+                        </stack>
+                        <label class="durationLabel" role="presentation"/>
                         <button class="muteButton"
                                 mutelabel="&muteButton.muteLabel;"
                                 unmutelabel="&muteButton.unmuteLabel;"/>
@@ -1595,17 +1597,12 @@
                           <box class="volumeForeground" anonid="volumeForeground"/>
                           <scale class="volumeControl" movetoclick="true"/>
                         </stack>
-                      </hbox>
-                    <stack class="scrubberStack" flex="1">
-                        <box class="backgroundBar"/>
-                        <progressmeter class="bufferBar"/>
-                        <progressmeter class="progressBar" max="10000"/>
-                        <scale class="scrubber" movetoclick="true"/>
-                    </stack>
-                    <vbox class="durationBox">
-                        <label class="positionLabel" role="presentation"/>
-                        <label class="durationLabel" role="presentation"/>
-                    </vbox>
+                        <button class="castingButton" hidden="true"
+                                aria-label="&castingButton.castingLabel;"/>
+                        <button class="fullscreenButton"
+                            enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
+                            exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
+                    </hbox>
                 </vbox>
             </vbox>
         </stack>
