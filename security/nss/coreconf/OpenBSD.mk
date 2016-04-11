@@ -26,7 +26,7 @@ endif
 
 DLL_SUFFIX		= so.1.0
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -Wno-switch -pipe -DOPENBSD
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wall -Wno-switch -pipe -DOPENBSD
 
 OS_LIBS			= 
 

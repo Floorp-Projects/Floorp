@@ -10,18 +10,16 @@ incoming:
 gs = ss->gather
 hs = ss->ssl3->hs
 
-gs->inbuf   SSL3 only: incoming (encrypted) ssl records are placed here,
+gs->inbuf   incoming (encrypted) ssl records are placed here,
         and then decrypted (or copied) to gs->buf.
 
-gs->buf     SSL2: incoming SSL records are put here, and then decrypted
-        in place.
-        SSL3: ssl3_HandleHandshake puts decrypted ssl records here.
+gs->buf     ssl3_HandleHandshake puts decrypted ssl records here.
 
-hs.msg_body (SSL3 only) When an incoming handshake message spans more
+hs.msg_body When an incoming handshake message spans more
         than one ssl record, the first part(s) of it are accumulated
         here until it all arrives.
 
-hs.msgState (SSL3 only) an alternative set of pointers/lengths for gs->buf.
+hs.msgState an alternative set of pointers/lengths for gs->buf.
         Used only when a handleHandshake function returns SECWouldBlock.
         ssl3_HandleHandshake remembers how far it previously got by
         using these pointers instead of gs->buf when it is called
@@ -65,17 +63,6 @@ sendLock ->/
 crypto and hash Data that must be protected while turning plaintext into
 ciphertext:
 
-SSL2:   (in ssl2_Send*)
-    sec->hash*
-    sec->hashcx     (ptr and data)
-    sec->enc
-    sec->writecx*   (ptr and content)
-    sec->sendSecret*(ptr and content)
-    sec->sendSequence       locked by xmitBufLock
-    sec->blockSize
-    sec->writeBuf*  (ptr & content) locked by xmitBufLock
-    "in"                locked by xmitBufLock
-
 SSl3:   (in ssl3_SendPlainText)
     ss->ssl3            (the pointer)
     ss->ssl3->current_write*    (the pointer and the data in the spec
@@ -87,13 +74,6 @@ SSl3:   (in ssl3_SendPlainText)
 
 crypto and hash data that must be protected while turning ciphertext into
 plaintext:
-
-SSL2:   (in ssl2_GatherData)
-    gs->*               (locked by recvBufLock )
-    sec->dec
-    sec->readcx
-    sec->hash*      (ptr and data)
-    sec->hashcx         (ptr and data)
 
 SSL3:   (in ssl3_HandleRecord )
     ssl3->current_read* (the pointer and all data refernced)
@@ -113,22 +93,12 @@ ss->sec->isServer
 
 in SendBlock
 
-ss->sec->hash->length
-ss->sec->blockSize
 ss->sec->writeBuf.*
-ss->sec->sendSecret
-ss->sec->sendSequence
-ss->sec->writecx    *
 ss->pendingBuf
 
 --------------------------------------------------------------------------
 
 Data variables (not const) protected by the "sslGlobalDataLock".
 Note, this really should be a reader/writer lock.
-
-allowedByPolicy     sslcon.c
-maybeAllowedByPolicy    sslcon.c
-chosenPreference    sslcon.c
-policyWasSet        sslcon.c
 
 cipherSuites[]      ssl3con.c

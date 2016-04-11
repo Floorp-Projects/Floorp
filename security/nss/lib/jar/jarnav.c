@@ -16,10 +16,10 @@
 extern MWContext *FE_GetInitContext(void);
 
 /* To return an MWContext for Java */
-static MWContext *(*jar_fn_FindSomeContext) (void) = NULL;
+static MWContext *(*jar_fn_FindSomeContext)(void) = NULL;
 
 /* To fabricate an MWContext for FE_GetPassword */
-static MWContext *(*jar_fn_GetInitContext) (void) = NULL;
+static MWContext *(*jar_fn_GetInitContext)(void) = NULL;
 
 /*
  *  J A R _ i n i t
@@ -28,9 +28,10 @@ static MWContext *(*jar_fn_GetInitContext) (void) = NULL;
  *
  */
 
-void JAR_init (void)
+void
+JAR_init(void)
 {
-    JAR_init_callbacks (XP_GetString, NULL, NULL);
+    JAR_init_callbacks(XP_GetString, NULL, NULL);
 }
 
 /*
@@ -40,23 +41,23 @@ void JAR_init (void)
  *  it may be needed to prompt the user for a password.
  *
  */
-int 
+int
 JAR_set_context(JAR *jar, MWContext *mw)
 {
     if (mw) {
-	jar->mw = mw;
+        jar->mw = mw;
     } else {
-	/* jar->mw = XP_FindSomeContext(); */
-	jar->mw = NULL;
-	/*
-	 * We can't find a context because we're in startup state and none
-	 * exist yet. go get an FE_InitContext that only works at 
-	 * initialization time.
-	 */
-	/* Turn on the mac when we get the FE_ function */
-	if (jar->mw == NULL) {
-	    jar->mw = jar_fn_GetInitContext();
-	}
+        /* jar->mw = XP_FindSomeContext(); */
+        jar->mw = NULL;
+        /*
+         * We can't find a context because we're in startup state and none
+         * exist yet. go get an FE_InitContext that only works at
+         * initialization time.
+         */
+        /* Turn on the mac when we get the FE_ function */
+        if (jar->mw == NULL) {
+            jar->mw = jar_fn_GetInitContext();
+        }
     }
     return 0;
 }
