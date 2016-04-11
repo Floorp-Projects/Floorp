@@ -4064,7 +4064,7 @@ public class BrowserApp extends GeckoApp
 
         final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
         i.setClass(context, TelemetryUploadService.class);
-        i.putExtra(TelemetryConstants.EXTRA_DEFAULT_SEARCH_ENGINE, defaultEngine.getIdentifier());
+        i.putExtra(TelemetryConstants.EXTRA_DEFAULT_SEARCH_ENGINE, (defaultEngine == null) ? null : defaultEngine.getIdentifier());
         i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
         i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
         i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().getAbsolutePath());
