@@ -5856,14 +5856,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // positioned, the position value should be computed to 'absolute' per
   // the Fullscreen API spec.
   if (display->mTopLayer != NS_STYLE_TOP_LAYER_NONE &&
-      // XXX We currently only support fixed top layer element. But per
-      // spec it should check IsAbsolutelyPositionedStyle() instead.
-      // This should be fixed as soon as we support <dialog> element
-      // in bug 840640. We have to restrict it now because addons may
-      // mess with UA-only styles and cause crashes. See bug 1230508.
-      display->mPosition != NS_STYLE_POSITION_FIXED) {
-    // XXX And we should set other values to absolute instead of fixed.
-    display->mPosition = NS_STYLE_POSITION_FIXED;
+      !display->IsAbsolutelyPositionedStyle()) {
+    display->mPosition = NS_STYLE_POSITION_ABSOLUTE;
     // We cannot cache this struct because otherwise it may be used as
     // an aStartStruct for some other elements.
     conditions.SetUncacheable();
