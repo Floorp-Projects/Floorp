@@ -60,7 +60,7 @@ public:
   AsyncEventDispatcher(dom::EventTarget* aTarget, WidgetEvent& aEvent);
 
   NS_IMETHOD Run() override;
-  NS_IMETHOD Cancel() override;
+  nsresult Cancel() override;
   nsresult PostDOMEvent();
   void RunDOMEventWhenSafe();
 

@@ -27,7 +27,7 @@ public:
   static NS_METHOD Enqueue(JSRuntime* aRt, const JS::GCDescription& aDesc);
 
   NS_DECL_NSIRUNNABLE
-  NS_DECL_NSICANCELABLERUNNABLE
+  nsresult Cancel() override;
 };
 
 } // namespace mozilla
