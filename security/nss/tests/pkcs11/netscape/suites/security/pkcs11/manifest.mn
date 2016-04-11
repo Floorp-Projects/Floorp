@@ -1,0 +1,18 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH=../../../../../../..
+
+#MODULE = sectools
+
+CSRCS = pk11test.c
+
+PROGRAM = pk11test
+
+REQUIRES = seccmd dbm nss
+
+REGRESSION_SPEC = pkcs11.reg
+
+RESULTS_SUBDIR = security/pkcs11
