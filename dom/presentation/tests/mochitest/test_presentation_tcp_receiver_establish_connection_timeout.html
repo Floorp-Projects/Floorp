@@ -65,15 +65,13 @@ function runTests() {
   then(teardown);
 }
 
-SimpleTest.expectAssertions(0, 5);
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.test.enabled", true],
-                                      ["dom.presentation.test.stage", 0],
+                                      ["dom.presentation.session_transport.data_channel.enable", false],
                                       ["presentation.receiver.loading.timeout", 10]]},
                             runTests);
 });

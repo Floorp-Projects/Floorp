@@ -9,7 +9,7 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for B2G Presentation API at sender side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1148307">Test for B2G Presentation API at sender side</a>
 <script type="application/javascript;version=1.8">
 
 'use strict';
@@ -63,6 +63,11 @@ function testStartConnection() {
     gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
       gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
       info("The control channel is closed. " + aReason);
+    });
+
+    gScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
+      gScript.removeMessageListener('check-navigator', checknavigatorHandler);
+      ok(aSuccess, "buildDataChannel get correct window object");
     });
 
     gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
@@ -169,6 +174,7 @@ function teardown() {
   gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
     gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
     gScript.destroy();
+    info('teardown-complete');
     SimpleTest.finish();
   });
 
@@ -193,8 +199,7 @@ SpecialPowers.pushPermissions([
   {type: 'presentation', allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.test.enabled", true],
-                                      ["dom.presentation.test.stage", 0]]},
+                                      ["dom.presentation.session_transport.data_channel.enable", true]]},
                             runTests);
 });
 

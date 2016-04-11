@@ -33,11 +33,6 @@ namespace dom {
  * presenting receiver side. The lifetime is managed in either
  * |PresentationControllingInfo| (sender side) or |PresentationPresentingInfo|
  * (receiver side) in PresentationSessionInfo.cpp.
- *
- * TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
- * The implementation over the TCP channel is primarily used for the early stage
- * of Presentation API (without SSL) and should be migrated to DataChannel with
- * full support soon.
  */
 class PresentationTCPSessionTransport final : public nsIPresentationSessionTransport
                                             , public nsIPresentationTCPSessionTransportBuilder

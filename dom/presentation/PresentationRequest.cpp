@@ -131,7 +131,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
 
   nsCOMPtr<nsIPresentationServiceCallback> callback =
     new PresentationRequesterCallback(this, mUrl, id, promise);
-  rv = service->StartSession(mUrl, id, origin, aDeviceId, callback);
+  rv = service->StartSession(mUrl, id, origin, aDeviceId, GetOwner()->WindowID(), callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }

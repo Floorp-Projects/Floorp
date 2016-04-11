@@ -65,6 +65,10 @@ IPDL_SOURCES += [
     'ipc/PPresentationRequest.ipdl'
 ]
 
+LOCAL_INCLUDES += [
+    '../base'
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

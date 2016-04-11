@@ -388,6 +388,7 @@ PresentationService::StartSession(const nsAString& aUrl,
                                   const nsAString& aSessionId,
                                   const nsAString& aOrigin,
                                   const nsAString& aDeviceId,
+                                  uint64_t aWindowId,
                                   nsIPresentationServiceCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -399,6 +400,13 @@ PresentationService::StartSession(const nsAString& aUrl,
   RefPtr<PresentationSessionInfo> info =
     new PresentationControllingInfo(aUrl, aSessionId, aCallback);
   mSessionInfo.Put(aSessionId, info);
+
+  // Only track the info when an actual window ID, which would never be 0, is
+  // provided (for an in-process sender page).
+  if (aWindowId != 0) {
+    mRespondingSessionIds.Put(aWindowId, new nsString(aSessionId));
+    mRespondingWindowIds.Put(aSessionId, aWindowId);
+  }
 
   nsCOMPtr<nsIPresentationDeviceRequest> request =
     new PresentationDeviceRequest(aUrl, aSessionId, aOrigin);
@@ -614,7 +622,7 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
   // Only track the responding info when an actual window ID, which would never
   // be 0, is provided (for an in-process receiver page).
   if (aWindowId != 0) {
-    mRespondingSessionIds.Put(aWindowId, new nsAutoString(aSessionId));
+    mRespondingSessionIds.Put(aWindowId, new nsString(aSessionId));
     mRespondingWindowIds.Put(aSessionId, aWindowId);
   }
 
@@ -629,12 +637,22 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId)
 
   // Remove the in-process responding info if there's still any.
   uint64_t windowId = 0;
-  if(mRespondingWindowIds.Get(aSessionId, &windowId)) {
+  if (mRespondingWindowIds.Get(aSessionId, &windowId)) {
     mRespondingWindowIds.Remove(aSessionId);
     mRespondingSessionIds.Remove(windowId);
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationService::GetWindowIdBySessionId(const nsAString& aSessionId,
+                                            uint64_t* aWindowId)
+{
+  if (mRespondingWindowIds.Get(aSessionId, aWindowId)) {
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 bool

@@ -151,11 +151,9 @@ PresentationTCPSessionTransport::BuildTCPReceiverTransport(nsIPresentationChanne
     return rv;
   }
 
-  // TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
-  // Ultimately we may use all the available addresses. DataChannel appears
-  // more robust upon handling ICE. And at the first stage Presentation API is
-  // only exposed on Firefox OS where the first IP appears enough for most
-  // scenarios.
+  // TODO bug 1228504 Take all IP addresses in PresentationChannelDescription
+  // into account. And at the first stage Presentation API is only exposed on
+  // Firefox OS where the first IP appears enough for most scenarios.
   nsCOMPtr<nsISupportsCString> supportStr = do_QueryElementAt(serverHosts, 0);
   if (NS_WARN_IF(!supportStr)) {
     return NS_ERROR_INVALID_ARG;
