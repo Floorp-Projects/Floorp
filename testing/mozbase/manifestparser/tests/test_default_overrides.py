@@ -11,7 +11,7 @@ from manifestparser import ManifestParser
 here = os.path.dirname(os.path.abspath(__file__))
 
 class TestDefaultSkipif(unittest.TestCase):
-    """test applying a skip-if condition in [DEFAULT] and || with the value for the test"""
+    """Tests applying a skip-if condition in [DEFAULT] and || with the value for the test"""
 
 
     def test_defaults(self):
@@ -31,6 +31,23 @@ class TestDefaultSkipif(unittest.TestCase):
                 self.assertEqual(test['skip-if'], "os == 'win' && debug # a pesky comment")
             elif test['name'] == 'test6':
                 self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (debug )")
+
+class TestDefaultSupportFiles(unittest.TestCase):
+    """Tests combining support-files field in [DEFAULT] with the value for a test"""
+
+    def test_defaults(self):
+
+        default = os.path.join(here, 'default-suppfiles.ini')
+        parser = ManifestParser(manifests=(default,))
+        expected_supp_files = {
+            'test1': 'foo.js # a comment',
+            'test2': 'foo.js  bar.js ',
+            'test3': 'foo.js # a comment',
+        }
+        for test in parser.tests:
+            expected = expected_supp_files[test['name']]
+            self.assertEqual(test['support-files'], expected)
+
 
 if __name__ == '__main__':
     unittest.main()
