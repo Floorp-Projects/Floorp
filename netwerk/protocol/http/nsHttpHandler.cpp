@@ -126,6 +126,7 @@ NewURI(const nsACString &aSpec,
     return NS_OK;
 }
 
+#ifdef ANDROID
 static nsCString
 GetDeviceModelId() {
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
@@ -137,6 +138,7 @@ GetDeviceModelId() {
     }
     return EmptyCString();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler <public>
