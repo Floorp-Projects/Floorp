@@ -107,21 +107,23 @@ PresentationTCPSessionTransport::BuildTCPSenderTransport(nsISocketTransport* aTr
     return rv;
   }
 
-  SetReadyState(ReadyState::OPEN);
-
-  if (IsReadyToNotifyData()) {
-    return CreateInputStreamPump();
-  }
-
   mType = nsIPresentationSessionTransportBuilder::TYPE_SENDER;
 
   nsCOMPtr<nsIPresentationSessionTransport> sessionTransport = do_QueryObject(this);
-  nsCOMPtr<nsIRunnable> runnable =
+  nsCOMPtr<nsIRunnable> onSessionTransportRunnable =
     NS_NewRunnableMethodWithArgs
       <nsIPresentationSessionTransport*>(mListener,
                                          &nsIPresentationSessionTransportBuilderListener::OnSessionTransport,
                                          sessionTransport);
-  return NS_DispatchToCurrentThread(runnable);
+
+  NS_DispatchToCurrentThread(onSessionTransportRunnable);
+
+
+  nsCOMPtr<nsIRunnable> setReadyStateRunnable =
+    NS_NewRunnableMethodWithArgs<ReadyState>(this,
+                                             &PresentationTCPSessionTransport::SetReadyState,
+                                             ReadyState::OPEN);
+  return NS_DispatchToCurrentThread(setReadyStateRunnable);
 }
 
 NS_IMETHODIMP
@@ -272,6 +274,10 @@ PresentationTCPSessionTransport::CreateStream()
 nsresult
 PresentationTCPSessionTransport::CreateInputStreamPump()
 {
+  if (NS_WARN_IF(mInputStreamPump)) {
+    return NS_OK;
+  }
+
   nsresult rv;
   mInputStreamPump = do_CreateInstance(NS_INPUTSTREAMPUMP_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -381,13 +387,26 @@ PresentationTCPSessionTransport::NotifyCopyComplete(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-PresentationTCPSessionTransport::Send(nsIInputStream* aData)
+PresentationTCPSessionTransport::Send(const nsAString& aData)
 {
   if (NS_WARN_IF(mReadyState != ReadyState::OPEN)) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  mMultiplexStream->AppendStream(aData);
+  nsresult rv;
+  nsCOMPtr<nsIStringInputStream> stream =
+    do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  NS_ConvertUTF16toUTF8 msgString(aData);
+  rv = stream->SetData(msgString.BeginReading(), msgString.Length());
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  mMultiplexStream->AppendStream(stream);
 
   EnsureCopying();
 
@@ -425,10 +444,22 @@ PresentationTCPSessionTransport::SetReadyState(ReadyState aReadyState)
 {
   mReadyState = aReadyState;
 
-  if (mReadyState == ReadyState::OPEN && mCallback) {
+  if (mReadyState == ReadyState::OPEN) {
+    if (IsReadyToNotifyData()) {
+      CreateInputStreamPump();
+    }
+
+    if (NS_WARN_IF(!mCallback)) {
+      return;
+    }
+
     // Notify the transport channel is ready.
     NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportReady()));
   } else if (mReadyState == ReadyState::CLOSED && mCallback) {
+    if (NS_WARN_IF(!mCallback)) {
+      return;
+    }
+
     // Notify the transport channel has been shut down.
     NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportClosed(mCloseStatus)));
     mCallback = nullptr;
@@ -451,10 +482,6 @@ PresentationTCPSessionTransport::OnTransportStatus(nsITransport* aTransport,
   }
 
   SetReadyState(ReadyState::OPEN);
-
-  if (IsReadyToNotifyData()) {
-    return CreateInputStreamPump();
-  }
 
   return NS_OK;
 }
