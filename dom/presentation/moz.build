@@ -8,6 +8,7 @@ DIRS += ['interfaces', 'provider']
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 
 EXPORTS.mozilla.dom += [
     'ipc/PresentationChild.h',
@@ -43,6 +44,8 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_COMPONENTS += [
+    'PresentationDataChannelSessionTransport.js',
+    'PresentationDataChannelSessionTransport.manifest',
     'PresentationDeviceInfoManager.js',
     'PresentationDeviceInfoManager.manifest',
 ]
