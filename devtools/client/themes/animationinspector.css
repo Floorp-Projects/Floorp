@@ -133,6 +133,12 @@ body {
   border-style: solid;
 }
 
+#global-toolbar .devtools-button,
+#timeline-toolbar .devtools-button {
+  margin: 0;
+  padding: 0;
+}
+
 #timeline-toolbar .devtools-button,
 #timeline-toolbar .label {
   border-width: 0 1px 0 0;
@@ -168,7 +174,7 @@ body {
   }
 }
 
-#timeline-rate select {
+#timeline-rate select.devtools-button {
   -moz-appearance: none;
   text-align: center;
   font-family: inherit;

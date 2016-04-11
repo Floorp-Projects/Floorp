@@ -94,6 +94,7 @@ html, body {
 
 #global-toolbar .toolbar-button {
   margin: 0 0 0 5px;
+  padding: 0;
 }
 
 #global-toolbar .toolbar-button,
