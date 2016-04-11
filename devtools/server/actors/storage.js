@@ -352,7 +352,9 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
         // We only acquire principal when the type of the storage is indexedDB
         // because the principal only matters the indexedDB.
         let win = this.storageActor.getWindowFromHost(host);
-        principal = win.document.nodePrincipal;
+        if (win) {
+          principal = win.document.nodePrincipal;
+        }
       }
 
       if (names) {
@@ -1345,8 +1347,12 @@ StorageActors.createActor({
   populateStoresForHost: Task.async(function*(host) {
     let storeMap = new Map();
     let caches = yield this.getCachesForHost(host);
-    for (let name of (yield caches.keys())) {
-      storeMap.set(name, (yield caches.open(name)));
+    try {
+      for (let name of (yield caches.keys())) {
+        storeMap.set(name, (yield caches.open(name)));
+      }
+    } catch (ex) {
+      console.error(`Failed to enumerate CacheStorage for host ${host}:`, ex);
     }
     this.hostVsStores.set(host, storeMap);
   }),
@@ -1606,13 +1612,15 @@ StorageActors.createActor({
     let storeMap = new Map();
     let {names} = yield this.getDBNamesForHost(host);
     let win = this.storageActor.getWindowFromHost(host);
-    let principal = win.document.nodePrincipal;
+    if (win) {
+      let principal = win.document.nodePrincipal;
 
-    for (let name of names) {
-      let metadata = yield this.getDBMetaData(host, principal, name);
+      for (let name of names) {
+        let metadata = yield this.getDBMetaData(host, principal, name);
 
-      metadata = indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
-      storeMap.set(name, metadata);
+        metadata = indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
+        storeMap.set(name, metadata);
+      }
     }
 
     this.hostVsStores.set(host, storeMap);
