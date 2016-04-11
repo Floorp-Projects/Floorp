@@ -49,7 +49,8 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
   , mMonitor("Fake video")
   , mCb(16), mCr(16)
 {
-  mImageContainer = layers::LayerManager::CreateImageContainer();
+  mImageContainer =
+    layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
 }
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()

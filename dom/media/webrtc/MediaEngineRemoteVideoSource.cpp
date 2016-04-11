@@ -190,7 +190,8 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
   if (mState == kStarted) {
     return NS_OK;
   }
-  mImageContainer = layers::LayerManager::CreateImageContainer();
+  mImageContainer =
+    layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
 
   mState = kStarted;
   mTrackID = aID;
