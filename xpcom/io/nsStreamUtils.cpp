@@ -30,7 +30,7 @@ using namespace mozilla;
 // those can be shut down at any time, and in these cases, Cancel() is called
 // instead of Run().
 class nsInputStreamReadyEvent final
-  : public nsCancelableRunnable
+  : public CancelableRunnable
   , public nsIInputStreamCallback
 {
 public:
@@ -111,7 +111,7 @@ private:
   nsCOMPtr<nsIEventTarget>         mTarget;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsInputStreamReadyEvent, nsCancelableRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(nsInputStreamReadyEvent, CancelableRunnable,
                             nsIInputStreamCallback)
 
 //-----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsInputStreamReadyEvent, nsCancelableRunnable,
 // those can be shut down at any time, and in these cases, Cancel() is called
 // instead of Run().
 class nsOutputStreamReadyEvent final
-  : public nsCancelableRunnable
+  : public CancelableRunnable
   , public nsIOutputStreamCallback
 {
 public:
@@ -201,7 +201,7 @@ private:
   nsCOMPtr<nsIEventTarget>          mTarget;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsOutputStreamReadyEvent, nsCancelableRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(nsOutputStreamReadyEvent, CancelableRunnable,
                             nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
@@ -235,7 +235,7 @@ NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback* aCallback,
 class nsAStreamCopier
   : public nsIInputStreamCallback
   , public nsIOutputStreamCallback
-  , public nsCancelableRunnable
+  , public CancelableRunnable
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -508,7 +508,7 @@ protected:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAStreamCopier,
-                            nsCancelableRunnable,
+                            CancelableRunnable,
                             nsIInputStreamCallback,
                             nsIOutputStreamCallback)
 
