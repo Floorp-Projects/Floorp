@@ -443,6 +443,7 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
     usesSubjKeyID = nss_cmsrecipientinfo_usessubjectkeyid(ri);
     if (cert) {
 	spki = &cert->subjectPublicKeyInfo;
+	certalgtag = SECOID_GetAlgorithmTag(&(spki->algorithm));
     } else if (usesSubjKeyID) {
 	extra = &ri->ri.keyTransRecipientInfoEx;
 	/* sanity check */
@@ -452,6 +453,7 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
 	    return SECFailure;
 	}
 	spki = freeSpki = SECKEY_CreateSubjectPublicKeyInfo(extra->pubKey);
+	certalgtag = SECOID_GetAlgorithmTag(&spki->algorithm);
     } else {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
@@ -511,6 +513,7 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
 	/* NOTE that we do not support any KEK algorithm */
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	rv = SECFailure;
+	break;
     }
     if (freeSpki)
 	SECKEY_DestroySubjectPublicKeyInfo(freeSpki);

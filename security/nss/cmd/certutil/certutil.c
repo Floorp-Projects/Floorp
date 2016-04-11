@@ -441,6 +441,7 @@ outputCertOrExtension(CERTCertificate *the_cert, PRBool raw, PRBool ascii,
 		    SECU_PrintSystemError(progName, "error writing extension");
 		    rv = SECFailure;
 		}
+		rv = SECSuccess;
 		break;
 	    }
 	}

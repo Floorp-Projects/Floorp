@@ -38,6 +38,7 @@
 /* Declare SSL cipher suites. */
 
 extern int cipherSuites[];
+extern int ssl2CipherSuites[];
 extern int ssl3CipherSuites[];
 
 /* Data buffer read from a socket. */
