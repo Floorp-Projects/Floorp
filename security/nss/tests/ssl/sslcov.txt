@@ -4,22 +4,8 @@
 #
 # This file enables test coverage of the various SSL ciphers
 #
-# NOTE: SSL2 ciphers are independent of whether TLS is enabled or not. We
-# mix up the enable functions so we can tests boths paths.
-#
 # Enable Enable Cipher Test Name 
 #  EC     TLS
-#
-  noECC  SSL3   A    SSL2_RC4_128_WITH_MD5
-  noECC  TLS10   B    SSL2_RC4_128_EXPORT40_WITH_MD5
-  noECC  TLS10   C    SSL2_RC2_128_CBC_WITH_MD5
-  noECC  SSL3   D    SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
-  noECC  TLS10   E    SSL2_DES_64_CBC_WITH_MD5
-  noECC  SSL3   F    SSL2_DES_192_EDE3_CBC_WITH_MD5
-#
-  noECC  TLS11   B    SSL2_RC4_128_EXPORT40_WITH_MD5
-  noECC  TLS11   C    SSL2_RC2_128_CBC_WITH_MD5
-  noECC  TLS11   E    SSL2_DES_64_CBC_WITH_MD5
 #
   noECC  SSL3   c    SSL3_RSA_WITH_RC4_128_MD5
   noECC  SSL3   d    SSL3_RSA_WITH_3DES_EDE_CBC_SHA

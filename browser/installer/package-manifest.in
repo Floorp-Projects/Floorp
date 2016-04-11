@@ -751,7 +751,11 @@
 ; meaning their .chk files are created there directly.
 ;
 #ifndef MOZ_SYSTEM_NSS
+#if defined(XP_LINUX) && !defined(ANDROID)
+@BINPATH@/@DLL_PREFIX@freeblpriv3@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
+#endif
 @BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
 #ifndef NSS_DISABLE_DBM

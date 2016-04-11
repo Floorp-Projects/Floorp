@@ -94,16 +94,6 @@ typedef enum ocspStaplingModeEnum ocspStaplingModeType;
 static char *ocspStaplingCA = NULL;
 static SECItemArray *certStatus[kt_kea_size] = { NULL };
 
-const int ssl2CipherSuites[] = {
-    SSL_EN_RC4_128_WITH_MD5,			/* A */
-    SSL_EN_RC4_128_EXPORT40_WITH_MD5,		/* B */
-    SSL_EN_RC2_128_CBC_WITH_MD5,		/* C */
-    SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,	/* D */
-    SSL_EN_DES_64_CBC_WITH_MD5,			/* E */
-    SSL_EN_DES_192_EDE3_CBC_WITH_MD5,		/* F */
-    0
-};
-
 const int ssl3CipherSuites[] = {
     -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
     -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA	 * b */
@@ -178,7 +168,7 @@ PrintParameterUsage()
     fputs(
 "-V [min]:[max] restricts the set of enabled SSL/TLS protocol versions.\n"
 "   All versions are enabled by default.\n"
-"   Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1 tls1.2\n"
+"   Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2\n"
 "   Example: \"-V ssl3:\" enables SSL 3 and newer.\n"
 "-B bypasses the PKCS11 layer for SSL encryption and MACing\n"
 "-q checks for bypassability\n"
@@ -242,13 +232,6 @@ PrintCipherUsage(const char *progName)
     PrintUsageHeader(progName);
     fputs(
 "-c ciphers   Letter(s) chosen from the following list\n"
-"A    SSL2 RC4 128 WITH MD5\n"
-"B    SSL2 RC4 128 EXPORT40 WITH MD5\n"
-"C    SSL2 RC2 128 CBC WITH MD5\n"
-"D    SSL2 RC2 128 CBC EXPORT40 WITH MD5\n"
-"E    SSL2 DES 64 CBC WITH MD5\n"
-"F    SSL2 DES 192 EDE3 CBC WITH MD5\n"
-"\n"
 "c    SSL3 RSA WITH RC4 128 MD5\n"
 "d    SSL3 RSA WITH 3DES EDE CBC SHA\n"
 "e    SSL3 RSA WITH DES CBC SHA\n"
@@ -828,7 +811,6 @@ logger(void *arg)
 
 PRBool useModelSocket  = PR_FALSE;
 static SSLVersionRange enabledVersions;
-PRBool enableSSL2      = PR_TRUE;
 PRBool disableRollBack = PR_FALSE;
 PRBool NoReuse         = PR_FALSE;
 PRBool hasSidCache     = PR_FALSE;
@@ -1865,8 +1847,7 @@ server_main(
     }
 
     /* do SSL configuration. */
-    rv = SSL_OptionSet(model_sock, SSL_SECURITY, 
-                       enableSSL2 || enabledVersions.min != 0);
+    rv = SSL_OptionSet(model_sock, SSL_SECURITY, enabledVersions.min != 0);
     if (rv < 0) {
 	errExit("SSL_OptionSet SSL_SECURITY");
     }
@@ -1874,11 +1855,6 @@ server_main(
     rv = SSL_VersionRangeSet(model_sock, &enabledVersions);
     if (rv != SECSuccess) {
 	errExit("error setting SSL/TLS version range ");
-    }
-
-    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL2, enableSSL2);
-    if (rv != SECSuccess) {
-       errExit("error enabling SSLv2 ");
     }
 
     rv = SSL_OptionSet(model_sock, SSL_ROLLBACK_DETECTION, !disableRollBack);
@@ -2282,8 +2258,7 @@ main(int argc, char **argv)
 	case 'U': configureReuseECDHE = (PORT_Atoi(optstate->value) != 0); break;
 
         case 'V': if (SECU_ParseSSLVersionRangeString(optstate->value,
-                          enabledVersions, enableSSL2,
-                          &enabledVersions, &enableSSL2) != SECSuccess) {
+                          enabledVersions, &enabledVersions) != SECSuccess) {
                       Usage(progName);
                   }
                   break;
@@ -2544,7 +2519,7 @@ main(int argc, char **argv)
     	}
     }
 
-    /* all the SSL2 and SSL3 cipher suites are enabled by default. */
+    /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {
     	char *cstringSaved = cipherString;
     	int ndx;
@@ -2553,12 +2528,11 @@ main(int argc, char **argv)
 	disableAllSSLCiphers();
 
 	while (0 != (ndx = *cipherString++)) {
-	    int  cipher;
+            int cipher = 0;
 
 	    if (ndx == ':') {
 		int ctmp;
 
-		cipher = 0;
 		HEXCHAR_TO_INT(*cipherString, ctmp)
 		cipher |= (ctmp << 12);
 		cipherString++;
@@ -2572,16 +2546,15 @@ main(int argc, char **argv)
 		cipher |= ctmp;
 		cipherString++;
 	    } else {
-		const int *cptr;
-
 		if (! isalpha(ndx)) {
 		    fprintf(stderr, 
 			    "Non-alphabetic char in cipher string (-c arg).\n");
 		    exit(9);
 		}
-		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-		    /* do nothing */;
+                ndx = tolower(ndx) - 'a';
+                if (ndx < PR_ARRAY_SIZE(ssl3CipherSuites)) {
+                    cipher = ssl3CipherSuites[ndx];
+                }
 	    }
 	    if (cipher > 0) {
 		SECStatus status;

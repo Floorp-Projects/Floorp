@@ -18,25 +18,32 @@
 #ifndef NO_SECURITY_ERROR_ENUM
 typedef enum {
     SSL_ERROR_EXPORT_ONLY_SERVER            = (SSL_ERROR_BASE +  0),
+                                            /* error 0 is obsolete */
     SSL_ERROR_US_ONLY_SERVER                = (SSL_ERROR_BASE +  1),
+                                            /* error 1 is obsolete */
     SSL_ERROR_NO_CYPHER_OVERLAP             = (SSL_ERROR_BASE +  2),
     /*
      * Received an alert reporting what we did wrong.  (more alerts below)
      */
     SSL_ERROR_NO_CERTIFICATE /*_ALERT */    = (SSL_ERROR_BASE +  3),
     SSL_ERROR_BAD_CERTIFICATE               = (SSL_ERROR_BASE +  4),
+                                            /* error 4 is obsolete */
     SSL_ERROR_UNUSED_5                      = (SSL_ERROR_BASE +  5),
                                             /* error 5 is obsolete */
     SSL_ERROR_BAD_CLIENT                    = (SSL_ERROR_BASE +  6),
     SSL_ERROR_BAD_SERVER                    = (SSL_ERROR_BASE +  7),
     SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE  = (SSL_ERROR_BASE +  8),
+                                            /* error 8 is obsolete */
     SSL_ERROR_UNSUPPORTED_VERSION           = (SSL_ERROR_BASE +  9),
     SSL_ERROR_UNUSED_10                     = (SSL_ERROR_BASE + 10),
                                             /* error 10 is obsolete */
     SSL_ERROR_WRONG_CERTIFICATE             = (SSL_ERROR_BASE + 11),
+                                            /* error 11 is obsolete */
     SSL_ERROR_BAD_CERT_DOMAIN               = (SSL_ERROR_BASE + 12),
     SSL_ERROR_POST_WARNING                  = (SSL_ERROR_BASE + 13),
+                                            /* error 13 is obsolete */
     SSL_ERROR_SSL2_DISABLED                 = (SSL_ERROR_BASE + 14),
+                                            /* error 14 is obsolete */
     SSL_ERROR_BAD_MAC_READ                  = (SSL_ERROR_BASE + 15),
     /*
      * Received an alert reporting what we did wrong.
@@ -49,6 +56,7 @@ typedef enum {
 
     SSL_ERROR_SSL_DISABLED                  = (SSL_ERROR_BASE + 20),
     SSL_ERROR_FORTEZZA_PQG                  = (SSL_ERROR_BASE + 21),
+                                            /* error 21 is obsolete */
     SSL_ERROR_UNKNOWN_CIPHER_SUITE          = (SSL_ERROR_BASE + 22),
     SSL_ERROR_NO_CIPHERS_SUPPORTED          = (SSL_ERROR_BASE + 23),
     SSL_ERROR_BAD_BLOCK_PADDING             = (SSL_ERROR_BASE + 24),
@@ -119,7 +127,8 @@ typedef enum {
     SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE   = (SSL_ERROR_BASE + 69),
 
     SSL_ERROR_ENCRYPTION_FAILURE            = (SSL_ERROR_BASE + 70),
-    SSL_ERROR_DECRYPTION_FAILURE            = (SSL_ERROR_BASE + 71), /* don't use */
+    SSL_ERROR_DECRYPTION_FAILURE            = (SSL_ERROR_BASE + 71),
+                                            /* error 71 is obsolete */
     SSL_ERROR_SOCKET_WRITE_FAILURE          = (SSL_ERROR_BASE + 72),
 
     SSL_ERROR_MD5_DIGEST_FAILURE            = (SSL_ERROR_BASE + 73),
@@ -138,8 +147,8 @@ typedef enum {
     SSL_ERROR_HANDSHAKE_NOT_COMPLETED       = (SSL_ERROR_BASE + 86),
     SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE      = (SSL_ERROR_BASE + 87),
     SSL_ERROR_CERT_KEA_MISMATCH             = (SSL_ERROR_BASE + 88),
-    /* SSL_ERROR_NO_TRUSTED_SSL_CLIENT_CA became obsolete in NSS 3.14. */
     SSL_ERROR_NO_TRUSTED_SSL_CLIENT_CA      = (SSL_ERROR_BASE + 89),
+                                            /* error 89 is obsolete */
     SSL_ERROR_SESSION_NOT_FOUND             = (SSL_ERROR_BASE + 90),
 
     SSL_ERROR_DECRYPTION_FAILED_ALERT       = (SSL_ERROR_BASE + 91),
@@ -177,6 +186,7 @@ typedef enum {
     SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID    = (SSL_ERROR_BASE + 116),
 
     SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2 = (SSL_ERROR_BASE + 117),
+                                             /* error 117 is obsolete */
     SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SERVERS = (SSL_ERROR_BASE + 118),
     SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_CLIENTS = (SSL_ERROR_BASE + 119),
 
@@ -220,6 +230,7 @@ typedef enum {
     SSL_ERROR_KEY_EXCHANGE_FAILURE          = (SSL_ERROR_BASE + 144),
     SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION = (SSL_ERROR_BASE + 145),
     SSL_ERROR_RX_MALFORMED_ENCRYPTED_EXTENSIONS = (SSL_ERROR_BASE + 146),
+    SSL_ERROR_MALFORMED_PRE_SHARED_KEY = (SSL_ERROR_BASE + 147),
     SSL_ERROR_END_OF_LIST   /* let the c compiler determine the value of this. */
 } SSLErrorCodes;
 #endif /* NO_SECURITY_ERROR_ENUM */

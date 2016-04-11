@@ -5,10 +5,10 @@
 /* This source file is meant to be included by other source files
  * (ecp_fp###.c, where ### is one of 160, 192, 224) and should not
  * constitute an independent compilation unit. It requires the following
- * preprocessor definitions be made: ECFP_BSIZE - the number of bits in
- * the field's prime 
+ * preprocessor definitions be made:
+ * ECFP_BSIZE - the number of bits in the field's prime
  * ECFP_NUMDOUBLES - the number of doubles to store one
- * multi-precision integer in floating point 
+ * multi-precision integer in floating point */
 
 /* Adds a prefix to a given token to give a unique token name. Prefixes
  * with "ecfp" + ECFP_BSIZE + "_". e.g. if ECFP_BSIZE = 160, then
