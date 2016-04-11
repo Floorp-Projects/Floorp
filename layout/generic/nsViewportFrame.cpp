@@ -145,7 +145,6 @@ ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
                    "should always be out-of-flow if in the top layer");
         continue;
       }
-      MOZ_ASSERT(frame->GetParent() == this);
       if (nsIFrame* backdropPh =
           frame->GetChildList(kBackdropList).FirstChild()) {
         MOZ_ASSERT(backdropPh->GetType() == nsGkAtoms::placeholderFrame);
