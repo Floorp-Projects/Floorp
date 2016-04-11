@@ -331,7 +331,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
     ("%s  channels: %d, rate: %d for %p", __FUNCTION__, aNumChannels, aRate, this));
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
-  mOutChannels = (aNumChannels > 2) ? 2 : aNumChannels;
+  mOutChannels = mIsMonoAudioEnabled ? 1 : aNumChannels;
 
   mDumpFile = OpenDumpFile(this);
 
@@ -353,9 +353,11 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   mAudioClock.Init();
 
-  AudioConfig inConfig(mChannels, mInRate);
-  AudioConfig outConfig(mOutChannels, mOutRate);
-  mAudioConverter = MakeUnique<AudioConverter>(inConfig, outConfig);
+  if (mIsMonoAudioEnabled) {
+    AudioConfig inConfig(mChannels, mInRate);
+    AudioConfig outConfig(mOutChannels, mOutRate);
+    mAudioConverter = MakeUnique<AudioConverter>(inConfig, outConfig);
+  }
   return OpenCubeb(params);
 }
 
@@ -561,13 +563,8 @@ AudioStream::Downmix(Chunk* aChunk)
     return false;
   }
 
-  if (aChunk->Channels() > 2) {
-    MOZ_ASSERT(mAudioConverter);
+  if (mAudioConverter) {
     mAudioConverter->Process(aChunk->GetWritable(), aChunk->Frames());
-  }
-
-  if (aChunk->Channels() >= 2 && mIsMonoAudioEnabled) {
-    DownmixStereoToMono(aChunk->GetWritable(), aChunk->Frames());
   }
 
   return true;
