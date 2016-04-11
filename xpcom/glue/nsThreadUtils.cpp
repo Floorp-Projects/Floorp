@@ -41,17 +41,10 @@ nsRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsCancelableRunnable, nsICancelableRunnable,
-                  nsIRunnable)
+NS_IMPL_ISUPPORTS_INHERITED(nsCancelableRunnable, nsRunnable,
+                            nsICancelableRunnable)
 
-NS_IMETHODIMP
-nsCancelableRunnable::Run()
-{
-  // Do nothing
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsCancelableRunnable::Cancel()
 {
   // Do nothing
