@@ -36,7 +36,7 @@ public:
   void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
-  void AddValue(nsCSSProperty aProperty, StyleAnimationValue &aStartValue)
+  void AddValue(nsCSSProperty aProperty, const StyleAnimationValue &aStartValue)
   {
     PropertyValuePair v = { aProperty, aStartValue };
     mPropertyValuePairs.AppendElement(v);
@@ -44,14 +44,13 @@ public:
       nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
   }
 
-  // Caller must fill in returned value.
-  StyleAnimationValue* AddEmptyValue(nsCSSProperty aProperty)
+  void AddValue(nsCSSProperty aProperty, StyleAnimationValue&& aStartValue)
   {
     PropertyValuePair *p = mPropertyValuePairs.AppendElement();
     p->mProperty = aProperty;
+    p->mValue = Move(aStartValue);
     mStyleBits |=
       nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
-    return &p->mValue;
   }
 
   struct PropertyValuePair {
