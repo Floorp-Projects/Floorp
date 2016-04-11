@@ -148,6 +148,20 @@ public class FeedService extends IntentService {
                SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_8AM);
     }
 
+    public static String getEnabledExperiment(Context context) {
+        String experiment = null;
+
+        if (SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_12HRS)) {
+            experiment = Experiments.CONTENT_NOTIFICATIONS_12HRS;
+        } else if (SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_8AM)) {
+            experiment = Experiments.CONTENT_NOTIFICATIONS_8AM;
+        } else if (SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_5PM)) {
+            experiment = Experiments.CONTENT_NOTIFICATIONS_5PM;
+        }
+
+        return experiment;
+    }
+
     private boolean isPreferenceEnabled() {
         return GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_NOTIFICATIONS_CONTENT, true);
     }

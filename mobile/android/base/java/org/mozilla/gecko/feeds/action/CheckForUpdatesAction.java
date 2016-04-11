@@ -28,6 +28,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
+import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.parser.Feed;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -119,7 +120,9 @@ public class CheckForUpdatesAction extends FeedAction {
             showNotificationForMultipleUpdates(updatedFeeds);
         }
 
+        Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(context));
         Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.NOTIFICATION, "content_update");
+        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(context));
     }
 
     private void showNotificationForSingleUpdate(Feed feed) {
