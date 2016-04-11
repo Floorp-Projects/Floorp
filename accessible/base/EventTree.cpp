@@ -219,7 +219,7 @@ EventTree::Process()
 
         AccHideEvent* hideEvent = downcast_accEvent(mtEvent);
         if (hideEvent->NeedsShutdown()) {
-          mContainer->Document()->ShutdownChildrenInSubtree(hideEvent->mAccessible);
+          mtEvent->GetDocAccessible()->ShutdownChildrenInSubtree(mtEvent->mAccessible);
         }
       }
     }
