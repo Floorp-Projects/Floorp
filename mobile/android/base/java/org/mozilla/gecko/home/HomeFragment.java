@@ -380,11 +380,20 @@ public abstract class HomeFragment extends Fragment {
 
             switch (mType) {
                 case BOOKMARKS:
-                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "bookmark");
+                    SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(mContext);
+                    final boolean isReaderViewPage = rch.isURLCached(mUrl);
+
+                    final String extra;
+                    if (isReaderViewPage) {
+                        extra = "bookmark_reader";
+                    } else {
+                        extra = "bookmark";
+                    }
+
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, extra);
                     mDB.removeBookmarksWithURL(cr, mUrl);
 
-                    SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(mContext);
-                    if (rch.isURLCached(mUrl)) {
+                    if (isReaderViewPage) {
                         ReadingListHelper.removeCachedReaderItem(mUrl, mContext);
                     }
 

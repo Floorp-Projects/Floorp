@@ -3459,8 +3459,15 @@ public class BrowserApp extends GeckoApp
         if (itemId == R.id.bookmark) {
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
+                final String extra;
+                if (AboutPages.isAboutReader(tab.getURL())) {
+                    extra = "bookmark_reader";
+                } else {
+                    extra = "bookmark";
+                }
+
                 if (item.isChecked()) {
-                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, extra);
                     tab.removeBookmark();
                     item.setTitle(resolveBookmarkTitleID(false));
                     if (Versions.feature11Plus) {
@@ -3468,7 +3475,7 @@ public class BrowserApp extends GeckoApp
                         item.setIcon(resolveBookmarkIconID(false));
                     }
                 } else {
-                    Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
+                    Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, extra);
                     tab.addBookmark();
                     item.setTitle(resolveBookmarkTitleID(true));
                     if (Versions.feature11Plus) {
