@@ -9,7 +9,22 @@ function setup_crash() {
   Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
-  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);
+
+  // For Windows XP and Vista we use toolkit.asyncshutdown.crash_timeout_winxp
+  // See bug 1248358.
+  var crash_timeout_pref = "toolkit.asyncshutdown.crash_timeout";
+  var os = Components.classes["@mozilla.org/xre/app-info;1"]
+             .getService(Components.interfaces.nsIXULRuntime).OS;
+  if (os == "Windows") {
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                     .getService(Components.interfaces.nsIPropertyBag2)
+                     .getProperty("version");
+    if (parseFloat(version) < 6.1) {
+      // Less than Win7.
+      crash_timeout_pref = "toolkit.asyncshutdown.crash_timeout_winxp";
+    }
+  }
+  Services.prefs.setIntPref(crash_timeout_pref, 10);
 
   let TOPIC = "testing-async-shutdown-crash";
   let phase = AsyncShutdown._getPhase(TOPIC);
@@ -42,7 +57,22 @@ function setup_osfile_crash_noerror() {
   Components.utils.import("resource://gre/modules/osfile.jsm", this);
   Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
-  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
+  // For Windows XP and Vista we use toolkit.asyncshutdown.crash_timeout_winxp
+  // See bug 1248358.
+  var crash_timeout_pref = "toolkit.asyncshutdown.crash_timeout";
+  var os = Components.classes["@mozilla.org/xre/app-info;1"]
+             .getService(Components.interfaces.nsIXULRuntime).OS;
+  if (os == "Windows") {
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                    .getService(Components.interfaces.nsIPropertyBag2)
+                    .getProperty("version");
+    if (parseFloat(version) < 6.1) {
+      // Less than Win7.
+      crash_timeout_pref = "toolkit.asyncshutdown.crash_timeout_winxp";
+    }
+  }
+  Services.prefs.setIntPref(crash_timeout_pref, 1);
+
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
   OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
@@ -73,7 +103,22 @@ function setup_osfile_crash_exn() {
   Components.utils.import("resource://gre/modules/osfile.jsm", this);
   Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
-  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
+  // For Windows XP and Vista we use toolkit.asyncshutdown.crash_timeout_winxp
+  // See bug 1248358.
+  var crash_timeout_pref = "toolkit.asyncshutdown.crash_timeout";
+  var os = Components.classes["@mozilla.org/xre/app-info;1"]
+             .getService(Components.interfaces.nsIXULRuntime).OS;
+  if (os == "Windows") {
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                    .getService(Components.interfaces.nsIPropertyBag2)
+                    .getProperty("version");
+    if (parseFloat(version) < 6.1) {
+      // Less than Win7.
+      crash_timeout_pref = "toolkit.asyncshutdown.crash_timeout_winxp";
+    }
+  }
+  Services.prefs.setIntPref(crash_timeout_pref, 1);
+
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
   OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
