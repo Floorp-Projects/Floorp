@@ -5292,9 +5292,14 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
                      gfxWidth = measure / appUnitsPerDevUnit;
       gfxFloat ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
+      nscoord frameBStart = 0;
       if (wm.IsVerticalRL()) {
+        frameBStart = GetSize().width;
         ascent = -ascent;
       }
+      // The decoration-line offsets need to be reversed for sideways-lr mode,
+      // so we will multiply the values from metrics by this factor.
+      gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
 
       nsCSSRendering::DecorationRectParams params;
       params.lineSize = Size(gfxWidth, 0);
@@ -5321,10 +5326,11 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                               useVerticalMetrics);
 
         params.lineSize.height = metrics.*lineSize;
-        params.offset = metrics.*lineOffset;
+        params.offset = decorationOffsetDir * metrics.*lineOffset;
         const nsRect decorationRect =
           nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
-          nsPoint(0, -dec.mBaselineOffset);
+          (verticalRun ? nsPoint(frameBStart - dec.mBaselineOffset, 0)
+                       : nsPoint(0, -dec.mBaselineOffset));
 
         if (verticalRun) {
           topOrLeft = std::min(decorationRect.x, topOrLeft);
