@@ -6,7 +6,7 @@
 
 interface nsIPresentationChannelDescription;
 interface nsISocketTransport;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIPresentationControlChannel;
 interface nsIPresentationSessionTransport;
 
@@ -58,7 +58,7 @@ interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSes
    * |buildDataChannelTransport|.
    */
   void buildDataChannelTransport(in uint8_t aType,
-                                 in nsIDOMWindow aWindow,
+                                 in mozIDOMWindow aWindow,
                                  in nsIPresentationControlChannel aControlChannel,
                                  in nsIPresentationSessionTransportBuilderListener aListener);
 };
