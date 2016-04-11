@@ -155,12 +155,6 @@ GLContextCGL::IsDoubleBuffered() const
 }
 
 bool
-GLContextCGL::SupportsRobustness() const
-{
-    return false;
-}
-
-bool
 GLContextCGL::SwapBuffers()
 {
   PROFILER_LABEL("GLContextCGL", "SwapBuffers",

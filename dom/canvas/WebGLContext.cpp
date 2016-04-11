@@ -1475,7 +1475,7 @@ CheckContextLost(GLContext* gl, bool* const out_isGuilty)
     bool isEGL = gl->GetContextType() == gl::GLContextType::EGL;
 
     GLenum resetStatus = LOCAL_GL_NO_ERROR;
-    if (gl->HasRobustness()) {
+    if (gl->IsSupported(GLFeature::robustness)) {
         gl->MakeCurrent();
         resetStatus = gl->fGetGraphicsResetStatus();
     } else if (isEGL) {
