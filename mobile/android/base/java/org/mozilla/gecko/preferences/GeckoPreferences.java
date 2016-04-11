@@ -387,7 +387,9 @@ OnSharedPreferenceChangeListener
 
         // Launched from "Notifications settings" action button in a notification.
         if (intentExtras != null && intentExtras.containsKey(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.BUTTON, "notification-settings");
+            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
         }
     }
 
