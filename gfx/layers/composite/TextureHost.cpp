@@ -784,7 +784,8 @@ ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
     // available, even though we did on the child process.
     // As a result this texture will be in an invalid state and Lock will
     // always fail.
-    gfxCriticalError() << "Failed to create a valid ShmemTextureHost";
+
+    gfxCriticalNote << "Failed to create a valid ShmemTextureHost";
   }
 
   MOZ_COUNT_CTOR(ShmemTextureHost);
