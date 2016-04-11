@@ -749,13 +749,32 @@ class Dumper_Win32(Dumper):
         result = file
 
         ctypes.windll.kernel32.SetErrorMode(ctypes.c_uint(1))
-        (path, filename) = os.path.split(file)
-        if os.path.isdir(path):
-            lc_filename = filename.lower()
-            for f in os.listdir(path):
-                if f.lower() == lc_filename:
-                    result = os.path.join(path, f)
-                    break
+        if not isinstance(file, unicode):
+            file = unicode(file, sys.getfilesystemencoding())
+        handle = ctypes.windll.kernel32.CreateFileW(file,
+                                                    # GENERIC_READ
+                                                    0x80000000,
+                                                    # FILE_SHARE_READ
+                                                    1,
+                                                    None,
+                                                    # OPEN_EXISTING
+                                                    3,
+                                                    0,
+                                                    None)
+        if handle != -1:
+            size = ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle,
+                                                                    None,
+                                                                    0,
+                                                                    0)
+            buf = ctypes.create_unicode_buffer(size)
+            if ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle,
+                                                                buf,
+                                                                size,
+                                                                0) > 0:
+                # The return value of GetFinalPathNameByHandleW uses the
+                # '\\?\' prefix.
+                result = buf.value.encode(sys.getfilesystemencoding())[4:]
+            ctypes.windll.kernel32.CloseHandle(handle)
 
         # Cache the corrected version to avoid future filesystem hits.
         self.fixedFilenameCaseCache[file] = result
