@@ -16,8 +16,8 @@
 #include <algorithm>
 #include "nsPIDOMWindow.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 class MultipartBlobImpl final : public BlobImplBase
 {
@@ -131,5 +131,8 @@ protected:
   nsTArray<RefPtr<BlobImpl>> mBlobImpls;
   bool mIsFromNsIFile;
 };
+
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_MultipartBlobImpl_h
