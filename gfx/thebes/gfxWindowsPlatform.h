@@ -245,6 +245,8 @@ public:
       IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice,
       HRESULT& aResOut);
 
+    bool DwmCompositionEnabled();
+
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
     static bool IsOptimus();
