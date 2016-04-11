@@ -700,7 +700,7 @@ private:
 
 // Must be cancelable in order to dispatch on active worker threads
 class ChildImpl::AlreadyCreatedCallbackRunnable final :
-  public nsCancelableRunnable
+  public CancelableRunnable
 {
 public:
   AlreadyCreatedCallbackRunnable()

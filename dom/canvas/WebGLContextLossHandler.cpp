@@ -38,7 +38,7 @@ private:
     nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-class ContextLossWorkerRunnable final : public nsCancelableRunnable
+class ContextLossWorkerRunnable final : public CancelableRunnable
 {
 public:
     explicit ContextLossWorkerRunnable(nsIRunnable* aRunnable)

@@ -25,7 +25,7 @@ namespace mozilla {
  * the wrong time, in order to avoid resulting instability.
  */
 
-class AsyncEventDispatcher : public nsCancelableRunnable
+class AsyncEventDispatcher : public CancelableRunnable
 {
 public:
   /**

@@ -1538,7 +1538,7 @@ WebGLContext::RunContextLossTimer()
     mContextLossHandler->RunTimer();
 }
 
-class UpdateContextLossStatusTask : public nsCancelableRunnable
+class UpdateContextLossStatusTask : public CancelableRunnable
 {
     RefPtr<WebGLContext> mWebGL;
 

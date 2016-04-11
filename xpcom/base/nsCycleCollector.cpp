@@ -1492,7 +1492,7 @@ struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
   Type mType;
 };
 
-class LogStringMessageAsync : public nsCancelableRunnable
+class LogStringMessageAsync : public CancelableRunnable
 {
 public:
   explicit LogStringMessageAsync(const nsAString& aMsg) : mMsg(aMsg)
