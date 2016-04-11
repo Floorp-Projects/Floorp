@@ -161,13 +161,19 @@ function selfAddress() {
 // Test the client sends a message and then a corresponding notification gets
 // triggered at the server side.
 function clientSendMessage() {
-  clientTransport.send(clientMessage);
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"]
+                 .createInstance(Ci.nsIStringInputStream);
+  stream.setData(clientMessage, clientMessage.length);
+  clientTransport.send(stream);
 }
 
 // Test the server sends a message an then a corresponding notification gets
 // triggered at the client side.
 function serverSendMessage() {
-  serverTransport.send(serverMessage);
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"]
+                 .createInstance(Ci.nsIStringInputStream);
+  stream.setData(serverMessage, serverMessage.length);
+  serverTransport.send(stream);
   // The client enables data notification even after the incoming message has
   // been sent, and should still be able to consume it.
   clientTransport.enableDataNotification();

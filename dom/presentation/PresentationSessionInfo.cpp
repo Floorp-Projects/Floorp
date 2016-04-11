@@ -266,7 +266,7 @@ PresentationSessionInfo::SetListener(nsIPresentationSessionListener* aListener)
 }
 
 nsresult
-PresentationSessionInfo::Send(const nsAString& aData)
+PresentationSessionInfo::Send(nsIInputStream* aData)
 {
   if (NS_WARN_IF(!IsSessionReady())) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;

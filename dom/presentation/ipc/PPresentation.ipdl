@@ -23,7 +23,7 @@ struct StartSessionRequest
 struct SendSessionMessageRequest
 {
   nsString sessionId;
-  nsString data;
+  InputStreamParams data;
 };
 
 struct CloseSessionRequest

@@ -267,8 +267,13 @@ PresentationRequestParent::DoRequest(const SendSessionMessageRequest& aRequest)
     return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  nsresult rv = mService->SendSessionMessage(aRequest.sessionId(),
-                                             aRequest.data());
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aRequest.data(), fds);
+  if(NS_WARN_IF(!stream)) {
+    return NotifyError(NS_ERROR_NOT_AVAILABLE);
+  }
+
+  nsresult rv = mService->SendSessionMessage(aRequest.sessionId(), stream);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);
   }
