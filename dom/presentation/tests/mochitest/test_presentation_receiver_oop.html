@@ -157,6 +157,7 @@ function runTests() {
   then(testIncomingSessionRequest);
 }
 
+SimpleTest.expectAssertions(0, 5);
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
@@ -164,7 +165,8 @@ SpecialPowers.pushPermissions([
   {type: 'browser', allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.session_transport.data_channel.enable", false],
+                                      ["dom.presentation.test.enabled", true],
+                                      ["dom.presentation.test.stage", 0],
                                       ["dom.mozBrowserFramesEnabled", true],
                                       ["dom.ipc.browser_frames.oop_by_default", true]]},
                             runTests);
