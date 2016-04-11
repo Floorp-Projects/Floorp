@@ -220,6 +220,19 @@ private:
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     nsRuleData* aData);
+
+  /**
+   * Decides whether we should load embed node content.
+   *
+   * If this is an embed node there are cases in which we should not try to load
+   * the content:
+   *
+   * - If the embed node is the child of a media element
+   *
+   * In these cases, this function will return false, which will cause
+   * us to skip calling LoadObject.
+   */
+  bool BlockEmbedContentLoading();
 };
 
 } // namespace dom
