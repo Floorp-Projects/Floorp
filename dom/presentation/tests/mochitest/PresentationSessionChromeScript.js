@@ -244,7 +244,11 @@ const mockedSessionTransport = {
     sendAsyncMessage('data-transport-notification-enabled');
   },
   send: function(data) {
-    sendAsyncMessage('message-sent', data);
+    var binaryStream = Cc["@mozilla.org/binaryinputstream;1"].
+                       createInstance(Ci.nsIBinaryInputStream);
+    binaryStream.setInputStream(data);
+    var message = binaryStream.readBytes(binaryStream.available());
+    sendAsyncMessage('message-sent', message);
   },
   close: function(reason) {
     sendAsyncMessage('data-transport-closed', reason);
