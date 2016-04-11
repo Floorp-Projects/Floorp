@@ -11,7 +11,6 @@
 #include "jit/MoveResolver.h"
 #include "jit/shared/Assembler-shared.h"
 
-
 namespace js {
 namespace jit {
 
@@ -72,8 +71,10 @@ static MOZ_CONSTEXPR_VAR Register JSReturnReg = { Registers::invalid_reg };
 
 #if defined(JS_NUNBOX32)
 static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg, InvalidReg);
+static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg, InvalidReg);
 #elif defined(JS_PUNBOX64)
 static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg);
+static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg);
 #else
 #error "Bad architecture"
 #endif
@@ -396,7 +397,6 @@ class MacroAssemblerNone : public Assembler
     bool buildOOLFakeExitFrame(void*) { MOZ_CRASH(); }
     void loadWasmActivation(Register) { MOZ_CRASH(); }
     void loadAsmJSHeapRegisterFromGlobalData() { MOZ_CRASH(); }
-    void memIntToValue(Address, Address) { MOZ_CRASH(); }
 
     void setPrinter(Sprinter*) { MOZ_CRASH(); }
     Operand ToPayload(Operand base) { MOZ_CRASH(); }

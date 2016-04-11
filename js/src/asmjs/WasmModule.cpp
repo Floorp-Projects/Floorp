@@ -1274,6 +1274,24 @@ Module::deoptimizeImportExit(uint32_t importIndex)
     exit.baselineScript = nullptr;
 }
 
+static JSObject*
+CreateI64Object(JSContext* cx, int64_t i64)
+{
+    RootedObject result(cx, JS_NewPlainObject(cx));
+    if (!result)
+        return nullptr;
+
+    RootedValue val(cx, Int32Value(uint32_t(i64)));
+    if (!JS_DefineProperty(cx, result, "low", val, JSPROP_ENUMERATE))
+        return nullptr;
+
+    val = Int32Value(uint32_t(i64 >> 32));
+    if (!JS_DefineProperty(cx, result, "high", val, JSPROP_ENUMERATE))
+        return nullptr;
+
+    return result;
+}
+
 bool
 Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
 {
@@ -1311,7 +1329,10 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
                 return false;
             break;
           case ValType::I64:
-            MOZ_CRASH("int64");
+            MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+            if (!ReadI64Object(cx, v, (int64_t*)&coercedArgs[i]))
+                return false;
+            break;
           case ValType::F32:
             if (!RoundFloat32(cx, v, (float*)&coercedArgs[i]))
                 return false;
@@ -1374,47 +1395,53 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
         return true;
     }
 
-    JSObject* simdObj;
+    void* retAddr = &coercedArgs[0];
+    JSObject* retObj = nullptr;
     switch (exp.sig().ret()) {
       case ExprType::Void:
         args.rval().set(UndefinedValue());
         break;
       case ExprType::I32:
-        args.rval().set(Int32Value(*(int32_t*)&coercedArgs[0]));
+        args.rval().set(Int32Value(*(int32_t*)retAddr));
         break;
       case ExprType::I64:
-        MOZ_CRASH("int64");
+        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+        retObj = CreateI64Object(cx, *(int64_t*)retAddr);
+        if (!retObj)
+            return false;
+        break;
       case ExprType::F32:
+        // The entry stub has converted the F32 into a double for us.
       case ExprType::F64:
-        args.rval().set(NumberValue(*(double*)&coercedArgs[0]));
+        args.rval().set(NumberValue(*(double*)retAddr));
         break;
       case ExprType::I32x4:
-        simdObj = CreateSimd<Int32x4>(cx, (int32_t*)&coercedArgs[0]);
-        if (!simdObj)
+        retObj = CreateSimd<Int32x4>(cx, (int32_t*)retAddr);
+        if (!retObj)
             return false;
-        args.rval().set(ObjectValue(*simdObj));
         break;
       case ExprType::F32x4:
-        simdObj = CreateSimd<Float32x4>(cx, (float*)&coercedArgs[0]);
-        if (!simdObj)
+        retObj = CreateSimd<Float32x4>(cx, (float*)retAddr);
+        if (!retObj)
             return false;
-        args.rval().set(ObjectValue(*simdObj));
         break;
       case ExprType::B32x4:
-        simdObj = CreateSimd<Bool32x4>(cx, (int32_t*)&coercedArgs[0]);
-        if (!simdObj)
+        retObj = CreateSimd<Bool32x4>(cx, (int32_t*)retAddr);
+        if (!retObj)
             return false;
-        args.rval().set(ObjectValue(*simdObj));
         break;
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
 
+    if (retObj)
+        args.rval().set(ObjectValue(*retObj));
+
     return true;
 }
 
 bool
-Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const Value* argv,
+Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uint64_t* argv,
                    MutableHandleValue rval)
 {
     MOZ_ASSERT(dynamicallyLinked_);
@@ -1425,13 +1452,46 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const Val
     if (!args.init(argc))
         return false;
 
-    for (size_t i = 0; i < argc; i++)
-        args[i].set(argv[i]);
+    bool hasI64Arg = false;
+    MOZ_ASSERT(import.sig().args().length() == argc);
+    for (size_t i = 0; i < argc; i++) {
+        switch (import.sig().args()[i]) {
+          case ValType::I32:
+            args[i].set(Int32Value(*(int32_t*)&argv[i]));
+            break;
+          case ValType::F32:
+            args[i].set(JS::CanonicalizedDoubleValue(*(float*)&argv[i]));
+            break;
+          case ValType::F64:
+            args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
+            break;
+          case ValType::I64: {
+            MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+            RootedObject obj(cx, CreateI64Object(cx, *(int64_t*)&argv[i]));
+            if (!obj)
+                return false;
+            args[i].set(ObjectValue(*obj));
+            hasI64Arg = true;
+            break;
+          }
+          case ValType::I32x4:
+          case ValType::F32x4:
+          case ValType::B32x4:
+          case ValType::Limit:
+            MOZ_CRASH("unhandled type in callImport");
+        }
+    }
 
     RootedValue fval(cx, ObjectValue(*importToExit(import).fun));
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
         return false;
+
+    // Don't try to optimize if the function has at least one i64 arg or if
+    // it returns an int64. GenerateJitExit relies on this, as does the
+    // type inference code below in this function.
+    if (hasI64Arg || import.sig().ret() == ExprType::I64)
+        return true;
 
     ImportExit& exit = importToExit(import);
 
@@ -1443,6 +1503,7 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const Val
     // Test if the function is JIT compiled.
     if (!exit.fun->hasScript())
         return true;
+
     JSScript* script = exit.fun->nonLazyScript();
     if (!script->hasBaselineScript()) {
         MOZ_ASSERT(!script->hasIonScript());
@@ -1473,7 +1534,7 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const Val
         TypeSet::Type type = TypeSet::UnknownType();
         switch (import.sig().args()[i]) {
           case ValType::I32:   type = TypeSet::Int32Type(); break;
-          case ValType::I64:   MOZ_CRASH("NYI");
+          case ValType::I64:   MOZ_CRASH("can't happen because of above guard");
           case ValType::F32:   type = TypeSet::DoubleType(); break;
           case ValType::F64:   type = TypeSet::DoubleType(); break;
           case ValType::I32x4: MOZ_CRASH("NYI");
