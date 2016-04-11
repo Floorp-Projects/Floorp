@@ -26,7 +26,7 @@ interface nsIPresentationSessionTransportCallback : nsISupports
 /*
  * App-to-App transport channel for the presentation session.
  */
-[scriptable, uuid(7af8556e-e37b-4ca1-a5dd-029567172863)]
+[scriptable, uuid(670b7e1b-65be-42b6-a596-be571907fa18)]
 interface nsIPresentationSessionTransport : nsISupports
 {
   // Should be set once the underlying session transport is built
@@ -46,7 +46,7 @@ interface nsIPresentationSessionTransport : nsISupports
    * Send message to the remote endpoint.
    * @param data The message to send.
    */
-  void send(in nsIInputStream data);
+  void send(in DOMString data);
 
   /*
    * Close this session transport.

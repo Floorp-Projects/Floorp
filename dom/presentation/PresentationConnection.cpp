@@ -118,25 +118,10 @@ PresentationConnection::State() const
 
 void
 PresentationConnection::Send(const nsAString& aData,
-                          ErrorResult& aRv)
+                             ErrorResult& aRv)
 {
   // Sending is not allowed if the session is not connected.
   if (NS_WARN_IF(mState != PresentationConnectionState::Connected)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIStringInputStream> stream =
-    do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
-  if(NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  NS_ConvertUTF16toUTF8 msgString(aData);
-  rv = stream->SetData(msgString.BeginReading(), msgString.Length());
-  if(NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -148,7 +133,7 @@ PresentationConnection::Send(const nsAString& aData,
     return;
   }
 
-  rv = service->SendSessionMessage(mId, stream);
+  nsresult rv = service->SendSessionMessage(mId, aData);
   if(NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
   }
@@ -186,7 +171,7 @@ PresentationConnection::Terminate(ErrorResult& aRv)
 
 NS_IMETHODIMP
 PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
-                                       uint16_t aState)
+                                          uint16_t aState)
 {
   if (!aSessionId.Equals(mId)) {
     return NS_ERROR_INVALID_ARG;
@@ -233,7 +218,7 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
 
 NS_IMETHODIMP
 PresentationConnection::NotifyMessage(const nsAString& aSessionId,
-                                   const nsACString& aData)
+                                      const nsACString& aData)
 {
   if (!aSessionId.Equals(mId)) {
     return NS_ERROR_INVALID_ARG;
