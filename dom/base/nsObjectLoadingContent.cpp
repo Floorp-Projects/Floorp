@@ -86,6 +86,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
+#include "mozilla/dom/HTMLSharedObjectElement.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -3093,24 +3094,35 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
     aType = eFallbackAlternate;
   }
 
+  // We'll set this to null no matter what now, doing it here means we'll load
+  // child embeds as we find them in the upcoming loop.
+  mType = eType_Null;
+
+  // Do a breadth-first traverse of node tree with the current element as root,
+  // looking for the first embed we can find.
+  nsTArray<nsINodeList*> childNodes;
   if ((thisContent->IsHTMLElement(nsGkAtoms::object) ||
        thisContent->IsHTMLElement(nsGkAtoms::applet)) &&
       (aType == eFallbackUnsupported ||
        aType == eFallbackDisabled ||
        aType == eFallbackBlocklisted))
   {
-    // Show alternate content instead, if it exists
-    for (nsIContent* child = thisContent->GetFirstChild();
-         child; child = child->GetNextSibling()) {
-      if (!child->IsHTMLElement(nsGkAtoms::param) &&
+    for (nsIContent* child = thisContent->GetFirstChild(); child;
+         child = child->GetNextNode(thisContent)) {
+      if (aType != eFallbackAlternate &&
+          !child->IsHTMLElement(nsGkAtoms::param) &&
           nsStyleUtil::IsSignificantChild(child, true, false)) {
         aType = eFallbackAlternate;
-        break;
+      }
+      if (child->IsHTMLElement(nsGkAtoms::embed)) {
+        HTMLSharedObjectElement* object = static_cast<HTMLSharedObjectElement*>(child);
+        if (object) {
+          object->StartObjectLoad(true, true);
+        }
       }
     }
   }
 
-  mType = eType_Null;
   mFallbackType = aType;
 
   // Notify
