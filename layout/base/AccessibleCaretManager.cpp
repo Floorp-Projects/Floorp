@@ -78,6 +78,8 @@ AccessibleCaretManager::sCaretsAlwaysTilt = false;
 /*static*/ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
 /*static*/ bool
+AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
+/*static*/ bool
 AccessibleCaretManager::sHapticFeedback = false;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
@@ -104,6 +106,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
                                  "layout.accessiblecaret.always_tilt");
     Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
       "layout.accessiblecaret.allow_script_change_updates");
+    Preferences::AddBoolVarCache(&sCaretsAllowDraggingAcrossOtherCaret,
+      "layout.accessiblecaret.allow_dragging_across_other_caret", true);
     Preferences::AddBoolVarCache(&sHapticFeedback,
                                  "layout.accessiblecaret.hapticfeedback");
     addedPrefs = true;
@@ -960,6 +964,12 @@ AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
 
+  // Compare the active caret's new position (aOffsets) to the inactive caret's
+  // position.
+  int32_t cmpToInactiveCaretPos =
+    nsContentUtils::ComparePoints(aOffsets.content, aOffsets.StartOffset(),
+                                  content, contentOffset);
+
   // Move one character (in the direction of dir) from the inactive caret's
   // position. This is the limit for the active caret's new position.
   nsPeekOffsetStruct limit(eSelectCluster, dir, offset, nsPoint(0, 0), true, true,
@@ -974,14 +984,44 @@ AccessibleCaretManager::RestrictCaretDraggingOffsets(
   int32_t cmpToLimit =
     nsContentUtils::ComparePoints(aOffsets.content, aOffsets.StartOffset(),
                                   limit.mResultContent, limit.mContentOffset);
-  if ((mActiveCaret == mFirstCaret.get() && cmpToLimit == 1) ||
-      (mActiveCaret == mSecondCaret.get() && cmpToLimit == -1)) {
-    // The active caret's position is past the limit, which we don't allow
-    // here. So set it to the limit, resulting in one character being
-    // selected.
+
+  auto SetOffsetsToLimit = [&aOffsets, &limit] () {
     aOffsets.content = limit.mResultContent;
     aOffsets.offset = limit.mContentOffset;
     aOffsets.secondaryOffset = limit.mContentOffset;
+  };
+
+  if (!sCaretsAllowDraggingAcrossOtherCaret) {
+    if ((mActiveCaret == mFirstCaret.get() && cmpToLimit == 1) ||
+        (mActiveCaret == mSecondCaret.get() && cmpToLimit == -1)) {
+      // The active caret's position is past the limit, which we don't allow
+      // here. So set it to the limit, resulting in one character being
+      // selected.
+      SetOffsetsToLimit();
+    }
+  } else {
+    switch (cmpToInactiveCaretPos) {
+      case 0:
+        // The active caret's position is the same as the position of the
+        // inactive caret. So set it to the limit to prevent the selection from
+        // being collapsed, resulting in one character being selected.
+        SetOffsetsToLimit();
+        break;
+      case 1:
+        if (mActiveCaret == mFirstCaret.get()) {
+          // First caret was moved across the second caret. After making change
+          // to the selection, the user will drag the second caret.
+          mActiveCaret = mSecondCaret.get();
+        }
+        break;
+      case -1:
+        if (mActiveCaret == mSecondCaret.get()) {
+          // Second caret was moved across the first caret. After making change
+          // to the selection, the user will drag the first caret.
+          mActiveCaret = mFirstCaret.get();
+        }
+        break;
+    }
   }
 
   return true;
@@ -1041,7 +1081,7 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
 
   nsIFrame::ContentOffsets offsets =
     newFrame->GetContentOffsetsFromPoint(newPoint);
-  if (!offsets.content) {
+  if (offsets.IsNull()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1144,7 +1184,8 @@ AccessibleCaretManager::AdjustDragBoundary(const nsPoint& aPoint) const
     }
   }
 
-  if (GetCaretMode() == CaretMode::Selection) {
+  if (GetCaretMode() == CaretMode::Selection &&
+      !sCaretsAllowDraggingAcrossOtherCaret) {
     // Bug 1068474: Adjust the Y-coordinate so that the carets won't be in tilt
     // mode when a caret is being dragged surpass the other caret.
     //

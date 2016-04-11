@@ -182,12 +182,16 @@ protected:
   // be dragged. Returns the rect relative to aFrame.
   nsRect GetAllChildFrameRectsUnion(nsIFrame* aFrame) const;
 
-  // Suppose the user is dragging the first caret. We do not want it to be
-  // dragged across the second caret, i.e. we want it to stop at the limit which
-  // is the previous character of the second caret. Same rule applies when
-  // dragging the second caret.
+  // Restrict the active caret's dragging position based on
+  // sCaretsAllowDraggingAcrossOtherCaret. If the active caret is the first
+  // caret, the `limit` will be the previous character of the second caret.
+  // Otherwise, the `limit` will be the next character of the first caret.
+  //
   // @param aOffsets is the new position of the active caret, and it will be set
-  // to the limit if it's being dragged past the limit.
+  // to the `limit` when 1) sCaretsAllowDraggingAcrossOtherCaret is false and
+  // it's being dragged past the limit. 2) sCaretsAllowDraggingAcrossOtherCaret
+  // is true and the active caret's position is the same as the inactive's
+  // position.
   // @return true if the aOffsets is suitable for changing the selection.
   bool RestrictCaretDraggingOffsets(nsIFrame::ContentOffsets& aOffsets);
 
@@ -296,6 +300,11 @@ protected:
   // UI interactions. Optionally, we can try to maintain the active UI, keeping
   // carets and ActionBar available.
   static bool sCaretsScriptUpdates;
+
+  // Preference to allow one caret to be dragged across the other caret without
+  // any limitation. When set to false, one caret cannot be dragged across the
+  // other one.
+  static bool sCaretsAllowDraggingAcrossOtherCaret;
 
   // AccessibleCaret pref for haptic feedback behaviour on longPress.
   static bool sHapticFeedback;
