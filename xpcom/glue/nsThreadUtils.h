@@ -233,7 +233,7 @@ protected:
 };
 
 // This class is designed to be subclassed.
-class nsCancelableRunnable : public nsRunnable,
+class CancelableRunnable : public nsRunnable,
                              public nsICancelableRunnable
 {
 public:
@@ -241,10 +241,10 @@ public:
   // nsICancelableRunnable
   virtual nsresult Cancel() override;
 
-  nsCancelableRunnable() {}
+  CancelableRunnable() {}
 
 protected:
-  virtual ~nsCancelableRunnable() {}
+  virtual ~CancelableRunnable() {}
 };
 
 // An event that can be used to call a C++11 functions or function objects,

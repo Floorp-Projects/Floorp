@@ -2531,9 +2531,9 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
  ******************************************************************************/
 
 // Does not need to be threadsafe since this only runs on one thread, but
-// inheriting from nsCancelableRunnable is easy.
+// inheriting from CancelableRunnable is easy.
 class BackgroundCursorChild::DelayedActionRunnable final
-  : public nsCancelableRunnable
+  : public CancelableRunnable
 {
   using ActionFunc = void (BackgroundCursorChild::*)();
 
