@@ -615,12 +615,6 @@ private:
 
   virtual void ProcessingError(Result aCode, const char* aReason) override;
 
-  /**
-   * Exit *now*.  Do not shut down XPCOM, do not pass Go, do not run
-   * static destructors, do not collect $200.
-   */
-  MOZ_NORETURN void QuickExit();
-
   InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
   RefPtr<ConsoleListener> mConsoleListener;
 
