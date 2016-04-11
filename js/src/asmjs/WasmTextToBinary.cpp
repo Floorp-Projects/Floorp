@@ -2461,7 +2461,7 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
           case WasmToken::SignedInteger:
             return new(c.lifo) WasmAstConst(Val(uint64_t(val.sint())));
           case WasmToken::NegativeZero:
-            return new(c.lifo) WasmAstConst(Val(uint32_t(0)));
+            return new(c.lifo) WasmAstConst(Val(uint64_t(0)));
           default:
             break;
         }

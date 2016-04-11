@@ -6156,6 +6156,9 @@ JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t v
         }
         jit::JitOptions.jumpThreshold = value;
         break;
+      case JSJITCOMPILER_WASM_TEST_MODE:
+        jit::JitOptions.wasmTestMode = !!value;
+        break;
       default:
         break;
     }
@@ -6182,6 +6185,8 @@ JS_GetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt)
         return rt->canUseOffthreadIonCompilation();
       case JSJITCOMPILER_SIGNALS_ENABLE:
         return rt->canUseSignalHandlers();
+      case JSJITCOMPILER_WASM_TEST_MODE:
+        return jit::JitOptions.wasmTestMode ? 1 : 0;
       default:
         break;
     }
