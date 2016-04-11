@@ -417,6 +417,8 @@
 @BINPATH@/components/TCPPresentationServer.js
 @BINPATH@/components/PresentationNetworkHelper.js
 @BINPATH@/components/PresentationNetworkHelper.manifest
+@BINPATH@/components/PresentationDataChannelSessionTransport.js
+@BINPATH@/components/PresentationDataChannelSessionTransport.manifest
 
 @BINPATH@/components/PACGenerator.js
 @BINPATH@/components/PACGenerator.manifest
