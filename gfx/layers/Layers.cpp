@@ -1931,7 +1931,7 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (1.0 != mOpacity) {
     aStream << nsPrintfCString(" [opacity=%g]", mOpacity).get();
   }
-  if (GetContentFlags() & CONTENT_OPAQUE) {
+  if (IsOpaque()) {
     aStream << " [opaqueContent]";
   }
   if (GetContentFlags() & CONTENT_COMPONENT_ALPHA) {
