@@ -582,8 +582,6 @@
 @RESPATH@/components/PresentationDeviceInfoManager.js
 @RESPATH@/components/BuiltinProviders.manifest
 @RESPATH@/components/TCPPresentationServer.js
-@BINPATH@/components/PresentationDataChannelSessionTransport.js
-@BINPATH@/components/PresentationDataChannelSessionTransport.manifest
 
 ; InputMethod API
 @RESPATH@/components/MozKeyboard.js
