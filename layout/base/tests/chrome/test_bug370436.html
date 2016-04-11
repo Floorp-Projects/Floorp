@@ -1,13 +1,13 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-	https://bugzilla.mozilla.org/show_bug.cgi?id=370436
+  https://bugzilla.mozilla.org/show_bug.cgi?id=370436
 -->
 <head>
-	<title>Test for Bug 370436</title>
-	<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>        
-	<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>        
-	<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <title>Test for Bug 370436</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -18,66 +18,66 @@ const Ci = Components.interfaces;
 
 function expandStringOffsetToWord(data, offset)
 {
-	if (data == undefined) return "";
+  if (data == undefined) return "";
 
-	var m1 = data.substr(0, offset).match(/\w+$/) || "";
-	var m2 = data.substr(offset).match(/^\w+/) || "";
-	return m1 + m2;
+  var m1 = data.substr(0, offset).match(/\w+$/) || "";
+  var m2 = data.substr(offset).match(/^\w+/) || "";
+  return m1 + m2;
 }
 
 function onContextMenu(e)
 {
-	var node = e.rangeParent;
-	var offset = e.rangeOffset;
-	var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-	is(utils.getClassName(node), "Text", "Shouldn't have SOWs in chrome");
+  var node = e.rangeParent;
+  var offset = e.rangeOffset;
+  var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+  is(utils.getClassName(node), "Text", "Shouldn't have SOWs in chrome");
 
-	var word = expandStringOffsetToWord(node.data, offset);
-	words.push(word);
+  var word = expandStringOffsetToWord(node.data, offset);
+  words.push(word);
 }
 
 function startTest()
 {
-	ta = document.getElementById('blah');
-	ta.focus();
-	ta.selectionStart = ta.selectionEnd = ta.value.length;
+  ta = document.getElementById('blah');
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = ta.value.length;
 
 // Note: This test, intentionally or by accident, relies on sending button '0'
 // with contextMenu, which triggers some key-equiv stuff in
 // PresShell::AdjustContextMenuKeyEvent.
 var mouseParams = { type: 'contextmenu', button: 0 };
 
-	/* Put cursor at start and middle of "sheep" */
-	synthesizeKey("VK_UP", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
-	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
-	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
+  /* Put cursor at start and middle of "sheep" */
+  synthesizeKey("VK_UP", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
+  synthesizeKey("VK_RIGHT", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
+  synthesizeKey("VK_RIGHT", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
 
-	/* Put cursor at the end of "hello" */
-	synthesizeKey("VK_UP", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
-	synthesizeKey("VK_RIGHT", {})
-	synthesizeKey("VK_RIGHT", {})
-	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
-	synthesizeKey("VK_RIGHT", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
+  /* Put cursor at the end of "hello" */
+  synthesizeKey("VK_UP", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
+  synthesizeKey("VK_RIGHT", {})
+  synthesizeKey("VK_RIGHT", {})
+  synthesizeKey("VK_RIGHT", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
+  synthesizeKey("VK_RIGHT", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
 
-	/* Put cursor on "welcome" */
-	synthesizeKey("VK_UP", {})
-	synthesizeMouse(ta, 0, 0, mouseParams);
+  /* Put cursor on "welcome" */
+  synthesizeKey("VK_UP", {})
+  synthesizeMouse(ta, 0, 0, mouseParams);
 
-	is(words.pop(), "welcome", "Word 1 selected correctly");	
-	is(words.pop(), "world"  , "Word 2 selected correctly");	
-	is(words.pop(), "hello"  , "Word 3 selected correctly");	
-	is(words.pop(), "hello"  , "Word 4 selected correctly");	
-	is(words.pop(), "sheep"  , "Word 5 selected correctly");	
-	is(words.pop(), "sheep"  , "Word 6 selected correctly");	
-	is(words.pop(), "sheep"  , "Word 7 selected correctly");
+  is(words.pop(), "welcome", "Word 1 selected correctly");
+  is(words.pop(), "world"  , "Word 2 selected correctly");
+  is(words.pop(), "hello"  , "Word 3 selected correctly");
+  is(words.pop(), "hello"  , "Word 4 selected correctly");
+  is(words.pop(), "sheep"  , "Word 5 selected correctly");
+  is(words.pop(), "sheep"  , "Word 6 selected correctly");
+  is(words.pop(), "sheep"  , "Word 7 selected correctly");
 
-	SimpleTest.finish();
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish()
@@ -94,4 +94,3 @@ sheep
 </textarea>
 </body>
 </html>
-

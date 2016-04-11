@@ -23,6 +23,7 @@ class nsCSSPropertySet;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
+struct Keyframe;
 struct StyleTransition;
 } // namespace mozilla
 
@@ -147,6 +148,7 @@ public:
   void Tick() override;
 
   nsCSSProperty TransitionProperty() const;
+  StyleAnimationValue ToValue() const;
 
   bool HasLowerCompositeOrderThan(const CSSTransition& aOther) const;
   EffectCompositor::CascadeLevel CascadeLevel() const override
@@ -354,6 +356,13 @@ protected:
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,
                              nsCSSPropertySet* aWhichStarted);
+
+  nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
+    nsStyleContext* aStyleContext,
+    nsCSSProperty aProperty,
+    mozilla::StyleAnimationValue&& aStartValue,
+    mozilla::StyleAnimationValue&& aEndValue,
+    const nsTimingFunction& aTimingFunction);
 
   bool mInAnimationOnlyStyleUpdate;
 

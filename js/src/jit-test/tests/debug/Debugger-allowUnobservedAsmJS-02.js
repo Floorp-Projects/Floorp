@@ -20,6 +20,6 @@ runOffThreadScript();
 var msg = getLastWarning().message;
 assertEq(msg === "asm.js type error: Disabled by debugger" ||
          msg === "asm.js type error: Disabled by lack of a JIT compiler" ||
-         msg === "asm.js type error: Disabled by javascript.options.asmjs in about:config" ||
+         msg === "asm.js type error: Disabled by 'asmjs' runtime option" ||
          msg === "asm.js type error: Disabled by lack of compiler support",
          true);

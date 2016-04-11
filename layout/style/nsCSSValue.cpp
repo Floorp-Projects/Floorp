@@ -621,6 +621,21 @@ void nsCSSValue::SetDependentListValue(nsCSSValueList* aList)
   }
 }
 
+void
+nsCSSValue::AdoptListValue(nsCSSValueList*&& aValue)
+{
+  // We have to copy the first element since for owned lists the first
+  // element should be an nsCSSValueList_heap object.
+  SetListValue();
+  // FIXME: If nsCSSValue gets a swap method or move assignment operator,
+  // we should use that here to avoid allocating an extra value.
+  mValue.mList->mValue = aValue->mValue;
+  mValue.mList->mNext  = aValue->mNext;
+  aValue->mNext = nullptr;
+  delete aValue;
+  aValue = nullptr;
+}
+
 nsCSSValuePairList* nsCSSValue::SetPairListValue()
 {
   Reset();
@@ -637,6 +652,22 @@ void nsCSSValue::SetDependentPairListValue(nsCSSValuePairList* aList)
     mUnit = eCSSUnit_PairListDep;
     mValue.mPairListDependent = aList;
   }
+}
+
+void
+nsCSSValue::AdoptPairListValue(nsCSSValuePairList*&& aValue)
+{
+  // We have to copy the first element since for owned pair lists the first
+  // element should be an nsCSSValuePairList_heap object.
+  SetPairListValue();
+  // FIXME: If nsCSSValue gets a swap method or move assignment operator,
+  // we should use that here to avoid allocating extra values.
+  mValue.mPairList->mXValue = aValue->mXValue;
+  mValue.mPairList->mYValue = aValue->mYValue;
+  mValue.mPairList->mNext   = aValue->mNext;
+  aValue->mNext = nullptr;
+  delete aValue;
+  aValue = nullptr;
 }
 
 void nsCSSValue::SetAutoValue()

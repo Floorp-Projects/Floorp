@@ -58,7 +58,7 @@ AxisPhysicsMSDModel::Acceleration(const State &aState)
 
 
 double
-AxisPhysicsMSDModel::GetDestination()
+AxisPhysicsMSDModel::GetDestination() const
 {
   return mDestination;
 }
