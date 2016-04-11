@@ -39,7 +39,7 @@ static MessagePump::Delegate* gFirstDelegate;
 namespace mozilla {
 namespace ipc {
 
-class DoWorkRunnable final : public nsCancelableRunnable,
+class DoWorkRunnable final : public CancelableRunnable,
                              public nsITimerCallback
 {
 public:
@@ -209,7 +209,7 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(DoWorkRunnable, nsCancelableRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(DoWorkRunnable, CancelableRunnable,
 			    nsITimerCallback)
 
 NS_IMETHODIMP

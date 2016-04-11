@@ -15,7 +15,7 @@
 namespace mozilla {
 
 // Runnable to fire the SpiderMonkey Debugger API's onGarbageCollection hook.
-class DebuggerOnGCRunnable : public nsCancelableRunnable
+class DebuggerOnGCRunnable : public CancelableRunnable
 {
   JS::dbg::GarbageCollectionEvent::Ptr mGCData;
 
