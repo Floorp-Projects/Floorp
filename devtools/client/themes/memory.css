@@ -115,17 +115,8 @@ html, body, #app, #memory-tool {
   background-image: url(chrome://devtools/skin/images/diff.svg);
 }
 
-/**
- * Due to toolbar styles of `.devtools-toolbarbutton:not([label])` which overrides
- * .devtools-toolbarbutton's min-width of 78px, reset the min-width.
- */
-#import-snapshot,
-#clear-snapshots {
-  -moz-box-align: center;
+#import-snapshot {
   flex-grow: 1;
-  padding: 1px;
-  margin: 2px 1px;
-  min-width: unset;
 }
 
 .spacer {

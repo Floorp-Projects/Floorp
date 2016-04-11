@@ -73,13 +73,14 @@
   -moz-box-align: center;
   min-width: 78px;
   padding: 1px;
-  margin: 2px 3px;
+  margin: 2px 1px;
 }
 
 .devtools-menulist:-moz-focusring,
-.devtools-toolbarbutton:-moz-focusring {
+.devtools-toolbarbutton:-moz-focusring,
+.devtools-button:-moz-focusring {
   outline: 1px dotted hsla(210,30%,85%,0.7);
-  outline-offset: -4px;
+  outline-offset: -1px;
 }
 
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon,
@@ -91,8 +92,8 @@
 
 /* HTML buttons */
 .devtools-button {
-  margin: 0;
-  padding: 0;
+  margin: 2px 1px;
+  padding: 1px;
   min-width: 32px;
   /* The icon is absolutely positioned in the button using ::before */
   position: relative;
@@ -296,14 +297,6 @@
 
 .devtools-option-toolbarbutton {
   list-style-image: url("chrome://devtools/skin/images/tool-options.svg");
-}
-
-/* Toolbar button groups */
-.devtools-toolbarbutton-group > .devtools-toolbarbutton {
-  margin-left: 1px;
-  margin-right: 1px;
-  outline-offset: -3px;
-  box-shadow: none;
 }
 
 .devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
