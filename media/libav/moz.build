@@ -66,4 +66,11 @@ if CONFIG['OS_ARCH'] != 'WINNT':
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
 
+if CONFIG['MOZ_DEBUG']:
+    # Enable all assertions in debug builds.
+    DEFINES['ASSERT_LEVEL'] = 2
+elif not CONFIG['RELEASE_BUILD']:
+    # Enable fast assertions in opt builds of Nightly and Aurora.
+    DEFINES['ASSERT_LEVEL'] = 1
+
 include("libavcommon.mozbuild")

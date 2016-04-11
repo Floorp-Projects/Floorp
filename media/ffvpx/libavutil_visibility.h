@@ -6,11 +6,15 @@
 
 // Include file for fixing symbol visibility on Linux.
 
-#ifndef MOZILLA_AVCPU_PERMS_H
-#define MOZILLA_AVCPU_PERMS_H
+#ifndef MOZILLA_AVUTIL_VISIBILITY_H
+#define MOZILLA_AVUTIL_VISIBILITY_H
 
 #pragma GCC visibility push(default)
 #include "libavutil/cpu.h"
+
+// We need av_log() to be visible so we can enable assertions in libavcodec.
+#include "libavutil/log.h"
+
 #pragma GCC visibility pop
 
-#endif // MOZILLA_AVCPU_PERMS_H
+#endif // MOZILLA_AVUTIL_VISIBILITY_H
