@@ -35,7 +35,7 @@ public:
         const char *symNames[MAX_SYMBOL_NAMES];
     } SymLoadStruct;
 
-    bool LoadSymbols(SymLoadStruct *firstStruct,
+    bool LoadSymbols(const SymLoadStruct *firstStruct,
                      bool tryplatform = false,
                      const char *prefix = nullptr,
                      bool warnOnFailure = true);
@@ -47,7 +47,7 @@ public:
                                   const char *symname,
                                   PlatformLookupFunction lookupFunction = nullptr);
     static bool LoadSymbols(PRLibrary *lib,
-                            SymLoadStruct *firstStruct,
+                            const SymLoadStruct *firstStruct,
                             PlatformLookupFunction lookupFunction = nullptr,
                             const char *prefix = nullptr,
                             bool warnOnFailure = true);
