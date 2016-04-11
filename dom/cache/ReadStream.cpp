@@ -133,7 +133,7 @@ public:
 
   // Note, we must proceed with the Run() method since our actor will not
   // clean itself up until we note that the stream is closed.
-  NS_IMETHOD Cancel()
+  nsresult Cancel()
   {
     Run();
     return NS_OK;
@@ -168,7 +168,7 @@ public:
 
   // Note, we must proceed with the Run() method so that we properly
   // call RemoveListener on the actor.
-  NS_IMETHOD Cancel()
+  nsresult Cancel()
   {
     Run();
     return NS_OK;

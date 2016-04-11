@@ -1152,7 +1152,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     mPerformance->CancelNotificationObservers();
     mPerformance = nullptr;
