@@ -1173,6 +1173,9 @@ class RunProgram(MachCommandBase):
         extra_env = {'MOZ_CRASHREPORTER_DISABLE': '1'}
 
         if debug or debugger or debugparams:
+            if 'INSIDE_EMACS' in os.environ:
+                self.log_manager.terminal_handler.setLevel(logging.WARNING)
+
             import mozdebug
             if not debugger:
                 # No debugger name was provided. Look for the default ones on
