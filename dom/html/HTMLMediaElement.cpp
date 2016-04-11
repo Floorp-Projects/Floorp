@@ -564,6 +564,12 @@ HTMLMediaElement::GetMozDebugReaderData(nsAString& aString)
   }
 }
 
+void
+HTMLMediaElement::MozDumpDebugInfo()
+{
+  // Tell mDecoder to dump debugging info.
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetSrcObject() const
 {
