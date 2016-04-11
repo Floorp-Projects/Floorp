@@ -60,17 +60,13 @@ PresentationIPCService::StartSession(const nsAString& aUrl,
 
 NS_IMETHODIMP
 PresentationIPCService::SendSessionMessage(const nsAString& aSessionId,
-                                           nsIInputStream* aStream)
+                                           const nsAString& aData)
 {
   MOZ_ASSERT(!aSessionId.IsEmpty());
-  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(!aData.IsEmpty());
 
-  mozilla::ipc::OptionalInputStreamParams stream;
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  SerializeInputStream(aStream, stream, fds);
-  MOZ_ASSERT(fds.IsEmpty());
-
-  return SendRequest(nullptr, SendSessionMessageRequest(nsAutoString(aSessionId), stream));
+  return SendRequest(nullptr, SendSessionMessageRequest(nsAutoString(aSessionId),
+                                                        nsAutoString(aData)));
 }
 
 NS_IMETHODIMP
