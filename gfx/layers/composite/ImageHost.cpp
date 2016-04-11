@@ -581,6 +581,27 @@ ImageHost::GetImageSize() const
   return IntSize();
 }
 
+bool
+ImageHost::IsOpaque()
+{
+  const TimedImage* img = ChooseImage();
+  if (!img) {
+    return false;
+  }
+
+  if (img->mPictureRect.width == 0 ||
+      img->mPictureRect.height == 0 ||
+      !img->mTextureHost) {
+    return false;
+  }
+
+  gfx::SurfaceFormat format = img->mTextureHost->GetFormat();
+  if (gfx::IsOpaque(format)) {
+    return true;
+  }
+  return false;
+}
+
 already_AddRefed<TexturedEffect>
 ImageHost::GenEffect(const gfx::Filter& aFilter)
 {
