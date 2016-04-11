@@ -104,11 +104,6 @@ public:
     mName = aName;
   }
 
-  void SetFromNsIFile(bool aValue)
-  {
-    mIsFromNsIFile = aValue;
-  }
-
   virtual bool MayBeClonedToOtherThreads() const override;
 
 protected:
