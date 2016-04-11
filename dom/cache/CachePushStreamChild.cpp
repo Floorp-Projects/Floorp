@@ -17,7 +17,7 @@ namespace dom {
 namespace cache {
 
 class CachePushStreamChild::Callback final : public nsIInputStreamCallback
-                                           , public nsCancelableRunnable
+                                           , public CancelableRunnable
 {
 public:
   explicit Callback(CachePushStreamChild* aActor)
@@ -89,7 +89,7 @@ private:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(CachePushStreamChild::Callback,
-                            nsCancelableRunnable,
+                            CancelableRunnable,
                             nsIInputStreamCallback);
 
 CachePushStreamChild::CachePushStreamChild(Feature* aFeature,

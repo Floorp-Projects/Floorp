@@ -1136,7 +1136,7 @@ PerformanceBase::CancelNotificationObservers()
   mPendingNotificationObserversTask = false;
 }
 
-class NotifyObserversTask final : public nsCancelableRunnable
+class NotifyObserversTask final : public CancelableRunnable
 {
 public:
   explicit NotifyObserversTask(PerformanceBase* aPerformance)
