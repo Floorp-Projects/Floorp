@@ -175,6 +175,7 @@ const tests = [
     }
   },
 ];
+
 //jscs:disable
 add_task(function* () {
   //jscs:enable
@@ -190,8 +191,7 @@ add_task(function* () {
 });
 
 function* testObtainingManifest(aBrowser, aTest) {
-  const expectsBlocked = aTest.expected.includes("block");
-  const observer = (expectsBlocked) ? createNetObserver(aTest) : null;
+  const waitForObserver = waitForNetObserver(aTest);
   // Expect an exception (from promise rejection) if there a content policy
   // that is violated.
   try {
@@ -200,38 +200,25 @@ function* testObtainingManifest(aBrowser, aTest) {
   } catch (e) {
     const wasBlocked = e.message.includes("NetworkError when attempting to fetch resource");
     ok(wasBlocked, `Expected promise rejection obtaining ${aTest.tabURL}: ${e.message}`);
-    if (observer) {
-      yield observer.untilFinished;
-    }
+  } finally {
+    yield waitForObserver;
   }
 }
 
-// Helper object used to observe policy violations. It waits 1 seconds
-// for a response, and then times out causing its associated test to fail.
-function createNetObserver(test) {
-  let finishedTest;
-  let success = false;
-  const finished = new Promise((resolver) => {
-    finishedTest = resolver;
-  });
-  const timeoutId = setTimeout(() => {
-    if (!success) {
-      test.run("This test timed out.");
-      finishedTest();
+// Helper object used to observe policy violations when blocking is expected.
+function waitForNetObserver(aTest) {
+  return new Promise((resolve) => {
+    // We don't need to wait for violation, so just resolve
+    if (!aTest.expected.includes("block")){
+      return resolve();
     }
-  }, 1000);
-  var observer = {
-    get untilFinished() {
-      return finished;
-    },
-    observe(subject, topic) {
-      SpecialPowers.removeObserver(observer, "csp-on-violate-policy");
-      test.run(topic);
-      finishedTest();
-      clearTimeout(timeoutId);
-      success = true;
-    },
-  };
-  SpecialPowers.addObserver(observer, "csp-on-violate-policy", false);
-  return observer;
+    const observer = {
+      observe(subject, topic) {
+        SpecialPowers.removeObserver(observer, "csp-on-violate-policy");
+        aTest.run(topic);
+        resolve();
+      },
+    };
+    SpecialPowers.addObserver(observer, "csp-on-violate-policy", false);
+  });
 }
