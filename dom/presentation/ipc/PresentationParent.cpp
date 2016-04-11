@@ -186,7 +186,7 @@ PresentationParent::NotifyStateChange(const nsAString& aSessionId,
                                       uint16_t aState)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifySessionStateChange(nsString(aSessionId), aState))) {
+                 !SendNotifySessionStateChange(nsAutoString(aSessionId), aState))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -197,7 +197,7 @@ PresentationParent::NotifyMessage(const nsAString& aSessionId,
                                   const nsACString& aData)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifyMessage(nsString(aSessionId), nsCString(aData)))) {
+                 !SendNotifyMessage(nsAutoString(aSessionId), nsAutoCString(aData)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -208,7 +208,7 @@ PresentationParent::NotifySessionConnect(uint64_t aWindowId,
                                          const nsAString& aSessionId)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifySessionConnect(aWindowId, nsString(aSessionId)))) {
+                 !SendNotifySessionConnect(aWindowId, nsAutoString(aSessionId)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -218,8 +218,6 @@ bool
 PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId)
 {
   MOZ_ASSERT(mService);
-
-  // Set window ID to 0 since the window is from content process.
   NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId, 0)));
   return true;
 }
@@ -253,10 +251,8 @@ nsresult
 PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
 {
   MOZ_ASSERT(mService);
-
-  // Set window ID to 0 since the window is from content process.
   return mService->StartSession(aRequest.url(), aRequest.sessionId(),
-                                aRequest.origin(), aRequest.deviceId(), 0, this);
+                                aRequest.origin(), aRequest.deviceId(), this);
 }
 
 nsresult
