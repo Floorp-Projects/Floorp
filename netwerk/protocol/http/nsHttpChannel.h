@@ -457,6 +457,12 @@ private:
 
     // cache specific data
     nsCOMPtr<nsICacheEntry>           mCacheEntry;
+    // This will be set during OnStopRequest() before calling CloseCacheEntry(),
+    // but only if the listener wants to use alt-data (signaled by
+    // HttpBaseChannel::mPreferredCachedAltDataType being not empty)
+    // Needed because calling openAlternativeOutputStream needs a reference
+    // to the cache entry.
+    nsCOMPtr<nsICacheEntry>           mAltDataCacheEntry;
     // We must close mCacheInputStream explicitly to avoid leaks.
     AutoClose<nsIInputStream>         mCacheInputStream;
     RefPtr<nsInputStreamPump>       mCachePump;

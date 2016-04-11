@@ -31,6 +31,8 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.net += [
+    'AltDataOutputStreamChild.h',
+    'AltDataOutputStreamParent.h',
     'HttpBaseChannel.h',
     'HttpChannelChild.h',
     'HttpChannelParent.h',
@@ -53,6 +55,8 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'AltDataOutputStreamChild.cpp',
+    'AltDataOutputStreamParent.cpp',
     'CacheControlParser.cpp',
     'ConnectionDiagnostics.cpp',
     'Http2Compression.cpp',
@@ -95,6 +99,7 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'PAltDataOutputStream.ipdl',
     'PHttpChannel.ipdl',
 ]
 
