@@ -15,138 +15,6 @@
 
 namespace nss_test {
 
-class TlsExtensionFilter : public TlsHandshakeFilter {
- protected:
-  virtual PacketFilter::Action FilterHandshake(
-      const HandshakeHeader& header,
-      const DataBuffer& input, DataBuffer* output) {
-    if (header.handshake_type() == kTlsHandshakeClientHello) {
-      TlsParser parser(input);
-      if (!FindClientHelloExtensions(&parser, header)) {
-        return KEEP;
-      }
-      return FilterExtensions(&parser, input, output);
-    }
-    if (header.handshake_type() == kTlsHandshakeServerHello) {
-      TlsParser parser(input);
-      if (!FindServerHelloExtensions(&parser, header.version())) {
-        return KEEP;
-      }
-      return FilterExtensions(&parser, input, output);
-    }
-    return KEEP;
-  }
-
-  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) = 0;
-
- public:
-  static bool FindClientHelloExtensions(TlsParser* parser, const Versioned& header) {
-    if (!parser->Skip(2 + 32)) { // version + random
-      return false;
-    }
-    if (!parser->SkipVariable(1)) { // session ID
-      return false;
-    }
-    if (header.is_dtls() && !parser->SkipVariable(1)) { // DTLS cookie
-      return false;
-    }
-    if (!parser->SkipVariable(2)) { // cipher suites
-      return false;
-    }
-    if (!parser->SkipVariable(1)) { // compression methods
-      return false;
-    }
-    return true;
-  }
-
-  static bool FindServerHelloExtensions(TlsParser* parser, uint16_t version) {
-    if (!parser->Skip(2 + 32)) { // version + random
-      return false;
-    }
-    if (!parser->SkipVariable(1)) { // session ID
-      return false;
-    }
-    if (!parser->Skip(2)) { // cipher suite
-      return false;
-    }
-    if (NormalizeTlsVersion(version) <= SSL_LIBRARY_VERSION_TLS_1_2) {
-      if (!parser->Skip(1)) { // compression method
-        return false;
-      }
-    }
-    return true;
-  }
-
- private:
-  PacketFilter::Action FilterExtensions(TlsParser* parser,
-                                        const DataBuffer& input,
-                                        DataBuffer* output) {
-    size_t length_offset = parser->consumed();
-    uint32_t all_extensions;
-    if (!parser->Read(&all_extensions, 2)) {
-      return KEEP; // no extensions, odd but OK
-    }
-    if (all_extensions != parser->remaining()) {
-      return KEEP; // malformed
-    }
-
-    bool changed = false;
-
-    // Write out the start of the message.
-    output->Allocate(input.len());
-    size_t offset = output->Write(0, input.data(), parser->consumed());
-
-    while (parser->remaining()) {
-      uint32_t extension_type;
-      if (!parser->Read(&extension_type, 2)) {
-        return KEEP; // malformed
-      }
-
-      DataBuffer extension;
-      if (!parser->ReadVariable(&extension, 2)) {
-        return KEEP; // malformed
-      }
-
-      DataBuffer filtered;
-      PacketFilter::Action action = FilterExtension(extension_type, extension,
-                                                    &filtered);
-      if (action == DROP) {
-        changed = true;
-        std::cerr << "extension drop: " << extension << std::endl;
-        continue;
-      }
-
-      const DataBuffer* source = &extension;
-      if (action == CHANGE) {
-        EXPECT_GT(0x10000U, filtered.len());
-        changed = true;
-        std::cerr << "extension old: " << extension << std::endl;
-        std::cerr << "extension new: " << filtered << std::endl;
-        source = &filtered;
-      }
-
-      // Write out extension.
-      offset = output->Write(offset, extension_type, 2);
-      offset = output->Write(offset, source->len(), 2);
-      offset = output->Write(offset, *source);
-    }
-    output->Truncate(offset);
-
-    if (changed) {
-      size_t newlen = output->len() - length_offset - 2;
-      EXPECT_GT(0x10000U, newlen);
-      if (newlen >= 0x10000) {
-        return KEEP; // bad: size increased too much
-      }
-      output->Write(length_offset, newlen, 2);
-      return CHANGE;
-    }
-    return KEEP;
-  }
-};
-
 class TlsExtensionTruncator : public TlsExtensionFilter {
  public:
   TlsExtensionTruncator(uint16_t extension, size_t length)
@@ -254,26 +122,6 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
   const DataBuffer data_;
 };
 
-class TlsExtensionCapture : public TlsExtensionFilter {
- public:
-  TlsExtensionCapture(uint16_t ext)
-      : extension_(ext), data_() {}
-
-  virtual PacketFilter::Action FilterExtension(
-      uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
-    if (extension_type == extension_) {
-      data_.Assign(input);
-    }
-    return KEEP;
-  }
-
-  const DataBuffer& extension() const { return data_; }
-
- private:
-  const uint16_t extension_;
-  DataBuffer data_;
-};
-
 class TlsExtensionTestBase : public TlsConnectTestBase {
  protected:
   TlsExtensionTestBase(Mode mode, uint16_t version)
@@ -323,11 +171,20 @@ class TlsExtensionTestDtls
 
 class TlsExtensionTest12Plus
   : public TlsExtensionTestBase,
-    public ::testing::WithParamInterface<std::string> {
+    public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsExtensionTest12Plus()
-    : TlsExtensionTestBase(TlsConnectTestBase::ToMode(GetParam()),
-                           SSL_LIBRARY_VERSION_TLS_1_2) {}
+    : TlsExtensionTestBase(TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
+                           std::get<1>(GetParam())) {}
+};
+
+class TlsExtensionTest12
+  : public TlsExtensionTestBase,
+    public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+ public:
+  TlsExtensionTest12()
+    : TlsExtensionTestBase(TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
+                           std::get<1>(GetParam())) {}
 };
 
 class TlsExtensionTest13
@@ -344,6 +201,15 @@ class TlsExtensionTestGeneric
     public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsExtensionTestGeneric()
+    : TlsExtensionTestBase(TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
+                           std::get<1>(GetParam())) {}
+};
+
+class TlsExtensionTestPre13
+  : public TlsExtensionTestBase,
+    public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+ public:
+  TlsExtensionTestPre13()
     : TlsExtensionTestBase(TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
                            std::get<1>(GetParam())) {}
 };
@@ -431,42 +297,44 @@ TEST_P(TlsExtensionTestGeneric, AlpnMismatch) {
   ClientHelloErrorTest(nullptr, kTlsAlertNoApplicationProtocol);
 }
 
-TEST_P(TlsExtensionTestGeneric, AlpnReturnedEmptyList) {
+// Many of these tests fail in TLS 1.3 because the extension is encrypted, which
+// prevents modification of the value from the ServerHello.
+TEST_P(TlsExtensionTestPre13, AlpnReturnedEmptyList) {
   EnableAlpn();
   const uint8_t val[] = { 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ServerHelloErrorTest(new TlsExtensionReplacer(ssl_app_layer_protocol_xtn, extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, AlpnReturnedEmptyName) {
+TEST_P(TlsExtensionTestPre13, AlpnReturnedEmptyName) {
   EnableAlpn();
   const uint8_t val[] = { 0x00, 0x01, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ServerHelloErrorTest(new TlsExtensionReplacer(ssl_app_layer_protocol_xtn, extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, AlpnReturnedListTrailingData) {
+TEST_P(TlsExtensionTestPre13, AlpnReturnedListTrailingData) {
   EnableAlpn();
   const uint8_t val[] = { 0x00, 0x02, 0x01, 0x61, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ServerHelloErrorTest(new TlsExtensionReplacer(ssl_app_layer_protocol_xtn, extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, AlpnReturnedExtraEntry) {
+TEST_P(TlsExtensionTestPre13, AlpnReturnedExtraEntry) {
   EnableAlpn();
   const uint8_t val[] = { 0x00, 0x04, 0x01, 0x61, 0x01, 0x62 };
   DataBuffer extension(val, sizeof(val));
   ServerHelloErrorTest(new TlsExtensionReplacer(ssl_app_layer_protocol_xtn, extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, AlpnReturnedBadListLength) {
+TEST_P(TlsExtensionTestPre13, AlpnReturnedBadListLength) {
   EnableAlpn();
   const uint8_t val[] = { 0x00, 0x99, 0x01, 0x61, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ServerHelloErrorTest(new TlsExtensionReplacer(ssl_app_layer_protocol_xtn, extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, AlpnReturnedBadNameLength) {
+TEST_P(TlsExtensionTestPre13, AlpnReturnedBadNameLength) {
   EnableAlpn();
   const uint8_t val[] = { 0x00, 0x02, 0x99, 0x61 };
   DataBuffer extension(val, sizeof(val));
@@ -549,35 +417,35 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesTrailingData) {
                                                 extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, SupportedPointsEmpty) {
+TEST_P(TlsExtensionTestPre13, SupportedPointsEmpty) {
   const uint8_t val[] = { 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
                                                 extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, SupportedPointsBadLength) {
+TEST_P(TlsExtensionTestPre13, SupportedPointsBadLength) {
   const uint8_t val[] = { 0x99, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
                                                 extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, SupportedPointsTrailingData) {
+TEST_P(TlsExtensionTestPre13, SupportedPointsTrailingData) {
   const uint8_t val[] = { 0x01, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
                                                 extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, RenegotiationInfoBadLength) {
+TEST_P(TlsExtensionTestPre13, RenegotiationInfoBadLength) {
   const uint8_t val[] = { 0x99 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_renegotiation_info_xtn,
                                                 extension));
 }
 
-TEST_P(TlsExtensionTestGeneric, RenegotiationInfoMismatch) {
+TEST_P(TlsExtensionTestPre13, RenegotiationInfoMismatch) {
   const uint8_t val[] = { 0x01, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_renegotiation_info_xtn,
@@ -585,13 +453,15 @@ TEST_P(TlsExtensionTestGeneric, RenegotiationInfoMismatch) {
 }
 
 // The extension has to contain a length.
-TEST_P(TlsExtensionTestGeneric, RenegotiationInfoExtensionEmpty) {
+TEST_P(TlsExtensionTestPre13, RenegotiationInfoExtensionEmpty) {
   DataBuffer extension;
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_renegotiation_info_xtn,
                                                 extension));
 }
 
-TEST_P(TlsExtensionTest12Plus, SignatureAlgorithmConfiguration) {
+// This only works on TLS 1.2, since it relies on static RSA; otherwise libssl
+// picks the wrong cipher suite.
+TEST_P(TlsExtensionTest12, SignatureAlgorithmConfiguration) {
   const SSLSignatureAndHashAlg algorithms[] = {
     {ssl_hash_sha512, ssl_sign_rsa},
     {ssl_hash_sha384, ssl_sign_ecdsa}
@@ -619,6 +489,7 @@ TEST_P(TlsExtensionTest12Plus, SignatureAlgorithmConfiguration) {
 
 /*
  * Tests for Certificate Transparency (RFC 6962)
+ * These don't work with TLS 1.3: see bug 1252745.
  */
 
 // Helper class - stores signed certificate timestamps as provided
@@ -647,11 +518,11 @@ class SignedCertificateTimestampsExtractor {
   }
 
   void assertTimestamps(const DataBuffer& timestamps) {
-    ASSERT_TRUE(auth_timestamps_);
-    ASSERT_EQ(timestamps, *auth_timestamps_);
+    EXPECT_TRUE(auth_timestamps_);
+    EXPECT_EQ(timestamps, *auth_timestamps_);
 
-    ASSERT_TRUE(handshake_timestamps_);
-    ASSERT_EQ(timestamps, *handshake_timestamps_);
+    EXPECT_TRUE(handshake_timestamps_);
+    EXPECT_EQ(timestamps, *handshake_timestamps_);
   }
 
  private:
@@ -660,7 +531,7 @@ class SignedCertificateTimestampsExtractor {
 };
 
 // Test timestamps extraction during a successful handshake.
-TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsHandshake) {
+TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsHandshake) {
   uint8_t val[] = { 0x01, 0x23, 0x45, 0x67, 0x89 };
   const SECItem si_timestamps = { siBuffer, val, sizeof(val) };
   const DataBuffer timestamps(val, sizeof(val));
@@ -683,7 +554,7 @@ TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsHandshake) {
 
 // Test SSL_PeerSignedCertTimestamps returning zero-length SECItem
 // when the client / the server / both have not enabled the feature.
-TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveClient) {
+TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsInactiveClient) {
   uint8_t val[] = { 0x01, 0x23, 0x45, 0x67, 0x89 };
   const SECItem si_timestamps = { siBuffer, val, sizeof(val) };
 
@@ -700,7 +571,7 @@ TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveClient) {
   timestamps_extractor.assertTimestamps(DataBuffer());
 }
 
-TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveServer) {
+TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsInactiveServer) {
   server_->StartConnect();
 
   client_->StartConnect();
@@ -714,7 +585,7 @@ TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveServer) {
   timestamps_extractor.assertTimestamps(DataBuffer());
 }
 
-TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveBoth) {
+TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsInactiveBoth) {
   server_->StartConnect();
   client_->StartConnect();
 
@@ -732,21 +603,34 @@ TEST_P(TlsExtensionTest13, EmptyClientKeyShare) {
                        kTlsAlertHandshakeFailure);
 }
 
-INSTANTIATE_TEST_CASE_P(ExtensionTls10, TlsExtensionTestGeneric,
+INSTANTIATE_TEST_CASE_P(ExtensionStream, TlsExtensionTestGeneric,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,
-                          TlsConnectTestBase::kTlsV10));
-INSTANTIATE_TEST_CASE_P(ExtensionVariants, TlsExtensionTestGeneric,
+                          TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(ExtensionDatagram, TlsExtensionTestGeneric,
+                        ::testing::Combine(
+                          TlsConnectTestBase::kTlsModesAll,
+                          TlsConnectTestBase::kTlsV11Plus));
+INSTANTIATE_TEST_CASE_P(ExtensionDatagramOnly, TlsExtensionTestDtls,
+                        TlsConnectTestBase::kTlsV11Plus);
+
+INSTANTIATE_TEST_CASE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
+                        ::testing::Combine(
+                          TlsConnectTestBase::kTlsModesAll,
+                          TlsConnectTestBase::kTlsV12Plus));
+
+INSTANTIATE_TEST_CASE_P(ExtensionPre13Stream, TlsExtensionTestPre13,
+                        ::testing::Combine(
+                          TlsConnectTestBase::kTlsModesStream,
+                          TlsConnectTestBase::kTlsV10To12));
+INSTANTIATE_TEST_CASE_P(ExtensionPre13Datagram, TlsExtensionTestPre13,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesAll,
                           TlsConnectTestBase::kTlsV11V12));
-INSTANTIATE_TEST_CASE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
-                        TlsConnectTestBase::kTlsModesAll);
+
 #ifdef NSS_ENABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(ExtensionTls13, TlsExtensionTest13,
-                        TlsConnectTestBase::kTlsModesStream);
+                        TlsConnectTestBase::kTlsModesAll);
 #endif
-INSTANTIATE_TEST_CASE_P(ExtensionDgram, TlsExtensionTestDtls,
-                        TlsConnectTestBase::kTlsV11V12);
 
 }  // namespace nspr_test

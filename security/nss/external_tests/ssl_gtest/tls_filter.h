@@ -181,6 +181,41 @@ class ChainedPacketFilter : public PacketFilter {
   std::vector<PacketFilter*> filters_;
 };
 
+class TlsExtensionFilter : public TlsHandshakeFilter {
+ protected:
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output);
+
+  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) = 0;
+
+ public:
+  static bool FindClientHelloExtensions(TlsParser* parser,
+                                        const Versioned& header);
+  static bool FindServerHelloExtensions(TlsParser* parser, uint16_t version);
+
+ private:
+  PacketFilter::Action FilterExtensions(TlsParser* parser,
+                                        const DataBuffer& input,
+                                        DataBuffer* output);
+};
+
+class TlsExtensionCapture : public TlsExtensionFilter {
+ public:
+  TlsExtensionCapture(uint16_t ext)
+      : extension_(ext), data_() {}
+
+  virtual PacketFilter::Action FilterExtension(
+      uint16_t extension_type, const DataBuffer& input, DataBuffer* output);
+  const DataBuffer& extension() const { return data_; }
+
+ private:
+  const uint16_t extension_;
+  DataBuffer data_;
+};
+
 }  // namespace nss_test
 
 #endif

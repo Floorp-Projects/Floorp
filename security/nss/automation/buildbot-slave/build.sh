@@ -288,12 +288,17 @@ prepare()
     mv ${OUTPUTDIR} ${OUTPUTDIR}.last >/dev/null 2>&1
     mkdir -p ${OUTPUTDIR}
 
+    cd ${HGDIR}/nss
+
     if [ -z "${NSS_DISABLE_ECC}" -a -n "${NSS_ECC_MORE_THAN_SUITE_B}" ]; then
-        cd ${HGDIR}/nss
         ECF="lib/freebl/ecl/ecl-curve.h"
 	print_log "hg revert -r NSS_3_11_1_RTM ${ECF}"
         hg revert -r NSS_3_11_1_RTM security/nss/${ECF}
         cp -f security/nss/${ECF} ${ECF}
+    fi
+
+    if [ -n "${FEWER_STRESS_ITERATIONS}" ]; then
+        sed -i 's/-c_1000_/-c_500_/g' tests/ssl/sslstress.txt
     fi
 
     return 0

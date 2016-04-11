@@ -25,7 +25,7 @@
 
 SEC_BEGIN_PROTOS
 
-/* constant table enumerating all implemented SSL 2 and 3 cipher suites. */
+/* constant table enumerating all implemented cipher suites. */
 SSL_IMPORT const PRUint16 SSL_ImplementedCiphers[];
 
 /* the same as the above, but is a function */
@@ -1044,6 +1044,8 @@ SSL_IMPORT SECStatus SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info,
  * Caller supplies the info struct.  This function fills it in.  Caller should
  * pass sizeof(SSLPreliminaryChannelInfo) as the |len| argument.
  *
+ * This function can be called prior to handshake details being confirmed (see
+ * SSL_GetChannelInfo above for what that means).  Thus, information provided by
  * this function is available to SSLAuthCertificate, SSLGetClientAuthData,
  * SSLSNISocketConfig, and other callbacks that might be called during the
  * processing of the first flight of client of server handshake messages.

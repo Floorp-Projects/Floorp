@@ -129,18 +129,15 @@ CERT_FindSubjectKeyIDExtension(CERTCertificate *cert, SECItem *retItem)
     rv = cert_FindExtension(cert->extensions, SEC_OID_X509_SUBJECT_KEY_ID,
                             &encodedValue);
     if (rv == SECSuccess) {
-        PLArenaPool *tmpArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-        if (tmpArena) {
-            rv = SEC_QuickDERDecodeItem(tmpArena, &decodedValue,
-                                        SEC_ASN1_GET(SEC_OctetStringTemplate),
-                                        &encodedValue);
-            if (rv == SECSuccess) {
-                rv = SECITEM_CopyItem(NULL, retItem, &decodedValue);
-            }
-            PORT_FreeArena(tmpArena, PR_FALSE);
-        } else {
-            rv = SECFailure;
+        PORTCheapArenaPool tmpArena;
+        PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+        rv = SEC_QuickDERDecodeItem(&tmpArena.arena, &decodedValue,
+                                    SEC_ASN1_GET(SEC_OctetStringTemplate),
+                                    &encodedValue);
+        if (rv == SECSuccess) {
+            rv = SECITEM_CopyItem(NULL, retItem, &decodedValue);
         }
+        PORT_DestroyCheapArena(&tmpArena);
     }
     SECITEM_FreeItem(&encodedValue, PR_FALSE);
     return rv;

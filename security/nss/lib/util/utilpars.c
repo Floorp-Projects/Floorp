@@ -1048,6 +1048,7 @@ _NSSUTIL_EvaluateConfigDir(const char *configdir,
 			   NSSDBType *pdbType, char **appName)
 {
     NSSDBType dbType;
+    PRBool checkEnvDefaultDB = PR_FALSE;
     *appName = NULL;
 /* force the default */
 #ifdef NSS_DISABLE_DBM
@@ -1055,7 +1056,9 @@ _NSSUTIL_EvaluateConfigDir(const char *configdir,
 #else
     dbType = NSS_DB_TYPE_LEGACY;
 #endif
-    if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS)-1) == 0) {
+    if (configdir == NULL) {
+	checkEnvDefaultDB = PR_TRUE;
+    } else if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS)-1) == 0) {
 	char *cdir;
 	dbType = NSS_DB_TYPE_MULTIACCESS;
 
@@ -1082,7 +1085,11 @@ _NSSUTIL_EvaluateConfigDir(const char *configdir,
 	dbType = NSS_DB_TYPE_LEGACY;
 	configdir = configdir + sizeof(LEGACY) -1;
     } else {
-	/* look up the default from the environment */
+	checkEnvDefaultDB = PR_TRUE;
+    }
+
+    /* look up the default from the environment */
+    if (checkEnvDefaultDB) {
 	char *defaultType = PR_GetEnvSecure("NSS_DEFAULT_DB_TYPE");
 	if (defaultType != NULL) {
 	    if (PORT_Strncmp(defaultType, SQLDB, sizeof(SQLDB)-2) == 0) {

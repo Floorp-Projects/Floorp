@@ -40,6 +40,7 @@
 #define NSS_SecureMemcmp NSS_SecureMemcmp_stub
 
 #define PR_Assert  PR_Assert_stub
+#define PR_Access  PR_Access_stub
 #define PR_CallOnce  PR_CallOnce_stub
 #define PR_Close  PR_Close_stub
 #define PR_DestroyCondVar PR_DestroyCondVar_stub
