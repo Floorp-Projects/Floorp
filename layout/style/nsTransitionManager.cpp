@@ -344,126 +344,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
 
-  // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
-  // I'll consider only the transitions from the number of items in
-  // 'transition-property' on down, and later ones will override earlier
-  // ones (tracked using |whichStarted|).
-  bool startedAny = false;
-  nsCSSPropertySet whichStarted;
-  for (uint32_t i = disp->mTransitionPropertyCount; i-- != 0; ) {
-    const StyleTransition& t = disp->mTransitions[i];
-    // Check the combined duration (combination of delay and duration)
-    // first, since it defaults to zero, which means we can ignore the
-    // transition.
-    if (t.GetCombinedDuration() > 0.0f) {
-      // We might have something to transition.  See if any of the
-      // properties in question changed and are animatable.
-      // FIXME: Would be good to find a way to share code between this
-      // interpretation of transition-property and the one below.
-      nsCSSProperty property = t.GetProperty();
-      if (property == eCSSPropertyExtra_no_properties ||
-          property == eCSSPropertyExtra_variable ||
-          property == eCSSProperty_UNKNOWN) {
-        // Nothing to do, but need to exclude this from cases below.
-      } else if (property == eCSSPropertyExtra_all_properties) {
-        for (nsCSSProperty p = nsCSSProperty(0);
-             p < eCSSProperty_COUNT_no_shorthands;
-             p = nsCSSProperty(p + 1)) {
-          ConsiderStartingTransition(p, t, aElement, collection,
-                                     aOldStyleContext, afterChangeStyle,
-                                     &startedAny, &whichStarted);
-        }
-      } else if (nsCSSProps::IsShorthand(property)) {
-        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-            subprop, property, nsCSSProps::eEnabledForAllContent) {
-          ConsiderStartingTransition(*subprop, t, aElement, collection,
-                                     aOldStyleContext, afterChangeStyle,
-                                     &startedAny, &whichStarted);
-        }
-      } else {
-        ConsiderStartingTransition(property, t, aElement, collection,
-                                   aOldStyleContext, afterChangeStyle,
-                                   &startedAny, &whichStarted);
-      }
-    }
-  }
-
-  // Stop any transitions for properties that are no longer in
-  // 'transition-property', including finished transitions.
-  // Also stop any transitions (and remove any finished transitions)
-  // for properties that just changed (and are still in the set of
-  // properties to transition), but for which we didn't just start the
-  // transition.  This can happen delay and duration are both zero, or
-  // because the new value is not interpolable.
-  // Note that we also do the latter set of work in
-  // nsTransitionManager::PruneCompletedTransitions.
-  if (collection) {
-    bool checkProperties =
-      disp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
-    nsCSSPropertySet allTransitionProperties;
-    if (checkProperties) {
-      for (uint32_t i = disp->mTransitionPropertyCount; i-- != 0; ) {
-        const StyleTransition& t = disp->mTransitions[i];
-        // FIXME: Would be good to find a way to share code between this
-        // interpretation of transition-property and the one above.
-        nsCSSProperty property = t.GetProperty();
-        if (property == eCSSPropertyExtra_no_properties ||
-            property == eCSSPropertyExtra_variable ||
-            property == eCSSProperty_UNKNOWN) {
-          // Nothing to do, but need to exclude this from cases below.
-        } else if (property == eCSSPropertyExtra_all_properties) {
-          for (nsCSSProperty p = nsCSSProperty(0);
-               p < eCSSProperty_COUNT_no_shorthands;
-               p = nsCSSProperty(p + 1)) {
-            allTransitionProperties.AddProperty(p);
-          }
-        } else if (nsCSSProps::IsShorthand(property)) {
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-              subprop, property, nsCSSProps::eEnabledForAllContent) {
-            allTransitionProperties.AddProperty(*subprop);
-          }
-        } else {
-          allTransitionProperties.AddProperty(property);
-        }
-      }
-    }
-
-    OwningCSSTransitionPtrArray& animations = collection->mAnimations;
-    size_t i = animations.Length();
-    MOZ_ASSERT(i != 0, "empty transitions list?");
-    StyleAnimationValue currentValue;
-    do {
-      --i;
-      CSSTransition* anim = animations[i];
-          // properties no longer in 'transition-property'
-      if ((checkProperties &&
-           !allTransitionProperties.HasProperty(anim->TransitionProperty())) ||
-          // properties whose computed values changed but for which we
-          // did not start a new transition (because delay and
-          // duration are both zero, or because the new value is not
-          // interpolable); a new transition would have anim->ToValue()
-          // matching currentValue
-          !ExtractComputedValueForTransition(anim->TransitionProperty(),
-                                             afterChangeStyle,
-                                             currentValue) ||
-          currentValue != anim->ToValue()) {
-        // stop the transition
-        if (anim->HasCurrentEffect()) {
-          EffectSet* effectSet = EffectSet::GetEffectSet(aElement, pseudoType);
-          if (effectSet) {
-            effectSet->UpdateAnimationGeneration(mPresContext);
-          }
-        }
-        anim->CancelFromStyle();
-        animations.RemoveElementAt(i);
-      }
-    } while (i != 0);
-
-    if (animations.IsEmpty()) {
-      collection->Destroy();
-      collection = nullptr;
-    }
-  }
+  DebugOnly<bool> startedAny = UpdateTransitions(disp, aElement, collection,
+                                                 aOldStyleContext,
+                                                 afterChangeStyle);
 
   MOZ_ASSERT(!startedAny || collection,
              "must have element transitions if we started any transitions");
@@ -492,6 +375,145 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                                               pseudoType,
                                                               cascadeLevel);
   }
+}
+
+bool
+nsTransitionManager::UpdateTransitions(
+  const nsStyleDisplay* aDisp,
+  dom::Element* aElement,
+  CSSTransitionCollection*& aElementTransitions,
+  nsStyleContext* aOldStyleContext,
+  nsStyleContext* aNewStyleContext)
+{
+  MOZ_ASSERT(aDisp, "Null nsStyleDisplay");
+  MOZ_ASSERT(!aElementTransitions ||
+             aElementTransitions->mElement == aElement, "Element mismatch");
+
+  // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
+  // I'll consider only the transitions from the number of items in
+  // 'transition-property' on down, and later ones will override earlier
+  // ones (tracked using |whichStarted|).
+  bool startedAny = false;
+  nsCSSPropertySet whichStarted;
+  for (uint32_t i = aDisp->mTransitionPropertyCount; i-- != 0; ) {
+    const StyleTransition& t = aDisp->mTransitions[i];
+    // Check the combined duration (combination of delay and duration)
+    // first, since it defaults to zero, which means we can ignore the
+    // transition.
+    if (t.GetCombinedDuration() > 0.0f) {
+      // We might have something to transition.  See if any of the
+      // properties in question changed and are animatable.
+      // FIXME: Would be good to find a way to share code between this
+      // interpretation of transition-property and the one below.
+      nsCSSProperty property = t.GetProperty();
+      if (property == eCSSPropertyExtra_no_properties ||
+          property == eCSSPropertyExtra_variable ||
+          property == eCSSProperty_UNKNOWN) {
+        // Nothing to do, but need to exclude this from cases below.
+      } else if (property == eCSSPropertyExtra_all_properties) {
+        for (nsCSSProperty p = nsCSSProperty(0);
+             p < eCSSProperty_COUNT_no_shorthands;
+             p = nsCSSProperty(p + 1)) {
+          ConsiderStartingTransition(p, t, aElement, aElementTransitions,
+                                     aOldStyleContext, aNewStyleContext,
+                                     &startedAny, &whichStarted);
+        }
+      } else if (nsCSSProps::IsShorthand(property)) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
+                                             nsCSSProps::eEnabledForAllContent)
+        {
+          ConsiderStartingTransition(*subprop, t, aElement, aElementTransitions,
+                                     aOldStyleContext, aNewStyleContext,
+                                     &startedAny, &whichStarted);
+        }
+      } else {
+        ConsiderStartingTransition(property, t, aElement, aElementTransitions,
+                                   aOldStyleContext, aNewStyleContext,
+                                   &startedAny, &whichStarted);
+      }
+    }
+  }
+
+  // Stop any transitions for properties that are no longer in
+  // 'transition-property', including finished transitions.
+  // Also stop any transitions (and remove any finished transitions)
+  // for properties that just changed (and are still in the set of
+  // properties to transition), but for which we didn't just start the
+  // transition.  This can happen delay and duration are both zero, or
+  // because the new value is not interpolable.
+  // Note that we also do the latter set of work in
+  // nsTransitionManager::PruneCompletedTransitions.
+  if (aElementTransitions) {
+    bool checkProperties =
+      aDisp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
+    nsCSSPropertySet allTransitionProperties;
+    if (checkProperties) {
+      for (uint32_t i = aDisp->mTransitionPropertyCount; i-- != 0; ) {
+        const StyleTransition& t = aDisp->mTransitions[i];
+        // FIXME: Would be good to find a way to share code between this
+        // interpretation of transition-property and the one above.
+        nsCSSProperty property = t.GetProperty();
+        if (property == eCSSPropertyExtra_no_properties ||
+            property == eCSSPropertyExtra_variable ||
+            property == eCSSProperty_UNKNOWN) {
+          // Nothing to do, but need to exclude this from cases below.
+        } else if (property == eCSSPropertyExtra_all_properties) {
+          for (nsCSSProperty p = nsCSSProperty(0);
+               p < eCSSProperty_COUNT_no_shorthands;
+               p = nsCSSProperty(p + 1)) {
+            allTransitionProperties.AddProperty(p);
+          }
+        } else if (nsCSSProps::IsShorthand(property)) {
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
+              subprop, property, nsCSSProps::eEnabledForAllContent) {
+            allTransitionProperties.AddProperty(*subprop);
+          }
+        } else {
+          allTransitionProperties.AddProperty(property);
+        }
+      }
+    }
+
+    OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
+    size_t i = animations.Length();
+    MOZ_ASSERT(i != 0, "empty transitions list?");
+    StyleAnimationValue currentValue;
+    do {
+      --i;
+      CSSTransition* anim = animations[i];
+          // properties no longer in 'transition-property'
+      if ((checkProperties &&
+           !allTransitionProperties.HasProperty(anim->TransitionProperty())) ||
+          // properties whose computed values changed but for which we
+          // did not start a new transition (because delay and
+          // duration are both zero, or because the new value is not
+          // interpolable); a new transition would have anim->ToValue()
+          // matching currentValue
+          !ExtractComputedValueForTransition(anim->TransitionProperty(),
+                                             aNewStyleContext,
+                                             currentValue) ||
+          currentValue != anim->ToValue()) {
+        // stop the transition
+        if (anim->HasCurrentEffect()) {
+          EffectSet* effectSet =
+            EffectSet::GetEffectSet(aElement,
+                                    aNewStyleContext->GetPseudoType());
+          if (effectSet) {
+            effectSet->UpdateAnimationGeneration(mPresContext);
+          }
+        }
+        anim->CancelFromStyle();
+        animations.RemoveElementAt(i);
+      }
+    } while (i != 0);
+
+    if (animations.IsEmpty()) {
+      aElementTransitions->Destroy();
+      aElementTransitions = nullptr;
+    }
+  }
+
+  return startedAny;
 }
 
 void
