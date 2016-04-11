@@ -143,6 +143,14 @@ ClientEngine.prototype = {
     Svc.Prefs.set("client.type", value);
   },
 
+  getClientName(id) {
+    if (id == this.localID) {
+      return this.localName;
+    }
+    let client = this._store._remoteClients[id];
+    return client ? client.name : "";
+  },
+
   isMobile: function isMobile(id) {
     if (this._store._remoteClients[id])
       return this._store._remoteClients[id].type == DEVICE_TYPE_MOBILE;
