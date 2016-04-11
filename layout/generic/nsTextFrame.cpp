@@ -5302,100 +5302,55 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       params.vertical = verticalRun;
 
       nscoord topOrLeft(nscoord_MAX), bottomOrRight(nscoord_MIN);
+      typedef gfxFont::Metrics Metrics;
+      auto accumulateDecorationRect = [&](const LineDecoration& dec,
+                                          gfxFloat Metrics::* lineSize,
+                                          gfxFloat Metrics::* lineOffset) {
+        params.style = dec.mStyle;
+        // If the style is solid, let's include decoration line rect of solid
+        // style since changing the style from none to solid/dotted/dashed
+        // doesn't cause reflow.
+        if (params.style == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
+          params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
+        }
+
+        float inflation =
+          GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
+        const Metrics metrics =
+          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
+                              useVerticalMetrics);
+
+        params.lineSize.height = metrics.*lineSize;
+        params.offset = metrics.*lineOffset;
+        const nsRect decorationRect =
+          nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
+          nsPoint(0, -dec.mBaselineOffset);
+
+        if (verticalRun) {
+          topOrLeft = std::min(decorationRect.x, topOrLeft);
+          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
+        } else {
+          topOrLeft = std::min(decorationRect.y, topOrLeft);
+          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
+        }
+      };
+
       // Below we loop through all text decorations and compute the rectangle
       // containing all of them, in this frame's coordinate space
       params.decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
-      for (uint32_t i = 0; i < textDecs.mUnderlines.Length(); ++i) {
-        const LineDecoration& dec = textDecs.mUnderlines[i];
-        params.style = dec.mStyle;
-        // If the style is solid, let's include decoration line rect of solid
-        // style since changing the style from none to solid/dotted/dashed
-        // doesn't cause reflow.
-        if (params.style == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-          params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-        }
-
-        float inflation =
-          GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
-        const gfxFont::Metrics metrics =
-          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                              useVerticalMetrics);
-
-        params.lineSize.height = metrics.underlineSize;
-        params.offset = metrics.underlineOffset;
-        const nsRect decorationRect =
-          nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
-          nsPoint(0, -dec.mBaselineOffset);
-
-        if (verticalRun) {
-          topOrLeft = std::min(decorationRect.x, topOrLeft);
-          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
-        } else {
-          topOrLeft = std::min(decorationRect.y, topOrLeft);
-          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
-        }
+      for (const LineDecoration& dec : textDecs.mUnderlines) {
+        accumulateDecorationRect(dec, &Metrics::underlineSize,
+                                 &Metrics::underlineOffset);
       }
       params.decoration = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
-      for (uint32_t i = 0; i < textDecs.mOverlines.Length(); ++i) {
-        const LineDecoration& dec = textDecs.mOverlines[i];
-        params.style = dec.mStyle;
-        // If the style is solid, let's include decoration line rect of solid
-        // style since changing the style from none to solid/dotted/dashed
-        // doesn't cause reflow.
-        if (params.style == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-          params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-        }
-
-        float inflation =
-          GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
-        const gfxFont::Metrics metrics =
-          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                              useVerticalMetrics);
-
-        params.lineSize.height = metrics.underlineSize;
-        params.offset = metrics.maxAscent;
-        const nsRect decorationRect =
-          nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
-          nsPoint(0, -dec.mBaselineOffset);
-
-        if (verticalRun) {
-          topOrLeft = std::min(decorationRect.x, topOrLeft);
-          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
-        } else {
-          topOrLeft = std::min(decorationRect.y, topOrLeft);
-          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
-        }
+      for (const LineDecoration& dec : textDecs.mOverlines) {
+        accumulateDecorationRect(dec, &Metrics::underlineSize,
+                                 &Metrics::maxAscent);
       }
       params.decoration = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
-      for (uint32_t i = 0; i < textDecs.mStrikes.Length(); ++i) {
-        const LineDecoration& dec = textDecs.mStrikes[i];
-        params.style = dec.mStyle;
-        // If the style is solid, let's include decoration line rect of solid
-        // style since changing the style from none to solid/dotted/dashed
-        // doesn't cause reflow.
-        if (params.style == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-          params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-        }
-
-        float inflation =
-          GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
-        const gfxFont::Metrics metrics =
-          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                              useVerticalMetrics);
-
-        params.lineSize.height = metrics.strikeoutSize;
-        params.offset = metrics.strikeoutOffset;
-        const nsRect decorationRect =
-          nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
-          nsPoint(0, -dec.mBaselineOffset);
-
-        if (verticalRun) {
-          topOrLeft = std::min(decorationRect.x, topOrLeft);
-          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
-        } else {
-          topOrLeft = std::min(decorationRect.y, topOrLeft);
-          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
-        }
+      for (const LineDecoration& dec : textDecs.mStrikes) {
+        accumulateDecorationRect(dec, &Metrics::strikeoutSize,
+                                 &Metrics::strikeoutOffset);
       }
 
       aVisualOverflowRect->UnionRect(
@@ -6700,49 +6655,39 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     params.ascent = ascent;
     params.vertical = verticalRun;
 
-    // Underlines
-    for (uint32_t i = aDecorations.mUnderlines.Length(); i-- > 0; ) {
-      const LineDecoration& dec = aDecorations.mUnderlines[i];
+    typedef gfxFont::Metrics Metrics;
+    auto paintDecorationLine = [&](const LineDecoration& dec,
+                                   gfxFloat Metrics::* lineSize,
+                                   gfxFloat Metrics::* lineOffset) {
       if (dec.mStyle == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-        continue;
+        return;
       }
 
       float inflation =
         GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
-      const gfxFont::Metrics metrics =
+      const Metrics metrics =
         GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
                             useVerticalMetrics);
 
-      params.lineSize.height = metrics.underlineSize;
+      params.lineSize.height = metrics.*lineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
       params.color = dec.mColor;
-      params.offset = decorationOffsetDir * metrics.underlineOffset;
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+      params.offset = decorationOffsetDir * metrics.*lineOffset;
       params.style = dec.mStyle;
       PaintDecorationLine(params);
+    };
+
+    // Underlines
+    params.decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+    for (const LineDecoration& dec : Reversed(aDecorations.mUnderlines)) {
+      paintDecorationLine(dec, &Metrics::underlineSize,
+                          &Metrics::underlineOffset);
     }
     // Overlines
-    for (uint32_t i = aDecorations.mOverlines.Length(); i-- > 0; ) {
-      const LineDecoration& dec = aDecorations.mOverlines[i];
-      if (dec.mStyle == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-        continue;
-      }
-
-      float inflation =
-        GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
-      const gfxFont::Metrics metrics =
-        GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                            useVerticalMetrics);
-
-      params.lineSize.height = metrics.underlineSize;
-      bCoord = (frameBStart - dec.mBaselineOffset) / app;
-
-      params.color = dec.mColor;
-      params.offset = decorationOffsetDir * metrics.maxAscent;
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
-      params.style = dec.mStyle;
-      PaintDecorationLine(params);
+    params.decoration = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+    for (const LineDecoration& dec : Reversed(aDecorations.mOverlines)) {
+      paintDecorationLine(dec, &Metrics::underlineSize, &Metrics::maxAscent);
     }
 
     // CSS 2.1 mandates that text be painted after over/underlines, and *then*
@@ -6754,26 +6699,10 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
                       aParams.decorationOverrideColor, aParams.provider);
 
     // Line-throughs
-    for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {
-      const LineDecoration& dec = aDecorations.mStrikes[i];
-      if (dec.mStyle == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
-        continue;
-      }
-
-      float inflation =
-        GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
-      const gfxFont::Metrics metrics =
-        GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                            useVerticalMetrics);
-
-      params.lineSize.height = metrics.strikeoutSize;
-      bCoord = (frameBStart - dec.mBaselineOffset) / app;
-
-      params.color = dec.mColor;
-      params.offset = decorationOffsetDir * metrics.strikeoutOffset;
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
-      params.style = dec.mStyle;
-      PaintDecorationLine(params);
+    params.decoration = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+    for (const LineDecoration& dec : Reversed(aDecorations.mStrikes)) {
+      paintDecorationLine(dec, &Metrics::strikeoutSize,
+                          &Metrics::strikeoutOffset);
     }
 }
 
