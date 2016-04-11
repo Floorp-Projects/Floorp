@@ -134,7 +134,7 @@ public:
 // This is a nsICancelableRunnable because we can dispatch it to Workers and
 // those can be shut down at any time, and in these cases, Cancel() is called
 // instead of Run().
-class nsTimerEvent : public nsCancelableRunnable
+class nsTimerEvent : public CancelableRunnable
 {
 public:
   NS_IMETHOD Run() override;
