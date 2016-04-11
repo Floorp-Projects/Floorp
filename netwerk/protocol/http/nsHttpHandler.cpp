@@ -123,6 +123,18 @@ NewURI(const nsACString &aSpec,
     return NS_OK;
 }
 
+static nsCString
+GetDeviceModelId() {
+    nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
+    MOZ_ASSERT(infoService, "Could not find a system info service");
+    nsAutoString androidDevice;
+    nsresult rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("device"), androidDevice);
+    if (NS_SUCCEEDED(rv)) {
+        return NS_LossyConvertUTF16toASCII(androidDevice);
+    }
+    return EmptyCString();
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpHandler <public>
 //-----------------------------------------------------------------------------
@@ -775,6 +787,10 @@ nsHttpHandler::InitUserAgentComponents()
             mCompatDevice.AssignLiteral("Mobile");
         }
     }
+
+    if (Preferences::GetBool(UA_PREF("use_device"), false)) {
+        mDeviceModelId = mozilla::net::GetDeviceModelId();
+    }
 #endif // ANDROID
 
 #ifdef FXOS_SIMULATOR
@@ -952,6 +968,18 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                             getter_Copies(mUserAgentOverride));
         mUserAgentIsDirty = true;
     }
+
+#ifdef ANDROID
+    // general.useragent.use_device
+    if (PREF_CHANGED(UA_PREF("use_device"))) {
+        if (Preferences::GetBool(UA_PREF("use_device"), false)) {
+            mDeviceModelId = mozilla::net::GetDeviceModelId();
+        } else {
+            mDeviceModelId = EmptyCString();
+        }
+        mUserAgentIsDirty = true;
+    }
+#endif
 
     //
     // HTTP options
