@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <meta charset="utf-8">
+  <title>Test for data channel as session transport in Presentation API</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1148307">Test for data channel as session transport in Presentation API</a>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+
+const loadingTimeoutPref = "presentation.receiver.loading.timeout";
+
+var clientBuilder;
+var serverBuilder;
+var clientTransport;
+var serverTransport;
+var clientControlChannel;
+var serverControlChannel;
+
+const clientMessage = "Client Message";
+const serverMessage = "Server Message";
+
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
+
+function TestControlChannel() {
+  this._listener = null;
+}
+
+TestControlChannel.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  set listener(aListener) {
+    this._listener = aListener;
+  },
+  get listener() {
+    return this._listener;
+  },
+  sendOffer: function(aOffer) {
+    setTimeout(()=>this._remote.listener.onOffer(aOffer), 0);
+  },
+  sendAnswer: function(aAnswer) {
+    setTimeout(()=>this._remote.listener.onAnswer(aAnswer), 0);
+  },
+  sendIceCandidate: function(aCandidate) {
+    setTimeout(()=>this._remote.listener.onIceCandidate(aCandidate), 0);
+  },
+  close: function(aReason) {
+    setTimeout(()=>this._listener.notifyClosed(aReason), 0);
+    setTimeout(()=>this._remote.listener.notifyClosed(aReason), 0);
+  },
+  set remote(aRemote) {
+    this._remote = aRemote;
+  },
+};
+
+var isClientReady = false;
+var isServerReady = false;
+var isClientClosed = false;
+var isServerClosed = false;
+
+var gResolve;
+var gReject;
+
+const clientCallback = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  notifyTransportReady: function () {
+    info("Client transport ready.");
+
+    isClientReady = true;
+    if (isClientReady && isServerReady) {
+      gResolve();
+    }
+  },
+  notifyTransportClosed: function (aReason) {
+    info("Client transport is closed.");
+
+    isClientClosed = true;
+    if (isClientClosed && isServerClosed) {
+      gResolve();
+    }
+  },
+  notifyData: function(aData) {
+    is(aData, serverMessage, "Client transport receives data.");
+    gResolve();
+  },
+};
+
+const serverCallback = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  notifyTransportReady: function () {
+    info("Server transport ready.");
+
+    isServerReady = true;
+    if (isClientReady && isServerReady) {
+      gResolve();
+    }
+  },
+  notifyTransportClosed: function (aReason) {
+    info("Server transport is closed.");
+
+    isServerClosed = true;
+    if (isClientClosed && isServerClosed) {
+      gResolve();
+    }
+  },
+  notifyData: function(aData) {
+    is(aData, clientMessage, "Server transport receives data.");
+    gResolve()
+  },
+};
+
+
+const clientListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  onSessionTransport: function(aTransport) {
+    info("Client Transport is built.");
+    clientTransport = aTransport;
+    clientTransport.callback = clientCallback;
+  },
+  onError: function(aError)  {
+    ok(false, "client's builder reports error " + aError);
+  }
+}
+
+const serverListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  onSessionTransport: function(aTransport) {
+    info("Server Transport is built.");
+    serverTransport = aTransport;
+    serverTransport.callback = serverCallback;
+    serverTransport.enableDataNotification();
+  },
+  onError: function(aError)  {
+    ok(false, "server's builder reports error " + aError);
+  }
+}
+
+
+function testBuilder() {
+  return new Promise(function(aResolve, aReject) {
+    gResolve = aResolve;
+    gReject = aReject;
+
+    clientControlChannel = new TestControlChannel();
+    serverControlChannel = new TestControlChannel();
+    clientControlChannel.remote = serverControlChannel;
+    serverControlChannel.remote = clientControlChannel;
+
+    clientBuilder = Cc["@mozilla.org/presentation/datachanneltransportbuilder;1"]
+                      .createInstance(Ci.nsIPresentationDataChannelSessionTransportBuilder);
+    serverBuilder = Cc["@mozilla.org/presentation/datachanneltransportbuilder;1"]
+                      .createInstance(Ci.nsIPresentationDataChannelSessionTransportBuilder);
+
+    clientBuilder
+      .buildDataChannelTransport(Ci.nsIPresentationSessionTransportBuilder.TYPE_SENDER,
+                                 window,
+                                 clientControlChannel,
+                                 clientListener);
+
+    serverBuilder
+      .buildDataChannelTransport(Ci.nsIPresentationSessionTransportBuilder.TYPE_RECEIVER,
+                                 window,
+                                 serverControlChannel,
+                                 serverListener);
+  });
+}
+
+function testClientSendMessage() {
+  return new Promise(function(aResolve, aReject) {
+    info("client sends message");
+    gResolve = aResolve;
+    gReject = aReject;
+
+    clientTransport.send(clientMessage);
+  });
+}
+
+function testServerSendMessage() {
+  return new Promise(function(aResolve, aReject) {
+    info("server sends message");
+    gResolve = aResolve;
+    gReject = aReject;
+
+    serverTransport.send(serverMessage);
+    setTimeout(()=>clientTransport.enableDataNotification(), 0);
+  });
+}
+
+function testCloseSessionTransport() {
+  return new Promise(function(aResolve, aReject) {
+    info("close session transport");
+    gResolve = aResolve;
+    gReject = aReject;
+
+    serverTransport.close(Cr.NS_OK);
+  });
+}
+
+function finish() {
+  info("test finished, teardown");
+  Services.prefs.clearUserPref(loadingTimeoutPref);
+
+  SimpleTest.finish();
+}
+
+function error(aError) {
+  ok(false, "report Error " + aError.name + ":" + aError.message);
+}
+
+function runTests() {
+  Services.prefs.setIntPref(loadingTimeoutPref, 30000);
+
+  testBuilder()
+  .then(testClientSendMessage)
+  .then(testServerSendMessage)
+  .then(testCloseSessionTransport)
+  .then(finish)
+  .catch(error);
+
+
+}
+
+window.addEventListener("load", function() {
+  runTests();
+});
+
+</script>
+</pre>
+</body>
+</html>
