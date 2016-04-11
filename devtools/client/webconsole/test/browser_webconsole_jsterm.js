@@ -166,4 +166,26 @@ function* testJSTerm(hud) {
     return node.parentNode.getAttribute("severity") === "error" &&
       node.textContent === Object.prototype.toString();
   }, "thrown object generates error message");
+
+  // check that errors with entires in errordocs.js display links
+  // alongside their messages.
+  const ErrorDocs = require("devtools/server/actors/errordocs");
+
+  const ErrorDocStatements = {
+    "JSMSG_BAD_RADIX": "(42).toString(0);",
+    "JSMSG_BAD_ARRAY_LENGTH": "([]).length = -1",
+    "JSMSG_NEGATIVE_REPETITION_COUNT": "'abc'.repeat(-1);",
+    "JSMSG_BAD_FORMAL": "var f = Function('x y', 'return x + y;');",
+    "JSMSG_PRECISION_RANGE": "77.1234.toExponential(-1);",
+  };
+
+  for (let errorMessageName of Object.keys(ErrorDocStatements)) {
+    let url = ErrorDocs.GetURL(errorMessageName);
+
+    jsterm.clearOutput();
+    yield jsterm.execute(ErrorDocStatements[errorMessageName]);
+    yield checkResult((node) => {
+      return node.parentNode.getElementsByTagName("a")[0].title == url;
+    }, `error links to ${url}`);
+  }
 }
