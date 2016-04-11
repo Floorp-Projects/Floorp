@@ -3,34 +3,30 @@
  * license, v. 2.0. if a copy of the mpl was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "AlignmentUtils.h"
 #include "AudioNodeEngineSSE2.h"
 #include <emmintrin.h>
 
-#ifdef DEBUG
-  #define ASSERT_ALIGNED(ptr)                                                  \
-            MOZ_ASSERT((((uintptr_t)ptr + 15) & ~0x0F) == (uintptr_t)ptr,      \
-                       #ptr " has to be aligned 16-bytes aligned.");
-#else
-  #define ASSERT_ALIGNED(ptr)
-#endif
 
 namespace mozilla {
 void
-AudioBlockAddChannelWithScale_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
-                                  float aScale,
-                                  float aOutput[WEBAUDIO_BLOCK_SIZE])
+AudioBufferAddWithScale_SSE(const float* aInput,
+                            float aScale,
+                            float* aOutput,
+                            uint32_t aSize)
 {
   __m128 vin0, vin1, vin2, vin3,
          vscaled0, vscaled1, vscaled2, vscaled3,
          vout0, vout1, vout2, vout3,
          vgain;
 
-  ASSERT_ALIGNED(aInput);
-  ASSERT_ALIGNED(aOutput);
+  ASSERT_ALIGNED16(aInput);
+  ASSERT_ALIGNED16(aOutput);
+  ASSERT_MULTIPLE16(aSize);
 
   vgain = _mm_load1_ps(&aScale);
 
-  for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=16) {
+  for (unsigned i = 0; i < aSize; i+=16) {
     vin0 = _mm_load_ps(&aInput[i]);
     vin1 = _mm_load_ps(&aInput[i + 4]);
     vin2 = _mm_load_ps(&aInput[i + 8]);
@@ -59,40 +55,6 @@ AudioBlockAddChannelWithScale_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
 }
 
 void
-AudioBlockAddChannel_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
-                         float aOutput[WEBAUDIO_BLOCK_SIZE])
-{
-  __m128 vin0, vin1, vin2, vin3,
-         vin4, vin5, vin6, vin7,
-         vout0, vout1, vout2, vout3;
-
-  ASSERT_ALIGNED(aInput);
-  ASSERT_ALIGNED(aOutput);
-
-  for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=16) {
-    vin0 = _mm_load_ps(&aInput[i]);
-    vin1 = _mm_load_ps(&aInput[i + 4]);
-    vin2 = _mm_load_ps(&aInput[i + 8]);
-    vin3 = _mm_load_ps(&aInput[i + 12]);
-
-    vin4 = _mm_load_ps(&aOutput[i]);
-    vin5 = _mm_load_ps(&aOutput[i + 4]);
-    vin6 = _mm_load_ps(&aOutput[i + 8]);
-    vin7 = _mm_load_ps(&aOutput[i + 12]);
-
-    vout0 = _mm_add_ps(vin0, vin4);
-    vout1 = _mm_add_ps(vin1, vin5);
-    vout2 = _mm_add_ps(vin2, vin6);
-    vout3 = _mm_add_ps(vin3, vin7);
-
-    _mm_store_ps(&aOutput[i], vout0);
-    _mm_store_ps(&aOutput[i + 4], vout1);
-    _mm_store_ps(&aOutput[i + 8], vout2);
-    _mm_store_ps(&aOutput[i + 12], vout3);
-  }
-}
-
-void
 AudioBlockCopyChannelWithScale_SSE(const float* aInput,
                                    float aScale,
                                    float* aOutput)
@@ -100,8 +62,8 @@ AudioBlockCopyChannelWithScale_SSE(const float* aInput,
   __m128 vin0, vin1, vin2, vin3,
          vout0, vout1, vout2, vout3;
 
-  ASSERT_ALIGNED(aInput);
-  ASSERT_ALIGNED(aOutput);
+  ASSERT_ALIGNED16(aInput);
+  ASSERT_ALIGNED16(aOutput);
 
   __m128 vgain = _mm_load1_ps(&aScale);
 
@@ -130,9 +92,9 @@ AudioBlockCopyChannelWithScale_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
          vscaled0, vscaled1, vscaled2, vscaled3,
          vout0, vout1, vout2, vout3;
 
-  ASSERT_ALIGNED(aInput);
-  ASSERT_ALIGNED(aScale);
-  ASSERT_ALIGNED(aOutput);
+  ASSERT_ALIGNED16(aInput);
+  ASSERT_ALIGNED16(aScale);
+  ASSERT_ALIGNED16(aOutput);
 
   for (unsigned i = 0 ; i < WEBAUDIO_BLOCK_SIZE; i+=16) {
     vscaled0 = _mm_load_ps(&aScale[i]);
@@ -158,18 +120,19 @@ AudioBlockCopyChannelWithScale_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
 }
 
 void
-AudioBlockInPlaceScale_SSE(float aBlock[WEBAUDIO_BLOCK_SIZE],
-                           uint32_t aChannelCount,
-                           float aScale)
+AudioBufferInPlaceScale_SSE(float* aBlock,
+                            float aScale,
+                            uint32_t aSize)
 {
   __m128 vout0, vout1, vout2, vout3,
          vin0, vin1, vin2, vin3;
 
-  ASSERT_ALIGNED(aBlock);
+  ASSERT_ALIGNED16(aBlock);
+  ASSERT_MULTIPLE16(aSize);
 
   __m128 vgain = _mm_load1_ps(&aScale);
 
-  for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=16) {
+  for (unsigned i = 0; i < aSize; i+=16) {
     vin0 = _mm_load_ps(&aBlock[i]);
     vin1 = _mm_load_ps(&aBlock[i + 4]);
     vin2 = _mm_load_ps(&aBlock[i + 8]);
@@ -197,10 +160,10 @@ AudioBlockPanStereoToStereo_SSE(const float aInputL[WEBAUDIO_BLOCK_SIZE],
          vscaled0, vscaled1,
          vgainl, vgainr;
 
-  ASSERT_ALIGNED(aInputL);
-  ASSERT_ALIGNED(aInputR);
-  ASSERT_ALIGNED(aOutputL);
-  ASSERT_ALIGNED(aOutputR);
+  ASSERT_ALIGNED16(aInputL);
+  ASSERT_ALIGNED16(aInputR);
+  ASSERT_ALIGNED16(aOutputL);
+  ASSERT_ALIGNED16(aOutputR);
 
   vgainl = _mm_load1_ps(&aGainL);
   vgainr = _mm_load1_ps(&aGainR);

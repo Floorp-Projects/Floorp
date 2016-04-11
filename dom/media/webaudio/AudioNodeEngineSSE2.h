@@ -7,13 +7,10 @@
 
 namespace mozilla {
 void
-AudioBlockAddChannelWithScale_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
-                                  float aScale,
-                                  float aOutput[WEBAUDIO_BLOCK_SIZE]);
-
-void
-AudioBlockAddChannel_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
-                         float aOutput[WEBAUDIO_BLOCK_SIZE]);
+AudioBufferAddWithScale_SSE(const float* aInput,
+                            float aScale,
+                            float* aOutput,
+                            uint32_t aSize);
 
 void
 AudioBlockCopyChannelWithScale_SSE(const float* aInput,
@@ -26,9 +23,9 @@ AudioBlockCopyChannelWithScale_SSE(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                    float aOutput[WEBAUDIO_BLOCK_SIZE]);
 
 void
-AudioBlockInPlaceScale_SSE(float aBlock[WEBAUDIO_BLOCK_SIZE],
-                           uint32_t aChannelCount,
-                           float aScale);
+AudioBufferInPlaceScale_SSE(float* aBlock,
+                            float aScale,
+                            uint32_t aSize);
 
 void
 AudioBlockPanStereoToStereo_SSE(const float aInputL[WEBAUDIO_BLOCK_SIZE],
