@@ -43,14 +43,7 @@ public:
 
   virtual Layer* GetLayer() override;
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) override
-  {
-    LayerComposite::SetLayerManager(aManager);
-    mManager = aManager;
-    if (mImageHost) {
-      mImageHost->SetCompositor(mCompositor);
-    }
-  }
+  virtual void SetLayerManager(LayerManagerComposite* aManager) override;
 
   virtual void RenderLayer(const gfx::IntRect& aClipRect) override;
 
@@ -66,6 +59,8 @@ public:
 
   virtual const char* Name() const override { return "ImageLayerComposite"; }
 
+  virtual bool IsOpaque() override;
+
 protected:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
@@ -73,7 +68,7 @@ private:
   gfx::Filter GetEffectFilter();
 
 private:
-  RefPtr<CompositableHost> mImageHost;
+  RefPtr<ImageHost> mImageHost;
 };
 
 } // namespace layers

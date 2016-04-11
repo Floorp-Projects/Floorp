@@ -1502,6 +1502,12 @@ public:
   }
 
   /**
+   * Return true if current layer content is opaque.
+   * It does not guarantee that layer content is always opaque.
+   */
+  virtual bool IsOpaque() { return GetContentFlags() & CONTENT_OPAQUE; }
+
+  /**
    * Returns the product of the opacities of this layer and all ancestors up
    * to and excluding the nearest ancestor that has UseIntermediateSurface() set.
    */

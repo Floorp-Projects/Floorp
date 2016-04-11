@@ -115,6 +115,8 @@ public:
     BIAS_POSITIVE,
   };
 
+  bool IsOpaque();
+
 protected:
   struct TimedImage {
     RefPtr<TextureHost> mTextureHost;
