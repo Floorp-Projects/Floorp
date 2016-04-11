@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIPresentationSessionTransport.h"
-#include "nsIPresentationSessionTransportBuilder.h"
 #include "nsIStreamListener.h"
 #include "nsISupportsImpl.h"
 #include "nsITransport.h"
@@ -39,31 +38,28 @@ namespace dom {
  * of Presentation API (without SSL) and should be migrated to DataChannel with
  * full support soon.
  */
-class PresentationTCPSessionTransport final : public nsIPresentationSessionTransport
-                                            , public nsIPresentationTCPSessionTransportBuilder
-                                            , public nsITransportEventSink
-                                            , public nsIInputStreamCallback
-                                            , public nsIStreamListener
+class PresentationSessionTransport final : public nsIPresentationSessionTransport
+                                         , public nsITransportEventSink
+                                         , public nsIInputStreamCallback
+                                         , public nsIStreamListener
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PresentationTCPSessionTransport,
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PresentationSessionTransport,
                                            nsIPresentationSessionTransport)
 
   NS_DECL_NSIPRESENTATIONSESSIONTRANSPORT
-  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDER
-  NS_DECL_NSIPRESENTATIONTCPSESSIONTRANSPORTBUILDER
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  PresentationTCPSessionTransport();
+  PresentationSessionTransport();
 
   void NotifyCopyComplete(nsresult aStatus);
 
 private:
-  ~PresentationTCPSessionTransport();
+  ~PresentationSessionTransport();
 
   nsresult CreateStream();
 
@@ -71,7 +67,7 @@ private:
 
   void EnsureCopying();
 
-  enum class ReadyState {
+  enum ReadyState {
     CONNECTING,
     OPEN,
     CLOSING,
@@ -82,15 +78,13 @@ private:
 
   bool IsReadyToNotifyData()
   {
-    return mDataNotificationEnabled && mReadyState == ReadyState::OPEN;
+    return mDataNotificationEnabled && mReadyState == OPEN;
   }
 
   ReadyState mReadyState;
   bool mAsyncCopierActive;
   nsresult mCloseStatus;
   bool mDataNotificationEnabled;
-
-  uint8_t mType = 0;
 
   // Raw socket streams
   nsCOMPtr<nsISocketTransport> mTransport;
@@ -106,7 +100,6 @@ private:
   nsCOMPtr<nsIAsyncStreamCopier> mMultiplexStreamCopier;
 
   nsCOMPtr<nsIPresentationSessionTransportCallback> mCallback;
-  nsCOMPtr<nsIPresentationSessionTransportBuilderListener> mListener;
 };
 
 } // namespace dom

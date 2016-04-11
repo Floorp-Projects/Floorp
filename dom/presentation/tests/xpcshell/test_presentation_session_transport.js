@@ -16,9 +16,6 @@ var testServer = null;
 var clientTransport = null;
 var serverTransport = null;
 
-var clientBuilder = null;
-var serverBuilder = null;
-
 const clientMessage = "Client Message";
 const serverMessage = "Server Message";
 
@@ -87,33 +84,6 @@ const serverCallback = {
   },
 };
 
-const clientListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
-  onSessionTransport(aTransport) {
-    Assert.ok(true, "Client Transport is built.");
-    clientTransport = aTransport;
-    clientTransport.callback = clientCallback;
-
-    if (serverTransport) {
-      run_next_test();
-    }
-  }
-}
-
-const serverListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
-  onSessionTransport(aTransport) {
-    Assert.ok(true, "Server Transport is built.");
-    serverTransport = aTransport;
-    serverTransport.callback = serverCallback;
-    serverTransport.enableDataNotification();
-
-    if (clientTransport) {
-      run_next_test();
-    }
-  }
-}
-
 function TestServer() {
   this.serverSocket = ServerSocket(-1, true, -1);
   this.serverSocket.asyncListen(this)
@@ -122,9 +92,10 @@ function TestServer() {
 TestServer.prototype = {
   onSocketAccepted: function(aSocket, aTransport) {
     print("Test server gets a client connection.");
-    serverBuilder = Cc["@mozilla.org/presentation/presentationtcpsessiontransport;1"]
-                      .createInstance(Ci.nsIPresentationTCPSessionTransportBuilder);
-    serverBuilder.buildTCPSenderTransport(aTransport, serverListener);
+    serverTransport = Cc["@mozilla.org/presentation/presentationsessiontransport;1"]
+                        .createInstance(Ci.nsIPresentationSessionTransport);
+    serverTransport.initWithSocketTransport(aTransport, serverCallback);
+    serverTransport.enableDataNotification();
   },
   onStopListening: function(aSocket) {
     print("Test server stops listening.");
@@ -140,9 +111,9 @@ TestServer.prototype = {
 // Set up the transport connection and ensure |notifyTransportReady| triggered
 // at both sides.
 function setup() {
-  clientBuilder = Cc["@mozilla.org/presentation/presentationtcpsessiontransport;1"]
-                    .createInstance(Ci.nsIPresentationTCPSessionTransportBuilder);
-  clientBuilder.buildTCPReceiverTransport(serverChannelDescription, clientListener);
+  clientTransport = Cc["@mozilla.org/presentation/presentationsessiontransport;1"]
+                      .createInstance(Ci.nsIPresentationSessionTransport);
+  clientTransport.initWithChannelDescription(serverChannelDescription, clientCallback);
 }
 
 // Test |selfAddress| attribute of |nsIPresentationSessionTransport|.
