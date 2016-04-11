@@ -460,10 +460,10 @@ PresentationService::StartSession(const nsAString& aUrl,
 
 NS_IMETHODIMP
 PresentationService::SendSessionMessage(const nsAString& aSessionId,
-                                        const nsAString& aData)
+                                        nsIInputStream* aStream)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!aData.IsEmpty());
+  MOZ_ASSERT(aStream);
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
   RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
@@ -471,7 +471,7 @@ PresentationService::SendSessionMessage(const nsAString& aSessionId,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return info->Send(aData);
+  return info->Send(aStream);
 }
 
 NS_IMETHODIMP

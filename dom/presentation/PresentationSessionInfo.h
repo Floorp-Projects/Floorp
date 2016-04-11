@@ -92,7 +92,7 @@ public:
     }
   }
 
-  nsresult Send(const nsAString& aData);
+  nsresult Send(nsIInputStream* aData);
 
   nsresult Close(nsresult aReason,
                  uint32_t aState);
