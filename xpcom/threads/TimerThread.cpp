@@ -139,7 +139,7 @@ class nsTimerEvent : public nsCancelableRunnable
 public:
   NS_IMETHOD Run() override;
 
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     // Since nsTimerImpl is not thread-safe, we should release |mTimer|
     // here in the target thread to avoid race condition. Otherwise,
