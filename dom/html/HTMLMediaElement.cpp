@@ -2774,7 +2774,7 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
   if (mDecoder) {
     // When the MediaElement is binding to tree, the dormant status is
     // aligned to document's hidden status.
-    mDecoder->NotifyOwnerActivityChanged();
+    mDecoder->NotifyOwnerActivityChanged(!IsHidden());
   }
 
   return rv;
@@ -2872,7 +2872,7 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
 
   if (mDecoder) {
     MOZ_ASSERT(IsHidden());
-    mDecoder->NotifyOwnerActivityChanged();
+    mDecoder->NotifyOwnerActivityChanged(false);
   }
 }
 
@@ -4532,10 +4532,8 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 bool
 HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
 {
-  nsIDocument* ownerDoc = OwnerDoc();
   if (mDecoder && !IsBeingDestroyed()) {
-    mDecoder->SetElementVisibility(!ownerDoc->Hidden());
-    mDecoder->NotifyOwnerActivityChanged();
+    mDecoder->NotifyOwnerActivityChanged(!IsHidden());
   }
 
   bool pauseElement = !IsActive();

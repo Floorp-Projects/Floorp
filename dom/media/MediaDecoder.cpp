@@ -287,13 +287,15 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 }
 
 void
-MediaDecoder::NotifyOwnerActivityChanged()
+MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mShuttingDown) {
     return;
   }
+
+  SetElementVisibility(aIsVisible);
 
   UpdateDormantState(false /* aDormantTimeout */, false /* aActivity */);
   // Start dormant timer if necessary
@@ -1363,6 +1365,13 @@ MediaDecoder::DurationChanged()
   if (CurrentPosition() > TimeUnit::FromSeconds(mDuration).ToMicroseconds()) {
     Seek(mDuration, SeekTarget::Accurate);
   }
+}
+
+void
+MediaDecoder::SetElementVisibility(bool aIsVisible)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mIsVisible = aIsVisible;
 }
 
 void
