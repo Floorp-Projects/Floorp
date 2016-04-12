@@ -74,8 +74,8 @@ public:
    * @param aDocument The new document for the content node.  May not be null
    *                  if aParent is null.  Must match the current document of
    *                  aParent, if aParent is not null (note that
-   *                  aParent->GetCurrentDoc() can be null, in which case this
-   *                  must also be null).
+   *                  aParent->GetUncomposedDoc() can be null, in which case
+   *                  this must also be null).
    * @param aParent The new parent for the content node.  May be null if the
    *                node is being bound as a direct child of the document.
    * @param aBindingParent The new binding parent for the content node.
@@ -229,7 +229,7 @@ public:
   bool IsInAnonymousSubtree() const
   {
     NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent() ||
-                 (!IsInDoc() &&
+                 (!IsInUncomposedDoc() &&
                   static_cast<nsIContent*>(SubtreeRoot())->IsInNativeAnonymousSubtree()),
                  "Must have binding parent when in native anonymous subtree which is in document.\n"
                  "Native anonymous subtree which is not in document must have native anonymous root.");
@@ -887,10 +887,10 @@ public:
    */
   nsIFrame* GetPrimaryFrame() const
   {
-    return (IsInDoc() || IsInShadowTree()) ? mPrimaryFrame : nullptr;
+    return (IsInUncomposedDoc() || IsInShadowTree()) ? mPrimaryFrame : nullptr;
   }
   void SetPrimaryFrame(nsIFrame* aFrame) {
-    MOZ_ASSERT(IsInDoc() || IsInShadowTree(), "This will end badly!");
+    MOZ_ASSERT(IsInUncomposedDoc() || IsInShadowTree(), "This will end badly!");
     NS_PRECONDITION(!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame,
                     "Losing track of existing primary frame");
     mPrimaryFrame = aFrame;

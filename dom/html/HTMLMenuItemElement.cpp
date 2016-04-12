@@ -386,7 +386,7 @@ HTMLMenuItemElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     if ((aName == nsGkAtoms::radiogroup || aName == nsGkAtoms::type) &&
         mType == CMD_TYPE_RADIO &&
         !mParserCreating) {
-      if (IsInDoc() && GetParent()) {
+      if (IsInUncomposedDoc() && GetParent()) {
         AddedToRadioGroup();
       }
     }

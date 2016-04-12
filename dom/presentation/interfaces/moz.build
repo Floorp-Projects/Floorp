@@ -15,6 +15,7 @@ XPIDL_SOURCES += [
     'nsIPresentationService.idl',
     'nsIPresentationSessionRequest.idl',
     'nsIPresentationSessionTransport.idl',
+    'nsIPresentationSessionTransportBuilder.idl',
     'nsITCPPresentationServer.idl',
 ]
 

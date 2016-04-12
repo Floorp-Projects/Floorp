@@ -183,9 +183,9 @@ ContentEventHandler::InitCommon()
   NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
 
   // See bug 537041 comment 5, the range could have removed node.
-  NS_ENSURE_TRUE(startNode->GetCurrentDoc() == mPresShell->GetDocument(),
+  NS_ENSURE_TRUE(startNode->GetUncomposedDoc() == mPresShell->GetDocument(),
                  NS_ERROR_NOT_AVAILABLE);
-  NS_ASSERTION(startNode->GetCurrentDoc() == endNode->GetCurrentDoc(),
+  NS_ASSERTION(startNode->GetUncomposedDoc() == endNode->GetUncomposedDoc(),
                "mFirstSelectedRange crosses the document boundary");
 
   mRootContent = startNode->GetSelectionRootContent(mPresShell);

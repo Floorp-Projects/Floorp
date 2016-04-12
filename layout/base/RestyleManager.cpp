@@ -1132,6 +1132,8 @@ RestyleManager::AnimationsWithDestroyedFrame::StopAnimationsWithoutFrame(
 {
   nsAnimationManager* animationManager =
     mRestyleManager->PresContext()->AnimationManager();
+  nsTransitionManager* transitionManager =
+    mRestyleManager->PresContext()->TransitionManager();
   for (nsIContent* content : aArray) {
     if (content->GetPrimaryFrame()) {
       continue;
@@ -1139,6 +1141,7 @@ RestyleManager::AnimationsWithDestroyedFrame::StopAnimationsWithoutFrame(
     dom::Element* element = content->AsElement();
 
     animationManager->StopAnimationsForElement(element, aPseudoType);
+    transitionManager->StopTransitionsForElement(element, aPseudoType);
   }
 }
 
@@ -2788,7 +2791,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
               RestyleManager::ChangeHintToString(mHintsNotHandledForDescendants).get());
 }
 
-class MOZ_STACK_CLASS AutoSelectorArrayTruncater final
+class MOZ_RAII AutoSelectorArrayTruncater final
 {
 public:
   explicit AutoSelectorArrayTruncater(

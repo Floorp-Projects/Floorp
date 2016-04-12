@@ -132,7 +132,7 @@ nsSMILMappedAttribute::FlushChangesToTargetAttr() const
   // Clear animated content-style-rule
   mElement->DeleteProperty(SMIL_MAPPED_ATTR_ANIMVAL,
                            SMIL_MAPPED_ATTR_STYLERULE_ATOM);
-  nsIDocument* doc = mElement->GetCurrentDoc();
+  nsIDocument* doc = mElement->GetUncomposedDoc();
 
   // Request animation restyle
   if (doc) {

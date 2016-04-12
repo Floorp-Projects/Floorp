@@ -48,9 +48,3 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 
 export:: private_export
-
-test: $(OBJDIR)/test_utf8
-
-$(OBJDIR)/test_utf8: utf8.c
-	@$(MAKE_OBJDIR)
-	$(CCF) -o $(OBJDIR)/test_utf8 -DTEST_UTF8 utf8.c $(OS_LIBS)

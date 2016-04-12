@@ -9,16 +9,15 @@ import unittest
 from mozfile.mozfile import NamedTemporaryFile
 
 from mach.config import (
-    AbsolutePathType,
     BooleanType,
-    ConfigProvider,
+    ConfigException,
     ConfigSettings,
     IntegerType,
     PathType,
     PositiveIntegerType,
-    RelativePathType,
     StringType,
 )
+from mach.decorators import SettingsProvider
 
 from mozunit import main
 
@@ -41,48 +40,61 @@ CONFIG2 = r"""
 bar = value2
 """
 
-class Provider1(ConfigProvider):
+@SettingsProvider
+class Provider1(object):
+    config_settings = [
+        ('foo.bar', StringType),
+        ('foo.baz', PathType),
+    ]
+
+
+@SettingsProvider
+class ProviderDuplicate(object):
+    config_settings = [
+        ('dupesect.foo', StringType),
+        ('dupesect.foo', StringType),
+    ]
+
+
+@SettingsProvider
+class Provider2(object):
+    config_settings = [
+        ('a.string', StringType),
+        ('a.boolean', BooleanType),
+        ('a.pos_int', PositiveIntegerType),
+        ('a.int', IntegerType),
+        ('a.path', PathType),
+    ]
+
+
+@SettingsProvider
+class Provider3(object):
     @classmethod
-    def _register_settings(cls):
-        cls.register_setting('foo', 'bar', StringType)
-        cls.register_setting('foo', 'baz', AbsolutePathType)
-
-Provider1.register_settings()
-
-class ProviderDuplicate(ConfigProvider):
-    @classmethod
-    def _register_settings(cls):
-        cls.register_setting('dupesect', 'foo', StringType)
-        cls.register_setting('dupesect', 'foo', StringType)
-
-class TestConfigProvider(unittest.TestCase):
-    def test_construct(self):
-        s = Provider1.config_settings
-
-        self.assertEqual(len(s), 1)
-        self.assertIn('foo', s)
-
-        self.assertEqual(len(s['foo']), 2)
-        self.assertIn('bar', s['foo'])
-        self.assertIn('baz', s['foo'])
-
-    def test_duplicate_option(self):
-        with self.assertRaises(Exception):
-            ProviderDuplicate.register_settings()
+    def config_settings(cls):
+        return [
+            ('a.string', 'string'),
+            ('a.boolean', 'boolean'),
+            ('a.pos_int', 'pos_int'),
+            ('a.int', 'int'),
+            ('a.path', 'path'),
+        ]
 
 
-class Provider2(ConfigProvider):
-    @classmethod
-    def _register_settings(cls):
-        cls.register_setting('a', 'string', StringType)
-        cls.register_setting('a', 'boolean', BooleanType)
-        cls.register_setting('a', 'pos_int', PositiveIntegerType)
-        cls.register_setting('a', 'int', IntegerType)
-        cls.register_setting('a', 'abs_path', AbsolutePathType)
-        cls.register_setting('a', 'rel_path', RelativePathType)
-        cls.register_setting('a', 'path', PathType)
+@SettingsProvider
+class Provider4(object):
+    config_settings = [
+        ('foo.abc', StringType, 'a', {'choices': set('abc')}),
+        ('foo.xyz', StringType, 'w', {'choices': set('xyz')}),
+    ]
 
-Provider2.register_settings()
+
+@SettingsProvider
+class Provider5(object):
+    config_settings = [
+        ('foo.*', 'string'),
+        ('foo.bar', 'string'),
+    ]
+
 
 class TestConfigSettings(unittest.TestCase):
     def test_empty(self):
@@ -90,6 +102,12 @@ class TestConfigSettings(unittest.TestCase):
 
         self.assertEqual(len(s), 0)
         self.assertNotIn('foo', s)
+
+    def test_duplicate_option(self):
+        s = ConfigSettings()
+
+        with self.assertRaises(ConfigException):
+            s.register_provider(ProviderDuplicate)
 
     def test_simple(self):
         s = ConfigSettings()
@@ -101,14 +119,18 @@ class TestConfigSettings(unittest.TestCase):
         foo = s['foo']
         foo = s.foo
 
-        self.assertEqual(len(foo), 2)
+        self.assertEqual(len(foo), 0)
+        self.assertEqual(len(foo._settings), 2)
 
-        self.assertIn('bar', foo)
-        self.assertIn('baz', foo)
+        self.assertIn('bar', foo._settings)
+        self.assertIn('baz', foo._settings)
 
+        self.assertNotIn('bar', foo)
         foo['bar'] = 'value1'
+        self.assertIn('bar', foo)
+
         self.assertEqual(foo['bar'], 'value1')
-        self.assertEqual(foo['bar'], 'value1')
+        self.assertEqual(foo.bar, 'value1')
 
     def test_assignment_validation(self):
         s = ConfigSettings()
@@ -117,7 +139,7 @@ class TestConfigSettings(unittest.TestCase):
         a = s.a
 
         # Assigning an undeclared setting raises.
-        with self.assertRaises(KeyError):
+        with self.assertRaises(AttributeError):
             a.undefined = True
 
         with self.assertRaises(KeyError):
@@ -155,26 +177,14 @@ class TestConfigSettings(unittest.TestCase):
         with self.assertRaises(TypeError):
             a.int = 'foo'
 
-        a.abs_path = '/home/gps'
-
-        with self.assertRaises(ValueError):
-            a.abs_path = 'home/gps'
-
-        a.rel_path = 'home/gps'
-        a.rel_path = './foo/bar'
-        a.rel_path = 'foo.c'
-
-        with self.assertRaises(ValueError):
-            a.rel_path = '/foo/bar'
-
         a.path = '/home/gps'
         a.path = 'foo.c'
         a.path = 'foo/bar'
         a.path = './foo'
 
-    def test_retrieval_type(self):
+    def retrieval_type_helper(self, provider):
         s = ConfigSettings()
-        s.register_provider(Provider2)
+        s.register_provider(provider)
 
         a = s.a
 
@@ -182,17 +192,50 @@ class TestConfigSettings(unittest.TestCase):
         a.boolean = True
         a.pos_int = 12
         a.int = -4
-        a.abs_path = '/home/gps'
-        a.rel_path = 'foo.c'
         a.path = './foo/bar'
 
         self.assertIsInstance(a.string, str_type)
         self.assertIsInstance(a.boolean, bool)
         self.assertIsInstance(a.pos_int, int)
         self.assertIsInstance(a.int, int)
-        self.assertIsInstance(a.abs_path, str_type)
-        self.assertIsInstance(a.rel_path, str_type)
         self.assertIsInstance(a.path, str_type)
+
+    def test_retrieval_type(self):
+        self.retrieval_type_helper(Provider2)
+        self.retrieval_type_helper(Provider3)
+
+    def test_choices_validation(self):
+        s = ConfigSettings()
+        s.register_provider(Provider4)
+
+        foo = s.foo
+        foo.abc
+        with self.assertRaises(ValueError):
+            foo.xyz
+
+        with self.assertRaises(ValueError):
+            foo.abc = 'e'
+
+        foo.abc = 'b'
+        foo.xyz = 'y'
+
+    def test_wildcard_options(self):
+        s = ConfigSettings()
+        s.register_provider(Provider5)
+
+        foo = s.foo
+
+        self.assertIn('*', foo._settings)
+        self.assertNotIn('*', foo)
+
+        foo.baz = 'value1'
+        foo.bar = 'value2'
+
+        self.assertIn('baz', foo)
+        self.assertEqual(foo.baz, 'value1')
+
+        self.assertIn('bar', foo)
+        self.assertEqual(foo.bar, 'value2')
 
     def test_file_reading_single(self):
         temp = NamedTemporaryFile(mode='wt')
@@ -248,16 +291,6 @@ class TestConfigSettings(unittest.TestCase):
 
         self.assertEqual(s.a.string, s2.a.string)
         self.assertEqual(s.a.boolean, s2.a.boolean)
-
-    def test_write_pot(self):
-        s = ConfigSettings()
-        s.register_provider(Provider1)
-        s.register_provider(Provider2)
-
-        # Just a basic sanity test.
-        temp = NamedTemporaryFile('wt')
-        s.write_pot(temp)
-        temp.flush()
 
 
 if __name__ == '__main__':

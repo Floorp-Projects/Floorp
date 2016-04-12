@@ -62,6 +62,7 @@ struct AESContextStr
     freeblDestroyFunc destroy;
     void	      *worker_cx;
     PRBool	      isBlock;
+    int           mode;
 };
 
 #endif /* _RIJNDAEL_H_ */

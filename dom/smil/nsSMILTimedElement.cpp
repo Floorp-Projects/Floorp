@@ -100,7 +100,7 @@ namespace
       event.mDetail = mDetail;
 
       nsPresContext* context = nullptr;
-      nsIDocument* doc = mTarget->GetCurrentDoc();
+      nsIDocument* doc = mTarget->GetUncomposedDoc();
       if (doc) {
         nsCOMPtr<nsIPresShell> shell = doc->GetShell();
         if (shell) {

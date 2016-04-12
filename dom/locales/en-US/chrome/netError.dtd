@@ -19,6 +19,9 @@
 <!ENTITY fileNotFound.title "File Not Found">
 <!ENTITY fileNotFound.longDesc "<ul><li>Could the item have been renamed, removed, or relocated?</li><li>Is there a spelling, capitalization, or other typographical error in the address?</li><li>Do you have sufficient access permissions to the requested item?</li></ul>">
 
+<!ENTITY fileAccessDenied.title "Access to the file was denied">
+<!ENTITY fileAccessDenied.longDesc "<ul><li>It may have been removed, moved, or file permissions may be preventing access.</li></ul>">
+
 <!ENTITY generic.title "Cannot Complete Request">
 <!ENTITY generic.longDesc "<p>Additional information about this problem or error is currently unavailable.</p>">
 

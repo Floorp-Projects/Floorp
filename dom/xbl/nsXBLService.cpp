@@ -113,7 +113,7 @@ public:
   {
     // We only need the document here to cause frame construction, so
     // we need the current doc, not the owner doc.
-    nsIDocument* doc = mBoundElement->GetCurrentDoc();
+    nsIDocument* doc = mBoundElement->GetUncomposedDoc();
     if (!doc)
       return;
 
@@ -318,7 +318,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
     // ready.
     if (count > 0) {
       nsXBLBindingRequest* req = mBindingRequests.ElementAt(0);
-      nsIDocument* document = req->mBoundElement->GetCurrentDoc();
+      nsIDocument* document = req->mBoundElement->GetUncomposedDoc();
       if (document)
         document->FlushPendingNotifications(Flush_ContentAndNotify);
     }
@@ -536,7 +536,7 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (contentNode) {
     // Only attach if we're really in a document
-    nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
+    nsCOMPtr<nsIDocument> doc = contentNode->GetUncomposedDoc();
     if (doc)
       piTarget = doc; // We're a XUL keyset. Attach to our document.
   }
@@ -582,7 +582,7 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
     return NS_ERROR_FAILURE;
 
   // Only attach if we're really in a document
-  nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = contentNode->GetUncomposedDoc();
   if (doc)
     piTarget = do_QueryInterface(doc);
 

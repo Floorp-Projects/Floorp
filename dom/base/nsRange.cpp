@@ -2927,14 +2927,14 @@ nsRange::CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
   nsCOMPtr<nsINode> endContainer = aEndParent;
 
   // Flush out layout so our frames are up to date.
-  if (!aStartParent->IsInDoc()) {
+  if (!aStartParent->IsInUncomposedDoc()) {
     return;
   }
 
   if (aFlushLayout) {
     aStartParent->OwnerDoc()->FlushPendingNotifications(Flush_Layout);
     // Recheck whether we're still in the document
-    if (!aStartParent->IsInDoc()) {
+    if (!aStartParent->IsInUncomposedDoc()) {
       return;
     }
   }
@@ -3062,7 +3062,7 @@ nsRange::GetUsedFontFaces(nsIDOMFontFaceList** aResult)
   doc->FlushPendingNotifications(Flush_Frames);
 
   // Recheck whether we're still in the document
-  NS_ENSURE_TRUE(mStartParent->IsInDoc(), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(mStartParent->IsInUncomposedDoc(), NS_ERROR_UNEXPECTED);
 
   RefPtr<nsFontFaceList> fontFaceList = new nsFontFaceList();
 

@@ -72,7 +72,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
   NS_PRECONDITION((aRestyleHint & eRestyle_LaterSiblings) == 0,
                   "Someone should have handled this before calling us");
   NS_PRECONDITION(Document(), "Must have a document");
-  NS_PRECONDITION(aElement->GetCrossShadowCurrentDoc() == Document(),
+  NS_PRECONDITION(aElement->GetComposedDoc() == Document(),
                   "Element has unexpected document");
 
   LOG_RESTYLE("aRestyleHint = %s, aChangeHint = %s",
@@ -123,8 +123,8 @@ RestyleTracker::DoProcessRestyles()
   bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
-  // stop animations on elements that have no frame at the end of the
-  // restyling process.
+  // stop animations and transitions on elements that have no frame at the end
+  // of the restyling process.
   RestyleManager::AnimationsWithDestroyedFrame
     animationsWithDestroyedFrame(mRestyleManager);
 
@@ -172,7 +172,7 @@ RestyleTracker::DoProcessRestyles()
           // haven't, for example, already been restyled).
           // It's important to not mess with the flags on entries not in our
           // document.
-          if (element->GetCrossShadowCurrentDoc() == Document() &&
+          if (element->GetComposedDoc() == Document() &&
               element->HasFlag(RestyleBit()) &&
               (iter.Data()->mRestyleHint & eRestyle_LaterSiblings)) {
             laterSiblingArr.AppendElement(element);
@@ -234,7 +234,7 @@ RestyleTracker::DoProcessRestyles()
         // Do the document check before calling GetRestyleData, since we
         // don't want to do the sibling-processing GetRestyleData does if
         // the node is no longer relevant.
-        if (element->GetCrossShadowCurrentDoc() != Document()) {
+        if (element->GetComposedDoc() != Document()) {
           // Content node has been removed from our document; nothing else
           // to do here
           LOG_RESTYLE("skipping, no longer in the document");
@@ -296,7 +296,7 @@ RestyleTracker::DoProcessRestyles()
           // haven't, for example, already been restyled).
           // It's important to not mess with the flags on entries not in our
           // document.
-          if (element->GetCrossShadowCurrentDoc() != Document() ||
+          if (element->GetComposedDoc() != Document() ||
               !element->HasFlag(RestyleBit())) {
             LOG_RESTYLE("skipping pending restyle %s, already restyled or no "
                         "longer in the document",
@@ -310,7 +310,7 @@ RestyleTracker::DoProcessRestyles()
             (element->GetFlattenedTreeParent() &&
              (!element->GetFlattenedTreeParent()->GetPrimaryFrame() ||
               element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf() ||
-              element->GetCrossShadowCurrentDoc()->GetShell()->FrameManager()
+              element->GetComposedDoc()->GetShell()->FrameManager()
                 ->GetDisplayContentsStyleFor(element))) ||
             // Or not reachable due to an async reinsert we have
             // pending?  If so, we'll have a reframe hint around.
@@ -397,7 +397,7 @@ RestyleTracker::DoProcessRestyles()
 bool
 RestyleTracker::GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData)
 {
-  NS_PRECONDITION(aElement->GetCrossShadowCurrentDoc() == Document(),
+  NS_PRECONDITION(aElement->GetComposedDoc() == Document(),
                   "Unexpected document; this will lead to incorrect behavior!");
 
   if (!aElement->HasFlag(RestyleBit())) {

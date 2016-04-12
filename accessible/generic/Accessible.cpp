@@ -94,8 +94,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible: nsISupports and cycle collection
 
-NS_IMPL_CYCLE_COLLECTION(Accessible,
-                         mContent, mParent, mChildren)
+NS_IMPL_CYCLE_COLLECTION(Accessible, mContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Accessible)
   if (aIID.Equals(NS_GET_IID(Accessible)))
@@ -278,7 +277,7 @@ Accessible::AccessKey() const
   }
 
   // Determine the access modifier used in this context.
-  nsIDocument* document = mContent->GetCurrentDoc();
+  nsIDocument* document = mContent->GetUncomposedDoc();
   if (!document)
     return KeyBinding();
 
@@ -1970,7 +1969,7 @@ Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
 #ifdef A11Y_LOG
   if (mParent) {
     logging::TreeInfo("BindToParent: stealing accessible", 0,
-                      "old parent", mParent.get(),
+                      "old parent", mParent,
                       "new parent", aParent,
                       "child", this, nullptr);
   }

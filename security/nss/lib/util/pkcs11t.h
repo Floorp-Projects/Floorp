@@ -829,6 +829,7 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_TLS12_KEY_AND_MAC_DERIVE        0x000003E1
 #define CKM_TLS12_MASTER_KEY_DERIVE_DH      0x000003E2
 #define CKM_TLS12_KEY_SAFE_DERIVE           0x000003E3
+#define CKM_TLS12_MAC                       0x000003E4
 #define CKM_TLS_MAC                         0x000003E4
 #define CKM_TLS_KDF                         0x000003E5
 

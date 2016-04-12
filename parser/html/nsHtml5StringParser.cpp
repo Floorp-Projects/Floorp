@@ -49,7 +49,7 @@ nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
 
 #ifdef DEBUG
   if (!aPreventScriptExecution) {
-    NS_ASSERTION(!aTargetNode->IsInDoc(),
+    NS_ASSERTION(!aTargetNode->IsInUncomposedDoc(),
                  "If script execution isn't prevented, "
                  "the target node must not be in doc.");
     nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);

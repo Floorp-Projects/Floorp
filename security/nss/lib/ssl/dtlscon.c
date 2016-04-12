@@ -15,8 +15,10 @@
 #endif
 
 static SECStatus dtls_TransmitMessageFlight(sslSocket *ss);
+static SECStatus dtls_StartRetransmitTimer(sslSocket *ss);
 static void dtls_RetransmitTimerExpiredCb(sslSocket *ss);
 static SECStatus dtls_SendSavedWriteData(sslSocket *ss);
+static void dtls_FinishedTimerCb(sslSocket *ss);
 
 /* -28 adjusts for the IP/UDP header */
 static const PRUint16 COMMON_MTU_VALUES[] = {
@@ -119,7 +121,7 @@ ssl3_DisableNonDTLSSuites(sslSocket *ss)
  * Called from dtls_QueueMessage()
  */
 static DTLSQueuedMessage *
-dtls_AllocQueuedMessage(PRUint16 epoch, SSL3ContentType type,
+dtls_AllocQueuedMessage(ssl3CipherSpec *cwSpec, SSL3ContentType type,
                         const unsigned char *data, PRUint32 len)
 {
     DTLSQueuedMessage *msg = NULL;
@@ -136,8 +138,11 @@ dtls_AllocQueuedMessage(PRUint16 epoch, SSL3ContentType type,
     PORT_Memcpy(msg->data, data, len);
 
     msg->len = len;
-    msg->epoch = epoch;
+    msg->cwSpec = cwSpec;
     msg->type = type;
+    /* Safe if we are < 1.3, since the refct is
+     * already very high. */
+    tls13_CipherSpecAddRef(cwSpec);
 
     return msg;
 }
@@ -147,12 +152,15 @@ dtls_AllocQueuedMessage(PRUint16 epoch, SSL3ContentType type,
  *
  * Called from dtls_FreeHandshakeMessages()
  */
-static void
+void
 dtls_FreeHandshakeMessage(DTLSQueuedMessage *msg)
 {
     if (!msg)
         return;
 
+    /* Safe if we are < 1.3, since the refct is
+     * already very high. */
+    tls13_CipherSpecRelease(msg->cwSpec);
     PORT_ZFree(msg->data, msg->len);
     PORT_Free(msg);
 }
@@ -174,6 +182,62 @@ dtls_FreeHandshakeMessages(PRCList *list)
         PR_REMOVE_LINK(cur_p);
         dtls_FreeHandshakeMessage((DTLSQueuedMessage *)cur_p);
     }
+}
+
+/* Called by dtls_HandleHandshake() and dtls_MaybeRetransmitHandshake() if a
+ * handshake message retransmission is detected. */
+static SECStatus
+dtls_RetransmitDetected(sslSocket *ss)
+{
+    SECStatus rv = SECSuccess;
+
+    PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
+    PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
+
+    if (ss->ssl3.hs.rtTimerCb == dtls_RetransmitTimerExpiredCb) {
+        /* Check to see if we retransmitted recently. If so,
+         * suppress the triggered retransmit. This avoids
+         * retransmit wars after packet loss.
+         * This is not in RFC 5346 but it should be.
+         */
+        if ((PR_IntervalNow() - ss->ssl3.hs.rtTimerStarted) >
+            (ss->ssl3.hs.rtTimeoutMs / 4)) {
+            SSL_TRC(30,
+                    ("%d: SSL3[%d]: Shortcutting retransmit timer",
+                     SSL_GETPID(), ss->fd));
+
+            /* Cancel the timer and call the CB,
+             * which re-arms the timer */
+            dtls_CancelTimer(ss);
+            dtls_RetransmitTimerExpiredCb(ss);
+        } else {
+            SSL_TRC(30,
+                    ("%d: SSL3[%d]: Ignoring retransmission: "
+                     "last retransmission %dms ago, suppressed for %dms",
+                     SSL_GETPID(), ss->fd,
+                     PR_IntervalNow() - ss->ssl3.hs.rtTimerStarted,
+                     ss->ssl3.hs.rtTimeoutMs / 4));
+        }
+
+    } else if (ss->ssl3.hs.rtTimerCb == dtls_FinishedTimerCb) {
+        SSL_TRC(30, ("%d: SSL3[%d]: Retransmit detected in holddown",
+                     SSL_GETPID(), ss->fd));
+        /* Retransmit the messages and re-arm the timer
+         * Note that we are not backing off the timer here.
+         * The spec isn't clear and my reasoning is that this
+         * may be a re-ordered packet rather than slowness,
+         * so let's be aggressive. */
+        dtls_CancelTimer(ss);
+        rv = dtls_TransmitMessageFlight(ss);
+        if (rv == SECSuccess) {
+            rv = dtls_StartHolddownTimer(ss);
+        }
+
+    } else {
+        PORT_Assert(ss->ssl3.hs.rtTimerCb == NULL);
+        /* ... and ignore it. */
+    }
+    return rv;
 }
 
 /* Called only from ssl3_HandleRecord, for each (deciphered) DTLS record.
@@ -279,7 +343,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
             /* Reset the timer to the initial value if the retry counter
              * is 0, per Sec. 4.2.4.1 */
             if (ss->ssl3.hs.rtRetries == 0) {
-                ss->ssl3.hs.rtTimeoutMs = INITIAL_DTLS_TIMEOUT_MS;
+                ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_INITIAL_MS;
             }
 
             rv = ssl3_HandleHandshakeMessage(ss, buf.buf, ss->ssl3.hs.msg_len);
@@ -290,53 +354,11 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
         } else {
             if (message_seq < ss->ssl3.hs.recvMessageSeq) {
                 /* Case 3: we do an immediate retransmit if we're
-                 * in a waiting state*/
-                if (ss->ssl3.hs.rtTimerCb == NULL) {
-                    /* Ignore */
-                } else if (ss->ssl3.hs.rtTimerCb ==
-                           dtls_RetransmitTimerExpiredCb) {
-                    SSL_TRC(30, ("%d: SSL3[%d]: Retransmit detected",
-                                 SSL_GETPID(), ss->fd));
-                    /* Check to see if we retransmitted recently. If so,
-                     * suppress the triggered retransmit. This avoids
-                     * retransmit wars after packet loss.
-                     * This is not in RFC 5346 but should be
-                     */
-                    if ((PR_IntervalNow() - ss->ssl3.hs.rtTimerStarted) >
-                        (ss->ssl3.hs.rtTimeoutMs / 4)) {
-                        SSL_TRC(30,
-                                ("%d: SSL3[%d]: Shortcutting retransmit timer",
-                                 SSL_GETPID(), ss->fd));
-
-                        /* Cancel the timer and call the CB,
-                         * which re-arms the timer */
-                        dtls_CancelTimer(ss);
-                        dtls_RetransmitTimerExpiredCb(ss);
-                        rv = SECSuccess;
-                        break;
-                    } else {
-                        SSL_TRC(30,
-                                ("%d: SSL3[%d]: We just retransmitted. Ignoring.",
-                                 SSL_GETPID(), ss->fd));
-                        rv = SECSuccess;
-                        break;
-                    }
-                } else if (ss->ssl3.hs.rtTimerCb == dtls_FinishedTimerCb) {
-                    /* Retransmit the messages and re-arm the timer
-                     * Note that we are not backing off the timer here.
-                     * The spec isn't clear and my reasoning is that this
-                     * may be a re-ordered packet rather than slowness,
-                     * so let's be aggressive. */
-                    dtls_CancelTimer(ss);
-                    rv = dtls_TransmitMessageFlight(ss);
-                    if (rv == SECSuccess) {
-                        rv = dtls_StartTimer(ss, dtls_FinishedTimerCb);
-                    }
-                    if (rv != SECSuccess)
-                        return rv;
-                    break;
-                }
-            } else if (message_seq > ss->ssl3.hs.recvMessageSeq) {
+                 * in a waiting state. */
+                rv = dtls_RetransmitDetected(ss);
+                break;
+            }
+            else if (message_seq > ss->ssl3.hs.recvMessageSeq) {
                 /* Case 2
                  *
                  * Ignore this message. This means we don't handle out of
@@ -445,7 +467,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                     /* If there have been no retries this time, reset the
                      * timer value to the default per Section 4.2.4.1 */
                     if (ss->ssl3.hs.rtRetries == 0) {
-                        ss->ssl3.hs.rtTimeoutMs = INITIAL_DTLS_TIMEOUT_MS;
+                        ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_INITIAL_MS;
                     }
                 }
             }
@@ -474,11 +496,13 @@ dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
 {
     SECStatus rv = SECSuccess;
     DTLSQueuedMessage *msg = NULL;
+    ssl3CipherSpec *spec;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
-    msg = dtls_AllocQueuedMessage(ss->ssl3.cwSpec->epoch, type, pIn, nIn);
+    spec = ss->ssl3.cwSpec;
+    msg = dtls_AllocQueuedMessage(spec, type, pIn, nIn);
 
     if (!msg) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
@@ -540,12 +564,12 @@ dtls_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
 
     if (!(flags & ssl_SEND_FLAG_FORCE_INTO_BUFFER)) {
         rv = dtls_TransmitMessageFlight(ss);
-        if (rv != SECSuccess)
+        if (rv != SECSuccess) {
             return rv;
+        }
 
         if (!(flags & ssl_SEND_FLAG_NO_RETRANSMIT)) {
-            ss->ssl3.hs.rtRetries = 0;
-            rv = dtls_StartTimer(ss, dtls_RetransmitTimerExpiredCb);
+            rv = dtls_StartRetransmitTimer(ss);
         }
     }
 
@@ -561,7 +585,7 @@ dtls_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags)
 static void
 dtls_RetransmitTimerExpiredCb(sslSocket *ss)
 {
-    SECStatus rv = SECFailure;
+    SECStatus rv;
 
     ss->ssl3.hs.rtRetries++;
 
@@ -574,15 +598,22 @@ dtls_RetransmitTimerExpiredCb(sslSocket *ss)
 
     rv = dtls_TransmitMessageFlight(ss);
     if (rv == SECSuccess) {
-
         /* Re-arm the timer */
-        rv = dtls_RestartTimer(ss, PR_TRUE, dtls_RetransmitTimerExpiredCb);
-    }
+        ss->ssl3.hs.rtTimeoutMs *= 2;
+        if (ss->ssl3.hs.rtTimeoutMs > DTLS_RETRANSMIT_MAX_MS) {
+            ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_MAX_MS;
+        }
 
-    if (rv == SECFailure) {
-        /* XXX OK for now. In future maybe signal the stack that we couldn't
-         * transmit. For now, let the read handle any real network errors */
+        ss->ssl3.hs.rtTimerStarted = PR_IntervalNow();
+        ss->ssl3.hs.rtTimerCb = dtls_RetransmitTimerExpiredCb;
+
+        SSL_TRC(30,
+                ("%d: SSL3[%d]: Retransmit #%d, next in %d",
+                 SSL_GETPID(), ss->fd,
+                 ss->ssl3.hs.rtRetries, ss->ssl3.hs.rtTimeoutMs));
     }
+    /* else: OK for now. In future maybe signal the stack that we couldn't
+     * transmit. For now, let the read handle any real network errors */
 }
 
 /* Transmit a flight of handshake messages, stuffing them
@@ -637,10 +668,9 @@ dtls_TransmitMessageFlight(sslSocket *ss)
         if ((msg->len + SSL3_BUFFER_FUDGE) <= room_left) {
             /* The message will fit, so encrypt and then continue with the
              * next packet */
-            sent = ssl3_SendRecord(ss, msg->epoch, msg->type,
+            sent = ssl3_SendRecord(ss, msg->cwSpec, msg->type,
                                    msg->data, msg->len,
-                                   ssl_SEND_FLAG_FORCE_INTO_BUFFER |
-                                       ssl_SEND_FLAG_USE_EPOCH);
+                                   ssl_SEND_FLAG_FORCE_INTO_BUFFER);
             if (sent != msg->len) {
                 rv = SECFailure;
                 if (sent != -1) {
@@ -714,10 +744,9 @@ dtls_TransmitMessageFlight(sslSocket *ss)
                  *  Send the record. We do this in two stages
                  * 1. Encrypt
                  */
-                sent = ssl3_SendRecord(ss, msg->epoch, msg->type,
+                sent = ssl3_SendRecord(ss, msg->cwSpec, msg->type,
                                        fragment, fragment_len + 12,
-                                       ssl_SEND_FLAG_FORCE_INTO_BUFFER |
-                                           ssl_SEND_FLAG_USE_EPOCH);
+                                       ssl_SEND_FLAG_FORCE_INTO_BUFFER);
                 if (sent != (fragment_len + 12)) {
                     rv = SECFailure;
                     if (sent != -1) {
@@ -786,15 +815,13 @@ dtls_SendSavedWriteData(sslSocket *ss)
  */
 SECStatus
 dtls_CompressMACEncryptRecord(sslSocket *ss,
-                              DTLSEpoch epoch,
-                              PRBool use_epoch,
+                              ssl3CipherSpec *cwSpec,
                               SSL3ContentType type,
                               const SSL3Opaque *pIn,
                               PRUint32 contentLen,
                               sslBuffer *wrBuf)
 {
     SECStatus rv = SECFailure;
-    ssl3CipherSpec *cwSpec;
 
     ssl_GetSpecReadLock(ss); /********************************/
 
@@ -808,66 +835,51 @@ dtls_CompressMACEncryptRecord(sslSocket *ss,
      * Thus, each record needs a different cipher spec. The information
      * about which epoch to use is carried with the record.
      */
-    if (use_epoch) {
-        if (ss->ssl3.cwSpec->epoch == epoch)
-            cwSpec = ss->ssl3.cwSpec;
-        else if (ss->ssl3.pwSpec->epoch == epoch)
-            cwSpec = ss->ssl3.pwSpec;
-        else
-            cwSpec = NULL;
-    } else {
+    if (!cwSpec) {
         cwSpec = ss->ssl3.cwSpec;
+    } else {
+        PORT_Assert(type == content_handshake ||
+                    type == content_change_cipher_spec);
     }
 
-    if (cwSpec) {
-        if (ss->ssl3.cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-            rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
-                                               PR_FALSE, type, pIn, contentLen,
-                                               wrBuf);
-        } else {
-            rv = tls13_ProtectRecord(ss, type, pIn, contentLen, wrBuf);
-        }
+    if (cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
+                                           PR_FALSE, type, pIn, contentLen,
+                                           wrBuf);
     } else {
-        PR_NOT_REACHED("Couldn't find a cipher spec matching epoch");
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        rv = tls13_ProtectRecord(ss, cwSpec, type, pIn, contentLen, wrBuf);
     }
     ssl_ReleaseSpecReadLock(ss); /************************************/
 
     return rv;
 }
 
-/* Start a timer
- *
- * Called from:
- *             dtls_HandleHandshake()
- *             dtls_FlushHAndshake()
- *             dtls_RestartTimer()
- */
-SECStatus
-dtls_StartTimer(sslSocket *ss, DTLSTimerCb cb)
+static SECStatus
+dtls_StartTimer(sslSocket *ss, PRUint32 time, DTLSTimerCb cb)
 {
     PORT_Assert(ss->ssl3.hs.rtTimerCb == NULL);
 
+    ss->ssl3.hs.rtRetries = 0;
     ss->ssl3.hs.rtTimerStarted = PR_IntervalNow();
+    ss->ssl3.hs.rtTimeoutMs = time;
     ss->ssl3.hs.rtTimerCb = cb;
-
     return SECSuccess;
 }
 
-/* Restart a timer with optional backoff
- *
- * Called from dtls_RetransmitTimerExpiredCb()
- */
-SECStatus
-dtls_RestartTimer(sslSocket *ss, PRBool backoff, DTLSTimerCb cb)
+/* Start a timer for retransmission. */
+static SECStatus
+dtls_StartRetransmitTimer(sslSocket *ss)
 {
-    if (backoff) {
-        ss->ssl3.hs.rtTimeoutMs *= 2;
-        if (ss->ssl3.hs.rtTimeoutMs > MAX_DTLS_TIMEOUT_MS)
-            ss->ssl3.hs.rtTimeoutMs = MAX_DTLS_TIMEOUT_MS;
-    }
+    return dtls_StartTimer(ss, DTLS_RETRANSMIT_INITIAL_MS,
+                           dtls_RetransmitTimerExpiredCb);
+}
 
-    return dtls_StartTimer(ss, cb);
+/* Start a timer for holding an old cipher spec. */
+SECStatus
+dtls_StartHolddownTimer(sslSocket *ss)
+{
+    return dtls_StartTimer(ss, DTLS_RETRANSMIT_FINISHED_MS,
+                           dtls_FinishedTimerCb);
 }
 
 /* Cancel a pending timer
@@ -891,8 +903,11 @@ dtls_CancelTimer(sslSocket *ss)
 void
 dtls_CheckTimer(sslSocket *ss)
 {
-    if (!ss->ssl3.hs.rtTimerCb)
+    ssl_GetSSL3HandshakeLock(ss);
+    if (!ss->ssl3.hs.rtTimerCb) {
+        ssl_ReleaseSSL3HandshakeLock(ss);
         return;
+    }
 
     if ((PR_IntervalNow() - ss->ssl3.hs.rtTimerStarted) >
         PR_MillisecondsToInterval(ss->ssl3.hs.rtTimeoutMs)) {
@@ -905,6 +920,7 @@ dtls_CheckTimer(sslSocket *ss)
         /* Now call the CB */
         cb(ss);
     }
+    ssl_ReleaseSSL3HandshakeLock(ss);
 }
 
 /* The callback to fire when the holddown timer for the Finished
@@ -912,10 +928,13 @@ dtls_CheckTimer(sslSocket *ss)
  *
  * Called from dtls_CheckTimer()
  */
-void
+static void
 dtls_FinishedTimerCb(sslSocket *ss)
 {
-    ssl3_DestroyCipherSpec(ss->ssl3.pwSpec, PR_FALSE);
+    dtls_FreeHandshakeMessages(&ss->ssl3.hs.lastMessageFlight);
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        ssl3_DestroyCipherSpec(ss->ssl3.pwSpec, PR_FALSE);
+    }
 }
 
 /* Cancel the Finished hold-down timer and destroy the
@@ -929,6 +948,7 @@ dtls_FinishedTimerCb(sslSocket *ss)
 void
 dtls_RehandshakeCleanup(sslSocket *ss)
 {
+    PORT_Assert(ss->version < SSL_LIBRARY_VERSION_TLS_1_3);
     dtls_CancelTimer(ss);
     ssl3_DestroyCipherSpec(ss->ssl3.pwSpec, PR_FALSE);
     ss->ssl3.hs.sendMessageSeq = 0;
@@ -1192,4 +1212,35 @@ dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
 
     *seqNum = dtls_seq_num;
     return PR_TRUE;
+}
+
+/* In TLS 1.3, a client that receives a retransmission of the server's first
+ * flight will reject that message and discard it (see dtls_IsRelevant() above).
+ * However, we need to trigger retransmission to prevent loss of the client's
+ * last flight from causing the connection to fail.
+ *
+ * This only triggers for a retransmitted ServerHello.  Other (encrypted)
+ * handshake messages do not trigger retransmission, so we are a little more
+ * exposed to loss than is ideal.
+ *
+ * Note: This isn't an issue in earlier versions because the second-to-last
+ * flight (sent by the server) includes the Finished message, which is not
+ * dropped because it has the same epoch that the client currently expects.
+ */
+SECStatus
+dtls_MaybeRetransmitHandshake(sslSocket *ss, const SSL3Ciphertext *cText)
+{
+    SECStatus rv = SECSuccess;
+    DTLSEpoch messageEpoch = cText->seq_num.high >> 16;
+
+    if (!ss->sec.isServer && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+        messageEpoch == 0 && cText->type == content_handshake) {
+        ssl_GetSSL3HandshakeLock(ss);
+        if (ss->ssl3.hs.rtTimerCb == dtls_FinishedTimerCb &&
+            ss->ssl3.hs.ws == idle_handshake) {
+            rv = dtls_RetransmitDetected(ss);
+        }
+        ssl_ReleaseSSL3HandshakeLock(ss);
+    }
+    return rv;
 }

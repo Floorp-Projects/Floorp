@@ -73,7 +73,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleDeclaration(css::Declarat
       oldValue.SetTo(oldValueStr);
     }
   }
-  else if (aNotify && IsInDoc()) {
+  else if (aNotify && IsInUncomposedDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   }
 

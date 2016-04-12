@@ -400,7 +400,7 @@ nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
                   aNode->IsNodeOfType(nsINode::eCONTENT),
                   "aNode must be content or document node");
 
-  nsCOMPtr<nsIDocument> doc = aNode->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = aNode->GetUncomposedDoc();
   if (!doc) {
     return nullptr;
   }
@@ -5199,7 +5199,7 @@ nsHTMLEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     // Otherwise, check whether the event target is in this document or not.
     nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
     NS_ENSURE_TRUE(targetContent, false);
-    return document == targetContent->GetCurrentDoc();
+    return document == targetContent->GetUncomposedDoc();
   }
 
   // This HTML editor is for contenteditable.  We need to check the validity of

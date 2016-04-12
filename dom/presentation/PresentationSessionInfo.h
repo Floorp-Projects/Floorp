@@ -18,6 +18,7 @@
 #include "nsIPresentationListener.h"
 #include "nsIPresentationService.h"
 #include "nsIPresentationSessionTransport.h"
+#include "nsIPresentationSessionTransportBuilder.h"
 #include "nsIServerSocket.h"
 #include "nsITimer.h"
 #include "nsString.h"
@@ -28,10 +29,12 @@ namespace dom {
 
 class PresentationSessionInfo : public nsIPresentationSessionTransportCallback
                               , public nsIPresentationControlChannelListener
+                              , public nsIPresentationSessionTransportBuilderListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTCALLBACK
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDERLISTENER
 
   PresentationSessionInfo(const nsAString& aUrl,
                           const nsAString& aSessionId,
@@ -89,7 +92,7 @@ public:
     }
   }
 
-  nsresult Send(nsIInputStream* aData);
+  nsresult Send(const nsAString& aData);
 
   nsresult Close(nsresult aReason,
                  uint32_t aState);
@@ -108,10 +111,7 @@ protected:
 
   nsresult ReplySuccess();
 
-  bool IsSessionReady()
-  {
-    return mIsResponderReady && mIsTransportReady;
-  }
+  virtual bool IsSessionReady() = 0;
 
   virtual nsresult UntrackFromService();
 
@@ -130,6 +130,11 @@ protected:
     }
   }
 
+  // Should be nsIPresentationChannelDescription::TYPE_TCP/TYPE_DATACHANNEL
+  uint8_t mTransportType = 0;
+
+  nsPIDOMWindowInner* GetWindow();
+
   nsString mUrl;
   nsString mSessionId;
   bool mIsResponderReady;
@@ -140,6 +145,7 @@ protected:
   nsCOMPtr<nsIPresentationDevice> mDevice;
   nsCOMPtr<nsIPresentationSessionTransport> mTransport;
   nsCOMPtr<nsIPresentationControlChannel> mControlChannel;
+  nsCOMPtr<nsIPresentationSessionTransportBuilder> mBuilder;
 };
 
 // Session info with controlling browsing context (sender side) behaviors.
@@ -174,6 +180,18 @@ private:
   nsresult OnGetAddress(const nsACString& aAddress);
 
   nsCOMPtr<nsIServerSocket> mServerSocket;
+
+protected:
+  bool IsSessionReady() override
+  {
+    if (mTransportType == nsIPresentationChannelDescription::TYPE_TCP) {
+      return mIsResponderReady && mIsTransportReady;
+    } else if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+      // Established RTCDataChannel implies responder is ready.
+      return mIsTransportReady;
+    }
+    return false;
+  }
 };
 
 // Session info with presenting browsing context (receiver side) behaviors.
@@ -184,6 +202,7 @@ class PresentationPresentingInfo final : public PresentationSessionInfo
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDERLISTENER
   NS_DECL_NSITIMERCALLBACK
 
   PresentationPresentingInfo(const nsAString& aUrl,
@@ -232,6 +251,12 @@ private:
   // The content parent communicating with the content process which the OOP
   // receiver page belongs to.
   nsCOMPtr<nsIContentParent> mContentParent;
+
+protected:
+  bool IsSessionReady() override
+  {
+    return mIsResponderReady && mIsTransportReady;
+  }
 };
 
 } // namespace dom

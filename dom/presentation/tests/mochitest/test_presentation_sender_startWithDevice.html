@@ -156,7 +156,6 @@ function runTests() {
   then(teardown);
 }
 
-//SimpleTest.expectAssertions(0, 5);
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: true, context: document},

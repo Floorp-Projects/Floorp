@@ -39,6 +39,12 @@
 </ul>
 ">
 
+<!ENTITY fileAccessDenied.title "Access to the file was denied">
+<!ENTITY fileAccessDenied.longDesc "
+<ul>
+  <li>It may have been removed, moved, or file permissions may be preventing access.</li>
+</ul>
+">
 
 <!ENTITY generic.title "Oops.">
 <!ENTITY generic.longDesc "

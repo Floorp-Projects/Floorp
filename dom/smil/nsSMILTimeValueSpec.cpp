@@ -98,7 +98,7 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
 
   // If we're not bound to the document yet, don't worry, we'll get called again
   // when that happens
-  if (!aContextNode->IsInDoc())
+  if (!aContextNode->IsInUncomposedDoc())
     return;
 
   // Hold ref to the old element so that it isn't destroyed in between resetting
@@ -113,7 +113,7 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);
   } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    nsIDocument* doc = aContextNode->GetCurrentDoc();
+    nsIDocument* doc = aContextNode->GetUncomposedDoc();
     MOZ_ASSERT(doc, "We are in the document but current doc is null");
     mReferencedElement.ResetWithElement(doc->GetRootElement());
   } else {
@@ -350,7 +350,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
   nsCOMPtr<EventTarget> target;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    nsIDocument* doc = aTarget->GetCurrentDoc();
+    nsIDocument* doc = aTarget->GetUncomposedDoc();
     if (!doc)
       return nullptr;
     nsPIDOMWindowOuter* win = doc->GetWindow();

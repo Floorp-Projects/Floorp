@@ -36,6 +36,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea
     ssl_fd_(nullptr),
     role_(role),
     state_(STATE_INIT),
+    timer_handle_(nullptr),
     falsestart_enabled_(false),
     expected_version_(0),
     expected_cipher_suite_(0),
@@ -62,6 +63,9 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea
 TlsAgent::~TlsAgent() {
   if (adapter_) {
     Poller::Instance()->Cancel(READABLE_EVENT, adapter_);
+  }
+  if (timer_handle_) {
+    timer_handle_->Cancel();
   }
 
   if (pr_fd_) {
@@ -414,9 +418,11 @@ void TlsAgent::CheckCallbacks() const {
     EXPECT_TRUE(handshake_callback_called_);
   }
 
-  // These callbacks shouldn't fire if we are resuming.
+  // These callbacks shouldn't fire if we are resuming, except on TLS 1.3.
   if (role_ == SERVER) {
-    EXPECT_EQ(!expect_resumption_, sni_hook_called_);
+    PRBool have_sni = SSLInt_ExtensionNegotiated(ssl_fd_, ssl_server_name_xtn);
+    EXPECT_EQ(((!expect_resumption_ && have_sni) ||
+               expected_version_ >= SSL_LIBRARY_VERSION_TLS_1_3), sni_hook_called_);
   } else {
     EXPECT_EQ(!expect_resumption_, auth_certificate_hook_called_);
     // Note that this isn't unconditionally called, even with false start on.
@@ -445,6 +451,10 @@ void TlsAgent::Connected() {
   EXPECT_EQ(SECSuccess, rv);
   EXPECT_EQ(sizeof(csinfo_), csinfo_.length);
 
+  if (expected_version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    PRInt32 cipherSuites = SSLInt_CountTls13CipherSpecs(ssl_fd_);
+    EXPECT_EQ(((mode_ == DGRAM) && (role_ == CLIENT)) ? 2 : 1, cipherSuites);
+  }
   SetState(STATE_CONNECTED);
 }
 
@@ -491,6 +501,7 @@ void TlsAgent::SetDowngradeCheckVersion(uint16_t version) {
 }
 
 void TlsAgent::Handshake() {
+  LOG("Handshake");
   SECStatus rv = SSL_ForceHandshake(ssl_fd_);
   if (rv == SECSuccess) {
     Connected();
@@ -504,13 +515,23 @@ void TlsAgent::Handshake() {
   switch (err) {
     case PR_WOULD_BLOCK_ERROR:
       LOG("Would have blocked");
-      // TODO(ekr@rtfm.com): set DTLS timeouts
+      if (mode_ == DGRAM) {
+        if (timer_handle_) {
+          timer_handle_->Cancel();
+        }
+
+        PRIntervalTime timeout;
+        rv = DTLS_GetHandshakeTimeout(ssl_fd_, &timeout);
+        if (rv == SECSuccess) {
+          Poller::Instance()->SetTimer(timeout, this,
+                                       &TlsAgent::ReadableCallback,
+                                       &timer_handle_);
+        }
+      }
       Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
                                &TlsAgent::ReadableCallback);
       return;
-      break;
 
-      // TODO(ekr@rtfm.com): needs special case for DTLS
     case SSL_ERROR_RX_MALFORMED_HANDSHAKE:
     default:
       if (IS_SSL_ERROR(err)) {

@@ -534,7 +534,7 @@ nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  nsIDocument* doc = aElement->GetCurrentDoc();
+  nsIDocument* doc = aElement->GetUncomposedDoc();
   NS_ENSURE_TRUE(doc, nullptr);
 
   nsIPresShell* presShell = doc->GetShell();
