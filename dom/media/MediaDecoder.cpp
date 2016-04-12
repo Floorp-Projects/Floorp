@@ -335,7 +335,7 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
               "ownerActive=%d mIsVisible=%d mIsHeuristicDormant=%d "
               "mPlayState=%s encrypted=%s",
               aDormantTimeout, aActivity, mIsDormant, mOwner->IsActive(),
-              mIsVisible, mIsHeuristicDormant, PlayStateStr(),
+              mIsVisible.Ref(), mIsHeuristicDormant, PlayStateStr(),
               (!mInfo ? "Unknown" : (mInfo->IsEncrypted() ? "1" : "0")));
 
   bool prevDormant = mIsDormant;
@@ -574,7 +574,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                    "MediaDecoder::mMediaSeekable (Canonical)")
   , mMediaSeekableOnlyInBufferedRanges(AbstractThread::MainThread(), false,
                    "MediaDecoder::mMediaSeekableOnlyInBufferedRanges (Canonical)")
-  , mIsVisible(!mOwner->IsHidden())
+  , mIsVisible(AbstractThread::MainThread(), !mOwner->IsHidden(),
+               "MediaDecoder::mIsVisible (Canonical)")
   , mTelemetryReported(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);

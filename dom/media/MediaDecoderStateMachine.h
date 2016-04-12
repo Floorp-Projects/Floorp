@@ -471,6 +471,9 @@ protected:
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
 
+  // Notification method invoked when mIsVisible changes.
+  void VisibilityChanged();
+
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();
@@ -997,6 +1000,9 @@ private:
   // True if the media is seekable only in buffered ranges.
   Mirror<bool> mMediaSeekableOnlyInBufferedRanges;
 
+  // IsVisible, mirrored from the media decoder.
+  Mirror<bool> mIsVisible;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
@@ -1016,7 +1022,7 @@ private:
   // Current playback position in the stream in bytes.
   Canonical<int64_t> mPlaybackOffset;
 
-  // Used to distiguish whether the audio is producing sound.
+  // Used to distinguish whether the audio is producing sound.
   Canonical<bool> mIsAudioDataAudible;
 
 public:
