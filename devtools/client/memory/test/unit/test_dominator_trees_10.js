@@ -7,7 +7,7 @@
 let {
   snapshotState: states,
   dominatorTreeState,
-  dominatorTreeDisplays,
+  labelDisplays,
   viewState,
 } = require("devtools/client/memory/constants");
 let {
@@ -18,8 +18,8 @@ const {
   changeView,
 } = require("devtools/client/memory/actions/view");
 const {
-  setDominatorTreeDisplayAndRefresh,
-} = require("devtools/client/memory/actions/dominator-tree-display");
+  setLabelDisplayAndRefresh,
+} = require("devtools/client/memory/actions/label-display");
 
 function run_test() {
   run_next_test();
@@ -49,12 +49,12 @@ add_task(function *() {
   equal(root, getState().snapshots[0].dominatorTree.focused,
         "The root should be focused.");
 
-  equal(getState().dominatorTreeDisplay, dominatorTreeDisplays.coarseType,
-        "Using dominatorTreeDisplays.coarseType by default");
-  dispatch(setDominatorTreeDisplayAndRefresh(heapWorker,
-                                             dominatorTreeDisplays.allocationStack));
-  equal(getState().dominatorTreeDisplay, dominatorTreeDisplays.allocationStack,
-        "Using dominatorTreeDisplays.allocationStack now");
+  equal(getState().labelDisplay, labelDisplays.coarseType,
+        "Using labelDisplays.coarseType by default");
+  dispatch(setLabelDisplayAndRefresh(heapWorker,
+                                             labelDisplays.allocationStack));
+  equal(getState().labelDisplay, labelDisplays.allocationStack,
+        "Using labelDisplays.allocationStack now");
 
   yield waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.FETCHING);

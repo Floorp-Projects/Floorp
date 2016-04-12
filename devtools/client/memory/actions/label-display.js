@@ -7,21 +7,24 @@ const { assert } = require("devtools/shared/DevToolsUtils");
 const { actions } = require("../constants");
 const { refresh } = require("./refresh");
 
-exports.setDominatorTreeDisplayAndRefresh = function(heapWorker, display) {
+/**
+ * Change the display we use for labeling individual nodes and refresh the
+ * current data.
+ */
+exports.setLabelDisplayAndRefresh = function(heapWorker, display) {
   return function*(dispatch, getState) {
     // Clears out all stored census data and sets the display.
-    dispatch(setDominatorTreeDisplay(display));
+    dispatch(setLabelDisplay(display));
     yield dispatch(refresh(heapWorker));
   };
 };
 
 /**
- * Clears out all census data in the snapshots and sets
- * a new display.
+ * Change the display we use for labeling individual nodes.
  *
- * @param {dominatorTreeDisplayModel} display
+ * @param {labelDisplayModel} display
  */
-const setDominatorTreeDisplay = exports.setDominatorTreeDisplay = function (display) {
+const setLabelDisplay = exports.setLabelDisplay = function (display) {
   assert(typeof display === "object"
          && display
          && display.breakdown
@@ -29,7 +32,7 @@ const setDominatorTreeDisplay = exports.setDominatorTreeDisplay = function (disp
     `Breakdowns must be an object with a \`by\` property, attempted to set: ${uneval(display)}`);
 
   return {
-    type: actions.SET_DOMINATOR_TREE_DISPLAY,
+    type: actions.SET_LABEL_DISPLAY,
     display,
   };
 };

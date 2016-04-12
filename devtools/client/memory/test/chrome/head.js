@@ -31,7 +31,7 @@ var constants = require("devtools/client/memory/constants");
 var {
   censusDisplays,
   diffingState,
-  dominatorTreeDisplays,
+  labelDisplays,
   dominatorTreeState,
   snapshotState,
   viewState,
@@ -135,7 +135,7 @@ var TEST_DOMINATOR_TREE = Object.freeze({
   expanded: new Set(),
   focused: null,
   error: null,
-  display: dominatorTreeDisplays.coarseType,
+  display: labelDisplays.coarseType,
   activeFetchRequestCount: null,
   state: dominatorTreeState.LOADED,
 });
@@ -174,7 +174,7 @@ var TEST_HEAP_PROPS = Object.freeze({
   onDominatorTreeFocus: noop,
   onViewSourceInDebugger: noop,
   diffing: null,
-  view: viewState.CENSUS,
+  view: { state: viewState.CENSUS, },
   snapshot: Object.freeze({
     id: 1337,
     selected: true,
@@ -221,6 +221,7 @@ var TEST_TOOLBAR_PROPS = Object.freeze({
     censusDisplays.allocationStack,
     censusDisplays.invertedAllocationStack,
   ],
+  censusDisplay: censusDisplays.coarseType,
   onTakeSnapshotClick: noop,
   onImportClick: noop,
   onCensusDisplayChange: noop,
@@ -232,13 +233,14 @@ var TEST_TOOLBAR_PROPS = Object.freeze({
   setFilterString: noop,
   diffing: null,
   onToggleDiffing: noop,
-  view: viewState.CENSUS,
+  view: { state: viewState.CENSUS, },
   onViewChange: noop,
-  dominatorTreeDisplays: [
-    dominatorTreeDisplays.coarseType,
-    dominatorTreeDisplays.allocationStack,
+  labelDisplays: [
+    labelDisplays.coarseType,
+    labelDisplays.allocationStack,
   ],
-  onDominatorTreeDisplayChange: noop,
+  labelDisplay: labelDisplays.coarseType,
+  onLabelDisplayChange: noop,
   snapshots: [],
 });
 

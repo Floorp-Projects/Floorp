@@ -69,6 +69,8 @@ registerCleanupFunction(() => {
   Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
 });
 
+var waitForTime = DevToolsUtils.waitForTime;
+
 function getFrameScript() {
   let mm = gBrowser.selectedBrowser.messageManager;
   let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
