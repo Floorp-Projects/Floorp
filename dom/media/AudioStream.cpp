@@ -563,8 +563,7 @@ AudioStream::Downmix(Chunk* aChunk)
 
   if (aChunk->Channels() > 2) {
     MOZ_ASSERT(mAudioConverter);
-    mAudioConverter->Process(aChunk->GetWritable(),
-                             aChunk->Channels() * aChunk->Frames());
+    mAudioConverter->Process(aChunk->GetWritable(), aChunk->Frames());
   }
 
   if (aChunk->Channels() >= 2 && mIsMonoAudioEnabled) {

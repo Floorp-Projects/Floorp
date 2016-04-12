@@ -129,12 +129,13 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == mOut.Format() && mIn.Format() == Format);
     AudioDataBuffer<Format, Value> buffer = Move(aBuffer);
     if (CanWorkInPlace()) {
-      size_t bytes = ProcessInternal(buffer.Data(), buffer.Data(), buffer.Size());
-      if (bytes && mIn.Rate() != mOut.Rate()) {
-        bytes = ResampleAudio(buffer.Data(), buffer.Data(), bytes);
+      size_t frames = SamplesInToFrames(buffer.Length());
+      frames = ProcessInternal(buffer.Data(), buffer.Data(), frames);
+      if (frames && mIn.Rate() != mOut.Rate()) {
+        frames = ResampleAudio(buffer.Data(), buffer.Data(), frames);
       }
       AlignedBuffer<Value> temp = buffer.Forget();
-      temp.SetLength(bytes / AudioConfig::SampleSize(mOut.Format()));
+      temp.SetLength(FramesOutToSamples(frames));
       return AudioDataBuffer<Format, Value>(Move(temp));;
     }
     return Process(buffer);
@@ -145,14 +146,14 @@ public:
   {
     MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == mOut.Format() && mIn.Format() == Format);
     // Perform the downmixing / reordering in temporary buffer.
-    uint32_t frames = aBuffer.Length() / mIn.Channels();
+    size_t frames = SamplesInToFrames(aBuffer.Length());
     AlignedBuffer<Value> temp1;
-    if (!temp1.SetLength(frames * mOut.Channels())) {
+    if (!temp1.SetLength(FramesOutToSamples(frames))) {
       return AudioDataBuffer<Format, Value>(Move(temp1));
     }
-    size_t bytes = ProcessInternal(temp1.Data(), aBuffer.Data(), aBuffer.Size());
-    if (!bytes || mIn.Rate() == mOut.Rate()) {
-      temp1.SetLength(bytes / AudioConfig::SampleSize(mOut.Format()));
+    frames = ProcessInternal(temp1.Data(), aBuffer.Data(), frames);
+    if (!frames || mIn.Rate() == mOut.Rate()) {
+      temp1.SetLength(FramesOutToSamples(frames));
       return AudioDataBuffer<Format, Value>(Move(temp1));
     }
 
@@ -163,30 +164,28 @@ public:
     if (mOut.Rate() > mIn.Rate()) {
       // We are upsampling, we can't work in place. Allocate another temporary
       // buffer where the upsampling will occur.
-      temp2.SetLength(ResampleRecipientFrames(frames) * mOut.Channels());
+      temp2.SetLength(FramesOutToSamples(ResampleRecipientFrames(frames)));
       outputBuffer = &temp2;
     }
-    bytes = ResampleAudio(outputBuffer->Data(), temp1.Data(), bytes);
-    outputBuffer->SetLength(bytes / AudioConfig::SampleSize(mOut.Format()));
+    frames = ResampleAudio(outputBuffer->Data(), temp1.Data(), frames);
+    outputBuffer->SetLength(FramesOutToSamples(frames));
     return AudioDataBuffer<Format, Value>(Move(*outputBuffer));
   }
 
   // Attempt to convert the AudioDataBuffer in place.
   // Will return 0 if the conversion wasn't possible.
   template <typename Value>
-  size_t Process(Value* aBuffer, size_t aSamples)
+  size_t Process(Value* aBuffer, size_t aFrames)
   {
     MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == mOut.Format());
     if (!CanWorkInPlace()) {
       return 0;
     }
-    size_t bytes =
-      ProcessInternal(aBuffer, aBuffer,
-                      aSamples * AudioConfig::SampleSize(mIn.Format()));
-    if (bytes && mIn.Rate() != mOut.Rate()) {
-      bytes = ResampleAudio(aBuffer, aBuffer, bytes);
+    size_t frames = ProcessInternal(aBuffer, aBuffer, aFrames);
+    if (frames && mIn.Rate() != mOut.Rate()) {
+      frames = ResampleAudio(aBuffer, aBuffer, aFrames);
     }
-    return bytes;
+    return frames;
   }
 
   bool CanWorkInPlace() const;
@@ -207,17 +206,21 @@ private:
    * Parameters:
    * aOut  : destination buffer where converted samples will be copied
    * aIn   : source buffer
-   * aBytes: size in bytes of source buffer
+   * aSamples: number of frames in source buffer
    *
-   * Return Value: size in bytes of samples converted or 0 if error
+   * Return Value: number of frames converted or 0 if error
    */
-  size_t ProcessInternal(void* aOut, const void* aIn, size_t aBytes);
-  void ReOrderInterleavedChannels(void* aOut, const void* aIn, size_t aDataSize) const;
-  size_t DownmixAudio(void* aOut, const void* aIn, size_t aDataSize) const;
+  size_t ProcessInternal(void* aOut, const void* aIn, size_t aFrames);
+  void ReOrderInterleavedChannels(void* aOut, const void* aIn, size_t aFrames) const;
+  size_t DownmixAudio(void* aOut, const void* aIn, size_t aFrames) const;
+
+  size_t FramesOutToSamples(size_t aFrames) const;
+  size_t SamplesInToFrames(size_t aSamples) const;
+  size_t FramesOutToBytes(size_t aFrames) const;
 
   // Resampler context.
   SpeexResamplerState* mResampler;
-  size_t ResampleAudio(void* aOut, const void* aIn, size_t aDataSize);
+  size_t ResampleAudio(void* aOut, const void* aIn, size_t aFrames);
   size_t ResampleRecipientFrames(size_t aFrames) const;
 };
 
