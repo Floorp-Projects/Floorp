@@ -35121,7 +35121,34 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {},
+    "items": {
+      "testharness": {
+        "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html": [
+          {
+            "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html",
+            "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html"
+          }
+        ],
+        "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-2.html": [
+          {
+            "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-2.html",
+            "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-2.html"
+          }
+        ],
+        "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-3.html": [
+          {
+            "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-3.html",
+            "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-3.html"
+          }
+        ],
+        "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html": [
+          {
+            "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html",
+            "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
