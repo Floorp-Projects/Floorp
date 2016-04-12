@@ -3,7 +3,7 @@
 add_task(function*() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://mochi.test:8888/browser/browser/base/content/test/general/title_test.svg",
+    url: "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
   }, function*(browser) {
     yield ContentTask.spawn(browser, "", function() {
       let tttp = Cc["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
