@@ -712,6 +712,18 @@ public class LocalBrowserDB implements BrowserDB {
                 History.DATE_LAST_VISITED + " DESC");
     }
 
+    public Cursor getHistoryForURL(ContentResolver cr, String uri) {
+        return cr.query(mHistoryUriWithProfile,
+                new String[] {
+                    History.VISITS,
+                    History.DATE_LAST_VISITED
+                },
+                History.URL + "= ?",
+                new String[] { uri },
+                History.DATE_LAST_VISITED + " DESC"
+        );
+    }
+
     @Override
     public long getPrePathLastVisitedTimeMilliseconds(ContentResolver cr, String prePath) {
         if (prePath == null) {

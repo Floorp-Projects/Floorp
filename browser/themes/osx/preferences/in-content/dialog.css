@@ -9,7 +9,7 @@ prefwindow,
   font: message-box !important;
 }
 
-label,
+label:not(.menu-text),
 textbox,
 description,
 .tab-text,

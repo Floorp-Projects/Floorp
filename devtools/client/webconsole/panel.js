@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cu} = require("chrome");
 const promise = require("promise");
 
 loader.lazyGetter(this, "HUDService", () => require("devtools/client/webconsole/hudservice"));
@@ -15,8 +15,7 @@ loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emi
 /**
  * A DevToolPanel that controls the Web Console.
  */
-function WebConsolePanel(iframeWindow, toolbox)
-{
+function WebConsolePanel(iframeWindow, toolbox) {
   this._frameWindow = iframeWindow;
   this._toolbox = toolbox;
   EventEmitter.decorate(this);
@@ -32,8 +31,7 @@ WebConsolePanel.prototype = {
    * If the WebConsole is opened, check if the JSTerm's input line has focus.
    * If not, focus it.
    */
-  focusInput: function WCP_focusInput()
-  {
+  focusInput: function() {
     this.hud.jsterm.focus();
   },
 
@@ -43,8 +41,7 @@ WebConsolePanel.prototype = {
    * @return object
    *         A promise that is resolved when the Web Console completes opening.
    */
-  open: function WCP_open()
-  {
+  open: function() {
     let parentDoc = this._toolbox.doc;
     let iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
 
@@ -55,8 +52,7 @@ WebConsolePanel.prototype = {
         (doc = win.document) &&
         doc.readyState == "complete") {
       deferredIframe.resolve(null);
-    }
-    else {
+    } else {
       iframe.addEventListener("load", function onIframeLoad() {
         iframe.removeEventListener("load", onIframeLoad, true);
         deferredIframe.resolve(null);
@@ -67,8 +63,7 @@ WebConsolePanel.prototype = {
     let promiseTarget;
     if (!this.target.isRemote) {
       promiseTarget = this.target.makeRemote();
-    }
-    else {
+    } else {
       promiseTarget = promise.resolve(this.target);
     }
 
@@ -77,40 +72,37 @@ WebConsolePanel.prototype = {
     // 3. Open the Web Console.
     return deferredIframe.promise
       .then(() => promiseTarget)
-      .then((aTarget) => {
-        this._frameWindow._remoteTarget = aTarget;
+      .then((target) => {
+        this._frameWindow._remoteTarget = target;
 
         let webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;
         let chromeWindow = iframe.ownerDocument.defaultView;
         return HUDService.openWebConsole(this.target, webConsoleUIWindow,
                                          chromeWindow);
       })
-      .then((aWebConsole) => {
-        this.hud = aWebConsole;
+      .then((webConsole) => {
+        this.hud = webConsole;
         this._isReady = true;
         this.emit("ready");
         return this;
-      }, (aReason) => {
+      }, (reason) => {
         let msg = "WebConsolePanel open failed. " +
-                  aReason.error + ": " + aReason.message;
+                  reason.error + ": " + reason.message;
         dump(msg + "\n");
         Cu.reportError(msg);
       });
   },
 
-  get target()
-  {
+  get target() {
     return this._toolbox.target;
   },
 
   _isReady: false,
-  get isReady()
-  {
+  get isReady() {
     return this._isReady;
   },
 
-  destroy: function WCP_destroy()
-  {
+  destroy: function() {
     if (this._destroyer) {
       return this._destroyer;
     }

@@ -55,6 +55,7 @@ import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.promotion.AddToHomeScreenPromotion;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
@@ -230,6 +231,7 @@ public class BrowserApp extends GeckoApp
     private ActionModeCompat mActionMode;
     private TabHistoryController tabHistoryController;
     private ZoomedView mZoomedView;
+    private AddToHomeScreenPromotion mAddToHomeScreenPromotion;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -779,6 +781,8 @@ public class BrowserApp extends GeckoApp
                        })
                       .run();
         }
+
+        mAddToHomeScreenPromotion = new AddToHomeScreenPromotion(this);
     }
 
     /**
@@ -1016,6 +1020,8 @@ public class BrowserApp extends GeckoApp
         processTabQueue();
 
         mScreenshotObserver.start();
+
+        mAddToHomeScreenPromotion.resume();
     }
 
     @Override
@@ -1030,6 +1036,8 @@ public class BrowserApp extends GeckoApp
             "Prompt:ShowTop");
 
         mScreenshotObserver.stop();
+
+        mAddToHomeScreenPromotion.pause();
     }
 
     @Override
@@ -3720,8 +3728,12 @@ public class BrowserApp extends GeckoApp
 
             // Launched from a "content notification"
             if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
+                Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
+
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "content_update");
+
+                Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
             }
         }
 
