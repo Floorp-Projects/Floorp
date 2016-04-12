@@ -53,6 +53,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
+  static bool
+  DeviceStorageEnabled(JSContext* aCx, JSObject* aObj);
+
   static already_AddRefed<Promise>
   GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv);
 
@@ -143,6 +146,9 @@ public:
   {
     return mType;
   }
+
+  bool
+  ClonableToDifferentThreadOrProcess() const;
 
 private:
   Directory(nsISupports* aParent,
