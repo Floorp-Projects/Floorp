@@ -227,8 +227,6 @@ public class BrowserContract {
         public static final String TABLE_NAME = "visits";
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "visits");
-        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/visits";
-        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/visits";
     }
 
     // Combined bookmarks and history

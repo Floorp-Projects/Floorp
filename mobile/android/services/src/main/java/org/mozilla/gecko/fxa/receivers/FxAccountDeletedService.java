@@ -13,7 +13,6 @@ import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
-import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryDataExtender;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabase;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 
@@ -85,22 +84,6 @@ public class FxAccountDeletedService extends IntentService {
       }
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception deleting the Firefox Sync clients database; ignoring.", e);
-    }
-
-    // Clear Firefox Sync history data table.
-    try {
-      Logger.info(LOG_TAG, "Deleting the Firefox Sync extended history database.");
-      AndroidBrowserHistoryDataExtender historyDataExtender = null;
-      try {
-        historyDataExtender = new AndroidBrowserHistoryDataExtender(context);
-        historyDataExtender.wipe();
-      } finally {
-        if (historyDataExtender != null) {
-          historyDataExtender.close();
-        }
-      }
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception deleting the Firefox Sync extended history database; ignoring.", e);
     }
 
     // Remove any displayed notifications.
