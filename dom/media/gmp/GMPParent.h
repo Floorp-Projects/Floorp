@@ -169,8 +169,10 @@ private:
   bool EnsureProcessLoaded();
   RefPtr<InitPromise> ReadGMPMetaData();
   RefPtr<InitPromise> ReadGMPInfoFile(nsIFile* aFile);
-  RefPtr<InitPromise> ReadChromiumManifestFile(nsIFile* aFile);
+#ifdef MOZ_WIDEVINE_EME
   RefPtr<InitPromise> ParseChromiumManifest(nsString aJSON); // Main thread.
+  RefPtr<InitPromise> ReadChromiumManifestFile(nsIFile* aFile); // GMP thread.
+#endif
 #ifdef MOZ_CRASHREPORTER
   void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
   void GetCrashID(nsString& aResult);
