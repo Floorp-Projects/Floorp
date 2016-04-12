@@ -375,7 +375,6 @@ nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
 
 nsStyleBorder::nsStyleBorder(StyleStructContext aContext)
   : mBorderColors(nullptr),
-    mBoxShadow(nullptr),
     mBorderImageFill(NS_STYLE_BORDER_IMAGE_SLICE_NOFILL),
     mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
     mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
@@ -422,7 +421,6 @@ nsBorderColors::Clone(bool aDeep) const
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   : mBorderColors(nullptr),
-    mBoxShadow(aSrc.mBoxShadow),
     mBorderRadius(aSrc.mBorderRadius),
     mBorderImageSource(aSrc.mBorderImageSource),
     mBorderImageSlice(aSrc.mBorderImageSlice),
@@ -509,18 +507,6 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
       mBoxDecorationBreak != aOther.mBoxDecorationBreak)
     return NS_STYLE_HINT_REFLOW;
 
-  nsChangeHint boxShadowHint = nsChangeHint(0);
-  if (!AreShadowArraysEqual(mBoxShadow, aOther.mBoxShadow)) {
-    // Update overflow regions & trigger DLBI to be sure it's noticed:
-    NS_UpdateHint(boxShadowHint, nsChangeHint_UpdateOverflow);
-    NS_UpdateHint(boxShadowHint, nsChangeHint_SchedulePaint);
-    // Also request a repaint, since it's possible that only the color
-    // of the shadow is changing (and UpdateOverflow/SchedulePaint won't
-    // repaint for that, since they won't know what needs invalidating.)
-    NS_UpdateHint(boxShadowHint, nsChangeHint_RepaintFrame);
-    // Don't return yet; we may also need nsChangeHint_BorderStyleNoneChange.
-  }
-
   NS_FOR_CSS_SIDES(ix) {
     // See the explanation in nsChangeHint.h of
     // nsChangeHint_BorderStyleNoneChange .
@@ -528,17 +514,9 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     // assume a repaint hint for some other change rather than bother
     // tracking this result through the rest of the function.
     if (HasVisibleStyle(ix) != aOther.HasVisibleStyle(ix)) {
-      return NS_CombineHint(boxShadowHint,
-                            nsChangeHint_RepaintFrame |
-                            nsChangeHint_BorderStyleNoneChange);
+      return nsChangeHint_RepaintFrame |
+             nsChangeHint_BorderStyleNoneChange;
     }
-  }
-
-  if (boxShadowHint) {
-    // NOTE: This hint (UpdateOverflow + SchedulePaint + RepaintFrame) is
-    // expected to subsume all hints returned after this point. (Hence, we're
-    // OK to return early.)
-    return boxShadowHint;
   }
 
   // Note that mBorderStyle stores not only the border style but also
@@ -4014,4 +3992,43 @@ nsChangeHint
 nsStyleVariables::CalcDifference(const nsStyleVariables& aOther) const
 {
   return nsChangeHint(0);
+}
+
+//-----------------------
+// nsStyleEffects
+//
+
+nsStyleEffects::nsStyleEffects(StyleStructContext aContext)
+  : mBoxShadow(nullptr)
+{
+  MOZ_COUNT_CTOR(nsStyleEffects);
+}
+
+nsStyleEffects::nsStyleEffects(const nsStyleEffects& aSource)
+  : mBoxShadow(aSource.mBoxShadow)
+{
+  MOZ_COUNT_CTOR(nsStyleEffects);
+}
+
+nsStyleEffects::~nsStyleEffects()
+{
+  MOZ_COUNT_DTOR(nsStyleEffects);
+}
+
+nsChangeHint
+nsStyleEffects::CalcDifference(const nsStyleEffects& aOther) const
+{
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (!AreShadowArraysEqual(mBoxShadow, aOther.mBoxShadow)) {
+    // Update overflow regions & trigger DLBI to be sure it's noticed.
+    // Also request a repaint, since it's possible that only the color
+    // of the shadow is changing (and UpdateOverflow/SchedulePaint won't
+    // repaint for that, since they won't know what needs invalidating.)
+    hint |= nsChangeHint_UpdateOverflow |
+            nsChangeHint_SchedulePaint |
+            nsChangeHint_RepaintFrame;
+  }
+
+  return hint;
 }

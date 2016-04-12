@@ -48,7 +48,7 @@ struct nsStyleVisibility;
 
 // Bits for each struct.
 // NS_STYLE_INHERIT_BIT defined in nsStyleStructFwd.h
-#define NS_STYLE_INHERIT_MASK              0x0007fffff
+#define NS_STYLE_INHERIT_MASK              0x000ffffff
 
 // Bits for inherited structs.
 #define NS_STYLE_INHERITED_STRUCT_MASK \
@@ -59,7 +59,6 @@ struct nsStyleVisibility;
    << nsStyleStructID_Inherited_Count)
 
 // Additional bits for nsStyleContext's mBits:
-// Free bit                                0x000800000
 // See nsStyleContext::HasTextDecorationLines
 #define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x001000000
 // See nsStyleContext::HasPseudoElementData.
@@ -87,7 +86,6 @@ struct nsStyleVisibility;
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        35
 
 // Additional bits for nsRuleNode's mDependentBits:
-// Free bit                                 0x00800000
 #define NS_RULE_NODE_IS_ANIMATION_RULE      0x01000000
 // Free bit                                 0x02000000
 #define NS_RULE_NODE_USED_DIRECTLY          0x04000000
@@ -1207,7 +1205,6 @@ struct nsStyleBorder
 
 public:
   nsBorderColors** mBorderColors;        // [reset] composite (stripe) colors
-  RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
 
 public:
   nsStyleCorners mBorderRadius;       // [reset] coord, percent
@@ -3565,6 +3562,38 @@ struct nsStyleVariables
   }
 
   mozilla::CSSVariableValues mVariables;
+};
+
+struct nsStyleEffects
+{
+  explicit nsStyleEffects(StyleStructContext aContext);
+  nsStyleEffects(const nsStyleEffects& aSource);
+  ~nsStyleEffects();
+
+  void* operator new(size_t sz, nsStyleEffects* aSelf) CPP_THROW_NEW { return aSelf; }
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->PresShell()->
+      AllocateByObjectID(mozilla::eArenaObjectID_nsStyleEffects, sz);
+  }
+  void Destroy(nsPresContext* aContext) {
+    this->~nsStyleEffects();
+    aContext->PresShell()->
+      FreeByObjectID(mozilla::eArenaObjectID_nsStyleEffects, this);
+  }
+
+  nsChangeHint CalcDifference(const nsStyleEffects& aOther) const;
+  static nsChangeHint MaxDifference() {
+    return nsChangeHint_UpdateOverflow |
+           nsChangeHint_SchedulePaint |
+           nsChangeHint_RepaintFrame;
+  }
+  static nsChangeHint DifferenceAlwaysHandledForDescendants() {
+    // CalcDifference never returns the reflow hints that are sometimes
+    // handled for descendants as hints not handled for descendants.
+    return nsChangeHint(0);
+  }
+
+  RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
 };
 
 #endif /* nsStyleStruct_h___ */

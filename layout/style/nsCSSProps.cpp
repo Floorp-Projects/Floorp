@@ -3208,6 +3208,13 @@ enum VariablesCheckCounter {
   ePropertyCount_for_Variables
 };
 
+enum EffectsCheckCounter {
+  #define CSS_PROP_EFFECTS ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_EFFECTS
+  ePropertyCount_for_Effects
+};
+
 #undef ENUM_DATA_FOR_PROPERTY
 
 /* static */ const size_t
