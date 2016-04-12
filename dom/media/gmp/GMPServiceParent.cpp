@@ -996,18 +996,26 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(const nsAString& aDirectory)
   }
 
   RefPtr<GMPParent> gmp = CreateGMPParent();
-  rv = gmp ? gmp->Init(this, directory) : NS_ERROR_NOT_AVAILABLE;
-  if (NS_FAILED(rv)) {
+  if (!gmp) {
     NS_WARNING("Can't Create GMPParent");
     return;
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-    mPlugins.AppendElement(gmp);
-  }
-
-  NS_DispatchToMainThread(new NotifyObserversTask("gmp-path-added"), NS_DISPATCH_NORMAL);
+  RefPtr<GeckoMediaPluginServiceParent> self(this);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsCString dir = NS_ConvertUTF16toUTF8(aDirectory);
+  gmp->Init(this, directory)->Then(thread, __func__,
+    [gmp, self, dir]() -> void {
+      LOGD(("%s::%s: %s Succeeded", __CLASS__, __FUNCTION__, dir.get()));
+      {
+        MutexAutoLock lock(self->mMutex);
+        self->mPlugins.AppendElement(gmp);
+      }
+      NS_DispatchToMainThread(new NotifyObserversTask("gmp-path-added"), NS_DISPATCH_NORMAL);
+    },
+    [dir]() -> void {
+      LOGD(("%s::%s: %s Failed", __CLASS__, __FUNCTION__, dir.get()));
+    });
 }
 
 void
