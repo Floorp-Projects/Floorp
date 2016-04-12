@@ -1471,9 +1471,9 @@ nsComputedDOMStyle::DoGetCounterReset()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetQuotes()
 {
-  const nsStyleQuotes *quotes = StyleQuotes();
+  const auto& quotePairs = StyleQuotes()->GetQuotePairs();
 
-  if (quotes->QuotesCount() == 0) {
+  if (quotePairs.IsEmpty()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword_none);
     return val.forget();
@@ -1481,15 +1481,15 @@ nsComputedDOMStyle::DoGetQuotes()
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
-  for (uint32_t i = 0, i_end = quotes->QuotesCount(); i < i_end; ++i) {
+  for (const auto& quotePair : quotePairs) {
     RefPtr<nsROCSSPrimitiveValue> openVal = new nsROCSSPrimitiveValue;
     RefPtr<nsROCSSPrimitiveValue> closeVal = new nsROCSSPrimitiveValue;
 
     nsString s;
-    nsStyleUtil::AppendEscapedCSSString(*quotes->OpenQuoteAt(i), s);
+    nsStyleUtil::AppendEscapedCSSString(quotePair.first, s);
     openVal->SetString(s);
     s.Truncate();
-    nsStyleUtil::AppendEscapedCSSString(*quotes->CloseQuoteAt(i), s);
+    nsStyleUtil::AppendEscapedCSSString(quotePair.second, s);
     closeVal->SetString(s);
 
     valueList->AppendCSSValue(openVal.forget());
