@@ -35123,6 +35123,12 @@
     "deleted": [],
     "items": {
       "testharness": {
+        "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html": [
+          {
+            "path": "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html",
+            "url": "/html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html"
+          }
+        ],
         "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html": [
           {
             "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html",
