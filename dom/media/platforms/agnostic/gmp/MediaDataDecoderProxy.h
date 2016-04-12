@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
+#include "GMPService.h"
 
 namespace mozilla {
 
@@ -62,7 +63,8 @@ class MediaDataDecoderProxy;
 
 class MediaDataDecoderCallbackProxy : public MediaDataDecoderCallback {
 public:
-  MediaDataDecoderCallbackProxy(MediaDataDecoderProxy* aProxyDecoder, MediaDataDecoderCallback* aCallback)
+  MediaDataDecoderCallbackProxy(MediaDataDecoderProxy* aProxyDecoder,
+                                MediaDataDecoderCallback* aCallback)
    : mProxyDecoder(aProxyDecoder)
    , mProxyCallback(aCallback)
   {
@@ -100,7 +102,8 @@ private:
 
 class MediaDataDecoderProxy : public MediaDataDecoder {
 public:
-  MediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback)
+  MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread,
+                        MediaDataDecoderCallback* aCallback)
    : mProxyThread(aProxyThread)
    , mProxyCallback(this, aCallback)
    , mFlushComplete(false)
@@ -108,7 +111,6 @@ public:
    , mIsShutdown(false)
 #endif
   {
-    mProxyThreadWrapper = CreateXPCOMAbstractThreadWrapper(aProxyThread, false);
   }
 
   // Ideally, this would return a regular MediaDataDecoderCallback pointer
@@ -151,7 +153,7 @@ private:
 
 #ifdef DEBUG
   bool IsOnProxyThread() {
-    return NS_GetCurrentThread() == mProxyThread;
+    return mProxyThread && mProxyThread->IsCurrentThreadIn();
   }
 #endif
 
@@ -159,8 +161,7 @@ private:
   friend class InitTask;
 
   RefPtr<MediaDataDecoder> mProxyDecoder;
-  nsCOMPtr<nsIThread> mProxyThread;
-  RefPtr<AbstractThread> mProxyThreadWrapper;
+  RefPtr<AbstractThread> mProxyThread;
 
   MediaDataDecoderCallbackProxy mProxyCallback;
 
