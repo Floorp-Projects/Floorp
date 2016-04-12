@@ -57,25 +57,55 @@
 #include "seccomon.h"
 #endif
 
+/*
+ * The PORT_*Arena* function signatures mostly involve PLArenaPool* arguments.
+ * But this is misleading! It's not actually safe to use vanilla PLArenaPools
+ * with them. There are two "subclasses" of PLArenaPool that should be used
+ * instead.
+ *
+ * - PORTArenaPool (defined in secport.c): this "subclass" is always
+ *   heap-allocated and uses a (heap-allocated) lock to protect all accesses.
+ *   Use PORT_NewArena() and PORT_FreeArena() to create and destroy
+ *   PORTArenaPools.
+ *
+ * - PORTCheapArenaPool (defined here): this "subclass" can be stack-allocated
+ *   and does not use a lock to protect accesses. This makes it cheaper but
+ *   less general. It is best used for arena pools that (a) are hot, (b) have
+ *   lifetimes bounded within a single function, and (c) don't need locking.
+ *   Use PORT_InitArena() and PORT_DestroyArena() to initialize and finalize
+ *   PORTCheapArenaPools.
+ *
+ * All the other PORT_Arena* functions will operate safely with either
+ * subclass.
+ */
+typedef struct PORTCheapArenaPool_str {
+  PLArenaPool arena;
+  PRUint32    magic;    /* This is used to distinguish the two subclasses. */
+} PORTCheapArenaPool;
+
 SEC_BEGIN_PROTOS
 
 extern void *PORT_Alloc(size_t len);
 extern void *PORT_Realloc(void *old, size_t len);
-extern void *PORT_AllocBlock(size_t len);
-extern void *PORT_ReallocBlock(void *old, size_t len);
-extern void PORT_FreeBlock(void *ptr);
 extern void *PORT_ZAlloc(size_t len);
 extern void PORT_Free(void *ptr);
 extern void PORT_ZFree(void *ptr, size_t len);
 extern char *PORT_Strdup(const char *s);
-extern time_t PORT_Time(void);
 extern void PORT_SetError(int value);
 extern int PORT_GetError(void);
 
+/* These functions are for use with PORTArenaPools. */
 extern PLArenaPool *PORT_NewArena(unsigned long chunksize);
+extern void PORT_FreeArena(PLArenaPool *arena, PRBool zero);
+
+/* These functions are for use with PORTCheapArenaPools. */
+extern void PORT_InitCheapArena(PORTCheapArenaPool* arena,
+                                unsigned long chunksize);
+extern void PORT_DestroyCheapArena(PORTCheapArenaPool* arena);
+
+/* These functions work with both kinds of arena pool. */
 extern void *PORT_ArenaAlloc(PLArenaPool *arena, size_t size);
 extern void *PORT_ArenaZAlloc(PLArenaPool *arena, size_t size);
-extern void PORT_FreeArena(PLArenaPool *arena, PRBool zero);
 extern void *PORT_ArenaGrow(PLArenaPool *arena, void *ptr,
 			    size_t oldsize, size_t newsize);
 extern void *PORT_ArenaMark(PLArenaPool *arena);

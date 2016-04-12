@@ -173,8 +173,8 @@ DH_NewKey(DHParams *params, DHPrivateKey **privKey)
     /* Generate private key xa */
     SECITEM_AllocItem(arena, &key->privateValue,
                       dh_GetSecretKeyLen(params->prime.len));
-    RNG_GenerateGlobalRandomBytes(key->privateValue.data, 
-                                  key->privateValue.len);
+    CHECK_SEC_OK(RNG_GenerateGlobalRandomBytes(key->privateValue.data, 
+                                  key->privateValue.len));
     SECITEM_TO_MPINT( key->privateValue, &xa );
     /* xa < p */
     CHECK_MPI_OK( mp_mod(&xa, &p, &xa) );
@@ -191,8 +191,10 @@ cleanup:
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
     }
-    if (rv)
+    if (rv) {
+	*privKey = NULL;
 	PORT_FreeArena(arena, PR_TRUE);
+    }
     return rv;
 }
 
@@ -272,6 +274,10 @@ DH_Derive(SECItem *publicValue,
 
     /* allocate a buffer which can hold the entire derived secret. */
     secret = PORT_Alloc(len);
+    if (secret == NULL) {
+	err = MP_MEM;
+	goto cleanup;
+    }
     /* grab the derived secret */
     err = mp_to_unsigned_octets(&ZZ, secret, len);
     if (err >= 0) err = MP_OKAY;
@@ -285,7 +291,10 @@ DH_Derive(SECItem *publicValue,
 	nb = outBytes;
     else
 	nb = len;
-    SECITEM_AllocItem(NULL, derivedSecret, nb);
+    if (SECITEM_AllocItem(NULL, derivedSecret, nb)  == NULL) {
+	err = MP_MEM;
+	goto cleanup;
+    }
     if (len < nb) {
 	unsigned int offset = nb - len;
 	memset(derivedSecret->data, 0, offset);
@@ -360,11 +369,19 @@ KEA_Derive(SECItem *prime,
     /* allocate a buffer for the full derived secret */
     len = mp_unsigned_octet_size(&w);
     secret = PORT_Alloc(len);
+    if (secret == NULL) {
+	err = MP_MEM;
+	goto cleanup;
+    }
     /* grab the secret */
     err = mp_to_unsigned_octets(&w, secret, len);
     if (err > 0) err = MP_OKAY;
     /* allocate output buffer */
-    SECITEM_AllocItem(NULL, derivedSecret, KEA_DERIVED_SECRET_LEN);
+    if (SECITEM_AllocItem(NULL, derivedSecret, KEA_DERIVED_SECRET_LEN)
+								  == NULL) {
+	err = MP_MEM;
+	goto cleanup;
+    }
     memset(derivedSecret->data, 0, derivedSecret->len);
     /* copy in the 128 lsb of the secret */
     if (len >= KEA_DERIVED_SECRET_LEN) {
@@ -387,6 +404,8 @@ cleanup:
 	PORT_ZFree(secret, len);
     if (err) {
 	MP_TO_SEC_ERROR(err);
+	if (derivedSecret->data) 
+	    PORT_ZFree(derivedSecret->data, derivedSecret->len);
 	return SECFailure;
     }
     return SECSuccess;
