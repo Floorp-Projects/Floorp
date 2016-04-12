@@ -12,6 +12,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 
@@ -40,10 +41,15 @@ DecodedAudioDataSink::DecodedAudioDataSink(MediaQueue<MediaData>& aAudioQueue,
   , mChannel(aChannel)
   , mPlaying(true)
   , mPlaybackComplete(false)
-  , mConverter(MakeUnique<AudioConverter>(
-                AudioConfig(mInfo.mChannels, mInfo.mRate),
-                AudioConfig(mInfo.mChannels > 2 ? 2 : mInfo.mChannels, mInfo.mRate)))
 {
+  bool resampling = gfxPrefs::AudioSinkResampling();
+  uint32_t resamplingRate = gfxPrefs::AudioSinkResampleRate();
+  mConverter =
+    MakeUnique<AudioConverter>(
+      AudioConfig(mInfo.mChannels, mInfo.mRate),
+      AudioConfig(mInfo.mChannels > 2 && gfxPrefs::AudioSinkForceStereo()
+                    ? 2 : mInfo.mChannels,
+                  resampling ? resamplingRate : mInfo.mRate));
 }
 
 DecodedAudioDataSink::~DecodedAudioDataSink()
