@@ -114,6 +114,11 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin'):
       'rlz',
   ]
 
+if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Linux'):
+  DIRS += [
+      'widevine-adapter',
+  ]
+
 IPDL_SOURCES += [
   'GMPTypes.ipdlh',
   'PGMP.ipdl',
