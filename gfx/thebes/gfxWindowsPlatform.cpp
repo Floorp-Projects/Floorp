@@ -2651,6 +2651,11 @@ gfxWindowsPlatform::InitializeD2D()
     return;
   }
 
+  // If we're getting here after we've already started using DWrite, we never
+  // want to go back to GDI fonts. However if we don't have anything yet, we
+  // should go to GDI if D2D 1.0 device creation fails.
+  bool hadDWriteFactory = !!mDWriteFactory;
+
     // Using Direct2D depends on DWrite support.
   if (!mDWriteFactory && !InitDWriteSupport()) {
     mD2DStatus = FeatureStatus::Failed;
@@ -2660,7 +2665,9 @@ gfxWindowsPlatform::InitializeD2D()
   // Initialize D2D 1.0.
   VerifyD2DDevice(gfxPrefs::Direct2DForceEnabled());
   if (!mD3D10Device) {
-    mDWriteFactory = nullptr;
+    if (!hadDWriteFactory) {
+      mDWriteFactory = nullptr;
+    }
     mD2DStatus = FeatureStatus::Failed;
     return;
   }
