@@ -2486,7 +2486,6 @@ struct nsStyleDisplay
   uint8_t mOverflowClipBox;     // [reset] see nsStyleConsts.h
   uint8_t mResize;              // [reset] see nsStyleConsts.h
   uint8_t mOrient;              // [reset] see nsStyleConsts.h
-  uint8_t mMixBlendMode;        // [reset] see nsStyleConsts.h
   uint8_t mIsolation;           // [reset] see nsStyleConsts.h
   uint8_t mTopLayer;            // [reset] see nsStyleConsts.h
   uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a
@@ -3598,6 +3597,7 @@ struct nsStyleEffects
   RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
   nsRect mClip;                        // [reset] offsets from UL border edge
   uint8_t mClipFlags;                  // [reset] see nsStyleConsts.h
+  uint8_t mMixBlendMode;               // [reset] see nsStyleConsts.h
 };
 
 #endif /* nsStyleStruct_h___ */
