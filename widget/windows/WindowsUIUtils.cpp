@@ -20,6 +20,9 @@
 #include "nsString.h"
 #include "nsIWidget.h"
 
+/* mingw currently doesn't support windows.ui.viewmanagement.h, so we disable it until it's fixed. */
+#ifndef __MINGW32__
+
 #include <windows.ui.viewmanagement.h>
 
 #pragma comment(lib, "runtimeobject.lib")
@@ -85,6 +88,8 @@ public:
 };
 #endif
 
+#endif
+
 WindowsUIUtils::WindowsUIUtils() :
   mInTabletMode(eTabletModeUnknown)
 {
@@ -113,6 +118,7 @@ WindowsUIUtils::GetInTabletMode(bool* aResult)
 NS_IMETHODIMP
 WindowsUIUtils::UpdateTabletModeState()
 {
+#ifndef __MINGW32__
   if (!IsWin10OrLater()) {
     return NS_OK;
   }
@@ -168,6 +174,7 @@ WindowsUIUtils::UpdateTabletModeState()
       }
     }
   }
+#endif
 
   return NS_OK;
 }
