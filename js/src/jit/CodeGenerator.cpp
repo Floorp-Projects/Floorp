@@ -2150,9 +2150,9 @@ CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
 
     masm.loadJSContext(temp);
     masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
-    masm.loadPtr(Address(temp, JSCompartment::offsetOfRegExps()), temp);
-    masm.loadPtr(Address(temp, RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape()),
-                 temp);
+    size_t offset = JSCompartment::offsetOfRegExps() +
+                    RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape();
+    masm.loadPtr(Address(temp, offset), temp);
 
     masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
     masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
@@ -2219,9 +2219,9 @@ CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
 
     masm.loadJSContext(temp);
     masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
-    masm.loadPtr(Address(temp, JSCompartment::offsetOfRegExps()), temp);
-    masm.loadPtr(Address(temp, RegExpCompartment::offsetOfOptimizableRegExpInstanceShape()),
-                 temp);
+    size_t offset = JSCompartment::offsetOfRegExps() +
+                    RegExpCompartment::offsetOfOptimizableRegExpInstanceShape();
+    masm.loadPtr(Address(temp, offset), temp);
 
     masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
     masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
