@@ -14465,3 +14465,10 @@ nsDocShell::GetTabChild()
   nsCOMPtr<nsITabChild> tc = do_GetInterface(owner);
   return tc.forget();
 }
+
+nsICommandManager*
+nsDocShell::GetCommandManager()
+{
+  NS_ENSURE_SUCCESS(EnsureCommandHandler(), nullptr);
+  return mCommandManager;
+}
