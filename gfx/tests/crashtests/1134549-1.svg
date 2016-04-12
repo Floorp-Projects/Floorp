@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="400" height="400"
+     viewBox="694400 -179730 8000 8000">
+
+  <defs>
+    <path id="tp_crash" d="M 698430.938,-174861.922 C 699068.125,-175493.781 699593.562,-176022.531 699499,-177727" />
+  </defs>
+
+  <text font-size="4000">
+    <textPath xlink:href="#tp_crash">Eisack</textPath>
+  </text>
+  <use xlink:href="#tp_crash" fill="none" stroke="green" stroke-width="200"></use>
+</svg>
