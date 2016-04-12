@@ -17,6 +17,8 @@
 
 #include "jstypes.h"
 
+#include "vm/HelperThreads.h"
+
 #ifdef WIN32
 #    include "jswin.h"
 #endif
@@ -56,6 +58,25 @@ uint32_t
 GetThreadType(void) {
     return threadType.get();
 }
+
+void
+SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
+    MOZ_ASSERT(counter + allocations > counter);
+    MOZ_ASSERT(thread > js::oom::THREAD_TYPE_NONE && thread < js::oom::THREAD_TYPE_MAX);
+    targetThread = thread;
+    maxAllocations = counter + allocations;
+    failAlways = always;
+}
+
+void
+ResetSimulatedOOM() {
+    if (targetThread != THREAD_TYPE_NONE && targetThread != THREAD_TYPE_MAIN)
+        HelperThreadState().waitForAllThreads();
+    targetThread = THREAD_TYPE_NONE;
+    maxAllocations = UINT64_MAX;
+    failAlways = false;
+}
+
 
 } // namespace oom
 } // namespace js
