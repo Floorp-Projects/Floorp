@@ -13,6 +13,9 @@ ac_add_options --enable-valgrind
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 . $topsrcdir/build/unix/mozconfig.gtk
 
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
+
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 

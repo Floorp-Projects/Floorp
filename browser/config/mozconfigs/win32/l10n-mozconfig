@@ -8,6 +8,9 @@ ac_add_options --with-branding=browser/branding/nightly
 
 export MOZILLA_OFFICIAL=1
 
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
+
 if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
   . $topsrcdir/build/win32/mozconfig.vs2015-win64
 else
