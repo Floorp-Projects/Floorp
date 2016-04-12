@@ -10,6 +10,7 @@ from collections import OrderedDict
 from distutils.spawn import find_executable
 
 import config
+import wpttest
 
 
 def abs_path(path):
@@ -24,6 +25,7 @@ def url_or_path(path):
         return path
     else:
         return abs_path(path)
+
 
 def require_arg(kwargs, name, value_func=None):
     if value_func is None:
@@ -58,6 +60,9 @@ def create_parser(product_choices=None):
 
     parser.add_argument("--binary", action="store",
                         type=abs_path, help="Binary to run tests against")
+    parser.add_argument('--binary-arg',
+                        default=[], action="append", dest="binary_args",
+                        help="Extra argument for the binary (servo)")
     parser.add_argument("--webdriver-binary", action="store", metavar="BINARY",
                         type=abs_path, help="WebDriver server binary to use")
     parser.add_argument("--processes", action="store", type=int, default=None,
@@ -98,8 +103,8 @@ def create_parser(product_choices=None):
 
     test_selection_group = parser.add_argument_group("Test Selection")
     test_selection_group.add_argument("--test-types", action="store",
-                                      nargs="*", default=["testharness", "reftest"],
-                                      choices=["testharness", "reftest"],
+                                      nargs="*", default=wpttest.enabled_tests,
+                                      choices=wpttest.enabled_tests,
                                       help="Test types to run")
     test_selection_group.add_argument("--include", action="append",
                                       help="URL prefix to include")
@@ -127,9 +132,6 @@ def create_parser(product_choices=None):
                                  help="Path or url to symbols file used to analyse crash minidumps.")
     debugging_group.add_argument("--stackwalk-binary", action="store", type=abs_path,
                                  help="Path to stackwalker program used to analyse minidumps.")
-
-    debugging_group.add_argument("--pdb", action="store_true",
-                                 help="Drop into pdb on python exception")
 
     chunking_group = parser.add_argument_group("Test Chunking")
     chunking_group.add_argument("--total-chunks", action="store", type=int, default=1,
@@ -343,11 +345,13 @@ def check_args(kwargs):
 
     return kwargs
 
+
 def check_args_update(kwargs):
     set_from_config(kwargs)
 
     if kwargs["product"] is None:
         kwargs["product"] = "firefox"
+
 
 def create_parser_update(product_choices=None):
     from mozlog.structured import commandline

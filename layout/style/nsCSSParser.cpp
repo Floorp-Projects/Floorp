@@ -2136,7 +2136,10 @@ CSSParserImpl::ParseSourceSizeList(const nsAString& aBuffer,
       query->SetNegated();
     }
 
-    if (ParseNonNegativeVariant(value, VARIANT_LPCALC, nullptr) !=
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#source-size-value
+    // Percentages are not allowed in a <source-size-value>, to avoid
+    // confusion about what it would be relative to.
+    if (ParseNonNegativeVariant(value, VARIANT_LCALC, nullptr) !=
         CSSParseResult::Ok) {
       hitError = true;
       break;

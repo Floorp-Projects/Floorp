@@ -635,7 +635,7 @@ bool Pass::testPassConstraint(Machine & m) const
 bool Pass::testConstraint(const Rule & r, Machine & m) const
 {
     const uint16 curr_context = m.slotMap().context();
-    if (unsigned(r.sort - r.preContext) > m.slotMap().size() - curr_context
+    if (unsigned(r.sort + curr_context - r.preContext) > m.slotMap().size()
         || curr_context - r.preContext < 0) return false;
 
     vm::slotref * map = m.slotMap().begin() + curr_context - r.preContext;

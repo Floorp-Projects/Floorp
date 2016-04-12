@@ -91,6 +91,8 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
 #endif
   , mScannedPluginOnDisk(false)
   , mWaitingForPluginsSyncShutdown(false)
+  , mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor")
+  , mLoadPluginsFromDiskComplete(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sHaveSetGMPServiceParentPrefCaches) {
@@ -101,6 +103,7 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
     Preferences::AddBoolVarCache(&sAllowInsecureGMP,
                                  "media.gmp.insecure.allow", false);
   }
+  mInitPromise.SetMonitor(&mInitPromiseMonitor);
 }
 
 GeckoMediaPluginServiceParent::~GeckoMediaPluginServiceParent()
@@ -508,30 +511,72 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+RefPtr<GenericPromise>
+GeckoMediaPluginServiceParent::EnsureInitialized() {
+  MonitorAutoLock lock(mInitPromiseMonitor);
+  if (mLoadPluginsFromDiskComplete) {
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }
+  // We should have an init promise in flight.
+  MOZ_ASSERT(!mInitPromise.IsEmpty());
+  return mInitPromise.Ensure(__func__);
+}
+
 bool
 GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
                                                     const nsCString& aAPI,
                                                     const nsTArray<nsCString>& aTags,
                                                     UniquePtr<GetGMPContentParentCallback>&& aCallback)
 {
-  RefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId, aAPI, aTags);
-
-  nsCString api = aTags[0];
-  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
-
-  if (!gmp) {
-    return false;
-  }
-
-  return gmp->GetGMPContentParent(Move(aCallback));
+  RefPtr<GeckoMediaPluginServiceParent> self(this);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsCString nodeId(aNodeId);
+  nsTArray<nsCString> tags(aTags);
+  nsCString api(aAPI);
+  GetGMPContentParentCallback* rawCallback = aCallback.release();
+  EnsureInitialized()->Then(thread, __func__,
+    [self, tags, api, nodeId, rawCallback]() -> void {
+      UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
+      RefPtr<GMPParent> gmp = self->SelectPluginForAPI(nodeId, api, tags);
+      LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)self, (void *)gmp, api.get()));
+      if (!gmp) {
+        NS_WARNING("GeckoMediaPluginServiceParent::GetContentParentFrom failed");
+        callback->Done(nullptr);
+        return;
+      }
+      gmp->GetGMPContentParent(Move(callback));
+    },
+    [rawCallback]() -> void {
+      UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
+      NS_WARNING("GMPService::EnsureInitialized failed.");
+      callback->Done(nullptr);
+    });
+  return true;
 }
 
 void
 GeckoMediaPluginServiceParent::InitializePlugins()
 {
-  mGMPThread->Dispatch(
-    NS_NewRunnableMethod(this, &GeckoMediaPluginServiceParent::LoadFromEnvironment),
-    NS_DISPATCH_NORMAL);
+  MonitorAutoLock lock(mInitPromiseMonitor);
+  if (mLoadPluginsFromDiskComplete) {
+    return;
+  }
+
+  RefPtr<GeckoMediaPluginServiceParent> self(this);
+  RefPtr<GenericPromise> p = mInitPromise.Ensure(__func__);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  InvokeAsync(thread, this, __func__, &GeckoMediaPluginServiceParent::LoadFromEnvironment)
+    ->Then(thread, __func__,
+      [self]() -> void {
+        MonitorAutoLock lock(self->mInitPromiseMonitor);
+        self->mLoadPluginsFromDiskComplete = true;
+        self->mInitPromise.Resolve(true, __func__);
+      },
+      [self]() -> void {
+        MonitorAutoLock lock(self->mInitPromiseMonitor);
+        self->mLoadPluginsFromDiskComplete = true;
+        self->mInitPromise.Reject(NS_ERROR_FAILURE, __func__);
+      });
 }
 
 void
@@ -702,36 +747,39 @@ GeckoMediaPluginServiceParent::CrashPlugins()
   }
 }
 
-void
+RefPtr<GenericPromise::AllPromiseType>
 GeckoMediaPluginServiceParent::LoadFromEnvironment()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
   const char* env = PR_GetEnv("MOZ_GMP_PATH");
   if (!env || !*env) {
-    return;
+    return GenericPromise::AllPromiseType::CreateAndResolve(true, __func__);
   }
 
   nsString allpaths;
   if (NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(env), allpaths)))) {
-    return;
+    return GenericPromise::AllPromiseType::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  nsTArray<RefPtr<GenericPromise>> promises;
   uint32_t pos = 0;
   while (pos < allpaths.Length()) {
     // Loop over multiple path entries separated by colons (*nix) or
     // semicolons (Windows)
     int32_t next = allpaths.FindChar(XPCOM_ENV_PATH_SEPARATOR[0], pos);
     if (next == -1) {
-      AddOnGMPThread(nsDependentSubstring(allpaths, pos));
+      promises.AppendElement(AddOnGMPThread(nsString(Substring(allpaths, pos))));
       break;
     } else {
-      AddOnGMPThread(nsDependentSubstring(allpaths, pos, next - pos));
+      promises.AppendElement(AddOnGMPThread(nsString(Substring(allpaths, pos, next - pos))));
       pos = next + 1;
     }
   }
 
   mScannedPluginOnDisk = true;
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  return GenericPromise::All(thread, promises);
 }
 
 class NotifyObserversTask final : public nsRunnable {
@@ -758,13 +806,9 @@ private:
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::PathRunnable::Run()
 {
-  if (mOperation == ADD) {
-    mService->AddOnGMPThread(mPath);
-  } else {
-    mService->RemoveOnGMPThread(mPath,
-                                mOperation == REMOVE_AND_DELETE_FROM_DISK,
-                                mDefer);
-  }
+  mService->RemoveOnGMPThread(mPath,
+                              mOperation == REMOVE_AND_DELETE_FROM_DISK,
+                              mDefer);
 #ifndef MOZ_WIDGET_GONK // Bug 1214967: disabled on B2G due to inscrutable test failures.
   // For e10s, we must fire a notification so that all ContentParents notify
   // their children to update the codecs that the GMPDecoderModule can use.
@@ -778,12 +822,41 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
   return NS_OK;
 }
 
+RefPtr<GenericPromise>
+GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirectory)
+{
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsString dir(aDirectory);
+  return InvokeAsync(thread, this, __func__, &GeckoMediaPluginServiceParent::AddOnGMPThread, dir)
+    ->Then(AbstractThread::MainThread(), __func__,
+      [dir]() -> void {
+        LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s succeeded",
+              NS_ConvertUTF16toUTF8(dir).get()));
+        MOZ_ASSERT(NS_IsMainThread());
+        // For e10s, we must fire a notification so that all ContentParents notify
+        // their children to update the codecs that the GMPDecoderModule can use.
+        nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+        MOZ_ASSERT(obsService);
+        if (obsService) {
+          obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
+        }
+        // For non-e10s, and for decoding in the chrome process, must update GMP
+        // PDM's codecs list directly.
+        GMPDecoderModule::UpdateUsableCodecs();
+      },
+      [dir]() -> void {
+        LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s failed",
+              NS_ConvertUTF16toUTF8(dir).get()));
+      })
+    ->CompletionPromise();
+}
+
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::AddPluginDirectory(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GMPDispatch(new PathRunnable(this, aDirectory,
-                                      PathRunnable::EOperation::ADD));
+  RefPtr<GenericPromise> p = AsyncAddPluginDirectory(aDirectory);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -983,8 +1056,8 @@ GeckoMediaPluginServiceParent::ClonePlugin(const GMPParent* aOriginal)
   return gmp.get();
 }
 
-void
-GeckoMediaPluginServiceParent::AddOnGMPThread(const nsAString& aDirectory)
+RefPtr<GenericPromise>
+GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, NS_LossyConvertUTF16toASCII(aDirectory).get()));
@@ -992,22 +1065,31 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(const nsAString& aDirectory)
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   RefPtr<GMPParent> gmp = CreateGMPParent();
-  rv = gmp ? gmp->Init(this, directory) : NS_ERROR_NOT_AVAILABLE;
-  if (NS_FAILED(rv)) {
+  if (!gmp) {
     NS_WARNING("Can't Create GMPParent");
-    return;
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-    mPlugins.AppendElement(gmp);
-  }
-
-  NS_DispatchToMainThread(new NotifyObserversTask("gmp-path-added"), NS_DISPATCH_NORMAL);
+  RefPtr<GeckoMediaPluginServiceParent> self(this);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsCString dir = NS_ConvertUTF16toUTF8(aDirectory);
+  return gmp->Init(this, directory)->Then(thread, __func__,
+    [gmp, self, dir]() -> void {
+      LOGD(("%s::%s: %s Succeeded", __CLASS__, __FUNCTION__, dir.get()));
+      {
+        MutexAutoLock lock(self->mMutex);
+        self->mPlugins.AppendElement(gmp);
+      }
+      NS_DispatchToMainThread(new NotifyObserversTask("gmp-path-added"), NS_DISPATCH_NORMAL);
+    },
+    [dir]() -> void {
+      LOGD(("%s::%s: %s Failed", __CLASS__, __FUNCTION__, dir.get()));
+    })
+    ->CompletionPromise();
 }
 
 void
@@ -1245,13 +1327,18 @@ GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
 
   nsresult rv;
 
-  if (aOrigin.EqualsLiteral("null") ||
+  if (aGMPName.EqualsLiteral("gmp-widevinecdm") ||
+      aOrigin.EqualsLiteral("null") ||
       aOrigin.IsEmpty() ||
       aTopLevelOrigin.EqualsLiteral("null") ||
       aTopLevelOrigin.IsEmpty()) {
-    // At least one of the (origin, topLevelOrigin) is null or empty;
-    // probably a local file. Generate a random node id, and don't store
-    // it so that the GMP's storage is temporary and not shared.
+    // This is for the Google Widevine CDM, which doesn't have persistent
+    // storage and which can't handle being used by more than one origin at
+    // once in the same plugin instance, or at least one of the
+    // (origin, topLevelOrigin) is null or empty; probably a local file.
+    // Generate a random node id, and don't store it so that the GMP's storage
+    // is temporary and the process for this GMP is not shared with GMP
+    // instances that have the same nodeId.
     nsAutoCString salt;
     rv = GenerateRandomPathName(salt, NodeIdSaltLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {

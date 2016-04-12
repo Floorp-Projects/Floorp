@@ -102,7 +102,12 @@ var ContentPrefServiceParent = {
       handleResult: function(pref) {
         msg.target.sendAsyncMessage("ContentPrefs:HandleResult",
                                     { requestId: requestId,
-                                      contentPref: pref });
+                                      contentPref: {
+                                        domain: pref.domain,
+                                        name: pref.name,
+                                        value: pref.value
+                                      }
+                                    });
       },
 
       handleError: function(error) {
@@ -110,7 +115,6 @@ var ContentPrefServiceParent = {
                                     { requestId: requestId,
                                       error: error });
       },
-
       handleCompletion: function(reason) {
         msg.target.sendAsyncMessage("ContentPrefs:HandleCompletion",
                                     { requestId: requestId,

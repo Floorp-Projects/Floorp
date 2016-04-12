@@ -112,8 +112,14 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
     # interpret the variables
     def interpret_variables(global_dict, local_dict):
         variables = global_dict.copy()
-        if 'skip-if' in local_dict and 'skip-if' in variables:
-            local_dict['skip-if'] = "(%s) || (%s)" % (variables['skip-if'].split('#')[0], local_dict['skip-if'].split('#')[0])
+
+        # These variables are combinable when they appear both in default
+        # and per-entry.
+        for field_name, pattern in (('skip-if', '(%s) || (%s)'),
+                                    ('support-files', '%s %s')):
+            local_value, global_value = local_dict.get(field_name), variables.get(field_name)
+            if local_value and global_value:
+                local_dict[field_name] = pattern % (global_value.split('#')[0], local_value.split('#')[0])
         variables.update(local_dict)
 
         return variables

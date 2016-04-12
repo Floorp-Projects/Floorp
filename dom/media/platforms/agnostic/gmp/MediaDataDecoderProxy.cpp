@@ -34,7 +34,7 @@ MediaDataDecoderProxy::Init()
 {
   MOZ_ASSERT(!mIsShutdown);
 
-  return InvokeAsync(mProxyThreadWrapper, this, __func__,
+  return InvokeAsync(mProxyThread, this, __func__,
                      &MediaDataDecoderProxy::InternalInit);
 }
 
@@ -45,8 +45,7 @@ MediaDataDecoderProxy::Input(MediaRawData* aSample)
   MOZ_ASSERT(!mIsShutdown);
 
   nsCOMPtr<nsIRunnable> task(new InputTask(mProxyDecoder, aSample));
-  nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mProxyThread->Dispatch(task.forget());
 
   return NS_OK;
 }
@@ -61,8 +60,7 @@ MediaDataDecoderProxy::Flush()
 
   nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Flush);
-  nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mProxyThread->Dispatch(task.forget());
 
   mFlushComplete.WaitUntil(true);
 
@@ -77,8 +75,7 @@ MediaDataDecoderProxy::Drain()
 
   nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Drain);
-  nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mProxyThread->Dispatch(task.forget());
   return NS_OK;
 }
 
@@ -92,7 +89,7 @@ MediaDataDecoderProxy::Shutdown()
 #endif
   nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Shutdown);
-  nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_SYNC);
+  nsresult rv = mProxyThread->AsXPCOMThread()->Dispatch(task, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }

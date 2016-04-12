@@ -138,7 +138,7 @@ ReadIntoArray(nsIFile* aFile,
   return (bytesRead == length);
 }
 
-static bool
+bool
 ReadIntoString(nsIFile* aFile,
                nsCString& aOutDst,
                size_t aMaxLength)

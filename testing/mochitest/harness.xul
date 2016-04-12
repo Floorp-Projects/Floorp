@@ -84,7 +84,7 @@ function linkAndHookup(links) {
         </div>
         <div class="clear"></div>
         <div class="frameholder">
-          <iframe type="content" scrolling="no" id="testframe" width="550" height="350"></iframe>
+          <iframe type="content" id="testframe" width="550" height="350"></iframe>
         </div>
         <div class="clear"></div>
         <div class="toggle">

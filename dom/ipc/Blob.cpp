@@ -657,58 +657,6 @@ private:
   }
 };
 
-class EmptyBlobImpl final
-  : public BlobImplBase
-{
-public:
-  explicit EmptyBlobImpl(const nsAString& aContentType)
-    : BlobImplBase(aContentType, 0)
-  {
-    mImmutable = true;
-  }
-
-  EmptyBlobImpl(const nsAString& aName,
-                const nsAString& aContentType,
-                int64_t aLastModifiedDate)
-    : BlobImplBase(aName, aContentType, 0, aLastModifiedDate)
-  {
-    mImmutable = true;
-  }
-
-private:
-  virtual already_AddRefed<BlobImpl>
-  CreateSlice(uint64_t /* aStart */,
-              uint64_t aLength,
-              const nsAString& aContentType,
-              ErrorResult& /* aRv */) override
-  {
-    MOZ_ASSERT(!aLength);
-
-    RefPtr<BlobImpl> sliceImpl = new EmptyBlobImpl(aContentType);
-
-    DebugOnly<bool> isMutable;
-    MOZ_ASSERT(NS_SUCCEEDED(sliceImpl->GetMutable(&isMutable)));
-    MOZ_ASSERT(!isMutable);
-
-    return sliceImpl.forget();
-  }
-
-  virtual void
-  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override
-  {
-    if (NS_WARN_IF(!aStream)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    nsString emptyString;
-    aRv = NS_NewStringInputStream(aStream, emptyString);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-  }
-};
-
 struct MOZ_STACK_CLASS CreateBlobImplMetadata final
 {
   nsString mContentType;

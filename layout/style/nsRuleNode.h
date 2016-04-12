@@ -683,13 +683,6 @@ protected:
                        const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
-    ComputeQuotesData(void* aStartStruct,
-                      const nsRuleData* aRuleData,
-                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
-                      RuleDetail aRuleDetail,
-                      const mozilla::RuleNodeCacheConditions aConditions);
-
-  const void*
     ComputeTextData(void* aStartStruct,
                     const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
@@ -752,6 +745,13 @@ protected:
                          nsStyleContext* aContext, nsRuleNode* aHighestNode,
                          RuleDetail aRuleDetail,
                          const mozilla::RuleNodeCacheConditions aConditions);
+
+  const void*
+    ComputeEffectsData(void* aStartStruct,
+                       const nsRuleData* aRuleData,
+                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
+                       RuleDetail aRuleDetail,
+                       const mozilla::RuleNodeCacheConditions aConditions);
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
   static void SetFontSize(nsPresContext* aPresContext,

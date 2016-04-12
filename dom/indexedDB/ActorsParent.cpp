@@ -10453,7 +10453,7 @@ DatabaseConnection::Close()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(!mDEBUGSavepointCount);
-  MOZ_RELEASE_ASSERT(!mInWriteTransaction);
+  MOZ_ASSERT(!mInWriteTransaction);
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseConnection::Close",
@@ -12139,7 +12139,7 @@ ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
-  MOZ_RELEASE_ASSERT(!aDatabaseInfo->TotalTransactionCount());
+  MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
   MOZ_ASSERT(!mIdleDatabases.Contains(aDatabaseInfo));
@@ -12313,7 +12313,7 @@ ConnectionPool::PerformIdleDatabaseMaintenance(DatabaseInfo* aDatabaseInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
-  MOZ_RELEASE_ASSERT(!aDatabaseInfo->TotalTransactionCount());
+  MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
   MOZ_ASSERT(aDatabaseInfo->mIdle);
@@ -12340,7 +12340,7 @@ ConnectionPool::CloseDatabase(DatabaseInfo* aDatabaseInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
-  MOZ_RELEASE_ASSERT(!aDatabaseInfo->TotalTransactionCount());
+  MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
   MOZ_ASSERT(!aDatabaseInfo->mClosing);
@@ -13965,7 +13965,7 @@ Database::RecvPBackgroundIDBTransactionConstructor(
              aMode == IDBTransaction::READ_WRITE ||
              aMode == IDBTransaction::READ_WRITE_FLUSH ||
              aMode == IDBTransaction::CLEANUP);
-  MOZ_RELEASE_ASSERT(!mClosed);
+  MOZ_ASSERT(!mClosed);
 
   if (IsInvalidated()) {
     // This is an expected race. We don't want the child to die here, just don't

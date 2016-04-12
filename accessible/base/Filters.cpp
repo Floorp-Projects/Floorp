@@ -49,9 +49,3 @@ filters::GetCell(Accessible* aAccessible)
 {
   return aAccessible->IsTableCell() ? eMatch : eSkipSubtree;
 }
-
-uint32_t
-filters::GetEmbeddedObject(Accessible* aAccessible)
-{
-  return aAccessible->IsText() ? eSkipSubtree : eMatch | eSkipSubtree;
-}

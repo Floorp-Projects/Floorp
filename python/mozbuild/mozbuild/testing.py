@@ -298,6 +298,7 @@ def all_test_flavors():
 
 class TestInstallInfo(object):
     def __init__(self):
+        self.seen = set()
         self.pattern_installs = []
         self.installs = []
         self.external_installs = set()
@@ -337,15 +338,26 @@ class SupportFilesConverter(object):
         #            test, based on the relative path to the manifest in the srcdir,
         #            the install_root, and 'install-to-subdir', if present in the manifest.
         info = TestInstallInfo()
-        for thing, seen in self._fields:
-            value = test.get(thing, '')
-            # We need to memoize on the basis of both the path and the output
-            # directory for the benefit of tests specifying 'install-to-subdir'.
-            if (value, out_dir) in seen:
-                continue
-            seen.add((value, out_dir))
+        for field, seen in self._fields:
+            value = test.get(field, '')
             for pattern in value.split():
-                if thing == 'generated-files':
+
+                # We track uniqueness locally (per test) where duplicates are forbidden,
+                # and globally, where they are permitted. If a support file appears multiple
+                # times for a single test, there are unnecessary entries in the manifest. But
+                # many entries will be shared across tests that share defaults.
+                # We need to memoize on the basis of both the path and the output
+                # directory for the benefit of tests specifying 'install-to-subdir'.
+                key = field, pattern, out_dir
+                if key in info.seen:
+                    raise ValueError("%s appears multiple times in a test manifest under a %s field,"
+                                     " please omit the duplicate entry." % (pattern, field))
+                info.seen.add(key)
+                if key in seen:
+                    continue
+                seen.add(key)
+
+                if field == 'generated-files':
                     info.external_installs.add(mozpath.normpath(mozpath.join(out_dir, pattern)))
                 # '!' indicates our syntax for inter-directory support file
                 # dependencies. These receive special handling in the backend.
@@ -353,7 +365,7 @@ class SupportFilesConverter(object):
                     info.deferred_installs.add(pattern)
                 # We only support globbing on support-files because
                 # the harness doesn't support * for head and tail.
-                elif '*' in pattern and thing == 'support-files':
+                elif '*' in pattern and field == 'support-files':
                     info.pattern_installs.append((manifest_dir, pattern, out_dir))
                 # "absolute" paths identify files that are to be
                 # placed in the install_root directory (no globs)
@@ -375,7 +387,7 @@ class SupportFilesConverter(object):
                         # with custom prefixes impossible. If this is
                         # needed, we can add support for that via a
                         # special syntax later.
-                        if thing == 'support-files':
+                        if field == 'support-files':
                             dest_path = mozpath.join(out_dir,
                                                      os.path.basename(pattern))
                         # If it's not a support file, we ignore it.
