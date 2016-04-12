@@ -48,12 +48,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['system/androidproxy']
 
-
-# Tests in other directories rely on files in this browser test
-# manifest. Include it here instead of crashreporter/test/moz.build
-# to avoid a failure when testing --disable-crashreporter builds.
-BROWSER_CHROME_MANIFESTS += ['crashreporter/test/browser/browser.ini']
-
 if CONFIG['MOZ_CRASHREPORTER']:
     DIRS += ['crashreporter']
 
