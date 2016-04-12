@@ -9,6 +9,9 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 /**
  * Container for telemetry data and the data necessary to upload it.
+ *
+ * If you want to create one of these, consider extending
+ * {@link TelemetryPingBuilder} or one of its descendants.
  */
 public class TelemetryPing {
     private final String url;
