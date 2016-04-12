@@ -306,9 +306,22 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   }
 #endif
 
+#ifdef MOZ_WIDEVINE_EME
   if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
+#ifdef XP_WIN
+    // Win Vista and later only.
+    if (!IsVistaOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version not met for Widevine EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
+    }
+#endif
+    if (!Preferences::GetBool("media.gmp-widevinecdm.enabled", false)) {
+      aOutMessage = NS_LITERAL_CSTRING("Widevine EME disabled");
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
+#endif
 
   return MediaKeySystemStatus::Cdm_not_supported;
 }

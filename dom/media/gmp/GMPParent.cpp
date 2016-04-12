@@ -22,7 +22,6 @@
 #include "mozilla/SandboxInfo.h"
 #endif
 #include "GMPContentParent.h"
-#include "widevine-adapter/WidevineAdapter.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
@@ -35,7 +34,11 @@ using CrashReporter::GetIDFromMinidump;
 #endif
 
 #include "mozilla/Telemetry.h"
+
+#ifdef MOZ_WIDEVINE_EME
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
+#include "widevine-adapter/WidevineAdapter.h"
+#endif
 
 namespace mozilla {
 
@@ -785,6 +788,7 @@ GMPParent::ReadGMPMetaData()
     return ReadGMPInfoFile(infoFile);
   }
 
+#ifdef MOZ_WIDEVINE_EME
   // Maybe this is the Widevine adapted plugin?
   nsCOMPtr<nsIFile> manifestFile;
   rv = mDirectory->Clone(getter_AddRefs(manifestFile));
@@ -793,6 +797,9 @@ GMPParent::ReadGMPMetaData()
   }
   manifestFile->AppendRelativePath(NS_LITERAL_STRING("manifest.json"));
   return ReadChromiumManifestFile(manifestFile);
+#else
+  return InitPromise::CreateAndReject(rv, __func__);
+#endif
 }
 
 RefPtr<GMPParent::InitPromise>
@@ -892,6 +899,7 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
+#ifdef MOZ_WIDEVINE_EME
 RefPtr<GMPParent::InitPromise>
 GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
 {
@@ -949,6 +957,7 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
+#endif
 
 bool
 GMPParent::CanBeSharedCrossNodeIds() const
