@@ -7661,6 +7661,9 @@ nsLayoutUtils::Shutdown()
   Preferences::UnregisterCallback(WebkitPrefixEnabledPrefChangeCallback,
                                   WEBKIT_PREFIXES_ENABLED_PREF_NAME);
   nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
+
+  // so the cached initial quotes array doesn't appear to be a leak
+  nsStyleQuotes::Shutdown();
 }
 
 /* static */

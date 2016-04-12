@@ -8854,34 +8854,33 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
   case eCSSUnit_Inherit:
   case eCSSUnit_Unset:
     conditions.SetUncacheable();
-    quotes->CopyFrom(*parentQuotes);
+    quotes->SetQuotesInherit(parentQuotes);
     break;
   case eCSSUnit_Initial:
-    quotes->SetInitial();
+    quotes->SetQuotesInitial();
     break;
   case eCSSUnit_None:
-    quotes->AllocateQuotes(0);
+    quotes->SetQuotesNone();
     break;
   case eCSSUnit_PairList:
   case eCSSUnit_PairListDep: {
-    const nsCSSValuePairList* ourQuotes
-      = quotesValue->GetPairListValue();
+    const nsCSSValuePairList* ourQuotes = quotesValue->GetPairListValue();
+
+    nsStyleQuoteValues::QuotePairArray quotePairs;
+    quotePairs.SetLength(ListLength(ourQuotes));
+
+    size_t index = 0;
     nsAutoString buffer;
-    nsAutoString closeBuffer;
-    uint32_t count = ListLength(ourQuotes);
-    if (NS_FAILED(quotes->AllocateQuotes(count))) {
-      break;
-    }
-    count = 0;
     while (ourQuotes) {
       MOZ_ASSERT(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
                  ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
                  "improper list contents for quotes");
-      ourQuotes->mXValue.GetStringValue(buffer);
-      ourQuotes->mYValue.GetStringValue(closeBuffer);
-      quotes->SetQuotesAt(count++, buffer, closeBuffer);
+      quotePairs[index].first  = ourQuotes->mXValue.GetStringValue(buffer);
+      quotePairs[index].second = ourQuotes->mYValue.GetStringValue(buffer);
+      ++index;
       ourQuotes = ourQuotes->mNext;
     }
+    quotes->SetQuotes(Move(quotePairs));
     break;
   }
   default:
