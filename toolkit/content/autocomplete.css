@@ -30,6 +30,7 @@ richlistitem {
   display: none;
 }
 
-.ac-action[actiontype=searchengine]:not([selected]) {
+.ac-action[actiontype=searchengine]:not([selected]),
+.ac-separator[actiontype=searchengine]:not([selected]) {
   display: none;
 }

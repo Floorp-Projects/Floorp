@@ -53,8 +53,7 @@ add_task(function*() {
   let actionHbox = result._actionText.parentNode.parentNode;
   ok(actionHbox.classList.contains("ac-action"), "Action hbox sanity check");
   is_element_hidden(actionHbox, "Action element should be hidden because it is not selected");
-  // \u2014 == em dash
-  is(result._actionText.textContent, "\u2014Search with SearchEngine", "Action text should be as expected");
+  is(result._actionText.textContent, "Search with SearchEngine", "Action text should be as expected");
 
   gBrowser.removeCurrentTab();
 });
