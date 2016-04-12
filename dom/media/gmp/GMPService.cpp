@@ -357,7 +357,7 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
       return rv;
     }
 
-    mAbstractGMPThread = CreateXPCOMAbstractThreadWrapper(mGMPThread, false);
+    mAbstractGMPThread = AbstractThread::CreateXPCOMThreadWrapper(mGMPThread, false);
 
     // Tell the thread to initialize plugins
     InitializePlugins();
