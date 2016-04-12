@@ -9,22 +9,7 @@ function setup_crash() {
   Components.utils.import("resource://gre/modules/Services.jsm");
 
   Services.prefs.setBoolPref("toolkit.terminator.testing", true);
-
-  // For Windows XP and Vista we use toolkit.asyncshutdown.crash_timeout_winxp
-  // See bug 1248358.
-  var crashTimeoutPref = "toolkit.asyncshutdown.crash_timeout";
-  var os = Components.classes["@mozilla.org/xre/app-info;1"]
-             .getService(Components.interfaces.nsIXULRuntime).OS;
-  if (os == "Windows") {
-    var version = Components.classes["@mozilla.org/system-info;1"]
-                    .getService(Components.interfaces.nsIPropertyBag2)
-                    .getProperty("version");
-    if (parseFloat(version) < 6.1) {
-      // Less than Win7.
-      crashTimeoutPref = "toolkit.asyncshutdown.crash_timeout_winxp";
-    }
-  }
-  Services.prefs.setIntPref(crashTimeoutPref, 10);
+  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);
 
   // Initialize the terminator
   // (normally, this is done through the manifest file, but xpcshell
