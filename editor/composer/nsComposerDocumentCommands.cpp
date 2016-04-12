@@ -400,7 +400,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
  *  4. In the appropriate location in editorSession, editor, or commands code,
  *     trigger the notification of this observer by something like:
  *
- *  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(mDocShell);
+ *  nsCOMPtr<nsICommandManager> commandManager = mDocShell->GetCommandManager();
  *  nsCOMPtr<nsPICommandUpdater> commandUpdater = do_QueryInterface(commandManager);
  *  NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
  *    commandUpdater->CommandStatusChanged(obs_documentCreated);

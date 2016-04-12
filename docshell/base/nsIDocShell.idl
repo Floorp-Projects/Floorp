@@ -42,6 +42,7 @@ interface nsIReflowObserver;
 interface nsIScrollObserver;
 interface nsITabParent;
 interface nsITabChild;
+interface nsICommandManager;
 native TabChildRef(already_AddRefed<nsITabChild>);
 
 typedef unsigned long nsLoadFlags;
@@ -1105,4 +1106,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [binaryname(ScriptableTabChild)] readonly attribute nsITabChild tabChild;
   [noscript,notxpcom,nostdcall] TabChildRef GetTabChild();
+
+  [noscript,nostdcall,notxpcom] nsICommandManager GetCommandManager();
 };

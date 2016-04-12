@@ -537,12 +537,12 @@ DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const
 nsresult
 DocAccessible::AddEventListeners()
 {
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(mDocumentNode->GetDocShell());
+  nsCOMPtr<nsIDocShell> docShell(mDocumentNode->GetDocShell());
 
   // We want to add a command observer only if the document is content and has
   // an editor.
-  if (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent) {
-    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
+  if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
+    nsCOMPtr<nsICommandManager> commandManager = docShell->GetCommandManager();
     if (commandManager)
       commandManager->AddCommandObserver(this, "obs_documentCreated");
   }
@@ -567,12 +567,12 @@ DocAccessible::RemoveEventListeners()
   if (mDocumentNode) {
     mDocumentNode->RemoveObserver(this);
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(mDocumentNode->GetDocShell());
-    NS_ASSERTION(docShellTreeItem, "doc should support nsIDocShellTreeItem.");
+    nsCOMPtr<nsIDocShell> docShell(mDocumentNode->GetDocShell());
+    NS_ASSERTION(docShell, "doc should support nsIDocShellTreeItem.");
 
-    if (docShellTreeItem) {
-      if (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent) {
-        nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
+    if (docShell) {
+      if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
+        nsCOMPtr<nsICommandManager> commandManager = docShell->GetCommandManager();
         if (commandManager) {
           commandManager->RemoveCommandObserver(this, "obs_documentCreated");
         }
