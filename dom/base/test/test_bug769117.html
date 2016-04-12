@@ -13,39 +13,43 @@
      /** Test for Bug 769117 **/
      "use strict";
      function onLoad () {
-       let youtube_url = "https://mochitest.youtube.com/v/Xm5i5kbIXzc";
-       let youtube_changed_url = "https://mochitest.youtube.com/embed/Xm5i5kbIXzc";
+       SpecialPowers.pushPrefEnv({"set": [["plugins.rewrite_youtube_embeds", true]]}, function() {
 
-       function testEmbed(embed) {
-         ok (embed, "Embed node exists");
-         embed = SpecialPowers.wrap(embed);
-         is (embed.srcURI.spec, youtube_changed_url, "Should have src uri of " + youtube_changed_url);
-       }
-       info("Running static embed youtube rewrite test");
-       testEmbed(document.getElementById("testembed"));
-       testEmbed(document.getElementById("testobject"));
+         let youtube_url = "https://mochitest.youtube.com/v/Xm5i5kbIXzc";
+         let youtube_changed_url = "https://mochitest.youtube.com/embed/Xm5i5kbIXzc";
+         let static_iframe = document.getElementById("staticiframe");
 
-       info("Running dynamic embed youtube rewrite test");
-       let embed_dynamic = document.createElement("embed");
-       embed_dynamic.src = "https://mochitest.youtube.com/v/Xm5i5kbIXzc";
-       embed_dynamic.type = "application/x-shockwave-flash";
+         function testEmbed(embed) {
+           ok (embed, "Embed node exists");
+           embed = SpecialPowers.wrap(embed);
+           is (embed.srcURI.spec, youtube_changed_url, "Should have src uri of " + youtube_changed_url);
+         }
 
-       document.body.appendChild(embed_dynamic);
+         function testStatic() {
+           info("Running static embed youtube rewrite test");
+           iframe_doc = static_iframe.contentWindow.document;
+           testEmbed(iframe_doc.getElementById("testembed"));
+           testEmbed(iframe_doc.getElementById("testobject"));
+           SimpleTest.executeSoon(() => {
+             testEmbed(embed_dynamic);
+             SimpleTest.finish();
+           });
+         }
 
-       SimpleTest.executeSoon(() =>
-         {
-           testEmbed(embed_dynamic);
-           SimpleTest.finish();
-         });
+         info("Running dynamic embed youtube rewrite test");
+         let embed_dynamic = document.createElement("embed");
+         embed_dynamic.src = "https://mochitest.youtube.com/v/Xm5i5kbIXzc";
+         embed_dynamic.type = "application/x-shockwave-flash";
+         document.body.appendChild(embed_dynamic);
+
+         static_iframe.onload = testStatic;
+         static_iframe.src = "file_bug769117.html"
+
+       });
      }
     </script>
   </head>
   <body onload="onLoad()">
-    <embed id="testembed"
-           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc"
-           type="application/x-shockwave-flash"
-           allowscriptaccess="always"></embed>
-    <object id="testobject"
-            data="https://mochitest.youtube.com/v/Xm5i5kbIXzc"></embed>
+    <iframe id="staticiframe"></iframe>
   </body>
 </html>
