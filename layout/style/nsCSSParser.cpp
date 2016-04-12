@@ -12063,16 +12063,13 @@ CSSParserImpl::ParseImageLayersItem(
         // The spec allows a second box value (for background-clip),
         // immediately following the first one (for background-origin).
 
-#ifdef DEBUG
-        for (size_t i = 0; nsCSSProps::kImageLayerOriginKTable[i].mValue != -1; i++) {
-          // For each keyword & value in kOriginKTable, ensure that
-          // kBackgroundKTable has a matching entry at the same position.
-          MOZ_ASSERT(nsCSSProps::kImageLayerOriginKTable[i].mKeyword ==
-                     nsCSSProps::kBackgroundClipKTable[i].mKeyword);
-          MOZ_ASSERT(nsCSSProps::kImageLayerOriginKTable[i].mValue ==
-                     nsCSSProps::kBackgroundClipKTable[i].mValue);
-        }
-#endif
+        // 'background-clip' and 'background-origin' use the same keyword table
+        MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
+                     aTable[nsStyleImageLayers::origin]] ==
+                   nsCSSProps::kImageLayerOriginKTable);
+        MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
+                     aTable[nsStyleImageLayers::clip]] ==
+                   nsCSSProps::kImageLayerOriginKTable);
         static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER ==
                       NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
                       NS_STYLE_IMAGELAYER_CLIP_PADDING ==
