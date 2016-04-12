@@ -95,6 +95,7 @@ GMPParent::CloneFrom(const GMPParent* aOther)
   for (const GMPCapability& cap : aOther->mCapabilities) {
     mCapabilities.AppendElement(cap);
   }
+  mAdapter = aOther->mAdapter;
   return NS_OK;
 }
 
@@ -190,7 +191,7 @@ GMPParent::LoadProcess()
 #endif
 
     // Intr call to block initialization on plugin load.
-    ok = CallStartPlugin();
+    ok = CallStartPlugin(mAdapter);
     if (!ok) {
       LOGD("%s: Failed to send start to child process", __FUNCTION__);
       return NS_ERROR_FAILURE;
@@ -941,6 +942,7 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
   mCapabilities.AppendElement(Move(decrypt));
 
   MOZ_ASSERT(mName.EqualsLiteral("widevinecdm"));
+  mAdapter = NS_LITERAL_STRING("widevine");
 #ifdef XP_WIN
   mLibs = NS_LITERAL_CSTRING("dxva2.dll");
 #endif
