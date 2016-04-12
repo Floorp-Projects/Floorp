@@ -4,7 +4,7 @@
 add_task(function*() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://mochi.test:8888/browser/browser/base/content/test/general/xul_tooltiptext.xhtml",
+    url: "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/xul_tooltiptext.xhtml",
   }, function*(browser) {
     yield ContentTask.spawn(browser, "", function() {
       let textObj = {};
