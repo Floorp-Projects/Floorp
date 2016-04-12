@@ -99,10 +99,15 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
                                  nsDisplayList* aList)
 {
   nsRect dirty;
+  DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   nsDisplayListBuilder::OutOfFlowDisplayData*
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(aFrame);
   if (savedOutOfFlowData) {
     dirty = savedOutOfFlowData->mDirtyRect;
+    clipState.SetClipForContainingBlockDescendants(
+      &savedOutOfFlowData->mContainingBlockClip);
+    clipState.SetScrollClipForContainingBlockDescendants(
+      savedOutOfFlowData->mContainingBlockScrollClip);
   }
   nsDisplayList list;
   aFrame->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
@@ -140,7 +145,6 @@ ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
                    "should always be out-of-flow if in the top layer");
         continue;
       }
-      MOZ_ASSERT(frame->GetParent() == this);
       if (nsIFrame* backdropPh =
           frame->GetChildList(kBackdropList).FirstChild()) {
         MOZ_ASSERT(backdropPh->GetType() == nsGkAtoms::placeholderFrame);

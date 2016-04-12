@@ -59,6 +59,7 @@ private:
   bool mPaddingDiscarded;
   int64_t mFrames;
   Maybe<int64_t> mLastFrameTime;
+  uint8_t mMappingTable[MAX_AUDIO_CHANNELS]; // Channel mapping table.
 };
 
 } // namespace mozilla

@@ -3464,29 +3464,29 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_clip: {
-          const nsStyleDisplay *display =
-            static_cast<const nsStyleDisplay*>(styleStruct);
-          if (!(display->mClipFlags & NS_STYLE_CLIP_RECT)) {
+          const nsStyleEffects* effects =
+            static_cast<const nsStyleEffects*>(styleStruct);
+          if (!(effects->mClipFlags & NS_STYLE_CLIP_RECT)) {
             aComputedValue.SetAutoValue();
           } else {
             nsCSSRect *vrect = new nsCSSRect;
-            const nsRect &srect = display->mClip;
-            if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
+            const nsRect &srect = effects->mClip;
+            if (effects->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
               vrect->mTop.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.y, vrect->mTop);
             }
-            if (display->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
+            if (effects->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
               vrect->mRight.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.XMost(), vrect->mRight);
             }
-            if (display->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
+            if (effects->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
               vrect->mBottom.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.YMost(), vrect->mBottom);
             }
-            if (display->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
+            if (effects->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
               vrect->mLeft.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.x, vrect->mLeft);
@@ -3537,9 +3537,9 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 #endif
         case eCSSProperty_filter: {
-          const nsStyleSVGReset *svgReset =
-            static_cast<const nsStyleSVGReset*>(styleStruct);
-          const nsTArray<nsStyleFilter>& filters = svgReset->mFilters;
+          const nsStyleEffects* effects =
+            static_cast<const nsStyleEffects*>(styleStruct);
+          const nsTArray<nsStyleFilter>& filters = effects->mFilters;
           nsAutoPtr<nsCSSValueList> result;
           nsCSSValueList **resultTail = getter_Transfers(result);
           for (uint32_t i = 0; i < filters.Length(); ++i) {

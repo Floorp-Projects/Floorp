@@ -219,18 +219,11 @@ function run_test()
                                    packagedAppWorseContentHandler.bind(null, i));
   }
 
-  httpserver.registerPathHandler("/signedPackage", signedPackagedAppContentHandler);
   httpserver.start(-1);
-
-  do_register_cleanup(function() {
-    gPrefs.clearUserPref("network.http.signed-packages.enabled");
-  });
 
   paservice = Cc["@mozilla.org/network/packaged-app-service;1"]
                      .getService(Ci.nsIPackagedAppService);
   ok(!!paservice, "test service exists");
-
-  gPrefs.setBoolPref("network.http.signed-packages.enabled", true);
 
   add_test(test_bad_args);
 
@@ -244,9 +237,6 @@ function run_test()
 
   add_test(test_bad_package);
   add_test(test_bad_package_404);
-
-  add_test(test_signed_package_callback);
-  add_test(test_unsigned_package_callback);
 
   // Channels created by addons could have no load info.
   // In debug mode this triggers an assertion, but we still want to test that
@@ -579,13 +569,6 @@ function test_worse_package_5() {
 
 //-----------------------------------------------------------------------------
 
-function signedPackagedAppContentHandler(metadata, response)
-{
-  response.setHeader("Content-Type", 'application/package');
-  var body = signedPackage(uri);
-  response.bodyOutputStream.write(body, body.length);
-}
-
 // Used as a stub when the cache listener is not important.
 var dummyCacheListener = {
   QueryInterface: function (iid) {
@@ -608,67 +591,4 @@ function setTrustedOrigin() {
 
 function resetTrustedOrigin() {
   gPrefs.clearUserPref("network.http.signed-packages.trusted-origin");
-}
-
-function test_signed_package_callback()
-{
-  setTrustedOrigin();
-
-  packagePath = "/signedPackage";
-  let url = uri + packagePath + "!//index.html";
-  let channel = getChannelForURL(url, {
-    onStartSignedPackageRequest: function(aPackageId) {
-      ok(true, "onStartSignedPackageRequest is notifited as expected");
-      resetTrustedOrigin();
-      run_next_test();
-    },
-
-    getInterface: function (iid) {
-      return this.QueryInterface(iid);
-    },
-
-    QueryInterface: function (iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIInterfaceRequestor) ||
-          iid.equals(Ci.nsIPackagedAppChannelListener)) {
-        return this;
-      }
-      if (iid.equals(Ci.nsILoadContext)) {
-        return new LoadContextCallback(1024, false, false, false);
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-  });
-
-  paservice.getResource(channel, dummyCacheListener);
-}
-
-function test_unsigned_package_callback()
-{
-  packagePath = "/package";
-  let url = uri + packagePath + "!//index.html";
-  let channel = getChannelForURL(url, {
-    onStartSignedPackageRequest: function(aPackageId) {
-      ok(false, "Unsigned package shouldn't be called.");
-    },
-
-    getInterface: function (iid) {
-      return this.QueryInterface(iid);
-    },
-
-    QueryInterface: function (iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIInterfaceRequestor) ||
-          iid.equals(Ci.nsIPackagedAppChannelListener)) {
-        return this;
-      }
-      if (iid.equals(Ci.nsILoadContext)) {
-        return new LoadContextCallback(1024, false, false, false);
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-  });
-
-  // Pass cacheListener since we rely on 'run_next_test' in it.
-  paservice.getResource(channel, cacheListener);
 }

@@ -908,7 +908,10 @@ class GTestCommands(MachCommandBase):
         # https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_Test_Programs:_Advanced_Options
         gtest_env = {b'GTEST_FILTER': gtest_filter}
 
-        xre_path = os.path.join(self.topobjdir, "dist", "bin")
+        # Note: we must normalize the path here so that gtest on Windows sees
+        # a MOZ_GMP_PATH which has only Windows dir seperators, because
+        # nsILocalFile cannot open the paths with non-Windows dir seperators.
+        xre_path = os.path.join(os.path.normpath(self.topobjdir), "dist", "bin")
         gtest_env["MOZ_XRE_DIR"] = xre_path
         gtest_env["MOZ_GMP_PATH"] = os.pathsep.join(
             os.path.join(xre_path, p, "1.0")
@@ -1173,6 +1176,9 @@ class RunProgram(MachCommandBase):
         extra_env = {'MOZ_CRASHREPORTER_DISABLE': '1'}
 
         if debug or debugger or debugparams:
+            if 'INSIDE_EMACS' in os.environ:
+                self.log_manager.terminal_handler.setLevel(logging.WARNING)
+
             import mozdebug
             if not debugger:
                 # No debugger name was provided. Look for the default ones on

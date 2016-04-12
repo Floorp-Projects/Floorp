@@ -493,7 +493,7 @@ HTMLTableCellElement::MapAttributesIntoRule(const nsMappedAttributes* aAttribute
       }
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue* verticalAlign = aData->ValueForVerticalAlign();
     if (verticalAlign->GetUnit() == eCSSUnit_Null) {
       // valign: enum

@@ -338,8 +338,10 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
   if (aBuilder->IsBuildingLayerEventRegions()) {
-    bool frameIsPointerEventsNone = !aFrame->PassPointerEventsToChildren()
-        && (aFrame->StyleVisibility()->GetEffectivePointerEvents(aFrame) == NS_STYLE_POINTER_EVENTS_NONE);
+    bool frameIsPointerEventsNone =
+      !aFrame->PassPointerEventsToChildren() &&
+      aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame) ==
+        NS_STYLE_POINTER_EVENTS_NONE;
     if (aBuilder->IsInsidePointerEventsNoneDoc() || frameIsPointerEventsNone) {
       mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;
     }

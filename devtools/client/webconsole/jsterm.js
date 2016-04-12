@@ -1,5 +1,5 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft= javascript ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -308,6 +308,22 @@ JSTerm.prototype = {
       return;
     }
     let errorMessage = response.exceptionMessage;
+    let errorDocURL = response.exceptionDocURL;
+
+    let errorDocLink;
+    if (errorDocURL) {
+      errorMessage += " ";
+      errorDocLink = this.hud.document.createElementNS(XHTML_NS, "a");
+      errorDocLink.className = "learn-more-link webconsole-learn-more-link";
+      errorDocLink.textContent = "[" + l10n.getStr("webConsoleMoreInfoLabel") + "]";
+      errorDocLink.title = errorDocURL;
+      errorDocLink.href = "#";
+      errorDocLink.draggable = false;
+      errorDocLink.addEventListener("click", () => {
+        this.hud.owner.openLink(errorDocURL);
+      });
+    }
+
     // Wrap thrown strings in Error objects, so `throw "foo"` outputs
     // "Error: foo"
     if (typeof(response.exception) === "string") {
@@ -356,7 +372,7 @@ JSTerm.prototype = {
       return;
     }
 
-    let msg = new Messages.JavaScriptEvalOutput(response, errorMessage);
+    let msg = new Messages.JavaScriptEvalOutput(response, errorMessage, errorDocLink);
     this.hud.output.addMessage(msg);
 
     if (callback) {

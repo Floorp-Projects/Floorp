@@ -501,7 +501,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (!svgChildFrame)
     return;
 
-  float opacity = aFrame->StyleDisplay()->mOpacity;
+  float opacity = aFrame->StyleEffects()->mOpacity;
   if (opacity == 0.0f)
     return;
 
@@ -592,7 +592,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)
-      || aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+      || aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     complexEffects = true;
 
     Matrix maskTransform;
@@ -624,7 +624,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                                         *drawTarget));
     }
 
-    if (aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+    if (aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
       // Create a temporary context to draw to so we can blend it back with
       // another operator.
       gfxRect clipRect;
@@ -709,7 +709,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     target->PopGroupAndBlend();
   }
 
-  if (aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+  if (aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     RefPtr<DrawTarget> targetDT = target->GetDrawTarget();
     target = nullptr;
     RefPtr<SourceSurface> targetSurf = targetDT->Snapshot();
@@ -879,9 +879,10 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
                                 float aX, float aY, float aWidth, float aHeight)
 {
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
+  const nsStyleEffects* effects = aFrame->StyleEffects();
 
-  if (!(disp->mClipFlags & NS_STYLE_CLIP_RECT)) {
-    NS_ASSERTION(disp->mClipFlags == NS_STYLE_CLIP_AUTO,
+  if (!(effects->mClipFlags & NS_STYLE_CLIP_RECT)) {
+    NS_ASSERTION(effects->mClipFlags == NS_STYLE_CLIP_AUTO,
                  "We don't know about this type of clip.");
     return gfxRect(aX, aY, aWidth, aHeight);
   }
@@ -890,14 +891,14 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
       disp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
 
     nsIntRect clipPxRect =
-      disp->mClip.ToOutsidePixels(aFrame->PresContext()->AppUnitsPerDevPixel());
+      effects->mClip.ToOutsidePixels(aFrame->PresContext()->AppUnitsPerDevPixel());
     gfxRect clipRect =
       gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width, clipPxRect.height);
 
-    if (NS_STYLE_CLIP_RIGHT_AUTO & disp->mClipFlags) {
+    if (NS_STYLE_CLIP_RIGHT_AUTO & effects->mClipFlags) {
       clipRect.width = aWidth - clipRect.X();
     }
-    if (NS_STYLE_CLIP_BOTTOM_AUTO & disp->mClipFlags) {
+    if (NS_STYLE_CLIP_BOTTOM_AUTO & effects->mClipFlags) {
       clipRect.height = aHeight - clipRect.Y();
     }
 
@@ -1124,7 +1125,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
       type != nsGkAtoms::svgPathGeometryFrame) {
     return false;
   }
-  if (aFrame->StyleSVGReset()->HasFilters()) {
+  if (aFrame->StyleEffects()->HasFilters()) {
     return false;
   }
   // XXX The SVG WG is intending to allow fill, stroke and markers on <image>
@@ -1295,7 +1296,7 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
 static float
 MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
 {
-  float opacity = aFrame->StyleDisplay()->mOpacity;
+  float opacity = aFrame->StyleEffects()->mOpacity;
   if (opacity < 1 && nsSVGUtils::CanOptimizeOpacity(aFrame)) {
     return aFillOrStrokeOpacity * opacity;
   }
@@ -1596,7 +1597,7 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 {
   uint16_t flags = 0;
 
-  switch(aFrame->StyleVisibility()->mPointerEvents) {
+  switch (aFrame->StyleUserInterface()->mPointerEvents) {
   case NS_STYLE_POINTER_EVENTS_NONE:
     break;
   case NS_STYLE_POINTER_EVENTS_AUTO:

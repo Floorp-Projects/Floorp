@@ -17,31 +17,31 @@ policies and contribution forms [3].
 <meta name="assert" content="The ShadowRoot element: olderShadowRoot attribute">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="../../../testcommon.js"></script>
-<link rel="stylesheet" href="/resources/testharness.css">
+<script src="../../../../../html/resources/common.js"></script>
+<script src="../../../../resources/shadow-dom-utils.js"></script>
 </head>
 <body>
 <div id="log"></div>
 <script>
 test(unit(function (ctx) {
 
-	var d = newRenderedHTMLDocument(ctx);
+    var d = newRenderedHTMLDocument(ctx);
 
-	var host = d.createElement('div');
-	d.body.appendChild(host);
+    var host = d.createElement('div');
+    d.body.appendChild(host);
 
-	// Shadow root and older Shadow root to play with
-	var oldRoot = host.createShadowRoot();
+    // Shadow root and older Shadow root to play with
+    var oldRoot = host.createShadowRoot();
 
-	var div = d.createElement('div');
-	div.innerHTML = '' +
-		'<span id="spandex">This is a shadow root content</span>' +
-		'<content><span id="contentId">This is the content fallback</span></content>';
-	oldRoot.appendChild(div);
-	var youngRoot = host.createShadowRoot();
+    var div = d.createElement('div');
+    div.innerHTML = '' +
+        '<span id="spandex">This is a shadow root content</span>' +
+        '<content><span id="contentId">This is the content fallback</span></content>';
+    oldRoot.appendChild(div);
+    var youngRoot = host.createShadowRoot();
 
-	assert_equals(oldRoot.olderShadowRoot, null, 'If the context object is the oldest shadow root, return null');
-	assert_equals(youngRoot.olderShadowRoot, oldRoot, 'Return the older shadow root relative to the context object');
+    assert_equals(oldRoot.olderShadowRoot, null, 'If the context object is the oldest shadow root, return null');
+    assert_equals(youngRoot.olderShadowRoot, oldRoot, 'Return the older shadow root relative to the context object');
 
 }), 'ShadowRoot.olderShadowRoot_T01');
 </script>

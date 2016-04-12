@@ -212,6 +212,42 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
+    def test_drag_swappable_carets(self, el_id):
+        self.open_test_html(self._selection_html)
+        el = self.marionette.find_element(By.ID, el_id)
+        sel = SelectionManager(el)
+        original_content = sel.content
+        words = original_content.split()
+        self.assertTrue(len(words) >= 1, 'Expect at least one word in the content.')
+
+        target_content1 = words[0]
+        target_content2 = original_content[len(words[0]):]
+
+        # Get the location of the carets at the end of the content for later
+        # use.
+        el.tap()
+        sel.select_all()
+        end_caret_x, end_caret_y = sel.second_caret_location()
+
+        self.long_press_on_word(el, 0)
+
+        # Drag the first caret to the end and back to where it was
+        # immediately. The selection range should not be collapsed.
+        caret1_x, caret1_y = sel.first_caret_location()
+        self.actions.flick(el, caret1_x, caret1_y, end_caret_x, end_caret_y)\
+                    .flick(el, end_caret_x, end_caret_y, caret1_x, caret1_y).perform()
+        self.assertEqual(target_content1, sel.selected_content)
+
+        # Drag the first caret to the end.
+        caret1_x, caret1_y = sel.first_caret_location()
+        self.actions.flick(el, caret1_x, caret1_y, end_caret_x, end_caret_y).perform()
+        self.assertEqual(target_content2, sel.selected_content)
+
+    @parameterized(_input_id, el_id=_input_id)
+    @parameterized(_textarea_id, el_id=_textarea_id)
+    @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
+    @parameterized(_contenteditable_id, el_id=_contenteditable_id)
+    @parameterized(_content_id, el_id=_content_id)
     def test_minimum_select_one_character(self, el_id):
         self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, el_id)
@@ -412,6 +448,29 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.actions.flick(body, caret1_x, caret1_y, end_caret_x, end_caret_y, 1).perform()
         self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          '4\nuser can select this 5\nuser')
+
+    def test_drag_swappable_caret_over_non_selectable_field(self):
+        self.open_test_html(self._multiplerange_html)
+        body = self.marionette.find_element(By.ID, 'bd')
+        sel3 = self.marionette.find_element(By.ID, 'sel3')
+        sel4 = self.marionette.find_element(By.ID, 'sel4')
+        sel = SelectionManager(body)
+
+        self.long_press_on_word(sel4, 3)
+        (end_caret1_x, end_caret1_y), (end_caret2_x, end_caret2_y) = sel.carets_location()
+
+        self.long_press_on_word(sel3, 3)
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
+
+        # Drag the first caret down, which will across the second caret.
+        self.actions.flick(body, caret1_x, caret1_y, end_caret1_x, end_caret1_y).perform()
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
+                         '3\nuser can select')
+
+        # The old second caret becomes the first caret. Drag it down again.
+        self.actions.flick(body, caret2_x, caret2_y, end_caret2_x, end_caret2_y).perform()
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
+                         'this')
 
     def test_drag_caret_to_beginning_of_a_line(self):
         '''Bug 1094056

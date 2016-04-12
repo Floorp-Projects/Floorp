@@ -21,6 +21,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
+#include "mozilla/MozPromise.h"
 
 class nsIThread;
 
@@ -41,6 +42,16 @@ namespace gmp {
 class GMPCapability
 {
 public:
+  explicit GMPCapability() {}
+  GMPCapability(GMPCapability&& aOther)
+    : mAPIName(Move(aOther.mAPIName))
+    , mAPITags(Move(aOther.mAPITags))
+  {
+  }
+  explicit GMPCapability(const nsCString& aAPIName)
+    : mAPIName(aAPIName)
+  {}
+  explicit GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
   nsTArray<nsCString> mAPITags;
 };
@@ -75,7 +86,7 @@ public:
 
   GMPParent();
 
-  nsresult Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
+  RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
   nsresult CloneFrom(const GMPParent* aOther);
 
   void Crash();
@@ -151,9 +162,15 @@ public:
 
 private:
   ~GMPParent();
+
   RefPtr<GeckoMediaPluginServiceParent> mService;
   bool EnsureProcessLoaded();
-  nsresult ReadGMPMetaData();
+  RefPtr<GenericPromise> ReadGMPMetaData();
+  RefPtr<GenericPromise> ReadGMPInfoFile(nsIFile* aFile);
+#ifdef MOZ_WIDEVINE_EME
+  RefPtr<GenericPromise> ParseChromiumManifest(nsString aJSON); // Main thread.
+  RefPtr<GenericPromise> ReadChromiumManifestFile(nsIFile* aFile); // GMP thread.
+#endif
 #ifdef MOZ_CRASHREPORTER
   void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
   void GetCrashID(nsString& aResult);
@@ -196,8 +213,9 @@ private:
 #ifdef XP_WIN
   nsCString mLibs;
 #endif
+  nsString mAdapter;
   uint32_t mPluginId;
-  nsTArray<nsAutoPtr<GMPCapability>> mCapabilities;
+  nsTArray<GMPCapability> mCapabilities;
   GMPProcessParent* mProcess;
   bool mDeleteProcessOnlyOnUnload;
   bool mAbnormalShutdownInProgress;
