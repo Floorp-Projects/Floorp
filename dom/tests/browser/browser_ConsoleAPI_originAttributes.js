@@ -29,13 +29,13 @@ const ConsoleObserver = {
       is(consoleAPIMessage.originAttributes.addonId, FAKE_ADDON_ID,
          "the consoleAPImessage's originAttributes contains the expected addonId");
 
-      let cachedMessages = ConsoleAPIStorage.getEvents();
+      let cachedMessages = ConsoleAPIStorage.getEvents().filter((msg) => {
+        return msg.originAttributes && msg.originAttributes.addonId == FAKE_ADDON_ID;
+      });
 
-      is(cachedMessages.length, 1, "found one console api messsage as expected");
-
-      ok(cachedMessages[0].originAttributes, "the consoleAPImessage contains originattributes");
-      is(cachedMessages[0].originAttributes.addonId, FAKE_ADDON_ID,
-         "the consoleAPImessage's originAttributes contains the expected addonId");
+      is(cachedMessages.length, 1, "found the expected cached console messages from the addon");
+      is(cachedMessages[0] && cachedMessages[0].originAttributes.addonId, FAKE_ADDON_ID,
+         "the cached message's originAttributes contains the expected addonId");
 
       finish();
     }
