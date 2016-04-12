@@ -87,7 +87,7 @@ public:
     NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
 
     // now get the document from sameTypeRoot
-    nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
+    nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
     NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
 
     // Get eventSink and the current security state from the docShell
@@ -764,7 +764,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
 
   // Get the root document from the sameTypeRoot
-  nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
+  nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
   NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
 
   // Get eventSink and the current security state from the docShell

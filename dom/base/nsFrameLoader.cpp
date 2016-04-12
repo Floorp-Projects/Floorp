@@ -3237,7 +3237,8 @@ nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
     return mRemoteBrowser->StartPersistence(aOuterWindowID, aRecv);
   }
 
-  nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDocument> rootDoc =
+    mDocShell ? mDocShell->GetDocument() : nullptr;
   nsCOMPtr<nsIDocument> foundDoc;
   if (aOuterWindowID) {
     foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc, aOuterWindowID);
