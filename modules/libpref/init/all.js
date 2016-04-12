@@ -847,12 +847,7 @@ pref("toolkit.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
 // AsyncShutdown delay before crashing in case of shutdown freeze
-pref("toolkit.asyncshutdown.crash_timeout", 60000);
-#if defined(XP_WIN32)
-// We have a separate crash timeout for windows XP and Vista. See bug 1248358.
-pref("toolkit.asyncshutdown.crash_timeout_winxp", 180000);
-#endif
-
+pref("toolkit.asyncshutdown.timeout.crash", 60000);
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 

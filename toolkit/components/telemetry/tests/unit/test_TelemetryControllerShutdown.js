@@ -42,21 +42,7 @@ add_task(function* test_sendTimeout() {
   // Enable testing mode for AsyncShutdown, otherwise some testing-only functionality
   // is not available.
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
-
-  // For Windows XP and Vista we use toolkit.asyncshutdown.crash_timeout_winxp
-  // See bug 1248358.
-  var crashTimeoutPref = "toolkit.asyncshutdown.crash_timeout";
-  var os = Cc["@mozilla.org/xre/app-info;1"]
-             .getService(Ci.nsIXULRuntime).OS;
-  if (os == "Windows") {
-    var version = Cc["@mozilla.org/system-info;1"]
-                    .getService(Ci.nsIPropertyBag2)
-                    .getProperty("version");
-    if (parseFloat(version) < 6.1) {
-      crashTimeoutPref = "toolkit.asyncshutdown.crash_timeout_winxp";
-    }
-  }
-  Services.prefs.setIntPref(crashTimeoutPref, TIMEOUT);
+  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", TIMEOUT);
 
   let httpServer = new HttpServer();
   httpServer.registerPrefixHandler("/", contentHandler);
