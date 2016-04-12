@@ -78,7 +78,16 @@ function TestCase(n, d, e, a)
   this.reason = '';
   this.bugnumber = typeof(BUGNUMER) != 'undefined' ? BUGNUMBER : '';
   this.type = (typeof window == 'undefined' ? 'shell' : 'browser');
-  gTestcases[gTc++] = this;
+  ({}).constructor.defineProperty(
+    gTestcases,
+    gTc++,
+    {
+      value: this,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    }
+  );
 }
 
 gFailureExpected = false;
