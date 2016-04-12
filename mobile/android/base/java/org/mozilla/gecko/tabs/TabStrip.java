@@ -16,7 +16,6 @@ import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
-import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.BrowserApp.TabStripInterface;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
