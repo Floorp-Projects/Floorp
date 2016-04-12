@@ -226,8 +226,7 @@ public:
     EVENT_DELIVERY,
     PLUGIN_GEOMETRY,
     FRAME_VISIBILITY,
-    TRANSFORM_COMPUTATION,
-    GENERATE_GLYPH
+    TRANSFORM_COMPUTATION
   };
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, Mode aMode, bool aBuildCaret);
   ~nsDisplayListBuilder();
@@ -268,14 +267,6 @@ public:
    * visibility.
    */
   bool IsForFrameVisibility() { return mMode == FRAME_VISIBILITY; }
-
-  /**
-   * @return true if the display list is being built for creating the glyph
-   * path from text items. While painting the display list, all text display
-   * items should only create glyph paths in target context, instead of
-   * drawing text into it.
-   */
-  bool IsForGenerateGlyphPath() { return mMode == GENERATE_GLYPH; }
 
   bool WillComputePluginGeometry() { return mWillComputePluginGeometry; }
   /**
