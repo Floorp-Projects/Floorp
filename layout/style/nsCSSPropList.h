@@ -4345,7 +4345,7 @@ CSS_PROP_SVG(
     kTextAnchorKTable,
     offsetof(nsStyleSVG, mTextAnchor),
     eStyleAnimType_EnumU8)
-CSS_PROP_SVG(
+CSS_PROP_TEXT(
     text-rendering,
     text_rendering,
     TextRendering,
@@ -4353,7 +4353,7 @@ CSS_PROP_SVG(
     "",
     VARIANT_HK,
     kTextRenderingKTable,
-    offsetof(nsStyleSVG, mTextRendering),
+    offsetof(nsStyleText, mTextRendering),
     eStyleAnimType_EnumU8)
 CSS_PROP_SVGRESET(
     vector-effect,

@@ -4677,6 +4677,13 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
       MOZ_ASSERT_UNREACHABLE("Unknown value unit type");
   }
 
+  // text-rendering: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextRendering(),
+              text->mTextRendering, conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentText->mTextRendering,
+              NS_STYLE_TEXT_RENDERING_AUTO, 0, 0, 0, 0);
+
   // -webkit-text-fill-color: color, string, inherit, initial
   const nsCSSValue*
     webkitTextFillColorValue = aRuleData->ValueForWebkitTextFillColor();
@@ -9442,13 +9449,6 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentSVG->mTextAnchor,
               NS_STYLE_TEXT_ANCHOR_START, 0, 0, 0, 0);
-
-  // text-rendering: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForTextRendering(),
-              svg->mTextRendering, conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentSVG->mTextRendering,
-              NS_STYLE_TEXT_RENDERING_AUTO, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(SVG, svg)
 }

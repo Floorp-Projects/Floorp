@@ -5751,7 +5751,7 @@ nsComputedDOMStyle::DoGetTextRendering()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleSVG()->mTextRendering,
+    nsCSSProps::ValueToKeywordEnum(StyleText()->mTextRendering,
                                    nsCSSProps::kTextRenderingKTable));
   return val.forget();
 }

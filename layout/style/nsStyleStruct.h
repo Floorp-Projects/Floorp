@@ -1982,6 +1982,7 @@ struct nsStyleText
   uint8_t mControlCharacterVisibility;  // [inherited] see nsStyleConsts.h
   uint8_t mTextEmphasisPosition;        // [inherited] see nsStyleConsts.h
   uint8_t mTextEmphasisStyle;           // [inherited] see nsStyleConsts.h
+  uint8_t mTextRendering;               // [inherited] see nsStyleConsts.h
   int32_t mTabSize;                     // [inherited] see nsStyleConsts.h
   nscolor mTextEmphasisColor;           // [inherited]
   nscolor mWebkitTextFillColor;         // [inherited]
@@ -3247,7 +3248,6 @@ struct nsStyleSVG
   uint8_t          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
   uint8_t          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
   uint8_t          mTextAnchor;       // [inherited] see nsStyleConsts.h
-  uint8_t          mTextRendering;    // [inherited] see nsStyleConsts.h
 
   // In SVG glyphs, whether we inherit fill or stroke opacity from the outer
   // text object.
