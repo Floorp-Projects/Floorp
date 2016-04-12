@@ -14,7 +14,6 @@
 #endif
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
-#include "WMFDecoderModule.h"
 #endif
 #ifdef XP_MACOSX
 #include "nsCocoaFeatures.h"
@@ -33,9 +32,6 @@
 #include "nsXULAppAPI.h"
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
-#ifdef XP_WIN
-#include "WMFDecoderModule.h"
-#endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
 #define PRIMETIME_EME_SUPPORTED 1
@@ -336,16 +332,7 @@ GMPDecryptsAndDecodesAAC(mozIGeckoMediaPluginService* aGMPS,
   return HaveGMPFor(aGMPS,
                     NS_ConvertUTF16toUTF8(aKeySystem),
                     NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                    NS_LITERAL_CSTRING("aac"))
-#ifdef XP_WIN
-    // Clearkey on Windows advertises that it can decode in its GMP info
-    // file, but uses Windows Media Foundation to decode. That's not present
-    // on Windows XP, and on some Vista, Windows N, and KN variants without
-    // certain services packs. So for ClearKey we must check that WMF will
-    // work.
-    && (!aKeySystem.EqualsLiteral("org.w3.clearkey") || WMFDecoderModule::HasAAC())
-#endif
-  ;
+                    NS_LITERAL_CSTRING("aac"));
 }
 
 static bool
@@ -358,23 +345,12 @@ GMPDecryptsAndDecodesH264(mozIGeckoMediaPluginService* aGMPS,
   return HaveGMPFor(aGMPS,
                     NS_ConvertUTF16toUTF8(aKeySystem),
                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                    NS_LITERAL_CSTRING("h264"))
-#ifdef XP_WIN
-    // Clearkey on Windows advertises that it can decode in its GMP info
-    // file, but uses Windows Media Foundation to decode. That's not present
-    // on Windows XP, and on some Vista, Windows N, and KN variants without
-    // certain services packs. So for ClearKey we must check that WMF will
-    // work.
-    && (!aKeySystem.EqualsLiteral("org.w3.clearkey") || WMFDecoderModule::HasH264())
-#endif
-  ;
+                    NS_LITERAL_CSTRING("h264"));
 }
 
 // If this keysystem's CDM explicitly says it doesn't support decoding,
 // that means it's OK with passing the decrypted samples back to Gecko
-// for decoding. Note we special case Clearkey on Windows, where we need
-// to check for whether WMF is usable because the CDM uses that
-// to decode.
+// for decoding.
 static bool
 GMPDecryptsAndGeckoDecodesH264(mozIGeckoMediaPluginService* aGMPService,
                                const nsAString& aKeySystem,
@@ -384,20 +360,11 @@ GMPDecryptsAndGeckoDecodesH264(mozIGeckoMediaPluginService* aGMPService,
                         NS_ConvertUTF16toUTF8(aKeySystem),
                         NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
   MOZ_ASSERT(IsH264ContentType(aContentType));
-  return
-    (!HaveGMPFor(aGMPService,
-                 NS_ConvertUTF16toUTF8(aKeySystem),
-                 NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                 NS_LITERAL_CSTRING("h264"))
-#ifdef XP_WIN
-    // Clearkey on Windows advertises that it can decode in its GMP info
-    // file, but uses Windows Media Foundation to decode. That's not present
-    // on Windows XP, and on some Vista, Windows N, and KN variants without
-    // certain services packs. So don't try to use gmp-clearkey for decoding
-    // if we don't have a decoder here.
-    || (aKeySystem.EqualsLiteral("org.w3.clearkey") && !WMFDecoderModule::HasH264())
-#endif
-    ) && MP4Decoder::CanHandleMediaType(aContentType);
+  return !HaveGMPFor(aGMPService,
+                     NS_ConvertUTF16toUTF8(aKeySystem),
+                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                     NS_LITERAL_CSTRING("h264")) &&
+         MP4Decoder::CanHandleMediaType(aContentType);
 }
 
 static bool
@@ -409,20 +376,12 @@ GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
                         NS_ConvertUTF16toUTF8(aKeySystem),
                         NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
   MOZ_ASSERT(IsAACContentType(aContentType));
-  return
-    (!HaveGMPFor(aGMPService,
-                 NS_ConvertUTF16toUTF8(aKeySystem),
-                 NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                 NS_LITERAL_CSTRING("aac"))
-#ifdef XP_WIN
-    // Clearkey on Windows advertises that it can decode in its GMP info
-    // file, but uses Windows Media Foundation to decode. That's not present
-    // on Windows XP, and on some Vista, Windows N, and KN variants without
-    // certain services packs. So don't try to use gmp-clearkey for decoding
-    // if we don't have a decoder here.
-    || (aKeySystem.EqualsLiteral("org.w3.clearkey") && !WMFDecoderModule::HasAAC())
-#endif
-    ) && MP4Decoder::CanHandleMediaType(aContentType);
+
+  return !HaveGMPFor(aGMPService,
+                     NS_ConvertUTF16toUTF8(aKeySystem),
+                     NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                     NS_LITERAL_CSTRING("aac")) &&
+         MP4Decoder::CanHandleMediaType(aContentType);
 }
 
 static bool
@@ -475,6 +434,16 @@ IsSupported(mozIGeckoMediaPluginService* aGMPService,
 }
 
 static bool
+IsSupportedInitDataType(const nsString& aCandidate, const nsAString& aKeySystem)
+{
+  // All supported keySystems can handle "cenc" initDataType.
+  // ClearKey also supports "keyids" and "webm" initDataTypes.
+  return aCandidate.EqualsLiteral("cenc") ||
+    (aKeySystem.EqualsLiteral("org.w3.clearkey") &&
+    (aCandidate.EqualsLiteral("keyids") || aCandidate.EqualsLiteral("webm)")));
+}
+
+static bool
 GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
                    const nsAString& aKeySystem,
                    const MediaKeySystemConfiguration& aCandidate,
@@ -485,13 +454,7 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
   if (aCandidate.mInitDataTypes.WasPassed()) {
     nsTArray<nsString> initDataTypes;
     for (const nsString& candidate : aCandidate.mInitDataTypes.Value()) {
-      // All supported keySystems can handle "cenc" initDataType.
-      // ClearKey also supports "keyids" and "webm" initDataTypes.
-      if (candidate.EqualsLiteral("cenc")) {
-        initDataTypes.AppendElement(candidate);
-      } else if ((candidate.EqualsLiteral("keyids") ||
-                  candidate.EqualsLiteral("webm)")) &&
-                 aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+      if (IsSupportedInitDataType(candidate, aKeySystem)) {
         initDataTypes.AppendElement(candidate);
       }
     }

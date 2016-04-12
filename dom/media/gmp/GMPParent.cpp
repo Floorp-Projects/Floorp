@@ -35,6 +35,10 @@ using CrashReporter::GetIDFromMinidump;
 
 #include "mozilla/Telemetry.h"
 
+#ifdef XP_WIN
+#include "WMFDecoderModule.h"
+#endif
+
 #ifdef MOZ_WIDEVINE_EME
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "widevine-adapter/WidevineAdapter.h"
@@ -877,17 +881,31 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       // Adobe GMP doesn't work without SSE2. Check the tags to see if
       // the decryptor is for the Adobe GMP, and refuse to load it if
       // SSE2 isn't supported.
-      for (const nsCString& tag : cap.mAPITags) {
-        if (!tag.EqualsLiteral("com.adobe.primetime")) {
-          continue;
-        }
-        if (!mozilla::supports_sse2()) {
-          return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-        }
-        break;
+      if (cap.mAPITags.Contains(NS_LITERAL_CSTRING("com.adobe.primetime")) &&
+          !mozilla::supports_sse2()) {
+        return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
 #endif // XP_WIN
     }
+
+#ifdef XP_WIN
+    // Clearkey on Windows advertises that it can decode in its GMP info
+    // file, but uses Windows Media Foundation to decode. That's not present
+    // on Windows XP, and on some Vista, Windows N, and KN variants without
+    // certain services packs. So don't add the decoding capability to
+    // gmp-clearkey's GMPParent if it's not going to be able to use WMF to
+    // decode.
+    if (cap.mAPIName.EqualsLiteral(GMP_API_VIDEO_DECODER) &&
+        cap.mAPITags.Contains(NS_LITERAL_CSTRING("org.w3.clearkey")) &&
+        !WMFDecoderModule::HasH264()) {
+      continue;
+    }
+    if (cap.mAPIName.EqualsLiteral(GMP_API_AUDIO_DECODER) &&
+        cap.mAPITags.Contains(NS_LITERAL_CSTRING("org.w3.clearkey")) &&
+        !WMFDecoderModule::HasAAC()) {
+      continue;
+    }
+#endif
 
     mCapabilities.AppendElement(Move(cap));
   }
