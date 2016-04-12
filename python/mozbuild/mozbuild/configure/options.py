@@ -205,12 +205,12 @@ class Option(object):
         self.nargs = nargs
         has_choices = choices is not None
         if isinstance(self.default, PositiveOptionValue):
-            if not self._validate_nargs(len(self.default)):
-                raise InvalidOptionError(
-                    "The given `default` doesn't satisfy `nargs`")
             if has_choices and len(self.default) == 0:
                 raise InvalidOptionError(
                     'A `default` must be given along with `choices`')
+            if not self._validate_nargs(len(self.default)):
+                raise InvalidOptionError(
+                    "The given `default` doesn't satisfy `nargs`")
             if has_choices and not all(d in choices for d in self.default):
                 raise InvalidOptionError(
                     'The `default` value must be one of %s' %
