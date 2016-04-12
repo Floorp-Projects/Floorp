@@ -4811,7 +4811,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMixBlendMode()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMixBlendMode,
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleEffects()->mMixBlendMode,
                                                nsCSSProps::kBlendModeKTable));
   return val.forget();
 }

@@ -2884,7 +2884,6 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
   mTransformBox = NS_STYLE_TRANSFORM_BOX_BORDER_BOX;
   mOrient = NS_STYLE_ORIENT_INLINE;
-  mMixBlendMode = NS_STYLE_BLEND_NORMAL;
   mIsolation = NS_STYLE_ISOLATION_AUTO;
   mTouchAction = NS_STYLE_TOUCH_ACTION_AUTO;
   mTopLayer = NS_STYLE_TOP_LAYER_NONE;
@@ -2938,7 +2937,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mOverflowClipBox(aSource.mOverflowClipBox)
   , mResize(aSource.mResize)
   , mOrient(aSource.mOrient)
-  , mMixBlendMode(aSource.mMixBlendMode)
   , mIsolation(aSource.mIsolation)
   , mTopLayer(aSource.mTopLayer)
   , mWillChangeBitField(aSource.mWillChangeBitField)
@@ -3069,8 +3067,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     }
   }
 
-  if (mMixBlendMode != aOther.mMixBlendMode
-      || mIsolation != aOther.mIsolation) {
+  if (mIsolation != aOther.mIsolation) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   }
 
@@ -3989,6 +3986,7 @@ nsStyleEffects::nsStyleEffects(StyleStructContext aContext)
   : mBoxShadow(nullptr)
   , mClip(0, 0, 0, 0)
   , mClipFlags(NS_STYLE_CLIP_AUTO)
+  , mMixBlendMode(NS_STYLE_BLEND_NORMAL)
 {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
@@ -3997,6 +3995,7 @@ nsStyleEffects::nsStyleEffects(const nsStyleEffects& aSource)
   : mBoxShadow(aSource.mBoxShadow)
   , mClip(aSource.mClip)
   , mClipFlags(aSource.mClipFlags)
+  , mMixBlendMode(aSource.mMixBlendMode)
 {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
@@ -4031,6 +4030,10 @@ nsStyleEffects::CalcDifference(const nsStyleEffects& aOther) const
     // will handle the invalidation.
     hint |= nsChangeHint_UpdateOverflow |
             nsChangeHint_SchedulePaint;
+  }
+
+  if (mMixBlendMode != aOther.mMixBlendMode) {
+    hint |= nsChangeHint_RepaintFrame;
   }
 
   if (!hint &&

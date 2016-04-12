@@ -5647,13 +5647,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               parentDisplay->mContain,
               NS_STYLE_CONTAIN_NONE, 0, NS_STYLE_CONTAIN_NONE, 0, 0);
 
-  // mix-blend-mode: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForMixBlendMode(), display->mMixBlendMode,
-              conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentDisplay->mMixBlendMode, NS_STYLE_BLEND_NORMAL,
-              0, 0, 0, 0);
-
   // scroll-behavior: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForScrollBehavior(), display->mScrollBehavior,
               conditions,
@@ -10031,6 +10024,13 @@ nsRuleNode::ComputeEffectsData(void* aStartStruct,
   default:
     MOZ_ASSERT(false, "unrecognized clip unit");
   }
+
+  // mix-blend-mode: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForMixBlendMode(), effects->mMixBlendMode,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentEffects->mMixBlendMode, NS_STYLE_BLEND_NORMAL,
+              0, 0, 0, 0);
 
   COMPUTE_END_RESET(Effects, effects)
 }

@@ -2618,7 +2618,7 @@ CSS_PROP_POSITION(
     kWidthKTable,
     offsetof(nsStylePosition, mMinWidth),
     eStyleAnimType_Coord)
-CSS_PROP_DISPLAY(
+CSS_PROP_EFFECTS(
     mix-blend-mode,
     mix_blend_mode,
     MixBlendMode,
