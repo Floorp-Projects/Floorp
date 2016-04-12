@@ -157,7 +157,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIPackagedAppChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsIParentRedirectingChannel)
@@ -982,19 +981,6 @@ HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
   nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI,
                                                     principal);
   return true;
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelParent::nsIPackagedAppChannelListener
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelParent::OnStartSignedPackageRequest(const nsACString& aPackageId)
-{
-  if (mTabParent) {
-    mTabParent->OnStartSignedPackageRequest(mChannel, aPackageId);
-  }
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

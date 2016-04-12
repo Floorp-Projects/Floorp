@@ -642,36 +642,34 @@ gfxPlatformFontList::CheckFamily(gfxFontFamily *aFamily)
     return aFamily;
 }
 
-gfxFontFamily* 
-gfxPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
-                                gfxFloat aDevToCssSize)
+bool 
+gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
+                                        nsTArray<gfxFontFamily*>* aOutput,
+                                        gfxFontStyle* aStyle,
+                                        gfxFloat aDevToCssSize)
 {
     nsAutoString key;
-    gfxFontFamily *familyEntry;
     GenerateFontListKey(aFamily, key);
 
     NS_ASSERTION(mFontFamilies.Count() != 0, "system font list was not initialized correctly");
 
     // lookup in canonical (i.e. English) family name list
-    if ((familyEntry = mFontFamilies.GetWeak(key))) {
-        return CheckFamily(familyEntry);
+    gfxFontFamily *familyEntry = mFontFamilies.GetWeak(key);
+
+    // if not found, lookup in other family names list (mostly localized names)
+    if (!familyEntry) {
+        familyEntry = mOtherFamilyNames.GetWeak(key);
     }
 
-    // lookup in other family names list (mostly localized names)
-    if ((familyEntry = mOtherFamilyNames.GetWeak(key)) != nullptr) {
-        return CheckFamily(familyEntry);
-    }
-
-    // name not found and other family names not yet fully initialized so
+    // if still not found and other family names not yet fully initialized,
     // initialize the rest of the list and try again.  this is done lazily
     // since reading name table entries is expensive.
     // although ASCII localized family names are possible they don't occur
     // in practice so avoid pulling in names at startup
-    if (!mOtherFamilyNamesInitialized && !IsASCII(aFamily)) {
+    if (!familyEntry && !mOtherFamilyNamesInitialized && !IsASCII(aFamily)) {
         InitOtherFamilyNames();
-        if ((familyEntry = mOtherFamilyNames.GetWeak(key)) != nullptr) {
-            return CheckFamily(familyEntry);
-        } else if (!mOtherFamilyNamesInitialized) {
+        familyEntry = mOtherFamilyNames.GetWeak(key);
+        if (!familyEntry && !mOtherFamilyNamesInitialized) {
             // localized family names load timed out, add name to list of
             // names to check after localized names are loaded
             if (!mOtherNamesMissed) {
@@ -681,7 +679,13 @@ gfxPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
         }
     }
 
-    return nullptr;
+    familyEntry = CheckFamily(familyEntry);
+    if (familyEntry) {
+        aOutput->AppendElement(familyEntry);
+        return true;
+    }
+
+    return false;
 }
 
 gfxFontEntry*
@@ -787,8 +791,7 @@ void
 gfxPlatformFontList::ResolveGenericFontNames(
     FontFamilyType aGenericType,
     eFontPrefLang aPrefLang,
-    nsTArray<RefPtr<gfxFontFamily>>* aGenericFamilies
-)
+    nsTArray<RefPtr<gfxFontFamily>>* aGenericFamilies)
 {
     const char* langGroupStr = GetPrefLangName(aPrefLang);
     const char* generic = GetGenericName(aGenericType);
@@ -821,18 +824,11 @@ gfxPlatformFontList::ResolveGenericFontNames(
         gfxFontStyle style;
         style.language = langGroup;
         style.systemFont = false;
-        RefPtr<gfxFontFamily> family =
-            FindFamily(genericFamily, &style);
-        if (family) {
-            bool notFound = true;
-            for (const gfxFontFamily* f : *aGenericFamilies) {
-                if (f == family) {
-                    notFound = false;
-                    break;
-                }
-            }
-            if (notFound) {
-                aGenericFamilies->AppendElement(family);
+        AutoTArray<gfxFontFamily*,10> families;
+        FindAndAddFamilies(genericFamily, &families, &style);
+        for (gfxFontFamily* f : families) {
+            if (!aGenericFamilies->Contains(f)) {
+                aGenericFamilies->AppendElement(f);
             }
         }
     }

@@ -113,12 +113,7 @@ def run_tests(config, browser_config):
         browser_config['preferences']['xpinstall.signatures.required'] = False
 
     # set defaults
-    title = config.get('title', '')
     testdate = config.get('testdate', '')
-
-    if browser_config['e10s'] and not title.endswith(".e"):
-        # we are running in e10s mode
-        title = "%s.e" % (title,)
 
     # get the process name from the path to the browser
     if not browser_config['process']:

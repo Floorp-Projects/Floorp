@@ -26,7 +26,6 @@ if CONFIG['MOZ_DEBUG']:
     ]
 
 UNIFIED_SOURCES += [
-    'AccCollector.cpp',
     'AccEvent.cpp',
     'AccGroupInfo.cpp',
     'AccIterator.cpp',
@@ -34,6 +33,7 @@ UNIFIED_SOURCES += [
     'ARIAStateMap.cpp',
     'Asserts.cpp',
     'DocManager.cpp',
+    'EmbeddedObjCollector.cpp',
     'EventQueue.cpp',
     'EventTree.cpp',
     'Filters.cpp',

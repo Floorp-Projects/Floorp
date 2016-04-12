@@ -5018,6 +5018,10 @@ pref("layout.accessiblecaret.always_tilt", false);
 // AccessibleCarets and close UI interaction by default.
 pref("layout.accessiblecaret.allow_script_change_updates", false);
 
+// Allow one caret to be dragged across the other caret without any limitation.
+// This matches the built-in convention for all desktop platforms.
+pref("layout.accessiblecaret.allow_dragging_across_other_caret", true);
+
 // Optionally provide haptic feedback on longPress selection events.
 pref("layout.accessiblecaret.hapticfeedback", false);
 

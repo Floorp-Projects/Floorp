@@ -1153,9 +1153,8 @@ bool
 nsIFrame::HasOpacityInternal(float aThreshold) const
 {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
-  const nsStyleDisplay* displayStyle = StyleDisplay();
-  return StyleDisplay()->mOpacity < aThreshold ||
-         (displayStyle->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
+  return StyleEffects()->mOpacity < aThreshold ||
+         (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
          (mContent &&
            EffectCompositor::HasAnimationsForCompositor(
              this, eCSSProperty_opacity) &&
@@ -1183,9 +1182,10 @@ nsIFrame::Extend3DContext() const
     return false;
   }
 
+  const nsStyleEffects* effects = StyleEffects();
   nsRect temp;
   return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
-         !GetClipPropClipRect(disp, &temp, GetSize()) &&
+         !GetClipPropClipRect(disp, effects, &temp, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
 }
 
@@ -1860,7 +1860,7 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return;
 
-  nsCSSShadowArray* shadows = StyleBorder()->mBoxShadow;
+  nsCSSShadowArray* shadows = StyleEffects()->mBoxShadow;
   if (shadows && shadows->HasShadowWithInset(false)) {
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
       nsDisplayBoxShadowOuter(aBuilder, this));
@@ -1897,17 +1897,19 @@ inline static bool IsSVGContentWithCSSClip(const nsIFrame *aFrame)
 }
 
 bool
-nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
+nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
+                              const nsStyleEffects* aEffects,
+                              nsRect* aRect,
                               const nsSize& aSize) const
 {
   NS_PRECONDITION(aRect, "Must have aRect out parameter");
 
-  if (!(aDisp->mClipFlags & NS_STYLE_CLIP_RECT) ||
+  if (!(aEffects->mClipFlags & NS_STYLE_CLIP_RECT) ||
       !(aDisp->IsAbsolutelyPositioned(this) || IsSVGContentWithCSSClip(this))) {
     return false;
   }
 
-  *aRect = aDisp->mClip;
+  *aRect = aEffects->mClip;
   if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak ==
                    NS_STYLE_BOX_DECORATION_BREAK_SLICE)) {
     // The clip applies to the joined boxes so it's relative the first
@@ -1919,10 +1921,10 @@ nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
     aRect->MoveBy(nsPoint(0, -y));
   }
 
-  if (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags) {
+  if (NS_STYLE_CLIP_RIGHT_AUTO & aEffects->mClipFlags) {
     aRect->width = aSize.width - aRect->x;
   }
-  if (NS_STYLE_CLIP_BOTTOM_AUTO & aDisp->mClipFlags) {
+  if (NS_STYLE_CLIP_BOTTOM_AUTO & aEffects->mClipFlags) {
     aRect->height = aSize.height - aRect->y;
   }
   return true;
@@ -1938,10 +1940,11 @@ static bool
 ApplyClipPropClipping(nsDisplayListBuilder* aBuilder,
                       const nsIFrame* aFrame,
                       const nsStyleDisplay* aDisp,
+                      const nsStyleEffects* aEffects,
                       nsRect* aRect,
                       DisplayListClipState::AutoSaveRestore& aClipState)
 {
-  if (!aFrame->GetClipPropClipRect(aDisp, aRect, aFrame->GetSize()))
+  if (!aFrame->GetClipPropClipRect(aDisp, aEffects, aRect, aFrame->GetSize()))
     return false;
 
   nsRect clipRect = *aRect + aBuilder->ToReferenceFrame(aFrame);
@@ -2144,14 +2147,17 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     return;
 
   const nsStyleDisplay* disp = StyleDisplay();
+  const nsStyleEffects* effects = StyleEffects();
   // We can stop right away if this is a zero-opacity stacking context and
   // we're painting, and we're not animating opacity. Don't do this
   // if we're going to compute plugin geometry, since opacity-0 plugins
   // need to have display items built for them.
-  bool needEventRegions = aBuilder->IsBuildingLayerEventRegions() &&
-      StyleVisibility()->GetEffectivePointerEvents(this) != NS_STYLE_POINTER_EVENTS_NONE;
+  bool needEventRegions =
+    aBuilder->IsBuildingLayerEventRegions() &&
+    StyleUserInterface()->GetEffectivePointerEvents(this) !=
+      NS_STYLE_POINTER_EVENTS_NONE;
   bool opacityItemForEventsOnly = false;
-  if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
+  if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !aBuilder->WillComputePluginGeometry() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       !nsLayoutUtils::HasCurrentAnimationOfProperty(this,
@@ -2230,7 +2236,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   bool useOpacity = HasVisualOpacity() && !nsSVGUtils::CanOptimizeOpacity(this) && !usingSVGEffects;
-  bool useBlendMode = disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
+  bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition = disp->mPosition == NS_STYLE_POSITION_STICKY &&
     IsScrollFrameActive(aBuilder,
                         nsLayoutUtils::GetNearestScrollableFrame(GetParent(),
@@ -2271,7 +2277,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     CheckForApzAwareEventHandlers(aBuilder, this);
 
     nsRect clipPropClip;
-    if (ApplyClipPropClipping(aBuilder, this, disp, &clipPropClip,
+    if (ApplyClipPropClipping(aBuilder, this, disp, effects, &clipPropClip,
                               nestedClipState)) {
       dirtyRect.IntersectRect(dirtyRect, clipPropClip);
     }
@@ -2515,7 +2521,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     mixBlendClipState.Clear();
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplayBlendMode(aBuilder, this, &resultList,
-                                          disp->mMixBlendMode,
+                                          effects->mMixBlendMode,
                                           containerItemScrollClip));
   }
 
@@ -2659,13 +2665,14 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
   const nsStyleDisplay* disp = child->StyleDisplay();
+  const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->HasOpacity()
     || child->IsTransformed()
     // strictly speaking, 'perspective' doesn't require visual atomicity,
     // but the spec says it acts like the rest of these
     || disp->mChildPerspective.GetUnit() == eStyleUnit_Coord
-    || disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL
+    || effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child)
     || (child->GetStateBits() & NS_FRAME_HAS_VR_CONTENT);
 
@@ -2678,7 +2685,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
      isVisuallyAtomic || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
   if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating(child)) ||
-      ((disp->mClipFlags & NS_STYLE_CLIP_RECT) &&
+      ((effects->mClipFlags & NS_STYLE_CLIP_RECT) &&
        IsSVGContentWithCSSClip(child)) ||
        disp->mIsolation != NS_STYLE_ISOLATION_AUTO ||
        (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
@@ -2717,7 +2724,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsDisplayList list;
   nsDisplayList extraPositionedDescendants;
   if (isStackingContext) {
-    if (disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+    if (effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
       aBuilder->SetContainsBlendMode(true);
     }
     // True stacking context.
@@ -2727,7 +2734,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     aBuilder->DisplayCaret(child, dirty, &list);
   } else {
     nsRect clipRect;
-    if (ApplyClipPropClipping(aBuilder, child, disp, &clipRect, clipState)) {
+    if (ApplyClipPropClipping(aBuilder, child, disp, effects, &clipRect,
+                              clipState)) {
       // clipRect is in builder-reference-frame coordinates,
       // dirty/clippedDirtyRect are in child coordinates
       dirty.IntersectRect(dirty, clipRect);
@@ -5674,7 +5682,7 @@ ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
     // For SVG frames, we only need to account for filters.
     // TODO: We could also take account of clipPath and mask to reduce the
     // visual overflow, but that's not essential.
-    if (aFrame->StyleSVGReset()->HasFilters()) {
+    if (aFrame->StyleEffects()->HasFilters()) {
       aFrame->Properties().
         Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
       r = nsSVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
@@ -7743,9 +7751,11 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
     return u;
   }
 
+  const nsStyleEffects* effects = aFrame->StyleEffects();
   nsRect clipPropClipRect;
   bool hasClipPropClip =
-    aFrame->GetClipPropClipRect(disp, &clipPropClipRect, bounds.Size());
+    aFrame->GetClipPropClipRect(disp, effects, &clipPropClipRect,
+                                bounds.Size());
 
   // Iterate over all children except pop-ups.
   const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
@@ -7986,8 +7996,10 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     ComputeEffectsRect(this, aOverflowAreas.VisualOverflow(), aNewSize);
 
   // Absolute position clipping
+  const nsStyleEffects* effects = StyleEffects();
   nsRect clipPropClipRect;
-  bool hasClipPropClip = GetClipPropClipRect(disp, &clipPropClipRect, aNewSize);
+  bool hasClipPropClip =
+    GetClipPropClipRect(disp, effects, &clipPropClipRect, aNewSize);
   if (hasClipPropClip) {
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = aOverflowAreas.Overflow(otype);
@@ -8544,7 +8556,7 @@ nsIFrame::VerticalAlignEnum() const
     return ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline);
   }
 
-  const nsStyleCoord& verticalAlign = StyleTextReset()->mVerticalAlign;
+  const nsStyleCoord& verticalAlign = StyleDisplay()->mVerticalAlign;
   if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     return verticalAlign.GetIntValue();
   }
@@ -9291,11 +9303,13 @@ nsIFrame::DestroyContentArray(ContentArray* aArray)
 
 bool
 nsIFrame::IsPseudoStackingContextFromStyle() {
-  const nsStyleDisplay* disp = StyleDisplay();
   // If you change this, also change the computation of pseudoStackingContext
   // in BuildDisplayListForChild()
-  return disp->mOpacity != 1.0f ||
-         disp->IsAbsPosContainingBlock(this) ||
+  if (StyleEffects()->mOpacity != 1.0f) {
+    return true;
+  }
+  const nsStyleDisplay* disp = StyleDisplay();
+  return disp->IsAbsPosContainingBlock(this) ||
          disp->IsFloating(this) ||
          (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT);
 }

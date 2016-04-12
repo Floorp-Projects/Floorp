@@ -17,6 +17,7 @@ Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderMo
 const promise = require("promise");
 const Services = require("Services");
 const ErrorDocs = require("devtools/server/actors/errordocs");
+const Telemetry = require("devtools/client/shared/telemetry")
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
@@ -241,6 +242,8 @@ function WebConsoleFrame(webConsoleOwner) {
   this.React = require("devtools/client/shared/vendor/react");
   this.ReactDOM = require("devtools/client/shared/vendor/react-dom");
   this.FrameView = this.React.createFactory(require("devtools/client/shared/components/frame"));
+
+  this._telemetry = new Telemetry();
 
   EventEmitter.decorate(this);
 }
@@ -1493,6 +1496,11 @@ WebConsoleFrame.prototype = {
 
     // Add the more info link node to messages that belong to certain categories
     this.addMoreInfoLink(msgBody, scriptError);
+
+    // Collect telemetry data regarding JavaScript errors
+    this._telemetry.logKeyed("DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED",
+                             scriptError.errorMessageName,
+                             true);
 
     if (objectActors.size > 0) {
       node._objectActors = objectActors;

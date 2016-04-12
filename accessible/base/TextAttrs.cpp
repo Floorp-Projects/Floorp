@@ -828,7 +828,7 @@ TextAttrsMgr::TextPosValue
 TextAttrsMgr::TextPosTextAttr::
   GetTextPosValue(nsIFrame* aFrame) const
 {
-  const nsStyleCoord& styleCoord = aFrame->StyleTextReset()->mVerticalAlign;
+  const nsStyleCoord& styleCoord = aFrame->StyleDisplay()->mVerticalAlign;
   switch (styleCoord.GetUnit()) {
     case eStyleUnit_Enumerated:
       switch (styleCoord.GetIntValue()) {

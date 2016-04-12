@@ -1916,12 +1916,6 @@ static const uint32_t gContentFlags[] = {
 #undef CSS_PROP_CONTENT
 };
 
-static const uint32_t gQuotesFlags[] = {
-#define CSS_PROP_QUOTES FLAG_DATA_FOR_PROPERTY
-#include "nsCSSPropList.h"
-#undef CSS_PROP_QUOTES
-};
-
 static const uint32_t gTextFlags[] = {
 #define CSS_PROP_TEXT FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
@@ -1981,6 +1975,12 @@ static const uint32_t gVariablesFlags[] = {
 static_assert(sizeof(gVariablesFlags) == sizeof(uint32_t),
               "if nsStyleVariables has properties now you can remove the dummy "
               "gVariablesFlags entry");
+
+static const uint32_t gEffectsFlags[] = {
+#define CSS_PROP_EFFECTS FLAG_DATA_FOR_PROPERTY
+#include "nsCSSPropList.h"
+#undef CSS_PROP_EFFECTS
+};
 
 #undef FLAG_DATA_FOR_PROPERTY
 
@@ -2539,12 +2539,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       aContext->SetStyle(eStyleStruct_Content, content);
       return content;
     }
-    case eStyleStruct_Quotes:
-    {
-      nsStyleQuotes* quotes = new (mPresContext) nsStyleQuotes(mPresContext);
-      aContext->SetStyle(eStyleStruct_Quotes, quotes);
-      return quotes;
-    }
     case eStyleStruct_UserInterface:
     {
       nsStyleUserInterface* ui = new (mPresContext) nsStyleUserInterface(mPresContext);
@@ -2586,6 +2580,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       nsStyleVariables* vars = new (mPresContext) nsStyleVariables(mPresContext);
       aContext->SetStyle(eStyleStruct_Variables, vars);
       return vars;
+    }
+    case eStyleStruct_Effects:
+    {
+      nsStyleEffects* effects = new (mPresContext) nsStyleEffects(mPresContext);
+      aContext->SetStyle(eStyleStruct_Effects, effects);
+      return effects;
     }
     default:
       /*
@@ -4689,6 +4689,13 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
       MOZ_ASSERT_UNREACHABLE("Unknown value unit type");
   }
 
+  // text-rendering: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextRendering(),
+              text->mTextRendering, conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentText->mTextRendering,
+              NS_STYLE_TEXT_RENDERING_AUTO, 0, 0, 0, 0);
+
   // -webkit-text-fill-color: color, string, inherit, initial
   const nsCSSValue*
     webkitTextFillColorValue = aRuleData->ValueForWebkitTextFillColor();
@@ -4730,19 +4737,6 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
                                  const RuleNodeCacheConditions aConditions)
 {
   COMPUTE_START_RESET(TextReset, text, parentText)
-
-  // vertical-align: enum, length, percent, calc, inherit
-  const nsCSSValue* verticalAlignValue = aRuleData->ValueForVerticalAlign();
-  if (!SetCoord(*verticalAlignValue, text->mVerticalAlign,
-                parentText->mVerticalAlign,
-                SETCOORD_LPH | SETCOORD_ENUMERATED | SETCOORD_STORE_CALC,
-                aContext, mPresContext, conditions)) {
-    if (eCSSUnit_Initial == verticalAlignValue->GetUnit() ||
-        eCSSUnit_Unset == verticalAlignValue->GetUnit()) {
-      text->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
-                                       eStyleUnit_Enumerated);
-    }
-  }
 
   // text-decoration-line: enum (bit field), inherit, initial
   const nsCSSValue* decorationLineValue =
@@ -4974,6 +4968,13 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentUI->mUserFocus,
               NS_STYLE_USER_FOCUS_NONE, 0, 0, 0, 0);
+
+  // pointer-events: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForPointerEvents(), ui->mPointerEvents,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentUI->mPointerEvents,
+              NS_STYLE_POINTER_EVENTS_AUTO, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(UserInterface, ui)
 }
@@ -5629,11 +5630,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
   }
 
-  // opacity: factor, inherit, initial
-  SetFactor(*aRuleData->ValueForOpacity(), display->mOpacity, conditions,
-            parentDisplay->mOpacity, 1.0f,
-            SETFCT_OPACITY | SETFCT_UNSET_INITIAL);
-
   // display: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForDisplay(), display->mDisplay, conditions,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
@@ -5645,13 +5641,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_UNSET_INITIAL,
               parentDisplay->mContain,
               NS_STYLE_CONTAIN_NONE, 0, NS_STYLE_CONTAIN_NONE, 0, 0);
-
-  // mix-blend-mode: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForMixBlendMode(), display->mMixBlendMode,
-              conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentDisplay->mMixBlendMode, NS_STYLE_BLEND_NORMAL,
-              0, 0, 0, 0);
 
   // scroll-behavior: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForScrollBehavior(), display->mScrollBehavior,
@@ -5856,14 +5845,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // positioned, the position value should be computed to 'absolute' per
   // the Fullscreen API spec.
   if (display->mTopLayer != NS_STYLE_TOP_LAYER_NONE &&
-      // XXX We currently only support fixed top layer element. But per
-      // spec it should check IsAbsolutelyPositionedStyle() instead.
-      // This should be fixed as soon as we support <dialog> element
-      // in bug 840640. We have to restrict it now because addons may
-      // mess with UA-only styles and cause crashes. See bug 1230508.
-      display->mPosition != NS_STYLE_POSITION_FIXED) {
-    // XXX And we should set other values to absolute instead of fixed.
-    display->mPosition = NS_STYLE_POSITION_FIXED;
+      !display->IsAbsolutelyPositionedStyle()) {
+    display->mPosition = NS_STYLE_POSITION_ABSOLUTE;
     // We cannot cache this struct because otherwise it may be used as
     // an aStartStruct for some other elements.
     conditions.SetUncacheable();
@@ -6003,80 +5986,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
               parentDisplay->mResize,
               NS_STYLE_RESIZE_NONE, 0, 0, 0, 0);
-
-  // clip property: length, auto, inherit
-  const nsCSSValue* clipValue = aRuleData->ValueForClip();
-  switch (clipValue->GetUnit()) {
-  case eCSSUnit_Inherit:
-    conditions.SetUncacheable();
-    display->mClipFlags = parentDisplay->mClipFlags;
-    display->mClip = parentDisplay->mClip;
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_Auto:
-    display->mClipFlags = NS_STYLE_CLIP_AUTO;
-    display->mClip.SetRect(0,0,0,0);
-    break;
-
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_Rect: {
-    const nsCSSRect& clipRect = clipValue->GetRectValue();
-
-    display->mClipFlags = NS_STYLE_CLIP_RECT;
-
-    if (clipRect.mTop.GetUnit() == eCSSUnit_Auto) {
-      display->mClip.y = 0;
-      display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
-    }
-    else if (clipRect.mTop.IsLengthUnit()) {
-      display->mClip.y = CalcLength(clipRect.mTop, aContext,
-                                    mPresContext, conditions);
-    }
-
-    if (clipRect.mBottom.GetUnit() == eCSSUnit_Auto) {
-      // Setting to NS_MAXSIZE for the 'auto' case ensures that
-      // the clip rect is nonempty. It is important that mClip be
-      // nonempty if the actual clip rect could be nonempty.
-      display->mClip.height = NS_MAXSIZE;
-      display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
-    }
-    else if (clipRect.mBottom.IsLengthUnit()) {
-      display->mClip.height = CalcLength(clipRect.mBottom, aContext,
-                                         mPresContext, conditions) -
-                              display->mClip.y;
-    }
-
-    if (clipRect.mLeft.GetUnit() == eCSSUnit_Auto) {
-      display->mClip.x = 0;
-      display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
-    }
-    else if (clipRect.mLeft.IsLengthUnit()) {
-      display->mClip.x = CalcLength(clipRect.mLeft, aContext,
-                                    mPresContext, conditions);
-    }
-
-    if (clipRect.mRight.GetUnit() == eCSSUnit_Auto) {
-      // Setting to NS_MAXSIZE for the 'auto' case ensures that
-      // the clip rect is nonempty. It is important that mClip be
-      // nonempty if the actual clip rect could be nonempty.
-      display->mClip.width = NS_MAXSIZE;
-      display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
-    }
-    else if (clipRect.mRight.IsLengthUnit()) {
-      display->mClip.width = CalcLength(clipRect.mRight, aContext,
-                                        mPresContext, conditions) -
-                             display->mClip.x;
-    }
-    break;
-  }
-
-  default:
-    MOZ_ASSERT(false, "unrecognized clip unit");
-  }
 
   if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
     // CSS2 9.7 specifies display type corrections dealing with 'float'
@@ -6268,6 +6177,19 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     MOZ_ASSERT(false, "unrecognized will-change unit");
   }
 
+  // vertical-align: enum, length, percent, calc, inherit
+  const nsCSSValue* verticalAlignValue = aRuleData->ValueForVerticalAlign();
+  if (!SetCoord(*verticalAlignValue, display->mVerticalAlign,
+                parentDisplay->mVerticalAlign,
+                SETCOORD_LPH | SETCOORD_ENUMERATED | SETCOORD_STORE_CALC,
+                aContext, mPresContext, conditions)) {
+    if (eCSSUnit_Initial == verticalAlignValue->GetUnit() ||
+        eCSSUnit_Unset == verticalAlignValue->GetUnit()) {
+      display->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
+                                          eStyleUnit_Enumerated);
+    }
+  }
+
   /* Convert -moz-transform-origin. */
   const nsCSSValue* transformOriginValue =
     aRuleData->ValueForTransformOrigin();
@@ -6399,12 +6321,12 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
               parentVisibility->mVisible,
               NS_STYLE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
 
-  // pointer-events: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForPointerEvents(), visibility->mPointerEvents,
-              conditions,
+  // image-rendering: enum, inherit
+  SetDiscrete(*aRuleData->ValueForImageRendering(),
+              visibility->mImageRendering, conditions,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentVisibility->mPointerEvents,
-              NS_STYLE_POINTER_EVENTS_AUTO, 0, 0, 0, 0);
+              parentVisibility->mImageRendering,
+              NS_STYLE_IMAGE_RENDERING_AUTO, 0, 0, 0, 0);
 
   // writing-mode: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForWritingMode(), visibility->mWritingMode,
@@ -7215,33 +7137,6 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
               parentBorder->mBoxDecorationBreak,
               NS_STYLE_BOX_DECORATION_BREAK_SLICE, 0, 0, 0, 0);
 
-  // box-shadow: none, list, inherit, initial
-  const nsCSSValue* boxShadowValue = aRuleData->ValueForBoxShadow();
-  switch (boxShadowValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_None:
-    border->mBoxShadow = nullptr;
-    break;
-
-  case eCSSUnit_Inherit:
-    border->mBoxShadow = parentBorder->mBoxShadow;
-    conditions.SetUncacheable();
-    break;
-
-  case eCSSUnit_List:
-  case eCSSUnit_ListDep:
-    border->mBoxShadow = GetShadowData(boxShadowValue->GetListValue(),
-                                       aContext, true, conditions);
-    break;
-
-  default:
-    MOZ_ASSERT(false, "unrecognized shadow unit");
-  }
-
   // border-width, border-*-width: length, enum, inherit
   nsStyleCoord coord;
   {
@@ -7690,6 +7585,47 @@ nsRuleNode::ComputeListData(void* aStartStruct,
                             const RuleNodeCacheConditions aConditions)
 {
   COMPUTE_START_INHERITED(List, list, parentList)
+
+  // quotes: inherit, initial, none, [string string]+
+  const nsCSSValue* quotesValue = aRuleData->ValueForQuotes();
+  switch (quotesValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+  case eCSSUnit_Inherit:
+  case eCSSUnit_Unset:
+    conditions.SetUncacheable();
+    list->SetQuotesInherit(parentList);
+    break;
+  case eCSSUnit_Initial:
+    list->SetQuotesInitial();
+    break;
+  case eCSSUnit_None:
+    list->SetQuotesNone();
+    break;
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourQuotes = quotesValue->GetPairListValue();
+
+    nsStyleQuoteValues::QuotePairArray quotePairs;
+    quotePairs.SetLength(ListLength(ourQuotes));
+
+    size_t index = 0;
+    nsAutoString buffer;
+    while (ourQuotes) {
+      MOZ_ASSERT(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
+                 ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
+                 "improper list contents for quotes");
+      quotePairs[index].first  = ourQuotes->mXValue.GetStringValue(buffer);
+      quotePairs[index].second = ourQuotes->mYValue.GetStringValue(buffer);
+      ++index;
+      ourQuotes = ourQuotes->mNext;
+    }
+    list->SetQuotes(Move(quotePairs));
+    break;
+  }
+  default:
+    MOZ_ASSERT(false, "unexpected value unit");
+  }
 
   // list-style-type: string, none, inherit, initial
   const nsCSSValue* typeValue = aRuleData->ValueForListStyleType();
@@ -8843,61 +8779,6 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
 }
 
 const void*
-nsRuleNode::ComputeQuotesData(void* aStartStruct,
-                              const nsRuleData* aRuleData,
-                              nsStyleContext* aContext,
-                              nsRuleNode* aHighestNode,
-                              const RuleDetail aRuleDetail,
-                              const RuleNodeCacheConditions aConditions)
-{
-  COMPUTE_START_INHERITED(Quotes, quotes, parentQuotes)
-
-  // quotes: inherit, initial, none, [string string]+
-  const nsCSSValue* quotesValue = aRuleData->ValueForQuotes();
-  switch (quotesValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-  case eCSSUnit_Inherit:
-  case eCSSUnit_Unset:
-    conditions.SetUncacheable();
-    quotes->CopyFrom(*parentQuotes);
-    break;
-  case eCSSUnit_Initial:
-    quotes->SetInitial();
-    break;
-  case eCSSUnit_None:
-    quotes->AllocateQuotes(0);
-    break;
-  case eCSSUnit_PairList:
-  case eCSSUnit_PairListDep: {
-    const nsCSSValuePairList* ourQuotes
-      = quotesValue->GetPairListValue();
-    nsAutoString buffer;
-    nsAutoString closeBuffer;
-    uint32_t count = ListLength(ourQuotes);
-    if (NS_FAILED(quotes->AllocateQuotes(count))) {
-      break;
-    }
-    count = 0;
-    while (ourQuotes) {
-      MOZ_ASSERT(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
-                 ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
-                 "improper list contents for quotes");
-      ourQuotes->mXValue.GetStringValue(buffer);
-      ourQuotes->mYValue.GetStringValue(closeBuffer);
-      quotes->SetQuotesAt(count++, buffer, closeBuffer);
-      ourQuotes = ourQuotes->mNext;
-    }
-    break;
-  }
-  default:
-    MOZ_ASSERT(false, "unexpected value unit");
-  }
-
-  COMPUTE_END_INHERITED(Quotes, quotes)
-}
-
-const void*
 nsRuleNode::ComputeXULData(void* aStartStruct,
                            const nsRuleData* aRuleData,
                            nsStyleContext* aContext,
@@ -9237,13 +9118,6 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               parentSVG->mFillRule,
               NS_STYLE_FILL_RULE_NONZERO, 0, 0, 0, 0);
 
-  // image-rendering: enum, inherit
-  SetDiscrete(*aRuleData->ValueForImageRendering(),
-              svg->mImageRendering, conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentSVG->mImageRendering,
-              NS_STYLE_IMAGE_RENDERING_AUTO, 0, 0, 0, 0);
-
   // marker-end: url, none, inherit
   const nsCSSValue* markerEndValue = aRuleData->ValueForMarkerEnd();
   if (eCSSUnit_URL == markerEndValue->GetUnit()) {
@@ -9474,13 +9348,6 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentSVG->mTextAnchor,
               NS_STYLE_TEXT_ANCHOR_START, 0, 0, 0, 0);
-
-  // text-rendering: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForTextRendering(),
-              svg->mTextRendering, conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentSVG->mTextRendering,
-              NS_STYLE_TEXT_RENDERING_AUTO, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(SVG, svg)
 }
@@ -9828,42 +9695,6 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
               parentSVGReset->mVectorEffect,
               NS_STYLE_VECTOR_EFFECT_NONE, 0, 0, 0, 0);
 
-  // filter: url, none, inherit
-  const nsCSSValue* filterValue = aRuleData->ValueForFilter();
-  switch (filterValue->GetUnit()) {
-    case eCSSUnit_Null:
-      break;
-    case eCSSUnit_None:
-    case eCSSUnit_Initial:
-    case eCSSUnit_Unset:
-      svgReset->mFilters.Clear();
-      break;
-    case eCSSUnit_Inherit:
-      conditions.SetUncacheable();
-      svgReset->mFilters = parentSVGReset->mFilters;
-      break;
-    case eCSSUnit_List:
-    case eCSSUnit_ListDep: {
-      svgReset->mFilters.Clear();
-      const nsCSSValueList* cur = filterValue->GetListValue();
-      while (cur) {
-        nsStyleFilter styleFilter;
-        if (!SetStyleFilterToCSSValue(&styleFilter, cur->mValue, aContext,
-                                      mPresContext, conditions)) {
-          svgReset->mFilters.Clear();
-          break;
-        }
-        MOZ_ASSERT(styleFilter.GetType() != NS_STYLE_FILTER_NONE,
-                   "filter should be set");
-        svgReset->mFilters.AppendElement(styleFilter);
-        cur = cur->mNext;
-      }
-      break;
-    }
-    default:
-      NS_NOTREACHED("unexpected unit");
-  }
-
   // mask-type: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForMaskType(),
               svgReset->mMaskType,
@@ -10040,6 +9871,168 @@ nsRuleNode::ComputeVariablesData(void* aStartStruct,
   conditions.SetUncacheable();
 
   COMPUTE_END_INHERITED(Variables, variables)
+}
+
+const void*
+nsRuleNode::ComputeEffectsData(void* aStartStruct,
+                               const nsRuleData* aRuleData,
+                               nsStyleContext* aContext,
+                               nsRuleNode* aHighestNode,
+                               const RuleDetail aRuleDetail,
+                               const RuleNodeCacheConditions aConditions)
+{
+  COMPUTE_START_RESET(Effects, effects, parentEffects)
+
+  // filter: url, none, inherit
+  const nsCSSValue* filterValue = aRuleData->ValueForFilter();
+  switch (filterValue->GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+    case eCSSUnit_None:
+    case eCSSUnit_Initial:
+    case eCSSUnit_Unset:
+      effects->mFilters.Clear();
+      break;
+    case eCSSUnit_Inherit:
+      conditions.SetUncacheable();
+      effects->mFilters = parentEffects->mFilters;
+      break;
+    case eCSSUnit_List:
+    case eCSSUnit_ListDep: {
+      effects->mFilters.Clear();
+      const nsCSSValueList* cur = filterValue->GetListValue();
+      while (cur) {
+        nsStyleFilter styleFilter;
+        if (!SetStyleFilterToCSSValue(&styleFilter, cur->mValue, aContext,
+                                      mPresContext, conditions)) {
+          effects->mFilters.Clear();
+          break;
+        }
+        MOZ_ASSERT(styleFilter.GetType() != NS_STYLE_FILTER_NONE,
+                   "filter should be set");
+        effects->mFilters.AppendElement(styleFilter);
+        cur = cur->mNext;
+      }
+      break;
+    }
+    default:
+      NS_NOTREACHED("unexpected unit");
+  }
+
+  // box-shadow: none, list, inherit, initial
+  const nsCSSValue* boxShadowValue = aRuleData->ValueForBoxShadow();
+  switch (boxShadowValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_None:
+    effects->mBoxShadow = nullptr;
+    break;
+
+  case eCSSUnit_Inherit:
+    effects->mBoxShadow = parentEffects->mBoxShadow;
+    conditions.SetUncacheable();
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep:
+    effects->mBoxShadow = GetShadowData(boxShadowValue->GetListValue(),
+                                        aContext, true, conditions);
+    break;
+
+  default:
+    MOZ_ASSERT(false, "unrecognized shadow unit");
+  }
+
+  // clip property: length, auto, inherit
+  const nsCSSValue* clipValue = aRuleData->ValueForClip();
+  switch (clipValue->GetUnit()) {
+  case eCSSUnit_Inherit:
+    conditions.SetUncacheable();
+    effects->mClipFlags = parentEffects->mClipFlags;
+    effects->mClip = parentEffects->mClip;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_Auto:
+    effects->mClipFlags = NS_STYLE_CLIP_AUTO;
+    effects->mClip.SetRect(0,0,0,0);
+    break;
+
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Rect: {
+    const nsCSSRect& clipRect = clipValue->GetRectValue();
+
+    effects->mClipFlags = NS_STYLE_CLIP_RECT;
+
+    if (clipRect.mTop.GetUnit() == eCSSUnit_Auto) {
+      effects->mClip.y = 0;
+      effects->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
+    }
+    else if (clipRect.mTop.IsLengthUnit()) {
+      effects->mClip.y = CalcLength(clipRect.mTop, aContext,
+                                    mPresContext, conditions);
+    }
+
+    if (clipRect.mBottom.GetUnit() == eCSSUnit_Auto) {
+      // Setting to NS_MAXSIZE for the 'auto' case ensures that
+      // the clip rect is nonempty. It is important that mClip be
+      // nonempty if the actual clip rect could be nonempty.
+      effects->mClip.height = NS_MAXSIZE;
+      effects->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
+    }
+    else if (clipRect.mBottom.IsLengthUnit()) {
+      effects->mClip.height = CalcLength(clipRect.mBottom, aContext,
+                                         mPresContext, conditions) -
+                              effects->mClip.y;
+    }
+
+    if (clipRect.mLeft.GetUnit() == eCSSUnit_Auto) {
+      effects->mClip.x = 0;
+      effects->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
+    }
+    else if (clipRect.mLeft.IsLengthUnit()) {
+      effects->mClip.x = CalcLength(clipRect.mLeft, aContext,
+                                    mPresContext, conditions);
+    }
+
+    if (clipRect.mRight.GetUnit() == eCSSUnit_Auto) {
+      // Setting to NS_MAXSIZE for the 'auto' case ensures that
+      // the clip rect is nonempty. It is important that mClip be
+      // nonempty if the actual clip rect could be nonempty.
+      effects->mClip.width = NS_MAXSIZE;
+      effects->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
+    }
+    else if (clipRect.mRight.IsLengthUnit()) {
+      effects->mClip.width = CalcLength(clipRect.mRight, aContext,
+                                        mPresContext, conditions) -
+                             effects->mClip.x;
+    }
+    break;
+  }
+
+  default:
+    MOZ_ASSERT(false, "unrecognized clip unit");
+  }
+
+  // opacity: factor, inherit, initial
+  SetFactor(*aRuleData->ValueForOpacity(), effects->mOpacity, conditions,
+            parentEffects->mOpacity, 1.0f,
+            SETFCT_OPACITY | SETFCT_UNSET_INITIAL);
+
+  // mix-blend-mode: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForMixBlendMode(), effects->mMixBlendMode,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentEffects->mMixBlendMode, NS_STYLE_BLEND_NORMAL,
+              0, 0, 0, 0);
+
+  COMPUTE_END_RESET(Effects, effects)
 }
 
 const void*

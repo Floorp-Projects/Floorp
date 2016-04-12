@@ -42,6 +42,9 @@ public:
 
   AbstractThread(bool aSupportsTailDispatch) : mSupportsTailDispatch(aSupportsTailDispatch) {}
 
+  static already_AddRefed<AbstractThread>
+  CreateXPCOMThreadWrapper(nsIThread* aThread, bool aRequireTailDispatch);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractThread);
 
   enum DispatchFailureHandling { AssertDispatchSuccess, DontAssertDispatchSuccess };
@@ -91,9 +94,6 @@ protected:
   // this queue go through our queue's tail dispatcher.
   const bool mSupportsTailDispatch;
 };
-
-already_AddRefed<AbstractThread> CreateXPCOMAbstractThreadWrapper(nsIThread* aThread,
-                                 bool aRequireTailDispatch);
 
 } // namespace mozilla
 

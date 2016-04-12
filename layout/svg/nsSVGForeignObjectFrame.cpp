@@ -377,7 +377,7 @@ nsSVGForeignObjectFrame::ReflowSVG()
 
   // If we have a filter, we need to invalidate ourselves because filter
   // output can change even if none of our descendants need repainting.
-  if (StyleSVGReset()->HasFilters()) {
+  if (StyleEffects()->HasFilters()) {
     InvalidateFrame();
   }
 

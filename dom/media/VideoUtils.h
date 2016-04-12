@@ -163,13 +163,6 @@ static const int32_t MAX_VIDEO_HEIGHT = 4608;
 // before being used!
 void ScaleDisplayByAspectRatio(nsIntSize& aDisplay, float aAspectRatio);
 
-// Downmix multichannel Audio samples to Stereo.
-// Input are the buffer contains multichannel data,
-// the number of channels and the number of frames.
-int DownmixAudioToStereo(mozilla::AudioDataValue* buffer,
-                         int channels,
-                         uint32_t frames);
-
 // Downmix Stereo audio samples to Mono.
 // Input are the buffer contains stereo data and the number of frames.
 void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,

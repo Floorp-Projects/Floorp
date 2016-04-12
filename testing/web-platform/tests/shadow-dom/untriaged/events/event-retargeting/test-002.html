@@ -16,8 +16,7 @@ policies and contribution forms [3].
 <meta name="assert" content="Event Retargeting:Event retargeting for document nodes distributed among insertion points">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="../../testcommon.js"></script>
-<link rel="stylesheet" href="/resources/testharness.css">
+<script src="../../../../html/resources/common.js"></script>
 </head>
 <body>
 <div id="log"></div>
@@ -32,7 +31,7 @@ A_05_01_02_T1.step(function () {
     iframe.onload = A_05_01_02_T1.step_func(function () {
 
     try {
-    	var d = iframe.contentDocument;
+        var d = iframe.contentDocument;
 
         var ul = d.querySelector('ul.stories');
         var s = ul.createShadowRoot();
@@ -42,7 +41,7 @@ A_05_01_02_T1.step(function () {
         div.innerHTML = '<ul id="ip_wrapper"><content select=".shadow"></content></ul>';
         s.appendChild(div);
 
-    	d.body.addEventListener('click', A_05_01_02_T1.step_func(function (event) {
+        d.body.addEventListener('click', A_05_01_02_T1.step_func(function (event) {
             assert_equals(event.target.tagName, 'LI', 'Incorrect target');
         }), false);
 

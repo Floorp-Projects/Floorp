@@ -1352,8 +1352,8 @@ function doTestZoomedScroll(aCallback)
 function doTestWholeScroll(aCallback)
 {
   SpecialPowers.pushPrefEnv({"set": [
-    ["mousewheel.default.delta_multiplier_x", 99999999],
-    ["mousewheel.default.delta_multiplier_y", 99999999]]},
+    ["mousewheel.default.delta_multiplier_x", 999999],
+    ["mousewheel.default.delta_multiplier_y", 999999]]},
     function() { doTestWholeScroll2(aCallback); });
 }
 

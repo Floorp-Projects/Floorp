@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import platform
 import subprocess
 import sys
 
@@ -13,10 +14,18 @@ from mozprofile.permissions import ServerLocations
 from mozrunner import FirefoxRunner
 from mozcrash import mozcrash
 
-from .base import get_free_port, Browser, ExecutorBrowser, require_arg, cmd_arg, browser_command
+from .base import (get_free_port,
+                   Browser,
+                   ExecutorBrowser,
+                   require_arg,
+                   cmd_arg,
+                   browser_command)
 from ..executors import executor_kwargs as base_executor_kwargs
-from ..executors.executormarionette import MarionetteTestharnessExecutor, MarionetteRefTestExecutor
+from ..executors.executormarionette import (MarionetteTestharnessExecutor,
+                                            MarionetteRefTestExecutor,
+                                            MarionetteWdspecExecutor)
 from ..environment import hostnames
+
 
 here = os.path.join(os.path.split(__file__)[0])
 
@@ -24,7 +33,8 @@ __wptrunner__ = {"product": "firefox",
                  "check_args": "check_args",
                  "browser": "FirefoxBrowser",
                  "executor": {"testharness": "MarionetteTestharnessExecutor",
-                              "reftest": "MarionetteRefTestExecutor"},
+                              "reftest": "MarionetteRefTestExecutor",
+                              "wdspec": "MarionetteWdspecExecutor"},
                  "browser_kwargs": "browser_kwargs",
                  "executor_kwargs": "executor_kwargs",
                  "env_options": "env_options",
@@ -62,6 +72,8 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                 executor_kwargs["timeout_multiplier"] = 2
         elif run_info_data["debug"] or run_info_data.get("asan"):
             executor_kwargs["timeout_multiplier"] = 3
+    if test_type == "wdspec":
+        executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
     return executor_kwargs
 
 
@@ -79,6 +91,7 @@ def run_info_extras(**kwargs):
 
 def update_properties():
     return ["debug", "e10s", "os", "version", "processor", "bits"], {"debug", "e10s"}
+
 
 class FirefoxBrowser(Browser):
     used_ports = set()
@@ -119,6 +132,11 @@ class FirefoxBrowser(Browser):
                                       "network.dns.localDomains": ",".join(hostnames)})
         if self.e10s:
             self.profile.set_preferences({"browser.tabs.remote.autostart": True})
+
+        # Bug 1262954: winxp + e10s, disable hwaccel
+        if self.e10s and platform.system() in ("Windows", "Microsoft") and \
+           '5.1' in platform.version():
+            self.profile.set_preferences({"layers.acceleration.disabled": True})
 
         if self.ca_certificate_path is not None:
             self.setup_ssl()

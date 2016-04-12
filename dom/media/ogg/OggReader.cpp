@@ -528,7 +528,10 @@ nsresult OggReader::DecodeVorbis(ogg_packet* aPacket) {
   ogg_int64_t endFrame = aPacket->granulepos;
   while ((frames = vorbis_synthesis_pcmout(&mVorbisState->mDsp, &pcm)) > 0) {
     mVorbisState->ValidateVorbisPacketSamples(aPacket, frames);
-    auto buffer = MakeUnique<AudioDataValue[]>(frames * channels);
+    AlignedAudioBuffer buffer(frames * channels);
+    if (!buffer) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
@@ -577,7 +580,10 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
   if (frames < 120 || frames > 5760)
     return NS_ERROR_FAILURE;
   uint32_t channels = mOpusState->mChannels;
-  auto buffer = MakeUnique<AudioDataValue[]>(frames * channels);
+  AlignedAudioBuffer buffer(frames * channels);
+  if (!buffer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Decode to the appropriate sample type.
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
@@ -617,7 +623,10 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
     }
     int32_t keepFrames = frames - skipFrames;
     int samples = keepFrames * channels;
-    auto trimBuffer = MakeUnique<AudioDataValue[]>(samples);
+    AlignedAudioBuffer trimBuffer(samples);
+    if (!trimBuffer) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     for (int i = 0; i < samples; i++)
       trimBuffer[i] = buffer[skipFrames*channels + i];
 
