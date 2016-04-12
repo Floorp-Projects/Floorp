@@ -68,7 +68,7 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                        SourceMediaStream* aSource,
                                        TrackID aID,
                                        StreamTime aDesiredTime,
-                                       const PrincipalID& aPrincipalHandle)
+                                       const PrincipalHandle& aPrincipalHandle)
 {
   VideoSegment segment;
 
@@ -99,7 +99,7 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     segment.AppendFrame(image.forget(), delta, size, aPrincipalHandle);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
-    aSource->AppendToTrack(aID, &(segment), aPrincipalHandle);
+    aSource->AppendToTrack(aID, &(segment));
   }
 }
 
@@ -203,7 +203,8 @@ MediaEngineGonkVideoSource::Deallocate()
 }
 
 nsresult
-MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
+MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
+                                  const PrincipalHandle& aPrincipalHandle)
 {
   LOG((__FUNCTION__));
   if (!mInitDone || !aStream) {
