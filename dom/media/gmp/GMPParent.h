@@ -164,10 +164,13 @@ public:
 
 private:
   ~GMPParent();
+
   RefPtr<GeckoMediaPluginServiceParent> mService;
   bool EnsureProcessLoaded();
   RefPtr<InitPromise> ReadGMPMetaData();
   RefPtr<InitPromise> ReadGMPInfoFile(nsIFile* aFile);
+  RefPtr<InitPromise> ReadChromiumManifestFile(nsIFile* aFile);
+  RefPtr<InitPromise> ParseChromiumManifest(nsString aJSON); // Main thread.
 #ifdef MOZ_CRASHREPORTER
   void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
   void GetCrashID(nsString& aResult);
