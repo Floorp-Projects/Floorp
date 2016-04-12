@@ -48,6 +48,7 @@ STYLE_STRUCTS = [("INHERITED",) + x for x in [
     ("XUL",            "nullptr",   NORMAL_DEP),
     ("SVGReset",       "nullptr",   NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
     ("Column",         "nullptr",   NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
+    ("Effects",        "nullptr",   NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
 ]]
 
 

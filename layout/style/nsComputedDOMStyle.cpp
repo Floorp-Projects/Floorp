@@ -3380,7 +3380,7 @@ nsComputedDOMStyle::DoGetBoxDecorationBreak()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBoxShadow()
 {
-  return GetCSSShadowArray(StyleBorder()->mBoxShadow,
+  return GetCSSShadowArray(StyleEffects()->mBoxShadow,
                            StyleColor()->mColor,
                            true);
 }

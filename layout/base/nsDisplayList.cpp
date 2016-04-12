@@ -2419,8 +2419,9 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   }
 
   const nsStyleBorder* borderStyle = aFrame->StyleBorder();
-  bool hasInsetShadow = borderStyle->mBoxShadow &&
-                        borderStyle->mBoxShadow->HasShadowWithInset(true);
+  const nsStyleEffects* effectsStyle = aFrame->StyleEffects();
+  bool hasInsetShadow = effectsStyle->mBoxShadow &&
+                        effectsStyle->mBoxShadow->HasShadowWithInset(true);
   bool willPaintBorder = !isThemed && !hasInsetShadow &&
                          borderStyle->HasBorder();
 

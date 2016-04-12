@@ -1247,8 +1247,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     float aOpacity)
 {
   DrawTarget& aDrawTarget = *aRenderingContext.GetDrawTarget();
-  const nsStyleBorder* styleBorder = aForFrame->StyleBorder();
-  nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
+  nsCSSShadowArray* shadows = aForFrame->StyleEffects()->mBoxShadow;
   if (!shadows)
     return;
 
@@ -1484,8 +1483,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aFrameArea)
 {
-  const nsStyleBorder* styleBorder = aForFrame->StyleBorder();
-  nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
+  nsCSSShadowArray* shadows = aForFrame->StyleEffects()->mBoxShadow;
   if (!shadows)
     return;
   if (aForFrame->IsThemed() && aForFrame->GetContent() &&
