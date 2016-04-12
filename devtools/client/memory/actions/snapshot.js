@@ -140,8 +140,6 @@ TaskCache.declareCacheableTask({
   },
 
   task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
-    console.log("FITZGEN: readSnapshot");
-
     const snapshot = getSnapshot(getState(), id);
     assert([states.SAVED, states.IMPORTING].includes(snapshot.state),
            `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`);
@@ -153,14 +151,12 @@ TaskCache.declareCacheableTask({
       yield heapWorker.readHeapSnapshot(snapshot.path);
       creationTime = yield heapWorker.getCreationTime(snapshot.path);
     } catch (error) {
-      console.log("FITZGEN: readSnapshot: error", error);
       removeFromCache();
       reportException("readSnapshot", error);
       dispatch({ type: actions.SNAPSHOT_ERROR, id, error });
       return;
     }
 
-    console.log("FITZGEN: readSnapshot: done reading");
     removeFromCache();
     dispatch({ type: actions.READ_SNAPSHOT_END, id, creationTime });
   }
@@ -196,10 +192,8 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
     },
 
     task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
-      console.log("FITZGEN: takeCensus");
       const snapshot = getSnapshot(getState(), id);
       if (!snapshot) {
-        console.log("FITZGEN:     no snapshot");
         removeFromCache();
         return;
       }
@@ -214,7 +208,6 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
 
       // If display, filter and inversion haven't changed, don't do anything.
       if (censusIsUpToDate(filter, display, getCensus(snapshot))) {
-        console.log("FITZGEN:     census is up to date");
         removeFromCache();
         return;
       }
@@ -226,7 +219,6 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
         display = getDisplay(getState());
         filter = getState().filter;
 
-        console.log("FITZGEN:     taking census with display =", display.displayName);
         dispatch({
           type: beginAction,
           id,
@@ -246,7 +238,6 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
             { breakdown: display.breakdown },
             opts));
         } catch (error) {
-          console.log("FITZGEN:     error taking census: " + error + "\n" + error.stack);
           removeFromCache();
           reportException("takeCensus", error);
           dispatch({ type: errorAction, id, error });
@@ -255,8 +246,6 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
       }
       while (filter !== getState().filter ||
              display !== getDisplay(getState()));
-
-      console.log("FITZGEN:     done taking census");
 
       removeFromCache();
       dispatch({
@@ -465,11 +454,9 @@ const refreshIndividuals = exports.refreshIndividuals = function(heapWorker) {
  * @param {HeapAnalysesClient} heapWorker
  */
 const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWorker) {
-  console.log("FITZGEN: refreshSelectedCensus");
   return function*(dispatch, getState) {
     let snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
-      console.log("FITZGEN:     nothing to do");
       return;
     }
 
@@ -481,7 +468,6 @@ const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWork
     // task action will follow through and ensure that a census is taken.
     if ((snapshot.census && snapshot.census.state === censusState.SAVED) ||
         !snapshot.census) {
-      console.log("FITZGEN:     taking census");
       yield dispatch(takeCensus(heapWorker, snapshot.id));
     }
   };
