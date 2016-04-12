@@ -21,7 +21,7 @@ but not in other dominator tree states.
 
              for (let state of [dominatorTreeState.COMPUTING, dominatorTreeState.FETCHING]) {
                yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-                 view: viewState.DOMINATOR_TREE,
+                 view: { state: viewState.DOMINATOR_TREE, },
                  snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                    dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
                      state,
@@ -37,7 +37,7 @@ but not in other dominator tree states.
 
              for (let state of [dominatorTreeState.LOADED, dominatorTreeState.INCREMENTAL_FETCHING]) {
                yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-                 view: viewState.DOMINATOR_TREE,
+                 view: { state: viewState.DOMINATOR_TREE, },
                  snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                    dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
                      state,
@@ -51,7 +51,7 @@ but not in other dominator tree states.
              }
 
              yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-               view: viewState.DOMINATOR_TREE,
+               view: { state: viewState.DOMINATOR_TREE, },
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  dominatorTree: {
                    state: dominatorTreeState.ERROR,

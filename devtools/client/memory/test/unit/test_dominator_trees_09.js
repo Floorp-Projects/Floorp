@@ -8,12 +8,12 @@ const {
   snapshotState: states,
   dominatorTreeState,
   viewState,
-  dominatorTreeDisplays,
+  labelDisplays,
   treeMapState,
 } = require("devtools/client/memory/constants");
 const {
-  setDominatorTreeDisplayAndRefresh
-} = require("devtools/client/memory/actions/dominator-tree-display");
+  setLabelDisplayAndRefresh
+} = require("devtools/client/memory/actions/label-display");
 const {
   changeView,
 } = require("devtools/client/memory/actions/view");
@@ -47,30 +47,30 @@ add_task(function *() {
     state.snapshots[0].dominatorTree &&
     state.snapshots[0].dominatorTree.state === dominatorTreeState.FETCHING);
 
-  ok(getState().dominatorTreeDisplay,
+  ok(getState().labelDisplay,
      "We have a default display for describing nodes in a dominator tree");
-  equal(getState().dominatorTreeDisplay,
-        dominatorTreeDisplays.coarseType,
+  equal(getState().labelDisplay,
+        labelDisplays.coarseType,
         "and the default is coarse type");
-  equal(getState().dominatorTreeDisplay,
+  equal(getState().labelDisplay,
         getState().snapshots[0].dominatorTree.display,
         "and the newly computed dominator tree has that display");
 
   // Switch to the allocationStack display while we are still fetching the
   // dominator tree.
-  dispatch(setDominatorTreeDisplayAndRefresh(
+  dispatch(setLabelDisplayAndRefresh(
     heapWorker,
-    dominatorTreeDisplays.allocationStack));
+    labelDisplays.allocationStack));
 
   // Wait for the dominator tree to finish being fetched.
   yield waitUntilState(store, state =>
     state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
 
   equal(getState().snapshots[0].dominatorTree.display,
-        dominatorTreeDisplays.allocationStack,
+        labelDisplays.allocationStack,
         "The new dominator tree's display is allocationStack");
-  equal(getState().dominatorTreeDisplay,
-        dominatorTreeDisplays.allocationStack,
+  equal(getState().labelDisplay,
+        labelDisplays.allocationStack,
         "as is our requested dominator tree display");
 
   heapWorker.destroy();

@@ -105,8 +105,11 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 pref("devtools.memory.enabled", false);
 
 pref("devtools.memory.custom-census-displays", "{}");
-pref("devtools.memory.custom-dominator-tree-displays", "{}");
+pref("devtools.memory.custom-label-displays", "{}");
 pref("devtools.memory.custom-tree-map-displays", "{}");
+
+pref("devtools.memory.max-individuals", 1000);
+pref("devtools.memory.max-retaining-paths", 10);
 
 // Enable the Performance tools
 pref("devtools.performance.enabled", true);

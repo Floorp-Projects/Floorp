@@ -5,7 +5,6 @@
 
 "use strict";
 
-const { waitForTime } = require("devtools/shared/DevToolsUtils");
 const {
   snapshotState,
   diffingState,

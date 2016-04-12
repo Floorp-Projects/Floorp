@@ -294,6 +294,10 @@ public final class HomeConfig {
             return (mViews != null ? mViews.get(index) : null);
         }
 
+        public EnumSet<Flags> getFlags() {
+            return mFlags.clone();
+        }
+
         public boolean isDynamic() {
             return (mType == PanelType.DYNAMIC);
         }

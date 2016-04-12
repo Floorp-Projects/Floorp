@@ -22,7 +22,7 @@ const DominatorTreeItem = module.exports = createClass({
   propTypes: {
     item: PropTypes.object.isRequired,
     depth: PropTypes.number.isRequired,
-    arrow: PropTypes.object.isRequired,
+    arrow: PropTypes.object,
     focused: PropTypes.bool.isRequired,
     getPercentSize: PropTypes.func.isRequired,
     onViewSourceInDebugger: PropTypes.func.isRequired,
