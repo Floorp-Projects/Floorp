@@ -687,7 +687,8 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
     return;
   }
 
-  if (aOffset != Point(0, 0)) {
+  if (aOffset != Point(0, 0) &&
+      paint.mPaint.getShader()) {
     SkMatrix transform;
     transform.setTranslate(PointToSkPoint(-aOffset));
     SkShader* matrixShader = paint.mPaint.getShader()->newWithLocalMatrix(transform);
