@@ -21,6 +21,7 @@
 #include "mozilla/dom/CrashReporterChild.h"
 #include "GMPUtils.h"
 #include "prio.h"
+#include "widevine-adapter/WidevineAdapter.h"
 
 using mozilla::dom::CrashReporterChild;
 
@@ -345,7 +346,7 @@ GMPChild::GetUTF8LibPath(nsACString& aOutLibPath)
 }
 
 bool
-GMPChild::AnswerStartPlugin()
+GMPChild::AnswerStartPlugin(const nsString& aAdapter)
 {
   LOGD("%s", __FUNCTION__);
 
@@ -378,11 +379,14 @@ GMPChild::AnswerStartPlugin()
   }
 #endif
 
+  GMPAdapter* adapter = aAdapter.EqualsLiteral("widevine")
+                      ? new WidevineAdapter() : nullptr;
   if (!mGMPLoader->Load(libPath.get(),
                         libPath.Length(),
                         mNodeId.BeginWriting(),
                         mNodeId.Length(),
-                        platformAPI)) {
+                        platformAPI,
+                        adapter)) {
     NS_WARNING("Failed to load GMP");
     delete platformAPI;
     return false;
