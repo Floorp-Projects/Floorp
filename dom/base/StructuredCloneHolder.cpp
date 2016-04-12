@@ -11,6 +11,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -658,7 +659,7 @@ ReadBlob(JSContext* aCx,
 
   MOZ_ASSERT(blobImpl);
 
-  // RefPtr<File> needs to go out of scope before toObjectOrNull() is
+  // RefPtr<File> needs to go out of scope before toObject() is
   // called because the static analysis thinks dereferencing XPCOM objects
   // can GC (because in some cases it can!), and a return statement with a
   // JSObject* type means that JSObject* is on the stack as a raw pointer
@@ -703,6 +704,80 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
   }
 
   return false;
+}
+
+// A directory is serialized as:
+// - pair of ints: SCTAG_DOM_DIRECTORY, 0
+// - pair of ints: type (eDOMRootDirectory/eDOMNotRootDirectory) - path length
+// - path as string
+bool
+WriteDirectory(JSStructuredCloneWriter* aWriter,
+               Directory* aDirectory)
+{
+  MOZ_ASSERT(aWriter);
+  MOZ_ASSERT(aDirectory);
+
+  nsAutoString path;
+  aDirectory->GetFullRealPath(path);
+
+  size_t charSize = sizeof(nsString::char_type);
+  return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DIRECTORY, 0) &&
+         JS_WriteUint32Pair(aWriter, (uint32_t)aDirectory->Type(),
+                            path.Length()) &&
+         JS_WriteBytes(aWriter, path.get(), path.Length() * charSize);
+}
+
+JSObject*
+ReadDirectory(JSContext* aCx,
+              JSStructuredCloneReader* aReader,
+              uint32_t aZero,
+              StructuredCloneHolder* aHolder)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aReader);
+  MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(aZero == 0);
+
+  uint32_t directoryType, lengthOfString;
+  if (!JS_ReadUint32Pair(aReader, &directoryType, &lengthOfString)) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(directoryType == Directory::eDOMRootDirectory ||
+             directoryType == Directory::eNotDOMRootDirectory);
+
+  nsAutoString path;
+  path.SetLength(lengthOfString);
+  size_t charSize = sizeof(nsString::char_type);
+  if (!JS_ReadBytes(aReader, (void*) path.BeginWriting(),
+                    lengthOfString * charSize)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
+                                      getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  // RefPtr<Directory> needs to go out of scope before toObject() is
+  // called because the static analysis thinks dereferencing XPCOM objects
+  // can GC (because in some cases it can!), and a return statement with a
+  // JSObject* type means that JSObject* is on the stack as a raw pointer
+  // while destructors are running.
+  JS::Rooted<JS::Value> val(aCx);
+  {
+    RefPtr<Directory> directory =
+      Directory::Create(aHolder->ParentDuringRead(), file,
+                        (Directory::DirectoryType) directoryType);
+
+    if (!ToJSValue(aCx, directory, &val)) {
+      return nullptr;
+    }
+  }
+
+  return &val.toObject();
 }
 
 // Read the WriteFileList for the format.
@@ -1002,6 +1077,10 @@ StructuredCloneHolder::CustomReadHandler(JSContext* aCx,
     return ReadBlob(aCx, aIndex, this);
   }
 
+  if (aTag == SCTAG_DOM_DIRECTORY) {
+    return ReadDirectory(aCx, aReader, aIndex, this);
+  }
+
   if (aTag == SCTAG_DOM_FILELIST) {
     return ReadFileList(aCx, aReader, aIndex, this);
   }
@@ -1039,6 +1118,14 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
     Blob* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
       return WriteBlob(aWriter, blob, this);
+    }
+  }
+
+  // See if this is a Directory object.
+  {
+    Directory* directory = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Directory, aObj, directory))) {
+      return WriteDirectory(aWriter, directory);
     }
   }
 
