@@ -38,6 +38,10 @@ extensions.registerSchemaAPI("extension", null, (extension, context) => {
       isAllowedIncognitoAccess() {
         return Promise.resolve(true);
       },
+
+      isAllowedFileSchemeAccess() {
+        return Promise.resolve(true);
+      },
     },
   };
 });
