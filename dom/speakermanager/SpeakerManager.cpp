@@ -105,7 +105,7 @@ SpeakerManager::Init(nsPIDOMWindowInner* aWindow)
 {
   BindToOwner(aWindow);
 
-  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
+  nsCOMPtr<nsIDocShell> docshell = GetOwner()->GetDocShell();
   NS_ENSURE_TRUE_VOID(docshell);
   docshell->GetIsActive(&mVisible);
 
