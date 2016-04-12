@@ -756,7 +756,13 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
     // call into GL, instead of trying to keep MakeCurrent-ed.
 
     RefPtr<gfx::DataSourceSurface> dataSurf = mSurf->GetDataSurface();
-    MOZ_ASSERT(dataSurf);
+
+    if (!dataSurf) {
+        // Since GetDataSurface didn't return error code, assume system
+        // is out of memory
+        *out_glError = LOCAL_GL_OUT_OF_MEMORY;
+        return;
+    }
 
     GLenum error;
     if (UploadDataSurface(isSubImage, webgl, target, level, dui, xOffset, yOffset,

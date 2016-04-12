@@ -153,9 +153,9 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
 
   if (aOldStyleContext) {
-    auto oldStyleDisplay = aOldStyleContext->PeekStyleDisplay();
-    if (oldStyleDisplay &&
-        StyleDisplay()->mOpacity != oldStyleDisplay->mOpacity &&
+    auto oldStyleEffects = aOldStyleContext->PeekStyleEffects();
+    if (oldStyleEffects &&
+        StyleEffects()->mOpacity != oldStyleEffects->mOpacity &&
         nsSVGUtils::CanOptimizeOpacity(this)) {
       // nsIFrame::BuildDisplayListForStackingContext() is not going to create an
       // nsDisplayOpacity display list item, so DLBI won't invalidate for us.

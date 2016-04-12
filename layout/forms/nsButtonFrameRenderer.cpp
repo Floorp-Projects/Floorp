@@ -259,7 +259,7 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
                                      nsDisplayList* aBackground,
                                      nsDisplayList* aForeground)
 {
-  if (mFrame->StyleBorder()->mBoxShadow) {
+  if (mFrame->StyleEffects()->mBoxShadow) {
     aBackground->AppendNewToTop(new (aBuilder)
       nsDisplayButtonBoxShadowOuter(aBuilder, this));
   }

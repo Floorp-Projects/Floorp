@@ -12,9 +12,7 @@
 
 #include "base/buffer.h"
 #include "base/message_loop.h"
-#include "mozilla/UniquePtr.h"
-
-class NonThreadSafe;
+#include "nsISupportsImpl.h"
 
 namespace IPC {
 
@@ -24,7 +22,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   ChannelImpl(const std::wstring& channel_id, Mode mode, Listener* listener);
   ChannelImpl(const std::wstring& channel_id, HANDLE server_pipe,
               Mode mode, Listener* listener);
-  ~ChannelImpl() { 
+  ~ChannelImpl() {
     if (pipe_ != INVALID_HANDLE_VALUE) {
       Close();
     }
@@ -120,7 +118,9 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // send us back our shared secret, if we are using one.
   bool waiting_for_shared_secret_;
 
-  mozilla::UniquePtr<NonThreadSafe> thread_check_;
+#ifdef DEBUG
+  mozilla::UniquePtr<nsAutoOwningThread> _mOwningThread;
+#endif
 
   DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
 };

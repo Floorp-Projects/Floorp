@@ -3756,8 +3756,8 @@ Tab.prototype = {
        * error should be no more than one app unit so doing the floor is overkill, but safe in the
        * sense that the extra page size updates that get sent as a result will be mostly harmless.
        */
-      let pageLargerThanScreen = (cssPageRect.width >= Math.floor(viewport.cssWidth))
-                              && (cssPageRect.height >= Math.floor(viewport.cssHeight));
+      let pageLargerThanScreen = (Math.ceil(cssPageRect.width) >= Math.floor(viewport.cssWidth))
+                              && (Math.ceil(cssPageRect.height) >= Math.floor(viewport.cssHeight));
       if (doc.readyState === 'complete' || pageLargerThanScreen) {
         viewport.cssPageLeft = cssPageRect.left;
         viewport.cssPageTop = cssPageRect.top;

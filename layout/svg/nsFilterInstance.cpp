@@ -63,7 +63,7 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea)
 {
-  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
                             filterChain, aPaintCallback, aTransform,
@@ -83,7 +83,7 @@ nsFilterInstance::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
   }
 
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
-  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
                             filterChain, nullptr, unused, nullptr,
@@ -103,7 +103,7 @@ nsFilterInstance::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
                                          const nsRegion& aPostFilterDirtyRegion)
 {
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
-  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
                             filterChain, nullptr, unused,
@@ -134,7 +134,7 @@ nsFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
   }
 
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
-  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
                             filterChain, nullptr, unused, nullptr,

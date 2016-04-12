@@ -901,7 +901,7 @@ RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult)
     if ((nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&
         !(state & states::OPAQUE1)) {
       nsIFrame* frame = aAccessible->GetFrame();
-      if (frame->StyleDisplay()->mOpacity == 0.0f) {
+      if (frame->StyleEffects()->mOpacity == 0.0f) {
         *aResult |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
         return NS_OK;
       }

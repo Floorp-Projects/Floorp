@@ -34,7 +34,7 @@ parent:
 child:
   async BeginAsyncShutdown();
   async CrashPluginNow();
-  intr StartPlugin();
+  intr StartPlugin(nsString adapter);
   async SetNodeId(nsCString nodeId);
   async PreloadLibs(nsCString libs);
   async CloseActive();

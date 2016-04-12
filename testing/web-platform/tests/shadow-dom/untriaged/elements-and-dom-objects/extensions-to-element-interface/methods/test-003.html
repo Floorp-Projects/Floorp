@@ -16,15 +16,15 @@ policies and contribution forms [3].
 <meta name="assert" content="Extensions to Element Interface: createShadowRoot method">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="../../../testcommon.js"></script>
-<link rel="stylesheet" href="/resources/testharness.css">
+<script src="../../../../../html/resources/common.js"></script>
+<script src="../../../../resources/shadow-dom-utils.js"></script>
 </head>
 <body>
 <div id="log"></div>
 <script>
 test(unit(function (ctx) {
 
-	var d = newRenderedHTMLDocument(ctx);
+    var d = newRenderedHTMLDocument(ctx);
 
     var host = d.createElement('div');
     d.body.appendChild(host);
@@ -43,11 +43,11 @@ test(unit(function (ctx) {
 
     // span should become invisible as shadow root content
     assert_equals(span.offsetTop, 0, 'Point 1:createShadowRoot() method should add ' +
-    		'the ShadowRoot object at the top of the tree stack of its host');
+            'the ShadowRoot object at the top of the tree stack of its host');
     assert_equals(s1.querySelector('#sp1').offsetTop, 0, 'Point 2:createShadowRoot() method should add ' +
-		'the ShadowRoot object at the top of the tree stack of its host');
+        'the ShadowRoot object at the top of the tree stack of its host');
     assert_true(s2.querySelector('#sp2').offsetTop > 0, 'Point 3:createShadowRoot() method should add ' +
-		'the ShadowRoot object at the top of the tree stack of its host');
+        'the ShadowRoot object at the top of the tree stack of its host');
 
 
 }), 'A_10_02_02_03_T01');

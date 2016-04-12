@@ -61,7 +61,7 @@ MediaSourceDecoder::Load(nsIStreamListener**)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = GetStateMachine()->Init();
+  nsresult rv = GetStateMachine()->Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();

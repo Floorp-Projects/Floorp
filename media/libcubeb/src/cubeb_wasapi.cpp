@@ -1596,11 +1596,6 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  if (input_device || output_device) {
-    /* Device selection not yet implemented. */
-    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
-  }
-
   XASSERT(context && stream);
 
   if (output_stream_params && output_stream_params->format != CUBEB_SAMPLE_FLOAT32NE ||

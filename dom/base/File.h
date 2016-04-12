@@ -754,7 +754,17 @@ public:
 
   explicit EmptyBlobImpl(const nsAString& aContentType)
     : BlobImplBase(aContentType, 0 /* aLength */)
-  {}
+  {
+    mImmutable = true;
+  }
+
+  EmptyBlobImpl(const nsAString& aName,
+                const nsAString& aContentType,
+                int64_t aLastModifiedDate)
+    : BlobImplBase(aName, aContentType, 0, aLastModifiedDate)
+  {
+    mImmutable = true;
+  }
 
   virtual void GetInternalStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;

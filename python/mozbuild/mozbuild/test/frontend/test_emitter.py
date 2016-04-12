@@ -429,6 +429,16 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegexp(SandboxValidationError, 'Empty test manifest'):
             self.read_topsrcdir(reader)
 
+    def test_test_manifest_dupe_support_files(self):
+        """A test manifest with dupe support-files in a single test is not
+        supported.
+        """
+        reader = self.reader('test-manifest-dupes')
+
+        with self.assertRaisesRegexp(SandboxValidationError, 'bar.js appears multiple times '
+            'in a test manifest under a support-files field, please omit the duplicate entry.'):
+            self.read_topsrcdir(reader)
+
     def test_test_manifest_absolute_support_files(self):
         """Support files starting with '/' are placed relative to the install root"""
         reader = self.reader('test-manifest-absolute-support')
