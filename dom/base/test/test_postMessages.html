@@ -61,15 +61,15 @@ function compare(a, b) {
 }
 
 var clonableObjects = [
-  { crossThreads: true, data: 'hello world' },
-  { crossThreads: true, data: 123 },
-  { crossThreads: true, data: null },
-  { crossThreads: true, data: true },
-  { crossThreads: true, data: new Date() },
-  { crossThreads: true, data: [ 1, 'test', true, new Date() ] },
-  { crossThreads: true, data: { a: true, b:  null, c: new Date(), d: [ true, false, {} ] } },
-  { crossThreads: true, data: new Blob([123], { type: 'plain/text' }) },
-  { crossThreads: true, data: new ImageData(2, 2) },
+  'hello world',
+  123,
+  null,
+  true,
+  new Date(),
+  [ 1, 'test', true, new Date() ],
+  { a: true, b:  null, c: new Date(), d: [ true, false, {} ] },
+  new Blob([123], { type: 'plain/text' }),
+  new ImageData(2, 2),
 ];
 
 function create_fileList_forFile() {
@@ -84,7 +84,7 @@ function create_fileList_forFile() {
     var domFile = fileList.files[0];
     is(domFile.name, "prefs.js", "fileName should be prefs.js");
 
-    clonableObjects.push({ crossThreads: true, data: fileList.files });
+    clonableObjects.push(fileList.files);
     script.destroy();
     next();
   }
@@ -105,7 +105,7 @@ function create_fileList_forDir() {
     is(fileList.files.length, 1, "Filelist has 1 element");
     ok(fileList.files[0] instanceof Directory, "We have a directory.");
 
-    clonableObjects.push({ crossThreads: false, data: fileList.files });
+    clonableObjects.push(fileList.files);
     script.destroy();
     next();
   }
@@ -135,15 +135,8 @@ function runTests(obj) {
 
       var object = clonableObjects[clonableObjectsId++];
 
-      // If this test requires a cross-thread structured clone algorithm, maybe
-      // we have to skip it.
-      if (!object.crossThread && obj.crossThread) {
-        runClonableTest();
-        return;
-      }
-
-      obj.send(object.data, []).then(function(received) {
-        compare(received.data, object.data);
+      obj.send(object, []).then(function(received) {
+        compare(received.data, object);
         runClonableTest();
       });
     }
@@ -232,7 +225,6 @@ function test_windowToWindow() {
   runTests({
     clonableObjects: true,
     transferableObjects: true,
-    crossThread: false,
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
@@ -286,7 +278,6 @@ function test_windowToIframeURL(url) {
     runTests({
       clonableObjects: true,
       transferableObjects: true,
-      crossThread: false,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
@@ -334,7 +325,6 @@ function test_workers() {
     runTests({
       clonableObjects: true,
       transferableObjects: true,
-      crossThread: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
@@ -378,7 +368,6 @@ function test_broadcastChannel() {
   runTests({
     clonableObjects: true,
     transferableObjects: false,
-    crossThread: true,
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         if (ports.length) {
@@ -424,7 +413,6 @@ function test_broadcastChannel_inWorkers() {
     runTests({
       clonableObjects: true,
       transferableObjects: false,
-      crossThread: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           if (ports.length) {
@@ -466,7 +454,6 @@ function test_messagePort() {
   runTests({
     clonableObjects: true,
     transferableObjects: true,
-    crossThread: true,
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
@@ -512,7 +499,6 @@ function test_messagePort_inWorkers() {
     runTests({
       clonableObjects: true,
       transferableObjects: true,
-      crossThread: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
