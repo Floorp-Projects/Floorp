@@ -3533,7 +3533,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetVerticalAlign()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleTextReset()->mVerticalAlign, false,
+  SetValueToCoord(val, StyleDisplay()->mVerticalAlign, false,
                   &nsComputedDOMStyle::GetLineHeightCoord,
                   nsCSSProps::kVerticalAlignKTable);
   return val.forget();
