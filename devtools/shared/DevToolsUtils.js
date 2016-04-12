@@ -382,8 +382,14 @@ exports.defineLazyGetter(this, "NetworkHelper", () => {
  *        - loadFromCache: if false, will bypass the cache and
  *          always load fresh from the network (default: true)
  *        - policy: the nsIContentPolicy type to apply when fetching the URL
+ *                  (only works when loading from system principal)
  *        - window: the window to get the loadGroup from
  *        - charset: the charset to use if the channel doesn't provide one
+ *        - principal: the principal to use, if omitted, the request is loaded
+ *                     with the system principal
+ *        - cacheKey: when loading from cache, use this key to retrieve a cache
+ *                    specific to a given SHEntry. (Allows loading POST
+ *                    requests from cache)
  * @returns Promise that resolves with an object with the following members on
  *          success:
  *           - content: the document at that URL, as a string,
@@ -398,7 +404,9 @@ exports.defineLazyGetter(this, "NetworkHelper", () => {
 function mainThreadFetch(aURL, aOptions={ loadFromCache: true,
                                           policy: Ci.nsIContentPolicy.TYPE_OTHER,
                                           window: null,
-                                          charset: null }) {
+                                          charset: null,
+                                          principal: null,
+                                          cacheKey: null }) {
   // Create a channel.
   let url = aURL.split(" -> ").pop();
   let channel;
@@ -412,6 +420,13 @@ function mainThreadFetch(aURL, aOptions={ loadFromCache: true,
   channel.loadFlags = aOptions.loadFromCache
     ? channel.LOAD_FROM_CACHE
     : channel.LOAD_BYPASS_CACHE;
+
+  // When loading from cache, the cacheKey allows us to target a specific
+  // SHEntry and offer ways to restore POST requests from cache.
+  if (aOptions.loadFromCache &&
+      aOptions.cacheKey && channel instanceof Ci.nsICacheInfoChannel) {
+    channel.cacheKey = aOptions.cacheKey;
+  }
 
   if (aOptions.window) {
     // Respect private browsing.
@@ -497,12 +512,16 @@ function mainThreadFetch(aURL, aOptions={ loadFromCache: true,
  * @param {Object} options - The options object passed to @method fetch.
  * @return {nsIChannel} - The newly created channel. Throws on failure.
  */
-function newChannelForURL(url, { policy }) {
+function newChannelForURL(url, { policy, principal }) {
   let channelOptions = {
-    contentPolicyType: policy,
-    loadUsingSystemPrincipal: true,
-    uri: url
+    uri: url,
+    contentPolicyType: policy
   };
+  if (principal) {
+    channelOptions.loadingPrincipal = principal;
+  } else {
+    channelOptions.loadUsingSystemPrincipal = true;
+  }
 
   try {
     return NetUtil.newChannel(channelOptions);
