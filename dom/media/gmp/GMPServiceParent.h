@@ -56,7 +56,7 @@ public:
 #ifdef MOZ_CRASHREPORTER
   void SetAsyncShutdownPluginState(GMPParent* aGMPParent, char aId, const nsCString& aState);
 #endif // MOZ_CRASHREPORTER
-
+  RefPtr<GenericPromise> EnsureInitialized();
 private:
   friend class GMPServiceParent;
 
@@ -104,7 +104,6 @@ protected:
   void ReAddOnGMPThread(const RefPtr<GMPParent>& aOld);
   void PluginTerminated(const RefPtr<GMPParent>& aOld);
   void InitializePlugins() override;
-  RefPtr<GenericPromise> EnsureInitialized();
   RefPtr<GenericPromise::AllPromiseType> LoadFromEnvironment();
   RefPtr<GenericPromise> AddOnGMPThread(const nsAString& aDirectory);
   bool GetContentParentFrom(const nsACString& aNodeId,
