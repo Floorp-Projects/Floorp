@@ -13,12 +13,10 @@
 namespace mozilla {
 namespace ipc {
 
-class RawDBusConnection;
-
 class DBusWatcher : public MessageLoopForIO::Watcher
 {
 public:
-  DBusWatcher(RawDBusConnection* aConnection, DBusWatch* aWatch);
+  DBusWatcher(DBusConnection* aConnection, DBusWatch* aWatch);
   ~DBusWatcher();
 
   void StartWatching();
@@ -29,7 +27,7 @@ public:
   static void        RemoveWatchFunction(DBusWatch* aWatch, void* aData);
   static void        ToggleWatchFunction(DBusWatch* aWatch, void* aData);
 
-  RawDBusConnection* GetConnection();
+  DBusConnection* GetConnection();
 
 private:
   void OnFileCanReadWithoutBlocking(int aFd);
@@ -42,7 +40,7 @@ private:
   MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
 
   // DBus structures
-  RawDBusConnection* mConnection;
+  DBusConnection* mConnection;
   DBusWatch* mWatch;
 };
 
