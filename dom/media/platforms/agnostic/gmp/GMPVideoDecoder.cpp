@@ -188,8 +188,8 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   codec.mGMPApiVersion = kGMPVersion33;
 
   codec.mCodecType = kGMPVideoCodecH264;
-  codec.mWidth = mConfig.mDisplay.width;
-  codec.mHeight = mConfig.mDisplay.height;
+  codec.mWidth = mConfig.mImage.width;
+  codec.mHeight = mConfig.mImage.height;
 
   nsTArray<uint8_t> codecSpecific;
   codecSpecific.AppendElement(0); // mPacketizationMode.
