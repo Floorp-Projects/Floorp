@@ -53,7 +53,8 @@ function onReceiveProperties(cache, action) {
   mergeProperties(response);
 
   // Compute list of requested children.
-  let ownProps = response.ownProperties || response.preview.ownProperties || [];
+  let previewProps = response.preview ? response.preview.ownProperties : null;
+  let ownProps = response.ownProperties || previewProps || [];
   let props = Object.keys(ownProps).map(key => {
     return new Property(key, ownProps[key], key);
   });
