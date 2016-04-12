@@ -13,6 +13,7 @@
 #include "nsDataHashtable.h"
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
+#include "mozilla/MozPromise.h"
 
 template <class> struct already_AddRefed;
 
@@ -80,10 +81,8 @@ private:
   void NotifySyncShutdownComplete();
   void NotifyAsyncShutdownComplete();
 
-  void LoadFromEnvironment();
   void ProcessPossiblePlugin(nsIFile* aDir);
 
-  void AddOnGMPThread(const nsAString& aDirectory);
   void RemoveOnGMPThread(const nsAString& aDirectory,
                          const bool aDeleteFromDisk,
                          const bool aCanDefer);
@@ -105,6 +104,9 @@ protected:
   void ReAddOnGMPThread(const RefPtr<GMPParent>& aOld);
   void PluginTerminated(const RefPtr<GMPParent>& aOld);
   void InitializePlugins() override;
+  RefPtr<GenericPromise> EnsureInitialized();
+  RefPtr<GenericPromise::AllPromiseType> LoadFromEnvironment();
+  RefPtr<GenericPromise> AddOnGMPThread(const nsAString& aDirectory);
   bool GetContentParentFrom(const nsACString& aNodeId,
                             const nsCString& aAPI,
                             const nsTArray<nsCString>& aTags,
@@ -193,6 +195,12 @@ private:
   // Hashes node id to whether that node id is allowed to store data
   // persistently on disk.
   nsDataHashtable<nsCStringHashKey, bool> mPersistentStorageAllowed;
+
+  // Synchronization for barrier that ensures we've loaded GMPs from
+  // MOZ_GMP_PATH before allowing GetContentParentFrom() to proceed.
+  Monitor mInitPromiseMonitor;
+  MozPromiseHolder<GenericPromise> mInitPromise;
+  bool mLoadPluginsFromDiskComplete;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
