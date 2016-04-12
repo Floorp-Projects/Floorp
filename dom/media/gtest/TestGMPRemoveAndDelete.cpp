@@ -228,14 +228,25 @@ void
 GMPRemoveTest::Setup()
 {
   GeneratePlugin();
-  EXPECT_OK(GetServiceParent()->RemovePluginDirectory(mOriginalPath));
+  GetService()->GetThread(getter_AddRefs(mGMPThread));
 
-  GetServiceParent()->AddPluginDirectory(mTmpPath);
+  // Spin the event loop until the GMP service has had a chance to complete
+  // adding GMPs from MOZ_GMP_PATH. Otherwise, the RemovePluginDirectory()
+  // below may complete before we're finished adding GMPs from MOZ_GMP_PATH,
+  // and we'll end up not removing the GMP, and the test will fail.
+  RefPtr<AbstractThread> thread(GetServiceParent()->GetAbstractGMPThread());
+  GMPTestMonitor* mon = &mTestMonitor;
+  GetServiceParent()->EnsureInitialized()->Then(thread, __func__,
+    [mon]() { mon->SetFinished(); },
+    [mon]() { mon->SetFinished(); }
+  );
+  mTestMonitor.AwaitFinished();
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->AddObserver(this, GMP_DELETED_TOPIC, false /* strong ref */);
+  EXPECT_OK(GetServiceParent()->RemovePluginDirectory(mOriginalPath));
 
-  GetService()->GetThread(getter_AddRefs(mGMPThread));
+  GetServiceParent()->AddPluginDirectory(mTmpPath);
 }
 
 bool
