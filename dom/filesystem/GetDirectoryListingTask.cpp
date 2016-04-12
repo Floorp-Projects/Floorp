@@ -72,6 +72,7 @@ GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(FileSystemBase* aFile
 
 GetDirectoryListingTaskChild::~GetDirectoryListingTaskChild()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mFileSystem->AssertIsOnOwningThread();
 }
 
