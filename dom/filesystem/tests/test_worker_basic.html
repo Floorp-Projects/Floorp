@@ -17,11 +17,6 @@ function create_fileList() {
   function onOpened(message) {
     var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
-
-    // Just a simple test
-    is(fileList.files.length, 1, "Filelist has 1 element");
-    ok(fileList.files[0] instanceof Directory, "We have a directory.");
-
     script.destroy();
     next();
   }
@@ -32,20 +27,21 @@ function create_fileList() {
 
 function test_worker() {
   var fileList = document.getElementById('fileList');
+  fileList.getFilesAndDirectories().then(function(array) {
+    var worker = new Worker('worker_basic.js');
+    worker.onmessage = function(e) {
+      if (e.data.type == 'finish') {
+        next();
+        return;
+      }
 
-  var worker = new Worker('worker_basic.js');
-  worker.onmessage = function(e) {
-    if (e.data.type == 'finish') {
-      next();
-      return;
+      if (e.data.type == 'test') {
+        ok(e.data.test, e.data.message);
+      }
     }
 
-    if (e.data.type == 'test') {
-      ok(e.data.test, e.data.message);
-    }
-  }
-
-  worker.postMessage(fileList.files);
+    worker.postMessage(array[0]);
+  });
 }
 
 var tests = [

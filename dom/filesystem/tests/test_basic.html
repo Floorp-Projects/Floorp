@@ -20,14 +20,14 @@ function create_fileList(aPath) {
     var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
 
-    // Just a simple test
-    is(fileList.files.length, 1, "Filelist has 1 element");
-    ok(fileList.files[0] instanceof Directory, "We have a directory.");
+    fileList.getFilesAndDirectories().then(function(array) {
+      is(array.length, 1, "We want just 1 directory.");
+      ok(array[0] instanceof Directory, "We want just 1 directory.");
 
-    directory = fileList.files[0];
-
-    script.destroy();
-    next();
+      directory = array[0];
+      script.destroy();
+      next();
+    });
   }
 
   script.addMessageListener("dir.opened", onOpened);

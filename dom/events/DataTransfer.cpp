@@ -866,13 +866,13 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
     }
   }
 
-  Sequence<OwningFileOrDirectory> filesAndDirsSeq;
-  mFileList->ToSequence(filesAndDirsSeq, aRv);
+  Sequence<RefPtr<File>> filesSeq;
+  mFileList->ToSequence(filesSeq, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  p->MaybeResolve(filesAndDirsSeq);
+  p->MaybeResolve(filesSeq);
 
   return p.forget();
 }
