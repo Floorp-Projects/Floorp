@@ -395,6 +395,8 @@
 @RESPATH@/components/nsLoginInfo.js
 @RESPATH@/components/nsLoginManager.js
 @RESPATH@/components/nsLoginManagerPrompter.js
+@RESPATH@/components/TooltipTextProvider.js
+@RESPATH@/components/TooltipTextProvider.manifest
 @RESPATH@/components/NetworkGeolocationProvider.manifest
 @RESPATH@/components/NetworkGeolocationProvider.js
 @RESPATH@/components/TVSimulatorService.js
