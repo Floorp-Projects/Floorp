@@ -228,14 +228,6 @@ class TestConfigure(unittest.TestCase):
         self.assertNotIn('CFLAGS', config)
 
     def test_imports(self):
-        config = self.get_config(['--with-imports'])
-        self.assertIn('IMPORTS', config)
-        self.assertEquals(config['IMPORTS'], True)
-
-        with self.assertRaises(ImportError):
-            self.get_config(['--with-imports=break'])
-
-    def test_imports(self):
         config = {}
         out = StringIO()
         sandbox = ConfigureSandbox(config, {}, [], out, out)
