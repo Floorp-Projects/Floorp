@@ -59,7 +59,6 @@ nsISupports*
 OSFileSystem::GetParentObject() const
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return mParent;
 }
 
@@ -94,8 +93,6 @@ void
 OSFileSystem::Unlink()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-
   mParent = nullptr;
 }
 
@@ -103,7 +100,6 @@ void
 OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
   OSFileSystem* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent);
