@@ -4726,19 +4726,6 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
 {
   COMPUTE_START_RESET(TextReset, text, parentText)
 
-  // vertical-align: enum, length, percent, calc, inherit
-  const nsCSSValue* verticalAlignValue = aRuleData->ValueForVerticalAlign();
-  if (!SetCoord(*verticalAlignValue, text->mVerticalAlign,
-                parentText->mVerticalAlign,
-                SETCOORD_LPH | SETCOORD_ENUMERATED | SETCOORD_STORE_CALC,
-                aContext, mPresContext, conditions)) {
-    if (eCSSUnit_Initial == verticalAlignValue->GetUnit() ||
-        eCSSUnit_Unset == verticalAlignValue->GetUnit()) {
-      text->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
-                                       eStyleUnit_Enumerated);
-    }
-  }
-
   // text-decoration-line: enum (bit field), inherit, initial
   const nsCSSValue* decorationLineValue =
     aRuleData->ValueForTextDecorationLine();
@@ -6255,6 +6242,19 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
   default:
     MOZ_ASSERT(false, "unrecognized will-change unit");
+  }
+
+  // vertical-align: enum, length, percent, calc, inherit
+  const nsCSSValue* verticalAlignValue = aRuleData->ValueForVerticalAlign();
+  if (!SetCoord(*verticalAlignValue, display->mVerticalAlign,
+                parentDisplay->mVerticalAlign,
+                SETCOORD_LPH | SETCOORD_ENUMERATED | SETCOORD_STORE_CALC,
+                aContext, mPresContext, conditions)) {
+    if (eCSSUnit_Initial == verticalAlignValue->GetUnit() ||
+        eCSSUnit_Unset == verticalAlignValue->GetUnit()) {
+      display->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
+                                          eStyleUnit_Enumerated);
+    }
   }
 
   /* Convert -moz-transform-origin. */

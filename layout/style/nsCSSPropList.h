@@ -3644,7 +3644,7 @@ CSS_PROP_UIRESET(
 // NOTE: vertical-align is only supposed to apply to :first-letter when
 // 'float' is 'none', but we don't worry about that since it has no
 // effect otherwise
-CSS_PROP_TEXTRESET(
+CSS_PROP_DISPLAY(
     vertical-align,
     vertical_align,
     VerticalAlign,
@@ -3657,7 +3657,7 @@ CSS_PROP_TEXTRESET(
     "",
     VARIANT_HKLP | VARIANT_CALC,
     kVerticalAlignKTable,
-    offsetof(nsStyleTextReset, mVerticalAlign),
+    offsetof(nsStyleDisplay, mVerticalAlign),
     eStyleAnimType_Coord)
 CSS_PROP_VISIBILITY(
     visibility,
