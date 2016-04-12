@@ -176,7 +176,7 @@ nsStyleDisplay::IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const
 }
 
 uint8_t
-nsStyleVisibility::GetEffectivePointerEvents(nsIFrame* aFrame) const
+nsStyleUserInterface::GetEffectivePointerEvents(nsIFrame* aFrame) const
 {
   if (aFrame->GetContent() && !aFrame->GetContent()->GetParent()) {
     // The root element has a cluster of frames associated with it
@@ -185,7 +185,7 @@ nsStyleVisibility::GetEffectivePointerEvents(nsIFrame* aFrame) const
     // frame.
     nsIFrame* f = aFrame->GetContent()->GetPrimaryFrame();
     if (f) {
-      return f->StyleVisibility()->mPointerEvents;
+      return f->StyleUserInterface()->mPointerEvents;
     }
   }
   return mPointerEvents;

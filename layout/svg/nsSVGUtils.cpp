@@ -1596,7 +1596,7 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 {
   uint16_t flags = 0;
 
-  switch(aFrame->StyleVisibility()->mPointerEvents) {
+  switch (aFrame->StyleUserInterface()->mPointerEvents) {
   case NS_STYLE_POINTER_EVENTS_NONE:
     break;
   case NS_STYLE_POINTER_EVENTS_AUTO:
