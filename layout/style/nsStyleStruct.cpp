@@ -934,7 +934,6 @@ nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
   mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
   mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
   mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
-  mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
   mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
   mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
   mStrokeDasharrayFromObject = false;
@@ -987,7 +986,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mStrokeLinecap = aSource.mStrokeLinecap;
   mStrokeLinejoin = aSource.mStrokeLinejoin;
   mTextAnchor = aSource.mTextAnchor;
-  mTextRendering = aSource.mTextRendering;
   mFillOpacitySource = aSource.mFillOpacitySource;
   mStrokeOpacitySource = aSource.mStrokeOpacitySource;
   mStrokeDasharrayFromObject = aSource.mStrokeDasharrayFromObject;
@@ -1049,14 +1047,12 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
   // we need a reflow here. No intrinsic sizes need to change, so
   // nsChangeHint_NeedReflow is sufficient.
   // Note that stroke-dashoffset does not affect nsSVGPathGeometryFrame::mRect.
-  // text-anchor and text-rendering changes also require a reflow since they
-  // change frames' rects.
+  // text-anchor changes also require a reflow since it changes frames' rects.
   if (mStrokeWidth           != aOther.mStrokeWidth           ||
       mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
       mStrokeLinecap         != aOther.mStrokeLinecap         ||
       mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
-      mTextAnchor            != aOther.mTextAnchor            ||
-      mTextRendering         != aOther.mTextRendering) {
+      mTextAnchor            != aOther.mTextAnchor) {
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
     NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
@@ -3664,6 +3660,7 @@ nsStyleText::nsStyleText(StyleStructContext aContext)
   mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
   mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
   mTextEmphasisStyle = NS_STYLE_TEXT_EMPHASIS_STYLE_NONE;
+  mTextRendering = NS_STYLE_TEXT_RENDERING_AUTO;
   nsCOMPtr<nsIAtom> language = aContext.GetContentLanguage();
   mTextEmphasisPosition = language &&
     nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("zh")) ?
@@ -3701,6 +3698,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mControlCharacterVisibility(aSource.mControlCharacterVisibility),
     mTextEmphasisPosition(aSource.mTextEmphasisPosition),
     mTextEmphasisStyle(aSource.mTextEmphasisStyle),
+    mTextRendering(aSource.mTextRendering),
     mTabSize(aSource.mTabSize),
     mTextEmphasisColor(aSource.mTextEmphasisColor),
     mWebkitTextFillColor(aSource.mWebkitTextFillColor),
@@ -3759,12 +3757,25 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
            nsChangeHint_RepaintFrame;
   }
 
+  nsChangeHint hint = nsChangeHint(0);
+
+  // text-rendering changes require a reflow since they change SVG
+  // frames' rects.
+  if (mTextRendering != aOther.mTextRendering) {
+    hint |= nsChangeHint_NeedReflow |
+            nsChangeHint_NeedDirtyReflow | // XXX remove me: bug 876085
+            nsChangeHint_RepaintFrame;
+  }
+
   if (!AreShadowArraysEqual(mTextShadow, aOther.mTextShadow) ||
       mTextEmphasisStyle != aOther.mTextEmphasisStyle ||
       mTextEmphasisStyleString != aOther.mTextEmphasisStyleString) {
-    return nsChangeHint_UpdateSubtreeOverflow |
-           nsChangeHint_SchedulePaint |
-           nsChangeHint_RepaintFrame;
+    hint |= nsChangeHint_UpdateSubtreeOverflow |
+            nsChangeHint_SchedulePaint |
+            nsChangeHint_RepaintFrame;
+
+    // We don't add any other hints below.
+    return hint;
   }
 
   MOZ_ASSERT(!mTextEmphasisColorForeground ||
@@ -3776,8 +3787,12 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
       mTextEmphasisColor != aOther.mTextEmphasisColor ||
       mWebkitTextFillColorForeground != aOther.mWebkitTextFillColorForeground ||
       mWebkitTextFillColor != aOther.mWebkitTextFillColor) {
-    return nsChangeHint_SchedulePaint |
-           nsChangeHint_RepaintFrame;
+    NS_UpdateHint(hint, nsChangeHint_SchedulePaint);
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+
+  if (hint) {
+    return hint;
   }
 
   if (mTextEmphasisPosition != aOther.mTextEmphasisPosition) {
