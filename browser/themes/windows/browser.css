@@ -1449,8 +1449,17 @@ html|span.ac-emphasize-text-tag {
   color: hsl(0, 0%, 50%);
 }
 
-.ac-url {
+.ac-separator,
+.ac-url,
+.ac-action {
   font-size: 12px;
+}
+
+.ac-separator {
+  color: hsl(0, 0%, 50%);
+}
+
+.ac-url {
   color: hsl(210, 77%, 47%);
 }
 
@@ -1459,22 +1468,16 @@ html|span.ac-emphasize-text-url {
 }
 
 .ac-action {
-  font-size: 12px;
   color: hsl(178, 100%, 28%);
 }
 
-html|span.ac-title-urlaction-separator {
-  color: hsl(0, 0%, 50%);
-}
-
 .ac-title[selected=true],
+.ac-separator[selected],
 .ac-url[selected=true],
 .ac-action[selected=true],
 .ac-title-text[selected=true] > html|span.ac-emphasize-text,
 .ac-url-text[selected=true] > html|span.ac-emphasize-text,
-.ac-action-text[selected=true] > html|span.ac-emphasize-text,
-.ac-url-text[selected=true] > html|span.ac-title-urlaction-separator,
-.ac-action-text[selected=true] > html|span.ac-title-urlaction-separator {
+.ac-action-text[selected=true] > html|span.ac-emphasize-text {
   color: hsl(0, 0%, 100%);
 }
 
@@ -1503,10 +1506,10 @@ html|span.ac-title-urlaction-separator {
     color: -moz-Field;
   }
 
+  .ac-separator,
   .ac-url,
   .ac-action,
-  html|span.ac-emphasize-text-url,
-  html|span.ac-title-urlaction-separator {
+  html|span.ac-emphasize-text-url {
     color: -moz-nativehyperlinktext;
   }
 
