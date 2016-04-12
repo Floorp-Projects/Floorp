@@ -3537,9 +3537,9 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 #endif
         case eCSSProperty_filter: {
-          const nsStyleSVGReset *svgReset =
-            static_cast<const nsStyleSVGReset*>(styleStruct);
-          const nsTArray<nsStyleFilter>& filters = svgReset->mFilters;
+          const nsStyleEffects* effects =
+            static_cast<const nsStyleEffects*>(styleStruct);
+          const nsTArray<nsStyleFilter>& filters = effects->mFilters;
           nsAutoPtr<nsCSSValueList> result;
           nsCSSValueList **resultTail = getter_Transfers(result);
           for (uint32_t i = 0; i < filters.Length(); ++i) {
