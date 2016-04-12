@@ -304,9 +304,9 @@ protected:
   bool                     mCanShowInvalidUI;
   /** Whether we should make :-moz-ui-valid apply on the element. **/
   bool                     mCanShowValidUI;
-  
+
   void FireChangeEventIfNeeded();
-  
+
   nsString mFocusedValue;
 
   /** The state of the text editor (selection controller and the editor) **/
