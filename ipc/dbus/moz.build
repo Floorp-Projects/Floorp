@@ -6,11 +6,13 @@
 
 EXPORTS.mozilla.ipc += [
     'DBusUtils.h',
+    'DBusWatcher.h',
     'RawDBusConnection.h',
 ]
 
 SOURCES += [
     'DBusUtils.cpp',
+    'DBusWatcher.cpp',
     'RawDBusConnection.cpp',
 ]
 
