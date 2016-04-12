@@ -75,32 +75,6 @@ DispatchToIOThread(nsIRunnable* aRunnable)
   return target->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
-// This runnable is used when an error value is set before doing any real
-// operation on the I/O thread. In this case we skip all and we directly
-// communicate the error.
-class ErrorRunnable final : public nsCancelableRunnable
-{
-public:
-  explicit ErrorRunnable(FileSystemTaskChildBase* aTask)
-    : mTask(aTask)
-  {
-    MOZ_ASSERT(aTask);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mTask->HasError());
-
-    mTask->HandlerCallback();
-    return NS_OK;
-  }
-
-private:
-  RefPtr<FileSystemTaskChildBase> mTask;
-};
-
 } // anonymous namespace
 
 /**
@@ -111,8 +85,8 @@ FileSystemTaskChildBase::FileSystemTaskChildBase(FileSystemBase* aFileSystem)
   : mErrorValue(NS_OK)
   , mFileSystem(aFileSystem)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
-  aFileSystem->AssertIsOnOwningThread();
 }
 
 FileSystemTaskChildBase::~FileSystemTaskChildBase()
@@ -133,10 +107,9 @@ FileSystemTaskChildBase::Start()
   mFileSystem->AssertIsOnOwningThread();
 
   if (HasError()) {
-    // In this case we don't want to use IPC at all.
-    RefPtr<ErrorRunnable> runnable = new ErrorRunnable(this);
-    nsresult rv = NS_DispatchToCurrentThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &FileSystemTaskChildBase::HandlerCallback);
+    NS_DispatchToMainThread(runnable);
     return;
   }
 

@@ -34,8 +34,8 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
                                      const nsAString& aFilters,
                                      ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
-  aFileSystem->AssertIsOnOwningThread();
 
   RefPtr<GetDirectoryListingTaskChild> task =
     new GetDirectoryListingTaskChild(aFileSystem, aTargetPath, aType, aFilters);
@@ -66,20 +66,19 @@ GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(FileSystemBase* aFile
   , mFilters(aFilters)
   , mType(aType)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
-  aFileSystem->AssertIsOnOwningThread();
 }
 
 GetDirectoryListingTaskChild::~GetDirectoryListingTaskChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mFileSystem->AssertIsOnOwningThread();
 }
 
 already_AddRefed<Promise>
 GetDirectoryListingTaskChild::GetPromise()
 {
-  mFileSystem->AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return RefPtr<Promise>(mPromise).forget();
 }
 
@@ -87,7 +86,7 @@ FileSystemParams
 GetDirectoryListingTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
                                                ErrorResult& aRv) const
 {
-  mFileSystem->AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 
   nsAutoString path;
   aRv = mTargetPath->GetPath(path);
@@ -104,7 +103,7 @@ void
 GetDirectoryListingTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
                                                       ErrorResult& aRv)
 {
-  mFileSystem->AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aValue.type() ==
                FileSystemResponseValue::TFileSystemDirectoryListingResponse);
 
@@ -134,8 +133,7 @@ GetDirectoryListingTaskChild::SetSuccessRequestResult(const FileSystemResponseVa
 void
 GetDirectoryListingTaskChild::HandlerCallback()
 {
-  mFileSystem->AssertIsOnOwningThread();
-
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   if (mFileSystem->IsShutdown()) {
     mPromise = nullptr;
     return;
