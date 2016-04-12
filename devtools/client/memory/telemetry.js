@@ -10,7 +10,7 @@
 
 const { telemetry } = require("Services");
 const { makeInfallible, immutableUpdate } = require("devtools/shared/DevToolsUtils");
-const { dominatorTreeDisplays, treeMapDisplays, censusDisplays } = require("./constants");
+const { labelDisplays, treeMapDisplays, censusDisplays } = require("./constants");
 
 exports.countTakeSnapshot = makeInfallible(function () {
   const histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_TAKE_SNAPSHOT_COUNT");
@@ -81,9 +81,9 @@ exports.countDominatorTree = makeInfallible(function ({ display }) {
   histogram.add(1);
 
   histogram = telemetry.getKeyedHistogramById("DEVTOOLS_MEMORY_BREAKDOWN_DOMINATOR_TREE_COUNT");
-  if (display === dominatorTreeDisplays.coarseType) {
+  if (display === labelDisplays.coarseType) {
     histogram.add(COARSE_TYPE);
-  } else if (display === dominatorTreeDisplays.allocationStack) {
+  } else if (display === labelDisplays.allocationStack) {
     histogram.add(ALLOCATION_STACK);
   } else {
     histogram.add(CUSTOM);

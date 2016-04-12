@@ -95,6 +95,9 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String[] mobileIdColumns = new String[] { Bookmarks._ID };
     private static final String[] mobileIdSelectionArgs = new String[] { Bookmarks.MOBILE_FOLDER_GUID };
 
+    private boolean didCreateTabsTable = false;
+    private boolean didCreateCurrentReadingListTable = false;
+
     public BrowserDatabaseHelper(Context context, String databasePath) {
         super(context, databasePath, null, DATABASE_VERSION);
         mContext = context;
@@ -239,6 +242,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY (" + BrowserContract.Tabs.CLIENT_GUID + ") REFERENCES " +
                 TABLE_CLIENTS + "(" + BrowserContract.Clients.GUID + ") ON DELETE CASCADE" +
                 ");");
+
+        didCreateTabsTable = true;
     }
 
     private void createTabsTableIndices(SQLiteDatabase db, final String tableName) {
@@ -535,6 +540,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                    ReadingListItems.WORD_COUNT + " INTEGER DEFAULT 0, " +
                    ReadingListItems.READ_POSITION + " INTEGER DEFAULT 0 " +
                 "); ");
+
+        didCreateCurrentReadingListTable = true;      // Mostly correct, in the absence of transactions.
     }
 
     private void createReadingListIndices(final SQLiteDatabase db, final String tableName) {
@@ -999,7 +1006,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
             // Done.
             db.setTransactionSuccessful();
-
         } catch (SQLException e) {
             Log.e(LOGTAG, "Error migrating reading list items", e);
         } finally {
@@ -1025,6 +1031,11 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom21to22(SQLiteDatabase db) {
+        if (didCreateCurrentReadingListTable) {
+            debug("No need to add CONTENT_STATUS to reading list; we just created with the current schema.");
+            return;
+        }
+
         debug("Adding CONTENT_STATUS column to reading list table.");
 
         try {
@@ -1042,6 +1053,14 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom22to23(SQLiteDatabase db) {
+        if (didCreateCurrentReadingListTable) {
+            // If we just created this table it is already in the expected >= 23 schema. Trying
+            // to run this migration will crash because columns that were in the <= 22 schema
+            // no longer exist.
+            debug("No need to rev reading list schema; we just created with the current schema.");
+            return;
+        }
+
         debug("Rewriting reading list table.");
         createReadingListTable(db, "tmp_rl");
 
@@ -1114,6 +1133,14 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom24to25(SQLiteDatabase db) {
+        if (didCreateTabsTable) {
+            // This migration adds a foreign key constraint (the table scheme stays identical, except
+            // for the new constraint) - hence it is safe to run this migration on a newly created tabs
+            // table - but it's unnecessary hence we should avoid doing so.
+            debug("No need to rev tabs schema; foreign key constraint exists.");
+            return;
+        }
+
         debug("Rewriting tabs table.");
         createTabsTable(db, "tmp_tabs");
 
@@ -1140,6 +1167,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE " + TABLE_TABS);
         db.execSQL("ALTER TABLE tmp_tabs RENAME TO " + TABLE_TABS);
         createTabsTableIndices(db, TABLE_TABS);
+        didCreateTabsTable = true;
     }
 
     private void upgradeDatabaseFrom25to26(SQLiteDatabase db) {
