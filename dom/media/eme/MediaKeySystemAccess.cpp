@@ -14,6 +14,7 @@
 #endif
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
+#include "WMFDecoderModule.h"
 #endif
 #ifdef XP_MACOSX
 #include "nsCocoaFeatures.h"
@@ -381,7 +382,15 @@ GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
                      NS_ConvertUTF16toUTF8(aKeySystem),
                      NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
                      NS_LITERAL_CSTRING("aac")) &&
-         MP4Decoder::CanHandleMediaType(aContentType);
+#if defined(MOZ_WIDEVINE_EME) && defined(XP_WIN)
+         // Widevine CDM doesn't include an AAC decoder. So if WMF can't
+         // decode AAC, and a codec wasn't specified, be conservative
+         // and reject the MediaKeys request, since our policy is to prevent
+         //  the Adobe GMP's unencrypted AAC decoding path being used to
+         // decode content decrypted by the Widevine CDM.
+        (!aKeySystem.EqualsLiteral("com.widevine.alpha") || WMFDecoderModule::HasAAC()) &&
+#endif
+    MP4Decoder::CanHandleMediaType(aContentType);
 }
 
 static bool
@@ -439,7 +448,11 @@ IsSupportedInitDataType(const nsString& aCandidate, const nsAString& aKeySystem)
   // All supported keySystems can handle "cenc" initDataType.
   // ClearKey also supports "keyids" and "webm" initDataTypes.
   return aCandidate.EqualsLiteral("cenc") ||
-    (aKeySystem.EqualsLiteral("org.w3.clearkey") &&
+    ((aKeySystem.EqualsLiteral("org.w3.clearkey")
+#ifdef MOZ_WIDEVINE_EME
+    || aKeySystem.EqualsLiteral("com.widevine.alpha")
+#endif
+    ) &&
     (aCandidate.EqualsLiteral("keyids") || aCandidate.EqualsLiteral("webm)")));
 }
 
@@ -490,6 +503,17 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     config.mVideoCapabilities.Construct();
     config.mVideoCapabilities.Value().Assign(caps);
   }
+
+#if defined(MOZ_WIDEVINE_EME) && defined(XP_WIN)
+  // Widevine CDM doesn't include an AAC decoder. So if WMF can't decode AAC,
+  // and a codec wasn't specified, be conservative and reject the MediaKeys request.
+  if (aKeySystem.EqualsLiteral("com.widevine.alpha") &&
+      (!aCandidate.mAudioCapabilities.WasPassed() ||
+       !aCandidate.mVideoCapabilities.WasPassed()) &&
+     !WMFDecoderModule::HasAAC()) {
+    return false;
+  }
+#endif
 
   aOutConfig = config;
 
