@@ -75,6 +75,11 @@ ReadIntoArray(nsIFile* aFile,
               nsTArray<uint8_t>& aOutDst,
               size_t aMaxLength);
 
+bool
+ReadIntoString(nsIFile* aFile,
+               nsCString& aOutDst,
+               size_t aMaxLength);
+
 } // namespace mozilla
 
 #endif
