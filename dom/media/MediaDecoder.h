@@ -806,6 +806,8 @@ protected:
   // True if the media is only seekable within its buffered ranges.
   Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
 
+  bool mIsVisible;
+
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() {
