@@ -2002,8 +2002,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
     // Get vertical-align property ("vertical-align" is the CSS name for
     // block-direction align)
-    const nsStyleCoord& verticalAlign =
-      frame->StyleTextReset()->mVerticalAlign;
+    const nsStyleCoord& verticalAlign = frame->StyleDisplay()->mVerticalAlign;
     uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("  [frame]");

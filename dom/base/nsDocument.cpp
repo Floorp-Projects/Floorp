@@ -12566,49 +12566,37 @@ nsDocument::ShouldLockPointer(Element* aElement, Element* aCurrentLock,
 bool
 nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
 {
-  // NOTE: aElement will be nullptr when unlocking.
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
-  if (!window) {
-    NS_WARNING("SetPointerLock(): No Window");
-    return false;
+  MOZ_ASSERT(!aElement || aElement->OwnerDoc() == this,
+             "We should be either unlocking pointer (aElement is nullptr), "
+             "or locking pointer to an element in this document");
+#ifdef DEBUG
+  if (!aElement) {
+    nsCOMPtr<nsIDocument> pointerLockedDoc =
+      do_QueryReferent(EventStateManager::sPointerLockedDoc);
+    MOZ_ASSERT(pointerLockedDoc == this);
   }
+#endif
 
-  nsIDocShell *docShell = window->GetDocShell();
-  if (!docShell) {
-    NS_WARNING("SetPointerLock(): No DocShell (window already closed?)");
-    return false;
-  }
-
-  RefPtr<nsPresContext> presContext;
-  docShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) {
-    NS_WARNING("SetPointerLock(): Unable to get presContext in \
-                domWindow->GetDocShell()->GetPresContext()");
-    return false;
-  }
-
-  nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+  nsIPresShell* shell = GetShell();
   if (!shell) {
-    NS_WARNING("SetPointerLock(): Unable to find presContext->PresShell()");
+    NS_WARNING("SetPointerLock(): No PresShell");
+    return false;
+  }
+  nsPresContext* presContext = shell->GetPresContext();
+  if (!presContext) {
+    NS_WARNING("SetPointerLock(): Unable to get PresContext");
     return false;
   }
 
+  nsCOMPtr<nsIWidget> widget;
   nsIFrame* rootFrame = shell->GetRootFrame();
-  if (!rootFrame) {
-    NS_WARNING("SetPointerLock(): Unable to get root frame");
-    return false;
-  }
-
-  nsCOMPtr<nsIWidget> widget = rootFrame->GetNearestWidget();
-  if (!widget) {
-    NS_WARNING("SetPointerLock(): Unable to find widget in \
-                shell->GetRootFrame()->GetNearestWidget();");
-    return false;
-  }
-
-  if (aElement && (aElement->OwnerDoc() != this)) {
-    NS_WARNING("SetPointerLock(): Element not in this document.");
-    return false;
+  if (!NS_WARN_IF(!rootFrame)) {
+    widget = rootFrame->GetNearestWidget();
+    NS_WARN_IF_FALSE(widget, "SetPointerLock(): Unable to find widget "
+                     "in shell->GetRootFrame()->GetNearestWidget();");
+    if (aElement && !widget) {
+      return false;
+    }
   }
 
   // Hide the cursor and set pointer lock for future mouse events

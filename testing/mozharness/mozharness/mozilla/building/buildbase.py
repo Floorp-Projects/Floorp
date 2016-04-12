@@ -1832,9 +1832,8 @@ or run without that action (ie: --no-{action})"
         c = self.config
 
         if c.get('enable_count_ctors'):
-            if c.get('enable_count_ctors'):
-                self.info("counting ctors...")
-                self._count_ctors()
+            self.info("counting ctors...")
+            self._count_ctors()
         else:
             self.info("ctors counts are disabled for this build.")
 

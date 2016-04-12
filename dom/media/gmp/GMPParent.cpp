@@ -35,6 +35,15 @@ using CrashReporter::GetIDFromMinidump;
 
 #include "mozilla/Telemetry.h"
 
+#ifdef XP_WIN
+#include "WMFDecoderModule.h"
+#endif
+
+#ifdef MOZ_WIDEVINE_EME
+#include "mozilla/dom/WidevineCDMManifestBinding.h"
+#include "widevine-adapter/WidevineAdapter.h"
+#endif
+
 namespace mozilla {
 
 #undef LOG
@@ -80,10 +89,24 @@ GMPParent::CloneFrom(const GMPParent* aOther)
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
   MOZ_ASSERT(aOther->mDirectory && aOther->mService, "null plugin directory");
-  return Init(aOther->mService, aOther->mDirectory);
+
+  mService = aOther->mService;
+  mDirectory = aOther->mDirectory;
+  mName = aOther->mName;
+  mVersion = aOther->mVersion;
+  mDescription = aOther->mDescription;
+  mDisplayName = aOther->mDisplayName;
+#ifdef XP_WIN
+  mLibs = aOther->mLibs;
+#endif
+  for (const GMPCapability& cap : aOther->mCapabilities) {
+    mCapabilities.AppendElement(cap);
+  }
+  mAdapter = aOther->mAdapter;
+  return NS_OK;
 }
 
-nsresult
+RefPtr<GenericPromise>
 GMPParent::Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir)
 {
   MOZ_ASSERT(aPluginDir);
@@ -98,12 +121,12 @@ GMPParent::Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir)
   nsCOMPtr<nsIFile> parent;
   nsresult rv = aPluginDir->GetParent(getter_AddRefs(parent));
   if (NS_FAILED(rv)) {
-    return rv;
+    return GenericPromise::CreateAndReject(rv, __func__);
   }
   nsAutoString parentLeafName;
   rv = parent->GetLeafName(parentLeafName);
   if (NS_FAILED(rv)) {
-    return rv;
+    return GenericPromise::CreateAndReject(rv, __func__);
   }
   LOGD("%s: for %s", __FUNCTION__, NS_LossyConvertUTF16toASCII(parentLeafName).get());
 
@@ -175,7 +198,7 @@ GMPParent::LoadProcess()
 #endif
 
     // Intr call to block initialization on plugin load.
-    ok = CallStartPlugin();
+    ok = CallStartPlugin(mAdapter);
     if (!ok) {
       LOGD("%s: Failed to send start to child process", __FUNCTION__);
       return NS_ERROR_FAILURE;
@@ -546,10 +569,10 @@ bool
 GMPParent::SupportsAPI(const nsCString& aAPI, const nsCString& aTag)
 {
   for (uint32_t i = 0; i < mCapabilities.Length(); i++) {
-    if (!mCapabilities[i]->mAPIName.Equals(aAPI)) {
+    if (!mCapabilities[i].mAPIName.Equals(aAPI)) {
       continue;
     }
-    nsTArray<nsCString>& tags = mCapabilities[i]->mAPITags;
+    nsTArray<nsCString>& tags = mCapabilities[i].mAPITags;
     for (uint32_t j = 0; j < tags.Length(); j++) {
       if (tags[j].Equals(aTag)) {
         return true;
@@ -752,7 +775,7 @@ ReadInfoField(GMPInfoFileParser& aParser, const nsCString& aKey, nsACString& aOu
   return true;
 }
 
-nsresult
+RefPtr<GenericPromise>
 GMPParent::ReadGMPMetaData()
 {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
@@ -761,13 +784,34 @@ GMPParent::ReadGMPMetaData()
   nsCOMPtr<nsIFile> infoFile;
   nsresult rv = mDirectory->Clone(getter_AddRefs(infoFile));
   if (NS_FAILED(rv)) {
-    return rv;
+    return GenericPromise::CreateAndReject(rv, __func__);
   }
   infoFile->AppendRelativePath(mName + NS_LITERAL_STRING(".info"));
 
+  if (FileExists(infoFile)) {
+    return ReadGMPInfoFile(infoFile);
+  }
+
+#ifdef MOZ_WIDEVINE_EME
+  // Maybe this is the Widevine adapted plugin?
+  nsCOMPtr<nsIFile> manifestFile;
+  rv = mDirectory->Clone(getter_AddRefs(manifestFile));
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+  manifestFile->AppendRelativePath(NS_LITERAL_STRING("manifest.json"));
+  return ReadChromiumManifestFile(manifestFile);
+#else
+  return GenericPromise::CreateAndReject(rv, __func__);
+#endif
+}
+
+RefPtr<GenericPromise>
+GMPParent::ReadGMPInfoFile(nsIFile* aFile)
+{
   GMPInfoFileParser parser;
-  if (!parser.Init(infoFile)) {
-    return NS_ERROR_FAILURE;
+  if (!parser.Init(aFile)) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   nsAutoCString apis;
@@ -775,7 +819,7 @@ GMPParent::ReadGMPMetaData()
       !ReadInfoField(parser, NS_LITERAL_CSTRING("description"), mDescription) ||
       !ReadInfoField(parser, NS_LITERAL_CSTRING("version"), mVersion) ||
       !ReadInfoField(parser, NS_LITERAL_CSTRING("apis"), apis)) {
-    return NS_ERROR_FAILURE;
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
 #ifdef XP_WIN
@@ -793,37 +837,36 @@ GMPParent::ReadGMPMetaData()
       continue;
     }
 
-    auto cap = new GMPCapability();
+    GMPCapability cap;
     if (tagsStart == -1) {
       // No tags.
-      cap->mAPIName.Assign(api);
+      cap.mAPIName.Assign(api);
     } else {
       auto tagsEnd = api.FindChar(']');
       if (tagsEnd == -1 || tagsEnd < tagsStart) {
         // Invalid syntax, skip whole capability.
-        delete cap;
         continue;
       }
 
-      cap->mAPIName.Assign(Substring(api, 0, tagsStart));
+      cap.mAPIName.Assign(Substring(api, 0, tagsStart));
 
       if ((tagsEnd - tagsStart) > 1) {
         const nsDependentCSubstring ts(Substring(api, tagsStart + 1, tagsEnd - tagsStart - 1));
         nsTArray<nsCString> tagTokens;
         SplitAt(":", ts, tagTokens);
         for (nsCString tag : tagTokens) {
-          cap->mAPITags.AppendElement(tag);
+          cap.mAPITags.AppendElement(tag);
         }
       }
     }
 
     // We support the current GMPDecryptor version, and the previous.
     // We Adapt the previous to the current in the GMPContentChild.
-    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
-      cap->mAPIName.AssignLiteral(GMP_API_DECRYPTOR);
+    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
+      cap.mAPIName.AssignLiteral(GMP_API_DECRYPTOR);
     }
 
-    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
+    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
       mCanDecrypt = true;
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
@@ -831,35 +874,103 @@ GMPParent::ReadGMPMetaData()
         printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
                       " but this system can't sandbox it; not loading.\n",
                       mDisplayName.get());
-        delete cap;
-        return NS_ERROR_FAILURE;
+        return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
 #endif
 #ifdef XP_WIN
       // Adobe GMP doesn't work without SSE2. Check the tags to see if
       // the decryptor is for the Adobe GMP, and refuse to load it if
       // SSE2 isn't supported.
-      for (const nsCString& tag : cap->mAPITags) {
-        if (!tag.EqualsLiteral("com.adobe.primetime")) {
-          continue;
-        }
-        if (!mozilla::supports_sse2()) {
-          return NS_ERROR_FAILURE;
-        }
-        break;
+      if (cap.mAPITags.Contains(NS_LITERAL_CSTRING("com.adobe.primetime")) &&
+          !mozilla::supports_sse2()) {
+        return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
 #endif // XP_WIN
     }
 
-    mCapabilities.AppendElement(cap);
+#ifdef XP_WIN
+    // Clearkey on Windows advertises that it can decode in its GMP info
+    // file, but uses Windows Media Foundation to decode. That's not present
+    // on Windows XP, and on some Vista, Windows N, and KN variants without
+    // certain services packs. So don't add the decoding capability to
+    // gmp-clearkey's GMPParent if it's not going to be able to use WMF to
+    // decode.
+    if (cap.mAPIName.EqualsLiteral(GMP_API_VIDEO_DECODER) &&
+        cap.mAPITags.Contains(NS_LITERAL_CSTRING("org.w3.clearkey")) &&
+        !WMFDecoderModule::HasH264()) {
+      continue;
+    }
+    if (cap.mAPIName.EqualsLiteral(GMP_API_AUDIO_DECODER) &&
+        cap.mAPITags.Contains(NS_LITERAL_CSTRING("org.w3.clearkey")) &&
+        !WMFDecoderModule::HasAAC()) {
+      continue;
+    }
+#endif
+
+    mCapabilities.AppendElement(Move(cap));
   }
 
   if (mCapabilities.IsEmpty()) {
-    return NS_ERROR_FAILURE;
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  return NS_OK;
+  return GenericPromise::CreateAndResolve(true, __func__);
 }
+
+#ifdef MOZ_WIDEVINE_EME
+RefPtr<GenericPromise>
+GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
+{
+  nsAutoCString json;
+  if (!ReadIntoString(aFile, json, 5 * 1024)) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  // DOM JSON parsing needs to run on the main thread.
+  return InvokeAsync(AbstractThread::MainThread(), this, __func__,
+    &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
+}
+
+RefPtr<GenericPromise>
+GMPParent::ParseChromiumManifest(nsString aJSON)
+{
+  LOGD("%s: for '%s'", __FUNCTION__, NS_LossyConvertUTF16toASCII(aJSON).get());
+
+  MOZ_ASSERT(NS_IsMainThread());
+  mozilla::dom::WidevineCDMManifest m;
+  if (!m.Init(aJSON)) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  nsresult ignored; // Note: ToInteger returns 0 on failure.
+  if (!WidevineAdapter::Supports(m.mX_cdm_module_versions.ToInteger(&ignored),
+                                 m.mX_cdm_interface_versions.ToInteger(&ignored),
+                                 m.mX_cdm_host_versions.ToInteger(&ignored))) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  mDisplayName = NS_ConvertUTF16toUTF8(m.mName);
+  mDescription = NS_ConvertUTF16toUTF8(m.mDescription);
+  mVersion = NS_ConvertUTF16toUTF8(m.mVersion);
+
+  GMPCapability video(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER));
+  video.mAPITags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  video.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
+  mCapabilities.AppendElement(Move(video));
+
+  GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
+  decrypt.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
+  mCapabilities.AppendElement(Move(decrypt));
+
+  MOZ_ASSERT(mName.EqualsLiteral("widevinecdm"));
+  mAdapter = NS_LITERAL_STRING("widevine");
+#ifdef XP_WIN
+  mLibs = NS_LITERAL_CSTRING("dxva2.dll");
+#endif
+
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+#endif
 
 bool
 GMPParent::CanBeSharedCrossNodeIds() const

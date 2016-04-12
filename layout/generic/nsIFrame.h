@@ -2826,7 +2826,9 @@ public:
    * rect, with coordinates relative to this frame's origin. aRect must not be
    * null!
    */
-  bool GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
+  bool GetClipPropClipRect(const nsStyleDisplay* aDisp,
+                           const nsStyleEffects* aEffects,
+                           nsRect* aRect,
                            const nsSize& aSize) const;
 
   /**

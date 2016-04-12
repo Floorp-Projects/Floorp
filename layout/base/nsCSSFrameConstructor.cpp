@@ -758,11 +758,13 @@ public:
   nsAbsoluteItems           mFixedItems;
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
-  // Items in the top layer are always fixed positioned children of the
-  // viewport frame. It differs from mFixedItems that the items here
-  // should not be caught by any other fixed-pos containing block like
-  // frames with transform or filter.
-  nsAbsoluteItems           mTopLayerItems;
+  // The containing block of a frame in the top layer is defined by the
+  // spec: fixed-positioned frames are children of the viewport frame,
+  // and absolutely-positioned frames are children of the initial
+  // containing block. They would not be caught by any other containing
+  // block, e.g. frames with transform or filter.
+  nsAbsoluteItems           mTopLayerFixedItems;
+  nsAbsoluteItems           mTopLayerAbsoluteItems;
 
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   // These bits will be added to the state bits of any frame we construct
@@ -948,6 +950,8 @@ protected:
                                           bool aIsOutOfFlowPopup,
                                           nsFrameState* aPlaceholderType);
 
+  void ConstructBackdropFrameFor(nsIContent* aContent, nsIFrame* aFrame);
+
   // Our list of all pending bindings.  When we're done, we need to call
   // AddToAttachedQueue on all of them, in order.
   LinkedList<PendingBinding> mPendingBindings;
@@ -970,7 +974,10 @@ nsFrameConstructorState::nsFrameConstructorState(
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
-    mTopLayerItems(do_QueryFrame(mFrameManager->GetRootFrame())),
+    mTopLayerFixedItems(
+      static_cast<nsContainerFrame*>(mFrameManager->GetRootFrame())),
+    mTopLayerAbsoluteItems(
+      aPresShell->FrameConstructor()->GetDocElementContainingBlock()),
     // See PushAbsoluteContaningBlock below
     mFrameState(aHistoryState),
     mAdditionalStateBits(nsFrameState(0)),
@@ -1007,8 +1014,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
 nsFrameConstructorState::~nsFrameConstructorState()
 {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
-  // Items in the top layer are fixed positioned children of the viewport frame.
-  ProcessFrameInsertions(mTopLayerItems, nsIFrame::kFixedList);
+  ProcessFrameInsertions(mTopLayerFixedItems, nsIFrame::kFixedList);
+  ProcessFrameInsertions(mTopLayerAbsoluteItems, nsIFrame::kAbsoluteList);
   ProcessFrameInsertions(mFloatedItems, nsIFrame::kFloatList);
   ProcessFrameInsertions(mAbsoluteItems, nsIFrame::kAbsoluteList);
   ProcessFrameInsertions(mFixedItems, nsIFrame::kFixedList);
@@ -1127,10 +1134,15 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
   if (aStyleDisplay->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
     MOZ_ASSERT(aStyleDisplay->mTopLayer == NS_STYLE_TOP_LAYER_TOP,
                "-moz-top-layer should be either none or top");
-    MOZ_ASSERT(mTopLayerItems.containingBlock, "No root frame?");
     MOZ_ASSERT(aStyleDisplay->IsAbsolutelyPositionedStyle(),
                "Top layer items should always be absolutely positioned");
-    return mTopLayerItems.containingBlock;
+    if (aStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED) {
+      MOZ_ASSERT(mTopLayerFixedItems.containingBlock, "No root frame?");
+      return mTopLayerFixedItems.containingBlock;
+    }
+    MOZ_ASSERT(aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE);
+    MOZ_ASSERT(mTopLayerAbsoluteItems.containingBlock);
+    return mTopLayerAbsoluteItems.containingBlock;
   }
 
   if (aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
@@ -1169,7 +1181,10 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
     const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
     if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
       *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
-      return &mTopLayerItems;
+      if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
+        return &mTopLayerFixedItems;
+      }
+      return &mTopLayerAbsoluteItems;
     }
     if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
       *aPlaceholderType = PLACEHOLDER_FOR_ABSPOS;
@@ -1181,6 +1196,45 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
     }
   }
   return nullptr;
+}
+
+void
+nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
+                                                   nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
+  nsContainerFrame* frame = do_QueryFrame(aFrame);
+  if (!frame) {
+    NS_WARNING("Cannot create backdrop frame for non-container frame");
+    return;
+  }
+
+  RefPtr<nsStyleContext> style = mPresShell->StyleSet()->
+    ResolvePseudoElementStyle(aContent->AsElement(),
+                              CSSPseudoElementType::backdrop,
+                              /* aParentStyleContext */ nullptr,
+                              /* aPseudoElement */ nullptr);
+  MOZ_ASSERT(style->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
+  nsContainerFrame* parentFrame =
+    GetGeometricParent(style->StyleDisplay(), nullptr);
+
+  nsBackdropFrame* backdropFrame = new (mPresShell) nsBackdropFrame(style);
+  backdropFrame->Init(aContent, parentFrame, nullptr);
+
+  nsFrameState placeholderType;
+  nsAbsoluteItems* frameItems = GetOutOfFlowFrameItems(backdropFrame,
+                                                       true, true, false,
+                                                       &placeholderType);
+  MOZ_ASSERT(placeholderType == PLACEHOLDER_FOR_TOPLAYER);
+
+  nsIFrame* placeholder = nsCSSFrameConstructor::
+    CreatePlaceholderFrameFor(mPresShell, aContent, backdropFrame,
+                              frame->StyleContext(), frame, nullptr,
+                              PLACEHOLDER_FOR_TOPLAYER);
+  nsFrameList temp(placeholder, placeholder);
+  frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
+
+  frameItems->AddChild(backdropFrame);
 }
 
 void
@@ -1233,12 +1287,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     aFrameItems.AddChild(placeholderFrame);
 
     if (placeholderType == PLACEHOLDER_FOR_TOPLAYER) {
-      nsIFrame* backdropFrame = nsCSSFrameConstructor::
-        CreateBackdropFrameFor(mPresShell, aContent, aNewFrame,
-                               outOfFlowFrameItems->containingBlock);
-      if (backdropFrame) {
-        frameItems->AddChild(backdropFrame);
-      }
+      ConstructBackdropFrameFor(aContent, aNewFrame);
     }
   }
 #ifdef DEBUG
@@ -1261,10 +1310,11 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
 {
 #define NS_NONXUL_LIST_TEST (&aFrameItems == &mFloatedItems &&            \
                              aChildListID == nsIFrame::kFloatList)    ||  \
-                            (&aFrameItems == &mAbsoluteItems &&           \
+                            ((&aFrameItems == &mAbsoluteItems ||          \
+                              &aFrameItems == &mTopLayerAbsoluteItems) && \
                              aChildListID == nsIFrame::kAbsoluteList) ||  \
                             ((&aFrameItems == &mFixedItems ||             \
-                              &aFrameItems == &mTopLayerItems) &&         \
+                              &aFrameItems == &mTopLayerFixedItems) &&    \
                              aChildListID == nsIFrame::kFixedList)
 #ifdef MOZ_XUL
   NS_PRECONDITION(NS_NONXUL_LIST_TEST ||
@@ -2970,38 +3020,6 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
   aPresShell->FrameManager()->RegisterPlaceholderFrame(placeholderFrame);
 
   return placeholderFrame;
-}
-
-/* static */ nsIFrame*
-nsCSSFrameConstructor::CreateBackdropFrameFor(nsIPresShell* aPresShell,
-                                              nsIContent* aContent,
-                                              nsIFrame* aFrame,
-                                              nsContainerFrame* aParentFrame)
-{
-  MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
-  nsContainerFrame* frame = do_QueryFrame(aFrame);
-  if (!frame) {
-    NS_WARNING("Cannot create backdrop frame for non-container frame");
-    return nullptr;
-  }
-
-  RefPtr<nsStyleContext> style = aPresShell->StyleSet()->
-    ResolvePseudoElementStyle(aContent->AsElement(),
-                              CSSPseudoElementType::backdrop,
-                              /* aParentStyleContext */ nullptr,
-                              /* aPseudoElement */ nullptr);
-  nsBackdropFrame* backdropFrame = new (aPresShell) nsBackdropFrame(style);
-  backdropFrame->Init(aContent, aParentFrame, nullptr);
-
-  nsIFrame* placeholder = CreatePlaceholderFrameFor(aPresShell, aContent,
-                                                    backdropFrame,
-                                                    frame->StyleContext(),
-                                                    frame, nullptr,
-                                                    PLACEHOLDER_FOR_TOPLAYER);
-  nsFrameList temp(placeholder, placeholder);
-  frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
-
-  return backdropFrame;
 }
 
 // Clears any lazy bits set in the range [aStartContent, aEndContent).  If

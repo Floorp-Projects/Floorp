@@ -687,7 +687,7 @@ class ArtifactCache(CacheManager):
                 if now == self._last_dl_update:
                     return
                 self._last_dl_update = now
-                self.log(logging.DEBUG, 'artifact',
+                self.log(logging.INFO, 'artifact',
                          {'bytes_so_far': bytes_so_far, 'total_size': total_size, 'percent': percent},
                          'Downloading... {percent:02.1f} %')
 

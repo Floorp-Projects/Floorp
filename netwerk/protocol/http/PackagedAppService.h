@@ -13,7 +13,6 @@
 #include "PackagedAppVerifier.h"
 #include "nsIMultiPartChannel.h"
 #include "PackagedAppVerifier.h"
-#include "nsIPackagedAppChannelListener.h"
 #include "nsCOMArray.h"
 #include "nsRefPtrHashtable.h"
 
@@ -129,8 +128,7 @@ private:
     // aURI is the full URI of a subresource, composed of packageURI + !// + subresourcePath
     // aRequester is the outer channel who makes the request for aURI.
     nsresult AddCallback(nsIURI *aURI,
-                         nsICacheEntryOpenCallback *aCallback,
-                         nsIChannel* aRequester);
+                         nsICacheEntryOpenCallback *aCallback);
 
     // Remove the callback from the resource callback list.
     nsresult RemoveCallbacks(nsICacheEntryOpenCallback* aCallback);
@@ -214,9 +212,6 @@ private:
 
     // Deal with verification and delegate callbacks to the downloader.
     RefPtr<PackagedAppVerifier> mVerifier;
-
-    // The outer channels which have issued the request to the downloader.
-    nsCOMArray<nsIPackagedAppChannelListener> mRequesters;
 
     // The package origin without signed package origin identifier.
     // If you need the origin with the signity taken into account, use

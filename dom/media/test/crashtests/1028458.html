@@ -1,7 +1,7 @@
 <html class="reftest-wait">
 <audio id="testAudio" controls></audio>
 <script type="text/javascript">
-navigator.mozGetUserMedia({audio: true}, function(stream) {
+navigator.mozGetUserMedia({audio: true, fake: true}, function(stream) {
     stream.getAudioTracks()[0].enabled = false;
     var testAudio = document.getElementById('testAudio');
     // Wait some time for good measure

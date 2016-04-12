@@ -18,7 +18,6 @@ UNIFIED_SOURCES += [
     'src/base/logging.cc',
     'src/base/message_loop.cc',
     'src/base/message_pump_default.cc',
-    'src/base/non_thread_safe.cc',
     'src/base/pickle.cc',
     'src/base/rand_util.cc',
     'src/base/revocable_store.cc',

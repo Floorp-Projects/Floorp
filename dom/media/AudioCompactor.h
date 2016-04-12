@@ -17,7 +17,15 @@ class AudioCompactor
 public:
   explicit AudioCompactor(MediaQueue<AudioData>& aQueue)
     : mQueue(aQueue)
-  { }
+  {
+    // Determine padding size used by AlignedBuffer.
+    size_t paddedSize = AlignedAudioBuffer::AlignmentPaddingSize();
+    mSamplesPadding = paddedSize / sizeof(AudioDataValue);
+    if (mSamplesPadding * sizeof(AudioDataValue) < paddedSize) {
+      // Round up.
+      mSamplesPadding++;
+    }
+  }
 
   // Push audio data into the underlying queue with minimal heap allocation
   // slop.  This method is responsible for allocating AudioDataValue[] buffers.
@@ -41,7 +49,13 @@ public:
 
     while (aFrames > 0) {
       uint32_t samples = GetChunkSamples(aFrames, aChannels, maxSlop);
-      auto buffer = MakeUnique<AudioDataValue[]>(samples);
+      if (aFrames * aChannels > mSamplesPadding) {
+        samples -= mSamplesPadding;
+      }
+      AlignedAudioBuffer buffer(samples);
+      if (!buffer) {
+        return false;
+      }
 
       // Copy audio data to buffer using caller-provided functor.
       uint32_t framesCopied = aCopyFunc(buffer.get(), samples);
@@ -115,6 +129,7 @@ private:
   }
 
   MediaQueue<AudioData> &mQueue;
+  size_t mSamplesPadding;
 };
 
 } // namespace mozilla

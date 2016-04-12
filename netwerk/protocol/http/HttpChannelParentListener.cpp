@@ -12,7 +12,6 @@
 #include "mozilla/unused.h"
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIHttpEventSink.h"
-#include "nsIPackagedAppChannelListener.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsQueryObject.h"
 
@@ -45,7 +44,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParentListener)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
-  NS_INTERFACE_MAP_ENTRY(nsIPackagedAppChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectResultListener)
   NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
@@ -109,22 +107,6 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
 
   LOG(("HttpChannelParentListener::OnDataAvailable [this=%p]\n", this));
   return mNextListener->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelParentListener::nsIPackagedAppChannelListener
-//-----------------------------------------------------------------------------
-NS_IMETHODIMP
-HttpChannelParentListener::OnStartSignedPackageRequest(const nsACString& aPackageId)
-{
-  nsCOMPtr<nsIPackagedAppChannelListener> listener = do_QueryInterface(mNextListener);
-  if (listener) {
-    listener->OnStartSignedPackageRequest(aPackageId);
-  } else {
-    NS_WARNING("mNextListener is not nsIPackagedAppChannelListener");
-  }
-
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

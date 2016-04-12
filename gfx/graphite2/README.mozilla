@@ -1,3 +1,6 @@
 This directory contains the Graphite2 library release 1.3.8 from
 https://github.com/silnrsi/graphite/releases/download/1.3.8/graphite2-minimal-1.3.8.tgz
 See gfx/graphite2/moz-gr-update.sh for update procedure.
+
+Cherry-picked post-1.3.8 commit 56157cf9845d13452068c297205f96b946126cc2 to fix
+https://bugzilla.mozilla.org/show_bug.cgi?id=1261135.
