@@ -135,7 +135,7 @@ SourceSurfaceSkia::DrawTargetWillChange()
 
     // First try a deep copy to avoid a readback from the GPU.
     // If that fails, try the CPU copy.
-    if (!mBitmap.deepCopyTo(&mBitmap) ||
+    if (!mBitmap.deepCopyTo(&mBitmap) &&
         !mBitmap.copyTo(&mBitmap)) {
       mBitmap.reset();
     }
