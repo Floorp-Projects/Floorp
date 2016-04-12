@@ -2466,7 +2466,6 @@ struct nsStyleDisplay
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;    // [reset]
-  nsRect  mClip;                // [reset] offsets from upper-left border edge
   float   mOpacity;             // [reset]
   uint8_t mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   uint8_t mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
@@ -2486,7 +2485,6 @@ struct nsStyleDisplay
   uint8_t mOverflowY;           // [reset] see nsStyleConsts.h
   uint8_t mOverflowClipBox;     // [reset] see nsStyleConsts.h
   uint8_t mResize;              // [reset] see nsStyleConsts.h
-  uint8_t mClipFlags;           // [reset] see nsStyleConsts.h
   uint8_t mOrient;              // [reset] see nsStyleConsts.h
   uint8_t mMixBlendMode;        // [reset] see nsStyleConsts.h
   uint8_t mIsolation;           // [reset] see nsStyleConsts.h
@@ -3583,17 +3581,23 @@ struct nsStyleEffects
 
   nsChangeHint CalcDifference(const nsStyleEffects& aOther) const;
   static nsChangeHint MaxDifference() {
-    return nsChangeHint_UpdateOverflow |
+    return nsChangeHint_AllReflowHints |
+           nsChangeHint_UpdateOverflow |
            nsChangeHint_SchedulePaint |
-           nsChangeHint_RepaintFrame;
+           nsChangeHint_RepaintFrame |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
     // handled for descendants as hints not handled for descendants.
-    return nsChangeHint(0);
+    return nsChangeHint_NeedReflow |
+           nsChangeHint_ReflowChangesSizeOrPosition |
+           nsChangeHint_ClearAncestorIntrinsics;
   }
 
   RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
+  nsRect mClip;                        // [reset] offsets from UL border edge
+  uint8_t mClipFlags;                  // [reset] see nsStyleConsts.h
 };
 
 #endif /* nsStyleStruct_h___ */
