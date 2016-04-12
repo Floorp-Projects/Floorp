@@ -1184,9 +1184,11 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                       aStyle, aFontData, face);
 }
 
-gfxFontFamily*
-gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
-                                  gfxFloat aDevToCssSize)
+bool
+gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
+                                          nsTArray<gfxFontFamily*>* aOutput,
+                                          gfxFontStyle* aStyle,
+                                          gfxFloat aDevToCssSize)
 {
     nsAutoString familyName(aFamily);
     ToLowerCase(familyName);
@@ -1208,9 +1210,10 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
         mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
         PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
         if (prefFonts && !prefFonts->IsEmpty()) {
-            return (*prefFonts)[0];
+            aOutput->AppendElement((*prefFonts)[0]);
+            return true;
         }
-        return nullptr;
+        return false;
     }
 
     // fontconfig allows conditional substitutions in such a way that it's
@@ -1232,7 +1235,8 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
     NS_ConvertUTF16toUTF8 familyToFind(familyName);
     gfxFontFamily* cached = mFcSubstituteCache.GetWeak(familyToFind);
     if (cached) {
-        return cached;
+        aOutput->AppendElement(cached);
+        return true;
     }
 
     const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
@@ -1261,16 +1265,20 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
             FcStrCmp(substName, sentinelFirstFamily) == 0) {
             break;
         }
-        gfxFontFamily* foundFamily = gfxPlatformFontList::FindFamily(subst);
-        if (foundFamily) {
+        // We can't use gfxPlatformFontList::FindFamily() here, even though
+        // we only expect a single result, because that would call back into
+        // this method, resulting in infinite recursion.
+        AutoTArray<gfxFontFamily*,1> foundFamilies;
+        if (gfxPlatformFontList::FindAndAddFamilies(subst, &foundFamilies)) {
             // We've figured out what family the given name maps to, after any
             // fontconfig subsitutions. Cache it to speed up future lookups.
-            mFcSubstituteCache.Put(familyToFind, foundFamily);
-            return foundFamily;
+            mFcSubstituteCache.Put(familyToFind, foundFamilies[0]);
+            aOutput->AppendElement(foundFamilies[0]);
+            return true;
         }
     }
 
-    return nullptr;
+    return false;
 }
 
 bool
@@ -1547,16 +1555,21 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
         FcPatternGetString(font, FC_FAMILY, 0, &mappedGeneric);
         if (mappedGeneric) {
             NS_ConvertUTF8toUTF16 mappedGenericName(ToCharPtr(mappedGeneric));
-            gfxFontFamily* genericFamily =
-                gfxPlatformFontList::FindFamily(mappedGenericName);
-            if (genericFamily && !prefFonts->Contains(genericFamily)) {
-                prefFonts->AppendElement(genericFamily);
-                bool foundLang = !fcLang.IsEmpty() &&
-                                 PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
-                foundFontWithLang = foundFontWithLang || foundLang;
-                // check to see if the list is full
-                if (prefFonts->Length() >= limit) {
-                    break;
+            AutoTArray<gfxFontFamily*,1> genericFamilies;
+            if (gfxPlatformFontList::FindAndAddFamilies(mappedGenericName,
+                                                        &genericFamilies)) {
+                MOZ_ASSERT(genericFamilies.Length() == 1,
+                           "expected a single family");
+                if (!prefFonts->Contains(genericFamilies[0])) {
+                    prefFonts->AppendElement(genericFamilies[0]);
+                    bool foundLang =
+                        !fcLang.IsEmpty() &&
+                        PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
+                    foundFontWithLang = foundFontWithLang || foundLang;
+                    // check to see if the list is full
+                    if (prefFonts->Length() >= limit) {
+                        break;
+                    }
                 }
             }
         }

@@ -129,9 +129,14 @@ public:
                           int32_t aRunScript,
                           const gfxFontStyle* aStyle);
 
-    virtual gfxFontFamily*
-    FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle = nullptr,
-               gfxFloat aDevToCssSize = 1.0);
+    // Find family(ies) matching aFamily and append to the aOutput array
+    // (there may be multiple results in the case of fontconfig aliases, etc).
+    // Return true if any match was found and appended, false if none.
+    virtual bool
+    FindAndAddFamilies(const nsAString& aFamily,
+                       nsTArray<gfxFontFamily*>* aOutput,
+                       gfxFontStyle* aStyle = nullptr,
+                       gfxFloat aDevToCssSize = 1.0);
 
     gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, bool& aNeedsBold);
 
@@ -253,6 +258,17 @@ protected:
     explicit gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);
 
     static gfxPlatformFontList *sPlatformFontList;
+
+    // Convenience method to return the first matching family (if any) as found
+    // by FindAndAddFamilies().
+    gfxFontFamily*
+    FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle = nullptr,
+               gfxFloat aDevToCssSize = 1.0)
+    {
+        AutoTArray<gfxFontFamily*,1> families;
+        return FindAndAddFamilies(aFamily, &families, aStyle, aDevToCssSize)
+               ? families[0] : nullptr;
+    }
 
     // Lookup family name in global family list without substitutions or
     // localized family name lookup. Used for common font fallback families.
