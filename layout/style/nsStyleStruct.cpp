@@ -2903,6 +2903,7 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   mPerspectiveOrigin[0].SetPercentValue(0.5f);
   mPerspectiveOrigin[1].SetPercentValue(0.5f);
   mChildPerspective.SetNoneValue();
+  mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
   mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
   mTransformBox = NS_STYLE_TRANSFORM_BOX_BORDER_BOX;
@@ -2981,6 +2982,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransformBox(aSource.mTransformBox)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
   , mChildPerspective(aSource.mChildPerspective)
+  , mVerticalAlign(aSource.mVerticalAlign)
   , mTransitions(aSource.mTransitions)
   , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
   , mTransitionDurationCount(aSource.mTransitionDurationCount)
@@ -3058,6 +3060,12 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
        NS_SubtractHint(nsChangeHint_AllReflowHints,
                        NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
                                       nsChangeHint_NeedDirtyReflow)));
+  }
+
+  if (mVerticalAlign != aOther.mVerticalAlign) {
+    // XXX Can this just be AllReflowHints + RepaintFrame, and be included in
+    // the block below?
+    NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
   }
 
   // XXX the following is conservative, for now: changing float breaking shouldn't
@@ -3566,7 +3574,6 @@ nsresult nsStyleContent::AllocateContents(uint32_t aCount)
 nsStyleTextReset::nsStyleTextReset(StyleStructContext aContext)
 { 
   MOZ_COUNT_CTOR(nsStyleTextReset);
-  mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
   mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
   mTextDecorationColor = NS_RGB(0,0,0);
   mTextDecorationStyle =
@@ -3585,38 +3592,39 @@ nsStyleTextReset::~nsStyleTextReset(void)
   MOZ_COUNT_DTOR(nsStyleTextReset);
 }
 
-nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
+nsChangeHint
+nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
 {
-  if (mVerticalAlign == aOther.mVerticalAlign
-      && mUnicodeBidi == aOther.mUnicodeBidi) {
-    uint8_t lineStyle = GetDecorationStyle();
-    uint8_t otherLineStyle = aOther.GetDecorationStyle();
-    if (mTextDecorationLine != aOther.mTextDecorationLine ||
-        lineStyle != otherLineStyle) {
-      // Changes to our text-decoration line can impact our overflow area &
-      // also our descendants' overflow areas (particularly for text-frame
-      // descendants).  So, we update those areas & trigger a repaint.
-      nsChangeHint hint = nsChangeHint_RepaintFrame;
-      NS_UpdateHint(hint, nsChangeHint_UpdateSubtreeOverflow);
-      NS_UpdateHint(hint, nsChangeHint_SchedulePaint);
-      return hint;
-    }
-
-    // Repaint for decoration color changes
-    nscolor decColor, otherDecColor;
-    bool isFG, otherIsFG;
-    GetDecorationColor(decColor, isFG);
-    aOther.GetDecorationColor(otherDecColor, otherIsFG);
-    if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
-      return nsChangeHint_RepaintFrame;
-    }
-
-    if (mTextOverflow != aOther.mTextOverflow) {
-      return nsChangeHint_RepaintFrame;
-    }
-    return NS_STYLE_HINT_NONE;
+  if (mUnicodeBidi != aOther.mUnicodeBidi) {
+    return NS_STYLE_HINT_REFLOW;
   }
-  return NS_STYLE_HINT_REFLOW;
+
+  uint8_t lineStyle = GetDecorationStyle();
+  uint8_t otherLineStyle = aOther.GetDecorationStyle();
+  if (mTextDecorationLine != aOther.mTextDecorationLine ||
+      lineStyle != otherLineStyle) {
+    // Changes to our text-decoration line can impact our overflow area &
+    // also our descendants' overflow areas (particularly for text-frame
+    // descendants).  So, we update those areas & trigger a repaint.
+    return nsChangeHint_RepaintFrame |
+           nsChangeHint_UpdateSubtreeOverflow |
+           nsChangeHint_SchedulePaint;
+  }
+
+  // Repaint for decoration color changes
+  nscolor decColor, otherDecColor;
+  bool isFG, otherIsFG;
+  GetDecorationColor(decColor, isFG);
+  aOther.GetDecorationColor(otherDecColor, otherIsFG);
+  if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
+    return nsChangeHint_RepaintFrame;
+  }
+
+  if (mTextOverflow != aOther.mTextOverflow) {
+    return nsChangeHint_RepaintFrame;
+  }
+
+  return NS_STYLE_HINT_NONE;
 }
 
 // Returns true if the given shadow-arrays are equal.

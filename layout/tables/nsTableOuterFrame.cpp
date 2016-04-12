@@ -474,7 +474,7 @@ uint8_t
 nsTableOuterFrame::GetCaptionVerticalAlign()
 {
   const nsStyleCoord& va =
-    mCaptionFrames.FirstChild()->StyleTextReset()->mVerticalAlign;
+    mCaptionFrames.FirstChild()->StyleDisplay()->mVerticalAlign;
   return (va.GetUnit() == eStyleUnit_Enumerated)
            ? va.GetIntValue()
            : NS_STYLE_VERTICAL_ALIGN_TOP;

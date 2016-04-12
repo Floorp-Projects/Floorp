@@ -186,7 +186,7 @@ HTMLTableSectionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttrib
         textAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue* verticalAlign = aData->ValueForVerticalAlign();
     if (verticalAlign->GetUnit() == eCSSUnit_Null) {
       // valign: enum
