@@ -1976,6 +1976,12 @@ static_assert(sizeof(gVariablesFlags) == sizeof(uint32_t),
               "if nsStyleVariables has properties now you can remove the dummy "
               "gVariablesFlags entry");
 
+static const uint32_t gEffectsFlags[] = {
+#define CSS_PROP_EFFECTS FLAG_DATA_FOR_PROPERTY
+#include "nsCSSPropList.h"
+#undef CSS_PROP_EFFECTS
+};
+
 #undef FLAG_DATA_FOR_PROPERTY
 
 static const uint32_t* gFlagsByStruct[] = {
@@ -2574,6 +2580,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       nsStyleVariables* vars = new (mPresContext) nsStyleVariables(mPresContext);
       aContext->SetStyle(eStyleStruct_Variables, vars);
       return vars;
+    }
+    case eStyleStruct_Effects:
+    {
+      nsStyleEffects* effects = new (mPresContext) nsStyleEffects(mPresContext);
+      aContext->SetStyle(eStyleStruct_Effects, effects);
+      return effects;
     }
     default:
       /*
@@ -7211,33 +7223,6 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
               parentBorder->mBoxDecorationBreak,
               NS_STYLE_BOX_DECORATION_BREAK_SLICE, 0, 0, 0, 0);
 
-  // box-shadow: none, list, inherit, initial
-  const nsCSSValue* boxShadowValue = aRuleData->ValueForBoxShadow();
-  switch (boxShadowValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_None:
-    border->mBoxShadow = nullptr;
-    break;
-
-  case eCSSUnit_Inherit:
-    border->mBoxShadow = parentBorder->mBoxShadow;
-    conditions.SetUncacheable();
-    break;
-
-  case eCSSUnit_List:
-  case eCSSUnit_ListDep:
-    border->mBoxShadow = GetShadowData(boxShadowValue->GetListValue(),
-                                       aContext, true, conditions);
-    break;
-
-  default:
-    MOZ_ASSERT(false, "unrecognized shadow unit");
-  }
-
   // border-width, border-*-width: length, enum, inherit
   nsStyleCoord coord;
   {
@@ -10008,6 +9993,46 @@ nsRuleNode::ComputeVariablesData(void* aStartStruct,
   conditions.SetUncacheable();
 
   COMPUTE_END_INHERITED(Variables, variables)
+}
+
+const void*
+nsRuleNode::ComputeEffectsData(void* aStartStruct,
+                               const nsRuleData* aRuleData,
+                               nsStyleContext* aContext,
+                               nsRuleNode* aHighestNode,
+                               const RuleDetail aRuleDetail,
+                               const RuleNodeCacheConditions aConditions)
+{
+  COMPUTE_START_RESET(Effects, effects, parentEffects)
+
+  // box-shadow: none, list, inherit, initial
+  const nsCSSValue* boxShadowValue = aRuleData->ValueForBoxShadow();
+  switch (boxShadowValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_None:
+    effects->mBoxShadow = nullptr;
+    break;
+
+  case eCSSUnit_Inherit:
+    effects->mBoxShadow = parentEffects->mBoxShadow;
+    conditions.SetUncacheable();
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep:
+    effects->mBoxShadow = GetShadowData(boxShadowValue->GetListValue(),
+                                        aContext, true, conditions);
+    break;
+
+  default:
+    MOZ_ASSERT(false, "unrecognized shadow unit");
+  }
+
+  COMPUTE_END_RESET(Effects, effects)
 }
 
 const void*

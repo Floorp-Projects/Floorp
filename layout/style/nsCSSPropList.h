@@ -156,6 +156,7 @@
 #define CSS_PROP_SVG(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, SVG, stylestructoffset_, animtype_)
 #define CSS_PROP_SVGRESET(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, SVGReset, stylestructoffset_, animtype_)
 #define CSS_PROP_VARIABLES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Variables, stylestructoffset_, animtype_)
+#define CSS_PROP_EFFECTS(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Effects, stylestructoffset_, animtype_)
 
 // And similarly for logical properties.  An includer can define
 // CSS_PROP_LOGICAL to capture all logical properties, but otherwise they
@@ -278,6 +279,10 @@
 #ifndef CSS_PROP_VARIABLES
 #define CSS_PROP_VARIABLES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
 #define DEFINED_CSS_PROP_VARIABLES
+#endif
+#ifndef CSS_PROP_EFFECTS
+#define CSS_PROP_EFFECTS(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
+#define DEFINED_CSS_PROP_EFFECTS
 #endif
 
 #ifndef CSS_PROP_LOGICAL
@@ -1314,7 +1319,7 @@ CSS_PROP_BORDER(
     kBoxDecorationBreakKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_BORDER(
+CSS_PROP_EFFECTS(
     box-shadow,
     box_shadow,
     BoxShadow,
@@ -1326,7 +1331,7 @@ CSS_PROP_BORDER(
     "",
     0,
     kBoxShadowTypeKTable,
-    offsetof(nsStyleBorder, mBoxShadow),
+    offsetof(nsStyleEffects, mBoxShadow),
     eStyleAnimType_Shadow)
 CSS_PROP_POSITION(
     box-sizing,
@@ -4463,6 +4468,7 @@ CSS_PROP_FONT(
 #undef CSS_PROP_SVG
 #undef CSS_PROP_SVGRESET
 #undef CSS_PROP_VARIABLES
+#undef CSS_PROP_EFFECTS
 
 #else /* !defined(USED_CSS_PROP) */
 
@@ -4557,6 +4563,10 @@ CSS_PROP_FONT(
 #ifdef DEFINED_CSS_PROP_VARIABLES
 #undef CSS_PROP_VARIABLES
 #undef DEFINED_CSS_PROP_VARIABLES
+#endif
+#ifdef DEFINED_CSS_PROP_EFFECTS
+#undef CSS_PROP_EFFECTS
+#undef DEFINED_CSS_PROP_EFFECTS
 #endif
 
 #endif /* !defined(USED_CSS_PROP) */

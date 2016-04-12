@@ -1860,7 +1860,7 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return;
 
-  nsCSSShadowArray* shadows = StyleBorder()->mBoxShadow;
+  nsCSSShadowArray* shadows = StyleEffects()->mBoxShadow;
   if (shadows && shadows->HasShadowWithInset(false)) {
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
       nsDisplayBoxShadowOuter(aBuilder, this));
