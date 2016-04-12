@@ -28,7 +28,6 @@ STYLE_STRUCTS = [("INHERITED",) + x for x in [
     ("List",           "nullptr",               NORMAL_DEP + LENGTH_DEP),
     ("Text",           "CheckTextCallback",     NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
     ("Visibility",     "nullptr",               NORMAL_DEP),
-    ("Quotes",         "nullptr",               NORMAL_DEP),
     ("UserInterface",  "nullptr",               NORMAL_DEP),
     ("TableBorder",    "nullptr",               NORMAL_DEP + LENGTH_DEP),
     ("SVG",            "nullptr",               NORMAL_DEP + LENGTH_DEP + COLOR_DEP),

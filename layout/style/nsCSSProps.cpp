@@ -3145,13 +3145,6 @@ enum ContentCheckCounter {
   ePropertyCount_for_Content
 };
 
-enum QuotesCheckCounter {
-  #define CSS_PROP_QUOTES ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_QUOTES
-  ePropertyCount_for_Quotes
-};
-
 enum TextCheckCounter {
   #define CSS_PROP_TEXT ENUM_DATA_FOR_PROPERTY
   #include "nsCSSPropList.h"
