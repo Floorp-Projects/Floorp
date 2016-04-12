@@ -19,6 +19,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIWeakReference.h"
+#include "mozilla/AbstractThread.h"
 
 template <class> struct already_AddRefed;
 
@@ -74,6 +75,8 @@ public:
   void AddPluginCrashedEventTarget(const uint32_t aPluginId,
                                    nsPIDOMWindowInner* aParentWindow);
 
+  RefPtr<AbstractThread> GetAbstractGMPThread();
+
 protected:
   GeckoMediaPluginService();
   virtual ~GeckoMediaPluginService();
@@ -92,6 +95,7 @@ protected:
   Mutex mMutex; // Protects mGMPThread and mGMPThreadShutdown and some members
                 // in derived classes.
   nsCOMPtr<nsIThread> mGMPThread;
+  RefPtr<AbstractThread> mAbstractGMPThread;
   bool mGMPThreadShutdown;
   bool mShuttingDownOnGMPThread;
 
