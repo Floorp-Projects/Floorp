@@ -161,8 +161,11 @@ private:
 
 class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy {
 public:
-  EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableTaskQueue* aTaskQueue)
-   : MediaDataDecoderProxy(aProxyThread, aCallback)
+  EMEMediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread,
+                           MediaDataDecoderCallback* aCallback,
+                           CDMProxy* aProxy,
+                           FlushableTaskQueue* aTaskQueue)
+   : MediaDataDecoderProxy(Move(aProxyThread), aCallback)
    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aTaskQueue, aProxy))
    , mProxy(aProxy)
   {
@@ -220,18 +223,16 @@ EMEDecoderModule::~EMEDecoderModule()
 static already_AddRefed<MediaDataDecoderProxy>
 CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableTaskQueue* aTaskQueue)
 {
-  nsCOMPtr<mozIGeckoMediaPluginService> gmpService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (!gmpService) {
+  RefPtr<gmp::GeckoMediaPluginService> s(gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
+  if (!s) {
     return nullptr;
   }
-
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = gmpService->GetThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
+  RefPtr<AbstractThread> thread(s->GetAbstractGMPThread());
+  if (!thread) {
     return nullptr;
   }
-
-  RefPtr<MediaDataDecoderProxy> decoder(new EMEMediaDataDecoderProxy(thread, aCallback, aProxy, aTaskQueue));
+  RefPtr<MediaDataDecoderProxy> decoder(
+    new EMEMediaDataDecoderProxy(thread.forget(), aCallback, aProxy, aTaskQueue));
   return decoder.forget();
 }
 
