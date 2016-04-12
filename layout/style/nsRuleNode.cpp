@@ -1916,12 +1916,6 @@ static const uint32_t gContentFlags[] = {
 #undef CSS_PROP_CONTENT
 };
 
-static const uint32_t gQuotesFlags[] = {
-#define CSS_PROP_QUOTES FLAG_DATA_FOR_PROPERTY
-#include "nsCSSPropList.h"
-#undef CSS_PROP_QUOTES
-};
-
 static const uint32_t gTextFlags[] = {
 #define CSS_PROP_TEXT FLAG_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
@@ -2538,12 +2532,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       nsStyleContent* content = new (mPresContext) nsStyleContent(mPresContext);
       aContext->SetStyle(eStyleStruct_Content, content);
       return content;
-    }
-    case eStyleStruct_Quotes:
-    {
-      nsStyleQuotes* quotes = new (mPresContext) nsStyleQuotes(mPresContext);
-      aContext->SetStyle(eStyleStruct_Quotes, quotes);
-      return quotes;
     }
     case eStyleStruct_UserInterface:
     {
@@ -7685,6 +7673,47 @@ nsRuleNode::ComputeListData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(List, list, parentList)
 
+  // quotes: inherit, initial, none, [string string]+
+  const nsCSSValue* quotesValue = aRuleData->ValueForQuotes();
+  switch (quotesValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+  case eCSSUnit_Inherit:
+  case eCSSUnit_Unset:
+    conditions.SetUncacheable();
+    list->SetQuotesInherit(parentList);
+    break;
+  case eCSSUnit_Initial:
+    list->SetQuotesInitial();
+    break;
+  case eCSSUnit_None:
+    list->SetQuotesNone();
+    break;
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourQuotes = quotesValue->GetPairListValue();
+
+    nsStyleQuoteValues::QuotePairArray quotePairs;
+    quotePairs.SetLength(ListLength(ourQuotes));
+
+    size_t index = 0;
+    nsAutoString buffer;
+    while (ourQuotes) {
+      MOZ_ASSERT(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
+                 ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
+                 "improper list contents for quotes");
+      quotePairs[index].first  = ourQuotes->mXValue.GetStringValue(buffer);
+      quotePairs[index].second = ourQuotes->mYValue.GetStringValue(buffer);
+      ++index;
+      ourQuotes = ourQuotes->mNext;
+    }
+    list->SetQuotes(Move(quotePairs));
+    break;
+  }
+  default:
+    MOZ_ASSERT(false, "unexpected value unit");
+  }
+
   // list-style-type: string, none, inherit, initial
   const nsCSSValue* typeValue = aRuleData->ValueForListStyleType();
   switch (typeValue->GetUnit()) {
@@ -8834,60 +8863,6 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   }
 
   COMPUTE_END_RESET(Content, content)
-}
-
-const void*
-nsRuleNode::ComputeQuotesData(void* aStartStruct,
-                              const nsRuleData* aRuleData,
-                              nsStyleContext* aContext,
-                              nsRuleNode* aHighestNode,
-                              const RuleDetail aRuleDetail,
-                              const RuleNodeCacheConditions aConditions)
-{
-  COMPUTE_START_INHERITED(Quotes, quotes, parentQuotes)
-
-  // quotes: inherit, initial, none, [string string]+
-  const nsCSSValue* quotesValue = aRuleData->ValueForQuotes();
-  switch (quotesValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-  case eCSSUnit_Inherit:
-  case eCSSUnit_Unset:
-    conditions.SetUncacheable();
-    quotes->SetQuotesInherit(parentQuotes);
-    break;
-  case eCSSUnit_Initial:
-    quotes->SetQuotesInitial();
-    break;
-  case eCSSUnit_None:
-    quotes->SetQuotesNone();
-    break;
-  case eCSSUnit_PairList:
-  case eCSSUnit_PairListDep: {
-    const nsCSSValuePairList* ourQuotes = quotesValue->GetPairListValue();
-
-    nsStyleQuoteValues::QuotePairArray quotePairs;
-    quotePairs.SetLength(ListLength(ourQuotes));
-
-    size_t index = 0;
-    nsAutoString buffer;
-    while (ourQuotes) {
-      MOZ_ASSERT(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
-                 ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
-                 "improper list contents for quotes");
-      quotePairs[index].first  = ourQuotes->mXValue.GetStringValue(buffer);
-      quotePairs[index].second = ourQuotes->mYValue.GetStringValue(buffer);
-      ++index;
-      ourQuotes = ourQuotes->mNext;
-    }
-    quotes->SetQuotes(Move(quotePairs));
-    break;
-  }
-  default:
-    MOZ_ASSERT(false, "unexpected value unit");
-  }
-
-  COMPUTE_END_INHERITED(Quotes, quotes)
 }
 
 const void*

@@ -48,7 +48,7 @@ struct nsStyleVisibility;
 
 // Bits for each struct.
 // NS_STYLE_INHERIT_BIT defined in nsStyleStructFwd.h
-#define NS_STYLE_INHERIT_MASK              0x000ffffff
+#define NS_STYLE_INHERIT_MASK              0x0007fffff
 
 // Bits for inherited structs.
 #define NS_STYLE_INHERITED_STRUCT_MASK \
@@ -59,6 +59,7 @@ struct nsStyleVisibility;
    << nsStyleStructID_Inherited_Count)
 
 // Additional bits for nsStyleContext's mBits:
+// Free bit                                0x000800000
 // See nsStyleContext::HasTextDecorationLines
 #define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x001000000
 // See nsStyleContext::HasPseudoElementData.
@@ -86,8 +87,9 @@ struct nsStyleVisibility;
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        35
 
 // Additional bits for nsRuleNode's mDependentBits:
+// Free bit                                 0x00800000
 #define NS_RULE_NODE_IS_ANIMATION_RULE      0x01000000
-// Free bit here!
+// Free bit                                 0x02000000
 #define NS_RULE_NODE_USED_DIRECTLY          0x04000000
 #define NS_RULE_NODE_IS_IMPORTANT           0x08000000
 #define NS_RULE_NODE_LEVEL_MASK             0xf0000000
@@ -1352,6 +1354,22 @@ protected:
 };
 
 
+/**
+ * An object that allows sharing of arrays that store 'quotes' property
+ * values.  This is particularly important for inheritance, where we want
+ * to share the same 'quotes' value with a parent style context.
+ */
+class nsStyleQuoteValues
+{
+public:
+  typedef nsTArray<std::pair<nsString, nsString>> QuotePairArray;
+  NS_INLINE_DECL_REFCOUNTING(nsStyleQuoteValues);
+  QuotePairArray mQuotePairs;
+
+private:
+  ~nsStyleQuoteValues() {}
+};
+
 struct nsStyleList
 {
   explicit nsStyleList(StyleStructContext aContext);
@@ -1382,6 +1400,11 @@ struct nsStyleList
            nsChangeHint_ClearAncestorIntrinsics;
   }
 
+  static void Shutdown() {
+    sInitialQuotes = nullptr;
+    sNoneQuotes = nullptr;
+  }
+
   imgRequestProxy* GetListStyleImage() const { return mListStyleImage; }
   void SetListStyleImage(imgRequestProxy* aReq)
   {
@@ -1410,14 +1433,27 @@ struct nsStyleList
                      CounterStyleManager()->BuildCounterStyle(aType));
   }
 
+  const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
+
+  void SetQuotesInherit(const nsStyleList* aOther);
+  void SetQuotesInitial();
+  void SetQuotesNone();
+  void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
+
   uint8_t   mListStylePosition;         // [inherited]
 private:
   nsString  mListStyleType;             // [inherited]
   RefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
   RefPtr<imgRequestProxy> mListStyleImage; // [inherited]
+  RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
+
+private:
+  // nsStyleQuoteValues objects representing two common values, for sharing.
+  static mozilla::StaticRefPtr<nsStyleQuoteValues> sInitialQuotes;
+  static mozilla::StaticRefPtr<nsStyleQuoteValues> sNoneQuotes;
 };
 
 struct nsStyleGridLine
@@ -2797,70 +2833,6 @@ struct nsStyleCounterData
 
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nullptr; }
-
-/**
- * An object that allows sharing of arrays that store 'quotes' property
- * values.  This is particularly important for inheritance, where we want
- * to share the same 'quotes' value with a parent style context.
- */
-class nsStyleQuoteValues
-{
-public:
-  typedef nsTArray<std::pair<nsString, nsString>> QuotePairArray;
-  NS_INLINE_DECL_REFCOUNTING(nsStyleQuoteValues);
-  QuotePairArray mQuotePairs;
-
-private:
-  ~nsStyleQuoteValues() {}
-};
-
-struct nsStyleQuotes
-{
-  explicit nsStyleQuotes(StyleStructContext aContext);
-  nsStyleQuotes(const nsStyleQuotes& aQuotes);
-  ~nsStyleQuotes();
-
-  void* operator new(size_t sz, nsStyleQuotes* aSelf) CPP_THROW_NEW { return aSelf; }
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-    return aContext->PresShell()->
-      AllocateByObjectID(mozilla::eArenaObjectID_nsStyleQuotes, sz);
-  }
-  void Destroy(nsPresContext* aContext) {
-    this->~nsStyleQuotes();
-    aContext->PresShell()->
-      FreeByObjectID(mozilla::eArenaObjectID_nsStyleQuotes, this);
-  }
-  nsChangeHint CalcDifference(const nsStyleQuotes& aOther) const;
-  static nsChangeHint MaxDifference() {
-    return NS_STYLE_HINT_FRAMECHANGE;
-  }
-  static nsChangeHint DifferenceAlwaysHandledForDescendants() {
-    // CalcDifference never returns the reflow hints that are sometimes
-    // handled for descendants as hints not handled for descendants.
-    return nsChangeHint_NeedReflow |
-           nsChangeHint_ReflowChangesSizeOrPosition |
-           nsChangeHint_ClearAncestorIntrinsics;
-  }
-
-  static void Shutdown() {
-    sInitialQuotes = nullptr;
-    sNoneQuotes = nullptr;
-  }
-
-  const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
-
-  void SetQuotesInherit(const nsStyleQuotes* aOther);
-  void SetQuotesInitial();
-  void SetQuotesNone();
-  void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
-
-private:
-  RefPtr<nsStyleQuoteValues> mQuotes;  // [inherited]
-
-  // nsStyleQuoteValues objects representing two common values, for sharing.
-  static mozilla::StaticRefPtr<nsStyleQuoteValues> sInitialQuotes;
-  static mozilla::StaticRefPtr<nsStyleQuoteValues> sNoneQuotes;
-};
 
 struct nsStyleContent
 {

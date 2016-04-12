@@ -683,13 +683,6 @@ protected:
                        const mozilla::RuleNodeCacheConditions aConditions);
 
   const void*
-    ComputeQuotesData(void* aStartStruct,
-                      const nsRuleData* aRuleData,
-                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
-                      RuleDetail aRuleDetail,
-                      const mozilla::RuleNodeCacheConditions aConditions);
-
-  const void*
     ComputeTextData(void* aStartStruct,
                     const nsRuleData* aRuleData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
