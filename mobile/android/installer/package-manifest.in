@@ -306,6 +306,8 @@
 @BINPATH@/components/nsLoginManagerPrompter.js
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/crypto-SDR.js
+@BINPATH@/components/TooltipTextProvider.js
+@BINPATH@/components/TooltipTextProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/extensions.manifest

@@ -525,147 +525,35 @@
                                    else this.removeAttribute('page');
                                    return val;"
                             onget="return this.getAttribute('page') == 'true';"/>
+      <property name="textProvider"
+                readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._textProvider) {
+            this._textProvider = Components.classes["@mozilla.org/embedcomp/default-tooltiptextprovider;1"]
+                                 .getService(Components.interfaces.nsITooltipTextProvider);
+          }
+          return this._textProvider;
+        ]]>
+        </getter>
+      </property>
 
       <!-- Given the supplied element within a page, set the tooltip's text to the text
            for that element. Returns true if text was assigned, and false if the no text
            is set, which normally would be used to cancel tooltip display.
-
-           Note that DefaultTooltipTextProvider::GetNodeText() from nsDocShellTreeOwner.cpp
-           also performs the same function, but for embedded clients that don't use a XUL/JS
-           layer. These two should be kept synchronized.
         -->
       <method name="fillInPageTooltip">
         <parameter name="tipElement"/>
         <body>
         <![CDATA[
-          // Don't show the tooltip if the tooltip node is a document, browser, or disconnected.
-          if (!tipElement || !tipElement.ownerDocument ||
-              tipElement.localName == "browser" ||
-              (tipElement.ownerDocument.compareDocumentPosition(tipElement) & document.DOCUMENT_POSITION_DISCONNECTED)) {
-            return false;
+          let tttp = this.textProvider;
+          let textObj = {}, dirObj = {};
+          let shouldChangeText = tttp.getNodeText(tipElement, textObj, dirObj);
+          if (shouldChangeText) {
+            this.style.direction = dirObj.value;
+            this.label = textObj.value;
           }
-
-          var defView = tipElement.ownerDocument.defaultView;
-          // XXX Work around bug 350679:
-          // "Tooltips can be fired in documents with no view".
-          if (!defView)
-            return false;
-
-          const XLinkNS = "http://www.w3.org/1999/xlink";
-          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-          var titleText = null;
-          var XLinkTitleText = null;
-          var SVGTitleText = null;
-          var XULtooltiptextText = null;
-          var lookingForSVGTitle = true;
-          var direction = tipElement.ownerDocument.dir;
-
-          // If the element is invalid per HTML5 Forms specifications and has no title,
-          // show the constraint validation error message.
-          if ((tipElement instanceof HTMLInputElement ||
-               tipElement instanceof HTMLTextAreaElement ||
-               tipElement instanceof HTMLSelectElement ||
-               tipElement instanceof HTMLButtonElement) &&
-              !tipElement.hasAttribute('title') &&
-              (!tipElement.form || !tipElement.form.noValidate)) {
-            // If the element is barred from constraint validation or valid,
-            // the validation message will be the empty string.
-            titleText = tipElement.validationMessage || null;
-          }
-
-          // If the element is an <input type='file'> without a title, we should show
-          // the current file selection.
-          if (!titleText &&
-              tipElement instanceof HTMLInputElement &&
-              tipElement.type == 'file' &&
-              !tipElement.hasAttribute('title')) {
-            let files = tipElement.files;
-
-            try {
-              var bundle = Components.classes['@mozilla.org/intl/stringbundle;1']
-                                     .getService(Components.interfaces.nsIStringBundleService)
-                                     .createBundle("chrome://global/locale/layout/HtmlForm.properties");
-              if (files.length == 0) {
-                if (tipElement.multiple) {
-                  titleText = bundle.GetStringFromName("NoFilesSelected");
-                } else {
-                  titleText = bundle.GetStringFromName("NoFileSelected");
-                }
-              } else {
-                titleText = files[0].name;
-                // For UX and performance (jank) reasons we cap the number of
-                // files that we list in the tooltip to 20 plus a "and xxx more"
-                // line, or to 21 if exactly 21 files were picked.
-                const TRUNCATED_FILE_COUNT = 20;
-                let count = Math.min(files.length, TRUNCATED_FILE_COUNT);
-                for (let i = 1; i < count; ++i) {
-                  titleText += "\n" + files[i].name;
-                }
-                if (files.length == TRUNCATED_FILE_COUNT + 1) {
-                  titleText += "\n" + files[TRUNCATED_FILE_COUNT].name;
-                } else if (files.length > TRUNCATED_FILE_COUNT + 1) {
-                  let xmoreStr = bundle.GetStringFromName("AndNMoreFiles");
-                  let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
-                  let tmp = {};
-                  Components.utils.import("resource://gre/modules/PluralForm.jsm", tmp);
-                  let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace("#1", xmoreNum);
-                  titleText += "\n" + andXMoreStr;
-                }
-              }
-            } catch(e) {}
-          }
-
-          // Check texts against null so that title="" can be used to undefine a
-          // title on a child element.
-          while (tipElement &&
-                 (titleText == null) && (XLinkTitleText == null) &&
-                 (SVGTitleText == null) && (XULtooltiptextText == null)) {
-
-            if (tipElement.nodeType == Node.ELEMENT_NODE) {
-              if (tipElement.namespaceURI == XULNS)
-                XULtooltiptextText = tipElement.getAttribute("tooltiptext");
-              else if (!(tipElement instanceof SVGElement))
-                titleText = tipElement.getAttribute("title");
-
-              if ((tipElement instanceof HTMLAnchorElement ||
-                   tipElement instanceof HTMLAreaElement ||
-                   tipElement instanceof HTMLLinkElement ||
-                   tipElement instanceof SVGAElement) && tipElement.href) {
-                XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-              }
-              if (lookingForSVGTitle &&
-                  (!(tipElement instanceof SVGElement) ||
-                   tipElement.parentNode.nodeType == Node.DOCUMENT_NODE)) {
-                lookingForSVGTitle = false;
-              }
-              if (lookingForSVGTitle) {
-                for (let childNode of tipElement.childNodes) {
-                  if (childNode instanceof SVGTitleElement) {
-                    SVGTitleText = childNode.textContent;
-                    break;
-                  }
-                }
-              }
-
-              direction = defView.getComputedStyle(tipElement, "")
-                                 .getPropertyValue("direction");
-            }
-
-            tipElement = tipElement.parentNode;
-          }
-
-          this.style.direction = direction;
-
-          return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(function (t) {
-            if (t && /\S/.test(t)) {
-              // Make CRLF and CR render one line break each.
-              this.label = t.replace(/\r\n?/g, '\n');
-              return true;
-            }
-
-            return false;
-          }, this);
+          return shouldChangeText;
         ]]>
         </body>
       </method>
