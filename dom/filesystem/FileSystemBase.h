@@ -127,6 +127,9 @@ public:
   virtual nsresult
   MainThreadWork() { return NS_ERROR_FAILURE; }
 
+  virtual bool
+  ClonableToDifferentThreadOrProcess() const { return false; }
+
   // CC methods
   virtual void Unlink() {}
   virtual void Traverse(nsCycleCollectionTraversalCallback &cb) {}
