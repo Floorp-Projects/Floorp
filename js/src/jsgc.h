@@ -918,6 +918,8 @@ class GCParallelTask
     // Amount of time this task took to execute.
     uint64_t duration_;
 
+    explicit GCParallelTask(const GCParallelTask&) = delete;
+
   protected:
     // A flag to signal a request for early completion of the off-thread task.
     mozilla::Atomic<bool> cancel_;
@@ -926,6 +928,11 @@ class GCParallelTask
 
   public:
     GCParallelTask() : state(NotStarted), duration_(0) {}
+    GCParallelTask(GCParallelTask&& other)
+      : state(other.state),
+        duration_(0),
+        cancel_(false)
+    {}
 
     // Derived classes must override this to ensure that join() gets called
     // before members get destructed.

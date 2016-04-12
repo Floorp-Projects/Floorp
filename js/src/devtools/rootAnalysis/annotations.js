@@ -211,6 +211,7 @@ var ignoreFunctions = {
 
     "uint64 js::TenuringTracer::moveObjectToTenured(JSObject*, JSObject*, int32)" : true,
     "uint32 js::TenuringTracer::moveObjectToTenured(JSObject*, JSObject*, int32)" : true,
+    "void js::Nursery::freeMallocedBuffers()" : true,
 };
 
 function isProtobuf(name)
