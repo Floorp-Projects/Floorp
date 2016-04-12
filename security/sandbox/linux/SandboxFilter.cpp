@@ -145,7 +145,11 @@ public:
     case __NR_clock_gettime: {
       Arg<clockid_t> clk_id(0);
       return If(clk_id == CLOCK_MONOTONIC, Allow())
+        .ElseIf(clk_id == CLOCK_MONOTONIC_COARSE, Allow())
+        .ElseIf(clk_id == CLOCK_PROCESS_CPUTIME_ID, Allow())
         .ElseIf(clk_id == CLOCK_REALTIME, Allow())
+        .ElseIf(clk_id == CLOCK_REALTIME_COARSE, Allow())
+        .ElseIf(clk_id == CLOCK_THREAD_CPUTIME_ID, Allow())
         .Else(InvalidSyscall());
     }
     case __NR_gettimeofday:
@@ -180,6 +184,7 @@ public:
     case __NR_write:
     case __NR_read:
     case __NR_writev: // see SandboxLogging.cpp
+    CASES_FOR_lseek:
       return Allow();
 
       // Memory mapping
@@ -517,7 +522,6 @@ public:
       return Allow();
 
     CASES_FOR_getdents:
-    CASES_FOR_lseek:
     CASES_FOR_ftruncate:
     case __NR_writev:
     case __NR_pread64:
@@ -680,6 +684,23 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     return fd;
   }
 
+  static intptr_t SchedTrap(const sandbox::arch_seccomp_data& aArgs,
+                            void* aux)
+  {
+    const pid_t tid = syscall(__NR_gettid);
+    if (aArgs.args[0] == static_cast<uint64_t>(tid)) {
+      return syscall(aArgs.nr,
+                     0,
+                     aArgs.args[1],
+                     aArgs.args[2],
+                     aArgs.args[3],
+                     aArgs.args[4],
+                     aArgs.args[5]);
+    }
+    SANDBOX_LOG_ERROR("unsupported tid in SchedTrap");
+    return BlockedSyscallTrap(aArgs, nullptr);
+  }
+
   SandboxOpenedFile* mPlugin;
 public:
   explicit GMPSandboxPolicy(SandboxOpenedFile* aPlugin)
@@ -710,6 +731,18 @@ public:
         .ElseIf(advice == MADV_DONTDUMP, Allow())
 #endif
         .Else(InvalidSyscall());
+    }
+    case __NR_brk:
+    case __NR_geteuid:
+      return Allow();
+    case __NR_sched_getparam:
+    case __NR_sched_getscheduler:
+    case __NR_sched_get_priority_min:
+    case __NR_sched_get_priority_max:
+    case __NR_sched_setscheduler: {
+      Arg<pid_t> pid(0);
+      return If(pid == 0, Allow())
+        .Else(Trap(SchedTrap, nullptr));
     }
 
     default:
