@@ -110,7 +110,7 @@ bool RawDBusConnection::Watch()
                                         DBusWatcher::AddWatchFunction,
                                         DBusWatcher::RemoveWatchFunction,
                                         DBusWatcher::ToggleWatchFunction,
-                                        this, nullptr);
+                                        this->GetConnection(), nullptr);
   NS_ENSURE_TRUE(success == TRUE, false);
 
   return true;

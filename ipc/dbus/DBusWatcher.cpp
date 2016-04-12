@@ -7,12 +7,11 @@
 #include "DBusWatcher.h"
 #include "mozilla/unused.h"
 #include "nsThreadUtils.h"
-#include "RawDBusConnection.h"
 
 namespace mozilla {
 namespace ipc {
 
-DBusWatcher::DBusWatcher(RawDBusConnection* aConnection, DBusWatch* aWatch)
+DBusWatcher::DBusWatcher(DBusConnection* aConnection, DBusWatch* aWatch)
   : mConnection(aConnection)
   , mWatch(aWatch)
 {
@@ -23,7 +22,7 @@ DBusWatcher::DBusWatcher(RawDBusConnection* aConnection, DBusWatch* aWatch)
 DBusWatcher::~DBusWatcher()
 { }
 
-RawDBusConnection*
+DBusConnection*
 DBusWatcher::GetConnection()
 {
   return mConnection;
@@ -82,7 +81,7 @@ DBusWatcher::AddWatchFunction(DBusWatch* aWatch, void* aData)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  auto connection = static_cast<RawDBusConnection*>(aData);
+  auto connection = static_cast<DBusConnection*>(aData);
 
   UniquePtr<DBusWatcher> dbusWatcher =
     MakeUnique<DBusWatcher>(connection, aWatch);
@@ -134,8 +133,7 @@ DBusWatcher::OnFileCanReadWithoutBlocking(int aFd)
   DBusDispatchStatus dbusDispatchStatus;
 
   do {
-    dbusDispatchStatus =
-      dbus_connection_dispatch(mConnection->GetConnection());
+    dbusDispatchStatus = dbus_connection_dispatch(mConnection);
   } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
 }
 
