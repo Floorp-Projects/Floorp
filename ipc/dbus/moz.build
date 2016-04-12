@@ -7,6 +7,7 @@
 EXPORTS.mozilla.ipc += [
     'DBusConnectionRefPtr.h',
     'DBusMessageRefPtr.h',
+    'DBusPendingCallRefPtr.h',
     'DBusUtils.h',
     'DBusWatcher.h',
     'RawDBusConnection.h',
