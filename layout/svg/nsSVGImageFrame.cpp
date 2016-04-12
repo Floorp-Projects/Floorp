@@ -366,7 +366,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     // image into the current canvas is just the group opacity.
     float opacity = 1.0f;
     if (nsSVGUtils::CanOptimizeOpacity(this)) {
-      opacity = StyleDisplay()->mOpacity;
+      opacity = StyleEffects()->mOpacity;
     }
 
     if (opacity != 1.0f || StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {

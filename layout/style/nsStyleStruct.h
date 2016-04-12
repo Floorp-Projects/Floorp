@@ -2443,8 +2443,6 @@ struct nsStyleDisplay
   static nsChangeHint MaxDifference() {
     // All the parts of FRAMECHANGE are present in CalcDifference.
     return nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-                        nsChangeHint_UpdateOpacityLayer |
-                        nsChangeHint_UpdateUsesOpacity |
                         nsChangeHint_UpdateTransformLayer |
                         nsChangeHint_UpdateOverflow |
                         nsChangeHint_UpdatePostTransformOverflow |
@@ -2466,7 +2464,6 @@ struct nsStyleDisplay
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;    // [reset]
-  float   mOpacity;             // [reset]
   uint8_t mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   uint8_t mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
                                 //         and float:left/right; otherwise equal
@@ -3584,6 +3581,8 @@ struct nsStyleEffects
            nsChangeHint_UpdateOverflow |
            nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame |
+           nsChangeHint_UpdateOpacityLayer |
+           nsChangeHint_UpdateUsesOpacity |
            nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
@@ -3595,7 +3594,8 @@ struct nsStyleEffects
   }
 
   RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
-  nsRect mClip;                        // [reset] offsets from UL border edge
+  nsRect  mClip;                       // [reset] offsets from UL border edge
+  float   mOpacity;                    // [reset]
   uint8_t mClipFlags;                  // [reset] see nsStyleConsts.h
   uint8_t mMixBlendMode;               // [reset] see nsStyleConsts.h
 };

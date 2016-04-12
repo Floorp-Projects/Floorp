@@ -1205,8 +1205,7 @@ Accessible::State()
   if (!frame)
     return state;
 
-  const nsStyleDisplay* display = frame->StyleDisplay();
-  if (display && display->mOpacity == 1.0f &&
+  if (frame->StyleEffects()->mOpacity == 1.0f &&
       !(state & states::INVISIBLE)) {
     state |= states::OPAQUE1;
   }

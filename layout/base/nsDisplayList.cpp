@@ -1524,7 +1524,7 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     // children, which might be a large area their contents don't really cover).
     nsIFrame* f = aItem->Frame();
     if (f->PresContext()->IsChrome() && !aItem->GetChildren() &&
-        f->StyleDisplay()->mOpacity != 0.0) {
+        f->StyleEffects()->mOpacity != 0.0) {
       opaque = aItem->GetBounds(aBuilder, &snap);
     }
   }
@@ -4170,7 +4170,7 @@ nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                                    const DisplayItemScrollClip* aScrollClip,
                                    bool aForEventsOnly)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
-    , mOpacity(aFrame->StyleDisplay()->mOpacity)
+    , mOpacity(aFrame->StyleEffects()->mOpacity)
     , mForEventsOnly(aForEventsOnly)
     , mParticipatesInPreserve3D(false)
 {
@@ -6568,7 +6568,7 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  float opacity = mFrame->StyleDisplay()->mOpacity;
+  float opacity = mFrame->StyleEffects()->mOpacity;
   if (opacity == 0.0f)
     return nullptr;
 
@@ -6678,9 +6678,9 @@ nsDisplaySVGEffects::PrintEffects(nsACString& aTo)
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   bool first = true;
   aTo += " effects=(";
-  if (mFrame->StyleDisplay()->mOpacity != 1.0f) {
+  if (mFrame->StyleEffects()->mOpacity != 1.0f) {
     first = false;
-    aTo += nsPrintfCString("opacity(%f)", mFrame->StyleDisplay()->mOpacity);
+    aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }
   if (clipPathFrame) {
     if (!first) {
