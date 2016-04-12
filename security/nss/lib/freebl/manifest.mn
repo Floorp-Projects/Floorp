@@ -10,6 +10,30 @@ CORE_DEPTH = ../..
 
 MODULE = nss
 
+# copied from Linux.mk. We have a chicken and egg issue here. We need to set
+# Library name before we call the platform code in coreconf, but we need to
+# Pick up the automatic setting of FREEBL_LOWHASH before we  can set the
+# Library name... so for now we mimic the code in Linux.mk to get the
+# automatic setting early...
+#
+# On Linux 2.6 or later, build libfreebl3.so with no NSPR and libnssutil3.so
+# dependencies by default.  Set FREEBL_NO_DEPEND to 0 in the environment to
+# override this.
+#
+#
+include $(CORE_DEPTH)/coreconf/arch.mk
+ifeq ($(OS_ARCH),Linux)
+ifneq ($(OS_TARGET),Android)
+ifeq (2.6,$(firstword $(sort 2.6 $(OS_RELEASE))))
+ifndef FREEBL_NO_DEPEND
+FREEBL_NO_DEPEND = 1
+FREEBL_LOWHASH = 1
+endif
+endif
+endif
+endif
+
+
 LIBRARY_NAME = freebl
 LIBRARY_VERSION = 3
 
@@ -28,6 +52,13 @@ ifdef FREEBL_CHILD_BUILD
   endif
   ifdef USE_ABI64_FPU
     LIBRARY_NAME = freebl_64fpu
+  endif
+  ifdef FREEBL_LOWHASH
+    LIBRARY_NAME = freeblpriv
+  endif
+  ifdef USE_STUB_BUILD
+    # for the stub build, reset name to the default (from freeblpriv)
+    LIBRARY_NAME = freebl
   endif
 endif
 
@@ -105,6 +136,7 @@ CSRCS = \
 	chacha20poly1305.c \
 	cts.c \
 	ctr.c \
+	fipsfreebl.c \
 	gcm.c \
 	hmacct.c \
 	rijndael.c \

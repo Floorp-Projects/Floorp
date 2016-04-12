@@ -12,7 +12,7 @@ LIBRARY_NAME = nssdbm
 LIBRARY_VERSION = 3
 MAPFILE = $(OBJDIR)/nssdbm.def
 
-DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DLG_LIB_NAME=\"$(notdir $(SHARED_LIBRARY))\"
 
 CSRCS = \
 	dbmshim.c \
@@ -21,6 +21,7 @@ CSRCS = \
 	lgcreate.c \
 	lgdestroy.c \
 	lgfind.c \
+	lgfips.c \
 	lginit.c \
 	lgutil.c \
 	lowcert.c \

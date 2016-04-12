@@ -83,7 +83,7 @@
 /*
  * this uses the loader weak attribute. it works automatically, but once
  * freebl is loaded, the symbols are 'fixed' (later loading of NSPR or 
- * libutil will not resolve these symbols.
+ * libutil will not resolve these symbols).
  */
 
 #define STUB_DECLARE(ret, fn,  args) \
@@ -116,6 +116,7 @@ STUB_DECLARE(void *,PORT_ZAlloc_Util,(size_t len));
 STUB_DECLARE(void,PORT_ZFree_Util,(void *ptr, size_t len));
 
 STUB_DECLARE(void,PR_Assert,(const char *s, const char *file, PRIntn ln));
+STUB_DECLARE(PRStatus,PR_Access,(const char *name, PRAccessHow how));
 STUB_DECLARE(PRStatus,PR_CallOnce,(PRCallOnceType *once, PRCallOnceFN func));
 STUB_DECLARE(PRStatus,PR_Close,(PRFileDesc *fd));
 STUB_DECLARE(void,PR_DestroyLock,(PRLock *lock));
@@ -342,6 +343,28 @@ PR_Seek_stub(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence)
     return lseek(*lfd, offset, lwhence);
 }
 
+PRStatus PR_Access_stub(const char *name, PRAccessHow how)
+{
+    int mode = F_OK;
+    int rv;
+    STUB_SAFE_CALL2(PR_Access, name, how);
+    switch (how) {
+    case PR_ACCESS_WRITE_OK:
+	mode = W_OK;
+	break;
+    case PR_ACCESS_READ_OK:
+	mode = R_OK;
+	break;
+    /* assume F_OK for all others */
+    default:
+	break;
+    }
+    rv = access(name, mode);
+    if (rv == 0) {
+	return PR_SUCCESS;
+    }
+    return PR_FAILURE;
+}
 
 /*
  * library 
@@ -567,6 +590,7 @@ freebl_InitNSPR(void *lib)
     STUB_FETCH_FUNCTION(PR_Seek);
     STUB_FETCH_FUNCTION(PR_GetLibraryFilePathname);
     STUB_FETCH_FUNCTION(PR_Assert);
+    STUB_FETCH_FUNCTION(PR_Access);
     STUB_FETCH_FUNCTION(PR_Sleep);
     STUB_FETCH_FUNCTION(PR_CallOnce);
     STUB_FETCH_FUNCTION(PR_NewCondVar);

@@ -138,7 +138,7 @@ rsa_build_from_primes(const mp_int *p, const mp_int *q,
     CHECK_MPI_OK( mp_sub_d(p, 1, &psub1) );
     CHECK_MPI_OK( mp_sub_d(q, 1, &qsub1) );
     if (needPublicExponent || needPrivateExponent) {
-	CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
+	CHECK_MPI_OK( mp_lcm(&psub1, &qsub1, &phi) );
 	/* 3.  Compute d = e**-1 mod(phi) */
 	/*     or      e = d**-1 mod(phi) as necessary */
 	if (needPublicExponent) {
@@ -226,6 +226,45 @@ cleanup:
 }
 
 /*
+ *  make sure the key components meet fips186 requirements.
+ */
+static PRBool
+rsa_fips186_verify(mp_int *p, mp_int *q, mp_int *d, int keySizeInBits)
+{
+    mp_int pq_diff;
+    mp_err   err = MP_OKAY;
+    PRBool ret=PR_FALSE;
+
+    if (keySizeInBits < 250) {
+ 	/* not a valid FIPS length, no point in our other tests */
+	/* if you are here, and in FIPS mode, you are outside the security 
+  	 * policy */
+	return PR_TRUE;
+    }
+
+    /* p & q are already known to be greater then sqrt(2)*2^(keySize/2-1) */
+    /* we also know that gcd(p-1,e) = 1 and gcd(q-1,e) = 1 because the 
+     * mp_invmod() function will fail. */
+    /* now check p-q > 2^(keysize/2-100) */
+    MP_DIGITS(&pq_diff) = 0;
+    CHECK_MPI_OK( mp_init(&pq_diff) );
+    /* NSS always has p > q, so we know pq_diff is positive */
+    CHECK_MPI_OK( mp_sub(p,q,&pq_diff) );
+    if ((unsigned)mpl_significant_bits(&pq_diff) < (keySizeInBits/2 - 100)) {
+	goto cleanup;
+    }
+    /* now verify d is large enough*/
+    if ((unsigned)mpl_significant_bits(d) < (keySizeInBits/2)) {
+	goto cleanup;
+    }
+    ret = PR_TRUE;
+
+cleanup:
+    mp_clear(&pq_diff);
+    return ret;
+}
+
+/*
 ** Generate and return a new RSA public and private key.
 **	Both keys are encoded in a single RSAPrivateKey structure.
 **	"cx" is the random number generator context
@@ -241,6 +280,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     unsigned int primeLen;
     mp_int p, q, e, d;
     int kiter;
+    int max_attempts;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
     int prerr = 0;
@@ -281,6 +321,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     /* 3.  Set the public exponent */
     SECITEM_TO_MPINT(*publicExponent, &e);
     kiter = 0;
+    max_attempts = 5*(keySizeInBits/2); /* FIPS 186-4 B.3.3 steps 4.7 and 5.8 */
     do {
 	prerr = 0;
 	PORT_SetError(0);
@@ -298,12 +339,17 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
 			&e, PR_FALSE,  /* needPublicExponent=false */
 			&d, PR_TRUE,   /* needPrivateExponent=true */
 			key, keySizeInBits);
-	if (rv == SECSuccess)
-	    break; /* generated two good primes */
-	prerr = PORT_GetError();
+	if (rv == SECSuccess) {
+	    if (rsa_fips186_verify(&p, &q, &d, keySizeInBits) ){
+		break;
+	    }
+	    prerr = SEC_ERROR_NEED_RANDOM; /* retry with different values */
+	} else {
+	    prerr = PORT_GetError();
+	}
 	kiter++;
 	/* loop until have primes */
-    } while (prerr == SEC_ERROR_NEED_RANDOM && kiter < MAX_KEY_GEN_ATTEMPTS);
+    } while (prerr == SEC_ERROR_NEED_RANDOM && kiter < max_attempts);
     if (prerr)
 	goto cleanup;
 cleanup:

@@ -1020,7 +1020,7 @@ __expand_table(HTAB *hashp)
             hashp->DSIZE = dirsize << 1;
         }
         if ((hashp->dir[new_segnum] =
-                 (SEGMENT)calloc((size_t)hashp->SGSIZE, sizeof(SEGMENT))) == NULL)
+                 (SEGMENT)calloc((size_t)hashp->SGSIZE, sizeof(BUFHEAD *))) == NULL)
             return (-1);
         hashp->exsegs++;
         hashp->nsegs++;
@@ -1091,13 +1091,13 @@ alloc_segs(
     register SEGMENT store;
 
     if ((hashp->dir =
-             (SEGMENT *)calloc((size_t)hashp->DSIZE, sizeof(SEGMENT *))) == NULL) {
+             (SEGMENT *)calloc((size_t)hashp->DSIZE, sizeof(SEGMENT))) == NULL) {
         errno = ENOMEM;
         return (-1);
     }
     /* Allocate segments */
     if ((store =
-             (SEGMENT)calloc((size_t)nsegs << hashp->SSHIFT, sizeof(SEGMENT))) == NULL) {
+             (SEGMENT)calloc((size_t)nsegs << hashp->SSHIFT, sizeof(BUFHEAD *))) == NULL) {
         errno = ENOMEM;
         return (-1);
     }

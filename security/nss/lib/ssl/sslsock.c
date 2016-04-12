@@ -229,9 +229,6 @@ ssl_DupSocket(sslSocket *os)
         ss->dbHandle = os->dbHandle;
 
         /* copy ssl2&3 policy & prefs, even if it's not selected (yet) */
-        ss->allowedByPolicy = os->allowedByPolicy;
-        ss->maybeAllowedByPolicy = os->maybeAllowedByPolicy;
-        ss->chosenPreference = os->chosenPreference;
         PORT_Memcpy(ss->cipherSuites, os->cipherSuites, sizeof os->cipherSuites);
         PORT_Memcpy(ss->ssl3.dtlsSRTPCiphers, os->ssl3.dtlsSRTPCiphers,
                     sizeof(PRUint16) * os->ssl3.dtlsSRTPCipherCount);
@@ -256,18 +253,6 @@ ssl_DupSocket(sslSocket *os)
             ss->ssl3.dheGroups = NULL;
         }
 
-        if (os->cipherSpecs) {
-            ss->cipherSpecs = (unsigned char *)PORT_Alloc(os->sizeCipherSpecs);
-            if (ss->cipherSpecs)
-                PORT_Memcpy(ss->cipherSpecs, os->cipherSpecs,
-                            os->sizeCipherSpecs);
-            ss->sizeCipherSpecs = os->sizeCipherSpecs;
-            ss->preferredCipher = os->preferredCipher;
-        } else {
-            ss->cipherSpecs = NULL; /* produced lazily */
-            ss->sizeCipherSpecs = 0;
-            ss->preferredCipher = NULL;
-        }
         if (ss->opt.useSecurity) {
             /* This int should be SSLKEAType, but CC on Irix complains,
              * during the for loop.
@@ -381,17 +366,12 @@ ssl_DestroySocketContents(sslSocket *ss)
 
     PORT_Free(ss->saveBuf.buf);
     PORT_Free(ss->pendingBuf.buf);
-    ssl_DestroyGather(&ss->gs);
+    ssl3_DestroyGather(&ss->gs);
 
     if (ss->peerID != NULL)
         PORT_Free(ss->peerID);
     if (ss->url != NULL)
         PORT_Free((void *)ss->url); /* CONST */
-    if (ss->cipherSpecs) {
-        PORT_Free(ss->cipherSpecs);
-        ss->cipherSpecs = NULL;
-        ss->sizeCipherSpecs = 0;
-    }
 
     /* Clean up server configuration */
     for (i = kt_null; i < kt_kea_size; i++) {
@@ -557,7 +537,7 @@ ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
             return;
         }
     }
-    if (SSL3_ALL_VERSIONS_DISABLED(vrange)) {
+    if (SSL_ALL_VERSIONS_DISABLED(vrange)) {
         if (on) {
             vrange->min = SSL_LIBRARY_VERSION_TLS_1_0;
             vrange->max = SSL_LIBRARY_VERSION_TLS_1_0;
@@ -594,7 +574,7 @@ ssl_EnableSSL3(SSLVersionRange *vrange, PRBool on)
             return;
         }
     }
-    if (SSL3_ALL_VERSIONS_DISABLED(vrange)) {
+    if (SSL_ALL_VERSIONS_DISABLED(vrange)) {
         if (on) {
             vrange->min = SSL_LIBRARY_VERSION_3_0;
             vrange->max = SSL_LIBRARY_VERSION_3_0;
@@ -686,12 +666,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
                 break;
             }
             ssl_EnableTLS(&ss->vrange, on);
-            ss->preferredCipher = NULL;
-            if (ss->cipherSpecs) {
-                PORT_Free(ss->cipherSpecs);
-                ss->cipherSpecs = NULL;
-                ss->sizeCipherSpecs = 0;
-            }
             break;
 
         case SSL_ENABLE_SSL3:
@@ -703,39 +677,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
                 break;
             }
             ssl_EnableSSL3(&ss->vrange, on);
-            ss->preferredCipher = NULL;
-            if (ss->cipherSpecs) {
-                PORT_Free(ss->cipherSpecs);
-                ss->cipherSpecs = NULL;
-                ss->sizeCipherSpecs = 0;
-            }
-            break;
-
-        case SSL_ENABLE_SSL2:
-            if (IS_DTLS(ss)) {
-                if (on) {
-                    PORT_SetError(SEC_ERROR_INVALID_ARGS);
-                    rv = SECFailure; /* not allowed */
-                }
-                break;
-            }
-            if (on) {
-                /* don't turn it on if ssl2 disallowed by by policy */
-                if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
-                                                    SSL_LIBRARY_VERSION_2)) {
-                    break;
-                }
-            }
-            ss->opt.enableSSL2 = on;
-            if (on) {
-                ss->opt.v2CompatibleHello = on;
-            }
-            ss->preferredCipher = NULL;
-            if (ss->cipherSpecs) {
-                PORT_Free(ss->cipherSpecs);
-                ss->cipherSpecs = NULL;
-                ss->sizeCipherSpecs = 0;
-            }
             break;
 
         case SSL_NO_CACHE:
@@ -748,20 +689,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
                 rv = SECFailure;
             }
             ss->opt.fdx = on;
-            break;
-
-        case SSL_V2_COMPATIBLE_HELLO:
-            if (IS_DTLS(ss)) {
-                if (on) {
-                    PORT_SetError(SEC_ERROR_INVALID_ARGS);
-                    rv = SECFailure; /* not allowed */
-                }
-                break;
-            }
-            ss->opt.v2CompatibleHello = on;
-            if (!on) {
-                ss->opt.enableSSL2 = on;
-            }
             break;
 
         case SSL_ROLLBACK_DETECTION:
@@ -933,17 +860,11 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
         case SSL_ENABLE_SSL3:
             on = ss->vrange.min == SSL_LIBRARY_VERSION_3_0;
             break;
-        case SSL_ENABLE_SSL2:
-            on = ss->opt.enableSSL2;
-            break;
         case SSL_NO_CACHE:
             on = ss->opt.noCache;
             break;
         case SSL_ENABLE_FDX:
             on = ss->opt.fdx;
-            break;
-        case SSL_V2_COMPATIBLE_HELLO:
-            on = ss->opt.v2CompatibleHello;
             break;
         case SSL_ROLLBACK_DETECTION:
             on = ss->opt.detectRollBack;
@@ -1050,17 +971,11 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
         case SSL_ENABLE_SSL3:
             on = versions_defaults_stream.min == SSL_LIBRARY_VERSION_3_0;
             break;
-        case SSL_ENABLE_SSL2:
-            on = ssl_defaults.enableSSL2;
-            break;
         case SSL_NO_CACHE:
             on = ssl_defaults.noCache;
             break;
         case SSL_ENABLE_FDX:
             on = ssl_defaults.fdx;
-            break;
-        case SSL_V2_COMPATIBLE_HELLO:
-            on = ssl_defaults.v2CompatibleHello;
             break;
         case SSL_ROLLBACK_DETECTION:
             on = ssl_defaults.detectRollBack;
@@ -1189,20 +1104,6 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
             ssl_EnableSSL3(&versions_defaults_stream, on);
             break;
 
-        case SSL_ENABLE_SSL2:
-            if (on) {
-                /* don't turn it on if ssl2 disallowed by by policy */
-                if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
-                                                    SSL_LIBRARY_VERSION_2)) {
-                    break;
-                }
-            }
-            ssl_defaults.enableSSL2 = on;
-            if (on) {
-                ssl_defaults.v2CompatibleHello = on;
-            }
-            break;
-
         case SSL_NO_CACHE:
             ssl_defaults.noCache = on;
             break;
@@ -1213,13 +1114,6 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
                 return SECFailure;
             }
             ssl_defaults.fdx = on;
-            break;
-
-        case SSL_V2_COMPATIBLE_HELLO:
-            ssl_defaults.v2CompatibleHello = on;
-            if (!on) {
-                ssl_defaults.enableSSL2 = on;
-            }
             break;
 
         case SSL_ROLLBACK_DETECTION:
@@ -1365,8 +1259,6 @@ ssl_CipherPolicySet(PRInt32 which, PRInt32 policy)
 
     if (ssl_IsRemovedCipherSuite(which)) {
         rv = SECSuccess;
-    } else if (SSL_IS_SSL2_CIPHER(which)) {
-        rv = ssl2_SetPolicy(which, policy);
     } else {
         rv = ssl3_SetPolicy((ssl3CipherSuite)which, policy);
     }
@@ -1395,8 +1287,6 @@ SSL_CipherPolicyGet(PRInt32 which, PRInt32 *oPolicy)
     if (ssl_IsRemovedCipherSuite(which)) {
         *oPolicy = SSL_NOT_ALLOWED;
         rv = SECSuccess;
-    } else if (SSL_IS_SSL2_CIPHER(which)) {
-        rv = ssl2_GetPolicy(which, oPolicy);
     } else {
         rv = ssl3_GetPolicy((ssl3CipherSuite)which, oPolicy);
     }
@@ -1426,20 +1316,13 @@ SSL_EnableCipher(long which, PRBool enabled)
 SECStatus
 ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
 {
-    SECStatus rv = SECSuccess;
-
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;
     if (enabled && ssl_defaults.noStepDown && SSL_IsExportCipherSuite(which)) {
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
         return SECFailure;
     }
-    if (SSL_IS_SSL2_CIPHER(which)) {
-        rv = ssl2_CipherPrefSetDefault(which, enabled);
-    } else {
-        rv = ssl3_CipherPrefSetDefault((ssl3CipherSuite)which, enabled);
-    }
-    return rv;
+    return ssl3_CipherPrefSetDefault((ssl3CipherSuite)which, enabled);
 }
 
 SECStatus
@@ -1465,8 +1348,6 @@ SSL_CipherPrefGetDefault(PRInt32 which, PRBool *enabled)
     if (ssl_IsRemovedCipherSuite(which)) {
         *enabled = PR_FALSE;
         rv = SECSuccess;
-    } else if (SSL_IS_SSL2_CIPHER(which)) {
-        rv = ssl2_CipherPrefGetDefault(which, enabled);
     } else {
         rv = ssl3_CipherPrefGetDefault((ssl3CipherSuite)which, enabled);
     }
@@ -1476,7 +1357,6 @@ SSL_CipherPrefGetDefault(PRInt32 which, PRBool *enabled)
 SECStatus
 SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
 {
-    SECStatus rv;
     sslSocket *ss = ssl_FindSocket(fd);
 
     if (!ss) {
@@ -1489,12 +1369,7 @@ SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
         return SECFailure;
     }
-    if (SSL_IS_SSL2_CIPHER(which)) {
-        rv = ssl2_CipherPrefSet(ss, which, enabled);
-    } else {
-        rv = ssl3_CipherPrefSet(ss, (ssl3CipherSuite)which, enabled);
-    }
-    return rv;
+    return ssl3_CipherPrefSet(ss, (ssl3CipherSuite)which, enabled);
 }
 
 SECStatus
@@ -1515,8 +1390,6 @@ SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 which, PRBool *enabled)
     if (ssl_IsRemovedCipherSuite(which)) {
         *enabled = PR_FALSE;
         rv = SECSuccess;
-    } else if (SSL_IS_SSL2_CIPHER(which)) {
-        rv = ssl2_CipherPrefGet(ss, which, enabled);
     } else {
         rv = ssl3_CipherPrefGet(ss, (ssl3CipherSuite)which, enabled);
     }
@@ -2303,10 +2176,6 @@ SSL_PeerSignedCertTimestamps(PRFileDesc *fd)
         return NULL;
     }
 
-    if (ss->sec.ci.sid->version < SSL_LIBRARY_VERSION_3_0) {
-        PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
-        return NULL;
-    }
     return &ss->sec.ci.sid->u.ssl3.signedCertTimestamps;
 }
 
@@ -2539,10 +2408,10 @@ ssl_Accept(PRFileDesc *fd, PRNetAddr *sockaddr, PRIntervalTime timeout)
     */
     if (ns->opt.useSecurity) {
         if (ns->opt.handshakeAsClient) {
-            ns->handshake = ssl2_BeginClientHandshake;
+            ns->handshake = ssl_BeginClientHandshake;
             ss->handshaking = sslHandshakingAsClient;
         } else {
-            ns->handshake = ssl2_BeginServerHandshake;
+            ns->handshake = ssl_BeginServerHandshake;
             ss->handshaking = sslHandshakingAsServer;
         }
     }
@@ -2951,8 +2820,7 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
                 ** handshake has been sent.  So do NOT to poll on write
                 ** unless we did false start.
                 */
-                if (!(ss->version >= SSL_LIBRARY_VERSION_3_0 &&
-                      ss->ssl3.hs.canFalseStart)) {
+                if (!ss->ssl3.hs.canFalseStart) {
                     new_flags ^= PR_POLL_WRITE; /* don't select on write. */
                 }
                 new_flags |= PR_POLL_READ; /* do    select on read. */
@@ -2966,8 +2834,7 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
         new_flags |= PR_POLL_WRITE;         /* also select on write. */
     }
 
-    if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
-        ss->ssl3.hs.restartTarget != NULL) {
+    if (ss->ssl3.hs.restartTarget != NULL) {
         /* Read and write will block until the asynchronous callback completes
          * (e.g. until SSL_AuthCertificateComplete is called), so don't tell
          * the caller to poll the socket unless there is pending write data.
@@ -3069,7 +2936,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
     const PRInt32 first_len = sslFirstBufSize;
     const PRInt32 limit = sslCopyLimit;
     PRBool blocking;
-    PRIOVec myIov = { 0, 0 };
+    PRIOVec myIov;
     char buf[MAX_FRAGMENT_LENGTH];
 
     if (vectors < 0) {
@@ -3582,9 +3449,6 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
         ss->rTimeout = PR_INTERVAL_NO_TIMEOUT;
         ss->wTimeout = PR_INTERVAL_NO_TIMEOUT;
         ss->cTimeout = PR_INTERVAL_NO_TIMEOUT;
-        ss->cipherSpecs = NULL;
-        ss->sizeCipherSpecs = 0; /* produced lazily */
-        ss->preferredCipher = NULL;
         ss->url = NULL;
 
         for (i = kt_null; i < kt_kea_size; i++) {
@@ -3614,7 +3478,6 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
         ss->ephemeralECDHKeyPair = NULL;
 
         ssl_ChooseOps(ss);
-        ssl2_InitSocketPolicy(ss);
         ssl3_InitSocketPolicy(ss);
         PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
         PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
@@ -3627,7 +3490,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
         status = ssl_CreateSecurityInfo(ss);
         if (status != SECSuccess)
             goto loser;
-        status = ssl_InitGather(&ss->gs);
+        status = ssl3_InitGather(&ss->gs);
         if (status != SECSuccess) {
         loser:
             ssl_DestroySocketContents(ss);

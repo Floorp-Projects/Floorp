@@ -36,10 +36,10 @@ typedef enum {
 
 /* void data in ZZList's contain JAR_Item type */
 typedef struct JAR_Item_ {
-    char *pathname;	   /* relative. inside zip file */
-    jarType type;	   /* various types */
-    size_t size;	   /* size of data below */
-    void *data; 	   /* totally opaque */
+    char *pathname; /* relative. inside zip file */
+    jarType type;   /* various types */
+    size_t size;    /* size of data below */
+    void *data;     /* totally opaque */
 } JAR_Item;
 
 /* hashes */
@@ -51,9 +51,9 @@ typedef enum {
 
 typedef struct JAR_Digest_ {
     jarHash md5_status;
-    unsigned char md5 [MD5_LENGTH];
+    unsigned char md5[MD5_LENGTH];
     jarHash sha1_status;
-    unsigned char sha1 [SHA1_LENGTH];
+    unsigned char sha1[SHA1_LENGTH];
 } JAR_Digest;
 
 /* physical archive formats */
@@ -68,35 +68,35 @@ typedef enum {
 
 struct JAR_;
 
-typedef int jar_settable_callback_fn(int status, struct JAR_ *jar, 
-                                     const char *metafile, char *pathname, 
-				     char *errortext);
+typedef int jar_settable_callback_fn(int status, struct JAR_ *jar,
+                                     const char *metafile, char *pathname,
+                                     char *errortext);
 
 /* jar object */
 typedef struct JAR_ {
-    jarArch format;	  /* physical archive format */
+    jarArch format; /* physical archive format */
 
-    char *url;		  /* Where it came from */
-    char *filename;	  /* Disk location */
-    FILE *fp;		  /* For multiple extractions */
+    char *url;      /* Where it came from */
+    char *filename; /* Disk location */
+    FILE *fp;       /* For multiple extractions */
     /* JAR_FILE */
 
     /* various linked lists */
-    ZZList *manifest;	  /* Digests of MF sections */
-    ZZList *hashes;	  /* Digests of actual signed files */
-    ZZList *phy;	  /* Physical layout of JAR file */
-    ZZList *metainfo;	  /* Global metainfo */
+    ZZList *manifest; /* Digests of MF sections */
+    ZZList *hashes;   /* Digests of actual signed files */
+    ZZList *phy;      /* Physical layout of JAR file */
+    ZZList *metainfo; /* Global metainfo */
 
-    JAR_Digest *globalmeta;  /* digest of .MF global portion */
+    JAR_Digest *globalmeta; /* digest of .MF global portion */
 
     /* Below will change to a linked list to support multiple sigs */
-    int pkcs7;		  /* Enforced opaqueness */
-    int valid;		  /* PKCS7 signature validated */
+    int pkcs7; /* Enforced opaqueness */
+    int valid; /* PKCS7 signature validated */
 
-    ZZList *signers;	  /* the above, per signer */
+    ZZList *signers; /* the above, per signer */
 
     /* Window context, very necessary for PKCS11 now */
-    void *mw;		  /* MWContext window context */
+    void *mw; /* MWContext window context */
 
     /* Signal callback function */
     jar_settable_callback_fn *signal;
@@ -111,20 +111,20 @@ typedef struct JAR_ {
  *
  */
 typedef struct JAR_Context_ {
-    JAR *jar;		  /* Jar we are searching */
-    char *pattern;	  /* Regular expression */
-    jarType finding;	  /* Type of item to find */
-    ZZLink *next;	  /* Next item in find */
-    ZZLink *nextsign;	  /* Next signer, sometimes */
+    JAR *jar;         /* Jar we are searching */
+    char *pattern;    /* Regular expression */
+    jarType finding;  /* Type of item to find */
+    ZZLink *next;     /* Next item in find */
+    ZZLink *nextsign; /* Next signer, sometimes */
 } JAR_Context;
 
 typedef struct JAR_Signer_ {
-    int pkcs7;		  /* Enforced opaqueness */
-    int valid;		  /* PKCS7 signature validated */
-    char *owner;	  /* name of .RSA file */
-    JAR_Digest *digest;   /* of .SF file */
-    ZZList *sf; 	  /* Linked list of .SF file contents */
-    ZZList *certs;	  /* Signing information */
+    int pkcs7;          /* Enforced opaqueness */
+    int valid;          /* PKCS7 signature validated */
+    char *owner;        /* name of .RSA file */
+    JAR_Digest *digest; /* of .SF file */
+    ZZList *sf;         /* Linked list of .SF file contents */
+    ZZList *certs;      /* Signing information */
 } JAR_Signer;
 
 /* Meta informaton, or "policy", from the manifest file.
@@ -151,7 +151,6 @@ typedef struct JAR_Cert_ {
     CERTCertificate *cert;
 } JAR_Cert;
 
-
 /* certificate stuff */
 typedef enum {
     jarCertCompany = 1,
@@ -164,7 +163,7 @@ typedef enum {
 } jarCert;
 
 /* callback types */
-#define JAR_CB_SIGNAL	1
+#define JAR_CB_SIGNAL 1
 
 /*
  *  This is the base for the JAR error codes. It will
@@ -173,40 +172,40 @@ typedef enum {
  *
  */
 #ifndef SEC_ERR_BASE
-#define SEC_ERR_BASE	    (-0x2000)
+#define SEC_ERR_BASE (-0x2000)
 #endif
 
-#define JAR_BASE	SEC_ERR_BASE + 300
+#define JAR_BASE SEC_ERR_BASE + 300
 
 /* Jar specific error definitions */
 
-#define JAR_ERR_GENERAL 	(JAR_BASE + 1)
-#define JAR_ERR_FNF		(JAR_BASE + 2)
-#define JAR_ERR_CORRUPT     	(JAR_BASE + 3)
-#define JAR_ERR_MEMORY	    	(JAR_BASE + 4)
-#define JAR_ERR_DISK	    	(JAR_BASE + 5)
-#define JAR_ERR_ORDER		(JAR_BASE + 6)
-#define JAR_ERR_SIG		(JAR_BASE + 7)
-#define JAR_ERR_METADATA	(JAR_BASE + 8)
-#define JAR_ERR_ENTRY	    	(JAR_BASE + 9)
-#define JAR_ERR_HASH	    	(JAR_BASE + 10)
-#define JAR_ERR_PK7		(JAR_BASE + 11)
-#define JAR_ERR_PNF		(JAR_BASE + 12)
+#define JAR_ERR_GENERAL (JAR_BASE + 1)
+#define JAR_ERR_FNF (JAR_BASE + 2)
+#define JAR_ERR_CORRUPT (JAR_BASE + 3)
+#define JAR_ERR_MEMORY (JAR_BASE + 4)
+#define JAR_ERR_DISK (JAR_BASE + 5)
+#define JAR_ERR_ORDER (JAR_BASE + 6)
+#define JAR_ERR_SIG (JAR_BASE + 7)
+#define JAR_ERR_METADATA (JAR_BASE + 8)
+#define JAR_ERR_ENTRY (JAR_BASE + 9)
+#define JAR_ERR_HASH (JAR_BASE + 10)
+#define JAR_ERR_PK7 (JAR_BASE + 11)
+#define JAR_ERR_PNF (JAR_BASE + 12)
 
 /* Function declarations */
 
-extern JAR *JAR_new (void);
+extern JAR *JAR_new(void);
 
-extern void PR_CALLBACK JAR_destroy (JAR *jar);
+extern void PR_CALLBACK JAR_destroy(JAR *jar);
 
-extern char *JAR_get_error (int status);
+extern char *JAR_get_error(int status);
 
 extern int JAR_set_callback(int type, JAR *jar, jar_settable_callback_fn *fn);
 
-extern void 
-JAR_init_callbacks(char *(*string_cb)(int), 
-                   void *(*find_cx)(void), 
-		   void *(*init_cx)(void) );
+extern void
+JAR_init_callbacks(char *(*string_cb)(int),
+                   void *(*find_cx)(void),
+                   void *(*init_cx)(void));
 
 /*
  *  JAR_set_context
@@ -220,7 +219,7 @@ JAR_init_callbacks(char *(*string_cb)(int),
  *  and one will be chosen for you.
  *
  */
-int JAR_set_context (JAR *jar, void /*MWContext*/ *mw);
+int JAR_set_context(JAR *jar, void /*MWContext*/ *mw);
 
 /*
  *  Iterative operations
@@ -236,17 +235,17 @@ int JAR_set_context (JAR *jar, void /*MWContext*/ *mw);
  *     JAR_Item *item;
  *     JAR_find (jar, "*.class", jarTypeMF);
  *     while (JAR_find_next (jar, &item) >= 0)
- *	 { do stuff }
+ *   { do stuff }
  *
  */
 
 /* Replacement functions with an external context */
 
-extern JAR_Context *JAR_find (JAR *jar, char *pattern, jarType type);
+extern JAR_Context *JAR_find(JAR *jar, char *pattern, jarType type);
 
-extern int JAR_find_next (JAR_Context *ctx, JAR_Item **it);
+extern int JAR_find_next(JAR_Context *ctx, JAR_Item **it);
 
-extern void JAR_find_end (JAR_Context *ctx);
+extern void JAR_find_end(JAR_Context *ctx);
 
 /*
  *  Function to parse manifest file:
@@ -273,7 +272,7 @@ extern void JAR_find_end (JAR_Context *ctx);
  *
  */
 
-extern int 
+extern int
 JAR_parse_manifest(JAR *jar, char *raw_manifest, long length, const char *path,
                    const char *url);
 
@@ -283,13 +282,13 @@ JAR_parse_manifest(JAR *jar, char *raw_manifest, long length, const char *path,
  *
  */
 
-extern JAR_Digest * PR_CALLBACK 
+extern JAR_Digest *PR_CALLBACK
 JAR_calculate_digest(void *data, long length);
 
-extern int PR_CALLBACK 
+extern int PR_CALLBACK
 JAR_verify_digest(JAR *jar, const char *name, JAR_Digest *dig);
 
-extern int 
+extern int
 JAR_digest_file(char *filename, JAR_Digest *dig);
 
 /*
@@ -309,18 +308,18 @@ JAR_digest_file(char *filename, JAR_Digest *dig);
  *
  */
 
-extern int 
-JAR_get_metainfo(JAR *jar, char *name, char *header, void **info, 
+extern int
+JAR_get_metainfo(JAR *jar, char *name, char *header, void **info,
                  unsigned long *length);
 
-extern char *JAR_get_filename (JAR *jar);
+extern char *JAR_get_filename(JAR *jar);
 
-extern char *JAR_get_url (JAR *jar);
+extern char *JAR_get_url(JAR *jar);
 
 /* save the certificate with this fingerprint in persistent
    storage, somewhere, for retrieval in a future session when there
    is no corresponding JAR structure. */
-extern int PR_CALLBACK 
+extern int PR_CALLBACK
 JAR_stash_cert(JAR *jar, long keylen, void *key);
 
 /* retrieve a certificate presumably stashed with the above
@@ -341,14 +340,14 @@ JAR_fetch_cert(long length, void *key);
  *  a list of filenames and certificates from traversing the linked list.
  *
  */
-extern int 
+extern int
 JAR_pass_archive(JAR *jar, jarArch format, char *filename, const char *url);
 
 /*
  * Same thing, but don't check signatures
  */
-extern int 
-JAR_pass_archive_unverified(JAR *jar, jarArch format, char *filename, 
+extern int
+JAR_pass_archive_unverified(JAR *jar, jarArch format, char *filename,
                             const char *url);
 
 /*
@@ -359,7 +358,7 @@ JAR_pass_archive_unverified(JAR *jar, jarArch format, char *filename,
  *  open between multiple calls to JAR_verify_extract.
  *
  */
-extern int 
+extern int
 JAR_verified_extract(JAR *jar, char *path, char *outpath);
 
 /*
@@ -367,7 +366,7 @@ JAR_verified_extract(JAR *jar, char *path, char *outpath);
  *  need to extract a manifest file or signature, etc.
  *
  */
-extern int 
+extern int
 JAR_extract(JAR *jar, char *path, char *outpath);
 
 #endif /* __JAR_h_ */
