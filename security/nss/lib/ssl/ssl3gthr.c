@@ -8,7 +8,60 @@
 #include "cert.h"
 #include "ssl.h"
 #include "sslimpl.h"
+#include "sslproto.h"
 #include "ssl3prot.h"
+
+struct ssl2GatherStr {
+    /* true when ssl3_GatherData encounters an SSLv2 handshake */
+    PRBool isV2;
+
+    /* number of bytes of padding appended to the message content */
+    PRUint8 padding;
+};
+
+typedef struct ssl2GatherStr ssl2Gather;
+
+/* Caller should hold RecvBufLock. */
+SECStatus
+ssl3_InitGather(sslGather *gs)
+{
+    SECStatus status;
+
+    gs->state = GS_INIT;
+    gs->writeOffset = 0;
+    gs->readOffset = 0;
+    gs->dtlsPacketOffset = 0;
+    gs->dtlsPacket.len = 0;
+    status = sslBuffer_Grow(&gs->buf, 4096);
+    return status;
+}
+
+/* Caller must hold RecvBufLock. */
+void
+ssl3_DestroyGather(sslGather *gs)
+{
+    if (gs) { /* the PORT_*Free functions check for NULL pointers. */
+        PORT_ZFree(gs->buf.buf, gs->buf.space);
+        PORT_Free(gs->inbuf.buf);
+        PORT_Free(gs->dtlsPacket.buf);
+    }
+}
+
+/* Checks whether a given buffer is likely an SSLv3 record header.  */
+PRBool
+ssl3_isLikelyV3Hello(const unsigned char *buf)
+{
+    /* Even if this was a V2 record header we couldn't possibly parse it
+     * correctly as the second bit denotes a vaguely-defined security escape. */
+    if (buf[0] & 0x40) {
+        return PR_TRUE;
+    }
+
+    /* Check for a typical V3 record header. */
+    return (PRBool)(buf[0] >= content_change_cipher_spec &&
+                    buf[0] <= content_application_data &&
+                    buf[1] == MSB(SSL_LIBRARY_VERSION_3_0));
+}
 
 /*
  * Attempt to read in an entire SSL3 record.
@@ -32,13 +85,14 @@
  *  (c) data (entire SSL3 record) has been received.
  */
 static int
-ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
+ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags, ssl2Gather *ssl2gs)
 {
     unsigned char *bp;
     unsigned char *lbp;
     int nb;
     int err;
     int rv = 1;
+    PRUint8 v2HdrLength = 0;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     if (gs->state == GS_INIT) {
@@ -92,17 +146,31 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
         /* have received entire record header, or entire record. */
         switch (gs->state) {
             case GS_HEADER:
-              /*
-              ** Have received SSL3 record header in gs->hdr.
-              ** Now extract the length of the following encrypted data,
-              ** and then read in the rest of the SSL3 record into gs->inbuf.
-              */
-                gs->remainder = (gs->hdr[3] << 8) | gs->hdr[4];
+                /* Check for SSLv2 handshakes. Always assume SSLv3 on clients,
+                 * support SSLv2 handshakes only when ssl2gs != NULL. */
+                if (!ssl2gs || ssl3_isLikelyV3Hello(gs->hdr)) {
+                    /* Should have an SSLv3 record header in gs->hdr. Extract
+                     * the length of the following encrypted data, and then
+                     * read in the rest of the SSL3 record into gs->inbuf. */
+                    gs->remainder = (gs->hdr[3] << 8) | gs->hdr[4];
+                } else {
+                    /* Probably an SSLv2 record header. No need to handle any
+                     * security escapes (gs->hdr[0] & 0x40) as we wouldn't get
+                     * here if one was set. See ssl3_isLikelyV3Hello(). */
+                    gs->remainder = ((gs->hdr[0] & 0x7f) << 8) | gs->hdr[1];
+                    ssl2gs->isV2 = PR_TRUE;
+                    v2HdrLength = 2;
 
-                /* This is the max fragment length for an encrypted fragment
-                ** plus the size of the record header.
-                */
-                if (gs->remainder > (MAX_FRAGMENT_LENGTH + 2048 + 5)) {
+                    /* Is it a 3-byte header with padding? */
+                    if (!(gs->hdr[0] & 0x80)) {
+                        ssl2gs->padding = gs->hdr[2];
+                        v2HdrLength++;
+                    }
+                }
+
+                /* This is the max length for an encrypted SSLv3+ fragment. */
+                if (!v2HdrLength &&
+                    gs->remainder > (MAX_FRAGMENT_LENGTH + 2048)) {
                     SSL3_SendAlert(ss, alert_fatal, unexpected_message);
                     gs->state = GS_INIT;
                     PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
@@ -120,12 +188,25 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
                     }
                     lbp = gs->inbuf.buf;
                 }
+
+                /* When we encounter an SSLv2 hello we've read 2 or 3 bytes too
+                 * many into the gs->hdr[] buffer. Copy them over into inbuf so
+                 * that we can properly process the hello record later. */
+                if (v2HdrLength) {
+                    gs->inbuf.len = 5 - v2HdrLength;
+                    PORT_Memcpy(lbp, gs->hdr + v2HdrLength, gs->inbuf.len);
+                    gs->remainder -= gs->inbuf.len;
+                    lbp += gs->inbuf.len;
+                }
+
                 break; /* End this case.  Continue around the loop. */
 
             case GS_DATA:
                 /*
                 ** SSL3 record has been completely received.
                 */
+                SSL_TRC(10, ("%d: SSL[%d]: got record of %d bytes",
+                             SSL_GETPID(), ss->fd, gs->inbuf.len));
                 gs->state = GS_INIT;
                 return 1;
         }
@@ -274,8 +355,8 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
 int
 ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 {
-    SSL3Ciphertext cText;
     int rv;
+    SSL3Ciphertext cText;
     PRBool keepGoing = PR_TRUE;
 
     SSL_TRC(30, ("ssl3_GatherCompleteHandshake"));
@@ -325,6 +406,15 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
              */
             rv = ssl3_HandleRecord(ss, NULL, &ss->gs.buf);
         } else {
+            /* State for SSLv2 client hello support. */
+            ssl2Gather ssl2gs = { PR_FALSE, 0 };
+            ssl2Gather *ssl2gs_ptr = NULL;
+
+            /* If we're a server and waiting for a client hello, accept v2. */
+            if (ss->sec.isServer && ss->ssl3.hs.ws == wait_client_hello) {
+                ssl2gs_ptr = &ssl2gs;
+            }
+
             /* bring in the next sslv3 record. */
             if (ss->recvdCloseNotify) {
                 /* RFC 5246 Section 7.2.1:
@@ -332,8 +422,11 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
                  */
                 return 0;
             }
+
             if (!IS_DTLS(ss)) {
-                rv = ssl3_GatherData(ss, &ss->gs, flags);
+                /* If we're a server waiting for a ClientHello then pass
+                 * ssl2gs to support SSLv2 ClientHello messages. */
+                rv = ssl3_GatherData(ss, &ss->gs, flags, ssl2gs_ptr);
             } else {
                 rv = dtls_GatherData(ss, &ss->gs, flags);
 
@@ -342,9 +435,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
                  * retransmit */
                 if (rv == SECFailure &&
                     (PORT_GetError() == PR_WOULD_BLOCK_ERROR)) {
-                    ssl_GetSSL3HandshakeLock(ss);
                     dtls_CheckTimer(ss);
-                    ssl_ReleaseSSL3HandshakeLock(ss);
                     /* Restore the error in case something succeeded */
                     PORT_SetError(PR_WOULD_BLOCK_ERROR);
                 }
@@ -354,31 +445,40 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
                 return rv;
             }
 
-            /* decipher it, and handle it if it's a handshake.
-             * If it's application data, ss->gs.buf will not be empty upon return.
-             * If it's a change cipher spec, alert, or handshake message,
-             * ss->gs.buf.len will be 0 when ssl3_HandleRecord returns SECSuccess.
-             */
-            cText.type = (SSL3ContentType)ss->gs.hdr[0];
-            cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
-
-            if (IS_DTLS(ss)) {
-                int i;
-
-                cText.version = dtls_DTLSVersionToTLSVersion(cText.version);
-                /* DTLS sequence number */
-                cText.seq_num.high = 0;
-                cText.seq_num.low = 0;
-                for (i = 0; i < 4; i++) {
-                    cText.seq_num.high <<= 8;
-                    cText.seq_num.low <<= 8;
-                    cText.seq_num.high |= ss->gs.hdr[3 + i];
-                    cText.seq_num.low |= ss->gs.hdr[7 + i];
+            if (ssl2gs.isV2) {
+                rv = ssl3_HandleV2ClientHello(ss, ss->gs.inbuf.buf,
+                                              ss->gs.inbuf.len,
+                                              ssl2gs.padding);
+                if (rv < 0) {
+                    return rv;
                 }
-            }
+            } else {
+                /* decipher it, and handle it if it's a handshake.
+                 * If it's application data, ss->gs.buf will not be empty upon return.
+                 * If it's a change cipher spec, alert, or handshake message,
+                 * ss->gs.buf.len will be 0 when ssl3_HandleRecord returns SECSuccess.
+                 */
+                cText.type = (SSL3ContentType)ss->gs.hdr[0];
+                cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
 
-            cText.buf = &ss->gs.inbuf;
-            rv = ssl3_HandleRecord(ss, &cText, &ss->gs.buf);
+                if (IS_DTLS(ss)) {
+                    int i;
+
+                    cText.version = dtls_DTLSVersionToTLSVersion(cText.version);
+                    /* DTLS sequence number */
+                    cText.seq_num.high = 0;
+                    cText.seq_num.low = 0;
+                    for (i = 0; i < 4; i++) {
+                        cText.seq_num.high <<= 8;
+                        cText.seq_num.low <<= 8;
+                        cText.seq_num.high |= ss->gs.hdr[3 + i];
+                        cText.seq_num.low |= ss->gs.hdr[7 + i];
+                    }
+                }
+
+                cText.buf = &ss->gs.inbuf;
+                rv = ssl3_HandleRecord(ss, &cText, &ss->gs.buf);
+            }
         }
         if (rv < 0) {
             return ss->recvdCloseNotify ? 0 : rv;
@@ -425,6 +525,10 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
         ssl_ReleaseSSL3HandshakeLock(ss);
     } while (keepGoing);
 
+    /* Service the DTLS timer so that the holddown timer eventually fires. */
+    if (IS_DTLS(ss)) {
+        dtls_CheckTimer(ss);
+    }
     ss->gs.readOffset = 0;
     ss->gs.writeOffset = ss->gs.buf.len;
     return 1;

@@ -54,8 +54,7 @@ int main(int argc, char **argv)
 		info.keaTypeName, info.authAlgorithmName, info.symCipherName, 
 		info.effectiveKeyBits, info.macAlgorithmName, 
 		enabled           ? "Enabled"     : "Disabled",
-		info.isFIPS       ? "FIPS" : 
-		  (SSL_IS_SSL2_CIPHER(info.cipherSuite) ? "SSL2" : ""),
+		info.isFIPS       ? "FIPS"        : "",
 		info.isExportable ? "Export"      : "Domestic",
 		info.nonStandard  ? "nonStandard" : "");
     }

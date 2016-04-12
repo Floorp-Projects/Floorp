@@ -14,6 +14,8 @@ struct CTRContextStr {
    void *context;
    unsigned char counter[MAX_BLOCK_SIZE];
    unsigned char buffer[MAX_BLOCK_SIZE];
+   unsigned char counterFirst[MAX_BLOCK_SIZE];  /* counter overlfow value */
+   PRBool checkWrap;				/*check for counter overflow*/
    unsigned long counterBits;
    unsigned int bufPtr;
 };

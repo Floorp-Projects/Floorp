@@ -20,6 +20,16 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (3) Include "component" configuration information. (OPTIONAL)       #
 #######################################################################
 
+ifdef NSS_NO_INIT_SUPPORT
+    DEFINES += -DNSS_NO_INIT_SUPPORT
+endif
+ifeq ($(OS_TARGET),Linux)
+ifeq ($(CPU_ARCH),ppc)
+ifdef USE_64
+    DEFINES += -DNSS_NO_INIT_SUPPORT
+endif # USE_64
+endif # ppc
+endif # Linux
 
 
 #######################################################################

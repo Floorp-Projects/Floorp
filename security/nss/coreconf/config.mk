@@ -174,6 +174,17 @@ ifdef NSS_PKIX_NO_LDAP
 DEFINES += -DNSS_PKIX_NO_LDAP
 endif
 
+# FIPS support requires startup tests to be executed at load time of shared modules.
+# For performance reasons, these tests are disabled by default.
+# When compiling binaries that must support FIPS mode, 
+# you should define NSS_FORCE_FIPS
+#
+# NSS_NO_INIT_SUPPORT is always defined on platforms that don't support
+# executing the startup tests at library load time.
+ifndef NSS_FORCE_FIPS
+DEFINES += -DNSS_NO_INIT_SUPPORT
+endif
+
 # Avoid building object leak test code for optimized library
 ifndef BUILD_OPT
 ifdef PKIX_OBJECT_LEAK_TEST

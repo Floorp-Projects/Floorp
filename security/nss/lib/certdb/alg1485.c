@@ -1398,14 +1398,13 @@ cert_GetCertificateEmailAddresses(CERTCertificate* cert)
     char* rawEmailAddr = NULL;
     char* addrBuf = NULL;
     char* pBuf = NULL;
-    PLArenaPool* tmpArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    PORTCheapArenaPool tmpArena;
     PRUint32 maxLen = 0;
     PRInt32 finalLen = 0;
     SECStatus rv;
     SECItem subAltName;
 
-    if (!tmpArena)
-        return addrBuf;
+    PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
 
     subAltName.data = NULL;
     maxLen = cert->derCert.len;
@@ -1413,35 +1412,37 @@ cert_GetCertificateEmailAddresses(CERTCertificate* cert)
     if (!maxLen)
         maxLen = 2000; /* a guess, should never happen */
 
-    pBuf = addrBuf = (char*)PORT_ArenaZAlloc(tmpArena, maxLen + 1);
+    pBuf = addrBuf = (char*)PORT_ArenaZAlloc(&tmpArena.arena, maxLen + 1);
     if (!addrBuf)
         goto loser;
 
-    rawEmailAddr =
-        CERT_GetNameElement(tmpArena, &cert->subject, SEC_OID_PKCS9_EMAIL_ADDRESS);
+    rawEmailAddr = CERT_GetNameElement(&tmpArena.arena, &cert->subject,
+                                       SEC_OID_PKCS9_EMAIL_ADDRESS);
     pBuf = appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
 
-    rawEmailAddr =
-        CERT_GetNameElement(tmpArena, &cert->subject, SEC_OID_RFC1274_MAIL);
+    rawEmailAddr = CERT_GetNameElement(&tmpArena.arena, &cert->subject,
+                                       SEC_OID_RFC1274_MAIL);
     pBuf = appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
 
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_SUBJECT_ALT_NAME, &subAltName);
     if (rv == SECSuccess && subAltName.data) {
         CERTGeneralName* nameList = NULL;
 
-        if (!!(nameList = CERT_DecodeAltNameExtension(tmpArena, &subAltName))) {
+        if (!!(nameList = CERT_DecodeAltNameExtension(&tmpArena.arena, &subAltName))) {
             CERTGeneralName* current = nameList;
             do {
                 if (current->type == certDirectoryName) {
                     rawEmailAddr =
-                        CERT_GetNameElement(tmpArena, &current->name.directoryName,
+                        CERT_GetNameElement(&tmpArena.arena,
+                                            &current->name.directoryName,
                                             SEC_OID_PKCS9_EMAIL_ADDRESS);
                     pBuf =
                         appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
 
                     rawEmailAddr =
-                        CERT_GetNameElement(
-                            tmpArena, &current->name.directoryName, SEC_OID_RFC1274_MAIL);
+                        CERT_GetNameElement(&tmpArena.arena,
+                                            &current->name.directoryName,
+                                            SEC_OID_RFC1274_MAIL);
                     pBuf =
                         appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
                 } else if (current->type == certRFC822Name) {
@@ -1464,8 +1465,7 @@ cert_GetCertificateEmailAddresses(CERTCertificate* cert)
         }
     }
 loser:
-    if (tmpArena)
-        PORT_FreeArena(tmpArena, PR_FALSE);
+    PORT_DestroyCheapArena(&tmpArena);
 
     return pBuf;
 }

@@ -77,7 +77,7 @@ ExportPublicKey(FILE *outFile, CERTCertificate *cert)
 
     if (!cert)
         return -1;
-    
+
     publicKey = CERT_ExtractPublicKey(cert);
     if (!publicKey)
         return -1;
@@ -86,17 +86,17 @@ ExportPublicKey(FILE *outFile, CERTCertificate *cert)
     SECKEY_DestroyPublicKey(publicKey);
     if (!item)
         return -1;
-    
+
     data = PL_Base64Encode((const char*)item->data, item->len, NULL);
     SECITEM_FreeItem(item, PR_TRUE);
     if (!data)
         return -1;
-    
+
     fputs("pubkey:\n", outFile);
     fputs(data, outFile);
     fputs("\n", outFile);
     PR_Free(data);
-    
+
     return 0;
 }
 
@@ -105,66 +105,86 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert)
 {
     SECItem data2sign;
     SECStatus rv;
-    char *data;
-    SECKEYPrivateKey *privKey;
     SECOidTag algID;
-    PLArenaPool *arena;
     CERTSignedData sd;
-    SECItem *result;
+    SECKEYPrivateKey *privKey = NULL;
+    char *data = NULL;
+    PLArenaPool *arena = NULL;
+    SECItem *result = NULL;
+    int returnValue = 0;
 
-    if (outFile == NULL || inFile == NULL || cert == NULL)
+    if (outFile == NULL || inFile == NULL || cert == NULL) {
         return -1;
+    }
 
     /* suck the file in */
     if (SECU_ReadDERFromFile(&data2sign, inFile, PR_FALSE,
-                             PR_FALSE) != SECSuccess)
+                             PR_FALSE) != SECSuccess) {
         return -1;
+    }
 
-    privKey = NULL;    
+    privKey = NULL;
     privKey = PK11_FindKeyByAnyCert(cert, NULL);
+    if (!privKey) {
+        returnValue = -1;
+        goto loser;
+    }
 
     algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, SEC_OID_SHA1);
-    if (algID == SEC_OID_UNKNOWN)
-        return -1;
-    
+    if (algID == SEC_OID_UNKNOWN) {
+        returnValue = -1;
+        goto loser;
+    }
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    
+
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    
+
     rv = SEC_SignData(&(sd.signature), data2sign.data, data2sign.len, privKey, algID);
     if (rv != SECSuccess) {
         fprintf (stderr, "Could not sign.\n");
-        return -1;
+        returnValue = -1;
+        goto loser;
     }
     sd.signature.len = sd.signature.len << 3;
-    
+
     rv = SECOID_SetAlgorithmID(arena, &sd.signatureAlgorithm, algID, 0);
     if (rv != SECSuccess) {
         fprintf (stderr, "Could not set alg id.\n");
-        return -1;
+        returnValue = -1;
+        goto loser;
     }
 
     result = SEC_ASN1EncodeItem(arena, NULL, &sd, CERTSignatureDataTemplate);
     SECITEM_FreeItem(&(sd.signature), PR_FALSE);
-    
+
     if (!result) {
         fprintf (stderr, "Could not encode.\n");
-        return -1;
+        returnValue = -1;
+        goto loser;
     }
 
     data = PL_Base64Encode((const char*)result->data, result->len, NULL);
-    if (!data)
-        return -1;
-    
+    if (!data){
+        returnValue = -1;
+        goto loser;
+    }
+
     fputs("signature:\n", outFile);
     fputs(data, outFile);
     fputs("\n", outFile);
     ExportPublicKey(outFile, cert);
-    
-    SECKEY_DestroyPrivateKey(privKey);
+
+loser:
+    if (privKey) {
+        SECKEY_DestroyPrivateKey(privKey);
+    }
+    if (data) {
+        PORT_Free(data);
+    }
     PORT_FreeArena(arena, PR_FALSE);
-    
-    return 0;
+
+    return returnValue;
 }
 
 int
