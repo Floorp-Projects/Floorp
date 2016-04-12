@@ -1549,9 +1549,16 @@ pref("media.gmp.decoder.h264", 2);
 // decode H.264.
 pref("media.gmp.trial-create.enabled", true);
 
-#ifdef MOZ_ADOBE_EME
+#if defined(MOZ_ADOBE_EME) || defined(MOZ_WIDEVINE_EME)
 pref("browser.eme.ui.enabled", true);
+#endif
+
+#ifdef MOZ_ADOBE_EME
 pref("media.gmp-eme-adobe.enabled", true);
+#endif
+
+#ifdef MOZ_WIDEVINE_EME
+pref("media.gmp-widevinecdm.enabled", true);
 #endif
 
 // Play with different values of the decay time and get telemetry,
