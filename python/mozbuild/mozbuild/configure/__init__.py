@@ -169,9 +169,9 @@ class ConfigureSandbox(dict):
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
-    def exec_file(self, path):
-        '''Execute one file within the sandbox. Users of this class probably
-        want to use `run` instead.'''
+    def include_file(self, path):
+        '''Include one file in the sandbox. Users of this class probably want
+        to use `run` instead.'''
 
         if self._paths:
             path = mozpath.join(mozpath.dirname(self._paths[-1]), path)
@@ -199,7 +199,7 @@ class ConfigureSandbox(dict):
     def run(self, path):
         '''Executes the given file within the sandbox, and ensure the overall
         consistency of the executed script.'''
-        self.exec_file(path)
+        self.include_file(path)
 
         for option in self._options.itervalues():
             # All options must be referenced by some @depends function
@@ -434,7 +434,7 @@ class ConfigureSandbox(dict):
         if what:
             if not isinstance(what, types.StringTypes):
                 raise TypeError("Unexpected type: '%s'" % type(what).__name__)
-            self.exec_file(what)
+            self.include_file(what)
 
     def template_impl(self, func):
         '''Implementation of @template.
