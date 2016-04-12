@@ -58,6 +58,7 @@ DIRS += [
     'telemetry',
     'thumbnails',
     'timermanager',
+    'tooltiptext',
     'typeaheadfind',
     'utils',
     'urlformatter',
