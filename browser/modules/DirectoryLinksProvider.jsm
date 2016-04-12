@@ -643,8 +643,10 @@ var DirectoryLinksProvider = {
       let validityFilter = function(link) {
         // Make sure the link url is allowed and images too if they exist
         return this.isURLAllowed(link.url, ALLOWED_LINK_SCHEMES, false) &&
-               this.isURLAllowed(link.imageURI, ALLOWED_IMAGE_SCHEMES, checkBase) &&
-               this.isURLAllowed(link.enhancedImageURI, ALLOWED_IMAGE_SCHEMES, checkBase);
+               (!link.imageURI ||
+                this.isURLAllowed(link.imageURI, ALLOWED_IMAGE_SCHEMES, checkBase)) &&
+               (!link.enhancedImageURI ||
+                this.isURLAllowed(link.enhancedImageURI, ALLOWED_IMAGE_SCHEMES, checkBase));
       }.bind(this);
 
       rawLinks.suggested.filter(validityFilter).forEach((link, position) => {
