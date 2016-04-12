@@ -150,18 +150,28 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
         self.info("Checking destination {} is empty".format(self._get_releases_prefix()))
         keys = [k for k in bucket.list(prefix=self._get_releases_prefix())]
         if keys:
-            self.fatal("Destination already exists with %s keys, aborting" %
-                       len(keys))
+            self.warning("Destination already exists with %s keys" % len(keys))
 
         def worker(item):
             source, destination = item
 
-            self.info("Copying {} to {}".format(source, destination))
-            return retry(bucket.copy_key,
-                         args=(destination,
-                               self.config["bucket_name"],
-                               source),
-                         sleeptime=5, max_sleeptime=60,
+            def copy_key():
+                dest_key = bucket.get_key(destination)
+                source_key = bucket.get_key(source)
+                if not dest_key:
+                    self.info("Copying {} to {}".format(source, destination))
+                    bucket.copy_key(destination, self.config["bucket_name"],
+                                    source)
+                elif source_key.etag == dest_key.etag:
+                    self.warning(
+                        "{} already exists with the same content ({}), skipping copy".format(
+                            destination, dest_key.etag))
+                else:
+                    self.fatal(
+                        "{} already exists with the different content (src: {}, dest: {}), aborting".format(
+                            destination, source_key.etag, dest_key.etag))
+
+            return retry(copy_key, sleeptime=5, max_sleeptime=60,
                          retry_exceptions=(S3CopyError, S3ResponseError))
 
         def find_release_files():
