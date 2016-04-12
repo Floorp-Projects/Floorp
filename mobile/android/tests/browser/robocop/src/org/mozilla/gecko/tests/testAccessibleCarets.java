@@ -6,8 +6,6 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 
