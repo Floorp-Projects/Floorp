@@ -246,7 +246,11 @@ GMPRemoveTest::Setup()
   obs->AddObserver(this, GMP_DELETED_TOPIC, false /* strong ref */);
   EXPECT_OK(GetServiceParent()->RemovePluginDirectory(mOriginalPath));
 
-  GetServiceParent()->AddPluginDirectory(mTmpPath);
+  GetServiceParent()->AsyncAddPluginDirectory(mTmpPath)->Then(thread, __func__,
+    [mon]() { mon->SetFinished(); },
+    [mon]() { mon->SetFinished(); }
+  );
+  mTestMonitor.AwaitFinished();
 }
 
 bool
