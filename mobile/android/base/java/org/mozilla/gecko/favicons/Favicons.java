@@ -8,10 +8,12 @@ package org.mozilla.gecko.favicons;
 import android.graphics.drawable.Drawable;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.cache.FaviconCache;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.NonEvictingLruCache;
@@ -33,6 +35,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -595,5 +598,42 @@ public class Favicons {
     public static void getPreferredSizeFaviconForPage(Context context, String url, String iconURL, OnFaviconLoadedListener onFaviconLoadedListener) {
         int preferredSize = GeckoAppShell.getPreferredIconSize();
         loadUncachedFavicon(context, url, iconURL, LoadFaviconTask.FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS, preferredSize, onFaviconLoadedListener);
+    }
+
+    /**
+     * Load the icon that is the most suitable for using as a home screen shortcut.
+     *
+     * This method will try to load a 'touch icon' first. If not available it will fallback to use
+     * the best available favicon.
+     *
+     * This implementation sidesteps the cache and will load the icon from the database or the
+     * internet. See getPreferredSizeFaviconForPage().
+     */
+    public static void getPreferredIconForHomeScreenShortcut(Context context, String url, OnFaviconLoadedListener onFaviconLoadedListener) {
+        ThreadUtils.assertOnBackgroundThread();
+
+        final BrowserDB db = GeckoProfile.get(context).getDB();
+
+        final ContentResolver cr = context.getContentResolver();
+        final Map<String, Map<String, Object>> metadata = db.getURLMetadata().getForURLs(cr,
+                Collections.singletonList(url),
+                Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN)
+        );
+
+        final Map<String, Object> row = metadata.get(url);
+
+        String touchIconURL = null;
+
+        if (row != null) {
+            touchIconURL = (String) row.get(URLMetadataTable.TOUCH_ICON_COLUMN);
+        }
+
+        // Retrieve the icon while bypassing the cache. Homescreen icon creation is a one-off event, hence it isn't
+        // useful to cache these icons. (Android takes care of storing homescreen icons after a shortcut
+        // has been created.)
+        // The cache is also (currently) limited to 32dp, hence we explicitly need to avoid accessing those icons.
+        // If touchIconURL is null, then Favicons falls back to finding the best possible favicon for
+        // the site URI, hence we can use this call even when there is no touchIcon defined.
+        getPreferredSizeFaviconForPage(context, url, touchIconURL, onFaviconLoadedListener);
     }
 }

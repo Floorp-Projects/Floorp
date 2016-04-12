@@ -575,7 +575,7 @@ HttpObserverManager = {
       }
 
       if (!result || !opts.blocking) {
-        return true;
+        continue;
       }
       if (result.cancel) {
         channel.cancel(Cr.NS_ERROR_ABORT);

@@ -9,6 +9,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadataTable;
+import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -1807,38 +1808,13 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void createShortcut(final String title, final String URI) {
-        ThreadUtils.assertOnBackgroundThread();
-        final BrowserDB db = GeckoProfile.get(getApplicationContext()).getDB();
-
-        final ContentResolver cr = getContext().getContentResolver();
-        final Map<String, Map<String, Object>> metadata = db.getURLMetadata().getForURLs(cr,
-                Collections.singletonList(URI),
-                Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN)
-        );
-
-        final Map<String, Object> row = metadata.get(URI);
-
-        String touchIconURL = null;
-
-        if (row != null) {
-            touchIconURL = (String) row.get(URLMetadataTable.TOUCH_ICON_COLUMN);
-        }
-
-        OnFaviconLoadedListener listener = new OnFaviconLoadedListener() {
+    public void createShortcut(final String title, final String url) {
+        Favicons.getPreferredIconForHomeScreenShortcut(this, url, new OnFaviconLoadedListener() {
             @Override
             public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
                 doCreateShortcut(title, url, favicon);
             }
-        };
-
-        // Retrieve the icon while bypassing the cache. Homescreen icon creation is a one-off event, hence it isn't
-        // useful to cache these icons. (Android takes care of storing homescreen icons after a shortcut
-        // has been created.)
-        // The cache is also (currently) limited to 32dp, hence we explicitly need to avoid accessing those icons.
-        // If touchIconURL is null, then Favicons falls back to finding the best possible favicon for
-        // the site URI, hence we can use this call even when there is no touchIcon defined.
-        Favicons.getPreferredSizeFaviconForPage(getApplicationContext(), URI, touchIconURL, listener);
+        });
     }
 
     private void doCreateShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
@@ -1864,6 +1840,10 @@ public abstract class GeckoApp
 
         intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
         getApplicationContext().sendBroadcast(intent);
+
+        // Remember interaction
+        final UrlAnnotations urlAnnotations = GeckoProfile.get(getApplicationContext()).getDB().getUrlAnnotations();
+        urlAnnotations.insertHomeScreenShortcut(getContentResolver(), aURI, true);
     }
 
     private void processAlertCallback(SafeIntent intent) {

@@ -14,6 +14,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
+import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 
 /**
@@ -71,6 +72,8 @@ public class SubscribeToFeedAction extends FeedAction {
 
         urlAnnotations.insertFeedSubscription(context.getContentResolver(), subscription);
 
+        Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(context));
         Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.SERVICE, "content_update");
+        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(context));
     }
 }
