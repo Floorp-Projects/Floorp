@@ -92,31 +92,44 @@ function getSupportsFile(path) {
   return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
-function installAddon(document, path, evt) {
+function* installAddon(document, path, name, evt) {
   // Mock the file picker to select a test addon
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(null);
   let file = getSupportsFile(path);
   MockFilePicker.returnFiles = [file.file];
 
+  let addonList = document.querySelector("#addons .targets");
+  let addonListMutation = waitForMutation(addonList, { childList: true });
+
   // Wait for a message sent by the addon's bootstrap.js file
   let onAddonInstalled = new Promise(done => {
     Services.obs.addObserver(function listener() {
-      Services.obs.removeObserver(listener, evt, false);
-      ok(true, "Addon installed and running its bootstrap.js file");
+      Services.obs.removeObserver(listener, evt);
+
       done();
     }, evt, false);
   });
   // Trigger the file picker by clicking on the button
   document.getElementById("load-addon-from-file").click();
 
-  // Wait for the addon execution
-  return onAddonInstalled;
+  yield onAddonInstalled;
+  ok(true, "Addon installed and running its bootstrap.js file");
+
+  // Check that the addon appears in the UI
+  yield addonListMutation;
+  let names = [...addonList.querySelectorAll(".target-name")];
+  names = names.map(element => element.textContent);
+  ok(names.includes(name),
+    "The addon name appears in the list of addons: " + names);
 }
 
-function uninstallAddon(addonId) {
+function* uninstallAddon(document, addonId, addonName) {
+  let addonList = document.querySelector("#addons .targets");
+  let addonListMutation = waitForMutation(addonList, { childList: true });
+
   // Now uninstall this addon
-  return new Promise(done => {
+  yield new Promise(done => {
     AddonManager.getAddonByID(addonId, addon => {
       let listener = {
         onUninstalled: function(uninstalledAddon) {
@@ -124,6 +137,7 @@ function uninstallAddon(addonId) {
             return;
           }
           AddonManager.removeAddonListener(listener);
+
           done();
         }
       };
@@ -131,6 +145,14 @@ function uninstallAddon(addonId) {
       addon.uninstall();
     });
   });
+
+  // Ensure that the UI removes the addon from the list
+  yield addonListMutation;
+  let names = [...addonList.querySelectorAll(".target-name")];
+  names = names.map(element => element.textContent);
+  ok(!names.includes(addonName),
+    "After uninstall, the addon name disappears from the list of addons: "
+    + names);
 }
 
 /**
