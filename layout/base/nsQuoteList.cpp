@@ -38,7 +38,7 @@ nsQuoteNode::Text()
                mType == eStyleContentType_CloseQuote,
                "should only be called when mText should be non-null");
   const nsStyleQuoteValues::QuotePairArray& quotePairs =
-    mPseudoFrame->StyleQuotes()->GetQuotePairs();
+    mPseudoFrame->StyleList()->GetQuotePairs();
   int32_t quotesCount = quotePairs.Length(); // 0 if 'quotes:none'
   int32_t quoteDepth = Depth();
 

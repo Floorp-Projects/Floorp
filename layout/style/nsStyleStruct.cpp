@@ -681,6 +681,7 @@ nsStyleList::nsStyleList(StyleStructContext aContext)
     mCounterStyle(aContext.BuildCounterStyle(mListStyleType))
 {
   MOZ_COUNT_CTOR(nsStyleList);
+  SetQuotesInitial();
 }
 
 nsStyleList::~nsStyleList() 
@@ -692,14 +693,74 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStylePosition(aSource.mListStylePosition),
     mListStyleType(aSource.mListStyleType),
     mCounterStyle(aSource.mCounterStyle),
+    mQuotes(aSource.mQuotes),
     mImageRegion(aSource.mImageRegion)
 {
   SetListStyleImage(aSource.GetListStyleImage());
   MOZ_COUNT_CTOR(nsStyleList);
 }
 
-nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
+void
+nsStyleList::SetQuotesInherit(const nsStyleList* aOther)
 {
+  mQuotes = aOther->mQuotes;
+}
+
+void
+nsStyleList::SetQuotesInitial()
+{
+  if (!sInitialQuotes) {
+    // The initial value for quotes is the en-US typographic convention:
+    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
+    // with LEFT and RIGHT SINGLE QUOTATION MARK.
+    static const char16_t initialQuotes[8] = {
+      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
+    };
+
+    sInitialQuotes = new nsStyleQuoteValues;
+    sInitialQuotes->mQuotePairs.AppendElement(
+        std::make_pair(nsDependentString(&initialQuotes[0], 1),
+                       nsDependentString(&initialQuotes[2], 1)));
+    sInitialQuotes->mQuotePairs.AppendElement(
+        std::make_pair(nsDependentString(&initialQuotes[4], 1),
+                       nsDependentString(&initialQuotes[6], 1)));
+  }
+
+  mQuotes = sInitialQuotes;
+}
+
+void
+nsStyleList::SetQuotesNone()
+{
+  if (!sNoneQuotes) {
+    sNoneQuotes = new nsStyleQuoteValues;
+  }
+  mQuotes = sNoneQuotes;
+}
+
+void
+nsStyleList::SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues)
+{
+  mQuotes = new nsStyleQuoteValues;
+  mQuotes->mQuotePairs = Move(aValues);
+}
+
+const nsStyleQuoteValues::QuotePairArray&
+nsStyleList::GetQuotePairs() const
+{
+  return mQuotes->mQuotePairs;
+}
+
+nsChangeHint
+nsStyleList::CalcDifference(const nsStyleList& aOther) const
+{
+  // If the quotes implementation is ever going to change we might not need
+  // a framechange here and a reflow should be sufficient.  See bug 35768.
+  if (mQuotes != aOther.mQuotes &&
+      (mQuotes || aOther.mQuotes) &&
+      GetQuotePairs() != aOther.GetQuotePairs()) {
+    return NS_STYLE_HINT_FRAMECHANGE;
+  }
   if (mListStylePosition != aOther.mListStylePosition)
     return NS_STYLE_HINT_FRAMECHANGE;
   if (EqualImages(mListStyleImage, aOther.mListStyleImage) &&
@@ -715,6 +776,13 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
   }
   return NS_STYLE_HINT_REFLOW;
 }
+
+StaticRefPtr<nsStyleQuoteValues>
+nsStyleList::sInitialQuotes;
+
+StaticRefPtr<nsStyleQuoteValues>
+nsStyleList::sNoneQuotes;
+
 
 // --------------------
 // nsStyleXUL
@@ -3491,97 +3559,6 @@ nsresult nsStyleContent::AllocateContents(uint32_t aCount)
   mContentCount = aCount;
   return NS_OK;
 }
-
-// ---------------------
-// nsStyleQuotes
-//
-
-nsStyleQuotes::nsStyleQuotes(StyleStructContext aContext)
-{
-  MOZ_COUNT_CTOR(nsStyleQuotes);
-  SetQuotesInitial();
-}
-
-nsStyleQuotes::~nsStyleQuotes()
-{
-  MOZ_COUNT_DTOR(nsStyleQuotes);
-}
-
-nsStyleQuotes::nsStyleQuotes(const nsStyleQuotes& aSource)
-  : mQuotes(aSource.mQuotes)
-{
-  MOZ_COUNT_CTOR(nsStyleQuotes);
-}
-
-void
-nsStyleQuotes::SetQuotesInherit(const nsStyleQuotes* aOther)
-{
-  mQuotes = aOther->mQuotes;
-}
-
-void
-nsStyleQuotes::SetQuotesInitial()
-{
-  if (!sInitialQuotes) {
-    // The initial value for quotes is the en-US typographic convention:
-    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
-    // with LEFT and RIGHT SINGLE QUOTATION MARK.
-    static const char16_t initialQuotes[8] = {
-      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
-    };
-
-    sInitialQuotes = new nsStyleQuoteValues;
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[0], 1),
-                       nsDependentString(&initialQuotes[2], 1)));
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[4], 1),
-                       nsDependentString(&initialQuotes[6], 1)));
-  }
-
-  mQuotes = sInitialQuotes;
-}
-
-void
-nsStyleQuotes::SetQuotesNone()
-{
-  if (!sNoneQuotes) {
-    sNoneQuotes = new nsStyleQuoteValues;
-  }
-  mQuotes = sNoneQuotes;
-}
-
-void
-nsStyleQuotes::SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues)
-{
-  mQuotes = new nsStyleQuoteValues;
-  mQuotes->mQuotePairs = Move(aValues);
-}
-
-const nsStyleQuoteValues::QuotePairArray&
-nsStyleQuotes::GetQuotePairs() const
-{
-  return mQuotes->mQuotePairs;
-}
-
-nsChangeHint
-nsStyleQuotes::CalcDifference(const nsStyleQuotes& aOther) const
-{
-  // If the quotes implementation is ever going to change we might not need
-  // a framechange here and a reflow should be sufficient.  See bug 35768.
-  if (mQuotes != aOther.mQuotes &&
-      mQuotes->mQuotePairs != aOther.mQuotes->mQuotePairs) {
-    return NS_STYLE_HINT_FRAMECHANGE;
-  }
-
-  return NS_STYLE_HINT_NONE;
-}
-
-StaticRefPtr<nsStyleQuoteValues>
-nsStyleQuotes::sInitialQuotes;
-
-StaticRefPtr<nsStyleQuoteValues>
-nsStyleQuotes::sNoneQuotes;
 
 
 // --------------------

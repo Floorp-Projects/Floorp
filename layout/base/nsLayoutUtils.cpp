@@ -7663,7 +7663,7 @@ nsLayoutUtils::Shutdown()
   nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
 
   // so the cached initial quotes array doesn't appear to be a leak
-  nsStyleQuotes::Shutdown();
+  nsStyleList::Shutdown();
 }
 
 /* static */

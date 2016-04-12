@@ -143,7 +143,6 @@
 #define CSS_PROP_DISPLAY(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Display, stylestructoffset_, animtype_)
 #define CSS_PROP_VISIBILITY(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Visibility, stylestructoffset_, animtype_)
 #define CSS_PROP_CONTENT(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Content, stylestructoffset_, animtype_)
-#define CSS_PROP_QUOTES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Quotes, stylestructoffset_, animtype_)
 #define CSS_PROP_USERINTERFACE(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, UserInterface, stylestructoffset_, animtype_)
 #define CSS_PROP_UIRESET(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, UIReset, stylestructoffset_, animtype_)
 #define CSS_PROP_TABLE(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Table, stylestructoffset_, animtype_)
@@ -227,10 +226,6 @@
 #ifndef CSS_PROP_CONTENT
 #define CSS_PROP_CONTENT(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
 #define DEFINED_CSS_PROP_CONTENT
-#endif
-#ifndef CSS_PROP_QUOTES
-#define CSS_PROP_QUOTES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
-#define DEFINED_CSS_PROP_QUOTES
 #endif
 #ifndef CSS_PROP_USERINTERFACE
 #define CSS_PROP_USERINTERFACE(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
@@ -3065,7 +3060,7 @@ CSS_PROP_DISPLAY(
     kPositionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_QUOTES(
+CSS_PROP_LIST(
     quotes,
     quotes,
     Quotes,
@@ -4455,7 +4450,6 @@ CSS_PROP_FONT(
 #undef CSS_PROP_DISPLAY
 #undef CSS_PROP_VISIBILITY
 #undef CSS_PROP_CONTENT
-#undef CSS_PROP_QUOTES
 #undef CSS_PROP_USERINTERFACE
 #undef CSS_PROP_UIRESET
 #undef CSS_PROP_TABLE
@@ -4511,10 +4505,6 @@ CSS_PROP_FONT(
 #ifdef DEFINED_CSS_PROP_CONTENT
 #undef CSS_PROP_CONTENT
 #undef DEFINED_CSS_PROP_CONTENT
-#endif
-#ifdef DEFINED_CSS_PROP_QUOTES
-#undef CSS_PROP_QUOTES
-#undef DEFINED_CSS_PROP_QUOTES
 #endif
 #ifdef DEFINED_CSS_PROP_USERINTERFACE
 #undef CSS_PROP_USERINTERFACE
