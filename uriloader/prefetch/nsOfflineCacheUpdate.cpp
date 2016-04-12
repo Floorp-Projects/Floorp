@@ -185,7 +185,7 @@ nsManifestCheck::Begin()
                        nsIContentPolicy::TYPE_OTHER,
                        nullptr,   // loadGroup
                        nullptr,   // aCallbacks
-                       nsIRequest::LOAD_BYPASS_CACHE | nsIChannel::LOAD_CLASSIFY_URI);
+                       nsIRequest::LOAD_BYPASS_CACHE);
 
     NS_ENSURE_SUCCESS(rv, rv);
 
