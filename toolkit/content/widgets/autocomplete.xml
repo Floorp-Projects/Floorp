@@ -1359,6 +1359,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                            xbl:inherits="selected"/>
         </xul:description>
       </xul:hbox>
+      <xul:hbox anonid="separator"
+                class="ac-separator"
+                align="center"
+                xbl:inherits="selected,actiontype">
+        <xul:description class="ac-separator-text">—</xul:description>
+      </xul:hbox>
       <xul:hbox class="ac-url"
                 align="center"
                 xbl:inherits="selected,actiontype">
@@ -1396,6 +1402,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           );
           this._tagsText = document.getAnonymousElementByAttribute(
             this, "anonid", "tags-text"
+          );
+          this._separator = document.getAnonymousElementByAttribute(
+            this, "anonid", "separator"
           );
           this._urlText = document.getAnonymousElementByAttribute(
             this, "anonid", "url-text"
@@ -1559,17 +1568,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // Get rid of all previous text
           while (aDescriptionElement.hasChildNodes())
             aDescriptionElement.removeChild(aDescriptionElement.firstChild);
-
-          // Add a separator to the front of the URL and action.
-          if (aText &&
-              (aDescriptionElement == this._urlText ||
-               aDescriptionElement == this._actionText)) {
-            let span =
-              document.createElementNS("http://www.w3.org/1999/xhtml", "span");
-            aDescriptionElement.appendChild(span);
-            span.className = "ac-title-urlaction-separator";
-            span.textContent = "—";
-          }
 
           // If aNoEmphasis is specified, don't add any emphasis
           if (aNoEmphasis) {
@@ -2002,21 +2000,25 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <!-- This method truncates the displayed strings as necessary. -->
       <method name="_handleOverflow">
         <body><![CDATA[
+          let itemRect = this.parentNode.getBoundingClientRect();
           let titleRect = this._titleText.getBoundingClientRect();
           let tagsRect = this._tagsText.getBoundingClientRect();
+          let separatorRect = this._separator.getBoundingClientRect();
           let urlRect = this._urlText.getBoundingClientRect();
           let actionRect = this._actionText.getBoundingClientRect();
-          let urlActionWidth = Math.max(urlRect.width, actionRect.width);
+          let separatorURLActionWidth =
+            separatorRect.width + Math.max(urlRect.width, actionRect.width);
 
           // Total width for the title and URL/action is the width of the item
           // minus the start of the title text minus a little extra padding.
-          // This extra padding amount is basically arbitrary but balances out
-          // the listbox's padding on the left side.
+          // This extra padding amount is basically arbitrary but keeps the text
+          // from getting too close to the popup's edge.
           let extraPadding = 30;
-          let itemWidth =
-            this.parentNode.getBoundingClientRect().width -
-            this._titleText.getBoundingClientRect().left -
-            extraPadding;
+          let dir =
+            this.ownerDocument.defaultView.getComputedStyle(this).direction;
+          let titleStart = dir == "rtl" ? itemRect.right - titleRect.right
+                                        : titleRect.left - itemRect.left;
+          let itemWidth = itemRect.width - titleStart - extraPadding;
 
           if (this._tags.hasAttribute("empty")) {
             // The tags box is not displayed in this case.
@@ -2024,13 +2026,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           }
 
           let titleTagsWidth = titleRect.width + tagsRect.width;
-          if (titleTagsWidth + urlActionWidth > itemWidth) {
+          if (titleTagsWidth + separatorURLActionWidth > itemWidth) {
             // Title + tags + URL/action overflows the item width.
 
             // The percentage of the item width allocated to the title and tags.
             let titleTagsPct = 0.66;
 
-            let titleTagsAvailable = itemWidth - urlActionWidth;
+            let titleTagsAvailable = itemWidth - separatorURLActionWidth;
             let titleTagsMaxWidth = Math.max(
               titleTagsAvailable,
               itemWidth * titleTagsPct
@@ -2055,11 +2057,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this._titleText.style.maxWidth = titleMaxWidth + "px";
               this._tagsText.style.maxWidth = tagsMaxWidth + "px";
             }
-            let urlActionAvailable = itemWidth - titleTagsWidth;
             let urlActionMaxWidth = Math.max(
-              urlActionAvailable,
+              itemWidth - titleTagsWidth,
               itemWidth * (1 - titleTagsPct)
             );
+            urlActionMaxWidth -= separatorRect.width;
             this._urlText.style.maxWidth = urlActionMaxWidth + "px";
             this._actionText.style.maxWidth = urlActionMaxWidth + "px";
           }

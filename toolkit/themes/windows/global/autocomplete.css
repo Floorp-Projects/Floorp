@@ -130,13 +130,14 @@ html|span.ac-tag {
   -moz-margin-end: 4px;
 }
 
-html|span.ac-title-urlaction-separator {
+.ac-separator {
   padding-left: 0;
   padding-right: 6px;
 }
 
 /* Better align the URL/action with the title. */
 .ac-tags,
+.ac-separator,
 .ac-url,
 .ac-action {
   margin-bottom: -2px;
@@ -144,6 +145,7 @@ html|span.ac-title-urlaction-separator {
 
 .ac-title-text,
 .ac-tags-text,
+.ac-separator-text,
 .ac-url-text,
 .ac-action-text,
 .ac-text-overflow-container {

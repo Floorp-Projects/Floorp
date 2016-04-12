@@ -772,3 +772,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      are used for a system notification that's shown to users after the app updates. -->
 <!ENTITY whatsnew_notification_title "&brandShortName; is up to date">
 <!ENTITY whatsnew_notification_summary "Find out what\'s new in this version">
+
+<!ENTITY promotion_add_to_homescreen "Add to home screen">

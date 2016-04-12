@@ -1141,6 +1141,7 @@ html|span.ac-tag {
   padding: 0 1px;
 }
 
+.ac-separator,
 .ac-url,
 .ac-action {
   font-size: 12px;
@@ -1148,6 +1149,7 @@ html|span.ac-tag {
 }
 
 .ac-title[selected=true],
+.ac-separator[selected],
 .ac-url[selected=true],
 .ac-action[selected=true] {
   color: inherit !important;
