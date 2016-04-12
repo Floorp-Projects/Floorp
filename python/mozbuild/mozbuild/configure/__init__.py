@@ -196,10 +196,11 @@ class ConfigureSandbox(dict):
 
         self._paths.pop(-1)
 
-    def run(self, path):
+    def run(self, path=None):
         '''Executes the given file within the sandbox, and ensure the overall
         consistency of the executed script.'''
-        self.include_file(path)
+        if path:
+            self.include_file(path)
 
         for option in self._options.itervalues():
             # All options must be referenced by some @depends function
