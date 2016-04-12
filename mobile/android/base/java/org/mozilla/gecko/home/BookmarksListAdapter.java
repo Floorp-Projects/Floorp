@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.home.BookmarkFolderView.FolderState;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -329,10 +330,16 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
             if (cursor == null) {
                 final Resources res = context.getResources();
                 row.setText(res.getString(R.string.home_move_back_to_filter, mParentStack.get(1).title));
-                row.open();
+                row.setState(FolderState.PARENT);
             } else {
                 row.setText(getFolderTitle(context, cursor));
-                row.close();
+
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+                if (id == Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID) {
+                    row.setState(FolderState.READING_LIST);
+                } else {
+                    row.setState(FolderState.FOLDER);
+                }
             }
         }
     }
