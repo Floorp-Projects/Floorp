@@ -953,11 +953,6 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
   mDescription = NS_ConvertUTF16toUTF8(m.mDescription);
   mVersion = NS_ConvertUTF16toUTF8(m.mVersion);
 
-  GMPCapability audio(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER));
-  audio.mAPITags.AppendElement(NS_LITERAL_CSTRING("aac"));
-  audio.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
-  mCapabilities.AppendElement(Move(audio));
-
   GMPCapability video(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER));
   video.mAPITags.AppendElement(NS_LITERAL_CSTRING("h264"));
   video.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
