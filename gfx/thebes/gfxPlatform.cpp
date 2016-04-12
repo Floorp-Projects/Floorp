@@ -2079,7 +2079,7 @@ InitLayersAccelerationPrefs()
     if (gfxPrefs::LayersAccelerationForceEnabled()) {
       sLayersSupportsD3D9 = true;
       sLayersSupportsD3D11 = true;
-    } else if (gfxInfo) {
+    } else if (!gfxPrefs::LayersAccelerationDisabled() && gfxInfo) {
       if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
         if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
           MOZ_ASSERT(!sPrefBrowserTabsRemoteAutostart || IsVistaOrLater());
