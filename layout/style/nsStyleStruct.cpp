@@ -929,7 +929,6 @@ nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
   mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
   mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
   mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
-  mImageRendering          = NS_STYLE_IMAGE_RENDERING_AUTO;
   mPaintOrder              = NS_STYLE_PAINT_ORDER_NORMAL;
   mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
   mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
@@ -983,7 +982,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mColorInterpolation = aSource.mColorInterpolation;
   mColorInterpolationFilters = aSource.mColorInterpolationFilters;
   mFillRule = aSource.mFillRule;
-  mImageRendering = aSource.mImageRendering;
   mPaintOrder = aSource.mPaintOrder;
   mShapeRendering = aSource.mShapeRendering;
   mStrokeLinecap = aSource.mStrokeLinecap;
@@ -1074,7 +1072,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mColorInterpolation    != aOther.mColorInterpolation    ||
        mColorInterpolationFilters != aOther.mColorInterpolationFilters ||
        mFillRule              != aOther.mFillRule              ||
-       mImageRendering        != aOther.mImageRendering        ||
        mPaintOrder            != aOther.mPaintOrder            ||
        mShapeRendering        != aOther.mShapeRendering        ||
        mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
@@ -3255,6 +3252,7 @@ nsStyleVisibility::nsStyleVisibility(StyleStructContext aContext)
 
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
+  mImageRendering = NS_STYLE_IMAGE_RENDERING_AUTO;
   mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
   mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
   mColorAdjust = NS_STYLE_COLOR_ADJUST_ECONOMY;
@@ -3267,6 +3265,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
   mPointerEvents = aSource.mPointerEvents;
+  mImageRendering = aSource.mImageRendering;
   mWritingMode = aSource.mWritingMode;
   mTextOrientation = aSource.mTextOrientation;
   mColorAdjust = aSource.mColorAdjust;
@@ -3303,6 +3302,9 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
       // GetHitTestFlags. (Only a reflow, no visual change.)
       NS_UpdateHint(hint, nsChangeHint_NeedReflow);
       NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    }
+    if (mImageRendering != aOther.mImageRendering) {
+      hint |= nsChangeHint_RepaintFrame;
     }
     if (mColorAdjust != aOther.mColorAdjust) {
       // color-adjust only affects media where dynamic changes can't happen.
