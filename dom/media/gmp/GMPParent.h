@@ -86,9 +86,7 @@ public:
 
   GMPParent();
 
-  using InitPromise = MozPromise<nsresult, nsresult, true>;
-
-  RefPtr<InitPromise> Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
+  RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
   nsresult CloneFrom(const GMPParent* aOther);
 
   void Crash();
@@ -167,11 +165,11 @@ private:
 
   RefPtr<GeckoMediaPluginServiceParent> mService;
   bool EnsureProcessLoaded();
-  RefPtr<InitPromise> ReadGMPMetaData();
-  RefPtr<InitPromise> ReadGMPInfoFile(nsIFile* aFile);
+  RefPtr<GenericPromise> ReadGMPMetaData();
+  RefPtr<GenericPromise> ReadGMPInfoFile(nsIFile* aFile);
 #ifdef MOZ_WIDEVINE_EME
-  RefPtr<InitPromise> ParseChromiumManifest(nsString aJSON); // Main thread.
-  RefPtr<InitPromise> ReadChromiumManifestFile(nsIFile* aFile); // GMP thread.
+  RefPtr<GenericPromise> ParseChromiumManifest(nsString aJSON); // Main thread.
+  RefPtr<GenericPromise> ReadChromiumManifestFile(nsIFile* aFile); // GMP thread.
 #endif
 #ifdef MOZ_CRASHREPORTER
   void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
