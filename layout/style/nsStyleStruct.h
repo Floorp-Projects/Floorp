@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CSSVariableValues.h"
 #include "mozilla/SheetType.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/StyleStructContext.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -33,6 +34,7 @@
 #include "Orientation.h"
 #include "CounterStyleManager.h"
 #include <cstddef> // offsetof()
+#include <utility>
 
 class nsIFrame;
 class nsIURI;
@@ -2796,6 +2798,22 @@ struct nsStyleCounterData
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nullptr; }
 
+/**
+ * An object that allows sharing of arrays that store 'quotes' property
+ * values.  This is particularly important for inheritance, where we want
+ * to share the same 'quotes' value with a parent style context.
+ */
+class nsStyleQuoteValues
+{
+public:
+  typedef nsTArray<std::pair<nsString, nsString>> QuotePairArray;
+  NS_INLINE_DECL_REFCOUNTING(nsStyleQuoteValues);
+  QuotePairArray mQuotePairs;
+
+private:
+  ~nsStyleQuoteValues() {}
+};
+
 struct nsStyleQuotes
 {
   explicit nsStyleQuotes(StyleStructContext aContext);
@@ -2812,10 +2830,6 @@ struct nsStyleQuotes
     aContext->PresShell()->
       FreeByObjectID(mozilla::eArenaObjectID_nsStyleQuotes, this);
   }
-
-  void SetInitial();
-  void CopyFrom(const nsStyleQuotes& aSource);
-
   nsChangeHint CalcDifference(const nsStyleQuotes& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
@@ -2828,56 +2842,24 @@ struct nsStyleQuotes
            nsChangeHint_ClearAncestorIntrinsics;
   }
 
-  uint32_t  QuotesCount(void) const { return mQuotesCount; } // [inherited]
-
-  const nsString* OpenQuoteAt(uint32_t aIndex) const
-  {
-    NS_ASSERTION(aIndex < mQuotesCount, "out of range");
-    return mQuotes + (aIndex * 2);
-  }
-  const nsString* CloseQuoteAt(uint32_t aIndex) const
-  {
-    NS_ASSERTION(aIndex < mQuotesCount, "out of range");
-    return mQuotes + (aIndex * 2 + 1);
-  }
-  nsresult  GetQuotesAt(uint32_t aIndex, nsString& aOpen, nsString& aClose) const {
-    if (aIndex < mQuotesCount) {
-      aIndex *= 2;
-      aOpen = mQuotes[aIndex];
-      aClose = mQuotes[++aIndex];
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
+  static void Shutdown() {
+    sInitialQuotes = nullptr;
+    sNoneQuotes = nullptr;
   }
 
-  nsresult  AllocateQuotes(uint32_t aCount) {
-    if (aCount != mQuotesCount) {
-      DELETE_ARRAY_IF(mQuotes);
-      if (aCount) {
-        mQuotes = new nsString[aCount * 2];
-        if (! mQuotes) {
-          mQuotesCount = 0;
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      mQuotesCount = aCount;
-    }
-    return NS_OK;
-  }
+  const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
 
-  nsresult  SetQuotesAt(uint32_t aIndex, const nsString& aOpen, const nsString& aClose) {
-    if (aIndex < mQuotesCount) {
-      aIndex *= 2;
-      mQuotes[aIndex] = aOpen;
-      mQuotes[++aIndex] = aClose;
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
+  void SetQuotesInherit(const nsStyleQuotes* aOther);
+  void SetQuotesInitial();
+  void SetQuotesNone();
+  void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
 
-protected:
-  uint32_t            mQuotesCount;
-  nsString*           mQuotes;
+private:
+  RefPtr<nsStyleQuoteValues> mQuotes;  // [inherited]
+
+  // nsStyleQuoteValues objects representing two common values, for sharing.
+  static mozilla::StaticRefPtr<nsStyleQuoteValues> sInitialQuotes;
+  static mozilla::StaticRefPtr<nsStyleQuoteValues> sNoneQuotes;
 };
 
 struct nsStyleContent
