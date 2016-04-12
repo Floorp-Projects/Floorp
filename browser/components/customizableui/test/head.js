@@ -8,7 +8,8 @@
 var tmp = {};
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
 Cu.import("resource:///modules/CustomizableUI.jsm", tmp);
-var {Promise, CustomizableUI} = tmp;
+Cu.import("resource://gre/modules/AppConstants.jsm", tmp);
+var {Promise, CustomizableUI, AppConstants} = tmp;
 
 var ChromeUtils = {};
 Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
@@ -113,12 +114,8 @@ function resetCustomization() {
   return CustomizableUI.reset();
 }
 
-XPCOMUtils.defineLazyGetter(this, 'gDeveloperButtonInNavbar', function() {
-  return getAreaWidgetIds(CustomizableUI.AREA_NAVBAR).indexOf("developer-button") != -1;
-});
-
 function isInDevEdition() {
-  return gDeveloperButtonInNavbar;
+  return AppConstants.MOZ_DEV_EDITION;
 }
 
 function removeDeveloperButtonIfDevEdition(areaPanelPlacements) {
