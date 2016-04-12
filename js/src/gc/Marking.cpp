@@ -899,8 +899,8 @@ GCMarker::traverse(AccessorShape* thing) {
 } // namespace js
 
 template <typename S, typename T>
-void
-js::GCMarker::traverseEdge(S source, T* target)
+static void
+CheckTraversedEdge(S source, T* target)
 {
     // Atoms and Symbols do not have or mark their internal pointers, respectively.
     MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(source));
@@ -916,7 +916,13 @@ js::GCMarker::traverseEdge(S source, T* target)
     // If we have access to a compartment pointer for both things, they must match.
     MOZ_ASSERT_IF(source->maybeCompartment() && target->maybeCompartment(),
                   source->maybeCompartment() == target->maybeCompartment());
+}
 
+template <typename S, typename T>
+void
+js::GCMarker::traverseEdge(S source, T* target)
+{
+    CheckTraversedEdge(source, target);
     traverse(target);
 }
 
@@ -1020,7 +1026,14 @@ js::GCMarker::eagerlyMarkChildren(Shape* shape)
 {
     MOZ_ASSERT(shape->isMarked(this->markColor()));
     do {
-        traverseEdge(shape, shape->base());
+        // Special case: if a base shape has a shape table then all its pointers
+        // must point to this shape or an anscestor.  Since these pointers will
+        // be traced by this loop they do not need to be traced here as well.
+        BaseShape* base = shape->base();
+        CheckTraversedEdge(shape, base);
+        if (mark(base))
+            base->traceChildrenSkipShapeTable(this);
+
         traverseEdge(shape, shape->propidRef().get());
 
         // When triggered between slices on belhalf of a barrier, these

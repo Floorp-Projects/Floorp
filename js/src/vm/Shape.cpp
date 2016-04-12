@@ -1332,6 +1332,13 @@ BaseShape::assertConsistency()
 void
 BaseShape::traceChildren(JSTracer* trc)
 {
+    traceChildrenSkipShapeTable(trc);
+    traceShapeTable(trc);
+}
+
+void
+BaseShape::traceChildrenSkipShapeTable(JSTracer* trc)
+{
     assertConsistency();
 
     if (trc->isMarkingTracer())
@@ -1343,7 +1350,11 @@ BaseShape::traceChildren(JSTracer* trc)
     JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
     if (global)
         TraceManuallyBarrieredEdge(trc, &global, "global");
+}
 
+void
+BaseShape::traceShapeTable(JSTracer* trc)
+{
     if (hasTable())
         table().trace(trc);
 }
