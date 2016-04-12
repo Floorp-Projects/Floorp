@@ -19,15 +19,13 @@
 #ifndef mozilla_ipc_dbus_dbusutils_h__
 #define mozilla_ipc_dbus_dbusutils_h__
 
+#include <dbus/dbus.h>
 #include "mozilla/RefPtr.h"
 
 // LOGE and free a D-Bus error
 // Using #define so that __FUNCTION__ resolves usefully
 #define LOG_AND_FREE_DBUS_ERROR_WITH_MSG(err, msg) log_and_free_dbus_error(err, __FUNCTION__, msg);
 #define LOG_AND_FREE_DBUS_ERROR(err) log_and_free_dbus_error(err, __FUNCTION__);
-
-struct DBusError;
-struct DBusMessage;
 
 namespace mozilla {
 namespace ipc {
