@@ -145,7 +145,7 @@ nsStyleDisplay::IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const
   return (IsContainPaint() || HasTransform(aContextFrame) ||
           HasPerspectiveStyle() ||
           (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) ||
-          aContextFrame->StyleSVGReset()->HasFilters()) &&
+          aContextFrame->StyleEffects()->HasFilters()) &&
       !aContextFrame->IsSVGText();
 }
 
