@@ -4957,6 +4957,13 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
               parentUI->mUserFocus,
               NS_STYLE_USER_FOCUS_NONE, 0, 0, 0, 0);
 
+  // pointer-events: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForPointerEvents(), ui->mPointerEvents,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentUI->mPointerEvents,
+              NS_STYLE_POINTER_EVENTS_AUTO, 0, 0, 0, 0);
+
   COMPUTE_END_INHERITED(UserInterface, ui)
 }
 
@@ -6387,13 +6394,6 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentVisibility->mVisible,
               NS_STYLE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
-
-  // pointer-events: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForPointerEvents(), visibility->mPointerEvents,
-              conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentVisibility->mPointerEvents,
-              NS_STYLE_POINTER_EVENTS_AUTO, 0, 0, 0, 0);
 
   // image-rendering: enum, inherit
   SetDiscrete(*aRuleData->ValueForImageRendering(),

@@ -2148,8 +2148,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // we're painting, and we're not animating opacity. Don't do this
   // if we're going to compute plugin geometry, since opacity-0 plugins
   // need to have display items built for them.
-  bool needEventRegions = aBuilder->IsBuildingLayerEventRegions() &&
-      StyleVisibility()->GetEffectivePointerEvents(this) != NS_STYLE_POINTER_EVENTS_NONE;
+  bool needEventRegions =
+    aBuilder->IsBuildingLayerEventRegions() &&
+    StyleUserInterface()->GetEffectivePointerEvents(this) !=
+      NS_STYLE_POINTER_EVENTS_NONE;
   bool opacityItemForEventsOnly = false;
   if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !aBuilder->WillComputePluginGeometry() &&

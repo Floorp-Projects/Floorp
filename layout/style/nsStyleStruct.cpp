@@ -3255,7 +3255,6 @@ nsStyleVisibility::nsStyleVisibility(StyleStructContext aContext)
     mDirection = NS_STYLE_DIRECTION_LTR;
 
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
-  mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
   mImageRendering = NS_STYLE_IMAGE_RENDERING_AUTO;
   mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
   mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
@@ -3268,7 +3267,6 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mImageOrientation = aSource.mImageOrientation;
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
-  mPointerEvents = aSource.mPointerEvents;
   mImageRendering = aSource.mImageRendering;
   mWritingMode = aSource.mWritingMode;
   mTextOrientation = aSource.mTextOrientation;
@@ -3299,13 +3297,6 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
     }
     if (mTextOrientation != aOther.mTextOrientation) {
       NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
-    }
-    if (mPointerEvents != aOther.mPointerEvents) {
-      // nsSVGPathGeometryFrame's mRect depends on stroke _and_ on the value
-      // of pointer-events. See nsSVGPathGeometryFrame::ReflowSVG's use of
-      // GetHitTestFlags. (Only a reflow, no visual change.)
-      NS_UpdateHint(hint, nsChangeHint_NeedReflow);
-      NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
     }
     if (mImageRendering != aOther.mImageRendering) {
       hint |= nsChangeHint_RepaintFrame;
@@ -3871,6 +3862,7 @@ nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
   mUserInput = NS_STYLE_USER_INPUT_AUTO;
   mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
   mUserFocus = NS_STYLE_USER_FOCUS_NONE;
+  mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
 
   mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
 
@@ -3882,6 +3874,7 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) 
   mUserInput(aSource.mUserInput),
   mUserModify(aSource.mUserModify),
   mUserFocus(aSource.mUserFocus),
+  mPointerEvents(aSource.mPointerEvents),
   mCursor(aSource.mCursor)
 { 
   MOZ_COUNT_CTOR(nsStyleUserInterface);
@@ -3904,6 +3897,14 @@ nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aO
   // rare.
   if (mCursorArrayLength > 0 || aOther.mCursorArrayLength > 0)
     NS_UpdateHint(hint, nsChangeHint_UpdateCursor);
+
+  if (mPointerEvents != aOther.mPointerEvents) {
+    // nsSVGPathGeometryFrame's mRect depends on stroke _and_ on the value
+    // of pointer-events. See nsSVGPathGeometryFrame::ReflowSVG's use of
+    // GetHitTestFlags. (Only a reflow, no visual change.)
+    hint |= nsChangeHint_NeedReflow |
+            nsChangeHint_NeedDirtyReflow; // XXX remove me: bug 876085
+  }
 
   if (mUserModify != aOther.mUserModify)
     NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
