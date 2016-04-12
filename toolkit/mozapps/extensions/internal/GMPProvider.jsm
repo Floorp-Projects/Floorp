@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/GMPUtils.jsm");
-/*globals EME_ADOBE_ID, GMP_PLUGIN_IDS, GMPPrefs, GMPUtils, OPEN_H264_ID*/
+/*globals EME_ADOBE_ID, GMP_PLUGIN_IDS, GMPPrefs, GMPUtils, OPEN_H264_ID, WIDEVINE_ID */
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
