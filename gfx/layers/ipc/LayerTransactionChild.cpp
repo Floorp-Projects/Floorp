@@ -37,15 +37,6 @@ LayerTransactionChild::Destroy()
   MOZ_ASSERT(0 == ManagedPLayerChild().Count(),
              "layers should have been cleaned up by now");
 
-  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
-  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
-
-    if (texture) {
-      texture->Destroy();
-    }
-  }
-
   SendShutdown();
 }
 
@@ -125,21 +116,6 @@ LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
     NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at LayerTransactionChild");
   }
 #endif
-}
-
-PTextureChild*
-LayerTransactionChild::AllocPTextureChild(const SurfaceDescriptor&,
-                                          const LayersBackend&,
-                                          const TextureFlags&)
-{
-  MOZ_ASSERT(!mDestroyed);
-  return TextureClient::CreateIPDLActor();
-}
-
-bool
-LayerTransactionChild::DeallocPTextureChild(PTextureChild* actor)
-{
-  return TextureClient::DestroyIPDLActor(actor);
 }
 
 } // namespace layers
