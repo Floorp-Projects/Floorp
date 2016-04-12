@@ -21,6 +21,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
+#include "mozilla/MozPromise.h"
 
 class nsIThread;
 
@@ -41,6 +42,11 @@ namespace gmp {
 class GMPCapability
 {
 public:
+  GMPCapability() {}
+  GMPCapability(const nsCString& aAPIName)
+    : mAPIName(aAPIName)
+  {}
+  GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
   nsTArray<nsCString> mAPITags;
 };
@@ -75,7 +81,9 @@ public:
 
   GMPParent();
 
-  nsresult Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
+  using InitPromise = MozPromise<nsresult, nsresult, true>;
+
+  RefPtr<InitPromise> Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
   nsresult CloneFrom(const GMPParent* aOther);
 
   void Crash();
@@ -153,7 +161,8 @@ private:
   ~GMPParent();
   RefPtr<GeckoMediaPluginServiceParent> mService;
   bool EnsureProcessLoaded();
-  nsresult ReadGMPMetaData();
+  RefPtr<InitPromise> ReadGMPMetaData();
+  RefPtr<InitPromise> ReadGMPInfoFile(nsIFile* aFile);
 #ifdef MOZ_CRASHREPORTER
   void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
   void GetCrashID(nsString& aResult);
