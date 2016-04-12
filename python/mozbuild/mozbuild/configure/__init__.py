@@ -129,6 +129,9 @@ class ConfigureSandbox(dict):
         # Store all results from _prepare_function
         self._prepared_functions = set()
 
+        # Queue of functions to execute, with their arguments
+        self._execution_queue = []
+
         self._helper = CommandLineHelper(environ, argv)
 
         assert isinstance(config, dict)
@@ -171,7 +174,10 @@ class ConfigureSandbox(dict):
 
     def include_file(self, path):
         '''Include one file in the sandbox. Users of this class probably want
-        to use `run` instead.'''
+
+        Note: this will execute all template invocations, as well as @depends
+        functions that depend on '--help', but nothing else.
+        '''
 
         if self._paths:
             path = mozpath.join(mozpath.dirname(self._paths[-1]), path)
@@ -197,8 +203,9 @@ class ConfigureSandbox(dict):
         self._paths.pop(-1)
 
     def run(self, path=None):
-        '''Executes the given file within the sandbox, and ensure the overall
-        consistency of the executed script.'''
+        '''Executes the given file within the sandbox, as well as everything
+        pending from any other included file, and ensure the overall
+        consistency of the executed script(s).'''
         if path:
             self.include_file(path)
 
@@ -210,12 +217,7 @@ class ConfigureSandbox(dict):
                     % option.option
                 )
 
-            # When running with --help, few options are handled but we still
-            # want to find the unknown ones below, so handle them all now. We
-            # however don't run any of the @depends function that depend on
-            # them.
-            if self._help:
-                self._helper.handle(option)
+            self._value_for(option)
 
         # All implied options should exist.
         for implied_option in self._implied_options:
@@ -228,6 +230,10 @@ class ConfigureSandbox(dict):
         for arg in self._helper:
             without_value = arg.split('=', 1)[0]
             raise InvalidOptionError('Unknown option: %s' % without_value)
+
+        # Run the execution queue
+        for func, args in self._execution_queue:
+            func(*args)
 
         if self._help:
             with LineIO(self.log_impl.info) as out:
@@ -291,6 +297,9 @@ class ConfigureSandbox(dict):
                             "`%s` depends on '--help' and `%s`. "
                             "`%s` must depend on '--help'"
                             % (func.__name__, arg.__name__, arg.__name__))
+        elif self._help:
+            raise ConfigureError("Missing @depends for `%s`: '--help'" %
+                                 func.__name__)
 
         resolved_args = [self._value_for(d) for d in dependencies]
         return func(*resolved_args)
@@ -363,8 +372,6 @@ class ConfigureSandbox(dict):
         if self._help:
             self._help.add(option)
 
-        self._value_for(option)
-
         return option
 
     def depends_impl(self, *args):
@@ -417,8 +424,14 @@ class ConfigureSandbox(dict):
             func, glob = self._prepare_function(func)
             dummy = wraps(func)(DependsFunction())
             self._depends[dummy] = func, dependencies
-            if not self._help or self._help_option in dependencies:
+
+            # Only @depends functions with a dependency on '--help' are
+            # executed immediately. Everything else is queued for later
+            # execution.
+            if self._help_option in dependencies:
                 self._value_for(dummy)
+            elif not self._help:
+                self._execution_queue.append((self._value_for, (dummy,)))
 
             return dummy
 
@@ -572,7 +585,8 @@ class ConfigureSandbox(dict):
         in which case the result from these functions is used. If the result
         of either function is None, the configuration item is not set.
         '''
-        self._resolve_and_set(self._config, name, value)
+        self._execution_queue.append((
+            self._resolve_and_set, (self._config, name, value)))
 
     def set_define_impl(self, name, value):
         '''Implementation of set_define().
@@ -583,7 +597,8 @@ class ConfigureSandbox(dict):
         explicitly undefined (-U).
         '''
         defines = self._config.setdefault('DEFINES', {})
-        self._resolve_and_set(defines, name, value)
+        self._execution_queue.append((
+            self._resolve_and_set, (defines, name, value)))
 
     def imply_option_impl(self, option, value, reason=None):
         '''Implementation of imply_option().
