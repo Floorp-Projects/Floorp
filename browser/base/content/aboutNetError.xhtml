@@ -241,7 +241,7 @@
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
           if (gIsCertError) {
-            sd.textContent = document.getElementById("ed_nssBadCert").textContent;
+            sd.innerHTML = document.getElementById("ed_nssBadCert").innerHTML;
           }
           else {
             sd.textContent = getDescription();
