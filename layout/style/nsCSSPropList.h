@@ -4039,7 +4039,7 @@ CSS_PROP_SVGRESET(
     nullptr,
     offsetof(nsStyleSVGReset, mFloodOpacity),
     eStyleAnimType_float)
-CSS_PROP_SVG(
+CSS_PROP_VISIBILITY(
     image-rendering,
     image_rendering,
     ImageRendering,
@@ -4047,7 +4047,7 @@ CSS_PROP_SVG(
     "",
     VARIANT_HK,
     kImageRenderingKTable,
-    offsetof(nsStyleSVG, mImageRendering),
+    offsetof(nsStyleVisibility, mImageRendering),
     eStyleAnimType_EnumU8)
 CSS_PROP_SVGRESET(
     lighting-color,
