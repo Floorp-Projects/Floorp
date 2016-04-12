@@ -6,6 +6,7 @@
 FINAL_TARGET = '_tests/xpcshell/toolkit/crashreporter/test'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 
 UNIFIED_SOURCES += [
     '../google-breakpad/src/processor/basic_code_modules.cc',
