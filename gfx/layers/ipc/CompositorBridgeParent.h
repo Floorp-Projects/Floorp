@@ -29,7 +29,9 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/ISurfaceAllocator.h" // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
@@ -53,6 +55,7 @@ class DrawTarget;
 
 namespace ipc {
 class GeckoChildProcessHost;
+class Shmem;
 } // namespace ipc
 
 namespace layers {
@@ -223,9 +226,10 @@ protected:
 };
 
 class CompositorBridgeParent final : public PCompositorBridgeParent,
-                               public ShadowLayersManager
+                                     public ShadowLayersManager,
+                                     public ISurfaceAllocator,
+                                     public ShmemAllocator
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorBridgeParent)
   friend class CompositorVsyncScheduler;
 
 public:
@@ -299,6 +303,26 @@ public:
                                       const uint64_t& aInputBlockId,
                                       const nsTArray<ScrollableLayerGuid>& aTargets) override;
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) override { return mCompositionManager; }
+
+  virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                              const LayersBackend& aLayersBackend,
+                                              const TextureFlags& aFlags,
+                                              const uint64_t& aId) override;
+  virtual bool DeallocPTextureParent(PTextureParent* actor) override;
+
+  virtual bool IsSameProcess() const override;
+
+  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
+
+  virtual bool AllocShmem(size_t aSize,
+                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
+                          mozilla::ipc::Shmem* aShmem) override;
+
+  virtual bool AllocUnsafeShmem(size_t aSize,
+                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
+                                mozilla::ipc::Shmem* aShmem) override;
+
+  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   /**
    * Request that the compositor be recreated due to a shared device reset.
