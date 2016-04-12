@@ -145,7 +145,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mUserEnteredView.setOnClickListener(mClickListener);
 
         mUserEnteredTextView = (TextView) findViewById(R.id.suggestion_text);
-        mSearchHistorySuggestionIcon = DrawableUtil.tintDrawable(getContext(), R.drawable.icon_most_recent_empty, R.color.tabs_tray_icon_grey);
+        mSearchHistorySuggestionIcon = DrawableUtil.tintDrawableWithColorRes(getContext(), R.drawable.icon_most_recent_empty, R.color.tabs_tray_icon_grey);
 
         // Suggestion limits
         mMaxSavedSuggestions = getResources().getInteger(R.integer.max_saved_suggestions);
