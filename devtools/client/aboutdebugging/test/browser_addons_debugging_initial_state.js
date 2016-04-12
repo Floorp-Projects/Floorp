@@ -8,6 +8,7 @@
 // - devtools.debugger.remote-enabled
 
 const ADDON_ID = "test-devtools@mozilla.org";
+const ADDON_NAME = "test-devtools";
 
 const TEST_DATA = [
   {
@@ -48,7 +49,8 @@ function* testCheckboxState(testData) {
   let { tab, document } = yield openAboutDebugging("addons");
 
   info("Install a test addon.");
-  yield installAddon(document, "addons/unpacked/install.rdf", "test-devtools");
+  yield installAddon(document, "addons/unpacked/install.rdf", ADDON_NAME,
+                     "test-devtools");
 
   info("Test checkbox checked state.");
   let addonDebugCheckbox = document.querySelector("#enable-addon-debugging");
@@ -61,7 +63,7 @@ function* testCheckboxState(testData) {
     "Debug buttons should be in the expected state");
 
   info("Uninstall test addon installed earlier.");
-  yield uninstallAddon(ADDON_ID);
+  yield uninstallAddon(document, ADDON_ID, ADDON_NAME);
 
   yield closeAboutDebugging(tab);
 }
