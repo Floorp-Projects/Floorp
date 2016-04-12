@@ -313,7 +313,7 @@ SandboxBroker::SetSecurityLevelForIPDLUnitTestProcess()
 }
 
 bool
-SandboxBroker::SetSecurityLevelForGMPlugin()
+SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
 {
   if (!mPolicy) {
     return false;
@@ -322,8 +322,9 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
   auto result = mPolicy->SetJobLevel(sandbox::JOB_LOCKDOWN, 0);
   bool ret = (sandbox::SBOX_ALL_OK == result);
 
-  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                  sandbox::USER_LOCKDOWN);
+  auto level = (aLevel == Restricted) ?
+    sandbox::USER_RESTRICTED : sandbox::USER_LOCKDOWN;
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS, level);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   result = mPolicy->SetAlternateDesktop(true);
