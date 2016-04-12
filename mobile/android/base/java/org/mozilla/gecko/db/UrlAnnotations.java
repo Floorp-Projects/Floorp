@@ -28,4 +28,22 @@ public interface UrlAnnotations {
 
     void insertReaderViewUrl(ContentResolver cr, String pageURL);
     void deleteReaderViewUrl(ContentResolver cr, String pageURL);
+
+    /**
+     * Did the user ever interact with this URL in regards to home screen shortcuts?
+     *
+     * @return true if the user has created a home screen shortcut or declined to create one in the
+     *         past. This method will still return true if the shortcut has been removed from the
+     *         home screen by the user.
+     */
+    boolean hasAcceptedOrDeclinedHomeScreenShortcut(ContentResolver cr, String url);
+
+    /**
+     * Insert an indication that the user has interacted with this URL in regards to home screen
+     * shortcuts.
+     *
+     * @param hasCreatedShortCut True if a home screen shortcut has been created for this URL. False
+     *                           if the user has actively declined to create a shortcut for this URL.
+     */
+    void insertHomeScreenShortcut(ContentResolver cr, String url, boolean hasCreatedShortCut);
 }

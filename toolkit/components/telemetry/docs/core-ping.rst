@@ -78,6 +78,9 @@ engine from the search plugins (in order):
 If the plugins fail to create a search engine instance, this field is also
 ``null``.
 
+This field can also be ``null`` when a custom search engine is set as the
+default.
+
 profileDate
 ~~~~~~~~~~~
 On Android, this value is created at profile creation time and retrieved or,

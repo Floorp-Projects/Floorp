@@ -45,6 +45,9 @@ public class Experiments {
     // Synchronizing the catalog of downloadable content from Kinto
     public static final String DOWNLOAD_CONTENT_CATALOG_SYNC = "download-content-catalog-sync";
 
+    // Promotion for "Add to homescreen"
+    public static final String PROMOTE_ADD_TO_HOMESCREEN = "promote-add-to-homescreen";
+
     public static final String PREF_ONBOARDING_VERSION = "onboarding_version";
 
     private static volatile Boolean disabled = null;
