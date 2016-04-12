@@ -2230,7 +2230,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     BufferMode layerBuffering = BufferMode::BUFFERED;
     RefPtr<DrawTarget> dt = GetDrawTarget(region, &layerBuffering);
-    if (!dt) {
+    if (!dt || !dt->IsValid()) {
         return FALSE;
     }
     RefPtr<gfxContext> ctx;
@@ -2254,12 +2254,16 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // channel is used on compositing window managers.)
         layerBuffering = BufferMode::BUFFER_NONE;
         RefPtr<DrawTarget> destDT = dt->CreateSimilarDrawTarget(boundsRect.Size(), SurfaceFormat::B8G8R8A8);
-        ctx = new gfxContext(destDT, boundsRect.TopLeft());
+        if (!destDT || !destDT->IsValid()) {
+            return FALSE;
+        }
+        ctx = gfxContext::ForDrawTarget(destDT, boundsRect.TopLeft());
     } else {
         gfxUtils::ClipToRegion(dt, region.ToUnknownRegion());
 
-        ctx = new gfxContext(dt, offset);
+        ctx = gfxContext::ForDrawTarget(dt, offset);
     }
+    MOZ_ASSERT(ctx); // checked both dt and destDT valid draw target above
 
 #if 0
     // NOTE: Paint flashing region would be wrong for cairo, since

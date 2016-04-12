@@ -568,12 +568,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
       }
       IntRect drawRect = RoundedOut(ToRect(clipRect));
       RefPtr<DrawTarget> targetDT = aContext.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::A8);
-      if (!targetDT) {
+      if (!targetDT || !targetDT->IsValid()) {
         aContext.Restore();
         return;
       }
 
-      RefPtr<gfxContext> target = new gfxContext(targetDT);
+      RefPtr<gfxContext> target = gfxContext::ForDrawTarget(targetDT);
+      MOZ_ASSERT(target); // alrady checked the draw target above
       target->SetMatrix(matrixAutoSaveRestore.Matrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
 
       // Compose all mask-images onto maskSurface.
@@ -617,11 +618,12 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
       IntRect drawRect = RoundedOut(ToRect(clipRect));
 
       RefPtr<DrawTarget> targetDT = aContext.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::B8G8R8A8);
-      if (!targetDT) {
+      if (!targetDT || !targetDT->IsValid()) {
         aContext.Restore();
         return;
       }
-      target = new gfxContext(targetDT);
+      target = gfxContext::ForDrawTarget(targetDT);
+      MOZ_ASSERT(target); // already checked the draw target above
       target->SetMatrix(aContext.CurrentMatrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
       targetOffset = drawRect.TopLeft();
     }

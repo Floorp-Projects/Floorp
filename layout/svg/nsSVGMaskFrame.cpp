@@ -253,14 +253,15 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   RefPtr<DrawTarget> maskDT =
     Factory::CreateDrawTarget(BackendType::CAIRO, maskSurfaceSize,
                               SurfaceFormat::B8G8R8A8);
-  if (!maskDT) {
+  if (!maskDT || !maskDT->IsValid()) {
     return nullptr;
   }
 
   gfxMatrix maskSurfaceMatrix =
     aContext->CurrentMatrix() * gfxMatrix::Translation(-maskSurfaceRect.TopLeft());
 
-  RefPtr<gfxContext> tmpCtx = new gfxContext(maskDT);
+  RefPtr<gfxContext> tmpCtx = gfxContext::ForDrawTarget(maskDT);
+  MOZ_ASSERT(tmpCtx); // already checked the draw target above
   tmpCtx->SetMatrix(maskSurfaceMatrix);
 
   mMatrixForChildren = GetMaskTransform(aMaskedFrame) * aMatrix;
