@@ -648,6 +648,11 @@ NSS_CMSEncoder_Cancel(NSSCMSEncoderContext *p7ecx)
     if (p7ecx->childp7ecx) {
 	rv = NSS_CMSEncoder_Cancel(p7ecx->childp7ecx); /* frees p7ecx->childp7ecx */
 	/* remember rv for now */
+#ifdef CMSDEBUG
+	if (rv != SECSuccess) {
+	    fprintf(stderr, "Fail to cancel inner encoder\n");
+	}
+#endif
     }
 
     /*

@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "tls_filter.h"
+#include "sslproto.h"
 
 #include <iostream>
 #include "gtest_utils.h"
@@ -269,6 +270,138 @@ PacketFilter::Action ChainedPacketFilter::Filter(const DataBuffer& input,
     }
   }
   return changed ? CHANGE : KEEP;
+}
+
+PacketFilter::Action TlsExtensionFilter::FilterHandshake(
+    const HandshakeHeader& header,
+    const DataBuffer& input, DataBuffer* output) {
+  if (header.handshake_type() == kTlsHandshakeClientHello) {
+    TlsParser parser(input);
+    if (!FindClientHelloExtensions(&parser, header)) {
+      return KEEP;
+    }
+    return FilterExtensions(&parser, input, output);
+  }
+  if (header.handshake_type() == kTlsHandshakeServerHello) {
+    TlsParser parser(input);
+    if (!FindServerHelloExtensions(&parser, header.version())) {
+      return KEEP;
+    }
+    return FilterExtensions(&parser, input, output);
+  }
+  return KEEP;
+}
+
+bool TlsExtensionFilter::FindClientHelloExtensions(TlsParser* parser,
+                                                   const Versioned& header) {
+  if (!parser->Skip(2 + 32)) { // version + random
+    return false;
+  }
+  if (!parser->SkipVariable(1)) { // session ID
+    return false;
+  }
+  if (header.is_dtls() && !parser->SkipVariable(1)) { // DTLS cookie
+    return false;
+  }
+  if (!parser->SkipVariable(2)) { // cipher suites
+    return false;
+  }
+  if (!parser->SkipVariable(1)) { // compression methods
+    return false;
+  }
+  return true;
+}
+
+bool TlsExtensionFilter::FindServerHelloExtensions(TlsParser* parser,
+                                                   uint16_t version) {
+  if (!parser->Skip(2 + 32)) { // version + random
+    return false;
+  }
+  if (!parser->SkipVariable(1)) { // session ID
+    return false;
+  }
+  if (!parser->Skip(2)) { // cipher suite
+    return false;
+  }
+  if (NormalizeTlsVersion(version) <= SSL_LIBRARY_VERSION_TLS_1_2) {
+    if (!parser->Skip(1)) { // compression method
+      return false;
+    }
+  }
+  return true;
+}
+
+PacketFilter::Action TlsExtensionFilter::FilterExtensions(
+    TlsParser* parser, const DataBuffer& input, DataBuffer* output) {
+  size_t length_offset = parser->consumed();
+  uint32_t all_extensions;
+  if (!parser->Read(&all_extensions, 2)) {
+    return KEEP; // no extensions, odd but OK
+  }
+  if (all_extensions != parser->remaining()) {
+    return KEEP; // malformed
+  }
+
+  bool changed = false;
+
+  // Write out the start of the message.
+  output->Allocate(input.len());
+  size_t offset = output->Write(0, input.data(), parser->consumed());
+
+  while (parser->remaining()) {
+    uint32_t extension_type;
+    if (!parser->Read(&extension_type, 2)) {
+      return KEEP; // malformed
+    }
+
+    DataBuffer extension;
+    if (!parser->ReadVariable(&extension, 2)) {
+      return KEEP; // malformed
+    }
+
+    DataBuffer filtered;
+    PacketFilter::Action action = FilterExtension(extension_type, extension,
+                                                  &filtered);
+    if (action == DROP) {
+      changed = true;
+      std::cerr << "extension drop: " << extension << std::endl;
+      continue;
+    }
+
+    const DataBuffer* source = &extension;
+    if (action == CHANGE) {
+      EXPECT_GT(0x10000U, filtered.len());
+      changed = true;
+      std::cerr << "extension old: " << extension << std::endl;
+      std::cerr << "extension new: " << filtered << std::endl;
+      source = &filtered;
+    }
+
+    // Write out extension.
+    offset = output->Write(offset, extension_type, 2);
+    offset = output->Write(offset, source->len(), 2);
+    offset = output->Write(offset, *source);
+  }
+  output->Truncate(offset);
+
+  if (changed) {
+    size_t newlen = output->len() - length_offset - 2;
+    EXPECT_GT(0x10000U, newlen);
+    if (newlen >= 0x10000) {
+      return KEEP; // bad: size increased too much
+    }
+    output->Write(length_offset, newlen, 2);
+    return CHANGE;
+  }
+  return KEEP;
+}
+
+PacketFilter::Action TlsExtensionCapture::FilterExtension(
+    uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
+  if (extension_type == extension_) {
+    data_.Assign(input);
+  }
+  return KEEP;
 }
 
 }  // namespace nss_test

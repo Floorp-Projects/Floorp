@@ -243,7 +243,7 @@ struct Pk11Install_Info_str {
 Pk11Install_Info*
 Pk11Install_Info_new();
 void
-Pk11Install_Info_init();
+Pk11Install_Info_init(Pk11Install_Info* _this);
 void
 Pk11Install_Info_delete(Pk11Install_Info* _this);
 /*// Returns NULL for success, error message if parse error.*/

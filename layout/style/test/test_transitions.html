@@ -738,18 +738,15 @@ add_future_call(8, check_number_tests);
 
 function check_display_tests(time)
 {
-    var tf = timingFunctions["ease-in-out"];
     for (var i in display_tests) {
         var p = display_tests[i];
 
-        check_transition_value(tf, 0, 8, 0, 100,
-                               getComputedStyle(p, "").textIndent,
-                               "display test for test with " +
-                                 p.childNodes[0].data,
-        // TODO: Making transitions work on 'display:none' elements is
-        // still not implemented.
-                               function(range) { return p != to_none_test &&
-                                                 range[1] < 100 });
+        // There is no transition if the old or new style is display:none, so
+        // the computed value is always the end value.
+        var computedValue = getComputedStyle(p, "").textIndent;
+        is(computedValue, "100px",
+           "display test for test with " + p.childNodes[0].data +
+           ": computed value " + computedValue + " should be 100px.");
     }
 }
 

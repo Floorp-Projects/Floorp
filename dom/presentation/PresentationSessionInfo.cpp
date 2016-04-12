@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindow.h"
 #include "nsIDocShell.h"
 #include "nsIFrameLoader.h"
 #include "nsIMutableArray.h"
@@ -121,21 +122,21 @@ PresentationNetworkHelper::OnGetWifiIPAddress(const nsACString& aIPAddress)
 
 #endif // MOZ_WIDGET_ANDROID
 
-class PresentationChannelDescription final : public nsIPresentationChannelDescription
+class TCPPresentationChannelDescription final : public nsIPresentationChannelDescription
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONCHANNELDESCRIPTION
 
-  PresentationChannelDescription(const nsACString& aAddress,
-                                 uint16_t aPort)
+  TCPPresentationChannelDescription(const nsACString& aAddress,
+                                    uint16_t aPort)
     : mAddress(aAddress)
     , mPort(aPort)
   {
   }
 
 private:
-  ~PresentationChannelDescription() {}
+  ~TCPPresentationChannelDescription() {}
 
   nsCString mAddress;
   uint16_t mPort;
@@ -144,23 +145,21 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-NS_IMPL_ISUPPORTS(PresentationChannelDescription, nsIPresentationChannelDescription)
+NS_IMPL_ISUPPORTS(TCPPresentationChannelDescription, nsIPresentationChannelDescription)
 
 NS_IMETHODIMP
-PresentationChannelDescription::GetType(uint8_t* aRetVal)
+TCPPresentationChannelDescription::GetType(uint8_t* aRetVal)
 {
   if (NS_WARN_IF(!aRetVal)) {
     return NS_ERROR_INVALID_POINTER;
   }
 
-  // TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
-  // Only support TCP socket for now.
   *aRetVal = nsIPresentationChannelDescription::TYPE_TCP;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal)
+TCPPresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal)
 {
   if (NS_WARN_IF(!aRetVal)) {
     return NS_ERROR_INVALID_POINTER;
@@ -171,11 +170,9 @@ PresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
-  // Ultimately we may use all the available addresses. DataChannel appears
-  // more robust upon handling ICE. And at the first stage Presentation API is
-  // only exposed on Firefox OS where the first IP appears enough for most
-  // scenarios.
+  // TODO bug 1228504 Take all IP addresses in PresentationChannelDescription
+  // into account. And at the first stage Presentation API is only exposed on
+  // Firefox OS where the first IP appears enough for most scenarios.
   nsCOMPtr<nsISupportsCString> address = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
   if (NS_WARN_IF(!address)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -189,7 +186,7 @@ PresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal)
 }
 
 NS_IMETHODIMP
-PresentationChannelDescription::GetTcpPort(uint16_t* aRetVal)
+TCPPresentationChannelDescription::GetTcpPort(uint16_t* aRetVal)
 {
   if (NS_WARN_IF(!aRetVal)) {
     return NS_ERROR_INVALID_POINTER;
@@ -200,10 +197,8 @@ PresentationChannelDescription::GetTcpPort(uint16_t* aRetVal)
 }
 
 NS_IMETHODIMP
-PresentationChannelDescription::GetDataChannelSDP(nsAString& aDataChannelSDP)
+TCPPresentationChannelDescription::GetDataChannelSDP(nsAString& aDataChannelSDP)
 {
-  // TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
-  // Only support TCP socket for now.
   aDataChannelSDP.Truncate();
   return NS_OK;
 }
@@ -214,7 +209,8 @@ PresentationChannelDescription::GetDataChannelSDP(nsAString& aDataChannelSDP)
 
 NS_IMPL_ISUPPORTS(PresentationSessionInfo,
                   nsIPresentationSessionTransportCallback,
-                  nsIPresentationControlChannelListener);
+                  nsIPresentationControlChannelListener,
+                  nsIPresentationSessionTransportBuilderListener);
 
 /* virtual */ nsresult
 PresentationSessionInfo::Init(nsIPresentationControlChannel* aControlChannel)
@@ -240,6 +236,8 @@ PresentationSessionInfo::Shutdown(nsresult aReason)
   }
 
   mIsResponderReady = false;
+
+  mBuilder = nullptr;
 }
 
 nsresult
@@ -265,7 +263,7 @@ PresentationSessionInfo::SetListener(nsIPresentationSessionListener* aListener)
 }
 
 nsresult
-PresentationSessionInfo::Send(nsIInputStream* aData)
+PresentationSessionInfo::Send(const nsAString& aData)
 {
   if (NS_WARN_IF(!IsSessionReady())) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -330,6 +328,22 @@ PresentationSessionInfo::UntrackFromService()
   static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
 
   return NS_OK;
+}
+
+nsPIDOMWindowInner*
+PresentationSessionInfo::GetWindow()
+{
+  nsCOMPtr<nsIPresentationService> service =
+  do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return nullptr;
+  }
+  uint64_t windowId = 0;
+  if (NS_WARN_IF(NS_FAILED(service->GetWindowIdBySessionId(mSessionId, &windowId)))) {
+    return nullptr;
+  }
+
+  return nsGlobalWindow::GetInnerWindowWithId(windowId)->AsInner();
 }
 
 /* virtual */ bool
@@ -406,7 +420,31 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
   return mListener->NotifyMessage(mSessionId, aData);
 }
 
-/*
+// nsIPresentationSessionTransportBuilderListener
+NS_IMETHODIMP
+PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* transport)
+{
+  mTransport = transport;
+
+  nsresult rv = mTransport->SetCallback(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mListener) {
+    mTransport->EnableDataNotification();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::OnError(nsresult reason)
+{
+  return ReplyError(reason);
+}
+
+/**
  * Implementation of PresentationControllingInfo
  *
  * During presentation session establishment, the sender expects the following
@@ -501,11 +539,10 @@ PresentationControllingInfo::GetAddress()
     return NS_ERROR_FAILURE;
   }
 
-  // TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
-  // Ultimately we may use all the available addresses. DataChannel appears
-  // more robust upon handling ICE. And at the first stage Presentation API is
-  // only exposed on Firefox OS where the first IP appears enough for most
-  // scenarios.
+  // TODO bug 1228504 Take all IP addresses in PresentationChannelDescription
+  // into account. And at the first stage Presentation API is only exposed on
+  // Firefox OS where the first IP appears enough for most scenarios.
+
   nsAutoString ip;
   ip.Assign(ips[0]);
 
@@ -570,8 +607,8 @@ PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
     return rv;
   }
 
-  RefPtr<PresentationChannelDescription> description =
-    new PresentationChannelDescription(aAddress, static_cast<uint16_t>(port));
+  RefPtr<TCPPresentationChannelDescription> description =
+    new TCPPresentationChannelDescription(aAddress, static_cast<uint16_t>(port));
   return mControlChannel->SendOffer(description);
 }
 
@@ -607,7 +644,27 @@ NS_IMETHODIMP
 PresentationControllingInfo::NotifyOpened()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GetAddress();
+
+  if (!Preferences::GetBool("dom.presentation.session_transport.data_channel.enable")) {
+    // Build TCP session transport
+    return GetAddress();
+  }
+
+  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
+    do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
+
+  if (NS_WARN_IF(!builder)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mBuilder = builder;
+  mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
+
+  return builder->BuildDataChannelTransport(nsIPresentationSessionTransportBuilder::TYPE_SENDER,
+                                            GetWindow(),
+                                            mControlChannel,
+                                            this);
+
 }
 
 NS_IMETHODIMP
@@ -644,23 +701,15 @@ PresentationControllingInfo::OnSocketAccepted(nsIServerSocket* aServerSocket,
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Initialize |mTransport| and use |this| as the callback.
-  mTransport = do_CreateInstance(PRESENTATION_SESSION_TRANSPORT_CONTRACTID);
-  if (NS_WARN_IF(!mTransport)) {
+  // Initialize session transport builder and use |this| as the callback.
+  nsCOMPtr<nsIPresentationTCPSessionTransportBuilder> builder =
+    do_CreateInstance(PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID);
+  if (NS_WARN_IF(!builder)) {
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
-  rv = mTransport->InitWithSocketTransport(aTransport, this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Enable data notification if the listener has been registered.
-  if (mListener) {
-    return mTransport->EnableDataNotification();
-  }
-
-  return NS_OK;
+  mTransportType = nsIPresentationChannelDescription::TYPE_TCP;
+  return builder->BuildTCPSenderTransport(aTransport, this);
 }
 
 NS_IMETHODIMP
@@ -686,7 +735,7 @@ PresentationControllingInfo::OnStopListening(nsIServerSocket* aServerSocket,
   return NS_OK;
 }
 
-/*
+/**
  * Implementation of PresentationPresentingInfo
  *
  * During presentation session establishment, the receiver expects the following
@@ -745,49 +794,106 @@ PresentationPresentingInfo::Shutdown(nsresult aReason)
   mPromise = nullptr;
 }
 
-nsresult
-PresentationPresentingInfo::InitTransportAndSendAnswer()
+// nsIPresentationSessionTransportBuilderListener
+NS_IMETHODIMP
+PresentationPresentingInfo::OnSessionTransport(nsIPresentationSessionTransport* transport)
 {
-  // Establish a data transport channel |mTransport| to the sender and use
-  // |this| as the callback.
-  mTransport = do_CreateInstance(PRESENTATION_SESSION_TRANSPORT_CONTRACTID);
-  if (NS_WARN_IF(!mTransport)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  nsresult rv = PresentationSessionInfo::OnSessionTransport(transport);
 
-  nsresult rv = mTransport->InitWithChannelDescription(mRequesterDescription, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // Enable data notification if the listener has been registered.
-  if (mListener) {
-    rv = mTransport->EnableDataNotification();
+  // send answer for TCP session transport
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_TCP) {
+    // Prepare and send the answer.
+    // In the current implementation of |PresentationSessionTransport|,
+    // |GetSelfAddress| cannot return the real info when it's initialized via
+    // |buildTCPReceiverTransport|. Yet this deficiency only affects the channel
+    // description for the answer, which is not actually checked at requester side.
+    nsCOMPtr<nsINetAddr> selfAddr;
+    rv = mTransport->GetSelfAddress(getter_AddRefs(selfAddr));
+    NS_WARN_IF(NS_FAILED(rv));
+
+    nsCString address;
+    uint16_t port = 0;
+    if (NS_SUCCEEDED(rv)) {
+      selfAddr->GetAddress(address);
+      selfAddr->GetPort(&port);
+    }
+    nsCOMPtr<nsIPresentationChannelDescription> description =
+      new TCPPresentationChannelDescription(address, port);
+
+    return mControlChannel->SendAnswer(description);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationPresentingInfo::OnError(nsresult reason)
+{
+  return PresentationSessionInfo::OnError(reason);
+}
+
+nsresult
+PresentationPresentingInfo::InitTransportAndSendAnswer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  uint8_t type = 0;
+  nsresult rv = mRequesterDescription->GetType(&type);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (type == nsIPresentationChannelDescription::TYPE_TCP) {
+    // Establish a data transport channel |mTransport| to the sender and use
+    // |this| as the callback.
+    nsCOMPtr<nsIPresentationTCPSessionTransportBuilder> builder =
+      do_CreateInstance(PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID);
+    if (NS_WARN_IF(!builder)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    mBuilder = builder;
+    mTransportType = nsIPresentationChannelDescription::TYPE_TCP;
+    return builder->BuildTCPReceiverTransport(mRequesterDescription, this);
+  }
+
+  if (type == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    if (!Preferences::GetBool("dom.presentation.session_transport.data_channel.enable")) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
+      do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
+
+    if (NS_WARN_IF(!builder)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    mBuilder = builder;
+    mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
+    rv = builder->BuildDataChannelTransport(nsIPresentationSessionTransportBuilder::TYPE_RECEIVER,
+                                            GetWindow(),
+                                            mControlChannel,
+                                            this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    // delegate |onOffer| to builder
+    nsCOMPtr<nsIPresentationControlChannelListener> listener(do_QueryInterface(builder));
+
+    if (NS_WARN_IF(!listener)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    return listener->OnOffer(mRequesterDescription);
   }
 
-  // Prepare and send the answer.
-  // TODO bug 1148307 Implement PresentationSessionTransport with DataChannel.
-  // In the current implementation of |PresentationSessionTransport|,
-  // |GetSelfAddress| cannot return the real info when it's initialized via
-  // |InitWithChannelDescription|. Yet this deficiency only affects the channel
-  // description for the answer, which is not actually checked at requester side.
-  nsCOMPtr<nsINetAddr> selfAddr;
-  rv = mTransport->GetSelfAddress(getter_AddRefs(selfAddr));
-  NS_WARN_IF(NS_FAILED(rv));
-
-  nsCString address;
-  uint16_t port = 0;
-  if (NS_SUCCEEDED(rv)) {
-    selfAddr->GetAddress(address);
-    selfAddr->GetPort(&port);
-  }
-  nsCOMPtr<nsIPresentationChannelDescription> description =
-    new PresentationChannelDescription(address, port);
-
-  return mControlChannel->SendAnswer(description);
+  MOZ_ASSERT(false, "Unknown nsIPresentationChannelDescription type!");
+  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
@@ -918,7 +1024,7 @@ PresentationPresentingInfo::Notify(nsITimer* aTimer)
 // PromiseNativeHandler
 void
 PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
-                                            JS::Handle<JS::Value> aValue)
+                                             JS::Handle<JS::Value> aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -982,7 +1088,7 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
 
 void
 PresentationPresentingInfo::RejectedCallback(JSContext* aCx,
-                                            JS::Handle<JS::Value> aValue)
+                                             JS::Handle<JS::Value> aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_WARNING("Launching the receiver page has been rejected.");

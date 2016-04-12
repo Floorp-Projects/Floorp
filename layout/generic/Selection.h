@@ -354,7 +354,7 @@ public:
   }
 };
 
-class MOZ_STACK_CLASS AutoHideSelectionChanges final
+class MOZ_RAII AutoHideSelectionChanges final
 {
 private:
   RefPtr<Selection> mSelection;

@@ -350,7 +350,7 @@ struct SFTKSlotStr {
     PRInt32             rwSessionCount;    	/* set by atomic operations */
                                           	/* (reset) */
     int			sessionObjectHandleCount;/* variable - perserved */
-    int			index;			/* invariant */
+    CK_ULONG		index;			/* invariant */
     PLHashTable		*tokObjHashTable;	/* invariant */
     SFTKObject		**sessObjHashTable;	/* variable - reset */
     unsigned int	sessObjHashSize;	/* invariant */

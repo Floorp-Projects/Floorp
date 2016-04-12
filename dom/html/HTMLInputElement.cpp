@@ -2562,7 +2562,7 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
     aFiles->GetLength(&listLength);
     for (uint32_t i = 0; i < listLength; i++) {
       OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
-      *element = files->UnsafeItem(i);
+      element->SetAsFile() = files->Item(i);
     }
   }
 
@@ -2678,9 +2678,6 @@ HTMLInputElement::UpdateFileList()
     for (uint32_t i = 0; i < array.Length(); ++i) {
       if (array[i].IsFile()) {
         mFileList->Append(array[i].GetAsFile());
-      } else {
-        MOZ_ASSERT(array[i].IsDirectory());
-        mFileList->Append(array[i].GetAsDirectory());
       }
     }
   }
@@ -5042,13 +5039,6 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
 
   for (uint32_t i = 0; i < filesAndDirs.Length(); ++i) {
     if (filesAndDirs[i].IsDirectory()) {
-#if defined(ANDROID) || defined(MOZ_B2G)
-      MOZ_ASSERT(false,
-                 "Directory picking should have been redirected to normal "
-                 "file picking for platforms that don't have a directory "
-                 "picker");
-#endif
-
       RefPtr<Directory> directory = filesAndDirs[i].GetAsDirectory();
 
       // In future we could refactor SetFilePickerFiltersFromAccept to return a
@@ -5996,7 +5986,7 @@ HTMLInputElement::AddedToRadioGroup()
 {
   // If the element is neither in a form nor a document, there is no group so we
   // should just stop here.
-  if (!mForm && !IsInDoc()) {
+  if (!mForm && !IsInUncomposedDoc()) {
     return;
   }
 

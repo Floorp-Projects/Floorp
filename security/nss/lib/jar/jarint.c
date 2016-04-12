@@ -14,34 +14,34 @@
  * Translate JAR_FOPEN arguments to PR_Open arguments
  */
 PRFileDesc*
-JAR_FOPEN_to_PR_Open(const char* name, const char *mode)
+JAR_FOPEN_to_PR_Open(const char* name, const char* mode)
 {
 
-    PRIntn  prflags=0, prmode=0;
+    PRIntn prflags = 0, prmode = 0;
 
     /* Get read/write flags */
     if (strchr(mode, 'r') && !strchr(mode, '+')) {
-	prflags |= PR_RDONLY;
-    } else if( (strchr(mode, 'w') || strchr(mode, 'a')) &&
-	!strchr(mode,'+') ) {
-	prflags |= PR_WRONLY;
+        prflags |= PR_RDONLY;
+    } else if ((strchr(mode, 'w') || strchr(mode, 'a')) &&
+               !strchr(mode, '+')) {
+        prflags |= PR_WRONLY;
     } else {
-	prflags |= PR_RDWR;
+        prflags |= PR_RDWR;
     }
 
     /* Create a new file? */
     if (strchr(mode, 'w') || strchr(mode, 'a')) {
-	prflags |= PR_CREATE_FILE;
+        prflags |= PR_CREATE_FILE;
     }
 
     /* Append? */
     if (strchr(mode, 'a')) {
-	prflags |= PR_APPEND;
+        prflags |= PR_APPEND;
     }
 
     /* Truncate? */
     if (strchr(mode, 'w')) {
-	prflags |= PR_TRUNCATE;
+        prflags |= PR_TRUNCATE;
     }
 
     /* We can't do umask because it isn't XP.  Choose some default

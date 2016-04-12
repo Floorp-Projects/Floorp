@@ -20,9 +20,8 @@ locale directory is the "locale" directory beneath the directory containing the
 module that defines it.
 
 People implementing ConfigProvider instances are expected to define a complete
-gettext .po and .mo file for the en-US locale. You can use the gettext-provided
-msgfmt binary to perform this conversion. Generation of the original .po file
-can be done via the write_pot() of ConfigSettings.
+gettext .po and .mo file for the en_US locale. The |mach settings locale-gen|
+command can be used to populate these files.
 """
 
 from __future__ import absolute_import, unicode_literals
@@ -31,13 +30,26 @@ import collections
 import gettext
 import os
 import sys
+from functools import wraps
 
 if sys.version_info[0] == 3:
-    from configparser import RawConfigParser
+    from configparser import RawConfigParser, NoSectionError
     str_type = str
 else:
-    from ConfigParser import RawConfigParser
+    from ConfigParser import RawConfigParser, NoSectionError
     str_type = basestring
+
+
+TRANSLATION_NOT_FOUND = """
+No translation files detected for {section}, there must at least be a
+translation for the 'en_US' locale. To generate these files, run:
+
+    mach settings locale-gen {section}
+""".lstrip()
+
+
+class ConfigException(Exception):
+    pass
 
 
 class ConfigType(object):
@@ -128,122 +140,31 @@ class PathType(StringType):
         return config.get(section, option)
 
 
-class AbsolutePathType(PathType):
-    @staticmethod
-    def validate(value):
-        if not isinstance(value, str_type):
-            raise TypeError()
-
-        if not os.path.isabs(value):
-            raise ValueError()
-
-
-class RelativePathType(PathType):
-    @staticmethod
-    def validate(value):
-        if not isinstance(value, str_type):
-            raise TypeError()
-
-        if os.path.isabs(value):
-            raise ValueError()
+TYPE_CLASSES = {
+    'string': StringType,
+    'boolean': BooleanType,
+    'int': IntegerType,
+    'pos_int': PositiveIntegerType,
+    'path': PathType,
+}
 
 
 class DefaultValue(object):
     pass
 
 
-class ConfigProvider(object):
-    """Abstract base class for an object providing config settings.
-
-    Classes implementing this interface expose configurable settings. Settings
-    are typically only relevant to that component itself. But, nothing says
-    settings can't be shared by multiple components.
+def reraise_attribute_error(func):
+    """Used to make sure __getattr__ wrappers around __getitem__
+    raise AttributeError instead of KeyError.
     """
-
-    @classmethod
-    def register_settings(cls):
-        """Registers config settings.
-
-        This is called automatically. Child classes should likely not touch it.
-        See _register_settings() instead.
-        """
-        if hasattr(cls, '_settings_registered'):
-            return
-
-        cls._settings_registered = True
-
-        cls.config_settings = {}
-
-        ourdir = os.path.dirname(__file__)
-        cls.config_settings_locale_directory = os.path.join(ourdir, 'locale')
-
-        cls._register_settings()
-
-    @classmethod
-    def _register_settings(cls):
-        """The actual implementation of register_settings().
-
-        This is what child classes should implement. They should not touch
-        register_settings().
-
-        Implementations typically make 1 or more calls to _register_setting().
-        """
-        raise NotImplemented('%s must implement _register_settings.' %
-            __name__)
-
-    @classmethod
-    def register_setting(cls, section, option, type_cls, default=DefaultValue,
-        choices=None, domain=None):
-        """Register a config setting with this type.
-
-        This is a convenience method to populate available settings. It is
-        typically called in the class's _register_settings() implementation.
-
-        Each setting must have:
-
-            section -- str section to which the setting belongs. This is how
-                settings are grouped.
-
-            option -- str id for the setting. This must be unique within the
-                section it appears.
-
-            type -- a ConfigType-derived type defining the type of the setting.
-
-        Each setting has the following optional parameters:
-
-            default -- The default value for the setting. If None (the default)
-                there is no default.
-
-            choices -- A set of values this setting can hold. Values not in
-                this set are invalid.
-
-            domain -- Translation domain for this setting. By default, the
-                 domain is the same as the section name.
-        """
-        if not section in cls.config_settings:
-            cls.config_settings[section] = {}
-
-        if option in cls.config_settings[section]:
-            raise Exception('Setting has already been registered: %s.%s' % (
-                section, option))
-
-        domain = domain if domain is not None else section
-
-        meta = {
-            'short': '%s.short' % option,
-            'full': '%s.full' % option,
-            'type_cls': type_cls,
-            'domain': domain,
-            'localedir': cls.config_settings_locale_directory,
-        }
-
-        if default != DefaultValue:
-            meta['default'] = default
-
-        if choices is not None:
-            meta['choices'] = choices
-
-        cls.config_settings[section][option] = meta
+    @wraps(func)
+    def _(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            exc_class, exc, tb = sys.exc_info()
+            raise AttributeError().__class__, exc, tb
+    return _
 
 
 class ConfigSettings(collections.Mapping):
@@ -299,37 +220,58 @@ class ConfigSettings(collections.Mapping):
             object.__setattr__(self, '_name', name)
             object.__setattr__(self, '_settings', settings)
 
+            wildcard = any(s == '*' for s in self._settings)
+            object.__setattr__(self, '_wildcard', wildcard)
+
+        @property
+        def options(self):
+            try:
+                return self._config.options(self._name)
+            except NoSectionError:
+                return []
+
+        def get_meta(self, option):
+            if option in self._settings:
+                return self._settings[option]
+            if self._wildcard:
+                return self._settings['*']
+            raise KeyError('Option not registered with provider: %s' % option)
+
+        def _validate(self, option, value):
+            meta = self.get_meta(option)
+            meta['type_cls'].validate(value)
+
+            if 'choices' in meta and value not in meta['choices']:
+                raise ValueError("Value '%s' must be one of: %s" % (
+                                 value, ', '.join(sorted(meta['choices']))))
+
         # MutableMapping interface
         def __len__(self):
-            return len(self._settings)
+            return len(self.options)
 
         def __iter__(self):
-            return iter(self._settings.keys())
+            return iter(self.options)
 
         def __contains__(self, k):
-            return k in self._settings
+            return self._config.has_option(self._name, k)
 
         def __getitem__(self, k):
-            if k not in self._settings:
-                raise KeyError('Option not registered with provider: %s' % k)
-
-            meta = self._settings[k]
+            meta = self.get_meta(k)
 
             if self._config.has_option(self._name, k):
-                return meta['type_cls'].from_config(self._config, self._name, k)
+                v = meta['type_cls'].from_config(self._config, self._name, k)
+            else:
+                v = meta.get('default', DefaultValue)
 
-            if not 'default' in meta:
+            if v == DefaultValue:
                 raise KeyError('No default value registered: %s' % k)
 
-            return meta['default']
+            self._validate(k, v)
+            return v
 
         def __setitem__(self, k, v):
-            if k not in self._settings:
-                raise KeyError('Option not registered with provider: %s' % k)
-
-            meta = self._settings[k]
-
-            meta['type_cls'].validate(v)
+            self._validate(k, v)
+            meta = self.get_meta(k)
 
             if not self._config.has_section(self._name):
                 self._config.add_section(self._name)
@@ -343,12 +285,15 @@ class ConfigSettings(collections.Mapping):
             if not len(self._config.options(self._name)):
                 self._config.remove_section(self._name)
 
+        @reraise_attribute_error
         def __getattr__(self, k):
             return self.__getitem__(k)
 
+        @reraise_attribute_error
         def __setattr__(self, k, v):
             self.__setitem__(k, v)
 
+        @reraise_attribute_error
         def __delattr__(self, k):
             self.__delitem__(k)
 
@@ -359,7 +304,7 @@ class ConfigSettings(collections.Mapping):
         self._settings = {}
         self._sections = {}
         self._finalized = False
-        self._loaded_filenames = set()
+        self.loaded_files = set()
 
     def load_file(self, filename):
         self.load_files([filename])
@@ -375,7 +320,7 @@ class ConfigSettings(collections.Mapping):
 
         fps = [open(f, 'rt') for f in filtered]
         self.load_fps(fps)
-        self._loaded_filenames.update(set(filtered))
+        self.loaded_files.update(set(filtered))
         for fp in fps:
             fp.close()
 
@@ -385,70 +330,97 @@ class ConfigSettings(collections.Mapping):
         for fp in fps:
             self._config.readfp(fp)
 
-    def loaded_files(self):
-        return self._loaded_filenames
-
     def write(self, fh):
         """Write the config to a file object."""
         self._config.write(fh)
 
-    def validate(self):
-        """Ensure that the current config passes validation.
+    @classmethod
+    def _format_metadata(cls, provider, section, option, type_cls,
+                         default=DefaultValue, extra=None):
+        """Formats and returns the metadata for a setting.
 
-        This is a generator of tuples describing any validation errors. The
-        elements of the tuple are:
+        Each setting must have:
 
-            (bool) True if error is fatal. False if just a warning.
-            (str) Type of validation issue. Can be one of ('unknown-section',
-                'missing-required', 'type-error')
+            section -- str section to which the setting belongs. This is how
+                settings are grouped.
+
+            option -- str id for the setting. This must be unique within the
+                section it appears.
+
+            type -- a ConfigType-derived type defining the type of the setting.
+
+        Each setting has the following optional parameters:
+
+            default -- The default value for the setting. If None (the default)
+                there is no default.
+
+            extra -- A dict of additional key/value pairs to add to the
+                setting metadata.
         """
+        if isinstance(type_cls, basestring):
+            type_cls = TYPE_CLASSES[type_cls]
+
+        meta = {
+            'short': '%s.short' % option,
+            'full': '%s.full' % option,
+            'type_cls': type_cls,
+            'domain': section,
+            'localedir': provider.config_settings_locale_directory,
+        }
+
+        if default != DefaultValue:
+            meta['default'] = default
+
+        if extra:
+            meta.update(extra)
+
+        return meta
 
     def register_provider(self, provider):
-        """Register a ConfigProvider with this settings interface."""
+        """Register a SettingsProvider with this settings interface."""
 
         if self._finalized:
-            raise Exception('Providers cannot be registered after finalized.')
+            raise ConfigException('Providers cannot be registered after finalized.')
 
-        provider.register_settings()
+        settings = provider.config_settings
+        if callable(settings):
+            settings = settings()
 
-        for section_name, settings in provider.config_settings.items():
+        config_settings = collections.defaultdict(dict)
+        for setting in settings:
+            section, option = setting[0].split('.')
+
+            if option in config_settings[section]:
+                raise ConfigException('Setting has already been registered: %s.%s' % (
+                                section, option))
+
+            meta = self._format_metadata(provider, section, option, *setting[1:])
+            config_settings[section][option] = meta
+
+        for section_name, settings in config_settings.items():
             section = self._settings.get(section_name, {})
 
             for k, v in settings.items():
                 if k in section:
-                    raise Exception('Setting already registered: %s.%s' %
-                        section_name, k)
+                    raise ConfigException('Setting already registered: %s.%s' %
+                                          section_name, k)
 
                 section[k] = v
 
             self._settings[section_name] = section
 
-    def write_pot(self, fh):
-        """Write a pot gettext translation file."""
-
-        for section in sorted(self):
-            fh.write('# Section %s\n\n' % section)
-            for option in sorted(self[section]):
-                fh.write('msgid "%s.%s.short"\n' % (section, option))
-                fh.write('msgstr ""\n\n')
-
-                fh.write('msgid "%s.%s.full"\n' % (section, option))
-                fh.write('msgstr ""\n\n')
-
-            fh.write('# End of section %s\n\n' % section)
-
     def option_help(self, section, option):
         """Obtain the translated help messages for an option."""
 
-        meta = self[section]._settings[option]
+        meta = self[section].get_meta(option)
 
-        # Providers should always have an en-US translation. If they don't,
+        # Providers should always have an en_US translation. If they don't,
         # they are coded wrong and this will raise.
         default = gettext.translation(meta['domain'], meta['localedir'],
-            ['en-US'])
+                                      ['en_US'])
 
         t = gettext.translation(meta['domain'], meta['localedir'],
-            fallback=True)
+                                fallback=True)
         t.add_fallback(default)
 
         short = t.ugettext('%s.%s.short' % (section, option))
@@ -484,5 +456,6 @@ class ConfigSettings(collections.Mapping):
         return self._sections[k]
 
     # Allow attribute access because it looks nice.
+    @reraise_attribute_error
     def __getattr__(self, k):
         return self.__getitem__(k)

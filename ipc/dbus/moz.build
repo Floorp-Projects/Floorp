@@ -5,12 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.ipc += [
+    'DBusConnectionRefPtr.h',
+    'DBusHelpers.h',
+    'DBusMessageRefPtr.h',
+    'DBusPendingCallRefPtr.h',
     'DBusUtils.h',
+    'DBusWatcher.h',
     'RawDBusConnection.h',
 ]
 
 SOURCES += [
+    'DBusHelpers.cpp',
     'DBusUtils.cpp',
+    'DBusWatcher.cpp',
     'RawDBusConnection.cpp',
 ]
 

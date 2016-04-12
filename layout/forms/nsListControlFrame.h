@@ -452,7 +452,7 @@ private:
   static nsAString& GetIncrementalString ();
   static DOMTimeStamp gLastKeyTime;
 
-  class MOZ_STACK_CLASS AutoIncrementalSearchResetter
+  class MOZ_RAII AutoIncrementalSearchResetter
   {
   public:
     AutoIncrementalSearchResetter() :

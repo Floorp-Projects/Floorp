@@ -55,7 +55,7 @@ EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
 {
   nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->mTarget));
   if (node) {
-    nsIDocument* doc = node->GetCurrentDoc();
+    nsIDocument* doc = node->GetUncomposedDoc();
     if (doc && (!aLimitToDocument || aLimitToDocument == doc)) {
       nsIPresShell* presShell = doc->GetShell();
       if (presShell) {

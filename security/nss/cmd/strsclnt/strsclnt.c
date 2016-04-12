@@ -46,16 +46,6 @@
  * cipher selection code.
  */
 
-int ssl2CipherSuites[] = {
-    SSL_EN_RC4_128_WITH_MD5,                    /* A */
-    SSL_EN_RC4_128_EXPORT40_WITH_MD5,           /* B */
-    SSL_EN_RC2_128_CBC_WITH_MD5,                /* C */
-    SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,       /* D */
-    SSL_EN_DES_64_CBC_WITH_MD5,                 /* E */
-    SSL_EN_DES_192_EDE3_CBC_WITH_MD5,           /* F */
-    0
-};
-
 int ssl3CipherSuites[] = {
     -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
     -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     * b */
@@ -122,7 +112,6 @@ static SSL3Statistics * ssl3stats;
 
 static int failed_already = 0;
 static SSLVersionRange enabledVersions;
-static PRBool enableSSL2      = PR_TRUE;
 static PRBool bypassPKCS11    = PR_FALSE;
 static PRBool disableLocking  = PR_FALSE;
 static PRBool ignoreErrors    = PR_FALSE;
@@ -163,7 +152,7 @@ Usage(const char *progName)
 	"       -P means do a specified percentage of full handshakes (0-100)\n"
         "       -V [min]:[max] restricts the set of enabled SSL/TLS protocols versions.\n"
         "          All versions are enabled by default.\n"
-        "          Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1 tls1.2\n"
+        "          Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2\n"
         "          Example: \"-V ssl3:\" enables SSL 3 and newer.\n"
         "       -U means enable throttling up threads\n"
 	"       -B bypasses the PKCS11 layer for SSL encryption and MACing\n"
@@ -338,7 +327,7 @@ printSecurityInfo(PRFileDesc *fd)
 
 #define MAX_THREADS 128
 
-typedef int startFn(void *a, void *b, int c);
+typedef SECStatus startFn(void *a, void *b, int c);
 
 
 static PRInt32     numConnected;
@@ -558,7 +547,7 @@ lockedVars_AddToCount(lockedVars * lv, int addend)
     return rv;
 }
 
-int
+SECStatus
 do_writes(
     void *       a,
     void *       b,
@@ -719,7 +708,7 @@ myHandshakeCallback(PRFileDesc *socket, void *arg)
 /* one copy of this function is launched in a separate thread for each
 ** connection to be made.
 */
-int
+SECStatus
 do_connects(
     void *	a,
     void *	b,
@@ -731,7 +720,7 @@ do_connects(
     PRFileDesc *        tcp_sock	= 0;
     PRStatus	        prStatus;
     PRUint32            sleepInterval	= 50; /* milliseconds */
-    int                 rv 		= SECSuccess;
+    SECStatus           rv 		= SECSuccess;
     PRSocketOptionData  opt;
 
 retry:
@@ -795,7 +784,6 @@ retry:
 	    goto retry;
 	}
 	errWarn("PR_Connect");
-	rv = SECFailure;
 	goto done;
     } else {
         if (ThrottleUp) {
@@ -866,7 +854,7 @@ done:
     } else if (tcp_sock) {
 	PR_Close(tcp_sock);
     }
-    return SECSuccess;
+    return rv;
 }
 
 
@@ -1097,7 +1085,7 @@ client_main(
     /* all suites except RSA_NULL_MD5 are enabled by Domestic Policy */
     NSS_SetDomesticPolicy();
 
-    /* all the SSL2 and SSL3 cipher suites are enabled by default. */
+    /* all SSL3 cipher suites are enabled by default. */
     if (cipherString) {
         int ndx;
 
@@ -1125,11 +1113,10 @@ client_main(
 		}
 	    } else {
 		if (isalpha(ndx)) {
-		    const int *cptr;
-
-		    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-		    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-			/* do nothing */;
+                    ndx = tolower(ndx) - 'a';
+                    if (ndx < PR_ARRAY_SIZE(ssl3CipherSuites)) {
+                        cipher = ssl3CipherSuites[ndx];
+                    }
 		}
 	    	if (cipher <= 0) {
 		    fprintf(stderr, "strsclnt: Invalid cipher letter: %c\n", 
@@ -1163,8 +1150,7 @@ client_main(
 
     /* do SSL configuration. */
 
-    rv = SSL_OptionSet(model_sock, SSL_SECURITY,
-                       enableSSL2 || enabledVersions.min != 0);
+    rv = SSL_OptionSet(model_sock, SSL_SECURITY, enabledVersions.min != 0);
     if (rv < 0) {
 	errExit("SSL_OptionSet SSL_SECURITY");
     }
@@ -1172,16 +1158,6 @@ client_main(
     rv = SSL_VersionRangeSet(model_sock, &enabledVersions);
     if (rv != SECSuccess) {
         errExit("error setting SSL/TLS version range ");
-    }
-
-    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL2, enableSSL2);
-    if (rv != SECSuccess) {
-       errExit("error enabling SSLv2 ");
-    }
-
-    rv = SSL_OptionSet(model_sock, SSL_V2_COMPATIBLE_HELLO, enableSSL2);
-    if (rv != SECSuccess) {
-        errExit("error enabling SSLv2 compatible hellos ");
     }
 
     if (bigBuf.data) { /* doing FDX */
@@ -1262,7 +1238,7 @@ client_main(
 
     if (!NoReuse) {
         remaining_connections = 1;
-	rv = launch_thread(do_connects, &addr, model_sock, 0);
+	launch_thread(do_connects, &addr, model_sock, 0);
 	/* wait for the first connection to terminate, then launch the rest. */
 	reap_threads();
         remaining_connections = total_connections - 1 ;
@@ -1271,7 +1247,7 @@ client_main(
         active_threads  = PR_MIN(active_threads, remaining_connections);
 	/* Start up the threads */
 	for (i=0;i<active_threads;i++) {
-	    rv = launch_thread(do_connects, &addr, model_sock, i);
+	    launch_thread(do_connects, &addr, model_sock, i);
 	}
 	reap_threads();
     }
@@ -1368,8 +1344,7 @@ main(int argc, char **argv)
 	case 'U': ThrottleUp = PR_TRUE; break;
         
         case 'V': if (SECU_ParseSSLVersionRangeString(optstate->value,
-                          enabledVersions, enableSSL2,
-                          &enabledVersions, &enableSSL2) != SECSuccess) {
+                          enabledVersions, &enabledVersions) != SECSuccess) {
                       Usage(progName);
                   }
                   break;
@@ -1510,22 +1485,13 @@ main(int argc, char **argv)
     PL_strfree(hostName);
 
     /* some final stats. */
-    if (ssl3stats->hsh_sid_cache_hits +
-	ssl3stats->hsh_sid_cache_misses +
-	ssl3stats->hsh_sid_cache_not_ok +
-	ssl3stats->hsh_sid_stateless_resumes == 0) {
-	/* presumably we were testing SSL2. */
-	printf("strsclnt: SSL2 - %d server certificates tested.\n",
-               certsTested);
-    } else {
-	printf(
-	"strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n"
-	"          %ld stateless resumes\n",
-	    ssl3stats->hsh_sid_cache_hits, 
-	    ssl3stats->hsh_sid_cache_misses,
-	    ssl3stats->hsh_sid_cache_not_ok,
-	    ssl3stats->hsh_sid_stateless_resumes);
-    }
+    printf(
+    "strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n"
+    "          %ld stateless resumes\n",
+        ssl3stats->hsh_sid_cache_hits,
+        ssl3stats->hsh_sid_cache_misses,
+        ssl3stats->hsh_sid_cache_not_ok,
+        ssl3stats->hsh_sid_stateless_resumes);
 
     if (!NoReuse) {
 	if (enableSessionTickets)
@@ -1539,16 +1505,9 @@ main(int argc, char **argv)
     } else {
 	printf("strsclnt: NoReuse - %d server certificates tested.\n",
                certsTested);
-        if (ssl3stats->hsh_sid_cache_hits +
-            ssl3stats->hsh_sid_cache_misses +
-            ssl3stats->hsh_sid_cache_not_ok +
-            ssl3stats->hsh_sid_stateless_resumes > 0) {
-            exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
-                (ssl3stats->hsh_sid_stateless_resumes != 0) ||
-                (certsTested != connections);
-        } else {                /* ssl2 connections */
-            exitVal = (certsTested != connections);
-        }
+        exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
+            (ssl3stats->hsh_sid_stateless_resumes != 0) ||
+            (certsTested != connections);
     }
 
     exitVal = ( exitVal || failed_already );

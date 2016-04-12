@@ -3697,10 +3697,6 @@ SECU_GetSSLVersionFromName(const char *buf, size_t bufLen, PRUint16 *version)
         return SECFailure;
     }
 
-    if (!PL_strncasecmp(buf, "ssl2", bufLen)) {
-        *version = SSL_LIBRARY_VERSION_2;
-        return SECSuccess;
-    }
     if (!PL_strncasecmp(buf, "ssl3", bufLen)) {
         *version = SSL_LIBRARY_VERSION_3_0;
         return SECSuccess;
@@ -3730,21 +3726,26 @@ SECU_GetSSLVersionFromName(const char *buf, size_t bufLen, PRUint16 *version)
 SECStatus
 SECU_ParseSSLVersionRangeString(const char *input,
                                 const SSLVersionRange defaultVersionRange,
-                                const PRBool defaultEnableSSL2,
-                                SSLVersionRange *vrange, PRBool *enableSSL2)
+                                SSLVersionRange *vrange)
 {
     const char *colonPos;
     size_t colonIndex;
     const char *maxStr;
 
-    if (!input || !vrange || !enableSSL2) {
+    if (!input || !vrange) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    // We don't support SSL2 any longer.
+    if (defaultVersionRange.min < SSL_LIBRARY_VERSION_3_0 ||
+        defaultVersionRange.max < SSL_LIBRARY_VERSION_3_0) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
     if (!strcmp(input, ":")) {
         /* special value, use default */
-        *enableSSL2 = defaultEnableSSL2;
         *vrange = defaultVersionRange;
         return SECSuccess;
     }
@@ -3760,7 +3761,6 @@ SECU_ParseSSLVersionRangeString(const char *input,
 
     if (!colonIndex) {
         /* colon was first character, min version is empty */
-        *enableSSL2 = defaultEnableSSL2;
         vrange->min = defaultVersionRange.min;
     } else {
         PRUint16 version;
@@ -3770,13 +3770,7 @@ SECU_ParseSSLVersionRangeString(const char *input,
             return SECFailure;
         }
 
-        if (version == SSL_LIBRARY_VERSION_2) {
-            *enableSSL2 = PR_TRUE;
-            vrange->min = defaultVersionRange.min;
-        } else {
-            *enableSSL2 = PR_FALSE;
-            vrange->min = version;
-        }
+        vrange->min = version;
     }
 
     if (!*maxStr) {
@@ -3790,18 +3784,12 @@ SECU_ParseSSLVersionRangeString(const char *input,
             return SECFailure;
         }
 
-        if (version == SSL_LIBRARY_VERSION_2) {
-            /* consistency checking, require that min allows enableSSL2, too */
-            if (!*enableSSL2) {
-                PORT_SetError(SEC_ERROR_INVALID_ARGS);
-                return SECFailure;
-            }
-            /* we use 0 because SSL_LIBRARY_VERSION_NONE is private: */
-            vrange->min = 0;
-            vrange->max = 0;
-        } else {
-            vrange->max = version;
-        }
+        vrange->max = version;
+    }
+
+    if (vrange->min > vrange->max) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
     return SECSuccess;

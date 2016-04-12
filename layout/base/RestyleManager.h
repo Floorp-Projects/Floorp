@@ -257,8 +257,8 @@ public:
                         nsStyleContext* aOldStyleContext,
                         RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
-  // AnimationsWithDestroyedFrame is used to stop animations on elements that
-  // have no frame at the end of the restyling process.
+  // AnimationsWithDestroyedFrame is used to stop animations and transitions
+  // on elements that have no frame at the end of the restyling process.
   // It only lives during the restyling process.
   class MOZ_STACK_CLASS AnimationsWithDestroyedFrame final {
   public:
@@ -267,13 +267,10 @@ public:
     // object.  (This is generally easy since the caller is typically a
     // method of RestyleManager.)
     explicit AnimationsWithDestroyedFrame(RestyleManager* aRestyleManager);
-    ~AnimationsWithDestroyedFrame()
-    {
-    }
 
     // This method takes the content node for the generated content for
-    // animation on ::before and ::after, rather than the content node for
-    // the real element.
+    // animation/transition on ::before and ::after, rather than the
+    // content node for the real element.
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
       CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
@@ -298,7 +295,7 @@ public:
     AutoRestore<AnimationsWithDestroyedFrame*> mRestorePointer;
 
     // Below three arrays might include elements that have already had their
-    // animations stopped.
+    // animations or transitions stopped.
     //
     // mBeforeContents and mAfterContents hold the real element rather than
     // the content node for the generated content (which might change during
@@ -922,7 +919,7 @@ private:
  * (and further ancestors) may be display:contents nodes which have
  * not yet been pushed onto TreeMatchContext.
  */
-class MOZ_STACK_CLASS AutoDisplayContentsAncestorPusher final
+class MOZ_RAII AutoDisplayContentsAncestorPusher final
 {
  public:
   typedef mozilla::dom::Element Element;

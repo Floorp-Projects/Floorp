@@ -527,7 +527,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         {
           result = listener->PaintWindow(
             this, LayoutDeviceIntRegion::FromUnknownRegion(region));
-          if (!gfxEnv::DisableForcePresent()) {
+          if (!gfxEnv::DisableForcePresent() && gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
             nsCOMPtr<nsIRunnable> event =
               NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
             NS_DispatchToMainThread(event);

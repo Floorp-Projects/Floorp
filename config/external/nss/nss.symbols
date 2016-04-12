@@ -452,12 +452,14 @@ PORT_ArenaStrdup_Util
 PORT_ArenaUnmark_Util
 PORT_ArenaZAlloc
 PORT_ArenaZAlloc_Util
+PORT_DestroyCheapArena
 PORT_Free
 PORT_FreeArena
 PORT_FreeArena_Util
 PORT_Free_Util
 PORT_GetError
 PORT_GetError_Util
+PORT_InitCheapArena
 PORT_NewArena
 PORT_NewArena_Util
 PORT_Realloc_Util

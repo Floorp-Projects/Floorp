@@ -14,16 +14,6 @@ extern void dumpCertChain(CERTCertificate *, SECCertUsage);
 
 /* Declare SSL cipher suites. */
 
-int ssl2CipherSuites[] = {
-    SSL_EN_RC4_128_WITH_MD5,              /* A */
-    SSL_EN_RC4_128_EXPORT40_WITH_MD5,     /* B */
-    SSL_EN_RC2_128_CBC_WITH_MD5,          /* C */
-    SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5, /* D */
-    SSL_EN_DES_64_CBC_WITH_MD5,           /* E */
-    SSL_EN_DES_192_EDE3_CBC_WITH_MD5,     /* F */
-    0
-};
-
 int ssl3CipherSuites[] = {
     -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
     -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,	 * b */
@@ -53,6 +43,7 @@ int ssl3CipherSuites[] = {
     TLS_RSA_WITH_NULL_SHA,			/* z */
     0
 };
+int numSSL3CipherSuites = PR_ARRAY_SIZE(ssl3CipherSuites);
 
 /**************************************************************************
 ** 

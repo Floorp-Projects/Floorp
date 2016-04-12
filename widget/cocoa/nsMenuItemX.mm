@@ -69,7 +69,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
   mMenuGroupOwner->RegisterForContentChanges(mContent, this);
 
-  nsIDocument *doc = mContent->GetCurrentDoc();
+  nsIDocument *doc = mContent->GetUncomposedDoc();
 
   // if we have a command associated with this menu item, register for changes
   // to the command DOM node
@@ -235,8 +235,8 @@ void nsMenuItemX::SetKeyEquiv()
   // Set key shortcut and modifiers
   nsAutoString keyValue;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
-  if (!keyValue.IsEmpty() && mContent->GetCurrentDoc()) {
-    nsIContent *keyContent = mContent->GetCurrentDoc()->GetElementById(keyValue);
+  if (!keyValue.IsEmpty() && mContent->GetUncomposedDoc()) {
+    nsIContent *keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
     if (keyContent) {
       nsAutoString keyChar;
       bool hasKey = keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);

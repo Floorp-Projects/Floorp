@@ -1,0 +1,6 @@
+# PresentationDataChannelSessionTransport.js
+component {dd2bbf2f-3399-4389-8f5f-d382afb8b2d6} PresentationDataChannelSessionTransport.js
+contract @mozilla.org/presentation/datachanneltransport;1 {dd2bbf2f-3399-4389-8f5f-d382afb8b2d6}
+
+component {215b2f62-46e2-4004-a3d1-6858e56c20f3} PresentationDataChannelSessionTransport.js
+contract @mozilla.org/presentation/datachanneltransportbuilder;1 {215b2f62-46e2-4004-a3d1-6858e56c20f3}
