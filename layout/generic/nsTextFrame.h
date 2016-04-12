@@ -349,7 +349,7 @@ public:
      */
     virtual void NotifySelectionBackgroundNeedsFill(const Rect& aBackgroundRect,
                                                     nscolor aColor,
-                                                    DrawTarget& aDrawTarget) { }
+                                                    DrawTarget& aDrawTarget);
 
     /**
      * Called before (for under/over-line) or after (for line-through) the text
