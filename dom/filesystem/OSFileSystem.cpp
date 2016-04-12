@@ -44,7 +44,6 @@ void
 OSFileSystem::Init(nsISupports* aParent)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(!mParent, "No duple Init() calls");
   MOZ_ASSERT(aParent);
 
