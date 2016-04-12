@@ -231,6 +231,8 @@ HeapAnalysesClient.prototype.computeDominatorTree = function (snapshotFilePath) 
  *        - {Number} maxSiblings
  *          The maximum number of siblings to visit within each traversed node's
  *          children.
+ *        - {Number} maxRetainingPaths
+ *          The maximum number of retaining paths to find for each node.
  *
  * @returns {Promise<DominatorTreeNode>}
  */

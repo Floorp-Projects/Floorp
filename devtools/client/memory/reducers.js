@@ -6,7 +6,8 @@
 exports.allocations = require("./reducers/allocations");
 exports.censusDisplay = require("./reducers/census-display");
 exports.diffing = require("./reducers/diffing");
-exports.dominatorTreeDisplay = require("./reducers/dominator-tree-display");
+exports.individuals = require("./reducers/individuals");
+exports.labelDisplay = require("./reducers/label-display");
 exports.treeMapDisplay = require("./reducers/tree-map-display");
 exports.errors = require("./reducers/errors");
 exports.filter = require("./reducers/filter");

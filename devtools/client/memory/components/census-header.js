@@ -4,13 +4,23 @@
 
 const { DOM: dom, createClass } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
+const models = require("../models");
 
 const CensusHeader = module.exports = createClass({
   displayName: "CensusHeader",
 
-  propTypes: { },
+  propTypes: {
+    diffing: models.diffingModel,
+  },
 
   render() {
+    let individualsCell;
+    if (!this.props.diffing) {
+      individualsCell = dom.span({
+        className: "heap-tree-item-field heap-tree-item-individuals"
+      });
+    }
+
     return dom.div(
       {
         className: "header"
@@ -47,6 +57,8 @@ const CensusHeader = module.exports = createClass({
         },
         L10N.getStr("heapview.field.totalcount")
       ),
+
+      individualsCell,
 
       dom.span(
         {

@@ -9,6 +9,7 @@ const { refresh } = require("./refresh");
 
 exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
   return function*(dispatch, getState) {
+    console.log("FITZGEN: setCensusDisplayAndRefresh", display);
     dispatch(setCensusDisplay(display));
     yield dispatch(refresh(heapWorker));
   };

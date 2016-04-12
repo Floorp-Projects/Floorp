@@ -13,6 +13,7 @@ Test that rendering a dominator tree error is handled correctly.
     <div id="container"></div>
     <pre id="test">
         <script src="head.js" type="application/javascript;version=1.8"></script>
+
         <script type="application/javascript;version=1.8">
          window.onload = Task.async(function* () {
            try {
@@ -23,7 +24,7 @@ Test that rendering a dominator tree error is handled correctly.
              const container = document.getElementById("container");
 
              const props = immutableUpdate(TEST_HEAP_PROPS, {
-               view: viewState.DOMINATOR_TREE,
+               view: { state: viewState.DOMINATOR_TREE, },
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  dominatorTree: {
                    error: new Error(errorMessage),

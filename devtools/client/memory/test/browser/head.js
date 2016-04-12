@@ -193,9 +193,10 @@ function waitUntilCensusState (store, getCensus, expected) {
                     (census && census.state === state);
            });
   };
-  info(`Waiting for snapshots' censuses to be of state: ${expected}`);
+  info(`Waiting for snapshot censuses to be of state: ${expected}`);
   return waitUntilState(store, predicate);
 }
+
 /**
  * Mock out the requestAnimationFrame.
  *
