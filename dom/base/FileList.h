@@ -40,13 +40,16 @@ public:
     return mParent;
   }
 
-  void Append(File* aFile);
-  void Append(Directory* aDirectory);
+  bool Append(File* aFile)
+  {
+    MOZ_ASSERT(aFile);
+    return mFiles.AppendElement(aFile, fallible);
+  }
 
   bool Remove(uint32_t aIndex)
   {
-    if (aIndex < mFilesOrDirectories.Length()) {
-      mFilesOrDirectories.RemoveElementAt(aIndex);
+    if (aIndex < mFiles.Length()) {
+      mFiles.RemoveElementAt(aIndex);
       return true;
     }
 
@@ -55,7 +58,7 @@ public:
 
   void Clear()
   {
-    return mFilesOrDirectories.Clear();
+    return mFiles.Clear();
   }
 
   static FileList* FromSupports(nsISupports* aSupports)
@@ -75,34 +78,22 @@ public:
     return static_cast<FileList*>(aSupports);
   }
 
-  const OwningFileOrDirectory& UnsafeItem(uint32_t aIndex) const
-  {
-    MOZ_ASSERT(aIndex < Length());
-    return mFilesOrDirectories[aIndex];
-  }
+  File* Item(uint32_t aIndex) const;
 
-  void Item(uint32_t aIndex,
-            Nullable<OwningFileOrDirectory>& aFileOrDirectory,
-            ErrorResult& aRv) const;
-
-  void IndexedGetter(uint32_t aIndex, bool& aFound,
-                     Nullable<OwningFileOrDirectory>& aFileOrDirectory,
-                     ErrorResult& aRv) const;
+  File* IndexedGetter(uint32_t aIndex, bool& aFound) const;
 
   uint32_t Length() const
   {
-    return mFilesOrDirectories.Length();
+    return mFiles.Length();
   }
 
-  void ToSequence(Sequence<OwningFileOrDirectory>& aSequence,
+  void ToSequence(Sequence<RefPtr<File>>& aSequence,
                   ErrorResult& aRv) const;
-
-  bool ClonableToDifferentThreadOrProcess() const;
 
 private:
   ~FileList() {}
 
-  nsTArray<OwningFileOrDirectory> mFilesOrDirectories;
+  FallibleTArray<RefPtr<File>> mFiles;
   nsCOMPtr<nsISupports> mParent;
 };
 
