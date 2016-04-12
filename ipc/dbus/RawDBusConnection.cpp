@@ -89,14 +89,20 @@ nsresult RawDBusConnection::EstablishDBusConnection()
     NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
     sDBusIsInit = true;
   }
+
   DBusError err;
   dbus_error_init(&err);
-  mConnection = dbus_bus_get_private(DBUS_BUS_SYSTEM, &err);
+
+  mConnection = already_AddRefed<DBusConnection>(
+    dbus_bus_get_private(DBUS_BUS_SYSTEM, &err));
+
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
     return NS_ERROR_FAILURE;
   }
+
   dbus_connection_set_exit_on_disconnect(mConnection, FALSE);
+
   return NS_OK;
 }
 
@@ -114,19 +120,6 @@ bool RawDBusConnection::Watch()
   NS_ENSURE_TRUE(success == TRUE, false);
 
   return true;
-}
-
-DBusConnection* RawDBusConnection::ScopedDBusConnectionPtrTraits::empty()
-{
-  return nullptr;
-}
-
-void RawDBusConnection::ScopedDBusConnectionPtrTraits::release(DBusConnection* ptr)
-{
-  if (ptr) {
-    dbus_connection_close(ptr);
-    dbus_connection_unref(ptr);
-  }
 }
 
 bool RawDBusConnection::Send(DBusMessage* aMessage)
