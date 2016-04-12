@@ -122,10 +122,11 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const Filter aFilter)
     RefPtr<DrawTarget> dt =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize,
                                                                      format);
-    if (!dt)
+    if (!dt || !dt->IsValid())
         return nullptr;
 
-    RefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+    MOZ_ASSERT(ctx); // already checked for target above
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), ExtendMode::CLAMP, aFilter);
 
     RefPtr<SourceSurface> surface = dt->Snapshot();
