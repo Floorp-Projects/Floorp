@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFiles, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFilesOrDirectories, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -29,6 +29,20 @@ FileList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return mozilla::dom::FileListBinding::Wrap(aCx, this, aGivenProto);
 }
 
+void
+FileList::Append(File* aFile)
+{
+  OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
+  element->SetAsFile() = aFile;
+}
+
+void
+FileList::Append(Directory* aDirectory)
+{
+  OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
+  element->SetAsDirectory() = aDirectory;
+}
+
 NS_IMETHODIMP
 FileList::GetLength(uint32_t* aLength)
 {
@@ -40,46 +54,74 @@ FileList::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 FileList::Item(uint32_t aIndex, nsISupports** aValue)
 {
-  nsCOMPtr<nsIDOMBlob> file = Item(aIndex);
-  file.forget(aValue);
+  if (aIndex >= mFilesOrDirectories.Length()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mFilesOrDirectories[aIndex].IsFile()) {
+    nsCOMPtr<nsIDOMBlob> file = mFilesOrDirectories[aIndex].GetAsFile();
+    file.forget(aValue);
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mFilesOrDirectories[aIndex].IsDirectory());
+  RefPtr<Directory> directory = mFilesOrDirectories[aIndex].GetAsDirectory();
+  directory.forget(aValue);
   return NS_OK;
 }
 
-File*
-FileList::Item(uint32_t aIndex) const
-{
-  if (aIndex >= mFiles.Length()) {
-    return nullptr;
-  }
-
-  return mFiles[aIndex];
-}
-
-File*
-FileList::IndexedGetter(uint32_t aIndex, bool& aFound) const
-{
-  aFound = aIndex < mFiles.Length();
-  return Item(aIndex);
-}
-
 void
-FileList::ToSequence(Sequence<RefPtr<File>>& aSequence,
-                     ErrorResult& aRv) const
+FileList::Item(uint32_t aIndex, Nullable<OwningFileOrDirectory>& aValue,
+               ErrorResult& aRv) const
 {
-  MOZ_ASSERT(aSequence.IsEmpty());
-  if (mFiles.IsEmpty()) {
+  if (aIndex >= mFilesOrDirectories.Length()) {
+    aValue.SetNull();
     return;
   }
 
-  if (!aSequence.SetLength(mFiles.Length(),
+  aValue.SetValue(mFilesOrDirectories[aIndex]);
+}
+
+void
+FileList::IndexedGetter(uint32_t aIndex, bool& aFound,
+                        Nullable<OwningFileOrDirectory>& aFileOrDirectory,
+                        ErrorResult& aRv) const
+{
+  aFound = aIndex < mFilesOrDirectories.Length();
+  Item(aIndex, aFileOrDirectory, aRv);
+}
+
+void
+FileList::ToSequence(Sequence<OwningFileOrDirectory>& aSequence,
+                     ErrorResult& aRv) const
+{
+  MOZ_ASSERT(aSequence.IsEmpty());
+  if (mFilesOrDirectories.IsEmpty()) {
+    return;
+  }
+
+  if (!aSequence.SetLength(mFilesOrDirectories.Length(),
                            mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  for (uint32_t i = 0; i < mFiles.Length(); ++i) {
-    aSequence[i] = mFiles[i];
+  for (uint32_t i = 0; i < mFilesOrDirectories.Length(); ++i) {
+    aSequence[i] = mFilesOrDirectories[i];
   }
+}
+
+bool
+FileList::ClonableToDifferentThreadOrProcess() const
+{
+  for (uint32_t i = 0; i < mFilesOrDirectories.Length(); ++i) {
+    if (mFilesOrDirectories[i].IsDirectory() &&
+        !mFilesOrDirectories[i].GetAsDirectory()->ClonableToDifferentThreadOrProcess()) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 } // namespace dom

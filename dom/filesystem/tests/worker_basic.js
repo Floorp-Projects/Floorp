@@ -31,10 +31,12 @@ function checkSubDir(dir) {
 }
 
 onmessage = function(e) {
-  var directory = e.data;
-  ok(directory instanceof Directory, "This is a directory.");
+  var fileList = e.data;
+  ok(fileList instanceof FileList, "This is a fileList.");
+  is(fileList.length, 1, "We want just 1 element.");
+  ok(fileList[0] instanceof Directory, "This is a directory.");
 
-  directory.getFilesAndDirectories().then(
+  fileList[0].getFilesAndDirectories().then(
     function(data) {
       ok(data.length, "We should have some data.");
       var promises = [];
