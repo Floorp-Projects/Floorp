@@ -2871,8 +2871,6 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
   mOverflowClipBox = NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX;
   mResize = NS_STYLE_RESIZE_NONE;
-  mClipFlags = NS_STYLE_CLIP_AUTO;
-  mClip.SetRect(0,0,0,0);
   mOpacity = 1.0f;
   mSpecifiedTransform = nullptr;
   mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
@@ -2923,7 +2921,6 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   : mBinding(aSource.mBinding)
-  , mClip(aSource.mClip)
   , mOpacity(aSource.mOpacity)
   , mDisplay(aSource.mDisplay)
   , mOriginalDisplay(aSource.mOriginalDisplay)
@@ -2940,7 +2937,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mOverflowY(aSource.mOverflowY)
   , mOverflowClipBox(aSource.mOverflowClipBox)
   , mResize(aSource.mResize)
-  , mClipFlags(aSource.mClipFlags)
   , mOrient(aSource.mOrient)
   , mMixBlendMode(aSource.mMixBlendMode)
   , mIsolation(aSource.mIsolation)
@@ -3054,17 +3050,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mBreakAfter != aOther.mBreakAfter
       || mAppearance != aOther.mAppearance
       || mOrient != aOther.mOrient
-      || mOverflowClipBox != aOther.mOverflowClipBox
-      || mClipFlags != aOther.mClipFlags)
+      || mOverflowClipBox != aOther.mOverflowClipBox)
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_AllReflowHints,
                                        nsChangeHint_RepaintFrame));
-
-  if (!mClip.IsEqualInterior(aOther.mClip)) {
-    // If the clip has changed, we just need to update overflow areas. DLBI
-    // will handle the invalidation.
-    NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_UpdateOverflow,
-                                       nsChangeHint_SchedulePaint));
-  }
 
   if (mOpacity != aOther.mOpacity) {
     // If we're going from the optimized >=0.99 opacity value to 1.0 or back, then
@@ -3194,8 +3182,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   // properties, since some data did change in the style struct.
 
   if (!hint &&
-      (!mClip.IsEqualEdges(aOther.mClip) ||
-       mOriginalDisplay != aOther.mOriginalDisplay ||
+      (mOriginalDisplay != aOther.mOriginalDisplay ||
        mOriginalFloats != aOther.mOriginalFloats ||
        mTransitions != aOther.mTransitions ||
        mTransitionTimingFunctionCount !=
@@ -4000,12 +3987,16 @@ nsStyleVariables::CalcDifference(const nsStyleVariables& aOther) const
 
 nsStyleEffects::nsStyleEffects(StyleStructContext aContext)
   : mBoxShadow(nullptr)
+  , mClip(0, 0, 0, 0)
+  , mClipFlags(NS_STYLE_CLIP_AUTO)
 {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
 
 nsStyleEffects::nsStyleEffects(const nsStyleEffects& aSource)
   : mBoxShadow(aSource.mBoxShadow)
+  , mClip(aSource.mClip)
+  , mClipFlags(aSource.mClipFlags)
 {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
@@ -4028,6 +4019,23 @@ nsStyleEffects::CalcDifference(const nsStyleEffects& aOther) const
     hint |= nsChangeHint_UpdateOverflow |
             nsChangeHint_SchedulePaint |
             nsChangeHint_RepaintFrame;
+  }
+
+  if (mClipFlags != aOther.mClipFlags) {
+    hint |= nsChangeHint_AllReflowHints |
+            nsChangeHint_RepaintFrame;
+  }
+
+  if (!mClip.IsEqualInterior(aOther.mClip)) {
+    // If the clip has changed, we just need to update overflow areas. DLBI
+    // will handle the invalidation.
+    hint |= nsChangeHint_UpdateOverflow |
+            nsChangeHint_SchedulePaint;
+  }
+
+  if (!hint &&
+      !mClip.IsEqualEdges(aOther.mClip)) {
+    hint |= nsChangeHint_NeutralChange;
   }
 
   return hint;

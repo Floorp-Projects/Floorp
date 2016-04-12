@@ -4472,9 +4472,9 @@ nsComputedDOMStyle::DoGetClip()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  const nsStyleDisplay* display = StyleDisplay();
+  const nsStyleEffects* effects = StyleEffects();
 
-  if (display->mClipFlags == NS_STYLE_CLIP_AUTO) {
+  if (effects->mClipFlags == NS_STYLE_CLIP_AUTO) {
     val->SetIdent(eCSSKeyword_auto);
   } else {
     // create the cssvalues for the sides, stick them in the rect object
@@ -4484,28 +4484,28 @@ nsComputedDOMStyle::DoGetClip()
     nsROCSSPrimitiveValue *leftVal   = new nsROCSSPrimitiveValue;
     nsDOMCSSRect * domRect = new nsDOMCSSRect(topVal, rightVal,
                                               bottomVal, leftVal);
-    if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
+    if (effects->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
       topVal->SetIdent(eCSSKeyword_auto);
     } else {
-      topVal->SetAppUnits(display->mClip.y);
+      topVal->SetAppUnits(effects->mClip.y);
     }
 
-    if (display->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
+    if (effects->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
       rightVal->SetIdent(eCSSKeyword_auto);
     } else {
-      rightVal->SetAppUnits(display->mClip.width + display->mClip.x);
+      rightVal->SetAppUnits(effects->mClip.width + effects->mClip.x);
     }
 
-    if (display->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
+    if (effects->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
       bottomVal->SetIdent(eCSSKeyword_auto);
     } else {
-      bottomVal->SetAppUnits(display->mClip.height + display->mClip.y);
+      bottomVal->SetAppUnits(effects->mClip.height + effects->mClip.y);
     }
 
-    if (display->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
+    if (effects->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
       leftVal->SetIdent(eCSSKeyword_auto);
     } else {
-      leftVal->SetAppUnits(display->mClip.x);
+      leftVal->SetAppUnits(effects->mClip.x);
     }
     val->SetRect(domRect);
   }
