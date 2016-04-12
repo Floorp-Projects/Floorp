@@ -43,12 +43,6 @@ uint32_t GetRow(Accessible* aAccessible);
  * Matches cell accessibles in children.
  */
 uint32_t GetCell(Accessible* aAccessible);
-
-/**
- * Matches embedded objects in children.
- */
-uint32_t GetEmbeddedObject(Accessible* aAccessible);
-
 } // namespace filters
 } // namespace a11y
 } // namespace mozilla

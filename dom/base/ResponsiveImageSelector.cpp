@@ -454,7 +454,6 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
                                                            mSizeValues[i]);
   }
 
-  MOZ_ASSERT(effectiveWidth >= 0);
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));
   return true;
 }

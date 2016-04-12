@@ -83,6 +83,7 @@ ParseKeySystem(const nsAString& aExpectedKeySystem,
 static const char16_t* sKeySystems[] = {
   MOZ_UTF16("org.w3.clearkey"),
   MOZ_UTF16("com.adobe.primetime"),
+  MOZ_UTF16("com.widevine.alpha"),
 };
 
 bool
@@ -139,6 +140,9 @@ KeySystemToGMPName(const nsAString& aKeySystem)
   }
   if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
     return NS_LITERAL_STRING("gmp-clearkey");
+  }
+  if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
+    return NS_LITERAL_STRING("gmp-widevinecdm");
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
   return EmptyString();

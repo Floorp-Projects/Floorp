@@ -814,12 +814,8 @@
         "url": "/html/webappapis/system-state-and-capabilities/the-navigator-object/get-navigatorlanguage-manual.html"
       },
       {
-        "path": "mediacapture-streams/mediastreams-as-media-elements/video-assignment-manual.html",
-        "url": "/mediacapture-streams/mediastreams-as-media-elements/video-assignment-manual.html"
-      },
-      {
-        "path": "mediacapture-streams/stream-api/mediastream/mediastream-id-manual.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/mediastream-id-manual.html"
+        "path": "mediacapture-streams/MediaStream-id-manual.html",
+        "url": "/mediacapture-streams/MediaStream-id-manual.html"
       },
       {
         "path": "notifications/body-basic-manual.html",
@@ -3658,6 +3654,46 @@
           ]
         ],
         "url": "/FileAPI/url/url_xmlhttprequest_img.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-001a.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001a.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-001b.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001b.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-001c.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001c.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-001d.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001d.html"
       },
       {
         "path": "custom-elements/registering-custom-elements/unresolved-element-pseudoclass/unresolved-element-pseudoclass-css-test-custom-tag.html",
@@ -12606,6 +12642,10 @@
         "url": "/XMLHttpRequest/responsetype.html"
       },
       {
+        "path": "XMLHttpRequest/responseurl.html",
+        "url": "/XMLHttpRequest/responseurl.html"
+      },
+      {
         "path": "XMLHttpRequest/responsexml-basic.htm",
         "url": "/XMLHttpRequest/responsexml-basic.htm"
       },
@@ -13942,6 +13982,10 @@
         "url": "/custom-elements/registering-custom-elements/unresolved-elements-interface-svg-element.html"
       },
       {
+        "path": "dom/collections/HTMLCollection-as-proto-length-get-throws.html",
+        "url": "/dom/collections/HTMLCollection-as-proto-length-get-throws.html"
+      },
+      {
         "path": "dom/collections/HTMLCollection-empty-name.html",
         "url": "/dom/collections/HTMLCollection-empty-name.html"
       },
@@ -14406,6 +14450,14 @@
         "url": "/dom/nodes/Element-getElementsByTagNameNS.html"
       },
       {
+        "path": "dom/nodes/Element-insertAdjacentElement.html",
+        "url": "/dom/nodes/Element-insertAdjacentElement.html"
+      },
+      {
+        "path": "dom/nodes/Element-insertAdjacentText.html",
+        "url": "/dom/nodes/Element-insertAdjacentText.html"
+      },
+      {
         "path": "dom/nodes/Element-lastElementChild-svg.svg",
         "url": "/dom/nodes/Element-lastElementChild-svg.svg"
       },
@@ -14758,8 +14810,16 @@
         "url": "/dom/nodes/getElementsByClassName-31.htm"
       },
       {
+        "path": "dom/nodes/insert-adjacent.html",
+        "url": "/dom/nodes/insert-adjacent.html"
+      },
+      {
         "path": "dom/nodes/prepend-on-Document.html",
         "url": "/dom/nodes/prepend-on-Document.html"
+      },
+      {
+        "path": "dom/nodes/remove-unscopable.html",
+        "url": "/dom/nodes/remove-unscopable.html"
       },
       {
         "path": "dom/nodes/rootNode.html",
@@ -18822,6 +18882,10 @@
         "url": "/html/semantics/forms/textfieldselection/select-event.html"
       },
       {
+        "path": "html/semantics/forms/textfieldselection/selection-after-content-change.html",
+        "url": "/html/semantics/forms/textfieldselection/selection-after-content-change.html"
+      },
+      {
         "path": "html/semantics/forms/textfieldselection/selection-not-application-textarea.html",
         "url": "/html/semantics/forms/textfieldselection/selection-not-application-textarea.html"
       },
@@ -19248,6 +19312,14 @@
       {
         "path": "html/semantics/scripting-1/the-script-element/script-before-after-events.html",
         "url": "/html/semantics/scripting-1/the-script-element/script-before-after-events.html"
+      },
+      {
+        "path": "html/semantics/scripting-1/the-script-element/script-charset-01.html",
+        "url": "/html/semantics/scripting-1/the-script-element/script-charset-01.html"
+      },
+      {
+        "path": "html/semantics/scripting-1/the-script-element/script-charset-02.html",
+        "url": "/html/semantics/scripting-1/the-script-element/script-charset-02.html"
       },
       {
         "path": "html/semantics/scripting-1/the-script-element/script-for-event-xhtml.xhtml",
@@ -20002,6 +20074,10 @@
         "url": "/js/builtins/Object.prototype.seal.html"
       },
       {
+        "path": "js/builtins/Promise-incumbent-global.sub.html",
+        "url": "/js/builtins/Promise-incumbent-global.sub.html"
+      },
+      {
         "path": "js/builtins/Promise-subclassing.html",
         "url": "/js/builtins/Promise-subclassing.html"
       },
@@ -20178,88 +20254,92 @@
         "url": "/media-source/mediasource-timestamp-offset.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/api-present.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/api-present.html"
+        "path": "mediacapture-streams/GUM-api.html",
+        "url": "/mediacapture-streams/GUM-api.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/deny.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/deny.html"
+        "path": "mediacapture-streams/GUM-deny.html",
+        "url": "/mediacapture-streams/GUM-deny.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/empty-option-param.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/empty-option-param.html"
+        "path": "mediacapture-streams/GUM-empty-option-param.html",
+        "url": "/mediacapture-streams/GUM-empty-option-param.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/getusermedia-impossible-constraint.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/getusermedia-impossible-constraint.html"
+        "path": "mediacapture-streams/GUM-impossible-constraint.html",
+        "url": "/mediacapture-streams/GUM-impossible-constraint.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/getusermedia-optional-constraint.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/getusermedia-optional-constraint.html"
+        "path": "mediacapture-streams/GUM-optional-constraint.html",
+        "url": "/mediacapture-streams/GUM-optional-constraint.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/getusermedia-trivial-constraint.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/getusermedia-trivial-constraint.html"
+        "path": "mediacapture-streams/GUM-trivial-constraint.html",
+        "url": "/mediacapture-streams/GUM-trivial-constraint.html"
       },
       {
-        "path": "mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/unknownkey-option-param.html",
-        "url": "/mediacapture-streams/obtaining-local-multimedia-content/navigatorusermedia/unknownkey-option-param.html"
+        "path": "mediacapture-streams/GUM-unknownkey-option-param.html",
+        "url": "/mediacapture-streams/GUM-unknownkey-option-param.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/introduction/disabled-audio-silence.html",
-        "url": "/mediacapture-streams/stream-api/introduction/disabled-audio-silence.html"
+        "path": "mediacapture-streams/MediaDevices-enumerateDevices.html",
+        "url": "/mediacapture-streams/MediaDevices-enumerateDevices.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/introduction/disabled-video-black.html",
-        "url": "/mediacapture-streams/stream-api/introduction/disabled-video-black.html"
+        "path": "mediacapture-streams/MediaDevices-getUserMedia.html",
+        "url": "/mediacapture-streams/MediaDevices-getUserMedia.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/audio.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/audio.html"
+        "path": "mediacapture-streams/MediaStream-MediaElement-srcObject.html",
+        "url": "/mediacapture-streams/MediaStream-MediaElement-srcObject.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/mediastream-addtrack.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/mediastream-addtrack.html"
+        "path": "mediacapture-streams/MediaStream-add-audio-track.html",
+        "url": "/mediacapture-streams/MediaStream-add-audio-track.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/mediastream-finished-add.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/mediastream-finished-add.html"
+        "path": "mediacapture-streams/MediaStream-audio-only.html",
+        "url": "/mediacapture-streams/MediaStream-audio-only.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/mediastream-gettrackid.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/mediastream-gettrackid.html"
+        "path": "mediacapture-streams/MediaStream-finished-add.html",
+        "url": "/mediacapture-streams/MediaStream-finished-add.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/mediastream-idl.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/mediastream-idl.html"
+        "path": "mediacapture-streams/MediaStream-gettrackid.html",
+        "url": "/mediacapture-streams/MediaStream-gettrackid.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/mediastream-removetrack.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/mediastream-removetrack.html"
+        "path": "mediacapture-streams/MediaStream-idl.html",
+        "url": "/mediacapture-streams/MediaStream-idl.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastream/video.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/video.html"
+        "path": "mediacapture-streams/MediaStream-removetrack.html",
+        "url": "/mediacapture-streams/MediaStream-removetrack.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastreamtrack/mediastreamtrack-end.html",
-        "url": "/mediacapture-streams/stream-api/mediastreamtrack/mediastreamtrack-end.html"
+        "path": "mediacapture-streams/MediaStream-video-only.html",
+        "url": "/mediacapture-streams/MediaStream-video-only.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastreamtrack/mediastreamtrack-id.html",
-        "url": "/mediacapture-streams/stream-api/mediastreamtrack/mediastreamtrack-id.html"
+        "path": "mediacapture-streams/MediaStreamTrack-MediaElement-disabled-audio-is-silence.html",
+        "url": "/mediacapture-streams/MediaStreamTrack-MediaElement-disabled-audio-is-silence.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/mediastreamtrack/mediastreamtrack-init.html",
-        "url": "/mediacapture-streams/stream-api/mediastreamtrack/mediastreamtrack-init.html"
+        "path": "mediacapture-streams/MediaStreamTrack-MediaElement-disabled-video-is-black.html",
+        "url": "/mediacapture-streams/MediaStreamTrack-MediaElement-disabled-video-is-black.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/video-and-audio-tracks/audiostreamtrack.html",
-        "url": "/mediacapture-streams/stream-api/video-and-audio-tracks/audiostreamtrack.html"
+        "path": "mediacapture-streams/MediaStreamTrack-end.html",
+        "url": "/mediacapture-streams/MediaStreamTrack-end.html"
       },
       {
-        "path": "mediacapture-streams/stream-api/video-and-audio-tracks/videostreamtrack.html",
-        "url": "/mediacapture-streams/stream-api/video-and-audio-tracks/videostreamtrack.html"
+        "path": "mediacapture-streams/MediaStreamTrack-id.html",
+        "url": "/mediacapture-streams/MediaStreamTrack-id.html"
+      },
+      {
+        "path": "mediacapture-streams/MediaStreamTrack-init.html",
+        "url": "/mediacapture-streams/MediaStreamTrack-init.html"
       },
       {
         "path": "mixed-content/allowed/http-csp/same-host-https/audio-tag/top-level/keep-scheme-redirect/allowed.https.html",
@@ -27646,20 +27726,12 @@
         "url": "/selection/Document-open.html"
       },
       {
-        "path": "selection/collapse.html",
-        "url": "/selection/collapse.html"
-      },
-      {
         "path": "selection/collapseToStartEnd.html",
         "url": "/selection/collapseToStartEnd.html"
       },
       {
         "path": "selection/deleteFromDocument.html",
         "url": "/selection/deleteFromDocument.html"
-      },
-      {
-        "path": "selection/extend.html",
-        "url": "/selection/extend.html"
       },
       {
         "path": "selection/getRangeAt.html",
@@ -27706,6 +27778,366 @@
         "url": "/service-workers/cache-storage/serviceworker/credentials.html"
       },
       {
+        "path": "service-workers/service-worker/ServiceWorkerGlobalScope/close.https.html",
+        "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/close.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/ServiceWorkerGlobalScope/registration-attribute.https.html",
+        "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/registration-attribute.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/ServiceWorkerGlobalScope/unregister.https.html",
+        "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/unregister.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html",
+        "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/activate-event-after-install-state-change.https.html",
+        "url": "/service-workers/service-worker/activate-event-after-install-state-change.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/activation-after-registration.https.html",
+        "url": "/service-workers/service-worker/activation-after-registration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/active.https.html",
+        "url": "/service-workers/service-worker/active.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/appcache-ordering-main.https.html",
+        "url": "/service-workers/service-worker/appcache-ordering-main.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/claim-not-using-registration.https.html",
+        "url": "/service-workers/service-worker/claim-not-using-registration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/claim-using-registration.https.html",
+        "url": "/service-workers/service-worker/claim-using-registration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/clients-get-cross-origin.https.html",
+        "url": "/service-workers/service-worker/clients-get-cross-origin.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/clients-get.https.html",
+        "url": "/service-workers/service-worker/clients-get.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/clients-matchall-client-types.https.html",
+        "url": "/service-workers/service-worker/clients-matchall-client-types.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/clients-matchall-include-uncontrolled.https.html",
+        "url": "/service-workers/service-worker/clients-matchall-include-uncontrolled.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/clients-matchall.https.html",
+        "url": "/service-workers/service-worker/clients-matchall.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/controller-on-load.https.html",
+        "url": "/service-workers/service-worker/controller-on-load.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/controller-on-reload.https.html",
+        "url": "/service-workers/service-worker/controller-on-reload.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/extendable-event-async-waituntil.https.html",
+        "url": "/service-workers/service-worker/extendable-event-async-waituntil.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/extendable-event-waituntil.https.html",
+        "url": "/service-workers/service-worker/extendable-event-waituntil.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-canvas-tainting-cache.https.html",
+        "url": "/service-workers/service-worker/fetch-canvas-tainting-cache.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-canvas-tainting.https.html",
+        "url": "/service-workers/service-worker/fetch-canvas-tainting.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-cors-xhr.https.html",
+        "url": "/service-workers/service-worker/fetch-cors-xhr.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-csp.https.html",
+        "url": "/service-workers/service-worker/fetch-csp.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-event-after-navigation-within-page.https.html",
+        "url": "/service-workers/service-worker/fetch-event-after-navigation-within-page.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-event-async-respond-with.https.html",
+        "url": "/service-workers/service-worker/fetch-event-async-respond-with.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-event-network-error.https.html",
+        "url": "/service-workers/service-worker/fetch-event-network-error.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html",
+        "url": "/service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-event.https.html",
+        "url": "/service-workers/service-worker/fetch-event.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-header-visibility.https.html",
+        "url": "/service-workers/service-worker/fetch-header-visibility.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-css-base-url.https.html",
+        "url": "/service-workers/service-worker/fetch-request-css-base-url.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-css-images.https.html",
+        "url": "/service-workers/service-worker/fetch-request-css-images.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-fallback.https.html",
+        "url": "/service-workers/service-worker/fetch-request-fallback.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-no-freshness-headers.https.html",
+        "url": "/service-workers/service-worker/fetch-request-no-freshness-headers.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-resources.https.html",
+        "url": "/service-workers/service-worker/fetch-request-resources.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-xhr.https.html",
+        "url": "/service-workers/service-worker/fetch-request-xhr.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-response-xhr.https.html",
+        "url": "/service-workers/service-worker/fetch-response-xhr.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/getregistration.https.html",
+        "url": "/service-workers/service-worker/getregistration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/getregistrations.https.html",
+        "url": "/service-workers/service-worker/getregistrations.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/indexeddb.https.html",
+        "url": "/service-workers/service-worker/indexeddb.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/install-event-type.https.html",
+        "url": "/service-workers/service-worker/install-event-type.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/installing.https.html",
+        "url": "/service-workers/service-worker/installing.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/interfaces.https.html",
+        "url": "/service-workers/service-worker/interfaces.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/invalid-blobtype.https.html",
+        "url": "/service-workers/service-worker/invalid-blobtype.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/invalid-header.https.html",
+        "url": "/service-workers/service-worker/invalid-header.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/multiple-register.https.html",
+        "url": "/service-workers/service-worker/multiple-register.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/multiple-update.https.html",
+        "url": "/service-workers/service-worker/multiple-update.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/navigation-redirect.https.html",
+        "url": "/service-workers/service-worker/navigation-redirect.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/onactivate-script-error.https.html",
+        "url": "/service-workers/service-worker/onactivate-script-error.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/oninstall-script-error.https.html",
+        "url": "/service-workers/service-worker/oninstall-script-error.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/performance-timeline.https.html",
+        "url": "/service-workers/service-worker/performance-timeline.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/postmessage-msgport-to-client.https.html",
+        "url": "/service-workers/service-worker/postmessage-msgport-to-client.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/postmessage-to-client.https.html",
+        "url": "/service-workers/service-worker/postmessage-to-client.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/postmessage.https.html",
+        "url": "/service-workers/service-worker/postmessage.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/ready.https.html",
+        "url": "/service-workers/service-worker/ready.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/referer.https.html",
+        "url": "/service-workers/service-worker/referer.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/register-default-scope.https.html",
+        "url": "/service-workers/service-worker/register-default-scope.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/register-same-scope-different-script-url.https.html",
+        "url": "/service-workers/service-worker/register-same-scope-different-script-url.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/register-wait-forever-in-install-worker.https.html",
+        "url": "/service-workers/service-worker/register-wait-forever-in-install-worker.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/registration-end-to-end.https.html",
+        "url": "/service-workers/service-worker/registration-end-to-end.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/registration-events.https.html",
+        "url": "/service-workers/service-worker/registration-events.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/registration-iframe.https.html",
+        "url": "/service-workers/service-worker/registration-iframe.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/registration-service-worker-attributes.https.html",
+        "url": "/service-workers/service-worker/registration-service-worker-attributes.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/registration.https.html",
+        "url": "/service-workers/service-worker/registration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/rejections.https.html",
+        "url": "/service-workers/service-worker/rejections.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/request-end-to-end.https.html",
+        "url": "/service-workers/service-worker/request-end-to-end.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/resource-timing.https.html",
+        "url": "/service-workers/service-worker/resource-timing.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/service-worker-csp-connect.https.html",
+        "url": "/service-workers/service-worker/service-worker-csp-connect.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/service-worker-csp-default.https.html",
+        "url": "/service-workers/service-worker/service-worker-csp-default.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/service-worker-csp-script.https.html",
+        "url": "/service-workers/service-worker/service-worker-csp-script.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/serviceworkerobject-scripturl.https.html",
+        "url": "/service-workers/service-worker/serviceworkerobject-scripturl.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/shared-worker-controlled.https.html",
+        "url": "/service-workers/service-worker/shared-worker-controlled.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/skip-waiting-installed.https.html",
+        "url": "/service-workers/service-worker/skip-waiting-installed.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/skip-waiting-using-registration.https.html",
+        "url": "/service-workers/service-worker/skip-waiting-using-registration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/skip-waiting-without-client.https.html",
+        "url": "/service-workers/service-worker/skip-waiting-without-client.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/skip-waiting-without-using-registration.https.html",
+        "url": "/service-workers/service-worker/skip-waiting-without-using-registration.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/skip-waiting.https.html",
+        "url": "/service-workers/service-worker/skip-waiting.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/state.https.html",
+        "url": "/service-workers/service-worker/state.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/synced-state.https.html",
+        "url": "/service-workers/service-worker/synced-state.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/uncontrolled-page.https.html",
+        "url": "/service-workers/service-worker/uncontrolled-page.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/unregister-controller.https.html",
+        "url": "/service-workers/service-worker/unregister-controller.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/unregister-then-register-new-script.https.html",
+        "url": "/service-workers/service-worker/unregister-then-register-new-script.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/unregister-then-register.https.html",
+        "url": "/service-workers/service-worker/unregister-then-register.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/unregister.https.html",
+        "url": "/service-workers/service-worker/unregister.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/update-after-navigation-fetch-event.https.html",
+        "url": "/service-workers/service-worker/update-after-navigation-fetch-event.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/update-after-oneday.https.html",
+        "url": "/service-workers/service-worker/update-after-oneday.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/update.https.html",
+        "url": "/service-workers/service-worker/update.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/waiting.https.html",
+        "url": "/service-workers/service-worker/waiting.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/websocket.https.html",
+        "url": "/service-workers/service-worker/websocket.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/worker-interception.https.html",
+        "url": "/service-workers/service-worker/worker-interception.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/xhr.https.html",
+        "url": "/service-workers/service-worker/xhr.https.html"
+      },
+      {
         "path": "shadow-dom/Element-interface-attachShadow.html",
         "url": "/shadow-dom/Element-interface-attachShadow.html"
       },
@@ -27722,24 +28154,8 @@
         "url": "/shadow-dom/styles/shadow-cascade-order.html"
       },
       {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-001.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-005.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-005.html"
-      },
-      {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-006.html",
         "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-006.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/elements-001.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/elements-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/non-element-nodes-001.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/non-element-nodes-001.html"
       },
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/test-001.html",
@@ -27756,10 +28172,6 @@
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-event-interface/event-path-001.html",
         "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-event-interface/event-path-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-event-interface/event-path-002.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-event-interface/event-path-002.html"
       },
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-attributes/activeElement-confirm-return-null.html",
@@ -27812,38 +28224,6 @@
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-methods/test-010.html",
         "url": "/shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-methods/test-010.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-001.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-002.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-002.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-003.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-003.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-005.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-005.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-006.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-content-html-element/test-006.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-shadow-html-element/test-001.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-shadow-html-element/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-shadow-html-element/test-002.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-shadow-html-element/test-002.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/the-shadow-html-element/test-004.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/the-shadow-html-element/test-004.html"
       },
       {
         "path": "shadow-dom/untriaged/events/event-dispatch/test-001.html",
@@ -27978,18 +28358,6 @@
         "url": "/shadow-dom/untriaged/shadow-trees/composition/test-001.html"
       },
       {
-        "path": "shadow-dom/untriaged/shadow-trees/content-pseudo-element/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/content-pseudo-element/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/content-pseudo-element/test-002.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/content-pseudo-element/test-002.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/custom-pseudo-elements/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/custom-pseudo-elements/test-001.html"
-      },
-      {
         "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-003.html",
         "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-003.html"
       },
@@ -28016,26 +28384,6 @@
       {
         "path": "shadow-dom/untriaged/shadow-trees/reprojection/test-001.html",
         "url": "/shadow-dom/untriaged/shadow-trees/reprojection/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-002.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-002.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-003.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-003.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-004.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-004.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-005.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/satisfying-matching-criteria/test-005.html"
       },
       {
         "path": "shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/dom-tree-accessors-001.html",
@@ -28096,14 +28444,6 @@
       {
         "path": "shadow-dom/untriaged/styles/css-variables/test-001.html",
         "url": "/shadow-dom/untriaged/styles/css-variables/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/styles/deep-combinator/deep-combinator-001.html",
-        "url": "/shadow-dom/untriaged/styles/deep-combinator/deep-combinator-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/styles/shadow-pseudoelement/shadow-pseudoelement-001.html",
-        "url": "/shadow-dom/untriaged/styles/shadow-pseudoelement/shadow-pseudoelement-001.html"
       },
       {
         "path": "shadow-dom/untriaged/styles/test-001.html",
@@ -28454,12 +28794,12 @@
         "url": "/web-animations/animation/play.html"
       },
       {
-        "path": "web-animations/animation/playbackRate.html",
-        "url": "/web-animations/animation/playbackRate.html"
-      },
-      {
         "path": "web-animations/animation/playState.html",
         "url": "/web-animations/animation/playState.html"
+      },
+      {
+        "path": "web-animations/animation/playbackRate.html",
+        "url": "/web-animations/animation/playbackRate.html"
       },
       {
         "path": "web-animations/keyframe-effect/constructor.html",
@@ -28520,6 +28860,10 @@
       {
         "path": "webaudio/the-audio-api/the-offlineaudiocontext-interface/current-time-block-size.html",
         "url": "/webaudio/the-audio-api/the-offlineaudiocontext-interface/current-time-block-size.html"
+      },
+      {
+        "path": "webdriver/interface.html",
+        "url": "/webdriver/interface.html"
       },
       {
         "path": "webgl/bufferSubData.html",
@@ -34498,6 +34842,16 @@
         "url": "/selection/addRange.html"
       },
       {
+        "path": "selection/collapse.html",
+        "timeout": "long",
+        "url": "/selection/collapse.html"
+      },
+      {
+        "path": "selection/extend.html",
+        "timeout": "long",
+        "url": "/selection/extend.html"
+      },
+      {
         "path": "service-workers/cache-storage/common.https.html",
         "timeout": "long",
         "url": "/service-workers/cache-storage/common.https.html"
@@ -34628,6 +34982,41 @@
         "url": "/service-workers/cache-storage/worker/cache-storage.https.html"
       },
       {
+        "path": "service-workers/service-worker/fetch-event-redirect.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/fetch-event-redirect.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-frame-resource.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/fetch-frame-resource.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/fetch-mixed-content-to-inscope.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-mixed-content-to-outscope.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/fetch-mixed-content-to-outscope.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-request-redirect.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/fetch-request-redirect.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/fetch-waits-for-activate.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/fetch-waits-for-activate.https.html"
+      },
+      {
+        "path": "service-workers/service-worker/register-closed-window.https.html",
+        "timeout": "long",
+        "url": "/service-workers/service-worker/register-closed-window.https.html"
+      },
+      {
         "path": "websockets/binary/002.html",
         "timeout": "long",
         "url": "/websockets/binary/002.html"
@@ -34728,876 +35117,12 @@
         "url": "/webstorage/storage_session_setitem_quotaexceedederr.html"
       }
     ],
-    "wdspec": [
-      {
-        "path": "webdriver/base_test.py",
-        "url": "/webdriver/base_test.py"
-      },
-      {
-        "path": "webdriver/command_contexts/open_and_close_window_test.py",
-        "url": "/webdriver/command_contexts/open_and_close_window_test.py"
-      },
-      {
-        "path": "webdriver/command_contexts/window_handle_test.py",
-        "url": "/webdriver/command_contexts/window_handle_test.py"
-      },
-      {
-        "path": "webdriver/command_contexts/window_size_test.py",
-        "url": "/webdriver/command_contexts/window_size_test.py"
-      },
-      {
-        "path": "webdriver/cookie/cookie_test.py",
-        "url": "/webdriver/cookie/cookie_test.py"
-      },
-      {
-        "path": "webdriver/ecmascript/ecmascript_test.py",
-        "url": "/webdriver/ecmascript/ecmascript_test.py"
-      },
-      {
-        "path": "webdriver/element_location/element_location_test.py",
-        "url": "/webdriver/element_location/element_location_test.py"
-      },
-      {
-        "path": "webdriver/element_state/method_test.py",
-        "url": "/webdriver/element_state/method_test.py"
-      },
-      {
-        "path": "webdriver/element_state/properties.py",
-        "url": "/webdriver/element_state/properties.py"
-      },
-      {
-        "path": "webdriver/element_state/selected_test.py",
-        "url": "/webdriver/element_state/selected_test.py"
-      },
-      {
-        "path": "webdriver/element_state/visibility_test.py",
-        "url": "/webdriver/element_state/visibility_test.py"
-      },
-      {
-        "path": "webdriver/javascript/execute_script_test.py",
-        "url": "/webdriver/javascript/execute_script_test.py"
-      },
-      {
-        "path": "webdriver/modal/alerts_quit_test.py",
-        "url": "/webdriver/modal/alerts_quit_test.py"
-      },
-      {
-        "path": "webdriver/modal/alerts_test.py",
-        "url": "/webdriver/modal/alerts_test.py"
-      },
-      {
-        "path": "webdriver/navigation/auth_tests.py",
-        "url": "/webdriver/navigation/auth_tests.py"
-      },
-      {
-        "path": "webdriver/navigation/forward.py",
-        "url": "/webdriver/navigation/forward.py"
-      },
-      {
-        "path": "webdriver/navigation/forwardToNothing.py",
-        "url": "/webdriver/navigation/forwardToNothing.py"
-      },
-      {
-        "path": "webdriver/navigation/get_from_http_test.py",
-        "url": "/webdriver/navigation/get_from_http_test.py"
-      },
-      {
-        "path": "webdriver/navigation/invalid_cert_test.py",
-        "url": "/webdriver/navigation/invalid_cert_test.py"
-      },
-      {
-        "path": "webdriver/navigation/refresh-page.py",
-        "url": "/webdriver/navigation/refresh-page.py"
-      },
-      {
-        "path": "webdriver/navigation/refresh_page.py",
-        "url": "/webdriver/navigation/refresh_page.py"
-      },
-      {
-        "path": "webdriver/network.py",
-        "url": "/webdriver/network.py"
-      },
-      {
-        "path": "webdriver/runtests.py",
-        "url": "/webdriver/runtests.py"
-      },
-      {
-        "path": "webdriver/runtests_p0.py",
-        "url": "/webdriver/runtests_p0.py"
-      },
-      {
-        "path": "webdriver/screenshot/take_screenshot.py",
-        "url": "/webdriver/screenshot/take_screenshot.py"
-      },
-      {
-        "path": "webdriver/timeouts/implicit_waits_tests.py",
-        "url": "/webdriver/timeouts/implicit_waits_tests.py"
-      },
-      {
-        "path": "webdriver/timeouts/page_load_timeouts_tests.py",
-        "url": "/webdriver/timeouts/page_load_timeouts_tests.py"
-      },
-      {
-        "path": "webdriver/user_input/clear_test.py",
-        "url": "/webdriver/user_input/clear_test.py"
-      },
-      {
-        "path": "webdriver/user_input/click_test.py",
-        "url": "/webdriver/user_input/click_test.py"
-      },
-      {
-        "path": "webdriver/user_input/sendkeys_test.py",
-        "url": "/webdriver/user_input/sendkeys_test.py"
-      },
-      {
-        "path": "webdriver/windows/tabbing.py",
-        "url": "/webdriver/windows/tabbing.py"
-      },
-      {
-        "path": "webdriver/windows/window_manipulation.py",
-        "url": "/webdriver/windows/window_manipulation.py"
-      }
-    ]
+    "wdspec": []
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "reftest": {
-        "compat/webkit-text-fill-color-property-001a.html": [
-          {
-            "path": "compat/webkit-text-fill-color-property-001a.html",
-            "references": [
-              [
-                "/compat/webkit-text-fill-color-property-001-ref.html",
-                "=="
-              ]
-            ],
-            "url": "/compat/webkit-text-fill-color-property-001a.html"
-          }
-        ],
-        "compat/webkit-text-fill-color-property-001b.html": [
-          {
-            "path": "compat/webkit-text-fill-color-property-001b.html",
-            "references": [
-              [
-                "/compat/webkit-text-fill-color-property-001-ref.html",
-                "=="
-              ]
-            ],
-            "url": "/compat/webkit-text-fill-color-property-001b.html"
-          }
-        ],
-        "compat/webkit-text-fill-color-property-001c.html": [
-          {
-            "path": "compat/webkit-text-fill-color-property-001c.html",
-            "references": [
-              [
-                "/compat/webkit-text-fill-color-property-001-ref.html",
-                "=="
-              ]
-            ],
-            "url": "/compat/webkit-text-fill-color-property-001c.html"
-          }
-        ],
-        "compat/webkit-text-fill-color-property-001d.html": [
-          {
-            "path": "compat/webkit-text-fill-color-property-001d.html",
-            "references": [
-              [
-                "/compat/webkit-text-fill-color-property-001-ref.html",
-                "=="
-              ]
-            ],
-            "url": "/compat/webkit-text-fill-color-property-001d.html"
-          }
-        ]
-      },
-      "testharness": {
-        "dom/collections/HTMLCollection-as-proto-length-get-throws.html": [
-          {
-            "path": "dom/collections/HTMLCollection-as-proto-length-get-throws.html",
-            "url": "/dom/collections/HTMLCollection-as-proto-length-get-throws.html"
-          }
-        ],
-        "dom/nodes/Element-insertAdjacentElement.html": [
-          {
-            "path": "dom/nodes/Element-insertAdjacentElement.html",
-            "url": "/dom/nodes/Element-insertAdjacentElement.html"
-          }
-        ],
-        "dom/nodes/Element-insertAdjacentText.html": [
-          {
-            "path": "dom/nodes/Element-insertAdjacentText.html",
-            "url": "/dom/nodes/Element-insertAdjacentText.html"
-          }
-        ],
-        "dom/nodes/remove-unscopable.html": [
-          {
-            "path": "dom/nodes/remove-unscopable.html",
-            "url": "/dom/nodes/remove-unscopable.html"
-          }
-        ],
-        "js/builtins/Promise-incumbent-global.sub.html": [
-          {
-            "path": "js/builtins/Promise-incumbent-global.sub.html",
-            "url": "/js/builtins/Promise-incumbent-global.sub.html"
-          }
-        ],
-        "selection/collapse.html": [
-          {
-            "path": "selection/collapse.html",
-            "timeout": "long",
-            "url": "/selection/collapse.html"
-          }
-        ],
-        "selection/extend.html": [
-          {
-            "path": "selection/extend.html",
-            "timeout": "long",
-            "url": "/selection/extend.html"
-          }
-        ],
-        "service-workers/service-worker/ServiceWorkerGlobalScope/close.https.html": [
-          {
-            "path": "service-workers/service-worker/ServiceWorkerGlobalScope/close.https.html",
-            "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/close.https.html"
-          }
-        ],
-        "service-workers/service-worker/ServiceWorkerGlobalScope/registration-attribute.https.html": [
-          {
-            "path": "service-workers/service-worker/ServiceWorkerGlobalScope/registration-attribute.https.html",
-            "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/registration-attribute.https.html"
-          }
-        ],
-        "service-workers/service-worker/ServiceWorkerGlobalScope/unregister.https.html": [
-          {
-            "path": "service-workers/service-worker/ServiceWorkerGlobalScope/unregister.https.html",
-            "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/unregister.https.html"
-          }
-        ],
-        "service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html": [
-          {
-            "path": "service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html",
-            "url": "/service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html"
-          }
-        ],
-        "service-workers/service-worker/activate-event-after-install-state-change.https.html": [
-          {
-            "path": "service-workers/service-worker/activate-event-after-install-state-change.https.html",
-            "url": "/service-workers/service-worker/activate-event-after-install-state-change.https.html"
-          }
-        ],
-        "service-workers/service-worker/activation-after-registration.https.html": [
-          {
-            "path": "service-workers/service-worker/activation-after-registration.https.html",
-            "url": "/service-workers/service-worker/activation-after-registration.https.html"
-          }
-        ],
-        "service-workers/service-worker/active.https.html": [
-          {
-            "path": "service-workers/service-worker/active.https.html",
-            "url": "/service-workers/service-worker/active.https.html"
-          }
-        ],
-        "service-workers/service-worker/appcache-ordering-main.https.html": [
-          {
-            "path": "service-workers/service-worker/appcache-ordering-main.https.html",
-            "url": "/service-workers/service-worker/appcache-ordering-main.https.html"
-          }
-        ],
-        "service-workers/service-worker/claim-not-using-registration.https.html": [
-          {
-            "path": "service-workers/service-worker/claim-not-using-registration.https.html",
-            "url": "/service-workers/service-worker/claim-not-using-registration.https.html"
-          }
-        ],
-        "service-workers/service-worker/claim-using-registration.https.html": [
-          {
-            "path": "service-workers/service-worker/claim-using-registration.https.html",
-            "url": "/service-workers/service-worker/claim-using-registration.https.html"
-          }
-        ],
-        "service-workers/service-worker/clients-get-cross-origin.https.html": [
-          {
-            "path": "service-workers/service-worker/clients-get-cross-origin.https.html",
-            "url": "/service-workers/service-worker/clients-get-cross-origin.https.html"
-          }
-        ],
-        "service-workers/service-worker/clients-get.https.html": [
-          {
-            "path": "service-workers/service-worker/clients-get.https.html",
-            "url": "/service-workers/service-worker/clients-get.https.html"
-          }
-        ],
-        "service-workers/service-worker/clients-matchall-client-types.https.html": [
-          {
-            "path": "service-workers/service-worker/clients-matchall-client-types.https.html",
-            "url": "/service-workers/service-worker/clients-matchall-client-types.https.html"
-          }
-        ],
-        "service-workers/service-worker/clients-matchall-include-uncontrolled.https.html": [
-          {
-            "path": "service-workers/service-worker/clients-matchall-include-uncontrolled.https.html",
-            "url": "/service-workers/service-worker/clients-matchall-include-uncontrolled.https.html"
-          }
-        ],
-        "service-workers/service-worker/clients-matchall.https.html": [
-          {
-            "path": "service-workers/service-worker/clients-matchall.https.html",
-            "url": "/service-workers/service-worker/clients-matchall.https.html"
-          }
-        ],
-        "service-workers/service-worker/controller-on-load.https.html": [
-          {
-            "path": "service-workers/service-worker/controller-on-load.https.html",
-            "url": "/service-workers/service-worker/controller-on-load.https.html"
-          }
-        ],
-        "service-workers/service-worker/controller-on-reload.https.html": [
-          {
-            "path": "service-workers/service-worker/controller-on-reload.https.html",
-            "url": "/service-workers/service-worker/controller-on-reload.https.html"
-          }
-        ],
-        "service-workers/service-worker/extendable-event-async-waituntil.https.html": [
-          {
-            "path": "service-workers/service-worker/extendable-event-async-waituntil.https.html",
-            "url": "/service-workers/service-worker/extendable-event-async-waituntil.https.html"
-          }
-        ],
-        "service-workers/service-worker/extendable-event-waituntil.https.html": [
-          {
-            "path": "service-workers/service-worker/extendable-event-waituntil.https.html",
-            "url": "/service-workers/service-worker/extendable-event-waituntil.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-canvas-tainting-cache.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-canvas-tainting-cache.https.html",
-            "url": "/service-workers/service-worker/fetch-canvas-tainting-cache.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-canvas-tainting.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-canvas-tainting.https.html",
-            "url": "/service-workers/service-worker/fetch-canvas-tainting.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-cors-xhr.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-cors-xhr.https.html",
-            "url": "/service-workers/service-worker/fetch-cors-xhr.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-csp.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-csp.https.html",
-            "url": "/service-workers/service-worker/fetch-csp.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-event-after-navigation-within-page.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-event-after-navigation-within-page.https.html",
-            "url": "/service-workers/service-worker/fetch-event-after-navigation-within-page.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-event-async-respond-with.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-event-async-respond-with.https.html",
-            "url": "/service-workers/service-worker/fetch-event-async-respond-with.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-event-network-error.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-event-network-error.https.html",
-            "url": "/service-workers/service-worker/fetch-event-network-error.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-event-redirect.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-event-redirect.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/fetch-event-redirect.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html",
-            "url": "/service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-event.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-event.https.html",
-            "url": "/service-workers/service-worker/fetch-event.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-frame-resource.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-frame-resource.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/fetch-frame-resource.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-header-visibility.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-header-visibility.https.html",
-            "url": "/service-workers/service-worker/fetch-header-visibility.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/fetch-mixed-content-to-inscope.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-mixed-content-to-outscope.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-mixed-content-to-outscope.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/fetch-mixed-content-to-outscope.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-css-base-url.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-css-base-url.https.html",
-            "url": "/service-workers/service-worker/fetch-request-css-base-url.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-css-images.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-css-images.https.html",
-            "url": "/service-workers/service-worker/fetch-request-css-images.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-fallback.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-fallback.https.html",
-            "url": "/service-workers/service-worker/fetch-request-fallback.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-no-freshness-headers.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-no-freshness-headers.https.html",
-            "url": "/service-workers/service-worker/fetch-request-no-freshness-headers.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-redirect.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-redirect.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/fetch-request-redirect.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-resources.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-resources.https.html",
-            "url": "/service-workers/service-worker/fetch-request-resources.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-request-xhr.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-xhr.https.html",
-            "url": "/service-workers/service-worker/fetch-request-xhr.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-response-xhr.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-response-xhr.https.html",
-            "url": "/service-workers/service-worker/fetch-response-xhr.https.html"
-          }
-        ],
-        "service-workers/service-worker/fetch-waits-for-activate.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-waits-for-activate.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/fetch-waits-for-activate.https.html"
-          }
-        ],
-        "service-workers/service-worker/getregistration.https.html": [
-          {
-            "path": "service-workers/service-worker/getregistration.https.html",
-            "url": "/service-workers/service-worker/getregistration.https.html"
-          }
-        ],
-        "service-workers/service-worker/getregistrations.https.html": [
-          {
-            "path": "service-workers/service-worker/getregistrations.https.html",
-            "url": "/service-workers/service-worker/getregistrations.https.html"
-          }
-        ],
-        "service-workers/service-worker/indexeddb.https.html": [
-          {
-            "path": "service-workers/service-worker/indexeddb.https.html",
-            "url": "/service-workers/service-worker/indexeddb.https.html"
-          }
-        ],
-        "service-workers/service-worker/install-event-type.https.html": [
-          {
-            "path": "service-workers/service-worker/install-event-type.https.html",
-            "url": "/service-workers/service-worker/install-event-type.https.html"
-          }
-        ],
-        "service-workers/service-worker/installing.https.html": [
-          {
-            "path": "service-workers/service-worker/installing.https.html",
-            "url": "/service-workers/service-worker/installing.https.html"
-          }
-        ],
-        "service-workers/service-worker/interfaces.https.html": [
-          {
-            "path": "service-workers/service-worker/interfaces.https.html",
-            "url": "/service-workers/service-worker/interfaces.https.html"
-          }
-        ],
-        "service-workers/service-worker/invalid-blobtype.https.html": [
-          {
-            "path": "service-workers/service-worker/invalid-blobtype.https.html",
-            "url": "/service-workers/service-worker/invalid-blobtype.https.html"
-          }
-        ],
-        "service-workers/service-worker/invalid-header.https.html": [
-          {
-            "path": "service-workers/service-worker/invalid-header.https.html",
-            "url": "/service-workers/service-worker/invalid-header.https.html"
-          }
-        ],
-        "service-workers/service-worker/multiple-register.https.html": [
-          {
-            "path": "service-workers/service-worker/multiple-register.https.html",
-            "url": "/service-workers/service-worker/multiple-register.https.html"
-          }
-        ],
-        "service-workers/service-worker/multiple-update.https.html": [
-          {
-            "path": "service-workers/service-worker/multiple-update.https.html",
-            "url": "/service-workers/service-worker/multiple-update.https.html"
-          }
-        ],
-        "service-workers/service-worker/navigation-redirect.https.html": [
-          {
-            "path": "service-workers/service-worker/navigation-redirect.https.html",
-            "url": "/service-workers/service-worker/navigation-redirect.https.html"
-          }
-        ],
-        "service-workers/service-worker/onactivate-script-error.https.html": [
-          {
-            "path": "service-workers/service-worker/onactivate-script-error.https.html",
-            "url": "/service-workers/service-worker/onactivate-script-error.https.html"
-          }
-        ],
-        "service-workers/service-worker/oninstall-script-error.https.html": [
-          {
-            "path": "service-workers/service-worker/oninstall-script-error.https.html",
-            "url": "/service-workers/service-worker/oninstall-script-error.https.html"
-          }
-        ],
-        "service-workers/service-worker/performance-timeline.https.html": [
-          {
-            "path": "service-workers/service-worker/performance-timeline.https.html",
-            "url": "/service-workers/service-worker/performance-timeline.https.html"
-          }
-        ],
-        "service-workers/service-worker/postmessage-msgport-to-client.https.html": [
-          {
-            "path": "service-workers/service-worker/postmessage-msgport-to-client.https.html",
-            "url": "/service-workers/service-worker/postmessage-msgport-to-client.https.html"
-          }
-        ],
-        "service-workers/service-worker/postmessage-to-client.https.html": [
-          {
-            "path": "service-workers/service-worker/postmessage-to-client.https.html",
-            "url": "/service-workers/service-worker/postmessage-to-client.https.html"
-          }
-        ],
-        "service-workers/service-worker/postmessage.https.html": [
-          {
-            "path": "service-workers/service-worker/postmessage.https.html",
-            "url": "/service-workers/service-worker/postmessage.https.html"
-          }
-        ],
-        "service-workers/service-worker/ready.https.html": [
-          {
-            "path": "service-workers/service-worker/ready.https.html",
-            "url": "/service-workers/service-worker/ready.https.html"
-          }
-        ],
-        "service-workers/service-worker/referer.https.html": [
-          {
-            "path": "service-workers/service-worker/referer.https.html",
-            "url": "/service-workers/service-worker/referer.https.html"
-          }
-        ],
-        "service-workers/service-worker/register-closed-window.https.html": [
-          {
-            "path": "service-workers/service-worker/register-closed-window.https.html",
-            "timeout": "long",
-            "url": "/service-workers/service-worker/register-closed-window.https.html"
-          }
-        ],
-        "service-workers/service-worker/register-default-scope.https.html": [
-          {
-            "path": "service-workers/service-worker/register-default-scope.https.html",
-            "url": "/service-workers/service-worker/register-default-scope.https.html"
-          }
-        ],
-        "service-workers/service-worker/register-same-scope-different-script-url.https.html": [
-          {
-            "path": "service-workers/service-worker/register-same-scope-different-script-url.https.html",
-            "url": "/service-workers/service-worker/register-same-scope-different-script-url.https.html"
-          }
-        ],
-        "service-workers/service-worker/register-wait-forever-in-install-worker.https.html": [
-          {
-            "path": "service-workers/service-worker/register-wait-forever-in-install-worker.https.html",
-            "url": "/service-workers/service-worker/register-wait-forever-in-install-worker.https.html"
-          }
-        ],
-        "service-workers/service-worker/registration-end-to-end.https.html": [
-          {
-            "path": "service-workers/service-worker/registration-end-to-end.https.html",
-            "url": "/service-workers/service-worker/registration-end-to-end.https.html"
-          }
-        ],
-        "service-workers/service-worker/registration-events.https.html": [
-          {
-            "path": "service-workers/service-worker/registration-events.https.html",
-            "url": "/service-workers/service-worker/registration-events.https.html"
-          }
-        ],
-        "service-workers/service-worker/registration-iframe.https.html": [
-          {
-            "path": "service-workers/service-worker/registration-iframe.https.html",
-            "url": "/service-workers/service-worker/registration-iframe.https.html"
-          }
-        ],
-        "service-workers/service-worker/registration-service-worker-attributes.https.html": [
-          {
-            "path": "service-workers/service-worker/registration-service-worker-attributes.https.html",
-            "url": "/service-workers/service-worker/registration-service-worker-attributes.https.html"
-          }
-        ],
-        "service-workers/service-worker/registration.https.html": [
-          {
-            "path": "service-workers/service-worker/registration.https.html",
-            "url": "/service-workers/service-worker/registration.https.html"
-          }
-        ],
-        "service-workers/service-worker/rejections.https.html": [
-          {
-            "path": "service-workers/service-worker/rejections.https.html",
-            "url": "/service-workers/service-worker/rejections.https.html"
-          }
-        ],
-        "service-workers/service-worker/request-end-to-end.https.html": [
-          {
-            "path": "service-workers/service-worker/request-end-to-end.https.html",
-            "url": "/service-workers/service-worker/request-end-to-end.https.html"
-          }
-        ],
-        "service-workers/service-worker/resource-timing.https.html": [
-          {
-            "path": "service-workers/service-worker/resource-timing.https.html",
-            "url": "/service-workers/service-worker/resource-timing.https.html"
-          }
-        ],
-        "service-workers/service-worker/service-worker-csp-connect.https.html": [
-          {
-            "path": "service-workers/service-worker/service-worker-csp-connect.https.html",
-            "url": "/service-workers/service-worker/service-worker-csp-connect.https.html"
-          }
-        ],
-        "service-workers/service-worker/service-worker-csp-default.https.html": [
-          {
-            "path": "service-workers/service-worker/service-worker-csp-default.https.html",
-            "url": "/service-workers/service-worker/service-worker-csp-default.https.html"
-          }
-        ],
-        "service-workers/service-worker/service-worker-csp-script.https.html": [
-          {
-            "path": "service-workers/service-worker/service-worker-csp-script.https.html",
-            "url": "/service-workers/service-worker/service-worker-csp-script.https.html"
-          }
-        ],
-        "service-workers/service-worker/serviceworkerobject-scripturl.https.html": [
-          {
-            "path": "service-workers/service-worker/serviceworkerobject-scripturl.https.html",
-            "url": "/service-workers/service-worker/serviceworkerobject-scripturl.https.html"
-          }
-        ],
-        "service-workers/service-worker/shared-worker-controlled.https.html": [
-          {
-            "path": "service-workers/service-worker/shared-worker-controlled.https.html",
-            "url": "/service-workers/service-worker/shared-worker-controlled.https.html"
-          }
-        ],
-        "service-workers/service-worker/skip-waiting-installed.https.html": [
-          {
-            "path": "service-workers/service-worker/skip-waiting-installed.https.html",
-            "url": "/service-workers/service-worker/skip-waiting-installed.https.html"
-          }
-        ],
-        "service-workers/service-worker/skip-waiting-using-registration.https.html": [
-          {
-            "path": "service-workers/service-worker/skip-waiting-using-registration.https.html",
-            "url": "/service-workers/service-worker/skip-waiting-using-registration.https.html"
-          }
-        ],
-        "service-workers/service-worker/skip-waiting-without-client.https.html": [
-          {
-            "path": "service-workers/service-worker/skip-waiting-without-client.https.html",
-            "url": "/service-workers/service-worker/skip-waiting-without-client.https.html"
-          }
-        ],
-        "service-workers/service-worker/skip-waiting-without-using-registration.https.html": [
-          {
-            "path": "service-workers/service-worker/skip-waiting-without-using-registration.https.html",
-            "url": "/service-workers/service-worker/skip-waiting-without-using-registration.https.html"
-          }
-        ],
-        "service-workers/service-worker/skip-waiting.https.html": [
-          {
-            "path": "service-workers/service-worker/skip-waiting.https.html",
-            "url": "/service-workers/service-worker/skip-waiting.https.html"
-          }
-        ],
-        "service-workers/service-worker/state.https.html": [
-          {
-            "path": "service-workers/service-worker/state.https.html",
-            "url": "/service-workers/service-worker/state.https.html"
-          }
-        ],
-        "service-workers/service-worker/synced-state.https.html": [
-          {
-            "path": "service-workers/service-worker/synced-state.https.html",
-            "url": "/service-workers/service-worker/synced-state.https.html"
-          }
-        ],
-        "service-workers/service-worker/uncontrolled-page.https.html": [
-          {
-            "path": "service-workers/service-worker/uncontrolled-page.https.html",
-            "url": "/service-workers/service-worker/uncontrolled-page.https.html"
-          }
-        ],
-        "service-workers/service-worker/unregister-controller.https.html": [
-          {
-            "path": "service-workers/service-worker/unregister-controller.https.html",
-            "url": "/service-workers/service-worker/unregister-controller.https.html"
-          }
-        ],
-        "service-workers/service-worker/unregister-then-register-new-script.https.html": [
-          {
-            "path": "service-workers/service-worker/unregister-then-register-new-script.https.html",
-            "url": "/service-workers/service-worker/unregister-then-register-new-script.https.html"
-          }
-        ],
-        "service-workers/service-worker/unregister-then-register.https.html": [
-          {
-            "path": "service-workers/service-worker/unregister-then-register.https.html",
-            "url": "/service-workers/service-worker/unregister-then-register.https.html"
-          }
-        ],
-        "service-workers/service-worker/unregister.https.html": [
-          {
-            "path": "service-workers/service-worker/unregister.https.html",
-            "url": "/service-workers/service-worker/unregister.https.html"
-          }
-        ],
-        "service-workers/service-worker/update-after-navigation-fetch-event.https.html": [
-          {
-            "path": "service-workers/service-worker/update-after-navigation-fetch-event.https.html",
-            "url": "/service-workers/service-worker/update-after-navigation-fetch-event.https.html"
-          }
-        ],
-        "service-workers/service-worker/update-after-oneday.https.html": [
-          {
-            "path": "service-workers/service-worker/update-after-oneday.https.html",
-            "url": "/service-workers/service-worker/update-after-oneday.https.html"
-          }
-        ],
-        "service-workers/service-worker/update.https.html": [
-          {
-            "path": "service-workers/service-worker/update.https.html",
-            "url": "/service-workers/service-worker/update.https.html"
-          }
-        ],
-        "service-workers/service-worker/waiting.https.html": [
-          {
-            "path": "service-workers/service-worker/waiting.https.html",
-            "url": "/service-workers/service-worker/waiting.https.html"
-          }
-        ],
-        "service-workers/service-worker/websocket.https.html": [
-          {
-            "path": "service-workers/service-worker/websocket.https.html",
-            "url": "/service-workers/service-worker/websocket.https.html"
-          }
-        ],
-        "service-workers/service-worker/worker-interception.https.html": [
-          {
-            "path": "service-workers/service-worker/worker-interception.https.html",
-            "url": "/service-workers/service-worker/worker-interception.https.html"
-          }
-        ],
-        "service-workers/service-worker/xhr.https.html": [
-          {
-            "path": "service-workers/service-worker/xhr.https.html",
-            "url": "/service-workers/service-worker/xhr.https.html"
-          }
-        ]
-      }
-    },
-    "reftest_nodes": {
-      "compat/webkit-text-fill-color-property-001a.html": [
-        {
-          "path": "compat/webkit-text-fill-color-property-001a.html",
-          "references": [
-            [
-              "/compat/webkit-text-fill-color-property-001-ref.html",
-              "=="
-            ]
-          ],
-          "url": "/compat/webkit-text-fill-color-property-001a.html"
-        }
-      ],
-      "compat/webkit-text-fill-color-property-001b.html": [
-        {
-          "path": "compat/webkit-text-fill-color-property-001b.html",
-          "references": [
-            [
-              "/compat/webkit-text-fill-color-property-001-ref.html",
-              "=="
-            ]
-          ],
-          "url": "/compat/webkit-text-fill-color-property-001b.html"
-        }
-      ],
-      "compat/webkit-text-fill-color-property-001c.html": [
-        {
-          "path": "compat/webkit-text-fill-color-property-001c.html",
-          "references": [
-            [
-              "/compat/webkit-text-fill-color-property-001-ref.html",
-              "=="
-            ]
-          ],
-          "url": "/compat/webkit-text-fill-color-property-001c.html"
-        }
-      ],
-      "compat/webkit-text-fill-color-property-001d.html": [
-        {
-          "path": "compat/webkit-text-fill-color-property-001d.html",
-          "references": [
-            [
-              "/compat/webkit-text-fill-color-property-001-ref.html",
-              "=="
-            ]
-          ],
-          "url": "/compat/webkit-text-fill-color-property-001d.html"
-        }
-      ]
-    }
+    "items": {},
+    "reftest_nodes": {}
   },
   "reftest_nodes": {
     "2dcontext/building-paths/canvas_complexshapes_arcto_001.htm": [
@@ -36042,6 +35567,54 @@
           ]
         ],
         "url": "/FileAPI/url/url_xmlhttprequest_img.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-001a.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-001a.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001a.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-001b.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-001b.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001b.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-001c.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-001c.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001c.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-001d.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-001d.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-001d.html"
       }
     ],
     "custom-elements/registering-custom-elements/unresolved-element-pseudoclass/unresolved-element-pseudoclass-css-test-custom-tag.html": [
@@ -41745,7 +41318,7 @@
       }
     ]
   },
-  "rev": "e9b6636c067fc08b9eb393a1c0ff380a77ae1786",
+  "rev": "8d896c2015ab1e50ad00a0013700f87813d9364c",
   "url_base": "/",
   "version": 3
 }

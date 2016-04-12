@@ -1184,9 +1184,11 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                       aStyle, aFontData, face);
 }
 
-gfxFontFamily*
-gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
-                                  gfxFloat aDevToCssSize)
+bool
+gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
+                                          nsTArray<gfxFontFamily*>* aOutput,
+                                          gfxFontStyle* aStyle,
+                                          gfxFloat aDevToCssSize)
 {
     nsAutoString familyName(aFamily);
     ToLowerCase(familyName);
@@ -1208,9 +1210,10 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
         mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
         PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
         if (prefFonts && !prefFonts->IsEmpty()) {
-            return (*prefFonts)[0];
+            aOutput->AppendElements(*prefFonts);
+            return true;
         }
-        return nullptr;
+        return false;
     }
 
     // fontconfig allows conditional substitutions in such a way that it's
@@ -1228,13 +1231,18 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
     // Nimbus Sans L as alternatives for Helvetica.
 
     // Because the FcConfigSubstitute call is quite expensive, we cache the
-    // actual font family found via this process. So check the cache first:
+    // actual font families found via this process. So check the cache first:
     NS_ConvertUTF16toUTF8 familyToFind(familyName);
-    gfxFontFamily* cached = mFcSubstituteCache.GetWeak(familyToFind);
-    if (cached) {
-        return cached;
+    AutoTArray<gfxFontFamily*,10> cachedFamilies;
+    if (mFcSubstituteCache.Get(familyToFind, &cachedFamilies)) {
+        if (cachedFamilies.IsEmpty()) {
+            return false;
+        }
+        aOutput->AppendElements(cachedFamilies);
+        return true;
     }
 
+    // It wasn't in the cache, so we need to ask fontconfig...
     const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
     FcChar8* sentinelFirstFamily = nullptr;
     nsAutoRef<FcPattern> sentinelSubst(FcPatternCreate());
@@ -1249,7 +1257,7 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
     FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
     FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
 
-    // iterate through substitutions until hitting the sentinel
+    // Add all font family matches until reaching the sentinel.
     FcChar8* substName = nullptr;
     for (int i = 0;
          FcPatternGetString(fontWithSentinel, FC_FAMILY,
@@ -1261,16 +1269,17 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
             FcStrCmp(substName, sentinelFirstFamily) == 0) {
             break;
         }
-        gfxFontFamily* foundFamily = gfxPlatformFontList::FindFamily(subst);
-        if (foundFamily) {
-            // We've figured out what family the given name maps to, after any
-            // fontconfig subsitutions. Cache it to speed up future lookups.
-            mFcSubstituteCache.Put(familyToFind, foundFamily);
-            return foundFamily;
-        }
+        gfxPlatformFontList::FindAndAddFamilies(subst, &cachedFamilies);
     }
 
-    return nullptr;
+    // Cache the resulting list, so we don't have to do this again.
+    mFcSubstituteCache.Put(familyToFind, cachedFamilies);
+
+    if (cachedFamilies.IsEmpty()) {
+        return false;
+    }
+    aOutput->AppendElements(cachedFamilies);
+    return true;
 }
 
 bool
@@ -1547,16 +1556,21 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
         FcPatternGetString(font, FC_FAMILY, 0, &mappedGeneric);
         if (mappedGeneric) {
             NS_ConvertUTF8toUTF16 mappedGenericName(ToCharPtr(mappedGeneric));
-            gfxFontFamily* genericFamily =
-                gfxPlatformFontList::FindFamily(mappedGenericName);
-            if (genericFamily && !prefFonts->Contains(genericFamily)) {
-                prefFonts->AppendElement(genericFamily);
-                bool foundLang = !fcLang.IsEmpty() &&
-                                 PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
-                foundFontWithLang = foundFontWithLang || foundLang;
-                // check to see if the list is full
-                if (prefFonts->Length() >= limit) {
-                    break;
+            AutoTArray<gfxFontFamily*,1> genericFamilies;
+            if (gfxPlatformFontList::FindAndAddFamilies(mappedGenericName,
+                                                        &genericFamilies)) {
+                MOZ_ASSERT(genericFamilies.Length() == 1,
+                           "expected a single family");
+                if (!prefFonts->Contains(genericFamilies[0])) {
+                    prefFonts->AppendElement(genericFamilies[0]);
+                    bool foundLang =
+                        !fcLang.IsEmpty() &&
+                        PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
+                    foundFontWithLang = foundFontWithLang || foundLang;
+                    // check to see if the list is full
+                    if (prefFonts->Length() >= limit) {
+                        break;
+                    }
                 }
             }
         }

@@ -160,10 +160,11 @@ struct PointerType
  * The constructors and mutating methods only accept array pointers (not T*, U*
  * that converts to T*, or UniquePtr<U[]> or UniquePtr<U>) or |nullptr|.
  *
- * It's perfectly okay to return a UniquePtr from a method to assure the related
- * resource is properly deleted.  You'll need to use |Move()| when returning a
- * local UniquePtr.  Otherwise you can return |nullptr|, or you can return
- * |UniquePtr(ptr)|.
+ * It's perfectly okay for a function to return a UniquePtr. This transfers
+ * the UniquePtr's sole ownership of the data, to the fresh UniquePtr created
+ * in the calling function, that will then solely own that data. Such functions
+ * can return a local variable UniquePtr, |nullptr|, |UniquePtr(ptr)| where
+ * |ptr| is a |T*|, or a UniquePtr |Move()|'d from elsewhere.
  *
  * UniquePtr will commonly be a member of a class, with lifetime equivalent to
  * that of that class.  If you want to expose the related resource, you could

@@ -544,11 +544,6 @@ public:
 
   layout::RenderFrameParent* GetRenderFrame();
 
-  // Called by HttpChannelParent. The function may use a new process to
-  // reload the URI associated with the given channel.
-  void OnStartSignedPackageRequest(nsIChannel* aChannel,
-                                   const nsACString& aPackageId);
-
   void AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
                                       AudioChannel aAudioChannel,
                                       float aVolume,
@@ -591,10 +586,6 @@ protected:
 
   bool InitBrowserConfiguration(const nsCString& aURI,
                                 BrowserConfiguration& aConfiguration);
-
-  // Decide whether we have to use a new process to reload the URI associated
-  // with the given channel.
-  bool ShouldSwitchProcess(nsIChannel* aChannel, const nsACString& aSignedPkg);
 
   ContentCacheInParent mContentCache;
 
