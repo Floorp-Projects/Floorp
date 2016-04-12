@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.ipc += [
     'DBusConnectionRefPtr.h',
+    'DBusHelpers.h',
     'DBusMessageRefPtr.h',
     'DBusPendingCallRefPtr.h',
     'DBusUtils.h',
@@ -14,6 +15,7 @@ EXPORTS.mozilla.ipc += [
 ]
 
 SOURCES += [
+    'DBusHelpers.cpp',
     'DBusUtils.cpp',
     'DBusWatcher.cpp',
     'RawDBusConnection.cpp',

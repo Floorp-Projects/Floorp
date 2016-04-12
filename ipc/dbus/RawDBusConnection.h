@@ -42,11 +42,6 @@ public:
                      const char *aFunc, int aFirstArgType, ...);
 
 protected:
-  DBusMessage* BuildDBusMessage(const char* aDestination,
-                                const char* aPath, const char* aIntf,
-                                const char* aFunc, int aFirstArgType,
-                                va_list args);
-
   RefPtr<DBusConnection> mConnection;
 
 private:

@@ -4,69 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/message_loop.h"
-#include "mozilla/ipc/DBusWatcher.h"
-#include "nsThreadUtils.h"
 #include "RawDBusConnection.h"
-
-#ifdef CHROMIUM_LOG
-#undef CHROMIUM_LOG
-#endif
-
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args);
-#else
-#define CHROMIUM_LOG(args...)  printf(args);
-#endif
+#include "base/message_loop.h"
+#include "mozilla/ipc/DBusHelpers.h"
+#include "mozilla/ipc/DBusWatcher.h"
 
 namespace mozilla {
 namespace ipc {
-
-//
-// Notification
-//
-
-class Notification
-{
-public:
-  Notification(DBusReplyCallback aCallback, void* aData)
-  : mCallback(aCallback),
-    mData(aData)
-  { }
-
-  // Callback function for DBus replies. Only run it on I/O thread.
-  //
-  static void Handle(DBusPendingCall* aCall, void* aData)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(MessageLoop::current());
-
-    nsAutoPtr<Notification> ntfn(static_cast<Notification*>(aData));
-
-    // The reply can be non-null if the timeout has been reached.
-    DBusMessage* reply = dbus_pending_call_steal_reply(aCall);
-
-    if (reply) {
-      ntfn->RunCallback(reply);
-      dbus_message_unref(reply);
-    }
-
-    dbus_pending_call_cancel(aCall);
-    dbus_pending_call_unref(aCall);
-  }
-
-private:
-  void RunCallback(DBusMessage* aMessage)
-  {
-    if (mCallback) {
-      mCallback(aMessage, mData);
-    }
-  }
-
-  DBusReplyCallback mCallback;
-  void*             mData;
-};
 
 //
 // RawDBusConnection
@@ -108,33 +52,22 @@ nsresult RawDBusConnection::EstablishDBusConnection()
 
 bool RawDBusConnection::Watch()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(MessageLoop::current());
 
-  dbus_bool_t success =
-    dbus_connection_set_watch_functions(mConnection,
-                                        DBusWatcher::AddWatchFunction,
-                                        DBusWatcher::RemoveWatchFunction,
-                                        DBusWatcher::ToggleWatchFunction,
-                                        this->GetConnection(), nullptr);
-  NS_ENSURE_TRUE(success == TRUE, false);
-
-  return true;
+  return NS_SUCCEEDED(DBusWatchConnection(mConnection));
 }
 
 bool RawDBusConnection::Send(DBusMessage* aMessage)
 {
-  MOZ_ASSERT(aMessage);
-  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(MessageLoop::current());
 
-  dbus_bool_t success = dbus_connection_send(mConnection,
-                                             aMessage,
-                                             nullptr);
-  if (success != TRUE) {
+  auto rv = DBusSendMessage(mConnection, aMessage);
+
+  if (NS_FAILED(rv)) {
     dbus_message_unref(aMessage);
     return false;
   }
+
   return true;
 }
 
@@ -143,26 +76,14 @@ bool RawDBusConnection::SendWithReply(DBusReplyCallback aCallback,
                                       int aTimeout,
                                       DBusMessage* aMessage)
 {
-  MOZ_ASSERT(aMessage);
-  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(MessageLoop::current());
 
-  nsAutoPtr<Notification> ntfn(new Notification(aCallback, aData));
-  NS_ENSURE_TRUE(ntfn, false);
+  auto rv = DBusSendMessageWithReply(mConnection, aCallback, aData, aTimeout,
+                                     aMessage);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
 
-  DBusPendingCall* call;
-
-  dbus_bool_t success = dbus_connection_send_with_reply(mConnection,
-                                                        aMessage,
-                                                        &call,
-                                                        aTimeout);
-  NS_ENSURE_TRUE(success == TRUE, false);
-
-  success = dbus_pending_call_set_notify(call, Notification::Handle,
-                                         ntfn, nullptr);
-  NS_ENSURE_TRUE(success == TRUE, false);
-
-  ntfn.forget();
   dbus_message_unref(aMessage);
 
   return true;
@@ -178,44 +99,15 @@ bool RawDBusConnection::SendWithReply(DBusReplyCallback aCallback,
                                       int aFirstArgType,
                                       ...)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
   va_list args;
-
   va_start(args, aFirstArgType);
-  DBusMessage* msg = BuildDBusMessage(aDestination, aPath, aIntf, aFunc,
-                                      aFirstArgType, args);
+
+  auto rv = DBusSendMessageWithReply(mConnection, aCallback, aData,
+                                     aTimeout, aDestination, aPath, aIntf,
+                                     aFunc, aFirstArgType, args);
   va_end(args);
 
-  if (!msg) {
-    return false;
-  }
-
-  return SendWithReply(aCallback, aData, aTimeout, msg);
-}
-
-DBusMessage* RawDBusConnection::BuildDBusMessage(const char* aDestination,
-                                                 const char* aPath,
-                                                 const char* aIntf,
-                                                 const char* aFunc,
-                                                 int aFirstArgType,
-                                                 va_list aArgs)
-{
-  DBusMessage* msg = dbus_message_new_method_call(aDestination,
-                                                  aPath, aIntf,
-                                                  aFunc);
-  if (!msg) {
-    CHROMIUM_LOG("Could not allocate D-Bus message object!");
-    return nullptr;
-  }
-
-  /* append arguments */
-  if (!dbus_message_append_args_valist(msg, aFirstArgType, aArgs)) {
-    CHROMIUM_LOG("Could not append argument to method call!");
-    dbus_message_unref(msg);
-    return nullptr;
-  }
-
-  return msg;
+  return NS_SUCCEEDED(rv);
 }
 
 }
