@@ -203,6 +203,10 @@
   <string name="pref_cookies_not_accept_foreign">&pref_cookies_not_accept_foreign;</string>
   <string name="pref_cookies_disabled">&pref_cookies_disabled;</string>
 
+  <string name="pref_category_data_saver">&pref_category_data_saver;</string>
+  <string name="pref_category_media">&pref_category_media;</string>
+  <string name="pref_category_developer_tools">&pref_category_developer_tools;</string>
+
   <string name="pref_tap_to_load_images_title2">&pref_tap_to_load_images_title2;</string>
   <string name="pref_tap_to_load_images_enabled">&pref_tap_to_load_images_enabled;</string>
   <string name="pref_tap_to_load_images_data">&pref_tap_to_load_images_data;</string>
