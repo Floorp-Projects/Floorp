@@ -306,6 +306,10 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   }
 #endif
 
+  if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+  }
+
   return MediaKeySystemStatus::Cdm_not_supported;
 }
 
