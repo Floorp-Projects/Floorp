@@ -45,6 +45,18 @@ public class LocalUrlAnnotations implements UrlAnnotations {
         insertAnnotation(cr, originUrl, Key.FEED, feedUrl);
     }
 
+    @Override
+    public boolean hasAcceptedOrDeclinedHomeScreenShortcut(ContentResolver cr, String url) {
+        return hasResultsForSelection(cr,
+                BrowserContract.UrlAnnotations.URL + " = ?",
+                new String[]{url});
+    }
+
+    @Override
+    public void insertHomeScreenShortcut(ContentResolver cr, String url, boolean hasCreatedShortCut) {
+        insertAnnotation(cr, url, Key.HOME_SCREEN_SHORTCUT, String.valueOf(hasCreatedShortCut));
+    }
+
     /**
      * Returns true if there's a mapping from the given website URL to a feed URL. False otherwise.
      */

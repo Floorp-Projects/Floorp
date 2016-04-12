@@ -549,7 +549,16 @@ public class BrowserContract {
              * Key:   reader_view
              * Value: String "true" to indicate that we would like to open into reader view.
              */
-            READER_VIEW("reader_view");
+            READER_VIEW("reader_view"),
+
+            /**
+             * Indicator that the user interacted with the URL in regards to home screen shortcuts.
+             *
+             * Key:   home_screen_shortcut
+             * Value: True: User created an home screen shortcut for this URL
+             *        False: User declined to create a shortcut for this URL
+             */
+            HOME_SCREEN_SHORTCUT("home_screen_shortcut");
 
             private final String dbValue;
 
