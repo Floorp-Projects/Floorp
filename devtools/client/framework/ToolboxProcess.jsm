@@ -250,12 +250,18 @@ BrowserToolboxProcess.prototype = {
     this._telemetry.toolClosed("jsbrowserdebugger");
     if (this.debuggerServer) {
       this.debuggerServer.destroy();
+      this.debuggerServer = null;
     }
 
     dumpn("Chrome toolbox is now closed...");
     this.closed = true;
     this.emit("close", this);
     processes.delete(this);
+
+    this._dbgProcess = null;
+    this._options = null;
+    this.loader = null;
+    this._telemetry = null;
   }
 };
 
