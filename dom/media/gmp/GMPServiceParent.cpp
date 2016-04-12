@@ -1253,13 +1253,18 @@ GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
 
   nsresult rv;
 
-  if (aOrigin.EqualsLiteral("null") ||
+  if (aGMPName.EqualsLiteral("gmp-widevinecdm") ||
+      aOrigin.EqualsLiteral("null") ||
       aOrigin.IsEmpty() ||
       aTopLevelOrigin.EqualsLiteral("null") ||
       aTopLevelOrigin.IsEmpty()) {
-    // At least one of the (origin, topLevelOrigin) is null or empty;
-    // probably a local file. Generate a random node id, and don't store
-    // it so that the GMP's storage is temporary and not shared.
+    // This is for the Google Widevine CDM, which doesn't have persistent
+    // storage and which can't handle being used by more than one origin at
+    // once in the same plugin instance, or at least one of the
+    // (origin, topLevelOrigin) is null or empty; probably a local file.
+    // Generate a random node id, and don't store it so that the GMP's storage
+    // is temporary and the process for this GMP is not shared with GMP
+    // instances that have the same nodeId.
     nsAutoCString salt;
     rv = GenerateRandomPathName(salt, NodeIdSaltLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
