@@ -2495,7 +2495,7 @@ WarnIfSandboxIneffective(nsIDocShell* aDocShell,
       return;
     }
 
-    nsCOMPtr<nsIDocument> parentDocument = do_GetInterface(parentDocShell);
+    nsCOMPtr<nsIDocument> parentDocument = parentDocShell->GetDocument();
     nsCOMPtr<nsIURI> iframeUri;
     parentChannel->GetURI(getter_AddRefs(iframeUri));
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
