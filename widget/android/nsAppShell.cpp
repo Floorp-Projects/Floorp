@@ -70,8 +70,6 @@
 
 using namespace mozilla;
 
-PRLogModuleInfo *gWidgetLog = nullptr;
-
 nsIGeolocationUpdate *gLocationCallback = nullptr;
 nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
 
@@ -383,9 +381,6 @@ static const char* kObservedPrefs[] = {
 nsresult
 nsAppShell::Init()
 {
-    if (!gWidgetLog)
-        gWidgetLog = PR_NewLogModule("Widget");
-
     nsresult rv = nsBaseAppShell::Init();
     nsCOMPtr<nsIObserverService> obsServ =
         mozilla::services::GetObserverService();
