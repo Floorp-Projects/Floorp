@@ -1153,9 +1153,8 @@ bool
 nsIFrame::HasOpacityInternal(float aThreshold) const
 {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
-  const nsStyleDisplay* displayStyle = StyleDisplay();
-  return StyleDisplay()->mOpacity < aThreshold ||
-         (displayStyle->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
+  return StyleEffects()->mOpacity < aThreshold ||
+         (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
          (mContent &&
            EffectCompositor::HasAnimationsForCompositor(
              this, eCSSProperty_opacity) &&
@@ -2148,6 +2147,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     return;
 
   const nsStyleDisplay* disp = StyleDisplay();
+  const nsStyleEffects* effects = StyleEffects();
   // We can stop right away if this is a zero-opacity stacking context and
   // we're painting, and we're not animating opacity. Don't do this
   // if we're going to compute plugin geometry, since opacity-0 plugins
@@ -2157,7 +2157,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     StyleUserInterface()->GetEffectivePointerEvents(this) !=
       NS_STYLE_POINTER_EVENTS_NONE;
   bool opacityItemForEventsOnly = false;
-  if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
+  if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !aBuilder->WillComputePluginGeometry() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       !nsLayoutUtils::HasCurrentAnimationOfProperty(this,
@@ -2235,7 +2235,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
-  const nsStyleEffects* effects = StyleEffects();
   bool useOpacity = HasVisualOpacity() && !nsSVGUtils::CanOptimizeOpacity(this) && !usingSVGEffects;
   bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition = disp->mPosition == NS_STYLE_POSITION_STICKY &&
@@ -9304,11 +9303,13 @@ nsIFrame::DestroyContentArray(ContentArray* aArray)
 
 bool
 nsIFrame::IsPseudoStackingContextFromStyle() {
-  const nsStyleDisplay* disp = StyleDisplay();
   // If you change this, also change the computation of pseudoStackingContext
   // in BuildDisplayListForChild()
-  return disp->mOpacity != 1.0f ||
-         disp->IsAbsPosContainingBlock(this) ||
+  if (StyleEffects()->mOpacity != 1.0f) {
+    return true;
+  }
+  const nsStyleDisplay* disp = StyleDisplay();
+  return disp->IsAbsPosContainingBlock(this) ||
          disp->IsFloating(this) ||
          (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT);
 }

@@ -451,7 +451,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
     }
   }
 
-  float opacity = aFrame->StyleDisplay()->mOpacity;
+  float opacity = aFrame->StyleEffects()->mOpacity;
   if (opacity == 0.0f) {
     return;
   }
