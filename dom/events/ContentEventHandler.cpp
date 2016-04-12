@@ -1919,16 +1919,24 @@ ContentEventHandler::ConvertToRootRelativeOffset(nsIFrame* aFrame,
 {
   NS_ASSERTION(aFrame, "aFrame must not be null");
 
-  nsPresContext* rootPresContext = aFrame->PresContext()->GetRootPresContext();
-  if (NS_WARN_IF(!rootPresContext)) {
+  nsPresContext* thisPC = aFrame->PresContext();
+  nsPresContext* rootPC = thisPC->GetRootPresContext();
+  if (NS_WARN_IF(!rootPC)) {
     return NS_ERROR_FAILURE;
   }
-  nsIFrame* rootFrame = rootPresContext->PresShell()->GetRootFrame();
+  nsIFrame* rootFrame = rootPC->PresShell()->GetRootFrame();
   if (NS_WARN_IF(!rootFrame)) {
     return NS_ERROR_FAILURE;
   }
 
   aRect = nsLayoutUtils::TransformFrameRectToAncestor(aFrame, aRect, rootFrame);
+
+  // TransformFrameRectToAncestor returned the rect in the ancestor's appUnits,
+  // but we want it in aFrame's units (in case of different full-zoom factors),
+  // so convert back.
+  aRect = aRect.ScaleToOtherAppUnitsRoundOut(rootPC->AppUnitsPerDevPixel(),
+                                             thisPC->AppUnitsPerDevPixel());
+
   return NS_OK;
 }
 
