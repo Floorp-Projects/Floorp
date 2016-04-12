@@ -281,7 +281,8 @@ public:
 
   virtual bool RecvShowTooltip(const uint32_t& aX,
                                const uint32_t& aY,
-                               const nsString& aTooltip) override;
+                               const nsString& aTooltip,
+                               const nsString& aDirection) override;
 
   virtual bool RecvHideTooltip() override;
 

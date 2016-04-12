@@ -11,5 +11,7 @@
 
 #define NS_TOOLTIPTEXTPROVIDER_CONTRACTID \
   "@mozilla.org/embedcomp/tooltiptextprovider;1"
+#define NS_DEFAULTTOOLTIPTEXTPROVIDER_CONTRACTID \
+  "@mozilla.org/embedcomp/default-tooltiptextprovider;1"
 
 #endif
