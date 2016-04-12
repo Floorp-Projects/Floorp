@@ -180,7 +180,7 @@ public:
   // Dormant state is a state to free all scarce media resources
   //  (like hw video codec), did not decoding and stay dormant.
   // It is used to share scarece media resources in system.
-  virtual void NotifyOwnerActivityChanged();
+  virtual void NotifyOwnerActivityChanged(bool aIsVisible);
 
   void UpdateDormantState(bool aDormantTimeout, bool aActivity);
 
@@ -250,9 +250,6 @@ protected:
   void UpdateEstimatedMediaDuration(int64_t aDuration) override;
 
 public:
-  // Called from HTMLMediaElement when owner document activity changes
-  virtual void SetElementVisibility(bool aIsVisible) {}
-
   // Set a flag indicating whether random seeking is supported
   void SetMediaSeekable(bool aMediaSeekable);
   // Set a flag indicating whether seeking is supported only in buffered ranges
@@ -367,6 +364,9 @@ private:
 
   void SetAudioChannel(dom::AudioChannel aChannel) { mAudioChannel = aChannel; }
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
+
+  // Called from HTMLMediaElement when owner document activity changes
+  virtual void SetElementVisibility(bool aIsVisible);
 
   /******
    * The following methods must only be called on the main
