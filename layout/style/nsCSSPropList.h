@@ -3036,7 +3036,7 @@ CSS_PROP_SVG(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_VISIBILITY(
+CSS_PROP_USERINTERFACE(
     pointer-events,
     pointer_events,
     PointerEvents,
@@ -3045,7 +3045,7 @@ CSS_PROP_VISIBILITY(
     "",
     VARIANT_HK,
     kPointerEventsKTable,
-    offsetof(nsStyleVisibility, mPointerEvents),
+    offsetof(nsStyleUserInterface, mPointerEvents),
     eStyleAnimType_EnumU8)
 CSS_PROP_DISPLAY(
     position,
