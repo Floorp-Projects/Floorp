@@ -10,7 +10,10 @@ import sys
 import textwrap
 import unittest
 
-from mozunit import main
+from mozunit import (
+    main,
+    MockedOpen,
+)
 
 from mozbuild.configure.options import (
     InvalidOptionError,
@@ -40,6 +43,12 @@ class TestConfigure(unittest.TestCase):
         if '--help' not in options:
             self.assertEquals('', out.getvalue())
         return config
+
+    def moz_configure(self, source):
+        return MockedOpen({
+            os.path.join(test_data_path,
+                         'moz.configure'): textwrap.dedent(source)
+        })
 
     def test_defaults(self):
         config = self.get_config()
@@ -544,6 +553,331 @@ class TestConfigure(unittest.TestCase):
             e.exception.message,
             "Cannot infer what implies '--enable-bar'. Please add a `reason` "
             "to the `imply_option` call.")
+
+    def test_imply_option_failures(self):
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                imply_option('--with-foo', ('a',), 'bar')
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "`--with-foo`, emitted from `%s` line 2, is unknown."
+                          % mozpath.join(test_data_path, 'moz.configure'))
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure('''
+                imply_option('--with-foo', 42, 'bar')
+
+                option('--with-foo', help='foo')
+                @depends('--with-foo')
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Unexpected type: 'int'")
+
+    def test_option_failures(self):
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('option("--with-foo", help="foo")'):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Option `--with-foo` is not handled ; reference it with a @depends'
+        )
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option("--with-foo", help="foo")
+                option("--with-foo", help="foo")
+            '''):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Option `--with-foo` already defined'
+        )
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option(env="MOZ_FOO", help="foo")
+                option(env="MOZ_FOO", help="foo")
+            '''):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Option `MOZ_FOO` already defined'
+        )
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--with-foo', env="MOZ_FOO", help="foo")
+                option(env="MOZ_FOO", help="foo")
+            '''):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Option `MOZ_FOO` already defined'
+        )
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option(env="MOZ_FOO", help="foo")
+                option('--with-foo', env="MOZ_FOO", help="foo")
+            '''):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Option `MOZ_FOO` already defined'
+        )
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--with-foo', env="MOZ_FOO", help="foo")
+                option('--with-foo', help="foo")
+            '''):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Option `--with-foo` already defined'
+        )
+
+    def test_include_failures(self):
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('include("../foo.configure")'):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Cannot include `%s` because it is not in a subdirectory of `%s`'
+            % (mozpath.normpath(mozpath.join(test_data_path, '..',
+                                             'foo.configure')),
+               mozpath.normsep(test_data_path))
+        )
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                include('extra.configure')
+                include('extra.configure')
+            '''):
+                self.get_config()
+
+        self.assertEquals(
+            e.exception.message,
+            'Cannot include `%s` because it was included already.'
+            % mozpath.normpath(mozpath.join(test_data_path,
+                                            'extra.configure'))
+        )
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure('''
+                include(42)
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message, "Unexpected type: 'int'")
+
+    def test_sandbox_failures(self):
+        with self.assertRaises(KeyError) as e:
+            with self.moz_configure('''
+                include = 42
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message, 'Cannot reassign builtins')
+
+        with self.assertRaises(KeyError) as e:
+            with self.moz_configure('''
+                foo = 42
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          'Cannot assign `foo` because it is neither a '
+                          '@depends nor a @template')
+
+    def test_depends_failures(self):
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @depends()
+                def foo():
+                    return
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "@depends needs at least one argument")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @depends('--with-foo')
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "'--with-foo' is not a known option. Maybe it's "
+                          "declared too late?")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @depends('--with-foo=42')
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Option must not contain an '='")
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure('''
+                @depends(42)
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Cannot use object of type 'int' as argument "
+                          "to @depends")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @depends('--help')
+                def foo(value):
+                    yield
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Cannot decorate generator functions with @depends")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--foo', help='foo')
+                @depends('--foo')
+                def foo(value):
+                    return value
+
+                @depends('--help', foo)
+                def bar(help, foo):
+                    return
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "`bar` depends on '--help' and `foo`. "
+                          "`foo` must depend on '--help'")
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure('''
+                depends('--help')(42)
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Unexpected type: 'int'")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--foo', help='foo')
+                @depends('--foo')
+                def foo(value):
+                    return value
+
+                include(foo)
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Missing @depends for `foo`: '--help'")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--foo', help='foo')
+                @depends('--foo')
+                def foo(value):
+                    return value
+
+                foo()
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "The `foo` function may not be called")
+
+    def test_imports_failures(self):
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @imports('os')
+                @template
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          '@imports must appear after @template')
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--foo', help='foo')
+                @imports('os')
+                @depends('--foo')
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          '@imports must appear after @depends')
+
+        for import_ in (
+            "42",
+            "_from=42, _import='os'",
+            "_from='os', _import='path', _as=42",
+        ):
+            with self.assertRaises(TypeError) as e:
+                with self.moz_configure('''
+                    @imports(%s)
+                    @template
+                    def foo(value):
+                        return value
+                ''' % import_):
+                    self.get_config()
+
+            self.assertEquals(e.exception.message, "Unexpected type: 'int'")
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure('''
+                @imports('os', 42)
+                @template
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message, "Unexpected type: 'int'")
+
+        with self.assertRaises(ValueError) as e:
+            with self.moz_configure('''
+                @imports('os*')
+                def foo(value):
+                    return value
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "Invalid argument to @imports: 'os*'")
 
 
 if __name__ == '__main__':
