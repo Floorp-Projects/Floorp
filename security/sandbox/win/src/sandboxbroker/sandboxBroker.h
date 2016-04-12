@@ -42,7 +42,11 @@ public:
 #endif
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel);
   bool SetSecurityLevelForIPDLUnitTestProcess();
-  bool SetSecurityLevelForGMPlugin();
+  enum SandboxLevel {
+    LockDown,
+    Restricted
+  };
+  bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel);
 
   // File system permissions
   bool AllowReadFile(wchar_t const *file);
