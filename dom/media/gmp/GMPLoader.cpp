@@ -53,6 +53,7 @@ class GMPLoaderImpl : public GMPLoader {
 public:
   explicit GMPLoaderImpl(SandboxStarter* aStarter)
     : mSandboxStarter(aStarter)
+    , mAdapter(nullptr)
   {}
   virtual ~GMPLoaderImpl() {}
 
@@ -60,7 +61,8 @@ public:
             uint32_t aUTF8LibPathLen,
             char* aOriginSalt,
             uint32_t aOriginSaltLen,
-            const GMPPlatformAPI* aPlatformAPI) override;
+            const GMPPlatformAPI* aPlatformAPI,
+            GMPAdapter* aAdapter) override;
 
   GMPErr GetAPI(const char* aAPIName,
                 void* aHostAPI,
@@ -73,14 +75,76 @@ public:
 #endif
 
 private:
-  PRLibrary* mLib;
-  GMPGetAPIFunc mGetAPIFunc;
   SandboxStarter* mSandboxStarter;
+  UniquePtr<GMPAdapter> mAdapter;
 };
 
 GMPLoader* CreateGMPLoader(SandboxStarter* aStarter) {
   return static_cast<GMPLoader*>(new GMPLoaderImpl(aStarter));
 }
+
+class PassThroughGMPAdapter : public GMPAdapter {
+public:
+  ~PassThroughGMPAdapter() {
+    // Ensure we're always shutdown, even if caller forgets to call GMPShutdown().
+    GMPShutdown();
+  }
+
+  void SetAdaptee(PRLibrary* aLib) override
+  {
+    mLib = aLib;
+  }
+
+  GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) override
+  {
+    if (!mLib) {
+      return GMPGenericErr;
+    }
+    GMPInitFunc initFunc = reinterpret_cast<GMPInitFunc>(PR_FindFunctionSymbol(mLib, "GMPInit"));
+    if (!initFunc) {
+      return GMPNotImplementedErr;
+    }
+    return initFunc(aPlatformAPI);
+  }
+
+  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI) override
+  {
+    if (!mLib) {
+      return GMPGenericErr;
+    }
+    GMPGetAPIFunc getapiFunc = reinterpret_cast<GMPGetAPIFunc>(PR_FindFunctionSymbol(mLib, "GMPGetAPI"));
+    if (!getapiFunc) {
+      return GMPNotImplementedErr;
+    }
+    return getapiFunc(aAPIName, aHostAPI, aPluginAPI);
+  }
+
+  void GMPShutdown() override
+  {
+    if (mLib) {
+      GMPShutdownFunc shutdownFunc = reinterpret_cast<GMPShutdownFunc>(PR_FindFunctionSymbol(mLib, "GMPShutdown"));
+      if (shutdownFunc) {
+        shutdownFunc();
+      }
+      PR_UnloadLibrary(mLib);
+      mLib = nullptr;
+    }
+  }
+
+  void GMPSetNodeId(const char* aNodeId, uint32_t aLength) override
+  {
+    if (!mLib) {
+      return;
+    }
+    GMPSetNodeIdFunc setNodeIdFunc = reinterpret_cast<GMPSetNodeIdFunc>(PR_FindFunctionSymbol(mLib, "GMPSetNodeId"));
+    if (setNodeIdFunc) {
+      setNodeIdFunc(aNodeId, aLength);
+    }
+  }
+
+private:
+  PRLibrary* mLib = nullptr;
+};
 
 #if defined(XP_WIN) && defined(HASH_NODE_ID_WITH_DEVICE_ID)
 MOZ_NEVER_INLINE
@@ -175,7 +239,8 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
                     uint32_t aUTF8LibPathLen,
                     char* aOriginSalt,
                     uint32_t aOriginSaltLen,
-                    const GMPPlatformAPI* aPlatformAPI)
+                    const GMPPlatformAPI* aPlatformAPI,
+                    GMPAdapter* aAdapter)
 {
   std::string nodeId;
 #ifdef HASH_NODE_ID_WITH_DEVICE_ID
@@ -259,29 +324,27 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
   libSpec.value.pathname = aUTF8LibPath;
   libSpec.type = PR_LibSpec_Pathname;
 #endif
-  mLib = PR_LoadLibraryWithFlags(libSpec, 0);
-  if (!mLib) {
+  PRLibrary* lib = PR_LoadLibraryWithFlags(libSpec, 0);
+  if (!lib) {
     return false;
   }
 
-  GMPInitFunc initFunc = reinterpret_cast<GMPInitFunc>(PR_FindFunctionSymbol(mLib, "GMPInit"));
-  if (!initFunc) {
+  GMPInitFunc initFunc = reinterpret_cast<GMPInitFunc>(PR_FindFunctionSymbol(lib, "GMPInit"));
+  if ((initFunc && aAdapter) ||
+      (!initFunc && !aAdapter)) {
+    // Ensure that if we're dealing with a GMP we do *not* use an adapter
+    // provided from the outside world. This is important as it means we
+    // don't call code not covered by Adobe's plugin-container voucher
+    // before we pass the node Id to Adobe's GMP.
     return false;
   }
 
-  if (initFunc(aPlatformAPI) != GMPNoErr) {
-    return false;
-  }
+  // Note: PassThroughGMPAdapter's code must remain in this file so that it's
+  // covered by Adobe's plugin-container voucher.
+  mAdapter.reset((!aAdapter) ? new PassThroughGMPAdapter() : aAdapter);
+  mAdapter->SetAdaptee(lib);
 
-  GMPSetNodeIdFunc setNodeIdFunc = reinterpret_cast<GMPSetNodeIdFunc>(PR_FindFunctionSymbol(mLib, "GMPSetNodeId"));
-  if (setNodeIdFunc) {
-    setNodeIdFunc(nodeId.c_str(), nodeId.size());
-  }
-
-  mGetAPIFunc = reinterpret_cast<GMPGetAPIFunc>(PR_FindFunctionSymbol(mLib, "GMPGetAPI"));
-  if (!mGetAPIFunc) {
-    return false;
-  }
+  mAdapter->GMPInit(aPlatformAPI);
 
   return true;
 }
@@ -291,20 +354,14 @@ GMPLoaderImpl::GetAPI(const char* aAPIName,
                       void* aHostAPI,
                       void** aPluginAPI)
 {
-  return mGetAPIFunc ? mGetAPIFunc(aAPIName, aHostAPI, aPluginAPI)
-                     : GMPGenericErr;
+  return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI);
 }
 
 void
 GMPLoaderImpl::Shutdown()
 {
-  if (mLib) {
-    GMPShutdownFunc shutdownFunc = reinterpret_cast<GMPShutdownFunc>(PR_FindFunctionSymbol(mLib, "GMPShutdown"));
-    if (shutdownFunc) {
-      shutdownFunc();
-    }
-    PR_UnloadLibrary(mLib);
-    mLib = nullptr;
+  if (mAdapter) {
+    mAdapter->GMPShutdown();
   }
 }
 
