@@ -2002,6 +2002,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <!-- This method truncates the displayed strings as necessary. -->
       <method name="_handleOverflow">
         <body><![CDATA[
+          let itemRect = this.parentNode.getBoundingClientRect();
           let titleRect = this._titleText.getBoundingClientRect();
           let tagsRect = this._tagsText.getBoundingClientRect();
           let urlRect = this._urlText.getBoundingClientRect();
@@ -2010,13 +2011,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           // Total width for the title and URL/action is the width of the item
           // minus the start of the title text minus a little extra padding.
-          // This extra padding amount is basically arbitrary but balances out
-          // the listbox's padding on the left side.
+          // This extra padding amount is basically arbitrary but keeps the text
+          // from getting too close to the popup's edge.
           let extraPadding = 30;
-          let itemWidth =
-            this.parentNode.getBoundingClientRect().width -
-            this._titleText.getBoundingClientRect().left -
-            extraPadding;
+          let dir =
+            this.ownerDocument.defaultView.getComputedStyle(this).direction;
+          let titleStart = dir == "rtl" ? itemRect.right - titleRect.right
+                                        : titleRect.left - itemRect.left;
+          let itemWidth = itemRect.width - titleStart - extraPadding;
 
           if (this._tags.hasAttribute("empty")) {
             // The tags box is not displayed in this case.
