@@ -5,7 +5,6 @@
 
 "use strict";
 
-const { waitForTime } = require("devtools/shared/DevToolsUtils");
 const { toggleRecordingAllocationStacks } = require("devtools/client/memory/actions/allocations");
 const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 const censusDisplayActions = require("devtools/client/memory/actions/census-display");

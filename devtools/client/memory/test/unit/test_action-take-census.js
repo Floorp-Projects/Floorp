@@ -38,6 +38,8 @@ add_task(function *() {
   // Test error case of wrong state.
   store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
   yield waitUntilState(store, () => store.getState().errors.length === 1);
+
+  dumpn("Found error: " + store.getState().errors[0]);
   ok(/Assertion failure/.test(store.getState().errors[0]),
     "Error thrown when taking a census of a snapshot that has not been read.");
 

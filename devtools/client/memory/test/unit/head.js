@@ -80,6 +80,23 @@ function waitUntilSnapshotState (store, expected) {
   return waitUntilState(store, predicate);
 }
 
+function findReportLeafIndex(node, name = null) {
+  if (node.reportLeafIndex && (!name || node.name === name)) {
+    return node.reportLeafIndex;
+  }
+
+  if (node.children) {
+    for (let child of node.children) {
+      const found = findReportLeafIndex(child);
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return null;
+}
+
 function waitUntilCensusState (store, getCensus, expected) {
   let predicate = () => {
     let snapshots = store.getState().snapshots;

@@ -14,8 +14,9 @@ const snapshot = require("./snapshot");
  * @param {HeapAnalysesWorker} heapWorker
  */
 exports.refresh = function (heapWorker) {
+  console.log("FITZGEN: refresh");
   return function* (dispatch, getState) {
-    switch (getState().view) {
+    switch (getState().view.state) {
       case viewState.DIFFING:
         assert(getState().diffing, "Should have diffing state if in diffing view");
         yield dispatch(refreshDiffing(heapWorker));
@@ -33,8 +34,12 @@ exports.refresh = function (heapWorker) {
         yield dispatch(snapshot.refreshSelectedTreeMap(heapWorker));
         return;
 
+      case viewState.INDIVIDUALS:
+        yield dispatch(snapshot.refreshIndividuals(heapWorker));
+        return;
+
       default:
-        assert(false, `Unexpected view state: ${getState().view}`);
+        assert(false, `Unexpected view state: ${getState().view.state}`);
     }
   };
 };

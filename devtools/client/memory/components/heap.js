@@ -10,6 +10,8 @@ const DominatorTree = createFactory(require("./dominator-tree"));
 const DominatorTreeHeader = createFactory(require("./dominator-tree-header"));
 const TreeMap = createFactory(require("./tree-map"));
 const HSplitBox = createFactory(require("devtools/client/shared/components/h-split-box"));
+const Individuals = createFactory(require("./individuals"));
+const IndividualsHeader = createFactory(require("./individuals-header"));
 const ShortestPaths = createFactory(require("./shortest-paths"));
 const { getStatusTextFull, L10N } = require("../utils");
 const {
@@ -18,23 +20,26 @@ const {
   viewState,
   censusState,
   treeMapState,
-  dominatorTreeState
+  dominatorTreeState,
+  individualsState,
 } = require("../constants");
-const { snapshot: snapshotModel, diffingModel } = require("../models");
+const models = require("../models");
+const { snapshot: snapshotModel, diffingModel } = models;
 
 /**
  * Get the app state's current state atom.
  *
  * @see the relevant state string constants in `../constants.js`.
  *
- * @param {viewState} view
+ * @param {models.view} view
  * @param {snapshotModel} snapshot
  * @param {diffingModel} diffing
+ * @param {individualsModel} individuals
  *
  * @return {snapshotState|diffingState|dominatorTreeState}
  */
-function getState(view, snapshot, diffing) {
-  switch (view) {
+function getState(view, snapshot, diffing, individuals) {
+  switch (view.state) {
     case viewState.CENSUS:
       return snapshot.census
         ? snapshot.census.state
@@ -52,9 +57,12 @@ function getState(view, snapshot, diffing) {
       return snapshot.dominatorTree
         ? snapshot.dominatorTree.state
         : snapshot.state;
+
+    case viewState.INDIVIDUALS:
+      return individuals.state;
   }
 
-  assert(false, `Unexpected view state: ${view}`);
+  assert(false, `Unexpected view state: ${view.state}`);
   return null;
 }
 
@@ -63,7 +71,7 @@ function getState(view, snapshot, diffing) {
  * state. Return false otherwise.
  *
  * @param {snapshotState|diffingState|dominatorTreeState} state
- * @param {viewState} view
+ * @param {models.view} view
  * @param {snapshotModel} snapshot
  *
  * @returns {Boolean}
@@ -81,9 +89,11 @@ function shouldDisplayStatus(state, view, snapshot) {
     case dominatorTreeState.COMPUTING:
     case dominatorTreeState.COMPUTED:
     case dominatorTreeState.FETCHING:
+    case individualsState.COMPUTING_DOMINATOR_TREE:
+    case individualsState.FETCHING:
       return true;
   }
-  return view === viewState.DOMINATOR_TREE && !snapshot.dominatorTree;
+  return view.state === viewState.DOMINATOR_TREE && !snapshot.dominatorTree;
 }
 
 /**
@@ -121,10 +131,11 @@ function shouldDisplayThrobber(diffing) {
  *
  * @param {snapshotModel} snapshot
  * @param {diffingModel} diffing
+ * @param {individualsModel} individuals
  *
  * @returns {Error|null}
  */
-function getError(snapshot, diffing) {
+function getError(snapshot, diffing, individuals) {
   if (diffing) {
     if (diffing.state === diffingState.ERROR) {
       return diffing.error;
@@ -153,6 +164,10 @@ function getError(snapshot, diffing) {
     }
   }
 
+  if (individuals && individuals.state === individualsState.ERROR) {
+    return individuals.error;
+  }
+
   return null;
 }
 
@@ -178,8 +193,12 @@ const Heap = module.exports = createClass({
     onShortestPathsResize: PropTypes.func.isRequired,
     snapshot: snapshotModel,
     onViewSourceInDebugger: PropTypes.func.isRequired,
+    onPopView: PropTypes.func.isRequired,
+    individuals: models.individuals,
+    onViewIndividuals: PropTypes.func.isRequired,
+    onFocusIndividual: PropTypes.func.isRequired,
     diffing: diffingModel,
-    view: PropTypes.string.isRequired,
+    view: models.view.isRequired,
     sizes: PropTypes.object.isRequired,
   },
 
@@ -190,40 +209,52 @@ const Heap = module.exports = createClass({
       onSnapshotClick,
       onLoadMoreSiblings,
       onViewSourceInDebugger,
+      onViewIndividuals,
+      individuals,
       view,
     } = this.props;
 
-    if (!diffing && !snapshot) {
+
+    if (!diffing && !snapshot && !individuals) {
       return this._renderInitial(onSnapshotClick);
     }
 
-    const state = getState(view, snapshot, diffing);
+    const state = getState(view, snapshot, diffing, individuals);
     const statusText = getStateStatusText(state, diffing);
 
     if (shouldDisplayStatus(state, view, snapshot)) {
       return this._renderStatus(state, statusText, diffing);
     }
 
-    const error = getError(snapshot, diffing);
+    const error = getError(snapshot, diffing, individuals);
     if (error) {
       return this._renderError(state, statusText, error);
     }
 
-    if (view === viewState.CENSUS || view === viewState.DIFFING) {
-      const census = view === viewState.CENSUS
+    if (view.state === viewState.CENSUS || view.state === viewState.DIFFING) {
+      const census = view.state === viewState.CENSUS
         ? snapshot.census
         : diffing.census;
       if (!census) {
         return this._renderStatus(state, statusText, diffing);
       }
-      return this._renderCensus(state, census, diffing, onViewSourceInDebugger);
+      return this._renderCensus(state, census, diffing, onViewSourceInDebugger,
+                                onViewIndividuals);
     }
 
-    if (view === viewState.TREE_MAP) {
+    if (view.state === viewState.TREE_MAP) {
       return this._renderTreeMap(state, snapshot.treeMap);
     }
 
-    assert(view === viewState.DOMINATOR_TREE,
+    if (view.state === viewState.INDIVIDUALS) {
+      assert(individuals.state === individualsState.FETCHED,
+             "Should have fetched the individuals -- other states are rendered as statuses");
+      return this._renderIndividuals(state, individuals,
+                                     individuals.dominatorTree,
+                                     onViewSourceInDebugger);
+    }
+
+    assert(view.state === viewState.DOMINATOR_TREE,
            "If we aren't in progress, looking at a census, or diffing, then we " +
            "must be looking at a dominator tree");
     assert(!diffing, "Should not have diffing");
@@ -290,7 +321,7 @@ const Heap = module.exports = createClass({
     );
   },
 
-  _renderCensus(state, census, diffing, onViewSourceInDebugger) {
+  _renderCensus(state, census, diffing, onViewSourceInDebugger, onViewIndividuals) {
     assert(census.report, "Should not render census that does not have a report");
 
     if (!census.report.children) {
@@ -310,9 +341,10 @@ const Heap = module.exports = createClass({
                             L10N.getStr("heapview.noAllocationStacks")));
     }
 
-    contents.push(CensusHeader());
+    contents.push(CensusHeader({ diffing }));
     contents.push(Census({
       onViewSourceInDebugger,
+      onViewIndividuals,
       diffing,
       census,
       onExpand: node => this.props.onCensusExpand(census, node),
@@ -327,6 +359,61 @@ const Heap = module.exports = createClass({
     return this._renderHeapView(
       state,
       TreeMap({ treeMap })
+    );
+  },
+
+  _renderIndividuals(state, individuals, dominatorTree, onViewSourceInDebugger) {
+    assert(individuals.state === individualsState.FETCHED,
+           "Should have fetched individuals");
+    assert(dominatorTree && dominatorTree.root,
+           "Should have a dominator tree and its root");
+
+    const tree = dom.div(
+      {
+        className: "vbox",
+        style: {
+          overflowY: "auto"
+        }
+      },
+      IndividualsHeader(),
+      Individuals({
+        individuals,
+        dominatorTree,
+        onViewSourceInDebugger,
+        onFocus: this.props.onFocusIndividual
+      })
+    );
+
+    const shortestPaths = ShortestPaths({
+      graph: individuals.focused
+        ? individuals.focused.shortestPaths
+        : null
+    });
+
+    return this._renderHeapView(
+      state,
+      dom.div(
+        { className: "hbox devtools-toolbar" },
+        dom.label(
+          { id: "pop-view-button-label" },
+          dom.button(
+            {
+              id: "pop-view-button",
+              className: "devtools-button",
+              onClick: this.props.onPopView,
+            },
+            L10N.getStr("toolbar.pop-view")
+          ),
+          L10N.getStr("toolbar.pop-view.label")
+        ),
+        L10N.getStr("toolbar.viewing-individuals")
+      ),
+      HSplitBox({
+        start: tree,
+        end: shortestPaths,
+        startWidth: this.props.sizes.shortestPathsSize,
+        onResize: this.props.onShortestPathsResize,
+      })
     );
   },
 

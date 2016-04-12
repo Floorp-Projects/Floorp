@@ -92,7 +92,7 @@ Test that we show a message when the census results are empty.
              // Empty Diffing Report
 
              yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-               view: viewState.DIFFING,
+               view: { state: viewState.DIFFING, },
                diffing: {
                  firstSnapshotId: 1,
                  secondSnapshotId: 2,

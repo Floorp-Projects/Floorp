@@ -11,10 +11,14 @@ const { viewState } = require("../constants");
 
 module.exports = createClass({
   displayName: "Toolbar",
+
   propTypes: {
     censusDisplays: PropTypes.arrayOf(PropTypes.shape({
       displayName: PropTypes.string.isRequired,
     })).isRequired,
+    censusDisplay: PropTypes.shape({
+      displayName: PropTypes.string.isRequired,
+    }).isRequired,
     onTakeSnapshotClick: PropTypes.func.isRequired,
     onImportClick: PropTypes.func.isRequired,
     onClearSnapshotsClick: PropTypes.func.isRequired,
@@ -25,12 +29,15 @@ module.exports = createClass({
     setFilterString: PropTypes.func.isRequired,
     diffing: models.diffingModel,
     onToggleDiffing: PropTypes.func.isRequired,
-    view: PropTypes.string.isRequired,
+    view: models.view.isRequired,
     onViewChange: PropTypes.func.isRequired,
-    dominatorTreeDisplays: PropTypes.arrayOf(PropTypes.shape({
+    labelDisplays: PropTypes.arrayOf(PropTypes.shape({
       displayName: PropTypes.string.isRequired,
     })).isRequired,
-    onDominatorTreeDisplayChange: PropTypes.func.isRequired,
+    labelDisplay: PropTypes.shape({
+      displayName: PropTypes.string.isRequired,
+    }).isRequired,
+    onLabelDisplayChange: PropTypes.func.isRequired,
     treeMapDisplays: PropTypes.arrayOf(PropTypes.shape({
       displayName: PropTypes.string.isRequired,
     })).isRequired,
@@ -45,8 +52,10 @@ module.exports = createClass({
       onClearSnapshotsClick,
       onCensusDisplayChange,
       censusDisplays,
-      dominatorTreeDisplays,
-      onDominatorTreeDisplayChange,
+      censusDisplay,
+      labelDisplays,
+      labelDisplay,
+      onLabelDisplayChange,
       treeMapDisplays,
       onTreeMapDisplayChange,
       onToggleRecordAllocationStacks,
@@ -61,7 +70,7 @@ module.exports = createClass({
     } = this.props;
 
     let viewToolbarOptions;
-    if (view == viewState.CENSUS || view === viewState.DIFFING) {
+    if (view.state == viewState.CENSUS || view.state === viewState.DIFFING) {
       viewToolbarOptions = dom.div(
         {
           className: "toolbar-group"
@@ -82,6 +91,7 @@ module.exports = createClass({
                   censusDisplays.find(b => b.displayName === e.target.value);
                 onCensusDisplayChange(newDisplay);
               },
+              value: censusDisplay.displayName,
             },
             censusDisplays.map(({ tooltip, displayName }) => dom.option(
               {
@@ -106,7 +116,7 @@ module.exports = createClass({
           value: filterString || undefined,
         })
       );
-    } else if (view == viewState.TREE_MAP) {
+    } else if (view.state == viewState.TREE_MAP) {
       assert(treeMapDisplays.length >= 1,
        "Should always have at least one tree map display");
 
@@ -145,7 +155,8 @@ module.exports = createClass({
           )
         : null;
     } else {
-      assert(view === viewState.DOMINATOR_TREE);
+      assert(view.state === viewState.DOMINATOR_TREE ||
+             view.state === viewState.INDIVIDUALS);
 
       viewToolbarOptions = dom.div(
         {
@@ -160,16 +171,17 @@ module.exports = createClass({
           L10N.getStr("toolbar.labelBy"),
           dom.select(
             {
-              id: "select-dominator-tree-display",
+              id: "select-label-display",
               onChange: e => {
                 const newDisplay =
-                  dominatorTreeDisplays.find(b => b.displayName === e.target.value);
-                onDominatorTreeDisplayChange(newDisplay);
+                  labelDisplays.find(b => b.displayName === e.target.value);
+                onLabelDisplayChange(newDisplay);
               },
+              value: labelDisplay.displayName,
             },
-            dominatorTreeDisplays.map(({ tooltip, displayName }) => dom.option(
+            labelDisplays.map(({ tooltip, displayName }) => dom.option(
               {
-                key: `dominator-tree-display-${displayName}`,
+                key: `label-display-${displayName}`,
                 value: displayName,
                 title: tooltip,
               },
@@ -181,7 +193,7 @@ module.exports = createClass({
     }
 
     let viewSelect;
-    if (view !== viewState.DIFFING) {
+    if (view.state !== viewState.DIFFING && view.state !== viewState.INDIVIDUALS) {
       viewSelect = dom.label(
         {
           title: L10N.getStr("toolbar.view.tooltip"),
@@ -192,12 +204,12 @@ module.exports = createClass({
             id: "select-view",
             onChange: e => onViewChange(e.target.value),
             defaultValue: view,
+            value: view.state,
           },
           dom.option(
             {
               value: viewState.TREE_MAP,
               title: L10N.getStr("toolbar.view.treemap.tooltip"),
-              selected: view
             },
             L10N.getStr("toolbar.view.treemap")
           ),
@@ -268,6 +280,7 @@ module.exports = createClass({
 
         dom.label(
           {
+            id: "record-allocation-stacks-label",
             title: L10N.getStr("checkbox.recordAllocationStacks.tooltip"),
           },
           dom.input({
