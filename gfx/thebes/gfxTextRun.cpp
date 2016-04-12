@@ -1611,7 +1611,7 @@ gfxFontGroup::BuildFontList()
     }
 
     // initialize fonts in the font family list
-    AutoTArray<gfxFontFamily*,4> fonts;
+    AutoTArray<gfxFontFamily*,10> fonts;
     gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
 
     // lookup fonts in the fontlist
@@ -1646,8 +1646,6 @@ void
 gfxFontGroup::AddPlatformFont(const nsAString& aName,
                               nsTArray<gfxFontFamily*>& aFamilyList)
 {
-    gfxFontFamily* family = nullptr;
-
     // First, look up in the user font set...
     // If the fontSet matches the family, we must not look for a platform
     // font of the same name, even if we fail to actually get a fontEntry
@@ -1655,18 +1653,16 @@ gfxFontGroup::AddPlatformFont(const nsAString& aName,
     if (mUserFontSet) {
         // Add userfonts to the fontlist whether already loaded
         // or not. Loading is initiated during font matching.
-        family = mUserFontSet->LookupFamily(aName);
+        gfxFontFamily* family = mUserFontSet->LookupFamily(aName);
+        if (family) {
+            aFamilyList.AppendElement(family);
+            return;
+        }
     }
 
     // Not known in the user font set ==> check system fonts
-    gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
-    if (!family) {
-        family = fontList->FindFamily(aName, &mStyle, mDevToCssSize);
-    }
-
-    if (family) {
-        aFamilyList.AppendElement(family);
-    }
+    gfxPlatformFontList::PlatformFontList()
+        ->FindAndAddFamilies(aName, &aFamilyList, &mStyle, mDevToCssSize);
 }
 
 void
