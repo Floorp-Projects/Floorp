@@ -22,6 +22,7 @@
 #include "mozilla/SandboxInfo.h"
 #endif
 #include "GMPContentParent.h"
+#include "widevine-adapter/WidevineAdapter.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
@@ -34,6 +35,7 @@ using CrashReporter::GetIDFromMinidump;
 #endif
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/WidevineCDMManifestBinding.h"
 
 namespace mozilla {
 
@@ -782,7 +784,14 @@ GMPParent::ReadGMPMetaData()
     return ReadGMPInfoFile(infoFile);
   }
 
-  return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  // Maybe this is the Widevine adapted plugin?
+  nsCOMPtr<nsIFile> manifestFile;
+  rv = mDirectory->Clone(getter_AddRefs(manifestFile));
+  if (NS_FAILED(rv)) {
+    return InitPromise::CreateAndReject(rv, __func__);
+  }
+  manifestFile->AppendRelativePath(NS_LITERAL_STRING("manifest.json"));
+  return ReadChromiumManifestFile(manifestFile);
 }
 
 RefPtr<GMPParent::InitPromise>
@@ -878,6 +887,63 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
   if (mCapabilities.IsEmpty()) {
     return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
+
+  return InitPromise::CreateAndResolve(NS_OK, __func__);
+}
+
+RefPtr<GMPParent::InitPromise>
+GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
+{
+  nsAutoCString json;
+  if (!ReadIntoString(aFile, json, 5 * 1024)) {
+    return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  // DOM JSON parsing needs to run on the main thread.
+  return InvokeAsync(AbstractThread::MainThread(), this, __func__,
+    &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
+}
+
+RefPtr<GMPParent::InitPromise>
+GMPParent::ParseChromiumManifest(nsString aJSON)
+{
+  LOGD("%s: for '%s'", __FUNCTION__, NS_LossyConvertUTF16toASCII(aJSON).get());
+
+  MOZ_ASSERT(NS_IsMainThread());
+  mozilla::dom::WidevineCDMManifest m;
+  if (!m.Init(aJSON)) {
+    return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  nsresult ignored; // Note: ToInteger returns 0 on failure.
+  if (!WidevineAdapter::Supports(m.mX_cdm_module_versions.ToInteger(&ignored),
+                                 m.mX_cdm_interface_versions.ToInteger(&ignored),
+                                 m.mX_cdm_host_versions.ToInteger(&ignored))) {
+    return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  mDisplayName = NS_ConvertUTF16toUTF8(m.mName);
+  mDescription = NS_ConvertUTF16toUTF8(m.mDescription);
+  mVersion = NS_ConvertUTF16toUTF8(m.mVersion);
+
+  GMPCapability audio(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER));
+  audio.mAPITags.AppendElement(NS_LITERAL_CSTRING("aac"));
+  audio.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
+  mCapabilities.AppendElement(Move(audio));
+
+  GMPCapability video(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER));
+  video.mAPITags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  video.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
+  mCapabilities.AppendElement(Move(video));
+
+  GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
+  decrypt.mAPITags.AppendElement(NS_LITERAL_CSTRING("com.widevine.alpha"));
+  mCapabilities.AppendElement(Move(decrypt));
+
+  MOZ_ASSERT(mName.EqualsLiteral("widevinecdm"));
+#ifdef XP_WIN
+  mLibs = NS_LITERAL_CSTRING("dxva2.dll");
+#endif
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
