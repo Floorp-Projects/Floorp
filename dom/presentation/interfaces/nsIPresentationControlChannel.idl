@@ -67,7 +67,8 @@ interface nsIPresentationControlChannelListener: nsISupports
 
 /*
  * The control channel for establishing RTCPeerConnection for a presentation
- * session. SDP Offer/Answer will be exchanged through this interface.
+ * session. SDP Offer/Answer will be exchanged through this interface. The
+ * control channel should be in-order.
  */
 [scriptable, uuid(e60e208c-a9f5-4bc6-9a3e-47f3e4ae9c57)]
 interface nsIPresentationControlChannel: nsISupports

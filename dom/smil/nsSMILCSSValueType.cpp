@@ -322,7 +322,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
 static nsPresContext*
 GetPresContextForElement(Element* aElem)
 {
-  nsIDocument* doc = aElem->GetCurrentDoc();
+  nsIDocument* doc = aElem->GetUncomposedDoc();
   if (!doc) {
     // This can happen if we process certain types of restyles mid-sample
     // and remove anonymous animated content from the document as a result.
@@ -400,7 +400,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
     return;
   }
 
-  nsIDocument* doc = aTargetElement->GetCurrentDoc();
+  nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr,
                                                 doc->NodePrincipal(),
                                                 doc->GetDocumentURI(),

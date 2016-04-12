@@ -21,15 +21,6 @@
 #endif
 #include <stddef.h> /* ptrdiff_t */
 
-/* if MP_CHAR_STORE_SLOW is defined, we  */
-/* need to know endianness of this platform. */
-#ifdef MP_CHAR_STORE_SLOW
-#if !defined(MP_IS_BIG_ENDIAN) && !defined(MP_IS_LITTLE_ENDIAN)
-#error "You must define MP_IS_BIG_ENDIAN or MP_IS_LITTLE_ENDIAN\n" \
-       "  if you define MP_CHAR_STORE_SLOW."
-#endif
-#endif
-
 #define STATIC
 
 #define MAX_ODD_INTS    32   /* 2 ** (WINDOW_BITS - 1) */
@@ -506,17 +497,16 @@ mp_err mp_set_safe_modexp(int value)
 #ifdef MP_USING_CACHE_SAFE_MOD_EXP
 #define WEAVE_WORD_SIZE 4
 
-#ifndef MP_CHAR_STORE_SLOW
 /*
- * mpi_to_weave takes an array of bignums, a matrix in which each bignum 
- * occupies all the columns of a row, and transposes it into a matrix in 
+ * mpi_to_weave takes an array of bignums, a matrix in which each bignum
+ * occupies all the columns of a row, and transposes it into a matrix in
  * which each bignum occupies a column of every row.  The first row of the
  * input matrix becomes the first column of the output matrix.  The n'th
  * row of input becomes the n'th column of output.  The input data is said
  * to be "interleaved" or "woven" into the output matrix.
  *
  * The array of bignums is left in this woven form.  Each time a single
- * bignum value is needed, it is recreated by fetching the n'th column, 
+ * bignum value is needed, it is recreated by fetching the n'th column,
  * forming a single row which is the new bignum.
  *
  * The purpose of this interleaving is make it impossible to determine which
@@ -526,46 +516,37 @@ mp_err mp_set_safe_modexp(int value)
  * The weaving function does not transpose the entire input matrix in one call.
  * It transposes 4 rows of mp_ints into their respective columns of output.
  *
- * There are two different implementations of the weaving and unweaving code
- * in this file.  One uses byte loads and stores.  The second uses loads and
- * stores of mp_weave_word size values.  The weaved forms of these two 
- * implementations differ.  Consequently, each one has its own explanation.
- *
- * Here is the explanation for the byte-at-a-time implementation.
- *
- * This implementation treats each mp_int bignum as an array of bytes, 
- * rather than as an array of mp_digits.  It stores those bytes as a 
- * column of bytes in the output matrix.  It doesn't care if the machine
- * uses big-endian or little-endian byte ordering within mp_digits.
- * The first byte of the mp_digit array becomes the first byte in the output
- * column, regardless of whether that byte is the MSB or LSB of the mp_digit.
+ * This implementation treats each mp_int bignum as an array of mp_digits,
+ * It stores those bytes as a column of mp_digits in the output matrix.  It
+ * doesn't care if the machine uses big-endian or little-endian byte ordering
+ * within mp_digits.
  *
  * "bignums" is an array of mp_ints.
  * It points to four rows, four mp_ints, a subset of a larger array of mp_ints.
  *
- * "weaved" is the weaved output matrix. 
+ * "weaved" is the weaved output matrix.
  * The first byte of bignums[0] is stored in weaved[0].
- * 
- * "nBignums" is the total number of bignums in the array of which "bignums" 
- * is a part.  
  *
- * "nDigits" is the size in mp_digits of each mp_int in the "bignums" array. 
- * mp_ints that use less than nDigits digits are logically padded with zeros 
+ * "nBignums" is the total number of bignums in the array of which "bignums"
+ * is a part.
+ *
+ * "nDigits" is the size in mp_digits of each mp_int in the "bignums" array.
+ * mp_ints that use less than nDigits digits are logically padded with zeros
  * while being stored in the weaved array.
  */
-mp_err mpi_to_weave(const mp_int  *bignums, 
-                    unsigned char *weaved, 
-		    mp_size nDigits,  /* in each mp_int of input */
-		    mp_size nBignums) /* in the entire source array */
+mp_err mpi_to_weave(const mp_int  *bignums,
+                    mp_digit *weaved,
+                    mp_size nDigits,  /* in each mp_int of input */
+                    mp_size nBignums) /* in the entire source array */
 {
   mp_size i;
-  unsigned char * endDest = weaved + (nDigits * nBignums * sizeof(mp_digit));
+  mp_digit *endDest = weaved + (nDigits * nBignums);
 
   for (i=0; i < WEAVE_WORD_SIZE; i++) {
     mp_size used = MP_USED(&bignums[i]);
-    unsigned char *pSrc   = (unsigned char *)MP_DIGITS(&bignums[i]);
-    unsigned char *endSrc = pSrc + (used * sizeof(mp_digit));
-    unsigned char *pDest  = weaved + i;
+    mp_digit *pSrc   = MP_DIGITS(&bignums[i]);
+    mp_digit *endSrc = pSrc + used;
+    mp_digit *pDest  = weaved + i;
 
     ARGCHK(MP_SIGN(&bignums[i]) == MP_ZPOS, MP_BADARG);
     ARGCHK(used <= nDigits, MP_BADARG);
@@ -583,267 +564,45 @@ mp_err mpi_to_weave(const mp_int  *bignums,
   return MP_OKAY;
 }
 
+/*
+ * These functions return 0xffffffff if the output is true, and 0 otherwise.
+ */
+#define CONST_TIME_MSB(x) (0L - ((x) >> (8*sizeof(x) - 1)))
+#define CONST_TIME_EQ_Z(x) CONST_TIME_MSB(~(x) & ((x)-1))
+#define CONST_TIME_EQ(a, b) CONST_TIME_EQ_Z((a) ^ (b))
+
 /* Reverse the operation above for one mp_int.
  * Reconstruct one mp_int from its column in the weaved array.
- * "pSrc" points to the offset into the weave array of the bignum we 
- * are going to reconstruct.
+ * Every read accesses every element of the weaved array, in order to
+ * avoid timing attacks based on patterns of memory accesses.
  */
-mp_err weave_to_mpi(mp_int *a,                /* output, result */
-                    const unsigned char *pSrc, /* input, byte matrix */
-		    mp_size nDigits,          /* per mp_int output */
-		    mp_size nBignums)         /* bignums in weaved matrix */
+mp_err weave_to_mpi(mp_int *a,                   /* out, result */
+                    const mp_digit *weaved, /* in, byte matrix */
+                    mp_size index,               /* which column to read */
+                    mp_size nDigits,             /* number of mp_digits in each bignum */
+                    mp_size nBignums)            /* width of the matrix */
 {
-  unsigned char *pDest   = (unsigned char *)MP_DIGITS(a);
-  unsigned char *endDest = pDest + (nDigits * sizeof(mp_digit));
+  /* these are indices, but need to be the same size as mp_digit
+   * because of the CONST_TIME operations */
+  mp_digit i, j;
+  mp_digit d;
+  mp_digit *pDest = MP_DIGITS(a);
 
   MP_SIGN(a) = MP_ZPOS;
   MP_USED(a) = nDigits;
 
-  for (; pDest < endDest; pSrc += nBignums, pDest++) {
-    *pDest = *pSrc;
-  }
-  s_mp_clamp(a);
-  return MP_OKAY;
-}
-
-#else
-
-/* Need a primitive that we know is 32 bits long... */
-/* this is true on all modern processors we know of today*/
-typedef unsigned int mp_weave_word;
-
-/*
- * on some platforms character stores into memory is very expensive since they
- * generate a read/modify/write operation on the bus. On those platforms
- * we need to do integer writes to the bus. Because of some unrolled code,
- * in this current code the size of mp_weave_word must be four. The code that
- * makes this assumption explicity is called out. (on some platforms a write
- * of 4 bytes still requires a single read-modify-write operation.
- *
- * This function is takes the identical parameters as the function above, 
- * however it lays out the final array differently. Where the previous function
- * treats the mpi_int as an byte array, this function treats it as an array of
- * mp_digits where each digit is stored in big endian order.
- * 
- * since we need to interleave on a byte by byte basis, we need to collect 
- * several mpi structures together into a single PRUint32 before we write. We
- * also need to make sure the PRUint32 is arranged so that the first value of
- * the first array winds up in b[0]. This means construction of that PRUint32
- * is endian specific (even though the layout of the mp_digits in the array 
- * is always big endian).
- *
- * The final data is stored as follows :
- *
- * Our same logical array p array, m is sizeof(mp_digit),
- * N is still count and n is now b_size. If we define p[i].digit[j]0 as the 
- * most significant byte of the word p[i].digit[j], p[i].digit[j]1 as 
- * the next most significant byte of p[i].digit[j], ...  and p[i].digit[j]m-1
- * is the least significant byte. 
- * Our array would look like:
- * p[0].digit[0]0     p[1].digit[0]0    ...  p[N-2].digit[0]0    p[N-1].digit[0]0
- * p[0].digit[0]1     p[1].digit[0]1    ...  p[N-2].digit[0]1    p[N-1].digit[0]1
- *                .                                         .
- * p[0].digit[0]m-1   p[1].digit[0]m-1  ...  p[N-2].digit[0]m-1  p[N-1].digit[0]m-1
- * p[0].digit[1]0     p[1].digit[1]0    ...  p[N-2].digit[1]0    p[N-1].digit[1]0
- *                .                                         .
- *                .                                         .
- * p[0].digit[n-1]m-2 p[1].digit[n-1]m-2 ... p[N-2].digit[n-1]m-2 p[N-1].digit[n-1]m-2
- * p[0].digit[n-1]m-1 p[1].digit[n-1]m-1 ... p[N-2].digit[n-1]m-1 p[N-1].digit[n-1]m-1 
- *
- */
-mp_err mpi_to_weave(const mp_int *a, unsigned char *b, 
-					mp_size b_size, mp_size count)
-{
-  mp_size i;
-  mp_digit *digitsa0;
-  mp_digit *digitsa1;
-  mp_digit *digitsa2;
-  mp_digit *digitsa3;
-  mp_size   useda0;
-  mp_size   useda1;
-  mp_size   useda2;
-  mp_size   useda3;
-  mp_weave_word *weaved = (mp_weave_word *)b;
-
-  count = count/sizeof(mp_weave_word);
-
-  /* this code pretty much depends on this ! */
-#if MP_ARGCHK == 2
-  assert(WEAVE_WORD_SIZE == 4); 
-  assert(sizeof(mp_weave_word) == 4);
-#endif
-
-  digitsa0 = MP_DIGITS(&a[0]);
-  digitsa1 = MP_DIGITS(&a[1]);
-  digitsa2 = MP_DIGITS(&a[2]);
-  digitsa3 = MP_DIGITS(&a[3]);
-  useda0 = MP_USED(&a[0]);
-  useda1 = MP_USED(&a[1]);
-  useda2 = MP_USED(&a[2]);
-  useda3 = MP_USED(&a[3]);
-
-  ARGCHK(MP_SIGN(&a[0]) == MP_ZPOS, MP_BADARG);
-  ARGCHK(MP_SIGN(&a[1]) == MP_ZPOS, MP_BADARG);
-  ARGCHK(MP_SIGN(&a[2]) == MP_ZPOS, MP_BADARG);
-  ARGCHK(MP_SIGN(&a[3]) == MP_ZPOS, MP_BADARG);
-  ARGCHK(useda0 <= b_size, MP_BADARG);
-  ARGCHK(useda1 <= b_size, MP_BADARG);
-  ARGCHK(useda2 <= b_size, MP_BADARG);
-  ARGCHK(useda3 <= b_size, MP_BADARG);
-
-#define SAFE_FETCH(digit, used, word) ((word) < (used) ? (digit[word]) : 0)
-
-  for (i=0; i < b_size; i++) {
-    mp_digit d0 = SAFE_FETCH(digitsa0,useda0,i);
-    mp_digit d1 = SAFE_FETCH(digitsa1,useda1,i);
-    mp_digit d2 = SAFE_FETCH(digitsa2,useda2,i);
-    mp_digit d3 = SAFE_FETCH(digitsa3,useda3,i);
-    register mp_weave_word acc;
-
-/*
- * ONE_STEP takes the MSB of each of our current digits and places that
- * byte in the appropriate position for writing to the weaved array.
- *  On little endian:
- *   b3 b2 b1 b0
- *  On big endian:
- *   b0 b1 b2 b3
- *  When the data is written it would always wind up:
- *   b[0] = b0
- *   b[1] = b1
- *   b[2] = b2
- *   b[3] = b3
- *
- * Once we've written the MSB, we shift the whole digit up left one
- * byte, putting the Next Most Significant Byte in the MSB position,
- * so we we repeat the next one step that byte will be written.
- * NOTE: This code assumes sizeof(mp_weave_word) and MP_WEAVE_WORD_SIZE
- * is 4.
- */
-#ifdef MP_IS_LITTLE_ENDIAN 
-#define MPI_WEAVE_ONE_STEP \
-    acc  = (d0 >> (MP_DIGIT_BIT-8))  & 0x000000ff; d0 <<= 8; /*b0*/ \
-    acc |= (d1 >> (MP_DIGIT_BIT-16)) & 0x0000ff00; d1 <<= 8; /*b1*/ \
-    acc |= (d2 >> (MP_DIGIT_BIT-24)) & 0x00ff0000; d2 <<= 8; /*b2*/ \
-    acc |= (d3 >> (MP_DIGIT_BIT-32)) & 0xff000000; d3 <<= 8; /*b3*/ \
-    *weaved = acc; weaved += count;
-#else 
-#define MPI_WEAVE_ONE_STEP \
-    acc  = (d0 >> (MP_DIGIT_BIT-32)) & 0xff000000; d0 <<= 8; /*b0*/ \
-    acc |= (d1 >> (MP_DIGIT_BIT-24)) & 0x00ff0000; d1 <<= 8; /*b1*/ \
-    acc |= (d2 >> (MP_DIGIT_BIT-16)) & 0x0000ff00; d2 <<= 8; /*b2*/ \
-    acc |= (d3 >> (MP_DIGIT_BIT-8))  & 0x000000ff; d3 <<= 8; /*b3*/ \
-    *weaved = acc; weaved += count;
-#endif 
-   switch (sizeof(mp_digit)) {
-   case 32:
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-   case 16:
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-   case 8:
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-   case 4:
-    MPI_WEAVE_ONE_STEP
-    MPI_WEAVE_ONE_STEP
-   case 2:
-    MPI_WEAVE_ONE_STEP
-   case 1:
-    MPI_WEAVE_ONE_STEP
-    break;
-   }
-  }
-
-  return MP_OKAY;
-}
-
-/* reverse the operation above for one entry.
- * b points to the offset into the weave array of the power we are
- * calculating */
-mp_err weave_to_mpi(mp_int *a, const unsigned char *b, 
-					mp_size b_size, mp_size count)
-{
-  mp_digit *pb = MP_DIGITS(a);
-  mp_digit *end = &pb[b_size];
-
-  MP_SIGN(a) = MP_ZPOS;
-  MP_USED(a) = b_size;
-
-  for (; pb < end; pb++) {
-    register mp_digit digit;
-
-    digit = *b << 8; b += count;
-#define MPI_UNWEAVE_ONE_STEP  digit |= *b; b += count; digit = digit << 8;
-    switch (sizeof(mp_digit)) {
-    case 32:
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-    case 16:
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-    case 8:
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-    case 4:
-	MPI_UNWEAVE_ONE_STEP 
-	MPI_UNWEAVE_ONE_STEP 
-    case 2:
-	break;
+  /* Fetch the proper column in constant time, indexing over the whole array */
+  for (i=0; i<nDigits; ++i) {
+    d = 0;
+    for (j=0; j<nBignums; ++j) {
+      d |= weaved[i*nBignums + j] & CONST_TIME_EQ(j, index);
     }
-    digit |= *b; b += count; 
-
-    *pb = digit;
+    pDest[i] = d;
   }
+
   s_mp_clamp(a);
   return MP_OKAY;
 }
-#endif
-
 
 #define SQR(a,b) \
   MP_CHECKOK( mp_sqr(a, b) );\
@@ -859,7 +618,7 @@ mp_err weave_to_mpi(mp_int *a, const unsigned char *b,
 #endif
 
 #define MUL(x,a,b) \
-  MP_CHECKOK( weave_to_mpi(&tmp, powers + (x), nLen, num_powers) ); \
+  MP_CHECKOK( weave_to_mpi(&tmp, powers, (x), nLen, num_powers) ); \
   MUL_NOWEAVE(&tmp,a,b)
 
 #define SWAPPA ptmp = pa1; pa1 = pa2; pa2 = ptmp
@@ -883,8 +642,8 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
   int     expOff;
   mp_int  accum1, accum2, accum[WEAVE_WORD_SIZE];
   mp_int  tmp;
-  unsigned char *powersArray = NULL;
-  unsigned char *powers = NULL;
+  mp_digit *powersArray = NULL;
+  mp_digit *powers = NULL;
 
   MP_DIGITS(&accum1) = 0;
   MP_DIGITS(&accum2) = 0;
@@ -915,13 +674,13 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
     MP_CHECKOK( mp_copy(montBase, &accum[1]) );
     SQR(montBase, &accum[2]);
     MUL_NOWEAVE(montBase, &accum[2], &accum[3]);
-    powersArray = (unsigned char *)malloc(num_powers*(nLen*sizeof(mp_digit)+1));
+    powersArray = (mp_digit *)malloc(num_powers*(nLen*sizeof(mp_digit)+1));
     if (!powersArray) {
       res = MP_MEM;
       goto CLEANUP;
     }
     /* powers[i] = base ** (i); */ \
-    powers = (unsigned char *)MP_ALIGN(powersArray,num_powers); \
+    powers = (mp_digit *)MP_ALIGN(powersArray,num_powers); \
     MP_CHECKOK( mpi_to_weave(accum, powers, nLen, num_powers) );
     if (first_window < 4) {
       MP_CHECKOK( mp_copy(&accum[first_window], &accum1) );
@@ -968,7 +727,7 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
        * value is overwritten, so we need to fetch it from the stored
        * weave array */
       if (i > 2* WEAVE_WORD_SIZE) {
-        MP_CHECKOK(weave_to_mpi(&accum2, powers+i/2, nLen, num_powers));
+        MP_CHECKOK(weave_to_mpi(&accum2, powers, i/2, nLen, num_powers));
         SQR(&accum2, &accum[acc_index]);
       } else {
 	int half_power_index = (i/2) & (WEAVE_WORD_SIZE-1);

@@ -13,6 +13,7 @@
 # OS_TARGET	User defined, or set to OS_ARCH
 # CPU_ARCH  	(from unmame -m or -p, ONLY on WINNT)
 # OS_CONFIG	OS_TARGET + OS_RELEASE
+# ASAN_TAG
 # OBJDIR_TAG
 # OBJDIR_NAME
 #######################################################################
@@ -257,17 +258,27 @@ endif
 OS_CONFIG = $(OS_TARGET)$(OS_RELEASE)
 
 #
+# Set Address Sanitizer prefix.
+#
+
+ifeq ($(USE_ASAN), 1)
+    ASAN_TAG = _ASAN
+else
+    ASAN_TAG =
+endif
+
+#
 # OBJDIR_TAG depends on the predefined variable BUILD_OPT,
 # to distinguish between debug and release builds.
 #
 
 ifdef BUILD_OPT
-    OBJDIR_TAG = $(64BIT_TAG)_OPT
+    OBJDIR_TAG = $(64BIT_TAG)$(ASAN_TAG)_OPT
 else
     ifdef BUILD_IDG
-	OBJDIR_TAG = $(64BIT_TAG)_IDG
+	OBJDIR_TAG = $(64BIT_TAG)$(ASAN_TAG)_IDG
     else
-	OBJDIR_TAG = $(64BIT_TAG)_DBG
+	OBJDIR_TAG = $(64BIT_TAG)$(ASAN_TAG)_DBG
     endif
 endif
 

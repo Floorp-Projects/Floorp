@@ -55,10 +55,10 @@ extern unsigned char * CBC_PadBuffer(PLArenaPool *arena, unsigned char *inbuf,
 
 /****************************************/
 /*
-** Power-Up selftests required for FIPS and invoked only
-** under PKCS #11 FIPS mode.
+** Power-Up selftests are required for FIPS.
 */
-extern CK_RV sftk_fipsPowerUpSelfTest( void ); 
+/* make sure Power-up selftests have been run. */
+extern CK_RV sftk_FIPSEntryOK( void ); 
 
 /*
 ** make known fixed PKCS #11 key types to their sizes in bytes

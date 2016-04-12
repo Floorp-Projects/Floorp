@@ -8,6 +8,7 @@ DIRS += ['interfaces', 'provider']
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 
 EXPORTS.mozilla.dom += [
     'ipc/PresentationChild.h',
@@ -22,7 +23,7 @@ EXPORTS.mozilla.dom += [
     'PresentationRequest.h',
     'PresentationService.h',
     'PresentationSessionInfo.h',
-    'PresentationSessionTransport.h',
+    'PresentationTCPSessionTransport.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -39,10 +40,12 @@ UNIFIED_SOURCES += [
     'PresentationService.cpp',
     'PresentationSessionInfo.cpp',
     'PresentationSessionRequest.cpp',
-    'PresentationSessionTransport.cpp',
+    'PresentationTCPSessionTransport.cpp',
 ]
 
 EXTRA_COMPONENTS += [
+    'PresentationDataChannelSessionTransport.js',
+    'PresentationDataChannelSessionTransport.manifest',
     'PresentationDeviceInfoManager.js',
     'PresentationDeviceInfoManager.manifest',
 ]
@@ -60,6 +63,10 @@ EXTRA_JS_MODULES += [
 IPDL_SOURCES += [
     'ipc/PPresentation.ipdl',
     'ipc/PPresentationRequest.ipdl'
+]
+
+LOCAL_INCLUDES += [
+    '../base'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

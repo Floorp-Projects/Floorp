@@ -700,9 +700,9 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
-  if (HasCSSAnimations()) {
+  if (HasCSSAnimations() || HasCSSTransitions()) {
     // If no new frame for this element is created by the end of the
-    // restyling process, stop animations for this frame
+    // restyling process, stop animations and transitions for this frame
     if (presContext->RestyleManager()->IsGecko()) {
       RestyleManager::AnimationsWithDestroyedFrame* adf =
         presContext->RestyleManager()->AsGecko()->GetAnimationsWithDestroyedFrame();
@@ -3690,7 +3690,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   // Also check the selection of the capturing content which might be in a
   // different document.
   if (!frameSelection && captureContent) {
-    nsIDocument* doc = captureContent->GetCurrentDoc();
+    nsIDocument* doc = captureContent->GetUncomposedDoc();
     if (doc) {
       nsIPresShell* capturingShell = doc->GetShell();
       if (capturingShell && capturingShell != PresContext()->GetPresShell()) {
@@ -9349,6 +9349,14 @@ nsFrame::HasCSSAnimations()
 {
   auto collection =
     AnimationCollection<CSSAnimation>::GetAnimationCollection(this);
+  return collection && collection->mAnimations.Length() > 0;
+}
+
+bool
+nsFrame::HasCSSTransitions()
+{
+  auto collection =
+    AnimationCollection<CSSTransition>::GetAnimationCollection(this);
   return collection && collection->mAnimations.Length() > 0;
 }
 

@@ -1107,7 +1107,7 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, int32_t aNamespaceID,
   nsIDocument* doc = aContent->GetUncomposedDoc();
 
   if (doc) {
-    NS_ASSERTION(aContent->IsInDoc(),
+    NS_ASSERTION(aContent->IsInUncomposedDoc(),
                  "This method should never be called on content nodes that "
                  "are not in a document!");
 #ifdef DEBUG
@@ -1152,7 +1152,7 @@ bool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, int32_t aNamespaceID,
                              nsIAtom* aAtom, void* aData)
 {
-  NS_ASSERTION(aContent->IsInDoc(),
+  NS_ASSERTION(aContent->IsInUncomposedDoc(),
                "This method should never be called on content nodes that "
                "are not in a document!");
 #ifdef DEBUG

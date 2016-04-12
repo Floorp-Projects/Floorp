@@ -8,7 +8,7 @@
 #define mozilla_ipc_dbus_gonk_rawdbusconnection_h__
 
 #include <dbus/dbus.h>
-#include "mozilla/Scoped.h"
+#include "mozilla/ipc/DBusConnectionRefPtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -17,14 +17,6 @@ typedef void (*DBusReplyCallback)(DBusMessage*, void*);
 
 class RawDBusConnection
 {
-  struct ScopedDBusConnectionPtrTraits
-  {
-    typedef DBusConnection* type;
-
-    static DBusConnection* empty();
-    static void release(DBusConnection* ptr);
-  };
-
 public:
   RawDBusConnection();
   virtual ~RawDBusConnection();
@@ -50,12 +42,7 @@ public:
                      const char *aFunc, int aFirstArgType, ...);
 
 protected:
-  DBusMessage* BuildDBusMessage(const char* aDestination,
-                                const char* aPath, const char* aIntf,
-                                const char* aFunc, int aFirstArgType,
-                                va_list args);
-
-  Scoped<ScopedDBusConnectionPtrTraits> mConnection;
+  RefPtr<DBusConnection> mConnection;
 
 private:
   static bool sDBusIsInit;

@@ -83,7 +83,16 @@ ifdef USE_STATIC_RTL
 NSPR_CONFIGURE_OPTS += --enable-static-rtl
 endif
 ifdef NS_USE_GCC
-NSPR_COMPILERS = CC=gcc CXX=g++
+NSPR_CONFIGURE_ENV = CC=gcc CXX=g++
+endif
+
+ifdef SANITIZER_CFLAGS
+ifdef BUILD_OPT
+NSPR_CONFIGURE_OPTS += --enable-debug-symbols
+endif
+NSPR_CONFIGURE_ENV += CFLAGS='$(SANITIZER_CFLAGS)' \
+                      CXXFLAGS='$(SANITIZER_CFLAGS)' \
+                      LDFLAGS='$(SANITIZER_LDFLAGS)'
 endif
 
 #
@@ -110,7 +119,7 @@ endif
 $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	mkdir -p $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
 	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
-	$(NSPR_COMPILERS) sh ../configure \
+	$(NSPR_CONFIGURE_ENV) sh ../configure \
 	$(NSPR_CONFIGURE_OPTS) \
 	--with-dist-prefix='$(NSPR_PREFIX)' \
 	--with-dist-includedir='$(NSPR_PREFIX)/include'

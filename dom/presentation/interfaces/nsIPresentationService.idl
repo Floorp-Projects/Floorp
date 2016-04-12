@@ -33,7 +33,7 @@ interface nsIPresentationServiceCallback : nsISupports
   void notifyError(in nsresult error);
 };
 
-[scriptable, uuid(2e360359-c45c-4949-bf95-410242ce483f)]
+[scriptable, uuid(de42b741-5619-4650-b961-c2cebb572c95)]
 interface nsIPresentationService : nsISupports
 {
   /*
@@ -45,6 +45,10 @@ interface nsIPresentationService : nsISupports
    * @param origin: The url of requesting page.
    * @param deviceId: The specified device of handling this request, null string
                       for prompt device selection dialog.
+   * @param windowId: The inner window ID associated with the presentation
+   *                  session. (0 implies no window ID since no actual window
+   *                  uses 0 as its ID. Generally it's the case the window is
+   *                  located in different process from this service)
    * @param callback: Invoke the callback when the operation is completed.
    *                  NotifySuccess() is called with |id| if a session is
    *                  established successfully with the selected device.
@@ -54,16 +58,17 @@ interface nsIPresentationService : nsISupports
                     in DOMString sessionId,
                     in DOMString origin,
                     in DOMString deviceId,
+                    in unsigned long long windowId,
                     in nsIPresentationServiceCallback callback);
 
   /*
-   * Send the message wrapped with an input stream to the session.
+   * Send the message to the session.
    *
    * @param sessionId: An ID to identify presentation session.
-   * @param stream: The message is converted to an input stream.
+   * @param data: the message being sent out.
    */
   void sendSessionMessage(in DOMString sessionId,
-                          in nsIInputStream stream);
+                          in DOMString data);
 
   /*
    * Close the session.
@@ -114,14 +119,14 @@ interface nsIPresentationService : nsISupports
    * @param windowId: The window ID associated with the listener.
    * @param listener: The listener to register.
    */
-  void registerRespondingListener(in uint64_t windowId,
+  void registerRespondingListener(in unsigned long long windowId,
                                   in nsIPresentationRespondingListener listener);
 
   /*
    * Unregister a responding listener. Must be called from the main thread.
    * @param windowId: The window ID associated with the listener.
    */
-  void unregisterRespondingListener(in uint64_t windowId);
+  void unregisterRespondingListener(in unsigned long long windowId);
 
   /*
    * Check if the presentation instance has an existent session ID at launch.
@@ -131,7 +136,7 @@ interface nsIPresentationService : nsISupports
    *
    * @param windowId: The inner window ID used to look up the session ID.
    */
-  DOMString getExistentSessionIdAtLaunch(in uint64_t windowId);
+  DOMString getExistentSessionIdAtLaunch(in unsigned long long windowId);
 
   /*
    * Notify the receiver page is ready for presentation use.
@@ -139,10 +144,11 @@ interface nsIPresentationService : nsISupports
    * @param sessionId: An ID to identify presentation session.
    * @param windowId: The inner window ID associated with the presentation
    *                  session. (0 implies no window ID since no actual window
-   *                  uses 0 as its ID.)
+   *                  uses 0 as its ID. Generally it's the case the window is
+   *                  located in different process from this service)
    */
   void notifyReceiverReady(in DOMString sessionId,
-                           [optional] in uint64_t windowId);
+                           [optional] in unsigned long long windowId);
 
   /*
    * Untrack the relevant info about the presentation session if there's any.
@@ -150,4 +156,9 @@ interface nsIPresentationService : nsISupports
    * @param sessionId: An ID to identify presentation session.
    */
   void untrackSessionInfo(in DOMString sessionId);
+
+  /*
+   * The windowId for building RTCDataChannel session transport
+   */
+  unsigned long long getWindowIdBySessionId(in DOMString sessionId);
 };

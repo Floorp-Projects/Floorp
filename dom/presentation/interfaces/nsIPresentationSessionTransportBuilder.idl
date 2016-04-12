@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationChannelDescription;
+interface nsISocketTransport;
+interface mozIDOMWindow;
+interface nsIPresentationControlChannel;
+interface nsIPresentationSessionTransport;
+
+[scriptable, uuid(673f6de1-e253-41b8-9be8-b7ff161fa8dc)]
+interface nsIPresentationSessionTransportBuilderListener : nsISupports
+{
+  // Should set |transport.callback| in |onSessionTransport|.
+  void onSessionTransport(in nsIPresentationSessionTransport transport);
+
+  void onError(in nsresult reason);
+};
+
+[scriptable, uuid(2fdbe67d-80f9-48dc-8237-5bef8fa19801)]
+interface nsIPresentationSessionTransportBuilder : nsISupports
+{
+  const unsigned short TYPE_SENDER = 1;
+  const unsigned short TYPE_RECEIVER = 2;
+};
+
+/**
+ * Builder for TCP session transport
+ */
+[scriptable, uuid(cde36d6e-f471-4262-a70d-f932a26b21d9)]
+interface nsIPresentationTCPSessionTransportBuilder : nsIPresentationSessionTransportBuilder
+{
+  /**
+   * The following creation functions will trigger |listener.onSessionTransport|
+   * if the session transport is successfully built, |listener.onError| if some
+   * error occurs during building session transport.
+   */
+  void buildTCPSenderTransport(in nsISocketTransport aTransport,
+                               in nsIPresentationSessionTransportBuilderListener aListener);
+
+  void buildTCPReceiverTransport(in nsIPresentationChannelDescription aDescription,
+                                 in nsIPresentationSessionTransportBuilderListener aListener);
+};
+
+/**
+ * Builder for WebRTC data channel session transport
+ */
+[scriptable, uuid(8131c4e0-3a8c-4bc1-a92a-8431473d2fe8)]
+interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSessionTransportBuilder
+{
+  /**
+   * The following creation function will trigger |listener.onSessionTransport|
+   * if the session transport is successfully built, |listener.onError| if some
+   * error occurs during creating session transport. The |notifyOpened| of
+   * |aControlChannel| should be called before calling
+   * |buildDataChannelTransport|.
+   */
+  void buildDataChannelTransport(in uint8_t aType,
+                                 in mozIDOMWindow aWindow,
+                                 in nsIPresentationControlChannel aControlChannel,
+                                 in nsIPresentationSessionTransportBuilderListener aListener);
+};

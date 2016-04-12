@@ -22,6 +22,7 @@ SPHINX_TREES['mach'] = 'mach/docs'
 PYTHON_UNIT_TESTS += [
     'mach/mach/test/test_conditions.py',
     'mach/mach/test/test_config.py',
+    'mach/mach/test/test_dispatcher.py',
     'mach/mach/test/test_entry_point.py',
     'mach/mach/test/test_error_output.py',
     'mach/mach/test/test_logger.py',

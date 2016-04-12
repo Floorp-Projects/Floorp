@@ -99,7 +99,7 @@ private:
 
     if (parent && parent->IsListControl()) {
       Accessible* combobox = parent->Parent();
-      return combobox && combobox->IsCombobox() ? combobox : mParent.get();
+      return combobox && combobox->IsCombobox() ? combobox : mParent;
     }
 
     return nullptr;

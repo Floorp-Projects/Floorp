@@ -398,21 +398,15 @@ SECU_SECItemHexStringToBinary(SECItem* srcdest);
  * and all implemented versions greater than or equal to min will be enabled.
  * A string consisting of a colon only means "all versions enabled".
  *
- * Because output parameter type SSLVersionRange doesn't allow to set
- * version 2 values, we use a separate boolean output parameter
- * to return whether SSL 2 is enabled.
- *
  * In order to avoid a link dependency from libsectool to libssl,
  * the caller must provide the desired default values for the min/max values,
- * by providing defaultEnableSSL2 and defaultVersionRange
- * (which can be obtained from libssl by calling SSL_VersionRangeGetSupported).
+ * by providing defaultVersionRange (which can be obtained from libssl by
+ * calling SSL_VersionRangeGetSupported).
  */
 SECStatus
 SECU_ParseSSLVersionRangeString(const char *input,
                                 const SSLVersionRange defaultVersionRange,
-                                const PRBool defaultEnableSSL2,
-                                SSLVersionRange *vrange,
-                                PRBool *enableSSL2);
+                                SSLVersionRange *vrange);
 
 /*
  *

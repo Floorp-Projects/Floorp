@@ -1694,7 +1694,7 @@ static const char INIT_CMD[] =
 
 CK_RV 
 sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
-	 int *newInit, int flags, PRUint32 accessOps, SDB **pSdb)
+	 int *newInit, int inFlags, PRUint32 accessOps, SDB **pSdb)
 {
     int i;
     char *initStr = NULL;
@@ -1710,6 +1710,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     char *env;
     PRBool enableCache = PR_FALSE;
     PRBool create;
+    int flags = inFlags & 0x7;
 
     *pSdb = NULL;
     *inUpdate = 0;
@@ -1925,7 +1926,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     sdb_p->sqlXactThread = NULL;
     sdb->private = sdb_p;
     sdb->version = 0;
-    sdb->sdb_flags = flags | SDB_HAS_META;
+    sdb->sdb_flags = inFlags | SDB_HAS_META;
     sdb->app_private = NULL;
     sdb->sdb_FindObjectsInit = sdb_FindObjectsInit;
     sdb->sdb_FindObjects = sdb_FindObjects;

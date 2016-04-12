@@ -186,7 +186,7 @@ PresentationParent::NotifyStateChange(const nsAString& aSessionId,
                                       uint16_t aState)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifySessionStateChange(nsAutoString(aSessionId), aState))) {
+                 !SendNotifySessionStateChange(nsString(aSessionId), aState))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -197,7 +197,7 @@ PresentationParent::NotifyMessage(const nsAString& aSessionId,
                                   const nsACString& aData)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifyMessage(nsAutoString(aSessionId), nsAutoCString(aData)))) {
+                 !SendNotifyMessage(nsString(aSessionId), nsCString(aData)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -208,7 +208,7 @@ PresentationParent::NotifySessionConnect(uint64_t aWindowId,
                                          const nsAString& aSessionId)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifySessionConnect(aWindowId, nsAutoString(aSessionId)))) {
+                 !SendNotifySessionConnect(aWindowId, nsString(aSessionId)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -218,6 +218,8 @@ bool
 PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId)
 {
   MOZ_ASSERT(mService);
+
+  // Set window ID to 0 since the window is from content process.
   NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId, 0)));
   return true;
 }
@@ -251,8 +253,10 @@ nsresult
 PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
 {
   MOZ_ASSERT(mService);
+
+  // Set window ID to 0 since the window is from content process.
   return mService->StartSession(aRequest.url(), aRequest.sessionId(),
-                                aRequest.origin(), aRequest.deviceId(), this);
+                                aRequest.origin(), aRequest.deviceId(), 0, this);
 }
 
 nsresult
@@ -267,13 +271,8 @@ PresentationRequestParent::DoRequest(const SendSessionMessageRequest& aRequest)
     return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aRequest.data(), fds);
-  if(NS_WARN_IF(!stream)) {
-    return NotifyError(NS_ERROR_NOT_AVAILABLE);
-  }
-
-  nsresult rv = mService->SendSessionMessage(aRequest.sessionId(), stream);
+  nsresult rv = mService->SendSessionMessage(aRequest.sessionId(),
+                                             aRequest.data());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);
   }

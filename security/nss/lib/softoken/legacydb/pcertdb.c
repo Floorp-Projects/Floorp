@@ -2558,8 +2558,10 @@ loser:
 static certDBEntrySubject *
 ReadDBSubjectEntry(NSSLOWCERTCertDBHandle *handle, SECItem *derSubject)
 {
+    /* |arena| isn't function-bounded, so cannot be a PORTCheapArenaPool. */
     PLArenaPool *arena = NULL;
-    PLArenaPool *tmparena = NULL;
+    PORTCheapArenaPool tmpArena;
+
     certDBEntrySubject *entry;
     SECItem dbkey;
     SECItem dbentry;
@@ -2571,12 +2573,8 @@ ReadDBSubjectEntry(NSSLOWCERTCertDBHandle *handle, SECItem *derSubject)
 	goto loser;
     }
 
-    tmparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( tmparena == NULL ) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	goto loser;
-    }
-    
+    PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+
     entry = (certDBEntrySubject *)PORT_ArenaAlloc(arena,
 						sizeof(certDBEntrySubject));
     if ( entry == NULL ) {
@@ -2586,12 +2584,12 @@ ReadDBSubjectEntry(NSSLOWCERTCertDBHandle *handle, SECItem *derSubject)
     entry->common.arena = arena;
     entry->common.type = certDBEntryTypeSubject;
 
-    rv = EncodeDBSubjectKey(derSubject, tmparena, &dbkey);
+    rv = EncodeDBSubjectKey(derSubject, &tmpArena.arena, &dbkey);
     if ( rv != SECSuccess ) {
 	goto loser;
     }
     
-    rv = ReadDBEntry(handle, &entry->common, &dbkey, &dbentry, tmparena);
+    rv = ReadDBEntry(handle, &entry->common, &dbkey, &dbentry, &tmpArena.arena);
     if ( rv == SECFailure ) {
 	goto loser;
     }
@@ -2601,13 +2599,11 @@ ReadDBSubjectEntry(NSSLOWCERTCertDBHandle *handle, SECItem *derSubject)
 	goto loser;
     }
     
-    PORT_FreeArena(tmparena, PR_FALSE);
+    PORT_DestroyCheapArena(&tmpArena);
     return(entry);
     
 loser:
-    if ( tmparena ) {
-	PORT_FreeArena(tmparena, PR_FALSE);
-    }
+    PORT_DestroyCheapArena(&tmpArena);
     if ( arena ) {
 	PORT_FreeArena(arena, PR_FALSE);
     }

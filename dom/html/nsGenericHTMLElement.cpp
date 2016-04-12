@@ -573,7 +573,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsGenericHTMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  if (IsInDoc()) {
+  if (IsInUncomposedDoc()) {
     UnregAccessKey();
   }
   

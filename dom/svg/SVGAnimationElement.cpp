@@ -314,7 +314,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   if (!aValue) {
     mHrefTarget.Unlink();
     AnimationTargetChanged();
-  } else if (IsInDoc()) {
+  } else if (IsInUncomposedDoc()) {
     MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
                "Expected href attribute to be string type");
     UpdateHrefTarget(this, aValue->GetStringValue());

@@ -61,16 +61,16 @@ ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
     printf("\n");
 
 	if (k1 != NULL) {
-		mp_tohex(k1, mpstr);
+		mp_tohex((mp_int*)k1, mpstr);
 		printf("ec_points_mul: scalar k1: %s\n", mpstr);
-		mp_todecimal(k1, mpstr);
+		mp_todecimal((mp_int*)k1, mpstr);
 		printf("ec_points_mul: scalar k1: %s (dec)\n", mpstr);
 	}
 
 	if (k2 != NULL) {
-		mp_tohex(k2, mpstr);
+		mp_tohex((mp_int*)k2, mpstr);
 		printf("ec_points_mul: scalar k2: %s\n", mpstr);
-		mp_todecimal(k2, mpstr);
+		mp_todecimal((mp_int*)k2, mpstr);
 		printf("ec_points_mul: scalar k2: %s (dec)\n", mpstr);
 	}
 
@@ -376,7 +376,7 @@ cleanup:
 	rv = SECFailure;
     }
     if (rv != SECSuccess && privKeyBytes) {
-	PORT_Free(privKeyBytes);
+	PORT_ZFree(privKeyBytes,2*len);
 	privKeyBytes = NULL;
     }
     return privKeyBytes;
@@ -1075,7 +1075,7 @@ cleanup:
     mp_clear(&v);
     mp_clear(&n);
 
-    if (pointC.data) SECITEM_FreeItem(&pointC, PR_FALSE);
+    if (pointC.data) SECITEM_ZfreeItem(&pointC, PR_FALSE);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;

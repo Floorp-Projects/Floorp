@@ -886,6 +886,8 @@ NS_INTERFACE_MAP_END
 /* static */ already_AddRefed<Console>
 Console::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
+  MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
+
   RefPtr<Console> console = new Console(aWindow);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -904,6 +906,8 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   , mInnerID(0)
   , mStatus(eUnknown)
 {
+  MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
+
   if (mWindow) {
     MOZ_ASSERT(mWindow->IsInnerWindow());
     mInnerID = mWindow->WindowID();

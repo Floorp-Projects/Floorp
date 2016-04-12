@@ -233,7 +233,7 @@ nsXBLResourceLoader::NotifyBoundElements()
     if (ready) {
       // We need the document to flush out frame construction and
       // such, so we want to use the current document.
-      nsIDocument* doc = content->GetCurrentDoc();
+      nsIDocument* doc = content->GetUncomposedDoc();
     
       if (doc) {
         // Flush first to make sure we can get the frame for content

@@ -360,7 +360,7 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
 void
 nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
 {
-  nsIDocument* documentNode = aTargetNode->GetCurrentDoc();
+  nsIDocument* documentNode = aTargetNode->GetUncomposedDoc();
   if (documentNode) {
     DocAccessible* document = GetDocAccessible(documentNode);
     if (document)
@@ -416,7 +416,7 @@ public:
 
   NS_IMETHODIMP Notify(nsITimer* aTimer) final
   {
-    if (!mContent->IsInDoc())
+    if (!mContent->IsInUncomposedDoc())
       return NS_OK;
 
     nsIPresShell* ps = mContent->OwnerDoc()->GetShell();
@@ -1034,7 +1034,7 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
   }
 
   // We have a content node.
-  if (!aNode->GetCrossShadowCurrentDoc()) {
+  if (!aNode->GetComposedDoc()) {
     NS_WARNING("Creating accessible for node with no document");
     return nullptr;
   }

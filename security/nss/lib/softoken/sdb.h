@@ -74,5 +74,6 @@ CK_RV s_shutdown();
 #define SDB_RDWR        2
 #define SDB_CREATE      4
 #define SDB_HAS_META    8
+#define SDB_FIPS        0x10
 
 #endif

@@ -23,8 +23,8 @@ from mozharness.mozilla.testing.testbase import (
 )
 from mozharness.mozilla.vcstools import VCSToolsScript
 
-# Command line arguments for firefox ui tests
-firefox_ui_tests_harness_config_options = [
+deprecated_options = [
+    # TODO update mozmill-ci jobs to use --disable-e10s instead?
     [["--e10s"], {
         'dest': 'e10s',
         'action': 'store_true',
@@ -54,7 +54,7 @@ firefox_ui_tests_config_options = [
         'help': 'absolute path to directory containing breakpad '
                 'symbols, or the url of a zip file containing symbols.',
     }],
-] + firefox_ui_tests_harness_config_options \
+] + deprecated_options \
     + copy.deepcopy(testing_config_options)
 
 # Command line arguments for update tests
@@ -224,12 +224,11 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         return self.abs_dirs
 
     def query_harness_args(self, extra_harness_config_options=None):
-        """Collects specific update test related command line arguments.
+        """Collects specific test related command line arguments.
 
         Sub classes should override this method for their own specific arguments.
         """
-        extra_harness_config_options = extra_harness_config_options or []
-        config_options = firefox_ui_tests_harness_config_options + extra_harness_config_options
+        config_options = extra_harness_config_options or []
 
         args = []
         for option in config_options:
@@ -319,6 +318,10 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         # Collect all pass-through harness options to the script
         cmd.extend(self.query_harness_args())
+
+        # Translate deprecated --e10s flag
+        if not self.config.get('e10s'):
+            cmd.append('--disable-e10s')
 
         # Set further environment settings
         env = env or self.query_env()

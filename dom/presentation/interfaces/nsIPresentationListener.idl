@@ -39,6 +39,6 @@ interface nsIPresentationRespondingListener : nsISupports
   /*
    * Called when an incoming session connects.
    */
-  void notifySessionConnect(in uint64_t windowId,
+  void notifySessionConnect(in unsigned long long windowId,
                             in DOMString sessionId);
 };

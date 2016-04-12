@@ -545,7 +545,9 @@ mp_err mp_div_d(const mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
     rem = DIGIT(a, 0) & mask;
 
     if(q) {
-      mp_copy(a, q);
+      if((res = mp_copy(a, q)) != MP_OKAY) {
+        return res;
+      }
       s_mp_div_2d(q, pow);
     }
 
@@ -1314,8 +1316,8 @@ mp_err mp_sqrt(const mp_int *a, mp_int *b)
 
   for(;;) {
     /* t = (x * x) - a */
-    mp_copy(&x, &t);      /* can't fail, t is big enough for original x */
-    if((res = mp_sqr(&t, &t)) != MP_OKAY ||
+    if((res = mp_copy(&x, &t)) != MP_OKAY ||
+       (res = mp_sqr(&t, &t)) != MP_OKAY ||
        (res = mp_sub(&t, a, &t)) != MP_OKAY)
       goto CLEANUP;
 
@@ -1488,8 +1490,10 @@ mp_err s_mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c
   mp_set(&s, 1);
 
   /* mu = b^2k / m */
-  s_mp_add_d(&mu, 1); 
-  s_mp_lshd(&mu, 2 * USED(m));
+  if((res = s_mp_add_d(&mu, 1)) != MP_OKAY)
+    goto CLEANUP;
+  if((res = s_mp_lshd(&mu, 2 * USED(m))) != MP_OKAY)
+    goto CLEANUP;
   if((res = mp_div(&mu, m, &mu, NULL)) != MP_OKAY)
     goto CLEANUP;
 
@@ -1675,7 +1679,7 @@ int    mp_cmp(const mp_int *a, const mp_int *b)
   Compares |a| <=> |b|, and returns an appropriate comparison result
  */
 
-int    mp_cmp_mag(mp_int *a, mp_int *b)
+int    mp_cmp_mag(const mp_int *a, const mp_int *b)
 {
   ARGCHK(a != NULL && b != NULL, MP_EQ);
 
@@ -1700,7 +1704,8 @@ int    mp_cmp_int(const mp_int *a, long z)
 
   ARGCHK(a != NULL, MP_EQ);
   
-  mp_init(&tmp); mp_set_int(&tmp, z);
+  mp_init(&tmp);
+  mp_set_int(&tmp, z);
   out = mp_cmp(a, &tmp);
   mp_clear(&tmp);
 
@@ -1937,8 +1942,8 @@ mp_err mp_xgcd(const mp_int *a, const mp_int *b, mp_int *g, mp_int *x, mp_int *y
     MP_CHECKOK( s_mp_mul_2d(&gx,n) );
   }
 
-  mp_copy(&xc, &u);
-  mp_copy(&yc, &v);
+  MP_CHECKOK(mp_copy(&xc, &u));
+  MP_CHECKOK(mp_copy(&yc, &v));
   mp_set(&A, 1); mp_set(&D, 1);
 
   /* Loop through binary GCD algorithm */
@@ -4275,7 +4280,7 @@ mp_err   s_mp_div(mp_int *rem, 	/* i: dividend, o: remainder */
      */
     for (i = 4; s_mp_cmp(&t, &part) > 0 && i > 0; --i) {
       --q_msd;
-      s_mp_sub(&t, div);	/* t -= div */
+      MP_CHECKOK(s_mp_sub(&t, div));	/* t -= div */
     }
     if (i < 0) {
       res = MP_RANGE;
