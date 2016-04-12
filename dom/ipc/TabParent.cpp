@@ -1747,14 +1747,15 @@ TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
 }
 
 bool
-TabParent::RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip)
+TabParent::RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip,
+                           const nsString& aDirection)
 {
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
   if (!xulBrowserWindow) {
     return true;
   }
 
-  xulBrowserWindow->ShowTooltip(aX, aY, aTooltip);
+  xulBrowserWindow->ShowTooltip(aX, aY, aTooltip, aDirection);
   return true;
 }
 

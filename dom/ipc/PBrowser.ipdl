@@ -374,7 +374,7 @@ parent:
      * Show/hide a tooltip when the mouse hovers over an element in the content
      * document.
      */
-    async ShowTooltip(uint32_t x, uint32_t y, nsString tooltip);
+    async ShowTooltip(uint32_t x, uint32_t y, nsString tooltip, nsString direction);
     async HideTooltip();
 
     /**
