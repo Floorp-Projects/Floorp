@@ -78,21 +78,7 @@ const DELAY_WARNING_MS = 10 * 1000;
 
 // Crash the process if shutdown is really too long
 // (allowing for sleep).
-var PREF_DELAY_CRASH_MS = "toolkit.asyncshutdown.crash_timeout";
-
-// For Windows XP and Vista we use toolkit.asyncshutdown.crash_timeout_winxp
-// See bug 1248358.
-var os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-if (os == "Windows") {
-  var version = Cc["@mozilla.org/system-info;1"]
-                  .getService(Ci.nsIPropertyBag2)
-                  .getProperty("version");
-  if (parseFloat(version) < 6.1) {
-    // Less than Win7.
-    PREF_DELAY_CRASH_MS = "toolkit.asyncshutdown.crash_timeout_winxp";
-  }
-}
-
+const PREF_DELAY_CRASH_MS = "toolkit.asyncshutdown.crash_timeout";
 var DELAY_CRASH_MS = 60 * 1000; // One minute
 try {
   DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);

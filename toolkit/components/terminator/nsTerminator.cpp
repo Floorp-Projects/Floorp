@@ -48,10 +48,6 @@
 // following value as a fallback if for some reason the preference is
 // absent.
 #define FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS 60000
-#ifdef XP_WIN32
-#define FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS_WINXP 180000
-#include "mozilla/WindowsVersion.h"
-#endif
 
 // Additional number of milliseconds to wait until we decide to exit
 // forcefully.
@@ -362,23 +358,9 @@ nsTerminator::Start()
 void
 nsTerminator::StartWatchdog()
 {
-  int32_t crashAfterMS;
-#if defined(XP_WIN32)
-  if (IsWin7OrLater()) {
-    crashAfterMS =
-      Preferences::GetInt("toolkit.asyncshutdown.crash_timeout",
-                          FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS);
-  } else {
-    crashAfterMS =
-      Preferences::GetInt("toolkit.asyncshutdown.crash_timeout_winxp",
-                          FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS_WINXP);
-  }
-#else
-  crashAfterMS =
+  int32_t crashAfterMS =
     Preferences::GetInt("toolkit.asyncshutdown.crash_timeout",
                         FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS);
-#endif
-
   // Ignore negative values
   if (crashAfterMS <= 0) {
     crashAfterMS = FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS;
