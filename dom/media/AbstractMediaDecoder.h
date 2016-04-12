@@ -62,7 +62,7 @@ public:
 
   // Return an event that will be notified when data arrives in MediaResource.
   // MediaDecoderReader will register with this event to receive notifications
-  // in order to udpate buffer ranges.
+  // in order to update buffer ranges.
   // Return null if this decoder doesn't support the event.
   virtual MediaEventSource<void>* DataArrivedEvent()
   {
