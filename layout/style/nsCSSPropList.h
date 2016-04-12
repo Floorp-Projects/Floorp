@@ -2731,7 +2731,7 @@ CSS_PROP_LOGICAL(
     Position,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_DISPLAY(
+CSS_PROP_EFFECTS(
     opacity,
     opacity,
     Opacity,
@@ -2742,7 +2742,7 @@ CSS_PROP_DISPLAY(
     "",
     VARIANT_HN,
     nullptr,
-    offsetof(nsStyleDisplay, mOpacity),
+    offsetof(nsStyleEffects, mOpacity),
     eStyleAnimType_float)
 CSS_PROP_DISPLAY(
     -moz-orient,

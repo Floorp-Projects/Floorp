@@ -114,7 +114,7 @@ nsSVGSwitchFrame::PaintSVG(gfxContext& aContext,
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 
-  if (StyleDisplay()->mOpacity == 0.0)
+  if (StyleEffects()->mOpacity == 0.0)
     return NS_OK;
 
   nsIFrame *kid = GetActiveChildFrame();

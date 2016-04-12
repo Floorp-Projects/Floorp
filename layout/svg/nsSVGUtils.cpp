@@ -501,7 +501,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (!svgChildFrame)
     return;
 
-  float opacity = aFrame->StyleDisplay()->mOpacity;
+  float opacity = aFrame->StyleEffects()->mOpacity;
   if (opacity == 0.0f)
     return;
 
@@ -1296,7 +1296,7 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
 static float
 MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
 {
-  float opacity = aFrame->StyleDisplay()->mOpacity;
+  float opacity = aFrame->StyleEffects()->mOpacity;
   if (opacity < 1 && nsSVGUtils::CanOptimizeOpacity(aFrame)) {
     return aFillOrStrokeOpacity * opacity;
   }

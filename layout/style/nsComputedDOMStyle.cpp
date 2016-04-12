@@ -993,7 +993,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetOpacity()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetNumber(StyleDisplay()->mOpacity);
+  val->SetNumber(StyleEffects()->mOpacity);
   return val.forget();
 }
 
