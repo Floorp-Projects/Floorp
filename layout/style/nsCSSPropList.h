@@ -1363,7 +1363,7 @@ CSS_PROP_DISPLAY(
     kClearKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_DISPLAY(
+CSS_PROP_EFFECTS(
     clip,
     clip,
     Clip,
@@ -1372,7 +1372,7 @@ CSS_PROP_DISPLAY(
     "",
     0,
     nullptr,
-    offsetof(nsStyleDisplay, mClip),
+    offsetof(nsStyleEffects, mClip),
     eStyleAnimType_Custom)
 CSS_PROP_COLOR(
     color,
