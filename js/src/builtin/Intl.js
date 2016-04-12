@@ -2884,17 +2884,3 @@ function resolveICUPattern(pattern, result) {
         }
     }
 }
-
-function Intl_getCanonicalLocales(locales) {
-  let codes = CanonicalizeLocaleList(locales);
-  let result = [];
-
-  let len = codes.length;
-  let k = 0;
-
-  while (k < len) {
-    _DefineDataProperty(result, k, codes[k]);
-    k++;
-  }
-  return result;
-}
