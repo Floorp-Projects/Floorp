@@ -330,10 +330,10 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   }
 
   DECODER_LOG("UpdateDormantState aTimeout=%d aActivity=%d mIsDormant=%d "
-              "ownerActive=%d ownerHidden=%d mIsHeuristicDormant=%d "
+              "ownerActive=%d mIsVisible=%d mIsHeuristicDormant=%d "
               "mPlayState=%s encrypted=%s",
               aDormantTimeout, aActivity, mIsDormant, mOwner->IsActive(),
-              mOwner->IsHidden(), mIsHeuristicDormant, PlayStateStr(),
+              mIsVisible, mIsHeuristicDormant, PlayStateStr(),
               (!mInfo ? "Unknown" : (mInfo->IsEncrypted() ? "1" : "0")));
 
   bool prevDormant = mIsDormant;
@@ -350,7 +350,7 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   // Try to enable dormant by idle heuristic, when the owner is hidden.
   bool prevHeuristicDormant = mIsHeuristicDormant;
   mIsHeuristicDormant = false;
-  if (IsHeuristicDormantSupported() && mOwner->IsHidden()) {
+  if (IsHeuristicDormantSupported() && !mIsVisible) {
     if (aDormantTimeout && !aActivity &&
         (mPlayState == PLAY_STATE_PAUSED || IsEnded())) {
       // Enable heuristic dormant
@@ -406,7 +406,7 @@ MediaDecoder::StartDormantTimer()
 
   if (mIsHeuristicDormant ||
       mShuttingDown ||
-      !mOwner->IsHidden() ||
+      mIsVisible ||
       (mPlayState != PLAY_STATE_PAUSED &&
        !IsEnded()))
   {
@@ -572,6 +572,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                    "MediaDecoder::mMediaSeekable (Canonical)")
   , mMediaSeekableOnlyInBufferedRanges(AbstractThread::MainThread(), false,
                    "MediaDecoder::mMediaSeekableOnlyInBufferedRanges (Canonical)")
+  , mIsVisible(!mOwner->IsHidden())
   , mTelemetryReported(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
