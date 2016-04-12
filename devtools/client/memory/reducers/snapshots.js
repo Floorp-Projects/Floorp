@@ -210,10 +210,16 @@ handlers[actions.DELETE_SNAPSHOTS_END] = function (snapshots) {
   return snapshots;
 };
 
-handlers[actions.CHANGE_VIEW] = function (snapshots, { view }) {
-  return view === viewState.DIFFING
+handlers[actions.CHANGE_VIEW] = function (snapshots, { newViewState }) {
+  return newViewState === viewState.DIFFING
     ? snapshots.map(s => immutableUpdate(s, { selected: false }))
     : snapshots;
+};
+
+handlers[actions.POP_VIEW] = function (snapshots, { previousView }) {
+  return snapshots.map(s => immutableUpdate(s, {
+    selected: s.id === previousView.selected
+  }));
 };
 
 handlers[actions.COMPUTE_DOMINATOR_TREE_START] = function (snapshots, { id }) {

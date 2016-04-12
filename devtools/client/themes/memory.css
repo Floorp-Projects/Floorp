@@ -36,8 +36,8 @@ html, body, #app, #memory-tool {
    * If --heap-tree-row-height changes, be sure to change HEAP_TREE_ROW_HEIGHT
    * in `devtools/client/memory/components/heap.js`.
    */
-  --heap-tree-row-height: 14px;
-  --heap-tree-header-height: 17px;
+  --heap-tree-row-height: 18px;
+  --heap-tree-header-height: 18px;
 }
 
 /**
@@ -115,7 +115,15 @@ html, body, #app, #memory-tool {
   background-image: url(chrome://devtools/skin/images/diff.svg);
 }
 
-#import-snapshot {
+#record-allocation-stacks-label,
+#pop-view-button-label {
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  padding-inline-end: 5px;
+}
+
+#import-snapshot,
+#clear-snapshots {
+  -moz-box-align: center;
   flex-grow: 1;
 }
 
@@ -399,6 +407,7 @@ html, body, #app, #memory-tool {
   color: var(--theme-selection-background);
 }
 
+.heap-tree-item-individuals,
 .heap-tree-item-bytes,
 .heap-tree-item-count,
 .heap-tree-item-total-bytes,
@@ -485,6 +494,20 @@ html, body, #app, #memory-tool {
   color: inherit;
 }
 
+.heap-tree-item-individuals {
+  width: 38px;
+  min-width: 20px;
+  overflow: hidden;
+  margin: 0;
+}
+
+.heap-tree-item-individuals > button {
+  height: 10px;
+  width: 32px;
+  margin: 0 auto;
+  padding: 0;
+}
+
 /**
  * Tree map
  */
@@ -529,6 +552,10 @@ html, body, #app, #memory-tool {
   opacity: .5;
   margin-left: .5em;
   margin-right: .5em;
+}
+
+.heap-tree-item-address {
+  font-family: monospace;
 }
 
 .no-allocation-stacks {

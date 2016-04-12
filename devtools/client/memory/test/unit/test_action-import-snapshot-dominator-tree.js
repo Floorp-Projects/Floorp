@@ -25,7 +25,7 @@ add_task(function* () {
   let { subscribe, dispatch, getState } = store;
 
   dispatch(changeViewAndRefresh(viewState.DOMINATOR_TREE, heapWorker));
-  equal(getState().view, viewState.DOMINATOR_TREE,
+  equal(getState().view.state, viewState.DOMINATOR_TREE,
         "We should now be in the DOMINATOR_TREE view");
 
   let i = 0;

@@ -10,8 +10,17 @@ const { snapshotIsDiffable } = require("../utils");
 
 const handlers = Object.create(null);
 
-handlers[actions.CHANGE_VIEW] = function (diffing, { view }) {
-  if (view === viewState.DIFFING) {
+handlers[actions.POP_VIEW] = function (diffing, { previousView }) {
+  if (previousView.state === viewState.DIFFING) {
+    assert(previousView.diffing, "Should have previousView.diffing");
+    return previousView.diffing;
+  }
+
+  return null;
+};
+
+handlers[actions.CHANGE_VIEW] = function (diffing, { newViewState }) {
+  if (newViewState === viewState.DIFFING) {
     assert(!diffing, "Should not switch to diffing view when already diffing");
     return Object.freeze({
       firstSnapshotId: null,
