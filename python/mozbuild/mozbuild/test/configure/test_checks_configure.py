@@ -56,7 +56,7 @@ class TestChecksConfigure(unittest.TestCase):
         out = StringIO()
         sandbox = FindProgramSandbox({}, stdout=out, stderr=out)
         base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
-        sandbox.exec_file(os.path.join(base_dir, 'checks.configure'))
+        sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
 
         exec(textwrap.dedent('''
             @checking('for a thing')
@@ -158,8 +158,8 @@ class TestChecksConfigure(unittest.TestCase):
         out = StringIO()
         sandbox = FindProgramSandbox(config, environ, [prog] + args, out, out)
         base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
-        sandbox.exec_file(os.path.join(base_dir, 'util.configure'))
-        sandbox.exec_file(os.path.join(base_dir, 'checks.configure'))
+        sandbox.include_file(os.path.join(base_dir, 'util.configure'))
+        sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
 
         status = 0
         try:
