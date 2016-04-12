@@ -16,6 +16,7 @@
 #include "nsITreeContentView.h"
 #include "nsITreeSelection.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIDocument;
 class Row;
@@ -53,13 +54,13 @@ class nsTreeContentView final : public nsINativeTreeView,
 
     // Recursive methods which deal with serializing of nested content.
     void Serialize(nsIContent* aContent, int32_t aParentIndex, int32_t* aIndex,
-                   nsTArray<nsAutoPtr<Row> >& aRows);
+                   nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
     void SerializeItem(nsIContent* aContent, int32_t aParentIndex,
-                       int32_t* aIndex, nsTArray<nsAutoPtr<Row> >& aRows);
+                       int32_t* aIndex, nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
     void SerializeSeparator(nsIContent* aContent, int32_t aParentIndex,
-                            int32_t* aIndex, nsTArray<nsAutoPtr<Row> >& aRows);
+                            int32_t* aIndex, nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, int32_t* aResult);
     
@@ -95,7 +96,7 @@ class nsTreeContentView final : public nsINativeTreeView,
     nsCOMPtr<nsIContent>                mRoot;
     nsCOMPtr<nsIContent>                mBody;
     nsIDocument*                        mDocument;      // WEAK
-    nsTArray<nsAutoPtr<Row> >           mRows;
+    nsTArray<mozilla::UniquePtr<Row>>   mRows;
 };
 
 #endif // nsTreeContentView_h__
