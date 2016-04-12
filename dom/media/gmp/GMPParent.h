@@ -42,11 +42,16 @@ namespace gmp {
 class GMPCapability
 {
 public:
-  GMPCapability() {}
-  GMPCapability(const nsCString& aAPIName)
+  explicit GMPCapability() {}
+  GMPCapability(GMPCapability&& aOther)
+    : mAPIName(Move(aOther.mAPIName))
+    , mAPITags(Move(aOther.mAPITags))
+  {
+  }
+  explicit GMPCapability(const nsCString& aAPIName)
     : mAPIName(aAPIName)
   {}
-  GMPCapability(const GMPCapability& aOther) = default;
+  explicit GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
   nsTArray<nsCString> mAPITags;
 };
@@ -206,7 +211,7 @@ private:
   nsCString mLibs;
 #endif
   uint32_t mPluginId;
-  nsTArray<nsAutoPtr<GMPCapability>> mCapabilities;
+  nsTArray<GMPCapability> mCapabilities;
   GMPProcessParent* mProcess;
   bool mDeleteProcessOnlyOnUnload;
   bool mAbnormalShutdownInProgress;

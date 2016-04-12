@@ -90,8 +90,8 @@ GMPParent::CloneFrom(const GMPParent* aOther)
 #ifdef XP_WIN
   mLibs = aOther->mLibs;
 #endif
-  for (const GMPCapability* cap : aOther->mCapabilities) {
-    mCapabilities.AppendElement(new GMPCapability(*cap));
+  for (const GMPCapability& cap : aOther->mCapabilities) {
+    mCapabilities.AppendElement(cap);
   }
   return NS_OK;
 }
@@ -559,10 +559,10 @@ bool
 GMPParent::SupportsAPI(const nsCString& aAPI, const nsCString& aTag)
 {
   for (uint32_t i = 0; i < mCapabilities.Length(); i++) {
-    if (!mCapabilities[i]->mAPIName.Equals(aAPI)) {
+    if (!mCapabilities[i].mAPIName.Equals(aAPI)) {
       continue;
     }
-    nsTArray<nsCString>& tags = mCapabilities[i]->mAPITags;
+    nsTArray<nsCString>& tags = mCapabilities[i].mAPITags;
     for (uint32_t j = 0; j < tags.Length(); j++) {
       if (tags[j].Equals(aTag)) {
         return true;
@@ -816,37 +816,36 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       continue;
     }
 
-    auto cap = new GMPCapability();
+    GMPCapability cap;
     if (tagsStart == -1) {
       // No tags.
-      cap->mAPIName.Assign(api);
+      cap.mAPIName.Assign(api);
     } else {
       auto tagsEnd = api.FindChar(']');
       if (tagsEnd == -1 || tagsEnd < tagsStart) {
         // Invalid syntax, skip whole capability.
-        delete cap;
         continue;
       }
 
-      cap->mAPIName.Assign(Substring(api, 0, tagsStart));
+      cap.mAPIName.Assign(Substring(api, 0, tagsStart));
 
       if ((tagsEnd - tagsStart) > 1) {
         const nsDependentCSubstring ts(Substring(api, tagsStart + 1, tagsEnd - tagsStart - 1));
         nsTArray<nsCString> tagTokens;
         SplitAt(":", ts, tagTokens);
         for (nsCString tag : tagTokens) {
-          cap->mAPITags.AppendElement(tag);
+          cap.mAPITags.AppendElement(tag);
         }
       }
     }
 
     // We support the current GMPDecryptor version, and the previous.
     // We Adapt the previous to the current in the GMPContentChild.
-    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
-      cap->mAPIName.AssignLiteral(GMP_API_DECRYPTOR);
+    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
+      cap.mAPIName.AssignLiteral(GMP_API_DECRYPTOR);
     }
 
-    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
+    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
       mCanDecrypt = true;
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
@@ -854,7 +853,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
         printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
                       " but this system can't sandbox it; not loading.\n",
                       mDisplayName.get());
-        delete cap;
         return InitPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
 #endif
@@ -862,7 +860,7 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       // Adobe GMP doesn't work without SSE2. Check the tags to see if
       // the decryptor is for the Adobe GMP, and refuse to load it if
       // SSE2 isn't supported.
-      for (const nsCString& tag : cap->mAPITags) {
+      for (const nsCString& tag : cap.mAPITags) {
         if (!tag.EqualsLiteral("com.adobe.primetime")) {
           continue;
         }
@@ -874,7 +872,7 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
 #endif // XP_WIN
     }
 
-    mCapabilities.AppendElement(cap);
+    mCapabilities.AppendElement(Move(cap));
   }
 
   if (mCapabilities.IsEmpty()) {
