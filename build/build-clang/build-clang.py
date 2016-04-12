@@ -115,20 +115,21 @@ def mkdir_p(path):
 
 
 def install_libgcc(gcc_dir, clang_dir):
-        libgcc_dir = glob.glob(os.path.join(gcc_dir, "lib", "gcc",
-                                            "x86_64-*linux-gnu",
-                                            "[0-9]*"))[0]
-        clang_lib_dir = os.path.join(clang_dir, "lib", "gcc",
-                                     "x86_64-unknown-linux-gnu",
-                                     os.path.basename(libgcc_dir))
-        mkdir_p(clang_lib_dir)
-        copy_dir_contents(libgcc_dir, clang_lib_dir)
-        libgcc_dir = os.path.join(gcc_dir, "lib64")
-        clang_lib_dir = os.path.join(clang_dir, "lib")
-        copy_dir_contents(libgcc_dir, clang_lib_dir)
-        include_dir = os.path.join(gcc_dir, "include")
-        clang_include_dir = os.path.join(clang_dir, "include")
-        copy_dir_contents(include_dir, clang_include_dir)
+    out = subprocess.check_output([os.path.join(gcc_dir, "bin", "gcc"),
+                                   '-print-libgcc-file-name'])
+
+    libgcc_dir = os.path.dirname(out.rstrip())
+    clang_lib_dir = os.path.join(clang_dir, "lib", "gcc",
+                                 "x86_64-unknown-linux-gnu",
+                                 os.path.basename(libgcc_dir))
+    mkdir_p(clang_lib_dir)
+    copy_dir_contents(libgcc_dir, clang_lib_dir)
+    libgcc_dir = os.path.join(gcc_dir, "lib64")
+    clang_lib_dir = os.path.join(clang_dir, "lib")
+    copy_dir_contents(libgcc_dir, clang_lib_dir)
+    include_dir = os.path.join(gcc_dir, "include")
+    clang_include_dir = os.path.join(clang_dir, "include")
+    copy_dir_contents(include_dir, clang_include_dir)
 
 
 def svn_co(source_dir, url, directory, revision):
