@@ -2562,7 +2562,7 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
     aFiles->GetLength(&listLength);
     for (uint32_t i = 0; i < listLength; i++) {
       OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
-      *element = files->UnsafeItem(i);
+      element->SetAsFile() = files->Item(i);
     }
   }
 
@@ -2678,9 +2678,6 @@ HTMLInputElement::UpdateFileList()
     for (uint32_t i = 0; i < array.Length(); ++i) {
       if (array[i].IsFile()) {
         mFileList->Append(array[i].GetAsFile());
-      } else {
-        MOZ_ASSERT(array[i].IsDirectory());
-        mFileList->Append(array[i].GetAsDirectory());
       }
     }
   }
