@@ -134,6 +134,8 @@ function resolveURIToLocalPath(aURI) {
  * @param Debugger.Source generatedSource
  *        Optional, passed in when aSourceMap is also passed in. The generated
  *        source object that introduced this source.
+ * @param Boolean isInlineSource
+ *        Optional. True if this is an inline source from a HTML or XUL page.
  * @param String contentType
  *        Optional. The content type of this source, if immediately available.
  */
@@ -345,7 +347,36 @@ let SourceActor = ActorClass({
         // fetching the original text for sourcemapped code, and the
         // page hasn't requested it before (if it has, it was a
         // previous debugging session).
-        let sourceFetched = fetch(this.url, { loadFromCache: this.isInlineSource });
+        let loadFromCache = this.isInlineSource;
+
+        // Fetch the sources with the same principal as the original document
+        let win = this.threadActor._parent.window;
+        let principal, cacheKey;
+        // On xpcshell, we don't have a window but a Sandbox
+        if (!isWorker && win instanceof Ci.nsIDOMWindow) {
+          let webNav = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation);
+          let channel = webNav.currentDocumentChannel;
+          principal = channel.loadInfo.loadingPrincipal;
+
+          // Retrieve the cacheKey in order to load POST requests from cache
+          // Note that chrome:// URLs don't support this interface.
+          if (loadFromCache &&
+            webNav.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
+            cacheKey = webNav.currentDocumentChannel.cacheKey;
+            assert(
+              cacheKey,
+              "Could not fetch the cacheKey from the related document."
+            );
+          }
+        }
+
+        let sourceFetched = fetch(this.url, {
+          policy: isWorker ? null : Ci.nsIContentPolicy.TYPE_DOCUMENT,
+          principal,
+          cacheKey,
+          loadFromCache
+        });
 
         // Record the contentType we just learned during fetching
         return sourceFetched
