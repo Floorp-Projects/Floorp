@@ -395,6 +395,8 @@ private:
   // Recomputes mBuffered.
   virtual void UpdateBuffered();
 
+  virtual void VisibilityChanged();
+
   virtual void NotifyDataArrivedInternal() {}
 
   // Overrides of this function should decodes an unspecified amount of

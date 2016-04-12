@@ -183,6 +183,10 @@ MediaDecoderReader::UpdateBuffered()
   mBuffered = GetBuffered();
 }
 
+void
+MediaDecoderReader::VisibilityChanged()
+{}
+
 media::TimeIntervals
 MediaDecoderReader::GetBuffered()
 {

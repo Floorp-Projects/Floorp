@@ -744,7 +744,7 @@ protected:
   // start playing back again.
   Mirror<int64_t> mPlaybackPosition;
 
-  // Used to distiguish whether the audio is producing sound.
+  // Used to distinguish whether the audio is producing sound.
   Mirror<bool> mIsAudioDataAudible;
 
   // Volume of playback.  0.0 = muted. 1.0 = full volume.
@@ -806,7 +806,8 @@ protected:
   // True if the media is only seekable within its buffered ranges.
   Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
 
-  bool mIsVisible;
+  // True if the decoder is visible.
+  Canonical<bool> mIsVisible;
 
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
@@ -854,6 +855,9 @@ public:
   }
   AbstractCanonical<bool>* CanonicalMediaSeekableOnlyInBufferedRanges() {
     return &mMediaSeekableOnlyInBufferedRanges;
+  }
+  AbstractCanonical<bool>* CanonicalIsVisible() {
+    return &mIsVisible;
   }
 
 private:
