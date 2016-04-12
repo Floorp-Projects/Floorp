@@ -106,12 +106,6 @@ using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
 
-#if DEUBG
-  #define LOG(args...) printf_stderr(args)
-#else
-  #define LOG(...)
-#endif
-
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
 #define NOTIFY_FLAG_SHIFT 16
@@ -458,121 +452,6 @@ TabParent::IsVisible() const
   bool visible = false;
   frameLoader->GetVisible(&visible);
   return visible;
-}
-
-static void LogChannelRelevantInfo(nsIURI* aURI,
-                                   nsIPrincipal* aLoadingPrincipal,
-                                   nsIPrincipal* aChannelResultPrincipal,
-                                   nsContentPolicyType aContentPolicyType) {
-  nsCString loadingOrigin;
-  aLoadingPrincipal->GetOrigin(loadingOrigin);
-
-  nsCString uriString;
-  aURI->GetAsciiSpec(uriString);
-  LOG("Loading %s from origin %s (type: %d)\n", uriString.get(),
-                                                loadingOrigin.get(),
-                                                aContentPolicyType);
-
-  nsCString resultPrincipalOrigin;
-  aChannelResultPrincipal->GetOrigin(resultPrincipalOrigin);
-  LOG("Result principal origin: %s\n", resultPrincipalOrigin.get());
-}
-
-// This is similar to nsIScriptSecurityManager.getChannelResultPrincipal
-// but taking signedPkg into account. The reason we can't rely on channel
-// loadContext/loadInfo is it's dangerous to mutate them on parent process.
-static already_AddRefed<nsIPrincipal>
-GetChannelPrincipalWithSingedPkg(nsIChannel* aChannel, const nsACString& aSignedPkg)
-{
-  NeckoOriginAttributes neckoAttrs;
-  NS_GetOriginAttributes(aChannel, neckoAttrs);
-
-  PrincipalOriginAttributes attrs;
-  attrs.InheritFromNecko(neckoAttrs);
-  attrs.mSignedPkg = NS_ConvertUTF8toUTF16(aSignedPkg);
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-
-  return principal.forget();
-}
-
-bool
-TabParent::ShouldSwitchProcess(nsIChannel* aChannel, const nsACString& aSignedPkg)
-{
-  // If we lack of any information which is required to decide the need of
-  // process switch, consider that we should switch process.
-
-  // Prepare the channel loading principal.
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_TRUE(loadInfo, true);
-  nsCOMPtr<nsIPrincipal> loadingPrincipal;
-  loadInfo->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
-  NS_ENSURE_TRUE(loadingPrincipal, true);
-
-  // Prepare the channel result principal.
-  nsCOMPtr<nsIPrincipal> channelPrincipal =
-    GetChannelPrincipalWithSingedPkg(aChannel, aSignedPkg);
-
-  // Log the debug info which is used to decide the need of proces switch.
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-  LogChannelRelevantInfo(uri, loadingPrincipal, channelPrincipal,
-                         loadInfo->InternalContentPolicyType());
-
-  // Check if the signed package is loaded from the same origin.
-  bool sameOrigin = false;
-  loadingPrincipal->Equals(channelPrincipal, &sameOrigin);
-  if (sameOrigin) {
-    LOG("Loading singed package from the same origin. Don't switch process.\n");
-    return false;
-  }
-
-  // If this is not a top level document, there's no need to switch process.
-  if (nsIContentPolicy::TYPE_DOCUMENT != loadInfo->InternalContentPolicyType()) {
-    LOG("Subresource of a document. No need to switch process.\n");
-    return false;
-  }
-
-  DocShellOriginAttributes attrs = OriginAttributesRef();
-  if (attrs.mSignedPkg == NS_ConvertUTF8toUTF16(aSignedPkg)) {
-    // This tab is made for the incoming signed content.
-    return false;
-  }
-
-  return true;
-}
-
-void
-TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel,
-                                       const nsACString& aPackageId)
-{
-  if (!ShouldSwitchProcess(aChannel, aPackageId)) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-
-  aChannel->Cancel(NS_BINDING_FAILED);
-
-  nsCString uriString;
-  uri->GetAsciiSpec(uriString);
-  LOG("We decide to switch process. Call nsFrameLoader::SwitchProcessAndLoadURIs: %s\n",
-       uriString.get());
-
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  NS_ENSURE_TRUE_VOID(frameLoader);
-
-  nsresult rv = frameLoader->SwitchProcessAndLoadURI(uri, aPackageId);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to switch process.");
-  }
 }
 
 void
