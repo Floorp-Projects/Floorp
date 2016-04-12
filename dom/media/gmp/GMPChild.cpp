@@ -21,7 +21,9 @@
 #include "mozilla/dom/CrashReporterChild.h"
 #include "GMPUtils.h"
 #include "prio.h"
+#ifdef MOZ_WIDEVINE_EME
 #include "widevine-adapter/WidevineAdapter.h"
+#endif
 
 using mozilla::dom::CrashReporterChild;
 
@@ -379,8 +381,12 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   }
 #endif
 
-  GMPAdapter* adapter = aAdapter.EqualsLiteral("widevine")
-                      ? new WidevineAdapter() : nullptr;
+  GMPAdapter* adapter = nullptr;
+#ifdef MOZ_WIDEVINE_EME
+  if (aAdapter.EqualsLiteral("widevine")) {
+    adapter = new WidevineAdapter();
+  }
+#endif
   if (!mGMPLoader->Load(libPath.get(),
                         libPath.Length(),
                         mNodeId.BeginWriting(),
