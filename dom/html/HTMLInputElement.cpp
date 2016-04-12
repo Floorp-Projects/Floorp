@@ -5042,13 +5042,6 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
 
   for (uint32_t i = 0; i < filesAndDirs.Length(); ++i) {
     if (filesAndDirs[i].IsDirectory()) {
-#if defined(ANDROID) || defined(MOZ_B2G)
-      MOZ_ASSERT(false,
-                 "Directory picking should have been redirected to normal "
-                 "file picking for platforms that don't have a directory "
-                 "picker");
-#endif
-
       RefPtr<Directory> directory = filesAndDirs[i].GetAsDirectory();
 
       // In future we could refactor SetFilePickerFiltersFromAccept to return a
