@@ -260,12 +260,6 @@ public:
     mScrollUpdateType = ePending;
   }
 
-  void UpdateScrollInfo(uint32_t aScrollGeneration, const CSSPoint& aScrollOffset)
-  {
-    mScrollOffset = aScrollOffset;
-    mScrollGeneration = aScrollGeneration;
-  }
-
   // Make a copy of this FrameMetrics object which does not have any pointers
   // to heap-allocated memory (i.e. is Plain Old Data, or 'POD'), and is
   // therefore safe to be placed into shared memory.
