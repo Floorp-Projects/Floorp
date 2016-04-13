@@ -19,11 +19,11 @@ assertError("({ a() false })", SyntaxError);
 
 assertExpr("({ get x() { return 42 } })",
            objExpr([ { key: ident("x"),
-                       value: funExpr(null, [], blockStmt([returnStmt(lit(42))])),
+                       value: funExpr(ident("get x"), [], blockStmt([returnStmt(lit(42))])),
                        kind: "get" } ]));
 assertExpr("({ set x(v) { return 42 } })",
            objExpr([ { key: ident("x"),
-                       value: funExpr(null, [ident("v")], blockStmt([returnStmt(lit(42))])),
+                       value: funExpr(ident("set x"), [ident("v")], blockStmt([returnStmt(lit(42))])),
                        kind: "set" } ]));
 
 // Bug 1073809 - Getter/setter syntax with generators
