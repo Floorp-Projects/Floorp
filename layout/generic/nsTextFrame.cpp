@@ -7689,7 +7689,7 @@ FindStartAfterSkippingWhitespace(PropertyProvider* aProvider,
                                  gfxSkipCharsIterator* aIterator,
                                  uint32_t aFlowEndInTextRun)
 {
-  if (aData->skipWhitespace) {
+  if (aData->mSkipWhitespace) {
     while (aIterator->GetSkippedOffset() < aFlowEndInTextRun &&
            IsTrimmableSpace(aProvider->GetFragment(), aIterator->GetOriginalOffset(), aTextStyle)) {
       aIterator->AdvanceOriginal(1);
@@ -7739,7 +7739,7 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
   uint32_t flowEndInTextRun;
   gfxSkipCharsIterator iter =
     EnsureTextRun(aTextRunType, aRenderingContext->GetDrawTarget(),
-                  aData->LineContainer(), aData->line, &flowEndInTextRun);
+                  aData->LineContainer(), aData->mLine, &flowEndInTextRun);
   gfxTextRun *textRun = GetTextRun(aTextRunType);
   if (!textRun)
     return;
@@ -7805,34 +7805,34 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
       nscoord width = NSToCoordCeilClamped(
         textRun->GetAdvanceWidth(Range(wordStart, i), &provider));
       width = std::max(0, width);
-      aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
-      aData->atStartOfLine = false;
+      aData->mCurrentLine = NSCoordSaturatingAdd(aData->mCurrentLine, width);
+      aData->mAtStartOfLine = false;
 
       if (collapseWhitespace) {
         uint32_t trimStart = GetEndOfTrimmedText(frag, textStyle, wordStart, i, &iter);
         if (trimStart == start) {
           // This is *all* trimmable whitespace, so whatever trailingWhitespace
           // we saw previously is still trailing...
-          aData->trailingWhitespace += width;
+          aData->mTrailingWhitespace += width;
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
           nscoord wsWidth = NSToCoordCeilClamped(
             textRun->GetAdvanceWidth(Range(trimStart, i), &provider));
-          aData->trailingWhitespace = std::max(0, wsWidth);
+          aData->mTrailingWhitespace = std::max(0, wsWidth);
         }
       } else {
-        aData->trailingWhitespace = 0;
+        aData->mTrailingWhitespace = 0;
       }
     }
 
     if (preformattedTab) {
       PropertyProvider::Spacing spacing;
       provider.GetSpacing(Range(i, i + 1), &spacing);
-      aData->currentLine += nscoord(spacing.mBefore);
+      aData->mCurrentLine += nscoord(spacing.mBefore);
       gfxFloat afterTab =
-        AdvanceToNextTab(aData->currentLine, this,
+        AdvanceToNextTab(aData->mCurrentLine, this,
                          textRun, &tabWidth);
-      aData->currentLine = nscoord(afterTab + spacing.mAfter);
+      aData->mCurrentLine = nscoord(afterTab + spacing.mAfter);
       wordStart = i + 1;
     } else if (i < flowEndInTextRun ||
         (i == textRun->GetLength() &&
@@ -7851,7 +7851,7 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
 
   if (start < flowEndInTextRun) {
     // Check if we have collapsible whitespace at the end
-    aData->skipWhitespace =
+    aData->mSkipWhitespace =
       IsTrimmableSpace(provider.GetFragment(),
                        iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
                        textStyle);
@@ -7891,7 +7891,7 @@ nsTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
           aData->LineContainer() != (lc = FindLineContainer(f))) {
         NS_ASSERTION(f != this, "wrong InlineMinISizeData container"
                                 " for first continuation");
-        aData->line = nullptr;
+        aData->mLine = nullptr;
         aData->SetLineContainer(lc);
       }
 
@@ -7912,7 +7912,7 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
   uint32_t flowEndInTextRun;
   gfxSkipCharsIterator iter =
     EnsureTextRun(aTextRunType, aRenderingContext->GetDrawTarget(),
-                  aData->LineContainer(), aData->line, &flowEndInTextRun);
+                  aData->LineContainer(), aData->mLine, &flowEndInTextRun);
   gfxTextRun *textRun = GetTextRun(aTextRunType);
   if (!textRun)
     return;
@@ -7958,33 +7958,33 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
       nscoord width = NSToCoordCeilClamped(
         textRun->GetAdvanceWidth(Range(lineStart, i), &provider));
       width = std::max(0, width);
-      aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
+      aData->mCurrentLine = NSCoordSaturatingAdd(aData->mCurrentLine, width);
 
       if (collapseWhitespace) {
         uint32_t trimStart = GetEndOfTrimmedText(frag, textStyle, lineStart, i, &iter);
         if (trimStart == start) {
           // This is *all* trimmable whitespace, so whatever trailingWhitespace
           // we saw previously is still trailing...
-          aData->trailingWhitespace += width;
+          aData->mTrailingWhitespace += width;
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
           nscoord wsWidth = NSToCoordCeilClamped(
             textRun->GetAdvanceWidth(Range(trimStart, i), &provider));
-          aData->trailingWhitespace = std::max(0, wsWidth);
+          aData->mTrailingWhitespace = std::max(0, wsWidth);
         }
       } else {
-        aData->trailingWhitespace = 0;
+        aData->mTrailingWhitespace = 0;
       }
     }
 
     if (preformattedTab) {
       PropertyProvider::Spacing spacing;
       provider.GetSpacing(Range(i, i + 1), &spacing);
-      aData->currentLine += nscoord(spacing.mBefore);
+      aData->mCurrentLine += nscoord(spacing.mBefore);
       gfxFloat afterTab =
-        AdvanceToNextTab(aData->currentLine, this,
+        AdvanceToNextTab(aData->mCurrentLine, this,
                          textRun, &tabWidth);
-      aData->currentLine = nscoord(afterTab + spacing.mAfter);
+      aData->mCurrentLine = nscoord(afterTab + spacing.mAfter);
       lineStart = i + 1;
     } else if (preformattedNewline) {
       aData->ForceBreak();
@@ -7994,7 +7994,7 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
 
   // Check if we have collapsible whitespace at the end
   if (start < flowEndInTextRun) {
-    aData->skipWhitespace =
+    aData->mSkipWhitespace =
       IsTrimmableSpace(provider.GetFragment(),
                        iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
                        textStyle);
@@ -8030,7 +8030,7 @@ nsTextFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
           aData->LineContainer() != (lc = FindLineContainer(f))) {
         NS_ASSERTION(f != this, "wrong InlinePrefISizeData container"
                                 " for first continuation");
-        aData->line = nullptr;
+        aData->mLine = nullptr;
         aData->SetLineContainer(lc);
       }
 
