@@ -988,6 +988,12 @@ PendingLookup::SendRemoteQueryInternal()
                         getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  if (loadInfo) {
+    loadInfo->SetOriginAttributes(
+      mozilla::NeckoOriginAttributes(NECKO_SAFEBROWSING_APP_ID, false));
+  }
+
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 

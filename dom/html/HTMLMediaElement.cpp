@@ -1307,6 +1307,16 @@ nsresult HTMLMediaElement::LoadResource()
   nsContentPolicyType contentPolicyType = IsHTMLElement(nsGkAtoms::audio) ?
     nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
+  nsDocShell* docShellPtr;
+  if (docShell) {
+    docShellPtr = nsDocShell::Cast(docShell);
+    bool privateBrowsing;
+    docShellPtr->GetUsePrivateBrowsing(&privateBrowsing);
+    if (privateBrowsing) {
+      securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
+    }
+  }
+
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;
   nsresult rv = NS_NewChannel(getter_AddRefs(channel),
@@ -1322,6 +1332,14 @@ nsresult HTMLMediaElement::LoadResource()
                               nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
 
   NS_ENSURE_SUCCESS(rv,rv);
+
+  // This is a workaround and it will be fix in bug 1264230.
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  if (loadInfo) {
+    NeckoOriginAttributes originAttrs;
+    NS_GetOriginAttributes(channel, originAttrs);
+    loadInfo->SetOriginAttributes(originAttrs);
+  }
 
   // The listener holds a strong reference to us.  This creates a
   // reference cycle, once we've set mChannel, which is manually broken
