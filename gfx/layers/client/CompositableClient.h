@@ -230,7 +230,8 @@ public:
   /// Call this during shutdown instead of trying to access the CompositableClient
   /// since the latter may be about to get destroyed and we don't know for sure
   /// on which thread.
-  static void ForceIPDLActorShutdown(PCompositableChild* aActor);
+  static void ForceIPDLActorShutdown(PCompositableChild* aActor,
+                                     const char* const aProtocolName);
 
   void InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID = 0);
 
