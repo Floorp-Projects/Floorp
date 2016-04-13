@@ -5,11 +5,12 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../framework/test/shared-head.js */
 
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var { TargetFactory } = require("devtools/client/framework/target");
-var promise = require("promise");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+// shared-head.js handles imports, constants, and utility functions
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
+  this);
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
@@ -23,8 +24,6 @@ const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 
-waitForExplicitFinish();
-
 var gToolbox, gPanelWindow, gWindow, gUI;
 
 // Services.prefs.setBoolPref(DUMPEMIT_PREF, true);
@@ -32,9 +31,7 @@ var gToolbox, gPanelWindow, gWindow, gUI;
 
 Services.prefs.setBoolPref(STORAGE_PREF, true);
 Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
-DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
   gToolbox = gPanelWindow = gWindow = gUI = null;
   Services.prefs.clearUserPref(STORAGE_PREF);
   Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
@@ -42,46 +39,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
 });
-
-registerCleanupFunction(function* cleanup() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
-});
-
-/**
- * Add a new test tab in the browser and load the given url.
- *
- * @param {String} url The url to be loaded in the new tab
- *
- * @return a promise that resolves to the content window when the url is loaded
- */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
-
-  // Bug 921935 should bring waitForFocus() support to e10s, which would
-  // probably cover the case of the test losing focus when the page is loading.
-  // For now, we just make sure the window is focused.
-  window.focus();
-
-  let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-  let linkedBrowser = tab.linkedBrowser;
-
-  linkedBrowser.addEventListener("load", function onload(event) {
-    if (event.originalTarget.location.href != url) {
-      return;
-    }
-    linkedBrowser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-    def.resolve(tab.linkedBrowser.contentWindow);
-  }, true);
-
-  return def.promise;
-}
 
 /**
  * This generator function opens the given url in a new tab, then sets up the
@@ -94,7 +51,8 @@ function addTab(url) {
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
 function* openTabAndSetupStorage(url) {
-  let content = yield addTab(url);
+  let tab = yield addTab(url);
+  let content = tab.linkedBrowser.contentWindow;
 
   gWindow = content.wrappedJSObject;
 
@@ -804,54 +762,6 @@ function PressKeyXTimes(key, x, modifiers = {}) {
   for (let i = 0; i < x; i++) {
     EventUtils.synthesizeKey(key, modifiers);
   }
-}
-
-/**
- * Wait for a context menu popup to open.
- *
- * @param nsIDOMElement popup
- *        The XUL popup you expect to open.
- * @param nsIDOMElement button
- *        The button/element that receives the contextmenu event. This is
- *        expected to open the popup.
- * @param function onShown
- *        Function to invoke on popupshown event.
- * @param function onHidden
- *        Function to invoke on popuphidden event.
- * @return object
- *         A Promise object that is resolved after the popuphidden event
- *         callback is invoked.
- */
-function waitForContextMenu(popup, button, onShown, onHidden) {
-  let deferred = promise.defer();
-
-  function onPopupShown() {
-    info("onPopupShown");
-    popup.removeEventListener("popupshown", onPopupShown);
-
-    onShown && onShown();
-
-    // Use executeSoon() to get out of the popupshown event.
-    popup.addEventListener("popuphidden", onPopupHidden);
-    executeSoon(() => popup.hidePopup());
-  }
-  function onPopupHidden() {
-    info("onPopupHidden");
-    popup.removeEventListener("popuphidden", onPopupHidden);
-
-    onHidden && onHidden();
-
-    deferred.resolve(popup);
-  }
-
-  popup.addEventListener("popupshown", onPopupShown);
-
-  info("wait for the context menu to open");
-  button.scrollIntoView();
-  let eventDetails = {type: "contextmenu", button: 2};
-  EventUtils.synthesizeMouse(button, 2, 2, eventDetails,
-                             button.ownerDocument.defaultView);
-  return deferred.promise;
 }
 
 /**

@@ -4,13 +4,13 @@
 // Tests getAdjustedQuads works properly in a variety of use cases including
 // iframes, scroll and zoom
 
-var {utils: Cu} = Components;
+"use strict";
+
 var {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
 
 add_task(function* () {
-
   let tab = yield addTab(TEST_URI);
   let doc = tab.linkedBrowser.contentDocument;
 
