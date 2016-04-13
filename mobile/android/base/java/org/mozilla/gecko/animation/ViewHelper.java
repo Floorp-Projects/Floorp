@@ -5,58 +5,105 @@
 package org.mozilla.gecko.animation;
 
 import android.view.View;
+import android.view.ViewGroup;
 
 public final class ViewHelper {
     private ViewHelper() {
     }
 
     public static float getTranslationX(View view) {
-        AnimatorProxy proxy = AnimatorProxy.create(view);
-        return proxy.getTranslationX();
+        if (view != null) {
+            return view.getTranslationX();
+        }
+
+        return 0;
     }
 
     public static void setTranslationX(View view, float translationX) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        proxy.setTranslationX(translationX);
+        if (view != null) {
+            view.setTranslationX(translationX);
+        }
     }
 
     public static float getTranslationY(View view) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        return proxy.getTranslationY();
+        if (view != null) {
+            return view.getTranslationY();
+        }
+
+        return 0;
     }
 
     public static void setTranslationY(View view, float translationY) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        proxy.setTranslationY(translationY);
+        if (view != null) {
+            view.setTranslationY(translationY);
+        }
     }
 
     public static float getAlpha(View view) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        return proxy.getAlpha();
+        if (view != null) {
+            return view.getAlpha();
+        }
+
+        return 1;
     }
 
     public static void setAlpha(View view, float alpha) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        proxy.setAlpha(alpha);
+        if (view != null) {
+            view.setAlpha(alpha);
+        }
     }
 
     public static int getWidth(View view) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        return proxy.getWidth();
+        if (view != null) {
+            return view.getWidth();
+        }
+
+        return 0;
     }
 
     public static void setWidth(View view, int width) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        proxy.setWidth(width);
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+            lp.width = width;
+            view.setLayoutParams(lp);
+        }
     }
 
     public static int getHeight(View view) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        return proxy.getHeight();
+        if (view != null) {
+            return view.getHeight();
+        }
+
+        return 0;
     }
 
     public static void setHeight(View view, int height) {
-        final AnimatorProxy proxy = AnimatorProxy.create(view);
-        proxy.setHeight(height);
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+            lp.height = height;
+            view.setLayoutParams(lp);
+        }
+    }
+
+    public static int getScrollX(View view) {
+        if (view != null) {
+            return view.getScrollX();
+        }
+
+        return 0;
+    }
+
+    public static int getScrollY(View view) {
+        if (view != null) {
+            return view.getScrollY();
+        }
+
+        return 0;
+    }
+
+    public static void scrollTo(View view, int scrollX, int scrollY) {
+        if (view != null) {
+            view.scrollTo(scrollX, scrollY);
+        }
     }
 }
