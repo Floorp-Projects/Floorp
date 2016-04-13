@@ -265,8 +265,8 @@ abstract class Axis {
 
     // Calculates and returns the value of the bezier curve with the given parameter t and control points p1 and p2
     float cubicBezier(float p1, float p2, float t) {
-        return (3 * t * (1-t) * (1-t) * p1)
-             + (3 * t * t * (1-t) * p2)
+        return (3 * t * (1 - t) * (1 - t) * p1)
+             + (3 * t * t * (1 - t) * p2)
              + (t * t * t);
     }
 
@@ -279,7 +279,7 @@ abstract class Axis {
         guess[0] = By;
 
         for (int i = 1; i < ni; i++) {
-            guess[i] = guess[i-1] - (cubicBezier(y1, y2, guess[i-1]) - By) / getSlope(guess[i-1]);
+            guess[i] = guess[i - 1] - (cubicBezier(y1, y2, guess[i - 1]) - By) / getSlope(guess[i - 1]);
         }
         // guess[4] is the final approximate root the cubic equation.
         float t = guess[4];
