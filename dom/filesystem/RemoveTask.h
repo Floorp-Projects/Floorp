@@ -11,8 +11,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
 
-#define REMOVE_TASK_PERMISSION "write"
-
 namespace mozilla {
 namespace dom {
 

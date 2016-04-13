@@ -288,6 +288,12 @@ SelectorAutocompleter.prototype = {
           this.searchPopup.selectedIndex = this.searchPopup.itemCount - 1;
           this.searchBox.value = this.searchPopup.selectedItem.label;
           this.hidePopup();
+        } else if (!this.searchPopup.isOpen && event.keyCode === event.DOM_VK_TAB) {
+          // When tab is pressed with focus on searchbox and closed popup,
+          // do not prevent the default to avoid a keyboard trap and move focus
+          // to next/previous element.
+          this.emit("processing-done");
+          return;
         }
         break;
 

@@ -285,6 +285,9 @@ ImageDocument::OnPageShow(bool aPersisted,
     mOriginalZoomLevel =
       Preferences::GetBool(SITE_SPECIFIC_ZOOM, false) ? 1.0 : GetZoomLevel();
   }
+  RefPtr<ImageDocument> kungFuDeathGrip(this);
+  UpdateSizeFromLayout();
+
   MediaDocument::OnPageShow(aPersisted, aDispatchStartTarget);
 }
 

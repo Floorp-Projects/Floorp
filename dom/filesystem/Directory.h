@@ -112,6 +112,9 @@ public:
   already_AddRefed<Promise>
   GetFilesAndDirectories(ErrorResult& aRv);
 
+  already_AddRefed<Promise>
+  GetFiles(bool aRecursiveFlag, ErrorResult& aRv);
+
   // =========== End WebIDL bindings.============
 
   /**

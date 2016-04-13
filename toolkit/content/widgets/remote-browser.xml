@@ -401,6 +401,12 @@
            Note: This overrides the destroy() method from browser.xml. -->
       <method name="destroy">
         <body><![CDATA[
+          // Make sure that any open select is closed.
+          if (this._selectParentHelper) {
+            let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+            this._selectParentHelper.hide(menulist, this);
+          }
+
           if (this.mDestroyed)
             return;
           this.mDestroyed = true;
@@ -483,7 +489,7 @@
             case "Forms:HideDropDown": {
               if (this._selectParentHelper) {
                 let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-                this._selectParentHelper.hide(menulist);
+                this._selectParentHelper.hide(menulist, this);
               }
               break;
             }

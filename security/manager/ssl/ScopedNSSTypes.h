@@ -344,6 +344,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertNicknames,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTOidSequence,
                                       CERTOidSequence,
                                       CERT_DestroyOidSequence)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTSubjectPublicKeyInfo,
+                                      CERTSubjectPublicKeyInfo,
+                                      SECKEY_DestroySubjectPublicKeyInfo)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTUserNotice,
                                       CERTUserNotice,
                                       CERT_DestroyUserNotice)

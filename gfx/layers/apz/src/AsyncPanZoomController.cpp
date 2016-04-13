@@ -3380,15 +3380,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
   const FrameMetrics& aLayerMetrics = aScrollMetadata.GetMetrics();
 
   if ((aLayerMetrics == mLastContentPaintMetrics) && !isDefault) {
-    // No new information here, skip it. Note that this is not just an
-    // optimization; it's correctness too. In the case where we get one of these
-    // stale aLayerMetrics *after* a call to NotifyScrollUpdated, processing the
-    // stale aLayerMetrics would clobber the more up-to-date information from
-    // NotifyScrollUpdated.
+    // No new information here, skip it.
     APZC_LOG("%p NotifyLayersUpdated short-circuit\n", this);
     return;
   }
-  mLastContentPaintMetrics = aLayerMetrics;
+  if (aLayerMetrics.GetScrollUpdateType() != FrameMetrics::ScrollOffsetUpdateType::ePending) {
+    mLastContentPaintMetrics = aLayerMetrics;
+  }
 
   mFrameMetrics.SetScrollParentId(aLayerMetrics.GetScrollParentId());
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d, aThisLayerTreeUpdated=%d",
@@ -3581,35 +3579,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     RequestContentRepaint();
   }
   UpdateSharedCompositorFrameMetrics();
-}
-
-void
-AsyncPanZoomController::NotifyScrollUpdated(uint32_t aScrollGeneration,
-                                            const CSSPoint& aScrollOffset)
-{
-  APZThreadUtils::AssertOnCompositorThread();
-  ReentrantMonitorAutoEnter lock(mMonitor);
-
-  APZC_LOG("%p NotifyScrollUpdated(%d, %s)\n", this, aScrollGeneration,
-      Stringify(aScrollOffset).c_str());
-
-  bool scrollOffsetUpdated = aScrollGeneration != mFrameMetrics.GetScrollGeneration();
-  if (!scrollOffsetUpdated) {
-    return;
-  }
-  APZC_LOG("%p updating scroll offset from %s to %s\n", this,
-      Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
-      Stringify(aScrollOffset).c_str());
-
-  mFrameMetrics.UpdateScrollInfo(aScrollGeneration, aScrollOffset);
-  AcknowledgeScrollUpdate();
-  mExpectedGeckoMetrics.UpdateScrollInfo(aScrollGeneration, aScrollOffset);
-  CancelAnimation();
-  RequestContentRepaint();
-  UpdateSharedCompositorFrameMetrics();
-  // We don't call ScheduleComposite() here because that happens higher up
-  // in the call stack, when LayerTransactionParent handles this message.
-  // If we did it here it would incur an extra message posting unnecessarily.
 }
 
 void

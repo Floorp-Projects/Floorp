@@ -203,6 +203,12 @@ class SPSProfiler
     uint32_t* addressOfEnabled() {
         return &enabled_;
     }
+
+    void trace(JSTracer* trc);
+    void fixupStringsMapAfterMovingGC();
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkStringsMapAfterMovingGC();
+#endif
 };
 
 /*

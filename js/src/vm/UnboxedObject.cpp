@@ -698,6 +698,7 @@ UnboxedPlainObject::createWithProperties(ExclusiveContext* cx, HandleObjectGroup
 
 #ifndef JS_CODEGEN_NONE
     if (cx->isJSContext() &&
+        !group->unknownProperties() &&
         !layout.constructorCode() &&
         cx->asJSContext()->runtime()->jitSupportsFloatingPoint)
     {

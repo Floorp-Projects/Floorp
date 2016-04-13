@@ -1,6 +1,0 @@
-{
-  "If there are two embeds, a collection should be returned. (name)": true,
-  "If there is one embed, it should not be returned (id)": true,
-  "If there are two embeds, nothing should be returned. (id)": true,
-  "A name shouldn't affect getting an embed by id": true
-}

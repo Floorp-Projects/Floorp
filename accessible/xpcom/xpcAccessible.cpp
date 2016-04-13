@@ -25,10 +25,11 @@ xpcAccessible::GetParent(nsIAccessible** aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nullptr;
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aParent = ToXPC(Intl()->Parent()));
+  AccessibleOrProxy parent = IntlGeneric().Parent();
+  NS_IF_ADDREF(*aParent = ToXPC(parent));
   return NS_OK;
 }
 
@@ -40,12 +41,17 @@ xpcAccessible::GetNextSibling(nsIAccessible** aNextSibling)
   if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    nsresult rv = NS_OK;
+    NS_IF_ADDREF(*aNextSibling = ToXPC(Intl()->GetSiblingAtOffset(1, &rv)));
+    return rv;
+  }
 
-  nsresult rv = NS_OK;
-  NS_IF_ADDREF(*aNextSibling = ToXPC(Intl()->GetSiblingAtOffset(1, &rv)));
-  return rv;
+  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  NS_ENSURE_STATE(proxy);
+
+  NS_IF_ADDREF(*aNextSibling = ToXPC(proxy->NextSibling()));
+  return *aNextSibling ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -56,12 +62,17 @@ xpcAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling)
   if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    nsresult rv = NS_OK;
+    NS_IF_ADDREF(*aPreviousSibling = ToXPC(Intl()->GetSiblingAtOffset(-1, &rv)));
+    return rv;
+  }
 
-  nsresult rv = NS_OK;
-  NS_IF_ADDREF(*aPreviousSibling = ToXPC(Intl()->GetSiblingAtOffset(-1, &rv)));
-  return rv;
+  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  NS_ENSURE_STATE(proxy);
+
+  NS_IF_ADDREF(*aPreviousSibling = ToXPC(proxy->PrevSibling()));
+  return *aPreviousSibling ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -156,10 +167,12 @@ xpcAccessible::GetIndexInParent(int32_t* aIndexInParent)
   if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    *aIndexInParent = Intl()->IndexInParent();
+  } else if (IntlGeneric().IsProxy()) {
+    *aIndexInParent = IntlGeneric().AsProxy()->IndexInParent();
+  }
 
-  *aIndexInParent = Intl()->IndexInParent();
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 

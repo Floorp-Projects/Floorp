@@ -8,7 +8,7 @@ pref(dom.details_element.enabled,true) == multiple-summary.html single-summary.h
 pref(dom.details_element.enabled,true) == open-multiple-summary.html open-multiple-summary-ref.html
 pref(dom.details_element.enabled,true) == summary-not-first-child.html single-summary.html
 pref(dom.details_element.enabled,true) == open-summary-not-first-child.html open-single-summary.html
-pref(dom.details_element.enabled,true) == open-summary-block-style.html open-single-summary.html
+pref(dom.details_element.enabled,true) == open-summary-block-style.html open-summary-block-style-ref.html
 pref(dom.details_element.enabled,true) == no-summary.html no-summary-ref.html
 pref(dom.details_element.enabled,true) == open-no-summary.html open-no-summary-ref.html
 pref(dom.details_element.enabled,true) == summary-not-in-details.html summary-not-in-details-ref.html

@@ -254,6 +254,7 @@ class Bindings
     }
 
   public:
+    static const uint32_t BODY_LEVEL_LEXICAL_LIMIT = UINT16_LIMIT;
 
     Binding* bindingArray() const {
         return reinterpret_cast<Binding*>(bindingArrayAndFlag_ & ~TEMPORARY_STORAGE_BIT);
@@ -284,7 +285,7 @@ class Bindings
                                          bool isModule = false);
 
     // Initialize a trivial Bindings with no slots and an empty callObjShape.
-    bool initTrivial(ExclusiveContext* cx);
+    static bool initTrivialForScript(ExclusiveContext* cx, HandleScript script);
 
     // CompileScript parses and compiles one statement at a time, but the result
     // is one Script object.  There will be no vars or bindings, because those
@@ -434,12 +435,26 @@ class MutableBindingsOperations : public BindingsOperations<Outer>
     void setBindingArray(const Binding* bindingArray, uintptr_t temporaryBit) {
         bindings().bindingArrayAndFlag_ = uintptr_t(bindingArray) | temporaryBit;
     }
-    void setNumArgs(uint16_t num) { bindings().numArgs_ = num; }
-    void setNumVars(uint32_t num) { bindings().numVars_ = num; }
-    void setNumBodyLevelLexicals(uint16_t num) { bindings().numBodyLevelLexicals_ = num; }
-    void setNumBlockScoped(uint16_t num) { bindings().numBlockScoped_ = num; }
-    void setNumUnaliasedVars(uint32_t num) { bindings().numUnaliasedVars_ = num; }
-    void setNumUnaliasedBodyLevelLexicals(uint16_t num) {
+    void setNumArgs(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
+        bindings().numArgs_ = num;
+    }
+    void setNumVars(uint32_t num) {
+        bindings().numVars_ = num;
+    }
+    void setNumBodyLevelLexicals(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
+        bindings().numBodyLevelLexicals_ = num;
+    }
+    void setNumBlockScoped(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
+        bindings().numBlockScoped_ = num;
+    }
+    void setNumUnaliasedVars(uint32_t num) {
+        bindings().numUnaliasedVars_ = num;
+    }
+    void setNumUnaliasedBodyLevelLexicals(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
         bindings().numUnaliasedBodyLevelLexicals_ = num;
     }
     void setAliasedBodyLevelLexicalBegin(uint32_t offset) {
@@ -525,6 +540,7 @@ typedef HashMap<JSScript*,
 class DebugScript
 {
     friend class ::JSScript;
+    friend struct ::JSCompartment;
 
     /*
      * When non-zero, compile script in single-step mode. The top bit is set and
@@ -2011,24 +2027,37 @@ namespace js {
  */
 class BindingIter
 {
-    Handle<Bindings> bindings_;
+    Binding* bindingArray_;
+    uint32_t numArgs_;
+    uint32_t count_;
     uint32_t i_;
     uint32_t unaliasedLocal_;
 
     friend class ::JSScript;
     friend class Bindings;
 
+    void init(const Bindings& bindings) {
+        // Bindings contained in a JSScript may be moved by the GC.  Copy the
+        // necessary fields into this object.
+        bindingArray_ = bindings.bindingArray();
+        numArgs_ = bindings.numArgs();
+        count_ = bindings.count();
+    }
+
   public:
     explicit BindingIter(Handle<Bindings> bindings)
-      : bindings_(bindings), i_(0), unaliasedLocal_(0)
-    {}
+      : i_(0), unaliasedLocal_(0)
+    {
+        init(bindings);
+    }
 
-    explicit BindingIter(const HandleScript& script)
-      : bindings_(Handle<Bindings>::fromMarkedLocation(&script->bindings)),
-        i_(0), unaliasedLocal_(0)
-    {}
+    explicit BindingIter(HandleScript script)
+      : i_(0), unaliasedLocal_(0)
+    {
+        init(script->bindings);
+    }
 
-    bool done() const { return i_ == bindings_.count(); }
+    bool done() const { return i_ == count_; }
     explicit operator bool() const { return !done(); }
     BindingIter& operator++() { (*this)++; return *this; }
 
@@ -2046,7 +2075,7 @@ class BindingIter
     // has no stack slot.
     uint32_t frameIndex() const {
         MOZ_ASSERT(!done());
-        if (i_ < bindings_.numArgs())
+        if (i_ < numArgs_)
             return i_;
         MOZ_ASSERT(!(*this)->aliased());
         return unaliasedLocal_;
@@ -2057,17 +2086,17 @@ class BindingIter
     // both unaliased and aliased arguments.
     uint32_t argIndex() const {
         MOZ_ASSERT(!done());
-        MOZ_ASSERT(i_ < bindings_.numArgs());
+        MOZ_ASSERT(i_ < numArgs_);
         return i_;
     }
     uint32_t argOrLocalIndex() const {
         MOZ_ASSERT(!done());
-        return i_ < bindings_.numArgs() ? i_ : i_ - bindings_.numArgs();
+        return i_ < numArgs_ ? i_ : i_ - numArgs_;
     }
     uint32_t localIndex() const {
         MOZ_ASSERT(!done());
-        MOZ_ASSERT(i_ >= bindings_.numArgs());
-        return i_ - bindings_.numArgs();
+        MOZ_ASSERT(i_ >= numArgs_);
+        return i_ - numArgs_;
     }
     bool isBodyLevelLexical() const {
         MOZ_ASSERT(!done());
@@ -2075,8 +2104,8 @@ class BindingIter
         return binding.kind() != Binding::ARGUMENT;
     }
 
-    const Binding& operator*() const { MOZ_ASSERT(!done()); return bindings_.bindingArray()[i_]; }
-    const Binding* operator->() const { MOZ_ASSERT(!done()); return &bindings_.bindingArray()[i_]; }
+    const Binding& operator*() const { MOZ_ASSERT(!done()); return bindingArray_[i_]; }
+    const Binding* operator->() const { MOZ_ASSERT(!done()); return &bindingArray_[i_]; }
 };
 
 /*
