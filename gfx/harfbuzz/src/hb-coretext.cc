@@ -904,13 +904,11 @@ resize_and_retry:
 	 * backend.
 	 *
 	 * However, even that wouldn't work if we were passed in the CGFont to
-	 * begin with.
-	 *
-	 * We might switch to checking PS name against "LastResort".  That would
-	 * be safe for all fonts except for those named "Last Resort".  Might be
-	 * better than what we have right now.
+	 * construct a hb_face to begin with.
 	 *
 	 * See: http://github.com/behdad/harfbuzz/pull/36
+	 *
+	 * Also see: https://bugs.chromium.org/p/chromium/issues/detail?id=597098
 	 */
 	bool matched = false;
 	for (unsigned int i = 0; i < range_records.len; i++)

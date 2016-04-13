@@ -66,7 +66,6 @@
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/unused.h"
 #include "LayersLogging.h"  // for Stringify
 #include <algorithm>
@@ -2752,14 +2751,18 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
                  !content->GetComposedDoc()->HasScrollLinkedEffect()) {
         nsIWidget* widget = presContext->GetNearestWidget();
         LayerManager* manager = widget ? widget->GetLayerManager() : nullptr;
-        ShadowLayerForwarder* forwarder = manager ? manager->AsShadowForwarder() : nullptr;
-        if (forwarder && forwarder->HasShadowManager()) {
+        if (manager) {
           mozilla::layers::FrameMetrics::ViewID id;
           DebugOnly<bool> success = nsLayoutUtils::FindIDFor(content, &id);
           MOZ_ASSERT(success); // we have a displayport, we better have an ID
-          forwarder->GetShadowManager()->SendUpdateScrollOffset(id,
-              mScrollGeneration, CSSPoint::FromAppUnits(GetScrollPosition()));
+
+          // Schedule an empty transaction to carry over the scroll offset update,
+          // instead of a full transaction. This empty transaction might still get
+          // squashed into a full transaction if something happens to trigger one.
           schedulePaint = false;
+          manager->SetPendingScrollUpdateForNextTransaction(id,
+              { mScrollGeneration, CSSPoint::FromAppUnits(GetScrollPosition()) });
+          mOuter->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
           PAINT_SKIP_LOG("Skipping due to APZ-forwarded main-thread scroll\n");
         }
       }

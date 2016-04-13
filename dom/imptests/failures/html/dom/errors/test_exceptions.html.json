@@ -1,6 +1,0 @@
-{
-  "exception.hasOwnProperty(\"message\")": true,
-  "Object.getOwnPropertyDescriptor(exception, \"message\")": true,
-  "In iframe: exception.hasOwnProperty(\"message\")": true,
-  "In iframe: Object.getOwnPropertyDescriptor(exception, \"message\")": true
-}

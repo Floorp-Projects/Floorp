@@ -499,7 +499,7 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
     return;
 
   hb_glyph_info_t dottedcircle = {0};
-  if (!font->get_glyph (0x25CCu, 0, &dottedcircle.codepoint))
+  if (!font->get_nominal_glyph (0x25CCu, &dottedcircle.codepoint))
     return;
   dottedcircle.use_category() = hb_use_get_categories (0x25CC);
 

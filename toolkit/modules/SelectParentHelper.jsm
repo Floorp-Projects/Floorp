@@ -26,8 +26,10 @@ this.SelectParentHelper = {
     menulist.selectedItem.scrollIntoView();
   },
 
-  hide: function(menulist) {
-    menulist.menupopup.hidePopup();
+  hide: function(menulist, browser) {
+    if (currentBrowser == browser) {
+      menulist.menupopup.hidePopup();
+    }
   },
 
   handleEvent: function(event) {

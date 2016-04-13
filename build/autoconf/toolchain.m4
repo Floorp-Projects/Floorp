@@ -21,8 +21,6 @@ COMPILER msvc _MSC_FULL_VER
 COMPILER clang __clang_major__.__clang_minor__.__clang_patchlevel__
 #elif defined(__GNUC__)
 COMPILER gcc __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
-#elif defined(__INTEL_COMPILER)
-COMPILER icc __INTEL_COMPILER
 #endif
 EOF
 read dummy compiler CC_VERSION <<EOF
@@ -66,13 +64,6 @@ if test "$compiler" = "msvc"; then
      MSVC_VERSION_FULL="$CXX_VERSION"
      CC_VERSION=`echo ${CC_VERSION} | cut -c 1-4`
      CXX_VERSION=`echo ${CXX_VERSION} | cut -c 1-4`
-fi
-
-INTEL_CC=
-INTEL_CXX=
-if test "$compiler" = "icc"; then
-   INTEL_CC=1
-   INTEL_CXX=1
 fi
 
 CLANG_CC=

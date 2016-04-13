@@ -36,6 +36,7 @@
 #include <unicode/uchar.h>
 #include <unicode/unorm.h>
 #include <unicode/ustring.h>
+#include <unicode/utf16.h>
 #include <unicode/uversion.h>
 
 
