@@ -6411,11 +6411,19 @@ var gIdentityHandler = {
   },
 
   get _isSecure() {
-    return this._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
+    // If a <browser> is included within a chrome document, then this._state
+    // will refer to the security state for the <browser> and not the top level
+    // document. In this case, don't upgrade the security state in the UI
+    // with the secure state of the embedded <browser>.
+    return !this._isURILoadedFromFile && this._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
   },
 
   get _isEV() {
-    return this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+    // If a <browser> is included within a chrome document, then this._state
+    // will refer to the security state for the <browser> and not the top level
+    // document. In this case, don't upgrade the security state in the UI
+    // with the EV state of the embedded <browser>.
+    return !this._isURILoadedFromFile && this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
   },
 
   get _isMixedActiveContentLoaded() {
@@ -6608,6 +6616,7 @@ var gIdentityHandler = {
     let shouldHidePopup = this._uri && (this._uri.spec != uri.spec);
     this._state = state;
     this._uri = uri;
+    this._isURILoadedFromFile = this.isURILoadedFromFile();
 
     // Firstly, populate the state properties required to display the UI. See
     // the documentation of the individual properties for details.
@@ -6961,7 +6970,7 @@ var gIdentityHandler = {
     this.updateSitePermissions();
   },
 
-  get _isURILoadedFromFile() {
+  isURILoadedFromFile() {
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.
     let chanOptions = {uri: this._uri, loadUsingSystemPrincipal: true};
