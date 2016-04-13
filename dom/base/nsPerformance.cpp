@@ -68,9 +68,11 @@ nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
     mZeroTime = 0;
   }
 
-  // The aHttpChannel argument is null if this nsPerformanceTiming object
-  // is being used for the navigation timing (document) and has a non-null
-  // value for the resource timing (any resources within the page).
+  // The aHttpChannel argument is null if this nsPerformanceTiming object is
+  // being used for navigation timing (which is only relevant for documents).
+  // It has a non-null value if this nsPerformanceTiming object is being used
+  // for resource timing, which can include document loads, both toplevel and
+  // in subframes, and resources linked from a document.
   if (aHttpChannel) {
     mTimingAllowed = CheckAllowedOrigin(aHttpChannel, aChannel);
     bool redirectsPassCheck = false;
@@ -144,6 +146,14 @@ nsPerformanceTiming::CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
   if (!loadInfo) {
     return false;
   }
+
+  // TYPE_DOCUMENT loads have no loadingPrincipal.  And that's OK, because we
+  // never actually need to have a performance timing entry for TYPE_DOCUMENT
+  // loads.
+  if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
   nsCOMPtr<nsIPrincipal> principal = loadInfo->LoadingPrincipal();
 
   // Check if the resource is either same origin as the page that started
