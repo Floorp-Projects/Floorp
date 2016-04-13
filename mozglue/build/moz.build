@@ -65,6 +65,7 @@ if not CONFIG['JS_STANDALONE']:
 
     EXPORTS.mozilla += [
         'arm.h',
+        'mips.h',
         'SSE.h',
         'WindowsDllBlocklist.h',
     ]
@@ -77,6 +78,11 @@ if not CONFIG['JS_STANDALONE']:
     if CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [
             'arm.cpp',
+        ]
+
+    if CONFIG['CPU_ARCH'].startswith('mips'):
+        SOURCES += [
+            'mips.cpp',
         ]
 
     if CONFIG['MOZ_LINKER']:
