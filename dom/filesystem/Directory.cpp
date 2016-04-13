@@ -11,6 +11,7 @@
 #include "FileSystemPermissionRequest.h"
 #include "GetDirectoryListingTask.h"
 #include "GetFileOrDirectoryTask.h"
+#include "GetFilesTask.h"
 #include "RemoveTask.h"
 
 #include "nsCharSeparatedTokenizer.h"
@@ -439,6 +440,27 @@ Directory::GetFilesAndDirectories(ErrorResult& aRv)
   RefPtr<GetDirectoryListingTaskChild> task =
     GetDirectoryListingTaskChild::Create(fs, mFile, mType, mFilters, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  FileSystemPermissionRequest::RequestForTask(task);
+  return task->GetPromise();
+}
+
+already_AddRefed<Promise>
+Directory::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
+{
+  ErrorResult rv;
+  RefPtr<FileSystemBase> fs = GetFileSystem(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<GetFilesTaskChild> task =
+    GetFilesTaskChild::Create(fs, mFile, aRecursiveFlag, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
