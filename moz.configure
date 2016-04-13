@@ -166,3 +166,4 @@ check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
+# Please do not add anything after the include of old.configure.
