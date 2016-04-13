@@ -29,6 +29,7 @@ GfxDriverInfo::GfxDriverInfo()
     mDriverVersion(0),
     mDriverVersionMax(0),
     mSuggestedVersion(nullptr),
+    mRuleId(nullptr),
     mGpu2(false)
 {}
 
@@ -37,6 +38,7 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, nsAString& vendor,
                              int32_t feature, int32_t featureStatus,
                              VersionComparisonOp op,
                              uint64_t driverVersion,
+                             const char *ruleId,
                              const char *suggestedVersion /* = nullptr */,
                              bool ownDevices /* = false */,
                              bool gpu2 /* = false */)
@@ -51,6 +53,7 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, nsAString& vendor,
     mDriverVersion(driverVersion),
     mDriverVersionMax(0),
     mSuggestedVersion(suggestedVersion),
+    mRuleId(ruleId),
     mGpu2(gpu2)
 {}
 
@@ -64,6 +67,7 @@ GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
     mDriverVersion(aOrig.mDriverVersion),
     mDriverVersionMax(aOrig.mDriverVersionMax),
     mSuggestedVersion(aOrig.mSuggestedVersion),
+    mRuleId(aOrig.mRuleId),
     mGpu2(aOrig.mGpu2)
 {
   // If we're managing the lifetime of the device family, we have to make a

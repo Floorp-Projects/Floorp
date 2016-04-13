@@ -9,27 +9,27 @@
 #include "nsString.h"
 
 // Macros for adding a blocklist item to the static list.
-#define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion) \
-    mDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion))
-#define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion) \
-    mDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion))
+#define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion) \
+    mDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion))
+#define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId) \
+    mDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId))
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, suggestedVersion) \
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, ruleId, suggestedVersion) \
     do { \
       MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE || \
                  driverComparator == DRIVER_BETWEEN_INCLUSIVE || \
                  driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
-      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion); \
+      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion); \
       info.mDriverVersionMax = driverVersionMax; \
       mDriverInfo->AppendElement(info); \
     } while (false)
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, suggestedVersion) \
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, ruleId, suggestedVersion) \
     do { \
       MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE || \
                  driverComparator == DRIVER_BETWEEN_INCLUSIVE || \
                  driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
-      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion, false, true); \
+      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion, false, true); \
       info.mDriverVersionMax = driverVersionMax; \
       mDriverInfo->AppendElement(info); \
     } while (false)
@@ -115,7 +115,8 @@ struct GfxDriverInfo
   // array, and it will be deleted when this GfxDriverInfo is destroyed.
   GfxDriverInfo(OperatingSystem os, nsAString& vendor, GfxDeviceFamily* devices,
                 int32_t feature, int32_t featureStatus, VersionComparisonOp op,
-                uint64_t driverVersion, const char *suggestedVersion = nullptr,
+                uint64_t driverVersion, const char *ruleId,
+                const char *suggestedVersion = nullptr,
                 bool ownDevices = false, bool gpu2 = false);
 
   GfxDriverInfo();
@@ -149,6 +150,7 @@ struct GfxDriverInfo
   static uint64_t allDriverVersions;
 
   const char *mSuggestedVersion;
+  nsCString mRuleId;
 
   static const GfxDeviceFamily* GetDeviceFamily(DeviceFamily id);
   static GfxDeviceFamily* mDeviceFamilies[DeviceFamilyMax];
