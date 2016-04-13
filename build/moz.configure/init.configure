@@ -677,6 +677,42 @@ add_old_configure_assignment('RELEASE_BUILD',
                              delayed_getattr(milestone, 'is_release'))
 
 
+# Set the MOZ_CONFIGURE_OPTIONS variable with all the options that
+# were passed somehow (environment, command line, mozconfig)
+@depends(mozconfig_options)
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports('__sandbox__')
+def all_configure_options(_):
+    result = []
+    previous = None
+    for option in __sandbox__._options.itervalues():
+        # __sandbox__._options contains items for both option.name and
+        # option.env. But it's also an OrderedDict, meaning both are
+        # consecutive.
+        # Also ignore OLD_CONFIGURE and MOZCONFIG because they're not
+        # interesting.
+        if option == previous or option.env in ('OLD_CONFIGURE', 'MOZCONFIG'):
+            continue
+        previous = option
+        value = __sandbox__._value_for(option)
+        # We only want options that were explicitly given on the command
+        # line, the environment, or mozconfig, and that differ from the
+        # defaults.
+        if (value.origin not in ('default', 'implied') and
+                value != option.default):
+            result.append(__sandbox__._raw_options[option])
+        # We however always include options that are sent to old configure
+        # because we don't know their actual defaults. (Keep the conditions
+        # separate for ease of understanding and ease of removal)
+        elif (option.help == 'Help missing for old configure options' and
+                option in __sandbox__._raw_options):
+            result.append(__sandbox__._raw_options[option])
+
+    return quote(*result)
+
+set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
+
+
 # This is temporary until js/src/configure and configure are merged.
 # Use instead of option() in js/moz.configure and more generally, for
 # options that are shared between configure and js/src/configure.
