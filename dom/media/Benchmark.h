@@ -104,6 +104,8 @@ class VP9Benchmark
 public:
   static bool IsVP9DecodeFast();
   static const char* sBenchmarkFpsPref;
+  static const char* sBenchmarkFpsVersionCheck;
+  static const uint32_t sBenchmarkVersionID;
   static bool sHasRunTest;
 };
 }
