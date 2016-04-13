@@ -116,7 +116,7 @@ public final class INIParser extends INISection {
                 debug("Ignore line: " + line);
             } else if (line.charAt(0) == '[') {
                 debug("Parse as section: " + line);
-                currentSection = new INISection(line.substring(1, line.length()-1));
+                currentSection = new INISection(line.substring(1, line.length() - 1));
                 mSections.put(currentSection.getName(), currentSection);
             } else {
                 debug("Parse as property: " + line);
