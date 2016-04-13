@@ -1,4 +1,7 @@
-<!DOCTYPE HTML>
+<!--
+  Important: needs to be in quirks mode for the test to work.
+  If not in quirks mode, the down and up arrow don't position as expected.
+-->
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=756984
@@ -20,45 +23,119 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=756984
 <div id="div2"><font face="Arial">123</font><br><i>45678</i><br></div>
 <div id="div3"><font face="Courier"><i><strong>123</strong></i></font><br><i>45678</i><br></div>
 <div id="div4"><br>45678<br></div>
+<div id="div5" contenteditable=true spellcheck=false>1234567890<br>abc<br>defghijklmno<br>end</div>
+<div id="div6" contenteditable=true spellcheck=false><font face="Arial">1234567890</font><br><i>abc</i><br><font color="red">defghijklmno</font><br>end</div>
+<div id="div7" contenteditable=true spellcheck=false><font face="Courier"><i><strong>1234567890</strong></i></font><br><i>abc</i><br><font color="red"><b>defghijklmno</b></font><br>end</div>
 
 <pre id="test">
 
  <script type="application/javascript">
 
-    /** Test for Bug 756984 **/
-    /** We test that clicking beyond the end of a line terminated with <br> selects the preceding text, if any **/
+  /** Test for Bug 756984 **/
+  /*
+   * We test that clicking beyond the end of a line terminated with <br> selects the preceding text, if any.
+   * In a contenteditable div, we also test that getting to the end of a line via the "end" key or by using
+   * the left-arrow key from the beginning of the following line selects the text preceding the <br>.
+   */
 
-    SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 
-    SimpleTest.waitForFocus(function() {
+  SimpleTest.waitForFocus(function() {
 
     var sel = window.getSelection();
-    
-    for (i = 1; i <= 3; i++) {
-        // click beyond the first line (100px to the left and 2px down), expect text
-        var theDiv = document.getElementById("div" + i.toString());
-        theDiv.focus();
-        sel.collapse(theDiv, 0);
-        synthesizeMouse(theDiv, 100, 2, {});
-        var selRange = sel.getRangeAt(0);
-        is(selRange.endContainer.nodeName, "#text", "selection should be in text node");
-        is(selRange.endOffset, 3, "offset should be 3");
-      }
+    var i, theDiv, selRange;
 
-      // click beyond the first line (100px to the left and 2px down), expect DIV.
-      // This is the previous behaviour which hasn't changed since the line is empty.
-      // If the processing were wrong, the selection would end up in some other non-empty line.
-      theDiv = document.getElementById("div4");
+    for (i = 1; i <= 3; i++) {
+      // click beyond the first line (100px to the left and 2px down), expect text
+      theDiv = document.getElementById("div" + i.toString());
       theDiv.focus();
       sel.collapse(theDiv, 0);
       synthesizeMouse(theDiv, 100, 2, {});
       selRange = sel.getRangeAt(0);
-      is(selRange.endContainer.nodeName, "DIV", "selection should be in DIV");
-      is(selRange.endOffset, 0, "offset should be 0");
+      is(selRange.endContainer.nodeName, "#text", "selection should be in text node");
+      is(selRange.endOffset, 3, "offset should be 3");
+    }
 
-      SimpleTest.finish();
-    });
+    // click beyond the first line (100px to the left and 2px down), expect DIV.
+    // This is the previous behaviour which hasn't changed since the line is empty.
+    // If the processing were wrong, the selection would end up in some other non-empty line.
+    theDiv = document.getElementById("div4");
+    theDiv.focus();
+    sel.collapse(theDiv, 0);
+    synthesizeMouse(theDiv, 100, 2, {});
+    selRange = sel.getRangeAt(0);
+    is(selRange.endContainer.nodeName, "DIV", "selection should be in DIV");
+    is(selRange.endOffset, 0, "offset should be 0");
 
+    // Now we do a more complex test, this time with an editable div.
+    // We have four lines:
+    // 1234567890<br>
+    // abc<br>
+    // defghijklmno<br>  <!-- Note: 12 characters long. -->
+    // end
+
+    for (i = 5; i <= 7; i++) {
+      // We do these steps:
+      // 1) Click behind the first line, add "X".
+      theDiv = document.getElementById("div" + i.toString());
+      theDiv.focus();
+      var originalHTML = theDiv.innerHTML;
+      sel.collapse(theDiv, 0);
+      synthesizeMouse(theDiv, 100, 2, {});
+
+      selRange = sel.getRangeAt(0);
+      is(selRange.endContainer.nodeName, "#text", "selection should be in text node (1)");
+      is(selRange.endOffset, 10, "offset should be 10");
+      synthesizeKey("X", {});
+
+      // 2) Down arrow to the end of the second line, add "Y".
+      synthesizeKey("VK_DOWN", {});
+      selRange = sel.getRangeAt(0);
+      is(selRange.endContainer.nodeName, "#text", "selection should be in text node (2)");
+      is(selRange.endOffset, 3, "offset should be 3");
+      synthesizeKey("Y", {});
+
+      // 3) Right arrow and end key to the end of the third line, add "Z".
+      synthesizeKey("VK_RIGHT", {});
+      if (navigator.platform.indexOf("Win") == 0) {
+        synthesizeKey("VK_END", {});
+      } else {
+        // End key doesn't work as expected on Mac and Linux.
+        sel.modify("move", "right", "lineboundary");
+      }
+      selRange = sel.getRangeAt(0);
+      is(selRange.endContainer.nodeName, "#text", "selection should be in text node (3)");
+      is(selRange.endOffset, 12, "offset should be 12");
+      synthesizeKey("Z", {});
+
+      // 4) Up arrow to the end of the second line, add "T".
+      synthesizeKey("VK_UP", {});
+      selRange = sel.getRangeAt(0);
+      is(selRange.endContainer.nodeName, "#text", "selection should be in text node (4)");
+      is(selRange.endOffset, 4, "offset should be 4");
+      synthesizeKey("T", {});
+
+      // 5) Left arrow six times to the end of the first line, add "A".
+      synthesizeKey("VK_LEFT", {});
+      synthesizeKey("VK_LEFT", {});
+      synthesizeKey("VK_LEFT", {});
+      synthesizeKey("VK_LEFT", {});
+      synthesizeKey("VK_LEFT", {});
+      synthesizeKey("VK_LEFT", {});
+      selRange = sel.getRangeAt(0);
+      is(selRange.endContainer.nodeName, "#text", "selection should be in text node (5)");
+      is(selRange.endOffset, 11, "offset should be 11");
+      synthesizeKey("A", {});
+
+      // Check the resulting HTML. First prepare what we expect.
+      originalHTML = originalHTML.replace(/1234567890/, "1234567890XA");
+      originalHTML = originalHTML.replace(/abc/, "abcYT");
+      originalHTML = originalHTML.replace(/defghijklmno/, "defghijklmnoZ");
+      var newHTML = theDiv.innerHTML;
+      is(newHTML, originalHTML, "unexpected HTML");
+    }
+    SimpleTest.finish();
+  });
   </script>
 
 </pre>
