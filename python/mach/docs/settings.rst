@@ -5,7 +5,7 @@ Settings
 ========
 
 Mach can read settings in from a set of configuration files. These
-configuration files are either named ``mach.ini`` or ``.machrc`` and
+configuration files are either named ``machrc`` or ``.machrc`` and
 are specified by the bootstrap script. In mozilla-central, these files
 can live in ``~/.mozbuild`` and/or ``topsrcdir``.
 
@@ -31,7 +31,7 @@ Defining Settings
 =================
 
 Settings need to be explicitly defined, along with their type,
-otherwise mach will throw when loading the configuration files.
+otherwise mach will throw when trying to access them.
 
 To define settings, use the :func:`~decorators.SettingsProvider`
 decorator in an existing mach command module. E.g:
