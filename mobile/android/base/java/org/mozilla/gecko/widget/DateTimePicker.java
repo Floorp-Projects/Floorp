@@ -633,7 +633,7 @@ public class DateTimePicker extends FrameLayout {
     private void setHourShown(boolean shown) {
         if (shown) {
             mHourSpinner.setVisibility(VISIBLE);
-            mHourEnabled= true;
+            mHourEnabled = true;
         } else {
             mHourSpinner.setVisibility(GONE);
             mAMPMSpinner.setVisibility(GONE);
@@ -646,7 +646,7 @@ public class DateTimePicker extends FrameLayout {
         if (shown) {
             mMinuteSpinner.setVisibility(VISIBLE);
             mTimeSpinners.findViewById(R.id.mincolon).setVisibility(VISIBLE);
-            mMinuteEnabled= true;
+            mMinuteEnabled = true;
         } else {
             mMinuteSpinner.setVisibility(GONE);
             mTimeSpinners.findViewById(R.id.mincolon).setVisibility(GONE);
