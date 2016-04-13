@@ -182,7 +182,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
         int indexOfMatch = 0;
         int lastIndexOfMatch = 0;
-        while(indexOfMatch != -1) {
+        while (indexOfMatch != -1) {
             indexOfMatch = string.indexOf(pattern, lastIndexOfMatch);
             lastIndexOfMatch = indexOfMatch + patternLength;
             if (indexOfMatch != -1) {
