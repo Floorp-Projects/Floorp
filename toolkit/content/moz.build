@@ -6,7 +6,7 @@
 
 TEST_DIRS += ['tests']
 
-for var in ('target', 'ac_configure_args', 'CC', 'CC_VERSION',
+for var in ('target', 'MOZ_CONFIGURE_OPTIONS', 'CC', 'CC_VERSION',
             'CXX', 'CXX_VERSION'):
     DEFINES[var] = CONFIG[var]
 
