@@ -385,6 +385,15 @@ add_task(function* testEmeSupport() {
         Assert.ok(!item,
                   "Adobe EME not supported, couldn't find add-on element.");
       }
+    } else if (addon.id == GMPScope.WIDEVINE_ID) {
+      if ((Services.appinfo.OS == "WINNT" &&
+          Services.sysinfo.getPropertyAsInt32("version") >= 6) ||
+          Services.appinfo.OS == "Darwin") {
+        Assert.ok(item, "Widevine supported, found add-on element.");
+      } else {
+        Assert.ok(!item,
+                  "Widevine not supported, couldn't find add-on element.");
+      }
     } else {
       Assert.ok(item, "Found add-on element.");
     }
