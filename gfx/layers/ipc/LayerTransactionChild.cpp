@@ -37,16 +37,14 @@ LayerTransactionChild::Destroy()
   MOZ_ASSERT(0 == ManagedPLayerChild().Count(),
              "layers should have been cleaned up by now");
 
+  const ManagedContainer<PCompositableChild>& compositables = ManagedPCompositableChild();
+  for (auto iter = compositables.ConstIter(); !iter.Done(); iter.Next()) {
+    CompositableClient::ForceIPDLActorShutdown(iter.Get()->GetKey());
+  }
+
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    TextureClient* texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
-
-    if (texture) {
-      // TODO: cf bug 1242448.
-      //gfxDevCrash(gfx::LogReason::TextureAliveAfterShutdown)
-      //  << "A texture is held alive after shutdown (PCompositorBridge)";
-      texture->Destroy();
-    }
+    TextureClient::ForceIPDLActorShutdown(iter.Get()->GetKey());
   }
 
   SendShutdown();
@@ -78,7 +76,7 @@ LayerTransactionChild::AllocPCompositableChild(const TextureInfo& aInfo)
 bool
 LayerTransactionChild::DeallocPCompositableChild(PCompositableChild* actor)
 {
-  return CompositableClient::DestroyIPDLActor(actor);
+  return CompositableClient::DeallocIPDLActor(actor);
 }
 
 bool
@@ -142,7 +140,7 @@ LayerTransactionChild::AllocPTextureChild(const SurfaceDescriptor&,
 bool
 LayerTransactionChild::DeallocPTextureChild(PTextureChild* actor)
 {
-  return TextureClient::DestroyIPDLActor(actor);
+  return TextureClient::DeallocIPDLActor(actor);
 }
 
 } // namespace layers

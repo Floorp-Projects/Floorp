@@ -45,11 +45,14 @@ public:
     MOZ_COUNT_DTOR(CompositableChild);
   }
 
-  virtual void ActorDestroy(ActorDestroyReason) override {
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override {
     DestroyAsyncTransactionTrackersHolder();
-    if (mCompositableClient) {
-      mCompositableClient->mCompositableChild = nullptr;
-    }
+    ChildActor::ActorDestroy(aWhy);
+  }
+
+  static CompositableChild* Cast(PCompositableChild* aActor)
+  {
+    return static_cast<CompositableChild*>(aActor);
   }
 
   CompositableClient* mCompositableClient;
@@ -76,21 +79,21 @@ RemoveTextureFromCompositableTracker::ReleaseTextureClient()
 /* static */ void
 CompositableClient::TransactionCompleteted(PCompositableChild* aActor, uint64_t aTransactionId)
 {
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
+  CompositableChild* child = CompositableChild::Cast(aActor);
   child->TransactionCompleteted(aTransactionId);
 }
 
 /* static */ void
 CompositableClient::HoldUntilComplete(PCompositableChild* aActor, AsyncTransactionTracker* aTracker)
 {
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
+  CompositableChild* child = CompositableChild::Cast(aActor);
   child->HoldUntilComplete(aTracker);
 }
 
 /* static */ uint64_t
 CompositableClient::GetTrackersHolderId(PCompositableChild* aActor)
 {
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
+  CompositableChild* child = CompositableChild::Cast(aActor);
   return child->GetId();
 }
 
@@ -101,9 +104,15 @@ CompositableClient::CreateIPDLActor()
 }
 
 /* static */ bool
-CompositableClient::DestroyIPDLActor(PCompositableChild* actor)
+CompositableClient::DeallocIPDLActor(PCompositableChild* aActor)
 {
-  delete actor;
+  MOZ_ASSERT(aActor);
+
+  auto actor = CompositableChild::Cast(aActor);
+  if (actor->Released()) {
+    delete actor;
+  }
+
   return true;
 }
 
@@ -111,7 +120,7 @@ void
 CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
 {
   MOZ_ASSERT(aActor);
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
+  CompositableChild* child = CompositableChild::Cast(aActor);
   mCompositableChild = child;
   child->mCompositableClient = this;
   child->mAsyncID = aAsyncID;
@@ -121,7 +130,7 @@ CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
 CompositableClient::FromIPDLActor(PCompositableChild* aActor)
 {
   MOZ_ASSERT(aActor);
-  return static_cast<CompositableChild*>(aActor)->mCompositableClient;
+  return CompositableChild::Cast(aActor)->mCompositableClient;
 }
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
@@ -174,10 +183,36 @@ CompositableClient::IsConnected() const
   return mCompositableChild && mCompositableChild->CanSend();
 }
 
+// static
+void
+CompositableClient::ForceIPDLActorShutdown(PCompositableChild* aActor)
+{
+  if (!aActor) {
+    return;
+  }
+
+  auto actor = CompositableChild::Cast(aActor);
+  if (actor->CanSend()) {
+#ifdef DEBUG
+    // Making it an assertion would blow up too often during test runs so
+    // let's keep it a simple printf for now. This is happening during shutdown
+    // so we don't have to worry too much about printf being slow.
+    // More involved reporting like crashstats annotations would be too much noise
+    // at this point.
+    printf("!! A CompositableClient is destroyed late during shutdown !!\n");
+#endif
+
+    // Do not access the CompositableClient from here.
+    // Do not call Destroy() either because that's how we know whether the
+    // CompositableClient's destructor has run.
+    actor->ForceActorShutdown();
+  }
+}
+
 void
 CompositableClient::Destroy()
 {
-  if (!IsConnected()) {
+  if (!mCompositableChild) {
     return;
   }
 
@@ -186,14 +221,15 @@ CompositableClient::Destroy()
   mForwarder->SendPendingAsyncMessges();
 
   mCompositableChild->mCompositableClient = nullptr;
-  mCompositableChild->Destroy(mForwarder);
+  mCompositableChild->ReleaseActor(mForwarder);
   mCompositableChild = nullptr;
 }
 
 bool
 CompositableClient::DestroyFallback(PCompositableChild* aActor)
 {
-  return aActor->SendDestroySync();
+  CompositableChild::Cast(aActor)->ReleaseActorSynchronously();
+  return true;
 }
 
 uint64_t
