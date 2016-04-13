@@ -633,8 +633,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     // structures. It uses a HashMap instead of a WeakMap, so that we can keep
     // the data alive for the JSScript::finalize call. Thus, we do not trace the
     // keys of the HashMap to avoid adding a strong reference to the JSScript
-    // pointers. Additionally, we assert that the JSScripts have not been moved
-    // in JSCompartment::fixupAfterMovingGC.
+    // pointers.
     //
     // If the code coverage is either enabled with the --dump-bytecode command
     // line option, or with the PCCount JSFriend API functions, then we mark the
@@ -821,18 +820,7 @@ JSCompartment::fixupAfterMovingGC()
     fixupInitialShapeTable();
     objectGroups.fixupTablesAfterMovingGC();
     dtoaCache.purge();
-
-#ifdef DEBUG
-    // Assert that none of the JSScript pointers, which are used as key of the
-    // scriptCountsMap HashMap are moved. We do not mark these keys because we
-    // need weak references. We do not use a WeakMap because these entries would
-    // be collected before the JSScript::finalize calls which is used to
-    // summarized the content of the code coverage.
-    if (scriptCountsMap) {
-        for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront())
-            MOZ_ASSERT(!IsForwarded(r.front().key()));
-    }
-#endif
+    fixupScriptMapsAfterMovingGC();
 }
 
 void
@@ -842,6 +830,59 @@ JSCompartment::fixupGlobal()
     if (global)
         global_.set(MaybeForwarded(global));
 }
+
+void
+JSCompartment::fixupScriptMapsAfterMovingGC()
+{
+    // Map entries are removed by JSScript::finalize, but we need to update the
+    // script pointers here in case they are moved by the GC.
+
+    if (scriptCountsMap) {
+        for (ScriptCountsMap::Enum e(*scriptCountsMap); !e.empty(); e.popFront()) {
+            JSScript* script = e.front().key();
+            if (!IsAboutToBeFinalizedUnbarriered(&script) && script != e.front().key())
+                e.rekeyFront(script);
+        }
+    }
+
+    if (debugScriptMap) {
+        for (DebugScriptMap::Enum e(*debugScriptMap); !e.empty(); e.popFront()) {
+            JSScript* script = e.front().key();
+            if (!IsAboutToBeFinalizedUnbarriered(&script) && script != e.front().key())
+                e.rekeyFront(script);
+        }
+    }
+}
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+void
+JSCompartment::checkScriptMapsAfterMovingGC()
+{
+    if (scriptCountsMap) {
+        for (auto r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
+            JSScript* script = r.front().key();
+            CheckGCThingAfterMovingGC(script);
+            auto ptr = scriptCountsMap->lookup(script);
+            MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+        }
+    }
+
+    if (debugScriptMap) {
+        for (auto r = debugScriptMap->all(); !r.empty(); r.popFront()) {
+            JSScript* script = r.front().key();
+            CheckGCThingAfterMovingGC(script);
+            DebugScript* ds = r.front().value();
+            for (uint32_t i = 0; i < ds->numSites; i++) {
+                BreakpointSite* site = ds->breakpoints[i];
+                if (site)
+                    CheckGCThingAfterMovingGC(site->script);
+            }
+            auto ptr = debugScriptMap->lookup(script);
+            MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+        }
+    }
+}
+#endif
 
 void
 JSCompartment::purge()
