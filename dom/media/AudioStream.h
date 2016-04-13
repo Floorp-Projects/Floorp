@@ -333,8 +333,9 @@ private:
 
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
-  // Return true if downmixing succeeds otherwise false.
-  bool Downmix(Chunk* aChunk);
+  // Return true if audio frames are valid (correct sampling rate and valid
+  // channel count) otherwise false.
+  bool IsValidAudioFormat(Chunk* aChunk);
 
   void GetUnprocessed(AudioBufferWriter& aWriter);
   void GetTimeStretched(AudioBufferWriter& aWriter);
@@ -374,12 +375,8 @@ private:
 
   StreamState mState;
   bool mIsFirst;
-  // Get this value from the preference, if true, we would downmix the stereo.
-  bool mIsMonoAudioEnabled;
 
   DataSource& mDataSource;
-
-  UniquePtr<AudioConverter> mAudioConverter;
 };
 
 } // namespace mozilla
