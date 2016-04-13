@@ -4398,13 +4398,7 @@ CSS_PROP_SHORTHAND(
 // We have a few properties that are in style structs but are not stored
 // in style sheets (or nsCSS* structs).  Some fields in these property
 // definitions are bogus (e.g., they work for nsRuleData* offsets but
-// not nsCSS* offsets).  Callers that care about these bogus fields can
-// define CSS_PROP_STUB_NOT_CSS to define a replacement for these
-// entries.
-#ifdef CSS_PROP_STUB_NOT_CSS
-CSS_PROP_STUB_NOT_CSS
-CSS_PROP_STUB_NOT_CSS
-#else
+// not nsCSS* offsets).
 CSS_PROP_FONT(
     -x-lang,
     _x_lang,
@@ -4438,7 +4432,6 @@ CSS_PROP_FONT(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-#endif /* !defined(CSS_PROP_STUB_NOT_CSS) */
 #endif /* !defined(CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 #endif /* !defined(CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND) */
 
