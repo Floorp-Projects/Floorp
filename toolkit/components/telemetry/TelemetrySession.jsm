@@ -1307,23 +1307,26 @@ var Impl = {
   getSessionPayload: function getSessionPayload(reason, clearSubsession) {
     this._log.trace("getSessionPayload - reason: " + reason + ", clearSubsession: " + clearSubsession);
 
-    const isMobile = ["gonk", "android"].includes(AppConstants.platform);
-    const isSubsession = isMobile ? false : !this._isClassicReason(reason);
+    let payload;
+    try {
+      const isMobile = ["gonk", "android"].includes(AppConstants.platform);
+      const isSubsession = isMobile ? false : !this._isClassicReason(reason);
 
-    if (isMobile) {
-      clearSubsession = false;
-    }
+      if (isMobile) {
+        clearSubsession = false;
+      }
 
-    let measurements =
-      this.getSimpleMeasurements(reason == REASON_SAVED_SESSION, isSubsession, clearSubsession);
-    let info = !Utils.isContentProcess ? this.getMetadata(reason) : null;
-    let payload = this.assemblePayloadWithMeasurements(measurements, info, reason, clearSubsession);
-
-    if (!Utils.isContentProcess && clearSubsession) {
-      this.startNewSubsession();
-      // Persist session data to disk (don't wait until it completes).
-      let sessionData = this._getSessionDataObject();
-      TelemetryStorage.saveSessionData(sessionData);
+      let measurements =
+        this.getSimpleMeasurements(reason == REASON_SAVED_SESSION, isSubsession, clearSubsession);
+      let info = !Utils.isContentProcess ? this.getMetadata(reason) : null;
+      payload = this.assemblePayloadWithMeasurements(measurements, info, reason, clearSubsession);
+    } finally {
+      if (!Utils.isContentProcess && clearSubsession) {
+        this.startNewSubsession();
+        // Persist session data to disk (don't wait until it completes).
+        let sessionData = this._getSessionDataObject();
+        TelemetryStorage.saveSessionData(sessionData);
+      }
     }
 
     return payload;
