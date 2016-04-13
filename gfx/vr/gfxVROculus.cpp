@@ -314,11 +314,11 @@ HMDInfoOculus::HMDInfoOculus(ovrSession aSession)
     mDeviceInfo.mSupportedSensorBits |= VRStateValidFlags::State_Position;
   }
 
-  mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Left] = FromFovPort(mDesc.DefaultEyeFov[ovrEye_Left]);
-  mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Right] = FromFovPort(mDesc.DefaultEyeFov[ovrEye_Right]);
+  mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Left] = FromFovPort(mDesc.DefaultEyeFov[ovrEye_Left]);
+  mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Right] = FromFovPort(mDesc.DefaultEyeFov[ovrEye_Right]);
 
-  mDeviceInfo.mMaximumEyeFOV[VRDeviceInfo::Eye_Left] = FromFovPort(mDesc.MaxEyeFov[ovrEye_Left]);
-  mDeviceInfo.mMaximumEyeFOV[VRDeviceInfo::Eye_Right] = FromFovPort(mDesc.MaxEyeFov[ovrEye_Right]);
+  mDeviceInfo.mMaximumEyeFOV[VRDisplayInfo::Eye_Left] = FromFovPort(mDesc.MaxEyeFov[ovrEye_Left]);
+  mDeviceInfo.mMaximumEyeFOV[VRDisplayInfo::Eye_Right] = FromFovPort(mDesc.MaxEyeFov[ovrEye_Right]);
 
   uint32_t w = mDesc.Resolution.w;
   uint32_t h = mDesc.Resolution.h;
@@ -328,7 +328,7 @@ HMDInfoOculus::HMDInfoOculus(ovrSession aSession)
   mDeviceInfo.mScreenRect.height = std::min(w, h);
   mDeviceInfo.mIsFakeScreen = true;
 
-  SetFOV(mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Left], mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Right], 0.01, 10000.0);
+  SetFOV(mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Left], mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Right], 0.01, 10000.0);
 
   for (int i = 0; i < kMaxLatencyFrames; i++) {
     mLastSensorState[i].Clear();
@@ -352,7 +352,7 @@ HMDInfoOculus::SetFOV(const gfx::VRFieldOfView& aFOVLeft, const gfx::VRFieldOfVi
   ovrSizei texSize[2];
 
   // get eye parameters and create the mesh
-  for (uint32_t eye = 0; eye < VRDeviceInfo::NumEyes; eye++) {
+  for (uint32_t eye = 0; eye < VRDisplayInfo::NumEyes; eye++) {
     mDeviceInfo.mEyeFOV[eye] = eye == 0 ? aFOVLeft : aFOVRight;
     mFOVPort[eye] = ToFovPort(mDeviceInfo.mEyeFOV[eye]);
 
@@ -368,8 +368,8 @@ HMDInfoOculus::SetFOV(const gfx::VRFieldOfView& aFOVLeft, const gfx::VRFieldOfVi
   }
 
   // take the max of both for eye resolution
-  mDeviceInfo.mEyeResolution.width = std::max(texSize[VRDeviceInfo::Eye_Left].w, texSize[VRDeviceInfo::Eye_Right].w);
-  mDeviceInfo.mEyeResolution.height = std::max(texSize[VRDeviceInfo::Eye_Left].h, texSize[VRDeviceInfo::Eye_Right].h);
+  mDeviceInfo.mEyeResolution.width = std::max(texSize[VRDisplayInfo::Eye_Left].w, texSize[VRDisplayInfo::Eye_Right].w);
+  mDeviceInfo.mEyeResolution.height = std::max(texSize[VRDisplayInfo::Eye_Left].h, texSize[VRDisplayInfo::Eye_Right].h);
 
   mConfiguration.hmdType = mDeviceInfo.mType;
   mConfiguration.value = 0;

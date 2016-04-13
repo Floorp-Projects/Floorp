@@ -30,7 +30,7 @@ public:
   void RemoveVRManagerParent(VRManagerParent* aVRManagerParent);
 
   void NotifyVsync(const TimeStamp& aVsyncTimestamp);
-  void RefreshVRDevices();
+  void RefreshVRDisplays();
   RefPtr<gfx::VRHMDInfo> GetDevice(const uint32_t& aDeviceID);
 
 protected:
@@ -42,8 +42,8 @@ private:
   void Init();
   void Destroy();
 
-  void DispatchVRDeviceInfoUpdate();
-  void DispatchVRDeviceSensorUpdate();
+  void DispatchVRDisplayInfoUpdate();
+  void DispatchVRDisplaySensorUpdate();
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
@@ -52,7 +52,7 @@ private:
   VRHMDManagerArray mManagers;
 
   typedef nsRefPtrHashtable<nsUint32HashKey, gfx::VRHMDInfo> VRHMDInfoHashMap;
-  VRHMDInfoHashMap mVRDevices;
+  VRHMDInfoHashMap mVRDisplays;
 
   Atomic<bool> mInitialized;
 

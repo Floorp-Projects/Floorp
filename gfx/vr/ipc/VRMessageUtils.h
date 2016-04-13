@@ -27,9 +27,9 @@ struct ParamTraits<mozilla::gfx::VRStateValidFlags> :
                                 mozilla::gfx::VRStateValidFlags::State_All> {};
 
 template <>
-struct ParamTraits<mozilla::gfx::VRDeviceUpdate>
+struct ParamTraits<mozilla::gfx::VRDisplayUpdate>
 {
-  typedef mozilla::gfx::VRDeviceUpdate paramType;
+  typedef mozilla::gfx::VRDisplayUpdate paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -69,9 +69,9 @@ struct ParamTraits<mozilla::gfx::VRSensorUpdate>
 };
 
 template <>
-struct ParamTraits<mozilla::gfx::VRDeviceInfo>
+struct ParamTraits<mozilla::gfx::VRDisplayInfo>
 {
-  typedef mozilla::gfx::VRDeviceInfo paramType;
+  typedef mozilla::gfx::VRDisplayInfo paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -82,7 +82,7 @@ struct ParamTraits<mozilla::gfx::VRDeviceInfo>
     WriteParam(aMsg, aParam.mEyeResolution);
     WriteParam(aMsg, aParam.mScreenRect);
     WriteParam(aMsg, aParam.mIsFakeScreen);
-    for (int i = 0; i < mozilla::gfx::VRDeviceInfo::NumEyes; i++) {
+    for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
       WriteParam(aMsg, aParam.mMaximumEyeFOV[i]);
       WriteParam(aMsg, aParam.mRecommendedEyeFOV[i]);
       WriteParam(aMsg, aParam.mEyeFOV[i]);
@@ -102,7 +102,7 @@ struct ParamTraits<mozilla::gfx::VRDeviceInfo>
         !ReadParam(aMsg, aIter, &(aResult->mIsFakeScreen))) {
       return false;
     }
-    for (int i = 0; i < mozilla::gfx::VRDeviceInfo::NumEyes; i++) {
+    for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
       if (!ReadParam(aMsg, aIter, &(aResult->mMaximumEyeFOV[i])) ||
           !ReadParam(aMsg, aIter, &(aResult->mRecommendedEyeFOV[i])) ||
           !ReadParam(aMsg, aIter, &(aResult->mEyeFOV[i])) ||
