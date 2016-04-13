@@ -421,6 +421,44 @@
       }
     }
 
+    /**
+     * Remove a child, remove a parent sibling, remove the parent
+     */
+    function test5()
+    {
+      this.o = getAccessible("t5_o");
+      this.ofc = this.o.firstChild;
+      this.b = getAccessible("t5_b");
+      this.lb = getAccessible("t5_lb");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.o),
+        new invokerChecker(EVENT_HIDE, this.b),
+        new invokerChecker(EVENT_REORDER, "t5"),
+        new unexpectedInvokerChecker(EVENT_HIDE, this.ofc),
+        new unexpectedInvokerChecker(EVENT_REORDER, this.o),
+        new unexpectedInvokerChecker(EVENT_REORDER, this.lb)
+      ];
+
+      this.invoke = function test5_invoke()
+      {
+        getNode("t5_o").textContent = "";
+        getNode("t5").removeChild(getNode("t5_b"));
+        getNode("t5_lb").removeChild(getNode("t5_o"));
+      }
+
+      this.finalCheck = function test5_finalCheck()
+      {
+        testIsDefunct(this.ofc);
+        testIsDefunct(this.o);
+        testIsDefunct(this.b);
+      }
+
+      this.getID = function test5_getID() {
+        return "remove a child, remove a parent sibling, remove the parent";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
@@ -451,6 +489,7 @@
       gQueue.push(new removeGrandChildrenNHideParent("t1_child1", "t1_child2", "t1_parent"));
       gQueue.push(new test3());
       gQueue.push(new test4());
+      gQueue.push(new test5());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -532,6 +571,13 @@
     <div role="listbox" id="t4_lb">
       <div role="option" id="t4_o1">opt1</div>
       <div role="option" id="t4_o2">opt2</div>
+    </div>
+  </div>
+
+  <div id="t5">
+    <div role="button" id="t5_b">btn</div>
+    <div role="listbox" id="t5_lb">
+      <div role="option" id="t5_o">opt</div>
     </div>
   </div>
 </body>
