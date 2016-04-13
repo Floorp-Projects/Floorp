@@ -142,7 +142,6 @@ const LEVELS = {
   warn: SEVERITY_WARNING,
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
-  clear: SEVERITY_LOG,
   trace: SEVERITY_LOG,
   table: SEVERITY_LOG,
   debug: SEVERITY_LOG,
@@ -1286,11 +1285,6 @@ WebConsoleFrame.prototype = {
         node = msg.init(this.output).render().element;
         break;
       }
-      case "clear": {
-        body = l10n.getStr("consoleCleared");
-        clipboardText = body;
-        break;
-      }
       case "dir": {
         body = { arguments: args };
         let clipboardArray = [];
@@ -2208,14 +2202,6 @@ WebConsoleFrame.prototype = {
     let isFiltered = this.filterMessageNode(node);
 
     let isRepeated = this._filterRepeatedMessage(node);
-
-    // If a clear message is processed while the webconsole is opened, the UI
-    // should be cleared.
-    if (message && message.level == "clear") {
-      // Do not clear the consoleStorage here as it has been cleared already
-      // by the clear method, only clear the UI.
-      this.jsterm.clearOutput(false);
-    }
 
     let visible = !isRepeated && !isFiltered;
     if (!isRepeated) {
