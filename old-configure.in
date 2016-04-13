@@ -7332,8 +7332,6 @@ fi
 
 AC_SUBST(MOZILLA_VERSION)
 
-AC_SUBST(ac_configure_args)
-
 dnl Spit out some output
 dnl ========================================================
 
