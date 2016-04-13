@@ -1,10 +1,5 @@
 function run_test()
 {
-  if (!("@mozilla.org/toolkit/crash-reporter;1" in Components.classes)) {
-    dump("INFO | test_crashreporter.js | Can't test crashreporter in a non-libxul build.\n");
-    return;
-  }
-
   var is_win7_or_newer = false;
   var is_windows = false;
   var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]
