@@ -267,12 +267,18 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     InfallibleTArray<PCompositableChild*> compositables;
     sImageBridgeChildSingleton->ManagedPCompositableChild(compositables);
     for (int i = compositables.Length() - 1; i >= 0; --i) {
-      CompositableClient::ForceIPDLActorShutdown(compositables[i], "ImageBridge");
+      auto compositable = CompositableClient::FromIPDLActor(compositables[i]);
+      if (compositable) {
+        compositable->Destroy();
+      }
     }
     InfallibleTArray<PTextureChild*> textures;
     sImageBridgeChildSingleton->ManagedPTextureChild(textures);
     for (int i = textures.Length() - 1; i >= 0; --i) {
-      TextureClient::ForceIPDLActorShutdown(textures[i], "ImageBridge");
+      RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
+      if (client) {
+        client->Destroy();
+      }
     }
     sImageBridgeChildSingleton->FallbackDestroyActors();
 
@@ -391,7 +397,7 @@ ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo,
 bool
 ImageBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
 {
-  return CompositableClient::DeallocIPDLActor(aActor);
+  return CompositableClient::DestroyIPDLActor(aActor);
 }
 
 
@@ -467,6 +473,7 @@ void ImageBridgeChild::DispatchReleaseImageClient(ImageClient* aClient,
       // However, if we take this branch it means that the ImageBridgeChild
       // has already shut down, along with the CompositableChild, which means no
       // message will be sent and it is safe to run this code from any thread.
+      MOZ_ASSERT(aClient->GetIPDLActor() == nullptr);
       aClient->Release();
     }
     delete aChild;
@@ -497,6 +504,7 @@ void ImageBridgeChild::DispatchReleaseCanvasClient(CanvasClient* aClient)
     // However, if we take this branch it means that the ImageBridgeChild
     // has already shut down, along with the CompositableChild, which means no
     // message will be sent and it is safe to run this code from any thread.
+    MOZ_ASSERT(aClient->GetIPDLActor() == nullptr);
     aClient->Release();
     return;
   }
@@ -525,6 +533,7 @@ void ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
     // However, if we take this branch it means that the ImageBridgeChild
     // has already shut down, along with the TextureChild, which means no
     // message will be sent and it is safe to run this code from any thread.
+    MOZ_ASSERT(aClient->GetIPDLActor() == nullptr);
     RELEASE_MANUALLY(aClient);
     return;
   }
@@ -1092,7 +1101,7 @@ ImageBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
 bool
 ImageBridgeChild::DeallocPTextureChild(PTextureChild* actor)
 {
-  return TextureClient::DeallocIPDLActor(actor);
+  return TextureClient::DestroyIPDLActor(actor);
 }
 
 PMediaSystemResourceManagerChild*
