@@ -149,7 +149,7 @@ public class DateTimePicker extends FrameLayout {
                     mTempDate.set(Calendar.DAY_OF_MONTH, newVal);
                 } else if (picker == mMonthSpinner && mMonthEnabled){
                     mTempDate.set(Calendar.MONTH, newVal);
-                    if (mTempDate.get(Calendar.MONTH) == newVal+1){
+                    if (mTempDate.get(Calendar.MONTH) == newVal + 1){
                         mTempDate.set(Calendar.MONTH, newVal);
                         mTempDate.set(Calendar.DAY_OF_MONTH,
                         mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));

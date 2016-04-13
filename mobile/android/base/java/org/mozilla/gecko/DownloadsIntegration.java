@@ -142,7 +142,7 @@ public class DownloadsIntegration implements NativeEventListener
         if (TextUtils.isEmpty(mimeType)) {
             final int extPosition = aFile.lastIndexOf(".");
             if (extPosition > 0 && extPosition < aFile.length() - 1) {
-                mimeType = GeckoAppShell.getMimeTypeFromExtension(aFile.substring(extPosition+1));
+                mimeType = GeckoAppShell.getMimeTypeFromExtension(aFile.substring(extPosition + 1));
             }
         }
 

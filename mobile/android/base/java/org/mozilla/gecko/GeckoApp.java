@@ -936,7 +936,7 @@ public abstract class GeckoApp
         try {
             if (isDataURI) {
                 int dataStart = aSrc.indexOf(",");
-                byte[] buf = Base64.decode(aSrc.substring(dataStart+1), Base64.DEFAULT);
+                byte[] buf = Base64.decode(aSrc.substring(dataStart + 1), Base64.DEFAULT);
                 image = BitmapUtils.decodeByteArray(buf);
             } else {
                 int byteRead;
