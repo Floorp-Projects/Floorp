@@ -173,7 +173,7 @@ public class FaviconView extends ImageView {
     private void scaleBitmap() {
         // If the Favicon can be resized to fill the view exactly without an enlargment of more than
         // a factor of two, do so.
-        int doubledSize = mIconBitmap.getWidth()*2;
+        int doubledSize = mIconBitmap.getWidth() * 2;
         if (mActualWidth > doubledSize) {
             // If the view is more than twice the size of the image, just double the image size
             // and do the rest with padding.
