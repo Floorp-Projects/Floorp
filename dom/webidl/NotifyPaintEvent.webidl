@@ -13,4 +13,6 @@ interface NotifyPaintEvent : Event
   readonly attribute DOMRect boundingClientRect;
 
   readonly attribute PaintRequestList paintRequests;
+
+  readonly attribute unsigned long long transactionId;
 };

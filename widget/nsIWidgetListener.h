@@ -146,7 +146,8 @@ public:
    */
   virtual void DidPaintWindow();
 
-  virtual void DidCompositeWindow(const mozilla::TimeStamp& aCompositeStart,
+  virtual void DidCompositeWindow(uint64_t aTransactionId,
+                                  const mozilla::TimeStamp& aCompositeStart,
                                   const mozilla::TimeStamp& aCompositeEnd);
 
   /**
