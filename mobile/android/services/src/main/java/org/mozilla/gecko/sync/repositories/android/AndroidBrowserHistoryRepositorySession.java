@@ -6,35 +6,30 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import java.util.ArrayList;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
+import android.content.ContentProviderClient;
 import android.content.Context;
 import android.database.Cursor;
+import android.os.RemoteException;
 
 public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserRepositorySession {
   public static final String LOG_TAG = "ABHistoryRepoSess";
-
-  public static final String KEY_DATE = "date";
-  public static final String KEY_TYPE = "type";
-  public static final long DEFAULT_VISIT_TYPE = 1;
 
   /**
    * The number of records to queue for insertion before writing to databases.
    */
   public static final int INSERT_RECORD_THRESHOLD = 50;
+  public static final int RECENT_VISITS_LIMIT = 20;
 
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
     super(repository);
@@ -86,72 +81,32 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     return addVisitsToRecord(record);
   }
 
-  @SuppressWarnings("unchecked")
-  private void addVisit(JSONArray visits, long date, long visitType) {
-    JSONObject visit = new JSONObject();
-    visit.put(KEY_DATE, date);               // Microseconds since epoch.
-    visit.put(KEY_TYPE, visitType);
-    visits.add(visit);
-  }
-
-  private void addVisit(JSONArray visits, long date) {
-    addVisit(visits, date, DEFAULT_VISIT_TYPE);
-  }
-
-  private AndroidBrowserHistoryDataExtender getDataExtender() {
-    return ((AndroidBrowserHistoryDataAccessor) dbHelper).getHistoryDataExtender();
-  }
-
   private Record addVisitsToRecord(Record record) throws NullCursorException {
     Logger.debug(LOG_TAG, "Adding visits for GUID " + record.guid);
-    HistoryRecord hist = (HistoryRecord) record;
-    JSONArray visitsArray = getDataExtender().visitsForGUID(hist.guid);
-    long missingRecords = hist.fennecVisitCount - visitsArray.size();
 
-    // Note that Fennec visit times are milliseconds, and we are working
-    // in microseconds. This is the point at which we translate.
-
-    // Add (missingRecords - 1) fake visits...
-    if (missingRecords > 0) {
-      long fakes = missingRecords - 1;
-      for (int j = 0; j < fakes; j++) {
-        // Set fake visit timestamp to be just previous to
-        // the real one we are about to add.
-        // TODO: make these equidistant?
-        long fakeDate = (hist.fennecDateVisited - (1 + j)) * 1000;
-        addVisit(visitsArray, fakeDate);
-      }
-
-      // ... and the 1 actual record we have.
-      // We still have to fake the visit type: Fennec doesn't track that.
-      addVisit(visitsArray, hist.fennecDateVisited * 1000);
+    // Sync is an object store, so what we attach here will replace what's already present on the Sync servers.
+    // We upload just a recent subset of visits for each history record for space and bandwidth reasons.
+    // We chose 20 to be conservative.  See Bug 1164660 for details.
+    ContentProviderClient visitsClient = dbHelper.context.getContentResolver().acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
+    if (visitsClient == null) {
+      throw new IllegalStateException("Could not obtain a ContentProviderClient for Visits URI");
     }
 
-    hist.visits = visitsArray;
-    return hist;
+    try {
+      ((HistoryRecord) record).visits = VisitsHelper.getRecentHistoryVisitsForGUID(
+              visitsClient, record.guid, RECENT_VISITS_LIMIT);
+    } catch (RemoteException e) {
+      throw new IllegalStateException("Error while obtaining visits for a record", e);
+    } finally {
+      visitsClient.release();
+    }
+
+    return record;
   }
 
   @Override
   protected Record prepareRecord(Record record) {
     return record;
-  }
-
-  @Override
-  public void abort() {
-    if (dbHelper != null) {
-      ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
-      dbHelper = null;
-    }
-    super.abort();
-  }
-
-  @Override
-  public void finish(final RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
-    if (dbHelper != null) {
-      ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
-      dbHelper = null;
-    }
-    super.finish(delegate);
   }
 
   protected final Object recordsBufferMonitor = new Object();

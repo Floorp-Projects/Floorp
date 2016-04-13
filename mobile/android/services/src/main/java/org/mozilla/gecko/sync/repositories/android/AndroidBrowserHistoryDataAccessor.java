@@ -5,8 +5,6 @@
 package org.mozilla.gecko.sync.repositories.android;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -23,15 +21,8 @@ import android.net.Uri;
 public class AndroidBrowserHistoryDataAccessor extends
     AndroidBrowserRepositoryDataAccessor {
 
-  private final AndroidBrowserHistoryDataExtender dataExtender;
-
   public AndroidBrowserHistoryDataAccessor(Context context) {
     super(context);
-    dataExtender = new AndroidBrowserHistoryDataExtender(context);
-  }
-
-  public AndroidBrowserHistoryDataExtender getHistoryDataExtender() {
-    return dataExtender;
   }
 
   @Override
@@ -51,13 +42,13 @@ public class AndroidBrowserHistoryDataAccessor extends
       long mostRecent = 0;
       for (int i = 0; i < visits.size(); i++) {
         JSONObject visit = (JSONObject) visits.get(i);
-        long visitDate = (Long) visit
-            .get(AndroidBrowserHistoryRepositorySession.KEY_DATE);
+        long visitDate = (Long) visit.get(VisitsHelper.SYNC_DATE_KEY);
         if (visitDate > mostRecent) {
           mostRecent = visitDate;
         }
       }
-      // Fennec stores milliseconds. The rest of Sync works in microseconds.
+      // Fennec stores history timestamps in milliseconds, and visit timestamps in microseconds.
+      // The rest of Sync works in microseconds. This is the conversion point for records coming form Sync.
       cv.put(BrowserContract.History.DATE_LAST_VISITED, mostRecent / 1000);
       cv.put(BrowserContract.History.VISITS, Long.toString(visits.size()));
     }
@@ -72,42 +63,50 @@ public class AndroidBrowserHistoryDataAccessor extends
   @Override
   public Uri insert(Record record) {
     HistoryRecord rec = (HistoryRecord) record;
-    Logger.debug(LOG_TAG, "Storing visits for " + record.guid);
-    dataExtender.store(record.guid, rec.visits);
+
     Logger.debug(LOG_TAG, "Storing record " + record.guid);
-    return super.insert(record);
+    Uri newRecordUri = super.insert(record);
+
+    Logger.debug(LOG_TAG, "Storing visits for " + record.guid);
+    context.getContentResolver().bulkInsert(
+            BrowserContract.Visits.CONTENT_URI,
+            VisitsHelper.getVisitsContentValues(rec.guid, rec.visits)
+    );
+
+    return newRecordUri;
   }
 
+  /**
+   * Given oldGUID, first updates corresponding history record with new values (super operation),
+   * and then inserts visits from the new record.
+   * Existing visits from the old record are updated on database level to point to new GUID if necessary.
+   *
+   * @param oldGUID GUID of old <code>HistoryRecord</code>
+   * @param newRecord new <code>HistoryRecord</code> to replace old one with, and insert visits from
+   */
   @Override
   public void update(String oldGUID, Record newRecord) {
+    // First, update existing history records with new values. This might involve changing history GUID,
+    // and thanks to ON UPDATE CASCADE clause on Visits.HISTORY_GUID foreign key, visits will be "ported over"
+    // to the new GUID.
+    super.update(oldGUID, newRecord);
+
+    // Now we need to insert any visits from the new record
     HistoryRecord rec = (HistoryRecord) newRecord;
     String newGUID = newRecord.guid;
     Logger.debug(LOG_TAG, "Storing visits for " + newGUID + ", replacing " + oldGUID);
-    dataExtender.delete(oldGUID);
-    dataExtender.store(newGUID, rec.visits);
-    super.update(oldGUID, newRecord);
-  }
 
-  @Override
-  public int purgeGuid(String guid) {
-    Logger.debug(LOG_TAG, "Purging record with " + guid);
-    dataExtender.delete(guid);
-    return super.purgeGuid(guid);
+    context.getContentResolver().bulkInsert(
+            BrowserContract.Visits.CONTENT_URI,
+            VisitsHelper.getVisitsContentValues(newGUID, rec.visits)
+    );
   }
-
-  public void closeExtender() {
-    dataExtender.close();
-  }
-
-  public static String[] GUID_AND_ID = new String[] { BrowserContract.History.GUID, BrowserContract.History._ID };
 
   /**
    * Insert records.
    * <p>
    * This inserts all the records (using <code>ContentProvider.bulkInsert</code>),
-   * then inserts all the visit information (using the data extender's
-   * <code>bulkInsert</code>, which internally uses a single database
-   * transaction).
+   * then inserts all the visit information (also using <code>ContentProvider.bulkInsert</code>).
    *
    * @param records
    *          the records to insert.
@@ -140,8 +139,17 @@ public class AndroidBrowserHistoryDataAccessor extends
                    inserted + " records but expected " +
                    size     + " records; continuing to update visits.");
     }
-    // Then update the history visits.
-    dataExtender.bulkInsert(records);
+
+    for (Record record : records) {
+      HistoryRecord rec = (HistoryRecord) record;
+      if (rec.visits != null && rec.visits.size() != 0) {
+        context.getContentResolver().bulkInsert(
+                BrowserContract.Visits.CONTENT_URI,
+                VisitsHelper.getVisitsContentValues(rec.guid, rec.visits)
+        );
+      }
+    }
+
     return inserted;
   }
 }
