@@ -18,14 +18,6 @@ import android.view.ViewConfiguration;
 public final class HardwareUtils {
     private static final String LOGTAG = "GeckoHardwareUtils";
 
-    // Minimum memory threshold for a device to be considered
-    // a low memory platform (see isLowMemoryPlatform). This value
-    // has be in sync with Gecko's equivalent threshold (defined in
-    // xpcom/base/nsMemoryImpl.cpp) and should only be used in cases
-    // where we can't depend on Gecko to be up and running e.g. show/hide
-    // reading list capabilities in HomePager.
-    private static final int LOW_MEMORY_THRESHOLD_MB = 384;
-
     private static final boolean IS_AMAZON_DEVICE = Build.MANUFACTURER.equalsIgnoreCase("Amazon");
     public static final boolean IS_KINDLE_DEVICE = IS_AMAZON_DEVICE &&
                                                    (Build.MODEL.equals("Kindle Fire") ||
@@ -84,19 +76,6 @@ public final class HardwareUtils {
 
     public static int getMemSize() {
         return SysInfo.getMemSize();
-    }
-
-    public static boolean isLowMemoryPlatform() {
-        final int memSize = getMemSize();
-
-        // Fallback to false if we fail to read meminfo
-        // for some reason.
-        if (memSize == 0) {
-            Log.w(LOGTAG, "Could not compute system memory. Falling back to isLowMemoryPlatform = false.");
-            return false;
-        }
-
-        return memSize < LOW_MEMORY_THRESHOLD_MB;
     }
 
     /**
