@@ -946,7 +946,7 @@ public class ContactService implements GeckoEventListener {
         }
 
         String returnStatus = "KO";
-        if(deleteContact(rawContactId)) {
+        if (deleteContact(rawContactId)) {
             returnStatus = "OK";
         }
 

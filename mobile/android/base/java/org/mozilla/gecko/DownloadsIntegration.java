@@ -223,7 +223,7 @@ public class DownloadsIntegration implements NativeEventListener
 
         @Override
         public void onScanCompleted(String path, Uri uri) {
-            if(path.equals(mFile)) {
+            if (path.equals(mFile)) {
                 mScanner.disconnect();
                 mScanner = null;
             }
