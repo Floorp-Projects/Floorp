@@ -451,7 +451,7 @@ public class FaviconCache {
      * @return true if this element already existed in the list, false otherwise. (Useful for preventing multiple-insertion.)
      */
     private boolean setMostRecentlyUsedWithinRead(FaviconCacheElement element) {
-        synchronized(reorderingLock) {
+        synchronized (reorderingLock) {
             boolean contained = ordering.remove(element);
             ordering.offer(element);
             return contained;
