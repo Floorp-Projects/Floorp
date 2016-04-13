@@ -74,7 +74,7 @@ nsDOMTokenList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult)
 }
 
 void
-nsDOMTokenList::SetValue(const nsAString& aValue, mozilla::ErrorResult& rv)
+nsDOMTokenList::SetValue(const nsAString& aValue, ErrorResult& rv)
 {
   if (!mElement) {
     return;
@@ -182,7 +182,7 @@ nsDOMTokenList::Add(const nsTArray<nsString>& aTokens, ErrorResult& aError)
 }
 
 void
-nsDOMTokenList::Add(const nsAString& aToken, mozilla::ErrorResult& aError)
+nsDOMTokenList::Add(const nsAString& aToken, ErrorResult& aError)
 {
   AutoTArray<nsString, 1> tokens;
   tokens.AppendElement(aToken);
@@ -268,7 +268,7 @@ nsDOMTokenList::Remove(const nsTArray<nsString>& aTokens, ErrorResult& aError)
 }
 
 void
-nsDOMTokenList::Remove(const nsAString& aToken, mozilla::ErrorResult& aError)
+nsDOMTokenList::Remove(const nsAString& aToken, ErrorResult& aError)
 {
   AutoTArray<nsString, 1> tokens;
   tokens.AppendElement(aToken);
@@ -306,6 +306,43 @@ nsDOMTokenList::Toggle(const nsAString& aToken,
   }
 
   return isPresent;
+}
+
+void
+nsDOMTokenList::Replace(const nsAString& aToken,
+                        const nsAString& aNewToken,
+                        ErrorResult& aError)
+{
+  // Doing this here instead of using `CheckToken` because if aToken had invalid
+  // characters, and aNewToken is empty, the returned error should be a
+  // SyntaxError, not an InvalidCharacterError.
+  if (aNewToken.IsEmpty()) {
+    aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
+  }
+
+  aError = CheckToken(aToken);
+  if (aError.Failed()) {
+    return;
+  }
+
+  aError = CheckToken(aNewToken);
+  if (aError.Failed()) {
+    return;
+  }
+
+  const nsAttrValue* attr = GetParsedAttr();
+  if (!attr || !attr->Contains(aToken)) {
+    return;
+  }
+
+  AutoTArray<nsString, 1> tokens;
+
+  tokens.AppendElement(aToken);
+  RemoveInternal(attr, tokens);
+
+  tokens[0] = aNewToken;
+  AddInternal(attr, tokens);
 }
 
 void
