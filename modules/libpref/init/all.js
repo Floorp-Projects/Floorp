@@ -2029,7 +2029,6 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 pref("security.csp.enable", true);
-pref("security.csp.debug", false);
 pref("security.csp.experimentalEnabled", false);
 
 // Default Content Security Policy to apply to privileged apps.
