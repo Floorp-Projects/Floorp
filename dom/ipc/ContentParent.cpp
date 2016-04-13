@@ -5721,6 +5721,8 @@ ContentParent::RecvNotifyBenchmarkResult(const nsString& aCodecName,
 {
   if (aCodecName.EqualsLiteral("VP9")) {
     Preferences::SetUint(VP9Benchmark::sBenchmarkFpsPref, aDecodeFPS);
+    Preferences::SetUint(VP9Benchmark::sBenchmarkFpsVersionCheck,
+                         VP9Benchmark::sBenchmarkVersionID);
   }
   return true;
 }
