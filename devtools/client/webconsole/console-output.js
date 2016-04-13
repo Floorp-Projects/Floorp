@@ -93,7 +93,6 @@ const CONSOLE_API_LEVELS_TO_SEVERITIES = {
   warn: "warning",
   info: "info",
   log: "log",
-  clear: "log",
   trace: "log",
   table: "log",
   debug: "log",
