@@ -172,8 +172,9 @@ public:
   // to be before any line which does contain 'y'.
   nsLineBox* GetFirstLineContaining(nscoord y);
   // Set the line cursor to our first line. Only call this if you
-  // guarantee that the lines' combinedArea.ys and combinedArea.yMosts
-  // are non-decreasing.
+  // guarantee that either the lines' combinedArea.ys and combinedArea.
+  // yMosts are non-decreasing, or the line cursor is cleared before
+  // building the display list of this frame.
   void SetupLineCursor();
 
   virtual void ChildIsDirty(nsIFrame* aChild) override;
