@@ -4265,38 +4265,53 @@ nsFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ void
-nsFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
-                           nsIFrame::InlineMinISizeData *aData)
+nsFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
+                           nsIFrame::InlineMinISizeData* aData)
 {
-  NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
-  nsIFrame* parent = GetParent();
-  bool canBreak = !CanContinueTextRun() &&
-    !parent->StyleContext()->ShouldSuppressLineBreak() &&
-    parent->StyleText()->WhiteSpaceCanWrap(parent);
-
-  if (canBreak) {
-    aData->OptionallyBreak();
-  }
-  aData->trailingWhitespace = 0;
-  aData->skipWhitespace = false;
-  aData->trailingTextFrame = nullptr;
-  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                            this, nsLayoutUtils::MIN_ISIZE);
-  aData->atStartOfLine = false;
-  if (canBreak) {
-    aData->OptionallyBreak();
-  }
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::MIN_ISIZE);
+  aData->DefaultAddInlineMinISize(this, isize);
 }
 
 /* virtual */ void
-nsFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
-                            nsIFrame::InlinePrefISizeData *aData)
+nsFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
+                            nsIFrame::InlinePrefISizeData* aData)
 {
-  aData->trailingWhitespace = 0;
-  aData->skipWhitespace = false;
-  nscoord myPref = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, 
-                       this, nsLayoutUtils::PREF_ISIZE);
-  aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, myPref);
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::PREF_ISIZE);
+  aData->DefaultAddInlinePrefISize(isize);
+}
+
+void
+nsIFrame::InlineMinISizeData::DefaultAddInlineMinISize(nsIFrame* aFrame,
+                                                       nscoord   aISize,
+                                                       bool      aAllowBreak)
+{
+  auto parent = aFrame->GetParent();
+  MOZ_ASSERT(parent, "Must have a parent if we get here!");
+  const bool mayBreak = aAllowBreak &&
+    !aFrame->CanContinueTextRun() &&
+    !parent->StyleContext()->ShouldSuppressLineBreak() &&
+    parent->StyleText()->WhiteSpaceCanWrap(parent);
+  if (mayBreak) {
+    OptionallyBreak();
+  }
+  trailingWhitespace = 0;
+  skipWhitespace = false;
+  trailingTextFrame = nullptr;
+  currentLine += aISize;
+  atStartOfLine = false;
+  if (mayBreak) {
+    OptionallyBreak();
+  }
+}
+
+void
+nsIFrame::InlinePrefISizeData::DefaultAddInlinePrefISize(nscoord aISize)
+{
+  currentLine = NSCoordSaturatingAdd(currentLine, aISize);
+  trailingWhitespace = 0;
+  skipWhitespace = false;
 }
 
 void
