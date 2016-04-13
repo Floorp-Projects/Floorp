@@ -20,8 +20,6 @@ interface DOMTokenList {
   [Throws]
   void remove(DOMString... tokens);
   [Throws]
-  void replace(DOMString token, DOMString newToken);
-  [Throws]
   boolean toggle(DOMString token, optional boolean force);
   [SetterThrows]
   attribute DOMString value;
