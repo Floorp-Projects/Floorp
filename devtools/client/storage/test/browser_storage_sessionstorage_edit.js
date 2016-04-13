@@ -10,7 +10,6 @@ add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-sessionstorage.html");
 
   yield selectTreeItem(["sessionStorage", "http://test1.example.org"]);
-  yield gUI.table.once(TableWidget.EVENTS.FIELDS_EDITABLE);
 
   yield editCell("TestSS1", "name", "newTestSS1");
   yield editCell("newTestSS1", "value", "newValueSS1");
