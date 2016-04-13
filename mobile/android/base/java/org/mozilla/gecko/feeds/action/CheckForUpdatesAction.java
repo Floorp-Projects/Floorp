@@ -25,6 +25,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
@@ -74,7 +75,18 @@ public class CheckForUpdatesAction extends FeedAction {
 
                 FeedFetcher.FeedResponse response = checkFeedForUpdates(subscription);
                 if (response != null) {
-                    updatedFeeds.add(response.feed);
+                    final Feed feed = response.feed;
+
+                    if (!hasBeenVisited(browserDB, feed.getLastItem().getURL())) {
+                        // Only notify about this update if the last item hasn't been visited yet.
+                        updatedFeeds.add(feed);
+                    } else {
+                        Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(context));
+                        Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
+                                TelemetryContract.Method.SERVICE,
+                                "content_update");
+                        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(context));
+                    }
 
                     urlAnnotations.updateFeedSubscription(resolver, subscription);
                 }
@@ -106,6 +118,29 @@ public class CheckForUpdatesAction extends FeedAction {
         }
 
         return null;
+    }
+
+    /**
+     * Returns true if this URL has been visited before.
+     *
+     * We do an exact match. So this can fail if the feed uses a different URL and redirects to
+     * content. But it's better than no checks at all.
+     */
+    private boolean hasBeenVisited(final BrowserDB browserDB, final String url) {
+        final Cursor cursor = browserDB.getHistoryForURL(context.getContentResolver(), url);
+        if (cursor == null) {
+            return false;
+        }
+
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(cursor.getColumnIndex(BrowserContract.History.VISITS)) > 0;
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return false;
     }
 
     private void showNotification(List<Feed> updatedFeeds) {
