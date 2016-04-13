@@ -278,7 +278,7 @@ public abstract class GeckoApp
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         // When a tab is closed, it is always unselected first.
         // When a tab is unselected, another tab is always selected first.
-        switch(msg) {
+        switch (msg) {
             case UNSELECTED:
                 hidePlugins(tab);
                 break;
