@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/debug.js");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const ADDON_TYPE_SERVICE     = "service";
@@ -157,9 +156,7 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
 function getOriginActivationType(origin) {
   // if this is an about uri, treat it as a directory
   let URI = Services.io.newURI(origin, null, null);
-  let attrs = ChromeUtils.createOriginAttributesFromOrigin(origin);
-  NS_ASSERT(attrs.userContextId == 0);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, attrs);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
   if (Services.scriptSecurityManager.isSystemPrincipal(principal) || origin == "moz-safe-about:home") {
     return "internal";
   }
@@ -519,9 +516,7 @@ this.SocialService = {
     }
     // force/fixup origin
     let URI = Services.io.newURI(installOrigin, null, null);
-    let attrs = ChromeUtils.createOriginAttributesFromOrigin(installOrigin);
-    NS_ASSERT(attrs.userContextid == 0);
-    principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, attrs);
+    principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
     data.origin = principal.origin;
 
     // iconURL and name are required
@@ -718,9 +713,7 @@ function SocialProvider(input) {
   this.postActivationURL = input.postActivationURL;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
-  let attrs = ChromeUtils.createOriginAttributesFromOrigin(input.origin);
-  NS_ASSERT(attrs.userContextId == 0);
-  this.principal = Services.scriptSecurityManager.createCodebasePrincipal(originUri, attrs);
+  this.principal = Services.scriptSecurityManager.createCodebasePrincipal(originUri, {});
   this.ambientNotificationIcons = {};
   this.errorState = null;
   this.frecency = 0;
