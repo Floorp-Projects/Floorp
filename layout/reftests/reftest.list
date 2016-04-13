@@ -394,10 +394,6 @@ include writing-mode/reftest.list
 # z-index/
 include z-index/reftest.list
 
-# reftest(s) to verify content bugfixes
-include ../../dom/html/reftests/reftest.list
-include ../../dom/imptests/reftest.list
-
 # editor/
 include ../../editor/reftests/reftest.list
 
