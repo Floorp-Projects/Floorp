@@ -10,7 +10,7 @@
 #include <sys/types.h>                  // for int16_t
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsCoord.h"                    // for nscoord
 #include "nsStringFwd.h"                // for nsSubstring
 #include "nsString.h"               // for nsString

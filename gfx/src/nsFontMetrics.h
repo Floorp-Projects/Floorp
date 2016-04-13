@@ -10,7 +10,7 @@
 #include <sys/types.h>                  // for int32_t
 #include "gfxTextRun.h"                 // for gfxFont, gfxFontGroup
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCoord.h"                    // for nscoord
 #include "nsError.h"                    // for nsresult

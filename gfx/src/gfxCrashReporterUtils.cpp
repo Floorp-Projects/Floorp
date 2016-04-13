@@ -16,7 +16,7 @@
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/StaticMutex.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsError.h"                    // for NS_OK, NS_FAILED, nsresult
 #include "nsExceptionHandler.h"         // for AppendAppNotesToCrashReport
