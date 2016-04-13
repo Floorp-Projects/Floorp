@@ -20,17 +20,17 @@
 #include "../layers/d3d11/CompositorD3D11.h"
 #endif
 
-#include "VRDeviceProxy.h"
+#include "VRDisplayProxy.h"
 #include "VRManagerChild.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-VRDeviceProxy::VRDeviceProxy(const VRDeviceUpdate& aDeviceUpdate)
+VRDisplayProxy::VRDisplayProxy(const VRDisplayUpdate& aDeviceUpdate)
   : mDeviceInfo(aDeviceUpdate.mDeviceInfo)
   , mSensorState(aDeviceUpdate.mSensorState)
 {
-  MOZ_COUNT_CTOR(VRDeviceProxy);
+  MOZ_COUNT_CTOR(VRDisplayProxy);
 
   if (mDeviceInfo.mScreenRect.width && mDeviceInfo.mScreenRect.height) {
     if (mDeviceInfo.mIsFakeScreen) {
@@ -51,19 +51,19 @@ VRDeviceProxy::VRDeviceProxy(const VRDeviceUpdate& aDeviceUpdate)
   }
 }
 
-VRDeviceProxy::~VRDeviceProxy() {
-  MOZ_COUNT_DTOR(VRDeviceProxy);
+VRDisplayProxy::~VRDisplayProxy() {
+  MOZ_COUNT_DTOR(VRDisplayProxy);
 }
 
 void
-VRDeviceProxy::UpdateDeviceInfo(const VRDeviceUpdate& aDeviceUpdate)
+VRDisplayProxy::UpdateDeviceInfo(const VRDisplayUpdate& aDeviceUpdate)
 {
   mDeviceInfo = aDeviceUpdate.mDeviceInfo;
   mSensorState = aDeviceUpdate.mSensorState;
 }
 
 bool
-VRDeviceProxy::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
+VRDisplayProxy::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
                        double zNear, double zFar)
 {
   VRManagerChild *vm = VRManagerChild::Get();
@@ -72,14 +72,14 @@ VRDeviceProxy::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
 }
 
 void
-VRDeviceProxy::ZeroSensor()
+VRDisplayProxy::ZeroSensor()
 {
   VRManagerChild *vm = VRManagerChild::Get();
   vm->SendResetSensor(mDeviceInfo.mDeviceID);
 }
 
 VRHMDSensorState
-VRDeviceProxy::GetSensorState()
+VRDisplayProxy::GetSensorState()
 {
   VRManagerChild *vm = VRManagerChild::Get();
   Unused << vm->SendKeepSensorTracking(mDeviceInfo.mDeviceID);
@@ -87,7 +87,7 @@ VRDeviceProxy::GetSensorState()
 }
 
 VRHMDSensorState
-VRDeviceProxy::GetImmediateSensorState()
+VRDisplayProxy::GetImmediateSensorState()
 {
   // XXX TODO - Need to perform IPC call to get the current sensor
   // state rather than the predictive state used for the frame rendering.
@@ -95,7 +95,7 @@ VRDeviceProxy::GetImmediateSensorState()
 }
 
 void
-VRDeviceProxy::UpdateSensorState(const VRHMDSensorState& aSensorState)
+VRDisplayProxy::UpdateSensorState(const VRHMDSensorState& aSensorState)
 {
   mSensorState = aSensorState;
 }
@@ -157,7 +157,7 @@ NS_IMPL_ISUPPORTS(FakeScreen, nsIScreen)
 
 
 /* static */ already_AddRefed<nsIScreen>
-VRDeviceProxy::MakeFakeScreen(const IntRect& aScreenRect)
+VRDisplayProxy::MakeFakeScreen(const IntRect& aScreenRect)
 {
   nsCOMPtr<nsIScreen> screen = new FakeScreen(aScreenRect);
   return screen.forget();

@@ -14,10 +14,10 @@
 namespace mozilla {
 namespace dom {
 class Navigator;
-class VRDevice;
+class VRDisplay;
 } // namespace dom
 namespace gfx {
-class VRDeviceProxy;
+class VRDisplayProxy;
 
 
 class VRManagerChild : public PVRManagerChild
@@ -26,8 +26,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(VRManagerChild)
 
   int GetInputFrameID();
-  bool GetVRDevices(nsTArray<RefPtr<VRDeviceProxy> >& aDevices);
-  bool RefreshVRDevicesWithCallback(dom::Navigator* aNavigator);
+  bool GetVRDisplays(nsTArray<RefPtr<VRDisplayProxy> >& aDevices);
+  bool RefreshVRDisplaysWithCallback(dom::Navigator* aNavigator);
 
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
@@ -44,14 +44,14 @@ protected:
   void Destroy();
   static void DeferredDestroy(RefPtr<VRManagerChild> aVRManagerChild);
 
-  virtual bool RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates) override;
+  virtual bool RecvUpdateDeviceInfo(nsTArray<VRDisplayUpdate>&& aDeviceUpdates) override;
   virtual bool RecvUpdateDeviceSensors(nsTArray<VRSensorUpdate>&& aDeviceSensorUpdates) override;
 
   friend class layers::CompositorBridgeChild;
 
 private:
 
-  nsTArray<RefPtr<VRDeviceProxy> > mDevices;
+  nsTArray<RefPtr<VRDisplayProxy> > mDevices;
   nsTArray<dom::Navigator*> mNavigatorCallbacks;
 
   int32_t mInputFrameID;

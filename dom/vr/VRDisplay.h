@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_VRDevice_h_
-#define mozilla_dom_VRDevice_h_
+#ifndef mozilla_dom_VRDisplay_h_
+#define mozilla_dom_VRDisplay_h_
 
 #include <stdint.h>
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/VRDeviceBinding.h"
+#include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMRect.h"
 
@@ -21,7 +21,7 @@
 #include "nsWrapperCache.h"
 
 #include "gfxVR.h"
-#include "VRDeviceProxy.h"
+#include "VRDisplayProxy.h"
 
 namespace mozilla {
 namespace dom {
@@ -175,13 +175,13 @@ protected:
   RefPtr<DOMRect> mRenderRect;
 };
 
-class VRDevice : public nsISupports,
+class VRDisplay : public nsISupports,
                  public nsWrapperCache
 {
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(VRDevice)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(VRDisplay)
 
   void GetHardwareUnitId(nsAString& aHWID) const { aHWID = mHWID; }
   void GetDeviceId(nsAString& aDeviceId) const { aDeviceId = mDeviceId; }
@@ -194,53 +194,53 @@ public:
     return mParent;
   }
 
-  enum VRDeviceType {
+  enum VRDisplayType {
     HMD,
     PositionSensor
   };
 
-  VRDeviceType GetType() const { return mType; }
+  VRDisplayType GetType() const { return mType; }
 
-  static bool RefreshVRDevices(dom::Navigator* aNavigator);
-  static void UpdateVRDevices(nsTArray<RefPtr<VRDevice> >& aDevices,
+  static bool RefreshVRDisplays(dom::Navigator* aNavigator);
+  static void UpdateVRDisplays(nsTArray<RefPtr<VRDisplay> >& aDevices,
                               nsISupports* aParent);
 
-  gfx::VRDeviceProxy *GetHMD() {
+  gfx::VRDisplayProxy *GetHMD() {
     return mHMD;
   }
 
 protected:
-  VRDevice(nsISupports* aParent,
-           gfx::VRDeviceProxy* aHMD,
-           VRDeviceType aType)
+  VRDisplay(nsISupports* aParent,
+           gfx::VRDisplayProxy* aHMD,
+           VRDisplayType aType)
     : mParent(aParent)
     , mHMD(aHMD)
     , mType(aType)
     , mValid(false)
   {
-    MOZ_COUNT_CTOR(VRDevice);
+    MOZ_COUNT_CTOR(VRDisplay);
     mHWID.AssignLiteral("uknown");
     mDeviceId.AssignLiteral("unknown");
     mDeviceName.AssignLiteral("unknown");
   }
 
-  virtual ~VRDevice()
+  virtual ~VRDisplay()
   {
-    MOZ_COUNT_DTOR(VRDevice);
+    MOZ_COUNT_DTOR(VRDisplay);
   }
 
   nsCOMPtr<nsISupports> mParent;
-  RefPtr<gfx::VRDeviceProxy> mHMD;
+  RefPtr<gfx::VRDisplayProxy> mHMD;
   nsString mHWID;
   nsString mDeviceId;
   nsString mDeviceName;
 
-  VRDeviceType mType;
+  VRDisplayType mType;
 
   bool mValid;
 };
 
-class HMDVRDevice : public VRDevice
+class HMDVRDisplay : public VRDisplay
 {
 public:
   virtual already_AddRefed<VREyeParameters> GetEyeParameters(VREye aEye) = 0;
@@ -252,23 +252,23 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  HMDVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD)
-    : VRDevice(aParent, aHMD, VRDevice::HMD)
+  HMDVRDisplay(nsISupports* aParent, gfx::VRDisplayProxy* aHMD)
+    : VRDisplay(aParent, aHMD, VRDisplay::HMD)
   {
-    MOZ_COUNT_CTOR_INHERITED(HMDVRDevice, VRDevice);
+    MOZ_COUNT_CTOR_INHERITED(HMDVRDisplay, VRDisplay);
   }
 
-  virtual ~HMDVRDevice()
+  virtual ~HMDVRDisplay()
   {
-    MOZ_COUNT_DTOR_INHERITED(HMDVRDevice, VRDevice);
+    MOZ_COUNT_DTOR_INHERITED(HMDVRDisplay, VRDisplay);
   }
 };
 
-class HMDInfoVRDevice : public HMDVRDevice
+class HMDInfoVRDisplay : public HMDVRDisplay
 {
 public:
-  HMDInfoVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD);
-  virtual ~HMDInfoVRDevice();
+  HMDInfoVRDisplay(nsISupports* aParent, gfx::VRDisplayProxy* aHMD);
+  virtual ~HMDInfoVRDisplay();
 
   /* If a field of view that is set to all 0's is passed in,
    * the recommended field of view for that eye is used.
@@ -279,7 +279,7 @@ public:
   virtual already_AddRefed<VREyeParameters> GetEyeParameters(VREye aEye) override;
 };
 
-class PositionSensorVRDevice : public VRDevice
+class PositionSensorVRDisplay : public VRDisplay
 {
 public:
   virtual already_AddRefed<VRPositionState> GetState() = 0;
@@ -288,23 +288,23 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  explicit PositionSensorVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD)
-    : VRDevice(aParent, aHMD, VRDevice::PositionSensor)
+  explicit PositionSensorVRDisplay(nsISupports* aParent, gfx::VRDisplayProxy* aHMD)
+    : VRDisplay(aParent, aHMD, VRDisplay::PositionSensor)
   {
-    MOZ_COUNT_CTOR_INHERITED(PositionSensorVRDevice, VRDevice);
+    MOZ_COUNT_CTOR_INHERITED(PositionSensorVRDisplay, VRDisplay);
   }
 
-  virtual ~PositionSensorVRDevice()
+  virtual ~PositionSensorVRDisplay()
   {
-    MOZ_COUNT_DTOR_INHERITED(PositionSensorVRDevice, VRDevice);
+    MOZ_COUNT_DTOR_INHERITED(PositionSensorVRDisplay, VRDisplay);
   }
 };
 
-class HMDPositionVRDevice : public PositionSensorVRDevice
+class HMDPositionVRDisplay : public PositionSensorVRDisplay
 {
 public:
-  HMDPositionVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD);
-  ~HMDPositionVRDevice();
+  HMDPositionVRDisplay(nsISupports* aParent, gfx::VRDisplayProxy* aHMD);
+  ~HMDPositionVRDisplay();
 
   virtual already_AddRefed<VRPositionState> GetState() override;
   virtual already_AddRefed<VRPositionState> GetImmediateState() override;

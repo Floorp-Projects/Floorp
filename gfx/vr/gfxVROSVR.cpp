@@ -236,8 +236,8 @@ HMDInfoOSVR::HMDInfoOSVR(OSVR_ClientContext* context,
   OSVR_DisplayDimension width, height;
   osvr_ClientGetDisplayDimensions(*m_display, 0, &width, &height);
 
-  SetFOV(mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Left],
-         mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Right], 0.01,
+  SetFOV(mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Left],
+         mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Right], 0.01,
          10000.0);
 }
 
@@ -284,8 +284,8 @@ HMDInfoOSVR::SetFOV(const gfx::VRFieldOfView& aFOVLeft,
 
   mConfiguration.hmdType = mDeviceInfo.mType;
   mConfiguration.value = 0;
-  mConfiguration.fov[VRDeviceInfo::Eye_Left] = aFOVLeft;
-  mConfiguration.fov[VRDeviceInfo::Eye_Right] = aFOVRight;
+  mConfiguration.fov[VRDisplayInfo::Eye_Left] = aFOVLeft;
+  mConfiguration.fov[VRDisplayInfo::Eye_Right] = aFOVRight;
 
   return true;
 }

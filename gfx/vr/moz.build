@@ -9,7 +9,7 @@ EXPORTS += [
     'ipc/VRManagerChild.h',
     'ipc/VRManagerParent.h',
     'ipc/VRMessageUtils.h',
-    'VRDeviceProxy.h',
+    'VRDisplayProxy.h',
     'VRManager.h',
 ]
 
@@ -23,7 +23,7 @@ UNIFIED_SOURCES += [
     'gfxVROSVR.cpp',
     'ipc/VRManagerChild.cpp',
     'ipc/VRManagerParent.cpp',
-    'VRDeviceProxy.cpp',
+    'VRDisplayProxy.cpp',
     'VRManager.cpp',
 ]
 
