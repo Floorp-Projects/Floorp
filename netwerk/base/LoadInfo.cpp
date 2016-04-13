@@ -309,7 +309,7 @@ LoadInfo::CloneForNewRequest() const
 NS_IMETHODIMP
 LoadInfo::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal)
 {
-  NS_ADDREF(*aLoadingPrincipal = mLoadingPrincipal);
+  NS_IF_ADDREF(*aLoadingPrincipal = mLoadingPrincipal);
   return NS_OK;
 }
 
