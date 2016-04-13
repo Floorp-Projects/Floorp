@@ -152,7 +152,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                     if (event.equals("TextSelection:ShowHandles")) {
                         selectionID = message.getString("selectionID");
                         final JSONArray handles = message.getJSONArray("handles");
-                        for (int i=0; i < handles.length(); i++) {
+                        for (int i = 0; i < handles.length(); i++) {
                             String handle = handles.getString(i);
                             getHandle(handle).setVisibility(View.VISIBLE);
                         }
@@ -193,7 +193,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
 
                     } else if (event.equals("TextSelection:PositionHandles")) {
                         final JSONArray positions = message.getJSONArray("positions");
-                        for (int i=0; i < positions.length(); i++) {
+                        for (int i = 0; i < positions.length(); i++) {
                             JSONObject position = positions.getJSONObject(i);
                             final int left = position.getInt("left");
                             final int top = position.getInt("top");
