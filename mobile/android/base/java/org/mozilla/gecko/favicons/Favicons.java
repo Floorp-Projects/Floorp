@@ -296,7 +296,7 @@ public class Favicons {
         final LoadFaviconTask task =
             new LoadFaviconTask(context, pageURL, targetURL, 0, callback, targetSize, true);
         final int taskId = task.getId();
-        synchronized(loadTasks) {
+        synchronized (loadTasks) {
             loadTasks.put(taskId, task);
         }
         task.execute();
@@ -369,7 +369,7 @@ public class Favicons {
         final LoadFaviconTask task =
             new LoadFaviconTask(context, pageURL, faviconURL, flags, listener, targetSize, false);
         final int taskId = task.getId();
-        synchronized(loadTasks) {
+        synchronized (loadTasks) {
             loadTasks.put(taskId, task);
         }
         task.execute();
@@ -567,7 +567,7 @@ public class Favicons {
     }
 
     public static void removeLoadTask(int taskId) {
-        synchronized(loadTasks) {
+        synchronized (loadTasks) {
             loadTasks.delete(taskId);
         }
     }
