@@ -897,7 +897,10 @@ public class Distribution {
             }
         }
 
-        return new String[] { baseDirectory };
+        return new String[] {
+                baseDirectory + "/default",
+                baseDirectory
+        };
     }
 
     /**
