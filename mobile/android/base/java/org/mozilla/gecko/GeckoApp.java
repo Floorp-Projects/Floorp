@@ -466,7 +466,7 @@ public abstract class GeckoApp
             for (String clear : clearSet) {
                 try {
                     clearObj.put(clear, true);
-                } catch(JSONException ex) {
+                } catch (JSONException ex) {
                     Log.e(LOGTAG, "Error adding clear object " + clear, ex);
                 }
             }
@@ -474,7 +474,7 @@ public abstract class GeckoApp
             final JSONObject res = new JSONObject();
             try {
                 res.put("sanitize", clearObj);
-            } catch(JSONException ex) {
+            } catch (JSONException ex) {
                 Log.e(LOGTAG, "Error adding sanitize object", ex);
             }
 
@@ -484,7 +484,7 @@ public abstract class GeckoApp
                 final String sessionRestore = getSessionRestorePreference();
                 try {
                     res.put("dontSaveSession", "quit".equals(sessionRestore));
-                } catch(JSONException ex) {
+                } catch (JSONException ex) {
                     Log.e(LOGTAG, "Error adding session restore data", ex);
                 }
             }
@@ -983,22 +983,22 @@ public abstract class GeckoApp
             } else {
                 SnackbarHelper.showSnackbar(this, getString(R.string.set_image_fail), Snackbar.LENGTH_LONG);
             }
-        } catch(OutOfMemoryError ome) {
+        } catch (OutOfMemoryError ome) {
             Log.e(LOGTAG, "Out of Memory when converting to byte array", ome);
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             Log.e(LOGTAG, "I/O Exception while setting wallpaper", ioe);
         } finally {
             if (is != null) {
                 try {
                     is.close();
-                } catch(IOException ioe) {
+                } catch (IOException ioe) {
                     Log.w(LOGTAG, "I/O Exception while closing stream", ioe);
                 }
             }
             if (os != null) {
                 try {
                     os.close();
-                } catch(IOException ioe) {
+                } catch (IOException ioe) {
                     Log.w(LOGTAG, "I/O Exception while closing stream", ioe);
                 }
             }

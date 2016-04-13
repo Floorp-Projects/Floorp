@@ -116,7 +116,7 @@ public class DefaultDoorHanger extends DoorHanger {
                     styleInput(input, v);
                     v.setPadding(0, 0, 0, padding);
                     group.addView(v);
-                } catch(JSONException ex) { }
+                } catch (JSONException ex) { }
             }
         }
 
