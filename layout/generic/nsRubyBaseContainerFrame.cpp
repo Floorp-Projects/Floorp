@@ -148,19 +148,19 @@ CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
       nsIFrame::InlinePrefISizeData data;
       if (i == 0) {
         data.SetLineContainer(aBaseISizeData->LineContainer());
-        data.skipWhitespace = aBaseISizeData->skipWhitespace;
-        data.trailingWhitespace = aBaseISizeData->trailingWhitespace;
+        data.mSkipWhitespace = aBaseISizeData->mSkipWhitespace;
+        data.mTrailingWhitespace = aBaseISizeData->mTrailingWhitespace;
       } else {
         // The line container of ruby text frames is their parent,
         // ruby text container frame.
         data.SetLineContainer(frame->GetParent());
       }
       frame->AddInlinePrefISize(aRenderingContext, &data);
-      MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
-      max = std::max(max, data.currentLine);
+      MOZ_ASSERT(data.mPrevLines == 0, "Shouldn't have prev lines");
+      max = std::max(max, data.mCurrentLine);
       if (i == 0) {
-        aBaseISizeData->skipWhitespace = data.skipWhitespace;
-        aBaseISizeData->trailingWhitespace = data.trailingWhitespace;
+        aBaseISizeData->mSkipWhitespace = data.mSkipWhitespace;
+        aBaseISizeData->mTrailingWhitespace = data.mTrailingWhitespace;
       }
     }
   }
@@ -182,22 +182,22 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
       // directly if there is any span.
       nsIFrame::InlinePrefISizeData data;
       data.SetLineContainer(aData->LineContainer());
-      data.skipWhitespace = aData->skipWhitespace;
-      data.trailingWhitespace = aData->trailingWhitespace;
+      data.mSkipWhitespace = aData->mSkipWhitespace;
+      data.mTrailingWhitespace = aData->mTrailingWhitespace;
       AddInlinePrefISize(aRenderingContext, &data);
-      aData->currentLine += data.currentLine;
-      if (data.currentLine > 0) {
-        aData->atStartOfLine = false;
+      aData->mCurrentLine += data.mCurrentLine;
+      if (data.mCurrentLine > 0) {
+        aData->mAtStartOfLine = false;
       }
-      aData->skipWhitespace = data.skipWhitespace;
-      aData->trailingWhitespace = data.trailingWhitespace;
+      aData->mSkipWhitespace = data.mSkipWhitespace;
+      aData->mTrailingWhitespace = data.mTrailingWhitespace;
       return;
     }
   }
 
   bool firstFrame = true;
   bool allowInitialLineBreak, allowLineBreak;
-  GetIsLineBreakAllowed(this, !aData->atStartOfLine,
+  GetIsLineBreakAllowed(this, !aData->mAtStartOfLine,
                         &allowInitialLineBreak, &allowLineBreak);
   for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
     RubyColumnEnumerator enumerator(
@@ -217,9 +217,9 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
       firstFrame = false;
       nscoord isize = CalculateColumnPrefISize(aRenderingContext,
                                                enumerator, aData);
-      aData->currentLine += isize;
+      aData->mCurrentLine += isize;
       if (isize > 0) {
-        aData->atStartOfLine = false;
+        aData->mAtStartOfLine = false;
       }
     }
   }
@@ -244,11 +244,11 @@ nsRubyBaseContainerFrame::AddInlinePrefISize(
       nsIFrame* frame = textContainers[i]->PrincipalChildList().FirstChild();
       nsIFrame::InlinePrefISizeData data;
       frame->AddInlinePrefISize(aRenderingContext, &data);
-      MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
-      sum = std::max(sum, data.currentLine);
+      MOZ_ASSERT(data.mPrevLines == 0, "Shouldn't have prev lines");
+      sum = std::max(sum, data.mCurrentLine);
     }
   }
-  aData->currentLine += sum;
+  aData->mCurrentLine += sum;
 }
 
 /* virtual */ bool 

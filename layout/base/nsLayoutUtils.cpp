@@ -5588,10 +5588,10 @@ nsLayoutUtils::MinISizeFromInline(nsIFrame* aFrame,
                "should not be container for font size inflation");
 
   nsIFrame::InlineMinISizeData data;
-  DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
+  DISPLAY_MIN_WIDTH(aFrame, data.mPrevLines);
   aFrame->AddInlineMinISize(aRenderingContext, &data);
   data.ForceBreak();
-  return data.prevLines;
+  return data.mPrevLines;
 }
 
 /* static */ nscoord
@@ -5602,10 +5602,10 @@ nsLayoutUtils::PrefISizeFromInline(nsIFrame* aFrame,
                "should not be container for font size inflation");
 
   nsIFrame::InlinePrefISizeData data;
-  DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
+  DISPLAY_PREF_WIDTH(aFrame, data.mPrevLines);
   aFrame->AddInlinePrefISize(aRenderingContext, &data);
   data.ForceBreak();
-  return data.prevLines;
+  return data.mPrevLines;
 }
 
 static nscolor
