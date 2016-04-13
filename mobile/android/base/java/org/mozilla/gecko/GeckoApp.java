@@ -1132,7 +1132,7 @@ public abstract class GeckoApp
         // Workaround for <http://code.google.com/p/android/issues/detail?id=20915>.
         try {
             Class.forName("android.os.AsyncTask");
-        } catch (ClassNotFoundException e) {}
+        } catch (ClassNotFoundException e) { }
 
         MemoryMonitor.getInstance().init(getApplicationContext());
 
