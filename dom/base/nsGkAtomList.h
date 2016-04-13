@@ -34,7 +34,7 @@
 GK_ATOM(_empty, "")
 GK_ATOM(moz, "_moz")
 GK_ATOM(mozframetype, "mozframetype")
-GK_ATOM(_moz_abspos, "_moz_activated")
+GK_ATOM(_moz_abspos, "_moz_abspos")
 GK_ATOM(_moz_activated, "_moz_activated")
 GK_ATOM(_moz_resizing, "_moz_resizing")
 GK_ATOM(mozallowfullscreen, "mozallowfullscreen")
