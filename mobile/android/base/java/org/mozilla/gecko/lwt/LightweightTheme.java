@@ -143,7 +143,7 @@ public class LightweightTheme implements GeckoEventListener {
                 if (stream != null) {
                     try {
                         stream.close();
-                    } catch (IOException e) {}
+                    } catch (IOException e) { }
                 }
             }
         }

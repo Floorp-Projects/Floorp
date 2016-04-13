@@ -657,7 +657,7 @@ public class ContactService implements GeckoEventListener {
         if (DEBUG) {
             try {
                 Log.d(LOGTAG, "Got contact: " + contact.toString(3));
-            } catch (JSONException e) {}
+            } catch (JSONException e) { }
         }
 
         return contact;

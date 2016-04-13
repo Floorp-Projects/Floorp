@@ -1297,7 +1297,7 @@ public class GeckoAppShell
             if (null != cmdlineReader) {
                 try {
                     cmdlineReader.close();
-                } catch (Exception e) {}
+                } catch (Exception e) { }
             }
         }
     }
@@ -1792,7 +1792,7 @@ public class GeckoAppShell
                     try {
                         if (getGeckoInterface() != null)
                             getGeckoInterface().enableCameraView();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { }
                 }
             });
 
@@ -1886,7 +1886,7 @@ public class GeckoAppShell
                     try {
                         if (getGeckoInterface() != null)
                             getGeckoInterface().disableCameraView();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { }
                 }
             });
         if (sCamera != null) {
@@ -2210,7 +2210,7 @@ public class GeckoAppShell
                             try {
                                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
                                 output.close();
-                            } catch (IOException ioe) {}
+                            } catch (IOException ioe) { }
                         }
                     });
                 mHaveConnected = true;
