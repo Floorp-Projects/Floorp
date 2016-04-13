@@ -39,8 +39,9 @@ public:
     hb_blob_t * GetFontTable(hb_tag_t aTag) const;
 
     // map unicode character to glyph ID
-    hb_codepoint_t GetGlyph(hb_codepoint_t unicode,
-                            hb_codepoint_t variation_selector) const;
+    hb_codepoint_t GetNominalGlyph(hb_codepoint_t unicode) const;
+    hb_codepoint_t GetVariationGlyph(hb_codepoint_t unicode,
+                                     hb_codepoint_t variation_selector) const;
 
     // get harfbuzz glyph advance, in font design units
     hb_position_t GetGlyphHAdvance(hb_codepoint_t glyph) const;
