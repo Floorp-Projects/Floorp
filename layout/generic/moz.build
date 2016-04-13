@@ -170,7 +170,6 @@ UNIFIED_SOURCES += [
     'ScrollSnap.cpp',
     'ScrollVelocityQueue.cpp',
     'StickyScrollContainer.cpp',
-    'SummaryFrame.cpp',
     'TextOverflow.cpp',
 ]
 
