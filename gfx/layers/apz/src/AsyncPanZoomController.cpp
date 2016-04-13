@@ -3388,7 +3388,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     APZC_LOG("%p NotifyLayersUpdated short-circuit\n", this);
     return;
   }
-  mLastContentPaintMetrics = aLayerMetrics;
+  if (aLayerMetrics.GetScrollUpdateType() != FrameMetrics::ScrollOffsetUpdateType::ePending) {
+    mLastContentPaintMetrics = aLayerMetrics;
+  }
 
   mFrameMetrics.SetScrollParentId(aLayerMetrics.GetScrollParentId());
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d, aThisLayerTreeUpdated=%d",
