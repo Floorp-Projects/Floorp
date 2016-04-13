@@ -39,13 +39,21 @@ RemoteTagServiceService.prototype = {
    * fetched with Components.utils.getCrossProcessWrapperTag.
    */
   getRemoteObjectTag: function(target) {
-    if (target instanceof Ci.nsIDocShellTreeItem) {
-      return "ContentDocShellTreeItem";
-    }
+    try {
+      if (target.QueryInterface) {
+        try {
+          if (target.QueryInterface(Ci.nsIDocShellTreeItem)) {
+            return "ContentDocShellTreeItem";
+          }
+        } catch (e) {}
 
-    if (target instanceof Ci.nsIDOMDocument) {
-      return "ContentDocument";
-    }
+        try {
+          if (target.QueryInterface(Ci.nsIDOMDocument)) {
+            return "ContentDocument";
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
 
     return "generic";
   }
