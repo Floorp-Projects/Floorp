@@ -174,13 +174,6 @@ public:
                            bool aThisLayerTreeUpdated);
 
   /**
-   * A lightweight version of NotifyLayersUpdated that allows just the scroll
-   * offset and scroll generation from the main thread to be propagated to APZ.
-   */
-  void NotifyScrollUpdated(uint32_t aScrollGeneration,
-                           const CSSPoint& aScrollOffset);
-
-  /**
    * The platform implementation must set the compositor parent so that we can
    * request composites.
    */
