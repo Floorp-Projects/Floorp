@@ -428,9 +428,7 @@ public:
    * implement AllocPextureChild and DeallocPTextureChild).
    */
   static PTextureChild* CreateIPDLActor();
-  static bool DeallocIPDLActor(PTextureChild* actor);
-  static void ForceIPDLActorShutdown(PTextureChild* actor,
-                                     const char* const aProtocolName);
+  static bool DestroyIPDLActor(PTextureChild* actor);
   // call this if the transaction that was supposed to destroy the actor failed.
   static bool DestroyFallback(PTextureChild* actor);
 
@@ -622,7 +620,7 @@ protected:
 
 
   RefPtr<ClientIPCAllocator> mAllocator;
-  TextureChild* mActor;
+  RefPtr<TextureChild> mActor;
   RefPtr<ITextureClientRecycleAllocator> mRecycleAllocator;
   RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
 

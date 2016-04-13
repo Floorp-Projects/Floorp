@@ -34,42 +34,51 @@ namespace layers {
 ///   async Destroy();
 ///   sync DestroySynchronously();
 ///
-/// If a sub-class overrides ActorDestroy, it should also call
-/// ChildActor::ActorDestroy from there.
-///
-/// The typical usage of this class looks like the following:
-/// some reference-counted object FooClient holds a reference to a FooChild
-/// actor inheriting from ChildActor<PFooChild>.
-/// Usually, the destruction of FooChild will be triggered by FooClient's
-/// destructor or some other thing that really means that nothing other than
-/// IPDL is holding a pointer to the actor. This is important because we track
-/// this information in mReleased and use it to know when it is safe to delete
-/// the actor. If FooManager::DeallocPFoChild is invoked by IPDL while mReleased
-/// is still false, we don't delete the actor as we usually would. Instead we
-/// set mIPCOpen to false, and ReleaseActor will delete the actor.
 template<typename Protocol>
 class ChildActor : public Protocol
 {
 public:
-  ChildActor()
-  : mReleased(false)
-  , mSentDestroy(false)
-  , mIPCOpen(true)
-  {}
+  ChildActor() : mDestroyed(false) {}
 
-  ~ChildActor() { MOZ_ASSERT(mReleased); }
+  ~ChildActor() { MOZ_ASSERT(mDestroyed); }
 
   /// Check the return of CanSend before sending any message!
-  bool CanSend() const { return !mSentDestroy && mIPCOpen; }
+  bool CanSend() const { return !mDestroyed; }
 
-  /// Return true if this actor is still connected to the IPDL system.
-  bool IPCOpen() const { return mIPCOpen; }
+  /// The normal way to destroy the actor.
+  ///
+  /// This will asynchronously send a Destroy message to the parent actor, whom
+  /// will send the delete message.
+  void Destroy(CompositableForwarder* aFwd = nullptr)
+  {
+    MOZ_ASSERT(!mDestroyed);
+    if (!mDestroyed) {
+      mDestroyed = true;
+      DestroyManagees();
+      if (!aFwd || !aFwd->DestroyInTransaction(this, false)) {
+        this->SendDestroy();
+      }
+    }
+  }
 
-  /// Return true if the actor was released (nothing holds on to the actor
-  /// except IPDL, and the actor will most likely receive the __delete__
-  /// message soon. Useful to know whether we can delete the actor when
-  /// IPDL shuts down.
-  bool Released() const { return mReleased; }
+  /// The ugly and slow way to destroy the actor.
+  ///
+  /// This will block until the Parent actor has handled the Destroy message,
+  /// and then start the asynchronous handshake (and destruction will already
+  /// be done on the parent side, when the async part happens).
+  void DestroySynchronously(CompositableForwarder* aFwd = nullptr)
+  {
+    MOZ_PERFORMANCE_WARNING("gfx", "IPDL actor requires synchronous deallocation");
+    MOZ_ASSERT(!mDestroyed);
+    if (!mDestroyed) {
+      DestroyManagees();
+      mDestroyed = true;
+      if (!aFwd || !aFwd->DestroyInTransaction(this, true)) {
+        this->SendDestroySync();
+        this->SendDestroy();
+      }
+    }
+  }
 
   /// If the transaction that was supposed to destroy the texture fails for
   /// whatever reason, fallback to destroying the actor synchronously.
@@ -78,86 +87,13 @@ public:
     return aActor->SendDestroySync();
   }
 
-  typedef ipc::IProtocolManager<ipc::IProtocol>::ActorDestroyReason Why;
-
-  virtual void ActorDestroy(Why) override
-  {
-    mIPCOpen = false;
-  }
-
-  /// Call this during shutdown only, if we need to destroy this
-  /// actor but the object paired with the actor isn't destroyed yet.
-  void ForceActorShutdown()
-  {
-    if (mIPCOpen && !mSentDestroy) {
-      this->SendDestroy();
-      mSentDestroy = true;
-    }
-  }
-
-  /// The normal way to destroy the actor.
-  ///
-  /// This will asynchronously send a Destroy message to the parent actor, whom
-  /// will send the delete message.
-  /// Nothing other than IPDL should hold a pointer to the actor after this is
-  /// called.
-  void ReleaseActor(CompositableForwarder* aFwd = nullptr)
-  {
-    if (!IPCOpen()) {
-      mReleased = true;
-      delete this;
-      return;
-    }
-
-    Destroy(aFwd, false);
-  }
-
-  /// The ugly and slow way to destroy the actor.
-  ///
-  /// This will block until the Parent actor has handled the Destroy message,
-  /// and then start the asynchronous handshake (and destruction will already
-  /// be done on the parent side, when the async part happens).
-  /// Nothing other than IPDL should hold a pointer to the actor after this is
-  /// called.
-  void ReleaseActorSynchronously(CompositableForwarder* aFwd = nullptr)
-  {
-    if (!IPCOpen()) {
-      mReleased = true;
-      delete this;
-      return;
-    }
-
-    Destroy(aFwd, true);
-  }
-
-protected:
-
-  void Destroy(CompositableForwarder* aFwd = nullptr, bool synchronously = false)
-  {
-    MOZ_ASSERT(mIPCOpen);
-    MOZ_ASSERT(!mReleased);
-    if (mReleased) {
-      return;
-    }
-    mReleased = true;
-
-    if (!aFwd || !aFwd->DestroyInTransaction(this, synchronously)) {
-      if (synchronously) {
-        MOZ_PERFORMANCE_WARNING("gfx", "IPDL actor requires synchronous deallocation");
-        this->SendDestroySync();
-      } else {
-        this->SendDestroy();
-      }
-    }
-    mSentDestroy = true;
-  }
+  /// Override this if the protocol manages other protocols, and destroy the
+  /// managees from there
+  virtual void DestroyManagees() {}
 
 private:
-  bool mReleased;
-  bool mSentDestroy;
-  bool mIPCOpen;
+  bool mDestroyed;
 };
-
 
 /// A base class to facilitate the deallocation of IPDL actors.
 ///
@@ -167,20 +103,20 @@ template<typename Protocol>
 class ParentActor : public Protocol
 {
 public:
-  ParentActor() : mReleased(false) {}
+  ParentActor() : mDestroyed(false) {}
 
-  ~ParentActor() { MOZ_ASSERT(mReleased); }
+  ~ParentActor() { MOZ_ASSERT(mDestroyed); }
 
-  bool CanSend() const { return !mReleased; }
+  bool CanSend() const { return !mDestroyed; }
 
   // Override this rather than ActorDestroy
   virtual void Destroy() {}
 
   virtual bool RecvDestroy() override
   {
-    if (!mReleased) {
+    if (!mDestroyed) {
       Destroy();
-      mReleased = true;
+      mDestroyed = true;
     }
     Unused << Protocol::Send__delete__(this);
     return true;
@@ -188,9 +124,9 @@ public:
 
   virtual bool RecvDestroySync() override
   {
-    if (!mReleased) {
+    if (!mDestroyed) {
       Destroy();
-      mReleased = true;
+      mDestroyed = true;
     }
     return true;
   }
@@ -199,14 +135,14 @@ public:
 
   virtual void ActorDestroy(Why) override
   {
-    if (!mReleased) {
+    if (!mDestroyed) {
       Destroy();
-      mReleased = true;
+      mDestroyed = true;
     }
   }
 
 private:
-  bool mReleased;
+  bool mDestroyed;
 };
 
 } // namespace
