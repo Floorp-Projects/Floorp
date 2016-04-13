@@ -199,8 +199,6 @@ BrowserToolboxProcess.prototype = {
 
     if (this._options.addonID) {
       xulURI += "?addonID=" + this._options.addonID;
-    } else if (this._options.testScript) {
-      xulURI += "?testScript=" + encodeURIComponent(this._options.testScript);
     }
 
     dumpn("Running chrome debugging process.");
@@ -252,12 +250,18 @@ BrowserToolboxProcess.prototype = {
     this._telemetry.toolClosed("jsbrowserdebugger");
     if (this.debuggerServer) {
       this.debuggerServer.destroy();
+      this.debuggerServer = null;
     }
 
     dumpn("Chrome toolbox is now closed...");
     this.closed = true;
     this.emit("close", this);
     processes.delete(this);
+
+    this._dbgProcess = null;
+    this._options = null;
+    this.loader = null;
+    this._telemetry = null;
   }
 };
 

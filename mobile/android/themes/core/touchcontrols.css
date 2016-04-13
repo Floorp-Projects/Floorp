@@ -18,16 +18,20 @@
   -moz-box-align: end;
 }
 
-.controlBar {
-  -moz-box-flex: 1;
-  font-size: 16pt;
-  background-color: rgba(50,50,50,0.8);
-  width: 100%;
-}
-
 .controlsSpacer {
   display: none;
   -moz-box-flex: 0;
+}
+
+.controlBar {
+  -moz-box-flex: 1;
+  width: 100%;
+  background-color: rgba(50,50,50,0.8);
+}
+
+.buttonsBar {
+  -moz-box-flex: 1;
+  -moz-box-align: center;
 }
 
 .playButton,
@@ -35,33 +39,34 @@
 .muteButton,
 .fullscreenButton {
   -moz-appearance: none;
-  height: 24px;
-  width: 24px;
+  padding: 15px;
   border: none !important;
-}
-
-.muteButton {
-  width: 28px;
+  width: 48px;
+  height: 48px;
 }
 
 .playButton {
   background: url("chrome://browser/skin/images/pause.svg") no-repeat center;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .playButton[paused="true"] {
   background: url("chrome://browser/skin/images/play.svg") no-repeat center;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .castingButton {
   background: url("chrome://browser/skin/images/cast-ready.svg") no-repeat center;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .castingButton[active="true"] {
   background: url("chrome://browser/skin/images/cast-active.svg") no-repeat center;
   background-size: contain;
+  background-origin: content-box;
 }
 
 /* If the casting button is showing, there will be two buttons on the right side of the controls.
@@ -72,24 +77,30 @@
 }
 
 .muteButton {
+  padding-left: 17.25px;
+  padding-right: 9.75px;
   background: url("chrome://browser/skin/images/mute.svg") no-repeat left;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .muteButton[muted="true"] {
   background: url("chrome://browser/skin/images/unmute.svg") no-repeat left;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .fullscreenButton {
   background-color: transparent;
   background: url("chrome://browser/skin/images/fullscreen.svg") no-repeat center;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .fullscreenButton[fullscreened] {
   background: url("chrome://browser/skin/images/exitfullscreen.svg") no-repeat center;
   background-size: contain;
+  background-origin: content-box;
 }
 
 .controlBar[fullscreen-unavailable] .fullscreenButton {
@@ -98,13 +109,12 @@
 
 /* bars */
 .scrubberStack {
-  width: 100%;
-  min-height: 32px;
-  max-height: 32px;
-  padding: 0px 8px;
-  margin: 0px;
+  -moz-box-flex: 1;
+  padding: 0px 18px;
 }
 
+.flexibleBar,
+.flexibleBar .progress-bar,
 .bufferBar,
 .bufferBar .progress-bar,
 .progressBar,
@@ -119,51 +129,51 @@
   background-color: transparent;
 }
 
-.bufferBar {
-  border: 1px solid #5e6166;
-}
-
+.flexibleBar,
 .bufferBar,
 .progressBar {
-  margin: 11px 0px 9px 0px;
-  height: 8px
+  height: 32px;
+  padding: 15px 0px;
+}
+
+.flexibleBar {
+  padding: 16px 0px;
+}
+
+.flexibleBar .progress-bar {
+  border: 1px #777777 solid;
+  border-radius: 1px;
 }
 
 .bufferBar .progress-bar {
-  background-color: #5e6166;
+  border: 2px #AFB1B3 solid;
+  border-radius: 2px;
 }
 
 .progressBar .progress-bar {
-  background-color: white;
+  border: 2px #FF9500 solid;
+  border-radius: 2px;
 }
 
 .scrubber {
-  margin-left: -16px;
-  margin-right: -16px;
+  margin-left: -12px;
+  margin-right: -12px;
 }
 
 .scrubber .scale-thumb {
   display: -moz-box;
   margin: 0px !important;
   padding: 0px !important;
-  background: url("chrome://browser/skin/images/scrubber.svg") no-repeat;
-  background-size: 32px 32px;
+  background: url("chrome://browser/skin/images/scrubber.svg") no-repeat center;
+  background-size: 12px 12px;
   height: 32px;
   width: 32px;
 }
 
-.durationBox {
-  -moz-box-orient: horizontal;
-  -moz-box-pack: start;
-  -moz-box-align: center;
+.positionLabel, .durationLabel {
+  font-family: 'Roboto', Helvetica, Arial, sans-serif;
+  font-size: 16px;
   color: white;
-  font-weight: bold;
-  padding: 0px 8px;
-  margin-top: -6px;
-}
-
-.positionLabel {
-  -moz-box-flex: 1;
 }
 
 .statusOverlay {
