@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for proper listing indexedDB databases with no object stores</title>
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+
+window.setup = function* () {
+  let request = indexedDB.open("idb1", 1);
+  let db = yield new Promise((resolve, reject) => {
+    request.onerror = e => reject(Error("error opening db connection"));
+    request.onupgradeneeded = event => {
+      let db = event.target.result;
+      let store1 = db.createObjectStore("obj1", { keyPath: "id" });
+      store1.createIndex("name", "name", { unique: false });
+      store1.createIndex("email", "email", { unique: true });
+      let store2 = db.createObjectStore("obj2", { keyPath: "id2" });
+      store1.transaction.oncomplete = () => resolve(db);
+    };
+  });
+
+  yield new Promise(resolve => request.onsuccess = resolve);
+
+  let transaction = db.transaction(["obj1", "obj2"], "readwrite");
+  let store1 = transaction.objectStore("obj1");
+  let store2 = transaction.objectStore("obj2");
+
+  store1.add({id: 1, name: "foo", email: "foo@bar.com"});
+  store1.add({id: 2, name: "foo2", email: "foo2@bar.com"});
+  store1.add({id: 3, name: "foo2", email: "foo3@bar.com"});
+  store2.add({id2: 1, name: "foo", email: "foo@bar.com", extra: "baz"});
+
+  yield new Promise(resolve => transaction.oncomplete = resolve);
+
+  db.close();
+
+  request = indexedDB.open("idb2", 1);
+  let db2 = yield new Promise((resolve, reject) => {
+    request.onerror = e => reject(Error("error opening db2 connection"));
+    request.onupgradeneeded = event => resolve(event.target.result);
+  });
+
+  yield new Promise(resolve => request.onsuccess = resolve);
+
+  db2.close();
+  dump("added indexedDB items from main page\n");
+};
+
+window.clear = function* () {
+  for (let dbName of ["idb1", "idb2"]) {
+    yield new Promise(resolve => {
+      indexedDB.deleteDatabase(dbName).onsuccess = resolve;
+    });
+  }
+  dump("removed indexedDB items from main page\n");
+};
+
+</script>
+</body>
+</html>
