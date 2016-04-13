@@ -46,10 +46,6 @@
   text-decoration: underline;
 }
 
-.treeTable .treeRow:hover {
-  background-color: var(--theme-body-background);
-}
-
 /* Filtering */
 .treeTable .treeRow.hidden {
   display: none;
@@ -80,17 +76,6 @@
   background-image: url(chrome://devtools/skin/images/firebug/spinner.png) !important;
   background-position: 2px 1px !important;
   background-size: 9px 9px !important;
-}
-
-/* Default toggle icon. The immediate children operator must be
- used here since there might be nested tree components inside
- a tree and we don't want to alter those. */
-.treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/firebug/twisty-closed-firebug.svg);
-}
-
-.treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/firebug/twisty-open-firebug.svg);
 }
 
 /******************************************************************************/
@@ -149,38 +134,45 @@
 
 /* Light Theme: toggle icon */
 .theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-image: url(chrome://devtools/skin/images/controls.png);
   background-size: 56px 28px;
   background-position: 0 -14px;
 }
 
 .theme-light .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
-  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-image: url(chrome://devtools/skin/images/controls.png);
   background-size: 56px 28px;
   background-position: -14px -14px;
 }
 
 /* Dark Theme: toggle icon */
 .theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-image: url(chrome://devtools/skin/images/controls.png);
   background-size: 56px 28px;
   background-position: -28px -14px;
 }
 
 .theme-dark .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
-  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-image: url(chrome://devtools/skin/images/controls.png);
   background-size: 56px 28px;
   background-position: -42px -14px;
 }
 
-.theme-dark .treeTable .treeRow:hover {
-  background-color: var(--theme-selection-background-semitransparent);
+/* Dark and Light Themes: Support for retina displays */
+@media (min-resolution: 1.1dppx) {
+  .theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon,
+  .theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
+    background-image: url("chrome://devtools/skin/images/controls@2x.png");
+  }
 }
 
-/* Dark and Light Themes: colors */
 .theme-light .treeTable .treeRow:hover,
 .theme-dark .treeTable .treeRow:hover {
   background-color: var(--theme-selection-background) !important;
+}
+
+.theme-firebug .treeTable .treeRow:hover {
+  background-color: var(--theme-body-background);
 }
 
 .theme-light .treeTable .treeLabel,
@@ -192,10 +184,6 @@
   color: var(--theme-highlight-pink);
 }
 
-/* Dark and Light Themes: Support for retina displays */
-@media (min-resolution: 1.1dppx) {
-.theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon,
-.theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-  background-image: url("chrome://devtools/skin/images/controls@2x.png");
-}
+.theme-firebug .treeTable .treeLabel {
+  color: var(--theme-body-color);
 }
