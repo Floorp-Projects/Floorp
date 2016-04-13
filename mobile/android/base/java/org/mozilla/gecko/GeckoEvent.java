@@ -601,7 +601,7 @@ public class GeckoEvent {
         int bits = 0;
         for (int i = 0; i < array.length; i++) {
             if (array[i]) {
-                bits |= 1<<i;
+                bits |= 1 << i;
             }
         }
         return bits;
