@@ -812,25 +812,6 @@ GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
 }
 
 bool
-LayerTransactionParent::RecvUpdateScrollOffset(
-    const FrameMetrics::ViewID& aScrollID,
-    const uint32_t& aScrollGeneration,
-    const CSSPoint& aScrollOffset)
-{
-  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
-    return false;
-  }
-
-  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
-  if (!controller) {
-    return false;
-  }
-  controller->NotifyScrollUpdated(aScrollGeneration, aScrollOffset);
-  mShadowLayersManager->ForceComposite(this);
-  return true;
-}
-
-bool
 LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
                                                  const float& aX, const float& aY)
 {
