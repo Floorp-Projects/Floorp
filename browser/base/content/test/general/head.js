@@ -611,7 +611,7 @@ var FullZoomHelper = {
 function promiseTabLoadEvent(tab, url)
 {
   let deferred = Promise.defer();
-  info("Wait tab event: " + load);
+  info("Wait tab event: load");
 
   // Create two promises: one resolved from the content process when the page
   // loads and one that is rejected if we take too long to load the url.
