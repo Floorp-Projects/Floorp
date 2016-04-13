@@ -254,6 +254,7 @@ class Bindings
     }
 
   public:
+    static const uint32_t BODY_LEVEL_LEXICAL_LIMIT = UINT16_LIMIT;
 
     Binding* bindingArray() const {
         return reinterpret_cast<Binding*>(bindingArrayAndFlag_ & ~TEMPORARY_STORAGE_BIT);
@@ -434,12 +435,26 @@ class MutableBindingsOperations : public BindingsOperations<Outer>
     void setBindingArray(const Binding* bindingArray, uintptr_t temporaryBit) {
         bindings().bindingArrayAndFlag_ = uintptr_t(bindingArray) | temporaryBit;
     }
-    void setNumArgs(uint16_t num) { bindings().numArgs_ = num; }
-    void setNumVars(uint32_t num) { bindings().numVars_ = num; }
-    void setNumBodyLevelLexicals(uint16_t num) { bindings().numBodyLevelLexicals_ = num; }
-    void setNumBlockScoped(uint16_t num) { bindings().numBlockScoped_ = num; }
-    void setNumUnaliasedVars(uint32_t num) { bindings().numUnaliasedVars_ = num; }
-    void setNumUnaliasedBodyLevelLexicals(uint16_t num) {
+    void setNumArgs(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
+        bindings().numArgs_ = num;
+    }
+    void setNumVars(uint32_t num) {
+        bindings().numVars_ = num;
+    }
+    void setNumBodyLevelLexicals(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
+        bindings().numBodyLevelLexicals_ = num;
+    }
+    void setNumBlockScoped(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
+        bindings().numBlockScoped_ = num;
+    }
+    void setNumUnaliasedVars(uint32_t num) {
+        bindings().numUnaliasedVars_ = num;
+    }
+    void setNumUnaliasedBodyLevelLexicals(uint32_t num) {
+        MOZ_ASSERT(num <= UINT16_MAX);
         bindings().numUnaliasedBodyLevelLexicals_ = num;
     }
     void setAliasedBodyLevelLexicalBegin(uint32_t offset) {

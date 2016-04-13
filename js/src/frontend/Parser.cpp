@@ -94,7 +94,9 @@ template <>
 bool
 ParseContext<FullParseHandler>::checkLocalsOverflow(TokenStream& ts)
 {
-    if (vars_.length() + bodyLevelLexicals_.length() >= LOCALNO_LIMIT) {
+    if (vars_.length() + bodyLevelLexicals_.length() >= LOCALNO_LIMIT ||
+        bodyLevelLexicals_.length() >= Bindings::BODY_LEVEL_LEXICAL_LIMIT)
+    {
         ts.reportError(JSMSG_TOO_MANY_LOCALS);
         return false;
     }
