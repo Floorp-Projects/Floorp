@@ -249,7 +249,7 @@ public class LightweightTheme implements GeckoEventListener {
         // Calculate the luminance to determine if it's a light or a dark theme.
         double luminance = (0.2125 * ((mColor & 0x00FF0000) >> 16)) +
                            (0.7154 * ((mColor & 0x0000FF00) >> 8)) +
-                           (0.0721 * (mColor &0x000000FF));
+                           (0.0721 * (mColor & 0x000000FF));
         mIsLight = luminance > 110;
 
         // The bitmap image might be smaller than the device's width.
