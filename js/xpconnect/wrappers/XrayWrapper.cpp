@@ -1055,11 +1055,15 @@ ExpandoObjectFinalize(JSFreeOp* fop, JSObject* obj)
     NS_RELEASE(principal);
 }
 
+static const JSClassOps ExpandoObjectClassOps = {
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, ExpandoObjectFinalize
+};
+
 const JSClass ExpandoObjectClass = {
     "XrayExpandoObject",
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT),
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, ExpandoObjectFinalize
+    &ExpandoObjectClassOps
 };
 
 bool
@@ -1706,14 +1710,15 @@ DOMXrayTraits::call(JSContext* cx, HandleObject wrapper,
     // are using "legacycaller", which basically means plug-ins.  We want to
     // call those on the content compartment.
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
-        if (!clasp->call) {
+        if (JSNative call = clasp->getCall()) {
+            // call it on the Xray compartment
+            if (!call(cx, args.length(), args.base()))
+                return false;
+        } else {
             RootedValue v(cx, ObjectValue(*wrapper));
             js::ReportIsNotFunction(cx, v);
             return false;
         }
-        // call it on the Xray compartment
-        if (!clasp->call(cx, args.length(), args.base()))
-            return false;
     } else {
         // This is only reached for WebIDL instance objects, and in practice
         // only for plugins.  Just call them on the content compartment.
@@ -1732,13 +1737,14 @@ DOMXrayTraits::construct(JSContext* cx, HandleObject wrapper,
     const js::Class* clasp = js::GetObjectClass(obj);
     // See comments in DOMXrayTraits::call() explaining what's going on here.
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
-        if (!clasp->construct) {
+        if (JSNative construct = clasp->getConstruct()) {
+            if (!construct(cx, args.length(), args.base()))
+                return false;
+        } else {
             RootedValue v(cx, ObjectValue(*wrapper));
             js::ReportIsNotFunction(cx, v);
             return false;
         }
-        if (!clasp->construct(cx, args.length(), args.base()))
-            return false;
     } else {
         if (!baseInstance.construct(cx, wrapper, args))
             return false;

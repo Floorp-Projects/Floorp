@@ -2508,6 +2508,8 @@ XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
 
 extern NativePropertyHooks sEmptyNativePropertyHooks;
 
+extern const js::ClassOps sBoringInterfaceObjectClassClassOps;
+
 extern const js::ObjectOps sInterfaceObjectClassObjectOps;
 
 // We use one constructor JSNative to represent all DOM interface objects (so
@@ -2540,7 +2542,7 @@ inline bool
 HasConstructor(JSObject* obj)
 {
   return JS_IsNativeFunction(obj, Constructor) ||
-         js::GetObjectClass(obj)->construct;
+         js::GetObjectClass(obj)->getConstruct();
 }
  #endif
 

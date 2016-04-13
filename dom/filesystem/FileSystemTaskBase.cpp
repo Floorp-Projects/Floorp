@@ -78,7 +78,7 @@ DispatchToIOThread(nsIRunnable* aRunnable)
 // This runnable is used when an error value is set before doing any real
 // operation on the I/O thread. In this case we skip all and we directly
 // communicate the error.
-class ErrorRunnable final : public nsCancelableRunnable
+class ErrorRunnable final : public CancelableRunnable
 {
 public:
   explicit ErrorRunnable(FileSystemTaskChildBase* aTask)

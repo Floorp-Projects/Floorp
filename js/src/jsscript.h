@@ -880,6 +880,8 @@ typedef HashSet<ScriptSource*, CompressedSourceHasher, SystemAllocPolicy> Compre
 
 class ScriptSourceObject : public NativeObject
 {
+    static const ClassOps classOps_;
+
   public:
     static const Class class_;
 

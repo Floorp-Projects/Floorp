@@ -146,6 +146,15 @@
     "high": 1000,
     "n_buckets": 50
   },
+  "CONTENT_RESPONSE_DURATION" : {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1261373],
+    "expires_in_version": "55",
+    "description": "Main thread response times for APZ notifications about input events (ms)",
+    "kind" : "exponential",
+    "high": 60000,
+    "n_buckets": 50
+  },
   "CYCLE_COLLECTOR": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",

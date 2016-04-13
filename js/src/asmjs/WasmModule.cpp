@@ -1563,10 +1563,7 @@ Module::profilingLabel(uint32_t funcIndex) const
     return funcLabels_[funcIndex].get();
 }
 
-const Class WasmModuleObject::class_ = {
-    "WasmModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS),
+const ClassOps WasmModuleObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1579,6 +1576,13 @@ const Class WasmModuleObject::class_ = {
     nullptr, /* hasInstance */
     nullptr, /* construct */
     WasmModuleObject::trace
+};
+
+const Class WasmModuleObject::class_ = {
+    "WasmModuleObject",
+    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS),
+    &WasmModuleObject::classOps_,
 };
 
 bool

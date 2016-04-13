@@ -142,8 +142,6 @@ protected:
     virtual void
     ActorDestroy(ActorDestroyReason why) override;
 
-    MOZ_NORETURN void QuickExit();
-
     virtual bool
     RecvProcessNativeEventsInInterruptCall() override;
 

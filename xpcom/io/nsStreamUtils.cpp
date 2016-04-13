@@ -20,6 +20,7 @@
 #include "nsIBufferedStreams.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
@@ -29,11 +30,11 @@ using namespace mozilla;
 // those can be shut down at any time, and in these cases, Cancel() is called
 // instead of Run().
 class nsInputStreamReadyEvent final
-  : public nsICancelableRunnable
+  : public CancelableRunnable
   , public nsIInputStreamCallback
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   nsInputStreamReadyEvent(nsIInputStreamCallback* aCallback,
                           nsIEventTarget* aTarget)
@@ -98,7 +99,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     mCallback = nullptr;
     return NS_OK;
@@ -110,8 +111,8 @@ private:
   nsCOMPtr<nsIEventTarget>         mTarget;
 };
 
-NS_IMPL_ISUPPORTS(nsInputStreamReadyEvent, nsICancelableRunnable,
-                  nsIRunnable, nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS_INHERITED(nsInputStreamReadyEvent, CancelableRunnable,
+                            nsIInputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -119,11 +120,11 @@ NS_IMPL_ISUPPORTS(nsInputStreamReadyEvent, nsICancelableRunnable,
 // those can be shut down at any time, and in these cases, Cancel() is called
 // instead of Run().
 class nsOutputStreamReadyEvent final
-  : public nsICancelableRunnable
+  : public CancelableRunnable
   , public nsIOutputStreamCallback
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   nsOutputStreamReadyEvent(nsIOutputStreamCallback* aCallback,
                            nsIEventTarget* aTarget)
@@ -188,7 +189,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     mCallback = nullptr;
     return NS_OK;
@@ -200,8 +201,8 @@ private:
   nsCOMPtr<nsIEventTarget>          mTarget;
 };
 
-NS_IMPL_ISUPPORTS(nsOutputStreamReadyEvent, nsICancelableRunnable,
-                  nsIRunnable, nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS_INHERITED(nsOutputStreamReadyEvent, CancelableRunnable,
+                            nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -234,10 +235,10 @@ NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback* aCallback,
 class nsAStreamCopier
   : public nsIInputStreamCallback
   , public nsIOutputStreamCallback
-  , public nsICancelableRunnable
+  , public CancelableRunnable
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   nsAStreamCopier()
     : mLock("nsAStreamCopier.mLock")
@@ -451,7 +452,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() MOZ_MUST_OVERRIDE override = 0;
+  nsresult Cancel() MOZ_MUST_OVERRIDE override = 0;
 
   nsresult PostContinuationEvent()
   {
@@ -506,11 +507,10 @@ protected:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsAStreamCopier,
-                  nsIInputStreamCallback,
-                  nsIOutputStreamCallback,
-                  nsICancelableRunnable,
-                  nsIRunnable)
+NS_IMPL_ISUPPORTS_INHERITED(nsAStreamCopier,
+                            CancelableRunnable,
+                            nsIInputStreamCallback,
+                            nsIOutputStreamCallback)
 
 class nsStreamCopierIB final : public nsAStreamCopier
 {
@@ -562,7 +562,7 @@ public:
     return n;
   }
 
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     return NS_OK;
   }
@@ -618,7 +618,7 @@ public:
     return n;
   }
 
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     return NS_OK;
   }

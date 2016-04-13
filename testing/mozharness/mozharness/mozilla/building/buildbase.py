@@ -1857,7 +1857,7 @@ or run without that action (ie: --no-{action})"
 
         paths = [
             (packageName, os.path.join(dirs['abs_obj_dir'], 'dist', packageName)),
-            ('omni.ja', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'assets', 'omni.ja')),
+            ('omni.ja', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'omni.ja')),
             ('classes.dex', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'classes.dex'))
         ]
 

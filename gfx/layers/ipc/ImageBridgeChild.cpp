@@ -625,8 +625,17 @@ void ImageBridgeChild::UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aWrappe
 }
 
 static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
-                               RefPtr<AsyncTransactionWaiter>&& aWaiter)
+                               RefPtr<AsyncTransactionWaiter>&& aWaiter,
+                               ReentrantMonitor* aBarrier,
+                               bool* const outDone)
 {
+#ifdef MOZ_WIDGET_GONK
+  MOZ_ASSERT(aWaiter);
+#else
+  MOZ_ASSERT(!aWaiter);
+#endif
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+
   if (!ImageBridgeChild::IsCreated() || ImageBridgeChild::IsShutDown()) {
     // How sad. If we get into this branch it means that the ImageBridge
     // got destroyed between the time we ImageBridgeChild::FlushAllImage
@@ -635,7 +644,12 @@ static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
     // in the shutdown of gecko for this to be happening for a good reason.
     NS_WARNING("Something is holding on to graphics resources after the shutdown"
                "of the graphics subsystem!");
+#ifdef MOZ_WIDGET_GONK
     aWaiter->DecrementWaitCount();
+#endif
+
+    *outDone = true;
+    aBarrier->NotifyAll();
     return;
   }
   MOZ_ASSERT(aClient);
@@ -649,7 +663,11 @@ static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
   // If any AsyncTransactionTrackers were created by FlushAllImages and attached
   // to aWaiter, aWaiter will not complete until those trackers all complete.
   // Otherwise, aWaiter will be ready to complete now.
+#ifdef MOZ_WIDGET_GONK
   aWaiter->DecrementWaitCount();
+#endif
+  *outDone = true;
+  aBarrier->NotifyAll();
 }
 
 // static
@@ -667,15 +685,27 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
     return;
   }
 
-  RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+  ReentrantMonitor barrier("FlushAllImages Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
+
+  RefPtr<AsyncTransactionWaiter> waiter;
+#ifdef MOZ_WIDGET_GONK
+  waiter = new AsyncTransactionWaiter();
   // This increment is balanced by the decrement in FlushAllImagesSync
   waiter->IncrementWaitCount();
-
+#endif
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
-    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, waiter));
+    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, waiter, &barrier, &done));
 
+  while (!done) {
+    barrier.Wait();
+  }
+
+#ifdef MOZ_WIDGET_GONK
   waiter->WaitComplete();
+#endif
 }
 
 void

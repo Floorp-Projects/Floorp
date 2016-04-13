@@ -383,10 +383,7 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-const Class WeakMapObject::class_ = {
-    "WeakMap",
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
+static const ClassOps WeakMapObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -399,6 +396,13 @@ const Class WeakMapObject::class_ = {
     nullptr, /* hasInstance */
     nullptr, /* construct */
     WeakMap_mark
+};
+
+const Class WeakMapObject::class_ = {
+    "WeakMap",
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
+    &WeakMapObjectClassOps
 };
 
 static const JSFunctionSpec weak_map_methods[] = {

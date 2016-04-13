@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_QT
-#include <unistd.h> // for _exit()
 #include <QtCore/QTimer>
 #include "nsQAppInstance.h"
 #include "NestedLoopTimer.h"
@@ -33,6 +32,7 @@
 #ifdef MOZ_X11
 # include "mozilla/X11Util.h"
 #endif
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/BrowserStreamChild.h"
@@ -57,6 +57,7 @@
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
+using namespace mozilla::ipc;
 using namespace mozilla::plugins;
 using namespace mozilla::widget;
 using mozilla::dom::CrashReporterChild;
@@ -786,13 +787,6 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
 #endif
 }
 
-void
-PluginModuleChild::QuickExit()
-{
-    NS_WARNING("plugin process _exit()ing");
-    _exit(0);
-}
-
 PPluginModuleChild*
 PluginModuleChild::AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
                                            base::ProcessId aOtherPid)
@@ -843,7 +837,7 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 
     if (AbnormalShutdown == why) {
         NS_WARNING("shutting down early because of crash!");
-        QuickExit();
+        ProcessChild::QuickExit();
     }
 
     if (!mHasShutdown) {

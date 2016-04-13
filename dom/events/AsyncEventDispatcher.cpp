@@ -54,7 +54,7 @@ AsyncEventDispatcher::Run()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 AsyncEventDispatcher::Cancel()
 {
   mCanceled = true;

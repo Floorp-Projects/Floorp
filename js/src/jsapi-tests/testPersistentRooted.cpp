@@ -20,21 +20,25 @@ struct BarkWhenTracedClass {
 int BarkWhenTracedClass::finalizeCount;
 int BarkWhenTracedClass::traceCount;
 
+static const JSClassOps BarkWhenTracedClassClassOps = {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    BarkWhenTracedClass::finalize,
+    nullptr,
+    nullptr,
+    nullptr,
+    BarkWhenTracedClass::trace
+};
+
 const JSClass BarkWhenTracedClass::class_ = {
     "BarkWhenTracedClass",
     0,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    finalize,
-    nullptr,
-    nullptr,
-    nullptr,
-    trace
+    &BarkWhenTracedClassClassOps
 };
 
 struct Kennel {

@@ -114,29 +114,21 @@ def mkdir_p(path):
             raise
 
 
-def build_and_use_libgcc(env, clang_dir):
-    with updated_env(env):
-        tempdir = tempfile.mkdtemp()
-        gcc_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "..", "build-gcc")
-        run_in(gcc_dir, ["./build-gcc.sh", tempdir, "libgcc"])
-        run_in(tempdir, ["tar", "-xf", "gcc.tar.xz"])
-        libgcc_dir = glob.glob(os.path.join(tempdir,
-                                            "gcc", "lib", "gcc",
-                                            "x86_64-unknown-linux-gnu",
+def install_libgcc(gcc_dir, clang_dir):
+        libgcc_dir = glob.glob(os.path.join(gcc_dir, "lib", "gcc",
+                                            "x86_64-*linux-gnu",
                                             "[0-9]*"))[0]
         clang_lib_dir = os.path.join(clang_dir, "lib", "gcc",
                                      "x86_64-unknown-linux-gnu",
                                      os.path.basename(libgcc_dir))
         mkdir_p(clang_lib_dir)
         copy_dir_contents(libgcc_dir, clang_lib_dir)
-        libgcc_dir = os.path.join(tempdir, "gcc", "lib64")
+        libgcc_dir = os.path.join(gcc_dir, "lib64")
         clang_lib_dir = os.path.join(clang_dir, "lib")
         copy_dir_contents(libgcc_dir, clang_lib_dir)
-        include_dir = os.path.join(tempdir, "gcc", "include")
+        include_dir = os.path.join(gcc_dir, "include")
         clang_include_dir = os.path.join(clang_dir, "include")
         copy_dir_contents(include_dir, clang_include_dir)
-        shutil.rmtree(tempdir)
 
 
 def svn_co(source_dir, url, directory, revision):
@@ -145,12 +137,6 @@ def svn_co(source_dir, url, directory, revision):
 
 def svn_update(directory, revision):
     run_in(directory, ["svn", "update", "-r", revision])
-
-
-def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
-                    build_type, assertions, python_path):
-    build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
-                        build_type, assertions, python_path)
 
 
 def get_platform():
@@ -183,8 +169,8 @@ def is_windows():
     return platform.system() == "Windows"
 
 
-def build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
-                        build_type, assertions, python_path):
+def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
+                    build_type, assertions, python_path, gcc_dir):
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -196,8 +182,10 @@ def build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
         run_cmake = False
 
     cmake_args = ["-GNinja",
-                  "-DCMAKE_C_COMPILER=%s" % cc,
-                  "-DCMAKE_CXX_COMPILER=%s" % cxx,
+                  "-DCMAKE_C_COMPILER=%s" % cc[0],
+                  "-DCMAKE_CXX_COMPILER=%s" % cxx[0],
+                  "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
+                  "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
                   "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
                   "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
@@ -207,6 +195,10 @@ def build_one_stage_aux(cc, cxx, src_dir, stage_dir, build_libcxx,
                   "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
                   src_dir];
     build_package(build_dir, run_cmake, cmake_args)
+
+    if is_linux():
+        install_libgcc(gcc_dir, inst_dir)
+
 
 if __name__ == "__main__":
     # The directories end up in the debug info, so the easy way of getting
@@ -343,61 +335,54 @@ if __name__ == "__main__":
     final_stage_dir = stage1_dir
 
     if is_darwin():
-        extra_cflags = ""
-        extra_cxxflags = "-stdlib=libc++"
-        extra_cflags2 = ""
-        extra_cxxflags2 = "-stdlib=libc++"
+        extra_cflags = []
+        extra_cxxflags = ["-stdlib=libc++"]
+        extra_cflags2 = []
+        extra_cxxflags2 = ["-stdlib=libc++"]
     elif is_linux():
-        extra_cflags = "-static-libgcc"
-        extra_cxxflags = "-static-libgcc -static-libstdc++"
-        extra_cflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
-        extra_cxxflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
+        extra_cflags = ["-static-libgcc"]
+        extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
+        extra_cflags2 = ["-fPIC"]
+        extra_cxxflags2 = ["-fPIC"]
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
         else:
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
     elif is_windows():
-        extra_cflags = ""
-        extra_cxxflags = ""
-        extra_cflags2 = ""
-        extra_cxxflags2 = ""
+        extra_cflags = []
+        extra_cxxflags = []
+        extra_cflags2 = []
+        extra_cxxflags2 = []
 
     build_one_stage(
-        cc + " %s" % extra_cflags,
-        cxx + " %s" % extra_cxxflags,
+        [cc] + extra_cflags,
+        [cxx] + extra_cxxflags,
         llvm_source_dir, stage1_dir, build_libcxx,
-        build_type, assertions, python_path)
+        build_type, assertions, python_path, gcc_dir)
 
     if stages > 1:
         stage2_dir = build_dir + '/stage2'
         stage2_inst_dir = stage2_dir + '/clang'
         final_stage_dir = stage2_dir
         build_one_stage(
-            stage1_inst_dir + "/bin/%s%s %s" %
-                (cc_name, exe_ext, extra_cflags2),
-            stage1_inst_dir + "/bin/%s%s %s" %
-                (cxx_name, exe_ext, extra_cxxflags2),
+            [stage1_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_cflags2,
+            [stage1_inst_dir + "/bin/%s%s" %
+                (cxx_name, exe_ext)] + extra_cxxflags2,
             llvm_source_dir, stage2_dir, build_libcxx,
-            build_type, assertions, python_path)
+            build_type, assertions, python_path, gcc_dir)
 
-        if stages > 2:
-            stage3_dir = build_dir + '/stage3'
-            final_stage_dir = stage3_dir
-            build_one_stage(
-                stage2_inst_dir + "/bin/%s%s %s" %
-                    (cc_name, exe_ext, extra_cflags2),
-                stage2_inst_dir + "/bin/%s%s %s" %
-                    (cxx_name, exe_ext, extra_cxxflags2),
-                llvm_source_dir, stage3_dir, build_libcxx,
-                build_type, assertions, python_path)
-
-    if is_linux():
-        final_stage_inst_dir = final_stage_dir + '/clang'
-        build_and_use_libgcc(
-            {"CC": cc + " %s" % extra_cflags,
-             "CXX": cxx + " %s" % extra_cxxflags},
-            final_stage_inst_dir)
+    if stages > 2:
+        stage3_dir = build_dir + '/stage3'
+        final_stage_dir = stage3_dir
+        build_one_stage(
+            [stage2_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_cflags2,
+            [stage2_inst_dir + "/bin/%s%s" %
+                (cxx_name, exe_ext)] + extra_cxxflags2,
+            llvm_source_dir, stage3_dir, build_libcxx,
+            build_type, assertions, python_path, gcc_dir)
 
     if is_darwin() or is_windows():
         build_tar_package("tar", "clang.tar.bz2", final_stage_dir, "clang")

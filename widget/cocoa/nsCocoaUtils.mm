@@ -486,7 +486,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<gfxContext> context = new gfxContext(drawTarget);
+    RefPtr<gfxContext> context = gfxContext::ForDrawTarget(drawTarget);
     if (!context) {
       NS_ERROR("Failed to create gfxContext");
       return NS_ERROR_FAILURE;

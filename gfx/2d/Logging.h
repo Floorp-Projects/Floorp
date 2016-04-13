@@ -136,6 +136,7 @@ enum class LogReason : int {
   GetFontFileDataFailed,
   MessageChannelCloseFailure,
   TextureAliveAfterShutdown,
+  InvalidContext,
   // End
   MustBeLessThanThis = 101,
 };

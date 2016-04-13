@@ -1829,11 +1829,12 @@ AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedVie
     RefPtr < DrawTarget > dt = Factory::CreateDrawTargetForData(
         BackendType::CAIRO, data, IntSize(zoomedViewRect.width, zoomedViewRect.height), stride,
         format);
-    if (!dt) {
+    if (!dt || !dt->IsValid()) {
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-    RefPtr<gfxContext> context = new gfxContext(dt);
+    RefPtr<gfxContext> context = gfxContext::ForDrawTarget(dt);
+    MOZ_ASSERT(context); // already checked the draw target above
     context->SetMatrix(context->CurrentMatrix().Scale(zoomFactor, zoomFactor));
 
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
@@ -1934,11 +1935,13 @@ nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t buf
                                          stride,
                                          is24bit ? SurfaceFormat::B8G8R8X8 :
                                                    SurfaceFormat::R5G6B5_UINT16);
-    if (!dt) {
+    if (!dt || !dt->IsValid()) {
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-    RefPtr<gfxContext> context = new gfxContext(dt);
+    RefPtr<gfxContext> context = gfxContext::ForDrawTarget(dt);
+    MOZ_ASSERT(context); // checked the draw target above
+
     context->SetMatrix(
       context->CurrentMatrix().Scale(scale * bufW / srcW,
                                      scale * bufH / srcH));

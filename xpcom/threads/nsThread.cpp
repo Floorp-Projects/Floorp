@@ -268,7 +268,7 @@ public:
     mShutdownContext->terminatingThread->ShutdownComplete(mShutdownContext);
     return NS_OK;
   }
-  NS_IMETHOD Cancel() override
+  nsresult Cancel() override
   {
     return Run();
   }

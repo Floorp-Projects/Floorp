@@ -135,7 +135,6 @@ class GlobalObject : public NativeObject
 
     enum WarnOnceFlag : int32_t {
         WARN_WATCH_DEPRECATED                   = 1 << 0,
-        WARN_STRING_CONTAINS_DEPRECATED         = 1 << 1,
     };
 
     // Emit the specified warning if the given slot in |obj|'s global isn't
@@ -709,12 +708,6 @@ class GlobalObject : public NativeObject
         // debuggers like Firebug (bug 934669).
         //return warnOnceAbout(cx, obj, WARN_WATCH_DEPRECATED, JSMSG_OBJECT_WATCH_DEPRECATED);
         return true;
-    }
-
-    // Warn about use of the deprecated String.prototype.contains method
-    static bool warnOnceAboutStringContains(JSContext* cx, HandleObject strContains) {
-        return warnOnceAbout(cx, strContains, WARN_STRING_CONTAINS_DEPRECATED,
-                             JSMSG_DEPRECATED_STRING_CONTAINS);
     }
 
     static bool getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,

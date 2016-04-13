@@ -354,7 +354,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   RefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
       neededRect.Size(), SurfaceFormat::B8G8R8A8);
-  if (!offscreenDT) {
+  if (!offscreenDT || !offscreenDT->IsValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -364,7 +364,8 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   }
 
   if (!mPaintTransform.IsSingular()) {
-    RefPtr<gfxContext> gfx = new gfxContext(offscreenDT);
+    RefPtr<gfxContext> gfx = gfxContext::ForDrawTarget(offscreenDT);
+    MOZ_ASSERT(gfx); // already checked the draw target above
     gfx->Save();
     gfx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
@@ -418,7 +419,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   RefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
       neededRect.Size(), SurfaceFormat::B8G8R8A8);
-  if (!offscreenDT) {
+  if (!offscreenDT || !offscreenDT->IsValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -443,7 +444,8 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   if (!deviceToFilterSpace.Invert()) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
+  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(offscreenDT);
+  MOZ_ASSERT(ctx); // already checked the draw target above
   ctx->SetMatrix(
     ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
                          PreMultiply(deviceToFilterSpace));

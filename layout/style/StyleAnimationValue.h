@@ -226,6 +226,11 @@ public:
    * Gets the computed value for the given property from the given style
    * context.
    *
+   * Obtaining the computed value allows us to animate properties when the
+   * content author has specified a value like "inherit" or "initial" or some
+   * other keyword that isn't directly interpolatable, but which *computes* to
+   * something interpolatable.
+   *
    * @param aProperty     The property whose value we're looking up.
    * @param aStyleContext The style context to check for the computed value.
    * @param [out] aComputedValue The resulting computed value.
@@ -270,6 +275,7 @@ public:
                 // calc() expression that's either length or length+percent
     eUnit_ObjectPosition, // nsCSSValue* (never null), always with a
                           // 4-entry nsCSSValue::Array
+    eUnit_URL, // nsCSSValue* (never null), always with a css::URLValue
     eUnit_CSSValuePair, // nsCSSValuePair* (never null)
     eUnit_CSSValueTriplet, // nsCSSValueTriplet* (never null)
     eUnit_CSSRect, // nsCSSRect* (never null)
@@ -453,7 +459,8 @@ private:
   }
   static bool IsCSSValueUnit(Unit aUnit) {
     return aUnit == eUnit_Calc ||
-           aUnit == eUnit_ObjectPosition;
+           aUnit == eUnit_ObjectPosition ||
+           aUnit == eUnit_URL;
   }
   static bool IsCSSValuePairUnit(Unit aUnit) {
     return aUnit == eUnit_CSSValuePair;
