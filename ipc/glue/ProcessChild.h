@@ -36,6 +36,12 @@ public:
     return gProcessChild->mUILoop;
   }
 
+    /**
+   * Exit *now*.  Do not shut down XPCOM, do not pass Go, do not run
+   * static destructors, do not collect $200.
+   */
+  static void QuickExit();
+
 protected:
   static ProcessChild* current() {
     return gProcessChild;

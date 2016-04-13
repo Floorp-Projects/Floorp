@@ -7455,17 +7455,32 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
             blobImpl = do_QueryInterface(data);
           }
           if (blobImpl) {
+            IPCDataTransferData data;
+
+            // If we failed to create the blob actor, then this blob probably
+            // can't get the file size for the underlying file, ignore it for
+            // now. TODO pass this through anyway.
+            if (aChild) {
+              auto* child = mozilla::dom::BlobChild::GetOrCreate(aChild,
+                              static_cast<BlobImpl*>(blobImpl.get()));
+              if (!child) {
+                continue;
+              }
+
+              data = child;
+            } else if (aParent) {
+              auto* parent = mozilla::dom::BlobParent::GetOrCreate(aParent,
+                               static_cast<BlobImpl*>(blobImpl.get()));
+              if (!parent) {
+                continue;
+              }
+
+              data = parent;
+            }
+
             IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
             item->flavor() = nsCString(flavorStr);
-            if (aChild) {
-              item->data() =
-                mozilla::dom::BlobChild::GetOrCreate(aChild,
-                  static_cast<BlobImpl*>(blobImpl.get()));
-            } else if (aParent) {
-              item->data() =
-                mozilla::dom::BlobParent::GetOrCreate(aParent,
-                  static_cast<BlobImpl*>(blobImpl.get()));
-            }
+            item->data() = data;
           } else {
             // This is a hack to support kFilePromiseMime.
             // On Windows there just needs to be an entry for it, 

@@ -547,6 +547,16 @@
         </body>
       </method>
     </implementation>
+    <handlers>
+      <handler event="dragstart">
+      <![CDATA[
+        // If we're a remote browser dealing with a dragstart, stop it
+        // from propagating up, since our content process should be dealing
+        // with the mouse movement.
+        event.stopPropagation();
+      ]]>
+      </handler>
+    </handlers>
 
   </binding>
 

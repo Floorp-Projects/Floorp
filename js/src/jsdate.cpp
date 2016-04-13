@@ -3286,18 +3286,7 @@ const Class DateObject::class_ = {
     js_Date_str,
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace */
+    JS_NULL_CLASS_OPS,
     &DateObjectClassSpec
 };
 
@@ -3315,18 +3304,7 @@ static const ClassSpec DateObjectProtoClassSpec = {
 const Class DateObject::protoClass_ = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace  */
+    JS_NULL_CLASS_OPS,
     &DateObjectProtoClassSpec
 };
 

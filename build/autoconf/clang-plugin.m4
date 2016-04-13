@@ -95,17 +95,20 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     dnl Check for the new ASTMatcher API names.  Since this happened in the
     dnl middle of the 3.8 cycle, our CLANG_VERSION_FULL is impossible to use
     dnl correctly, so we have to detect this at configure time.
-    AC_CACHE_CHECK(for new ASTMatcher names,
-                   ac_cv_have_new_ASTMatcher_names,
+    AC_CACHE_CHECK(for new ASTMatcher API,
+                   ac_cv_have_new_ASTMatcher_api,
         [
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
+            _SAVE_CXX="$CXX"
             CXXFLAGS="${LLVM_CXXFLAGS}"
+            CXX="${HOST_CXX}"
             AC_TRY_COMPILE([#include "clang/ASTMatchers/ASTMatchers.h"],
                            [clang::ast_matchers::cxxConstructExpr();],
                            ac_cv_have_new_ASTMatcher_names="yes",
                            ac_cv_have_new_ASTMatcher_names="no")
+            CXX="$_SAVE_CXX"
             CXXFLAGS="$_SAVE_CXXFLAGS"
             AC_LANG_RESTORE
         ])

@@ -403,7 +403,7 @@ add_task(function* test_createRoom() {
 
   // We can't check the value of the key, but check we've got a # which indicates
   // there should be one.
-  Assert.ok(room.roomUrl.contains("#"), "Created room url should have a key");
+  Assert.ok(room.roomUrl.includes("#"), "Created room url should have a key");
   var key = room.roomUrl.split("#")[1];
   Assert.ok(key.length, "Created room url should have non-zero length key");
 

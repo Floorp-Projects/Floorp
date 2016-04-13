@@ -6,7 +6,6 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
-
 AC_PREREQ(2.13)
 AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
@@ -413,7 +412,7 @@ case "$target" in
               if test ! -d "$WIN_UCRT_REDIST_DIR"; then
                 AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
               fi
-              WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd`
+              WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd -W`
             fi
         else
             AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
@@ -431,7 +430,7 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
           if test ! -d "$WIN32_REDIST_DIR"; then
             AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
           fi
-          WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
+          WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd -W`
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -7249,6 +7248,7 @@ fi
 
 dnl win32 options
 AC_SUBST(WIN32_REDIST_DIR)
+AC_SUBST(WIN_UCRT_REDIST_DIR)
 AC_SUBST(MAKENSISU)
 
 dnl Echo the CFLAGS to remove extra whitespace.

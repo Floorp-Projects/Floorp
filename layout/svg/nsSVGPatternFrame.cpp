@@ -372,12 +372,13 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
 
   RefPtr<DrawTarget> dt =
     aDrawTarget->CreateSimilarDrawTarget(surfaceSize, SurfaceFormat::B8G8R8A8);
-  if (!dt) {
+  if (!dt || !dt->IsValid()) {
     return nullptr;
   }
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
-  RefPtr<gfxContext> gfx = new gfxContext(dt);
+  RefPtr<gfxContext> gfx = gfxContext::ForDrawTarget(dt);
+  MOZ_ASSERT(gfx); // already checked the draw target above
 
   if (aGraphicOpacity != 1.0f) {
     gfx->Save();

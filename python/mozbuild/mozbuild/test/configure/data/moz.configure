@@ -147,22 +147,6 @@ include(include_path)
 # The order of the decorators matter: @imports needs to appear after other
 # decorators.
 option('--with-imports', nargs='?', help='Imports')
-@depends('--with-imports')
-@imports(_from='mozbuild.configure.options', _import='OptionValue')
-def with_imports(value):
-    if value:
-        return isinstance(value, OptionValue)
-
-set_config('IMPORTS', with_imports)
-
-# Trying to import manually will fail at runtime.
-@depends('--with-imports')
-def with_imports(value):
-    if len(value) and value[0] == 'break':
-        from mozbuild.configure.options import OptionValue
-        return isinstance(value, OptionValue)
-
-set_config('IMPORTS2', with_imports)
 
 # A limited set of functions from os.path are exposed by default.
 @depends('--with-imports')

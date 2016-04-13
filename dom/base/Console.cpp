@@ -409,7 +409,7 @@ private:
 
       // If something goes wrong, we still need to release the ConsoleCallData
       // object. For this reason we have a custom Cancel method.
-      NS_IMETHOD
+      nsresult
       Cancel() override
       {
         mRunnable->ReleaseData();

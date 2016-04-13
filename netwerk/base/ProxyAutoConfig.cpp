@@ -666,13 +666,17 @@ private:
   }
 };
 
-const JSClass JSRuntimeWrapper::sGlobalClass = {
-  "PACResolutionThreadGlobal",
-  JSCLASS_GLOBAL_FLAGS,
+static const JSClassOps sJSRuntimeWrapperGlobalClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr,
   JS_GlobalObjectTraceHook
+};
+
+const JSClass JSRuntimeWrapper::sGlobalClass = {
+  "PACResolutionThreadGlobal",
+  JSCLASS_GLOBAL_FLAGS,
+  &sJSRuntimeWrapperGlobalClassOps
 };
 
 void

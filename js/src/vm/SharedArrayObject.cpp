@@ -346,11 +346,7 @@ const Class SharedArrayBufferObject::protoClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer)
 };
 
-const Class SharedArrayBufferObject::class_ = {
-    "SharedArrayBuffer",
-    JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
+static const ClassOps SharedArrayBufferObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -363,6 +359,14 @@ const Class SharedArrayBufferObject::class_ = {
     nullptr, /* hasInstance */
     nullptr, /* construct */
     nullptr, /* trace */
+};
+
+const Class SharedArrayBufferObject::class_ = {
+    "SharedArrayBuffer",
+    JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
+    &SharedArrayBufferObjectClassOps,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT
 };

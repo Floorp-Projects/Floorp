@@ -295,10 +295,11 @@ MediaEngineTabVideoSource::Draw() {
                                      size,
                                      stride,
                                      SurfaceFormat::B8G8R8X8);
-  if (!dt) {
+  if (!dt || !dt->IsValid()) {
     return;
   }
-  RefPtr<gfxContext> context = new gfxContext(dt);
+  RefPtr<gfxContext> context = gfxContext::ForDrawTarget(dt);
+  MOZ_ASSERT(context); // already checked the draw target above
   context->SetMatrix(context->CurrentMatrix().Scale((((float) size.width)/mViewportWidth),
                                                     (((float) size.height)/mViewportHeight)));
 

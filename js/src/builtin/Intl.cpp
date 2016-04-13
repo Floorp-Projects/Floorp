@@ -628,9 +628,7 @@ static void collator_finalize(FreeOp* fop, JSObject* obj);
 static const uint32_t UCOLLATOR_SLOT = 0;
 static const uint32_t COLLATOR_SLOTS_COUNT = 1;
 
-static const Class CollatorClass = {
-    js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(COLLATOR_SLOTS_COUNT),
+static const ClassOps CollatorClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -639,6 +637,12 @@ static const Class CollatorClass = {
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     collator_finalize
+};
+
+static const Class CollatorClass = {
+    js_Object_str,
+    JSCLASS_HAS_RESERVED_SLOTS(COLLATOR_SLOTS_COUNT),
+    &CollatorClassOps
 };
 
 #if JS_HAS_TOSOURCE
@@ -1122,9 +1126,7 @@ static void numberFormat_finalize(FreeOp* fop, JSObject* obj);
 static const uint32_t UNUMBER_FORMAT_SLOT = 0;
 static const uint32_t NUMBER_FORMAT_SLOTS_COUNT = 1;
 
-static const Class NumberFormatClass = {
-    js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(NUMBER_FORMAT_SLOTS_COUNT),
+static const ClassOps NumberFormatClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1133,6 +1135,12 @@ static const Class NumberFormatClass = {
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     numberFormat_finalize
+};
+
+static const Class NumberFormatClass = {
+    js_Object_str,
+    JSCLASS_HAS_RESERVED_SLOTS(NUMBER_FORMAT_SLOTS_COUNT),
+    &NumberFormatClassOps
 };
 
 #if JS_HAS_TOSOURCE
@@ -1591,9 +1599,7 @@ static void dateTimeFormat_finalize(FreeOp* fop, JSObject* obj);
 static const uint32_t UDATE_FORMAT_SLOT = 0;
 static const uint32_t DATE_TIME_FORMAT_SLOTS_COUNT = 1;
 
-static const Class DateTimeFormatClass = {
-    js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT),
+static const ClassOps DateTimeFormatClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1602,6 +1608,12 @@ static const Class DateTimeFormatClass = {
     nullptr, /* resolve */
     nullptr, /* mayResolve */
     dateTimeFormat_finalize
+};
+
+static const Class DateTimeFormatClass = {
+    js_Object_str,
+    JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT),
+    &DateTimeFormatClassOps
 };
 
 #if JS_HAS_TOSOURCE
