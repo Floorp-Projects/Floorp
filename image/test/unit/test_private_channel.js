@@ -55,7 +55,12 @@ var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';
 
 function setup_chan(path, isPrivate, callback) {
   var uri = NetUtil.newURI(gImgPath);
-  var chan =  NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+  var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+  if (isPrivate) {
+    securityFlags |= Ci.nsILoadInfo.SEC_FORCE_PRIVATE_BROWSING;
+  }
+  var chan =  NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true,
+                                  securityFlags: securityFlags});
   chan.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var channelListener = new ChannelListener();
   chan.asyncOpen2(channelListener);

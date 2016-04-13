@@ -51,6 +51,9 @@ var i = 0;
 function setupChannel(path)
 {
   var chan = NetUtil.newChannel({uri: URL + path, loadUsingSystemPrincipal: true});
+  chan.loadInfo.originAttributes = { appId: tests[i].loadContext.appId,
+                                     inIsolatedMozBrowser: tests[i].loadContext.isInIsolatedMozBrowserElement
+                                   };
   chan.notificationCallbacks = tests[i].loadContext;
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
