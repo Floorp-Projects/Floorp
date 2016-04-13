@@ -4,9 +4,22 @@
 
 function test() {
   waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab("data:text/html,<iframe width='700' height='700' src='about:certerror?e=nssBadCert&u='></iframe>");
+  gBrowser.selectedTab = gBrowser.addTab("data:text/html,<iframe width='700' height='700'></iframe>");
   // Open a html page with about:certerror in an iframe
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(testIframeCert);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
+    return ContentTask.spawn(gBrowser.selectedBrowser, "", function() {
+      return new Promise(resolve => {
+        info("Running content task");
+        let listener = e => {
+          removeEventListener('AboutNetErrorLoad', listener, false, true);
+          resolve();
+        };
+        addEventListener('AboutNetErrorLoad', listener, false, true);
+        let iframe = content.document.querySelector("iframe");
+        iframe.src = "https://expired.example.com/";
+      });
+    }).then(testIframeCert);
+  });
 }
 
 function testIframeCert(e) {

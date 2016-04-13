@@ -38,7 +38,13 @@ add_task(function*() {
 
   // Pinned: Link to an about: URI should not open a new tab
   // Tests link to about:mozilla
-  yield testLink(6, true, false);
+  yield testLink(function(doc) {
+    let link = doc.createElement("a");
+    link.textContent = "Link to Mozilla";
+    link.href = "about:mozilla";
+    doc.body.appendChild(link);
+    return link;
+  }, true, false, false, "about:robots");
 });
 
 var waitForPageLoad = Task.async(function*(browser, linkLocation) {
@@ -57,8 +63,8 @@ var waitForTabOpen = Task.async(function*() {
   gBrowser.removeCurrentTab();
 });
 
-var testLink = Task.async(function*(aLinkIndex, pinTab, expectNewTab, testSubFrame) {
-  let appTab = gBrowser.addTab(TEST_URL, {skipAnimation: true});
+var testLink = Task.async(function*(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame, aURL = TEST_URL) {
+  let appTab = gBrowser.addTab(aURL, {skipAnimation: true});
   if (pinTab)
     gBrowser.pinTab(appTab);
   gBrowser.selectedTab = appTab;
@@ -69,7 +75,12 @@ var testLink = Task.async(function*(aLinkIndex, pinTab, expectNewTab, testSubFra
   if (testSubFrame)
     browser = browser.contentDocument.querySelector("iframe");
 
-  let link = browser.contentDocument.querySelectorAll("a")[aLinkIndex];
+  let link;
+  if (typeof aLinkIndexOrFunction == "function") {
+    link = aLinkIndexOrFunction(browser.contentDocument);
+  } else {
+    link = browser.contentDocument.querySelectorAll("a")[aLinkIndexOrFunction];
+  }
 
   let promise;
   if (expectNewTab)
