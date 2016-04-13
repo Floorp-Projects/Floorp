@@ -222,7 +222,15 @@ public:
    */
   static PCompositableChild* CreateIPDLActor();
 
-  static bool DestroyIPDLActor(PCompositableChild* actor);
+  static bool DeallocIPDLActor(PCompositableChild* actor);
+
+  /// Ideally we would not need this. When we shut top-level IPDL protocols down,
+  /// the remaining managed protocols need to be destroyed synchronously. We'd
+  /// It'd be better if all ImageClients were alread destroyed by that time.
+  /// Call this during shutdown instead of trying to access the CompositableClient
+  /// since the latter may be about to get destroyed and we don't know for sure
+  /// on which thread.
+  static void ForceIPDLActorShutdown(PCompositableChild* aActor);
 
   void InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID = 0);
 
