@@ -308,6 +308,7 @@ EXTRA_CONFIG_DEPS := \
 $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	@echo Generating $@
 	sed '1,/^divert/d' $< > $@
+	chmod +x $@
 
 CONFIG_STATUS_DEPS := \
   $(wildcard $(TOPSRCDIR)/*/confvars.sh) \
