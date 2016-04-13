@@ -660,13 +660,6 @@ AudioCallbackDriver::Init()
       return;
     }
   }
-#ifdef XP_MACOSX
-  // Currently, only mac cares about this
-  bool aec;
-  Unused << mGraphImpl->AudioTrackPresent(aec);
-  SetMicrophoneActive(aec);
-#endif
-
   cubeb_stream_register_device_changed_callback(mAudioStream,
                                                 AudioCallbackDriver::DeviceChangedCallback_s);
 
@@ -1070,7 +1063,6 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive)
 
 void
 AudioCallbackDriver::DeviceChangedCallback() {
-#ifdef XP_MACOSX
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   PanOutputIfNeeded(mMicrophoneActive);
   // On OSX, changing the output device causes the audio thread to no call the
@@ -1079,7 +1071,7 @@ AudioCallbackDriver::DeviceChangedCallback() {
   // We switch to a system driver until audio callbacks are called again, so we
   // still pull from the input stream, so that everything works apart from the
   // audio output.
-
+#ifdef XP_MACOSX
   // Don't bother doing the device switching dance if the graph is not RUNNING
   // (starting up, shutting down), because we haven't started pulling from the
   // SourceMediaStream.
@@ -1104,13 +1096,11 @@ AudioCallbackDriver::DeviceChangedCallback() {
 void
 AudioCallbackDriver::SetMicrophoneActive(bool aActive)
 {
-#ifdef XP_MACOSX
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
 
   mMicrophoneActive = aActive;
 
   PanOutputIfNeeded(mMicrophoneActive);
-#endif
 }
 
 uint32_t
