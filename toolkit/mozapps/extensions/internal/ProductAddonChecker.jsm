@@ -19,6 +19,13 @@ Cu.import("resource://gre/modules/osfile.jsm");
 
 var logger = Log.repository.getLogger("addons.productaddons");
 
+// This exists so that tests can override the XHR behaviour for downloading
+// the addon update XML file.
+var CreateXHR = function() {
+  return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+    createInstance(Ci.nsISupports);
+}
+
 /**
  * Number of milliseconds after which we need to cancel `downloadXML`.
  *
@@ -74,8 +81,7 @@ function getRequestStatus(request) {
  */
 function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
   return new Promise((resolve, reject) => {
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                  createInstance(Ci.nsISupports);
+    let request = CreateXHR();
     // This is here to let unit test code override XHR
     if (request.wrappedJSObject) {
       request = request.wrappedJSObject;
@@ -173,7 +179,7 @@ function parseXML(document) {
 }
 
 /**
- * Downloads file from a URL using the incremental file downloader.
+ * Downloads file from a URL using XHR.
  *
  * @param  url
  *         The url to download from.
@@ -182,30 +188,43 @@ function parseXML(document) {
  */
 function downloadFile(url) {
   return new Promise((resolve, reject) => {
-    let observer = {
-      onStartRequest: function() {},
-
-      onStopRequest: function(request, context, status) {
-        if (!Components.isSuccessCode(status)) {
-          logger.warn("File download failed: 0x" + status.toString(16));
-          tmpFile.remove(true);
-          reject(Components.Exception("File download failed", status));
-          return;
-        }
-
-        resolve(tmpFile.path);
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                  createInstance(Ci.nsISupports);
+    xhr.onload = function(response) {
+      logger.info("downloadXHR File download. status=" + xhr.status);
+      if (xhr.status != 200 && xhr.status != 206) {
+        reject(Components.Exception("File download failed", xhr.status));
+        return;
       }
+      Task.spawn(function* () {
+        let f = yield OS.File.openUnique(OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon"));
+        let path = f.path;
+        logger.info(`Downloaded file will be saved to ${path}`);
+        yield f.file.close();
+        yield OS.File.writeAtomic(path, new Uint8Array(xhr.response));
+        return path;
+      }).then(resolve, reject);
     };
 
-    let uri = NetUtil.newURI(url);
-    let request = Cc["@mozilla.org/network/incremental-download;1"].
-                  createInstance(Ci.nsIIncrementalDownload);
-    let tmpFile = FileUtils.getFile("TmpD", ["tmpaddon"]);
-    tmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    let fail = (event) => {
+      let request = event.target;
+      let status = getRequestStatus(request);
+      let message = "Failed downloading via XHR, status: " + status +  ", reason: " + event.type;
+      logger.warn(message);
+      let ex = new Error(message);
+      ex.status = status;
+      reject(ex);
+    };
+    xhr.addEventListener("error", fail);
+    xhr.addEventListener("abort", fail);
 
-    logger.info("Downloading from " + uri.spec + " to " + tmpFile.path);
-    request.init(uri, tmpFile, DOWNLOAD_CHUNK_BYTES_SIZE, DOWNLOAD_INTERVAL);
-    request.start(observer, null);
+    xhr.responseType = "arraybuffer";
+    try {
+      xhr.open("GET", url);
+    } catch (ex) {
+      reject(ex);
+    }
+    xhr.send(null);
   });
 }
 
