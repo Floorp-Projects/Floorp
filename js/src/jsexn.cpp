@@ -65,23 +65,27 @@ static const JSFunctionSpec exception_methods[] = {
     JS_FS_END
 };
 
+static const ClassOps ErrorObjectClassOps = {
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
+    nullptr,                 /* getProperty */
+    nullptr,                 /* setProperty */
+    nullptr,                 /* enumerate */
+    nullptr,                 /* resolve */
+    nullptr,                 /* mayResolve */
+    exn_finalize,
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
+    nullptr,                 /* trace       */
+};
+
 #define IMPLEMENT_ERROR_CLASS(name, classSpecPtr) \
     { \
         js_Error_str, /* yes, really */ \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS), \
-        nullptr,                 /* addProperty */ \
-        nullptr,                 /* delProperty */ \
-        nullptr,                 /* getProperty */ \
-        nullptr,                 /* setProperty */ \
-        nullptr,                 /* enumerate */ \
-        nullptr,                 /* resolve */ \
-        nullptr,                 /* mayResolve */ \
-        exn_finalize, \
-        nullptr,                 /* call        */ \
-        nullptr,                 /* hasInstance */ \
-        nullptr,                 /* construct   */ \
-        nullptr,                 /* trace       */ \
+        &ErrorObjectClassOps, \
         classSpecPtr \
     }
 

@@ -84,12 +84,16 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
 static void
 CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
 {
-  static const JSClass GlobalClass = {
-    "global", JSCLASS_GLOBAL_FLAGS,
+  static const JSClassOps GlobalClassOps = {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
+  };
+
+  static const JSClass GlobalClass = {
+    "global", JSCLASS_GLOBAL_FLAGS,
+    &GlobalClassOps
   };
 
   JS::CompartmentOptions options;

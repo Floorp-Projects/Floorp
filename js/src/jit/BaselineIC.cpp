@@ -927,7 +927,7 @@ IsCacheableSetPropAddSlot(JSContext* cx, JSObject* obj, Shape* oldShape,
 
     // Watch out for resolve or addProperty hooks.
     if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj) ||
-        obj->getClass()->addProperty)
+        obj->getClass()->getAddProperty())
     {
         return false;
     }

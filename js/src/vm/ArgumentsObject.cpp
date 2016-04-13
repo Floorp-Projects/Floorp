@@ -675,13 +675,7 @@ ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject
  * stack frame with their corresponding property values in the frame's
  * arguments object.
  */
-const Class MappedArgumentsObject::class_ = {
-    "Arguments",
-    JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(MappedArgumentsObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
-    JSCLASS_SKIP_NURSERY_FINALIZE |
-    JSCLASS_BACKGROUND_FINALIZE,
+const ClassOps MappedArgumentsObject::classOps_ = {
     nullptr,                 /* addProperty */
     ArgumentsObject::obj_delProperty,
     nullptr,                 /* getProperty */
@@ -696,17 +690,21 @@ const Class MappedArgumentsObject::class_ = {
     ArgumentsObject::trace
 };
 
+const Class MappedArgumentsObject::class_ = {
+    "Arguments",
+    JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(MappedArgumentsObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_SKIP_NURSERY_FINALIZE |
+    JSCLASS_BACKGROUND_FINALIZE,
+    &MappedArgumentsObject::classOps_
+};
+
 /*
  * Unmapped arguments is significantly less magical than mapped arguments, so
  * it is represented by a different class while sharing some functionality.
  */
-const Class UnmappedArgumentsObject::class_ = {
-    "Arguments",
-    JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(UnmappedArgumentsObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
-    JSCLASS_SKIP_NURSERY_FINALIZE |
-    JSCLASS_BACKGROUND_FINALIZE,
+const ClassOps UnmappedArgumentsObject::classOps_ = {
     nullptr,                 /* addProperty */
     ArgumentsObject::obj_delProperty,
     nullptr,                 /* getProperty */
@@ -719,4 +717,14 @@ const Class UnmappedArgumentsObject::class_ = {
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
     ArgumentsObject::trace
+};
+
+const Class UnmappedArgumentsObject::class_ = {
+    "Arguments",
+    JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(UnmappedArgumentsObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_SKIP_NURSERY_FINALIZE |
+    JSCLASS_BACKGROUND_FINALIZE,
+    &UnmappedArgumentsObject::classOps_
 };

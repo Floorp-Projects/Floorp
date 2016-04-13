@@ -120,6 +120,8 @@ struct NativeIterator
 
 class PropertyIteratorObject : public NativeObject
 {
+    static const ClassOps classOps_;
+
   public:
     static const Class class_;
 

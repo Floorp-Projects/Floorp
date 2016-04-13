@@ -116,9 +116,7 @@ void Finalize(JSFreeOp *fop, JSObject *objSelf)
   // during shutdown. In that case, there is not much we can do.
 }
 
-static const JSClass sWitnessClass = {
-  "FinalizationWitness",
-  JSCLASS_HAS_RESERVED_SLOTS(WITNESS_INSTANCES_SLOTS),
+static const JSClassOps sWitnessClassOps = {
   nullptr /* addProperty */,
   nullptr /* delProperty */,
   nullptr /* getProperty */,
@@ -127,6 +125,12 @@ static const JSClass sWitnessClass = {
   nullptr /* resolve */,
   nullptr /* mayResolve */,
   Finalize /* finalize */
+};
+
+static const JSClass sWitnessClass = {
+  "FinalizationWitness",
+  JSCLASS_HAS_RESERVED_SLOTS(WITNESS_INSTANCES_SLOTS),
+  &sWitnessClassOps
 };
 
 bool IsWitness(JS::Handle<JS::Value> v)

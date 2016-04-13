@@ -35,7 +35,7 @@ function doTest() {
   var resources = window.performance.getEntriesByType("resource");
   for (var i = 0 ; i < resources.length; i++) {
     var entry = resources[i];
-    if (entry.initiatorType === "subdocument") {
+    if (entry.initiatorType === "iframe") {
       ok(false, "unexpected iframe " + entry.name);
     }
   }

@@ -395,9 +395,7 @@ class FileObject : public JSObject {
     }
 };
 
-const js::Class FileObject::class_ = {
-    "File",
-    JSCLASS_HAS_RESERVED_SLOTS(FileObject::NUM_SLOTS),
+static const js::ClassOps FileObjectClassOps = {
     nullptr,               /* addProperty */
     nullptr,               /* delProperty */
     nullptr,               /* getProperty */
@@ -410,6 +408,12 @@ const js::Class FileObject::class_ = {
     nullptr,               /* hasInstance */
     nullptr,               /* construct */
     nullptr                /* trace */
+};
+
+const js::Class FileObject::class_ = {
+    "File",
+    JSCLASS_HAS_RESERVED_SLOTS(FileObject::NUM_SLOTS),
+    &FileObjectClassOps
 };
 
 static FileObject*

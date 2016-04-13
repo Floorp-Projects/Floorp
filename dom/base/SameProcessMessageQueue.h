@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-class CancelableRunnable;
-
 class SameProcessMessageQueue
 {
 public:
@@ -45,8 +43,6 @@ public:
   static SameProcessMessageQueue* Get();
 
 private:
-  friend class CancelableRunnable;
-
   nsTArray<RefPtr<Runnable>> mQueue;
   static SameProcessMessageQueue* sSingleton;
 };

@@ -2828,6 +2828,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     }
   }
 
+  // share the scheduling context - see bug 1236650
+  httpChannel->SetSchedulingContextID(mSchedulingContextID);
+
   if (httpInternal) {
     // Convey third party cookie and spdy flags.
     httpInternal->SetThirdPartyFlags(mThirdPartyFlags);

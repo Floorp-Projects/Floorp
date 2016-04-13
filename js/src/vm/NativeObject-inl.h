@@ -394,7 +394,7 @@ CallResolveOp(JSContext* cx, HandleNativeObject obj, HandleId id, MutableHandleS
     *recursedp = false;
 
     bool resolved = false;
-    if (!obj->getClass()->resolve(cx, obj, id, &resolved))
+    if (!obj->getClass()->getResolve()(cx, obj, id, &resolved))
         return false;
 
     if (!resolved)
@@ -402,8 +402,8 @@ CallResolveOp(JSContext* cx, HandleNativeObject obj, HandleId id, MutableHandleS
 
     // Assert the mayResolve hook, if there is one, returns true for this
     // property.
-    MOZ_ASSERT_IF(obj->getClass()->mayResolve,
-                  obj->getClass()->mayResolve(cx->names(), id, obj));
+    MOZ_ASSERT_IF(obj->getClass()->getMayResolve(),
+                  obj->getClass()->getMayResolve()(cx->names(), id, obj));
 
     if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
         MarkDenseOrTypedArrayElementFound<CanGC>(propp);
@@ -421,17 +421,17 @@ ClassMayResolveId(const JSAtomState& names, const Class* clasp, jsid id, JSObjec
 {
     MOZ_ASSERT_IF(maybeObj, maybeObj->getClass() == clasp);
 
-    if (!clasp->resolve) {
+    if (!clasp->getResolve()) {
         // Sanity check: we should only have a mayResolve hook if we have a
         // resolve hook.
-        MOZ_ASSERT(!clasp->mayResolve, "Class with mayResolve hook but no resolve hook");
+        MOZ_ASSERT(!clasp->getMayResolve(), "Class with mayResolve hook but no resolve hook");
         return false;
     }
 
-    if (clasp->mayResolve) {
+    if (JSMayResolveOp mayResolve = clasp->getMayResolve()) {
         // Tell the analysis our mayResolve hooks won't trigger GC.
         JS::AutoSuppressGCAnalysis nogc;
-        if (!clasp->mayResolve(names, id, maybeObj))
+        if (!mayResolve(names, id, maybeObj))
             return false;
     }
 
@@ -477,8 +477,7 @@ LookupOwnPropertyInline(ExclusiveContext* cx,
     }
 
     // id was not found in obj. Try obj's resolve hook, if any.
-    if (obj->getClass()->resolve)
-    {
+    if (obj->getClass()->getResolve()) {
         if (!cx->shouldBeJSContext() || !allowGC)
             return false;
 

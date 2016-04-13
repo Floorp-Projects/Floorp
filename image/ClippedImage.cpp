@@ -290,12 +290,13 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
     RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(aSize.width, aSize.height),
                                        SurfaceFormat::B8G8R8A8);
-    if (!target) {
+    if (!target || !target->IsValid()) {
       NS_ERROR("Could not create a DrawTarget");
       return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
     }
 
-    RefPtr<gfxContext> ctx = new gfxContext(target);
+    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(target);
+    MOZ_ASSERT(ctx); // already checked the draw target above
 
     // Create our callback.
     RefPtr<DrawSingleTileCallback> drawTileCallback =

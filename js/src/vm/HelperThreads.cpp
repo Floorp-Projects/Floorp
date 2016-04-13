@@ -187,12 +187,16 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script)
     }
 }
 
-static const JSClass parseTaskGlobalClass = {
-    "internal-parse-task-global", JSCLASS_GLOBAL_FLAGS,
+static const JSClassOps parseTaskGlobalClassOps = {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
+};
+
+static const JSClass parseTaskGlobalClass = {
+    "internal-parse-task-global", JSCLASS_GLOBAL_FLAGS,
+    &parseTaskGlobalClassOps
 };
 
 ParseTask::ParseTask(ParseTaskKind kind, ExclusiveContext* cx, JSObject* exclusiveContextGlobal,

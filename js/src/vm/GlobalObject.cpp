@@ -293,7 +293,7 @@ GlobalObject*
 GlobalObject::createInternal(JSContext* cx, const Class* clasp)
 {
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
-    MOZ_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
+    MOZ_ASSERT(clasp->isTrace(JS_GlobalObjectTraceHook));
 
     JSObject* obj = NewObjectWithGivenProto(cx, clasp, nullptr, SingletonObject);
     if (!obj)
@@ -620,11 +620,22 @@ GlobalDebuggees_finalize(FreeOp* fop, JSObject* obj)
     fop->delete_((GlobalObject::DebuggerVector*) obj->as<NativeObject>().getPrivate());
 }
 
+static const ClassOps
+GlobalDebuggees_classOps = {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    GlobalDebuggees_finalize
+};
+
 static const Class
 GlobalDebuggees_class = {
     "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, GlobalDebuggees_finalize
+    &GlobalDebuggees_classOps
 };
 
 GlobalObject::DebuggerVector*

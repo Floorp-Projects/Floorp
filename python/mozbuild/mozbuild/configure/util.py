@@ -65,10 +65,26 @@ class ConfigureOutputHandler(logging.Handler):
         # ascii, which blatantly fails when trying to print out non-ascii.
         def fix_encoding(fh):
             try:
-                if not fh.isatty():
-                    return codecs.getwriter(locale.getpreferredencoding())(fh)
+                isatty = fh.isatty()
             except AttributeError:
-                pass
+                isatty = True
+
+            if not isatty:
+                encoding = None
+                try:
+                    encoding = locale.getpreferredencoding()
+                except ValueError:
+                    # On english OSX, LC_ALL is UTF-8 (not en-US.UTF-8), and
+                    # that throws off locale._parse_localename, which ends up
+                    # being used on e.g. homebrew python.
+                    if os.environ.get('LC_ALL', '').upper() == 'UTF-8':
+                        encoding = 'utf-8'
+
+                # locale._parse_localename makes locale.getpreferredencoding
+                # return None when LC_ALL is C, instead of e.g. 'US-ASCII' or
+                # 'ANSI_X3.4-1968' when it uses nl_langinfo.
+                if encoding:
+                    return codecs.getwriter(encoding)(fh)
             return fh
 
         self._stdout = fix_encoding(stdout)

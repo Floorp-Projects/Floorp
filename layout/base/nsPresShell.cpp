@@ -2907,7 +2907,10 @@ PresShell::CreateReferenceRenderingContext()
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
   RefPtr<gfxContext> rc;
   if (mPresContext->IsScreen()) {
-    rc = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+    rc = gfxContext::ForDrawTarget(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+    if (!rc) {
+      return nullptr;
+    }
   } else {
     // We assume the devCtx has positive width and height for this call.
     // However, width and height, may be outside of the reasonable range
@@ -4934,11 +4937,12 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
                                  IntSize(pixelArea.width, pixelArea.height),
                                  SurfaceFormat::B8G8R8A8);
-  if (!dt) {
+  if (!dt || !dt->IsValid()) {
     return nullptr;
   }
 
-  RefPtr<gfxContext> ctx = new gfxContext(dt);
+  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+  MOZ_ASSERT(ctx); // already checked the draw target above
 
   if (aRegion) {
     // Convert aRegion from CSS pixels to dev pixels

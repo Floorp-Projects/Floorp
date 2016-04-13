@@ -98,12 +98,15 @@ BEGIN_TEST(testNewObject_1)
     CHECK(v.isInt32(N - 1));
 
     // With JSClass.construct.
-    static const JSClass cls = {
-        "testNewObject_1",
-        0,
+    static const JSClassOps clsOps = {
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, constructHook
+    };
+    static const JSClass cls = {
+        "testNewObject_1",
+        0,
+        &clsOps
     };
     JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
     CHECK(ctor);

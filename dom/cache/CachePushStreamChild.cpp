@@ -17,7 +17,7 @@ namespace dom {
 namespace cache {
 
 class CachePushStreamChild::Callback final : public nsIInputStreamCallback
-                                           , public nsICancelableRunnable
+                                           , public CancelableRunnable
 {
 public:
   explicit Callback(CachePushStreamChild* aActor)
@@ -56,7 +56,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD
+  nsresult
   Cancel() override
   {
     // Cancel() gets called when the Worker thread is being shutdown.  We have
@@ -85,12 +85,12 @@ private:
   CachePushStreamChild* mActor;
   nsCOMPtr<nsIThread> mOwningThread;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 };
 
-NS_IMPL_ISUPPORTS(CachePushStreamChild::Callback, nsIInputStreamCallback,
-                                                  nsIRunnable,
-                                                  nsICancelableRunnable);
+NS_IMPL_ISUPPORTS_INHERITED(CachePushStreamChild::Callback,
+                            CancelableRunnable,
+                            nsIInputStreamCallback);
 
 CachePushStreamChild::CachePushStreamChild(Feature* aFeature,
                                            nsISupports* aParent,

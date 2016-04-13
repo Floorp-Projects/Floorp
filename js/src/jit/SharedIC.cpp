@@ -2744,7 +2744,7 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
                 return false;
             if (curObj->as<NativeObject>().contains(cx, NameToId(name)))
                 return false;
-            if (curObj->getClass()->getProperty)
+            if (curObj->getClass()->getGetProperty())
                 return false;
         } else if (curObj != obj) {
             // Non-native objects are only handled as the original receiver.

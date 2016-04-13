@@ -159,10 +159,21 @@ static const struct pm_const {
 static bool pm_construct(JSContext* cx, unsigned argc, Value* vp);
 static void pm_finalize(JSFreeOp* fop, JSObject* obj);
 
+static const JSClassOps pm_classOps = {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    pm_finalize
+};
+
 static const JSClass pm_class = {
-    "PerfMeasurement", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, pm_finalize
+    "PerfMeasurement",
+    JSCLASS_HAS_PRIVATE,
+    &pm_classOps
 };
 
 // Constructor and destructor

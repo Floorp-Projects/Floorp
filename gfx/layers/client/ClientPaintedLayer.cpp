@@ -89,7 +89,8 @@ ClientPaintedLayer::PaintThebes()
     
     SetAntialiasingFlags(this, target);
 
-    RefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
+    RefPtr<gfxContext> ctx = gfxContext::ForDrawTargetWithTransform(target);
+    MOZ_ASSERT(ctx); // already checked the target above
 
     ClientManager()->GetPaintedLayerCallback()(this,
                                               ctx,
