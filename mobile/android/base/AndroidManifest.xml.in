@@ -357,6 +357,12 @@
             android:name="org.mozilla.gecko.feeds.FeedService">
         </service>
 
+        <!-- DON'T EXPORT THIS, please! An attacker could delete arbitrary files. -->
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.cleanup.FileCleanupService">
+        </service>
+
         <receiver
             android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
             android:exported="false" />
