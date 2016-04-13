@@ -1476,6 +1476,32 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificateDB::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  NS_ENSURE_ARG_POINTER(enterpriseRoots);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+#ifdef XP_WIN
+  nsCOMPtr<nsINSSComponent> psm(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (!psm) {
+    return NS_ERROR_FAILURE;
+  }
+  return psm->GetEnterpriseRoots(enterpriseRoots);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 nsresult
 VerifyCertAtTime(nsIX509Cert* aCert,
                  int64_t /*SECCertificateUsage*/ aUsage,
