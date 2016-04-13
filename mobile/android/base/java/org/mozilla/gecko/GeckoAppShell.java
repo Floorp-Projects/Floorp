@@ -1824,7 +1824,7 @@ public class GeckoAppShell
                         params.setPreviewFrameRate(nFps);
                     }
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 params.setPreviewFrameRate(kPreferredFPS);
             }
 
@@ -1871,7 +1871,7 @@ public class GeckoAppShell
             result[1] = params.getPreviewSize().width;
             result[2] = params.getPreviewSize().height;
             result[3] = params.getPreviewFrameRate();
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             Log.w(LOGTAG, "initCamera RuntimeException.", e);
             result[0] = result[1] = result[2] = result[3] = 0;
         }
@@ -2242,7 +2242,7 @@ public class GeckoAppShell
                     final Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(d);
                     return new BitmapConnection(bitmap);
                 }
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 Log.e(LOGTAG, "error", ex);
             }
 
@@ -2251,7 +2251,7 @@ public class GeckoAppShell
             if (colon == -1 || colon > spec.indexOf('/')) {
                 spec = spec.replaceFirst("/", ":/");
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
         return null;

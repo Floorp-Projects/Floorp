@@ -213,7 +213,7 @@ public final class WebActivityMapper {
                     destDir    /* directory */
                 );
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(dest));
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.w(LOGTAG, "Failed to add extra for " + action + " : " + e);
             }
         }

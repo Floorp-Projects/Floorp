@@ -198,7 +198,7 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
             if (route.supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)) {
                 return new ChromeCast(getActivity(), route);
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             debug("Error handling presentation", ex);
         }
 

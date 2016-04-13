@@ -346,7 +346,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                             }
                         }
                     });
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     Log.i(LOGTAG, "Exception building menu", ex);
                 }
             }
@@ -365,7 +365,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                 final JSONObject obj = mItems.getJSONObject(item.getItemId());
                 GeckoAppShell.notifyObservers("TextSelection:Action", obj.optString("id"));
                 return true;
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 Log.i(LOGTAG, "Exception calling action", ex);
             }
             return false;

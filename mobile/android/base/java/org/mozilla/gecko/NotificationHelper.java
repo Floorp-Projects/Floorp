@@ -361,7 +361,7 @@ public final class NotificationHelper implements GeckoEventListener {
             JSONObject obj;
             try {
                 obj = new JSONObject(json);
-            } catch(JSONException ex) {
+            } catch (JSONException ex) {
                 obj = new JSONObject();
             }
 

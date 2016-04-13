@@ -59,7 +59,7 @@ public class PromptService implements GeckoEventListener {
                     public void onPromptFinished(String jsonResult) {
                         try {
                             EventDispatcher.sendResponse(message, new JSONObject(jsonResult));
-                        } catch(JSONException ex) {
+                        } catch (JSONException ex) {
                             Log.i(LOGTAG, "Error building json response", ex);
                         }
                     }

@@ -646,7 +646,7 @@ public class UpdateService extends IntentService {
             try {
                 if (input != null)
                     input.close();
-            } catch(java.io.IOException e) {}
+            } catch (java.io.IOException e) {}
         }
 
         String hex = Hex.encodeHexString(digest.digest());
