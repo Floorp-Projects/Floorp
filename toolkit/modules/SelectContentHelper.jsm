@@ -36,6 +36,7 @@ this.SelectContentHelper.prototype = {
     this.global.addMessageListener("Forms:MouseOver", this);
     this.global.addMessageListener("Forms:MouseOut", this);
     this.global.addEventListener("pagehide", this);
+    this.global.addEventListener("mozhidedropdown", this);
   },
 
   uninit: function() {
@@ -44,6 +45,7 @@ this.SelectContentHelper.prototype = {
     this.global.removeMessageListener("Forms:MouseOver", this);
     this.global.removeMessageListener("Forms:MouseOut", this);
     this.global.removeEventListener("pagehide", this);
+    this.global.removeEventListener("mozhidedropdown", this);
     this.element = null;
     this.global = null;
   },
@@ -98,6 +100,12 @@ this.SelectContentHelper.prototype = {
     switch (event.type) {
       case "pagehide":
         if (this.element.ownerDocument === event.target) {
+          this.global.sendAsyncMessage("Forms:HideDropDown", {});
+          this.uninit();
+        }
+        break;
+      case "mozhidedropdown":
+        if (this.element === event.target) {
           this.global.sendAsyncMessage("Forms:HideDropDown", {});
           this.uninit();
         }
