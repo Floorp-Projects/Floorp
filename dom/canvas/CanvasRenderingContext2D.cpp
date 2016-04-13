@@ -5111,51 +5111,6 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& aElem,
 #endif
 }
 
-void
-CanvasRenderingContext2D::DrawWidgetAsOnScreen(nsGlobalWindow& aWindow,
-                                               mozilla::ErrorResult& aError)
-{
-  EnsureTarget();
-
-  // This is an internal API.
-  if (!nsContentUtils::IsCallerChrome()) {
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  RefPtr<nsPresContext> presContext;
-  nsIDocShell* docshell = aWindow.GetDocShell();
-  if (docshell) {
-    docshell->GetPresContext(getter_AddRefs(presContext));
-  }
-  if (!presContext) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsIWidget* widget = presContext->GetRootWidget();
-  if (!widget) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  RefPtr<SourceSurface> snapshot = widget->SnapshotWidgetOnScreen();
-  if (!snapshot) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  gfx::Rect sourceRect(gfx::Point(0, 0), gfx::Size(snapshot->GetSize()));
-  mTarget->DrawSurface(snapshot, sourceRect, sourceRect,
-                       DrawSurfaceOptions(gfx::Filter::POINT),
-                       DrawOptions(GlobalAlpha(), CompositionOp::OP_OVER,
-                                   AntialiasMode::NONE));
-  mTarget->Flush();
-
-  RedrawUser(gfxRect(0, 0,
-                     std::min(mWidth, snapshot->GetSize().width),
-                     std::min(mHeight, snapshot->GetSize().height)));
-}
-
 //
 // device pixel getting/setting
 //

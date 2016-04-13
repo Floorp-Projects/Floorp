@@ -7793,47 +7793,6 @@ void nsWindow::PickerClosed()
   }
 }
 
-bool nsWindow::CaptureWidgetOnScreen(RefPtr<DrawTarget> aDT)
-{
-  BOOL dwmEnabled = false;
-  if (WinUtils::dwmIsCompositionEnabledPtr &&
-      WinUtils::dwmFlushProcPtr &&
-      WinUtils::dwmIsCompositionEnabledPtr(&dwmEnabled) &&
-      dwmEnabled)
-  {
-    WinUtils::dwmFlushProcPtr();
-  }
-
-  HDC dc = ::GetDC(mWnd);
-  uint32_t flags = (mTransparencyMode == eTransparencyOpaque)
-                   ? 0
-                   : gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-
-  RefPtr<gfxASurface> surf = new gfxWindowsSurface(dc, flags);
-  IntSize size(surf->GetSize().width, surf->GetSize().height);
-  if (size.width <= 0 || size.height <= 0) {
-    ::ReleaseDC(mWnd, dc);
-    return false;
-  }
-
-  RefPtr<DrawTarget> source = Factory::CreateDrawTargetForCairoSurface(surf->CairoSurface(), size);
-  if (!source) {
-    ::ReleaseDC(mWnd, dc);
-    return false;
-  }
-  RefPtr<SourceSurface> snapshot = source->Snapshot();
-  if (!snapshot) {
-    ::ReleaseDC(mWnd, dc);
-    return false;
-  }
-
-  aDT->DrawSurface(snapshot,
-                   Rect(0, 0, size.width, size.height),
-                   Rect(0, 0, size.width, size.height));
-  ::ReleaseDC(mWnd, dc);
-  return true;
-}
-
 bool nsWindow::PreRender(LayerManagerComposite*)
 {
   // This can block waiting for WM_SETTEXT to finish
