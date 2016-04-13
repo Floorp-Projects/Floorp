@@ -1,6 +1,8 @@
 // Check to make sure that a worker can be attached to a toolbox
 // directly, and that the toolbox has expected properties.
 
+"use strict";
+
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejections should be fixed.
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("[object Object]");
@@ -33,7 +35,7 @@ add_task(function* () {
                                             Toolbox.HostType.WINDOW);
 
   is(toolbox._host.type, "window", "correct host");
-  ok(toolbox._host._window.document.title.contains(WORKER_URL),
+  ok(toolbox._host._window.document.title.includes(WORKER_URL),
      "worker URL in host title");
 
   let toolTabs = toolbox.doc.querySelectorAll(".devtools-tab");

@@ -41,7 +41,7 @@ ArrayObject::createArrayInternal(ExclusiveContext* cx, gc::AllocKind kind, gc::I
     MOZ_ASSERT(shape && group);
     MOZ_ASSERT(group->clasp() == shape->getObjectClass());
     MOZ_ASSERT(group->clasp() == &ArrayObject::class_);
-    MOZ_ASSERT_IF(group->clasp()->finalize, heap == gc::TenuredHeap);
+    MOZ_ASSERT_IF(group->clasp()->hasFinalize(), heap == gc::TenuredHeap);
     MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
                   heap == js::gc::TenuredHeap);
     MOZ_ASSERT(group->clasp()->shouldDelayMetadataBuilder());

@@ -256,7 +256,6 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
   // adjusts the display port margins, so do it before we set those.
   ScrollFrame(content, aMetrics);
 
-  MOZ_ASSERT(nsLayoutUtils::HasDisplayPort(content));
   SetDisplayPortMargins(shell, content, aMetrics);
   SetPaintRequestTime(content, aMetrics.GetPaintRequestTime());
 }

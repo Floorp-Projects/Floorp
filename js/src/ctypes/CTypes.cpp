@@ -546,12 +546,15 @@ static const JSClass sCABIClass = {
 // Class representing ctypes.{C,Pointer,Array,Struct,Function}Type.prototype.
 // This exists to give said prototypes a class of "CType", and to provide
 // reserved slots for stashing various other prototype objects.
-static const JSClass sCTypeProtoClass = {
-  "CType",
-  JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
+static const JSClassOps sCTypeProtoClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
   ConstructAbstract, nullptr, ConstructAbstract
+};
+static const JSClass sCTypeProtoClass = {
+  "CType",
+  JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
+  &sCTypeProtoClassOps
 };
 
 // Class representing ctypes.CData.prototype and the 'prototype' properties
@@ -561,29 +564,38 @@ static const JSClass sCDataProtoClass = {
   0
 };
 
-static const JSClass sCTypeClass = {
-  "CType",
-  JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
+static const JSClassOps sCTypeClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, CType::Finalize,
   CType::ConstructData, CType::HasInstance, CType::ConstructData,
   CType::Trace
 };
+static const JSClass sCTypeClass = {
+  "CType",
+  JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
+  &sCTypeClassOps
+};
 
-static const JSClass sCDataClass = {
-  "CData",
-  JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
+static const JSClassOps sCDataClassOps = {
   nullptr, nullptr, ArrayType::Getter, ArrayType::Setter,
   nullptr, nullptr, nullptr, CData::Finalize,
   FunctionType::Call, nullptr, FunctionType::Call
 };
+static const JSClass sCDataClass = {
+  "CData",
+  JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
+  &sCDataClassOps
+};
 
-static const JSClass sCClosureClass = {
-  "CClosure",
-  JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
+static const JSClassOps sCClosureClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, CClosure::Finalize,
   nullptr, nullptr, nullptr, CClosure::Trace
+};
+static const JSClass sCClosureClass = {
+  "CClosure",
+  JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
+  &sCClosureClassOps
 };
 
 /*
@@ -600,11 +612,14 @@ static const JSClass sCDataFinalizerProtoClass = {
  * Instances of CDataFinalizer have both private data (with type
  * |CDataFinalizer::Private|) and slots (see |CDataFinalizerSlots|).
  */
+static const JSClassOps sCDataFinalizerClassOps = {
+  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, CDataFinalizer::Finalize
+};
 static const JSClass sCDataFinalizerClass = {
   "CDataFinalizer",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, CDataFinalizer::Finalize
+  &sCDataFinalizerClassOps
 };
 
 
@@ -786,18 +801,21 @@ static const JSClass sUInt64ProtoClass = {
   0
 };
 
+static const JSClassOps sInt64ClassOps = {
+  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, Int64Base::Finalize
+};
+
 static const JSClass sInt64Class = {
   "Int64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, Int64Base::Finalize
+  &sInt64ClassOps
 };
 
 static const JSClass sUInt64Class = {
   "UInt64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, Int64Base::Finalize
+  &sInt64ClassOps
 };
 
 static const JSFunctionSpec sInt64StaticFunctions[] = {

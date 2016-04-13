@@ -338,6 +338,7 @@ option(env='MOZILLABUILD', nargs=1,
 # It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
 # but the end goal being that the configure script would go away...
 @depends('MOZILLABUILD')
+@checking('for a shell')
 @imports('sys')
 def shell(mozillabuild):
     shell = 'sh'
@@ -345,7 +346,7 @@ def shell(mozillabuild):
         shell = mozillabuild[0] + '/msys/bin/sh'
     if sys.platform == 'win32':
         shell = shell + '.exe'
-    return shell
+    return find_program(shell)
 
 
 # Host and target systems

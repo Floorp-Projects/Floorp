@@ -4,27 +4,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-REDIST_FILES =
-
-ifdef WIN32_REDIST_DIR
-REDIST_FILES += '$(WIN32_REDIST_DIR)'/$(MSVC_C_RUNTIME_DLL)
-REDIST_FILES += '$(WIN32_REDIST_DIR)'/$(MSVC_CXX_RUNTIME_DLL)
-endif
-
-ifdef WIN_UCRT_REDIST_DIR
-REDIST_FILES += $(wildcard $(WIN_UCRT_REDIST_DIR)/api-ms-win-*.dll)
-REDIST_FILES += '$(WIN_UCRT_REDIST_DIR)'/ucrtbase.dll
-endif
-
-ifdef REDIST_FILES
-libs-preqs = \
-	$(call mkdir_deps,$(FINAL_TARGET)) \
-	$(NULL)
-
-libs:: $(libs-preqs)
-	install --preserve-timestamps $(REDIST_FILES) $(FINAL_TARGET)
-endif
-
 # run the binscope tool to make sure the binary and all libraries
 # are using all available Windows OS-level security mechanisms
 # Don't do this in clang-cl since it doesn't support debug information yet.

@@ -16,10 +16,14 @@ CounterAdd(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue
     return true;
 }
 
+static const JSClassOps CounterClassOps = {
+    CounterAdd
+};
+
 static const JSClass CounterClass = {
     "Counter",  /* name */
     0,  /* flags */
-    CounterAdd
+    &CounterClassOps
 };
 
 BEGIN_TEST(testPropCache_bug505798)

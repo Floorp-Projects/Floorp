@@ -117,7 +117,7 @@ private:
 // be done on the thread associated with the PBackground actor.  Must be
 // cancelable to execute on Worker threads (which can occur when the
 // ReadStream is constructed on a child process Worker thread).
-class ReadStream::Inner::NoteClosedRunnable final : public nsCancelableRunnable
+class ReadStream::Inner::NoteClosedRunnable final : public CancelableRunnable
 {
 public:
   explicit NoteClosedRunnable(ReadStream::Inner* aStream)
@@ -133,7 +133,7 @@ public:
 
   // Note, we must proceed with the Run() method since our actor will not
   // clean itself up until we note that the stream is closed.
-  NS_IMETHOD Cancel()
+  nsresult Cancel()
   {
     Run();
     return NS_OK;
@@ -152,7 +152,7 @@ private:
 // it on the thread associated with the PBackground actor.  Must be
 // cancelable to execute on Worker threads (which can occur when the
 // ReadStream is constructed on a child process Worker thread).
-class ReadStream::Inner::ForgetRunnable final : public nsCancelableRunnable
+class ReadStream::Inner::ForgetRunnable final : public CancelableRunnable
 {
 public:
   explicit ForgetRunnable(ReadStream::Inner* aStream)
@@ -168,7 +168,7 @@ public:
 
   // Note, we must proceed with the Run() method so that we properly
   // call RemoveListener on the actor.
-  NS_IMETHOD Cancel()
+  nsresult Cancel()
   {
     Run();
     return NS_OK;

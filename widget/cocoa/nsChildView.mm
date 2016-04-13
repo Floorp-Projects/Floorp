@@ -3734,9 +3734,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
     gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
                                                     gfx::IntSize(backingSize.width,
                                                                  backingSize.height));
-  MOZ_ASSERT(dt); // see implementation
+  if (!dt || !dt->IsValid()) {
+    // This used to be an assertion, so keep crashing in nightly+aurora
+    gfxDevCrash(mozilla::gfx::LogReason::InvalidContext) << "Cannot create target with CreateDrawTargetForCairoCGContext " << backingSize;
+    return;
+  }
   dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-  RefPtr<gfxContext> targetContext = new gfxContext(dt);
+  RefPtr<gfxContext> targetContext = gfxContext::ForDrawTarget(dt);
+  MOZ_ASSERT(targetContext); // already checked the draw target above
 
   // Set up the clip region.
   targetContext->NewPath();

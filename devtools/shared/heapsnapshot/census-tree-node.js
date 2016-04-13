@@ -664,12 +664,12 @@ function makeFilterPredicate(filterString) {
     }
 
     if (isSavedFrame(node.name)) {
-      return node.name.source.contains(filterString)
-        || (node.name.functionDisplayName || "").contains(filterString)
-        || (node.name.asyncCause || "").contains(filterString);
+      return node.name.source.includes(filterString)
+        || (node.name.functionDisplayName || "").includes(filterString)
+        || (node.name.asyncCause || "").includes(filterString);
     }
 
-    return String(node.name).contains(filterString);
+    return String(node.name).includes(filterString);
   };
 }
 

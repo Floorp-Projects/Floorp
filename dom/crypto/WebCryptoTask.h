@@ -57,7 +57,7 @@ if (NS_FAILED(rv)) { \
   return; \
 }
 
-class WebCryptoTask : public nsCancelableRunnable,
+class WebCryptoTask : public CancelableRunnable,
                       public nsNSSShutDownObject
 {
 public:

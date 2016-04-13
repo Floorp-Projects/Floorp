@@ -1249,7 +1249,7 @@ CycleCollectedJSRuntime::JSObjectsTenured()
     if (!JS::ObjectIsTenured(wrapper)) {
       MOZ_ASSERT(!cache->PreservingWrapper());
       const JSClass* jsClass = js::GetObjectJSClass(wrapper);
-      jsClass->finalize(nullptr, wrapper);
+      jsClass->doFinalize(nullptr, wrapper);
     }
   }
 

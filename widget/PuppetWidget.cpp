@@ -1041,7 +1041,11 @@ PuppetWidget::Paint()
         mTabChild->NotifyPainted();
       }
     } else {
-      RefPtr<gfxContext> ctx = new gfxContext(mDrawTarget);
+      RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(mDrawTarget);
+      if (!ctx) {
+        gfxDevCrash(LogReason::InvalidContext) << "PuppetWidget context problem " << gfx::hexa(mDrawTarget);
+        return NS_ERROR_FAILURE;
+      }
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,

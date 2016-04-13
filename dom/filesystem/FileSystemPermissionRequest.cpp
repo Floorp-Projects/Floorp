@@ -77,7 +77,7 @@ PBackgroundInitializer::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
 // This must be a CancelableRunnable because it can be dispatched to a worker
 // thread. But we don't care about the Cancel() because in that case, Run() is
 // not called and the task is deleted by the DTOR.
-class AsyncStartRunnable final : public nsCancelableRunnable
+class AsyncStartRunnable final : public CancelableRunnable
 {
 public:
   explicit AsyncStartRunnable(FileSystemTaskChildBase* aTask)

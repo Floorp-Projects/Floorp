@@ -1,0 +1,29 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN">
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>browser_frametree_sample_frameset.html</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+      window.addEventListener("load", function() {
+      	var frameEntries = performance.getEntriesByName("http://mochi.test:8888/tests/dom/base/test/file_empty.html");
+
+      	is(frameEntries.length, 2, "correct number");
+      	is(frameEntries[0].initiatorType, "frame", "correct type");
+      	SimpleTest.finish();
+      });
+    </script>
+  </head>
+  <frameset id="frames" rows="50%, 50%">
+    <frame src="http://mochi.test:8888/tests/dom/base/test/file_empty.html">
+    <frame src="http://mochi.test:8888/tests/dom/base/test/file_empty.html">
+  </frameset>
+</html>

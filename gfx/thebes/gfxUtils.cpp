@@ -446,11 +446,13 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 
     RefPtr<DrawTarget> target =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(size, aFormat);
-    if (!target) {
+    if (!target || !target->IsValid()) {
       return nullptr;
     }
 
-    RefPtr<gfxContext> tmpCtx = new gfxContext(target);
+    RefPtr<gfxContext> tmpCtx = gfxContext::ForDrawTarget(target);
+    MOZ_ASSERT(tmpCtx); // already checked the target above
+
     tmpCtx->SetOp(OptimalFillOp());
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), ExtendMode::REPEAT, Filter::LINEAR,
                     1.0, gfxMatrix::Translation(needed.TopLeft()));
@@ -592,11 +594,13 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
 
   RefPtr<DrawTarget> scaledDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(scaledImageSize, aFormat);
-  if (!scaledDT) {
+  if (!scaledDT || !scaledDT->IsValid()) {
     return false;
   }
 
-  RefPtr<gfxContext> tmpCtx = new gfxContext(scaledDT);
+  RefPtr<gfxContext> tmpCtx = gfxContext::ForDrawTarget(scaledDT);
+  MOZ_ASSERT(tmpCtx); // already checked the target above
+
   scaledDT->SetTransform(ToMatrix(scaleMatrix));
   gfxRect gfxImageRect(aImageRect.x, aImageRect.y, aImageRect.width, aImageRect.height);
   aDrawable->Draw(tmpCtx, gfxImageRect, ExtendMode::REPEAT, aFilter, 1.0, gfxMatrix());
@@ -1342,9 +1346,10 @@ gfxUtils::WriteAsPNG(nsIPresShell* aShell, const char* aFile)
   RefPtr<mozilla::gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
     CreateOffscreenContentDrawTarget(IntSize(width, height),
                                      SurfaceFormat::B8G8R8A8);
-  NS_ENSURE_TRUE(dt, /*void*/);
+  NS_ENSURE_TRUE(dt && dt->IsValid(), /*void*/);
 
-  RefPtr<gfxContext> context = new gfxContext(dt);
+  RefPtr<gfxContext> context = gfxContext::ForDrawTarget(dt);
+  MOZ_ASSERT(context); // already checked the draw target above
   aShell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
   WriteAsPNG(dt.get(), aFile);
 }

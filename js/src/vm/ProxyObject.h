@@ -91,8 +91,8 @@ class ProxyObject : public JSObject
         // Proxy classes are not allowed to have call or construct hooks directly. Their
         // callability is instead decided by handler()->isCallable().
         return clasp->isProxy() &&
-               clasp->trace == proxy_Trace &&
-               !clasp->call && !clasp->construct;
+               clasp->isTrace(proxy_Trace) &&
+               !clasp->getCall() && !clasp->getConstruct();
     }
 
   public:

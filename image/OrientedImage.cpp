@@ -99,7 +99,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(size, surfaceFormat);
-  if (!target) {
+  if (!target || !target->IsValid()) {
     NS_ERROR("Could not create a DrawTarget");
     return nullptr;
   }
@@ -113,7 +113,8 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
     new gfxSurfaceDrawable(innerSurface, size);
 
   // Draw.
-  RefPtr<gfxContext> ctx = new gfxContext(target);
+  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(target);
+  MOZ_ASSERT(ctx); // already checked the draw target above
   ctx->Multiply(OrientationMatrix(size));
   gfxUtils::DrawPixelSnapped(ctx, drawable, size, ImageRegion::Create(size),
                              surfaceFormat, Filter::LINEAR);
