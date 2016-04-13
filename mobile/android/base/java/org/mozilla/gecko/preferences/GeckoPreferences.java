@@ -1343,7 +1343,7 @@ OnSharedPreferenceChangeListener
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
         AlertDialog dialog;
-        switch(id) {
+        switch (id) {
             case DIALOG_CREATE_MASTER_PASSWORD:
                 final TextInputLayout inputLayout1 = getTextBox(R.string.masterpassword_password);
                 final TextInputLayout inputLayout2 = getTextBox(R.string.masterpassword_confirm);

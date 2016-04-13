@@ -138,7 +138,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             return;
         }
 
-        switch(msg) {
+        switch (msg) {
             case SELECTED:
                 Log.i(LOGTAG, "Selected");
                 mDialog.show();
@@ -256,7 +256,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      */
     private void addButtonResult(final JSONObject result, int which) {
         int button = -1;
-        switch(which) {
+        switch (which) {
             case DialogInterface.BUTTON_POSITIVE : button = 0; break;
             case DialogInterface.BUTTON_NEUTRAL  : button = 1; break;
             case DialogInterface.BUTTON_NEGATIVE : button = 2; break;
@@ -283,7 +283,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      *        One of the ListView.CHOICE_MODE constants to designate whether this list shows checkmarks, radios buttons, or nothing.
     */
     private void addListItems(AlertDialog.Builder builder, PromptListItem[] listItems, int choiceMode) {
-        switch(choiceMode) {
+        switch (choiceMode) {
             case ListView.CHOICE_MODE_MULTIPLE_MODAL:
             case ListView.CHOICE_MODE_MULTIPLE:
                 addMultiSelectList(builder, listItems);
