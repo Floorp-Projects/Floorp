@@ -267,12 +267,12 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     InfallibleTArray<PCompositableChild*> compositables;
     sImageBridgeChildSingleton->ManagedPCompositableChild(compositables);
     for (int i = compositables.Length() - 1; i >= 0; --i) {
-      CompositableClient::ForceIPDLActorShutdown(compositables[i]);
+      CompositableClient::ForceIPDLActorShutdown(compositables[i], "ImageBridge");
     }
     InfallibleTArray<PTextureChild*> textures;
     sImageBridgeChildSingleton->ManagedPTextureChild(textures);
     for (int i = textures.Length() - 1; i >= 0; --i) {
-      TextureClient::ForceIPDLActorShutdown(textures[i]);
+      TextureClient::ForceIPDLActorShutdown(textures[i], "ImageBridge");
     }
     sImageBridgeChildSingleton->FallbackDestroyActors();
 
