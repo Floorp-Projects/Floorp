@@ -498,10 +498,6 @@ public:
     , mNativeIMEContext(aWidget)
     , mOriginalMessage(eVoidEvent)
   {
-    // XXX compositionstart is cancelable in draft of DOM3 Events.
-    //     However, it doesn't make sense for us, we cannot cancel composition
-    //     when we send compositionstart event.
-    mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const override
@@ -854,14 +850,6 @@ public:
     : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass)
     , mIsComposing(false)
   {
-    if (!aIsTrusted) {
-      mFlags.mBubbles = false;
-      mFlags.mCancelable = false;
-      return;
-    }
-
-    mFlags.mBubbles = true;
-    mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const override

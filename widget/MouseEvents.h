@@ -217,15 +217,6 @@ protected:
     , exit(eChild)
     , clickCount(0)
   {
-    switch (aMessage) {
-      case eMouseEnter:
-      case eMouseLeave:
-        mFlags.mBubbles = false;
-        mFlags.mCancelable = false;
-        break;
-      default:
-        break;
-    }
   }
 
 public:
@@ -237,17 +228,8 @@ public:
     acceptActivation(false), ignoreRootScrollFrame(false),
     reason(aReason), context(aContext), exit(eChild), clickCount(0)
   {
-    switch (aMessage) {
-      case eMouseEnter:
-      case eMouseLeave:
-        mFlags.mBubbles = false;
-        mFlags.mCancelable = false;
-        break;
-      case eContextMenu:
-        button = (context == eNormal) ? eRightButton : eLeftButton;
-        break;
-      default:
-        break;
+    if (aMessage == eContextMenu) {
+      button = (context == eNormal) ? eRightButton : eLeftButton;
     }
   }
 
@@ -337,8 +319,6 @@ public:
     , mUserCancelled(false)
     , mDefaultPreventedOnContent(false)
   {
-    mFlags.mCancelable =
-      (aMessage != eDragExit && aMessage != eDragLeave && aMessage != eDragEnd);
   }
 
   virtual WidgetEvent* Duplicate() const override
@@ -675,7 +655,6 @@ public:
     , height(0)
     , isPrimary(true)
   {
-    UpdateFlags();
   }
 
   explicit WidgetPointerEvent(const WidgetMouseEvent& aEvent)
@@ -685,25 +664,6 @@ public:
     , isPrimary(true)
   {
     mClass = ePointerEventClass;
-    UpdateFlags();
-  }
-
-  void UpdateFlags()
-  {
-    switch (mMessage) {
-      case ePointerEnter:
-      case ePointerLeave:
-        mFlags.mBubbles = false;
-        mFlags.mCancelable = false;
-        break;
-      case ePointerCancel:
-      case ePointerGotCapture:
-      case ePointerLostCapture:
-        mFlags.mCancelable = false;
-        break;
-      default:
-        break;
-    }
   }
 
   virtual WidgetEvent* Duplicate() const override

@@ -244,7 +244,6 @@ public:
     : WidgetEvent(aIsTrusted, aMessage, eTransitionEventClass)
     , mElapsedTime(0.0)
   {
-    mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const override
@@ -289,7 +288,6 @@ public:
     : WidgetEvent(aIsTrusted, aMessage, eAnimationEventClass)
     , mElapsedTime(0.0)
   {
-    mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const override
@@ -330,7 +328,6 @@ public:
   InternalSVGZoomEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eSVGZoomEventClass)
   {
-    mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const override
@@ -366,8 +363,6 @@ public:
   InternalSMILTimeEvent(bool aIsTrusted, EventMessage aMessage)
     : InternalUIEvent(aIsTrusted, aMessage, eSMILTimeEventClass)
   {
-    mFlags.mBubbles = false;
-    mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const override
