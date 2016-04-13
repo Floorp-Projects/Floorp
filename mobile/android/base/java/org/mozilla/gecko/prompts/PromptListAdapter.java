@@ -149,7 +149,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         int length = getCount();
 
         ArrayList<Integer> selected = new ArrayList<Integer>();
-        for (int i = 0; i< length; i++) {
+        for (int i = 0; i < length; i++) {
             if (isSelected(i)) {
                 selected.add(i);
             }
@@ -160,7 +160,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
     int getSelectedIndex() {
         int length = getCount();
-        for (int i = 0; i< length; i++) {
+        for (int i = 0; i < length; i++) {
             if (isSelected(i)) {
                 return i;
             }
