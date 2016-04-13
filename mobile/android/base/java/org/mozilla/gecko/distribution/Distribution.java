@@ -352,6 +352,34 @@ public class Distribution {
         return descFile;
     }
 
+    public DistributionDescriptor getDescriptor() {
+        File descFile = getDistributionFile("preferences.json");
+        if (descFile == null) {
+            // Logging and existence checks are handled in getDistributionFile.
+            return null;
+        }
+
+        try {
+            JSONObject all = new JSONObject(FileUtils.getFileContents(descFile));
+
+            if (!all.has("Global")) {
+                Log.e(LOGTAG, "Distribution preferences.json has no Global entry!");
+                return null;
+            }
+
+            return new DistributionDescriptor(all.getJSONObject("Global"));
+
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
+            Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
+            return null;
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error parsing preferences.json", e);
+            Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
+            return null;
+        }
+    }
+
     /**
      * Get the Android preferences from the preferences.json file, if any exist.
      * @return The preferences in a JSONObject, or an empty JSONObject if no preferences are defined.
