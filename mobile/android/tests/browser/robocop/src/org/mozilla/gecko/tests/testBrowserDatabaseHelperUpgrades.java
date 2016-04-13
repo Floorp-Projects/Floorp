@@ -47,6 +47,11 @@ import java.util.ArrayList;
  *   * Note: when the application starts for testing, it may need to upgrade the database from your existing version. If
  * this fails, the application will crash and the test may fail to start.
  *
+ * IMPORTANT:
+ * Test DBs must be created on the oldest version of Android that is currently supported. SQLite
+ * is not forwards compatible. E.g. uploading a DB created on a 6.0 device will cause failures
+ * when robocop tests running on 4.3 are unable to load it.
+ *
  * Implementation inspired by:
  *   http://riggaroo.co.za/automated-testing-sqlite-database-upgrades-android/
  */
