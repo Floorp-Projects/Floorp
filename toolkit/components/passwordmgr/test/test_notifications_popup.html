@@ -81,7 +81,9 @@ function checkTest() {
         logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should only have 1 login");
         login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
-        ok(login.timesUsed, 1, "Check times used on new entry");
+        is(login.username, "notifyu1", "Check the username used on the new entry");
+        is(login.password, "notifyp1", "Check the password used on the new entry");
+        is(login.timesUsed, 1, "Check times used on new entry");
 
         // password-change with chrome hidden
         popup = getPopup(popupNotifications, "password-change");
@@ -95,6 +97,7 @@ function checkTest() {
         logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should only have 1 login");
         login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+        is(login.username, "notifyu1", "Check the username");
         is(login.password, "pass2", "Check password changed");
         is(login.timesUsed, 2, "check .timesUsed incremented on change");
         ok(login.timeCreated < login.timeLastUsed, "timeLastUsed bumped");
@@ -120,7 +123,9 @@ function checkTest() {
         logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should only have 1 login now");
         login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
-        ok(login.timesUsed, 1, "Check times used on new entry");
+        is(login.username, "notifyu2", "Check the username used on the new entry");
+        is(login.password, "notifyp2", "Check the password used on the new entry");
+        is(login.timesUsed, 1, "Check times used on new entry");
 
         // password-change with chrome visible
         popupWin = iframe.contentWindow.popupWin;
@@ -139,6 +144,7 @@ function checkTest() {
         logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should have 1 login");
         login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+        is(login.username, "notifyu2", "Check the username");
         is(login.password, "pass2", "Check password changed");
         is(login.timesUsed, 2, "check .timesUsed incremented on change");
         ok(login.timeCreated < login.timeLastUsed, "timeLastUsed bumped");

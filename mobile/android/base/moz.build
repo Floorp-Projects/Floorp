@@ -196,7 +196,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'AlarmReceiver.java',
     'AndroidGamepadManager.java',
     'animation/AnimationUtils.java',
-    'animation/AnimatorProxy.java',
     'animation/HeightChangeAnimation.java',
     'animation/PropertyAnimator.java',
     'animation/Rotate3DAnimation.java',

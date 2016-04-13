@@ -219,13 +219,17 @@
 <!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">
 <!ENTITY pref_cookies_disabled "Disabled">
 
+<!ENTITY pref_category_data_saver "Data saver">
+<!ENTITY pref_category_media "Media">
+<!ENTITY pref_category_developer_tools "Developer tools">
+
 <!ENTITY pref_tap_to_load_images_title2 "Show images">
 <!ENTITY pref_tap_to_load_images_enabled "Always">
 <!ENTITY pref_tap_to_load_images_data "Only over Wi-Fi">
 <!ENTITY pref_tap_to_load_images_disabled2 "Blocked">
 
-<!ENTITY pref_show_web_fonts "Show Web fonts">
-<!ENTITY pref_show_web_fonts_summary "Hide to use default fonts and reduce website load times">
+<!ENTITY pref_show_web_fonts "Show web fonts">
+<!ENTITY pref_show_web_fonts_summary2 "Download remote fonts when loading a page">
 
 <!ENTITY pref_tracking_protection_title2 "Tracking Protection">
 <!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">

@@ -51,6 +51,8 @@ add_task(function* test_clickNever() {
     clickDoorhangerButton(notif, NEVER_BUTTON);
   });
 
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
+
   info("Make sure Never took effect");
   yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
@@ -61,6 +63,8 @@ add_task(function* test_clickNever() {
        "Checking for login saving disabled");
     Services.logins.setLoginSavingEnabled("http://mochi.test:8888", true);
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_clickRemember() {
@@ -74,6 +78,13 @@ add_task(function* test_clickRemember() {
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
   });
 
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username used on the new entry");
+  is(login.password, "notifyp1", "Check the password used on the new entry");
+  is(login.timesUsed, 1, "Check times used on new entry");
+
   info("Make sure Remember took effect and we don't prompt for an existing login");
   yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
@@ -81,6 +92,13 @@ add_task(function* test_clickRemember() {
     let notif = getCaptureDoorhanger("password-save");
     ok(!notif, "checking for no notification popup");
   });
+
+  logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username used");
+  is(login.password, "notifyp1", "Check the password used");
+  is(login.timesUsed, 2, "Check times used incremented");
 
   checkOnlyLoginWasUsedTwice({ justChanged: false });
 
@@ -100,6 +118,8 @@ add_task(function* test_rememberSignonsFalse() {
     let notif = getCaptureDoorhanger("password-save");
     ok(!notif, "checking for no notification popup");
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_rememberSignonsTrue() {
@@ -113,6 +133,8 @@ add_task(function* test_rememberSignonsTrue() {
     ok(notif, "got notification popup");
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 /* autocomplete=off tests... */
@@ -127,6 +149,8 @@ add_task(function* test_autocompleteOffUsername() {
     ok(notif, "checking for notification popup");
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_autocompleteOffPassword() {
@@ -139,6 +163,8 @@ add_task(function* test_autocompleteOffPassword() {
     ok(notif, "checking for notification popup");
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_autocompleteOffForm() {
@@ -151,6 +177,8 @@ add_task(function* test_autocompleteOffForm() {
     ok(notif, "checking for notification popup");
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 
@@ -163,6 +191,8 @@ add_task(function* test_noPasswordField() {
     let notif = getCaptureDoorhanger("password-save");
     ok(!notif, "checking for no notification popup");
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_pwOnlyLoginMatchesForm() {
@@ -177,6 +207,13 @@ add_task(function* test_pwOnlyLoginMatchesForm() {
     notif.remove();
   });
 
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "", "Check the username");
+  is(login.password, "notifyp1", "Check the password");
+  is(login.timesUsed, 1, "Check times used");
+
   Services.logins.removeLogin(login2);
 });
 
@@ -190,6 +227,13 @@ add_task(function* test_pwOnlyFormMatchesLogin() {
     let notif = getCaptureDoorhanger("password-save");
     ok(!notif, "checking for no notification popup");
   });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username");
+  is(login.password, "notifyp1", "Check the password");
+  is(login.timesUsed, 2, "Check times used");
 
   Services.logins.removeLogin(login1);
 });
@@ -206,6 +250,13 @@ add_task(function* test_pwOnlyFormDoesntMatchExisting() {
     notif.remove();
   });
 
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1B", "Check the username unchanged");
+  is(login.password, "notifyp1B", "Check the password unchanged");
+  is(login.timesUsed, 1, "Check times used");
+
   Services.logins.removeLogin(login1B);
 });
 
@@ -220,6 +271,13 @@ add_task(function* test_changeUPLoginOnUPForm_dont() {
     ok(notif, "got notification popup");
     clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
   });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username unchanged");
+  is(login.password, "notifyp1", "Check the password unchanged");
+  is(login.timesUsed, 1, "Check times used");
 
   Services.logins.removeLogin(login1);
 });
@@ -236,6 +294,13 @@ add_task(function* test_changeUPLoginOnUPForm_change() {
     clickDoorhangerButton(notif, CHANGE_BUTTON);
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username unchanged");
+  is(login.password, "pass2", "Check the password changed");
+  is(login.timesUsed, 2, "Check times used");
 
   checkOnlyLoginWasUsedTwice({ justChanged: true });
 
@@ -257,6 +322,15 @@ add_task(function* test_changePLoginOnUPForm() {
     clickDoorhangerButton(notif, CHANGE_BUTTON);
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "", "Check the username unchanged");
+  is(login.password, "pass2", "Check the password changed");
+  is(login.timesUsed, 2, "Check times used");
+
+  // no cleanup -- saved password to be used in the next test.
 });
 
 add_task(function* test_changePLoginOnPForm() {
@@ -270,6 +344,14 @@ add_task(function* test_changePLoginOnPForm() {
     clickDoorhangerButton(notif, CHANGE_BUTTON);
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "", "Check the username unchanged");
+  is(login.password, "notifyp1", "Check the password changed");
+  is(login.timesUsed, 3, "Check times used");
+
   Services.logins.removeLogin(login2);
 });
 
@@ -287,6 +369,8 @@ add_task(function* test_checkUPSaveText() {
     is(expectedText, notificationText, "Checking text: " + notificationText);
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_checkPSaveText() {
@@ -303,6 +387,8 @@ add_task(function* test_checkPSaveText() {
     is(expectedText, notificationText, "Checking text: " + notificationText);
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_capture2pw0un() {
@@ -316,6 +402,8 @@ add_task(function* test_capture2pw0un() {
     ok(notif, "got notification popup");
     notif.remove();
   });
+
+  is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
 });
 
 add_task(function* test_change2pw0unExistingDifferentUP() {
@@ -331,6 +419,13 @@ add_task(function* test_change2pw0unExistingDifferentUP() {
     ok(notif, "got notification popup");
     notif.remove();
   });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1B", "Check the username unchanged");
+  is(login.password, "notifyp1B", "Check the password unchanged");
+  is(login.timesUsed, 1, "Check times used");
 
   Services.logins.removeLogin(login1B);
 });
@@ -349,6 +444,13 @@ add_task(function* test_change2pw0unExistingDifferentP() {
     notif.remove();
   });
 
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "", "Check the username unchanged");
+  is(login.password, "notifyp1B", "Check the password unchanged");
+  is(login.timesUsed, 1, "Check times used");
+
   Services.logins.removeLogin(login2B);
 });
 
@@ -365,9 +467,44 @@ add_task(function* test_change2pw0unExistingWithSameP() {
     ok(!notif, "checking for no notification popup");
   });
 
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "", "Check the username unchanged");
+  is(login.password, "notifyp1", "Check the password unchanged");
+  is(login.timesUsed, 2, "Check times used incremented");
+
   checkOnlyLoginWasUsedTwice({ justChanged: false });
 
   Services.logins.removeLogin(login2);
+});
+
+add_task(function* test_changeUPLoginOnPUpdateForm() {
+  info("Check for change-password popup, u+p login on password update form.");
+  Services.logins.addLogin(login1);
+
+  yield testSubmittingLoginForm("subtst_notifications_change_p.html", function*(fieldValues) {
+    is(fieldValues.username, "null", "Checking submitted username");
+    is(fieldValues.password, "pass2", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-change");
+    ok(notif, "got notification popup");
+    clickDoorhangerButton(notif, CHANGE_BUTTON);
+    ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+  });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username unchanged");
+  is(login.password, "pass2", "Check the password changed");
+  is(login.timesUsed, 2, "Check times used");
+
+  checkOnlyLoginWasUsedTwice({ justChanged: true });
+
+  // cleanup
+  login1.password = "pass2";
+  Services.logins.removeLogin(login1);
+  login1.password = "notifyp1";
 });
 
 add_task(function* test_recipeCaptureFields_NewLogin() {
@@ -385,6 +522,13 @@ add_task(function* test_recipeCaptureFields_NewLogin() {
 
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
   }, "http://example.org"); // The recipe is for example.org
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username unchanged");
+  is(login.password, "notifyp1", "Check the password unchanged");
+  is(login.timesUsed, 1, "Check times used");
 });
 
 add_task(function* test_recipeCaptureFields_ExistingLogin() {
@@ -400,8 +544,11 @@ add_task(function* test_recipeCaptureFields_ExistingLogin() {
 
   checkOnlyLoginWasUsedTwice({ justChanged: false });
   let logins = Services.logins.getAllLogins();
-  is(logins[0].username, "notifyu1", "check .username for existing login submission");
-  is(logins[0].password, "notifyp1", "check .password for existing login submission");
+  is(logins.length, 1, "Should only have 1 login");
+  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.username, "notifyu1", "Check the username unchanged");
+  is(login.password, "notifyp1", "Check the password unchanged");
+  is(login.timesUsed, 2, "Check times used incremented");
 
   Services.logins.removeAllLogins();
 });
