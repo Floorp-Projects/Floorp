@@ -93,26 +93,47 @@ hb_font_get_font_v_extents_parent (hb_font_t *font,
 }
 
 static hb_bool_t
-hb_font_get_glyph_nil (hb_font_t *font HB_UNUSED,
-		       void *font_data HB_UNUSED,
-		       hb_codepoint_t unicode,
-		       hb_codepoint_t variation_selector,
-		       hb_codepoint_t *glyph,
-		       void *user_data HB_UNUSED)
+hb_font_get_nominal_glyph_nil (hb_font_t *font HB_UNUSED,
+			       void *font_data HB_UNUSED,
+			       hb_codepoint_t unicode,
+			       hb_codepoint_t *glyph,
+			       void *user_data HB_UNUSED)
 {
   *glyph = 0;
   return false;
 }
 static hb_bool_t
-hb_font_get_glyph_parent (hb_font_t *font,
-			  void *font_data HB_UNUSED,
-			  hb_codepoint_t unicode,
-			  hb_codepoint_t variation_selector,
-			  hb_codepoint_t *glyph,
-			  void *user_data HB_UNUSED)
+hb_font_get_nominal_glyph_parent (hb_font_t *font,
+				  void *font_data HB_UNUSED,
+				  hb_codepoint_t unicode,
+				  hb_codepoint_t *glyph,
+				  void *user_data HB_UNUSED)
 {
-  return font->parent->get_glyph (unicode, variation_selector, glyph);
+  return font->parent->get_nominal_glyph (unicode, glyph);
 }
+
+static hb_bool_t
+hb_font_get_variation_glyph_nil (hb_font_t *font HB_UNUSED,
+				 void *font_data HB_UNUSED,
+				 hb_codepoint_t unicode,
+				 hb_codepoint_t variation_selector,
+				 hb_codepoint_t *glyph,
+				 void *user_data HB_UNUSED)
+{
+  *glyph = 0;
+  return false;
+}
+static hb_bool_t
+hb_font_get_variation_glyph_parent (hb_font_t *font,
+				    void *font_data HB_UNUSED,
+				    hb_codepoint_t unicode,
+				    hb_codepoint_t variation_selector,
+				    hb_codepoint_t *glyph,
+				    void *user_data HB_UNUSED)
+{
+  return font->parent->get_variation_glyph (unicode, variation_selector, glyph);
+}
+
 
 static hb_position_t
 hb_font_get_glyph_h_advance_nil (hb_font_t *font HB_UNUSED,
@@ -622,7 +643,50 @@ hb_font_get_glyph (hb_font_t *font,
 		   hb_codepoint_t unicode, hb_codepoint_t variation_selector,
 		   hb_codepoint_t *glyph)
 {
-  return font->get_glyph (unicode, variation_selector, glyph);
+  if (unlikely (variation_selector))
+    return font->get_variation_glyph (unicode, variation_selector, glyph);
+  return font->get_nominal_glyph (unicode, glyph);
+}
+
+/**
+ * hb_font_get_nominal_glyph:
+ * @font: a font.
+ * @unicode: 
+ * @glyph: (out): 
+ *
+ * 
+ *
+ * Return value: 
+ *
+ * Since: 1.2.3
+ **/
+hb_bool_t
+hb_font_get_nominal_glyph (hb_font_t *font,
+			   hb_codepoint_t unicode,
+			   hb_codepoint_t *glyph)
+{
+  return font->get_nominal_glyph (unicode, glyph);
+}
+
+/**
+ * hb_font_get_variation_glyph:
+ * @font: a font.
+ * @unicode: 
+ * @variation_selector: 
+ * @glyph: (out): 
+ *
+ * 
+ *
+ * Return value: 
+ *
+ * Since: 1.2.3
+ **/
+hb_bool_t
+hb_font_get_variation_glyph (hb_font_t *font,
+			     hb_codepoint_t unicode, hb_codepoint_t variation_selector,
+			     hb_codepoint_t *glyph)
+{
+  return font->get_variation_glyph (unicode, variation_selector, glyph);
 }
 
 /**
@@ -1472,3 +1536,131 @@ hb_font_get_ppem (hb_font_t *font,
   if (x_ppem) *x_ppem = font->x_ppem;
   if (y_ppem) *y_ppem = font->y_ppem;
 }
+
+
+#ifndef HB_DISABLE_DEPRECATED
+
+/*
+ * Deprecated get_glyph_func():
+ */
+
+struct hb_trampoline_closure_t
+{
+  void *user_data;
+  hb_destroy_func_t destroy;
+  unsigned int ref_count;
+};
+
+template <typename FuncType>
+struct hb_trampoline_t
+{
+  hb_trampoline_closure_t closure; /* Must be first. */
+  FuncType func;
+};
+
+template <typename FuncType>
+static hb_trampoline_t<FuncType> *
+trampoline_create (FuncType           func,
+		   void              *user_data,
+		   hb_destroy_func_t  destroy)
+{
+  typedef hb_trampoline_t<FuncType> trampoline_t;
+
+  trampoline_t *trampoline = (trampoline_t *) calloc (1, sizeof (trampoline_t));
+
+  if (unlikely (!trampoline))
+    return NULL;
+
+  trampoline->closure.user_data = user_data;
+  trampoline->closure.destroy = destroy;
+  trampoline->closure.ref_count = 1;
+  trampoline->func = func;
+
+  return trampoline;
+}
+
+static void
+trampoline_reference (hb_trampoline_closure_t *closure)
+{
+  closure->ref_count++;
+}
+
+static void
+trampoline_destroy (void *user_data)
+{
+  hb_trampoline_closure_t *closure = (hb_trampoline_closure_t *) user_data;
+
+  if (--closure->ref_count)
+    return;
+
+  if (closure->destroy)
+    closure->destroy (closure->user_data);
+  free (closure);
+}
+
+typedef hb_trampoline_t<hb_font_get_glyph_func_t> hb_font_get_glyph_trampoline_t;
+
+static hb_bool_t
+hb_font_get_nominal_glyph_trampoline (hb_font_t *font,
+				      void *font_data,
+				      hb_codepoint_t unicode,
+				      hb_codepoint_t *glyph,
+				      void *user_data)
+{
+  hb_font_get_glyph_trampoline_t *trampoline = (hb_font_get_glyph_trampoline_t *) user_data;
+  return trampoline->func (font, font_data, unicode, 0, glyph, trampoline->closure.user_data);
+}
+
+static hb_bool_t
+hb_font_get_variation_glyph_trampoline (hb_font_t *font,
+					void *font_data,
+					hb_codepoint_t unicode,
+					hb_codepoint_t variation_selector,
+					hb_codepoint_t *glyph,
+					void *user_data)
+{
+  hb_font_get_glyph_trampoline_t *trampoline = (hb_font_get_glyph_trampoline_t *) user_data;
+  return trampoline->func (font, font_data, unicode, variation_selector, glyph, trampoline->closure.user_data);
+}
+
+/**
+ * hb_font_funcs_set_glyph_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * Deprecated.  Use hb_font_funcs_set_nominal_glyph_func() and
+ * hb_font_funcs_set_variation_glyph_func() instead.
+ *
+ * Since: 0.9.2
+ * Deprecated: 1.2.3
+ **/
+void
+hb_font_funcs_set_glyph_func (hb_font_funcs_t *ffuncs,
+			      hb_font_get_glyph_func_t func,
+			      void *user_data, hb_destroy_func_t destroy)
+{
+  hb_font_get_glyph_trampoline_t *trampoline;
+
+  trampoline = trampoline_create (func, user_data, destroy);
+  if (unlikely (!trampoline))
+  {
+    if (destroy)
+      destroy (user_data);
+    return;
+  }
+
+  hb_font_funcs_set_nominal_glyph_func (ffuncs,
+					hb_font_get_nominal_glyph_trampoline,
+					trampoline,
+					trampoline_destroy);
+
+  trampoline_reference (&trampoline->closure);
+  hb_font_funcs_set_variation_glyph_func (ffuncs,
+					  hb_font_get_variation_glyph_trampoline,
+					  trampoline,
+					  trampoline_destroy);
+}
+
+#endif /* HB_DISABLE_DEPRECATED */

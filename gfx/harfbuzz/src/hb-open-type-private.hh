@@ -662,6 +662,15 @@ typedef SHORT FWORD;
 /* 16-bit unsigned integer (USHORT) that describes a quantity in FUnits. */
 typedef USHORT UFWORD;
 
+/* 16-bit signed fixed number with the low 14 bits of fraction (2.14). */
+struct F2DOT14 : SHORT
+{
+  //inline float to_float (void) const { return ???; }
+  //inline void set_float (float f) { v.set (f * ???); }
+  public:
+  DEFINE_SIZE_STATIC (2);
+};
+
 /* Date represented in number of seconds since 12:00 midnight, January 1,
  * 1904. The value is represented as a signed 64-bit integer. */
 struct LONGDATETIME

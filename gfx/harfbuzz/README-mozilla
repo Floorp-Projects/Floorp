@@ -1,11 +1,9 @@
-gfx/harfbuzz status as of 2016-04-07:
+gfx/harfbuzz status as of 2016-04-12:
 
 This directory contains the harfbuzz source from the 'master' branch of
 https://github.com/behdad/harfbuzz.
 
-Current version: 1.2.2
-Plus cherry-picked commit 6dd80faf0dcb3e8a8915c3a25da44e2a67cb0cd8 to fix
-broken mark filter set support.
+Current version: 1.2.6
 
 
 UPDATING:
