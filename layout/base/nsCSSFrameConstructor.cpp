@@ -96,7 +96,6 @@
 #include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
 #include "DetailsFrame.h"
-#include "SummaryFrame.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -3624,10 +3623,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
     SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame),
     SIMPLE_TAG_CREATE(meter, NS_NewMeterFrame),
-    COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetailsFrame),
-    { &nsGkAtoms::summary,
-      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES | FCDATA_MAY_NEED_SCROLLFRAME,
-                  NS_NewSummaryFrame) }
+    COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetailsFrame)
   };
 
   return FindDataByTag(aTag, aElement, aStyleContext, sHTMLData,
@@ -8943,9 +8939,6 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
   } else if (nsGkAtoms::detailsFrame == frameType) {
     newFrame = NS_NewDetailsFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
-  } else if (nsGkAtoms::summaryFrame == frameType) {
-    newFrame = NS_NewSummaryFrame(shell, styleContext);
-    newFrame->Init(content, aParentFrame, aFrame);
   } else {
     NS_RUNTIMEABORT("unexpected frame type");
   }
@@ -9274,15 +9267,20 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return true;
   }
 
-  if (insertionFrame && insertionFrame->GetType() == nsGkAtoms::summaryFrame &&
+  if (insertionFrame &&
       aFrame->GetParent()->GetType() == nsGkAtoms::detailsFrame) {
-    // When removing a summary frame, we should reframe the parent details frame
-    // to ensure that another summary is used or the default summary is
-    // generated.
-    *aResult = RecreateFramesForContent(aFrame->GetParent()->GetContent(),
-                                        false, REMOVE_FOR_RECONSTRUCTION,
-                                        aDestroyedFramesFor);
-    return true;
+    HTMLSummaryElement* summary =
+      HTMLSummaryElement::FromContent(insertionFrame->GetContent());
+
+    if (summary && summary->IsMainSummary()) {
+      // When removing a summary, we should reframe the parent details frame to
+      // ensure that another summary is used or the default summary is
+      // generated.
+      *aResult = RecreateFramesForContent(aFrame->GetParent()->GetContent(),
+                                          false, REMOVE_FOR_RECONSTRUCTION,
+                                          aDestroyedFramesFor);
+      return true;
+    }
   }
 
   // Now check for possibly needing to reconstruct due to a pseudo parent

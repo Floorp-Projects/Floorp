@@ -142,7 +142,7 @@ RemoveTaskChild::HandlerCallback()
 void
 RemoveTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(REMOVE_TASK_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_WRITE_PERMISSION);
 }
 
 /**
@@ -252,7 +252,7 @@ RemoveTaskParent::IOWork()
 void
 RemoveTaskParent::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(REMOVE_TASK_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_WRITE_PERMISSION);
 }
 
 } // namespace dom

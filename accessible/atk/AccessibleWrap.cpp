@@ -793,24 +793,13 @@ getParentCB(AtkObject *aAtkObj)
   if (aAtkObj->accessible_parent)
     return aAtkObj->accessible_parent;
 
-  AtkObject* atkParent = nullptr;
-  if (AccessibleWrap* wrapper = GetAccessibleWrap(aAtkObj)) {
-    Accessible* parent = wrapper->Parent();
-    atkParent = parent ? AccessibleWrap::GetAtkObject(parent) : nullptr;
-  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
-    ProxyAccessible* parent = proxy->Parent();
-    if (parent) {
-      atkParent = GetWrapperFor(parent);
-    } else {
-      // Otherwise this should be the proxy for the tab's top level document.
-      Accessible* outerDocParent = proxy->OuterDocOfRemoteBrowser();
-      NS_ASSERTION(outerDocParent, "this document should have an outerDoc as a parent");
-      if (outerDocParent) {
-        atkParent = AccessibleWrap::GetAtkObject(outerDocParent);
-      }
-    }
+  AccessibleOrProxy acc = GetInternalObj(aAtkObj);
+  if (acc.IsNull()) {
+    return nullptr;
   }
 
+  AccessibleOrProxy parent = acc.Parent();
+  AtkObject* atkParent = !parent.IsNull() ? GetWrapperFor(parent) : nullptr;
   if (atkParent)
     atk_object_set_parent(aAtkObj, atkParent);
 
@@ -1099,6 +1088,16 @@ AtkObject*
 GetWrapperFor(ProxyAccessible* aProxy)
 {
   return reinterpret_cast<AtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
+}
+
+AtkObject*
+GetWrapperFor(AccessibleOrProxy aObj)
+{
+  if (aObj.IsProxy()) {
+    return GetWrapperFor(aObj.AsProxy());
+  }
+
+  return AccessibleWrap::GetAtkObject(aObj.AsAccessible());
 }
 
 static uint16_t

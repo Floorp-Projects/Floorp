@@ -122,6 +122,7 @@
     macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
     macro(GeneratorFunction, GeneratorFunction, "GeneratorFunction") \
     macro(get, get, "get") \
+    macro(getPrefix, getPrefix, "get ") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
@@ -236,6 +237,7 @@
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(separator, separator, "separator") \
     macro(set, set, "set") \
+    macro(setPrefix, setPrefix, "set ") \
     macro(shape, shape, "shape") \
     macro(size, size, "size") \
     macro(source, source, "source") \
@@ -307,27 +309,6 @@
     macro(boolean, boolean, "boolean") \
     macro(null, null, "null") \
     macro(symbol, symbol, "symbol") \
-    /* Well-known atom names must be continuous and ordered, matching \
-     * enum JS::SymbolCode in jsapi.h. */ \
-    macro(iterator, iterator, "iterator") \
-    macro(match, match, "match") \
-    macro(replace, replace, "replace") \
-    macro(search, search, "search") \
-    macro(species, species, "species") \
-    macro(split, split, "split") \
-    macro(toPrimitive, toPrimitive, "toPrimitive") \
-    macro(unscopables, unscopables, "unscopables") \
-    /* Same goes for the descriptions of the well-known symbols. */ \
-    macro(Symbol_hasInstance, Symbol_hasInstance, "Symbol.hasInstance") \
-    macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
-    macro(Symbol_iterator, Symbol_iterator, "Symbol.iterator") \
-    macro(Symbol_match,    Symbol_match,    "Symbol.match") \
-    macro(Symbol_replace,  Symbol_replace,  "Symbol.replace") \
-    macro(Symbol_search,   Symbol_search,   "Symbol.search") \
-    macro(Symbol_species,  Symbol_species,  "Symbol.species") \
-    macro(Symbol_split,    Symbol_split,    "Symbol.split") \
-    macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
-    macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
     /* Function names for properties named by symbols. */ \
     macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \
 

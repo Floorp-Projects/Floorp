@@ -17,8 +17,6 @@
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
-#define GET_FILE_OR_DIRECTORY_PERMISSION "read"
-
 namespace mozilla {
 namespace dom {
 
@@ -171,7 +169,7 @@ GetFileOrDirectoryTaskChild::HandlerCallback()
 void
 GetFileOrDirectoryTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(GET_FILE_OR_DIRECTORY_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_READ_PERMISSION);
 }
 
 /**
@@ -298,7 +296,7 @@ GetFileOrDirectoryTaskParent::IOWork()
 void
 GetFileOrDirectoryTaskParent::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(GET_FILE_OR_DIRECTORY_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_READ_PERMISSION);
 }
 
 } // namespace dom

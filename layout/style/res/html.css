@@ -773,12 +773,20 @@ video > .caption-box {
 /* details & summary */
 /* Need to revert Bug 1259889 Part 2 when removing details preference. */
 @supports -moz-bool-pref("dom.details_element.enabled") {
-  details > summary::-moz-list-bullet {
-    list-style-type: disclosure-closed;
+  details > summary:first-of-type,
+  details > summary:-moz-native-anonymous {
+    display: list-item;
+    list-style: disclosure-closed inside;
   }
 
-  details[open] > summary::-moz-list-bullet {
+  details[open] > summary:first-of-type,
+  details[open] > summary:-moz-native-anonymous {
     list-style-type: disclosure-open;
+  }
+
+  details > summary:first-of-type > * {
+    /* Cancel "list-style-position: inside" inherited from summary. */
+    list-style-position: initial;
   }
 }
 

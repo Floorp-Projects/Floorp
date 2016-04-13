@@ -3407,6 +3407,12 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 #ifdef NIGHTLY_BUILD
             // Stash some data on the stack so we can retrieve it from minidumps,
             // see bug 1124397.
+            int32_t startOffset = from.offset() - 1;
+            while (startOffset >= 0 && code[startOffset] == 0xe5)
+                startOffset--;
+            int32_t endOffset = from.offset() - 1;
+            while (endOffset < int32_t(size()) && code[endOffset] == 0xe5)
+                endOffset++;
             volatile uintptr_t dump[10];
             blackbox = dump;
             blackbox[0] = uintptr_t(0xABCD1234);
@@ -3416,8 +3422,8 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             blackbox[4] = uintptr_t(code[from.offset() - 5]);
             blackbox[5] = uintptr_t(code[from.offset() - 4]);
             blackbox[6] = uintptr_t(code[from.offset() - 3]);
-            blackbox[7] = uintptr_t(code[from.offset() - 2]);
-            blackbox[8] = uintptr_t(code[from.offset() - 1]);
+            blackbox[7] = uintptr_t(startOffset);
+            blackbox[8] = uintptr_t(endOffset);
             blackbox[9] = uintptr_t(0xFFFF7777);
 #endif
             MOZ_CRASH("nextJump bogus offset");

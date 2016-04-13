@@ -456,7 +456,7 @@ hb_ot_hide_default_ignorables (hb_ot_shape_context_t *c)
     return;
 
   hb_codepoint_t space;
-  if (c->font->get_glyph (' ', 0, &space))
+  if (c->font->get_nominal_glyph (' ', &space))
   {
     /* Replace default-ignorables with a zero-advance space glyph. */
     for (/*continue*/; i < count; i++)
@@ -524,32 +524,6 @@ hb_ot_map_glyphs_fast (hb_buffer_t  *buffer)
 }
 
 static inline void
-hb_synthesize_glyph_classes (hb_ot_shape_context_t *c)
-{
-  unsigned int count = c->buffer->len;
-  hb_glyph_info_t *info = c->buffer->info;
-  for (unsigned int i = 0; i < count; i++)
-  {
-    hb_ot_layout_glyph_props_flags_t klass;
-
-    /* Never mark default-ignorables as marks.
-     * They won't get in the way of lookups anyway,
-     * but having them as mark will cause them to be skipped
-     * over if the lookup-flag says so, but at least for the
-     * Mongolian variation selectors, looks like Uniscribe
-     * marks them as non-mark.  Some Mongolian fonts without
-     * GDEF rely on this.  Another notable character that
-     * this applies to is COMBINING GRAPHEME JOINER. */
-    klass = (_hb_glyph_info_get_general_category (&info[i]) !=
-	     HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK ||
-	     _hb_glyph_info_is_default_ignorable (&info[i])) ?
-	    HB_OT_LAYOUT_GLYPH_PROPS_BASE_GLYPH :
-	    HB_OT_LAYOUT_GLYPH_PROPS_MARK;
-    _hb_glyph_info_set_glyph_props (&info[i], klass);
-  }
-}
-
-static inline void
 hb_ot_substitute_default (hb_ot_shape_context_t *c)
 {
   hb_buffer_t *buffer = c->buffer;
@@ -579,9 +553,6 @@ hb_ot_substitute_complex (hb_ot_shape_context_t *c)
   hb_buffer_t *buffer = c->buffer;
 
   hb_ot_layout_substitute_start (c->font, buffer);
-
-  if (!hb_ot_layout_has_glyph_classes (c->face))
-    hb_synthesize_glyph_classes (c);
 
   c->plan->substitute (c->font, buffer);
 
@@ -848,12 +819,12 @@ add_char (hb_font_t          *font,
 	  hb_set_t           *glyphs)
 {
   hb_codepoint_t glyph;
-  if (font->get_glyph (u, 0, &glyph))
+  if (font->get_nominal_glyph (u, &glyph))
     glyphs->add (glyph);
   if (mirror)
   {
     hb_codepoint_t m = unicode->mirroring (u);
-    if (m != u && font->get_glyph (m, 0, &glyph))
+    if (m != u && font->get_nominal_glyph (m, &glyph))
       glyphs->add (glyph);
   }
 }
