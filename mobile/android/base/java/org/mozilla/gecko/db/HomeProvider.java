@@ -141,7 +141,7 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
      */
 
     @Override
-    protected String getDBName(){
+    protected String getDBName() {
         return DB_FILENAME;
     }
 
@@ -151,7 +151,7 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
     }
 
     @Override
-    protected int getDBVersion(){
+    protected int getDBVersion() {
         return DB_VERSION;
     }
 

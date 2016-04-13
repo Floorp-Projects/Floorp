@@ -1231,7 +1231,7 @@ public class GeckoAppShell
         EnumerateGeckoProcesses(visitor);
     }
 
-    interface GeckoProcessesVisitor{
+    interface GeckoProcessesVisitor {
         boolean callback(int pid);
     }
 
