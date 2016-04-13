@@ -81,6 +81,7 @@
           if (Components.isSuccessCode(aStatus)) {
             // Refresh the display (updating icon, etc)
             this.updateDisplay();
+            BrowserSearch.updateOpenSearchBadge();
           } else {
             Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
           }

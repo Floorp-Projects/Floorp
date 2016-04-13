@@ -21,6 +21,7 @@
 %include ../browser.inc
 
 :root {
+  --panel-separator-color: ThreeDShadow;
   --panel-ui-exit-subview-gutter-width: 38px;
 }
 
@@ -1153,7 +1154,8 @@ menuitem.panel-subview-footer@menuStateActive@,
 .cui-widget-panelview menuseparator {
   -moz-appearance: none;
   min-height: 0;
-  border-top: 1px solid hsla(210,4%,10%,.15);
+  border-top: 1px solid var(--panel-separator-color);
+  border-bottom: none;
   margin: 6px 0;
   padding: 0;
 }
@@ -1346,7 +1348,7 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
   margin: .5em 0;
   width: 1px;
   height: auto;
-  background: hsla(210,4%,10%,.15);
+  background: var(--panel-separator-color);
   transition-property: margin;
   transition-duration: 10ms;
   transition-timing-function: ease;

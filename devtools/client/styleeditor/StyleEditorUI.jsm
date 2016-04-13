@@ -301,13 +301,14 @@ StyleEditorUI.prototype = {
 
     let sources = yield styleSheet.getOriginalSources();
     if (sources && sources.length) {
+      let parentEditorName = editor.friendlyName;
       this._removeStyleSheetEditor(editor);
 
       for (let source of sources) {
         // set so the first sheet will be selected, even if it's a source
         source.styleSheetIndex = styleSheet.styleSheetIndex;
         source.relatedStyleSheet = styleSheet;
-
+        source.relatedEditorName = parentEditorName;
         yield this._addStyleSheetEditor(source);
       }
     }
@@ -803,7 +804,7 @@ StyleEditorUI.prototype = {
     }
 
     let ruleCount = editor.styleSheet.ruleCount;
-    if (editor.styleSheet.relatedStyleSheet && editor.linkedCSSFile) {
+    if (editor.styleSheet.relatedStyleSheet) {
       ruleCount = editor.styleSheet.relatedStyleSheet.ruleCount;
     }
     if (ruleCount === undefined) {
@@ -828,11 +829,13 @@ StyleEditorUI.prototype = {
       label.setAttribute("tooltiptext", editor.styleSheet.href);
     }
 
-    let linkedCSSFile = "";
+    let linkedCSSSource = "";
     if (editor.linkedCSSFile) {
-      linkedCSSFile = OS.Path.basename(editor.linkedCSSFile);
+      linkedCSSSource = OS.Path.basename(editor.linkedCSSFile);
+    } else if (editor.styleSheet.relatedEditorName) {
+      linkedCSSSource = editor.styleSheet.relatedEditorName;
     }
-    text(summary, ".stylesheet-linked-file", linkedCSSFile);
+    text(summary, ".stylesheet-linked-file", linkedCSSSource);
     text(summary, ".stylesheet-title", editor.styleSheet.title || "");
     text(summary, ".stylesheet-rule-count",
       PluralForm.get(ruleCount,
