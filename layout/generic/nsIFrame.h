@@ -1752,8 +1752,7 @@ public:
 
   struct InlineMinISizeData : public InlineIntrinsicISizeData {
     InlineMinISizeData()
-      : trailingTextFrame(nullptr)
-      , atStartOfLine(true)
+      : atStartOfLine(true)
     {}
 
     // The default implementation for nsIFrame::AddInlineMinISize.
@@ -1770,11 +1769,6 @@ public:
     // If the break here is actually taken, aHyphenWidth must be added to the
     // width of the current line.
     void OptionallyBreak(nscoord aHyphenWidth = 0);
-
-    // The last text frame processed so far in the current line, when
-    // the last characters in that text frame are relevant for line
-    // break opportunities.
-    nsIFrame *trailingTextFrame;
 
     // Whether we're currently at the start of the line.  If we are, we
     // can't break (for example, between the text-indent and the first
