@@ -1842,6 +1842,14 @@ interface nsIDOMWindowUtils : nsISupports {
   void forceUseCounterFlush(in nsIDOMNode aNode);
 
   void setNextPaintSyncId(in long aSyncId);
+
+  /**
+   * Enable or disable displayport suppression. This is intended to be used by
+   * testing code, to provide more deterministic behaviour over the displayport
+   * suppression during tests. Note that this updates a flag, so whatever value
+   * was last provided is what will be used.
+   */
+  void respectDisplayPortSuppression(in boolean aEnabled);
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
