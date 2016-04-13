@@ -111,7 +111,7 @@ public class PromptListItem {
             try {
                 PromptListItem item = new PromptListItem(items.getJSONObject(i));
                 list.add(item);
-            } catch(Exception ex) { }
+            } catch (Exception ex) { }
         }
 
         return list.toArray(new PromptListItem[length]);

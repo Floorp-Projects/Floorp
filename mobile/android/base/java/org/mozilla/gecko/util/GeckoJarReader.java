@@ -62,7 +62,7 @@ public final class GeckoJarReader {
             if (inputStream != null) {
                 try {
                     inputStream.close();
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                     Log.e(LOGTAG, "Error closing stream", ex);
                 }
             }
@@ -93,7 +93,7 @@ public final class GeckoJarReader {
             if (reader != null) {
                 try {
                     reader.close();
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                     Log.e(LOGTAG, "Error closing reader", ex);
                 }
             }

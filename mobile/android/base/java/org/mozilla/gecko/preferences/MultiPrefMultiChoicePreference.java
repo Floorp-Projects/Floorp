@@ -92,7 +92,7 @@ class MultiPrefMultiChoicePreference extends MultiChoicePreference {
                     persist(edit);
                     edit.putBoolean(getKey() + IMPORT_SUFFIX, true);
                     edit.apply();
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     Log.i(LOGTAG, "Err", ex);
                 }
             }

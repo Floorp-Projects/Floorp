@@ -324,10 +324,10 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
         try {
             passwordIndex = cursor.getColumnIndexOrThrow(Passwords.ENCRYPTED_PASSWORD);
-        } catch(Exception ex) { }
+        } catch (Exception ex) { }
         try {
             usernameIndex = cursor.getColumnIndexOrThrow(Passwords.ENCRYPTED_USERNAME);
-        } catch(Exception ex) { }
+        } catch (Exception ex) { }
 
         if (passwordIndex > -1 || usernameIndex > -1) {
             MatrixBlobCursor m = (MatrixBlobCursor)cursor;

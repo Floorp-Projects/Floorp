@@ -73,7 +73,7 @@ public class FileUtils {
                 File fileDelete = new File(file, temp);
                 try {
                     delete(fileDelete);
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                     Log.i(LOGTAG, "Error deleting " + fileDelete.getPath(), ex);
                 }
             }

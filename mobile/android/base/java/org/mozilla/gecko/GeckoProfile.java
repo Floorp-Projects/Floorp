@@ -495,7 +495,7 @@ public final class GeckoProfile {
                 mLocked = LockState.UNLOCKED;
             }
             return result;
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             Log.e(LOGTAG, "Error locking profile", ex);
         }
         mLocked = LockState.UNLOCKED;
@@ -527,7 +527,7 @@ public final class GeckoProfile {
                 mLocked = LockState.LOCKED;
             }
             return result;
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             Log.e(LOGTAG, "Error unlocking profile", ex);
         }
 

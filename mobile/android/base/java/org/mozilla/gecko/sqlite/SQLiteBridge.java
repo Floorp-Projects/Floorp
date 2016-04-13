@@ -313,7 +313,7 @@ public class SQLiteBridge {
           } else {
               execSQL("ROLLBACK TRANSACTION");
           }
-        } catch(SQLiteBridgeException ex) {
+        } catch (SQLiteBridgeException ex) {
             Log.e(LOGTAG, "Error ending transaction", ex);
         }
         mInTransaction = false;
