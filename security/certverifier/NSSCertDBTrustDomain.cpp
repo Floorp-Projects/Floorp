@@ -21,6 +21,7 @@
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
+#include "pkix/Result.h"
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
