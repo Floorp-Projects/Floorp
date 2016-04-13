@@ -438,6 +438,7 @@ var TelemetryScheduler = {
     try {
       promise = this._schedulerTickLogic();
     } catch (e) {
+      Telemetry.getHistogramById("TELEMETRY_SCHEDULER_TICK_EXCEPTION").add(1);
       this._log.error("_onSchedulerTick - There was an exception", e);
     } finally {
       this._rescheduleTimeout();
@@ -457,8 +458,10 @@ var TelemetryScheduler = {
     let nowDate = Policy.now();
     let now = nowDate.getTime();
 
-    if (now - this._lastTickTime > 1.1 * SCHEDULER_TICK_INTERVAL_MS) {
-      this._log.trace("_schedulerTickLogic - First scheduler tick after sleep or startup.");
+    if ((now - this._lastTickTime) > (1.1 * SCHEDULER_TICK_INTERVAL_MS) &&
+        (this._lastTickTime != 0)) {
+      Telemetry.getHistogramById("TELEMETRY_SCHEDULER_WAKEUP").add(1);
+      this._log.trace("_schedulerTickLogic - First scheduler tick after sleep.");
     }
     this._lastTickTime = now;
 
@@ -466,6 +469,7 @@ var TelemetryScheduler = {
     const shouldSendDaily = this._isDailyPingDue(nowDate);
 
     if (shouldSendDaily) {
+      Telemetry.getHistogramById("TELEMETRY_SCHEDULER_SEND_DAILY").add(1);
       this._log.trace("_schedulerTickLogic - Daily ping due.");
       this._lastDailyPingTime = now;
       return Impl._sendDailyPing();
@@ -1320,6 +1324,9 @@ var Impl = {
         this.getSimpleMeasurements(reason == REASON_SAVED_SESSION, isSubsession, clearSubsession);
       let info = !Utils.isContentProcess ? this.getMetadata(reason) : null;
       payload = this.assemblePayloadWithMeasurements(measurements, info, reason, clearSubsession);
+    } catch (ex) {
+      Telemetry.getHistogramById("TELEMETRY_ASSEMBLE_PAYLOAD_EXCEPTION").add(1);
+      throw ex;
     } finally {
       if (!Utils.isContentProcess && clearSubsession) {
         this.startNewSubsession();
