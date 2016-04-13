@@ -1821,7 +1821,7 @@ public class ContactService implements GeckoEventListener {
         return max;
     }
 
-    private static void putPossibleNullValueInJSONObject(final String key, final Object value, JSONObject jsonObject) throws JSONException{
+    private static void putPossibleNullValueInJSONObject(final String key, final Object value, JSONObject jsonObject) throws JSONException {
         if (value != null) {
             jsonObject.put(key, value);
         } else {

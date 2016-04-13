@@ -103,7 +103,7 @@ public class FaviconView extends ImageView {
     }
 
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh){
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
         // No point rechecking the image if there hasn't really been any change.

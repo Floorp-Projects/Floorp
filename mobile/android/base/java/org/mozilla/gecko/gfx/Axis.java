@@ -409,7 +409,7 @@ abstract class Axis {
         return average / usablePoints;
     }
 
-    float accelerate(float velocity, float lastFlingVelocity){
+    float accelerate(float velocity, float lastFlingVelocity) {
         return (FLING_ACCEL_BASE_MULTIPLIER * velocity + FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER * lastFlingVelocity);
     }
 

@@ -44,7 +44,7 @@ public class PushService implements BundleEventListener {
 
     private static PushService sInstance;
 
-    private static final String[] GECKO_EVENTS = new String[]{
+    private static final String[] GECKO_EVENTS = new String[] {
             "PushServiceAndroidGCM:Configure",
             "PushServiceAndroidGCM:DumpRegistration",
             "PushServiceAndroidGCM:DumpSubscriptions",

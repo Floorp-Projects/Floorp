@@ -141,7 +141,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         }
     }
 
-    boolean isSelected(int position){
+    boolean isSelected(int position) {
         return getItem(position).getSelected();
     }
 
