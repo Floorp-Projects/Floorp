@@ -54,9 +54,9 @@ public:
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType);
 
-  // Constructor used for TYPE_DOCUMENT loads with no reasonable loadingNode.
+  // Constructor used for TYPE_DOCUMENT loads which have no reasonable
+  // loadingNode or loadingPrincipal
   LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
-           nsIPrincipal* aLoadingPrincipal,
            nsIPrincipal* aTriggeringPrincipal,
            nsSecurityFlags aSecurityFlags);
 
