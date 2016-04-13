@@ -17,49 +17,6 @@ const Strings = Services.strings.createBundle(
 module.exports = createClass({
   displayName: "ServiceWorkerTarget",
 
-  render() {
-    let { target, debugDisabled } = this.props;
-    let isRunning = this.isRunning();
-
-    return dom.div({ className: "target-container" },
-      dom.img({
-        className: "target-icon",
-        role: "presentation",
-        src: target.icon
-      }),
-      dom.div({ className: "target" },
-        dom.div({ className: "target-name" }, target.name),
-        dom.ul({ className: "target-details" },
-          dom.li({ className: "target-detail" },
-            dom.strong(null, Strings.GetStringFromName("scope")),
-            dom.span({ className: "service-worker-scope" }, target.scope),
-            dom.a({
-              onClick: this.unregister,
-              className: "unregister-link"
-            }, Strings.GetStringFromName("unregister"))
-          )
-        )
-      ),
-      (isRunning ?
-        [
-          dom.button({
-            className: "push-button",
-            onClick: this.push
-          }, Strings.GetStringFromName("push")),
-          dom.button({
-            className: "debug-button",
-            onClick: this.debug,
-            disabled: debugDisabled
-          }, Strings.GetStringFromName("debug"))
-        ] :
-        dom.button({
-          className: "start-button",
-          onClick: this.start
-        }, Strings.GetStringFromName("start"))
-      )
-    );
-  },
-
   debug() {
     if (!this.isRunning()) {
       // If the worker is not running, we can't debug it.
@@ -108,4 +65,47 @@ module.exports = createClass({
     // We know the target is running if it has a worker actor.
     return !!this.props.target.workerActor;
   },
+
+  render() {
+    let { target, debugDisabled } = this.props;
+    let isRunning = this.isRunning();
+
+    return dom.div({ className: "target-container" },
+      dom.img({
+        className: "target-icon",
+        role: "presentation",
+        src: target.icon
+      }),
+      dom.div({ className: "target" },
+        dom.div({ className: "target-name" }, target.name),
+        dom.ul({ className: "target-details" },
+          dom.li({ className: "target-detail" },
+            dom.strong(null, Strings.GetStringFromName("scope")),
+            dom.span({ className: "service-worker-scope" }, target.scope),
+            dom.a({
+              onClick: this.unregister,
+              className: "unregister-link"
+            }, Strings.GetStringFromName("unregister"))
+          )
+        )
+      ),
+      (isRunning ?
+        [
+          dom.button({
+            className: "push-button",
+            onClick: this.push
+          }, Strings.GetStringFromName("push")),
+          dom.button({
+            className: "debug-button",
+            onClick: this.debug,
+            disabled: debugDisabled
+          }, Strings.GetStringFromName("debug"))
+        ] :
+        dom.button({
+          className: "start-button",
+          onClick: this.start
+        }, Strings.GetStringFromName("start"))
+      )
+    );
+  }
 });

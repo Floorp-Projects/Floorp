@@ -21,15 +21,14 @@ const Viewports = createFactory(require("./components/viewports"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
 
 let App = createClass({
-
-  displayName: "App",
-
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
   },
+
+  displayName: "App",
 
   onBrowserMounted() {
     window.postMessage({ type: "browser-mounted" }, "*");

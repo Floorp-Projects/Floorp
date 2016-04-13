@@ -10,6 +10,10 @@ const { createClass, DOM: dom } =
 module.exports = createClass({
   displayName: "TabMenuEntry",
 
+  onClick() {
+    this.props.selectTab(this.props.tabId);
+  },
+
   render() {
     let { icon, name, selected } = this.props;
 
@@ -23,9 +27,5 @@ module.exports = createClass({
       role: "tab" },
     dom.img({ className: "category-icon", src: icon, role: "presentation" }),
     dom.div({ className: "category-name" }, name));
-  },
-
-  onClick() {
-    this.props.selectTab(this.props.tabId);
   }
 });
