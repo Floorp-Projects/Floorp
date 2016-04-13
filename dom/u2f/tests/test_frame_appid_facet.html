@@ -51,14 +51,6 @@ u2f.register(window.location.origin + "/otherAppId", [{
   local_is(res.errorCode, 0, "Direct window origin should work");
 });
 
-// eTLD+1 check
-u2f.register("https://test1.example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_is(res.errorCode, 0, "Subdomain AppID should work");
-});
-
 local_finished();
 
 </script>
