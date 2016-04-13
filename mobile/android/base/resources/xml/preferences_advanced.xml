@@ -32,42 +32,52 @@
                     android:entryValues="@array/pref_restore_values"
                     android:persistent="true" />
 
-    <ListPreference android:key="browser.image_blocking"
-                    android:title="@string/pref_tap_to_load_images_title2"
-                    android:entries="@array/pref_browser_image_blocking_entries"
-                    android:entryValues="@array/pref_browser_image_blocking_values"
-                    android:persistent="false" />
-
-    <CheckBoxPreference android:key="browser.display.use_document_fonts"
-                        android:title="@string/pref_show_web_fonts"
-                        android:summary="@string/pref_show_web_fonts_summary"/>
-
-    <ListPreference android:key="plugin.enable"
-                    android:title="@string/pref_plugins"
-                    android:entries="@array/pref_plugins_entries"
-                    android:entryValues="@array/pref_plugins_values"
-                    android:persistent="false" />
-
-    <SwitchPreference android:key="media.autoplay.enabled"
-                      android:title="@string/pref_media_autoplay_enabled"
-                      android:summary="@string/pref_media_autoplay_enabled_summary" />
-
     <ListPreference android:key="browser.menu.showCharacterEncoding"
                     android:title="@string/pref_char_encoding"
                     android:entries="@array/pref_char_encoding_entries"
                     android:entryValues="@array/pref_char_encoding_values"
                     android:persistent="false" />
 
-    <SwitchPreference android:key="devtools.remote.usb.enabled"
-                      android:title="@string/pref_developer_remotedebugging_usb" />
+    <PreferenceCategory android:title="@string/pref_category_data_saver">
 
+        <ListPreference android:key="browser.image_blocking"
+                        android:title="@string/pref_tap_to_load_images_title2"
+                        android:entries="@array/pref_browser_image_blocking_entries"
+                        android:entryValues="@array/pref_browser_image_blocking_values"
+                        android:persistent="false" />
 
-    <SwitchPreference android:key="devtools.remote.wifi.enabled"
-                      android:title="@string/pref_developer_remotedebugging_wifi" />
+        <SwitchPreference android:key="browser.display.use_document_fonts"
+                          android:title="@string/pref_show_web_fonts"
+                          android:summary="@string/pref_show_web_fonts_summary"/>
 
-    <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.remote_debugging.link"
-                                                            android:title="@string/pref_learn_more"
-                                                            android:persistent="false"
-                                                            url="https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_category_media">
+
+        <ListPreference android:key="plugin.enable"
+                        android:title="@string/pref_plugins"
+                        android:entries="@array/pref_plugins_entries"
+                        android:entryValues="@array/pref_plugins_values"
+                        android:persistent="false" />
+
+        <SwitchPreference android:key="media.autoplay.enabled"
+                          android:title="@string/pref_media_autoplay_enabled"
+                          android:summary="@string/pref_media_autoplay_enabled_summary" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_category_developer_tools">
+
+        <SwitchPreference android:key="devtools.remote.usb.enabled"
+                          android:title="@string/pref_developer_remotedebugging_usb" />
+
+        <SwitchPreference android:key="devtools.remote.wifi.enabled"
+                          android:title="@string/pref_developer_remotedebugging_wifi" />
+
+        <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.remote_debugging.link"
+                                                                android:title="@string/pref_learn_more"
+                                                                android:persistent="false"
+                                                                url="https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" />
+    </PreferenceCategory>
 
 </PreferenceScreen>

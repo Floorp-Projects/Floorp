@@ -62,13 +62,16 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    // This is the hack needed for searchbar work outside of browser.
+    // This is the hacks needed to use a searchbar without browser.js.
     function getBrowser()
     {
       return {
         mCurrentBrowser: { engines: new Array() }
       };
     }
+    var BrowserSearch = {
+      updateOpenSearchBadge: function() {}
+    };
 
     SimpleTest.waitForExplicitFinish();
 

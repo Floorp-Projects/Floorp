@@ -6,7 +6,6 @@
 package org.mozilla.gecko.gfx;
 
 import org.json.JSONObject;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -305,10 +304,6 @@ class JavaPanZoomController
     /** This function MUST be called on the UI thread */
     @Override
     public boolean onKeyEvent(KeyEvent event) {
-        if (Versions.preHCMR1) {
-            return false;
-        }
-
         if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
             && event.getAction() == KeyEvent.ACTION_DOWN) {
 
@@ -328,10 +323,6 @@ class JavaPanZoomController
     /** This function MUST be called on the UI thread */
     @Override
     public boolean onMotionEvent(MotionEvent event) {
-        if (Versions.preHCMR1) {
-            return false;
-        }
-
         switch (event.getSource() & InputDevice.SOURCE_CLASS_MASK) {
         case InputDevice.SOURCE_CLASS_POINTER:
             switch (event.getAction() & MotionEvent.ACTION_MASK) {
