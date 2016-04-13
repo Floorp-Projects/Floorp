@@ -567,6 +567,11 @@ Layer::ApplyPendingUpdatesToSubtree()
   for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
     child->ApplyPendingUpdatesToSubtree();
   }
+  if (!GetParent()) {
+    // Once we're done recursing through the whole tree, clear the pending
+    // updates from the manager.
+    Manager()->ClearPendingScrollInfoUpdate();
+  }
 }
 
 bool
@@ -945,6 +950,15 @@ Layer::ApplyPendingUpdatesForThisTransaction()
     mPendingAnimations->SwapElements(mAnimations);
     mPendingAnimations = nullptr;
     Mutated();
+  }
+
+  for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
+    FrameMetrics& fm = mScrollMetadata[i].GetMetrics();
+    Maybe<ScrollUpdateInfo> update = Manager()->GetPendingScrollInfoUpdate(fm.GetScrollId());
+    if (update) {
+      fm.UpdatePendingScrollInfo(update.value());
+      Mutated();
+    }
   }
 }
 
@@ -2444,6 +2458,29 @@ LayerManager::DumpPacket(layerscope::LayersPacket* aPacket)
 LayerManager::IsLogEnabled()
 {
   return MOZ_LOG_TEST(GetLog(), LogLevel::Debug);
+}
+
+void
+LayerManager::SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
+                                                       const ScrollUpdateInfo& aUpdateInfo)
+{
+  mPendingScrollUpdates[aScrollId] = aUpdateInfo;
+}
+
+Maybe<ScrollUpdateInfo>
+LayerManager::GetPendingScrollInfoUpdate(FrameMetrics::ViewID aScrollId)
+{
+  auto it = mPendingScrollUpdates.find(aScrollId);
+  if (it != mPendingScrollUpdates.end()) {
+    return Some(it->second);
+  }
+  return Nothing();
+}
+
+void
+LayerManager::ClearPendingScrollInfoUpdate()
+{
+  mPendingScrollUpdates.clear();
 }
 
 void
