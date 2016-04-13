@@ -139,7 +139,6 @@ thai_pua_shape (hb_codepoint_t u, thai_action_t action, hb_font_t *font)
   };
 
   switch (action) {
-    default: assert (false); HB_FALLTHROUGH;
     case NOP: return u;
     case SD:  pua_mappings = SD_mappings; break;
     case SDL: pua_mappings = SDL_mappings; break;

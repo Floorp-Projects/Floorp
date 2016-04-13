@@ -305,8 +305,8 @@ void
 SPSProfiler::pop()
 {
     MOZ_ASSERT(installed());
+    MOZ_ASSERT(*size_ > 0);
     (*size_)--;
-    MOZ_ASSERT(*(int*)size_ >= 0);
 }
 
 /*
@@ -362,6 +362,57 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
     MOZ_ASSERT(ret == len, "Computed length should match actual length!");
 
     return cstr;
+}
+
+void
+SPSProfiler::trace(JSTracer* trc)
+{
+    if (stack_) {
+        size_t limit = Min(*size_, max_);
+        for (size_t i = 0; i < limit; i++)
+            stack_[i].trace(trc);
+    }
+}
+
+void
+SPSProfiler::fixupStringsMapAfterMovingGC()
+{
+    if (!strings.initialized())
+        return;
+
+    for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront()) {
+        JSScript* script = e.front().key();
+        if (IsForwarded(script)) {
+            script = Forwarded(script);
+            e.rekeyFront(script);
+        }
+    }
+}
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+void
+SPSProfiler::checkStringsMapAfterMovingGC()
+{
+    if (!strings.initialized())
+        return;
+
+    for (auto r = strings.all(); !r.empty(); r.popFront()) {
+        JSScript* script = r.front().key();
+        CheckGCThingAfterMovingGC(script);
+        auto ptr = strings.lookup(script);
+        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+    }
+}
+#endif
+
+void
+ProfileEntry::trace(JSTracer* trc)
+{
+    if (isJs()) {
+        JSScript* s = script();
+        TraceNullableRoot(trc, &s, "ProfileEntry script");
+        spOrScript = s;
+    }
 }
 
 SPSEntryMarker::SPSEntryMarker(JSRuntime* rt,

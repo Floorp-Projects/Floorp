@@ -26,6 +26,7 @@ if CONFIG['MOZ_DEBUG']:
     ]
 
 UNIFIED_SOURCES += [
+    'AccessibleOrProxy.cpp',
     'AccEvent.cpp',
     'AccGroupInfo.cpp',
     'AccIterator.cpp',

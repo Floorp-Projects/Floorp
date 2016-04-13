@@ -605,6 +605,7 @@
 #toolbox-controls > toolbarbutton,
 #toolbox-dock-buttons > toolbarbutton {
   -moz-appearance: none;
+  -moz-user-focus: normal;
   border: none;
   margin: 0 4px;
   min-width: 16px;
@@ -691,6 +692,7 @@
   margin: 0;
   width: 32px;
   position: relative;
+  -moz-user-focus: normal;
 }
 
 .command-button:hover {
@@ -812,6 +814,7 @@
   border-width: 0;
   -moz-border-start-width: 1px;
   -moz-box-align: center;
+  -moz-user-focus: normal;
 }
 
 .theme-dark .devtools-tab {

@@ -881,6 +881,7 @@ APZCCallbackHelper::NotifyFlushComplete(nsIPresShell* aShell)
 }
 
 static int32_t sActiveSuppressDisplayport = 0;
+static bool sDisplayPortSuppressionRespected = true;
 
 void
 APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled,
@@ -889,8 +890,11 @@ APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled,
   if (aEnabled) {
     sActiveSuppressDisplayport++;
   } else {
+    bool isSuppressed = IsDisplayportSuppressed();
     sActiveSuppressDisplayport--;
-    if (sActiveSuppressDisplayport == 0 && aShell && aShell->GetRootFrame()) {
+    if (isSuppressed && !IsDisplayportSuppressed() &&
+        aShell && aShell->GetRootFrame()) {
+      // We unsuppressed the displayport, trigger a paint
       aShell->GetRootFrame()->SchedulePaint();
     }
   }
@@ -898,10 +902,24 @@ APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled,
   MOZ_ASSERT(sActiveSuppressDisplayport >= 0);
 }
 
+void
+APZCCallbackHelper::RespectDisplayPortSuppression(bool aEnabled,
+                                                  const nsCOMPtr<nsIPresShell>& aShell)
+{
+  bool isSuppressed = IsDisplayportSuppressed();
+  sDisplayPortSuppressionRespected = aEnabled;
+  if (isSuppressed && !IsDisplayportSuppressed() &&
+      aShell && aShell->GetRootFrame()) {
+    // We unsuppressed the displayport, trigger a paint
+    aShell->GetRootFrame()->SchedulePaint();
+  }
+}
+
 bool
 APZCCallbackHelper::IsDisplayportSuppressed()
 {
-  return sActiveSuppressDisplayport > 0;
+  return sDisplayPortSuppressionRespected
+      && sActiveSuppressDisplayport > 0;
 }
 
 /* static */ bool

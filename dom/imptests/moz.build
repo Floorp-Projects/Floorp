@@ -5,30 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_MANIFESTS += [
-    'editing/mochitest.ini',
     'html/mochitest.ini',
     'webapps/mochitest.ini',
 ]
 
 MOCHITEST_MANIFESTS += [
-    'failures/editing/conformancetest/mochitest.ini',
-    'failures/editing/selecttest/mochitest.ini',
-    'failures/html/dom/errors/mochitest.ini',
-    'failures/html/dom/lists/mochitest.ini',
-    'failures/html/dom/mochitest.ini',
-    'failures/html/dom/nodes/mochitest.ini',
-    'failures/html/dom/ranges/mochitest.ini',
-    'failures/html/html/browsers/the-window-object/mochitest.ini',
-    'failures/html/html/browsers/the-window-object/named-access-on-the-window-object/mochitest.ini',
-    'failures/html/html/dom/documents/dta/doc.gEBN/mochitest.ini',
-    'failures/html/html/dom/documents/dta/mochitest.ini',
-    'failures/html/html/obsolete/implreq/oeaaa/mochitest.ini',
-    'failures/html/html/semantics/forms/the-select-element/mochitest.ini',
-    'failures/html/html/semantics/scripting-1/the-script-element/mochitest.ini',
-    'failures/html/html/semantics/tabular-data/the-table-element/mochitest.ini',
-    'failures/html/html/webappapis/atob/mochitest.ini',
-    'failures/html/js/builtins/mochitest.ini',
-    'failures/html/microdata/microdata-dom-api/mochitest.ini',
     'failures/html/typedarrays/mochitest.ini',
     'failures/webapps/WebStorage/tests/submissions/Infraware/mochitest.ini',
 ]

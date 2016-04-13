@@ -65,36 +65,47 @@ class NameResolver
     }
 
     /*
-     * Walk over the given ParseNode, converting it to a stringified name that
-     * respresents where the function is being assigned to.
+     * Walk over the given ParseNode, attempting to convert it to a stringified
+     * name that respresents where the function is being assigned to.
+     *
+     * |*foundName| is set to true if a name is found for the expression.
      */
-    bool nameExpression(ParseNode* n) {
+    bool nameExpression(ParseNode* n, bool* foundName) {
         switch (n->getKind()) {
           case PNK_DOT:
-            return nameExpression(n->expr()) && appendPropertyReference(n->pn_atom);
+            if (!nameExpression(n->expr(), foundName))
+                return false;
+            if (!*foundName)
+                return true;
+            return appendPropertyReference(n->pn_atom);
 
           case PNK_NAME:
+            *foundName = true;
             return buf->append(n->pn_atom);
 
           case PNK_THIS:
+            *foundName = true;
             return buf->append("this");
 
           case PNK_ELEM:
-            return nameExpression(n->pn_left) &&
-                   buf->append('[') &&
-                   nameExpression(n->pn_right) &&
-                   buf->append(']');
+            if (!nameExpression(n->pn_left, foundName))
+                return false;
+            if (!*foundName)
+                return true;
+            if (!buf->append('[') || !nameExpression(n->pn_right, foundName))
+                return false;
+            if (!*foundName)
+                return true;
+            return buf->append(']');
 
           case PNK_NUMBER:
+            *foundName = true;
             return appendNumber(n->pn_dval);
 
           default:
-            /*
-             * Technically this isn't an "abort" situation, we're just confused
-             * on what to call this function, but failures in naming aren't
-             * treated as fatal.
-             */
-            return false;
+            /* We're confused as to what to call this function. */
+            *foundName = false;
+            return true;
         }
     }
 
@@ -212,7 +223,10 @@ class NameResolver
         if (assignment) {
             if (assignment->isAssignment())
                 assignment = assignment->pn_left;
-            if (!nameExpression(assignment))
+            bool foundName = false;
+            if (!nameExpression(assignment, &foundName))
+                return false;
+            if (!foundName)
                 return true;
         }
 

@@ -1831,6 +1831,9 @@ jit::MakeMRegExpHoistable(MIRGraph& graph)
 {
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         for (MDefinitionIterator iter(*block); iter; iter++) {
+            if (!*iter)
+                MOZ_CRASH("confirm bug 1263794.");
+
             if (!iter->isRegExp())
                 continue;
 

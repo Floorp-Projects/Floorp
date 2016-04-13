@@ -23,6 +23,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/SSE.h"
+#include "mozilla/mips.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPrefs.h"
@@ -236,7 +237,7 @@ public:
     if (mInputRow == inputRowToRead) {
       skia::ConvolveHorizontally(mRowBuffer.get(), *mXFilter,
                                  mWindow[mRowsInWindow++], mHasAlpha,
-                                 supports_sse2());
+                                 supports_sse2() || supports_mmi());
     }
 
     MOZ_ASSERT(mOutputRow < mNext.InputSize().height,
@@ -311,7 +312,7 @@ private:
       skia::ConvolveVertically(static_cast<const FilterValue*>(filterValues),
                                filterLength, mWindow.get(), mXFilter->num_values(),
                                reinterpret_cast<uint8_t*>(aRow), mHasAlpha,
-                               supports_sse2());
+                               supports_sse2() || supports_mmi());
       return Some(WriteState::NEED_MORE_DATA);
     });
 

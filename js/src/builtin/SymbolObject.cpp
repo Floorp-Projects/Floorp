@@ -67,7 +67,7 @@ SymbolObject::initClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     // Define the well-known symbol properties, such as Symbol.iterator.
-    ImmutablePropertyNamePtr* names = &cx->names().iterator;
+    ImmutablePropertyNamePtr* names = cx->names().wellKnownSymbolNames();
     RootedValue value(cx);
     unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
     WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;

@@ -839,7 +839,7 @@ ManifestHelper.prototype = {
   _localeProp: function(aProp) {
     if (this._localeRoot[aProp] != undefined)
       return this._localeRoot[aProp];
-    return this._manifest[aProp];
+    return (aProp in this._manifest) ? this._manifest[aProp] : undefined;
   },
 
   get name() {

@@ -11,7 +11,7 @@
 #include "gfxTypes.h"                   // for gfxFloat
 #include "gfxFont.h"                    // for gfxFont::Orientation
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCoord.h"                    // for nscoord
 #include "nsError.h"                    // for nsresult

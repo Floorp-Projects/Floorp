@@ -12,21 +12,59 @@ SimpleTest.waitForExplicitFinish();
 // this page just serially loads each one of the following test helper pages in
 // a new window and waits for it to call testDone()
 var tests = [
-  'helper_tap.html',
+  {'file': 'helper_tap.html'},
+  // For the following two tests, disable displayport suppression to make sure it
+  // doesn't interfere with the test by scheduling paints non-deterministically.
+  {'file': 'helper_scrollto_tap.html?true', 'prefs': [["apz.paint_skipping.enabled", true]], 'dp_suppression': false},
+  {'file': 'helper_scrollto_tap.html?false', 'prefs': [["apz.paint_skipping.enabled", false]], 'dp_suppression': false}
 ];
 
 var testIndex = -1;
 var w = null;
 
 function testDone() {
+  var test = tests[testIndex];
   if (w) {
+    if (typeof test.dp_suppression != 'undefined') {
+      // We modified the suppression when starting the test, so now undo that.
+      SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
+    }
+    if (!!test.prefs) {
+      // We pushed some prefs for this test, pop them, and re-invoke
+      // testDone() after that's been processed
+      SpecialPowers.popPrefEnv(function() {
+        w.close();
+        w = null;
+        testDone();
+      });
+      return;
+    }
+
     w.close();
   }
+
   testIndex++;
-  if (testIndex < tests.length) {
-    w = window.open(tests[testIndex], "_blank");
-  } else {
+  if (testIndex >= tests.length) {
     SimpleTest.finish();
+    return;
+  }
+
+  test = tests[testIndex];
+  if (typeof test.dp_suppression != 'undefined') {
+    // Normally during a test, the displayport will get suppressed during page
+    // load, and unsuppressed at a non-deterministic time during the test. The
+    // unsuppression can trigger a repaint which interferes with the test, so
+    // to avoid that we can force the displayport to be unsuppressed for the
+    // entire test which is more deterministic.
+    SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(test.dp_suppression);
+  }
+  if (!!test.prefs) {
+    // Got some prefs for this subtest, push them
+    SpecialPowers.pushPrefEnv({"set": test.prefs}, function() {
+      w = window.open(test.file, "_blank");
+    });
+  } else {
+    w = window.open(test.file, "_blank");
   }
 }
 
