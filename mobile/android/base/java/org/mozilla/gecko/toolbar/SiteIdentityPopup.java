@@ -422,7 +422,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mContentButtonClickListener);
 
-        final int icon = blocked ? R.drawable.shield_enabled: R.drawable.shield_disabled;
+        final int icon = blocked ? R.drawable.shield_enabled : R.drawable.shield_disabled;
 
         final JSONObject options = new JSONObject();
         final JSONObject tracking = new JSONObject();
