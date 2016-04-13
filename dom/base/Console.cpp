@@ -1042,6 +1042,7 @@ METHOD(Error, "error")
 METHOD(Exception, "exception")
 METHOD(Debug, "debug")
 METHOD(Table, "table")
+METHOD(Clear, "clear")
 
 void
 Console::Trace(JSContext* aCx)
@@ -1535,6 +1536,11 @@ Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
     MOZ_ASSERT(aData->mIDType == ConsoleCallData::eNumber);
     outerID.AppendInt(aData->mOuterIDNumber);
     innerID.AppendInt(aData->mInnerIDNumber);
+  }
+
+  if (aData->mMethodName == MethodClear) {
+    nsresult rv = mStorage->ClearEvents(innerID);
+    NS_WARN_IF(NS_FAILED(rv));
   }
 
   if (NS_FAILED(mStorage->RecordEvent(innerID, outerID, eventValue))) {
