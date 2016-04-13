@@ -365,7 +365,7 @@ MediaDecoderStateMachine::CreateAudioSink()
   auto audioSinkCreator = [self] () {
     MOZ_ASSERT(self->OnTaskQueue());
     return new DecodedAudioDataSink(
-      self->mAudioQueue, self->GetMediaTime(),
+      self->mTaskQueue, self->mAudioQueue, self->GetMediaTime(),
       self->mInfo.mAudio, self->mAudioChannel);
   };
   return new AudioSinkWrapper(mTaskQueue, audioSinkCreator);
