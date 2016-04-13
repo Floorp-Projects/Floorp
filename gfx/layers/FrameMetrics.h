@@ -41,6 +41,13 @@ public:
   static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling subframes
                                         // will begin at.
 
+  enum ScrollOffsetUpdateType : uint8_t {
+    eNone,          // The default; the scroll offset was not updated
+    eMainThread,    // The scroll offset was updated by the main thread.
+
+    eSentinel       // For IPC use only
+  };
+
   FrameMetrics()
     : mScrollId(NULL_SCROLL_ID)
     , mScrollParentId(NULL_SCROLL_ID)
@@ -65,9 +72,9 @@ public:
     , mLineScrollAmount(0, 0)
     , mPageScrollAmount(0, 0)
     , mPaintRequestTime()
+    , mScrollUpdateType(eNone)
     , mIsRootContent(false)
     , mHasScrollgrab(false)
-    , mUpdateScrollOffset(false)
     , mDoSmoothScroll(false)
     , mUseDisplayPortMargins(false)
     , mAllowVerticalScrollWithWheel(false)
@@ -106,9 +113,9 @@ public:
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
+           mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
-           mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
            mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
@@ -363,7 +370,7 @@ public:
 
   void SetScrollOffsetUpdated(uint32_t aScrollGeneration)
   {
-    mUpdateScrollOffset = true;
+    mScrollUpdateType = eMainThread;
     mScrollGeneration = aScrollGeneration;
   }
 
@@ -375,7 +382,7 @@ public:
 
   bool GetScrollOffsetUpdated() const
   {
-    return mUpdateScrollOffset;
+    return mScrollUpdateType != eNone;
   }
 
   bool GetDoSmoothScroll() const
@@ -719,15 +726,15 @@ private:
   // The time at which the APZC last requested a repaint for this scrollframe.
   TimeStamp mPaintRequestTime;
 
+  // Whether mScrollOffset was updated by something other than the APZ code, and
+  // if the APZC receiving this metrics should update its local copy.
+  ScrollOffsetUpdateType mScrollUpdateType;
+
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent:1;
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab:1;
-
-  // Whether mScrollOffset was updated by something other than the APZ code, and
-  // if the APZC receiving this metrics should update its local copy.
-  bool mUpdateScrollOffset:1;
 
   // When mDoSmoothScroll, the scroll offset should be animated to
   // smoothly transition to mScrollOffset rather than be updated instantly.
@@ -767,9 +774,6 @@ private:
 
 
   // Private helpers for IPC purposes
-  void SetUpdateScrollOffset(bool aValue) {
-    mUpdateScrollOffset = aValue;
-  }
   void SetDoSmoothScroll(bool aValue) {
     mDoSmoothScroll = aValue;
   }
