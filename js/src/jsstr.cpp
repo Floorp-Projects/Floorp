@@ -1586,12 +1586,10 @@ str_includes(JSContext* cx, unsigned argc, Value* vp)
 static bool
 str_contains(JSContext *cx, unsigned argc, Value *vp)
 {
-#ifndef RELEASE_BUILD
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject callee(cx, &args.callee());
     if (!GlobalObject::warnOnceAboutStringContains(cx, callee))
         return false;
-#endif
     return str_includes(cx, argc, vp);
 }
 
