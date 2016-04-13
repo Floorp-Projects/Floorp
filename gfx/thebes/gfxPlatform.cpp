@@ -864,7 +864,6 @@ gfxPlatform::InitLayersIPC()
         mozilla::layers::ImageBridgeChild::StartUp();
         gfx::VRManagerChild::StartUpSameProcess();
     }
-
 }
 
 /* static */ void
@@ -873,6 +872,7 @@ gfxPlatform::ShutdownLayersIPC()
     if (!sLayersIPCIsUp) {
       return;
     }
+    sLayersIPCIsUp = false;
 
     if (XRE_IsContentProcess()) {
 
@@ -899,14 +899,6 @@ gfxPlatform::ShutdownLayersIPC()
       // TODO: There are other kind of processes and we should make sure gfx
       // stuff is either not created there or shut down properly.
     }
-
-    sLayersIPCIsUp = false;
-}
-
-// static
-bool gfxPlatform::IPCAlreadyShutDown()
-{
-  return !sLayersIPCIsUp;
 }
 
 gfxPlatform::~gfxPlatform()

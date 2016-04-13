@@ -201,15 +201,6 @@ ImageContainer::ImageContainer(Mode flag)
 ImageContainer::~ImageContainer()
 {
   if (IsAsync()) {
-
-    if (gfxPlatform::IPCAlreadyShutDown()) {
-      printf_stderr("!![ImageBridge] an ImageContainer is Destroyed late "
-                    "during shutdown!!\n");
-#ifdef GFX_STRICT_SHUTDOWN
-      MOZ_CRASH("This ImageContainer is deleted too late.");
-#endif
-    }
-
     mIPDLChild->ForgetImageContainer();
     ImageBridgeChild::DispatchReleaseImageClient(mImageClient, mIPDLChild);
   }
