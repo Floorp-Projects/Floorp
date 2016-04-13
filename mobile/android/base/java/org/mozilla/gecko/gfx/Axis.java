@@ -135,7 +135,7 @@ abstract class Axis {
 
     static final float MS_PER_FRAME = 1000.0f / 60.0f;
     static final long NS_PER_FRAME = Math.round(1000000000f / 60f);
-    private static final float FRAMERATE_MULTIPLIER = (1000f/60f) / MS_PER_FRAME;
+    private static final float FRAMERATE_MULTIPLIER = (1000f / 60f) / MS_PER_FRAME;
     private static final int FLING_VELOCITY_POINTS = 8;
 
     //  The values we use for friction are based on a 16.6ms frame, adjust them to currentNsPerFrame:

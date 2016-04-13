@@ -514,7 +514,7 @@ public class GeckoAppShell
                 getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // AlarmManager only supports millisecond precision
-        long time = ((long)aSeconds * 1000) + ((long)aNanoSeconds/1_000_000L);
+        long time = ((long) aSeconds * 1000) + ((long) aNanoSeconds / 1_000_000L);
         am.setExact(AlarmManager.RTC_WAKEUP, time, pi);
 
         return true;
