@@ -655,3 +655,20 @@ function waitForClipboard(setup, expected) {
   SimpleTest.waitForClipboard(expected, setup, def.resolve, def.reject);
   return def.promise;
 }
+
+/**
+ * Checks if document's active element is within the given element.
+ * @param  {HTMLDocument}  doc document with active element in question
+ * @param  {DOMNode}       container element tested on focus containment
+ * @return {Boolean}
+ */
+function containsFocus(doc, container) {
+  let elm = doc.activeElement;
+  while (elm) {
+    if (elm === container) {
+      return true;
+    }
+    elm = elm.parentNode;
+  }
+  return false;
+}

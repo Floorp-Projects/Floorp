@@ -1,7 +1,0 @@
-{
-  "getSelection() on HTML document with null defaultView must be null":true,
-  "getSelection() on XML document with null defaultView must be null":true,
-  "window.getSelection() instanceof Selection in an iframe immediately after appendChild":true,
-  "document.getSelection() instanceof Selection in an iframe immediately after appendChild":true,
-  "getSelection() on HTML document with null defaultView must be null inside an iframe onload":true
-}

@@ -178,9 +178,6 @@ NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 class DetailsFrame;
 DetailsFrame*
 NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-class SummaryFrame;
-SummaryFrame*
-NS_NewSummaryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Table frame factories
 class nsTableOuterFrame;

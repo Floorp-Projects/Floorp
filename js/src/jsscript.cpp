@@ -213,15 +213,15 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
     return true;
 }
 
-bool
-Bindings::initTrivial(ExclusiveContext* cx)
+/* static */ bool
+Bindings::initTrivialForScript(ExclusiveContext* cx, HandleScript script)
 {
     Shape* shape = EmptyShape::getInitialShape(cx, &CallObject::class_, TaggedProto(nullptr),
                                                CallObject::RESERVED_SLOTS,
                                                BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE);
     if (!shape)
         return false;
-    callObjShape_.init(shape);
+    script->bindings.callObjShape_.init(shape);
     return true;
 }
 
@@ -242,7 +242,7 @@ Bindings::clone(JSContext* cx, MutableHandle<Bindings> self,
                 uint8_t* dstScriptData, HandleScript srcScript)
 {
     /* The clone has the same bindingArray_ offset as 'src'. */
-    Handle<Bindings> src = Handle<Bindings>::fromMarkedLocation(&srcScript->bindings);
+    const Bindings& src = srcScript->bindings;
     ptrdiff_t off = (uint8_t*)src.bindingArray() - srcScript->data;
     MOZ_ASSERT(off >= 0);
     MOZ_ASSERT(size_t(off) <= srcScript->dataSize());
@@ -2942,7 +2942,7 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
 /* static */ bool
 JSScript::fullyInitTrivial(ExclusiveContext* cx, Handle<JSScript*> script)
 {
-    if (!script->bindings.initTrivial(cx))
+    if (!Bindings::initTrivialForScript(cx, script))
         return false;
 
     if (!partiallyInit(cx, script, 0, 0, 0, 0, 0, 0))

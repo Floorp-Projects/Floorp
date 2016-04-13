@@ -97,3 +97,26 @@ function flushApzRepaints(aCallback, aWindow = window) {
     repaintDone();
   }
 }
+
+// Flush repaints, APZ pending repaints, and any repaints resulting from that
+// flush. This is particularly useful if the test needs to reach some sort of
+// "idle" state in terms of repaints. Usually just doing waitForAllPaints
+// followed by flushApzRepaints is sufficient to flush all APZ state back to
+// the main thread, but it can leave a paint scheduled which will get triggered
+// at some later time. For tests that specifically test for painting at
+// specific times, this method is the way to go. Even if in doubt, this is the
+// preferred method as the extra step is "safe" and shouldn't interfere with
+// most tests.
+function waitForApzFlushedRepaints(aCallback) {
+  // First flush the main-thread paints and send transactions to the APZ
+  waitForAllPaints(function() {
+    // Then flush the APZ to make sure any repaint requests have been sent
+    // back to the main thread
+    flushApzRepaints(function() {
+      // Then flush the main-thread again to process the repaint requests.
+      // Once this is done, we should be in a stable state with nothing
+      // pending, so we can trigger the callback.
+      waitForAllPaints(aCallback);
+    });
+  });
+}

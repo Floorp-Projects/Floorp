@@ -114,6 +114,9 @@ partial interface Directory {
    */
   [Throws]
   Promise<sequence<(File or Directory)>> getFilesAndDirectories();
+
+  [Throws]
+  Promise<sequence<File>> getFiles(optional boolean recursiveFlag = false);
 };
 
 enum CreateIfExistsMode { "replace", "fail" };

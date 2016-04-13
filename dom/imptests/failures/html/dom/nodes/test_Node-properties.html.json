@@ -1,7 +1,0 @@
-{
-  "document.characterSet": true,
-  "foreignDoc.characterSet": true,
-  "xmlDoc.characterSet": true,
-  "xmlElement.namespaceURI": true,
-  "detachedXmlElement.namespaceURI": true
-}

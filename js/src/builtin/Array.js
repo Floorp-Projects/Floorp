@@ -716,43 +716,61 @@ function CreateArrayIterator(obj, kind) {
     return CreateArrayIteratorAt(obj, kind, 0);
 }
 
-
+// ES6, 22.1.5.2.1
+// http://www.ecma-international.org/ecma-262/6.0/index.html#sec-%arrayiteratorprototype%.next
 function ArrayIteratorNext() {
+    // Step 1-3.
     if (!IsObject(this) || !IsArrayIterator(this)) {
         return callFunction(CallArrayIteratorMethodIfWrapped, this,
                             "ArrayIteratorNext");
     }
-    var a = UnsafeGetObjectFromReservedSlot(this, ITERATOR_SLOT_TARGET);
+
+    // Step 4.
+    var a = UnsafeGetReservedSlot(this, ITERATOR_SLOT_TARGET);
+    var result = { value: undefined, done: false };
+
+    // Step 5.
+    if (a === null) {
+      result.done = true;
+      return result;
+    }
+
+    // Step 6.
     // The index might not be an integer, so we have to do a generic get here.
     var index = UnsafeGetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX);
+
+    // Step 7.
     var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
-    var result = { value: undefined, done: false };
+
+    // Step 8-9.
     var len = IsPossiblyWrappedTypedArray(a)
               ? PossiblyWrappedTypedArrayLength(a)
               : TO_UINT32(a.length);
 
-    // FIXME: This should be ToLength, which clamps at 2**53.  Bug 924058.
+    // Step 10.
     if (index >= len) {
-        // When the above is changed to ToLength, use +1/0 here instead
-        // of MAX_UINT32.
-        UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, 0xffffffff);
+        UnsafeSetReservedSlot(this, ITERATOR_SLOT_TARGET, null);
         result.done = true;
         return result;
     }
 
+    // Step 11.
     UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, index + 1);
 
+    // Step 16.
     if (itemKind === ITEM_KIND_VALUE) {
         result.value = a[index];
         return result;
     }
 
+    // Step 13.
     if (itemKind === ITEM_KIND_KEY_AND_VALUE) {
         var pair = [index, a[index]];
         result.value = pair;
         return result;
     }
 
+    // Step 12.
     assert(itemKind === ITEM_KIND_KEY, itemKind);
     result.value = index;
     return result;

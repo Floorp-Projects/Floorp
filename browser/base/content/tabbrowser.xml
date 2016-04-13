@@ -4285,6 +4285,14 @@
               browser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
               break;
             }
+            case "Browser:FirstContentLoaded": {
+              let tab = this.getTabForBrowser(browser);
+              if (tab && data.userContextId) {
+                tab.setUserContextId(data.userContextId);
+              }
+
+              break;
+            }
             case "Findbar:Keypress": {
               let tab = this.getTabForBrowser(browser);
               // If the find bar for this tab is not yet alive, only initialize
@@ -4431,6 +4439,7 @@
           messageManager.addMessageListener("DOMWebNotificationClicked", this);
           messageManager.addMessageListener("DOMServiceWorkerFocusClient", this);
           messageManager.addMessageListener("RefreshBlocker:Blocked", this);
+          messageManager.addMessageListener("Browser:FirstContentLoaded", this);
 
           // To correctly handle keypresses for potential FindAsYouType, while
           // the tab's find bar is not yet initialized.

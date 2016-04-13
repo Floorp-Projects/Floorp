@@ -495,7 +495,8 @@ ValueNumberer::removePredecessorAndDoDCE(MBasicBlock* block, MBasicBlock* pred, 
             phi = nextDef_->toPhi();
             iter++;
             nextDef_ = iter != end ? *iter : nullptr;
-            discardDefsRecursively(phi);
+            if (!discardDefsRecursively(phi))
+                return false;
         }
     }
     nextDef_ = nullptr;
@@ -1226,8 +1227,10 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
 
     // Adding fixup blocks only make sense iff we have a second entry point into
     // the graph which cannot be reached any more from the entry point.
-    if (graph_.osrBlock())
-        insertOSRFixups();
+    if (graph_.osrBlock()) {
+        if (!insertOSRFixups())
+            return false;
+    }
 
     // Top level non-sparse iteration loop. If an iteration performs a
     // significant change, such as discarding a block which changes the
@@ -1284,7 +1287,8 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
     }
 
     if (MOZ_UNLIKELY(hasOSRFixups_)) {
-        cleanupOSRFixups();
+        if (!cleanupOSRFixups())
+            return false;
         hasOSRFixups_ = false;
     }
 

@@ -143,9 +143,6 @@ protected:
   virtual bool RecvGetAnimationTransform(PLayerParent* aParent,
                                          MaybeTransform* aTransform)
                                          override;
-  virtual bool RecvUpdateScrollOffset(const FrameMetrics::ViewID& aScrollId,
-                                      const uint32_t& aScrollGeneration,
-                                      const CSSPoint& aScrollOffset) override;
   virtual bool RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
                                         const float& aX, const float& aY) override;
   virtual bool RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,

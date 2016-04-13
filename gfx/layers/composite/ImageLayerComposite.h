@@ -61,6 +61,8 @@ public:
 
   virtual bool IsOpaque() override;
 
+  virtual nsIntRegion GetFullyRenderedRegion() override;
+
 protected:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 

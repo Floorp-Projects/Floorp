@@ -674,6 +674,14 @@ struct ParamTraits<nsRegion>
   : RegionParamTraits<nsRegion, nsRect, nsRegion::RectIterator>
 {};
 
+template<>
+struct ParamTraits<mozilla::layers::FrameMetrics::ScrollOffsetUpdateType>
+  : public ContiguousEnumSerializer<
+             mozilla::layers::FrameMetrics::ScrollOffsetUpdateType,
+             mozilla::layers::FrameMetrics::ScrollOffsetUpdateType::eNone,
+             mozilla::layers::FrameMetrics::ScrollOffsetUpdateType::eSentinel>
+{};
+
 template <>
 struct ParamTraits<mozilla::layers::FrameMetrics>
 {
@@ -704,9 +712,9 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mLineScrollAmount);
     WriteParam(aMsg, aParam.mPageScrollAmount);
     WriteParam(aMsg, aParam.mPaintRequestTime);
+    WriteParam(aMsg, aParam.mScrollUpdateType);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mHasScrollgrab);
-    WriteParam(aMsg, aParam.mUpdateScrollOffset);
     WriteParam(aMsg, aParam.mDoSmoothScroll);
     WriteParam(aMsg, aParam.mUseDisplayPortMargins);
     WriteParam(aMsg, aParam.mAllowVerticalScrollWithWheel);
@@ -765,9 +773,9 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mLineScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mPageScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetHasScrollgrab) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUpdateScrollOffset) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetDoSmoothScroll) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUseDisplayPortMargins) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetAllowVerticalScrollWithWheel) &&

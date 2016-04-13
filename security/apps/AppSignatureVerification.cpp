@@ -663,11 +663,18 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
                 const SECItem& detachedDigest,
                 /*out*/ ScopedCERTCertList& builtChain)
 {
+  // Currently, this function is only called within the CalculateResult() method
+  // of CryptoTasks. As such, NSS should not be shut down at this point and the
+  // CryptoTask implementation should already hold a nsNSSShutDownPreventionLock.
+  // We acquire a nsNSSShutDownPreventionLock here solely to prove we did to
+  // VerifyCMSDetachedSignatureIncludingCertificate().
+  nsNSSShutDownPreventionLock locker;
   VerifyCertificateContext context = { trustedRoot, builtChain };
   // XXX: missing pinArg
   return VerifyCMSDetachedSignatureIncludingCertificate(buffer, detachedDigest,
                                                         VerifyCertificate,
-                                                        &context, nullptr);
+                                                        &context, nullptr,
+                                                        locker);
 }
 
 NS_IMETHODIMP

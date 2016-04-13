@@ -3,6 +3,7 @@
 <head>
   <title>Test for Directory API</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="filesystem_commons.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
@@ -34,63 +35,20 @@ function create_fileList(aPath) {
   script.sendAsyncMessage("dir.open", { path: aPath });
 }
 
-function test_basic() {
-  ok(directory, "Directory exists.");
-  ok(directory instanceof Directory, "We have a directory.");
-  is(directory.name, '/', "directory.name must be '/'");
-  is(directory.path, '/', "directory.path must be '/'");
-  next();
-}
-
-function checkSubDir(dir) {
-  return dir.getFilesAndDirectories().then(
-    function(data) {
-      for (var i = 0; i < data.length; ++i) {
-        ok (data[i] instanceof File || data[i] instanceof Directory, "Just Files or Directories");
-        if (data[i] instanceof Directory) {
-          isnot(data[i].name, '/', "Subdirectory should be called with the leafname: " + data[i].name);
-          isnot(data[i].path, '/', "Subdirectory path should be called with the leafname:" + data[i].path);
-          isnot(data[i].path, dir.path, "Subdirectory path should contain the parent path.");
-          is(data[i].path,dir.path + '/' + data[i].name, "Subdirectory path should be called parentdir.path + '/' + leafname");
-        }
-      }
-    }
-  );
-}
-
-function getFilesAndDirectories(aRecursive) {
-  directory.getFilesAndDirectories().then(
-    function(data) {
-      ok(data.length, "We should have some data.");
-      var promises = [];
-      for (var i = 0; i < data.length; ++i) {
-        ok (data[i] instanceof File || data[i] instanceof Directory, "Just Files or Directories");
-        if (data[i] instanceof Directory) {
-          isnot(data[i].name, '/', "Subdirectory should be called with the leafname");
-          is(data[i].path, '/' + data[i].name, "Subdirectory path should be called '/' + leafname");
-
-          if (aRecursive) {
-            promises.push(checkSubDir(data[i]));
-          }
-        }
-      }
-
-      return Promise.all(promises);
-    },
-    function() {
-      ok(false, "Something when wrong");
-    }
-  ).then(next);
-}
-
 var tests = [
   function() { create_fileList('ProfD') },
-  test_basic,
-  function() { getFilesAndDirectories(true) },
+  function() { test_basic(directory, next); },
+  function() { test_getFilesAndDirectories(directory, true, next); },
+  function() { test_getFiles(directory, false, next); },
+  function() { test_getFiles(directory, true, next); },
 
-  function() { create_fileList('root') },
-  test_basic,
-  function() { getFilesAndDirectories(false) },
+  function() { create_fileList('test') },
+  function() { test_getFiles_recursiveComparison(directory, next); },
+
+  function() { create_fileList('root'); },
+  function() { test_basic(directory, next); },
+  function() { test_getFilesAndDirectories(directory, false, next); },
+  function() { test_getFiles(directory, false, next); },
 ];
 
 function next() {
