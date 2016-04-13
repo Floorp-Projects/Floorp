@@ -988,14 +988,13 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
 }
 
 void
-MessageChannel::PeekMessages(msgid_t aMsgId, mozilla::function<bool(const Message& aMsg)> aInvoke)
+MessageChannel::PeekMessages(mozilla::function<bool(const Message& aMsg)> aInvoke)
 {
     MonitorAutoLock lock(*mMonitor);
 
     for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
         Message &msg = *it;
-
-        if (msg.type() == aMsgId && !aInvoke(msg)) {
+        if (!aInvoke(msg)) {
             break;
         }
     }
