@@ -215,10 +215,14 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
   }
 
   nsresult rv = NS_OK;
-  PrincipalInfo requestingPrincipalInfo;
-  rv = PrincipalToPrincipalInfo(aLoadInfo->LoadingPrincipal(),
-                                &requestingPrincipalInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  OptionalPrincipalInfo loadingPrincipalInfo = mozilla::void_t();
+  if (aLoadInfo->LoadingPrincipal()) {
+    PrincipalInfo loadingPrincipalInfoTemp;
+    rv = PrincipalToPrincipalInfo(aLoadInfo->LoadingPrincipal(),
+                                  &loadingPrincipalInfoTemp);
+    NS_ENSURE_SUCCESS(rv, rv);
+    loadingPrincipalInfo = loadingPrincipalInfoTemp;
+  }
 
   PrincipalInfo triggeringPrincipalInfo;
   rv = PrincipalToPrincipalInfo(aLoadInfo->TriggeringPrincipal(),
@@ -238,7 +242,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
 
   *aOptionalLoadInfoArgs =
     LoadInfoArgs(
-      requestingPrincipalInfo,
+      loadingPrincipalInfo,
       triggeringPrincipalInfo,
       aLoadInfo->GetSecurityFlags(),
       aLoadInfo->InternalContentPolicyType(),
@@ -275,8 +279,12 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     aOptionalLoadInfoArgs.get_LoadInfoArgs();
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-    PrincipalInfoToPrincipal(loadInfoArgs.requestingPrincipalInfo(), &rv);
+  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  if (loadInfoArgs.requestingPrincipalInfo().type() != OptionalPrincipalInfo::Tvoid_t) {
+    loadingPrincipal = PrincipalInfoToPrincipal(loadInfoArgs.requestingPrincipalInfo(), &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
     PrincipalInfoToPrincipal(loadInfoArgs.triggeringPrincipalInfo(), &rv);
@@ -299,7 +307,7 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo =
-    new mozilla::LoadInfo(requestingPrincipal,
+    new mozilla::LoadInfo(loadingPrincipal,
                           triggeringPrincipal,
                           loadInfoArgs.securityFlags(),
                           loadInfoArgs.contentPolicyType(),
