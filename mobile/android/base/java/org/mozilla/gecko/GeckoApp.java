@@ -141,7 +141,7 @@ public abstract class GeckoApp
     ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final String LOGTAG = "GeckoApp";
-    private static final int ONE_DAY_MS = 1000*60*60*24;
+    private static final int ONE_DAY_MS = 1000 * 60 * 60 * 24;
 
     public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
     public static final String ACTION_HOMESCREEN_SHORTCUT  = "org.mozilla.gecko.BOOKMARK";
