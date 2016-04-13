@@ -44,6 +44,13 @@ struct FileSystemGetDirectoryListingParams
   nsString filters;
 };
 
+struct FileSystemGetFilesParams
+{
+  nsString filesystem;
+  nsString realPath;
+  bool recursiveFlag;
+};
+
 struct FileSystemGetFileOrDirectoryParams
 {
   nsString filesystem;
@@ -64,6 +71,7 @@ union FileSystemParams
   FileSystemCreateDirectoryParams;
   FileSystemCreateFileParams;
   FileSystemGetDirectoryListingParams;
+  FileSystemGetFilesParams;
   FileSystemGetFileOrDirectoryParams;
   FileSystemRemoveParams;
 };

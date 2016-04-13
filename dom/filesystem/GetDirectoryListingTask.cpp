@@ -18,8 +18,6 @@
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
-#define GET_DIRECTORY_LISTING_PERMISSION "read"
-
 namespace mozilla {
 namespace dom {
 
@@ -206,7 +204,7 @@ GetDirectoryListingTaskChild::HandlerCallback()
 void
 GetDirectoryListingTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(GET_DIRECTORY_LISTING_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_READ_PERMISSION);
 }
 
 /**
@@ -394,7 +392,7 @@ GetDirectoryListingTaskParent::IOWork()
 void
 GetDirectoryListingTaskParent::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(GET_DIRECTORY_LISTING_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_READ_PERMISSION);
 }
 
 } // namespace dom

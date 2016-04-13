@@ -4,31 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RemoveTask_h
-#define mozilla_dom_RemoveTask_h
+#ifndef mozilla_dom_GetFilesTask_h
+#define mozilla_dom_GetFilesTask_h
 
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
-#include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {
 
 class BlobImpl;
-class Promise;
 
-class RemoveTaskChild final : public FileSystemTaskChildBase
+class GetFilesTaskChild final : public FileSystemTaskChildBase
 {
 public:
-  static already_AddRefed<RemoveTaskChild>
+  static already_AddRefed<GetFilesTaskChild>
   Create(FileSystemBase* aFileSystem,
-         nsIFile* aDirPath,
          nsIFile* aTargetPath,
-         bool aRecursive,
+         bool aRecursiveFlag,
          ErrorResult& aRv);
 
   virtual
-  ~RemoveTaskChild();
+  ~GetFilesTaskChild();
 
   already_AddRefed<Promise>
   GetPromise();
@@ -36,7 +35,12 @@ public:
   virtual void
   GetPermissionAccessType(nsCString& aAccess) const override;
 
-protected:
+private:
+  // If aDirectoryOnly is set, we should ensure that the target is a directory.
+  GetFilesTaskChild(FileSystemBase* aFileSystem,
+                    nsIFile* aTargetPath,
+                    bool aRecursiveFlag);
+
   virtual FileSystemParams
   GetRequestParams(const nsString& aSerializedDOMPath,
                    ErrorResult& aRv) const override;
@@ -48,59 +52,48 @@ protected:
   virtual void
   HandlerCallback() override;
 
-private:
-  RemoveTaskChild(FileSystemBase* aFileSystem,
-                  nsIFile* aDirPath,
-                  nsIFile* aTargetPath,
-                  bool aRecursive);
-
   RefPtr<Promise> mPromise;
-
-  // This path is the Directory::mFile.
-  nsCOMPtr<nsIFile> mDirPath;
-
-  // This is what we want to remove. mTargetPath is discendant path of mDirPath.
   nsCOMPtr<nsIFile> mTargetPath;
+  bool mRecursiveFlag;
 
-  bool mRecursive;
-  bool mReturnValue;
+  // We store the fullpath of Files.
+  FallibleTArray<nsString> mTargetData;
 };
 
-class RemoveTaskParent final : public FileSystemTaskParentBase
+class GetFilesTaskParent final : public FileSystemTaskParentBase
 {
 public:
-  static already_AddRefed<RemoveTaskParent>
+  static already_AddRefed<GetFilesTaskParent>
   Create(FileSystemBase* aFileSystem,
-         const FileSystemRemoveParams& aParam,
+         const FileSystemGetFilesParams& aParam,
          FileSystemRequestParent* aParent,
          ErrorResult& aRv);
 
   virtual void
   GetPermissionAccessType(nsCString& aAccess) const override;
 
-protected:
+private:
+  GetFilesTaskParent(FileSystemBase* aFileSystem,
+                     const FileSystemGetFilesParams& aParam,
+                     FileSystemRequestParent* aParent);
+
   virtual FileSystemResponseValue
   GetSuccessRequestResult(ErrorResult& aRv) const override;
 
   virtual nsresult
   IOWork() override;
 
-private:
-  RemoveTaskParent(FileSystemBase* aFileSystem,
-                   const FileSystemRemoveParams& aParam,
-                   FileSystemRequestParent* aParent);
+  nsresult
+  ExploreDirectory(nsIFile* aPath);
 
-  // This path is the Directory::mFile.
-  nsCOMPtr<nsIFile> mDirPath;
-
-  // This is what we want to remove. mTargetPath is discendant path of mDirPath.
   nsCOMPtr<nsIFile> mTargetPath;
+  bool mRecursiveFlag;
 
-  bool mRecursive;
-  bool mReturnValue;
+  // We store the fullpath of Files.
+  FallibleTArray<nsString> mTargetData;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_RemoveTask_h
+#endif // mozilla_dom_GetFilesTask_h

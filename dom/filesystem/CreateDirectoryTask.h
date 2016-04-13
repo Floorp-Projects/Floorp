@@ -11,8 +11,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
 
-#define CREATE_DIRECTORY_TASK_PERMISSION "create"
-
 namespace mozilla {
 namespace dom {
 

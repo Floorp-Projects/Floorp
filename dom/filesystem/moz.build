@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'FileSystemUtils.cpp',
     'GetDirectoryListingTask.cpp',
     'GetFileOrDirectoryTask.cpp',
+    'GetFilesTask.cpp',
     'OSFileSystem.cpp',
     'RemoveTask.cpp',
 ]
