@@ -378,7 +378,7 @@ public abstract class HomeFragment extends Fragment {
                 }
             }
 
-            switch(mType) {
+            switch (mType) {
                 case BOOKMARKS:
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "bookmark");
                     mDB.removeBookmarksWithURL(cr, mUrl);

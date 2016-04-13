@@ -541,7 +541,7 @@ public class GeckoAppShell
         SensorManager sm = (SensorManager)
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
-        switch(aSensortype) {
+        switch (aSensortype) {
         case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
             if (gGameRotationVectorSensor == null) {
                 gGameRotationVectorSensor = sm.getDefaultSensor(15);

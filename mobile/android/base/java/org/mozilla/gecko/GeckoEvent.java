@@ -365,7 +365,7 @@ public class GeckoEvent {
         int sensor_type = s.sensor.getType();
         GeckoEvent event = null;
 
-        switch(sensor_type) {
+        switch (sensor_type) {
 
         case Sensor.TYPE_ACCELEROMETER:
             event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
