@@ -4248,76 +4248,86 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
 }
 
 bool
-ContentParent::RecvNSSU2FTokenIsCompatibleVersion(const nsString& version,
-                                                  bool* isCompatible)
+ContentParent::RecvNSSU2FTokenIsCompatibleVersion(const nsString& aVersion,
+                                                  bool* aIsCompatible)
 {
+  MOZ_ASSERT(aIsCompatible);
+
   nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
   if (NS_WARN_IF(!nssToken)) {
     return false;
   }
 
-  nsresult rv = nssToken->IsCompatibleVersion(version, isCompatible);
+  nsresult rv = nssToken->IsCompatibleVersion(aVersion, aIsCompatible);
   return NS_SUCCEEDED(rv);
 }
 
 bool
-ContentParent::RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& keyHandle,
-                                           bool* isValidKeyHandle)
+ContentParent::RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& aKeyHandle,
+                                           bool* aIsValidKeyHandle)
 {
+  MOZ_ASSERT(aIsValidKeyHandle);
+
   nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
   if (NS_WARN_IF(!nssToken)) {
     return false;
   }
 
-  nsresult rv = nssToken->IsRegistered(keyHandle.Elements(), keyHandle.Length(),
-                                       isValidKeyHandle);
+  nsresult rv = nssToken->IsRegistered(aKeyHandle.Elements(), aKeyHandle.Length(),
+                                       aIsValidKeyHandle);
   return  NS_SUCCEEDED(rv);
 }
 
 bool
-ContentParent::RecvNSSU2FTokenRegister(nsTArray<uint8_t>&& application,
-                                       nsTArray<uint8_t>&& challenge,
-                                       nsTArray<uint8_t>* registration)
+ContentParent::RecvNSSU2FTokenRegister(nsTArray<uint8_t>&& aApplication,
+                                       nsTArray<uint8_t>&& aChallenge,
+                                       nsTArray<uint8_t>* aRegistration)
 {
+  MOZ_ASSERT(aRegistration);
+
   nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
   if (NS_WARN_IF(!nssToken)) {
     return false;
   }
   uint8_t* buffer;
   uint32_t bufferlen;
-  nsresult rv = nssToken->Register(application.Elements(), application.Length(),
-                                   challenge.Elements(), challenge.Length(),
+  nsresult rv = nssToken->Register(aApplication.Elements(), aApplication.Length(),
+                                   aChallenge.Elements(), aChallenge.Length(),
                                    &buffer, &bufferlen);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
-  registration->ReplaceElementsAt(0, registration->Length(), buffer, bufferlen);
+  MOZ_ASSERT(buffer);
+  aRegistration->ReplaceElementsAt(0, aRegistration->Length(), buffer, bufferlen);
   free(buffer);
   return NS_SUCCEEDED(rv);
 }
 
 bool
-ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& application,
-                                   nsTArray<uint8_t>&& challenge,
-                                   nsTArray<uint8_t>&& keyHandle,
-                                   nsTArray<uint8_t>* signature)
+ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& aApplication,
+                                   nsTArray<uint8_t>&& aChallenge,
+                                   nsTArray<uint8_t>&& aKeyHandle,
+                                   nsTArray<uint8_t>* aSignature)
 {
+  MOZ_ASSERT(aSignature);
+
   nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
   if (NS_WARN_IF(!nssToken)) {
     return false;
   }
   uint8_t* buffer;
   uint32_t bufferlen;
-  nsresult rv = nssToken->Sign(application.Elements(), application.Length(),
-                               challenge.Elements(), challenge.Length(),
-                               keyHandle.Elements(), keyHandle.Length(),
+  nsresult rv = nssToken->Sign(aApplication.Elements(), aApplication.Length(),
+                               aChallenge.Elements(), aChallenge.Length(),
+                               aKeyHandle.Elements(), aKeyHandle.Length(),
                                &buffer, &bufferlen);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
-  signature->ReplaceElementsAt(0, signature->Length(), buffer, bufferlen);
+  MOZ_ASSERT(buffer);
+  aSignature->ReplaceElementsAt(0, aSignature->Length(), buffer, bufferlen);
   free(buffer);
   return NS_SUCCEEDED(rv);
 }
