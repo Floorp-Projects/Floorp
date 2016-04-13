@@ -49,8 +49,20 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   , mLastEndTime(0)
 {
   bool resampling = gfxPrefs::AudioSinkResampling();
-  uint32_t resamplingRate = gfxPrefs::AudioSinkResampleRate();
-  mOutputRate = resampling ? resamplingRate : mInfo.mRate;
+
+  if (resampling) {
+    mOutputRate = gfxPrefs::AudioSinkResampleRate();
+  } else if (mInfo.mRate == 44100 || mInfo.mRate == 48000) {
+    // The original rate is of good quality and we want to minimize unecessary
+    // resampling. The common scenario being that the sampling rate is one or
+    // the other, this allows to minimize audio quality regression and hoping
+    // content provider want change from those rates mid-stream.
+    mOutputRate = mInfo.mRate;
+  } else {
+    // We will resample all data to match cubeb's preferred sampling rate.
+    mOutputRate = AudioStream::GetPreferredRate();
+  }
+
   mOutputChannels = mInfo.mChannels > 2 && gfxPrefs::AudioSinkForceStereo()
                       ? 2 : mInfo.mChannels;
 
