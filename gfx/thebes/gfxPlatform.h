@@ -173,6 +173,7 @@ public:
 
     static void InitLayersIPC();
     static void ShutdownLayersIPC();
+    static bool IPCAlreadyShutDown();
 
     /**
      * Create an offscreen surface of the given dimensions

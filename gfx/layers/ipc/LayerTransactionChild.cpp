@@ -39,12 +39,12 @@ LayerTransactionChild::Destroy()
 
   const ManagedContainer<PCompositableChild>& compositables = ManagedPCompositableChild();
   for (auto iter = compositables.ConstIter(); !iter.Done(); iter.Next()) {
-    CompositableClient::ForceIPDLActorShutdown(iter.Get()->GetKey());
+    CompositableClient::ForceIPDLActorShutdown(iter.Get()->GetKey(), "CompositorBridge");
   }
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    TextureClient::ForceIPDLActorShutdown(iter.Get()->GetKey());
+    TextureClient::ForceIPDLActorShutdown(iter.Get()->GetKey(), "CompositorBridge");
   }
 
   SendShutdown();

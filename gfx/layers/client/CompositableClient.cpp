@@ -145,6 +145,13 @@ CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
 CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
+
+#ifdef GFX_STRICT_SHUTDOWN
+  if (gfxPlatform::IPCAlreadyShutDown()) {
+    MOZ_CRASH("This CompositableClient is deleted too late.");
+  }
+#endif
+
   Destroy();
 }
 
@@ -185,7 +192,8 @@ CompositableClient::IsConnected() const
 
 // static
 void
-CompositableClient::ForceIPDLActorShutdown(PCompositableChild* aActor)
+CompositableClient::ForceIPDLActorShutdown(PCompositableChild* aActor,
+                                           const char* const aProtocolName)
 {
   if (!aActor) {
     return;
@@ -199,7 +207,8 @@ CompositableClient::ForceIPDLActorShutdown(PCompositableChild* aActor)
     // so we don't have to worry too much about printf being slow.
     // More involved reporting like crashstats annotations would be too much noise
     // at this point.
-    printf("!! A CompositableClient is destroyed late during shutdown !!\n");
+    printf_stderr("!![%s] A CompositableClient is destroyed late during shutdown!!\n",
+                  aProtocolName);
 #endif
 
     // Do not access the CompositableClient from here.
