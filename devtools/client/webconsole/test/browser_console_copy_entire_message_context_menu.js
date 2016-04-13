@@ -42,7 +42,6 @@ function test() {
 
     outputNode.focus();
     let message = [...results.matched][0];
-    message.scrollIntoView();
 
     yield waitForContextMenu(contextMenu, message, copyFromPopup,
                              testContextMenuCopy);

@@ -66,7 +66,6 @@ function onConsoleMessage(results) {
   let isDisabled = !controller || !controller.isCommandEnabled(COMMAND_NAME);
   ok(isDisabled, COMMAND_NAME + " should be disabled.");
 
-  outputNode.selectedItem.scrollIntoView();
   return waitForContextMenu(contextMenu, outputNode.selectedItem, () => {
     let isHidden = contextMenu.querySelector(CONTEXT_MENU_ID).hidden;
     ok(isHidden, CONTEXT_MENU_ID + " should be hidden.");
@@ -131,7 +130,6 @@ function testOnNetActivityContextMenu(msg) {
 
   outputNode.focus();
   HUD.ui.output.selectMessage(msg);
-  msg.scrollIntoView();
 
   info("net activity context menu");
 
