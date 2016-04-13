@@ -185,7 +185,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         while(indexOfMatch != -1) {
             indexOfMatch = string.indexOf(pattern, lastIndexOfMatch);
             lastIndexOfMatch = indexOfMatch + patternLength;
-            if(indexOfMatch != -1) {
+            if (indexOfMatch != -1) {
                 mOccurrences.add(indexOfMatch);
             }
         }
