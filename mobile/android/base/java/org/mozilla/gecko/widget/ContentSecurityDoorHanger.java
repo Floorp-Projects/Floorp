@@ -92,7 +92,7 @@ public class ContentSecurityDoorHanger extends DoorHanger {
                 }
                 mMessage.setVisibility(VISIBLE);
                 mSecurityState.setVisibility(VISIBLE);
-            } catch (JSONException e) {}
+            } catch (JSONException e) { }
         }
     }
 
