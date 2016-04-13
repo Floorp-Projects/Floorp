@@ -26,6 +26,9 @@ if (url.search.length > 1) {
                    .getInterface(Ci.nsIDOMWindowUtils)
                    .containerElement;
 
+  // Specify the default tool to open
+  let tool = url.searchParams.get("tool");
+
   if (url.searchParams.has("target")) {
     // Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
     // mozbrowser>) whose reference is set on the host iframe.
@@ -55,13 +58,13 @@ if (url.search.length > 1) {
         let form = response.tab;
         let target = yield TargetFactory.forRemoteTab({client, form, chrome: false});
         let options = { customIframe: host };
-        yield gDevTools.showToolbox(target, null, Toolbox.HostType.CUSTOM, options);
+        yield gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
       });
     }
   } else {
     targetFromURL(url).then(target => {
       let options = { customIframe: host };
-      return gDevTools.showToolbox(target, null, Toolbox.HostType.CUSTOM, options);
+      return gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
     }).then(null, e => {
       window.alert("Unable to start the toolbox:" + e.message);
     });
