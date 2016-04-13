@@ -28,7 +28,8 @@ namespace media {
 class DecodedAudioDataSink : public AudioSink,
                              private AudioStream::DataSource {
 public:
-  DecodedAudioDataSink(MediaQueue<MediaData>& aAudioQueue,
+  DecodedAudioDataSink(AbstractThread* aThread,
+                       MediaQueue<MediaData>& aAudioQueue,
                        int64_t aStartTime,
                        const AudioInfo& aInfo,
                        dom::AudioChannel aChannel);
@@ -102,12 +103,32 @@ private:
   // Keep track of the read position of mCurrentData.
   UniquePtr<AudioBufferCursor> mCursor;
   // True if there is any error in processing audio data like overflow.
-  bool mErrored = false;
+  Atomic<bool> mErrored;
 
   // Set on the callback thread of cubeb once the stream has drained.
   Atomic<bool> mPlaybackComplete;
 
+  const RefPtr<AbstractThread> mProcessingThread;
+  Atomic<bool> mShutdown;
+
+  // Audio Processing objects and methods
+  void OnAudioPopped(const RefPtr<MediaData>& aSample);
+  void OnAudioPushed(const RefPtr<MediaData>& aSample);
+  void NotifyAudioNeeded();
+  already_AddRefed<AudioData> CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
+                                                    AudioData* aReference);
   UniquePtr<AudioConverter> mConverter;
+  MediaQueue<AudioData> mProcessedQueue;
+  MediaEventListener mAudioQueueListener;
+  MediaEventListener mProcessedQueueListener;
+  // Number of frames processed from AudioQueue(). Used to determine gaps in
+  // the input stream. It indicates the time in frames since playback started
+  // at the current input framerate.
+  int64_t mFramesParsed;
+  int64_t mLastEndTime;
+  // Never modifed after construction.
+  uint32_t mOutputRate;
+  uint32_t mOutputChannels;
 };
 
 } // namespace media
