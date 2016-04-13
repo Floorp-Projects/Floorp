@@ -2634,11 +2634,12 @@ gfxWindowsPlatform::InitializeD2D()
 {
   mD2DStatus = CheckD2DSupport();
   if (IsFeatureStatusFailure(mD2DStatus)) {
+    mD2D1Status = mD2DStatus;
     return;
   }
 
   if (!mCompositorD3D11TextureSharingWorks) {
-    mD2DStatus = FeatureStatus::Failed;
+    mD2D1Status = mD2DStatus = FeatureStatus::Failed;
     return;
   }
 
@@ -3089,7 +3090,7 @@ gfxWindowsPlatform::GetD2DStatus() const
 FeatureStatus
 gfxWindowsPlatform::GetD2D1Status() const
 {
-  if (GetD3D11Status() != FeatureStatus::Available) {
+  if (GetD2DStatus() != FeatureStatus::Available) {
     return FeatureStatus::Unavailable;
   }
   return mD2D1Status;
