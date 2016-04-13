@@ -436,6 +436,12 @@ Rule.prototype = {
     let props = parseDeclarations(this.style.authoredText, true);
     for (let prop of props) {
       let name = prop.name;
+      // If the authored text has an invalid property, it will show up
+      // as nameless.  Skip these as we don't currently have a good
+      // way to display them.
+      if (!name) {
+        continue;
+      }
       // In an inherited rule, we only show inherited properties.
       // However, we must keep all properties in order for rule
       // rewriting to work properly.  So, compute the "invisible"
