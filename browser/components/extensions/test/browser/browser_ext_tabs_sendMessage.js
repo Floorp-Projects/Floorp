@@ -119,7 +119,8 @@ add_task(function* tabsSendMessageNoExceptionOnNonExistentTab() {
     },
 
     background: function() {
-      browser.tabs.create({url: "about:robots"}, tab => {
+      let url = "http://example.com/mochitest/browser/browser/components/extensions/test/browser/file_dummy.html";
+      browser.tabs.create({url}, tab => {
         let exception;
         try {
           browser.tabs.sendMessage(tab.id, "message");
