@@ -8,7 +8,7 @@
 include "VRMessageUtils.h";
 
 using struct mozilla::gfx::VRFieldOfView from "gfxVR.h";
-using struct mozilla::gfx::VRDeviceUpdate from "gfxVR.h";
+using struct mozilla::gfx::VRDisplayUpdate from "gfxVR.h";
 using struct mozilla::gfx::VRSensorUpdate from "gfxVR.h";
 
 namespace mozilla {
@@ -48,7 +48,7 @@ child:
   // be sent to all children when the parent receives RefreshDevices, even
   // if no changes have been detected.  This ensures that Promises exposed
   // through DOM calls are always resolved.
-  async UpdateDeviceInfo(VRDeviceUpdate[] aDeviceUpdates);
+  async UpdateDeviceInfo(VRDisplayUpdate[] aDeviceUpdates);
 
   // Notify children of updated VR device sensor states.  This will be
   // sent once per frame for at least one second after the parent receives

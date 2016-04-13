@@ -88,7 +88,7 @@ struct VRDistortionConstants {
   float destinationScaleAndOffset[4];
 };
 
-struct VRDeviceInfo
+struct VRDisplayInfo
 {
   VRHMDType GetType() const { return mType; }
   uint32_t GetDeviceID() const { return mDeviceID; }
@@ -112,11 +112,11 @@ struct VRDeviceInfo
   VRHMDType mType;
   nsCString mDeviceName;
   VRStateValidFlags mSupportedSensorBits;
-  VRFieldOfView mMaximumEyeFOV[VRDeviceInfo::NumEyes];
-  VRFieldOfView mRecommendedEyeFOV[VRDeviceInfo::NumEyes];
-  VRFieldOfView mEyeFOV[VRDeviceInfo::NumEyes];
-  Point3D mEyeTranslation[VRDeviceInfo::NumEyes];
-  Matrix4x4 mEyeProjectionMatrix[VRDeviceInfo::NumEyes];
+  VRFieldOfView mMaximumEyeFOV[VRDisplayInfo::NumEyes];
+  VRFieldOfView mRecommendedEyeFOV[VRDisplayInfo::NumEyes];
+  VRFieldOfView mEyeFOV[VRDisplayInfo::NumEyes];
+  Point3D mEyeTranslation[VRDisplayInfo::NumEyes];
+  Matrix4x4 mEyeProjectionMatrix[VRDisplayInfo::NumEyes];
   /* Suggested resolution for rendering a single eye.
    * Assumption is that left/right rendering will be 2x of this size.
    * XXX fix this for vertical displays
@@ -128,7 +128,7 @@ struct VRDeviceInfo
 
 
 
-  bool operator==(const VRDeviceInfo& other) const {
+  bool operator==(const VRDisplayInfo& other) const {
     return mType == other.mType &&
            mDeviceID == other.mDeviceID &&
            mDeviceName == other.mDeviceName &&
@@ -148,7 +148,7 @@ struct VRDeviceInfo
            mEyeProjectionMatrix[1] == other.mEyeProjectionMatrix[1];
   }
 
-  bool operator!=(const VRDeviceInfo& other) const {
+  bool operator!=(const VRDisplayInfo& other) const {
     return !(*this == other);
   }
 };
@@ -181,14 +181,14 @@ struct VRSensorUpdate {
   VRHMDSensorState mSensorState;
 };
 
-struct VRDeviceUpdate {
-  VRDeviceUpdate() { }; // Required for ipdl binding
-  VRDeviceUpdate(const VRDeviceInfo& aDeviceInfo,
+struct VRDisplayUpdate {
+  VRDisplayUpdate() { }; // Required for ipdl binding
+  VRDisplayUpdate(const VRDisplayInfo& aDeviceInfo,
                  const VRHMDSensorState& aSensorState)
    : mDeviceInfo(aDeviceInfo)
    , mSensorState(aSensorState) { };
 
-  VRDeviceInfo mDeviceInfo;
+  VRDisplayInfo mDeviceInfo;
   VRHMDSensorState mSensorState;
 };
 
@@ -251,7 +251,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRHMDInfo)
 
   const VRHMDConfiguration& GetConfiguration() const { return mConfiguration; }
-  const VRDeviceInfo& GetDeviceInfo() const { return mDeviceInfo; }
+  const VRDisplayInfo& GetDeviceInfo() const { return mDeviceInfo; }
 
   /* set the FOV for this HMD unit; this triggers a computation of all the remaining bits.  Returns false if it fails */
   virtual bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
@@ -281,8 +281,8 @@ protected:
   virtual ~VRHMDInfo();
 
   VRHMDConfiguration mConfiguration;
-  VRDeviceInfo mDeviceInfo;
-  VRDistortionMesh mDistortionMesh[VRDeviceInfo::NumEyes];
+  VRDisplayInfo mDeviceInfo;
+  VRDistortionMesh mDistortionMesh[VRDisplayInfo::NumEyes];
 };
 
 class VRHMDManager {

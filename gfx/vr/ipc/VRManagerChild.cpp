@@ -7,7 +7,7 @@
 
 #include "VRManagerChild.h"
 #include "VRManagerParent.h"
-#include "VRDeviceProxy.h"
+#include "VRDisplayProxy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
@@ -121,11 +121,11 @@ VRManagerChild::Destroy()
 }
 
 bool
-VRManagerChild::RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates)
+VRManagerChild::RecvUpdateDeviceInfo(nsTArray<VRDisplayUpdate>&& aDeviceUpdates)
 {
   // mDevices could be a hashed container for more scalability, but not worth
   // it now as we expect < 10 entries.
-  nsTArray<RefPtr<VRDeviceProxy> > devices;
+  nsTArray<RefPtr<VRDisplayProxy> > devices;
   for (auto& deviceUpdate: aDeviceUpdates) {
     bool isNewDevice = true;
     for (auto& device: mDevices) {
@@ -137,7 +137,7 @@ VRManagerChild::RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates)
       }
     }
     if (isNewDevice) {
-      devices.AppendElement(new VRDeviceProxy(deviceUpdate));
+      devices.AppendElement(new VRDisplayProxy(deviceUpdate));
     }
   }
 
@@ -145,7 +145,7 @@ VRManagerChild::RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates)
 
 
   for (auto& nav: mNavigatorCallbacks) {
-    nav->NotifyVRDevicesUpdated();
+    nav->NotifyVRDisplaysUpdated();
   }
   mNavigatorCallbacks.Clear();
 
@@ -171,14 +171,14 @@ VRManagerChild::RecvUpdateDeviceSensors(nsTArray<VRSensorUpdate>&& aDeviceSensor
 }
 
 bool
-VRManagerChild::GetVRDevices(nsTArray<RefPtr<VRDeviceProxy> >& aDevices)
+VRManagerChild::GetVRDisplays(nsTArray<RefPtr<VRDisplayProxy> >& aDevices)
 {
   aDevices = mDevices;
   return true;
 }
 
 bool
-VRManagerChild::RefreshVRDevicesWithCallback(dom::Navigator* aNavigator)
+VRManagerChild::RefreshVRDisplaysWithCallback(dom::Navigator* aNavigator)
 {
   bool success = SendRefreshDevices();
   if (success) {

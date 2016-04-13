@@ -17,17 +17,17 @@ namespace gfx {
 
 class VRManagerChild;
 
-class VRDeviceProxy
+class VRDisplayProxy
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRDeviceProxy)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRDisplayProxy)
 
-  explicit VRDeviceProxy(const VRDeviceUpdate& aDeviceUpdate);
+  explicit VRDisplayProxy(const VRDisplayUpdate& aDeviceUpdate);
 
-  void UpdateDeviceInfo(const VRDeviceUpdate& aDeviceUpdate);
+  void UpdateDeviceInfo(const VRDisplayUpdate& aDeviceUpdate);
   void UpdateSensorState(const VRHMDSensorState& aSensorState);
 
-  const VRDeviceInfo& GetDeviceInfo() const { return mDeviceInfo; }
+  const VRDisplayInfo& GetDeviceInfo() const { return mDeviceInfo; }
   virtual VRHMDSensorState GetSensorState();
   virtual VRHMDSensorState GetImmediateSensorState();
 
@@ -41,9 +41,9 @@ public:
   nsIScreen* GetScreen() { return mScreen; }
 
 protected:
-  virtual ~VRDeviceProxy();
+  virtual ~VRDisplayProxy();
 
-  VRDeviceInfo mDeviceInfo;
+  VRDisplayInfo mDeviceInfo;
   VRHMDSensorState mSensorState;
 
   nsCOMPtr<nsIScreen> mScreen;

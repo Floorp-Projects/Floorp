@@ -133,7 +133,7 @@ bool
 VRManagerParent::RecvRefreshDevices()
 {
   VRManager* vm = VRManager::Get();
-  vm->RefreshVRDevices();
+  vm->RefreshVRDisplays();
 
   return true;
 }

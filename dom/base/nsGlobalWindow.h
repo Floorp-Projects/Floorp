@@ -122,7 +122,7 @@ class RequestOrUSVString;
 class Selection;
 class SpeechSynthesis;
 class U2F;
-class VRDevice;
+class VRDisplay;
 class WakeLock;
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 class WindowOrientationObserver;
@@ -801,8 +801,8 @@ public:
   void EnableGamepadUpdates();
   void DisableGamepadUpdates();
 
-  // Update the VR devices for this window
-  bool UpdateVRDevices(nsTArray<RefPtr<mozilla::dom::VRDevice>>& aDevices);
+  // Update the VR displays for this window
+  bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
 
 #define EVENT(name_, id_, type_, struct_)                                     \
   mozilla::dom::EventHandlerNonNull* GetOn##name_()                           \
@@ -1908,8 +1908,8 @@ protected:
   // This is the CC generation the last time we called CanSkip.
   uint32_t mCanSkipCCGeneration;
 
-  // The VRDevies for this window
-  nsTArray<RefPtr<mozilla::dom::VRDevice>> mVRDevices;
+  // The VR Displays for this window
+  nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

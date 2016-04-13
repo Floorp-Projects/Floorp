@@ -9,7 +9,7 @@ enum VREye {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDevice.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRFieldOfViewReadOnly {
   readonly attribute double upDegrees;
   readonly attribute double rightDegrees;
@@ -18,7 +18,7 @@ interface VRFieldOfViewReadOnly {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDevice.h",
+ HeaderFile="mozilla/dom/VRDisplay.h",
  Constructor(optional VRFieldOfViewInit fov),
  Constructor(double upDegrees, double rightDegrees, double downDegrees, double leftDegrees)]
 interface VRFieldOfView : VRFieldOfViewReadOnly {
@@ -36,7 +36,7 @@ dictionary VRFieldOfViewInit {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDevice.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRPositionState {
   readonly attribute double timeStamp;
 
@@ -53,7 +53,7 @@ interface VRPositionState {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDevice.h"]
+ HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VREyeParameters {
   /* These values are expected to be static per-device/per-user */
   [Constant, Cached] readonly attribute VRFieldOfView minimumFieldOfView;
@@ -67,10 +67,10 @@ interface VREyeParameters {
 };
 
 [Pref="dom.vr.enabled"]
-interface VRDevice {
+interface VRDisplay {
   /**
    * An identifier for the distinct hardware unit that this
-   * VR Device is a part of.  All VRDevice/Sensors that come
+   * VR Device is a part of.  All VRDisplay/Sensors that come
    * from the same hardware will have the same hardwareId
    */
   [Constant] readonly attribute DOMString hardwareUnitId;
@@ -89,8 +89,8 @@ interface VRDevice {
 };
 
 [Pref="dom.vr.enabled",
- HeaderFile="mozilla/dom/VRDevice.h"]
-interface HMDVRDevice : VRDevice {
+ HeaderFile="mozilla/dom/VRDisplay.h"]
+interface HMDVRDisplay : VRDisplay {
   // Return the current VREyeParameters for the given eye
   VREyeParameters getEyeParameters(VREye whichEye);
 
@@ -104,8 +104,8 @@ interface HMDVRDevice : VRDevice {
 };
 
 [Pref="dom.vr.enabled" ,
- HeaderFile="mozilla/dom/VRDevice.h"]
-interface PositionSensorVRDevice : VRDevice {
+ HeaderFile="mozilla/dom/VRDisplay.h"]
+interface PositionSensorVRDisplay : VRDisplay {
   /*
    * Return a VRPositionState dictionary containing the state of this position sensor
    * for the current frame if within a requestAnimationFrame callback, or for the

@@ -192,7 +192,7 @@
 #include "mozilla/dom/GamepadManager.h"
 #endif
 
-#include "mozilla/dom/VRDevice.h"
+#include "mozilla/dom/VRDisplay.h"
 
 #include "nsRefreshDriver.h"
 #include "Layers.h"
@@ -1891,7 +1891,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 #endif
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDevices)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDisplays)
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
@@ -1967,7 +1967,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 #endif
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDevices)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDisplays)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
@@ -13351,12 +13351,12 @@ nsGlobalWindow::SyncGamepadState()
 #endif // MOZ_GAMEPAD
 
 bool
-nsGlobalWindow::UpdateVRDevices(nsTArray<RefPtr<mozilla::dom::VRDevice>>& aDevices)
+nsGlobalWindow::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDevices)
 {
-  FORWARD_TO_INNER(UpdateVRDevices, (aDevices), false);
+  FORWARD_TO_INNER(UpdateVRDisplays, (aDevices), false);
 
-  VRDevice::UpdateVRDevices(mVRDevices, ToSupports(this));
-  aDevices = mVRDevices;
+  VRDisplay::UpdateVRDisplays(mVRDisplays, ToSupports(this));
+  aDevices = mVRDisplays;
   return true;
 }
 

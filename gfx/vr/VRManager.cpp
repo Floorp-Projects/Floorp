@@ -8,7 +8,7 @@
 #include "VRManagerParent.h"
 #include "gfxVR.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/VRDevice.h"
+#include "mozilla/dom/VRDisplay.h"
 #include "mozilla/unused.h"
 
 #include "gfxPrefs.h"
@@ -71,7 +71,7 @@ VRManager::~VRManager()
 void
 VRManager::Destroy()
 {
-  mVRDevices.Clear();
+  mVRDisplays.Clear();
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Destroy();
   }
@@ -116,15 +116,15 @@ VRManager::RemoveVRManagerParent(VRManagerParent* aVRManagerParent)
 void
 VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 {
-  for (auto iter = mVRDevices.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRHMDInfo* device = iter.UserData();
     device->NotifyVsync(aVsyncTimestamp);
   }
-  DispatchVRDeviceSensorUpdate();
+  DispatchVRDisplaySensorUpdate();
 }
 
 void
-VRManager::RefreshVRDevices()
+VRManager::RefreshVRDisplays()
 {
   nsTArray<RefPtr<gfx::VRHMDInfo> > devices;
 
@@ -134,7 +134,7 @@ VRManager::RefreshVRDevices()
 
   bool deviceInfoChanged = false;
 
-  if (devices.Length() != mVRDevices.Count()) {
+  if (devices.Length() != mVRDisplays.Count()) {
     deviceInfoChanged = true;
   }
 
@@ -151,22 +151,22 @@ VRManager::RefreshVRDevices()
   }
 
   if (deviceInfoChanged) {
-    mVRDevices.Clear();
+    mVRDisplays.Clear();
     for (const auto& device: devices) {
-      mVRDevices.Put(device->GetDeviceInfo().GetDeviceID(), device);
+      mVRDisplays.Put(device->GetDeviceInfo().GetDeviceID(), device);
     }
   }
 
-  DispatchVRDeviceInfoUpdate();
+  DispatchVRDisplayInfoUpdate();
 }
 
 void
-VRManager::DispatchVRDeviceInfoUpdate()
+VRManager::DispatchVRDisplayInfoUpdate()
 {
-  nsTArray<VRDeviceUpdate> update;
-  for (auto iter = mVRDevices.Iter(); !iter.Done(); iter.Next()) {
+  nsTArray<VRDisplayUpdate> update;
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRHMDInfo* device = iter.UserData();
-    update.AppendElement(VRDeviceUpdate(device->GetDeviceInfo(),
+    update.AppendElement(VRDisplayUpdate(device->GetDeviceInfo(),
                                         device->GetSensorState()));
   }
 
@@ -176,11 +176,11 @@ VRManager::DispatchVRDeviceInfoUpdate()
 }
 
 void
-VRManager::DispatchVRDeviceSensorUpdate()
+VRManager::DispatchVRDisplaySensorUpdate()
 {
   nsTArray<VRSensorUpdate> update;
 
-  for (auto iter = mVRDevices.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRHMDInfo* device = iter.UserData();
     update.AppendElement(VRSensorUpdate(device->GetDeviceInfo().GetDeviceID(),
                                         device->GetSensorState()));
@@ -196,7 +196,7 @@ RefPtr<gfx::VRHMDInfo>
 VRManager::GetDevice(const uint32_t& aDeviceID)
 {
   RefPtr<gfx::VRHMDInfo> device;
-  if (mVRDevices.Get(aDeviceID, getter_AddRefs(device))) {
+  if (mVRDisplays.Get(aDeviceID, getter_AddRefs(device))) {
     return device;
   }
   return nullptr;
