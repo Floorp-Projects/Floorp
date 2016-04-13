@@ -4,8 +4,19 @@ function testClasses() {
     function methodFun(id, kind, generator, args, body = []) {
         assertEq(generator && kind === "method", generator);
         assertEq(typeof id === 'string' || id === null, true);
-        let idN = typeof id === 'string' ? ident(id) : null;
-        let methodName = kind !== "method" ? null : idN;
+        let methodName;
+        switch (kind) {
+          case "method":
+            methodName = typeof id === 'string' ? ident(id) : null;
+            break;
+          case "get":
+          case "set":
+            methodName = ident(`${kind} ${typeof id === 'string' ? id : ""}`);
+            break;
+          default:
+            methodName = null;
+            break;
+        }
         return generator
                ? genFunExpr("es6", methodName, args.map(ident), blockStmt(body))
                : funExpr(methodName, args.map(ident), blockStmt(body));
