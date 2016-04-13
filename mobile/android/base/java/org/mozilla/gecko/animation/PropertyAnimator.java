@@ -35,7 +35,6 @@ public class PropertyAnimator implements Runnable {
 
     private class ElementHolder {
         View view;
-        AnimatorProxy proxy;
         Property property;
         float from;
         float to;
@@ -76,7 +75,6 @@ public class PropertyAnimator implements Runnable {
         ElementHolder element = new ElementHolder();
 
         element.view = view;
-        element.proxy = AnimatorProxy.create(view);
         element.property = property;
         element.to = to;
 
@@ -128,19 +126,19 @@ public class PropertyAnimator implements Runnable {
         // Fix the from value based on current position and property
         for (ElementHolder element : mElementsList) {
             if (element.property == Property.ALPHA)
-                element.from = element.proxy.getAlpha();
+                element.from = ViewHelper.getAlpha(element.view);
             else if (element.property == Property.TRANSLATION_Y)
-                element.from = element.proxy.getTranslationY();
+                element.from = ViewHelper.getTranslationY(element.view);
             else if (element.property == Property.TRANSLATION_X)
-                element.from = element.proxy.getTranslationX();
+                element.from = ViewHelper.getTranslationX(element.view);
             else if (element.property == Property.SCROLL_Y)
-                element.from = element.proxy.getScrollY();
+                element.from = ViewHelper.getScrollY(element.view);
             else if (element.property == Property.SCROLL_X)
-                element.from = element.proxy.getScrollX();
+                element.from = ViewHelper.getScrollX(element.view);
             else if (element.property == Property.WIDTH)
-                element.from = element.proxy.getWidth();
+                element.from = ViewHelper.getWidth(element.view);
             else if (element.property == Property.HEIGHT)
-                element.from = element.proxy.getHeight();
+                element.from = ViewHelper.getHeight(element.view);
 
             ViewCompat.setHasTransientState(element.view, true);
 
@@ -254,19 +252,19 @@ public class PropertyAnimator implements Runnable {
             return;
 
         if (element.property == Property.ALPHA)
-            element.proxy.setAlpha(delta);
+            ViewHelper.setAlpha(element.view, delta);
         else if (element.property == Property.TRANSLATION_Y)
-            element.proxy.setTranslationY(delta);
+            ViewHelper.setTranslationY(element.view, delta);
         else if (element.property == Property.TRANSLATION_X)
-            element.proxy.setTranslationX(delta);
+            ViewHelper.setTranslationX(element.view, delta);
         else if (element.property == Property.SCROLL_Y)
-            element.proxy.scrollTo(element.proxy.getScrollX(), (int) delta);
+            ViewHelper.scrollTo(element.view, ViewHelper.getScrollX(element.view), (int) delta);
         else if (element.property == Property.SCROLL_X)
-            element.proxy.scrollTo((int) delta, element.proxy.getScrollY());
+            ViewHelper.scrollTo(element.view, (int) delta, ViewHelper.getScrollY(element.view));
         else if (element.property == Property.WIDTH)
-            element.proxy.setWidth((int) delta);
+            ViewHelper.setWidth(element.view, (int) delta);
         else if (element.property == Property.HEIGHT)
-            element.proxy.setHeight((int) delta);
+            ViewHelper.setHeight(element.view, (int) delta);
     }
 
     private static abstract class FramePoster {
