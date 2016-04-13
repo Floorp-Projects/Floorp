@@ -17,21 +17,30 @@ namespace mozilla
 
 sandbox::BrokerServices *SandboxBroker::sBrokerService = nullptr;
 
-SandboxBroker::SandboxBroker()
+/* static */
+bool
+SandboxBroker::Initialize()
 {
-  // XXX: This is not thread-safe! Two threads could simultaneously try
-  // to set `sBrokerService`
+  sBrokerService = sandbox::SandboxFactory::GetBrokerServices();
   if (!sBrokerService) {
-    sBrokerService = sandbox::SandboxFactory::GetBrokerServices();
-    if (sBrokerService) {
-      sandbox::ResultCode result = sBrokerService->Init();
-      if (result != sandbox::SBOX_ALL_OK) {
-        sBrokerService = nullptr;
-      }
-    }
+    return false;
   }
 
-  mPolicy = sBrokerService->CreatePolicy();
+  if (sBrokerService->Init() != sandbox::SBOX_ALL_OK) {
+    sBrokerService = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+SandboxBroker::SandboxBroker()
+{
+  if (sBrokerService) {
+    mPolicy = sBrokerService->CreatePolicy();
+  } else {
+    mPolicy = nullptr;
+  }
 }
 
 bool
