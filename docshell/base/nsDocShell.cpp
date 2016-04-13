@@ -12048,9 +12048,20 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       if (loadInfo) {
         // For now keep storing just the principal in the SHEntry.
         if (loadInfo->GetLoadingSandboxed()) {
-          owner = nsNullPrincipal::CreateWithInheritedAttributes(
-            loadInfo->LoadingPrincipal());
-          NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+          if (loadInfo->LoadingPrincipal()) {
+            owner = nsNullPrincipal::CreateWithInheritedAttributes(
+              loadInfo->LoadingPrincipal());
+            NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+          } else {
+            // get the OriginAttributes
+            NeckoOriginAttributes nAttrs;
+            loadInfo->GetOriginAttributes(&nAttrs);
+            PrincipalOriginAttributes pAttrs;
+            pAttrs.InheritFromNecko(nAttrs);
+
+            owner = nsNullPrincipal::Create(pAttrs);
+            NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+          }
         } else if (loadInfo->GetForceInheritPrincipal()) {
           owner = loadInfo->TriggeringPrincipal();
         }

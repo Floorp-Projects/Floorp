@@ -344,9 +344,19 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
     if (loadInfo) {
         if (loadInfo->GetLoadingSandboxed()) {
-            RefPtr<nsNullPrincipal> prin =
-              nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
-            NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
+            RefPtr<nsNullPrincipal> prin;
+            if (loadInfo->LoadingPrincipal()) {
+              prin =
+                nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
+              NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
+            } else {
+              NeckoOriginAttributes nAttrs;
+              loadInfo->GetOriginAttributes(&nAttrs);
+              PrincipalOriginAttributes pAttrs;
+              pAttrs.InheritFromNecko(nAttrs);
+              prin = nsNullPrincipal::Create(pAttrs);
+              NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
+            }
             prin.forget(aPrincipal);
             return NS_OK;
         }
