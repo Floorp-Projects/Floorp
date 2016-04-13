@@ -135,10 +135,10 @@ public class PluginLayer extends Layer {
         private void clampToMaxSize() {
             if (width > mMaxDimension || height > mMaxDimension) {
                 if (width > height) {
-                    height = Math.round(((float)height/ width) * mMaxDimension);
+                    height = Math.round(((float) height / width) * mMaxDimension);
                     width = mMaxDimension;
                 } else {
-                    width = Math.round(((float)width/ height) * mMaxDimension);
+                    width = Math.round(((float) width / height) * mMaxDimension);
                     height = mMaxDimension;
                 }
             }

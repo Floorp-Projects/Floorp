@@ -389,7 +389,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private void setSecurityStateIcon(int resource, int factor) {
         final Drawable stateIcon = ContextCompat.getDrawable(mContext, resource);
-        stateIcon.setBounds(0, 0, stateIcon.getIntrinsicWidth()/factor, stateIcon.getIntrinsicHeight()/factor);
+        stateIcon.setBounds(0, 0, stateIcon.getIntrinsicWidth() / factor, stateIcon.getIntrinsicHeight() / factor);
         mSecurityState.setCompoundDrawables(stateIcon, null, null, null);
         mSecurityState.setCompoundDrawablePadding((int) mResources.getDimension(R.dimen.doorhanger_drawable_padding));
     }
