@@ -261,6 +261,7 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
 };
 
 const MSG_JAR_FLUSH = "AddonJarFlush";
+const MSG_MESSAGE_MANAGER_CACHES_FLUSH = "AddonMessageManagerCachesFlush";
 
 var gGlobalScope = this;
 
@@ -300,7 +301,7 @@ function loadLazyObjects() {
     isUsableAddon,
     recordAddonTelemetry,
     applyBlocklistChanges,
-    flushStartupCache,
+    flushChromeCaches,
     canRunInSafeMode,
   }
 
@@ -1505,13 +1506,16 @@ function buildJarURI(aJarfile, aPath) {
  */
 function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
-  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageBroadcaster)
-    .broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+  Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
-function flushStartupCache() {
+function flushChromeCaches() {
   // Init this, so it will get the notification.
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+  // Flush message manager cached scripts
+  Services.obs.notifyObservers(null, "message-manager-flush-caches", null);
+  // Also dispatch this event to child processes
+  Services.mm.broadcastAsyncMessage(MSG_MESSAGE_MANAGER_CACHES_FLUSH, null);
 }
 
 /**
@@ -2650,7 +2654,7 @@ this.XPIProvider = {
       }
 
       if (flushCaches) {
-        flushStartupCache();
+        Services.obs.notifyObservers(null, "startupcache-invalidate", null);
         // UI displayed early in startup (like the compatibility UI) may have
         // caused us to cache parts of the skin or locale in memory. These must
         // be flushed to allow extension provided skins and locales to take full
@@ -3335,7 +3339,7 @@ this.XPIProvider = {
                                        existingAddon, "uninstall", uninstallReason,
                                        { newVersion: newVersion });
               this.unloadBootstrapScope(existingAddonID);
-              flushStartupCache();
+              flushChromeCaches();
             }
           }
           catch (e) {
@@ -3878,7 +3882,7 @@ this.XPIProvider = {
         this.callBootstrapMethod(oldAddon, existingAddon,
                                  "uninstall", uninstallReason, { newVersion });
         this.unloadBootstrapScope(existingAddonID);
-        flushStartupCache();
+        flushChromeCaches();
       }
     }
 
@@ -4993,7 +4997,7 @@ this.XPIProvider = {
         this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "uninstall",
                                  BOOTSTRAP_REASONS.ADDON_UNINSTALL);
         this.unloadBootstrapScope(aAddon.id);
-        flushStartupCache();
+        flushChromeCaches();
       }
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
@@ -6100,7 +6104,7 @@ AddonInstall.prototype = {
                                             "uninstall", reason,
                                             { newVersion: this.addon.version });
             XPIProvider.unloadBootstrapScope(this.existingAddon.id);
-            flushStartupCache();
+            flushChromeCaches();
           }
 
           if (!isUpgrade && this.existingAddon.active) {
@@ -7309,7 +7313,7 @@ AddonWrapper.prototype = {
       }
 
       this.userDisabled = true;
-      flushStartupCache();
+      flushChromeCaches();
       this.userDisabled = false;
       resolve();
     });
