@@ -27,6 +27,15 @@ namespace mozilla {
 namespace layers {
 
 /**
+ * Helper struct to hold a couple of fields that can be updated as part of
+ * an empty transaction.
+ */
+struct ScrollUpdateInfo {
+  uint32_t mScrollGeneration;
+  CSSPoint mScrollOffset;
+};
+
+/**
  * The viewport and displayport metrics for the painted frame at the
  * time of a layer-tree transaction.  These metrics are especially
  * useful for shadow layers, because the metrics values are updated
@@ -44,6 +53,9 @@ public:
   enum ScrollOffsetUpdateType : uint8_t {
     eNone,          // The default; the scroll offset was not updated
     eMainThread,    // The scroll offset was updated by the main thread.
+    ePending,       // The scroll offset was updated on the main thread, but not
+                    // painted, so the layer texture data is still at the old
+                    // offset.
 
     eSentinel       // For IPC use only
   };
@@ -241,6 +253,13 @@ public:
     mDoSmoothScroll = aOther.mDoSmoothScroll;
   }
 
+  void UpdatePendingScrollInfo(const ScrollUpdateInfo& aInfo)
+  {
+    mScrollOffset = aInfo.mScrollOffset;
+    mScrollGeneration = aInfo.mScrollGeneration;
+    mScrollUpdateType = ePending;
+  }
+
   void UpdateScrollInfo(uint32_t aScrollGeneration, const CSSPoint& aScrollOffset)
   {
     mScrollOffset = aScrollOffset;
@@ -378,6 +397,11 @@ public:
   {
     mDoSmoothScroll = true;
     mScrollGeneration = aScrollGeneration;
+  }
+
+  ScrollOffsetUpdateType GetScrollUpdateType() const
+  {
+    return mScrollUpdateType;
   }
 
   bool GetScrollOffsetUpdated() const
