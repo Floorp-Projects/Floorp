@@ -326,7 +326,7 @@ public class HomePanelsManager implements GeckoEventListener {
         pm.requestPanelsById(ids, new RequestCallback() {
             @Override
             public void onComplete(List<PanelInfo> panelInfos) {
-                synchronized(panelRequestLock) {
+                synchronized (panelRequestLock) {
                     latestPanelInfos.addAll(panelInfos);
                     Log.d(LOGTAG, "executeRefresh: fetched panel infos: " + panelInfos.size());
 
@@ -336,7 +336,7 @@ public class HomePanelsManager implements GeckoEventListener {
         });
 
         try {
-            synchronized(panelRequestLock) {
+            synchronized (panelRequestLock) {
                 panelRequestLock.wait(PANEL_INFO_TIMEOUT_MSEC);
 
                 Log.d(LOGTAG, "executeRefresh: done fetching panel infos");

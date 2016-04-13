@@ -763,25 +763,25 @@ public class Tab {
     }
 
     public void addPluginLayer(Object surfaceOrView, Layer layer) {
-        synchronized(mPluginLayers) {
+        synchronized (mPluginLayers) {
             mPluginLayers.put(surfaceOrView, layer);
         }
     }
 
     public Layer getPluginLayer(Object surfaceOrView) {
-        synchronized(mPluginLayers) {
+        synchronized (mPluginLayers) {
             return mPluginLayers.get(surfaceOrView);
         }
     }
 
     public Collection<Layer> getPluginLayers() {
-        synchronized(mPluginLayers) {
+        synchronized (mPluginLayers) {
             return new ArrayList<Layer>(mPluginLayers.values());
         }
     }
 
     public Layer removePluginLayer(Object surfaceOrView) {
-        synchronized(mPluginLayers) {
+        synchronized (mPluginLayers) {
             return mPluginLayers.remove(surfaceOrView);
         }
     }

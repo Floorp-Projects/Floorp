@@ -1492,7 +1492,7 @@ public class GeckoAppShell
         List<ResolveInfo> plugins = pm.queryIntentServices(new Intent(PLUGIN_ACTION),
                 PackageManager.GET_SERVICES | PackageManager.GET_META_DATA);
 
-        synchronized(mPackageInfoCache) {
+        synchronized (mPackageInfoCache) {
 
             // clear the list of existing packageInfo objects
             mPackageInfoCache.clear();
@@ -1619,7 +1619,7 @@ public class GeckoAppShell
             return null;
         }
 
-        synchronized(mPackageInfoCache) {
+        synchronized (mPackageInfoCache) {
             for (PackageInfo pkgInfo : mPackageInfoCache) {
                 if (pluginLib.contains(pkgInfo.packageName)) {
                     return pkgInfo.packageName;
