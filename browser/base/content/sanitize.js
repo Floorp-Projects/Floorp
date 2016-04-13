@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
@@ -58,32 +56,35 @@ Sanitizer.prototype = {
    * occurs, a message is reported to the console and all other items are still
    * cleared before the promise is finally rejected.
    *
-   * If the consumer specifies the (optional) array parameter, only those
-   * items get cleared (irrespective of the preference settings)
+   * @param [optional] itemsToClear
+   *        Array of items to be cleared. if specified only those
+   *        items get cleared, irrespectively of the preference settings.
+   * @param [optional] options
+   *        Object whose properties are options for this sanitization.
+   *        TODO (bug 1167238) document options here.
    */
-  sanitize: Task.async(function*(aItemsToClear = null) {
-    let progress = {};
-    let promise = this._sanitize(aItemsToClear, progress);
+  sanitize: Task.async(function*(itemsToClear = null, options = {}) {
+    let progress = options.progress || {};
+    let promise = this._sanitize(itemsToClear, progress);
 
-    //
     // Depending on preferences, the sanitizer may perform asynchronous
     // work before it starts cleaning up the Places database (e.g. closing
     // windows). We need to make sure that the connection to that database
     // hasn't been closed by the time we use it.
-    //
-    let shutdownClient = Cc["@mozilla.org/browser/nav-history-service;1"]
-       .getService(Ci.nsPIPlacesDatabase)
-       .shutdownClient
-       .jsclient;
-
-    shutdownClient.addBlocker("sanitize.js: Sanitize",
-      promise,
-      {
-        fetchState: () => {
-          return { progress };
+    // Though, if this is a sanitize on shutdown, we already have a blocker.
+    if (!progress.isShutdown) {
+      let shutdownClient = Cc["@mozilla.org/browser/nav-history-service;1"]
+                             .getService(Ci.nsPIPlacesDatabase)
+                             .shutdownClient
+                             .jsclient;
+      shutdownClient.addBlocker("sanitize.js: Sanitize",
+        promise,
+        {
+          fetchState: () => ({ progress })
         }
-      }
-    );
+      );
+    }
+
     try {
       yield promise;
     } finally {
@@ -833,25 +834,23 @@ Sanitizer.onStartup = Task.async(function*() {
     Services.prefs.savePrefFile(null);
   }
 
-  // Make sure that we are triggered during shutdown, at the right time,
-  // and only once.
-  let placesClient = Cc["@mozilla.org/browser/nav-history-service;1"]
-                       .getService(Ci.nsPIPlacesDatabase)
-                       .shutdownClient
-                       .jsclient;
-
-  let deferredSanitization = PromiseUtils.defer();
-  let sanitizationInProgress = false;
-  let doSanitize = function() {
-    if (!sanitizationInProgress) {
-      sanitizationInProgress = true;
-      Sanitizer.onShutdown().catch(er => {Promise.reject(er) /* Do not return rejected promise */;}).then(() =>
-        deferredSanitization.resolve()
-      );
+  // Make sure that we are triggered during shutdown.
+  let shutdownClient = Cc["@mozilla.org/browser/nav-history-service;1"]
+                         .getService(Ci.nsPIPlacesDatabase)
+                         .shutdownClient
+                         .jsclient;
+  // We need to pass to sanitize() (through sanitizeOnShutdown) a state object
+  // that tracks the status of the shutdown blocker. This `progress` object
+  // will be updated during sanitization and reported with the crash in case of
+  // a shutdown timeout.
+  // We use the `options` argument to pass the `progress` object to sanitize().
+  let progress = { isShutdown: true };
+  shutdownClient.addBlocker("sanitize.js: Sanitize on shutdown",
+    () => sanitizeOnShutdown({ progress }),
+    {
+      fetchState: () => ({ progress })
     }
-    return deferredSanitization.promise;
-  }
-  placesClient.addBlocker("sanitize.js: Sanitize on shutdown", doSanitize);
+  );
 
   // Check if Firefox crashed during a sanitization.
   let lastInterruptedSanitization = Preferences.get(Sanitizer.PREF_SANITIZE_IN_PROGRESS, "");
@@ -864,18 +863,18 @@ Sanitizer.onStartup = Task.async(function*() {
     // Otherwise, could be we were supposed to sanitize on shutdown but we
     // didn't have a chance, due to an earlier crash.
     // In such a case, just redo a shutdown sanitize now, during startup.
-    yield Sanitizer.onShutdown();
+    yield sanitizeOnShutdown();
   }
 });
 
-Sanitizer.onShutdown = Task.async(function*() {
+var sanitizeOnShutdown = Task.async(function*(options = {}) {
   if (!Preferences.get(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN)) {
     return;
   }
   // Need to sanitize upon shutdown
   let s = new Sanitizer();
   s.prefDomain = "privacy.clearOnShutdown.";
-  yield s.sanitize();
+  yield s.sanitize(null, options);
   // We didn't crash during shutdown sanitization, so annotate it to avoid
   // sanitizing again on startup.
   Preferences.set(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN, true);
