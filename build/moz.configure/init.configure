@@ -254,65 +254,10 @@ def early_options():
 
 early_options = early_options()
 
-# At the moment, moz.configure doesn't have complete knowledge of all the
-# supported options in mozconfig because of all that is still in old.configure.
-# But we don't know all the options that moz.configure knows about until all
-# moz.configure files are executed, so we keep a manual list here, that is
-# checked in old.configure (we'll assume it's the last moz.configure file
-# processed). This is tedious but necessary for now.
-@depends('--help')
-def wanted_mozconfig_variables(help):
-     return set([
-         'AUTOCONF',
-         'AWK',
-         'CC',
-         'CCACHE',
-         'CXX',
-         'COMPILER_WRAPPER',
-         'DISABLE_EXPORT_JS',
-         'DISABLE_SHARED_JS',
-         'DOXYGEN',
-         'DSYMUTIL',
-         'EXTERNAL_SOURCE_DIR',
-         'GENISOIMAGE',
-         'GRADLE',
-         'GRADLE_FLAGS',
-         'GRADLE_MAVEN_REPOSITORY',
-         'HOST_CC',
-         'HOST_CXX',
-         'JS_STANDALONE',
-         'L10NBASEDIR',
-         'MOZILLABUILD',
-         'MOZ_ARTIFACT_BUILDS',
-         'MOZ_BUILD_APP',
-         'MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE',
-         'MOZ_CALLGRIND',
-         'MOZ_DMD',
-         'MOZ_FMP4',
-         'MOZ_INSTRUMENT_EVENT_LOOP',
-         'MOZ_INSTRUMENTS',
-         'MOZ_JPROF',
-         'MOZ_PROFILING',
-         'MOZ_USE_SYSTRACE',
-         'MOZ_VTUNE',
-         'MOZTTDIR',
-         'PERL',
-         'RPMBUILD',
-         'TAR',
-         'TOOLCHAIN_PREFIX',
-         'UNZIP',
-         'USE_FC_FREETYPE',
-         'WITHOUT_X',
-         'XARGS',
-         'YASM',
-         'ZIP',
-     ])
-
-
-@depends(mozconfig, wanted_mozconfig_variables, '--help')
+@depends(mozconfig, '--help')
 # This gives access to the sandbox. Don't copy this blindly.
 @imports('__sandbox__')
-def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
+def mozconfig_options(mozconfig, help):
     if mozconfig['path']:
         helper = __sandbox__._helper
         log.info('Adding configure options from %s' % mozconfig['path'])
@@ -324,8 +269,7 @@ def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
             helper.add(arg, origin='mozconfig', args=helper._args)
 
         def add(key, value):
-            # See comment above wanted_mozconfig_variables
-            if key in wanted_mozconfig_variables:
+            if key.isupper():
                 arg = '%s=%s' % (key, value)
                 log.info('  %s' % arg)
                 helper.add(arg, origin='mozconfig', args=helper._args)
@@ -335,7 +279,9 @@ def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
         for key, (_, value) in mozconfig['env']['modified'].iteritems():
             add(key, value)
         for key, value in mozconfig['vars']['added'].iteritems():
-            add(key, value)
+            # mozconfig_loader adds _IS_SET variables that are irrelevant
+            if not key.endswith('_IS_SET'):
+                add(key, value)
         for key, (_, value) in mozconfig['vars']['modified'].iteritems():
             add(key, value)
 
