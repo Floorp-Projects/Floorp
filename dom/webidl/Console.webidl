@@ -23,7 +23,6 @@ interface Console {
   void time(optional any time);
   void timeEnd(optional any time);
   void timeStamp(optional any data);
-  void clear(any... data);
 
   void profile(any... data);
   void profileEnd(any... data);
@@ -32,6 +31,8 @@ interface Console {
   void count(any... data);
 
   // No-op methods for compatibility with other browsers.
+  [BinaryName="noopMethod"]
+  void clear();
   [BinaryName="noopMethod"]
   void markTimeline();
   [BinaryName="noopMethod"]
