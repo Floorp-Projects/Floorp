@@ -89,7 +89,10 @@ public class SavedReaderViewHelper {
      * Must not be run on the UI thread due to file access.
      */
     public synchronized void loadItems() {
-        ThreadUtils.assertNotOnUiThread();
+        // TODO bug 1264489
+        // This is a band aid fix for Bug 1264134. We need to figure out the root cause and reenable this
+        // assertion.
+        // ThreadUtils.assertNotOnUiThread();
 
         if (mItems != null) {
             return;
