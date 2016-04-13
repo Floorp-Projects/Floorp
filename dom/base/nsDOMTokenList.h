@@ -63,10 +63,13 @@ public:
   void Remove(const nsAString& aToken, mozilla::ErrorResult& aError);
   void Remove(const nsTArray<nsString>& aTokens,
               mozilla::ErrorResult& aError);
+  void Replace(const nsAString& aToken,
+               const nsAString& aNewToken,
+               mozilla::ErrorResult& aError);
   bool Toggle(const nsAString& aToken,
               const mozilla::dom::Optional<bool>& force,
               mozilla::ErrorResult& aError);
-  
+
   void GetValue(nsAString& aResult) { Stringify(aResult); }
   void SetValue(const nsAString& aValue, mozilla::ErrorResult& rv);
   void Stringify(nsAString& aResult);
