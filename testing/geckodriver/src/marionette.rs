@@ -107,7 +107,7 @@ impl ToJson for GeckoContext {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct GeckoContextParameters {
+pub struct GeckoContextParameters {
     context: GeckoContext
 }
 
