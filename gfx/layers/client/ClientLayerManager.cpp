@@ -419,11 +419,11 @@ ClientLayerManager::DidComposite(uint64_t aTransactionId,
   if (aTransactionId) {
     nsIWidgetListener *listener = mWidget->GetWidgetListener();
     if (listener) {
-      listener->DidCompositeWindow(aCompositeStart, aCompositeEnd);
+      listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
     }
     listener = mWidget->GetAttachedWidgetListener();
     if (listener) {
-      listener->DidCompositeWindow(aCompositeStart, aCompositeEnd);
+      listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
     }
     mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
   }
