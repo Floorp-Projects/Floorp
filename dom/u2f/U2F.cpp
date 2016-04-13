@@ -96,12 +96,14 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
 
   if (!EnsureNSSInitializedChromeOrContent()) {
     MOZ_LOG(gU2FLog, LogLevel::Debug, ("Failed to get NSS context for U2F"));
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   if (XRE_IsParentProcess()) {
     mNSSToken = do_GetService(NS_NSSU2FTOKEN_CONTRACTID);
     if (NS_WARN_IF(!mNSSToken)) {
+      aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
   }
@@ -113,55 +115,60 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
 }
 
 nsresult
-U2F::NSSTokenIsCompatible(const nsString& versionString, bool* isCompatible)
+U2F::NSSTokenIsCompatible(const nsString& aVersionString, bool* aIsCompatible)
 {
+  MOZ_ASSERT(aIsCompatible);
+
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(mNSSToken);
-    return mNSSToken->IsCompatibleVersion(versionString, isCompatible);
+    return mNSSToken->IsCompatibleVersion(aVersionString, aIsCompatible);
   }
 
   ContentChild* cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  if (!cc->SendNSSU2FTokenIsCompatibleVersion(versionString, isCompatible)) {
+  if (!cc->SendNSSU2FTokenIsCompatibleVersion(aVersionString, aIsCompatible)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
 nsresult
-U2F::NSSTokenIsRegistered(CryptoBuffer& keyHandle, bool* isRegistered)
+U2F::NSSTokenIsRegistered(CryptoBuffer& aKeyHandle, bool* aIsRegistered)
 {
+  MOZ_ASSERT(aIsRegistered);
+
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(mNSSToken);
-    return mNSSToken->IsRegistered(keyHandle.Elements(), keyHandle.Length(),
-                                   isRegistered);
+    return mNSSToken->IsRegistered(aKeyHandle.Elements(), aKeyHandle.Length(),
+                                   aIsRegistered);
   }
 
   ContentChild* cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  if (!cc->SendNSSU2FTokenIsRegistered(keyHandle, isRegistered)) {
+  if (!cc->SendNSSU2FTokenIsRegistered(aKeyHandle, aIsRegistered)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
 nsresult
-U2F::NSSTokenRegister(CryptoBuffer& application, CryptoBuffer& challenge,
-                      CryptoBuffer& registrationData)
+U2F::NSSTokenRegister(CryptoBuffer& aApplication, CryptoBuffer& aChallenge,
+                      CryptoBuffer& aRegistrationData)
 {
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(mNSSToken);
     uint8_t* buffer;
     uint32_t bufferlen;
     nsresult rv;
-    rv = mNSSToken->Register(application.Elements(), application.Length(),
-                             challenge.Elements(), challenge.Length(),
+    rv = mNSSToken->Register(aApplication.Elements(), aApplication.Length(),
+                             aChallenge.Elements(), aChallenge.Length(),
                              &buffer, &bufferlen);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    registrationData.Assign(buffer, bufferlen);
+    MOZ_ASSERT(buffer);
+    aRegistrationData.Assign(buffer, bufferlen);
     free(buffer);
     return NS_OK;
   }
@@ -169,32 +176,33 @@ U2F::NSSTokenRegister(CryptoBuffer& application, CryptoBuffer& challenge,
   nsTArray<uint8_t> registrationBuffer;
   ContentChild* cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  if (!cc->SendNSSU2FTokenRegister(application, challenge,
+  if (!cc->SendNSSU2FTokenRegister(aApplication, aChallenge,
                                    &registrationBuffer)) {
     return NS_ERROR_FAILURE;
   }
 
-  registrationData.Assign(registrationBuffer);
+  aRegistrationData.Assign(registrationBuffer);
   return NS_OK;
 }
 
 nsresult
-U2F::NSSTokenSign(CryptoBuffer& keyHandle, CryptoBuffer& application,
-                  CryptoBuffer& challenge, CryptoBuffer& signatureData)
+U2F::NSSTokenSign(CryptoBuffer& aKeyHandle, CryptoBuffer& aApplication,
+                  CryptoBuffer& aChallenge, CryptoBuffer& aSignatureData)
 {
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(mNSSToken);
     uint8_t* buffer;
     uint32_t bufferlen;
-    nsresult rv = mNSSToken->Sign(application.Elements(), application.Length(),
-                                  challenge.Elements(), challenge.Length(),
-                                  keyHandle.Elements(), keyHandle.Length(),
+    nsresult rv = mNSSToken->Sign(aApplication.Elements(), aApplication.Length(),
+                                  aChallenge.Elements(), aChallenge.Length(),
+                                  aKeyHandle.Elements(), aKeyHandle.Length(),
                                   &buffer, &bufferlen);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    signatureData.Assign(buffer, bufferlen);
+    MOZ_ASSERT(buffer);
+    aSignatureData.Assign(buffer, bufferlen);
     free(buffer);
     return NS_OK;
   }
@@ -202,12 +210,12 @@ U2F::NSSTokenSign(CryptoBuffer& keyHandle, CryptoBuffer& application,
   nsTArray<uint8_t> signatureBuffer;
   ContentChild* cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  if (!cc->SendNSSU2FTokenSign(application, challenge, keyHandle,
+  if (!cc->SendNSSU2FTokenSign(aApplication, aChallenge, aKeyHandle,
                                &signatureBuffer)) {
     return NS_ERROR_FAILURE;
   }
 
-  signatureData.Assign(signatureBuffer);
+  aSignatureData.Assign(signatureBuffer);
   return NS_OK;
 }
 
@@ -420,7 +428,7 @@ U2F::Register(const nsAString& aAppId,
 
       if (isCompatible && isRegistered) {
         SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
-                                                  ErrorCode::DEVICE_INELIGIBLE);
+                                                         ErrorCode::DEVICE_INELIGIBLE);
         return;
       }
     }
