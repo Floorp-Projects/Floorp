@@ -16,10 +16,10 @@ import android.view.View;
 public interface PanZoomController {
     // The distance the user has to pan before we recognize it as such (e.g. to avoid 1-pixel pans
     // between the touch-down and touch-up of a click). In units of density-independent pixels.
-    public static final float PAN_THRESHOLD = 1/16f * GeckoAppShell.getDpi();
+    public static final float PAN_THRESHOLD = 1 / 16f * GeckoAppShell.getDpi();
 
     // Threshold for sending touch move events to content
-    public static final float CLICK_THRESHOLD = 1/50f * GeckoAppShell.getDpi();
+    public static final float CLICK_THRESHOLD = 1 / 50f * GeckoAppShell.getDpi();
 
     static class Factory {
         static PanZoomController create(PanZoomTarget target, View view, EventDispatcher dispatcher) {

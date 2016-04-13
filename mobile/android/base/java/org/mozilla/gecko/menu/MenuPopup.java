@@ -72,7 +72,7 @@ public class MenuPopup extends PopupWindow {
 
         // Attempt to align the center of the popup with the center of the anchor. If the anchor is
         // near the edge of the screen, the popup will just align with the edge of the screen.
-        final int xOffset = anchor.getWidth()/2 - mPopupWidth/2;
+        final int xOffset = anchor.getWidth() / 2 - mPopupWidth / 2;
         showAsDropDown(anchor, xOffset, -mYOffset);
     }
 }

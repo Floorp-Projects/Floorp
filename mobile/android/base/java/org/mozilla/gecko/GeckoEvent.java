@@ -322,11 +322,11 @@ public class GeckoEvent {
             // reverse which radius is major and minor
             if (mOrientations[index] < 0) {
                 mOrientations[index] += 90;
-                mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
-                                               (int)event.getToolMinor(eventIndex)/2);
+                mPointRadii[index] = new Point((int) event.getToolMajor(eventIndex) / 2,
+                                               (int) event.getToolMinor(eventIndex) / 2);
             } else {
-                mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
-                                               (int)event.getToolMajor(eventIndex)/2);
+                mPointRadii[index] = new Point((int) event.getToolMinor(eventIndex) / 2,
+                                               (int) event.getToolMajor(eventIndex) / 2);
             }
 
             if (!keepInViewCoordinates) {
