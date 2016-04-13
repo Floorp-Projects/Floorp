@@ -14,8 +14,24 @@
     <ol>
       <li>First item
         <details open>
-          <summary>Summary</summary>
+          <summary>Summary
+            <ul>
+              <li>First unordered item in summary</li>
+              <li>Second unordered item in summary</li>
+            </ul>
+            <div>
+              <ol>
+                <li>First item in summary</li>
+                <li>Second item in summary</li>
+              </ol>
+            </div>
+          </summary>
           <p>This is the details.</p>
+          <!-- Although html spec does not allow <li> inside <details>, we
+               deliberately omit the <ol> to test the renumbering isn't affected
+               by the summary. -->
+          <li>First item in details</li>
+          <li>Second item in details</li>
         </details>
       </li>
       <li>Second item</li>
