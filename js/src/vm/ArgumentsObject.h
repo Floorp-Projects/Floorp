@@ -329,6 +329,8 @@ class ArgumentsObject : public NativeObject
 
 class MappedArgumentsObject : public ArgumentsObject
 {
+    static const ClassOps classOps_;
+
   public:
     static const Class class_;
 
@@ -352,6 +354,8 @@ class MappedArgumentsObject : public ArgumentsObject
 
 class UnmappedArgumentsObject : public ArgumentsObject
 {
+    static const ClassOps classOps_;
+
   public:
     static const Class class_;
 

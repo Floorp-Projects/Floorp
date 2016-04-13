@@ -79,11 +79,12 @@ DocumentRendererChild::RenderDocument(nsPIDOMWindowOuter* window,
                                          IntSize(renderSize.width, renderSize.height),
                                          4 * renderSize.width,
                                          SurfaceFormat::B8G8R8A8);
-    if (!dt) {
+    if (!dt || !dt->IsValid()) {
         gfxWarning() << "DocumentRendererChild::RenderDocument failed to Factory::CreateDrawTargetForData";
         return false;
     }
-    RefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+    MOZ_ASSERT(ctx); // already checked the draw target above
     ctx->SetMatrix(mozilla::gfx::ThebesMatrix(transform));
 
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();

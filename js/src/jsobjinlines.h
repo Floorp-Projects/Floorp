@@ -78,8 +78,8 @@ JSObject::finalize(js::FreeOp* fop)
 #endif
 
     const js::Class* clasp = getClass();
-    if (clasp->finalize)
-        clasp->finalize(fop, this);
+    if (clasp->hasFinalize())
+        clasp->doFinalize(fop, this);
 
     if (!clasp->isNative())
         return;
@@ -321,7 +321,7 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
                   js::gc::GetGCKindSlots(kind, group->clasp()) == shape->numFixedSlots());
     MOZ_ASSERT_IF(group->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE,
                   IsBackgroundFinalized(kind));
-    MOZ_ASSERT_IF(group->clasp()->finalize,
+    MOZ_ASSERT_IF(group->clasp()->hasFinalize(),
                   heap == js::gc::TenuredHeap ||
                   (group->clasp()->flags & JSCLASS_SKIP_NURSERY_FINALIZE));
     MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),

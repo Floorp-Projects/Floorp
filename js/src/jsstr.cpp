@@ -430,10 +430,7 @@ str_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
     return true;
 }
 
-const Class StringObject::class_ = {
-    js_String_str,
-    JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+static const ClassOps StringObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -441,6 +438,13 @@ const Class StringObject::class_ = {
     str_enumerate,
     str_resolve,
     str_mayResolve
+};
+
+const Class StringObject::class_ = {
+    js_String_str,
+    JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+    &StringObjectClassOps
 };
 
 /*
@@ -1582,19 +1586,6 @@ js::str_includes(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* TODO: remove String.prototype.contains (bug 1103588) */
-static bool
-str_contains(JSContext *cx, unsigned argc, Value *vp)
-{
-#ifndef RELEASE_BUILD
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject callee(cx, &args.callee());
-    if (!GlobalObject::warnOnceAboutStringContains(cx, callee))
-        return false;
-#endif
-    return str_includes(cx, argc, vp);
-}
-
 /* ES6 20120927 draft 15.5.4.7. */
 bool
 js::str_indexOf(JSContext* cx, unsigned argc, Value* vp)
@@ -2542,7 +2533,6 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2,0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1,0),
     JS_FN("includes",          str_includes,          1,JSFUN_GENERIC_NATIVE),
-    JS_FN("contains",          str_contains,          1,JSFUN_GENERIC_NATIVE),
     JS_FN("indexOf",           str_indexOf,           1,JSFUN_GENERIC_NATIVE),
     JS_FN("lastIndexOf",       str_lastIndexOf,       1,JSFUN_GENERIC_NATIVE),
     JS_FN("startsWith",        str_startsWith,        1,JSFUN_GENERIC_NATIVE),

@@ -41,8 +41,8 @@ class ConfigureError(Exception):
 class DependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
     def __call__(self, *arg, **kwargs):
-        raise RuntimeError('The `%s` function may not be called'
-                           % self.__name__)
+        raise ConfigureError('The `%s` function may not be called'
+                             % self.__name__)
 
 
 class SandboxedGlobal(dict):
@@ -107,6 +107,7 @@ class ConfigureSandbox(dict):
         dict.__setitem__(self, '__builtins__', self.BUILTINS)
 
         self._paths = []
+        self._all_paths = set()
         self._templates = set()
         # Store the real function and its dependencies, behind each
         # DependsFunction generated from @depends.
@@ -179,16 +180,18 @@ class ConfigureSandbox(dict):
 
         if self._paths:
             path = mozpath.join(mozpath.dirname(self._paths[-1]), path)
+            path = mozpath.normpath(path)
             if not mozpath.basedir(path, (mozpath.dirname(self._paths[0]),)):
                 raise ConfigureError(
                     'Cannot include `%s` because it is not in a subdirectory '
                     'of `%s`' % (path, mozpath.dirname(self._paths[0])))
         else:
             path = mozpath.realpath(mozpath.abspath(path))
-        if path in self._paths:
+        if path in self._all_paths:
             raise ConfigureError(
                 'Cannot include `%s` because it was included already.' % path)
         self._paths.append(path)
+        self._all_paths.add(path)
 
         source = open(path, 'rb').read()
 
@@ -209,7 +212,7 @@ class ConfigureSandbox(dict):
             if arg in self._implied_options:
                 frameinfo, reason = self._implied_options[arg]
                 raise ConfigureError(
-                    '`%s`, emitted from `%s` line `%d`, was not handled.'
+                    '`%s`, emitted from `%s` line %d, is unknown.'
                     % (without_value, frameinfo[1], frameinfo[2]))
             raise InvalidOptionError('Unknown option: %s' % without_value)
 
@@ -275,11 +278,9 @@ class ConfigureSandbox(dict):
         kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()}
         option = Option(*args, **kwargs)
         if option.name in self._options:
-            raise ConfigureError('Option `%s` already defined'
-                                 % self._options[option.name].option)
+            raise ConfigureError('Option `%s` already defined' % option.option)
         if option.env in self._options:
-            raise ConfigureError('Option `%s` already defined'
-                                 % self._options[option.env].option)
+            raise ConfigureError('Option `%s` already defined' % option.env)
         if option.name:
             self._options[option.name] = option
         if option.env:
@@ -346,7 +347,7 @@ class ConfigureSandbox(dict):
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
-                    % type(arg))
+                    % type(arg).__name__)
             resolved_args.append(resolved_arg)
         dependencies = tuple(dependencies)
 
@@ -385,7 +386,7 @@ class ConfigureSandbox(dict):
         what = self._resolve(what)
         if what:
             if not isinstance(what, types.StringTypes):
-                raise TypeError("Unexpected type: '%s'" % type(what))
+                raise TypeError("Unexpected type: '%s'" % type(what).__name__)
             self.exec_file(what)
 
     def template_impl(self, func):
@@ -449,16 +450,20 @@ class ConfigureSandbox(dict):
         '''
         for value, required in (
                 (_import, True), (_from, False), (_as, False)):
-            if not isinstance(value, types.StringTypes) and not (
-                    required or value is None):
-                raise TypeError("Unexpected type: '%s'" % type(value))
+
+            if not isinstance(value, types.StringTypes) and (
+                    required or value is not None):
+                raise TypeError("Unexpected type: '%s'" % type(value).__name__)
             if value is not None and not self.RE_MODULE.match(value):
                 raise ValueError("Invalid argument to @imports: '%s'" % value)
 
         def decorator(func):
-            if func in self._prepared_functions:
+            if func in self._templates:
                 raise ConfigureError(
-                    '@imports must appear after other decorators')
+                    '@imports must appear after @template')
+            if func in self._depends:
+                raise ConfigureError(
+                    '@imports must appear after @depends')
             # For the imports to apply in the order they appear in the
             # .configure file, we accumulate them in reverse order and apply
             # them later.
@@ -503,7 +508,7 @@ class ConfigureSandbox(dict):
         if name is None:
             return
         if not isinstance(name, types.StringTypes):
-            raise TypeError("Unexpected type: '%s'" % type(name))
+            raise TypeError("Unexpected type: '%s'" % type(name).__name__)
         if name in data:
             raise ConfigureError(
                 "Cannot add '%s' to configuration: Key already "
@@ -587,7 +592,7 @@ class ConfigureSandbox(dict):
                     reason = (self._raw_options.get(possible_reasons[0]) or
                               possible_reasons[0].option)
 
-        if not reason or not isinstance(value, DependsFunction):
+        if not reason:
             raise ConfigureError(
                 "Cannot infer what implies '%s'. Please add a `reason` to "
                 "the `imply_option` call."
@@ -606,7 +611,7 @@ class ConfigureSandbox(dict):
             elif isinstance(value, tuple):
                 value = PositiveOptionValue(value)
             else:
-                raise TypeError("Unexpected type: '%s'" % type(value))
+                raise TypeError("Unexpected type: '%s'" % type(value).__name__)
 
             option = value.format(option)
             self._helper.add(option, 'implied')
@@ -617,7 +622,7 @@ class ConfigureSandbox(dict):
         for @depends, and @template.
         '''
         if not inspect.isfunction(func):
-            raise TypeError("Unexpected type: '%s'" % type(func))
+            raise TypeError("Unexpected type: '%s'" % type(func).__name__)
         if func in self._prepared_functions:
             return func, func.func_globals
 

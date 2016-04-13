@@ -6548,7 +6548,11 @@ DrawImageInternal(gfxContext&            aContext,
       imageRect.ToIntRect(&tmpDTRect);
 
       RefPtr<DrawTarget> tempDT = destCtx->GetDrawTarget()->CreateSimilarDrawTarget(tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
-      destCtx = new gfxContext(tempDT, imageRect.TopLeft());
+      destCtx = gfxContext::ForDrawTarget(tempDT, imageRect.TopLeft());
+      if (!destCtx) {
+        gfxDevCrash(LogReason::InvalidContext) << "NonOP_OVER context problem " << gfx::hexa(tempDT);
+        return result;
+      }
     }
     destCtx->SetMatrix(params.imageSpaceToDeviceSpace);
 

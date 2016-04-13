@@ -96,6 +96,21 @@ const Class ArrayBufferObject::protoClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer)
 };
 
+const ClassOps ArrayBufferObject::classOps_ = {
+    nullptr,        /* addProperty */
+    nullptr,        /* delProperty */
+    nullptr,        /* getProperty */
+    nullptr,        /* setProperty */
+    nullptr,        /* enumerate */
+    nullptr,        /* resolve */
+    nullptr,        /* mayResolve */
+    ArrayBufferObject::finalize,
+    nullptr,        /* call        */
+    nullptr,        /* hasInstance */
+    nullptr,        /* construct   */
+    ArrayBufferObject::trace,
+};
+
 static const ClassExtension ArrayBufferObjectClassExtension = {
     nullptr,    /* weakmapKeyDelegateOp */
     ArrayBufferObject::objectMoved
@@ -107,18 +122,7 @@ const Class ArrayBufferObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* mayResolve */
-    ArrayBufferObject::finalize,
-    nullptr,        /* call        */
-    nullptr,        /* hasInstance */
-    nullptr,        /* construct   */
-    ArrayBufferObject::trace,
+    &ArrayBufferObject::classOps_,
     JS_NULL_CLASS_SPEC,
     &ArrayBufferObjectClassExtension
 };

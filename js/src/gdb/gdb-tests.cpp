@@ -13,13 +13,17 @@
 
 using namespace JS;
 
-/* The class of the global object. */
-const JSClass global_class = {
-    "global", JSCLASS_GLOBAL_FLAGS,
+static const JSClassOps global_classOps = {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
+};
+
+/* The class of the global object. */
+static const JSClass global_class = {
+    "global", JSCLASS_GLOBAL_FLAGS,
+    &global_classOps
 };
 
 template<typename T>

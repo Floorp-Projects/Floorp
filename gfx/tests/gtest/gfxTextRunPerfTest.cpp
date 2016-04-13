@@ -43,7 +43,7 @@ MakeContext ()
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(IntSize(size, size),
                                          SurfaceFormat::B8G8R8X8);
-    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(drawTarget);
 
     return ctx.forget();
 }

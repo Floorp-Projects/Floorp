@@ -174,7 +174,9 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
 
     RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
 
-    RefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
+    RefPtr<gfxContext> ctx = gfxContext::ForDrawTargetWithTransform(target);
+    MOZ_ASSERT(ctx); // already checked the target above
+
     PaintBuffer(ctx,
                 state.mRegionToDraw, state.mRegionToDraw, state.mRegionToInvalidate,
                 state.mDidSelfCopy,

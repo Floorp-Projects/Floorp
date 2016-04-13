@@ -8059,7 +8059,6 @@ class MRegExpPrototypeOptimizable
       : MUnaryInstruction(object)
     {
         setResultType(MIRType_Boolean);
-        setMovable();
     }
 
   public:
@@ -8084,7 +8083,6 @@ class MRegExpInstanceOptimizable
       : MBinaryInstruction(object, proto)
     {
         setResultType(MIRType_Boolean);
-        setMovable();
     }
 
   public:

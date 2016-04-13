@@ -175,7 +175,7 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t numDynamic, const
      * heap. The finalizers for these classes must do nothing except free data
      * which was allocated via Nursery::allocateBuffer.
      */
-    MOZ_ASSERT_IF(clasp->finalize, clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE);
+    MOZ_ASSERT_IF(clasp->hasFinalize(), clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE);
 
     /* Make the object allocation. */
     JSObject* obj = static_cast<JSObject*>(allocate(size));

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // This is testing the aboutCertError page (Bug 1207107).
 
 const GOOD_PAGE = "https://example.com/";
@@ -149,15 +151,15 @@ add_task(function* checkAdvancedDetails() {
     };
   });
   is(message.divDisplay, "block", "Debug information is visible");
-  ok(message.text.contains(BAD_CERT), "Correct URL found");
-  ok(message.text.contains("Certificate has expired"),
+  ok(message.text.includes(BAD_CERT), "Correct URL found");
+  ok(message.text.includes("Certificate has expired"),
      "Correct error message found");
-  ok(message.text.contains("HTTP Strict Transport Security: false"),
+  ok(message.text.includes("HTTP Strict Transport Security: false"),
      "Correct HSTS value found");
-  ok(message.text.contains("HTTP Public Key Pinning: false"),
+  ok(message.text.includes("HTTP Public Key Pinning: false"),
      "Correct HPKP value found");
   let certChain = getCertChain(message.securityInfoAsString);
-  ok(message.text.contains(certChain), "Found certificate chain");
+  ok(message.text.includes(certChain), "Found certificate chain");
 
   gBrowser.removeCurrentTab();
 });
@@ -221,15 +223,15 @@ add_task(function* checkAdvancedDetailsForHSTS() {
     };
   });
   is(message.divDisplay, "block", "Debug information is visible");
-  ok(message.text.contains(badStsUri.spec), "Correct URL found");
-  ok(message.text.contains("requested domain name does not match the server's certificate"),
+  ok(message.text.includes(badStsUri.spec), "Correct URL found");
+  ok(message.text.includes("requested domain name does not match the server's certificate"),
      "Correct error message found");
-  ok(message.text.contains("HTTP Strict Transport Security: false"),
+  ok(message.text.includes("HTTP Strict Transport Security: false"),
      "Correct HSTS value found");
-  ok(message.text.contains("HTTP Public Key Pinning: true"),
+  ok(message.text.includes("HTTP Public Key Pinning: true"),
      "Correct HPKP value found");
   let certChain = getCertChain(message.securityInfoAsString);
-  ok(message.text.contains(certChain), "Found certificate chain");
+  ok(message.text.includes(certChain), "Found certificate chain");
 
   gBrowser.removeCurrentTab();
 });

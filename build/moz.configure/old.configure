@@ -14,6 +14,7 @@ def encoded_open(path, mode):
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 @depends(mozconfig, 'AUTOCONF')
+@checking('for autoconf')
 @imports('re')
 def autoconf(mozconfig, autoconf):
     mozconfig_autoconf = None

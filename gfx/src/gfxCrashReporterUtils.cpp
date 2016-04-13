@@ -83,7 +83,7 @@ public:
   }
 };
 
-class AppendAppNotesRunnable : public nsCancelableRunnable {
+class AppendAppNotesRunnable : public CancelableRunnable {
 public:
   explicit AppendAppNotesRunnable(const nsACString& aFeatureStr)
     : mFeatureString(aFeatureStr)
