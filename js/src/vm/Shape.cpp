@@ -1293,14 +1293,14 @@ BaseShape::adoptUnowned(UnownedBaseShape* other)
 /* static */ UnownedBaseShape*
 BaseShape::getUnowned(ExclusiveContext* cx, StackBaseShape& base)
 {
-    BaseShapeSet& table = cx->compartment()->baseShapes;
+    auto& table = cx->compartment()->baseShapes;
 
     if (!table.initialized() && !table.init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    DependentAddPtr<BaseShapeSet> p(cx, table, base);
+    auto p = MakeDependentAddPtr(cx, table, base);
     if (p)
         return *p;
 
@@ -1359,12 +1359,6 @@ BaseShape::traceShapeTable(JSTracer* trc)
         table().trace(trc);
 }
 
-void
-JSCompartment::sweepBaseShapeTable()
-{
-    baseShapes.sweep();
-}
-
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 void
@@ -1373,7 +1367,7 @@ JSCompartment::checkBaseShapeTableAfterMovingGC()
     if (!baseShapes.initialized())
         return;
 
-    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
+    for (decltype(baseShapes)::Enum e(baseShapes); !e.empty(); e.popFront()) {
         UnownedBaseShape* base = e.front().unbarrieredGet();
         CheckGCThingAfterMovingGC(base);
 

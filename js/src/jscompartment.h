@@ -438,8 +438,7 @@ struct JSCompartment
     js::PropertyTree             propertyTree;
 
     /* Set of all unowned base shapes in the compartment. */
-    js::BaseShapeSet             baseShapes;
-    void sweepBaseShapeTable();
+    JS::WeakCache<js::BaseShapeSet> baseShapes;
 
     /* Set of initial shapes in the compartment. */
     js::InitialShapeSet          initialShapes;
