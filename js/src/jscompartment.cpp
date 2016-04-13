@@ -66,6 +66,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     detachedTypedObjects(0),
     objectMetadataState(ImmediateMetadata()),
     propertyTree(thisForCtor()),
+    baseShapes(zone, BaseShapeSet()),
     selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
     innerViews(zone, InnerViewTable()),
