@@ -1730,7 +1730,7 @@ public class ContactService implements GeckoEventListener {
         long[] ids = new long[cursor.getCount()];
         int index = 0;
         cursor.moveToPosition(-1);
-        while(cursor.moveToNext()) {
+        while (cursor.moveToNext()) {
             ids[index] = cursor.getLong(cursor.getColumnIndex(RawContacts._ID));
             index++;
         }

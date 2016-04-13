@@ -371,7 +371,7 @@ public class LightweightTheme implements GeckoEventListener {
                 curView = (View) parent;
             }
 
-        } while(parent instanceof View);
+        } while (parent instanceof View);
 
         // Adjust the coordinates for the offset.
         left -= offsetX;

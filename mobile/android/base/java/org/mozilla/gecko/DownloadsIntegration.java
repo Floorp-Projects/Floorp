@@ -193,7 +193,7 @@ public class DownloadsIntegration implements NativeEventListener
                 if (download.equals(d)) {
                     dm.remove(d.id);
                 }
-            } while(c.moveToNext());
+            } while (c.moveToNext());
         } finally {
             if (c != null) {
                 c.close();

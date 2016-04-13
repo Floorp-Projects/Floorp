@@ -948,7 +948,7 @@ public abstract class GeckoApp
                 // Cannot read from same stream twice. Also, InputStream from
                 // URL does not support reset. So converting to byte array.
 
-                while((byteRead = is.read(buf)) != -1) {
+                while ((byteRead = is.read(buf)) != -1) {
                     os.write(buf, 0, byteRead);
                 }
                 byte[] imgBuffer = os.toByteArray();
