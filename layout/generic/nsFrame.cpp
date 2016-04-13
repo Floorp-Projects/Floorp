@@ -4298,7 +4298,6 @@ nsIFrame::InlineMinISizeData::DefaultAddInlineMinISize(nsIFrame* aFrame,
   }
   trailingWhitespace = 0;
   skipWhitespace = false;
-  trailingTextFrame = nullptr;
   currentLine += aISize;
   atStartOfLine = false;
   if (mayBreak) {
@@ -4327,15 +4326,12 @@ nsIFrame::InlineMinISizeData::ForceBreak()
       prevLines = float_min;
   }
   floats.Clear();
-  trailingTextFrame = nullptr;
   skipWhitespace = true;
 }
 
 void
 nsIFrame::InlineMinISizeData::OptionallyBreak(nscoord aHyphenWidth)
 {
-  trailingTextFrame = nullptr;
-
   // If we can fit more content into a smaller width by staying on this
   // line (because we're still at a negative offset due to negative
   // text-indent or negative margin), don't break.  Otherwise, do the
