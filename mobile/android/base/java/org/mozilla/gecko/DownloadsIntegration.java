@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.EventCallback;
 import java.io.File;
 import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import android.app.DownloadManager;
@@ -32,12 +33,14 @@ public class DownloadsIntegration implements NativeEventListener
 {
     private static final String LOGTAG = "GeckoDownloadsIntegration";
 
-    @SuppressWarnings("serial")
-    private static final List<String> UNKNOWN_MIME_TYPES = new ArrayList<String>(3) {{
-        add("unknown/unknown"); // This will be used as a default mime type for unknown files
-        add("application/unknown");
-        add("application/octet-stream"); // Github uses this for APK files
-    }};
+    private static final List<String> UNKNOWN_MIME_TYPES;
+    static {
+        final ArrayList<String> tempTypes = new ArrayList<>(3);
+        tempTypes.add("unknown/unknown"); // This will be used as a default mime type for unknown files
+        tempTypes.add("application/unknown");
+        tempTypes.add("application/octet-stream"); // Github uses this for APK files
+        UNKNOWN_MIME_TYPES = Collections.unmodifiableList(tempTypes);
+    }
 
     private static final String DOWNLOAD_REMOVE = "Download:Remove";
 
