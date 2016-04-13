@@ -60,6 +60,35 @@ _hb_ot_layout_create (hb_face_t *face)
   layout->gpos_blob = OT::Sanitizer<OT::GPOS>::sanitize (face->reference_table (HB_OT_TAG_GPOS));
   layout->gpos = OT::Sanitizer<OT::GPOS>::lock_instance (layout->gpos_blob);
 
+  {
+    /*
+     * The ugly business of blacklisting individual fonts' tables happen here!
+     * See this thread for why we finally had to bend in and do this:
+     * https://lists.freedesktop.org/archives/harfbuzz/2016-February/005489.html
+     */
+    unsigned int gdef_len = hb_blob_get_length (layout->gdef_blob);
+    unsigned int gsub_len = hb_blob_get_length (layout->gsub_blob);
+    unsigned int gpos_len = hb_blob_get_length (layout->gpos_blob);
+    if (0
+      || (442 == gdef_len && 42038 == gpos_len && 2874 == gsub_len) /* Windows 7 timesi.ttf */
+      || (430 == gdef_len && 40662 == gpos_len && 2874 == gsub_len) /* Windows 7 timesbi.ttf */
+      || (442 == gdef_len && 39116 == gpos_len && 2874 == gsub_len) /* Windows ??? timesi.ttf */
+      || (430 == gdef_len && 39374 == gpos_len && 2874 == gsub_len) /* Windows ??? timesbi.ttf */
+      || (490 == gdef_len && 41638 == gpos_len && 3046 == gsub_len) /* OS X 10.11.3 Times New Roman Italic.ttf */
+      || (478 == gdef_len && 41902 == gpos_len && 3046 == gsub_len) /* OS X 10.11.3 Times New Roman Bold Italic.ttf */
+    )
+    {
+      /* In certain versions of Times New Roman Italic and Bold Italic,
+       * ASCII double quotation mark U+0022, mapped to glyph 5, has wrong
+       * glyph class 3 (mark) in GDEF.  Nuke the GDEF to avoid zero-width
+       * double-quote.  See:
+       * https://lists.freedesktop.org/archives/harfbuzz/2016-February/005489.html
+       */
+     if (3 == layout->gdef->get_glyph_class (5))
+       layout->gdef = &OT::Null(OT::GDEF);
+    }
+  }
+
   layout->gsub_lookup_count = layout->gsub->get_lookup_count ();
   layout->gpos_lookup_count = layout->gpos->get_lookup_count ();
 

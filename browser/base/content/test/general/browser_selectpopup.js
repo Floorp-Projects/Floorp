@@ -26,13 +26,26 @@ const PAGECONTENT =
   "  </optgroup></select><input />Text" +
   "</body></html>";
 
-function openSelectPopup(selectPopup, withMouse)
+const PAGECONTENT_SMALL =
+  "<html>" +
+  "<body><select id='one'>" +
+  "  <option value='One'>One</option>" +
+  "  <option value='Two'>Two</option>" +
+  "</select><select id='two'>" +
+  "  <option value='Three'>Three</option>" +
+  "  <option value='Four'>Four</option>" +
+  "</select><select id='three'>" +
+  "  <option value='Five'>Five</option>" +
+  "  <option value='Six'>Six</option>" +
+  "</select></body></html>";
+
+function openSelectPopup(selectPopup, withMouse, selector = "select")
 {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
   if (withMouse) {
     return Promise.all([popupShownPromise,
-                        BrowserTestUtils.synthesizeMouseAtCenter("select", { }, gBrowser.selectedBrowser)]);
+                        BrowserTestUtils.synthesizeMouseAtCenter(selector, { }, gBrowser.selectedBrowser)]);
   }
 
   setTimeout(() => EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true, code: "ArrowDown" }), 1500);
@@ -41,7 +54,7 @@ function openSelectPopup(selectPopup, withMouse)
 
 function hideSelectPopup(selectPopup, withEscape)
 {
-  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
 
   if (withEscape) {
     EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" });
@@ -50,7 +63,7 @@ function hideSelectPopup(selectPopup, withEscape)
     EventUtils.synthesizeKey("KEY_Enter", { code: "Enter" });
   }
 
-  return popupShownPromise;
+  return popupHiddenPromise;
 }
 
 function getChangeEvents()
@@ -62,11 +75,8 @@ function getChangeEvents()
 
 function doSelectTests(contentType, dtd)
 {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  let browser = gBrowser.getBrowserForTab(tab);
-  yield promiseTabLoadEvent(tab, "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT));
-
-  yield SimpleTest.promiseFocus(browser.contentWindow);
+  const pageUrl = "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
   let menulist = document.getElementById("ContentSelectDropdown");
   let selectPopup = menulist.menupopup;
@@ -138,7 +148,7 @@ function doSelectTests(contentType, dtd)
   is(selectPopup.lastChild.previousSibling.label, "Seven", "Spaces collapsed");
   is(selectPopup.lastChild.label, "\xA0\xA0Eight\xA0\xA0", "Non-breaking spaces not collapsed");
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(tab);
 }
 
 add_task(function*() {
@@ -149,3 +159,46 @@ add_task(function*() {
   yield doSelectTests("application/xhtml+xml", XHTML_DTD);
 });
 
+// This test opens a select popup and removes the content node of a popup while
+// The popup should close if its node is removed.
+add_task(function*() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  // First, try it when a different <select> element than the one that is open is removed
+  yield openSelectPopup(selectPopup, true, "#one");
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.document.body.removeChild(content.document.getElementById("two"));
+  });
+
+  // Wait a bit just to make sure the popup won't close.
+  yield new Promise(resolve => setTimeout(resolve, 1000));
+  
+  is(selectPopup.state, "open", "Different popup did not affect open popup");
+
+  yield hideSelectPopup(selectPopup);
+
+  // Next, try it when the same <select> element than the one that is open is removed
+  yield openSelectPopup(selectPopup, true, "#three");
+
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.document.body.removeChild(content.document.getElementById("three"));
+  });
+  yield popupHiddenPromise;
+
+  ok(true, "Popup hidden when select is removed");
+
+  // Finally, try it when the tab is closed while the select popup is open.
+  yield openSelectPopup(selectPopup, true, "#one");
+
+  popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+  yield BrowserTestUtils.removeTab(tab);
+  yield popupHiddenPromise;
+
+  ok(true, "Popup hidden when tab is closed");
+});

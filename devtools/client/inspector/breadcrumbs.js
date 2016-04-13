@@ -10,6 +10,7 @@ const {Cu, Ci} = require("chrome");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 const promise = require("promise");
+const FocusManager = Services.focus;
 
 const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
@@ -72,6 +73,7 @@ HTMLBreadcrumbs.prototype = {
     this.container.addEventListener("keypress", this, true);
     this.container.addEventListener("mouseover", this, true);
     this.container.addEventListener("mouseleave", this, true);
+    this.container.addEventListener("focus", this, true);
 
     // We will save a list of already displayed nodes in this array.
     this.nodeHierarchy = [];
@@ -290,6 +292,24 @@ HTMLBreadcrumbs.prototype = {
       this.handleMouseOver(event);
     } else if (event.type == "mouseleave") {
       this.handleMouseLeave(event);
+    } else if (event.type == "focus") {
+      this.handleFocus(event);
+    }
+  },
+
+  /**
+   * Focus event handler. When breadcrumbs container gets focus, if there is an
+   * already selected breadcrumb, move focus to it.
+   * @param {DOMEvent} event.
+   */
+  handleFocus: function(event) {
+    let control = this.container.querySelector(
+      ".breadcrumbs-widget-item[checked]");
+    if (control && control !== event.target) {
+      // If we already have a selected breadcrumb and focus target is not it,
+      // move focus to selected breadcrumb.
+      event.preventDefault();
+      control.focus();
     }
   },
 
@@ -379,6 +399,26 @@ HTMLBreadcrumbs.prototype = {
             whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
           });
           break;
+        case this.chromeWin.KeyEvent.DOM_VK_TAB:
+          // Tabbing when breadcrumbs or its contents are focused should move
+          // focus to next/previous focusable element relative to breadcrumbs
+          // themselves.
+          let elm, type;
+          if (event.shiftKey) {
+            elm = this.container;
+            type = FocusManager.MOVEFOCUS_BACKWARD;
+          } else {
+            // To move focus to next element following the breadcrumbs, relative
+            // element needs to be the last element in breadcrumbs' subtree.
+            let last = this.container.lastChild;
+            while (last && last.lastChild) {
+              last = last.lastChild;
+            }
+            elm = last;
+            type = FocusManager.MOVEFOCUS_FORWARD;
+          }
+          FocusManager.moveFocus(this.chromeWin, elm, type, 0);
+          break;
       }
 
       return navigate.then(node => this.navigateTo(node));
@@ -403,6 +443,7 @@ HTMLBreadcrumbs.prototype = {
     this.container.removeEventListener("keypress", this, true);
     this.container.removeEventListener("mouseover", this, true);
     this.container.removeEventListener("mouseleave", this, true);
+    this.container.removeEventListener("focus", this, true);
 
     this.empty();
     this.separators.remove();

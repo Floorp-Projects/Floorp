@@ -1111,7 +1111,7 @@ nsComputedDOMStyle::DoGetContent()
     switch (data.mType) {
       case eStyleContentType_String:
         {
-          nsString str;
+          nsAutoString str;
           nsStyleUtil::AppendEscapedCSSString(
             nsDependentString(data.mContent.mString), str);
           val->SetString(str);
@@ -1485,7 +1485,7 @@ nsComputedDOMStyle::DoGetQuotes()
     RefPtr<nsROCSSPrimitiveValue> openVal = new nsROCSSPrimitiveValue;
     RefPtr<nsROCSSPrimitiveValue> closeVal = new nsROCSSPrimitiveValue;
 
-    nsString s;
+    nsAutoString s;
     nsStyleUtil::AppendEscapedCSSString(quotePair.first, s);
     openVal->SetString(s);
     s.Truncate();
@@ -1622,7 +1622,7 @@ nsComputedDOMStyle::DoGetFontLanguageOverride()
   if (font->mFont.languageOverride.IsEmpty()) {
     val->SetIdent(eCSSKeyword_normal);
   } else {
-    nsString str;
+    nsAutoString str;
     nsStyleUtil::AppendEscapedCSSString(font->mFont.languageOverride, str);
     val->SetString(str);
   }
@@ -3429,7 +3429,7 @@ nsComputedDOMStyle::DoGetListStyleType()
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   CounterStyle* style = StyleList()->GetCounterStyle();
   AnonymousCounterStyle* anonymous = style->AsAnonymous();
-  nsString tmp;
+  nsAutoString tmp;
   if (!anonymous) {
     // want SetIdent
     nsString type;
@@ -3721,7 +3721,7 @@ nsComputedDOMStyle::DoGetTextEmphasisStyle()
   }
   if (style == NS_STYLE_TEXT_EMPHASIS_STYLE_STRING) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    nsString tmp;
+    nsAutoString tmp;
     nsStyleUtil::AppendEscapedCSSString(
       StyleText()->mTextEmphasisStyleString, tmp);
     val->SetString(tmp);
@@ -3775,7 +3775,7 @@ nsComputedDOMStyle::DoGetTextOverflow()
   RefPtr<nsROCSSPrimitiveValue> first = new nsROCSSPrimitiveValue;
   const nsStyleTextOverflowSide *side = style->mTextOverflow.GetFirstValue();
   if (side->mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
-    nsString str;
+    nsAutoString str;
     nsStyleUtil::AppendEscapedCSSString(side->mString, str);
     first->SetString(str);
   } else {
@@ -3789,7 +3789,7 @@ nsComputedDOMStyle::DoGetTextOverflow()
   }
   RefPtr<nsROCSSPrimitiveValue> second = new nsROCSSPrimitiveValue;
   if (side->mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
-    nsString str;
+    nsAutoString str;
     nsStyleUtil::AppendEscapedCSSString(side->mString, str);
     second->SetString(str);
   } else {

@@ -43,6 +43,11 @@ struct FileSystemDirectoryListingResponse
   FileSystemDirectoryListingResponseData[] data;
 };
 
+struct FileSystemFilesResponse
+{
+  FileSystemFileResponse[] data;
+};
+
 struct FileSystemErrorResponse
 {
   nsresult error;
@@ -59,6 +64,7 @@ union FileSystemResponseValue
   FileSystemDirectoryResponse;
   FileSystemDirectoryListingResponse;
   FileSystemFileResponse;
+  FileSystemFilesResponse;
   FileSystemErrorResponse;
 };
 

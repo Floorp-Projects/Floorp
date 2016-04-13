@@ -131,7 +131,7 @@ CreateDirectoryTaskChild::HandlerCallback()
 void
 CreateDirectoryTaskChild::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(CREATE_DIRECTORY_TASK_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_CREATE_PERMISSION);
 }
 
 /**
@@ -216,7 +216,7 @@ CreateDirectoryTaskParent::IOWork()
 void
 CreateDirectoryTaskParent::GetPermissionAccessType(nsCString& aAccess) const
 {
-  aAccess.AssignLiteral(CREATE_DIRECTORY_TASK_PERMISSION);
+  aAccess.AssignLiteral(DIRECTORY_CREATE_PERMISSION);
 }
 
 } // namespace dom

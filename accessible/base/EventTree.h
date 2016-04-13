@@ -57,8 +57,9 @@ class EventTree final {
 public:
   EventTree() :
     mFirst(nullptr), mNext(nullptr), mContainer(nullptr), mFireReorder(false) { }
-  explicit EventTree(Accessible* aContainer) :
-    mFirst(nullptr), mNext(nullptr), mContainer(aContainer), mFireReorder(true) { }
+  explicit EventTree(Accessible* aContainer, bool aFireReorder) :
+    mFirst(nullptr), mNext(nullptr), mContainer(aContainer),
+    mFireReorder(aFireReorder) { }
   ~EventTree() { Clear(); }
 
   void Shown(Accessible* aChild)

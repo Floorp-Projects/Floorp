@@ -1059,9 +1059,6 @@ pref("layout.accessiblecaret.bar.enabled", true);
 pref("layout.accessiblecaret.use_long_tap_injector", false);
 #endif
 
-// The active caret is disallow to be dragged across the other (inactive) caret.
-pref("layout.accessiblecaret.allow_dragging_across_other_caret", false);
-
 // Enable sync and mozId with Firefox Accounts.
 pref("services.sync.fxaccounts.enabled", true);
 pref("identity.fxaccounts.enabled", true);
