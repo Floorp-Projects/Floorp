@@ -1657,7 +1657,7 @@ nsMessageManagerScriptExecutor::DidCreateGlobal()
 
 // static
 void
-nsMessageManagerScriptExecutor::Shutdown()
+nsMessageManagerScriptExecutor::PurgeCache()
 {
   if (sCachedScripts) {
     NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
@@ -1665,6 +1665,15 @@ nsMessageManagerScriptExecutor::Shutdown()
       delete iter.Data();
       iter.Remove();
     }
+  }
+}
+
+// static
+void
+nsMessageManagerScriptExecutor::Shutdown()
+{
+  if (sCachedScripts) {
+    PurgeCache();
 
     delete sCachedScripts;
     sCachedScripts = nullptr;
