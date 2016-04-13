@@ -44,7 +44,8 @@
 #define HB_FONT_FUNCS_IMPLEMENT_CALLBACKS \
   HB_FONT_FUNC_IMPLEMENT (font_h_extents) \
   HB_FONT_FUNC_IMPLEMENT (font_v_extents) \
-  HB_FONT_FUNC_IMPLEMENT (glyph) \
+  HB_FONT_FUNC_IMPLEMENT (nominal_glyph) \
+  HB_FONT_FUNC_IMPLEMENT (variation_glyph) \
   HB_FONT_FUNC_IMPLEMENT (glyph_h_advance) \
   HB_FONT_FUNC_IMPLEMENT (glyph_v_advance) \
   HB_FONT_FUNC_IMPLEMENT (glyph_h_origin) \
@@ -180,16 +181,25 @@ struct hb_font_t {
   inline bool has_glyph (hb_codepoint_t unicode)
   {
     hb_codepoint_t glyph;
-    return get_glyph (unicode, 0, &glyph);
+    return get_nominal_glyph (unicode, &glyph);
   }
 
-  inline hb_bool_t get_glyph (hb_codepoint_t unicode, hb_codepoint_t variation_selector,
-			      hb_codepoint_t *glyph)
+  inline hb_bool_t get_nominal_glyph (hb_codepoint_t unicode,
+				      hb_codepoint_t *glyph)
   {
     *glyph = 0;
-    return klass->get.f.glyph (this, user_data,
-			       unicode, variation_selector, glyph,
-			       klass->user_data.glyph);
+    return klass->get.f.nominal_glyph (this, user_data,
+				       unicode, glyph,
+				       klass->user_data.nominal_glyph);
+  }
+
+  inline hb_bool_t get_variation_glyph (hb_codepoint_t unicode, hb_codepoint_t variation_selector,
+					hb_codepoint_t *glyph)
+  {
+    *glyph = 0;
+    return klass->get.f.variation_glyph (this, user_data,
+					 unicode, variation_selector, glyph,
+					 klass->user_data.variation_glyph);
   }
 
   inline hb_position_t get_glyph_h_advance (hb_codepoint_t glyph)
@@ -487,7 +497,7 @@ struct hb_font_t {
       hb_codepoint_t unichar;
       if (0 == strncmp (s, "uni", 3) &&
 	  hb_codepoint_parse (s + 3, len - 3, 16, &unichar) &&
-	  get_glyph (unichar, 0, glyph))
+	  get_nominal_glyph (unichar, glyph))
 	return true;
     }
 

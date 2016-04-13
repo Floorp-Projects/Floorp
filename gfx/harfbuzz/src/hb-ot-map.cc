@@ -204,11 +204,8 @@ hb_ot_map_builder_t::compile (hb_ot_map_t &m)
     for (unsigned int table_index = 0; table_index < 2; table_index++)
     {
       if (required_feature_tag[table_index] == info->tag)
-      {
 	required_feature_stage[table_index] = info->stage[table_index];
-	found = true;
-	continue;
-      }
+
       found |= hb_ot_layout_language_find_feature (face,
 						   table_tags[table_index],
 						   script_index[table_index],
