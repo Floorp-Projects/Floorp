@@ -31,7 +31,7 @@ task:
   extra:
     treeherder:
       groupName: Desktop tests
-      tier: 2
+      tier: 1
     treeherderEnv:
       - production
       - staging
