@@ -297,14 +297,15 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
       CreateOffscreenContentDrawTarget(mSize, mFormat);
   }
 
-  if (!target) {
+  if (!target || !target->IsValid()) {
     mAborted = true;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Draw using the drawable the caller provided.
   nsIntRect imageRect(0, 0, mSize.width, mSize.height);
-  RefPtr<gfxContext> ctx = new gfxContext(target);
+  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(target);
+  MOZ_ASSERT(ctx); // already checked the draw target above
   gfxUtils::DrawPixelSnapped(ctx, aDrawable, mSize,
                              ImageRegion::Create(ThebesRect(imageRect)),
                              mFormat, aFilter, aImageFlags);

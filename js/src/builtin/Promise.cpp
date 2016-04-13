@@ -409,18 +409,7 @@ const Class PromiseObject::class_ = {
     "Promise",
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) | JSCLASS_HAS_CACHED_PROTO(JSProto_Promise) |
     JSCLASS_HAS_XRAYED_CONSTRUCTOR,
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace */
+    JS_NULL_CLASS_OPS,
     &PromiseObjectClassSpec
 };
 
@@ -438,17 +427,6 @@ static const ClassSpec PromiseObjectProtoClassSpec = {
 const Class PromiseObject::protoClass_ = {
     "PromiseProto",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Promise),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace  */
+    JS_NULL_CLASS_OPS,
     &PromiseObjectProtoClassSpec
 };

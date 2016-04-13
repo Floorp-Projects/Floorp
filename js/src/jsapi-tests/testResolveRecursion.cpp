@@ -13,15 +13,19 @@
  */
 BEGIN_TEST(testResolveRecursion)
 {
-    static const JSClass my_resolve_class = {
-        "MyResolve",
-        JSCLASS_HAS_PRIVATE,
+    static const JSClassOps my_resolve_classOps = {
         nullptr, // add
         nullptr, // delete
         nullptr, // get
         nullptr, // set
         nullptr, // enumerate
         my_resolve
+    };
+
+    static const JSClass my_resolve_class = {
+        "MyResolve",
+        JSCLASS_HAS_PRIVATE,
+        &my_resolve_classOps
     };
 
     obj1.init(cx, JS_NewObject(cx, &my_resolve_class));
@@ -150,9 +154,7 @@ BEGIN_TEST(testResolveRecursion_InitStandardClasses)
 }
 
 const JSClass* getGlobalClass() override {
-    static const JSClass myGlobalClass = {
-        "testResolveRecursion_InitStandardClasses_myGlobalClass",
-        JSCLASS_GLOBAL_FLAGS,
+    static const JSClassOps myGlobalClassOps = {
         nullptr, // add
         nullptr, // delete
         nullptr, // get
@@ -165,6 +167,12 @@ const JSClass* getGlobalClass() override {
         nullptr, // hasInstance
         nullptr, // construct
         JS_GlobalObjectTraceHook
+    };
+
+    static const JSClass myGlobalClass = {
+        "testResolveRecursion_InitStandardClasses_myGlobalClass",
+        JSCLASS_GLOBAL_FLAGS,
+        &myGlobalClassOps
     };
 
     return &myGlobalClass;

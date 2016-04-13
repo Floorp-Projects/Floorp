@@ -348,7 +348,7 @@ nsDeviceContext::CreateRenderingContext()
 
     // This can legitimately happen - CreateDrawTargetForSurface will fail
     // to create a draw target if the size is too large, for instance.
-    if (!dt) {
+    if (!dt || !dt->IsValid()) {
         gfxCriticalNote << "Failed to create draw target in device context sized " << mWidth << "x" << mHeight << " and pointers " << hexa(mPrintingSurface) << " and " << hexa(printingSurface);
         return nullptr;
     }
@@ -357,6 +357,10 @@ nsDeviceContext::CreateRenderingContext()
     nsresult rv = mDeviceContextSpec->GetDrawEventRecorder(getter_AddRefs(recorder));
     if (NS_SUCCEEDED(rv) && recorder) {
       dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dt);
+      if (!dt || !dt->IsValid()) {
+          gfxCriticalNote << "Failed to create a recording draw target";
+          return nullptr;
+      }
     }
 
 #ifdef XP_MACOSX
@@ -364,7 +368,8 @@ nsDeviceContext::CreateRenderingContext()
 #endif
     dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
-    RefPtr<gfxContext> pContext = new gfxContext(dt);
+    RefPtr<gfxContext> pContext = gfxContext::ForDrawTarget(dt);
+    MOZ_ASSERT(pContext); // already checked draw target above
 
     gfxMatrix transform;
     if (printingSurface->GetRotateForLandscape()) {

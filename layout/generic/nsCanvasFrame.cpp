@@ -310,8 +310,9 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
     dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width),
                                                  ceil(destRect.height)),
                                          SurfaceFormat::B8G8R8A8);
-    if (dt) {
-      RefPtr<gfxContext> ctx = new gfxContext(dt);
+    if (dt && dt->IsValid()) {
+      RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+      MOZ_ASSERT(ctx); // already checked draw target above
       ctx->SetMatrix(ctx->CurrentMatrix().Translate(-destRect.x, -destRect.y));
       nsRenderingContext context(ctx);
       PaintInternal(aBuilder, &context, bgClipRect, &bgClipRect);

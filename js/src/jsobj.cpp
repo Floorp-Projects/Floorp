@@ -1855,8 +1855,8 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
     RootedObject protoProto(cx, protoProto_);
 
     /* Check function pointer members. */
-    MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
-    MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
+    MOZ_ASSERT(clasp->getGetProperty() != JS_PropertyStub);
+    MOZ_ASSERT(clasp->getSetProperty() != JS_StrictPropertyStub);
 
     RootedAtom atom(cx, Atomize(cx, clasp->name, strlen(clasp->name)));
     if (!atom)
@@ -2112,8 +2112,8 @@ JSObject::callHook() const
 {
     const js::Class* clasp = getClass();
 
-    if (clasp->call)
-        return clasp->call;
+    if (JSNative call = clasp->getCall())
+        return call;
 
     if (is<js::ProxyObject>()) {
         const js::ProxyObject& p = as<js::ProxyObject>();
@@ -2128,8 +2128,8 @@ JSObject::constructHook() const
 {
     const js::Class* clasp = getClass();
 
-    if (clasp->construct)
-        return clasp->construct;
+    if (JSNative construct = clasp->getConstruct())
+        return construct;
 
     if (is<js::ProxyObject>()) {
         const js::ProxyObject& p = as<js::ProxyObject>();
@@ -2944,8 +2944,8 @@ DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs
         gop = nullptr;
         sop = nullptr;
     } else {
-        gop = obj->getClass()->getProperty;
-        sop = obj->getClass()->setProperty;
+        gop = obj->getClass()->getGetProperty();
+        sop = obj->getClass()->getSetProperty();
         MOZ_ASSERT(gop != JS_PropertyStub);
         MOZ_ASSERT(sop != JS_StrictPropertyStub);
     }
@@ -3909,8 +3909,8 @@ JSObject::traceChildren(JSTracer* trc)
 
     // Call the trace hook at the end so that during a moving GC the trace hook
     // will see updated fields and slots.
-    if (clasp->trace)
-        clasp->trace(trc, this);
+    if (clasp->hasTrace())
+        clasp->doTrace(trc, this);
 }
 
 static JSAtom*

@@ -109,6 +109,8 @@ class MapObject : public NativeObject {
     static bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj, MutableHandleValue iter);
 
   private:
+    static const ClassOps classOps_;
+
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
     static const JSPropertySpec staticProperties[];
@@ -191,9 +193,12 @@ class SetObject : public NativeObject {
     static bool delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval);
 
   private:
+    static const ClassOps classOps_;
+
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
     static const JSPropertySpec staticProperties[];
+
     ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
     static ValueSet & extract(HandleObject o);
     static ValueSet & extract(CallReceiver call);

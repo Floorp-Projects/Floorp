@@ -4751,7 +4751,11 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   // the matrix even though this is a temp gfxContext.
   AutoRestoreTransform autoRestoreTransform(mTarget);
 
-  RefPtr<gfxContext> context = new gfxContext(tempTarget);
+  RefPtr<gfxContext> context = gfxContext::ForDrawTarget(tempTarget);
+  if (!context) {
+    gfxDevCrash(LogReason::InvalidContext) << "Canvas context problem";
+    return;
+  }
   context->SetMatrix(contextMatrix.
                        Scale(1.0 / contextScale.width,
                              1.0 / contextScale.height).
@@ -4950,19 +4954,21 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
       GlobalAlpha() == 1.0f &&
       UsedOperation() == CompositionOp::OP_OVER)
   {
-    thebes = new gfxContext(mTarget);
+    thebes = gfxContext::ForDrawTarget(mTarget);
+    MOZ_ASSERT(thebes); // alrady checked the draw target above
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
   } else {
     drawDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(ceil(sw), ceil(sh)),
                                                                    SurfaceFormat::B8G8R8A8);
-    if (!drawDT) {
+    if (!drawDT || !drawDT->IsValid()) {
       aError.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    thebes = new gfxContext(drawDT);
+    thebes = gfxContext::ForDrawTarget(drawDT);
+    MOZ_ASSERT(thebes); // alrady checked the draw target above
     thebes->SetMatrix(gfxMatrix::Scaling(matrix._11, matrix._22));
   }
 

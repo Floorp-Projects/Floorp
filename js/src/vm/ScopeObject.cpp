@@ -458,18 +458,7 @@ const Class ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",
     JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,        /* addProperty */
-    nullptr,        /* delProperty */
-    nullptr,        /* getProperty */
-    nullptr,        /* setProperty */
-    nullptr,        /* enumerate   */
-    nullptr,        /* resolve     */
-    nullptr,        /* mayResolve  */
-    nullptr,        /* finalize    */
-    nullptr,        /* call        */
-    nullptr,        /* hasInstance */
-    nullptr,        /* construct   */
-    nullptr,        /* trace       */
+    JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     &ModuleEnvironmentObject::objectOps_
@@ -698,8 +687,8 @@ DeclEnvObject::createTemplateObject(JSContext* cx, HandleFunction fun, NewObject
     const Class* clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
 
-    JSGetterOp getter = clasp->getProperty;
-    JSSetterOp setter = clasp->setProperty;
+    JSGetterOp getter = clasp->getGetProperty();
+    JSSetterOp setter = clasp->getSetProperty();
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
@@ -886,18 +875,7 @@ const Class DynamicWithObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(DynamicWithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace */
+    JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     &DynamicWithObjectObjectOps
@@ -1128,18 +1106,7 @@ const Class ClonedBlockObject::class_ = {
     "Block",
     JSCLASS_HAS_RESERVED_SLOTS(ClonedBlockObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace */
+    JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     JS_NULL_OBJECT_OPS
@@ -1401,18 +1368,7 @@ const Class RuntimeLexicalErrorObject::class_ = {
     "RuntimeLexicalError",
     JSCLASS_HAS_RESERVED_SLOTS(RuntimeLexicalErrorObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace */
+    JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     &RuntimeLexicalErrorObjectObjectOps

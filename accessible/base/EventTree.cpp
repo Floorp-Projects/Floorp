@@ -228,6 +228,8 @@ EventTree::Process()
     if (mFireReorder) {
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_REORDER, mContainer);
     }
+
+    mDependentEvents.Clear();
   }
 }
 
@@ -384,6 +386,23 @@ EventTree::FindOrInsert(Accessible* aContainer)
   return prevNode->mNext = new EventTree(aContainer);
 }
 
+void
+EventTree::Clear()
+{
+  mFirst = nullptr;
+  mNext = nullptr;
+  mContainer = nullptr;
+
+  uint32_t eventsCount = mDependentEvents.Length();
+  for (uint32_t jdx = 0; jdx < eventsCount; jdx++) {
+    AccHideEvent* ev = downcast_accEvent(mDependentEvents[jdx]);
+    if (ev && ev->NeedsShutdown()) {
+      ev->GetDocAccessible()->ShutdownChildrenInSubtree(ev->mAccessible);
+    }
+  }
+  mDependentEvents.Clear();
+}
+
 const EventTree*
 EventTree::Find(const Accessible* aContainer) const
 {
@@ -458,13 +477,13 @@ EventTree::Mutated(AccMutationEvent* aEv)
 {
   // If shown or hidden node is a root of previously mutated subtree, then
   // discard those subtree mutations as we are no longer interested in them.
-  EventTree* node = mFirst;
-  while (node) {
-    if (node->mContainer == aEv->mAccessible) {
-      node->Clear();
+  nsAutoPtr<EventTree>* node = &mFirst;
+  while (*node) {
+    if ((*node)->mContainer == aEv->mAccessible) {
+      *node = Move((*node)->mNext);
       break;
     }
-    node = node->mNext;
+    node = &(*node)->mNext;
   }
 
   AccMutationEvent* prevEvent = mDependentEvents.SafeLastElement(nullptr);

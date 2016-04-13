@@ -21,13 +21,17 @@ static bool test_prop_get( JSContext* cx, JS::HandleObject obj, JS::HandleId id,
 static bool
 PTest(JSContext* cx, unsigned argc, JS::Value* vp);
 
-static const JSClass ptestClass = {
-    "PTest",
-    JSCLASS_HAS_PRIVATE,
+static const JSClassOps ptestClassOps = {
     nullptr, // addProperty
     nullptr, // delProperty
     test_prop_get,
     nullptr // setProperty
+};
+
+static const JSClass ptestClass = {
+    "PTest",
+    JSCLASS_HAS_PRIVATE,
+    &ptestClassOps
 };
 
 static bool

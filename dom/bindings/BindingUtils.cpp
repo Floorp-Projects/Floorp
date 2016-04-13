@@ -1806,6 +1806,21 @@ NativePropertyHooks sEmptyNativePropertyHooks = {
   nullptr
 };
 
+const js::ClassOps sBoringInterfaceObjectClassClassOps = {
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    nullptr,               /* getProperty */
+    nullptr,               /* setProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* mayResolve */
+    nullptr,               /* finalize */
+    ThrowingConstructor,   /* call */
+    InterfaceHasInstance,  /* hasInstance */
+    ThrowingConstructor,   /* construct */
+    nullptr,               /* trace */
+};
+
 const js::ObjectOps sInterfaceObjectClassObjectOps = {
   nullptr, /* lookupProperty */
   nullptr, /* defineProperty */

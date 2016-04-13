@@ -11,14 +11,7 @@ function copy(obj) {
   return o;
 }
 
-Array.prototype.contains = String.prototype.contains = function (e) {
-  for (var elt of this)
-    if (elt == e)
-      return true;
-  return false;
-}
-
-Array.prototype.repeat = String.prototype.repeat = function (n) {
+Array.prototype.repeat = function (n) {
   var s = this.constructor();
   for (var i = 0; i < n; i++)
     s = s.concat(this);
@@ -64,7 +57,7 @@ function dict(A) {
 function set(A) {
   var s = [];
   for (var e of A)
-    if (!s.contains(e))
+    if (!s.includes(e))
       s.push(e);
   return s;
 }
@@ -85,19 +78,19 @@ unitlist = [for (c of cols) cross(rows, c)]
   .concat([for (r of rows) cross(r, cols)])
   .concat([for (rs of ['ABC','DEF','GHI']) for (cs of ['123','456','789']) cross(rs, cs)]);
 units = dict((for (s of squares)
-                [s, [for (u of unitlist) if (u.contains(s)) u]]));
+                [s, [for (u of unitlist) if (u.includes(s)) u]]));
 
 peers = dict((for (s of squares)
                 [s, set([for (u of units[s]) for (s2 of u) if (s2 != s) s2])]));
 
 // Given a string of 81 digits (or . or 0 or -), return a dict of {cell:values}.
 function parse_grid(grid) {
-  grid = [for (c of grid) if ('0.-123456789'.contains(c)) c];
+  grid = [for (c of grid) if ('0.-123456789'.includes(c)) c];
   var values = dict((for (s of squares) [s, digits]));
 
   for (var pair of zip(squares, grid)) {
     var s = pair[0], d = pair[1];
-    if (digits.contains(d) && !assign(values, s, d))
+    if (digits.includes(d) && !assign(values, s, d))
       return false;
   }
   return values;
@@ -112,7 +105,7 @@ function assign(values, s, d) {
 
 // Eliminate d from values[s]; propagate when values or places <= 2.
 function eliminate(values, s, d) {
-  if (!values[s].contains(d))
+  if (!values[s].includes(d))
     return values; // Already eliminated
   values[s] = values[s].replace(d, '');
   if (values[s].length == 0)
@@ -125,7 +118,7 @@ function eliminate(values, s, d) {
   }
   // Now check the places where d appears in the units of s
   for (var u of units[s]) {
-    var dplaces = [for (s of u) if (values[s].contains(d)) s];
+    var dplaces = [for (s of u) if (values[s].includes(d)) s];
     if (dplaces.length == 0)
       return false;
     if (dplaces.length == 1)
@@ -142,8 +135,8 @@ function print_board(values) {
   var line = '\n' + ['-'.repeat(width*3)].repeat(3).join('+');
   for (var r of rows)
     print([for (c of cols)
-              values[r+c].center(width) + ('36'.contains(c) && '|' || '')]
-          .join('') + ('CF'.contains(r) && line || ''));
+              values[r+c].center(width) + ('36'.includes(c) && '|' || '')]
+          .join('') + ('CF'.includes(r) && line || ''));
   print('\n');
 }
 
