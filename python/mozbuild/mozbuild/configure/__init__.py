@@ -119,7 +119,7 @@ class ConfigureSandbox(dict):
 
         self._options = OrderedDict()
         # Store raw option (as per command line or environment) for each Option
-        self._raw_options = {}
+        self._raw_options = OrderedDict()
 
         # Store options added with `imply_option`, and the reason they were
         # added (which can either have been given to `imply_option`, or
@@ -342,12 +342,13 @@ class ConfigureSandbox(dict):
         except ConflictingOptionError as e:
             reason = implied[e.arg].reason
             reason = self._raw_options.get(reason) or reason.option
+            reason = reason.split('=', 1)[0]
             raise InvalidOptionError(
                 "'%s' implied by '%s' conflicts with '%s' from the %s"
                 % (e.arg, reason, e.old_arg, e.old_origin))
 
-        self._raw_options[option] = (option_string.split('=', 1)[0]
-                                     if option_string else option_string)
+        if option_string:
+            self._raw_options[option] = option_string
 
         return value
 
