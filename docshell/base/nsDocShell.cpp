@@ -10948,8 +10948,13 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(channel));
   if (timedChannel) {
     timedChannel->SetTimingEnabled(true);
-    if (IsFrame()) {
-      timedChannel->SetInitiatorType(NS_LITERAL_STRING("subdocument"));
+
+    nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+    if (IsFrame() && win) {
+      nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
+      if (frameElement) {
+        timedChannel->SetInitiatorType(frameElement->LocalName());
+      }
     }
   }
 
