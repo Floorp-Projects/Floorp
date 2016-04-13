@@ -917,7 +917,7 @@ public final class GeckoProfile {
                     try {
                         int sectionNumber = Integer.parseInt(section.getName().substring("Profile".length()));
                         String curSection = "Profile" + sectionNumber;
-                        String nextSection = "Profile" + (sectionNumber+1);
+                        String nextSection = "Profile" + (sectionNumber + 1);
 
                         sections.remove(curSection);
 
@@ -926,7 +926,7 @@ public final class GeckoProfile {
                             sectionNumber++;
 
                             curSection = nextSection;
-                            nextSection = "Profile" + (sectionNumber+1);
+                            nextSection = "Profile" + (sectionNumber + 1);
                         }
                     } catch (NumberFormatException nex) {
                         // uhm, malformed Profile thing; we can't do much.

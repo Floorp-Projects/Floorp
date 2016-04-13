@@ -100,7 +100,7 @@ public abstract class SessionParser {
 
                     totalCount++;
                     boolean selected = false;
-                    if (optSelected == i+1) {
+                    if (optSelected == i + 1) {
                         selected = true;
                         selectedIndex = totalCount;
                     }
