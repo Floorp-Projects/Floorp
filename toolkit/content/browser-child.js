@@ -130,9 +130,9 @@ var WebProgressListener = {
       json.documentURI = content.document.documentURIObject.spec;
       json.charset = content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
+      json.inLoadURI = WebNavigation.inLoadURI;
     }
 
-    json.inLoadURI = WebNavigation.inLoadURI;
     this._send("Content:StateChange", json, objects);
   },
 
@@ -171,6 +171,7 @@ var WebProgressListener = {
       json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
       json.principal = content.document.nodePrincipal;
       json.synthetic = content.document.mozSyntheticDocument;
+      json.inLoadURI = WebNavigation.inLoadURI;
 
       if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
         let uri = aLocationURI.clone();
