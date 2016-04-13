@@ -155,21 +155,32 @@ hb_ft_font_get_face (hb_font_t *font)
 
 
 static hb_bool_t
-hb_ft_get_glyph (hb_font_t *font HB_UNUSED,
-		 void *font_data,
-		 hb_codepoint_t unicode,
-		 hb_codepoint_t variation_selector,
-		 hb_codepoint_t *glyph,
-		 void *user_data HB_UNUSED)
-
+hb_ft_get_nominal_glyph (hb_font_t *font HB_UNUSED,
+			 void *font_data,
+			 hb_codepoint_t unicode,
+			 hb_codepoint_t *glyph,
+			 void *user_data HB_UNUSED)
 {
   const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font_data;
-  unsigned int g;
+  unsigned int g = FT_Get_Char_Index (ft_font->ft_face, unicode);
 
-  if (likely (!variation_selector))
-    g = FT_Get_Char_Index (ft_font->ft_face, unicode);
-  else
-    g = FT_Face_GetCharVariantIndex (ft_font->ft_face, unicode, variation_selector);
+  if (unlikely (!g))
+    return false;
+
+  *glyph = g;
+  return true;
+}
+
+static hb_bool_t
+hb_ft_get_variation_glyph (hb_font_t *font HB_UNUSED,
+			   void *font_data,
+			   hb_codepoint_t unicode,
+			   hb_codepoint_t variation_selector,
+			   hb_codepoint_t *glyph,
+			   void *user_data HB_UNUSED)
+{
+  const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font_data;
+  unsigned int g = FT_Face_GetCharVariantIndex (ft_font->ft_face, unicode, variation_selector);
 
   if (unlikely (!g))
     return false;
@@ -408,7 +419,8 @@ retry:
 
     hb_font_funcs_set_font_h_extents_func (funcs, hb_ft_get_font_h_extents, NULL, NULL);
     //hb_font_funcs_set_font_v_extents_func (funcs, hb_ft_get_font_v_extents, NULL, NULL);
-    hb_font_funcs_set_glyph_func (funcs, hb_ft_get_glyph, NULL, NULL);
+    hb_font_funcs_set_nominal_glyph_func (funcs, hb_ft_get_nominal_glyph, NULL, NULL);
+    hb_font_funcs_set_variation_glyph_func (funcs, hb_ft_get_variation_glyph, NULL, NULL);
     hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ft_get_glyph_h_advance, NULL, NULL);
     hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ft_get_glyph_v_advance, NULL, NULL);
     //hb_font_funcs_set_glyph_h_origin_func (funcs, hb_ft_get_glyph_h_origin, NULL, NULL);

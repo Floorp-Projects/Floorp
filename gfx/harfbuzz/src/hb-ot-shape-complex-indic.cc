@@ -493,12 +493,12 @@ struct indic_shape_plan_t
     hb_codepoint_t glyph = virama_glyph;
     if (unlikely (virama_glyph == (hb_codepoint_t) -1))
     {
-      if (!config->virama || !font->get_glyph (config->virama, 0, &glyph))
+      if (!config->virama || !font->get_nominal_glyph (config->virama, &glyph))
 	glyph = 0;
       /* Technically speaking, the spec says we should apply 'locl' to virama too.
        * Maybe one day... */
 
-      /* Our get_glyph() function needs a font, so we can't get the virama glyph
+      /* Our get_nominal_glyph() function needs a font, so we can't get the virama glyph
        * during shape planning...  Instead, overwrite it here.  It's safe.  Don't worry! */
       (const_cast<indic_shape_plan_t *> (this))->virama_glyph = glyph;
     }
@@ -742,10 +742,6 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 
     switch (indic_plan->config->base_pos)
     {
-      default:
-        assert (false);
-	HB_FALLTHROUGH;
-
       case BASE_POS_LAST:
       {
 	/* -> starting from the end of the syllable, move backwards */
@@ -1219,7 +1215,7 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
 
 
   hb_codepoint_t dottedcircle_glyph;
-  if (!font->get_glyph (0x25CCu, 0, &dottedcircle_glyph))
+  if (!font->get_nominal_glyph (0x25CCu, &dottedcircle_glyph))
     return;
 
   hb_glyph_info_t dottedcircle = {0};
@@ -1803,7 +1799,7 @@ decompose_indic (const hb_ot_shape_normalize_context_t *c,
     hb_codepoint_t glyph;
 
     if (hb_options ().uniscribe_bug_compatible ||
-	(c->font->get_glyph (ab, 0, &glyph) &&
+	(c->font->get_nominal_glyph (ab, &glyph) &&
 	 indic_plan->pstf.would_substitute (&glyph, 1, c->font->face)))
     {
       /* Ok, safe to use Uniscribe-style decomposition. */
