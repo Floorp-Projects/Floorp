@@ -860,7 +860,7 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
       styleBorder->GetComputedBorderWidth(startSide) +
       GetCoord(styleMargin->mMargin.Get(startSide), 0);
     if (MOZ_LIKELY(sliceBreak)) {
-      aData->currentLine += startPBM;
+      aData->mCurrentLine += startPBM;
     } else {
       clonePBM = startPBM;
     }
@@ -875,14 +875,14 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
     clonePBM += endPBM;
   }
 
-  const nsLineList_iterator* savedLine = aData->line;
+  const nsLineList_iterator* savedLine = aData->mLine;
   nsIFrame* const savedLineContainer = aData->LineContainer();
 
   nsContainerFrame *lastInFlow;
   for (nsContainerFrame *nif = this; nif;
        nif = static_cast<nsContainerFrame*>(nif->GetNextInFlow())) {
-    if (aData->currentLine == 0) {
-      aData->currentLine = clonePBM;
+    if (aData->mCurrentLine == 0) {
+      aData->mCurrentLine = clonePBM;
     }
     for (nsIFrame* kid : nif->mFrames) {
       if (aType == nsLayoutUtils::MIN_ISIZE)
@@ -895,13 +895,13 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
 
     // After we advance to our next-in-flow, the stored line and line container
     // may no longer be correct. Just forget them.
-    aData->line = nullptr;
+    aData->mLine = nullptr;
     aData->SetLineContainer(nullptr);
 
     lastInFlow = nif;
   }
 
-  aData->line = savedLine;
+  aData->mLine = savedLine;
   aData->SetLineContainer(savedLineContainer);
 
   // This goes at the end no matter how things are broken and how
@@ -912,7 +912,7 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
   // continuation, in which case that continuation should handle
   // the endSide border.
   if (MOZ_LIKELY(!lastInFlow->GetNextContinuation() && sliceBreak)) {
-    aData->currentLine += endPBM;
+    aData->mCurrentLine += endPBM;
   }
 }
 
