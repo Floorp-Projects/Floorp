@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=659625
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 659625</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=659625">Mozilla Bug 659625</a>
+<script type="application/javascript">
+  const { Cc, Ci } = SpecialPowers;
+  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
+
+  let clearAndCheckStorage = () => {
+    console.clear();
+    ok(storage.getEvents().length === 1,
+      "Only one event remains in consoleAPIStorage");
+    ok(storage.getEvents()[0].level === "clear",
+      "Remaining event has level 'clear'");
+  }
+
+  storage.clearEvents();
+  ok(storage.getEvents().length === 0,
+    "Console is empty when test is starting");
+  clearAndCheckStorage();
+
+  console.log("log");
+  console.debug("debug");
+  console.warn("warn");
+  console.error("error");
+  console.exception("exception");
+  ok(storage.getEvents().length === 6,
+    "5 new console events have been registered for logging variants");
+  clearAndCheckStorage();
+
+  console.trace();
+  ok(storage.getEvents().length === 2,
+    "1 new console event registered for trace");
+  clearAndCheckStorage();
+
+  console.dir({});
+  ok(storage.getEvents().length === 2,
+    "1 new console event registered for dir");
+  clearAndCheckStorage();
+
+  console.count("count-label");
+  console.count("count-label");
+  ok(storage.getEvents().length === 3,
+    "2 new console events registered for 2 count calls");
+  clearAndCheckStorage();
+
+  console.group("group-label")
+  console.log("group-log");
+  ok(storage.getEvents().length === 3,
+    "2 new console events registered for group + log");
+  clearAndCheckStorage();
+
+  console.groupCollapsed("group-collapsed")
+  console.log("group-collapsed-log");
+  ok(storage.getEvents().length === 3,
+    "2 new console events registered for groupCollapsed + log");
+  clearAndCheckStorage();
+
+  console.group("closed-group-label")
+  console.log("group-log");
+  console.groupEnd()
+  ok(storage.getEvents().length === 4,
+    "3 new console events registered for group/groupEnd");
+  clearAndCheckStorage();
+
+  console.time("time-label");
+  console.timeEnd();
+  ok(storage.getEvents().length === 3,
+    "2 new console events registered for time/timeEnd");
+  clearAndCheckStorage();
+
+  console.timeStamp("timestamp-label");
+  ok(storage.getEvents().length === 2,
+    "1 new console event registered for timeStamp");
+  clearAndCheckStorage();
+
+  // Check that console.clear() clears previous clear messages
+  clearAndCheckStorage();
+
+</script>
+</body>
+</html>
