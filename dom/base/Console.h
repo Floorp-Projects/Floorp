@@ -116,6 +116,9 @@ public:
   Count(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
+  Clear(JSContext* aCx, const Sequence<JS::Value>& aData);
+
+  void
   NoopMethod();
 
   void
@@ -156,7 +159,8 @@ private:
     MethodTimeEnd,
     MethodTimeStamp,
     MethodAssert,
-    MethodCount
+    MethodCount,
+    MethodClear
   };
 
   void

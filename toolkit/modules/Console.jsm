@@ -283,6 +283,7 @@ const LOG_LEVELS = {
   "debug": 2,
   "log": 3,
   "info": 3,
+  "clear": 3,
   "trace": 3,
   "timeEnd": 3,
   "time": 3,
