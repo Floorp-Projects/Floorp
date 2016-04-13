@@ -199,7 +199,7 @@ public class LocalURLMetadata implements URLMetadata {
 
                 data.put(url, metadata);
                 cache.put(url, metadata);
-            } while(cursor.moveToNext());
+            } while (cursor.moveToNext());
 
         } finally {
             cursor.close();

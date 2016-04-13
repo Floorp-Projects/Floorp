@@ -342,7 +342,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
                         String decrypted = doCrypto(cursor.getString(usernameIndex), uri, false);
                         m.set(usernameIndex, decrypted);
                     }
-                } while(cursor.moveToNext());
+                } while (cursor.moveToNext());
             }
         }
     }
