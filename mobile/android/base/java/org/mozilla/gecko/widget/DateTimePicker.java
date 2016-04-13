@@ -182,7 +182,7 @@ public class DateTimePicker extends FrameLayout {
             if (mDayEnabled) {
                 mDaySpinner.setMaxValue(mCurrentDate.getActualMaximum(Calendar.DAY_OF_MONTH));
             }
-            if(mWeekEnabled) {
+            if (mWeekEnabled) {
                 mWeekSpinner.setMaxValue(mCurrentDate.getActualMaximum(Calendar.WEEK_OF_YEAR));
             }
             updateCalendar();
