@@ -60,9 +60,19 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
+
+#ifdef DEBUG
+  // TYPE_DOCUMENT loads initiated by javascript tests will go through
+  // nsIOService and use the wrong constructor.  Don't enforce the
+  // !TYPE_DOCUMENT check in those cases
+  bool skipContentTypeCheck = false;
+  skipContentTypeCheck = Preferences::GetBool("network.loadinfo.skip_type_assertion");
+#endif
+
   // This constructor shouldn't be used for TYPE_DOCUMENT loads that don't
   // have a loadingPrincipal
-  MOZ_ASSERT(mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT);
+  MOZ_ASSERT(skipContentTypeCheck ||
+             mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT);
 
   // TODO(bug 1259873): Above, we initialize mIsThirdPartyContext to false meaning
   // that consumers of LoadInfo that don't pass a context or pass a context from
